@@ -182,7 +182,7 @@ jobs:
             org.opencontainers.image.title=${{ matrix.title }}
 
       - name: Set up QEMU (build arm64 no runner amd64)
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
