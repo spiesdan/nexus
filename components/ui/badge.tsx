@@ -50,6 +50,15 @@ const badgeVariants = cva(
           "border-transparent bg-error-bg text-error-fg",
         outline:
           "border-border bg-transparent text-text",
+        // UImaxxing aliases (registry `badge.json`): os showcases usam
+        // `positive`/`negative`/`solid` — mapeados para os semânticos do
+        // produto em vez de duplicar o componente (§33).
+        positive:
+          "border-transparent bg-success-bg text-success-fg",
+        negative:
+          "border-transparent bg-error-bg text-error-fg",
+        solid:
+          "border-transparent bg-accent text-accent-foreground",
       },
     },
     defaultVariants: {

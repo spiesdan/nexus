@@ -34,7 +34,7 @@ export function SidebarNotice({ collapsed }: { collapsed: boolean }) {
         type="button"
         onClick={() => setDispensado(true)}
         aria-label={t("Dispensar aviso")}
-        className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+        className="shrink-0 rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
       >
         <X size={12} aria-hidden />
       </button>

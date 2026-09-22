@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
+import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
 import type { Role } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { IDIOMA_PADRAO, type Idioma } from "@/lib/i18n/idiomas";
@@ -52,10 +53,7 @@ export function NavHub({ group, isPlatformAdmin, role, title, subtitle, locale =
 
   return (
     <div className="flex h-full flex-col gap-8 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir(title, locale)}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground">{traduzir(subtitle, locale)}</p>}
-      </header>
+      <CrmPageHeader title={traduzir(title, locale)} description={subtitle ? traduzir(subtitle, locale) : undefined} />
 
       {secoes.map(({ section, items }) => (
         <section key={section} aria-labelledby={`hub-${group}-${slug(section)}`} className="space-y-3">
@@ -70,7 +68,7 @@ export function NavHub({ group, isPlatformAdmin, role, title, subtitle, locale =
               const Icon = item.icon;
               return (
                 <Link key={item.href} href={item.href} className="block">
-                  <Card className="flex h-full gap-3 p-4 transition-colors hover:border-border-strong">
+                  <Card className="hover-raise flex h-full gap-3 p-4 transition-colors hover:border-border-strong">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft">
                       <Icon size={20} weight="regular" aria-hidden className="text-accent" />
                     </span>

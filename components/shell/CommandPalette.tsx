@@ -42,7 +42,7 @@ export function CommandPalette({
   const t = useT();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-[15%] max-w-xl translate-y-0 gap-0 p-0">
+      <DialogContent className="top-[15%] max-w-xl translate-y-0 gap-0 overflow-hidden rounded-card border p-0">
         <DialogTitle className="sr-only">{t("Buscar telas")}</DialogTitle>
         {/* O miolo é um componente à parte porque o Radix o DESMONTA ao fechar:
             busca e destaque nascem zerados na próxima abertura por construção,
@@ -175,7 +175,7 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
                 onMouseEnter={() => setDestacado(i)}
                 onClick={() => navegar(d)}
                 className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-full px-3 py-2",
+                  "row-hover interactive flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2",
                   ativo && "bg-accent text-accent-foreground",
                 )}
               >
@@ -206,7 +206,7 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
                       <li
                         key={p.id}
                         onClick={() => navegar({ href: `/app/pedidos/${p.id}` } as NavDestination)}
-                        className="flex cursor-pointer items-center gap-3 rounded-full px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                        className="row-hover interactive flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent hover:text-accent-foreground"
                       >
                         <span className="text-sm font-medium">{numeroDoPedido(p.numero)}</span>
                         <span className="truncate text-xs text-muted-foreground">{p.cliente_nome}</span>
@@ -225,7 +225,7 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
                       <li
                         key={c.id}
                         onClick={() => navegar({ href: `/app/contacts/${c.id}` } as NavDestination)}
-                        className="flex cursor-pointer items-center gap-3 rounded-full px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                        className="row-hover interactive flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent hover:text-accent-foreground"
                       >
                         <span className="text-sm font-medium">{c.display_name ?? c.name ?? "—"}</span>
                       </li>

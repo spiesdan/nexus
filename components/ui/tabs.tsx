@@ -10,8 +10,37 @@ import { cn } from "@/lib/utils"
  * inativo, Carbon no ativo com underline lavanda de 2px. Mantido o
  * `max-w-full overflow-x-auto`: fila de abas cresce com o produto e a página
  * nunca pode rolar na horizontal (ver comentário original abaixo).
+ *
+ * Modo `items` (UImaxxing registry `tabs.json`): os showcases
+ * (`markets-table`, `order-book`, `trading-chart`) usam `<Tabs items={[...]}/>`
+ * com estado interno. Em vez de duplicar o componente (§33), o mesmo `Tabs`
+ * aceita esse modo — presença de `items` decide, as APIs não se sobrepõem
+ * (Radix não tem prop `items`).
  */
-const Tabs = TabsPrimitive.Root
+function Tabs(
+  props: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> & {
+    items?: string[];
+    defaultActive?: number;
+    variant?: "underline" | "pill";
+    size?: "md" | "sm";
+    onChange?: (index: number) => void;
+  },
+) {
+  const { items, defaultActive, variant, size, onChange, ...radixProps } = props;
+  if (items) {
+    return (
+      <ShowcaseTabs
+        items={items}
+        defaultActive={defaultActive}
+        variant={variant}
+        size={size}
+        onChange={onChange}
+        className={radixProps.className as string | undefined}
+      />
+    );
+  }
+  return <TabsPrimitive.Root {...radixProps} />;
+}
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
@@ -68,4 +97,75 @@ const TabsContent = React.forwardRef<
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+/**
+ * Faixa de abas apresentacional com estado interno (modo `items` do
+ * UImaxxing). `underline` = estilo trading-panel; `pill` = chip segmentado.
+ */
+function ShowcaseTabs({
+  items,
+  defaultActive = 0,
+  variant = "underline",
+  size = "sm",
+  className,
+  onChange,
+}: {
+  items: string[];
+  defaultActive?: number;
+  variant?: "underline" | "pill";
+  size?: "md" | "sm";
+  className?: string;
+  onChange?: (index: number) => void;
+}) {
+  const [active, setActive] = React.useState(defaultActive);
+
+  const select = (i: number) => {
+    setActive(i);
+    onChange?.(i);
+  };
+
+  if (variant === "pill") {
+    return (
+      <div className={cn("flex items-center gap-1", className)}>
+        {items.map((item, i) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => select(i)}
+            className={cn(
+              "rounded-pill interactive font-medium",
+              size === "sm" ? "px-3 py-1 text-xs" : "px-3.5 py-1.5 text-sm",
+              i === active
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex items-end gap-5 border-b border-border", className)}>
+      {items.map((item, i) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => select(i)}
+          className={cn(
+            "-mb-px border-b-2 border-transparent pb-2 font-medium interactive",
+            size === "sm" ? "text-xs" : "text-sm",
+            i === active
+              ? "border-accent text-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, ShowcaseTabs }

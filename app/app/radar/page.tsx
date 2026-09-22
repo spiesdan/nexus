@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
 import { RadarTabs } from "./_tabs";
 
 export const dynamic = "force-dynamic";
@@ -18,12 +19,11 @@ export default async function RadarPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Radar Comercial")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t("Identifique riscos, oportunidades de recompra e clientes que precisam de atenção.")}
-        </p>
-      </header>
+      <CrmPageHeader
+        eyebrow={t("Sales Intelligence")}
+        title={t("Radar Comercial")}
+        description={t("Identifique riscos, oportunidades de recompra e clientes que precisam de atenção.")}
+      />
       <RadarTabs />
     </div>
   );
