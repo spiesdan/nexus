@@ -7,6 +7,22 @@
 
 ---
 
+## Remotes — onde commitar (REGRA PERMANENTE)
+
+O repositório canônico deste projeto é **`spiesdan/nexus`**
+(`https://github.com/spiesdan/nexus`). **Todo commit, push e PR vai para ele.
+Sempre.** Sem exceção, sem perguntar de novo.
+
+- `nexus` → escrita. É para cá que `git push` aponta (upstream das branches).
+- `origin` (`melgarafael/DeskcommCRM`) → somente leitura (upstream histórico).
+  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
+- `fork` (`spiesdan/DeskcommCRM`) → somente leitura (espelho legado).
+  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
+
+Antes de `push`/`pr create`, confira com `git remote -v` e `git status -sb`
+(upstream precisa ser `nexus/...`). Errou o remoto? Não conserte com push
+duplo — apague a ref errada e refaça no `nexus`.
+
 ## Objetivo do projeto
 
 Sistema operacional de vendas open source com agentes de IA nativos, multi-nicho,
