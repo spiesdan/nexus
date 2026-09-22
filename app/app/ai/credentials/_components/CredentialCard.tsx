@@ -113,7 +113,7 @@ export function CredentialCard({ credential, canWrite, usageCount }: Props) {
   );
 
   return (
-    <Card className="flex flex-col gap-3 p-4">
+    <Card className="hover-raise flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-medium" title={credential.label}>

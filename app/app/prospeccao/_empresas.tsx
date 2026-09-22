@@ -546,7 +546,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
             )}
           </div>
           {rota && (
-            <Card className="p-3">
+            <Card className="hover-raise p-3">
               <p className="mb-2 text-sm font-medium">
                 {t("Rota")} · {rota.pontos.length} {t("paradas")} · {rota.km} km
               </p>
@@ -622,13 +622,13 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       ) : lista.length === 0 && chips.length > 0 ? (
         <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
       ) : lista.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
           {t("Nenhuma empresa com estes filtros.")}
         </Card>
       ) : (
         <>
           {podeOperar && (
-            <Card className="flex flex-wrap items-center gap-2 p-3">
+            <Card className="hover-raise flex flex-wrap items-center gap-2 p-3">
               <span className="text-sm text-muted-foreground">
                 {selecionados.length} {t("selecionadas")}
               </span>

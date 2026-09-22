@@ -154,7 +154,7 @@ export function CartaoDaConexaoGoogle({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
+    <div className="hover-raise flex items-center gap-3 rounded-lg border border-border bg-surface p-3">
       <p className="min-w-0 flex-1 text-sm text-text-muted">
         {t("Conecte sua agenda do Google para ver aqui o que já está marcado lá — e enviar para lá o que for marcado aqui.")}
       </p>

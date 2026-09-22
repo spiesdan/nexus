@@ -164,7 +164,7 @@ export function RadarCategorias({
     const zap = montarZap(l.fone, l.nome, l.atraso_dias, l.intervalo_mediano_dias);
     const vendedor = l.vendedor_user_id ? (nomesVendedores.get(l.vendedor_user_id) ?? null) : null;
     return (
-      <li className="rounded-lg border border-border bg-surface p-3">
+      <li className="row-hover rounded-lg border border-border bg-surface p-3">
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/app/contacts/${l.contact_id}`}
@@ -204,7 +204,7 @@ export function RadarCategorias({
   }
 
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <h2 className="text-base font-medium text-text">{t("Radar por categoria")}</h2>
       <p className="text-xs text-muted-foreground">
         {t("Risco, recompra, oportunidade, follow-up, perda e cobrança — com próxima ação.")}
@@ -282,7 +282,7 @@ export function RadarCategorias({
           ) : (
             <ul className="grid gap-2 md:grid-cols-2">
               {followups.map((f) => (
-                <li key={f.id} className="rounded-lg border border-border bg-surface p-3">
+                <li key={f.id} className="row-hover rounded-lg border border-border bg-surface p-3">
                   <p className="truncate text-sm font-medium text-text">{f.titulo}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {f.detalhe}
@@ -312,7 +312,7 @@ export function RadarCategorias({
               {titulos.map((x, i) => (
                 <li
                   key={`${x.contact_id ?? "s/c"}-${i}`}
-                  className="rounded-lg border border-border bg-surface p-3"
+                  className="row-hover rounded-lg border border-border bg-surface p-3"
                 >
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     {x.contact_id ? (

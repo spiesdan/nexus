@@ -39,7 +39,7 @@ export function AgentsList({ initialData, canWrite }: Props) {
 
   if (!isLoading && agents.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-3 p-10 text-center">
+      <Card className="hover-raise flex flex-col items-center gap-3 p-10 text-center">
         <Robot size={36} aria-hidden className="text-muted-foreground" />
         <h2 className="font-medium">{t("Nenhum agent configurado")}</h2>
         <p className="max-w-sm text-sm text-muted-foreground">
@@ -79,7 +79,7 @@ export function AgentsList({ initialData, canWrite }: Props) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
           {t("Nenhum agent corresponde aos filtros atuais.")}
         </Card>
       ) : (

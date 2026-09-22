@@ -44,7 +44,7 @@ export function FlowsList({ initialData, canWrite }: Props) {
   if (flows.length === 0) {
     return (
       <>
-        <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <Card className="hover-raise flex flex-col items-center gap-3 p-10 text-center">
           <FlowArrow size={36} aria-hidden className="text-text-muted" />
           <h2 className="font-medium">{t("Nenhum fluxo de follow-up ainda")}</h2>
           <p className="max-w-sm text-sm text-text-muted">
@@ -68,7 +68,7 @@ export function FlowsList({ initialData, canWrite }: Props) {
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {flows.map((flow) => (
           <li key={flow.id}>
-            <Card className="flex h-full flex-col gap-3 p-4 transition-colors hover:border-accent-400">
+            <Card className="hover-raise flex h-full flex-col gap-3 p-4 transition-colors hover:border-accent-400">
               <Link href={`/app/ai/followups/${flow.id}`} className="flex flex-1 flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="min-w-0 flex-1 truncate font-medium" title={flow.name}>

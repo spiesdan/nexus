@@ -36,7 +36,7 @@ export function OportunidadesDoContato({ contactId }: { contactId: string }) {
   }
 
   return (
-    <ul className="divide-y rounded-lg border border-border bg-surface">
+    <ul className="divide-y rounded-lg border border-border bg-surface hover-raise">
       {resumo.leads.map((lead) => (
         <li key={lead.id} className="flex items-center gap-4 p-3 text-sm">
           <div className="min-w-0 flex-1">

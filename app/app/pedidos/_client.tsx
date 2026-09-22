@@ -702,7 +702,7 @@ export function PedidosClient({
 
       {/* Barra de massa */}
       {podeCriar && selecionados.length > 0 && (
-        <Card className="flex flex-wrap items-center gap-2 p-3 text-sm">
+        <Card className="hover-raise flex flex-wrap items-center gap-2 p-3 text-sm">
           <span className="text-muted-foreground">
             {selecionados.length} {t("selecionados")}
           </span>
@@ -874,7 +874,7 @@ export function PedidosClient({
                 const aberto = expandido === p.id;
                 return (
                   <React.Fragment key={p.id}>
-                    <TableRow>
+                    <TableRow className="row-hover">
                       {podeCriar && (
                         <TableCell>
                           <input

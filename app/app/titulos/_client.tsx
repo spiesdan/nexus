@@ -183,19 +183,19 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Vencido")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalVencido, "BRL")}
           </p>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("A vencer")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalAVencer, "BRL")}
           </p>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Recebido")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalRecebido, "BRL")}

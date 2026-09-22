@@ -168,7 +168,7 @@ function StatCard({
   significa: string;
 }) {
   return (
-    <Card className="flex flex-col p-4">
+    <Card className="hover-raise flex flex-col p-4">
       <p className="text-xs text-text-muted">{rotulo}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight">{valor}</p>
       <p className="mt-2 text-xs leading-relaxed text-text-muted">{significa}</p>
@@ -227,7 +227,7 @@ function GraficoDiario({
   const temDado = dados.some((p) => p.value > 0);
   const total = dados.reduce((acc, p) => acc + p.value, 0);
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <h3 className="text-sm font-medium">{titulo}</h3>
       <p className="mt-1 text-xs leading-relaxed text-text-muted">{significa}</p>
       {!temDado ? (
@@ -293,7 +293,7 @@ function Ranking({
     .slice(0, 8);
   const maior = linhas[0]?.[1] ?? 0;
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <h3 className="text-sm font-medium">{titulo}</h3>
       <p className="mt-1 text-xs leading-relaxed text-text-muted">{significa}</p>
       {linhas.length === 0 ? (
@@ -349,7 +349,7 @@ export function EvolutionClient({ defaultRange }: { defaultRange: { from: string
 
   return (
     <div className="flex flex-col gap-8">
-      <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:gap-4">
+      <Card className="hover-raise flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:gap-4">
         <div className="flex-1">
           <p className="text-sm font-medium">{t("Período analisado")}</p>
           <p className="text-xs text-text-muted">
@@ -442,7 +442,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
             )}
           />
         </div>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <h3 className="text-sm font-medium">{t("Linha do tempo do aprendizado")}</h3>
           <p className="mt-1 text-xs text-text-muted">
             {t("Cada linha é uma coisa nova que o agente passou a saber, na ordem em que aconteceu.")}

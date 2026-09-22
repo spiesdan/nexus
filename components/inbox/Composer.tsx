@@ -16,7 +16,6 @@ import { AttachmentPreviewDialog } from "@/components/inbox/composer/AttachmentP
 import { ContactPickerDialog } from "@/components/inbox/composer/ContactPickerDialog";
 import { AudioRecorder } from "@/components/inbox/composer/AudioRecorder";
 import { DraftReplyButton } from "@/components/inbox/composer/DraftReplyButton";
-import { WA } from "@/components/inbox/whatsapp-theme";
 import { NexusAiSuggestion } from "@/components/nexus-ui/ai/NexusAi";
 import { EmojiButton } from "@/components/inbox/composer/EmojiButton";
 import { resolveSlash, TemplateMenu } from "@/components/inbox/composer/TemplateMenu";
@@ -223,8 +222,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     <>
       <div
         className={cn(
-          "relative border-t border-border px-3 py-2",
-          WA.bar,
+          "relative border-t border-border bg-card px-3 py-2",
           mode === "note" && "border-warning/40 bg-warning-bg",
         )}
       >

@@ -369,7 +369,7 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
       */}
         <div
           className={cn(
-            "h-full min-h-0 flex-col border-r border-border bg-white md:flex",
+            "h-full min-h-0 flex-col border-r border-border bg-card md:flex",
             colunas.lista,
           )}
         >

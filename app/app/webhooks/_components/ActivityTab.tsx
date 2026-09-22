@@ -205,7 +205,7 @@ export function ActivityTab() {
         </div>
       ) : runs.length === 0 ? (
         <div className="flex justify-center pt-10">
-          <Card className="max-w-md">
+          <Card className="hover-raise max-w-md">
             <CardContent className="pt-6 text-center text-sm text-muted-foreground">
               {t(
                 "Nenhuma automação rodou ainda. Assim que uma regra ligada disparar, o histórico aparece aqui.",

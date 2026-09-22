@@ -146,11 +146,11 @@ export function FaturamentoClient({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Faturado no período")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{comoMoeda(total, "BRL")}</p>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Faturados sem NF vinculada")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{semNf}</p>
         </Card>

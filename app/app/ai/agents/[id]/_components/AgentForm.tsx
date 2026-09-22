@@ -638,7 +638,7 @@ export function AgentForm(props: Props) {
         {/* COLUMN 1 */}
         <div className="space-y-4">
           {/* Identification */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Quem é este agente")}</h3>
             <div className="space-y-1">
               <Label htmlFor="name">{t("Nome")}</Label>
@@ -690,7 +690,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Provider + credential + model */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("A inteligência que ele usa")}</h3>
             <div className="space-y-1">
               <Label htmlFor="provider">{t("Empresa de inteligência artificial")}</Label>
@@ -752,7 +752,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* WhatsApp session */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Por qual número ele atende")}</h3>
             {props.routerMembership && (
               <div className="flex items-start gap-2 rounded-2xl bg-accent-soft p-3 text-xs text-text-muted">
@@ -808,7 +808,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Limits */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Freios de segurança")}</h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -884,7 +884,7 @@ export function AgentForm(props: Props) {
         {/* COLUMN 2 */}
         <div className="space-y-4">
           {/* Prompt */}
-          <Card className="space-y-2 p-4">
+          <Card className="hover-raise space-y-2 p-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">{t("As instruções dele")}</h3>
               <div className="flex items-center gap-2">
@@ -937,7 +937,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Estilo de resposta (split de mensagens — Onda 4) */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Estilo de resposta")}</h3>
             <div className="flex items-center gap-2">
               <Switch
@@ -977,7 +977,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Capacidades */}
-          <Card className="space-y-2 p-4">
+          <Card className="hover-raise space-y-2 p-4">
             <h3 className="text-sm font-medium">{t("O que o agente pode fazer")}</h3>
             <p className="text-xs text-muted-foreground">
               {t(
@@ -1003,7 +1003,7 @@ export function AgentForm(props: Props) {
           />
 
           {/* Triggers */}
-          <Card className="space-y-2 p-4">
+          <Card className="hover-raise space-y-2 p-4">
             <h3 className="text-sm font-medium">{t("Quando ele entra em ação")}</h3>
             <TriggerEditor
               value={form.trigger_config}
@@ -1013,7 +1013,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Handoff */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Passar para uma pessoa")}</h3>
             <div className="flex items-center gap-2">
               <Switch
@@ -1034,7 +1034,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Casos humanos */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Pedir ajuda sem sair da conversa")}</h3>
             <div className="flex items-center gap-2">
               <Switch
@@ -1055,7 +1055,7 @@ export function AgentForm(props: Props) {
           </Card>
 
           {/* Follow-up */}
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Follow-up")}</h3>
             <p className="text-xs text-muted-foreground">
               {t(

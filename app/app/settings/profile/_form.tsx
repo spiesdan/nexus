@@ -69,7 +69,7 @@ export function ProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-xl">
-      <Card className="space-y-4 p-6">
+      <Card className="hover-raise space-y-4 p-6">
         <div className="space-y-2">
           <Label htmlFor="email">{t("Email")}</Label>
           <Input id="email" value={email} disabled />

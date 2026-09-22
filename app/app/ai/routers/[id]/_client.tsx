@@ -258,7 +258,7 @@ export function RouterEditorClient({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Identificação")}</h3>
             <div className="space-y-1">
               <Label htmlFor="router-name">{t("Nome")}</Label>
@@ -298,7 +298,7 @@ export function RouterEditorClient({
             </div>
           </Card>
 
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Modelo que identifica a intenção")}</h3>
             <div className="space-y-1">
               <Label htmlFor="router-classifier">{t("Modelo do classificador")}</Label>
@@ -332,7 +332,7 @@ export function RouterEditorClient({
             </div>
           </Card>
 
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <h3 className="text-sm font-medium">{t("Se nenhuma intenção casar")}</h3>
             <div className="space-y-1">
               <Label htmlFor="router-fallback">{t("Agente de fallback")}</Label>
@@ -373,7 +373,7 @@ export function RouterEditorClient({
         </div>
 
         <div className="space-y-4">
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <h3 className="text-sm font-medium">{t("Intenções")}</h3>
@@ -634,7 +634,7 @@ function TestPanel({
   const t = useT();
   const belowThreshold = result?.intent_name != null && result.confidence < result.min_confidence;
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="hover-raise space-y-3 p-4">
       <CardHeader className="p-0">
         <CardTitle className="text-sm">{t("Testar classificação")}</CardTitle>
         <CardDescription>

@@ -442,25 +442,25 @@ export function Roteirizador({
     <div className="space-y-4">
       {/* RESUMO */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Entregas")}</p>
           <p className="text-lg font-bold">
             {paradasOrdenadas.length} · {rota.paradas.length > 0 ? new Set(rota.paradas.map((p) => p.contact_id ?? p.chave)).size : 0} {t("clientes")}
           </p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Distância")}</p>
           <p className="text-lg font-bold">{distanciaM != null ? formatarDistancia(distanciaM) : "—"}</p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Tempo estimado")}</p>
           <p className="text-lg font-bold">{duracaoTotalS != null ? formatarDuracao(duracaoTotalS) : "—"}</p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Valor")}</p>
           <p className="text-lg font-bold">{comoMoeda(valorTotal, "BRL")}</p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Cálculo")}</p>
           <p className="text-lg font-bold">
             {provedorRota ? (provedorRota.ruas ? t("Pelas ruas") : t("Aproximado")) : "—"}
@@ -473,7 +473,7 @@ export function Roteirizador({
         </Card>
       </div>
       {realizado && (
-        <Card className="p-3 text-sm">
+        <Card className="hover-raise p-3 text-sm">
           <span className="text-muted-foreground">{t("Realizado")}: </span>
           <strong>
             {realizado.km} · {realizado.tempo}
@@ -520,7 +520,7 @@ export function Roteirizador({
         {/* PAINEL */}
         <div className="min-w-0 space-y-3">
           {editavel && (
-            <Card className="space-y-2 p-3">
+            <Card className="hover-raise space-y-2 p-3">
               <p className="text-sm font-semibold">{t("Origem da rota")}</p>
               <div className="flex gap-2">
                 <Input

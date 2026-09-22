@@ -81,7 +81,7 @@ export function TimelineView({ contactId, types }: Props) {
 
   if (q.isError) {
     return (
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <p className="text-sm text-error-fg">{t("Erro ao carregar timeline.")}</p>
         <Button size="sm" variant="outline" className="mt-2" onClick={() => q.refetch()}>
           {t("Tentar novamente")}
@@ -92,7 +92,7 @@ export function TimelineView({ contactId, types }: Props) {
 
   if (grouped.length === 0) {
     return (
-      <Card className="p-6 text-center text-sm text-muted-foreground">
+      <Card className="hover-raise p-6 text-center text-sm text-muted-foreground">
         {t("Nenhuma atividade registrada ainda.")}
       </Card>
     );

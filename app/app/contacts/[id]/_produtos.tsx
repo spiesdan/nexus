@@ -93,7 +93,7 @@ export function ProdutosDoContato({ contactId }: { contactId: string }) {
   }
 
   return (
-    <ul className="divide-y rounded-lg border border-border bg-surface">
+    <ul className="divide-y rounded-lg border border-border bg-surface hover-raise">
       {lista.map((p) => (
         <li key={p.nome} className="flex items-center gap-4 p-3 text-sm">
           <div className="min-w-0 flex-1">

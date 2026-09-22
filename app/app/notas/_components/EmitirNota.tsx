@@ -70,7 +70,7 @@ export function EmitirNota({
   }
 
   return (
-    <Card className="space-y-4 p-4 sm:p-5">
+    <Card className="hover-raise space-y-4 p-4 sm:p-5">
       <div>
         <div className="flex items-center gap-2">
           <Receipt size={18} className="text-muted-foreground" />

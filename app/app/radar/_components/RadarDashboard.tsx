@@ -245,7 +245,7 @@ export function RadarDashboard() {
 
   if (falhou && linhas.length === 0) {
     return (
-      <Card className="p-8 text-center">
+      <Card className="hover-raise p-8 text-center">
         <p className="font-medium">{t("Não consegui ler os pedidos.")}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("Verifique a conexão e tente de novo.")}
@@ -295,7 +295,7 @@ export function RadarDashboard() {
   return (
     <div className="space-y-6">
       {/* Filtros que funcionam: tudo abaixo (KPIs, gráficos, ranking) deriva das linhas filtradas. */}
-      <Card className="space-y-3 p-4">
+      <Card className="hover-raise space-y-3 p-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="radar-busca">{t("Buscar cliente")}</Label>
@@ -417,7 +417,7 @@ export function RadarDashboard() {
 
       {/* KPIs — clicar em risco/oportunidades leva à lista filtrada. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Clientes monitorados")}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
             {r.monitorados.toLocaleString("pt-BR")}
@@ -437,7 +437,7 @@ export function RadarDashboard() {
           }}
           aria-label={t("Ver clientes em risco")}
         >
-          <Card className="h-full p-3 transition-colors hover:border-border-strong">
+          <Card className="hover-raise h-full p-3 transition-colors hover:border-border-strong">
             <p className="text-xs text-muted-foreground">{t("Em risco")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {r.emRisco.toLocaleString("pt-BR")}
@@ -456,7 +456,7 @@ export function RadarDashboard() {
           }}
           aria-label={t("Ver oportunidades de recompra")}
         >
-          <Card className="h-full p-3 transition-colors hover:border-border-strong">
+          <Card className="hover-raise h-full p-3 transition-colors hover:border-border-strong">
             <p className="text-xs text-muted-foreground">{t("Oportunidades de recompra")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {r.oportunidades.toLocaleString("pt-BR")}
@@ -466,7 +466,7 @@ export function RadarDashboard() {
             </p>
           </Card>
         </button>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{t("Receita em risco")}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
             {comoMoeda(r.receitaRiscoCents, "BRL")}
@@ -477,7 +477,7 @@ export function RadarDashboard() {
 
       {/* Ações recomendadas hoje — as 3 prioridades por impacto. */}
       {top.length > 0 && (
-        <Card className="space-y-2 p-4">
+        <Card className="hover-raise space-y-2 p-4">
           <h2 className="text-base font-medium text-text">{t("Ações recomendadas hoje")}</h2>
           <ul className="space-y-2">
             {top.slice(0, 3).map((l, i) => (
@@ -514,7 +514,7 @@ export function RadarDashboard() {
       />
 
       {/* Saúde da carteira — eventos de compra reais por semana (até 4/cliente). */}
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-base font-medium text-text">{t("Saúde da carteira")}</h2>
@@ -577,7 +577,7 @@ export function RadarDashboard() {
 
       <div className="grid gap-3 lg:grid-cols-2">
         {/* Recompra — clicar filtra a lista. */}
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <h2 className="text-base font-medium text-text">{t("Recompra")}</h2>
           <p className="text-xs text-muted-foreground">
             {t("Clique numa fatia para filtrar a lista.")}
@@ -628,7 +628,7 @@ export function RadarDashboard() {
         </Card>
 
         {/* Risco — distribuição por nível. */}
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <h2 className="text-base font-medium text-text">{t("Risco de carteira")}</h2>
           <p className="text-xs text-muted-foreground">
             {t("Pelo comportamento de cada cliente, não por dia fixo.")}
@@ -675,7 +675,7 @@ export function RadarDashboard() {
           filtradas.length === 0 && !semFiltro ? (
             <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limpar }} />
           ) : (
-            <Card className="p-8 text-center">
+            <Card className="hover-raise p-8 text-center">
               <p className="font-medium">{t("Tudo tranquilo por aqui")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("Nenhum cliente atrasado no recorte atual.")}
@@ -692,7 +692,7 @@ export function RadarDashboard() {
                 : null;
               return (
                 <li key={l.contact_id}>
-                  <Card className="h-full space-y-2 p-4">
+                  <Card className="hover-raise h-full space-y-2 p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/app/contacts/${l.contact_id}`}
@@ -773,7 +773,7 @@ export function RadarDashboard() {
       </div>
 
       {/* Inativos — top recuperável + rota para a recuperação completa. */}
-      <Card className="space-y-2 p-4">
+      <Card className="hover-raise space-y-2 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-medium text-text">{t("Maiores chances de recuperação")}</h2>
           <Button size="sm" variant="outline" asChild>

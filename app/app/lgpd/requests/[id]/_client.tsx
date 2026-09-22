@@ -192,7 +192,7 @@ export function LgpdRequestDetail({ id }: Props) {
         </Card>
 
         {/* Audit trail (spans both cols) */}
-        <Card className="lg:col-span-2">
+        <Card className="hover-raise lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-sm font-medium">
               {t("Trilha de auditoria")} ({audit_trail.length})

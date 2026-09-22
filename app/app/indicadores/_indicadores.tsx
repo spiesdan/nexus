@@ -21,6 +21,7 @@ import {
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
+import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -140,7 +141,7 @@ function PerguntarIA({ mes }: { mes: string }) {
   }
 
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="hover-raise space-y-3 p-4">
       <p className="text-sm font-semibold tracking-wide">{t("INDICADOR IA")}</p>
       <div className="flex gap-2">
         <input
@@ -304,6 +305,11 @@ export function IndicadoresClient({
 
   return (
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
+      <CrmPageHeader
+        eyebrow={t("Sales Intelligence")}
+        title={t("Indicadores")}
+        description={dados.rotuloMes}
+      />
       <Saudacao nome={nome} hora={hora} dados={dados} />
 
       <Briefing necessarioDia={dados.necessarioDia} />
@@ -417,7 +423,7 @@ export function IndicadoresClient({
       </div>
 
       {/* EVOLUÇÃO DE VENDA */}
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold tracking-wide">{t("EVOLUÇÃO DE VENDA")}</p>
           <p className="text-xs text-muted-foreground uppercase">{dados.rotuloMes}</p>
@@ -552,7 +558,7 @@ export function IndicadoresClient({
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* CARTEIRA */}
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="mb-1 text-sm font-semibold tracking-wide">{t("CARTEIRA DE CLIENTES")}</p>
           <p className="mb-3 text-center text-3xl font-semibold tabular-nums">
             {dados.carteira.total}
@@ -608,7 +614,7 @@ export function IndicadoresClient({
         </Card>
 
         {/* POSITIVAÇÃO + FATURADO */}
-        <Card className="space-y-4 p-4">
+        <Card className="hover-raise space-y-4 p-4">
           <div>
             <p className="text-sm font-semibold tracking-wide">{t("POSITIVAÇÃO")}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
@@ -657,7 +663,7 @@ export function IndicadoresClient({
         </Card>
 
         {/* CURVA ABC */}
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="mb-3 text-sm font-semibold tracking-wide">{t("CURVA ABC DE CLIENTES")}</p>
           <div className="space-y-3">
             {dados.abc.faixas.map((f, i) => (
@@ -686,7 +692,7 @@ export function IndicadoresClient({
       </div>
 
       {/* RANKING */}
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold tracking-wide">
             {t("QUANTIDADE E VALOR POR VENDEDOR")}
@@ -708,7 +714,7 @@ export function IndicadoresClient({
             </thead>
             <tbody>
               {dados.ranking.map((r) => (
-                <tr key={r.id} className="border-t">
+                <tr key={r.id} className="row-hover border-t">
                   <td className="py-2 pr-3 font-medium">{r.nome}</td>
                   <td className="py-2 pr-3 text-right tabular-nums">{r.qtd}</td>
                   <td className="py-2 pr-3 text-right tabular-nums">{brl(r.ticket)}</td>

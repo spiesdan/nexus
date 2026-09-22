@@ -213,7 +213,7 @@ export function EvolutionGaps({
     <ul className="flex flex-col gap-3" data-testid="gaps-lista">
       {lacunas.map((l) => (
         <li key={l.chave}>
-          <Card className="flex items-start gap-3 p-5">
+          <Card className="hover-raise flex items-start gap-3 p-5">
             <Warning size={20} className="mt-0.5 shrink-0 text-warning-fg" aria-hidden />
             <div className="min-w-0 flex-1">
               <p className="text-sm leading-relaxed">{l.texto}</p>

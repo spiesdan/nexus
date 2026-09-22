@@ -135,7 +135,7 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
 
   return (
     <form onSubmit={salvar} className="flex max-w-3xl flex-col gap-6" data-testid="form-atendimento">
-      <Card className="space-y-4 p-4">
+      <Card className="hover-raise space-y-4 p-4">
         <div>
           <h2 className="text-sm font-semibold">{t("Quem recebe o cliente novo")}</h2>
           <p className="text-xs text-muted-foreground">
@@ -198,7 +198,7 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
         ) : null}
       </Card>
 
-      <Card className="space-y-4 p-4">
+      <Card className="hover-raise space-y-4 p-4">
         <div>
           <h2 className="text-sm font-semibold">{t("O que cada atendente enxerga")}</h2>
           <p className="text-xs text-muted-foreground">

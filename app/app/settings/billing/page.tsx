@@ -31,7 +31,7 @@ export default async function BillingPage() {
           {traduzir("Planos, faturas e cobrança.", idioma)}
         </p>
       </header>
-      <Card className="max-w-xl p-6">
+      <Card className="hover-raise max-w-xl p-6">
         <h2 className="text-sm font-semibold">{traduzir("Em breve — Fase 2", idioma)}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {traduzir("Billing entra na Fase 2 do roadmap.", idioma)}{" "}

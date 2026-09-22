@@ -281,7 +281,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
         // instalação ("conecte seu primeiro número") para quem já tem número no
         // ar — o convite exato para parear de novo um aparelho que já está
         // conectado. Erro tem que aparecer como erro.
-        <Card className="flex flex-col items-center gap-3 p-8 text-center">
+        <Card className="hover-raise flex flex-col items-center gap-3 p-8 text-center">
           <Warning size={28} className="text-error-fg" aria-hidden />
           <p className="text-sm text-error-fg">
             {t(
@@ -295,7 +295,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
           </p>
         </Card>
       ) : list.length === 0 ? (
-        <Card className="flex flex-col items-center gap-3 p-8 text-center">
+        <Card className="hover-raise flex flex-col items-center gap-3 p-8 text-center">
           <Phone size={28} className="text-muted-foreground" aria-hidden />
           <p className="text-sm text-muted-foreground">
             {t("Conecte seu primeiro número de WhatsApp para começar a atender.")}

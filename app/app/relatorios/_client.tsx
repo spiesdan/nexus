@@ -137,19 +137,19 @@ export function RelatoriosClient({
         </FilterActions>
       </FilterBar>
 
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <h2 className="mb-3 text-base font-medium text-text">{textos.porVendedor}</h2>
         <Tabela linhas={porVendedor} textos={textos} nomeArquivo={`vendas-vendedor-${dias}d.csv`} />
       </Card>
 
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <h2 className="mb-3 text-base font-medium text-text">
           {textos.porCliente} · {textos.curvaAbc}
         </h2>
         <Tabela linhas={abcClientes} textos={textos} nomeArquivo={`abc-clientes-${dias}d.csv`} comClasse />
       </Card>
 
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <h2 className="mb-3 text-base font-medium text-text">
           {textos.porProduto} · {textos.curvaAbc}
         </h2>

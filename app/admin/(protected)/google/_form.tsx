@@ -56,7 +56,7 @@ export function FormularioDoGoogle({
         </p>
       </header>
 
-      <Card className="flex flex-col gap-4 p-4">
+      <Card className="hover-raise flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="redirect">{t("Endereço de retorno")}</Label>
           {/*

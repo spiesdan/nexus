@@ -55,7 +55,7 @@ export function ContactDetailClient({ contactId }: Props) {
   if (q.isError || !q.data) {
     return (
       <div className="p-6">
-        <Card className="p-6 text-center text-sm text-error-fg">Erro ao carregar contato.</Card>
+        <Card className="hover-raise p-6 text-center text-sm text-error-fg">Erro ao carregar contato.</Card>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export function ContactDetailClient({ contactId }: Props) {
           </div>
 
           <TabsContent value="overview" className="mt-4">
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <dl className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                 <div>
                   <dt className="text-xs text-muted-foreground uppercase">Nome</dt>
@@ -246,7 +246,7 @@ export function ContactDetailClient({ contactId }: Props) {
 
           {isAdmin && (
             <TabsContent value="lgpd" className="mt-4">
-              <Card className="space-y-4 p-4">
+              <Card className="hover-raise space-y-4 p-4">
                 <div>
                   <h2 className="text-lg font-medium text-text">Direito ao esquecimento (LGPD)</h2>
                   <p className="mt-1 text-sm text-muted-foreground">

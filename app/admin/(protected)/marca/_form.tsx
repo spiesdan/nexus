@@ -210,7 +210,7 @@ export function FormularioDaMarca({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
-      <Card className="space-y-2 p-6">
+      <Card className="hover-raise space-y-2 p-6">
         <Label htmlFor="app_name">{t("Nome do sistema")}</Label>
         <Input
           id="app_name"
@@ -259,7 +259,7 @@ export function FormularioDaMarca({
         </p>
       </Card>
 
-      <Card className="space-y-4 p-6">
+      <Card className="hover-raise space-y-4 p-6">
         <div className="space-y-2">
           <Label htmlFor="accent_hex">{t("Cor da marca")}</Label>
           <div className="flex items-center gap-3">
@@ -334,7 +334,7 @@ export function FormularioDaMarca({
         Salvar. Misturá-lo aos campos que passam ensinaria que o arquivo só vale
         depois de salvar — e a pessoa sairia da tela achando que perdeu o upload.
       */}
-      <Card className="space-y-4 p-6">
+      <Card className="hover-raise space-y-4 p-6">
         <CampoDeLogo
           escopo="instalacao"
           // Literal, nunca memoizado: a identidade deste objeto é o que diz ao

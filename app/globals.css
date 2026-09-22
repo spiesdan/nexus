@@ -1075,3 +1075,17 @@
   background-image: radial-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px);
   background-size: 22px 22px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Cursor: seta do SO, não a do UImaxxing.
+   O `uimaxxing.css` (importado no topo) define `body { cursor:
+   var(--cursor-arrow) }` — uma seta SVG customizada no site inteiro. Fora
+   da vitrine, ela é ruído: some em certos fundos e quebra a expectativa de
+   quem opera o dia todo. Esta regra é SEM layer e vem DEPOIS do import de
+   propósito: sem layer vence o `@layer base` próprio, e vindo depois vence
+   a regra também-sem-layer do UImaxxing. A mãozinha em elementos clicáveis
+   (`--cursor-hand: pointer`) continua valendo — é igual à nossa.
+   ───────────────────────────────────────────────────────────────────────── */
+body {
+  cursor: default;
+}

@@ -132,7 +132,7 @@ export function EstadoDaMarca({
           Tailwind 3.4 — aquelas telas estão sem borda e ninguém percebeu. Um
           alarme não é o lugar de repetir esse erro. */}
       {fallbackEm ? (
-        <Card className="border-error bg-error-bg p-4">
+        <Card className="hover-raise border-error bg-error-bg p-4">
           <p className="text-sm font-semibold text-error-fg">
             {t("A sua marca não está sendo aplicada.")}
           </p>
@@ -152,7 +152,7 @@ export function EstadoDaMarca({
         </Card>
       ) : null}
 
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <h3 className="text-sm font-medium text-text">{t("De onde vem cada coisa")}</h3>
         <div className="mt-2">
           <LinhaDeOrigem
@@ -176,7 +176,7 @@ export function EstadoDaMarca({
       </Card>
 
       {derivada ? (
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <h3 className="text-sm font-medium text-text">{t("O texto em cima dos botões")}</h3>
           <p className="mt-1 text-xs text-text-muted">
             {t(

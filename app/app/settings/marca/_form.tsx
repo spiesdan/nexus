@@ -251,7 +251,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
-      <Card className="space-y-4 p-6">
+      <Card className="hover-raise space-y-4 p-6">
         <h2 className="text-base font-medium tracking-tight text-text">
           {t("Como sua empresa aparece")}
         </h2>
@@ -367,7 +367,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
         cor dela, e de onde vem cada campo, com os motivos que o próprio motor
         emitiu (nunca uma conclusão que a tela tirou por conta).
       */}
-      <Card className="space-y-3 p-6">
+      <Card className="hover-raise space-y-3 p-6">
         <div>
           <h2 className="text-base font-medium tracking-tight text-text">
             {t("De onde vem cada coisa")}
@@ -413,7 +413,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
         algum canto do produto e conclui que não funcionou — e "não funcionou" é
         o que ela vai repetir para o fornecedor dela.
       */}
-      <Card className="space-y-2 p-6">
+      <Card className="hover-raise space-y-2 p-6">
         <h2 className="text-base font-medium tracking-tight text-text">
           {t("O que isto ainda não muda")}
         </h2>

@@ -157,7 +157,7 @@ export function PainelDeProvedores() {
   if (erro) {
     return (
       <div className="p-6">
-        <Card className="border-destructive/40 p-6">
+        <Card className="hover-raise border-destructive/40 p-6">
           <h2 className="font-medium">{t("Não consegui carregar a configuração de IA")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{erro}</p>
           <Button className="mt-4" variant="outline" onClick={() => void carregar()}>
@@ -245,7 +245,7 @@ function ResumoDoGrupo({ pontos }: { pontos: Ponto[] }) {
   const comAviso = pontos.filter((p) => p.avisos.length > 0).length;
 
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{t("Usando:")}</span>
         {modelos.map((m) => (

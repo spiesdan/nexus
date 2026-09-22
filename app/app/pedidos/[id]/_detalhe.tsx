@@ -95,7 +95,7 @@ function FinanceiroDoPedido({ pedidoId }: { pedidoId: string }) {
   }
 
   return (
-    <Card className="space-y-2 p-4">
+    <Card className="hover-raise space-y-2 p-4">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FINANCEIRO")}</p>
       {linhas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
@@ -170,7 +170,7 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
   }
 
   return (
-    <Card className="space-y-2 p-4">
+    <Card className="hover-raise space-y-2 p-4">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FISCAL")}</p>
       {notas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
@@ -382,7 +382,7 @@ export function DetalheDoPedido({
       </Link>
 
       {/* Cabeçalho: número + pill, como no Mercos. */}
-      <Card className="flex items-center justify-between gap-3 p-4">
+      <Card className="hover-raise flex items-center justify-between gap-3 p-4">
         <p className="text-lg font-semibold">{numeroDoPedido(pedido.numero)}</p>
         <PillDoStatus status={pedido.status as StatusDoPedido} />
       </Card>
@@ -434,7 +434,7 @@ export function DetalheDoPedido({
       </div>
 
       {/* CLIENTE */}
-      <Card className="space-y-2 p-4">
+      <Card className="hover-raise space-y-2 p-4">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("CLIENTE")}</p>
         <p className="font-medium">
           {contato ? (
@@ -491,14 +491,14 @@ export function DetalheDoPedido({
 
       {/* ORGANIZAÇÃO (a "representada" do Mercos). */}
       {nomeOrganizacao && (
-        <Card className="space-y-1 p-4">
+        <Card className="hover-raise space-y-1 p-4">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("EMPRESA")}</p>
           <p className="font-medium">{nomeOrganizacao}</p>
         </Card>
       )}
 
       {/* PRODUTOS */}
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">{t("PRODUTOS")}</p>
         {itens.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("Sem itens.")}</p>
@@ -561,7 +561,7 @@ export function DetalheDoPedido({
       </Card>
 
       {/* DETALHES DO PEDIDO */}
-      <Card className="space-y-4 p-4">
+      <Card className="hover-raise space-y-4 p-4">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("DETALHES DO PEDIDO")}</p>
         <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <LinhaDetalhe rotulo={t("Nº do pedido")} valor={numeroDoPedido(pedido.numero)} />
@@ -642,7 +642,7 @@ export function DetalheDoPedido({
       <FiscalDoPedido pedidoId={pedido.id} />
 
       {/* HISTÓRICO */}
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">{t("HISTÓRICO")}</p>
         {timeline === null ? (
           <p className="text-xs text-muted-foreground">…</p>

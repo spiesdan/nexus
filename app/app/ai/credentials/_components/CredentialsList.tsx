@@ -44,7 +44,7 @@ export function CredentialsList({ initialData, canWrite, usageMap }: Props) {
   if (credentials.length === 0) {
     return (
       <>
-        <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <Card className="hover-raise flex flex-col items-center gap-3 p-10 text-center">
           <h2 className="font-medium">{t("Nenhuma chave cadastrada ainda")}</h2>
           <p className="max-w-md text-sm text-muted-foreground">
             {t(

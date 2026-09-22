@@ -18,7 +18,7 @@ export function Funil() {
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (isError || !data) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-4 text-sm shadow-xs">
+      <div className="hover-raise rounded-lg border border-border bg-surface p-4 text-sm shadow-xs">
         <p className="font-semibold text-text">{t("Funil de atendimento")}</p>
         <p className="mt-1 text-muted-foreground">{t("Não foi possível ler o funil agora.")}</p>
         <Button variant="outline" size="sm" className="mt-2" onClick={() => void refetch()}>

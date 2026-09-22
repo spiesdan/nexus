@@ -48,7 +48,7 @@ export function ProximasAcoes({
   return (
     <aside
       aria-label={t("Próximas ações")}
-      className="space-y-2 rounded-lg border border-border bg-surface p-4 shadow-xs"
+      className="hover-raise space-y-2 rounded-lg border border-border bg-surface p-4 shadow-xs"
     >
       <h2 className="text-sm font-semibold text-text">{t("Próximas ações")}</h2>
       <div className="grid gap-2">

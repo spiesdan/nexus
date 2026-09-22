@@ -54,7 +54,7 @@ export function PipelinesClient({
     // vazio manda "Ir para Configurações": pingue-pongue fechado, com o usuário
     // procurando um botão que não existe em lugar nenhum.
     return (
-      <Card className="p-6 text-sm leading-relaxed text-muted-foreground">
+      <Card className="hover-raise p-6 text-sm leading-relaxed text-muted-foreground">
         {t("Você ainda não tem nenhum funil. Enquanto for assim, o agente atende normalmente, mas não tem para onde levar o card de ninguém — não há etapas para onde mover. Criar o funil é feito por quem instalou o sistema, direto no banco; depois ele aparece aqui para você escolher a etapa de cada passo.")}
       </Card>
     );

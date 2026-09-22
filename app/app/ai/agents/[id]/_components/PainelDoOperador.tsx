@@ -114,7 +114,7 @@ export function PainelDoOperador(props: Props) {
   return (
     <div className="space-y-4">
       {props.enabled ? <ComoOPapelEstaIndo /> : null}
-      <Card className="space-y-3 p-4">
+      <Card className="hover-raise space-y-3 p-4">
         <div className="flex items-start gap-3">
           <Switch
             id="operator_enabled"
@@ -164,7 +164,7 @@ export function PainelDoOperador(props: Props) {
 
       {props.enabled ? (
         <>
-          <Card className="space-y-2 p-4">
+          <Card className="hover-raise space-y-2 p-4">
             <h3 className="text-sm font-medium">{t("A inteligência que ele usa para organizar")}</h3>
             <p className="text-xs text-muted-foreground">
               {t(
@@ -203,7 +203,7 @@ export function PainelDoOperador(props: Props) {
             ) : null}
           </Card>
 
-          <Card className="space-y-2 p-4">
+          <Card className="hover-raise space-y-2 p-4">
             <h3 className="text-sm font-medium">{t("O que ele pode mexer no sistema")}</h3>
             <p className="text-xs text-muted-foreground">
               {t(

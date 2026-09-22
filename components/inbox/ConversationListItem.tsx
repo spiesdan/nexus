@@ -159,9 +159,8 @@ export function ConversationListItem({
       data-conversation-id={conversation.id}
       onClick={() => onSelect(conversation.id)}
       className={cn(
-        "group flex w-full items-start gap-3 border-b border-border bg-white px-3 py-3 text-left transition-colors",
-        WA.hover,
-        isSelected && WA.selected,
+        "row-hover interactive group flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left",
+        isSelected ? "border-accent/50 bg-accent-soft" : "border-transparent",
       )}
       aria-current={isSelected ? "true" : undefined}
     >

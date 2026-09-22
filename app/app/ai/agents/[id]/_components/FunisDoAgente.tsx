@@ -67,7 +67,7 @@ export function FunisDoAgente({ funis, value, onChange, cobertura, disabled = fa
     .map((f) => f.name);
 
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="hover-raise space-y-3 p-4">
       <div>
         <h3 className="text-sm font-medium">{t("Em que negócios ele pode mexer")}</h3>
         <p className="text-xs text-muted-foreground">

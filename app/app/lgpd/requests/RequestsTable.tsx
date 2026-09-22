@@ -143,7 +143,7 @@ export function RequestsTable() {
       {!q.isLoading && rows.length > 0 && <SlaBanner requests={rows} />}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2">
+      <div className="hover-raise flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2">
         <Select
           value={status ?? ALL}
           onValueChange={(v) => {
@@ -224,7 +224,7 @@ export function RequestsTable() {
       </div>
 
       {/* Table */}
-      <Card className="overflow-hidden">
+      <Card className="hover-raise overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

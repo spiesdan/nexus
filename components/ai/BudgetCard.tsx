@@ -166,7 +166,7 @@ export function BudgetCard({ initialData, isAdmin }: Props) {
 
   if (!status) {
     return (
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <p className="text-sm text-muted-foreground">{t("Carregando orçamento...")}</p>
       </Card>
     );
@@ -179,7 +179,7 @@ export function BudgetCard({ initialData, isAdmin }: Props) {
   const chave = avisoDaChave(status, t);
 
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold tracking-tight">{t("Orçamento mensal de IA")}</h2>
