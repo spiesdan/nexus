@@ -4,6 +4,10 @@ import {
   type SituacaoRecompra,
 } from "./radar-compras";
 
+// Reexportado para os testes ao lado (`radar-digest.test.ts`): o tipo nasce
+// em `radar-compras` (fonte única) e este módulo é a porta de entrada do digest.
+export type { PedidoParaRadar };
+
 /**
  * DIGEST DO RADAR — contagens para a Central de avisos (cron radar-digest).
  *
