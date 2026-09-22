@@ -486,7 +486,7 @@ export function CRMSidePanel({ conversation }: Props) {
         <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {t("Contato")}
         </h3>
-        <Card className="mt-2 space-y-2 p-3 text-sm">
+        <Card className="hover-raise mt-2 space-y-2 p-3 text-sm">
           <div className="font-medium">{displayName}</div>
           {contact?.phone_number && (
             <div className="text-xs text-muted-foreground">

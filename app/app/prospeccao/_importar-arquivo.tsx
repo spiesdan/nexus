@@ -88,7 +88,7 @@ export function ImportarArquivoDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <Card className="w-full max-w-lg space-y-3 p-4">
+      <Card className="hover-raise w-full max-w-lg space-y-3 p-4">
         <div className="flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-base font-medium text-text">
             <UploadSimple size={18} className="text-muted-foreground" />

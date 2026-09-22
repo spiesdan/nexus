@@ -95,7 +95,7 @@ export function CanalOficialClient() {
       ) : null}
 
       {estado?.webhook ? (
-        <Card className="flex flex-col gap-3 p-4">
+        <Card className="hover-raise flex flex-col gap-3 p-4">
           <div>
             <h2 className="font-medium">{t("Cole isto no painel da Meta")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -122,7 +122,7 @@ export function CanalOficialClient() {
         </Card>
       ) : null}
 
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <h2 className="font-medium">
           {estado?.connected ? t("Trocar credencial") : t("Conectar canal oficial")}
         </h2>

@@ -107,7 +107,7 @@ export function CapturasTab() {
 
   return (
     <div className="space-y-4 pt-4">
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
           <div className="space-y-1">
             <label className="block text-xs text-muted-foreground" htmlFor="captura-busca">
@@ -202,7 +202,7 @@ export function CapturasTab() {
         // saber que algo quebrou. Ela iria conferir a landing page em vez de
         // recarregar a tela.
         <div className="flex justify-center pt-10">
-          <Card className="max-w-md">
+          <Card className="hover-raise max-w-md">
             <CardContent className="space-y-3 pt-6 text-center">
               <p className="text-sm text-text">{t("Não foi possível carregar o histórico.")}</p>
               <p className="text-xs text-muted-foreground">
@@ -216,7 +216,7 @@ export function CapturasTab() {
         </div>
       ) : linhas.length === 0 ? (
         <div className="flex justify-center pt-10">
-          <Card className="max-w-md">
+          <Card className="hover-raise max-w-md">
             <CardContent className="space-y-3 pt-6 text-center">
               <Tray className="mx-auto h-10 w-10 text-accent" />
               <p className="text-sm text-muted-foreground">
@@ -233,7 +233,7 @@ export function CapturasTab() {
         <>
           {/* A tabela rola dentro do próprio container: o corpo da página nunca
               rola na horizontal (regra de responsividade do design system). */}
-          <Card className="overflow-x-auto">
+          <Card className="hover-raise overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

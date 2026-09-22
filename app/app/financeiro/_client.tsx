@@ -200,19 +200,19 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Card className="p-3">
+          <Card className="hover-raise p-3">
             <p className="text-xs text-muted-foreground">{t("A receber")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {comoMoeda(kpis.a_receber_cents ?? 0, "BRL")}
             </p>
           </Card>
-          <Card className="p-3">
+          <Card className="hover-raise p-3">
             <p className="text-xs text-muted-foreground">{t("Vencido")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {comoMoeda(kpis.vencido_cents ?? 0, "BRL")}
             </p>
           </Card>
-          <Card className="p-3">
+          <Card className="hover-raise p-3">
             <p className="text-xs text-muted-foreground">{t("Vence hoje / 7 dias")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {comoMoeda(kpis.vence_hoje_cents ?? 0, "BRL")}
@@ -221,7 +221,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
               7d: {comoMoeda(kpis.vence_7d_cents ?? 0, "BRL")}
             </p>
           </Card>
-          <Card className="p-3">
+          <Card className="hover-raise p-3">
             <p className="text-xs text-muted-foreground">{t("Recebido (período)")}</p>
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {comoMoeda(kpis.recebido_periodo_cents ?? 0, "BRL")}
@@ -240,7 +240,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
         </TabsList>
 
         <TabsContent value="recebiveis" className="mt-4 space-y-3">
-          <Card className="space-y-3 p-4">
+          <Card className="hover-raise space-y-3 p-4">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               <div className="space-y-1.5">
                 <Label htmlFor="fin-busca">{t("Buscar")}</Label>
@@ -337,7 +337,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
             />
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-xs text-muted-foreground">
@@ -447,7 +447,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
           {divergencias === null ? (
             <Skeleton className="h-24 w-full" />
           ) : divergencias.length === 0 ? (
-            <Card className="p-8 text-center">
+            <Card className="hover-raise p-8 text-center">
               <p className="font-medium">{t("Tudo conciliado")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("Nenhuma divergência entre pedido, NF e financeiro.")}
@@ -457,7 +457,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
             <ul className="space-y-2">
               {divergencias.map((d, i) => (
                 <li key={i}>
-                  <Card className="flex flex-wrap items-center gap-2 p-3 text-sm">
+                  <Card className="hover-raise flex flex-wrap items-center gap-2 p-3 text-sm">
                     <Badge variant="warning">{String(d.tipo).replaceAll("_", " ")}</Badge>
                     <span className="text-muted-foreground tabular-nums">
                       {typeof d.total_cents === "number" ? comoMoeda(d.total_cents, "BRL") : ""}

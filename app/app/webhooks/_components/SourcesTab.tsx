@@ -43,7 +43,7 @@ export function SourcesTab() {
   if (sources.length === 0) {
     return (
       <div className="flex justify-center pt-10">
-        <Card className="max-w-md">
+        <Card className="hover-raise max-w-md">
           <CardHeader className="items-center text-center">
             <PlugsConnected className="mb-2 h-10 w-10 text-accent" />
             <CardTitle>{t("Conecte sua landing page em 2 minutos")}</CardTitle>

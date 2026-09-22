@@ -80,7 +80,7 @@ export function TemplatesClient() {
   // template" é a diferença entre o operador saber o próximo passo ou não.
   if (!waba) {
     return (
-      <Card className="p-6">
+      <Card className="hover-raise p-6">
         <h2 className="font-medium">{t("Canal oficial não conectado")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("Os templates vivem na sua conta do WhatsApp Business (Meta) — esta tela é um espelho deles. Conecte o canal oficial em")}{" "}
@@ -103,7 +103,7 @@ export function TemplatesClient() {
       </div>
 
       {templates.length === 0 ? (
-        <Card className="p-6">
+        <Card className="hover-raise p-6">
           <h2 className="font-medium">{t("Nenhum template ainda")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("Crie templates no Gerenciador do WhatsApp e clique em")}{" "}

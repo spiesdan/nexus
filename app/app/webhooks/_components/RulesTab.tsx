@@ -84,7 +84,7 @@ export function RulesTab() {
   if (rules.length === 0) {
     return (
       <div className="flex justify-center pt-10">
-        <Card className="max-w-md">
+        <Card className="hover-raise max-w-md">
           <CardHeader className="items-center text-center">
             <Robot className="mb-2 h-10 w-10 text-accent" />
             <CardTitle>{t("Crie sua primeira automação")}</CardTitle>

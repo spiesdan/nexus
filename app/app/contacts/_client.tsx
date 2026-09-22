@@ -103,7 +103,7 @@ export function ContactsListClient() {
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2">
+      <div className="hover-raise flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2">
         <div className="relative w-full sm:w-72">
           <MagnifyingGlass
             size={16}
@@ -192,7 +192,7 @@ export function ContactsListClient() {
           ))}
         </div>
       ) : q.isError ? (
-        <Card className="p-6 text-center">
+        <Card className="hover-raise p-6 text-center">
           <p className="text-sm text-error-fg">{t("Erro ao carregar clientes.")}</p>
           <Button
             size="sm"
@@ -204,12 +204,12 @@ export function ContactsListClient() {
           </Button>
         </Card>
       ) : allContacts.length === 0 ? (
-        <Card className="p-2">
+        <Card className="hover-raise p-2">
           <EmptyContacts />
         </Card>
       ) : (
         <>
-          <Card className="overflow-hidden">
+          <Card className="hover-raise overflow-hidden">
             <ContactsTable
               contacts={allContacts}
               orderBy={orderBy}

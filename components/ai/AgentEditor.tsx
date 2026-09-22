@@ -200,7 +200,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
         </TabsList>
 
         <TabsContent value="general">
-          <Card className="space-y-4 p-4">
+          <Card className="hover-raise space-y-4 p-4">
             <div className="space-y-1">
               <Label htmlFor="name">{t("Nome")}</Label>
               <Input
@@ -239,7 +239,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
         </TabsContent>
 
         <TabsContent value="model">
-          <Card className="space-y-4 p-4">
+          <Card className="hover-raise space-y-4 p-4">
             <div className="space-y-1">
               <Label>{t("Modelo")}</Label>
               <Select
@@ -310,7 +310,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
         </TabsContent>
 
         <TabsContent value="rag">
-          <Card className="space-y-4 p-4">
+          <Card className="hover-raise space-y-4 p-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <Label>Top K (1–20)</Label>
@@ -362,7 +362,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
         </TabsContent>
 
         <TabsContent value="guardrails">
-          <Card className="p-4">
+          <Card className="hover-raise p-4">
             <GuardrailsEditor
               value={formState.guardrails}
               onChange={(v) => patchForm({ guardrails: v })}

@@ -63,7 +63,7 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
     return (
       <div className="space-y-6 p-6">
         <h1 className="text-2xl font-medium tracking-tight text-text">{textos.titulo}</h1>
-        <Card className="p-8 text-center text-sm text-muted-foreground">{textos.semBase}</Card>
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.semBase}</Card>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
       {lista === null ? (
         <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
       ) : lista.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">{textos.vazio}</Card>
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.vazio}</Card>
       ) : (
         <ul className="space-y-2">
           {lista.map((c) => {

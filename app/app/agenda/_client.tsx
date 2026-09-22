@@ -663,7 +663,7 @@ export function AgendaClient({
           limpo. O mesmo formato do defeito que `agenda-tela-do-produto` já
           tinha pago: verde por banco sujo. */}
       {agendamentos.length === 0 ? (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="hover-raise rounded-lg border border-border bg-surface p-4">
           <EmptyAgenda />
         </div>
       ) : null}

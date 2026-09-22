@@ -82,7 +82,7 @@ export function AcoesFiscais({
 
   return (
     <div className="space-y-5">
-      <Card className="space-y-3 p-4 sm:p-5">
+      <Card className="hover-raise space-y-3 p-4 sm:p-5">
         <h2 className="flex items-center gap-2 text-base font-medium text-text">
           <FileText size={18} className="text-muted-foreground" />
           {textos.inutilizarNum}
@@ -132,12 +132,12 @@ export function AcoesFiscais({
         </div>
       </Card>
 
-      <Card className="space-y-2 p-4 sm:p-5">
+      <Card className="hover-raise space-y-2 p-4 sm:p-5">
         <h2 className="text-base font-medium text-text">{textos.notasInutilizadas}</h2>
         {inutilizacoesIniciais.length === 0 ? (
           <p className="text-sm text-muted-foreground">{textos.nenhumaInutilizacao}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+          <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -186,7 +186,7 @@ export function AcoesFiscais({
         )}
       </Card>
 
-      <Card className="space-y-1 p-4 sm:p-5">
+      <Card className="hover-raise space-y-1 p-4 sm:p-5">
         <h2 className="text-base font-medium text-text">{textos.ibpt}</h2>
         <p className="text-sm text-muted-foreground">{textos.semIbpt}</p>
       </Card>

@@ -249,7 +249,7 @@ export function NexusIntelligence() {
         </div>
 
         <aside aria-label={t("Contexto selecionado")} className="space-y-4">
-          <section className="rounded-lg border border-border bg-surface p-4 shadow-xs">
+          <section className="hover-raise rounded-lg border border-border bg-surface p-4 shadow-xs">
             <h2 className="text-sm font-semibold text-text">{t("Contexto")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{ctx.resumo}</p>
             {selecionados.length > 0 ? (
@@ -300,7 +300,7 @@ export function NexusIntelligence() {
             ) : null}
           </section>
 
-          <section className="rounded-lg border border-border bg-surface p-4 shadow-xs">
+          <section className="hover-raise rounded-lg border border-border bg-surface p-4 shadow-xs">
             <h2 className="text-sm font-semibold text-text">{t("Legenda")}</h2>
             <ul className="mt-2 grid grid-cols-2 gap-1 text-xs text-muted-foreground">
               {itensLegenda.map(([kind, rotulo]) => {

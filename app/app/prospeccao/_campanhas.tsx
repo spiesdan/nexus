@@ -88,7 +88,7 @@ export function CampanhasTab({
       {lista === null ? (
         <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
       ) : lista.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
           {t("Nenhuma campanha ainda.")}
         </Card>
       ) : (

@@ -228,7 +228,7 @@ export function CargaClient({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-2 sm:grid-cols-3">
-            <Card className="p-3">
+            <Card className="hover-raise p-3">
               <p className="text-xs tracking-wide text-muted-foreground uppercase">
                 {textos.totalMercadorias}
               </p>
@@ -236,13 +236,13 @@ export function CargaClient({
                 {comoMoeda(totalMercadorias, "BRL")}
               </p>
             </Card>
-            <Card className="p-3">
+            <Card className="hover-raise p-3">
               <p className="text-xs tracking-wide text-muted-foreground uppercase">
                 {textos.aCobrar}
               </p>
               <p className="text-lg font-semibold tabular-nums">{comoMoeda(aCobrar, "BRL")}</p>
             </Card>
-            <Card className="p-3">
+            <Card className="hover-raise p-3">
               <p className="text-xs tracking-wide text-muted-foreground uppercase">
                 {textos.paradasConcluidas}
               </p>
@@ -329,7 +329,7 @@ export function CargaClient({
           {textos.rota} ({itens.length})
         </h2>
         {itens.length === 0 ? (
-          <Card className="p-6 text-center text-sm text-muted-foreground">
+          <Card className="hover-raise p-6 text-center text-sm text-muted-foreground">
             {t("Nenhum pedido embarcado.")}
           </Card>
         ) : (

@@ -202,19 +202,19 @@ export function ComissoesClient({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Comissão do mês")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalComissao, "BRL")}
           </p>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("Já baixado")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalBaixado, "BRL")}
           </p>
         </Card>
-        <Card className="p-4">
+        <Card className="hover-raise p-4">
           <p className="text-sm text-muted-foreground">{t("A pagar")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">
             {comoMoeda(totalComissao - totalBaixado, "BRL")}

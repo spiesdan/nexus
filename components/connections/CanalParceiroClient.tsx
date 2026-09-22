@@ -124,7 +124,7 @@ export function CanalParceiroClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="flex flex-col gap-4 p-4">
+      <Card className="hover-raise flex flex-col gap-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">
@@ -200,7 +200,7 @@ export function CanalParceiroClient() {
       {/* Só depois de conectar: antes disso não há URL nem segredo a mostrar, e
           um passo 2 vazio faz parecer que falta algo que ainda não podia existir. */}
       {recemConectado && (
-        <Card className="flex flex-col gap-4 border-warning/40 bg-warning-bg p-4">
+        <Card className="hover-raise flex flex-col gap-4 border-warning/40 bg-warning-bg p-4">
           <div>
             <h3 className="text-sm font-semibold">{t("Falta ligar a volta")}</h3>
             <p className="text-xs text-muted-foreground">
@@ -224,7 +224,7 @@ export function CanalParceiroClient() {
       )}
 
       {conectado && !recemConectado && estado?.webhook_url && (
-        <Card className="flex flex-col gap-3 p-4">
+        <Card className="hover-raise flex flex-col gap-3 p-4">
           <div>
             <h3 className="text-sm font-semibold">Webhook</h3>
             <p className="text-xs text-muted-foreground">

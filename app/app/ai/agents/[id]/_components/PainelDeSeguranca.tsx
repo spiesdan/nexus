@@ -140,7 +140,7 @@ export function PainelDeSeguranca() {
 
   return (
     <div className="space-y-4" data-testid="painel-de-seguranca">
-      <Card className="space-y-2 p-4">
+      <Card className="hover-raise space-y-2 p-4">
         <h3 className="text-sm font-medium">{t("Antes de cada mensagem sair")}</h3>
         <p className="text-xs text-muted-foreground">
           {t("O assistente escreve, e o sistema confere. São")} {CONFERENCIAS_DE_SAIDA.length}{" "}
@@ -155,7 +155,7 @@ export function PainelDeSeguranca() {
         </ul>
       </Card>
 
-      <Card className="space-y-2 p-4">
+      <Card className="hover-raise space-y-2 p-4">
         <h3 className="text-sm font-medium">{t("Antes de o assistente ler")}</h3>
         <p className="text-xs text-muted-foreground">
           {t("Esta roda sobre a mensagem que chega, antes das outras — por isso aparece separada.")}

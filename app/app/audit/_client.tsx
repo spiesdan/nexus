@@ -66,7 +66,7 @@ export function AuditClient() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
           <div className="space-y-1">
             <label className="block text-xs text-muted-foreground">{t("Ação contém")}</label>

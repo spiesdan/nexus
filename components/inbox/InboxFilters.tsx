@@ -2,7 +2,6 @@
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useState } from "react";
 import { MagnifyingGlass } from "@/lib/ui/icons";
-import { WA } from "@/components/inbox/whatsapp-theme";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -106,7 +105,7 @@ export function InboxFilters({ value, onChange }: Props) {
   }, [searchInput]);
 
   return (
-    <div className={`space-y-3 border-b border-border px-3 py-3 ${WA.bar}`}>
+    <div className="space-y-3 border-b border-border bg-card px-3 py-3">
       <div className="relative">
         <MagnifyingGlass
           size={14}

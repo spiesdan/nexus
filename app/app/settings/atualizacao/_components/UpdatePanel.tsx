@@ -467,7 +467,7 @@ function Layout({ titulo, children }: { titulo?: string; children: React.ReactNo
           {titulo ?? t("Atualização do sistema")}
         </h1>
       </header>
-      <Card className="p-6">{children}</Card>
+      <Card className="hover-raise p-6">{children}</Card>
     </div>
   );
 }

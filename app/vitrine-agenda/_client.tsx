@@ -225,7 +225,7 @@ export function VitrineDaAgenda() {
         titulo="Os estados"
         descricao="Vazio, carregando e erro — os três que aparecem antes de qualquer dado existir, e que decidem a primeira impressão de quem acabou de instalar."
       >
-        <div className="rounded-lg border border-border bg-surface">
+        <div className="hover-raise rounded-lg border border-border bg-surface">
           <EmptyAgenda primary={{ label: "Criar um tipo de agendamento", onClick: () => {} }} />
         </div>
         <div className="flex h-[280px]">

@@ -257,13 +257,13 @@ export function GradeNotas({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{textos.total}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
             {comoMoeda(totalCents, "BRL")}
           </p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{textos.autorizadas}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
             {comoMoeda(autorizadasCents, "BRL")}
@@ -272,11 +272,11 @@ export function GradeNotas({
             {inicial.filter((n) => n.status === "autorizada").length} {textos.notas}
           </p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{textos.pendentes}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">{pendentes}</p>
         </Card>
-        <Card className="p-3">
+        <Card className="hover-raise p-3">
           <p className="text-xs text-muted-foreground">{textos.comErro}</p>
           <p className="mt-1 text-2xl font-semibold text-text tabular-nums">{comErro}</p>
         </Card>
@@ -358,7 +358,7 @@ export function GradeNotas({
             <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -505,7 +505,7 @@ export function GradeNotas({
                   </TableBody>
                 </Table>
               </div>
-              <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
                 <Table>
                   <TableBody>
                     <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
@@ -534,7 +534,7 @@ export function GradeNotas({
           role="dialog"
           aria-modal="true"
         >
-          <Card className="w-full max-w-lg space-y-3 p-4">
+          <Card className="hover-raise w-full max-w-lg space-y-3 p-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-base font-medium text-text">{textos.cartaCorrecao}</h2>
               <Button
@@ -629,7 +629,7 @@ function DetalheNota({ id, textos }: { id: string; textos: Textos }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="space-y-3">
-        <div className="space-y-2 rounded-lg border border-border bg-surface p-3 text-sm">
+        <div className="hover-raise space-y-2 rounded-lg border border-border bg-surface p-3 text-sm">
           {dados.provedor ? (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">{textos.provedor}</span>

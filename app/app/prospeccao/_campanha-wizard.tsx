@@ -212,7 +212,7 @@ export function CampanhaWizard({
   );
 
   return (
-    <Card className="space-y-4 p-4">
+    <Card className="hover-raise space-y-4 p-4">
       <NexusSteps steps={PASSOS} current={passo} reached={alcancado} onGo={setPasso} />
 
       {passo === 0 && (
@@ -355,7 +355,7 @@ export function CampanhaWizard({
             />
           </div>
           {preview ? (
-            <div className="rounded-lg border border-border bg-surface-elevated p-3">
+            <div className="hover-raise rounded-lg border border-border bg-surface-elevated p-3">
               <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">
                 {t("Pré-visualização")}
               </p>

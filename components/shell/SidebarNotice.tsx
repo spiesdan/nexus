@@ -22,7 +22,7 @@ export function SidebarNotice({ collapsed }: { collapsed: boolean }) {
   if (fila <= 0) return null;
 
   return (
-    <div className="mb-1 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+    <div className="hover-raise mb-1 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
       <Bell size={14} aria-hidden className="shrink-0 text-accent" />
       <Link
         href="/app/inbox?filter=unassigned"

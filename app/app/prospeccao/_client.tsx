@@ -214,7 +214,7 @@ export function ProspeccaoClient({
 
         <TabsContent value="buscar" className="mt-4">
           {podeBuscar ? (
-            <Card className="space-y-4 p-4">
+            <Card className="hover-raise space-y-4 p-4">
               <div>
                 <p className="mb-2 text-sm font-medium">{textos.categorias}</p>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -283,7 +283,7 @@ export function ProspeccaoClient({
               </Button>
             </Card>
           ) : (
-            <Card className="p-6 text-center text-sm text-muted-foreground">
+            <Card className="hover-raise p-6 text-center text-sm text-muted-foreground">
               {t("Criar busca exige papel de atendente ou superior.")}
             </Card>
           )}
@@ -291,7 +291,7 @@ export function ProspeccaoClient({
 
         <TabsContent value="pesquisas" className="mt-4">
           {listaBuscas.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-muted-foreground">{textos.vazias}</Card>
+            <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.vazias}</Card>
           ) : (
             <ul className="space-y-3">
               {listaBuscas.map((b) => {

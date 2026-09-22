@@ -197,7 +197,7 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       ) : aba === "tarefas" ? (
         <>
           {podeRegistrar && (
-            <Card className="flex flex-wrap items-end gap-2 p-3">
+            <Card className="hover-raise flex flex-wrap items-end gap-2 p-3">
               <label className="min-w-52 flex-1 text-sm">
                 <span className="mb-1 block text-muted-foreground">{t("Nova tarefa")}</span>
                 <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={t("Visitar cliente X…")} />
@@ -259,7 +259,7 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       ) : (
         <>
           {podeRegistrar && (
-            <Card className="flex flex-wrap items-end gap-2 p-3">
+            <Card className="hover-raise flex flex-wrap items-end gap-2 p-3">
               <label className="block text-sm">
                 <span className="mb-1 block text-muted-foreground">{t("Tipo")}</span>
                 <select

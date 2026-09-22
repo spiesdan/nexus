@@ -111,7 +111,7 @@ export function ConfigTab() {
   );
 
   return (
-    <Card className="space-y-4 p-4">
+    <Card className="hover-raise space-y-4 p-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="cfg-provider">{t("Provider ativo")}</Label>

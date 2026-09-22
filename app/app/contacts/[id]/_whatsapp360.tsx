@@ -19,7 +19,7 @@ export function WhatsappDoContato({
   const t = useT();
   if (!conversa) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
+      <div className="hover-raise rounded-lg border border-border bg-surface p-6 text-center text-sm text-muted-foreground">
         {t("Este cliente ainda não tem conversa no WhatsApp.")}
       </div>
     );
@@ -28,7 +28,7 @@ export function WhatsappDoContato({
   const preview = conversa.preview?.trim();
 
   return (
-    <div className="space-y-3 rounded-lg border border-border bg-surface p-4">
+    <div className="hover-raise space-y-3 rounded-lg border border-border bg-surface p-4">
       <div className="flex items-start gap-2.5">
         <ChatCircle
           size={20}

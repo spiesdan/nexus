@@ -84,7 +84,7 @@ export function ConfigFiscal({
   }
 
   return (
-    <Card className="space-y-5 p-4 sm:p-5">
+    <Card className="hover-raise space-y-5 p-4 sm:p-5">
       <div className="flex items-center gap-2">
         <h2 className="text-base font-medium text-text">{textos.config}</h2>
         {ambiente === "homologacao" && <Badge variant="warning">{textos.homologacao}</Badge>}

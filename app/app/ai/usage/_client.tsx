@@ -28,7 +28,7 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <Card className="p-4">
+    <Card className="hover-raise p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}

@@ -231,7 +231,7 @@ export function EntradasFiscais({
           primary={undefined}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">

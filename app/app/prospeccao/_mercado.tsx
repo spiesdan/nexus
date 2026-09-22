@@ -72,31 +72,31 @@ export function MercadoTab() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <p className="text-sm text-muted-foreground">{t("Empresas")}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{dados.totais.empresas}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <p className="text-sm text-muted-foreground">{t("Telefones")}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{dados.totais.com_telefone}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <p className="text-sm text-muted-foreground">{t("Clientes")}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
                 {dados.totais.clientes_vinculados + dados.totais.clientes_extras_por_telefone}
               </p>
             </Card>
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <p className="text-sm text-muted-foreground">{t("Prospects")}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{dados.totais.prospects}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="hover-raise p-4">
               <p className="text-sm text-muted-foreground">{t("Com website")}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{dados.totais.com_website}</p>
             </Card>
           </div>
 
-          <Card className="p-4">
+          <Card className="hover-raise p-4">
             <h2 className="mb-3 text-base font-medium text-text">{t("Potencial por cidade")}</h2>
             {dados.por_cidade.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("Sem dados ainda — rode uma busca.")}</p>
@@ -119,7 +119,7 @@ export function MercadoTab() {
             )}
           </Card>
 
-          <Card className="p-4">
+          <Card className="hover-raise p-4">
             <h2 className="mb-3 text-base font-medium text-text">{t("Por categoria")}</h2>
             <ul className="space-y-2">
               {dados.por_categoria.slice(0, 15).map((c) => (

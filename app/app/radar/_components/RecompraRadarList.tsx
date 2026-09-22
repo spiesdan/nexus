@@ -188,7 +188,7 @@ export function RecompraRadarList({
                     {t(ROTULO_FAIXA[faixa])}
                   </h3>
                 )}
-                <Card className="space-y-2 p-4">
+                <Card className="hover-raise space-y-2 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/app/contacts/${l.contact_id}`}

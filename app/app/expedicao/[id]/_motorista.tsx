@@ -237,7 +237,7 @@ export function ModoMotorista({
 
   return (
     <div className="mx-auto max-w-md space-y-3">
-      <Card className="p-3">
+      <Card className="hover-raise p-3">
         <div className="flex items-center justify-between text-sm">
           <strong>
             {feitas}/{rota.paradas.length} {t("entregas")}
@@ -255,7 +255,7 @@ export function ModoMotorista({
       </Card>
 
       {fila.length > 0 && (
-        <Card className="border-amber-500 p-3 text-sm">
+        <Card className="hover-raise border-amber-500 p-3 text-sm">
           <p>
             ⏳ {fila.length} {t("aguardando envio (sem internet)")}
           </p>
@@ -265,7 +265,7 @@ export function ModoMotorista({
         </Card>
       )}
 
-      {versaoNova && (        <Card className="border-orange-500 p-3 text-sm">
+      {versaoNova && (        <Card className="hover-raise border-orange-500 p-3 text-sm">
           <p>{t("A rota foi alterada no painel de expedição. Nova sequência disponível.")}</p>
           <div className="mt-2 flex gap-2">
             <Button size="sm" onClick={() => { setVersaoVista(rota.carga.rota_versao); void recarregar(); }}>
@@ -285,7 +285,7 @@ export function ModoMotorista({
       )}
 
       {proxima ? (
-        <Card className="space-y-2 p-4">
+        <Card className="hover-raise space-y-2 p-4">
           <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("PRÓXIMA ENTREGA")}</p>
           <p className="text-lg font-bold">{proxima.cliente}</p>
           {proxima.endereco && <p className="text-sm">{proxima.endereco}</p>}
@@ -369,7 +369,7 @@ export function ModoMotorista({
           )}
         </Card>
       ) : (
-        <Card className="p-4 text-center text-sm">
+        <Card className="hover-raise p-4 text-center text-sm">
           <p className="font-semibold">{t("Todas as paradas concluídas.")}</p>
           {podeOperar && rota.carga.status === "em_rota" && (
             <Button className="mt-2 w-full" onClick={() => void transicao("finalizar")}>
@@ -380,7 +380,7 @@ export function ModoMotorista({
       )}
 
       {/* Lista compacta */}
-      <Card className="p-2">
+      <Card className="hover-raise p-2">
         <ul className="divide-y text-sm">
           {rota.paradas.map((p, i) => {
             const temPendente = p.pedidos.some((x) => mapaFila.has(x.order_id));

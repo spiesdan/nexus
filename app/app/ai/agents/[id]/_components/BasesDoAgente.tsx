@@ -61,7 +61,7 @@ export function BasesDoAgente({ materiais, value, onChange, disabled = false }: 
   const acervoTodoDeFora = materiais.length > 0 && value.length === 0;
 
   return (
-    <Card className="space-y-3 p-4">
+    <Card className="hover-raise space-y-3 p-4">
       <div>
         <h3 className="text-sm font-medium">{t("O que ele consulta antes de responder")}</h3>
         <p className="text-xs text-muted-foreground">

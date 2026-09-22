@@ -104,7 +104,7 @@ export function ExecucoesDeIa() {
   if (erro) {
     return (
       <div className="p-6">
-        <Card className="border-destructive/40 p-6">
+        <Card className="hover-raise border-destructive/40 p-6">
           <h2 className="font-medium">{t("Não consegui carregar as execuções")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{erro}</p>
           <Button className="mt-4" variant="outline" onClick={() => void carregar()}>

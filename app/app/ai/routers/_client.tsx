@@ -65,7 +65,7 @@ export function RoutersClient({ initialState, channelSessions }: Props) {
       </div>
 
       {routers.length === 0 ? (
-        <Card className="flex flex-col items-center gap-3 p-10 text-center">
+        <Card className="hover-raise flex flex-col items-center gap-3 p-10 text-center">
           <Signpost size={32} className="text-muted-foreground" aria-hidden />
           <p className="max-w-md text-sm text-muted-foreground">
             {t(
@@ -83,7 +83,7 @@ export function RoutersClient({ initialState, channelSessions }: Props) {
           {routers.map((r) => (
             <li key={r.id}>
               <Link href={`/app/ai/routers/${r.id}`}>
-                <Card className="flex h-full flex-col gap-2 p-4 transition-colors hover:border-accent">
+                <Card className="hover-raise flex h-full flex-col gap-2 p-4 transition-colors hover:border-accent">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="truncate font-medium" title={r.name}>
                       {r.name}

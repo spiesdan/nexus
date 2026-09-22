@@ -50,7 +50,7 @@ export function ComprasDoContato({ contactId }: { contactId: string }) {
 
   if (pedidos.length === 0) {
     return (
-      <Card className="p-6 text-center text-sm text-muted-foreground">
+      <Card className="hover-raise p-6 text-center text-sm text-muted-foreground">
         {t("Nenhum pedido deste cliente ainda.")}
       </Card>
     );
@@ -62,7 +62,7 @@ export function ComprasDoContato({ contactId }: { contactId: string }) {
 
   return (
     <div className="space-y-3">
-      <Card className="p-4">
+      <Card className="hover-raise p-4">
         <p className="text-sm text-muted-foreground">
           {t("Total comprado (sem cancelados)")}
         </p>

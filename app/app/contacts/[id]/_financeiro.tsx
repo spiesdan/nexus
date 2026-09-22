@@ -64,7 +64,7 @@ export function FinanceiroDoContato({
   }
 
   return (
-    <Card className="space-y-4 p-4">
+    <Card className="hover-raise space-y-4 p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="limite">{t("Limite de crédito (R$)")}</Label>
@@ -136,7 +136,7 @@ export function ContasDoCliente({ contactId }: { contactId: string }) {
 
   if (resumo === null || resumo.qtd === 0) return null;
   return (
-    <Card className="flex flex-wrap items-center gap-x-6 gap-y-1 p-4 text-sm">
+    <Card className="hover-raise flex flex-wrap items-center gap-x-6 gap-y-1 p-4 text-sm">
       <p>
         <span className="text-muted-foreground">{t("Em aberto")}: </span>
         <strong className="tabular-nums">{comoMoeda(resumo.aberto_cents, "BRL")}</strong>
