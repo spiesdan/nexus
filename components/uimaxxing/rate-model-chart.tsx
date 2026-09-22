@@ -61,7 +61,7 @@ export function RateModelChart() {
             {PARAMS.map((param) => (
               <div
                 key={param.label}
-                className="row-hover -mx-2 flex items-center justify-between gap-3 rounded px-2 py-0.5 text-xs"
+                className="row-hover -mx-2 flex items-center justify-between gap-3 rounded-sm px-2 py-0.5 text-xs"
               >
                 <span className="flex items-center gap-1.5 text-fg-muted">
                   {param.label}

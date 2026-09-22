@@ -131,13 +131,13 @@ export function PlanCompare() {
 
             <ul className="mt-4 space-y-3 text-[13px]">
               {plan.accents.map(({ icon: Glyph, label }) => (
-                <li key={label} className="row-hover -mx-1.5 flex items-start gap-2 rounded px-1.5 py-0.5">
+                <li key={label} className="row-hover -mx-1.5 flex items-start gap-2 rounded-sm px-1.5 py-0.5">
                   <Glyph className="mt-0.5 size-3.5 shrink-0 text-accent-blue" />
                   <span className="font-medium text-accent-blue">{label}</span>
                 </li>
               ))}
               {plan.checks.map((item) => (
-                <li key={item} className="row-hover -mx-1.5 flex items-start gap-2 rounded px-1.5 py-0.5">
+                <li key={item} className="row-hover -mx-1.5 flex items-start gap-2 rounded-sm px-1.5 py-0.5">
                   <CheckIcon className="mt-0.5 size-3.5 shrink-0 text-fg-muted" />
                   <span className="text-fg-secondary">{item}</span>
                 </li>

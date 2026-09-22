@@ -179,7 +179,7 @@ export function MarketsTable() {
             <input
               type="text"
               placeholder="Search markets"
-              className="w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-muted"
+              className="w-full bg-transparent text-[13px] text-fg outline-hidden placeholder:text-fg-muted"
             />
           </label>
           <div className="flex h-9 shrink-0 items-center rounded-[10px] bg-white/[0.04] p-1">

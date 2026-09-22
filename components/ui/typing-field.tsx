@@ -183,7 +183,7 @@ export function TypingField({
           setTyping(false);
         }}
         className={cn(
-          "absolute inset-0 w-full bg-transparent text-transparent caret-transparent outline-none placeholder:text-transparent",
+          "absolute inset-0 w-full bg-transparent text-transparent caret-transparent outline-hidden placeholder:text-transparent",
           inputClassName,
         )}
       />

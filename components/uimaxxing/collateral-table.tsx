@@ -52,7 +52,7 @@ export function CollateralTable() {
           </span>
           <button
             type="button"
-            className="interactive flex items-center gap-1.5 rounded px-1 text-[10px] font-medium uppercase tracking-[0.12em] text-fg-muted hover:text-fg"
+            className="interactive flex items-center gap-1.5 rounded-sm px-1 text-[10px] font-medium uppercase tracking-[0.12em] text-fg-muted hover:text-fg"
           >
             Collateral Factor
             <CaretUpDownIcon className="size-3" weight="bold"/>

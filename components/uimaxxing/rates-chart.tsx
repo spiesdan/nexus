@@ -53,7 +53,7 @@ export function RatesChart() {
           {RATES.map((rate, i) => (
             <div key={rate.label}>
               {i > 0 ? <div className="my-5 border-t border-border" /> : null}
-              <div className="row-hover -mx-2 flex items-center gap-1.5 rounded px-2">
+              <div className="row-hover -mx-2 flex items-center gap-1.5 rounded-sm px-2">
                 <span className="text-xs text-fg-muted">{rate.label}</span>
                 <InfoIcon className="size-3 text-fg-muted" weight="bold"/>
               </div>
@@ -74,7 +74,7 @@ export function RatesChart() {
                   key={range}
                   type="button"
                   className={cn(
-                    "interactive rounded px-1.5 py-0.5 text-[11px] leading-none hover:bg-white/[0.06]",
+                    "interactive rounded-sm px-1.5 py-0.5 text-[11px] leading-none hover:bg-white/[0.06]",
                     range === ACTIVE_RANGE
                       ? "font-medium text-fg"
                       : "text-fg-muted",

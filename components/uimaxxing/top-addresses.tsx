@@ -68,7 +68,7 @@ export function TopAddresses() {
           <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-fg-muted">
             Holder
           </span>
-          <button type="button" className="interactive flex items-center gap-1 rounded px-1 text-[10px] font-medium uppercase tracking-[0.12em] text-fg-muted hover:text-fg">
+          <button type="button" className="interactive flex items-center gap-1 rounded-sm px-1 text-[10px] font-medium uppercase tracking-[0.12em] text-fg-muted hover:text-fg">
             Share of Deposits
             <CaretUpDownIcon className="size-3 shrink-0" weight="bold"/>
           </button>

@@ -80,7 +80,7 @@ export function CommandDock() {
         <input
           type="text"
           placeholder="Search for actions, people, instruments"
-          className="w-full bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-muted"
+          className="w-full bg-transparent text-[13px] text-fg outline-hidden placeholder:text-fg-muted"
         />
       </div>
 
