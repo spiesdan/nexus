@@ -3,10 +3,11 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Data Table — Visitors (DESIGN.md): gridlines Fog, sem zebra, cabeçalho
- * Carbon em peso 600, corpo Graphite. O raio do contêiner (24px) fica com quem
- * envolve a tabela — a base não impõe moldura para não duplicar a borda onde a
- * tela já desenha uma.
+ * Data Table — padrão de tabela UImaxxing (ver `markets-table.tsx`).
+ * Cabeçalho em caixa alta com tracking largo (assinatura do registry), linhas
+ * com `row-hover` (hover sutil em tema claro e escuro via `--ink`). O raio do
+ * contêiner fica com quem envolve a tabela — a base não impõe moldura para não
+ * duplicar a borda onde a tela já desenha uma.
  */
 
 const Table = React.forwardRef<
@@ -65,7 +66,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "row-hover border-b transition-colors data-[state=selected]:bg-muted",
       className
     )}
     {...props}
@@ -80,7 +81,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-semibold text-text [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "h-9 px-3 text-left align-middle text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props}

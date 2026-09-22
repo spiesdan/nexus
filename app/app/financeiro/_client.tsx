@@ -340,13 +340,13 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
               <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-xs text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">{t("Vencimento")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Cliente")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Parcela")}</th>
-                      <th className="px-3 py-2 text-right font-medium">{t("Valor")}</th>
-                      <th className="px-3 py-2 text-right font-medium">{t("Saldo")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Status")}</th>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Cliente")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
+                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Valor")}</th>
+                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Saldo")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Status")}</th>
                       <th className="px-3 py-2">
                         <span className="sr-only">{t("Ações")}</span>
                       </th>
@@ -355,7 +355,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
                   <tbody>
                     {linhas.map((l) => (
                       <React.Fragment key={l.id}>
-                        <tr className="border-b align-top last:border-0 hover:bg-muted/50">
+                        <tr className="row-hover border-b align-top last:border-0">
                           <td className="px-3 py-2 whitespace-nowrap tabular-nums">
                             {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
                             {l.dias_atraso > 0 && (

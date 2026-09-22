@@ -28,8 +28,9 @@ export const nexusTokens = {
 export type NexusTokens = typeof nexusTokens;
 
 /** Classes canônicas de container de tabela/lista (mobile: vira cards via `renderCard`). */
+/** Container canônico de tabela: padrão UImaxxing (fill-well + hairline). */
 export const nexusTableContainerClass =
-  "overflow-x-auto rounded-lg border border-border bg-surface";
+  "overflow-x-auto rounded-xl border border-border fill-well";
 
 /** Altura mínima de alvo de toque (mobile): aplicada via `min-h-[44px] lg:min-h-0`. */
 export const nexusTouchTargetClass = "min-h-[44px] lg:min-h-0";

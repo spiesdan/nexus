@@ -22,6 +22,7 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
+import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -424,11 +425,12 @@ export function IndicadoresClient({
 
       {/* EVOLUÇÃO DE VENDA */}
       <Card className="hover-raise p-4">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-4">
           <p className="text-sm font-semibold tracking-wide">{t("EVOLUÇÃO DE VENDA")}</p>
           <p className="text-xs text-muted-foreground uppercase">{dados.rotuloMes}</p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
+        {comparar ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_260px]">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dados.serie} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -549,6 +551,19 @@ export function IndicadoresClient({
             </div>
           </div>
         </div>
+        ) : (
+          <CrmSalesChart
+            pontos={dados.serie.map((s) => ({
+              dia: s.dia,
+              vendidoAc: s.vendaAc,
+              metaAc: s.metaAc,
+              projecao: s.projecao,
+            }))}
+            metaAc={dados.objetivo ?? 0}
+            projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
+            previsaoMes={dados.previsaoMes}
+          />
+        )}
         <div className="mt-2 border-t pt-2 text-center">
           <Link href="/app/pedidos" className="text-sm underline underline-offset-4">
             {t("Detalhar por vendedor")}
@@ -705,11 +720,11 @@ export function IndicadoresClient({
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted-foreground">
-                <th className="py-1 pr-3 font-medium">{t("Vendedor")}</th>
-                <th className="py-1 pr-3 text-right font-medium">{t("Pedidos")}</th>
-                <th className="py-1 pr-3 text-right font-medium">{t("Ticket médio")}</th>
-                <th className="py-1 pr-3 text-right font-medium">{t("Total")}</th>
-                <th className="py-1 text-right font-medium">{t("Meta")}</th>
+                <th className="py-1 pr-3 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vendedor")}</th>
+                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Pedidos")}</th>
+                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Ticket médio")}</th>
+                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Total")}</th>
+                <th className="py-1 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Meta")}</th>
               </tr>
             </thead>
             <tbody>
