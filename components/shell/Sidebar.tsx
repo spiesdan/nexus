@@ -138,7 +138,7 @@ export function SidebarContent({
               ) : (
                 <h2
                   id={tituloId}
-                  className="px-3 text-[10px] font-medium tracking-wider text-muted-foreground uppercase"
+                  className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
                 >
                   {t(group.label)}
                 </h2>
@@ -162,10 +162,10 @@ export function SidebarContent({
                           // Pill nos links (assinatura Visitors); a altura da
                           // linha não muda — o e2e `navegacao.spec.ts` exige o
                           // menu inteiro em 900px sem scroll.
-                          "relative flex items-center gap-3 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                          "row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                           isActive
                             ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                            : "text-muted-foreground hover:text-foreground",
                           collapsed && "justify-center px-2",
                         )}
                       >
@@ -188,10 +188,10 @@ export function SidebarContent({
                       aria-current={pathname === group.hub.href ? "page" : undefined}
                       onClick={onNavigate}
                       className={cn(
-                        "flex items-center gap-3 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                        "row-hover interactive flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                         pathname === group.hub.href
                           ? "bg-accent text-accent-foreground"
-                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                          : "text-muted-foreground hover:text-foreground",
                         collapsed && "justify-center px-2",
                       )}
                     >
@@ -213,10 +213,10 @@ export function SidebarContent({
             aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
             onClick={onNavigate}
             className={cn(
-              "mb-1 flex items-center gap-3 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+              "row-hover interactive mb-1 flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
               pathname.startsWith(rodape.href)
                 ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                : "text-muted-foreground hover:text-foreground",
               collapsed && "justify-center px-2",
             )}
           >
@@ -232,7 +232,7 @@ export function SidebarContent({
             onClick={() => startTransition(() => toggleSidebar(collapsed))}
             disabled={isPending}
             className={cn(
-              "flex w-full items-center gap-2 rounded-full px-3 py-2 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+              "row-hover interactive flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground",
               collapsed && "justify-center px-2",
             )}
             aria-label={collapsed ? t("Expandir sidebar") : t("Recolher sidebar")}
