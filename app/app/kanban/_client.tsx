@@ -288,7 +288,11 @@ export function FunisClient({
                       <span className="flex items-center gap-2">
                         <span className="text-sm font-medium group-hover:underline">{funil.name}</span>
                         {funil.is_default && (
-                          <Badge variant="secondary" className="text-[10px]">
+                          // `outline`, não `secondary`: secondary é bg
+                          // surface-elevated + text-muted (4,44 no dark, abaixo
+                          // do piso 4.5:1 do a11y do e2e). Outline usa text-text
+                          // sobre o fundo da página e passa nos dois temas.
+                          <Badge variant="outline" className="text-[10px]">
                             {t("Padrão")}
                           </Badge>
                         )}

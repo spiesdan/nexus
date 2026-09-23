@@ -52,8 +52,22 @@ test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ 
     .poll(async () => marcadores.count(), { timeout: 30_000 })
     .toBeGreaterThanOrEqual(2);
 
-  await marcadores.first().click();
-  await expect(page.getByRole("button", { name: /ver empresa/i }).first()).toBeVisible({ timeout: 20_000 });
+  // O `.first()` nem sempre é um ponto: pode ser o marco do centro (não
+  // clicável) ou um CLUSTER — e o clique no cluster APROXIMA (zoom+2, o gesto
+  // certo do produto), re-renderizando a camada no meio do clique e matando o
+  // handle. Tenta cada marcador até a popup "Ver empresa" abrir,
+  // re-consultando a cada volta porque o zoom invalida os elementos.
+  const verEmpresa = page.getByRole("button", { name: /ver empresa/i }).first();
+  let abriu = false;
+  for (let volta = 0; volta < 6 && !abriu; volta++) {
+    const n = await marcadores.count();
+    for (let i = 0; i < n && !abriu; i++) {
+      await marcadores.nth(i).click({ timeout: 8_000 }).catch(() => undefined);
+      await page.waitForTimeout(500);
+      abriu = await verEmpresa.isVisible().catch(() => false);
+    }
+  }
+  await expect(verEmpresa, "nenhum marcador abriu a popup de empresa").toBeVisible({ timeout: 20_000 });
 
   await page.getByRole("button", { name: /ver empresa/i }).first().click();
   await expect(page.getByRole("dialog").first()).toBeVisible({ timeout: 20_000 });
