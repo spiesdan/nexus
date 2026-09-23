@@ -6,15 +6,16 @@ import { motivoDoErro } from "./psql-transporte";
 /**
  * O LOGO NO STORAGE — E AS TRÊS PROPRIEDADES QUE SÓ O BANCO PODE TESTEMUNHAR.
  *
- * ## 1. O bucket público é UM, e é este
+ * ## 1. Os buckets públicos são os DOIS que o produto serve sem sessão — e só eles
  *
- * `brand-logos` é o primeiro bucket `public = true` do repositório: os quatro que
- * já existiam (`ai-policy`, `lgpd-exports`, `skill-assets`, `whatsapp-media`)
- * nascem privados, e um deles guarda a mídia das conversas de todos os clientes.
- * A exceção tem razão medida (o logo é renderizado num `<img>` da tela de login,
- * onde não há sessão para assinar URL, e URL assinada VENCE — a marca sumiria da
- * fachada sozinha). O que este arquivo faz é o que documentar não faz: transformar
- * "é a única exceção" numa afirmação que reprova quando deixa de ser verdade.
+ * `brand-logos` foi o primeiro bucket `public = true` do repositório; `product-images`
+ * (0219) é o segundo, no MESMO molde: os outros (`ai-policy`, `lgpd-exports`,
+ * `skill-assets`, `whatsapp-media`) nascem privados, e um deles guarda a mídia das
+ * conversas de todos os clientes. A exceção tem razão medida (o logo é renderizado
+ * num `<img>` da tela de login; a foto do produto aparece em catálogo/portal futuro —
+ * em ambos não há sessão para assinar URL, e URL assinada VENCE). O que este arquivo
+ * faz é o que documentar não faz: transformar "é a única exceção" numa afirmação que
+ * reprova quando deixa de ser verdade.
  *
  * ## 2. O prefixo asseverado DENTRO da função
  *
@@ -197,7 +198,7 @@ describe("guarda de vacuidade — o que todo caso abaixo supõe", () => {
   });
 });
 
-describe("o bucket público é UM, e é o dos logos", () => {
+describe("os buckets públicos são os dois deliberados", () => {
   it("`brand-logos` existe com o teto, o tipo e a visibilidade que o produto supõe", () => {
     const linha = lastLine(
       sql(`select public::text || '|' || file_size_limit::text || '|' ||
@@ -210,14 +211,26 @@ describe("o bucket público é UM, e é o dos logos", () => {
     expect(linha).toBe("true|524288|image/png,image/jpeg");
   });
 
+  it("`product-images` é o segundo público deliberado, e continua com as contenções da 0219", () => {
+    // A 0219 nasceu depois do resto deste arquivo e não foi registrada aqui na hora:
+    // a main herdou a exceção sem a guarda. Listá-la aqui é o que impede `ai-policy`
+    // (conteúdo NDAs de clientes) de virar público com o mesmo argumento "é como o logo".
+    const linha = lastLine(
+      sql(`select public::text || '|' || file_size_limit::text || '|' ||
+                  coalesce(array_to_string(allowed_mime_types, ','), 'NULO')
+             from storage.buckets where id = 'product-images';`),
+    );
+    expect(linha).toBe("true|2097152|image/jpeg,image/png,image/webp");
+  });
+
   it("NENHUM outro bucket é público — a exceção continua sendo exceção", () => {
-    // Sem este caso, "o bucket público é só o de logos" é prosa. Com ele, tornar
+    // Sem este caso, "o bucket público é só o de logos e o de fotos" é prosa. Com ele, tornar
     // `whatsapp-media` público (que exporia o histórico de todos os clientes)
     // reprova o CI.
     const publicos = lastLine(
       sql(`select coalesce(string_agg(id, ',' order by id), 'NENHUM') from storage.buckets where public;`),
     );
-    expect(publicos).toBe("brand-logos");
+    expect(publicos).toBe("brand-logos,product-images");
   });
 
   it("NENHUMA policy de `storage.objects` nomeia o bucket — escrita só por service_role", () => {
