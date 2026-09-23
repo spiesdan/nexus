@@ -132,12 +132,12 @@ describe("cobertura do e2e no CI", () => {
     // A terceira ponta. Declarar não é executar: sem o consumo, acrescentar o nome
     // à variável deixa este gate verde e a spec continua fora do run.
     //
-    // As partes passaram a rodar em PARALELO (matrix), e o comando deixou de
-    // citar a variável direto: ele escolhe a lista pela `matrix.parte`. A
-    // propriedade que este caso guarda não mudou, então ele cobra a CADEIA
-    // inteira em vez de uma linha literal — as duas variáveis chegam a `LISTA`,
-    // e é `LISTA` que vai ao Playwright. Cobrar só o `--workers=1 $LISTA`
-    // deixaria passar um workflow onde `LISTA` nunca é atribuída.
+    // As partes rodam como passos SEQUENCIAIS do mesmo job (antes era matrix, e
+    // o comando escolhia a lista pela `matrix.parte`). A propriedade que este
+    // caso guarda não mudou, então ele cobra a CADEIA inteira em vez de uma
+    // linha literal — as duas variáveis chegam a `LISTA`, e é `LISTA` que vai
+    // ao Playwright. Cobrar só o `--workers=1 $LISTA` deixaria passar um
+    // workflow onde `LISTA` nunca é atribuída.
     expect(yml, "SPECS_PARTE_1 não alimenta a variável que roda").toMatch(/LISTA="\$SPECS_PARTE_1"/);
     expect(yml, "SPECS_PARTE_2 não alimenta a variável que roda").toMatch(/LISTA="\$SPECS_PARTE_2"/);
     expect(yml, "a lista escolhida não é passada ao Playwright").toMatch(

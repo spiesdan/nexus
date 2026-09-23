@@ -36,6 +36,9 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Manual, para re-rodar sem push (ex.: após um 429 do GHCR que não tem nada
+  # a ver com o código).
+  workflow_dispatch:
 
 # O GITHUB_TOKEN deste job serve a `actions/checkout` (clone) e a
 # `actions/setup-node` (manifest de `actions/node-versions`, repo público).
@@ -60,37 +63,57 @@ permissions:
   contents: read
   packages: read
 
+# Um push novo cancela o run anterior da mesma PR/push: sem isto, três commits
+# em sequência mantêm três Supabases consumindo runner E pulls do GHCR — e foi
+# essa pressão que levou ao `toomanyrequests` de 2026-09-23.
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # AS DUAS PARTES RODAM EM PARALELO, e o motivo é medido, não estético.
+  # JOB ÚNICO, e o motivo é medido, não estético.
   #
-  # Elas rodavam como dois passos do MESMO job, então somavam contra um único
-  # teto de 30 min. Medido no run 33125422531, o último verde antes deste
-  # conserto: parte 2 = 16,3 min, parte 1 = 8,2 min, setup (build + Supabase +
-  # browser) ≈ 4,5 min — total ≈ 29 min, com 1 min de folga. A folga acabou:
-  # dois runs da própria `main` foram CANCELADOS em 30 min exatos (23:30→00:00
-  # e 23:26→23:56 de 2026-08-27), e um PR de UM arquivo foi cancelado junto.
+  # Antes eram dois runners em matrix, cada um pagando o setup inteiro:
+  # 2× pnpm install, 2× supabase start (2× pulls Docker), 2× baseline,
+  # 2× build, 2× Chromium, 2× seeds. Além do tempo, a pressão dobrada no GHCR
+  # virou `toomanyrequests` com o stack morrendo ainda no setup (2026-09-23).
   #
-  # Em paralelo, cada parte paga o setup uma vez e tem o teto inteiro para si:
-  # o job mais longo passa a ser ≈ 21 min em vez de ≈ 29.
+  # Agora: 1 runner, 1 install, 1 Supabase, 1 build, 1 Chromium (com cache),
+  # 1 conjunto de seeds. As duas partes do Playwright continuam existindo,
+  # como passos SEQUENCIAIS do mesmo job, contra o MESMO banco.
   #
-  # E há um ganho que não era o objetivo: a razão de existirem duas partes é
-  # "processo novo, contador de login zerado" — o teto por IP. Runners de
-  # matrix são máquinas diferentes, com IPs diferentes, então a separação
-  # deixa de depender de reiniciar o processo.
+  # O que NÃO muda com a junção, e por quê é seguro:
   #
-  # O teto de 30 min FICA. Ele é o que denuncia a suíte crescendo de novo;
-  # subi-lo seria trocar um vermelho honesto por um CI que demora mais a cada
-  # mês sem ninguém perceber.
-  e2e-parte:
+  # - Cobertura: as listas SPECS_PARTE_1/2 e FORA_DO_CI continuam as únicas
+  #   fontes, e `e2e-cobertura-completa.test.ts` continua cobrando.
+  # - Login por IP: o teto segue em 1000 no CI (ver passo das partes), e cada
+  #   invocação do Playwright sobe o SEU `next start` (webServer do
+  #   playwright.config.ts, `reuseExistingServer: false`) — ou seja, cada
+  #   parte roda num processo novo, com o contador em memória zerado, como
+  #   antes. O restart do Next entre as partes SAI DE GRAÇA daí: não há PID
+  #   para gerenciar, e um `next start` manual brigaria pela mesma porta
+  #   (EADDRINUSE) com o que o Playwright sobe sozinho.
+  # - TOTP/workers: `--workers=1` continua; partes sequenciais não disputam
+  #   a mesma janela de 30s.
+  #
+  # O preço: as partes dividem o MESMO banco (antes cada runner tinha o seu).
+  # Dentro de cada parte isso já era verdade (workers=1, sequencial), e as
+  # specs se isolam por nomes únicos + limpeza própria; a parte 2 passa a ver
+  # sobras da parte 1. Se uma spec presumia banco fresco por parte, o vermelho
+  # dirá qual — e o conserto é na spec, não aqui.
+  #
+  # O teto: 60 min no job, 30 min por parte (passo). O 30 do job virou 60
+  # porque as partes SOMAM agora (medido em 08: 8,2 + 16,3 + setup 4,5 ≈ 29);
+  # o canário contra a suíte crescendo desce para o nível da parte, que é
+  # onde ele morava de verdade.
+  #
+  # O NOME DESTE JOB É O CHECK OBRIGATÓRIO: a branch protection da `main`
+  # exige um check chamado exatamente `e2e` (verify, build-and-size,
+  # invariants, e2e, imagens-ok). Antes havia um agregador com este nome por
+  # causa da matrix (`e2e-parte (1)`/`(2)`); com um job só, o nome mora aqui.
+  e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      # Sem fail-fast: se a parte 1 quebrar, ainda quero saber se a 2 também.
-      # Com ele ligado, o primeiro vermelho esconde o outro e o conserto vira
-      # uma rodada por parte.
-      fail-fast: false
-      matrix:
-        parte: [1, 2]
+    timeout-minutes: 60
     # ─────────────────────────────────────────────────────────────────────────
     # A COBERTURA DEIXA DE SER PROSA DIGITADA À MÃO.
     #
@@ -166,6 +189,11 @@ jobs:
     # O rebalanceamento das duas partes FICA, por outro motivo e sem alegar mais do que
     # faz: 6,5 + 8,1 min em vez de 2,7 + 12,2.
     env:
+      # A porta que `playwright.config.ts:89` usa quando E2E_PORT não está
+      # definido. Redigir aqui não muda nada (é o default), mas amarra as duas
+      # pontas no mesmo lugar: se um dia o config mudar, quem lê este env
+      # percebe que há um contrato do outro lado.
+      E2E_PORT: "3001"
       SPECS_PARTE_1: >-
         smoke.spec.ts auth.spec.ts error-pages.spec.ts
         icone-da-marca.spec.ts
@@ -431,13 +459,15 @@ jobs:
         run: |
           mv supabase/migrations /tmp/migrations-off
           mkdir -p supabase/migrations
-          # Retry com backoff: mesmo autenticado o GHCR devolve 429 transitório
-          # sob carga, e um 429 no pull não pode matar 30 min de CI. O gate é o
-          # `supabase status` no fim: se o stack não subiu, ele reprova.
+          # Retry com backoff progressivo: mesmo autenticado o GHCR devolve 429
+          # transitório sob carga, e um 429 no pull não pode matar 30 min de
+          # CI. Sem loop infinito e sem esconder falha definitiva: 5 tentativas
+          # (30s, 60s, 90s, 120s, 150s) e o gate é o `supabase status` no fim —
+          # se o stack não subiu, ele reprova com `exit 1`.
           for tentativa in 1 2 3 4 5; do
             supabase start && break
             echo "supabase start falhou (tentativa $tentativa/5) — esperando e tentando de novo"
-            sleep $((tentativa * 60))
+            sleep $((tentativa * 30))
           done
           supabase status
 
@@ -561,8 +591,27 @@ jobs:
           # que é o org id do DEFAULT_SENTRY_DSN (lib/sentry/dsn.ts:17).
           SENTRY_DSN: "off"
 
+      # O browser vive em `~/.cache/ms-playwright`, fora do workspace — sem
+      # cache, cada run baixa ~170MB de Chromium DEPOIS de já ter gasto pulls
+      # do GHCR. A chave amarra a versão do Playwright (que mora no
+      # pnpm-lock): bump de versão invalida o cache sozinho, sem número
+      # digitado à mão para apodrecer.
+      - name: Restaurar Chromium do cache
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Instalar o browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
+            # Só as libs do sistema: o binário veio do cache, mas runners
+            # frescos não têm libnss3 & cia. e o Chromium não abre sem elas.
+            sudo "$(which pnpm)" exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
 
       # `.env.local` é CÓPIA do `.env.e2e`, não uma terceira redação dele.
       #
@@ -623,7 +672,7 @@ jobs:
       # `required()` no lib/env.ts vira obrigatória, inclusive as de serviço que
       # estes specs nem tocam. Os valores abaixo são PLACEHOLDERS FALSOS, só
       # para o boot passar da validação Zod — nenhum segredo real entra aqui.
-      # DUAS INVOCAÇÕES, e não uma — o motivo é medido, não estético.
+      # DUAS INVOCAÇÕES SEQUENCIAIS, e não uma — o motivo é medido, não estético.
       #
       # `lib/auth/rate-limit.ts` limita login a 60 por IP a cada 300s. No CI todo
       # spec loga do mesmo 127.0.0.1, e ao subir a suíte de 15 para 29 specs o
@@ -637,7 +686,11 @@ jobs:
       # diz: "redis incr failed; falling back to in-memory"), e o
       # `reuseExistingServer: false` do playwright.config.ts faz cada invocação
       # subir o SEU `next start`. Duas invocações = dois processos = dois
-      # contadores, e o pico por processo volta para ~40.
+      # contadores, e o pico por processo volta para ~40. É também por isto que
+      # NÃO há `next start` manual neste job: o Playwright sobe um servidor por
+      # invocação, espera a URL (health check com timeout de 120s no config) e
+      # o derruba no fim — o restart do Next entre as partes sai daí, sem PID
+      # para gerenciar e sem brigar pela porta.
       #
       # A alternativa seria afrouxar o teto por env — mexer num controle de
       # segurança para acomodar o teste, que é a troca errada.
@@ -647,19 +700,22 @@ jobs:
       # workers, dois specs gerando o mesmo código no mesmo intervalo de 30s
       # fazem o segundo ser recusado como replay. Foi o que derrubava a
       # `reset-password-mfa` (issue #80): ela passa sozinha e falha em paralelo.
-      - name: E2E — parte ${{ matrix.parte }} de 2
+      - name: E2E — parte 1 de 2
+        id: parte1
+        timeout-minutes: 30
         run: |
           set -euo pipefail
-          # A lista sai da matrix, e as duas variáveis continuam existindo no
-          # `env:` do job porque é DELAS que `e2e-cobertura-completa.test.ts` lê
-          # a cobertura. Ler por indireção aqui e não duplicar a lista mantém
-          # UMA fonte por parte.
-          if [ "${{ matrix.parte }}" = "1" ]; then LISTA="$SPECS_PARTE_1"; else LISTA="$SPECS_PARTE_2"; fi
+          echo "INICIO_P1=$(date +%s)" >> "$GITHUB_ENV"
+          # A lista continua vindo da variável do job: `e2e-cobertura-completa`
+          # lê DELA a cobertura, e ler por indireção aqui (não duplicar a
+          # lista) mantém UMA fonte por parte.
+          LISTA="$SPECS_PARTE_1"
           # Falha alto se a variável vier vazia: sem isto, um typo no nome faria
           # o playwright rodar a suíte INTEIRA (ou nenhuma) e o job ficaria
           # verde medindo outra coisa.
-          [ -n "$LISTA" ] || { echo "::error::lista da parte ${{ matrix.parte }} vazia"; exit 1; }
+          [ -n "$LISTA" ] || { echo "::error::lista da parte 1 vazia"; exit 1; }
           pnpm exec playwright test --workers=1 $LISTA
+          echo "FIM_P1=$(date +%s)" >> "$GITHUB_ENV"
         env:
           # Só o que NÃO vem do `.env.e2e`: isto é ajuste de CI, não config do
           # produto. CI = 1 IP para todos os specs, e o teto de produção
@@ -669,42 +725,54 @@ jobs:
           # ver o comentário do passo de build: vazio NÃO desliga.
           SENTRY_DSN: "off"
 
+      # Roda mesmo se a parte 1 quebrar (`always`): o comportamento antigo era
+      # `fail-fast: false` na matrix, e o primeiro vermelho escondendo o outro
+      # transformava o conserto numa rodada por parte. O passo de gate abaixo é
+      # que dá o veredito — este aqui só mede.
+      - name: E2E — parte 2 de 2
+        id: parte2
+        if: always()
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          echo "INICIO_P2=$(date +%s)" >> "$GITHUB_ENV"
+          LISTA="$SPECS_PARTE_2"
+          [ -n "$LISTA" ] || { echo "::error::lista da parte 2 vazia"; exit 1; }
+          pnpm exec playwright test --workers=1 $LISTA
+          echo "FIM_P2=$(date +%s)" >> "$GITHUB_ENV"
+        env:
+          AUTH_RATE_LIMIT_LOGIN_IP: "1000"
+          SENTRY_DSN: "off"
+
+      # O veredito: `success` nas DUAS partes é o único desfecho aceito. Sem
+      # este passo, a parte 2 com `always()` deixaria o job verde com a parte 1
+      # vermelha — o mesmo "verde que não distingue" que o cabeçalho proíbe.
+      - name: Falhar se qualquer parte não passou
+        if: always()
+        run: |
+          echo "parte 1: ${{ steps.parte1.outcome }} · parte 2: ${{ steps.parte2.outcome }}"
+          [ "${{ steps.parte1.outcome }}" = "success" ] && [ "${{ steps.parte2.outcome }}" = "success" ]
+
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report-parte-${{ matrix.parte }}
+          name: playwright-report
           path: |
             playwright-report/
             test-results/
           retention-days: 7
 
-  # O NOME DESTE JOB É O CHECK OBRIGATÓRIO, e é por isso que ele existe.
-  #
-  # A branch protection da `main` exige um check chamado exatamente `e2e`
-  # (medido: verify, build-and-size, invariants, e2e, imagens-ok). Jobs de
-  # matrix se chamam `e2e-parte (1)` e `e2e-parte (2)` — se o job das partes
-  # tivesse ficado com o nome `e2e`, a proteção passaria a esperar para sempre
-  # um check que nenhum run produz, e NENHUM PR mergearia. Este agregador é o
-  # mesmo padrão do `imagens-ok` em `publish-image.yml`.
-  e2e:
-    if: always()
-    needs: [e2e-parte]
-    runs-on: ubuntu-latest
-    # Nenhuma permissão: este job só lê o resultado de `needs` e escreve o
-    # summary. Sem o bloco, o token herdaria o default do REPOSITÓRIO, que vive
-    # fora do repo e muda num clique.
-    permissions: {}
-    steps:
-      - name: Falhar se qualquer parte não passou
+      # Diagnóstico sem secrets: chaves locais vazariam `.env.e2e` se o
+      # `supabase status` fosse despejado cru — por isso só os NOMES das
+      # variáveis. O stdout do `next start` mora no log dos passos das partes
+      # (o Playwright o imprime quando a invocação falha).
+      - name: Diagnóstico do ambiente (sem secrets)
+        if: failure()
         run: |
-          echo "e2e-parte: ${{ needs.e2e-parte.result }}"
-          # `success` é o único desfecho aceito. `skipped` também reprova, de
-          # propósito: parte pulada não mediu nada, e ler isso como aprovação é
-          # o modo de falha que o `imagens-ok` documenta.
-          [ "${{ needs.e2e-parte.result }}" = "success" ]
-
-      - uses: actions/checkout@v7
-        if: always()
+          supabase status -o env | sed -E 's/=(.*)/=<oculto>/' || true
+          docker ps -a
+          df -h
+          free -h
 
       - name: Declarar o que este job ainda NÃO cobre
         if: always()
@@ -731,10 +799,13 @@ jobs:
           # Falha alto se o recorte parou de casar: listas vazias fariam este
           # passo anunciar "0 de N" como se fosse notícia, em vez de erro.
           [ "$RODOU" -gt 10 ] || { echo "::error::o recorte das listas do workflow parou de casar"; exit 1; }
+          duracao() {
+            [ -n "${1:-}" ] && [ -n "${2:-}" ] && echo "$(( ($2 - $1) / 60 )) min" || echo "não mediu"
+          }
           {
             echo "## E2E — cobertura deste job"
             echo ""
-            echo "**Rodou: ${RODOU} de ${NO_DISCO} specs**, em duas partes paralelas."
+            echo "**Rodou: ${RODOU} de ${NO_DISCO} specs**, em duas partes sequenciais no mesmo job (parte 1: $(duracao "${INICIO_P1:-}" "${FIM_P1:-}"), parte 2: $(duracao "${INICIO_P2:-}" "${FIM_P2:-}"))."
             echo ""
             echo "**Não rodou (${FORA}):**"
             for s in $FORA_LISTA; do echo "- \`${s}\` — precisa de WAHA + Redis + Resend + Nuvemshop (P0 da doutrina de QA Visual)"; done
