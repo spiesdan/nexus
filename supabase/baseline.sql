@@ -19770,6 +19770,88 @@ revoke all on public.fiscal_events from anon;
 grant select on public.fiscal_events to authenticated;
 grant all on public.fiscal_events to service_role;
 
+-- ---------------------------------------------------------------------------
+-- 0238 — ANONIMIZAR UM CONTATO DEIXAVA PROSPECÇÃO, NOTA DE ENTRADA E CONTA A
+--    PAGAR LEGÍVEIS (apêndice idempotente — mesma carga da migration 0238)
+--
+-- Três tabelas chegadas em setembro ficaram fora da lista de tabelas da
+-- `fn_lgpd_cascade_redact_contact`. Mesma razão da 0184: função vem do dump com
+-- ~180 linhas, e carregar uma CÓPIA dela no apêndice criaria duas fontes que
+-- divergem. O conserto é trigger `after update of is_anonymized on contacts`,
+-- na MESMA transação do cascade, como a 0174 e a 0184. O apêndice entra ANTES
+-- da varredura anon (0116) porque cria função — o bloco da varredura é, de
+-- propósito, o último do arquivo.
+-- ---------------------------------------------------------------------------
+create or replace function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  update public.business_prospects
+     set nome                = 'Prospecto anonimizado',
+         nome_normalizado    = 'prospecto-anonimizado',
+         telefone            = null,
+         telefone_normalizado = null,
+         whatsapp_potencial  = false,
+         website             = null,
+         dominio             = null,
+         email               = null,
+         endereco            = null,
+         logradouro          = null,
+         numero_end          = null,
+         bairro              = null,
+         cep                 = null,
+         external_url        = null,
+         source              = null,
+         source_url          = null,
+         latitude            = null,
+         longitude           = null
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  update public.fiscal_entradas
+     set emitente_cnpj = '00000000000000',
+         emitente_nome = 'Fornecedor anonimizado',
+         emitente_ie   = null,
+         cobranca_json = '[]'::jsonb
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  update public.financial_pagaveis
+     set fornecedor_nome = null,
+         fornecedor_cnpj = null,
+         observacoes     = null
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  return new;
+end;
+$$;
+
+-- Função de trigger não exige EXECUTE de quem dispara o UPDATE, então revogar
+-- das três origens não a quebra — e a mantém fora da lista de exceções do
+-- invariante de hardening, que é congelada.
+revoke execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() from public, anon, authenticated;
+grant  execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() to service_role;
+
+drop trigger if exists trg_redigir_prospeccao_e_fiscal_ao_anonimizar on public.contacts;
+create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
+  after update of is_anonymized on public.contacts
+  for each row
+  when (new.is_anonymized is true and old.is_anonymized is distinct from true)
+  execute function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado();
+
+comment on column public.business_prospects.email is
+  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com telefone, endereço, website, domínio e URLs. provider/external_id são PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
+comment on column public.fiscal_entradas.emitente_cnpj is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
+comment on column public.financial_pagaveis.fornecedor_nome is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
+
+notify pgrst, 'reload schema';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

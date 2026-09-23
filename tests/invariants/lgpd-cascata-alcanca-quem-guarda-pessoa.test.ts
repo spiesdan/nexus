@@ -61,6 +61,20 @@ const DIVIDA_LGPD_CONHECIDA: Record<string, string> = {
     "captured_name, captured_email e captured_phone — o payload cru de captação. " +
     "A própria migration 0174 escreveu que 'o cascade de anonimização precisa alcançar esta tabela' " +
     "e o passo nunca foi acrescentado. Sai quando for.",
+  business_prospects:
+    "Ficou fora da lista do cascade na 0220 (2026-09-05). Guarda nome, telefone, e-mail, endereço e " +
+    "website do prospecto. CONSERTADO por trigger na 0238 (trg_redigir_prospeccao_e_fiscal_ao_anonimizar, " +
+    "molde da 0184) — mas o gate lê o CORPO da função, não triggers, então sai desta lista " +
+    "no commit que acrescentar a tabela ao cascade.",
+  fiscal_entradas:
+    "Ficou fora da lista do cascade na 0236 (2026-09-09). Guarda o snapshot do fornecedor " +
+    "(emitente_cnpj, emitente_nome, emitente_ie) e a cobrança della NF-e de entrada. " +
+    "CONSERTADO por trigger na 0238 (mesmo motivo da business_prospects) — sai desta lista " +
+    "no commit que acrescentar a tabela ao cascade.",
+  financial_pagaveis:
+    "Ficou fora da lista do cascade na 0236 (2026-09-09). Guarda o snapshot do fornecedor " +
+    "(fornecedor_nome, fornecedor_cnpj) da conta a pagar. CONSERTADO por trigger na 0238 " +
+    "(mesmo motivo da business_prospects) — sai desta lista no commit que acrescentar a tabela ao cascade.",
 };
 
 /** Tabelas no escopo: FK para contacts E coluna de conteúdo pessoal. */
