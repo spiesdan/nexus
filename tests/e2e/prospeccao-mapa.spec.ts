@@ -81,7 +81,16 @@ test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ 
       await page.waitForTimeout(500);
       continue;
     }
-    await marcadores.nth(i % n).click({ timeout: 8_000 }).catch(() => undefined);
+    // Só aperta Enter com o foco CONFIRMADO no marcador: sem isso o Enter
+    // cairia no último botão clicado (ex. o alternador Mapa/Tabela) e a tela
+    // mudaria no meio do teste.
+    const focou = await marcadores
+      .nth(i % n)
+      .focus({ timeout: 8_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!focou) continue;
+    await page.keyboard.press("Enter");
     await page.waitForTimeout(500);
     abriu = await verEmpresa.isVisible().catch(() => false);
   }
