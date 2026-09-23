@@ -690,7 +690,13 @@ export function AgendaClient({
           setRemarcandoId(null);
           setMarcando(true);
         }}
-        className="min-h-0 flex-1"
+        // `min-h-[480px]` e não `min-h-0`: a grade é o terceiro flex-1/min-h-0
+        // aninhado desta tela, e numa viewport curta os três colapsos somavam —
+        // a grade ia a altura ZERO com os blocos tranbordando visíveis POR BAIXO
+        // dos irmãos (a panel vazia e os chips de tipo interceptavam o clique).
+        // Com o piso, o que sobra vira rolagem do `main` (doutrina do AppShell:
+        // só o main rola) em vez de grade morta.
+        className="min-h-[480px] flex-1"
       />
 
     </div>

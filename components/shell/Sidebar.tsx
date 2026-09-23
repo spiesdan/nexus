@@ -138,8 +138,15 @@ export function SidebarContent({
         das treze telas dele moram atrás do "Ver tudo em IA"), e o CRM ainda não
         tem um. Quando o quinto destino de CRM aparecer, é hub que se cria, não
         mais 4px que se raspa.
+
+        2026-09-23, segunda rodada do mesmo remendo: o menu chegou a 20 links e
+        o "Análise" caiu da dobra de novo — dívida pré-existente da main, que
+        nunca teve este job verde. A LINHA continua intocável (`py-1`, 28px);
+        o que encolheu desta vez foi o AR (gaps e respiro de título, ~74px):
+        entre grupos 8px→4px, título pt-2→pt-1, entre linhas 4px→2px. O hub do
+        CRM continua sendo a saída estrutural; isto aqui compra a dobra até lá.
       */}
-      <nav className="flex-1 space-y-2 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
         {grupos.map(({ group, items }) => {
           const tituloId = `nav-grupo-${group.id}`;
           return (
@@ -151,7 +158,7 @@ export function SidebarContent({
               ) : (
                 <h2
                   id={tituloId}
-                  className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+                  className="px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
                 >
                   {t(group.label)}
                 </h2>
@@ -159,7 +166,7 @@ export function SidebarContent({
               <ul
                 aria-labelledby={collapsed ? undefined : tituloId}
                 aria-label={collapsed ? t(group.label) : undefined}
-                className="space-y-1"
+                className="space-y-0.5"
               >
                 {items.map((item) => {
                   const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
