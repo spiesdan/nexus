@@ -83,30 +83,43 @@ export function SidebarContent({
           collapsed ? "justify-center" : "justify-start",
         )}
       >
-        {logo && !collapsed ? (
-          // <img> em vez de next/image de propósito: a URL vem de quem hospeda
-          // (banco ou .env), e next/image exige allowlist de domínios fechada em
-          // build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
-          // Altura fixa e largura livre porque a arte enviada tem proporção
-          // desconhecida; forçar as duas distorceria o logo de quem configurou.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
-        ) : (
-          <span className={cn("font-medium tracking-tight", collapsed && "sr-only")}>{nome}</span>
-        )}
-        {collapsed && (
-          <span
-            aria-hidden
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground"
-          >
-            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
-                quebraria no meio do code point. Mesma regra de `resolveBranding`
-                — a inicial precisa acompanhar o nome que a barra mostra, senão
-                recolher o menu troca a marca. Círculo no accent (não na lavanda
-                crua) para seguir a marca do revendedor e passar no piso. */}
-            {[...nome][0]?.toUpperCase() ?? brand.initial}
-          </span>
-        )}
+        {/*
+          O logo é a PORTA do Dashboard (/app) — a Home de quem entra no app.
+          Antes ele não era link nenhum e o Dashboard, quando existisse, não teria
+          como ser alcançado pela navegação: só digitando a URL. O mesmo template
+          do item de nav preserva a densidade (o menu não ganha mais nenhum item).
+        */}
+        <Link
+          href="/app"
+          title={nome}
+          onClick={onNavigate}
+          className={cn("flex items-center", collapsed ? "justify-center" : "justify-start")}
+        >
+          {logo && !collapsed ? (
+            // <img> em vez de next/image de propósito: a URL vem de quem hospeda
+            // (banco ou .env), e next/image exige allowlist de domínios fechada em
+            // build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
+            // Altura fixa e largura livre porque a arte enviada tem proporção
+            // desconhecida; forçar as duas distorceria o logo de quem configurou.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
+          ) : (
+            <span className={cn("font-medium tracking-tight", collapsed && "sr-only")}>{nome}</span>
+          )}
+          {collapsed && (
+            <span
+              aria-hidden
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground"
+            >
+              {/* Spread e não `[0]`: nome começando com emoji ou acento composto
+                  quebraria no meio do code point. Mesma regra de `resolveBranding`
+                  — a inicial precisa acompanhar o nome que a barra mostra, senão
+                  recolher o menu troca a marca. Círculo no accent (não na lavanda
+                  crua) para seguir a marca do revendedor e passar no piso. */}
+              {[...nome][0]?.toUpperCase() ?? brand.initial}
+            </span>
+          )}
+        </Link>
       </div>
       {/*
         A DENSIDADE É MEDIDA, NÃO ESTÉTICA.
@@ -162,10 +175,17 @@ export function SidebarContent({
                           // Pill nos links (assinatura Visitors); a altura da
                           // linha não muda — o e2e `navegacao.spec.ts` exige o
                           // menu inteiro em 900px sem scroll.
+                          //
+                          // ATIVO (PROMPT V4 §11): background sutil + highlight
+                          // discreto, SEM bloco colorido. Antes era `bg-accent
+                          // text-accent-foreground` — lavanda sólida, que é a
+                          // mesma cor da ação/do botão primário; num nav, item
+                          // ativo não merece a cor da ação. O filete esquerdo
+                          // (highlight) nomeia o item sem pintar o grupo.
                           "row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                           isActive
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:text-foreground",
+                            ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                            : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
                           collapsed && "justify-center px-2",
                         )}
                       >
@@ -188,10 +208,10 @@ export function SidebarContent({
                       aria-current={pathname === group.hub.href ? "page" : undefined}
                       onClick={onNavigate}
                       className={cn(
-                        "row-hover interactive flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
+                        "row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                         pathname === group.hub.href
-                          ? "bg-accent text-accent-foreground"
-                          : "text-muted-foreground hover:text-foreground",
+                          ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                          : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
                         collapsed && "justify-center px-2",
                       )}
                     >
@@ -213,10 +233,10 @@ export function SidebarContent({
             aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
             onClick={onNavigate}
             className={cn(
-              "row-hover interactive mb-1 flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
+              "row-hover interactive relative mb-1 flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
               pathname.startsWith(rodape.href)
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground",
+                ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
               collapsed && "justify-center px-2",
             )}
           >
