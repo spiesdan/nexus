@@ -352,12 +352,12 @@ describe("controle positivo — o produto sem marca não pode se mexer", () => {
     expect(foco(p.claro, "--color-surface-elevated")).toBeCloseTo(3.48, 2);
     // Escuro: rampa violeta emitida com d=0 sobre bases escuras. (Na Sage eram
     // 6,30/5,22 porque a rampa derivada coincidia com os literais do dark.)
-    expect(foco(p.escuro, "--color-bg")).toBeCloseTo(8.19, 2);
-    expect(foco(p.escuro, "--color-surface-elevated")).toBeCloseTo(6.79, 2);
+    expect(foco(p.escuro, "--color-bg")).toBeCloseTo(8.178, 2);
+    expect(foco(p.escuro, "--color-surface-elevated")).toBeCloseTo(6.777, 2);
     // No escuro o anel NÃO fica apertado contra as bases: quem aperta é o
-    // `-soft` COMPOSTO. 5,66/5,02 aqui (na Sage, 4,58/4,03).
-    expect(foco(p.escuro, "--color-accent-soft@--color-surface")).toBeCloseTo(5.66, 2);
-    expect(foco(p.escuro, "--color-accent-soft@--color-surface-elevated")).toBeCloseTo(5.02, 2);
+    // `-soft` COMPOSTO. 5,645/4,999 aqui (na Sage, 4,58/4,03).
+    expect(foco(p.escuro, "--color-accent-soft@--color-surface")).toBeCloseTo(5.645, 2);
+    expect(foco(p.escuro, "--color-accent-soft@--color-surface-elevated")).toBeCloseTo(4.999, 2);
   });
 
   it("sem marca configurada nada é injetado, e a tela fica como está", () => {
@@ -373,13 +373,13 @@ describe("a navy #0f172a — o defeito que a prova em tela achou", () => {
     // escuro 2,86 e 2,37 — os dois de baixo abaixo do piso 3,0, porque o anel
     // pintava `--color-accent-400`, o stop CRU. O defeito em si (rampa crua ×
     // papéis deslocados) continua guardado aqui como história; os números de
-    // HOJE saem do anel no 600: claro 17,85/17,10, escuro 5,28/4,39 (o escuro
+    // HOJE saem do anel no 600: claro 17,85/17,10, escuro 5,28/4,38 (o escuro
     // anda -1 como antes, e esses dois nem se mexeram).
     const p = pintadosDaSemente("#0f172a");
     expect(foco(p.claro, "--color-bg")).toBeCloseTo(17.85, 2);
     expect(foco(p.claro, "--color-surface-elevated")).toBeCloseTo(17.1, 2);
     expect(foco(p.escuro, "--color-bg")).toBeCloseTo(5.28, 2);
-    expect(foco(p.escuro, "--color-surface-elevated")).toBeCloseTo(4.39, 2);
+    expect(foco(p.escuro, "--color-surface-elevated")).toBeCloseTo(4.375, 2);
     for (const superficie of ["--color-bg", "--color-surface-elevated"] as const) {
       expect(foco(p.escuro, superficie), superficie).toBeGreaterThanOrEqual(PISOS.componente);
     }
