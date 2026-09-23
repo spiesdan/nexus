@@ -19843,12 +19843,10 @@ create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
   when (new.is_anonymized is true and old.is_anonymized is distinct from true)
   execute function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado();
 
-comment on column public.business_prospects.email is
-  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com telefone, endereço, website, domínio e URLs. provider/external_id são PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
-comment on column public.fiscal_entradas.emitente_cnpj is
-  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
-comment on column public.financial_pagaveis.fornecedor_nome is
-  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
+-- Os `comment on column` das três tabelas vivem NO FIM do arquivo, junto ao
+-- apêndice 0236 que as cria: num INSTALL, este bloco roda antes delas
+-- existirem (psql:<stdin>:N: ERROR: relation "public.fiscal_entradas" does
+-- not exist — medido no modo INSTALL do CI).
 
 notify pgrst, 'reload schema';
 
@@ -20252,3 +20250,13 @@ comment on table public.fiscal_entrada_cursor is
   'Cursor da distribuição DF-e por org (ultNSU). Sem ele, cada sincronização baixaria tudo de novo.';
 comment on table public.financial_pagaveis is
   'Conta a pagar por parcela da nota de entrada. Sem duplicata, 1 parcela com vencimento na emissão.';
+
+-- Os `comment on column` da 0238 vivem AQUI, junto às tabelas que o apêndice
+-- 0236 criou — num INSTALL elas ainda não existiam quando o bloco da função
+-- rodou, antes da varredura anon.
+comment on column public.business_prospects.email is
+  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com telefone, endereço, website, domínio e URLs. provider/external_id são PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
+comment on column public.fiscal_entradas.emitente_cnpj is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
+comment on column public.financial_pagaveis.fornecedor_nome is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
