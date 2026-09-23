@@ -50,11 +50,15 @@ on:
 # um nível abaixo.
 #
 # `actions/upload-artifact@v7` não tem input de token: publica pela Actions
-# Results API, com ACTIONS_RUNTIME_TOKEN + ACTIONS_RESULTS_URL. Nenhum passo
-# `run:` enxerga o GITHUB_TOKEN — ele só entra no ambiente via
-# `secrets.GITHUB_TOKEN`, ausente aqui.
+# Results API, com ACTIONS_RUNTIME_TOKEN + ACTIONS_RESULTS_URL. O ÚNICO passo
+# `run:` que enxerga o GITHUB_TOKEN é o login no GHCR antes do `supabase
+# start` — exceção deliberada de 2026-09-23: o pull das imagens do Supabase é
+# anônimo por padrão e o GHCR limita pulls anônimos (`toomanyrequests`
+# derrubou 3 rodadas seguidas); autenticado a cota é por conta, não por IP.
+# Escopo mínimo (`packages: read`) e só leitura.
 permissions:
   contents: read
+  packages: read
 
 jobs:
   # AS DUAS PARTES RODAM EM PARALELO, e o motivo é medido, não estético.
@@ -408,6 +412,13 @@ jobs:
         with:
           version: latest
 
+      # O pull das imagens do Supabase é anônimo por padrão — e o GHCR limita
+      # pulls anônimos por IP (`toomanyrequests` derrubou 3 rodadas seguidas em
+      # 2026-09-23, com o stack morrendo ainda no setup). Autenticado com o
+      # GITHUB_TOKEN a cota passa a ser por conta. O token é mascarado nos logs.
+      - name: Autenticar no GHCR (cota de pull maior que anônimo)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       # Sobe Postgres + Auth (GoTrue) + PostgREST + Storage. Auth de verdade é
       # requisito: os specs de login exercitam o GoTrue, não um mock.
       #
@@ -420,7 +431,15 @@ jobs:
         run: |
           mv supabase/migrations /tmp/migrations-off
           mkdir -p supabase/migrations
-          supabase start
+          # Retry com backoff: mesmo autenticado o GHCR devolve 429 transitório
+          # sob carga, e um 429 no pull não pode matar 30 min de CI. O gate é o
+          # `supabase status` no fim: se o stack não subiu, ele reprova.
+          for tentativa in 1 2 3 4 5; do
+            supabase start && break
+            echo "supabase start falhou (tentativa $tentativa/5) — esperando e tentando de novo"
+            sleep $((tentativa * 60))
+          done
+          supabase status
 
       # O baseline é um dump `--schema-only`: ele USA os tipos das extensões
       # (public.vector, citext, gin_trgm_ops) mas não as cria. O stack local do
