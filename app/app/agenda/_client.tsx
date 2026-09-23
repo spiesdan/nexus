@@ -621,7 +621,11 @@ export function AgendaClient({
         agendamentos={agendamentos}
         pessoas={pessoas}
         agora={new Date()}
-        className="max-h-[320px]"
+        // `shrink-0` porque `tela-agenda` é coluna flex com altura contida e o
+        // histórico tem `min-h-0`: sem ele o flex o esmaga até altura ZERO (o
+        // `flex-1` da grade come o espaço) — os filhos transbordam visíveis, a
+        // grade sobrepõe as abas, e o testid resolve "hidden" para o Playwright.
+        className="max-h-[320px] shrink-0"
         // ⚠️ ESTAS DUAS PROPS FALTAVAM, e a ausência tinha cara de permissão.
         // `HistoricoDaAgenda` usa `disabled={!onRemarcar}`; sem elas os botões
         // nasciam cinzas em toda linha, de toda organização — e o `title` dizia

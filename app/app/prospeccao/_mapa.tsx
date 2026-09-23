@@ -87,6 +87,12 @@ export function MapaProspects({
     cbRef.current = { onSelecionar, onVer, onAdicionar, onArea };
   });
   const [zoom, setZoom] = React.useState(12);
+  // O desenho SÓ acontece quando o mapa existe: o efeito de desenho roda no
+  // mount com os refs ainda nulos (o import do Leaflet é assíncrono) e, sem
+  // este estado, nada o dispara de novo — a lista chega antes do chunk e os
+  // marcadores nunca nascem. Era o `prospeccao-mapa` vermelho: lista com 3,
+  // mapa visível, zero `.leaflet-marker-icon`.
+  const [mapaPronto, setMapaPronto] = React.useState(false);
 
   // Monta o mapa uma vez; camadas base OSM + satélite Esri.
   React.useEffect(() => {
@@ -112,6 +118,7 @@ export function MapaProspects({
       refCamada.current = L.layerGroup().addTo(mapa);
       mapa.on("zoomend moveend", () => setZoom(mapa.getZoom()));
       refMapa.current = mapa;
+      setMapaPronto(true);
     })();
     return () => {
       cancelado = true;
@@ -243,7 +250,7 @@ export function MapaProspects({
     return () => {
       cancelado = true;
     };
-  }, [lista, zoom, modo, selecionadoId, selecionados, centro, raioKm, rota]);
+  }, [lista, zoom, modo, selecionadoId, selecionados, centro, raioKm, rota, mapaPronto]);
 
   // Seleção vinda da lista: centraliza sem trocar o zoom.
   React.useEffect(() => {

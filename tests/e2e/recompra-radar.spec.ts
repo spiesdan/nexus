@@ -43,7 +43,10 @@ test("recompra atrasada aparece com atraso e link para os pedidos", async ({ pag
 
   await expect(page.getByRole("button", { name: /recompra/i }).first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("Mercado E2E Recompra", { exact: false }).first()).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText(/recompra atrasada/i).first()).toBeVisible({ timeout: 20_000 });
+  // O filtro "Situação" tem <option>Recompra atrasada</option> (hidden) ANTES do
+  // selo no DOM — sem o filtro por visível, o `.first()` casa a option e o
+  // teste cobra um elemento escondido. O que importa é o selo APARECER no card.
+  await expect(page.getByText(/recompra atrasada/i).filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText(/\+8/i).first()).toBeVisible({ timeout: 20_000 });
 
   const verPedidos = page.getByRole("link", { name: /ver pedidos/i }).first();

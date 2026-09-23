@@ -65,7 +65,10 @@ const AvatarFallback = React.forwardRef<
   <AvatarPrimitive.Fallback
     ref={ref}
     className={cn(
-      "flex h-full w-full items-center justify-center rounded-full bg-muted",
+      // Iniciais legíveis: text-text sobre bg-muted passa 4.5:1 nos dois
+      // temas (claro #181925/#fafafa, dark #f4f4f4/#262626). O herdado
+      // text-muted-foreground dava 4,44 no dark e quebrava o a11y do e2e.
+      "flex h-full w-full items-center justify-center rounded-full bg-muted text-text",
       className
     )}
     {...props}
