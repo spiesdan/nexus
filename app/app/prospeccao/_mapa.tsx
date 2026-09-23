@@ -48,6 +48,47 @@ const SIMBOLO: Record<StatusMapa, string> = {
   cliente: "✓",
 };
 
+/** Módulo do Leaflet (import dinâmico); passado como parâmetro para as
+ *  fábricas de ícone poderem morar no escopo do módulo em vez de duplicadas
+ *  nos efeitos. */
+type ModuloLeaflet = typeof import("leaflet");
+
+/** Id do ponto/cluster guardado no marcador — o efeito de seleção usa para
+ *  achar QUEM atualizar sem recriar a camada. */
+type CamadaComId = { _pontoId?: string };
+
+function iconeCluster(M: ModuloLeaflet, n: number): DivIcon {
+  return M.divIcon({
+    className: "",
+    html:
+      `<div style="background:#1e293b;color:#fff;border-radius:9999px;` +
+      `min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;` +
+      `font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);padding:0 6px">${n}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
+
+function iconePonto(
+  M: ModuloLeaflet,
+  p: PontoMapa,
+  selecionadoId: string | null,
+  selecionados: string[],
+): DivIcon {
+  const sel = selecionadoId === p.id || selecionados.includes(p.id);
+  return M.divIcon({
+    className: "",
+    html:
+      `<div style="background:${CORES[p.status]};color:#fff;border-radius:9999px;` +
+      `width:28px;height:28px;display:flex;align-items:center;justify-content:center;` +
+      `font-size:11px;font-weight:700;border:${sel ? "3px solid #facc15" : "2px solid #fff"};` +
+      `box-shadow:0 1px 4px rgba(0,0,0,.4)">${SIMBOLO[p.status]}${p.score}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
+  });
+}
+
 export function MapaProspects({
   lista,
   selecionadoId,
@@ -125,14 +166,18 @@ export function MapaProspects({
     };
   }, []);
 
-  // Desenha pontos/clusters/densidade/raio/rota; reage a lista, zoom, modo e seleção.
+  // Desenha pontos/clusters/densidade/raio/rota; reage a lista, zoom, modo,
+  // centro e rota — mas NÃO à seleção (ver o efeito seguinte). Recriar a
+  // camada no clique de seleção removia a camada-fonte e o Leaflet fechava a
+  // popup recém-aberta junto: seleção funcionava, popup morria no mesmo gesto.
   React.useEffect(() => {
     const mapa = refMapa.current;
     const camada = refCamada.current;
     if (!mapa || !camada) return;
     let cancelado = false;
     (async () => {
-      const L = (await import("leaflet")).default;
+      const M = await import("leaflet");
+      const L = M.default;
       if (cancelado) return;
       camada.clearLayers();
       const escapar = (s: string): string =>
@@ -174,35 +219,10 @@ export function MapaProspects({
         return;
       }
 
-      const iconeCluster = (n: number): DivIcon =>
-        L.divIcon({
-          className: "",
-          html:
-            `<div style="background:#1e293b;color:#fff;border-radius:9999px;` +
-            `min-width:32px;height:32px;display:flex;align-items:center;justify-content:center;` +
-            `font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);padding:0 6px">${n}</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-        });
-
-      const iconePonto = (p: PontoMapa): DivIcon => {
-        const sel = selecionadoId === p.id || selecionados.includes(p.id);
-        return L.divIcon({
-          className: "",
-          html:
-            `<div style="background:${CORES[p.status]};color:#fff;border-radius:9999px;` +
-            `width:28px;height:28px;display:flex;align-items:center;justify-content:center;` +
-            `font-size:11px;font-weight:700;border:${sel ? "3px solid #facc15" : "2px solid #fff"};` +
-            `box-shadow:0 1px 4px rgba(0,0,0,.4)">${SIMBOLO[p.status]}${p.score}</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-          popupAnchor: [0, -14],
-        });
-      };
-
       for (const item of itens) {
         if (ehCluster(item)) {
-          const mk = L.marker([item.latitude, item.longitude], { icon: iconeCluster(item.pontos.length) });
+          const mk = L.marker([item.latitude, item.longitude], { icon: iconeCluster(M, item.pontos.length) });
+          (mk as unknown as CamadaComId)._pontoId = item.id;
           mk.on("click", () => mapa.setView([item.latitude, item.longitude], Math.min(19, mapa.getZoom() + 2)));
           mk.addTo(camada);
           continue;
@@ -211,7 +231,8 @@ export function MapaProspects({
         const zap = p.telefone
           ? `<br><a href="https://wa.me/${p.telefone.replace(/\D/g, "")}" target="_blank" rel="noopener">WhatsApp</a>`
           : "";
-        const mk = L.marker([p.latitude, p.longitude], { icon: iconePonto(p) }).addTo(camada);
+        const mk = L.marker([p.latitude, p.longitude], { icon: iconePonto(M, p, selecionadoId, selecionados) }).addTo(camada);
+        (mk as unknown as CamadaComId)._pontoId = p.id;
         mk.bindPopup(
           `<b>${escapar(p.nome)}</b><br>${escapar([p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · "))}${fone}${zap}` +
             `<br><br><button data-acao="ver" style="text-decoration:underline">Ver empresa</button>` +
@@ -250,7 +271,34 @@ export function MapaProspects({
     return () => {
       cancelado = true;
     };
-  }, [lista, zoom, modo, selecionadoId, selecionados, centro, raioKm, rota, mapaPronto]);
+  }, [lista, zoom, modo, centro, raioKm, rota, mapaPronto]);
+
+  // O ANEL DE SELEÇÃO sem recriar a camada: `setIcon` no marcador certo.
+  // Recriar aqui (o `clearLayers` do efeito acima) removia a camada-fonte da
+  // popup e o Leaflet a fechava no mesmo gesto do clique — a seleção
+  // funcionava e a popup morria, e o e2e `prospeccao-mapa` nunca achava o
+  // botão "Ver empresa".
+  React.useEffect(() => {
+    const camada = refCamada.current;
+    if (!camada || !mapaPronto) return;
+    let cancelado = false;
+    (async () => {
+      const M = await import("leaflet");
+      if (cancelado) return;
+      for (const layer of camada.getLayers()) {
+        const id = (layer as unknown as CamadaComId)._pontoId;
+        if (!id || id.startsWith("cluster:")) continue;
+        const ponto = lista.find((p) => p.id === id);
+        if (!ponto || !(layer instanceof M.Marker)) continue;
+        (layer as InstanceType<typeof M.Marker>).setIcon(
+          iconePonto(M, ponto, selecionadoId, selecionados),
+        );
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [mapaPronto, selecionadoId, selecionados, lista]);
 
   // Seleção vinda da lista: centraliza sem trocar o zoom.
   React.useEffect(() => {
