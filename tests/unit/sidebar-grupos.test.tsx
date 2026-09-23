@@ -38,6 +38,11 @@ vi.mock("@/app/actions/shell/toggleSidebar", () => ({
 vi.mock("@/components/shell/VersionFooter", () => ({
   VersionFooter: () => null,
 }));
+// O rodapé de fila também busca do servidor via react-query; os títulos dos
+// grupos é o que estes testes examinam.
+vi.mock("@/components/shell/SidebarNotice", () => ({
+  SidebarNotice: () => null,
+}));
 
 function comoPapel(role: ActiveOrg["role"]) {
   authRef.user = { is_platform_admin: false };

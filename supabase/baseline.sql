@@ -10094,6 +10094,13 @@ alter table public.agent_inbox_items
     -- tratava `skipped` como sucesso, e a linha da fonte seguia dizendo `ready`.
     -- Irmão direto de `midia_nao_lida`: mesma chave, mesmo silêncio.
     'conhecimento_nao_indexado',
+    -- (migration 0237) Digest diário do Radar na Central de avisos: um item por
+    -- org por dia, só quando há o que dizer. A 0237 o acrescentou na migration,
+    -- mas o bloco ÚNICO do baseline ficou pra trás — sem esta linha, quem atualiza
+    -- pelo kit vê o INSERT do digest morrer no 23514 em silêncio (o cron captura e
+    -- loga, e o operador só não recebe o resumo). Entra AQUI, no fim, pela regra do
+    -- bloco único (#159): um kind novo numa lista, nunca um bloco novo.
+    'radar_digest',
     'other'
   ));
 

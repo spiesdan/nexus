@@ -89,6 +89,32 @@ const REMOCOES_DELIBERADAS: Record<string, { valores: string[]; porque: string }
       "porque migration aplicada não se edita: o evento é história, a consequência foi " +
       "consertada.",
   },
+  "20260922080000_0237_radar_digest_kind.sql::agent_inbox_items_kind_check": {
+    valores: [
+      "budget_warning",
+      "capabilities_missing",
+      "channel_number_alert",
+      "channel_template_review",
+      "conhecimento_nao_indexado",
+      "contact_proposal_expired",
+      "followup_dead",
+      "message_send_stuck",
+      "midia_nao_lida",
+      "next_action_ambiguous",
+      "promise_unfulfilled",
+      "reactivation_expired",
+      "risk_backlog_seeded",
+    ],
+    porque:
+      "A REINCIDÊNCIA MAIS CUSTOSA, de 2026-09-22: a 0237 acrescentou `radar_digest` " +
+      "aliado a uma lista de 10 valores que era verdade antes da 0139, e derrubou 13 " +
+      "kinds do vocabulário canônico — inclusive `followup_dead`, o mesmo valor que " +
+      "abriu esta classe na 0062. Foi reparada em 24h pela 0239 (`radar_digest_restaura_o_vocabulario`), " +
+      "que reconstrói a constraint com a lista VERBATIM do baseline — que também ganhou " +
+      "`radar_digest`, que a 0237 só havia declarado na migration. Liberado aqui só " +
+      "porque migration aplicada não se edita: o evento é história, e o estado final " +
+      "da cadeia (0239) bate com o baseline valor a valor.",
+  },
 };
 
 /** Uma reconstrução de constraint encontrada na cadeia. */
