@@ -54,15 +54,21 @@ test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ 
 
   // O `.first()` nem sempre é um ponto: pode ser o marco do centro (não
   // clicável) ou um CLUSTER — e o clique no cluster APROXIMA (zoom+2, o gesto
-  // certo do produto), re-renderizando a camada no meio do clique e matando o
+  // certo do produto), re-renderizando a camada no meio do gesto e matando o
   // handle. Tenta cada marcador até a popup "Ver empresa" abrir,
   // re-consultando a cada volta porque o zoom invalida os elementos.
+  //
+  // `dispatchEvent` em vez de `click`: a camada do Leaflet é recriada a cada
+  // `zoomend moveend` (o `setView` inicial já dispara um), então a checagem de
+  // estabilidade do `click` nunca sossega e cada tentativa estoura o timeout.
+  // O evento despachado é o mesmo que o gesto do usuário produz — só pula a
+  // espera de estabilidade, que neste mapa nunca chega.
   const verEmpresa = page.getByRole("button", { name: /ver empresa/i }).first();
   let abriu = false;
   for (let volta = 0; volta < 6 && !abriu; volta++) {
     const n = await marcadores.count();
     for (let i = 0; i < n && !abriu; i++) {
-      await marcadores.nth(i).click({ timeout: 8_000 }).catch(() => undefined);
+      await marcadores.nth(i).dispatchEvent("click").catch(() => undefined);
       await page.waitForTimeout(500);
       abriu = await verEmpresa.isVisible().catch(() => false);
     }
