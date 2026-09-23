@@ -55,23 +55,35 @@ test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ 
   // O `.first()` nem sempre é um ponto: pode ser o marco do centro (não
   // clicável) ou um CLUSTER — e o clique no cluster APROXIMA (zoom+2, o gesto
   // certo do produto), re-renderizando a camada no meio do gesto e matando o
-  // handle. Tenta cada marcador até a popup "Ver empresa" abrir,
-  // re-consultando a cada volta porque o zoom invalida os elementos.
+  // handle. Em duas fases: primeiro QUEBRA os clusters por despacho (rápido,
+  // sem espera de estabilidade — e a seleção prova que o evento chega: o card
+  // da lista acende); depois o clique REAL num ponto abre a popup (o Leaflet
+  // só abre popup em evento confiável, não em sintético).
   //
-  // `dispatchEvent` em vez de `click`: a camada do Leaflet é recriada a cada
-  // `zoomend moveend` (o `setView` inicial já dispara um), então a checagem de
-  // estabilidade do `click` nunca sossega e cada tentativa estoura o timeout.
-  // O evento despachado é o mesmo que o gesto do usuário produz — só pula a
-  // espera de estabilidade, que neste mapa nunca chega.
+  // `dispatchEvent` na fase 1 porque a camada é recriada a cada `zoomend`
+  // `moveend` (o `setView` inicial já dispara um): a checagem de estabilidade
+  // do `click` nunca sossega ali e cada tentativa estouraria o timeout.
+  for (let volta = 0, anterior = -1; volta < 4; volta++) {
+    const n = await marcadores.count();
+    if (n >= 4 || (volta > 0 && n === anterior)) break;
+    anterior = n;
+    for (let i = 0; i < n; i++) {
+      await marcadores.nth(i).dispatchEvent("click").catch(() => undefined);
+    }
+    await page.waitForTimeout(800);
+  }
+
   const verEmpresa = page.getByRole("button", { name: /ver empresa/i }).first();
   let abriu = false;
-  for (let volta = 0; volta < 6 && !abriu; volta++) {
+  for (let i = 0; i < 6 && !abriu; i++) {
     const n = await marcadores.count();
-    for (let i = 0; i < n && !abriu; i++) {
-      await marcadores.nth(i).dispatchEvent("click").catch(() => undefined);
+    if (n === 0) {
       await page.waitForTimeout(500);
-      abriu = await verEmpresa.isVisible().catch(() => false);
+      continue;
     }
+    await marcadores.nth(i % n).click({ timeout: 8_000 }).catch(() => undefined);
+    await page.waitForTimeout(500);
+    abriu = await verEmpresa.isVisible().catch(() => false);
   }
   await expect(verEmpresa, "nenhum marcador abriu a popup de empresa").toBeVisible({ timeout: 20_000 });
 
