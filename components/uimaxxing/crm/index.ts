@@ -8,5 +8,6 @@
 export { CrmPageHeader } from "./crm-page-header";
 export { CrmKpi, CrmKpiGrid, type CrmTrend } from "./crm-kpi";
 export { CrmInsightCard } from "./crm-insight";
+export { CrmSalesChart, type CrmSalesPoint } from "./crm-sales-chart";
 export { CrmStatusBadge, CrmPresenceDot } from "./crm-status";
 export { CrmLoading, CrmEmpty, CrmError, CrmProgress } from "./crm-states";

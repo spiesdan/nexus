@@ -271,9 +271,15 @@ const MARCA_CONGELADA: Record<string, EntradaDeMarca> = {
   },
 
   // ─── INFRA — cookie/storage/contêiner. Renomear desloga ou perde estado. ───
+  "app/layout.tsx": {
+    categoria: "INFRA",
+    motivo:
+      "mesma `deskcomm-theme` de lib/theme.tsx: o `THEME_INIT_SCRIPT` a lê antes do primeiro paint para não piscar do dark-first para uma preferência light gravada. Renomear em um dos dois pontos e não no outro diverge o que o script pinta do que o provider aplica",
+    marcas: ["deskcomm-theme"],
+  },
   "lib/theme.tsx": {
     categoria: "INFRA",
-    motivo: "chave de localStorage do tema (light-only desde o redesign: o layout fixa light sem ler; a chave segue gravada por compatibilidade com quem tinha preferência guardada)",
+    motivo: "chave de localStorage do tema (dark-first desde o PROMPT V4: o layout fixa dark sem ler; a chave guarda a escolha de quem pediu light)",
     marcas: ["deskcomm-theme"],
   },
   "lib/supabase/browser.ts": {

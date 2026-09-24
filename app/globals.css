@@ -26,7 +26,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ─────────────────────────────────────────────────────────────────────────
-   DeskcommCRM — Design System tokens (Visitors · light-only)
+   DeskcommCRM — Design System tokens (Visitors · dark-first)
    Source of truth: DESIGN.md (raiz do repo).
    O accent funcional é o grau 600 da rampa (#7e77f0): a lavanda do DESIGN.md
    (#918df6, que a derivação põe no grau 500) dá 2,86 contra o branco e reprova
@@ -34,10 +34,13 @@
    fixar a semente. O anel de foco também sai do 600 pelo mesmo motivo (era 500
    na Sage). O texto sobre o accent é Carbon (#181925), não branco: branco sobre
    o 600 dá 4,0 e reprova o piso de texto (4,5); Carbon dá 7+.
-   O bloco `[data-theme="dark"]` abaixo está MORTO (o provider trava em light),
-   mas fica de pé: `extrairRegua` (lib/branding/contraste.ts) e meia dúzia de
-   gates exigem os dois blocos, e a derivação de marca de revendedor continua
-   calculando o tema escuro. Removê-lo é um épico próprio, não este commit.
+   Dark-first (PROMPT V4): o `<html>` nasce com `data-theme="dark"` e só sai
+   dele quando o usuário grava light em `deskcomm-theme` (app/layout.tsx e
+   lib/theme.tsx). O proto do tema escuro abaixo virou o caminho DEFAULT; o
+   `:root` e o `[data-theme="light"]` continuam sendo o tema claro, e
+   `extrairRegua` (lib/branding/contraste.ts) e os gates exigem os dois blocos.
+   A rampa accent do escuro é a MESMA lavanda do claro — a derivação de marca
+   de revendedor é quem desloca papéis e graus no escuro via cssDaMarca.
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
@@ -375,36 +378,37 @@
 }
 
 [data-theme="dark"] {
-  /* Surfaces (dark — drawn) */
-  --color-bg: #161510;
-  --color-surface: #1d1c17;
-  --color-surface-elevated: #272620;
+  /* Surfaces (dark — premium neutral, mesma luminância da era greige) */
+  --color-bg: #151515;
+  --color-surface: #1c1c1c;
+  --color-surface-elevated: #262626;
   --color-overlay: rgba(0, 0, 0, 0.55);
 
   /* Text (dark) */
-  --color-text: #f5f4ef;
-  --color-text-muted: #8e8b7f;
-  --color-text-subtle: #605e54;
+  --color-text: #f4f4f4;
+  --color-text-muted: #8b8b8b;
+  --color-text-subtle: #5e5e5e;
 
   /* Borders (dark) */
-  --color-border: #33312a;
-  --color-border-strong: #444239;
+  --color-border: #313131;
+  --color-border-strong: #424242;
 
-  /* Accent stays same hex stops; default shifts up for dark contrast */
-  --color-accent-50: #f3f6f1;
-  --color-accent-100: #e4ebe0;
-  --color-accent-200: #c8d6c1;
-  --color-accent-300: #a4ba9a;
-  --color-accent-400: #82a077;
-  --color-accent-500: #67885d;
-  --color-accent-600: #506d48;
-  --color-accent-700: #41573b;
-  --color-accent-800: #374731;
-  --color-accent-900: #2f3c2b;
-  --color-accent-950: #171f15;
+  /* Accent stays same hex stops (lavanda, como o :root); default shifts up for
+     dark contrast */
+  --color-accent-50: #f3f4ff;
+  --color-accent-100: #e9eaff;
+  --color-accent-200: #d5d7ff;
+  --color-accent-300: #bcbeff;
+  --color-accent-400: #a4a5ff;
+  --color-accent-500: #918dff;
+  --color-accent-600: #7e77f0;
+  --color-accent-700: #625db8;
+  --color-accent-800: #4d4b90;
+  --color-accent-900: #403e74;
+  --color-accent-950: #191837;
   --color-accent: var(--color-accent-400);
-  --color-accent-fg: #161510;
-  --color-accent-soft: rgba(130, 160, 119, 0.16);
+  --color-accent-fg: #151515;
+  --color-accent-soft: rgba(164, 165, 255, 0.16);
   --color-accent-hover: var(--color-accent-300);
 
   /* Tons categoria do DESIGN.md (constantes — mesmos valores do claro). */
@@ -417,18 +421,18 @@
   --color-magenta: #d6409f;
   --color-ember: #ff3e00;
 
-  /* Neutrals — greige (11 stops, dark) */
-  --color-neutral-50: #f5f4ef;
-  --color-neutral-100: #e6e4dc;
-  --color-neutral-200: #bbb8ac;
-  --color-neutral-300: #8e8b7f;
-  --color-neutral-400: #605e54;
-  --color-neutral-500: #444239;
-  --color-neutral-600: #33312a;
-  --color-neutral-700: #272620;
-  --color-neutral-800: #1d1c17;
-  --color-neutral-900: #161510;
-  --color-neutral-950: #0c0b08;
+  /* Neutrals — cinza neutro (11 stops, dark — mesma luminância da era greige) */
+  --color-neutral-50: #f4f4f4;
+  --color-neutral-100: #e4e4e4;
+  --color-neutral-200: #b8b8b8;
+  --color-neutral-300: #8b8b8b;
+  --color-neutral-400: #5e5e5e;
+  --color-neutral-500: #424242;
+  --color-neutral-600: #313131;
+  --color-neutral-700: #262626;
+  --color-neutral-800: #1c1c1c;
+  --color-neutral-900: #151515;
+  --color-neutral-950: #0b0b0b;
 
   /* States (dark) */
   --color-success: #82a077;

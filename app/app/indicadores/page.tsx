@@ -5,51 +5,14 @@ import { isServiceRoleConfigured } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
-import { diasNoMes, metaAcumulada } from "@/lib/comercial/inteligencia";
+import { diasNoMes } from "@/lib/comercial/inteligencia";
+import { deslocarMes, fusoValido, mesAtualNoFuso, montarGradeDoMes } from "@/lib/comercial/visao-do-mes";
 
 import { IndicadoresClient, type DadosIndicadores } from "./_indicadores";
 
 export const dynamic = "force-dynamic";
 
 const ANO_MES = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
-
-function fusoValido(fuso: string | null): string {
-  if (!fuso) return "America/Sao_Paulo";
-  try {
-    new Intl.DateTimeFormat("en-CA", { timeZone: fuso });
-    return fuso;
-  } catch {
-    return "America/Sao_Paulo";
-  }
-}
-
-function mesAtualNoFuso(fuso: string, agoraMs: number): string {
-  const partes = new Intl.DateTimeFormat("en-CA", {
-    timeZone: fuso,
-    year: "numeric",
-    month: "2-digit",
-  }).format(new Date(agoraMs));
-  return /^\d{4}-\d{2}$/.test(partes) ? partes : new Date(agoraMs).toISOString().slice(0, 7);
-}
-
-function deslocarMes(anoMes: string, delta: number): string {
-  const [ano = 0, mes = 1] = anoMes.split("-").map(Number);
-  const d = new Date(Date.UTC(ano, mes - 1 + delta, 1));
-  return d.toISOString().slice(0, 7);
-}
-
-/** Dias úteis (seg–sex) restantes no mês a partir de hoje. */
-function diasUteisRest(anoMes: string, hoje: string): number {
-  const [ano = 0, mes = 1] = anoMes.split("-").map(Number);
-  const dias = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
-  const diaHoje = Number(hoje.slice(8, 10));
-  let uteis = 0;
-  for (let d = Math.max(1, diaHoje); d <= dias; d++) {
-    const dow = new Date(Date.UTC(ano, mes - 1, d)).getUTCDay();
-    if (dow >= 1 && dow <= 5) uteis++;
-  }
-  return uteis;
-}
 
 /**
  * INDICADORES — o painel no molde do Mercos (medido em 2026-09-06).
@@ -109,15 +72,18 @@ export default async function IndicadoresPage({
   });
 
   const dias = diasNoMes(mes);
-  const vendaAc: number[] = [];
-  let soma = 0;
-  for (const s of ag.serieDiaria) {
-    soma += s.cents;
-    vendaAc.push(soma);
-  }
-  const metaAc = ag.metaLoja != null ? metaAcumulada(ag.metaLoja, dias) : null;
-  const compAntSerie = ag.seriesExtras[mesAnterior] ?? [];
-  const compAnoSerie = ag.seriesExtras[mesAnoPassado] ?? [];
+  const {
+    vendaAc,
+    metaAc,
+    projecaoAc,
+    vendidoHoje,
+    diasDecorridos,
+    necessarioDia,
+    diasUteisRestantes,
+    previsaoMes,
+  } = montarGradeDoMes({ agregados: ag, mes, hoje });
+  const compAntSerie = ag.seriesExtras[mesAnterior] ?? [] as { dia: string; cents: number }[];
+  const compAnoSerie = ag.seriesExtras[mesAnoPassado] ?? [] as { dia: string; cents: number }[];
   const compAnt: number[] = [];
   const compAno: number[] = [];
   let sAnt = 0;
@@ -128,35 +94,6 @@ export default async function IndicadoresPage({
     compAnt.push(sAnt);
     compAno.push(sAno);
   }
-
-  const vendidoHoje = ag.serieDiaria.find((s) => s.dia === hoje)?.cents ?? 0;
-  const diasDecorridos = ag.serieDiaria.filter((s) => s.dia <= hoje).length || 1;
-  const previsaoMes = Math.round((ag.vendidoMes / diasDecorridos) * dias);
-
-  /**
-   * PROJEÇÃO — a "simulação" que a linha do realizado não faz.
-   *
-   * `vendaAc` é acumulado REALIZADO: depois do último dia com venda ela fica
-   * reta (dias futuros têm zero vendido). Esta série continua do ponto de
-   * hoje até o fim do mês no ritmo médio, terminando em `previsaoMes` — é a
-   * mesma conta da PREVISÃO DE FECHAMENTO, desenhada.
-   *
-   * Só no mês corrente e só do dia seguinte em diante: mês passado está
-   * fechado (nada a simular) e até hoje o realizado já ocupa o gráfico.
-   */
-  const ehMesAtual = hoje.slice(0, 7) === mes;
-  const vendaAcHoje = vendaAc[diasDecorridos - 1] ?? ag.vendidoMes;
-  const taxaDiaria = diasDecorridos > 0 ? ag.vendidoMes / diasDecorridos : 0;
-  const projecaoAc: (number | null)[] = vendaAc.map((_, i) =>
-    ehMesAtual && diasDecorridos < dias && i + 1 > diasDecorridos
-      ? Math.round(vendaAcHoje + taxaDiaria * (i + 1 - diasDecorridos))
-      : null,
-  );
-  const uteisRestantes = diasUteisRest(mes, hoje);
-  const necessarioDia =
-    ag.metaLoja != null && uteisRestantes > 0
-      ? Math.max(0, ag.metaLoja - ag.vendidoMes) / uteisRestantes
-      : null;
 
   const { data: membros } = await supabase
     .from("user_organizations")
@@ -238,7 +175,7 @@ export default async function IndicadoresPage({
     objetivo: ag.metaLoja,
     pctObjetivo: ag.metaLoja ? (ag.vendidoMes / ag.metaLoja) * 100 : null,
     necessarioDia,
-    diasUteisRestantes: uteisRestantes,
+    diasUteisRestantes,
     previsaoMes,
     faturado: ag.faturado,
     naoFaturado: ag.naoFaturado,

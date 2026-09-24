@@ -99,6 +99,18 @@ beforeAll(() => {
       v_conv uuid;
       v_pipe uuid;
       v_stage uuid;
+      v_prod uuid;
+      v_ord uuid;
+      v_cat uuid;
+      v_pt uuid;
+      v_shi uuid;
+      v_inv uuid;
+      v_recv uuid;
+      v_search uuid;
+      v_prospect uuid;
+      v_camp uuid;
+      v_tag text;
+      v_chave text;
     begin
       foreach v_org in array array['${ORG_A}'::uuid, '${ORG_B}'::uuid] loop
         select id into v_sess from public.channel_sessions where organization_id = v_org limit 1;
@@ -192,6 +204,7 @@ beforeAll(() => {
             (organization_id, codigo, nome, preco_cents)
             values (v_org, 'RLS-' || v_org::text, 'Produto de invariante', 100);
         end if;
+        select id into v_prod from public.catalog_products where organization_id = v_org limit 1;
 
         if not exists (select 1 from public.push_subscriptions where organization_id = v_org) then
           insert into public.push_subscriptions
@@ -211,6 +224,176 @@ beforeAll(() => {
         if not exists (select 1 from public.commercial_goals where organization_id = v_org) then
           insert into public.commercial_goals (organization_id, ano_mes, valor_cents)
             values (v_org, '2026-09', 100000);
+        end if;
+
+        -- migration 0208 — contador do número do pedido (singleton por org).
+        v_tag := case when v_org = '${ORG_A}'::uuid then 'a' else 'b' end;
+        if not exists (select 1 from public.commercial_order_counters where organization_id = v_org) then
+          insert into public.commercial_order_counters (organization_id)
+            values (v_org);
+        end if;
+
+        -- Pedido + 1 item (o positive control precisa de linha em todas).
+        if not exists (select 1 from public.commercial_orders where organization_id = v_org) then
+          insert into public.commercial_orders (organization_id, numero, cliente_nome)
+            values (v_org, 1, 'Cliente RLS Invariant') returning id into v_ord;
+        end if;
+        select id into v_ord from public.commercial_orders where organization_id = v_org limit 1;
+        if not exists (select 1 from public.commercial_order_items where organization_id = v_org) then
+          insert into public.commercial_order_items
+            (organization_id, order_id, product_id, produto_codigo, produto_nome, quantidade, preco_unit_cents, subtotal_cents)
+            values (v_org, v_ord, v_prod, 'RLS-' || v_tag, 'Item RLS Invariant', 1, 100, 100);
+        end if;
+
+        -- migration 0210 — categoria + tabela de preço + item ligando o produto.
+        if not exists (select 1 from public.product_categories where organization_id = v_org) then
+          insert into public.product_categories (organization_id, nome)
+            values (v_org, 'Categoria RLS Invariant') returning id into v_cat;
+        end if;
+        if not exists (select 1 from public.price_tables where organization_id = v_org) then
+          insert into public.price_tables (organization_id, nome)
+            values (v_org, 'Tabela RLS Invariant') returning id into v_pt;
+        end if;
+        select id into v_pt from public.price_tables where organization_id = v_org limit 1;
+        if not exists (select 1 from public.price_table_items where organization_id = v_org) then
+          insert into public.price_table_items (organization_id, price_table_id, product_id)
+            values (v_org, v_pt, v_prod);
+        end if;
+
+        -- migration 0212 — carga + romaneio + posição de GPS do roteirizador.
+        if not exists (select 1 from public.commercial_shipment_counters where organization_id = v_org) then
+          insert into public.commercial_shipment_counters (organization_id)
+            values (v_org);
+        end if;
+        if not exists (select 1 from public.shipments where organization_id = v_org) then
+          insert into public.shipments (organization_id, numero)
+            values (v_org, 1) returning id into v_shi;
+        end if;
+        select id into v_shi from public.shipments where organization_id = v_org limit 1;
+        if not exists (select 1 from public.shipment_orders where organization_id = v_org) then
+          insert into public.shipment_orders (organization_id, shipment_id, order_id)
+            values (v_org, v_shi, v_ord);
+        end if;
+        if not exists (select 1 from public.shipment_positions where organization_id = v_org) then
+          insert into public.shipment_positions (organization_id, shipment_id, latitude, longitude)
+            values (v_org, v_shi, -23.5505, -46.6333);
+        end if;
+
+        -- migration 0213 — fiscal settings (singleton) + invoice + evento+job.
+        if not exists (select 1 from public.fiscal_settings where organization_id = v_org) then
+          insert into public.fiscal_settings (organization_id)
+            values (v_org);
+        end if;
+        if not exists (select 1 from public.invoices where organization_id = v_org) then
+          insert into public.invoices (organization_id, serie, total_cents)
+            values (v_org, '1', 1000) returning id into v_inv;
+        end if;
+        select id into v_inv from public.invoices where organization_id = v_org limit 1;
+        if not exists (select 1 from public.fiscal_jobs where organization_id = v_org) then
+          insert into public.fiscal_jobs (organization_id, invoice_id)
+            values (v_org, v_inv);
+        end if;
+        if not exists (select 1 from public.fiscal_events where organization_id = v_org) then
+          insert into public.fiscal_events (organization_id, invoice_id, tipo)
+            values (v_org, v_inv, 'criada');
+        end if;
+
+        -- migration 0235 — inutilização + CFOP equivalente.
+        if not exists (select 1 from public.fiscal_inutilizacoes where organization_id = v_org) then
+          insert into public.fiscal_inutilizacoes (organization_id, serie, numero_inicial, numero_final, motivo)
+            values (v_org, '1', 100, 101, 'Faixa de teste de invariante RLS');
+        end if;
+        if not exists (select 1 from public.fiscal_cfop_equivalentes where organization_id = v_org) then
+          insert into public.fiscal_cfop_equivalentes (organization_id, cfop_origem, cfop_destino)
+            values (v_org, '5102', '6108');
+        end if;
+
+        -- migration 0236 — nota de entrada + cursor + conta a pagar.
+        v_chave := '3526' || lpad(case when v_org = '${ORG_A}'::uuid then '1' else '2' end, 40, '0');
+        if not exists (select 1 from public.fiscal_entradas where organization_id = v_org) then
+          insert into public.fiscal_entradas (organization_id, chave, nsu, emitente_cnpj, emitente_nome)
+            values (v_org, v_chave, 42, '00000000000191', 'Fornecedor RLS Invariant');
+        end if;
+        if not exists (select 1 from public.fiscal_entrada_cursor where organization_id = v_org) then
+          insert into public.fiscal_entrada_cursor (organization_id)
+            values (v_org);
+        end if;
+        if not exists (select 1 from public.financial_pagaveis where organization_id = v_org) then
+          insert into public.financial_pagaveis (organization_id, parcela_n, total_parcelas, valor_original_cents, vencimento)
+            values (v_org, 1, 1, 1000, current_date + interval '30 days');
+        end if;
+
+        -- migration 0233 — contas a receber + pagamento.
+        if not exists (select 1 from public.financial_receivables where organization_id = v_org) then
+          insert into public.financial_receivables (organization_id, parcela_n, total_parcelas, valor_original_cents, vencimento)
+            values (v_org, 1, 1, 1000, current_date + interval '30 days') returning id into v_recv;
+        end if;
+        select id into v_recv from public.financial_receivables where organization_id = v_org limit 1;
+        if not exists (select 1 from public.financial_payments where organization_id = v_org) then
+          insert into public.financial_payments (organization_id, receivable_id, valor_cents)
+            values (v_org, v_recv, 1000);
+        end if;
+
+        -- migration 0218 — comprovante de entrega.
+        if not exists (select 1 from public.shipment_proofs where organization_id = v_org) then
+          insert into public.shipment_proofs (organization_id, shipment_id, order_id, storage_path)
+            values (v_org, v_shi, v_ord, 'rls/' || v_tag || '/prova.jpg');
+        end if;
+
+        -- migration 0219 — foto do produto.
+        if not exists (select 1 from public.product_images where organization_id = v_org) then
+          insert into public.product_images (organization_id, product_id, storage_path)
+            values (v_org, v_prod, 'rls/' || v_tag || '/prod.jpg');
+        end if;
+
+        -- migration 0220 — busca de prospecção + prospecto + resultado + campanha.
+        if not exists (select 1 from public.prospecting_searches where organization_id = v_org) then
+          insert into public.prospecting_searches (organization_id)
+            values (v_org) returning id into v_search;
+        end if;
+        select id into v_search from public.prospecting_searches where organization_id = v_org limit 1;
+        if not exists (select 1 from public.business_prospects where organization_id = v_org) then
+          insert into public.business_prospects (organization_id, nome, nome_normalizado, provider)
+            values (v_org, 'Prospecto RLS Invariant', 'prospecto-rls-invariant', 'google_places') returning id into v_prospect;
+        end if;
+        select id into v_prospect from public.business_prospects where organization_id = v_org limit 1;
+        if not exists (select 1 from public.prospect_search_results where organization_id = v_org) then
+          insert into public.prospect_search_results (search_id, prospect_id, organization_id)
+            values (v_search, v_prospect, v_org);
+        end if;
+        if not exists (select 1 from public.prospecting_campaigns where organization_id = v_org) then
+          insert into public.prospecting_campaigns (organization_id, nome)
+            values (v_org, 'Campanha RLS Invariant') returning id into v_camp;
+        end if;
+        if not exists (select 1 from public.prospecting_settings where organization_id = v_org) then
+          insert into public.prospecting_settings (organization_id)
+            values (v_org);
+        end if;
+
+        -- migration 0221 — políticas comerciais (singleton).
+        if not exists (select 1 from public.commercial_policies where organization_id = v_org) then
+          insert into public.commercial_policies (organization_id)
+            values (v_org);
+        end if;
+
+        -- migrations 0226/0227 — baixas de comissão e de título (por pedido).
+        if not exists (select 1 from public.commercial_commission_baixas where organization_id = v_org) then
+          insert into public.commercial_commission_baixas (organization_id, order_id, valor_cents)
+            values (v_org, v_ord, 100);
+        end if;
+        if not exists (select 1 from public.commercial_titulo_baixas where organization_id = v_org) then
+          insert into public.commercial_titulo_baixas (organization_id, order_id, parcela_n, valor_cents)
+            values (v_org, v_ord, 1, 100);
+        end if;
+
+        -- migration 0229 — tarefa e atividade do vendedor.
+        if not exists (select 1 from public.commercial_tasks where organization_id = v_org) then
+          insert into public.commercial_tasks (organization_id, titulo)
+            values (v_org, 'Tarefa RLS Invariant');
+        end if;
+        if not exists (select 1 from public.commercial_activities where organization_id = v_org) then
+          insert into public.commercial_activities (organization_id)
+            values (v_org);
         end if;
       end loop;
     end
@@ -266,6 +449,43 @@ export const TABLES = [
   // natural seria afrouxar a policy para caber no molde. A prova dela vive em
   // `tests/invariants/historico-de-captacao-rls.test.ts`, que mede as duas
   // direções MAIS o gate de papel (o `viewer` que não lê o formulário).
+  // ── Ondas de setembro (0208–0236) — RLS molde 0204, leitura org-scoped sem
+  // gate de papel: o `agent` semeado lê a própria org (positive control) e 0 da
+  // vizinha. A escrita (agent+/manager+) é provada nos testes unitários/API de
+  // cada módulo, não aqui. Seed em `beforeAll`.
+  "commercial_order_counters",
+  "commercial_orders",
+  "commercial_order_items",
+  "product_categories",
+  "price_tables",
+  "price_table_items",
+  "shipments",
+  "commercial_shipment_counters",
+  "shipment_orders",
+  "shipment_positions",
+  "shipment_proofs",
+  "product_images",
+  "fiscal_settings",
+  "invoices",
+  "fiscal_jobs",
+  "fiscal_events",
+  "fiscal_inutilizacoes",
+  "fiscal_cfop_equivalentes",
+  "fiscal_entradas",
+  "fiscal_entrada_cursor",
+  "financial_pagaveis",
+  "financial_receivables",
+  "financial_payments",
+  "prospecting_searches",
+  "business_prospects",
+  "prospect_search_results",
+  "prospecting_campaigns",
+  "prospecting_settings",
+  "commercial_policies",
+  "commercial_commission_baixas",
+  "commercial_titulo_baixas",
+  "commercial_tasks",
+  "commercial_activities",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

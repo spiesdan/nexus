@@ -6,7 +6,8 @@ import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
+import { CrmKpi, CrmKpiGrid } from "@/components/uimaxxing/crm/crm-kpi";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -187,9 +188,10 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
 
   return (
     <div className="space-y-6 p-6">
-      <NexusPageHeader
-        title={t("Financeiro")}
-        subtitle={t("Contas a receber, recebimentos e conciliação.")}
+      <CrmPageHeader
+        eyebrow={t("Financeiro")}
+        title={t("Contas a receber")}
+        description={t("Recebimentos e conciliação pedido × NF × financeiro.")}
       />
 
       {kpis === null ? (
@@ -199,38 +201,27 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Card className="hover-raise p-3">
-            <p className="text-xs text-muted-foreground">{t("A receber")}</p>
-            <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-              {comoMoeda(kpis.a_receber_cents ?? 0, "BRL")}
-            </p>
-          </Card>
-          <Card className="hover-raise p-3">
-            <p className="text-xs text-muted-foreground">{t("Vencido")}</p>
-            <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-              {comoMoeda(kpis.vencido_cents ?? 0, "BRL")}
-            </p>
-          </Card>
-          <Card className="hover-raise p-3">
-            <p className="text-xs text-muted-foreground">{t("Vence hoje / 7 dias")}</p>
-            <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-              {comoMoeda(kpis.vence_hoje_cents ?? 0, "BRL")}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-              7d: {comoMoeda(kpis.vence_7d_cents ?? 0, "BRL")}
-            </p>
-          </Card>
-          <Card className="hover-raise p-3">
-            <p className="text-xs text-muted-foreground">{t("Recebido (período)")}</p>
-            <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-              {comoMoeda(kpis.recebido_periodo_cents ?? 0, "BRL")}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-              {t("Vendas")}: {comoMoeda(kpis.vendas_periodo_cents ?? 0, "BRL")}
-            </p>
-          </Card>
-        </div>
+        <CrmKpiGrid>
+          <CrmKpi
+            label={t("A receber")}
+            value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")}
+          />
+          <CrmKpi
+            label={t("Vencido")}
+            value={comoMoeda(kpis.vencido_cents ?? 0, "BRL")}
+            trend={(kpis.vencido_cents ?? 0) > 0 ? "down" : "flat"}
+          />
+          <CrmKpi
+            label={t("Vence hoje / 7 dias")}
+            value={comoMoeda(kpis.vence_hoje_cents ?? 0, "BRL")}
+            comparison={`7d: ${comoMoeda(kpis.vence_7d_cents ?? 0, "BRL")}`}
+          />
+          <CrmKpi
+            label={t("Recebido (período)")}
+            value={comoMoeda(kpis.recebido_periodo_cents ?? 0, "BRL")}
+            comparison={`${t("Vendas")}: ${comoMoeda(kpis.vendas_periodo_cents ?? 0, "BRL")}`}
+          />
+        </CrmKpiGrid>
       )}
 
       <Tabs value={aba} onValueChange={setAba}>
@@ -340,13 +331,13 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
               <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-xs text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">{t("Vencimento")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Cliente")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Parcela")}</th>
-                      <th className="px-3 py-2 text-right font-medium">{t("Valor")}</th>
-                      <th className="px-3 py-2 text-right font-medium">{t("Saldo")}</th>
-                      <th className="px-3 py-2 font-medium">{t("Status")}</th>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Cliente")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
+                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Valor")}</th>
+                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Saldo")}</th>
+                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Status")}</th>
                       <th className="px-3 py-2">
                         <span className="sr-only">{t("Ações")}</span>
                       </th>
@@ -355,7 +346,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
                   <tbody>
                     {linhas.map((l) => (
                       <React.Fragment key={l.id}>
-                        <tr className="border-b align-top last:border-0 hover:bg-muted/50">
+                        <tr className="row-hover border-b align-top last:border-0">
                           <td className="px-3 py-2 whitespace-nowrap tabular-nums">
                             {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
                             {l.dias_atraso > 0 && (

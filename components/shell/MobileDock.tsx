@@ -41,8 +41,13 @@ export function MobileDock() {
   if (itens.length === 0) return null;
 
   return (
+    // Landmark PRÓPRIO ("Navegação rápida"), não "Navegação principal": dois
+    // `nav` com o mesmo rótulo são indistinguíveis para leitor de tela — e o
+    // e2e `navegacao` conta o principal por esse rótulo no mobile, onde SÓ o
+    // dock está visível. Renomear aqui é o conserto; excluir o dock do teste
+    // seria esconder o sintoma.
     <nav
-      aria-label={t("Navegação principal")}
+      aria-label={t("Navegação rápida")}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <div className="flex items-stretch justify-around px-2 py-1.5">

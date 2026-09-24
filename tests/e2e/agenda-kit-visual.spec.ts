@@ -17,6 +17,19 @@ const ESPERA = 60_000;
 
 const VITRINE = "/vitrine-agenda";
 
+/** Deruba o default (dark, PROMPT V4) para o tema claro nos testes que medem
+ *  o claro — mesmo `applyTheme` do runtime, aplicado direto no navegador. */
+async function forcarTemaClaro(page: Page) {
+  await page.evaluate(() => {
+    try {
+      window.localStorage.setItem("deskcomm-theme", "light");
+    } catch {
+      /* modo privado: aplica direto no DOM */
+    }
+    document.documentElement.setAttribute("data-theme", "light");
+  });
+}
+
 /**
  * A vitrine não toca banco, mas EXIGE SESSÃO — e essa distinção custou uma
  * medição do maestro para aparecer.
@@ -141,9 +154,11 @@ test.describe("kit visual da Agenda", () => {
   test.beforeEach(async () => {
     // `goto` a cada teste devolve a tela ao estado inicial sem novo login — a
     // sessão vive no contexto, não na página. O localStorage do tema NÃO volta
-    // sozinho, e sem limpá-lo o teste que troca para o escuro contaminaria o
-    // seguinte: ele mediria "as cores do tema claro" num tema escuro e passaria,
-    // porque a régua de contraste vale para os dois.
+    // sozinho, e sem limpá-lo o teste que troca para o claro contaminaria o
+    // seguinte: ele mediria "as cores do tema escuro" num tema claro e passaria,
+    // porque a régua de contraste vale para os dois. O default é DARK (PROMPT
+    // V4): limpar cai no escuro, e quem mede o tema claro força `light` no
+    // próprio teste.
     await page.goto(VITRINE);
     await page.evaluate(() => {
       try {
@@ -380,6 +395,7 @@ test.describe("kit visual da Agenda", () => {
   test("as oito trilhas passam em contraste e são distinguíveis — no tema claro", async () => {
     const relatorio: string[] = [];
 
+    await forcarTemaClaro(page);
     {
       const m = await medirTrilhas(page);
       relatorio.push(
@@ -393,8 +409,6 @@ test.describe("kit visual da Agenda", () => {
       // WCAG 1.4.11: componente gráfico não-textual precisa de 3:1 contra o
       // fundo adjacente. É esta a régua — 4.5:1 é para TEXTO, e a faixa de cor
       // não carrega texto (o nome vem na inicial, que usa a cor de texto do tema).
-      // Light-only desde o redesign: o bloco escuro do CSS segue morto de pé
-      // para a derivação de marca, sem leitor na UI.
       for (const [i, c] of m.contrastes.entries()) {
         expect(c, `trilha ${i + 1} no tema claro (${m.cores[i]})`).toBeGreaterThanOrEqual(3);
       }
@@ -457,7 +471,9 @@ test.describe("kit visual da Agenda", () => {
     const afirmados = [...texto.matchAll(/0,(\d{3})/g)].map((m) => Number(`0.${m[1]}`));
     expect(afirmados.length, `a seção deveria afirmar números; texto: ${texto}`).toBeGreaterThanOrEqual(1);
 
-    // Light-only desde o redesign: a vitrine afirma só o número do claro.
+    // A vitrine afirma o número do claro (à esquerda), e o claro é o tema
+    // escolhido aqui — o default dark-first não pode roubar a medição.
+    await forcarTemaClaro(page);
     const medido = (await medirTrilhas(page)).menorDistancia;
 
     // O primeiro número do texto é o par mais próximo no claro.
@@ -631,6 +647,7 @@ test.describe("kit visual da Agenda", () => {
 
   test("evidência visual: claro e celular", async () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
+    await forcarTemaClaro(page);
     await expect(page.getByTestId("grade-da-agenda")).toBeVisible({ timeout: ESPERA });
     await page.screenshot({ path: "evidence/calendario/kit-visual-claro.png", fullPage: true });
 
@@ -648,8 +665,18 @@ test.describe("kit visual da Agenda", () => {
     );
     await painelDaFoto.screenshot({ path: "evidence/calendario/painel-coluna-aberta.png" });
 
-    // Light-only desde o redesign: sem foto do tema escuro (o bloco escuro do
-    // CSS segue morto de pé para a derivação de marca, sem leitor na UI).
+    // O tema escuro é o DEFAULT agora (PROMPT V4): foto própria do escuro em
+    // desktop, além do claro que a vitrine afirma por números.
+    await page.evaluate(() => {
+      try {
+        window.localStorage.setItem("deskcomm-theme", "dark");
+      } catch {
+        /* modo privado: aplica direto no DOM */
+      }
+      document.documentElement.setAttribute("data-theme", "dark");
+    });
+    await page.screenshot({ path: "evidence/calendario/kit-visual-escuro.png", fullPage: true });
+    await forcarTemaClaro(page);
 
     // 390px é o iPhone que o dono da clínica tem no bolso.
     await page.setViewportSize({ width: 390, height: 844 });

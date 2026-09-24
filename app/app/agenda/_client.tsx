@@ -621,7 +621,11 @@ export function AgendaClient({
         agendamentos={agendamentos}
         pessoas={pessoas}
         agora={new Date()}
-        className="max-h-[320px]"
+        // `shrink-0` porque `tela-agenda` é coluna flex com altura contida e o
+        // histórico tem `min-h-0`: sem ele o flex o esmaga até altura ZERO (o
+        // `flex-1` da grade come o espaço) — os filhos transbordam visíveis, a
+        // grade sobrepõe as abas, e o testid resolve "hidden" para o Playwright.
+        className="max-h-[320px] shrink-0"
         // ⚠️ ESTAS DUAS PROPS FALTAVAM, e a ausência tinha cara de permissão.
         // `HistoricoDaAgenda` usa `disabled={!onRemarcar}`; sem elas os botões
         // nasciam cinzas em toda linha, de toda organização — e o `title` dizia
@@ -686,7 +690,13 @@ export function AgendaClient({
           setRemarcandoId(null);
           setMarcando(true);
         }}
-        className="min-h-0 flex-1"
+        // `min-h-[480px]` e não `min-h-0`: a grade é o terceiro flex-1/min-h-0
+        // aninhado desta tela, e numa viewport curta os três colapsos somavam —
+        // a grade ia a altura ZERO com os blocos tranbordando visíveis POR BAIXO
+        // dos irmãos (a panel vazia e os chips de tipo interceptavam o clique).
+        // Com o piso, o que sobra vira rolagem do `main` (doutrina do AppShell:
+        // só o main rola) em vez de grade morta.
+        className="min-h-[480px] flex-1"
       />
 
     </div>

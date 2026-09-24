@@ -1704,8 +1704,27 @@ echo "packaging: a tag do git não basta — as imagens têm de existir"
 #
 # 403 é o caso que trava na estreia de uma imagem nova: pacote recém-criado no
 # GHCR nasce privado, e repositório público não muda isso.
+#
+# Offline de propósito, como o cenário da pinagem acima: o aviso "construídas
+# neste servidor" só existe no ramo em que VERSAO_ALVO foi resolvido E o trio
+# saiu inalcançável (403). Um REPO_URL real resolve a versão só se o remoto
+# tiver tag v* — e o remoto canônico (spiesdan/nexus) ainda não tem nenhuma,
+# então o install caía no canal móvel e o teste media outra coisa. Repo local
+# com tags conhecidas deixa o cenário determinístico.
 TMP_PRIV="$(mktemp -d)"
 (
+  origem="$TMP_PRIV/origem.git"
+  git init --quiet --bare "$origem"
+  (
+    cd "$TMP_PRIV" || exit 1
+    git clone --quiet "$origem" w 2>/dev/null
+    cd w || exit 1
+    git config user.email t@t; git config user.name t
+    echo x > a; git add -A; git commit --quiet -m init
+    for t in v1.0.0 v1.9.0 v1.10.0; do git tag "$t"; done
+    git push --quiet origin HEAD --tags 2>/dev/null
+  )
+
   montar_vps "$TMP_PRIV/vps" "crmpriv" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$DOCKER_LOG"
@@ -1714,9 +1733,11 @@ case "$1" in
 esac
 exit 0
 STUB
+  export REPO_URL="$origem"
   export DUBLE_GHCR=403          # pacote existe mas está PRIVADO
   saida="$(rodar install.sh --yes)"
   unset DUBLE_GHCR
+  unset REPO_URL
 
   if ! printf '%s' "$saida" | grep -q "construídas neste servidor"; then
     printf '  ✗ com as imagens inalcançáveis, o instalador não avisou que ia construir aqui\n'

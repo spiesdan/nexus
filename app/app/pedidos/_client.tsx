@@ -509,12 +509,12 @@ export function PedidosClient({
               </Link>
             </Button>
           )}
-          <Button variant="outline" asChild className="bg-white">
+          <Button variant="outline" asChild className="bg-surface">
             <Link href="/app/ai">
               <Robot size={16} /> {t("Criar com IA no WhatsApp")}
             </Link>
           </Button>
-          <Button variant="outline" asChild className="bg-white">
+          <Button variant="outline" asChild className="bg-surface">
             <Link
               href={
                 selecionados.length > 0
@@ -536,13 +536,13 @@ export function PedidosClient({
               onChange={(e) => mudar({ busca: e.target.value }, true)}
               placeholder={t("Pedido, cliente ou representada")}
               aria-label={textos.buscar}
-              className="h-9 w-full rounded-r-none border-[#d9d9d9] bg-white sm:w-64"
+              className="h-9 w-full rounded-r-none border-[#d9d9d9] bg-surface sm:w-64"
             />
             <Button
               type="button"
               variant="outline"
               aria-label={textos.buscar}
-              className="rounded-l-none border-l-0 bg-white"
+              className="rounded-l-none border-l-0 bg-surface"
               onClick={() => void recarregar(filtros)}
             >
               <MagnifyingGlass size={16} />
@@ -637,7 +637,7 @@ export function PedidosClient({
                 value={filtros.condicao}
                 onChange={(e) => mudar({ condicao: e.target.value }, true)}
                 placeholder="30/60"
-                className="h-9 bg-white"
+                className="h-9 bg-surface"
               />
             </div>
             <FilterNumber
@@ -660,7 +660,7 @@ export function PedidosClient({
               variant={filtros.meus ? "default" : "outline"}
               onClick={() => mudar({ meus: !filtros.meus })}
               aria-pressed={filtros.meus}
-              className="bg-white"
+              className="bg-surface"
             >
               {textos.meus}
             </Button>
@@ -760,9 +760,9 @@ export function PedidosClient({
                   return (
                     <article
                       key={p.id}
-                      className="overflow-hidden rounded-md border border-[#e2e2e2] bg-white"
+                      className="overflow-hidden rounded-xl border border-border fill-well"
                     >
-                      <div className="flex items-center justify-between gap-2 bg-[#f6f6f4] px-3 py-2">
+                      <div className="flex items-center justify-between gap-2 bg-stage-2 px-3 py-2">
                         <p className="flex min-w-0 items-center gap-2 text-[13px]">
                           {podeCriar && (
                             <input
@@ -842,10 +842,10 @@ export function PedidosClient({
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-3xl border">
+        <div className="overflow-x-auto rounded-xl border border-border fill-well">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow className="bg-stage-2/60 hover:bg-stage-2/60">
                 {podeCriar && (
                   <TableHead className="px-3">
                     <input

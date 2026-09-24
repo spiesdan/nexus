@@ -120,11 +120,13 @@ export const viewport: Viewport = {
   themeColor: coresDaBarraDoNavegador(REGUA_DO_PRODUTO),
 };
 
-// Light-only (DESIGN.md): o produto não tem mais tema escuro. O script fixa
-// `light` sem ler storage nem `prefers-color-scheme` — conteúdo estático,
-// portanto seguro. O bloco `[data-theme="dark"]` do globals.css segue morto
-// de pé para a derivação de marca (ver cabeçalho dos tokens).
-const THEME_INIT_SCRIPT = `(function(){try{document.documentElement.setAttribute('data-theme','light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
+// Dark-first (PROMPT V4): o produto nasce no tema escuro e só sai dele quando o
+// usuário gravou `light` em `deskcomm-theme`. O script lê a chave ANTES do
+// primeiro paint (o `<html>` já sai com `data-theme="dark"` do SSR; se houver
+// preferência gravada, troca aqui mesmo para não piscar). O bloco
+// `[data-theme="dark"]` do globals.css é agora o caminho padrão, e não um
+// convidado morto de pé para a derivação de marca (ver cabeçalho dos tokens).
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('deskcomm-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();`;
 
 /**
  * Motivos já registrados neste processo. `EstiloDaMarca` roda em TODA
@@ -281,7 +283,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      data-theme="light"
+      data-theme="dark"
       suppressHydrationWarning
       className={`${inter.variable} ${plexMono.variable}`}
     >

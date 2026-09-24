@@ -137,15 +137,13 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "Este é o check obrigatório `invariants` (`pnpm test:db`) — o único que exercita o " +
       "`baseline.sql` que o self-hoster aplica, e o isolamento RLS entre organizações.",
   },
-  "e2e.yml::e2e-parte": {
-    condicao: null,
-    efeito: "São as partes da matriz Playwright; sem elas o `e2e` fica sem nada para ler.",
-  },
   "e2e.yml::e2e": {
-    condicao: "always()",
+    condicao: null,
     efeito:
-      "Este é o check obrigatório `e2e`, a fachada da matriz. Precisa de `always()` para " +
-      "ler o resultado das partes e reprovar `skipped`.",
+      "Este é o check obrigatório `e2e` em job ÚNICO (setup, Supabase, build e " +
+      "as duas partes do Playwright no mesmo runner). Era a fachada da matrix " +
+      "`e2e-parte` com `always()`; com um job só, não há fachada — o veredito " +
+      "sai do passo de gate interno. SEM `if:` de job de propósito.",
   },
   "perf.yml::build-and-size": {
     condicao: null,

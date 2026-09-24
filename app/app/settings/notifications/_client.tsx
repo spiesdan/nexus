@@ -47,15 +47,15 @@ export function NotificationPrefsClient() {
       <table className="w-full text-sm">
         <thead className="border-b">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">{t("Categoria")}</th>
-            <th className="px-4 py-3 text-center font-medium">Email</th>
-            <th className="px-4 py-3 text-center font-medium">In-app</th>
-            <th className="px-4 py-3 text-center font-medium">Push</th>
+            <th className="px-4 py-3 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("Categoria")}</th>
+            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Email</th>
+            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">In-app</th>
+            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Push</th>
           </tr>
         </thead>
         <tbody>
           {NOTIFY_UI_CATEGORIES.map((cat) => (
-            <tr key={cat} className="border-b last:border-0">
+            <tr key={cat} className="row-hover border-b last:border-0">
               <td className="px-4 py-3">
                 {t(LABELS[cat])}
                 {cat === "message" && denied ? (

@@ -91,7 +91,12 @@ test.describe("gestão de funis", () => {
     // O manager é membro de DUAS organizações, e as duas têm um funil "Pedidos".
     // Sem o filtro por organização, apareceriam as duas linhas — indistinguíveis,
     // cada uma levando a um quadro diferente.
-    await expect(page.getByText("Pedidos", { exact: true })).toHaveCount(1);
+    //
+    // Escopo na LINHA, não na página: o `getByText` page-wide casa também o link
+    // "Pedidos" do sidebar e o rótulo do dock mobile (oculto no desktop) — a
+    // contagem quebra a cada item de chrome com o mesmo nome, sem nada a ver
+    // com isolamento. Uma linha = só a org ativa; duas = vazamento.
+    await expect(linhaDoFunil(page, "Pedidos")).toHaveCount(1);
   });
 
   test("cria funil com colunas, edita, e as recusas aparecem explicadas", async ({ page }) => {
@@ -169,7 +174,9 @@ test("quem não pode gerenciar vê a lista sem os controles de escrita", async (
   await login(page, creds.users.agent!.email);
   await page.goto("/app/kanban");
   await expect(page.getByRole("heading", { name: "Funis" })).toBeVisible();
-  await expect(page.getByText("Pedidos", { exact: true })).toHaveCount(1);
+  // Mesmo escopo do caso acima: conta LINHAS da lista, não ocorrências do
+  // nome na página (sidebar + dock mobile também dizem "Pedidos").
+  await expect(linhaDoFunil(page, "Pedidos")).toHaveCount(1);
   await expect(page.getByTestId("novo-funil")).toHaveCount(0);
   await expect(page.locator('[data-testid^="arquivar-"]')).toHaveCount(0);
 });

@@ -86,6 +86,21 @@ const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
       "declarado pela migration 0034 e não há call site de RPC para removê-lo " +
       "com segurança sem medir o disparo de cada trigger.",
   },
+  {
+    fn: "fn_proximo_numero_carga(uuid)",
+    razao:
+      "POST /app/api/v1/shipments chama com a sessão do usuário (createClient em " +
+      "app/api/v1/shipments/route.ts:62, rpc na linha 98, dentro do handler com " +
+      "requireRole('agent')). A função confere membership via auth.uid().",
+  },
+  {
+    fn: "fn_proximo_numero_pedido(uuid)",
+    razao:
+      "criarPedidoComercial chama com a sessão do usuário (lib/comercial/criar-pedido.ts:223), " +
+      "e é invocada só com client de sessão: lib/mcp/tools/comercio.ts:372 (ctx.supabase), " +
+      "app/api/v1/commercial-orders/route.ts:105, [id]/duplicar/route.ts:138 e " +
+      "lib/assistente/propostas.ts:116. A função confere membership via auth.uid().",
+  },
 ];
 
 interface Definer {

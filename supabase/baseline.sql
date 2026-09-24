@@ -10094,6 +10094,13 @@ alter table public.agent_inbox_items
     -- tratava `skipped` como sucesso, e a linha da fonte seguia dizendo `ready`.
     -- Irmão direto de `midia_nao_lida`: mesma chave, mesmo silêncio.
     'conhecimento_nao_indexado',
+    -- (migration 0237) Digest diário do Radar na Central de avisos: um item por
+    -- org por dia, só quando há o que dizer. A 0237 o acrescentou na migration,
+    -- mas o bloco ÚNICO do baseline ficou pra trás — sem esta linha, quem atualiza
+    -- pelo kit vê o INSERT do digest morrer no 23514 em silêncio (o cron captura e
+    -- loga, e o operador só não recebe o resumo). Entra AQUI, no fim, pela regra do
+    -- bloco único (#159): um kind novo numa lista, nunca um bloco novo.
+    'radar_digest',
     'other'
   ));
 
@@ -19770,6 +19777,86 @@ revoke all on public.fiscal_events from anon;
 grant select on public.fiscal_events to authenticated;
 grant all on public.fiscal_events to service_role;
 
+-- ---------------------------------------------------------------------------
+-- 0238 — ANONIMIZAR UM CONTATO DEIXAVA PROSPECÇÃO, NOTA DE ENTRADA E CONTA A
+--    PAGAR LEGÍVEIS (apêndice idempotente — mesma carga da migration 0238)
+--
+-- Três tabelas chegadas em setembro ficaram fora da lista de tabelas da
+-- `fn_lgpd_cascade_redact_contact`. Mesma razão da 0184: função vem do dump com
+-- ~180 linhas, e carregar uma CÓPIA dela no apêndice criaria duas fontes que
+-- divergem. O conserto é trigger `after update of is_anonymized on contacts`,
+-- na MESMA transação do cascade, como a 0174 e a 0184. O apêndice entra ANTES
+-- da varredura anon (0116) porque cria função — o bloco da varredura é, de
+-- propósito, o último do arquivo.
+-- ---------------------------------------------------------------------------
+create or replace function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  update public.business_prospects
+     set nome                = 'Prospecto anonimizado',
+         nome_normalizado    = 'prospecto-anonimizado',
+         telefone            = null,
+         telefone_normalizado = null,
+         whatsapp_potencial  = false,
+         website             = null,
+         dominio             = null,
+         email               = null,
+         endereco            = null,
+         logradouro          = null,
+         numero_end          = null,
+         bairro              = null,
+         cep                 = null,
+         external_url        = null,
+         source              = null,
+         source_url          = null,
+         latitude            = null,
+         longitude           = null
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  update public.fiscal_entradas
+     set emitente_cnpj = '00000000000000',
+         emitente_nome = 'Fornecedor anonimizado',
+         emitente_ie   = null,
+         cobranca_json = '[]'::jsonb
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  update public.financial_pagaveis
+     set fornecedor_nome = null,
+         fornecedor_cnpj = null,
+         observacoes     = null
+   where organization_id = new.organization_id
+     and contact_id = new.id;
+
+  return new;
+end;
+$$;
+
+-- Função de trigger não exige EXECUTE de quem dispara o UPDATE, então revogar
+-- das três origens não a quebra — e a mantém fora da lista de exceções do
+-- invariante de hardening, que é congelada.
+revoke execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() from public, anon, authenticated;
+grant  execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() to service_role;
+
+drop trigger if exists trg_redigir_prospeccao_e_fiscal_ao_anonimizar on public.contacts;
+create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
+  after update of is_anonymized on public.contacts
+  for each row
+  when (new.is_anonymized is true and old.is_anonymized is distinct from true)
+  execute function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado();
+
+-- Os `comment on column` das três tabelas vivem NO FIM do arquivo, junto ao
+-- apêndice 0236 que as cria: num INSTALL, este bloco roda antes delas
+-- existirem (psql:<stdin>:N: ERROR: relation "public.fiscal_entradas" does
+-- not exist — medido no modo INSTALL do CI).
+
+notify pgrst, 'reload schema';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
@@ -20170,3 +20257,13 @@ comment on table public.fiscal_entrada_cursor is
   'Cursor da distribuição DF-e por org (ultNSU). Sem ele, cada sincronização baixaria tudo de novo.';
 comment on table public.financial_pagaveis is
   'Conta a pagar por parcela da nota de entrada. Sem duplicata, 1 parcela com vencimento na emissão.';
+
+-- Os `comment on column` da 0238 vivem AQUI, junto às tabelas que o apêndice
+-- 0236 criou — num INSTALL elas ainda não existiam quando o bloco da função
+-- rodou, antes da varredura anon.
+comment on column public.business_prospects.email is
+  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com telefone, endereço, website, domínio e URLs. provider/external_id são PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
+comment on column public.fiscal_entradas.emitente_cnpj is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
+comment on column public.financial_pagaveis.fornecedor_nome is
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';

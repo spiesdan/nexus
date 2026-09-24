@@ -147,6 +147,77 @@ export interface AuditRow {
   created_at: string;
 }
 
+/**
+ * Prospecto descoberto/business prospect vinculado ao titular (0220).
+ *
+ * Mesma doutrina do bloco de captação: as colunas para cá são as que a 0238
+ * REDIGE ao anonimizar (nome, telefone, e-mail, endereço, URLs) MAIS o que ela
+ * PRESERVA e que a organização sabe a respeito dele — categoria, cidade,
+ * proveedor/external_id (identidade da fonte) e o estado comercial do contato
+ * que o titular reputa seu. `provider`/`external_id` não são PII do titular,
+ * mas entram por completude de registro: dizer "este fornecedor foi descoberto
+ * por ali" é informação sobre a relação.
+ */
+export interface BusinessProspectRow {
+  id: string;
+  nome: string | null;
+  categoria: string | null;
+  telefone: string | null;
+  email: string | null;
+  website: string | null;
+  endereco: string | null;
+  cidade: string | null;
+  estado: string | null;
+  pais: string | null;
+  status_comercial: string;
+  score: number;
+  provider: string;
+  external_id: string | null;
+  discovered_at: string;
+}
+
+/**
+ * Nota de entrada (NF-e de fornecedor contra o CNPJ da instalação) em que o
+ * titular é a contraparte (0236).
+ *
+ * A 0238 redige o snapshot do FORNECEDOR (emitente_cnpj → sentinela,
+ * emitente_nome, emitente_ie, cobrança) quando o contato é anonimizado. O
+ * export entrega o registro de operação PRESERVADO: chave fiscal, número,
+ * série, emissão e valor — "houve uma nota X de Y" é a informação do titular.
+ * PII de fora: `emitente_cnpj` NÃO entra aqui depois de anonimizado valer
+ * sentinêla; o que exportamos é a operação, não a contraparte.
+ */
+export interface FiscalEntradaRow {
+  id: string;
+  chave: string;
+  numero: number | null;
+  serie: string | null;
+  dh_emi: string | null;
+  valor_total_cents: number;
+  status: string;
+  manifestacao: string | null;
+  created_at: string;
+}
+
+/**
+ * Conta a pagar vinculada ao titular como fornecedor (0236).
+ *
+ * A 0238 redige o snapshot `fornecedor_nome`/`fornecedor_cnpj`/`observacoes`.
+ * O export entrega o registro financeiro PRESERVADO: parcela, vencimento e
+ * valores — o financeiro é registro de operação, e o titular vê o que se sabe
+ * a respeito da relação. PII de fora: o CNPJ do fornecedor anonimizado.
+ */
+export interface FinancialPagavelRow {
+  id: string;
+  parcela_n: number;
+  total_parcelas: number;
+  valor_original_cents: number;
+  vencimento: string;
+  status: string;
+  forma_pagamento: string | null;
+  created_at: string;
+}
+
 export interface ExportPayload {
   request_id: string;
   organization_id: string;
@@ -172,6 +243,9 @@ export interface ExportPayload {
   activities: ActivityRow[];
   appointments: AppointmentRow[];
   webhook_captures: CaptureRow[];
+  business_prospects: BusinessProspectRow[];
+  fiscal_entradas: FiscalEntradaRow[];
+  financial_pagaveis: FinancialPagavelRow[];
   audit_log_extract: AuditRow[];
 }
 
@@ -522,6 +596,107 @@ export async function collectExportData(args: CollectArgs): Promise<ExportPayloa
     }
   }
 
+  // Prospectos de business discovery (0220) vinculados ao titular.
+  let business_prospects: BusinessProspectRow[] = [];
+  if (contactId) {
+    const { data, error } = await admin
+      .from("business_prospects")
+      .select(
+        "id, nome, categoria, telefone, email, website, endereco, cidade, estado, pais, status_comercial, score, provider, external_id, discovered_at",
+      )
+      .eq("organization_id", organizationId)
+      .eq("contact_id", contactId)
+      .order("discovered_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      logger.warn("[lgpd-export-worker] business prospects load failed", {
+        request_id: requestId,
+        error: error.message,
+      });
+    } else if (data) {
+      business_prospects = data.map((p) => ({
+        id: p.id,
+        nome: p.nome ?? null,
+        categoria: p.categoria ?? null,
+        telefone: p.telefone ?? null,
+        email: p.email ?? null,
+        website: p.website ?? null,
+        endereco: p.endereco ?? null,
+        cidade: p.cidade ?? null,
+        estado: p.estado ?? null,
+        pais: p.pais ?? null,
+        status_comercial: p.status_comercial,
+        score: p.score,
+        provider: p.provider,
+        external_id: p.external_id ?? null,
+        discovered_at: p.discovered_at,
+      }));
+    }
+  }
+
+  // Notas de entrada (0236) em que o titular é a contraparte (fornecedor).
+  let fiscal_entradas: FiscalEntradaRow[] = [];
+  if (contactId) {
+    const { data, error } = await admin
+      .from("fiscal_entradas")
+      .select(
+        "id, chave, numero, serie, dh_emi, valor_total_cents, status, manifestacao, created_at",
+      )
+      .eq("organization_id", organizationId)
+      .eq("contact_id", contactId)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      logger.warn("[lgpd-export-worker] fiscal entradas load failed", {
+        request_id: requestId,
+        error: error.message,
+      });
+    } else if (data) {
+      fiscal_entradas = data.map((e) => ({
+        id: e.id,
+        chave: e.chave,
+        numero: e.numero ?? null,
+        serie: e.serie ?? null,
+        dh_emi: e.dh_emi ?? null,
+        valor_total_cents: e.valor_total_cents,
+        status: e.status,
+        manifestacao: e.manifestacao ?? null,
+        created_at: e.created_at,
+      }));
+    }
+  }
+
+  // Contas a pagar (0236) vinculadas ao titular como fornecedor.
+  let financial_pagaveis: FinancialPagavelRow[] = [];
+  if (contactId) {
+    const { data, error } = await admin
+      .from("financial_pagaveis")
+      .select(
+        "id, parcela_n, total_parcelas, valor_original_cents, vencimento, status, forma_pagamento, created_at",
+      )
+      .eq("organization_id", organizationId)
+      .eq("contact_id", contactId)
+      .order("vencimento", { ascending: false })
+      .limit(200);
+    if (error) {
+      logger.warn("[lgpd-export-worker] financial pagaveis load failed", {
+        request_id: requestId,
+        error: error.message,
+      });
+    } else if (data) {
+      financial_pagaveis = data.map((p) => ({
+        id: p.id,
+        parcela_n: p.parcela_n,
+        total_parcelas: p.total_parcelas,
+        valor_original_cents: p.valor_original_cents,
+        vencimento: p.vencimento,
+        status: p.status,
+        forma_pagamento: p.forma_pagamento ?? null,
+        created_at: p.created_at,
+      }));
+    }
+  }
+
   // Audit log extract (best-effort: rows where metadata.contact_id matches).
   let audit_log_extract: AuditRow[] = [];
   if (contactId) {
@@ -566,6 +741,9 @@ export async function collectExportData(args: CollectArgs): Promise<ExportPayloa
     activities,
     appointments,
     webhook_captures,
+    business_prospects,
+    fiscal_entradas,
+    financial_pagaveis,
     audit_log_extract,
   };
 }
@@ -593,6 +771,9 @@ function emptyPayload(
     activities: [],
     appointments: [],
     webhook_captures: [],
+    business_prospects: [],
+    fiscal_entradas: [],
+    financial_pagaveis: [],
     audit_log_extract: [],
   };
 }
