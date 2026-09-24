@@ -91,7 +91,7 @@ export function DashboardHome(dados: DadosDashboard) {
             metaAc: s.metaAc,
             projecao: s.projecao,
           }))}
-          metaAc={dados.objetivo ?? 0}
+          metaAc={dados.objetivo}
           projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
           previsaoMes={dados.previsaoMes}
         />

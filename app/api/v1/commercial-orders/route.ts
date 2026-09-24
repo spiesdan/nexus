@@ -53,6 +53,15 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   if (status !== "" && (STATUS_DO_PEDIDO as readonly string[]).includes(status)) {
     q = q.eq("status", status);
+  } else if (status.includes(",")) {
+    // Multi-seleção da UI: `status=rascunho,aprovado`. Entradas inválidas são
+    // ignoradas; se nenhuma restar, o filtro não se aplica (fail-open igual
+    // ao valor único inválido acima).
+    const lista = status
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => (STATUS_DO_PEDIDO as readonly string[]).includes(s));
+    if (lista.length > 0) q = q.in("status", lista);
   }
   if (origem !== "") q = q.eq("origem", origem);
   if (contato !== "") q = q.eq("contact_id", contato);

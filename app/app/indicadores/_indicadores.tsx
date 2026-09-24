@@ -13,7 +13,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,7 +21,7 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
-import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
+import { EvolucaoVendas } from "@/components/indicadores/EvolucaoVendas";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -97,6 +96,25 @@ function Barra({ pct, cor }: { pct: number | null; cor: string }) {
 }
 
 const CORES_CARTEIRA = ["#16a34a", "#eab308", "#dc2626", "#9ca3af"];
+
+const MESES = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function ANOS_FILTRO(ano: number): number[] {
+  return [ano - 2, ano - 1, ano, ano + 1];
+}
 
 /** O "Indicador IA": pergunta livre respondida com os agregados do mês + gráfico. */
 function PerguntarIA({ mes }: { mes: string }) {
@@ -279,6 +297,7 @@ export function IndicadoresClient({
     },
   );
   const [nomePainel, setNomePainel] = React.useState("");
+  const [anoNumFiltro, mesNumFiltro] = mes.split("-").map(Number) as [number, number];
 
   function gravarPaineis(prox: { nome: string; mes: string; vendedor: string }[]) {
     setPaineis(prox);
@@ -322,29 +341,54 @@ export function IndicadoresClient({
         <Atividade />
       </div>
 
-      {/* Filtros: mês e vendedor, como no Mercos. */}
+      {/* Filtros: mes, ano e vendedor, como no Mercos. */}
       <div className="flex flex-wrap items-end gap-3">
-        <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">{t("Mês")}</span>
-          <input
-            type="month"
-            value={mes}
+        <span className="pb-2 text-xs font-semibold tracking-wide">{t("FILTRAR POR:")}</span>
+        <label className="block min-w-44 flex-1 text-sm">
+          <span className="sr-only">{t("Mês")}</span>
+          <select
+            value={mesNumFiltro}
             onChange={(e) => {
-              setMes(e.target.value);
-              aplicar(e.target.value, vendedor);
+              const nm = `${anoNumFiltro}-${String(Number(e.target.value)).padStart(2, "0")}`;
+              setMes(nm);
+              aplicar(nm, vendedor);
             }}
-            className="h-9 rounded-lg border bg-background px-3"
-          />
+            className="h-9 w-full rounded-lg border bg-background px-3"
+          >
+            {MESES.map((m, i) => (
+              <option key={m} value={i + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">{t("Vendedor")}</span>
+          <span className="sr-only">{t("Ano")}</span>
+          <select
+            value={anoNumFiltro}
+            onChange={(e) => {
+              const nm = `${e.target.value}-${String(mesNumFiltro).padStart(2, "0")}`;
+              setMes(nm);
+              aplicar(nm, vendedor);
+            }}
+            className="h-9 rounded-lg border bg-background px-3"
+          >
+            {ANOS_FILTRO(anoNumFiltro).map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block min-w-44 flex-1 text-sm">
+          <span className="sr-only">{t("Vendedor")}</span>
           <select
             value={vendedor}
             onChange={(e) => {
               setVendedor(e.target.value);
               aplicar(mes, e.target.value);
             }}
-            className="h-9 rounded-lg border bg-background px-3"
+            className="h-9 w-full rounded-lg border bg-background px-3"
           >
             <option value="">{t("Todos os vendedores")}</option>
             {dados.vendedores.map((v) => (
@@ -353,14 +397,6 @@ export function IndicadoresClient({
               </option>
             ))}
           </select>
-        </label>
-        <label className="flex items-center gap-2 pb-2 text-sm">
-          <input
-            type="checkbox"
-            checked={comparar}
-            onChange={(e) => setComparar(e.target.checked)}
-          />
-          {t("Comparar com mês anterior e ano passado")}
         </label>
       </div>
       {paineis.length > 0 && (
@@ -423,153 +459,13 @@ export function IndicadoresClient({
         </label>
       </div>
 
-      {/* EVOLUÇÃO DE VENDA */}
-      <Card className="hover-raise p-4">
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold tracking-wide">{t("EVOLUÇÃO DE VENDA")}</p>
-          <p className="text-xs text-muted-foreground uppercase">{dados.rotuloMes}</p>
-        </div>
-        {comparar ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_260px]">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dados.serie} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
-                <XAxis dataKey="dia" tick={{ fontSize: 11 }} interval={2} />
-                <YAxis
-                  tickFormatter={(v: number) => `${Math.round(v / 100 / 1000)}k`}
-                  tick={{ fontSize: 11 }}
-                  width={44}
-                />
-                <Tooltip
-                  formatter={(v) => brl(Math.round(Number(v ?? 0)))}
-                  labelFormatter={(d) => `${t("Dia")} ${d}`}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="vendaAc"
-                  name={t("Vendas no mês")}
-                  stroke="#16a34a"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                {dados.serie.some((s) => s.metaAc != null) && (
-                  <Line
-                    type="monotone"
-                    dataKey="metaAc"
-                    name={t("Objetivo")}
-                    stroke="#7c3aed"
-                    strokeDasharray="6 3"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                )}
-                {/* Simulação do fechamento: continua de hoje até o fim do mês no
-                    ritmo médio. Amarelo como a linha de Previsão — mesma conta. */}
-                {dados.serie.some((s) => s.projecao != null) && (
-                  <Line
-                    type="monotone"
-                    dataKey="projecao"
-                    name={t("Projeção")}
-                    stroke="#eab308"
-                    strokeDasharray="6 3"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                )}
-                {comparar && (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="mesAnt"
-                      name={t("Mês anterior")}
-                      stroke="#94a3b8"
-                      strokeDasharray="6 3"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="mesAno"
-                      name={t("Ano passado")}
-                      stroke="#cbd5e1"
-                      strokeDasharray="2 3"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </>
-                )}
-                <ReferenceLine
-                  y={dados.previsaoMes}
-                  stroke="#eab308"
-                  strokeDasharray="4 3"
-                  label={{ value: t("Previsão"), fontSize: 11 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">{t("Vendido no mês")}</p>
-              <p className="text-2xl font-semibold tabular-nums">{brl(dados.vendidoMes)}</p>
-              <p className="text-xs text-muted-foreground">
-                {t("Hoje")} {brl(dados.vendidoHoje)} · {dados.qtdMes} {t("pedidos")}
-              </p>
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground uppercase">{t("Objetivo do mês")}</p>
-                {dados.objetivo == null && (
-                  <Link href="/app/relatorios" className="text-xs underline underline-offset-4">
-                    {t("Definir metas")}
-                  </Link>
-                )}
-              </div>
-              <p className="text-2xl font-semibold tabular-nums">
-                {dados.objetivo != null ? brl(dados.objetivo) : "—"}
-              </p>
-              <div className="mt-1">
-                <Barra pct={dados.pctObjetivo} cor="bg-violet-500" />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {dados.pctObjetivo != null
-                  ? `${dados.pctObjetivo.toFixed(1)}% ${t("da meta")}`
-                  : t("Nenhuma meta definida")}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">{t("Necessário vender")}</p>
-              <p className="text-lg font-semibold tabular-nums">
-                {dados.necessarioDia != null
-                  ? `${brl(Math.round(dados.necessarioDia))} ${t("por dia útil")}`
-                  : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {dados.diasUteisRestantes} {t("dias úteis restantes")}
-              </p>
-            </div>
-          </div>
-        </div>
-        ) : (
-          <CrmSalesChart
-            pontos={dados.serie.map((s) => ({
-              dia: s.dia,
-              vendidoAc: s.vendaAc,
-              metaAc: s.metaAc,
-              projecao: s.projecao,
-            }))}
-            metaAc={dados.objetivo ?? 0}
-            projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
-            previsaoMes={dados.previsaoMes}
-          />
-        )}
-        <div className="mt-2 border-t pt-2 text-center">
-          <Link href="/app/pedidos" className="text-sm underline underline-offset-4">
-            {t("Detalhar por vendedor")}
-          </Link>
-        </div>
-      </Card>
+      {/* EVOLUÇÃO DE VENDA — card Mercos, pele black premium. */}
+      <EvolucaoVendas
+        key={`${dados.mes}-${dados.filtroVendedor}`}
+        dados={dados}
+        comparar={comparar}
+        onCompararChange={setComparar}
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* CARTEIRA */}

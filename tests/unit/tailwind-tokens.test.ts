@@ -263,11 +263,43 @@ describe("Tailwind 4 — `space-*` põe a margem no filho ANTERIOR", () => {
 
 // ── auxiliares ────────────────────────────────────────────────────────────
 
+// Código de TERCEIROS (beUI, via `shadcn add`): segue o upstream, não as
+// guardas do produto. `outline-none`, `rounded` e alphas baixos de lá são
+// decisão do autor do componente — consertar por instância a cada `add`
+// seria reescrever o vendor à mão e perder no próximo update. O que ESTÁ
+// vigiado: todo arquivo que a equipe escreve (`app/`, `components/` menos
+// estas pastas, `lib/` menos estes arquivos, `hooks/`). Se um dia o produto
+// der fork de verdade num arquivo vendor (editar além de guards de tipos),
+// ele sai desta lista e passa a ser vigiado como produto.
+const VENDOR = new Set([
+  "components/motion",
+  "components/charts",
+  "components/previews",
+  "lib/ease.ts",
+  "lib/touch.ts",
+  "lib/tick-sound.ts",
+  "lib/presence-gate.tsx",
+  "lib/hooks/use-slider.ts",
+  "lib/hooks/use-dismiss.ts",
+  "lib/hooks/use-hover-gesture.ts",
+  "lib/hooks/use-tap-gesture.ts",
+  "lib/hooks/use-hover-capable.ts",
+]);
+
+function ehVendor(absoluto: string): boolean {
+  const rel = path.relative(RAIZ, absoluto).replace(/\\/g, "/");
+  for (const v of VENDOR) {
+    if (rel === v || rel.startsWith(`${v}/`)) return true;
+  }
+  return false;
+}
+
 function listarFontes(raizes: string[]): string[] {
   const saida: string[] = [];
   const anda = (dir: string) => {
     for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = path.join(dir, d.name);
+      if (ehVendor(p)) continue;
       if (d.isDirectory()) {
         if (d.name === "node_modules" || d.name.startsWith(".")) continue;
         anda(p);

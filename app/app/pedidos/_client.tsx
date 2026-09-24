@@ -19,6 +19,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/motion/checkbox";
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectInput,
+  MultiSelectItem,
+  MultiSelectList,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/motion/multi-select";
 import {
   Table,
   TableBody,
@@ -288,9 +298,13 @@ export function PedidosClient({
     chips.push({ key: "busca", label: filtros.busca.trim(), onRemove: () => mudar({ busca: "" }, true) });
   }
   if (filtros.status) {
+    const rotulos = filtros.status
+      .split(",")
+      .map((s) => ROTULO_DO_STATUS[s as StatusDoPedido] ?? s)
+      .join(", ");
     chips.push({
       key: "status",
-      label: `${textos.statusLabel}: ${ROTULO_DO_STATUS[filtros.status as StatusDoPedido] ?? filtros.status}`,
+      label: `${textos.statusLabel}: ${rotulos}`,
       onRemove: () => mudar({ status: "" }),
     });
   }
@@ -498,12 +512,12 @@ export function PedidosClient({
   }, [pedidos, tagIdioma]);
 
   return (
-    <div className="min-h-full space-y-3 bg-[#f4f4f3] p-4 sm:p-6">
+    <div className="min-h-full space-y-3 bg-background p-4 sm:p-6">
       {/* Barra de acoes no molde do Mercos */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {podeCriar && (
-            <Button asChild className="bg-[#4b2e83] font-semibold text-white hover:bg-[#3d2569]">
+            <Button asChild className="bg-primary font-semibold text-primary-foreground hover:bg-accent-hover">
               <Link href="/app/pedidos/novo">
                 <Plus size={16} weight="bold" /> {t("Criar pedido / orçamento")}
               </Link>
@@ -536,7 +550,7 @@ export function PedidosClient({
               onChange={(e) => mudar({ busca: e.target.value }, true)}
               placeholder={t("Pedido, cliente ou representada")}
               aria-label={textos.buscar}
-              className="h-9 w-full rounded-r-none border-[#d9d9d9] bg-surface sm:w-64"
+              className="h-9 w-full rounded-r-none border-input bg-surface sm:w-64"
             />
             <Button
               type="button"
@@ -550,7 +564,7 @@ export function PedidosClient({
           </div>
           <button
             type="button"
-            className="mt-1 text-xs text-[#6a2fb3] hover:underline"
+            className="mt-1 text-xs text-primary hover:underline"
             onClick={() => setAvancadosAbertos((a) => !a)}
           >
             {t("Pesquise por nota fiscal, data de emissão, etc.")}
@@ -559,21 +573,35 @@ export function PedidosClient({
       </div>
 
       {/* Linha de filtros por frase, como no Mercos */}
-      <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px] text-[#555]">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px] text-muted-foreground">
         <span>{t("Mostrando")}</span>
-        <select
-          value={filtros.status}
-          onChange={(e) => mudar({ status: e.target.value })}
-          aria-label={textos.statusLabel}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+        <MultiSelect
+          value={filtros.status ? filtros.status.split(",") : []}
+          onValueChange={(v) => mudar({ status: v.join(",") })}
         >
-          <option value="">{t("Pedidos ativos")}</option>
-          {STATUS_DO_PEDIDO.map((st) => (
-            <option key={st} value={st}>
-              {ROTULO_DO_STATUS[st]}
-            </option>
-          ))}
-        </select>
+          <MultiSelectTrigger className="min-h-8 w-auto min-w-36 border-transparent bg-transparent px-1 py-0.5 hover:border-input">
+            <MultiSelectValue
+              placeholder={t("Pedidos ativos")}
+              chipClassName="border-transparent bg-transparent px-0 font-semibold text-primary"
+            >
+              {(value, label) => (
+                <span key={value} className="font-semibold text-primary">
+                  {label}
+                </span>
+              )}
+            </MultiSelectValue>
+            <MultiSelectInput className="sr-only" aria-label={textos.statusLabel} />
+          </MultiSelectTrigger>
+          <MultiSelectContent>
+            <MultiSelectList aria-label={textos.statusLabel}>
+              {STATUS_DO_PEDIDO.map((st) => (
+                <MultiSelectItem key={st} value={st}>
+                  {ROTULO_DO_STATUS[st]}
+                </MultiSelectItem>
+              ))}
+            </MultiSelectList>
+          </MultiSelectContent>
+        </MultiSelect>
         <span>{t("feitos por")}</span>
         <select
           value={filtros.meus ? "meus" : filtros.vendedorId || ""}
@@ -584,7 +612,7 @@ export function PedidosClient({
             else mudar({ meus: false, vendedorId: v });
           }}
           aria-label={t("Vendedor")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-primary outline-hidden"
         >
           <option value="">{t("Todos os vendedores")}</option>
           <option value="meus">{textos.meus}</option>
@@ -599,7 +627,7 @@ export function PedidosClient({
           value={filtros.origem}
           onChange={(e) => mudar({ origem: e.target.value })}
           aria-label={t("Origem")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-primary outline-hidden"
         >
           <option value="">{t("Todas as plataformas")}</option>
           {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
@@ -612,18 +640,18 @@ export function PedidosClient({
           value=""
           onChange={() => {}}
           aria-label={t("Envio")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-primary outline-hidden"
         >
           <option value="">{t("Sem considerar o envio")}</option>
         </select>
-      </p>
+      </div>
 
       <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
 
       {/* Avancados + salvos + troca de visao (colapsado para nao poluir o molde) */}
       <div className="flex flex-wrap items-center gap-2">
         <details open={avancadosAbertos} className="text-sm">
-          <summary className="cursor-pointer text-xs text-[#6a2fb3] hover:underline">
+          <summary className="cursor-pointer text-xs text-primary hover:underline">
             {textos.avancados}
             {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
           </summary>
@@ -765,22 +793,22 @@ export function PedidosClient({
                       <div className="flex items-center justify-between gap-2 bg-stage-2 px-3 py-2">
                         <p className="flex min-w-0 items-center gap-2 text-[13px]">
                           {podeCriar && (
-                            <input
-                              type="checkbox"
-                              checked={selecionados.includes(p.id)}
-                              onChange={() => alternar(p.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={numeroDoPedido(p.numero)}
-                            />
+                            <span onClick={(e) => e.stopPropagation()} className="inline-flex">
+                              <Checkbox
+                                checked={selecionados.includes(p.id)}
+                                onCheckedChange={() => alternar(p.id)}
+                                aria-label={numeroDoPedido(p.numero)}
+                              />
+                            </span>
                           )}
                           <span className="truncate">
                             <Link
                               href={`/app/pedidos/${p.id}`}
-                              className="font-bold text-[#6a2fb3] hover:underline"
+                              className="font-bold text-primary hover:underline"
                             >
                               {numeroDoPedido(p.numero)}
                             </Link>{" "}
-                            <span className="text-[#3c3c3c]">
+                            <span className="text-muted-foreground">
                               {t("emitido por")} {emissor}
                             </span>
                           </span>
@@ -789,21 +817,28 @@ export function PedidosClient({
                       </div>
                       <Link
                         href={`/app/pedidos/${p.id}`}
-                        className="block space-y-1 px-3 py-2.5 text-[13px] leading-5 text-[#333]"
+                        // Duas colunas no desktop: o card de fileira única
+                        // deixava ~75% da largura vazia (filetes de texto à
+                        // esquerda, laje escura à direita) — e em tela clara
+                        // a laje lia como "quebrado", não como "respiro".
+                        // Grade com o valor à direita, recibo clássico; numa
+                        // coluna só no mobile. Cores por token (a versão com
+                        // hex fixo `#333/#222` era ilegível no tema escuro).
+                        className="grid grid-cols-1 gap-x-4 gap-y-1 px-3 py-2.5 text-[13px] leading-5 text-foreground sm:grid-cols-[minmax(0,1fr)_auto]"
                       >
-                        <span className="flex items-center gap-1.5">
-                          <Storefront size={13} className="shrink-0 text-[#b5b5b5]" />
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <Storefront size={13} className="shrink-0 text-muted-foreground" />
                           <span className="truncate font-medium uppercase">{p.cliente_nome}</span>
                         </span>
-                        {segundaLinha && (
-                          <span className="block truncate pl-5 text-[#555]">{segundaLinha}</span>
-                        )}
-                        <span className="flex items-center gap-1.5 text-[#555]">
-                          <CalendarBlank size={13} className="shrink-0 text-[#b5b5b5]" />
-                          <span className="truncate uppercase">{p.condicao_pagamento || "—"}</span>
-                        </span>
-                        <span className="block pl-5 font-bold text-[#222]">
+                        <span className="block font-bold tabular-nums text-foreground sm:text-right">
                           {comoMoeda(p.total_cents, p.moeda)}
+                        </span>
+                        {segundaLinha && (
+                          <span className="block min-w-0 truncate pl-5 text-muted-foreground">{segundaLinha}</span>
+                        )}
+                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground sm:justify-end">
+                          <CalendarBlank size={13} className="shrink-0 text-muted-foreground" />
+                          <span className="truncate uppercase">{p.condicao_pagamento || "—"}</span>
                         </span>
                       </Link>
                     </article>
@@ -848,11 +883,10 @@ export function PedidosClient({
               <TableRow className="bg-stage-2/60 hover:bg-stage-2/60">
                 {podeCriar && (
                   <TableHead className="px-3">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selecionados.length === pedidos.length && pedidos.length > 0}
-                      onChange={(e) =>
-                        setSelecionados(e.target.checked ? pedidos.map((p) => p.id) : [])
+                      onCheckedChange={(v) =>
+                        setSelecionados(v ? pedidos.map((p) => p.id) : [])
                       }
                       aria-label={textos.selecionarTodos}
                     />
@@ -877,10 +911,9 @@ export function PedidosClient({
                     <TableRow className="row-hover">
                       {podeCriar && (
                         <TableCell>
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selecionados.includes(p.id)}
-                            onChange={() => alternar(p.id)}
+                            onCheckedChange={() => alternar(p.id)}
                             aria-label={numeroDoPedido(p.numero)}
                           />
                         </TableCell>

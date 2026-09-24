@@ -56,7 +56,10 @@ export function CrmSalesChart({
   previsaoMes,
 }: {
   pontos: CrmSalesPoint[];
-  metaAc: number;
+  // null = sem meta definida: a figura mostra "—" como o KPI acima e como os
+  // Indicadores ("Sem meta"). Coagir para 0 desenhava "Meta do mês R$ 0",
+  // que se lê como meta zerada — o oposto de "não há meta".
+  metaAc: number | null;
   projecao: number;
   previsaoMes: number;
 }) {
@@ -138,11 +141,13 @@ export function CrmSalesChart({
                 <InfoIcon className="size-3 text-fg-muted" weight="bold" />
               </div>
               <div className="mt-2 text-3xl font-semibold leading-none tabular-nums text-fg">
-                {new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                  maximumFractionDigits: 0,
-                }).format(f.value / 100)}
+                {f.value == null
+                  ? "—"
+                  : new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                      maximumFractionDigits: 0,
+                    }).format(f.value / 100)}
               </div>
             </div>
           ))}
