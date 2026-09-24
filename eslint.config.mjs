@@ -12,6 +12,13 @@ export default defineConfig([
   // com dezenas de milhares de falsos positivos em JS gerado. (Na CI, checkout
   // limpo, o diretório nem existe.)
   globalIgnores([".next/", "node_modules/", "dist/", "supabase/", "next-env.d.ts", ".claude/worktrees/"]),
+  // Código de TERCEIROS (beUI, via `shadcn add`): 65 erros do react-compiler
+  // medidos em 2026-09-24, todos em `components/motion|charts`. São padrões do
+  // autor (refs durante render, mutação local) que o gate do produto proíbe —
+  // consertar por instância seria forkar o vendor e perder no próximo update.
+  // Vigia: typecheck continua cobrindo esses arquivos; `tailwind-tokens`
+  // exclui as mesmas pastas pelo mesmo motivo (allowlist VENDOR no teste).
+  globalIgnores(["components/motion/", "components/charts/", "components/previews/"]),
   nextPlugin.configs["core-web-vitals"],
   reactHooks.configs.flat.recommended,
   ...tseslint.configs.recommended,

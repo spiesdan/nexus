@@ -1,32 +1,74 @@
 "use client"
 
 import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+import { motion, useReducedMotion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
 /**
- * Tab Bar — Visitors (DESIGN.md): sem preenchimento de fundo, texto Ash no
- * inativo, Carbon no ativo com underline lavanda de 2px. Mantido o
- * `max-w-full overflow-x-auto`: fila de abas cresce com o produto e a página
- * nunca pode rolar na horizontal (ver comentário original abaixo).
+ * Tab Bar — API Radix preservada (`value`, `defaultValue`, `onValueChange`,
+ * `disabled`, `data-state="active|inactive"`, `role="tab"`), movimento beUI
+ * (`motion/tabs`, variante `underline`): o filete ativo desliza entre abas
+ * com a mesma mola do original (stiffness 245, damping 36, mass 1.2), sem
+ * overshoot para a fila rolavel nao ganhar scrollbar fantasma.
  *
- * Modo `items` (UImaxxing registry `tabs.json`): os showcases
- * (`markets-table`, `order-book`, `trading-chart`) usam `<Tabs items={[...]}/>`
- * com estado interno. Em vez de duplicar o componente (§33), o mesmo `Tabs`
- * aceita esse modo — presença de `items` decide, as APIs não se sobrepõem
- * (Radix não tem prop `items`).
+ * Por que reimplementar em vez de importar o `Tabs` do beUI: o trigger de la
+ * nao aceita `disabled` nem espalha props (`data-tab`), e nao pinta
+ * `data-state` — tres coisas que o e2e le (`webhooks.spec`,
+ * `agenda-caminho-ate-os-horarios.spec`) e que uma tela usa
+ * (`AgentTabs`, aba de teste desabilitada).
  */
+
+const GLIDE = { type: "spring", stiffness: 245, damping: 36, mass: 1.2 } as const
+
+type TabsContexto = {
+  valor: string
+  selecionar: (v: string) => void
+  layoutId: string
+  registrar: (valor: string, el: HTMLElement | null) => void
+}
+
+const Ctx = React.createContext<TabsContexto | null>(null)
+
+function useAbas() {
+  const ctx = React.useContext(Ctx)
+  if (!ctx) throw new Error("Tabs.* precisa estar dentro de <Tabs>")
+  return ctx
+}
+
 function Tabs(
-  props: React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root> & {
-    items?: string[];
-    defaultActive?: number;
-    variant?: "underline" | "pill";
-    size?: "md" | "sm";
-    onChange?: (index: number) => void;
+  props: {
+    value?: string
+    defaultValue?: string
+    onValueChange?: (v: string) => void
+    children?: React.ReactNode
+    className?: string
+    items?: string[]
+    defaultActive?: number
+    variant?: "underline" | "pill"
+    size?: "md" | "sm"
+    onChange?: (index: number) => void
   },
 ) {
-  const { items, defaultActive, variant, size, onChange, ...radixProps } = props;
+  const { items, defaultActive, variant, size, onChange, value, defaultValue, onValueChange, children, className } = props
+  const [interno, setInterno] = React.useState(defaultValue ?? "")
+  const atual = value ?? interno
+  const layoutId = React.useId()
+  const refs = React.useRef(new Map<string, HTMLElement>())
+
+  const selecionar = React.useCallback(
+    (v: string) => {
+      if (value === undefined) setInterno(v)
+      onValueChange?.(v)
+    },
+    [value, onValueChange],
+  )
+
+  const registrar = React.useCallback((v: string, el: HTMLElement | null) => {
+    if (el) refs.current.set(v, el)
+    else refs.current.delete(v)
+  }, [])
+
   if (items) {
     return (
       <ShowcaseTabs
@@ -35,67 +77,131 @@ function Tabs(
         variant={variant}
         size={size}
         onChange={onChange}
-        className={radixProps.className as string | undefined}
+        className={className}
       />
-    );
+    )
   }
-  return <TabsPrimitive.Root {...radixProps} />;
+
+  const aoTeclar = (e: React.KeyboardEvent) => {
+    const ordem = [...refs.current.keys()]
+    const i = ordem.indexOf(atual)
+    if (i < 0) return
+    let proximo: number | null = null
+    if (e.key === "ArrowRight") proximo = (i + 1) % ordem.length
+    else if (e.key === "ArrowLeft") proximo = (i - 1 + ordem.length) % ordem.length
+    else if (e.key === "Home") proximo = 0
+    else if (e.key === "End") proximo = ordem.length - 1
+    if (proximo !== null) {
+      e.preventDefault()
+      const v = ordem[proximo] as string
+      selecionar(v)
+      refs.current.get(v)?.focus()
+    }
+  };
+
+  return (
+    <Ctx.Provider value={{ valor: atual, selecionar, layoutId, registrar }}>
+      <div className={className} data-slot="tabs" onKeyDown={aoTeclar}>
+        {children}
+      </div>
+    </Ctx.Provider>
+  )
 }
 
 const TabsList = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, children, ...props }, ref) => (
+  // `max-w-full overflow-x-auto`: fila de abas cresce com o produto e a pagina
+  // nunca pode rolar na horizontal (detalhe do agente: seis abas, 814px em
+  // 390px de viewport — medido `scrollWidth - clientWidth` antes/depois).
+  <div
     ref={ref}
+    role="tablist"
     className={cn(
-      // `max-w-full overflow-x-auto` porque uma fila de abas cresce com o
-      // produto e nunca encolhe: no detalhe do agente são SEIS, e em 390px de
-      // largura a fila mede 814px — a página inteira passava a rolar na
-      // horizontal, que é o pior jeito de uma tela quebrar (o conteúdo some
-      // para o lado e nada indica que existe). Medido antes/depois com
-      // `documentElement.scrollWidth - clientWidth`.
-      //
-      // Aqui e não na tela do agente de propósito: TODA `TabsList` do app tem a
-      // mesma fragilidade, e consertar só onde eu esbarrei deixaria as irmãs
-      // quebradas com um álibi de "já foi tratado".
       "inline-flex h-10 max-w-full items-center justify-start gap-1 overflow-x-auto border-b border-border bg-transparent p-0 text-text-subtle",
-      className
+      className,
     )}
     {...props}
-  />
+  >
+    {children}
+  </div>
 ))
-TabsList.displayName = TabsPrimitive.List.displayName
+TabsList.displayName = "TabsList"
 
 const TabsTrigger = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium tracking-[-0.02em] ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-accent data-[state=active]:text-text",
-      className
-    )}
-    {...props}
-  />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { value: string }
+>(({ className, value, disabled, children, ...props }, ref) => {
+  const { valor, selecionar, layoutId, registrar } = useAbas()
+  const ativo = valor === value
+  const reduce = useReducedMotion()
+  const internoRef = React.useRef<HTMLButtonElement | null>(null)
+
+  React.useEffect(() => {
+    registrar(value, internoRef.current)
+    return () => registrar(value, null)
+  }, [value, registrar])
+
+  return (
+    <button
+      ref={(no) => {
+        internoRef.current = no
+        if (typeof ref === "function") ref(no)
+        else if (ref) ref.current = no
+      }}
+      type="button"
+      role="tab"
+      aria-selected={ativo}
+      data-state={ativo ? "active" : "inactive"}
+      data-value={value}
+      disabled={disabled}
+      onClick={() => selecionar(value)}
+      className={cn(
+        "relative isolate inline-flex min-h-[40px] shrink-0 whitespace-nowrap items-center justify-center px-3 pb-2.5 pt-1 text-sm font-medium tracking-[-0.02em] ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        ativo ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      {ativo && !reduce ? (
+        <motion.span
+          layoutId={layoutId}
+          transition={GLIDE}
+          className="absolute inset-x-0 bottom-0 h-0.5 bg-accent"
+          aria-hidden
+        />
+      ) : null}
+      {ativo && reduce ? (
+        <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" aria-hidden />
+      ) : null}
+    </button>
+  )
+})
+TabsTrigger.displayName = "TabsTrigger"
 
 const TabsContent = React.forwardRef<
-  React.ElementRef<typeof TabsPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
-    {...props}
-  />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { value: string }
+>(({ className, value, children, ...props }, ref) => {
+  const { valor } = useAbas()
+  if (valor !== value) return null
+  return (
+    <div
+      ref={ref}
+      role="tabpanel"
+      className={cn(
+        "mt-2 ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+})
+TabsContent.displayName = "TabsContent"
 
 /**
  * Faixa de abas apresentacional com estado interno (modo `items` do

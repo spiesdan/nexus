@@ -378,7 +378,8 @@
 }
 
 [data-theme="dark"] {
-  /* Surfaces (dark — premium neutral, mesma luminância da era greige) */
+  /* Surfaces (dark — régua oficial: mesmos valores de lib/branding/
+     regua-do-produto.ts, que os testes medem do CSS de verdade. */
   --color-bg: #151515;
   --color-surface: #1c1c1c;
   --color-surface-elevated: #262626;
@@ -389,9 +390,9 @@
   --color-text-muted: #8b8b8b;
   --color-text-subtle: #5e5e5e;
 
-  /* Borders (dark) */
-  --color-border: #313131;
-  --color-border-strong: #424242;
+  /* Borders (dark) — brancas translúcidas no estilo beUI, hairlines sutis */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
 
   /* Accent stays same hex stops (lavanda, como o :root); default shifts up for
      dark contrast */
@@ -1092,4 +1093,59 @@
    ───────────────────────────────────────────────────────────────────────── */
 body {
   cursor: default;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   beUI · utilitários de motion (marquee/shimmer/glass/mask).
+   Fonte: beui.dev/docs/theme — mesmos keyframes e superfícies que os
+   componentes em `components/motion/` esperam. Escopo: só estética,
+   nenhum token funcional é redefinido aqui.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-marquee-vertical: marquee-vertical 30s linear infinite;
+  --animate-shimmer: shimmer 2.5s linear infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-100% - var(--gap, 1rem))); }
+  }
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-100% - var(--gap, 1rem))); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { scrollbar-width: none; }
+
+  .mask-radial-fade {
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+  }
+  .mask-b-fade {
+    mask-image: linear-gradient(to bottom, black 60%, transparent);
+  }
+
+  .glass {
+    background: rgb(20 20 22 / 0.55);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.06) inset,
+      0 24px 60px -24px rgb(0 0 0 / 0.45);
+  }
+  .glass-strong {
+    background: rgb(20 20 22 / 0.6);
+    backdrop-filter: blur(16px);
+  }
+  .glass-thin {
+    background: rgb(10 10 12 / 0.45);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
 }
