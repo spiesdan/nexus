@@ -8,6 +8,80 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.14.0] — 2026-09-23
+
+### Adicionado
+
+- **Importar leads de uma planilha** A lista de clientes que já está no Excel agora entra no funil sem digitação. Em
+  **Funis**, o botão "Importar planilha" pede um arquivo CSV e cria um negócio por
+  linha, na primeira etapa do funil escolhido.
+
+  O importador reconhece os cabeçalhos usuais — nome, telefone, e-mail, valor,
+  origem, tags, observação — em português, com ou sem acento, e aceita o
+  ponto-e-vírgula que o Excel brasileiro usa. Valor escrito como "R$ 1.200,00"
+  entra certo.
+
+  Quando a planilha traz telefone, o contato é criado junto e ligado ao negócio —
+  e o mesmo número repetido em várias linhas vira um contato só, não vários.
+
+  Nada é aceito no escuro: ao terminar, a tela mostra quantos negócios entraram,
+  quantos contatos foram criados, quais colunas o importador não reconheceu e
+  quais linhas foram recusadas, com o motivo e o número da linha como você a vê na
+  planilha. Uma linha com erro não derruba as outras.
+
+  Há uma planilha modelo para baixar, para quem prefere começar do formato certo.
+
+  Isto veio da contribuição de James, da Clínica Centro do Sorriso
+  (**@clinicacentrodosorrisosc-code**).
+
+- **Dashboard home, Financeiro redesenhado e radar com vocabulário restaurado** Entrar no app agora abre uma **home de verdade** em vez de cair direto no Inbox: o logo no topo do menu virou a porta dela. O item ativo do menu ficou mais discreto — um filete ao lado em vez do bloco colorido — e o **Financeiro** ganhou o visual novo.
+
+  No **Radar**, as situações de recompra voltaram a falar a língua do time ("Recompra atrasada", "Em voo") em vez de códigos genéricos, e a lista de alertas ganhou filtro por situação. Na **Agenda**, o histórico e a grade dividem a tela sem uma esmagar a outra, e os marcadores do mapa da **Prospecção** aparecem mesmo quando a lista chega antes do mapa carregar.
+
+  Na parte invisível: a cascata da LGPD agora alcança contatos guardados na prospecção e no fiscal, e a exportação de dados do titular nomeia o controlador e o DPO no PDF.
+
+### Corrigido
+
+- **O painel de IA para de avisar que um modelo não enxerga imagens quando ele enxerga** Duas informações erradas no painel de provedores, e as duas faziam quem opera
+  tomar decisão contra o que o sistema realmente faz.
+
+  **A primeira:** o painel avisava que um modelo "não enxerga imagens" e que fotos
+  e comprovantes do cliente seriam ignorados — sobre modelos que enxergam, e num
+  sistema onde a leitura estava funcionando. Na mesma instalação em que o aviso
+  aparecia, o print que o cliente enviou virou descrição correta para o atendente.
+
+  O painel lia uma tabela de catálogo; o atendimento lia outra coisa. Agora os
+  dois respondem pela mesma fonte, e o painel não pode mais discordar do que
+  acontece de verdade. Onde o sistema não conhece o modelo — o seu, ou um de um
+  serviço próprio —, o catálogo continua sendo a resposta, e a falta de informação
+  continua sendo dita como falta de informação, não como "não funciona".
+
+  **A segunda:** quem usa a OpenRouter tinha o problema INVERTIDO — e ele é pior,
+  porque não tem sintoma. Ali o sistema não sabia dizer se um modelo enxerga: ele
+  olhava só o começo do nome. Como `openai/gpt-4o` enxerga e `openai/gpt-3.5-turbo`
+  não, e os dois começam igual, um palpite pelo começo do nome erra metade das
+  vezes — e a OpenRouter já informa a resposta certa, modelo por modelo, quando o
+  catálogo é sincronizado na instalação.
+
+  O efeito prático era duplo. O painel deixava de avisar quando o aviso era
+  verdadeiro, então quem opera achava que o comprovante do cliente estava sendo
+  lido e não estava. E o atendimento chegava a enviar a imagem para um modelo que
+  não a aceita, o que fazia a resposta daquela mensagem falhar. Agora, quando a
+  OpenRouter informa a capacidade, é ela que vale — e quando não informa, o
+  sistema volta a dizer que não sabe, em vez de afirmar.
+
+  **A terceira:** o ponto "Ouvir o áudio do cliente" mostrava um modelo de
+  conversa, com "usando o padrão da organização" — ao lado do próprio texto do
+  ponto, que diz que a transcrição usa o padrão da OpenAI. A mesma tela afirmava
+  duas coisas incompatíveis, e modelo de conversa não transcreve áudio.
+
+  Agora ele mostra o que de fato transcreve. Trocar o modelo de conversa nunca
+  mudou nada ali; o que muda é a tela parar de sugerir que mudaria.
+
+  Para quem opera uma instalação, nada muda no dia a dia: nenhuma configuração
+  nova, nenhum passo de atualização. O que muda é que o painel volta a descrever
+  o sistema que está rodando.
+
 ## [1.13.0] — 2026-09-04
 
 ### Alterado
@@ -2313,7 +2387,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.13.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.11.1...v1.12.0
 [1.11.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.11.0...v1.11.1
