@@ -88,7 +88,7 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <>
-      <AnimatedSidebarHeader className="h-14 justify-center p-0 px-3 pb-0">
+      <AnimatedSidebarHeader className="h-12 justify-center p-0 px-3 pb-0">
         <div className="flex min-h-0 items-center gap-2.5 overflow-hidden px-1">
           <Link
             href="/app"
@@ -118,17 +118,17 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
         {grupos.map(({ group, items }) => {
           const tituloId = `nav-grupo-${group.id}`;
           return (
-            <AnimatedSidebarGroup key={group.id} className="px-1 py-1">
+            <AnimatedSidebarGroup key={group.id} className="px-1 py-0.5">
               {collapsed ? null : (
                 <h2
                   id={tituloId}
-                  className="mb-0.5 h-6 overflow-hidden px-2 text-[10px] font-semibold uppercase leading-6 tracking-[0.14em] text-muted-foreground"
+                  className="mb-0 h-5 overflow-hidden px-2 text-[10px] font-semibold uppercase leading-5 tracking-[0.14em] text-muted-foreground"
                 >
                   {t(group.label)}
                 </h2>
               )}
               <AnimatedSidebarGroupContent>
-                <AnimatedSidebarMenu onClickCapture={segurarNavegacao}>
+                <AnimatedSidebarMenu onClickCapture={segurarNavegacao} className="gap-px">
                   {items.map((item) => {
                     const isActive =
                       pathname === item.href || pathname.startsWith(item.href + "/");
@@ -177,7 +177,7 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
         })}
       </nav>
 
-      <AnimatedSidebarFooter className="gap-2 border-none p-2">
+      <AnimatedSidebarFooter className="gap-1 border-none p-2">
         {rodape ? (
           <AnimatedSidebarMenu onClickCapture={segurarNavegacao}>
             <AnimatedSidebarMenuItem>
