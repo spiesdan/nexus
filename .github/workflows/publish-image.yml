@@ -192,9 +192,6 @@ jobs:
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
 
-      - name: Set up QEMU (build arm64 no runner amd64)
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -203,10 +200,10 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          # amd64 (VPS HostGator/x86) + arm64 (Oracle Ampere).
-          # A imagem do WAHA continua amd64-only (upstream) — por isso o
-          # deploy ARM é híbrido: WAHA roda no host x86 (ver docs/runbooks/oracle.md).
-          platforms: linux/amd64,linux/arm64
+          # Só amd64: o deploy é x86 (Hostinger). O passo arm64/QEMU saiu
+          # porque custava 5–10x o tempo de build para uma arquitetura sem
+          # nenhum destino. Se a Oracle Ampere voltar, reverter este hunk.
+          platforms: linux/amd64
           # PR de fork não tem permissão de escrita no GHCR, e publicar imagem
           # de código não revisado seria pior que não gatear. Em PR: constrói
           # (que é o gate) e descarta.
