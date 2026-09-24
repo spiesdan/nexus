@@ -24,6 +24,7 @@ import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState"
 import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { BrainRecomendacoes } from "./BrainRecomendacoes";
 
 /**
  * @xyflow/react só entra nesta rota (`ssr: false` — fora do bundle principal,
@@ -237,6 +238,7 @@ export function NexusIntelligence() {
           </>
         }
       />
+      <BrainRecomendacoes />
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <div className="min-w-0">

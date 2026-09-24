@@ -15,6 +15,9 @@ import type { PedidoParaRadar } from "@/lib/comercial/radar-compras";
 import { requireRole } from "@/lib/auth/require-role";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+/** O tipo vem da ROTA, não é redigitado no hook (contrato duplicado diverge). */
+export type { BrainRecomendacao as SalesBrainItem } from "@/lib/ai/sales-brain/recommend";
+
 export const dynamic = "force-dynamic";
 
 const PRIORIDADES = ["alta", "media", "baixa"] as const;
