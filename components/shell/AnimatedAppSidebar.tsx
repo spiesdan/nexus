@@ -1,6 +1,7 @@
 "use client";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRef } from "react";
 import { PanelLeft } from "lucide-react";
 import { ArrowRight, Gear } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
@@ -12,11 +13,9 @@ import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import { GRUPO_NO_RODAPE, NAV_GROUPS, sidebarGroups } from "@/lib/navigation/registry";
 import {
   AnimatedSidebar,
-  AnimatedSidebarContent,
   AnimatedSidebarFooter,
   AnimatedSidebarGroup,
   AnimatedSidebarGroupContent,
-  AnimatedSidebarGroupLabel,
   AnimatedSidebarHeader,
   AnimatedSidebarMenu,
   AnimatedSidebarMenuButton,
@@ -30,9 +29,19 @@ import { cn } from "@/lib/utils";
 /**
  * Barra lateral do app no visual beUI Animated Sidebar.
  *
- * Mesmos primitivos e classes do preview oficial (`animated-sidebar.preview`);
- * só os DADOS vêm do produto: `sidebarGroups()` (RBAC), `useT()` (i18n),
- * marca branca (instalação/organização) e `router.push` (navegação client).
+ * Mesmos primitivos e movimento do preview oficial; os DADOS vêm do produto
+ * (`sidebarGroups()` para RBAC, `useT()` para i18n, marca branca) e a
+ * SEMÂNTICA é a do sidebar antigo, que o e2e cobra:
+ *
+ * - itens são ÂNCORAS reais (`href`), não botões — `getByRole("link")`,
+ *   botão do meio, abrir em nova guia e SEO continuam funcionando;
+ * - grupos têm `<nav aria-label>` + `<h2>` (dobra medida em 900px);
+ * - Configurações é link fora do `<nav>`, no rodapé fixo;
+ * - densidade 28px/linha para o menu inteiro caber sem scroll.
+ *
+ * O beUI renderiza `<a>` nativo (reload full = regressão). O
+ * `segurarNavegacao` cancela o nativo só no clique simples e o `ir` faz o
+ * `router.push` — modificadores/teclado especial seguem nativos.
  */
 function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
   const t = useT();
@@ -41,6 +50,9 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
   const { user, activeOrg } = useAuth();
   const { state } = useAnimatedSidebar();
   const collapsed = state === "collapsed";
+  // Clique com modificador abre guia nova no nativo; nesse caso o `ir` não
+  // deve empurrar a aba atual junto (o capture roda antes do bubble, sempre).
+  const nativo = useRef(false);
 
   const todos = sidebarGroups(user.is_platform_admin, activeOrg?.role ?? null);
   const grupos = todos.filter((g) => g.group.id !== GRUPO_NO_RODAPE);
@@ -50,15 +62,34 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
   const nome = activeOrg?.marca?.nome ?? brand.name;
   const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
 
-  const go = (href: string) => {
+  const ir = (href: string) => {
+    if (nativo.current) {
+      nativo.current = false;
+      return;
+    }
     onNavigate();
     router.push(href);
   };
 
+  const segurarNavegacao = (e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) {
+      nativo.current = true;
+      return;
+    }
+    const alvo = e.target as HTMLElement | null;
+    const a = alvo?.closest?.("a[href]");
+    if (!a) return;
+    if (a.getAttribute("target") === "_blank") {
+      nativo.current = true;
+      return;
+    }
+    e.preventDefault();
+  };
+
   return (
     <>
-      <AnimatedSidebarHeader className="p-3 pb-2">
-        <div className="flex min-h-11 items-center gap-3 overflow-hidden px-2">
+      <AnimatedSidebarHeader className="h-14 justify-center p-0 px-3 pb-0">
+        <div className="flex min-h-0 items-center gap-2.5 overflow-hidden px-1">
           <Link
             href="/app"
             title={nome}
@@ -80,15 +111,24 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
         </div>
       </AnimatedSidebarHeader>
 
-      <AnimatedSidebarContent className="px-2 pt-1">
+      <nav
+        aria-label={t("Navegação principal")}
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-1"
+      >
         {grupos.map(({ group, items }) => {
+          const tituloId = `nav-grupo-${group.id}`;
           return (
-            <AnimatedSidebarGroup key={group.id} className="pt-1">
+            <AnimatedSidebarGroup key={group.id} className="px-1 py-1">
               {collapsed ? null : (
-                <AnimatedSidebarGroupLabel>{t(group.label)}</AnimatedSidebarGroupLabel>
+                <h2
+                  id={tituloId}
+                  className="mb-0.5 h-6 overflow-hidden px-2 text-[10px] font-semibold uppercase leading-6 tracking-[0.14em] text-muted-foreground"
+                >
+                  {t(group.label)}
+                </h2>
               )}
               <AnimatedSidebarGroupContent>
-                <AnimatedSidebarMenu>
+                <AnimatedSidebarMenu onClickCapture={segurarNavegacao}>
                   {items.map((item) => {
                     const isActive =
                       pathname === item.href || pathname.startsWith(item.href + "/");
@@ -96,8 +136,9 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
                     return (
                       <AnimatedSidebarMenuItem key={item.href}>
                         <AnimatedSidebarMenuButton
+                          href={item.href}
                           isActive={isActive}
-                          icon={<Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />}
+                          icon={<Icon size={17} weight={isActive ? "fill" : "regular"} aria-hidden />}
                           badge={
                             item.healthDot ? (
                               <ConnectionHealthDot
@@ -105,7 +146,8 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
                               />
                             ) : undefined
                           }
-                          onSelect={() => go(item.href)}
+                          onSelect={() => ir(item.href)}
+                          className="min-h-7 gap-2 rounded-lg px-2.5 text-[13px]"
                         >
                           {t(item.label)}
                         </AnimatedSidebarMenuButton>
@@ -115,12 +157,14 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
                   {group.hub ? (
                     <AnimatedSidebarMenuItem>
                       <AnimatedSidebarMenuButton
+                        href={group.hub.href}
                         isActive={pathname === group.hub.href}
-                        icon={<ArrowRight size={18} aria-hidden />}
+                        icon={<ArrowRight size={17} aria-hidden />}
                         onSelect={() => {
                           const href = group.hub?.href;
-                          if (href) go(href);
+                          if (href) ir(href);
                         }}
+                        className="min-h-7 gap-2 rounded-lg px-2.5 text-[13px]"
                       >
                         {t(group.hub.label)}
                       </AnimatedSidebarMenuButton>
@@ -131,16 +175,18 @@ function AnimatedSidebarBody({ onNavigate }: { onNavigate: () => void }) {
             </AnimatedSidebarGroup>
           );
         })}
-      </AnimatedSidebarContent>
+      </nav>
 
-      <AnimatedSidebarFooter className="gap-3 border-none p-3">
+      <AnimatedSidebarFooter className="gap-2 border-none p-2">
         {rodape ? (
-          <AnimatedSidebarMenu>
+          <AnimatedSidebarMenu onClickCapture={segurarNavegacao}>
             <AnimatedSidebarMenuItem>
               <AnimatedSidebarMenuButton
+                href={rodape.href}
                 isActive={pathname.startsWith(rodape.href)}
-                icon={<Gear size={18} aria-hidden />}
-                onSelect={() => go(rodape.href)}
+                icon={<Gear size={17} aria-hidden />}
+                onSelect={() => ir(rodape.href)}
+                className="min-h-7 gap-2 rounded-lg px-2.5 text-[13px]"
               >
                 {t(rodape.label)}
               </AnimatedSidebarMenuButton>
@@ -170,10 +216,22 @@ export function AnimatedAppSidebar() {
   );
 }
 
-/** Botão que alterna a sidebar — no desktop recolhe, no mobile abre o sheet. */
+/**
+ * Botão que alterna a sidebar — no desktop recolhe/expande, no mobile abre a
+ * gaveta. O nome "Abrir navegação" no mobile é o que o e2e procura.
+ */
 export function SidebarToggleButton({ className }: { className?: string }) {
+  const t = useT();
+  const { isMobile, open } = useAnimatedSidebar();
+  const rotulo = isMobile
+    ? t("Abrir navegação")
+    : open
+      ? t("Recolher sidebar")
+      : t("Expandir sidebar");
   return (
     <AnimatedSidebarTrigger
+      aria-label={rotulo}
+      title={rotulo}
       className={cn("text-muted-foreground transition-colors hover:bg-muted hover:text-foreground", className)}
     >
       <PanelLeft aria-hidden="true" className="size-4" />
