@@ -527,7 +527,7 @@ export function EvolucaoVendas({
               <Barra pct={dados.pctObjetivo} cor="bg-violet-500" />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {dados.pctObjetivo != null ? `${dados.pctObjetivo.toFixed(1)}%` : "%"}
+              {dados.pctObjetivo != null ? `${dados.pctObjetivo.toFixed(1)}%` : "—"}
             </p>
           </div>
           <div>
@@ -535,7 +535,7 @@ export function EvolucaoVendas({
             <p className="mt-0.5 text-lg font-semibold tabular-nums">
               {dados.necessarioDia != null
                 ? `${brl(Math.round(dados.necessarioDia))} ${t("por dia útil")}`
-                : t("R$ por dia útil")}
+                : "—"}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {dados.necessarioDia != null
