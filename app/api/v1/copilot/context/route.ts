@@ -1,0 +1,173 @@
+/**
+ * GET /api/v1/copilot/context — contexto real da página atual (NEXUS 2.0 §33).
+ *
+ * Fundação do Copilot: `?pagina=cliente&contact_id=` devolve contato +
+ * histórico de compra real; `?pagina=radar` devolve os 12 casos de maior
+ * prioridade numa varredura limitada (pedidos recentes, `amostra_parcial`
+ * declarado — a contagem exata mora em `/api/v1/radar-compras`).
+ *
+ * Leitura pura via RLS de sessão (`createClient`), `organization_id`
+ * explícito. Responder em linguagem natural sobre este contexto é FASE 5.
+ */
+import { randomUUID } from "node:crypto";
+import { type NextRequest } from "next/server";
+
+import { fail, ok } from "@/lib/api/wrappers";
+import { requireRole } from "@/lib/auth/require-role";
+import { createClient } from "@/lib/supabase/server";
+import {
+  contagemVazia,
+  perguntasPara,
+  resumirCliente,
+  resumirRadar,
+  type PaginaCopilot,
+} from "@/lib/ai/copilot/context";
+import {
+  historicoDeCompra as historicoReal,
+  type PedidoParaRadar,
+} from "@/lib/comercial/radar-compras";
+
+export const dynamic = "force-dynamic";
+
+const PAGINAS = ["cliente", "radar"] as const;
+const LIMITE_VARREDURA = 5000;
+
+type LinhaPedido = {
+  id: string;
+  contact_id: string | null;
+  total_cents: number;
+  status: string;
+  origem: string;
+  created_at: string;
+};
+
+function paraRadar(p: LinhaPedido): PedidoParaRadar {
+  return {
+    id: p.id,
+    contact_id: p.contact_id,
+    total_cents: p.total_cents,
+    status: p.status,
+    origem: p.origem,
+    dia: p.created_at.slice(0, 10),
+  };
+}
+
+export async function GET(req: NextRequest): Promise<Response> {
+  const requestId = randomUUID();
+  const authz = await requireRole("viewer", { requestId, resource: "commercial_orders" });
+  if (!authz.ok) return authz.response;
+
+  const pagina = req.nextUrl.searchParams.get("pagina")?.trim() ?? "";
+  if (!(PAGINAS as readonly string[]).includes(pagina)) {
+    return fail("validation_failed", "pagina aceita: cliente, radar.", 422, { requestId });
+  }
+  const hoje = new Date().toISOString().slice(0, 10);
+  const supabase = await createClient();
+  const orgId = authz.org.orgId;
+
+  if (pagina === "cliente") {
+    const contactId = req.nextUrl.searchParams.get("contact_id")?.trim() ?? "";
+    if (!contactId) return fail("validation_failed", "contact_id é obrigatório.", 422, { requestId });
+    const { data: contato, error: erroContato } = await supabase
+      .from("contacts")
+      .select("id, display_name, name, phone_number")
+      .eq("organization_id", orgId)
+      .eq("id", contactId)
+      .maybeSingle();
+    if (erroContato) return fail("internal_error", "Erro ao ler o contato.", 500, { requestId });
+    if (!contato) return fail("not_found", "Contato não encontrado.", 404, { requestId });
+
+    const { data: pedidos, error: erroPedidos } = await supabase
+      .from("commercial_orders")
+      .select("id, contact_id, total_cents, status, origem, created_at")
+      .eq("organization_id", orgId)
+      .eq("contact_id", contactId)
+      .order("created_at", { ascending: true })
+      .limit(2000);
+    if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
+
+    const historico = historicoReal(
+      ((pedidos ?? []) as LinhaPedido[]).map(paraRadar),
+      contactId,
+      hoje,
+    );
+    const pg: PaginaCopilot = "cliente";
+    return ok(
+      {
+        pagina: pg,
+        contato: {
+          id: (contato as { id: string }).id,
+          nome:
+            (contato as { display_name: string | null; name: string | null }).display_name ??
+            (contato as { display_name: string | null; name: string | null }).name ??
+            "—",
+        },
+        resumo: resumirCliente(historico),
+        historico: {
+          situacao: historico.situacao,
+          dias_sem_compra: historico.dias_sem_compra,
+          atraso_dias: historico.atraso_dias,
+          ultima_compra: historico.ultima_compra,
+          ticket_medio_cents: historico.ticket_medio_cents,
+          qtd_pedidos: historico.qtd_pedidos,
+        },
+        perguntas: perguntasPara(pg),
+      },
+      { requestId },
+    );
+  }
+
+  // pagina === "radar": varredura limitada dos pedidos recentes, top 12 por
+  // prioridade. Parcial por desenho (rápido no Copilot); o exato está no radar.
+  const { data: recentes, error: erroRecentes } = await supabase
+    .from("commercial_orders")
+    .select("id, contact_id, total_cents, status, origem, created_at")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: false })
+    .limit(LIMITE_VARREDURA);
+  if (erroRecentes) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
+
+  const linhas = ((recentes ?? []) as LinhaPedido[]).map(paraRadar);
+  const parcial = linhas.length >= LIMITE_VARREDURA;
+  const porContato = new Map<string, PedidoParaRadar[]>();
+  for (const p of linhas) {
+    if (!p.contact_id) continue;
+    const lista = porContato.get(p.contact_id) ?? [];
+    lista.push(p);
+    porContato.set(p.contact_id, lista);
+  }
+  const contagem = contagemVazia();
+  const casos: { contact_id: string; situacao: string; atraso_dias: number; dias_sem_compra: number }[] = [];
+  for (const [contactId, lista] of porContato) {
+    const h = historicoReal(lista, contactId, hoje);
+    contagem[h.situacao] += 1;
+    if (h.situacao !== "ok" && h.situacao !== "novo_sem_compras") {
+      casos.push({
+        contact_id: contactId,
+        situacao: h.situacao,
+        atraso_dias: h.atraso_dias,
+        dias_sem_compra: h.dias_sem_compra,
+      });
+    }
+  }
+  const PESO: Record<string, number> = {
+    em_risco: 0,
+    recompra_atrasada: 1,
+    em_voo: 2,
+    cancelado_sem_nova: 3,
+    oportunidade_aberta: 4,
+    primeira_compra: 5,
+  };
+  casos.sort((a, b) => (PESO[a.situacao] ?? 6) - (PESO[b.situacao] ?? 6) || b.atraso_dias - a.atraso_dias);
+  const pg: PaginaCopilot = "radar";
+  return ok(
+    {
+      pagina: pg,
+      resumo: resumirRadar(contagem, porContato.size, parcial),
+      amostra_parcial: parcial,
+      top_casos: casos.slice(0, 12),
+      perguntas: perguntasPara(pg),
+    },
+    { requestId },
+  );
+}
