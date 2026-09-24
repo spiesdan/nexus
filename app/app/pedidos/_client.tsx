@@ -817,21 +817,28 @@ export function PedidosClient({
                       </div>
                       <Link
                         href={`/app/pedidos/${p.id}`}
-                        className="block space-y-1 px-3 py-2.5 text-[13px] leading-5 text-foreground"
+                        // Duas colunas no desktop: o card de fileira única
+                        // deixava ~75% da largura vazia (filetes de texto à
+                        // esquerda, laje escura à direita) — e em tela clara
+                        // a laje lia como "quebrado", não como "respiro".
+                        // Grade com o valor à direita, recibo clássico; numa
+                        // coluna só no mobile. Cores por token (a versão com
+                        // hex fixo `#333/#222` era ilegível no tema escuro).
+                        className="grid grid-cols-1 gap-x-4 gap-y-1 px-3 py-2.5 text-[13px] leading-5 text-foreground sm:grid-cols-[minmax(0,1fr)_auto]"
                       >
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex min-w-0 items-center gap-1.5">
                           <Storefront size={13} className="shrink-0 text-muted-foreground" />
                           <span className="truncate font-medium uppercase">{p.cliente_nome}</span>
                         </span>
+                        <span className="block font-bold tabular-nums text-foreground sm:text-right">
+                          {comoMoeda(p.total_cents, p.moeda)}
+                        </span>
                         {segundaLinha && (
-                          <span className="block truncate pl-5 text-muted-foreground">{segundaLinha}</span>
+                          <span className="block min-w-0 truncate pl-5 text-muted-foreground">{segundaLinha}</span>
                         )}
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground sm:justify-end">
                           <CalendarBlank size={13} className="shrink-0 text-muted-foreground" />
                           <span className="truncate uppercase">{p.condicao_pagamento || "—"}</span>
-                        </span>
-                        <span className="block pl-5 font-bold text-[#222]">
-                          {comoMoeda(p.total_cents, p.moeda)}
                         </span>
                       </Link>
                     </article>
