@@ -11,9 +11,9 @@ import type { HistoricoCompra, SituacaoRecompra } from "@/lib/comercial/radar-co
  * contrato de dados já nasce correto.
  */
 
-export type PaginaCopilot = "cliente" | "radar";
+export type PaginaCopilot = "cliente" | "radar" | "pedido";
 
-export const PAGINAS_COPILOT = ["cliente", "radar"] as const;
+export const PAGINAS_COPILOT = ["cliente", "radar", "pedido"] as const;
 
 /** Perguntas que o Copilot sugere em cada página (§33). Chaves estáveis. */
 export function perguntasPara(pagina: PaginaCopilot): string[] {
@@ -22,7 +22,24 @@ export function perguntasPara(pagina: PaginaCopilot): string[] {
       return ["risco_do_cliente", "proxima_acao", "potencial_de_recompra"];
     case "radar":
       return ["quem_agir_primeiro", "porque_aqui", "oportunidades_abertas"];
+    case "pedido":
+      return ["desconto_dentro_da_politica", "credito_do_cliente", "estoque_dos_itens"];
   }
+}
+
+export interface PoliticaComercial {
+  desconto_max_vendedor_pct: number;
+  permite_estoque_negativo: boolean;
+  comissao_padrao_pct: number | null;
+}
+
+/** Uma frase sobre as travas comerciais vigentes (para "o desconto cabe?"). */
+export function resumirPolitica(p: PoliticaComercial): string {
+  return (
+    `desconto máximo do vendedor ${p.desconto_max_vendedor_pct}%; ` +
+    `estoque negativo ${p.permite_estoque_negativo ? "permitido" : "bloqueado"}; ` +
+    `comissão padrão ${p.comissao_padrao_pct ?? "—"}%.`
+  );
 }
 
 /** Uma frase sobre o cliente a partir do histórico real (ciclo, atraso). */

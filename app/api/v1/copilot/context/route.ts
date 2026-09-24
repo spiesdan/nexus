@@ -19,6 +19,7 @@ import {
   contagemVazia,
   perguntasPara,
   resumirCliente,
+  resumirPolitica,
   resumirRadar,
   type PaginaCopilot,
 } from "@/lib/ai/copilot/context";
@@ -29,7 +30,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const PAGINAS = ["cliente", "radar"] as const;
+const PAGINAS = ["cliente", "radar", "pedido"] as const;
 const LIMITE_VARREDURA = 5000;
 
 type LinhaPedido = {
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const pagina = req.nextUrl.searchParams.get("pagina")?.trim() ?? "";
   if (!(PAGINAS as readonly string[]).includes(pagina)) {
-    return fail("validation_failed", "pagina aceita: cliente, radar.", 422, { requestId });
+    return fail("validation_failed", "pagina aceita: cliente, radar, pedido.", 422, { requestId });
   }
   const hoje = new Date().toISOString().slice(0, 10);
   const supabase = await createClient();
@@ -115,6 +116,27 @@ export async function GET(req: NextRequest): Promise<Response> {
       },
       { requestId },
     );
+  }
+
+  // pagina === "pedido": travas comerciais vigentes ("o desconto cabe?").
+  if (pagina === "pedido") {
+    const { data: pol, error: erroPol } = await supabase
+      .from("commercial_policies")
+      .select("desconto_max_vendedor_pct, permite_estoque_negativo, comissao_padrao_pct")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    if (erroPol) return fail("internal_error", "Erro ao ler as políticas.", 500, { requestId });
+    const politica = {
+      desconto_max_vendedor_pct: Number(
+        (pol as { desconto_max_vendedor_pct: number } | null)?.desconto_max_vendedor_pct ?? 5,
+      ),
+      permite_estoque_negativo:
+        (pol as { permite_estoque_negativo: boolean } | null)?.permite_estoque_negativo ?? false,
+      comissao_padrao_pct:
+        (pol as { comissao_padrao_pct: number | null } | null)?.comissao_padrao_pct ?? null,
+    };
+    const pg: PaginaCopilot = "pedido";
+    return ok({ pagina: pg, resumo: resumirPolitica(politica), politica, perguntas: perguntasPara(pg) }, { requestId });
   }
 
   // pagina === "radar": varredura limitada dos pedidos recentes, top 12 por

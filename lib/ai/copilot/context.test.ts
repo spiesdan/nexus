@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { contagemVazia, perguntasPara, resumirCliente, resumirRadar } from "@/lib/ai/copilot/context";
+import { contagemVazia, perguntasPara, resumirCliente, resumirPolitica, resumirRadar } from "@/lib/ai/copilot/context";
 
 describe("copilot context (puro, dados reais)", () => {
   it("perguntas estáveis por página", () => {
     expect(perguntasPara("cliente")).toContain("risco_do_cliente");
     expect(perguntasPara("radar")).toContain("quem_agir_primeiro");
+    expect(perguntasPara("pedido")).toContain("desconto_dentro_da_politica");
   });
 
   it("resumo do cliente cita ciclo e atraso", () => {
@@ -45,5 +46,15 @@ describe("copilot context (puro, dados reais)", () => {
     const r = resumirRadar(c, 15, true);
     expect(r).toContain("5 de 15");
     expect(r).toContain("amostra parcial");
+  });
+
+  it("resumo da política cita desconto e estoque", () => {
+    const r = resumirPolitica({
+      desconto_max_vendedor_pct: 10,
+      permite_estoque_negativo: false,
+      comissao_padrao_pct: null,
+    });
+    expect(r).toContain("10%");
+    expect(r).toContain("bloqueado");
   });
 });
