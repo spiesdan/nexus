@@ -20,6 +20,7 @@ import { activityLabel, actorLabel, actorShape } from "@/lib/leads/activity-voca
 import { ConversationTagsEditor } from "./ConversationTagsEditor";
 import { ContactTagsEditor } from "./ContactTagsEditor";
 import { SecoesComerciais } from "./SecoesComerciais";
+import { BrainNoPainel, FollowupsNoPainel } from "./PainelBrainFollowups";
 import { useDefaultPipeline } from "@/hooks/pipelines/useDefaultPipeline";
 import { NewLeadDialog } from "@/components/kanban/NewLeadDialog";
 import { CustomFieldsEditor, type CustomFieldDef } from "@/components/contacts/CustomFieldsEditor";
@@ -677,6 +678,8 @@ export function CRMSidePanel({ conversation }: Props) {
       {/* Independente do crm-summary de propósito: cada seção falha sozinha
           sem derrubar as outras — a mesma doutrina dos três estados acima. */}
       {contactId && <SecoesComerciais contactId={contactId} />}
+      {contactId && <BrainNoPainel contactId={contactId} />}
+      {contactId && <FollowupsNoPainel contactId={contactId} />}
 
       <Separator />
 
