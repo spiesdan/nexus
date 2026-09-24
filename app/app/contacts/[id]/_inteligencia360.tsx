@@ -1,6 +1,7 @@
 "use client";
 
 import { ROTULO_RECOMPRA } from "@/lib/comercial/radar-compras";
+import { recomendar } from "@/lib/ai/sales-brain/recommend";
 import { comoMoeda } from "@/lib/format/moeda";
 import { useT } from "@/hooks/i18n/useT";
 import { NexusAiBriefing, type NexusInsight } from "@/components/nexus-ui/ai/NexusAi";
@@ -27,6 +28,34 @@ export function InteligenciaDoContato({ contactId }: { contactId: string }) {
 
   const insights: NexusInsight[] = [];
   const h = resumo.historico;
+
+  // Sales Brain primeiro: recomendação operacional (QUEM/PORQUÊ/O QUÊ/
+  // próximo passo) sobre o mesmo histórico real das demais abas.
+  if (h) {
+    const rec = recomendar(h);
+    if (rec) {
+      const destino =
+        rec.proxima_acao === "criar_pedido"
+          ? "/app/pedidos/novo"
+          : rec.proxima_acao === "ver_cliente"
+            ? null
+            : "/app/inbox";
+      insights.push({
+        id: "brain-recomendacao",
+        text: `${rec.recomendacao} ${rec.motivo}`,
+        actionLabel:
+          rec.proxima_acao === "criar_pedido"
+            ? t("Criar pedido")
+            : rec.proxima_acao === "ver_cliente"
+              ? t("Ver pedidos")
+              : t("Abrir conversa"),
+        onAction: () => {
+          if (destino) window.location.href = destino;
+          else document.querySelector<HTMLElement>('[data-tab="compras"]')?.click();
+        },
+      });
+    }
+  }
 
   if (h) {
     if (h.situacao !== "ok") {

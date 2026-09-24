@@ -42,6 +42,9 @@ interface Props {
   orderBy: ContactOrderBy;
   orderDir: "asc" | "desc";
   onSort: (column: ContactOrderBy) => void;
+  /** Seleção (§22 ações em massa). Ausente = tabela sem seleção (comportamento atual). */
+  selecionados?: string[];
+  onSelecaoChange?: (ids: string[]) => void;
 }
 
 function displayName(c: Contact, t: (texto: string) => string = (texto) => texto): string {
@@ -105,7 +108,7 @@ function SortableHead({
   );
 }
 
-export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
+export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionados, onSelecaoChange }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
   const del = useDeleteContact();
@@ -113,6 +116,29 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const router = useRouter();
   const qc = useQueryClient();
+
+  const comSelecao = selecionados !== undefined && onSelecaoChange !== undefined;
+  const todosIds = contacts.map((c) => c.id);
+  const todosMarcados = comSelecao && contacts.length > 0 && todosIds.every((id) => selecionados.includes(id));
+  const algunsMarcados = comSelecao && todosIds.some((id) => selecionados.includes(id)) && !todosMarcados;
+
+  function alternarTodos(marcar: boolean) {
+    if (!onSelecaoChange) return;
+    if (marcar) {
+      onSelecaoChange([...new Set([...(selecionados ?? []), ...todosIds])]);
+    } else {
+      onSelecaoChange((selecionados ?? []).filter((id) => !todosIds.includes(id)));
+    }
+  }
+
+  function alternarUm(id: string, marcar: boolean) {
+    if (!onSelecaoChange) return;
+    onSelecaoChange(
+      marcar
+        ? [...new Set([...(selecionados ?? []), id])]
+        : (selecionados ?? []).filter((s) => s !== id),
+    );
+  }
 
   async function iniciarConversa(c: Contact) {
     if (!c.phone_number || abrindo) return;
@@ -155,6 +181,20 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
+          {comSelecao ? (
+            <TableHead className="w-[40px]">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-current"
+                checked={Boolean(todosMarcados)}
+                ref={(el) => {
+                  if (el) el.indeterminate = Boolean(algunsMarcados);
+                }}
+                onChange={(e) => alternarTodos(e.target.checked)}
+                aria-label={t("Selecionar todos")}
+              />
+            </TableHead>
+          ) : null}
           <SortableHead
             label={t("Nome")}
             column="display_name"
@@ -194,6 +234,17 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
       <TableBody>
         {contacts.map((c) => (
           <TableRow key={c.id} className="cursor-pointer">
+            {comSelecao ? (
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-current"
+                  checked={(selecionados ?? []).includes(c.id)}
+                  onChange={(e) => alternarUm(c.id, e.target.checked)}
+                  aria-label={`${t("Selecionar")} ${displayName(c, t)}`}
+                />
+              </TableCell>
+            ) : null}
             <TableCell className="font-medium">
               <Link href={`/app/contacts/${c.id}`} className="hover:underline">
                 {displayName(c)}

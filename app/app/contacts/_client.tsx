@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useContactList } from "@/hooks/contacts/useContactList";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
+import { BulkTagBar } from "./_bulkbar";
 import { NewContactDialog } from "@/components/contacts/NewContactDialog";
 import { ImportContactsDialog } from "@/components/contacts/ImportContactsDialog";
 import { EmptyContacts } from "@/components/empty";
@@ -42,6 +43,7 @@ export function ContactsListClient() {
   const [limit, setLimit] = useState<number>(25);
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput), 250);
@@ -209,12 +211,17 @@ export function ContactsListClient() {
         </Card>
       ) : (
         <>
+          {selecionados.length > 0 ? (
+            <BulkTagBar selecionados={selecionados} onLimpar={() => setSelecionados([])} />
+          ) : null}
           <Card className="hover-raise overflow-hidden">
             <ContactsTable
               contacts={allContacts}
               orderBy={orderBy}
               orderDir={orderDir}
               onSort={handleSort}
+              selecionados={selecionados}
+              onSelecaoChange={setSelecionados}
             />
           </Card>
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
