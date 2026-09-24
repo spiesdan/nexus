@@ -348,12 +348,14 @@ jobs:
       # fora do repo, muda num clique e não passa por PR.
       packages: write
     steps:
+      # Mesmo PAT do build-and-push (ver o comentário lá): os pacotes são
+      # vinculados ao fork e o GITHUB_TOKEN é recusado aqui também.
       - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PUSH_TOKEN }}
 
       - name: Apontar `stable` para esta versão, nas três imagens
         env:
