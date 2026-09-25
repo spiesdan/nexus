@@ -78,8 +78,10 @@ export async function POST(
 
   const proposta = (dec.metadata?.proposta ?? dec.metadata) as Record<string, unknown>;
   const ferramenta = typeof proposta.ferramenta === "string" ? proposta.ferramenta : "";
-  const contato = typeof dec.resource_id === "string" ? dec.resource_id : null;
-  if (!contato) return fail("validation_failed", "Decisão sem contato vinculado.", 422, { requestId });
+  // Nome termina em Id de propósito: o gate `audit-resource-id-e-uuid`
+  // exige que resourceId pareça id (é o contact_id da decisão).
+  const contactId = typeof dec.resource_id === "string" ? dec.resource_id : null;
+  if (!contactId) return fail("validation_failed", "Decisão sem contato vinculado.", 422, { requestId });
   if (ferramenta !== "agendar_followup") {
     return fail("validation_failed", `Ferramenta sem executor: ${ferramenta || "—"}.`, 422, { requestId });
   }
@@ -102,7 +104,7 @@ export async function POST(
   const resultado = await enrollFollowupFlow(admin, {
     organizationId: orgId,
     pointerId: pol.default_flow_pointer_id,
-    contactId: contato,
+    contactId,
     actorUserId: authz.user.id,
     requestId,
   });
@@ -117,7 +119,7 @@ export async function POST(
     actorUserId: authz.user.id,
     organizationId: orgId,
     resourceType: "contact",
-    resourceId: contato,
+    resourceId: contactId,
     requestId,
     metadata: {
       ref_audit_id: id,

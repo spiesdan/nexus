@@ -19857,6 +19857,40 @@ create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
 
 notify pgrst, 'reload schema';
 
+-- Função do apêndice 0243 ANTES da varredura de propósito: o teste
+-- `varredura-anon-e-o-ultimo-bloco` proíbe `create function` depois dela
+-- (o ALTER DEFAULT PRIVILEGES faria a função nascer com EXECUTE para anon
+-- em quem atualiza). Os grants abaixo já negam anon explicitamente; a
+-- posição garante a cura mesmo assim.
+create or replace function public.fn_proximo_numero_compra(p_org uuid)
+returns integer
+  language plpgsql security definer
+  set search_path to 'public', 'pg_temp'
+as $$
+declare
+  v_numero integer;
+begin
+  if not exists (select 1 from public.fn_user_org_ids() where fn_user_org_ids = p_org)
+     and not public.fn_is_platform_admin() then
+    raise exception 'compra_numero_org_invalida' using errcode = '42501';
+  end if;
+
+  insert into public.purchase_order_counters (organization_id, ultimo_numero, updated_at)
+  values (p_org, 1, now())
+  on conflict (organization_id)
+  do update set ultimo_numero = public.purchase_order_counters.ultimo_numero + 1, updated_at = now()
+  returning ultimo_numero into v_numero;
+
+  return v_numero;
+end;
+$$;
+
+alter function public.fn_proximo_numero_compra(uuid) owner to postgres;
+
+revoke execute on function public.fn_proximo_numero_compra(uuid) from public, anon;
+grant execute on function public.fn_proximo_numero_compra(uuid) to authenticated;
+grant execute on function public.fn_proximo_numero_compra(uuid) to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
@@ -20452,34 +20486,9 @@ begin
   end if;
 end $$;
 
-create or replace function public.fn_proximo_numero_compra(p_org uuid)
-returns integer
-  language plpgsql security definer
-  set search_path to 'public', 'pg_temp'
-as $$
-declare
-  v_numero integer;
-begin
-  if not exists (select 1 from public.fn_user_org_ids() where fn_user_org_ids = p_org)
-     and not public.fn_is_platform_admin() then
-    raise exception 'compra_numero_org_invalida' using errcode = '42501';
-  end if;
-
-  insert into public.purchase_order_counters (organization_id, ultimo_numero, updated_at)
-  values (p_org, 1, now())
-  on conflict (organization_id)
-  do update set ultimo_numero = public.purchase_order_counters.ultimo_numero + 1, updated_at = now()
-  returning ultimo_numero into v_numero;
-
-  return v_numero;
-end;
-$$;
-
-alter function public.fn_proximo_numero_compra(uuid) owner to postgres;
-
-revoke execute on function public.fn_proximo_numero_compra(uuid) from public, anon;
-grant execute on function public.fn_proximo_numero_compra(uuid) to authenticated;
-grant execute on function public.fn_proximo_numero_compra(uuid) to service_role;
+-- A função fn_proximo_numero_compra vive ACIMA da varredura anon (ver nota
+-- lá): aqui no apêndice ficam só tabelas, policies, grants de tabela,
+-- triggers e comentários — nada de `create function` depois da varredura.
 
 alter table public.suppliers enable row level security;
 alter table public.purchase_orders enable row level security;
