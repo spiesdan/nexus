@@ -9,57 +9,91 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `4126a9681 feat(nexus-v2): Sidebar §19 - taxonomia de 9 grupos, 18 portas, dobra fechada (53)`
-  (anteriores: `31e1b6655` login helper Windows · `7225f5c80` docs ·
-  `b5ae07bed` Dashboard 52 · `259023c91` Financeiro 51 · `3c5126932` Compras)
+- HEAD: `6f12049c0 fix(e2e): offset de relogio host<->GoTrue medido no globalSetup + execNpx nos specs de MFA restantes`
+  (anteriores: `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
+  `cd0caeccc` NotificationCenter · `359c03e3f` Breadcrumb · `0353cd57b` Fase 1
+  mata uimaxxing · `9c26fd26e` inventário §100 · `4126a9681` Sidebar §19 ·
+  `31e1b6655` helper Windows · `7225f5c80` docs · passos 1-4: `b5ae07bed`/
+  `259023c91`/`31d9411a9`/`3c5126932`)
 - Remotes: `nexus` = escrita canônica (`https://github.com/spiesdan/nexus`) —
   **todo push vai para `nexus`**; `origin`/`fork` = somente leitura (AGENTS.md);
   o spec §101 quer SÓ o nexus — **decisão pendente do usuário** (ver abaixo).
 - Não existe PR `nexus-v2 → main` ainda (abrir só com ordem explícita).
-- Árvore limpa (nada de WIP).
+- Árvore limpa (nada de WIP). Todos os commits acima já estão em `nexus`.
 
 ## Última ação
 
-Passo 5 (Sidebar §19) FECHADO em `4126a9681` (helper de e2e em `31e1b6655`):
-`lib/navigation/registry.ts` reescrito para os **9 grupos da §19** (ids `visao`,
-`vendas`, `atendimento`, `ia`/Inteligência, `operacao`, `financeiro`, `fiscal`,
-`equipe`, `organizacao`/Configurações — `crm`/`canais`/`analise` deletados).
-**Medição real da dobra** (script temporário `medir-dobra.spec.ts`, já apagado):
-`nav763 · conteudo744 · folga+19 · rola=false · links18 · títulos8` com a ordem
-EXATA da §19 (Dashboard, Meu Dia | Pedidos, Clientes, Produtos, Funis, Prospecção |
-Inbox, Radar, Follow-ups, Agenda | Ver tudo em IA | Estoque, Compras, Expedição |
-Contas a Receber | Notas fiscais | Comissões). Orçamento validado:
-`conteudo = 4 + 30·L + 25·H ≤ 763` → H=8 ⇒ L≤18 (mediu exato).
-Decisões INFIDO travadas na implementação (ver conversa/proxy): Agenda é o único
-link não-listado da §19 (porta do dia); Etapas do funil e `/app/team` moram no
-hub Configurações (porta = ⌘K); INTELIGÊNCIA hub-only (só o link "Ver tudo em IA"
-entra — única aritmética que cabe); EQUIPE no sidebar = só Comissões; hub de
-Canais é a última seção do hub; `/app` (Dashboard) virou destino+sidebar com
-exceção de `isActive` em `components/shell/Sidebar.tsx` (senão `aria-current`
-em toda tela); `sidebarGroups()` mantém grupo hub-only vivo com 0 itens.
-Gates: `tsc` 0 · `eslint` 0 errors · unit 42/42 novos verdes (budget 18/8,
-portas, hub-only) · suíte completa = só os 4 flakes Windows + 1 timeout de
-carga (`telas-sem-dado-de-mentira` passa solto) · e2e local verdes:
-`navegacao` 11 · `webhooks`+`vps-ssrf`+`agenda-tela-do-produto` 9 ·
-medição 1. `next.config.ts` já está **revertido** (sem `ignoreBuildErrors`);
-temporários `next.config.ts.bak`/`medir-dobra.spec.ts` apagados.
+**Passo 6 (redesign §100) — Fases 0, 1 e 2 executadas; Fase 2 com UM item
+pendente (2d Global Search).** Inventário: `docs/nexus-v2/redesign-inventory.md`
+(142 itens + plano de 7 fases; alvos fantasma corrigidos em `9c26fd26e`).
+Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
-Helper de e2e (`31e1b6655`): `login-admin.ts` mede o skew relógio local×servidor
-(header `Date` do `/auth/v1/health`) e compensa no TOTP — este PC está +46~47s
-adiantado (CMOS sem NTP; corrigir de vez com `w32tm /resync` **como admin**);
-e `tests/e2e/utils/npx.ts` (`execNpx`) — `execFileSync("npx")` sem shell dá
-`ENOENT` no Windows (o `.cmd` só resolve em shell), quebrando os beforeAll de
-seed de ~75 specs no Windows (CI Linux não afeta).
-
-Passo 4 (Dashboard `b5ae07bed`) e passos 1-3 (Compras `3c5126932`, Estoque
-`31d9411a9`, Financeiro `259023c91`) já fechados.
+- **Fase 1 `0353cd57b`**: −9.442 linhas — 64/67 `components/uimaxxing/*` apagados
+  (3 crm movidos p/ `components/nexus-ui/crm/` + barril), 8 primitivos `ui/`
+  órfãos apagados, `app/(admin)/` apagado. `uimaxxing.css` (66KB) continua
+  `@import` em `globals.css:2` — **CSS adiado** (risco visual). Mantidos por
+  decisão: `app/ai/layout.tsx` e `app/admin/layout.tsx` (semântica intencional).
+- **Fase 2a Breadcrumb `359c03e3f`**: `shell/Breadcrumb.tsx` sobre o registry
+  (destino/hub com rótulo do GRUPO, `canSee`, id→"Detalhe", some <2 níveis);
+  `AppShell.main` virou coluna flex com wrapper `flex-1 min-h-0` (h-full das
+  páginas intacto). Teste `breadcrumb.test.tsx` 7/7; e2e navegacao 11/11,
+  inbox+kanban 3/3 (layouts h-full).
+- **Fase 2c NotificationCenter `cd0caeccc`**: sino virou popover com prévia dos
+  itens de `useAgentInbox("open")` (SoR = `AgentInboxList`: severity badge,
+  `kindLabel`, `formatDistanceToNowStrict`), testids `alerts-bell/-count`
+  preservados, `AlertsBell.tsx` apagado. Painel sem ação (resolver é da
+  central). e2e novo no fim de `navegacao.spec.ts` (12/12).
+- **Fase 2b ContextualDrawer `40e049aab`**: `shell/ContextualDrawer` = casa do
+  `ui/sheet` (overlay/esc/foco/anim SoR); primeiro migrante = painel de detalhe
+  manual da prospecção (`_empresas.tsx:767`, era `fixed inset-y-0` sem backdrop
+  nem teclado). e2e `prospeccao-mapa` 1/1 (usa `getByRole("dialog")`).
+- **Fase 2e TopBar admin `d949973d5`**: `AdminShell` ganhou header completo
+  (hambúrguer lg:hidden + título + `SearchTrigger` + `NotificationCenter` +
+  `UserMenu`); **`AuthProvider` passou a existir no admin** — ele SÓ existia em
+  `app/app/layout.tsx`, e sem ele a barra nova derrubava `/admin/*` no SSR com
+  "useAuth must be used inside `<AuthProvider>`" (medido em e2e `/admin/marca`).
+  `(protected)/layout.tsx` agora faz `requirePlatformAdmin()` (guarda) +
+  `loadAuthUser()` (AuthUser rico) + `<AuthProvider activeOrg={null}>`.
+  Testes: `admin-topbar.test.tsx` 2/2, `admin-shell-tooltip` 2/2; e2e
+  `marca-logo` 6/6 + evidências em `evidence/marca-logo/` (commitadas —
+  `evidence/` É tracked).
+- **Infra e2e `6f12049c0`**: offset host↔GoTrue agora é medida UMA vez no
+  `globalSetup` (`tests/e2e/global-setup.ts` → `E2E_CLOCK_OFFSET_MS` herdado
+  pelos workers); `generateTotp`/`msUntilNextTotpWindow` DEFAULT ao relógio do
+  servidor em `tests/e2e/utils/totp.ts` — os 12 specs que digitam TOTP
+  (marca-logo, rbac-roles, system-update, qa-agente, followup*, gatilho*,
+  invite-lifecycle, reset-password-mfa, olhar-telas, vps-fresh) compensam sem
+  editar; `login-admin.ts` importa o mecanismo (não duplica mais); `execNpx`
+  aplicado também em `marca-logo`/`prospeccao-mapa`/`inbox-quem-manda`/`kanban`
+  (~71 call sites `execFileSync("npx")` continuam quebrando no Windows; CI ok).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6, o monstro, ~70% do esforço)** — só **15 de 291**
-   arquivos usam `nexus-ui`; ordem: inventário classificado
-   (NOVO/REFATORAR/CONSOLIDAR/REMOVER) → tokens/shell → módulos por prioridade
-   (Dashboard → Clientes → 360 → Pedidos → Inbox → Radar → resto) → mobile.
+1. **Redesign §100 (passo 6) — falta**:
+   a. **Fase 2d: Global Search estendida** (inventário §4): hoje só
+      navegação+pedidos+contatos no `CommandPalette`; falta leads/conversas/
+      produtos/títulos + rota `/busca`. É o ÚLTIMO item da Fase 2 (shell §17
+      fica 100%: Sidebar ✅ Topbar ✅(admin+tenant) CommandPalette ✅
+      Notifications ✅ ContextualDrawer ✅ Breadcrumb ✅ UserMenu ✅).
+   b. **Fase 3 — consolidações**: `StatusPage` 6→1 (403/404/500/503/
+      account-suspended + `forbidden`); `AdminDataTable` 7 tabelas→1 +
+      `STATUS_VARIANTS`→`ui/badge`; `NexusConfirmDialog` (18 AlertDialog + 7
+      `window.confirm`); `SuspendDialog`+`ReactivateDialog`→1; overlays
+      manuais restantes→`ui/sheet` (2 de 4 já migrados via ContextualDrawer);
+      toasts→`nexusToast`.
+   c. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
+      `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
+      tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
+      `/indicadores` (+`/metrics`) → `/prospeccao` → funis → `/agenda` →
+      `pedidos/[id]`/`novo` → `/webhooks` → admin.
+   d. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
+      `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→
+      `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
+   e. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
+      visual de aceite §100 (checklist dos 11 itens) com evidência.
+   Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
+   notification-center, contextual-drawer, admin-topbar, sidebar-grupos,
+   command-palette, navegacao-*) + e2e alvo + evidence/ quando a tela mudar.
 2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
    specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
    e2e-cobertura).
@@ -124,10 +158,19 @@ Passo 4 (Dashboard `b5ae07bed`) e passos 1-3 (Compras `3c5126932`, Estoque
   `import-in-the-middle`, `pg`, `@react-pdf/renderer`). Reparo: `Remove-Item`
   + `cmd /c mklink /J <link> <absoluto em node_modules\.pnpm\…>`; se estiverem
   vazios o `next start` cai com MODULE_NOT_FOUND no runtime.
-- Relógio desta máquina +46~47s adiantado: sem compensação todo TOTP dá 422.
-  O helper compensa (31e1b6655); a correção de fundo é `w32tm /resync` como
-  admin. MFA lockout = cookie 3 falhas/60s. Seed: `npx tsx
+- Relógio desta máquina +46~47s adiantado: sem compensação todo TOTP dá 422 e
+  o erro vira "MFA falhou". **A compensação é automática desde `6f12049c0`**:
+  `globalSetup` do Playwright mede (header `Date` do `/auth/v1/health`) e
+  publica `E2E_CLOCK_OFFSET_MS`; `generateTotp`/`msUntilNextTotpWindow` em
+  `tests/e2e/utils/totp.ts` já default ao relógio do servidor. Correção de
+  fundo segue sendo `w32tm /resync` como admin (sem permissão interativa).
+  MFA lockout = cookie 3 falhas/60s. Seed: `npx tsx
   scripts/seed-e2e-credentials.ts` + `seed-e2e-followup-agent.ts`.
+- `AuthProvider` só nasce em `app/app/layout.tsx`; `/admin` ganhou o seu em
+  `(protected)/layout.tsx` (Fase 2e). Qualquer componente novo em `/admin` que
+  use `useUser`/`useAuth` depende dessa junção — sem ela, SSR derruba a rota.
+- `evidence/` é TRACKED (commitar screenshots de e2e como prova visual);
+  `.superpowers/` não.
 
 ## Arquivos de contexto do projeto
 
