@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 
+import { BrainRecomendacoes } from "@/components/nexus-ui/intelligence/BrainRecomendacoes";
 import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
 import { CrmKpi, CrmKpiGrid } from "@/components/uimaxxing/crm/crm-kpi";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
 import { comoMoeda } from "@/lib/format/moeda";
 import { NAV_DESTINATIONS } from "@/lib/navigation/registry";
+import { ClientesParaAgir, SalesRadar, SalesRoadmap } from "./_home-secoes";
 import { Atividade } from "./indicadores/_atividade";
 
 export interface DadosDashboard {
@@ -96,6 +98,14 @@ export function DashboardHome(dados: DadosDashboard) {
           previsaoMes={dados.previsaoMes}
         />
       )}
+
+      <ClientesParaAgir />
+
+      <SalesRoadmap />
+
+      <SalesRadar />
+
+      <BrainRecomendacoes />
 
       <section aria-label={t("Acesso rápido")}>
         <h2 className="mb-3 text-sm font-semibold tracking-wide text-foreground">{t("Acesso rápido")}</h2>
