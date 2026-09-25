@@ -431,6 +431,8 @@ export const AUDIT_ACTIONS = [
   // trilha de governança no metadata (quem/agente/dados/ferramentas/
   // políticas/resultado) — o Decision Log se lê em /api/v1/audit.
   "ai.action.proposed",
+  "ai.action.approved",
+  "ai.action.rejected",
   "ai.action.executed",
   "shipment.proof_uploaded",
   // Roteirizador (migration 0231). Rota é dinheiro em movimento com GPS no

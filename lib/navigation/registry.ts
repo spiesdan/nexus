@@ -507,6 +507,17 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     section: "Acompanhar o agente",
   },
   {
+    // NEXUS FASE 10: o Decision Log com Aprovar/Recusar — ações que o
+    // vendedor autônomo propôs, com motivo, dados e política.
+    href: "/app/ai/decisoes",
+    label: "Decisões",
+    description: "Ações propostas pela IA esperando sua decisão, e o que já foi decidido.",
+    icon: Flag,
+    group: "ia",
+    section: "Acompanhar o agente",
+    minRole: "manager",
+  },
+  {
     // A tela de Uso responde "quanto gastei". Esta responde a pergunta que não
     // tinha lugar nenhum: "o agente parou de responder, o que aconteceu?".
     // Antes da migration 0128 ela seria impossível de construir com honestidade
