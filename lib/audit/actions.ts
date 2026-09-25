@@ -433,6 +433,7 @@ export const AUDIT_ACTIONS = [
   "ai.action.proposed",
   "ai.action.approved",
   "ai.action.rejected",
+  "ai.policy.updated",
   "ai.action.executed",
   "shipment.proof_uploaded",
   // Roteirizador (migration 0231). Rota é dinheiro em movimento com GPS no
