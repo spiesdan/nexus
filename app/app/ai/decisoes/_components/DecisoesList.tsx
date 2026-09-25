@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { NexusAiApproval } from "@/components/nexus-ui/ai/NexusAiApproval";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Brain } from "@/lib/ui/icons";
 import { useFollowupFlows } from "@/hooks/followup/useFollowupFlows";
 
@@ -89,6 +90,17 @@ export function DecisoesList() {
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-20 w-full" />
       </div>
+    );
+  }
+
+  // Erro nunca vira "nada esperando": vazio sem leitura é mentira (§59).
+  if (q.isError) {
+    return (
+      <NexusErrorState
+        title={t("Decisões indisponíveis")}
+        description={t("Não foi possível ler a auditoria. Tente novamente.")}
+        onRetry={() => void q.refetch()}
+      />
     );
   }
 
