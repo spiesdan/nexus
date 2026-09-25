@@ -552,6 +552,17 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     section: "Acompanhar o agente",
     minRole: "manager",
   },
+  {
+    // NEXUS §56: o painel do gestor — decisões, oportunidades, follow-ups
+    // e orçamento num lugar só. Sem sidebar (doutrina da dobra).
+    href: "/app/ai/controle",
+    label: "Controle de IA",
+    description: "O que a IA propôs, decidiu, acompanha e consumiu.",
+    icon: Gauge,
+    group: "ia",
+    section: "Acompanhar o agente",
+    minRole: "manager",
+  },
 
   // ---- Canais — por onde as mensagens entram e saem ----
   {
