@@ -9,7 +9,9 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `3c5126932 feat(nexus-v2): UI Compras - pedidos, fornecedores e detalhe (Etapa 3)`
+- HEAD: `b5ae07bed feat(nexus-v2): Dashboard centro de comando - clientes para agir, roadmap, radar e IA (52)`
+  (anteriores: `259023c91` Financeiro 51 · `31d9411a9` Estoque · `28d9f4fbd` docs ·
+  `3c5126932` Compras)
 - Remotes: `nexus` = escrita canônica (`https://github.com/spiesdan/nexus`) —
   **todo push vai para `nexus`**; `origin`/`fork` = somente leitura (AGENTS.md);
   o spec §101 quer SÓ o nexus — **decisão pendente do usuário** (ver abaixo).
@@ -18,51 +20,46 @@
 
 ## Última ação
 
-Passo 1 da ordem aprovada (Compras) FECHADO: `app/app/compras/` (lista com abas
-Pedidos/Fornecedores + detalhe `[id]` com transições), entrada `/app/compras`
-em `lib/navigation/registry.ts` (grupo `crm`, sem `sidebar` — dobra), ícones
-`ShoppingCart`/`Package`. Verificado antes do commit: `tsc` 0, `eslint` 0,
-59 testes verdes (navegacao-completude/registry, branding, i18n, rótulos).
-Suíte unit completa: 7359 passam; falharam só os flakes Windows conhecidos
-(`guarda-da-release`, `namespace-das-imagens`, `performed-at`, `rate-limit`) —
-um defeito NOSSO apareceu e foi corrigido no mesmo turno: datas com
-`toLocaleDateString("pt-BR")` fixo (guard `i18n-a-data-segue-o-idioma`); o
-padrão certo é `useTagDeIdioma()` de `@/hooks/i18n/useLocaleDeData`. Para o
-padrão `carregar()` chamado de `useEffect`, o repo aceita
-`// eslint-disable-next-line react-hooks/set-state-in-effect` (precedente em
-`app/app/financeiro/_client.tsx:142`).
+Passo 4 da ordem aprovada (Dashboard §20/§91) FECHADO em `b5ae07bed`: novas
+seções em `app/app/_home.tsx` via `app/app/_home-secoes.tsx` —
+**Clientes para agir** (chips Recompra/Risco/Oportunidades/Follow-up +
+lista top-5 do radar com `ROTULO_RECOMPRA` + follow-ups vencidos via
+`GET /api/v1/ai/followups/queue?limit=100`), **Sales roadmap**
+(`GET /api/v1/roadmap`, ComposedChart 12 meses: realizado × meta × projeção,
+nota de amostra parcial), **Sales radar** (contagens risco/oportunidade/recompra
+com o MESMO agrupamento do `RadarCategorias`) e **IA** (`<BrainRecomendacoes />`
+zero-props, já usava `useSalesBrain(6)`). Todos os fetches em react-query com
+staleTime 5-10min (o radar agrega a base inteira — 60s de timeout). Gates:
+`tsc` 0, `eslint` 0, i18n+branding 34 verdes, suíte completa = só os 4 flakes
+Windows (`guarda-da-release`/`namespace-das-imagens`/`performed-at`/`rate-limit`),
+7360 passam.
+
+Passos 1-3 já fechados: Compras (`3c5126932`), Estoque (`31d9411a9`), Financeiro
+com as 5 abas (`259023c91`). Padrões aprendidos (mantidos): `toLocaleDateString`
+com tag de `useTagDeIdioma()`; `// eslint-disable-next-line
+react-hooks/set-state-in-effect` antes de `void carregar()` (precedente
+`financeiro/_client.tsx:142`); **o lint do react-compiler reprova `Date.now()`
+dentro do render** ("Cannot call impure function during render") — o corte
+"vencido" foi pro `queryFn`.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Estoque UI (passo 2)** — criar `app/app/estoque/`: aba Sugestões consome
-   `GET /api/v1/inventory/sugestoes` (hoje órfã) com botão "Criar compra" →
-   `/app/compras?novo=1&produto=<id>&qtd=<n>` (o diálogo de Nova compra do
-   Compras já lê esse prefill); aba Movimentos consome
-   `GET /api/v1/inventory/movements` + diálogo de novo movimento →
-   `POST .../movements`. Entrada `/app/estoque` no registry (grupo `crm`,
-   sem sidebar), `tsc + lint + testes de navegação/i18n/branding`, commit+push
-   `nexus`. Lembrete de gate: se criar função/tabela nova, TABLES do
-   `rls-isolation` + definer em `AUTHENTICATED_PERMITIDO`.
-2. **Financeiro §51** — abas faltantes em `app/app/financeiro/_client.tsx`:
-   Contas a Pagar, Cobranças, **Fluxo de Caixa** (API
-   `/api/v1/financeiro/fluxo` existe e está órfã, 0 telas).
-3. **Roadmap + Dashboard §20/§91** — consumir `/api/v1/roadmap` (órfã) no
-   Dashboard; adicionar "Clientes para Agir" (usa sales-brain/radar já
-   existentes), Sales Radar e ações da IA; o Dashboard hoje só tem
-   vendas/meta/projeção + acesso rápido + atividade (`app/app/_home.tsx`).
-4. **Sidebar §19** — taxonomia nova (9 grupos do spec vs 6 atuais em
+1. **Sidebar §19 (passo 5)** — taxonomia nova (9 grupos do spec vs 6 atuais em
    `lib/navigation/registry.ts`); destinos faltantes: Estoque, Compras,
    Campanhas (hoje embutida em Prospecção), Metas, Notas, Cobranças.
    Cuidado com o gate da dobra (sidebar `sidebar: true` = 27 hoje).
-5. **Redesign §100 (o monstro, ~70% do esforço)** — só **15 de 291** arquivos
-   usam `nexus-ui`; ordem: inventário classificado (NOVO/REFATORAR/CONSOLIDAR/
-   REMOVER) → tokens/shell → módulos por prioridade (Dashboard → Clientes →
-   360 → Pedidos → Inbox → Radar → resto) → mobile.
-6. **E2E §86** — 6 jornadas nomeadas (hoje só `recompra-radar`) + specs das
-   telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate e2e-cobertura).
-7. **Fechamento** — docs (`parity-matrix`/`migration-plan` desatualizados desde
-   a Etapa 1-3), checklist §94 recontado, **abrir PR** (ordem do usuário),
-   CI Linux, deploy medido na VPS (§84).
+2. **Redesign §100 (passo 6, o monstro, ~70% do esforço)** — só **15 de 291**
+   arquivos usam `nexus-ui`; ordem: inventário classificado
+   (NOVO/REFATORAR/CONSOLIDAR/REMOVER) → tokens/shell → módulos por prioridade
+   (Dashboard → Clientes → 360 → Pedidos → Inbox → Radar → resto) → mobile.
+3. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
+   specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
+   e2e-cobertura).
+4. **Fechamento (passo 8)** — docs (`parity-matrix`/`migration-plan`
+   desatualizados desde a Etapa 1-3), checklist §94 recontado, **abrir PR**
+   (ordem do usuário), CI Linux, deploy medido na VPS (§84).
+   Antes de fechar: checar o spec linha a linha (§20/§91 já cumpridos no
+   Dashboard; confirmar §51-§53, §14, §19 contra o spec).
 
 ## Decisões pendentes do usuário (NÃO decidir sozinho)
 
@@ -91,8 +88,20 @@ padrão `carregar()` chamado de `useEffect`, o repo aceita
   NÃO `title/description/action`.
 - API é `snake_case`, dinheiro `*_cents`, `apiClient.get/post/patch/delete`,
   erros via `showApiError`/`nexusToast`, wrappers `ok()/fail()`.
-- Endpoints órfãos (0 telas) neste momento: `/api/v1/financeiro/fluxo`,
-  `/api/v1/roadmap`, `/api/v1/inventory/sugestoes` (a tela 2 vai consumi-lo).
+- Endpoints consumidos pelos passos 1-4: `/api/v1/financeiro/fluxo`,
+  `/api/v1/roadmap`, `/api/v1/inventory/sugestoes`, `/api/v1/inventory/movements`,
+  `/api/v1/financial-pagaveis`, `/api/v1/radar-compras`,
+  `/api/v1/ai/followups/queue`, `/api/v1/sales-brain`. Refaça a varredura de
+  órfãos antes de afirmar qual ainda sobra.
+- `GET /api/v1/pipelines` exige **manager** — o Dashboard (viewer) não pode
+  usá-lo; use radar-compras/roadmap/fila/sales-brain (viewer OK).
+- Agrupamento oficial do radar (não inventar): risco=`em_risco`;
+  recompra=`recompra_atrasada`; oportunidade=`oportunidade_aberta`+
+  `em_voo`+`primeira_compra`; perda=`cancelado_sem_nova`
+  (`app/app/radar/_components/RadarCategorias.tsx`).
+- `<BrainRecomendacoes />` não tem props (busca sozinho via `useSalesBrain(6)`);
+  Badge aceita variant `error|warning|info`; filtros de fila vencida:
+  `status ∈ {active, waiting_reply, agendada}` e `next_fire_at < agora`.
 
 ## Arquivos de contexto do projeto
 
