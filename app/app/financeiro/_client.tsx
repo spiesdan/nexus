@@ -190,8 +190,8 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
     <div className="space-y-6 p-6">
       <CrmPageHeader
         eyebrow={t("Financeiro")}
-        title={t("Contas a receber")}
-        description={t("Recebimentos e conciliação pedido × NF × financeiro.")}
+        title={t("Financeiro")}
+        description={t("Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação.")}
       />
 
       {kpis === null ? (
@@ -227,7 +227,10 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
       <Tabs value={aba} onValueChange={setAba}>
         <TabsList>
           <TabsTrigger value="recebiveis">{t("Contas a receber")}</TabsTrigger>
+          <TabsTrigger value="pagar">{t("Contas a pagar")}</TabsTrigger>
+          <TabsTrigger value="cobrancas">{t("Cobranças")}</TabsTrigger>
           <TabsTrigger value="conciliacao">{t("Conciliação")}</TabsTrigger>
+          <TabsTrigger value="fluxo">{t("Fluxo de caixa")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recebiveis" className="mt-4 space-y-3">
@@ -469,7 +472,466 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
             </ul>
           )}
         </TabsContent>
+
+        <TabsContent value="pagar" className="mt-4">
+          <AbaPagar />
+        </TabsContent>
+
+        <TabsContent value="cobrancas" className="mt-4">
+          <AbaCobrancas />
+        </TabsContent>
+
+        <TabsContent value="fluxo" className="mt-4">
+          <AbaFluxo />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+interface Pagavel {
+  id: string;
+  entrada_id: string | null;
+  contact_id: string | null;
+  fornecedor_nome: string | null;
+  fornecedor_cnpj: string | null;
+  parcela_n: number;
+  total_parcelas: number;
+  valor_original_cents: number;
+  vencimento: string;
+  status: string;
+  forma_pagamento: string | null;
+  observacoes: string | null;
+  created_at: string;
+}
+
+interface DiaFluxo {
+  dia: string;
+  receber_cents: number;
+  pagar_cents: number;
+  liquido_cents: number;
+  acumulado_cents: number;
+}
+
+interface Fluxo {
+  vencido_receber_cents: number;
+  vencido_pagar_cents: number;
+  dias: DiaFluxo[];
+  amostra_parcial?: boolean;
+}
+
+/** Pagável não tem baixa rastreada ainda; vencido aqui é data < hoje em aberto. */
+function situacaoDoPagavel(p: Pagavel, hoje: string): Situacao {
+  if (p.status === "aberto" || p.status === "parcial") {
+    return p.vencimento < hoje ? "vencido" : (p.status as Situacao);
+  }
+  return p.status as Situacao;
+}
+
+function AbaPagar() {
+  const t = useT();
+  const [pagaveis, setPagaveis] = React.useState<Pagavel[] | null>(null);
+  const [statusFiltro, setStatusFiltro] = React.useState("");
+  const [busca, setBusca] = React.useState("");
+
+  React.useEffect(() => {
+    let vivo = true;
+    apiClient
+      .get<{ data: Pagavel[] }>("/api/v1/financial-pagaveis")
+      .then((c) => {
+        if (vivo) setPagaveis(c.data ?? []);
+      })
+      .catch((e) => {
+        showApiError(e);
+        if (vivo) setPagaveis([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  const hoje = hojeIso();
+  const linhas = (pagaveis ?? []).filter((p) => {
+    const sit = situacaoDoPagavel(p, hoje);
+    if (statusFiltro && sit !== statusFiltro) return false;
+    if (busca.trim()) {
+      const b = busca.trim().toLowerCase();
+      const nome = (p.fornecedor_nome ?? "").toLowerCase();
+      const cnpj = (p.fornecedor_cnpj ?? "").toLowerCase();
+      if (!nome.includes(b) && !cnpj.includes(b)) return false;
+    }
+    return true;
+  });
+
+  const somaPorStatus = (fn: (p: Pagavel) => boolean) =>
+    (pagaveis ?? [])
+      .filter(fn)
+      .reduce((acc, p) => acc + p.valor_original_cents, 0);
+  const emAbertoCents = somaPorStatus((p) => {
+    const s = situacaoDoPagavel(p, hoje);
+    return s === "aberto" || s === "parcial" || s === "vencido";
+  });
+  const vencidoCents = somaPorStatus((p) => situacaoDoPagavel(p, hoje) === "vencido");
+  const pagoCents = somaPorStatus((p) => p.status === "pago");
+
+  if (pagaveis === null) {
+    return (
+      <div className="space-y-2" aria-live="polite">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <CrmKpiGrid>
+        <CrmKpi label={t("Em aberto")} value={comoMoeda(emAbertoCents, "BRL")} />
+        <CrmKpi
+          label={t("Vencido")}
+          value={comoMoeda(vencidoCents, "BRL")}
+          trend={vencidoCents > 0 ? "down" : "flat"}
+        />
+        <CrmKpi label={t("Pago")} value={comoMoeda(pagoCents, "BRL")} />
+        <CrmKpi label={t("Títulos")} value={String(pagaveis.length)} />
+      </CrmKpiGrid>
+
+      <Card className="hover-raise space-y-3 p-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="pag-busca">{t("Buscar")}</Label>
+            <Input
+              id="pag-busca"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder={t("fornecedor…")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pag-status">{t("Status")}</Label>
+            <Select
+              value={statusFiltro || "__todos"}
+              onValueChange={(v) => setStatusFiltro(v === "__todos" ? "" : v)}
+            >
+              <SelectTrigger id="pag-status" className="h-10 w-full">
+                <SelectValue placeholder={t("Todos")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__todos">{t("Todos")}</SelectItem>
+                <SelectItem value="aberto">{t("Em aberto")}</SelectItem>
+                <SelectItem value="vencido">{t("Vencido")}</SelectItem>
+                <SelectItem value="pago">{t("Pago")}</SelectItem>
+                <SelectItem value="cancelado">{t("Cancelado")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t("Baixa e cancelamento de pagável são fase futura: o status nasce na importação da nota fiscal.")}
+        </p>
+      </Card>
+
+      {linhas.length === 0 ? (
+        <Card className="hover-raise p-8 text-center">
+          <p className="font-medium">{t("Nenhuma conta a pagar")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("As parcelas das notas de entrada aparecem aqui.")}
+          </p>
+        </Card>
+      ) : (
+        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Fornecedor")}</th>
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
+                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Valor")}</th>
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Status")}</th>
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Forma")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {linhas.map((p) => {
+                const sit = situacaoDoPagavel(p, hoje);
+                const atrasoDias =
+                  sit === "vencido"
+                    ? Math.floor(
+                        (new Date(`${hoje}T12:00:00Z`).getTime() -
+                          new Date(`${p.vencimento}T12:00:00Z`).getTime()) /
+                          86400000,
+                      )
+                    : 0;
+                return (
+                  <tr key={p.id} className="row-hover border-b align-top last:border-0">
+                    <td className="px-3 py-2">
+                      <span className="font-medium">{p.fornecedor_nome ?? t("Sem fornecedor")}</span>
+                      {p.fornecedor_cnpj && (
+                        <span className="block text-xs text-muted-foreground">{p.fornecedor_cnpj}</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                      {p.parcela_n}/{p.total_parcelas}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                      {new Date(`${p.vencimento}T12:00:00Z`).toLocaleDateString()}
+                      {atrasoDias > 0 && (
+                        <span className="block text-xs text-error-fg">+{atrasoDias}d</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                      {comoMoeda(p.valor_original_cents, "BRL")}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant={VARIANTE_SITUACAO[sit]}>{sit}</Badge>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{p.forma_pagamento ?? "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AbaCobrancas() {
+  const t = useT();
+  const [linhas, setLinhas] = React.useState<Recebivel[] | null>(null);
+
+  React.useEffect(() => {
+    let vivo = true;
+    const qs = new URLSearchParams({ status: "vencido", limit: "200", ordem: "vencimento" });
+    apiClient
+      .get<{ data: Recebivel[] }>(`/api/v1/financeiro/recebiveis?${qs}`)
+      .then((c) => {
+        if (vivo) setLinhas(c.data ?? []);
+      })
+      .catch((e) => {
+        showApiError(e);
+        if (vivo) setLinhas([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  if (linhas === null) {
+    return <Skeleton className="h-32 w-full" aria-live="polite" />;
+  }
+
+  const totalVencido = linhas.reduce((acc, l) => acc + l.saldo_cents, 0);
+  const maiorAtraso = linhas.reduce((acc, l) => Math.max(acc, l.dias_atraso), 0);
+
+  if (linhas.length === 0) {
+    return (
+      <Card className="hover-raise p-8 text-center">
+        <p className="font-medium">{t("Nada vencido")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("Nenhum título passou do vencimento. As cobranças estão em dia.")}
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <CrmKpiGrid>
+        <CrmKpi label={t("Total vencido")} value={comoMoeda(totalVencido, "BRL")} trend="down" />
+        <CrmKpi label={t("Títulos")} value={String(linhas.length)} />
+        <CrmKpi label={t("Maior atraso")} value={`${maiorAtraso}d`} trend="down" />
+      </CrmKpiGrid>
+
+      <p className="text-xs text-muted-foreground">
+        {t("A baixa e a negociação do título vivem em Títulos; aqui é o painel do que está atrasado.")}
+      </p>
+
+      <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-muted-foreground">
+              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Cliente")}</th>
+              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
+              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
+              <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Saldo")}</th>
+              <th className="px-3 py-2">
+                <span className="sr-only">{t("Ações")}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((l) => (
+              <tr key={l.id} className="row-hover border-b align-top last:border-0">
+                <td className="px-3 py-2">
+                  <span className="font-medium">{l.contato_nome ?? "—"}</span>
+                  {l.contato_cidade && (
+                    <span className="block text-xs text-muted-foreground">{l.contato_cidade}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                  {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
+                  {l.dias_atraso > 0 && (
+                    <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                  {l.parcela_n}/{l.total_parcelas}
+                  {l.pedido_numero != null && (
+                    <span className="block text-xs text-muted-foreground">#{l.pedido_numero}</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                  {comoMoeda(l.saldo_cents, "BRL")}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href="/app/titulos">{t("Abrir em Títulos")}</Link>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AbaFluxo() {
+  const t = useT();
+  const [dias, setDias] = React.useState(60);
+  const [fluxo, setFluxo] = React.useState<Fluxo | null>(null);
+
+  React.useEffect(() => {
+    let vivo = true;
+    apiClient
+      .get<{ data: Fluxo }>(`/api/v1/financeiro/fluxo?dias=${dias}`)
+      .then((c) => {
+        if (vivo) setFluxo(c.data);
+      })
+      .catch((e) => {
+        showApiError(e);
+        if (vivo) setFluxo(null);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [dias]);
+
+  if (fluxo === null) {
+    return <Skeleton className="h-32 w-full" aria-live="polite" />;
+  }
+
+  const comMovimento = fluxo.dias.filter(
+    (d) => d.receber_cents !== 0 || d.pagar_cents !== 0,
+  );
+  const liquidoVencido = fluxo.vencido_receber_cents - fluxo.vencido_pagar_cents;
+  const posicaoFinal = fluxo.dias.at(-1)?.acumulado_cents ?? liquidoVencido;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-44">
+          <Select
+            value={String(dias)}
+            onValueChange={(v) => setDias(Number(v))}
+          >
+            <SelectTrigger aria-label={t("Horizonte (dias)")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">{t("30 dias")}</SelectItem>
+              <SelectItem value="60">{t("60 dias")}</SelectItem>
+              <SelectItem value="90">{t("90 dias")}</SelectItem>
+              <SelectItem value="180">{t("180 dias")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {fluxo.amostra_parcial ? (
+          <span className="text-xs text-muted-foreground">
+            {t("Amostra parcial: há mais títulos do que a análise lê por vez.")}
+          </span>
+        ) : null}
+      </div>
+
+      <CrmKpiGrid>
+        <CrmKpi
+          label={t("Vencido a receber")}
+          value={comoMoeda(fluxo.vencido_receber_cents, "BRL")}
+          trend="down"
+        />
+        <CrmKpi
+          label={t("Vencido a pagar")}
+          value={comoMoeda(fluxo.vencido_pagar_cents, "BRL")}
+        />
+        <CrmKpi
+          label={t("Líquido vencido")}
+          value={comoMoeda(liquidoVencido, "BRL")}
+          trend={liquidoVencido < 0 ? "down" : "flat"}
+        />
+        <CrmKpi
+          label={t("Posição no fim do período")}
+          value={comoMoeda(posicaoFinal, "BRL")}
+          trend={posicaoFinal < 0 ? "down" : "flat"}
+        />
+      </CrmKpiGrid>
+
+      {comMovimento.length === 0 ? (
+        <Card className="hover-raise p-8 text-center">
+          <p className="font-medium">{t("Sem movimento no período")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("Nenhum vencimento de receber ou pagar nos próximos dias.")}
+          </p>
+        </Card>
+      ) : (
+        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Dia")}</th>
+                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("A receber")}</th>
+                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("A pagar")}</th>
+                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Líquido")}</th>
+                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Acumulado")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comMovimento.map((d) => (
+                <tr key={d.dia} className="row-hover border-b align-top last:border-0">
+                  <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                    {new Date(`${d.dia}T12:00:00Z`).toLocaleDateString()}
+                  </td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                    {comoMoeda(d.receber_cents, "BRL")}
+                  </td>
+                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                    {comoMoeda(d.pagar_cents, "BRL")}
+                  </td>
+                  <td
+                    className={`px-3 py-2 text-right whitespace-nowrap tabular-nums ${
+                      d.liquido_cents < 0 ? "text-error-fg" : ""
+                    }`}
+                  >
+                    {comoMoeda(d.liquido_cents, "BRL")}
+                  </td>
+                  <td
+                    className={`px-3 py-2 text-right whitespace-nowrap tabular-nums font-medium ${
+                      d.acumulado_cents < 0 ? "text-error-fg" : ""
+                    }`}
+                  >
+                    {comoMoeda(d.acumulado_cents, "BRL")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">
+        {t("Dias sem vencimento não aparecem. A posição acumulada já parte do líquido vencido de hoje.")}
+      </p>
     </div>
   );
 }
