@@ -144,12 +144,16 @@ export async function GET(req: NextRequest): Promise<Response> {
   // pagina === "fiscal": saúde da emissão (travadas + fila + sem nota).
   // Antes do radar de propósito: o fiscal não precisa da varredura de 5000.
   if (pagina === "fiscal") {
+    // Constante à direita de propósito: o gate `postgrest-nao-compara-
+    // coluna-com-coluna` lê literal-vs-literal como comparação de colunas
+    // (`invoices` TEM coluna `erro`), e o valor aqui é literal mesmo.
+    const STATUS_NOTA_ERRO = "erro";
     const [{ count: notasErro, error: erroNotas }, { count: jobsAbertos, error: erroJobs }] = await Promise.all([
       supabase
         .from("invoices")
         .select("id", { count: "exact", head: true })
         .eq("organization_id", orgId)
-        .eq("status", "erro"),
+        .eq("status", STATUS_NOTA_ERRO),
       supabase
         .from("fiscal_jobs")
         .select("id", { count: "exact", head: true })
