@@ -1,9 +1,5 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
-import { normalizarIdioma } from "@/lib/i18n/idiomas";
-import { traduzir } from "@/lib/i18n/dicionario";
+import { StatusPage } from "@/components/nexus-ui/feedback/StatusPage";
+import { idiomaDaPagina } from "@/lib/i18n/idioma-da-pagina";
 
 /**
  * `/500` — irmã de `/403` e `/503`, e faltava.
@@ -17,34 +13,5 @@ import { traduzir } from "@/lib/i18n/dicionario";
  * Esta é a página estática, alcançável por URL.
  */
 export default async function InternalErrorPage() {
-  // Rota fora da árvore de `app/app/layout.tsx` — sem `IdiomaProvider`, então
-  // resolve o idioma direto, como `admin/forbidden/page.tsx`. Quem cai aqui
-  // pode até ser o próprio Supabase falhando, por isso `user` é opcional e a
-  // ausência de sessão não impede a página de renderizar.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const idioma = normalizarIdioma(
-    (user?.user_metadata?.locale as string | undefined) ?? null,
-  );
-
-  return (
-    <main className="flex min-h-screen items-center justify-center p-8">
-      <Card className="hover-raise w-full max-w-md p-8 text-center">
-        <h1 className="text-2xl font-semibold">{traduzir("500 — Erro interno", idioma)}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {traduzir(
-            "Algo quebrou do nosso lado. Já registramos o ocorrido; tente de novo em instantes.",
-            idioma,
-          )}
-        </p>
-        <div className="mt-6 flex justify-center gap-2">
-          <Button asChild>
-            <Link href="/">{traduzir("Voltar", idioma)}</Link>
-          </Button>
-        </div>
-      </Card>
-    </main>
-  );
+  return <StatusPage variante="erro-interno" idioma={await idiomaDaPagina()} />;
 }
