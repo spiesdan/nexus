@@ -25,6 +25,7 @@ import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
 import { CustomerSelector, type ContatoOpcao } from "./_cliente";
 import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "./_produtos";
 import { OrderItems, type LinhaDoPedido } from "./_itens";
+import { AfinsNoPedido } from "./_afins";
 import { OrderSummary } from "./_resumo";
 import { haQuantoTempo, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
@@ -560,6 +561,13 @@ export function OrderEditor({
             linhas={linhas}
             aoMudar={mudarLinha}
             aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
+          />
+
+          <AfinsNoPedido
+            carrinho={linhas.map((l) => l.product_id)}
+            contatoId={contatoId}
+            porId={porId}
+            aoAdicionar={adicionar}
           />
 
           {relacionados.length > 0 && (
