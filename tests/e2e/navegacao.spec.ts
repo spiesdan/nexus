@@ -191,6 +191,29 @@ test.describe("navegação agrupada", () => {
   });
 
   /**
+   * Global Search (§17): a paleta mostra 5 por seção porque é um launcher;
+   * "Ver todos os resultados" leva para a PÁGINA com o termo na URL — mesmo
+   * motor (`lib/busca/global`), outro teto. A rota escrita à mão tem de
+   * resolver sozinha também: é ela que o registry passa a conhecer.
+   */
+  test("a busca global tem página própria e a ponte da paleta leva para lá", async ({ page }) => {
+    await loginAdmin(page);
+
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByRole("combobox").fill("conhec");
+    await page.getByRole("button", { name: /Ver todos os resultados/ }).click();
+    await page.waitForURL(/\/app\/busca\?q=conhec/);
+    await expect(page.getByRole("heading", { name: "Busca" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Conhecimento/ })).toBeVisible();
+
+    await page.goto("/app/busca?q=funis");
+    // /Funis/ casaria com o item da sidebar e com o resultado (modo estrito):
+    // o subtítulo "Seus funis de venda…" só existe no resultado.
+    await expect(page.getByRole("link", { name: /Seus funis de venda/ })).toBeVisible();
+    await page.screenshot({ path: path.join(EVIDENCE, "nav-busca-global.png"), fullPage: true });
+  });
+
+  /**
    * Agrupar cria um risco que a lista plana não tinha: o menu cresce e passa a
    * exigir scroll. Na primeira versão desta mudança, medido em 1280×768, o
    * conteúdo dava 1019px contra 663px visíveis — SETE links e os grupos Análise

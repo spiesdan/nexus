@@ -213,6 +213,19 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     icon: ChartLineUp,
     group: "visao",
   },
+  {
+    // Global Search (§17): a PÁGINA de resultados — a paleta ⌘K é a
+    // abreviação, esta é a tela completa, com navegação e as seis entidades do
+    // `lib/busca/global` lado a lado. §19 não a lista no sidebar e a dobra
+    // medida (18 links + 8 títulos = 744px de 763px) não comporta mais uma
+    // porta: a porta é o ⌘K, o botão "Buscar…" do topo e o Enter dentro da
+    // própria busca.
+    href: "/app/busca",
+    label: "Busca",
+    description: "Resultados da busca global: telas, conversas, clientes, pedidos, leads, produtos e títulos.",
+    icon: MagnifyingGlass,
+    group: "visao",
+  },
 
   // ---- Atendimento — onde o operador passa o dia ----
   {

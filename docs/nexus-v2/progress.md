@@ -9,10 +9,12 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `6f12049c0 fix(e2e): offset de relogio host<->GoTrue medido no globalSetup + execNpx nos specs de MFA restantes`
-  (anteriores: `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
-  `cd0caeccc` NotificationCenter · `359c03e3f` Breadcrumb · `0353cd57b` Fase 1
-  mata uimaxxing · `9c26fd26e` inventário §100 · `4126a9681` Sidebar §19 ·
+- HEAD: `727faf650 docs(nexus-v2): handoff do passo 6 - fases 0/1/2 fechadas, falta 2d Global Search (55)`
+  — e o commit que entrega este arquivo **fecha a Fase 2d (Global Search)**.
+  (anteriores: `6f12049c0` infra e2e · `d949973d5` TopBar admin ·
+  `40e049aab` ContextualDrawer · `cd0caeccc` NotificationCenter ·
+  `359c03e3f` Breadcrumb · `0353cd57b` Fase 1 mata uimaxxing ·
+  `9c26fd26e` inventário §100 · `4126a9681` Sidebar §19 ·
   `31e1b6655` helper Windows · `7225f5c80` docs · passos 1-4: `b5ae07bed`/
   `259023c91`/`31d9411a9`/`3c5126932`)
 - Remotes: `nexus` = escrita canônica (`https://github.com/spiesdan/nexus`) —
@@ -23,9 +25,10 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fases 0, 1 e 2 executadas; Fase 2 com UM item
-pendente (2d Global Search).** Inventário: `docs/nexus-v2/redesign-inventory.md`
-(142 itens + plano de 7 fases; alvos fantasma corrigidos em `9c26fd26e`).
+**Passo 6 (redesign §100) — Fases 0, 1 e 2 EXECUTADAS; shell §17 100%.
+Falta a Fase 3.** Inventário: `docs/nexus-v2/redesign-inventory.md`
+(142 itens + plano de 7 fases; alvos fantasma corrigidos em `9c26fd26e`;
+tabela §4 atualizada com as fases concluídas).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
 - **Fase 1 `0353cd57b`**: −9.442 linhas — 64/67 `components/uimaxxing/*` apagados
@@ -66,34 +69,48 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   editar; `login-admin.ts` importa o mecanismo (não duplica mais); `execNpx`
   aplicado também em `marca-logo`/`prospeccao-mapa`/`inbox-quem-manda`/`kanban`
   (~71 call sites `execFileSync("npx")` continuam quebrando no Windows; CI ok).
+- **Fase 2d Global Search (neste commit)**: motor `lib/busca/global.ts` —
+  `buscarEntidades()` consulta as 6 fontes (conversas, clientes, pedidos,
+  leads, produtos, títulos) via `Promise.allSettled`, mínimo 2 letras, ordem
+  fixa, seção vazia some; `telasQueCasam()` cruza termo×labels do registry.
+  `CommandPalette` reescrita: linhas achatadas (setas/Enter atravessam
+  seções), seções com `role="group"`, footer "Ver todos os resultados" →
+  `/app/busca?q=`. Rota nova `/app/busca` (grupo `visao`, **`sidebar:false`
+  de propósito** — não pode estourar a dobra L≤18). Endpoints novos:
+  `GET /api/v1/leads` (viewer, clamp `limite` 1–20) e param `busca` em
+  `/api/v1/titulos` (dígitos→numero eq, texto→cliente_nome ilike; sem
+  `.or()` combinado). Prefill `?busca=` em produtos e títulos (threading
+  `buscaInicial` + recarregar debounced). Testes: `command-palette` (8
+  casos com FIXTURES mockadas), `busca-global`, `leads/route.test`,
+  `titulos/route.test`; e2e `navegacao.spec.ts` **13/13** (novo: ponte
+  paleta→`/app/busca` + rota escrita à mão). ⚠️ O gate `evidencia-citada`
+  cobrou as 6 fotos da marca-logo versionadas em `d949973d5` —
+  `evidence/marca-logo/README.md` agora as cita (arquivo novo só conta
+  depois de `git add`: o gate lê `git ls-files`, não o disco).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — falta**:
-   a. **Fase 2d: Global Search estendida** (inventário §4): hoje só
-      navegação+pedidos+contatos no `CommandPalette`; falta leads/conversas/
-      produtos/títulos + rota `/busca`. É o ÚLTIMO item da Fase 2 (shell §17
-      fica 100%: Sidebar ✅ Topbar ✅(admin+tenant) CommandPalette ✅
-      Notifications ✅ ContextualDrawer ✅ Breadcrumb ✅ UserMenu ✅).
-   b. **Fase 3 — consolidações**: `StatusPage` 6→1 (403/404/500/503/
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); resta Fase 3-6**:
+   a. **Fase 3 — consolidações**: `StatusPage` 6→1 (403/404/500/503/
       account-suspended + `forbidden`); `AdminDataTable` 7 tabelas→1 +
       `STATUS_VARIANTS`→`ui/badge`; `NexusConfirmDialog` (18 AlertDialog + 7
       `window.confirm`); `SuspendDialog`+`ReactivateDialog`→1; overlays
       manuais restantes→`ui/sheet` (2 de 4 já migrados via ContextualDrawer);
       toasts→`nexusToast`.
-   c. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
+   b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
       `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
       tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
       `/indicadores` (+`/metrics`) → `/prospeccao` → funis → `/agenda` →
       `pedidos/[id]`/`novo` → `/webhooks` → admin.
-   d. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
+   c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
       `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→
       `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
-   e. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
+   d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
    notification-center, contextual-drawer, admin-topbar, sidebar-grupos,
-   command-palette, navegacao-*) + e2e alvo + evidence/ quando a tela mudar.
+   command-palette, busca-global, leads/titulos route, navegacao-*) + e2e
+   alvo + evidence/ quando a tela mudar.
 2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
    specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
    e2e-cobertura).
@@ -170,7 +187,15 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   `(protected)/layout.tsx` (Fase 2e). Qualquer componente novo em `/admin` que
   use `useUser`/`useAuth` depende dessa junção — sem ela, SSR derruba a rota.
 - `evidence/` é TRACKED (commitar screenshots de e2e como prova visual);
-  `.superpowers/` não.
+  `.superpowers/` não. E o gate `evidencia-citada.test.ts` cobra o OUTRO
+  lado: imagem versionada sem citação (`[x](…)`/crase) em `*.md` versionado
+  reprova — e "versionado" lê `git ls-files`, então um `README` novo só
+  conta depois do `git add` (aconteceu com as 6 fotos da marca-logo).
+- Busca global: SoR única = `lib/busca/global.ts` (paleta e `/app/busca`
+  compartilham); vocabulário de cada endpoint e hrefs estão em
+  `tests/unit/busca-global.test.ts`. Produto/título não têm tela de
+  detalhe → caem na LISTA filtrada (`?busca=` no preload). `limite=0` de
+  `/api/v1/leads` cai no default 5 (mesmo `Number(x) || 5` do prospects).
 
 ## Arquivos de contexto do projeto
 

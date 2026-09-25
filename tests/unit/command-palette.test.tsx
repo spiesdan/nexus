@@ -1,10 +1,11 @@
 /**
- * ⌘K. Até aqui a barra "Buscar…" do topo era um `console.info` com o comentário
- * "UI not yet implemented" — a única saída de emergência para quem não achava
- * uma tela era uma promessa vazia.
+ * ⌘K — a porta da Global Search (§17).
  *
- * v1 busca só NAVEGAÇÃO. Contato, conversa e lead são outra fonte de dados e
- * outra feature.
+ * v1 buscava só NAVEGAÇÃO; as seis entidades entram pela mesma janela sem
+ * trocar o que já estava provado aqui: acha tela por descrição, ignora acento,
+ * respeita papel, Enter navega para o destaque. O mock de `apiClient` filtra
+ * pelo termo como o servidor faria — sem ele, cada teste pagaria seis buscas
+ * reais (que no jsdom rejeitam) e "Nada encontrado" seria acerto de sorte.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
@@ -12,6 +13,65 @@ import userEvent from "@testing-library/user-event";
 
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
+
+vi.mock("@/lib/api/client", () => {
+  const FIXTURES: Array<{ caminho: string; itens: Array<Record<string, unknown>> }> = [
+    {
+      caminho: "/api/v1/conversations",
+      itens: [
+        {
+          id: "conv-1",
+          contacts: { display_name: "Ana Loja", name: null },
+          last_message_preview: "Fecha hoje?",
+        },
+      ],
+    },
+    {
+      caminho: "/api/v1/contacts",
+      itens: [{ id: "cont-1", display_name: "Ana Loja", name: null }],
+    },
+    {
+      caminho: "/api/v1/commercial-orders",
+      itens: [{ id: "ped-1", numero: 1237, cliente_nome: "Ana Loja" }],
+    },
+    { caminho: "/api/v1/leads", itens: [{ id: "lead-1", title: "Ana Loja reforma" }] },
+    {
+      caminho: "/api/v1/products",
+      itens: [
+        { id: "prod-1", nome: "Camiseta Preta", codigo: "CAM01", marca: "Acme" },
+      ],
+    },
+    {
+      caminho: "/api/v1/titulos",
+      itens: [
+        {
+          order_id: "tit-1",
+          numero: 1237,
+          cliente_nome: "Ana Loja",
+          parcela: 2,
+          de: 6,
+        },
+      ],
+    },
+  ];
+  return {
+    apiClient: {
+      get: vi.fn(async (url: string) => {
+        const u = new URL(url, "http://localhost");
+        const termo = (
+          u.searchParams.get("busca") ??
+          u.searchParams.get("search") ??
+          ""
+        ).toLowerCase();
+        const fixture = FIXTURES.find((f) => u.pathname.endsWith(f.caminho));
+        const itens = (fixture?.itens ?? []).filter((i) =>
+          JSON.stringify(i).toLowerCase().includes(termo),
+        );
+        return { data: itens };
+      }),
+    },
+  };
+});
 
 const push = vi.fn();
 const authRef: { user: Pick<AuthUser, "is_platform_admin">; activeOrg: ActiveOrg | null } = {
@@ -96,5 +156,52 @@ describe("CommandPalette", () => {
     await user.type(screen.getByRole("combobox"), "zzzzzz");
     expect(screen.queryAllByRole("option")).toHaveLength(0);
     expect(screen.getByText(/Nada encontrado/i)).toBeTruthy();
+  });
+
+  it("traz as entidades depois do debounce, cada uma na sua seção", async () => {
+    const user = userEvent.setup();
+    abrir();
+    await user.type(screen.getByRole("combobox"), "ana loja");
+    // findBy* espera o debounce de 300ms — o mesmo relógio da paleta.
+    expect(await screen.findByRole("group", { name: "Conversas" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Clientes" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Pedidos" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Leads" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Títulos" })).toBeTruthy();
+    expect(screen.getAllByText("Ana Loja").length).toBeGreaterThan(1);
+    // Produto não casa com "ana loja" — seção que não achou não aparece.
+    expect(screen.queryByRole("group", { name: "Produtos" })).toBeNull();
+  });
+
+  it("Enter cai na entidade quando nenhuma tela casa com o termo", async () => {
+    const user = userEvent.setup();
+    abrir();
+    await user.type(screen.getByRole("combobox"), "camiseta");
+    expect(await screen.findByRole("option", { name: /Camiseta Preta/ })).toBeTruthy();
+    await user.keyboard("{Enter}");
+    // O clique leva à lista com o termo dentro: produto não tem página própria.
+    expect(push).toHaveBeenCalledWith("/app/products?busca=camiseta");
+  });
+
+  it("as setas atravessam as seções — o último item é alcançável pelo teclado", async () => {
+    const user = userEvent.setup();
+    abrir();
+    await user.type(screen.getByRole("combobox"), "ana loja");
+    await screen.findByRole("group", { name: "Títulos" });
+    const opcoes = screen.getAllByRole("option");
+    const ultimo = opcoes[opcoes.length - 1];
+    // Demais de uma vez: o destaque faz clamp no fim, então chega ao último.
+    await user.keyboard("{ArrowDown}".repeat(opcoes.length + 2));
+    await user.keyboard("{Enter}");
+    expect(push).toHaveBeenCalledWith(ultimo?.getAttribute("data-href"));
+  });
+
+  it("oferece a ponte para a página de resultados com o termo na URL", async () => {
+    const user = userEvent.setup();
+    abrir();
+    await user.type(screen.getByRole("combobox"), "conhec");
+    const botao = await screen.findByRole("button", { name: /Ver todos os resultados/ });
+    await user.click(botao);
+    expect(push).toHaveBeenCalledWith("/app/busca?q=conhec");
   });
 });

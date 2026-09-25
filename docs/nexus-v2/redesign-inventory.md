@@ -152,12 +152,12 @@ repo passa a importar `@/components/nexus-ui` ou o barril mente sobre a própria
 | peça §17 | status | ação |
 |---|---|---|
 | Sidebar | ✅ (`shell/Sidebar` + `MobileSidebar`, §19 fechado) | — |
-| Topbar | ✅ no tenant (`shell/TopBar`); ❌ no admin (`AdminShell` = "sidebar + main") | dar Topbar ao admin (busca/⌘K/sino/UserMenu) |
-| Command Palette | ✅ (`CommandPalette` via `SearchTrigger`) | — |
-| Global Search | ⚠️ só navegação+pedidos+contatos; sem leads/conversas/produtos/títulos; sem `/busca` | estender |
-| Notifications | ⚠️ `AlertsBell` = contador→link `/app/ai/inbox`; sem painel | `NotificationCenter` |
-| Contextual Drawer | ❌ não existe peça no shell | criar `shell/ContextualDrawer` no `AppShell` e migrar drawers de domínio |
-| Breadcrumb | ❌ 0 componentes (só slot `navigation` do `NexusPageHeader`, usado por 3) | criar `shell/Breadcrumb` sobre `lib/navigation/registry.ts` |
+| Topbar | ✅ no tenant (`shell/TopBar`) e no admin (Fase 2e: `AdminShell` com busca/⌘K/sino/UserMenu) | — |
+| Command Palette | ✅ (`CommandPalette` via `SearchTrigger`; Fase 2d: seções de entidade + ponte para `/app/busca`) | — |
+| Global Search | ✅ Fase 2d: 6 entidades em `lib/busca/global.ts` (conversas, clientes, pedidos, leads, produtos, títulos) + rota `/app/busca?q=` | — |
+| Notifications | ✅ `NotificationCenter` (Fase 2c) | — |
+| Contextual Drawer | ✅ `shell/ContextualDrawer` no `AppShell` (Fase 2b) | — |
+| Breadcrumb | ✅ `shell/Breadcrumb` sobre `lib/navigation/registry.ts` (Fase 2a) | — |
 | User Menu | ✅ (`UserMenu`, `TenantSwitcher`) | — |
 
 Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`

@@ -8,6 +8,7 @@ import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { FilterSearch } from "@/components/filters/FilterBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { paraCSV } from "@/lib/comercial/relatorios";
@@ -41,18 +43,30 @@ function SituacaoTitulo({ l, t }: { l: Titulo; t: (texto: string) => string }) {
   return <Badge variant="success">{t("A vencer")}</Badge>;
 }
 
-export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
+export function TitulosClient({
+  podeDarBaixa,
+  buscaInicial,
+}: {
+  podeDarBaixa: boolean;
+  buscaInicial?: string;
+}) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
   const [situacao, setSituacao] = React.useState("");
+  const [busca, setBusca] = React.useState(buscaInicial ?? "");
   const [linhas, setLinhas] = React.useState<Titulo[]>([]);
   const [carregando, setCarregando] = React.useState(true);
 
-  async function carregar(s: string) {
+  async function carregar(s: string, b: string) {
     setCarregando(true);
     try {
-      const qs = s ? `?situacao=${s}` : "";
-      const corpo = await apiClient.get<{ data: Titulo[] }>(`/api/v1/titulos${qs}`);
+      const qs = new URLSearchParams();
+      if (s) qs.set("situacao", s);
+      if (b.trim()) qs.set("busca", b.trim());
+      const query = qs.toString();
+      const corpo = await apiClient.get<{ data: Titulo[] }>(
+        `/api/v1/titulos${query ? `?${query}` : ""}`,
+      );
       setLinhas(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
@@ -62,23 +76,29 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
   }
 
   React.useEffect(() => {
-    let vivo = true;
-    apiClient
-      .get<{ data: Titulo[] }>("/api/v1/titulos")
-      .then((corpo) => {
-        if (!vivo) return;
-        setLinhas(corpo.data ?? []);
-        setCarregando(false);
-      })
-      .catch((e: unknown) => {
-        if (!vivo) return;
-        showApiError(e);
-        setCarregando(false);
-      });
-    return () => {
-      vivo = false;
-    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void carregar("", buscaInicial ?? "");
+    // O primeiro load é este: `buscaInicial` é o termo que veio na URL pela
+    // busca global (§17). Depois disso quem manda é o debounced abaixo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Digitou: recarrega sem tecla. O servidor é quem filtra (mesmo `busca` da
+  // Global Search), então a página e a paleta nunca divergem sobre o que o
+  // termo achou — e não são 2000 linhas refiltradas no cliente a cada tecla.
+  const recarregarPorBusca = useDebouncedCallback((b: string) => {
+    void carregar(situacao, b);
+  }, 300);
+  const primeiraExecucao = React.useRef(true);
+  React.useEffect(() => {
+    // Na montagem o load imediato de cima já respondeu; o debounced só entra
+    // quando o usuário digita de fato, senão a lista carregaria DUAS vezes.
+    if (primeiraExecucao.current) {
+      primeiraExecucao.current = false;
+      return;
+    }
+    recarregarPorBusca(busca);
+  }, [busca, recarregarPorBusca]);
 
   const totalVencido = linhas
     .filter((l) => l.situacao === "vencido" && !l.baixado_em)
@@ -122,7 +142,7 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
         valor_cents: l.valor_cents,
       });
       nexusToast.success(t("Recebimento registrado"));
-      await carregar(situacao);
+      await carregar(situacao, busca);
     } catch (e) {
       showApiError(e);
     }
@@ -134,7 +154,7 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
         `/api/v1/titulos/baixas?order_id=${l.order_id}&parcela_n=${l.parcela}`,
       );
       nexusToast.success(t("Baixa estornada"));
-      await carregar(situacao);
+      await carregar(situacao, busca);
     } catch (e) {
       showApiError(e);
     }
@@ -160,6 +180,14 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
       />
 
       <div className="flex flex-wrap items-end gap-3">
+        <FilterSearch
+          id="busca-titulo"
+          label={t("Buscar")}
+          value={busca}
+          onChange={setBusca}
+          placeholder={t("Cliente ou número do pedido")}
+          dataTestId="busca-titulo"
+        />
         <div className="block text-sm">
           <span className="mb-1 block text-muted-foreground">{t("Situação")}</span>
           <Select
@@ -167,7 +195,7 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
             onValueChange={(v) => {
               const prox = v === "__todas" ? "" : v;
               setSituacao(prox);
-              void carregar(prox);
+              void carregar(prox, busca);
             }}
           >
             <SelectTrigger className="w-44">
@@ -210,15 +238,16 @@ export function TitulosClient({ podeDarBaixa }: { podeDarBaixa: boolean }) {
             icon={Receipt}
             headline={t("Nenhum título no filtro.")}
             subcopy={
-              situacao ? undefined : t("Os títulos nascem das parcelas dos pedidos faturados.")
+              situacao || busca ? undefined : t("Os títulos nascem das parcelas dos pedidos faturados.")
             }
             primary={
-              situacao
+              situacao || busca
                 ? {
                     label: t("Limpar filtro"),
                     onClick: () => {
                       setSituacao("");
-                      void carregar("");
+                      setBusca("");
+                      void carregar("", "");
                     },
                   }
                 : { label: t("Ver pedidos"), href: "/app/pedidos" }

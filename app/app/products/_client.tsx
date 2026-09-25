@@ -118,15 +118,22 @@ export function ProdutosClient({
    * nenhuma tela existente muda.
    */
   esconderCabecalho,
+  /**
+   * Termo que veio na URL (`/app/products?busca=`), o caminho de quem clicou
+   * num produto na busca global (§17): o campo já nasce com o que a pessoa
+   * digitou, em vez de pedir para digitar de novo na lista inteira.
+   */
+  buscaInicial,
 }: {
   inicial: Produto[];
   podeEditar: boolean;
   textos: Textos;
   esconderCabecalho?: boolean;
+  buscaInicial?: string;
 }) {
   const t = useT();
   const router = useRouter();
-  const [busca, setBusca] = React.useState("");
+  const [busca, setBusca] = React.useState(buscaInicial ?? "");
   const [aba, setAba] = React.useState<"todos" | "promocoes" | "destaques">("todos");
   const [criando, setCriando] = React.useState(false);
   const [rascunho, setRascunho] = React.useState<Rascunho>(VAZIO);

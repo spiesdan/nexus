@@ -12,10 +12,15 @@ export const dynamic = "force-dynamic";
  * Sem sidebar de propósito (doutrina da dobra, como Notas e Recuperação): a
  * porta é o ⌘K e os links do Indicadores.
  */
-export default async function TitulosPage() {
+export default async function TitulosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ busca?: string }>;
+}) {
   const user = await requireAuth();
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
   const podeDarBaixa = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
-  return <TitulosClient podeDarBaixa={podeDarBaixa} />;
+  const { busca } = await searchParams;
+  return <TitulosClient podeDarBaixa={podeDarBaixa} buscaInicial={busca ?? ""} />;
 }
