@@ -278,4 +278,24 @@ test.describe("navegação agrupada", () => {
     await expect(sidebar(page).getByRole("link", { name: "Ver tudo em IA" })).toBeVisible();
     await expect(sidebar(page).getByRole("heading", { name: "Atendimento" })).toBeVisible();
   });
+
+  test("o sino da central abre o painel (§17) e o painel tem porta para a central inteira", async ({ page }) => {
+    await loginAdmin(page);
+
+    const sino = page.getByTestId("alerts-bell");
+    await expect(sino).toBeVisible();
+    await sino.click();
+
+    const painel = page.getByTestId("notification-center");
+    await expect(painel).toBeVisible();
+
+    // O painel é prévia, não central própria: cheio ou vazio, a saída é
+    // `/app/ai/inbox`. Sem seed de avisos locais isto é o contrato inteiro —
+    // e é o que o usuário sente no primeiro clique.
+    await painel.getByRole("link", { name: /abrir a central de avisos/i }).click();
+    await page.waitForURL(/\/app\/ai\/inbox/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: "Central de avisos" })).toBeVisible({
+      timeout: 30_000,
+    });
+  });
 });
