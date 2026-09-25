@@ -35,6 +35,7 @@ import {
   ShieldCheck,
   Signpost,
   Storefront,
+  Sun,
   Truck,
   UserCircle,
   Users,
@@ -140,6 +141,16 @@ export const GRUPO_NO_RODAPE: NavGroupId = "organizacao";
  */
 export const NAV_DESTINATIONS: NavDestination[] = [
   // ---- Atendimento — onde o operador passa o dia ----
+  {
+    // NEXUS §21: "o que preciso fazer agora?" — tarefas, follow-ups e
+    // recomendações num lugar só. Sem sidebar (doutrina da dobra): a
+    // porta é o ⌘K; a landing pós-login segue o inbox.
+    href: "/app/meu-dia",
+    label: "Meu Dia",
+    description: "O que fazer agora: tarefas, follow-ups ativos e recomendações.",
+    icon: Sun,
+    group: "atendimento",
+  },
   {
     href: "/app/inbox",
     label: "Inbox",
