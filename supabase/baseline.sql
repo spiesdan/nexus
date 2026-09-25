@@ -20267,3 +20267,17 @@ comment on column public.fiscal_entradas.emitente_cnpj is
   'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
 comment on column public.financial_pagaveis.fornecedor_nome is
   'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
+
+-- APÊNDICE 0240 - SEPARAÇÃO DA CARGA (idempotente; fonte:
+-- supabase/migrations/20260925010000_0240_separacao_da_carga.sql)
+alter table public.shipment_orders
+  add column if not exists separado_em timestamptz;
+
+alter table public.shipment_orders
+  add column if not exists separado_por uuid references auth.users(id) on delete set null;
+
+comment on column public.shipment_orders.separado_em is
+  'Quando o item foi separado e conferido (NULL = pendente). A carga só sai de montando com tudo separado.';
+
+comment on column public.shipment_orders.separado_por is
+  'Quem separou e conferiu o item.';

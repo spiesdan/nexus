@@ -1,5 +1,5 @@
 /**
- * PATCH /api/v1/shipments/[id]/orders/[orderId] — o desfecho da entrega.
+ * PATCH /api/v1/shipments/[id]/orders/[orderId] — o desfecho da entrega + a separação.
  *
  * `{ status: "em_atendimento" }` = cheguei (chegar perto não entrega
  * sozinho); `{ status: "entregue", latitude?, longitude? }` carimba
@@ -7,6 +7,10 @@
  * sem baixa). Confirmar entrega avança o pedido comercial para `entregue`
  * junto (a integração mora aqui, explícita — não em trigger escondido).
  * Devolução não mexe no pedido: ele volta para a operação decidir.
+ *
+ * `{ separado: true }` = separado e conferido (só com a carga em
+ * `montando`); `{ separado: false }` desfaz. A carga só sai para rota
+ * com tudo separado (trava no PATCH da carga).
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -22,7 +26,8 @@ export const dynamic = "force-dynamic";
 
 const corpoSchema = z
   .object({
-    status: z.enum(["em_atendimento", "entregue", "devolvido"]),
+    status: z.enum(["em_atendimento", "entregue", "devolvido"]).optional(),
+    separado: z.boolean().optional(),
     motivo: z.enum(MOTIVOS_DEVOLUCAO).optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
@@ -34,6 +39,9 @@ const corpoSchema = z
     ocorrido_em: z.string().datetime({ offset: true }).optional(),
   })
   .superRefine((v, ctx) => {
+    if (v.status === undefined && v.separado === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe status ou separado." });
+    }
     if (v.status === "devolvido" && !v.motivo) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Devolução pede o motivo.", path: ["motivo"] });
     }
@@ -85,12 +93,54 @@ export async function PATCH(
     return fail("not_found", "Pedido não está nesta carga.", 404, { requestId });
   }
 
+  // Separação e conferência (0240): só com a carga em montagem. Não mexe
+  // no status de entrega — são duas dimensões independentes do item.
+  if (parsed.data.separado !== undefined) {
+    const { data: carga } = await supabase
+      .from("shipments")
+      .select("status")
+      .eq("id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    if (!carga || (carga as unknown as { status: string }).status !== "montando") {
+      return fail("validation_failed", "Separação só com a carga em montagem.", 422, { requestId });
+    }
+    const { data: separado, error: erroSep } = await supabase
+      .from("shipment_orders")
+      .update(
+        parsed.data.separado
+          ? { separado_em: new Date().toISOString(), separado_por: authz.user.id }
+          : { separado_em: null, separado_por: null },
+      )
+      .eq("shipment_id", id)
+      .eq("order_id", orderId)
+      .eq("organization_id", authz.org.orgId)
+      .select("id, order_id, sequencia, status, separado_em")
+      .single();
+    if (erroSep || !separado) {
+      return fail("internal_error", "Erro ao registrar a separação.", 500, { requestId });
+    }
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "shipment_order.separado",
+      resourceType: "shipment_orders",
+      resourceId: (separado as unknown as { id: string }).id,
+      requestId,
+    });
+    return ok(separado, { requestId });
+  }
+
+  // Daqui em diante é desfecho de entrega: o refine acima garante status.
+  const status = parsed.data.status;
+  if (!status) return fail("validation_failed", "Informe status ou separado.", 422, { requestId });
+
   const { data: atualizado, error: erroUpd } = await supabase
     .from("shipment_orders")
     .update({
-      status: parsed.data.status,
-      ...(parsed.data.status === "devolvido" ? { motivo: parsed.data.motivo ?? null } : {}),
-      ...(parsed.data.status === "entregue"
+      status,
+      ...(status === "devolvido" ? { motivo: parsed.data.motivo ?? null } : {}),
+      ...(status === "entregue"
         ? {
             // Offline: vale a hora do fato, não a do envio.
             entregue_em: parsed.data.ocorrido_em ?? new Date().toISOString(),
@@ -109,7 +159,7 @@ export async function PATCH(
     return fail("internal_error", "Erro ao registrar a entrega.", 500, { requestId });
   }
 
-  if (parsed.data.status === "entregue") {
+  if (status === "entregue") {
     await supabase
       .from("commercial_orders")
       .update({ status: "entregue" })
