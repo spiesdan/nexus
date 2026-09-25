@@ -11,36 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CaretLeft } from "@/lib/ui/icons";
 import { useAdminIncident } from "@/hooks/useAdminIncident";
 import { ResolveIncidentDialog } from "@/components/admin/incidents/ResolveIncidentDialog";
+import {
+  IncidentSeverityBadge,
+  IncidentStatusBadge,
+} from "@/components/admin/incidents/badges";
 import type { IncidentSeverity, IncidentStatus } from "@/hooks/useAdminIncidents";
 import { useT } from "@/hooks/i18n/useT";
-
-// ---------------------------------------------------------------------------
-// Badge helpers
-// ---------------------------------------------------------------------------
-
-const SEVERITY_VARIANTS: Record<IncidentSeverity, "error" | "warning" | "info"> = {
-  critical: "error",
-  warning: "warning",
-  info: "info",
-};
-
-const SEVERITY_LABELS: Record<IncidentSeverity, string> = {
-  critical: "Crítico",
-  warning: "Atenção",
-  info: "Info",
-};
-
-const STATUS_VARIANTS: Record<IncidentStatus, "neutral" | "info" | "success"> = {
-  open: "neutral",
-  acknowledged: "info",
-  resolved: "success",
-};
-
-const STATUS_LABELS: Record<IncidentStatus, string> = {
-  open: "Aberto",
-  acknowledged: "Reconhecido",
-  resolved: "Resolvido",
-};
 
 // ---------------------------------------------------------------------------
 // Client component
@@ -103,12 +79,8 @@ export function IncidentDetailClient({ id }: IncidentDetailClientProps) {
             {incident.type}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={SEVERITY_VARIANTS[severity]}>
-              {t(SEVERITY_LABELS[severity])}
-            </Badge>
-            <Badge variant={STATUS_VARIANTS[status]}>
-              {t(STATUS_LABELS[status])}
-            </Badge>
+            <IncidentSeverityBadge severity={severity} />
+            <IncidentStatusBadge status={status} />
             {incident.tenant && (
               <Badge variant="neutral" className="font-mono text-xs">
                 {incident.tenant.slug}
