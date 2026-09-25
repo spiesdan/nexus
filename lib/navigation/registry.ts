@@ -25,6 +25,7 @@ import {
   ListChecks,
   Lock,
   MagnifyingGlass,
+  Package,
   Palette,
   Plugs,
   PlugsConnected,
@@ -343,6 +344,15 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     label: "Compras",
     description: "Pedidos de compra aos fornecedores e quem os fornece.",
     icon: ShoppingCart,
+    group: "crm",
+  },
+  {
+    // Estoque (NEXUS §46): saldo, razão de movimentações e sugestão de
+    // recomposição. Mesma dobra de Compras — sidebar com a taxonomia §19.
+    href: "/app/estoque",
+    label: "Estoque",
+    description: "Saldo dos produtos, movimentações e sugestão de compra.",
+    icon: Package,
     group: "crm",
   },
   {
