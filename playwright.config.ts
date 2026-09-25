@@ -91,6 +91,10 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Mede o deslocamento relógio host↔GoTrue e publica E2E_CLOCK_OFFSET_MS
+  // antes dos workers nascerem — o TOTP de todos os specs compensa sem cada
+  // spec precisar lembrar. Ver `tests/e2e/global-setup.ts`.
+  globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 30_000,
   fullyParallel: false,
   /**

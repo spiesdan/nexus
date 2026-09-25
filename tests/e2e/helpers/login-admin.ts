@@ -18,8 +18,9 @@
  *
  * 3. **O relógio desta máquina pode não ser o do servidor.** O GoTrue julga o
  *    TOTP pelo tempo do contêiner; o host pode andar à frente (medido: +47 s).
- *    Ver `medirDeslocamentoRelogio` abaixo — o offset é medido por processo,
- *    não configurado.
+ *    A compensação mora em `utils/totp.ts` e é medida uma vez por run pelo
+ *    `globalSetup` (`E2E_CLOCK_OFFSET_MS`) — todos os specs digitam TOTP com
+ *    o relógio do servidor.
  */
 import { execNpx } from "../utils/npx";
 import * as fs from "node:fs";
@@ -27,7 +28,7 @@ import * as path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
 
-import { generateTotp, msUntilNextTotpWindow } from "../utils/totp";
+import { agoraNoServidor, generateTotp, medirDeslocamentoRelogio, msUntilNextTotpWindow } from "../utils/totp";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 
@@ -73,36 +74,10 @@ export function semearCredenciais(): CredsE2E {
 
 let ultimoCodigoEnviado: string | null = null;
 
-/**
- * Relógio: o GoTrue valida o TOTP contra o tempo do CONTÊINER, e o relógio da
- * máquina de quem roda o e2e pode andar em outra velocidade — medido: +47 s
- * numa máquina local com `w32tm` sem sincronização ("Local CMOS Clock"). Com
- * o relógio errado TODO código é recusado (422 "Invalid TOTP code"), sintoma
- * que lê como bug de senha, de MFA ou da tela. O offset é medido UMA vez por
- * processo pelo header `Date` do `/auth/v1/health` (o tempo do contêiner) e
- * somado ao relógio local SÓ na geração/espera do TOTP. Em CI os dois relógios
- * batem e o offset fica ~0 — a compensação é um no-op lá. Correção definitiva
- * da máquina local: `w32tm /resync` com privilégio de administrador.
- */
-let deslocamentoRelogioMs: number | null = null;
-
-async function medirDeslocamentoRelogio(): Promise<number> {
-  if (deslocamentoRelogioMs !== null) return deslocamentoRelogioMs;
-  try {
-    const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
-    const resp = await fetch(`${base}/auth/v1/health`, { method: "GET" });
-    const servidor = Date.parse(resp.headers.get("date") ?? "");
-    deslocamentoRelogioMs = Number.isFinite(servidor) ? servidor - Date.now() : 0;
-  } catch {
-    deslocamentoRelogioMs = 0;
-  }
-  return deslocamentoRelogioMs;
-}
-
-/** O instante de AGORA no relógio com que o servidor julga o código. */
-function agoraNoServidor(): number {
-  return Date.now() + (deslocamentoRelogioMs ?? 0);
-}
+// Relógio (host↔GoTrue) mora em `utils/totp.ts` desde que o `globalSetup` do
+// Playwright passou a medi-lo uma vez por run e publicar em
+// `E2E_CLOCK_OFFSET_MS` — a explicação completa (e o sintoma de offset: todo
+// código TOTP recusado, lido como bug de MFA) está lá. Aqui só importa.
 
 async function tentarMfa(page: Page, secret: string, tentativas: number): Promise<boolean> {
   for (let i = 0; i < tentativas; i++) {

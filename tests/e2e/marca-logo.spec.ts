@@ -43,7 +43,7 @@
  * spec seguinte medindo a sobra. Ela mora num `test.afterAll` — o porquê, medido,
  * está no comentário do hook lá embaixo.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as zlib from "node:zlib";
@@ -70,12 +70,12 @@ function loadCreds(): E2ECreds {
     return !c.users?.dono || !c.admin_totp?.secret || !c.dono_totp?.secret || !c.org_id;
   };
   if (precisaSemear()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   // Promove `dono` a platform admin e REVOGA a promoção do `admin` — idempotente.
   // Sem a revogação, o admin de tenant desta spec passaria pelo gate da camada da
   // instalação e o caso (3) mediria o escape, não a separação de camadas.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as E2ECreds;
 }
 
