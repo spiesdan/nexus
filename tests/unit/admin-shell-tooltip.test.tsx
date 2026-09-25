@@ -42,12 +42,19 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Único mock: o `AdminSidebar` é client component e chama `usePathname`. O
-// banner e o sidebar continuam reais — a casca sob teste é a casca de verdade,
-// não uma maquete dela. Mesmo padrão de `tests/unit/sidebar-grupos.test.tsx`.
+// O `AdminSidebar` é client component e chama `usePathname`. O banner e o
+// sidebar continuam reais — a casca sob teste é a casca de verdade, não uma
+// maquete dela. Mesmo padrão de `tests/unit/sidebar-grupos.test.tsx`.
 vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/inbox",
 }));
+// A TopBar do admin (§17) carrega três peças do shell cujas dependências
+// (AuthProvider, QueryClientProvider, atalho global) não são o assunto aqui —
+// mockadas por dependência, não por conveniência: o que este teste vigia é o
+// TooltipProvider, e banner + sidebar + header continuam os reais.
+vi.mock("@/components/shell/SearchTrigger", () => ({ SearchTrigger: () => null }));
+vi.mock("@/components/shell/NotificationCenter", () => ({ NotificationCenter: () => null }));
+vi.mock("@/components/shell/UserMenu", () => ({ UserMenu: () => null }));
 
 /** Consumidor sem Provider próprio, como o `TenantBadge`. */
 function UsaTooltipSemProviderProprio() {
