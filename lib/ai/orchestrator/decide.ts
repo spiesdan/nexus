@@ -115,9 +115,10 @@ export function decidir(
       return {
         ...base,
         intencao: "interpretar_e_responder",
-        ferramenta: nivel <= 2 ? "gerar_abordagem" : "enviar_whatsapp",
+        // Nível 3 executa COM aprovação: envio direto só do 4 em diante.
+        ferramenta: nivel <= 3 ? "gerar_abordagem" : "enviar_whatsapp",
         acao: "Interpretar mensagem e responder dentro da política.",
-        requer_aprovacao: nivel <= 2,
+        requer_aprovacao: nivel <= 3,
         nivel_usado: nivel,
       };
     case "proposta_sem_resposta":
