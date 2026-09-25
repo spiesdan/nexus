@@ -9,11 +9,12 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `727faf650 docs(nexus-v2): handoff do passo 6 - fases 0/1/2 fechadas, falta 2d Global Search (55)`
-  — e o commit que entrega este arquivo **fecha a Fase 2d (Global Search)**.
-  (anteriores: `6f12049c0` infra e2e · `d949973d5` TopBar admin ·
-  `40e049aab` ContextualDrawer · `cd0caeccc` NotificationCenter ·
-  `359c03e3f` Breadcrumb · `0353cd57b` Fase 1 mata uimaxxing ·
+- HEAD: `eafb9c071 feat(nexus-v2): Fase 3c do redesign - NexusConfirmDialog adotado: 7 window.confirm + 13 AlertDialog (§100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 3 (3a/3b/3c)**.
+  (anteriores: `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
+  `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
+  `6f12049c0` infra e2e · `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
+  `cd0caeccc` NotificationCenter · `359c03e3f` Breadcrumb · `0353cd57b` Fase 1 mata uimaxxing ·
   `9c26fd26e` inventário §100 · `4126a9681` Sidebar §19 ·
   `31e1b6655` helper Windows · `7225f5c80` docs · passos 1-4: `b5ae07bed`/
   `259023c91`/`31d9411a9`/`3c5126932`)
@@ -25,78 +26,55 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fases 0, 1 e 2 EXECUTADAS; shell §17 100%.
-Falta a Fase 3.** Inventário: `docs/nexus-v2/redesign-inventory.md`
-(142 itens + plano de 7 fases; alvos fantasma corrigidos em `9c26fd26e`;
-tabela §4 atualizada com as fases concluídas).
+**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c EXECUTADAS nesta
+torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
+`docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
-- **Fase 1 `0353cd57b`**: −9.442 linhas — 64/67 `components/uimaxxing/*` apagados
-  (3 crm movidos p/ `components/nexus-ui/crm/` + barril), 8 primitivos `ui/`
-  órfãos apagados, `app/(admin)/` apagado. `uimaxxing.css` (66KB) continua
-  `@import` em `globals.css:2` — **CSS adiado** (risco visual). Mantidos por
-  decisão: `app/ai/layout.tsx` e `app/admin/layout.tsx` (semântica intencional).
-- **Fase 2a Breadcrumb `359c03e3f`**: `shell/Breadcrumb.tsx` sobre o registry
-  (destino/hub com rótulo do GRUPO, `canSee`, id→"Detalhe", some <2 níveis);
-  `AppShell.main` virou coluna flex com wrapper `flex-1 min-h-0` (h-full das
-  páginas intacto). Teste `breadcrumb.test.tsx` 7/7; e2e navegacao 11/11,
-  inbox+kanban 3/3 (layouts h-full).
-- **Fase 2c NotificationCenter `cd0caeccc`**: sino virou popover com prévia dos
-  itens de `useAgentInbox("open")` (SoR = `AgentInboxList`: severity badge,
-  `kindLabel`, `formatDistanceToNowStrict`), testids `alerts-bell/-count`
-  preservados, `AlertsBell.tsx` apagado. Painel sem ação (resolver é da
-  central). e2e novo no fim de `navegacao.spec.ts` (12/12).
-- **Fase 2b ContextualDrawer `40e049aab`**: `shell/ContextualDrawer` = casa do
-  `ui/sheet` (overlay/esc/foco/anim SoR); primeiro migrante = painel de detalhe
-  manual da prospecção (`_empresas.tsx:767`, era `fixed inset-y-0` sem backdrop
-  nem teclado). e2e `prospeccao-mapa` 1/1 (usa `getByRole("dialog")`).
-- **Fase 2e TopBar admin `d949973d5`**: `AdminShell` ganhou header completo
-  (hambúrguer lg:hidden + título + `SearchTrigger` + `NotificationCenter` +
-  `UserMenu`); **`AuthProvider` passou a existir no admin** — ele SÓ existia em
-  `app/app/layout.tsx`, e sem ele a barra nova derrubava `/admin/*` no SSR com
-  "useAuth must be used inside `<AuthProvider>`" (medido em e2e `/admin/marca`).
-  `(protected)/layout.tsx` agora faz `requirePlatformAdmin()` (guarda) +
-  `loadAuthUser()` (AuthUser rico) + `<AuthProvider activeOrg={null}>`.
-  Testes: `admin-topbar.test.tsx` 2/2, `admin-shell-tooltip` 2/2; e2e
-  `marca-logo` 6/6 + evidências em `evidence/marca-logo/` (commitadas —
-  `evidence/` É tracked).
-- **Infra e2e `6f12049c0`**: offset host↔GoTrue agora é medida UMA vez no
-  `globalSetup` (`tests/e2e/global-setup.ts` → `E2E_CLOCK_OFFSET_MS` herdado
-  pelos workers); `generateTotp`/`msUntilNextTotpWindow` DEFAULT ao relógio do
-  servidor em `tests/e2e/utils/totp.ts` — os 12 specs que digitam TOTP
-  (marca-logo, rbac-roles, system-update, qa-agente, followup*, gatilho*,
-  invite-lifecycle, reset-password-mfa, olhar-telas, vps-fresh) compensam sem
-  editar; `login-admin.ts` importa o mecanismo (não duplica mais); `execNpx`
-  aplicado também em `marca-logo`/`prospeccao-mapa`/`inbox-quem-manda`/`kanban`
-  (~71 call sites `execFileSync("npx")` continuam quebrando no Windows; CI ok).
-- **Fase 2d Global Search (neste commit)**: motor `lib/busca/global.ts` —
-  `buscarEntidades()` consulta as 6 fontes (conversas, clientes, pedidos,
-  leads, produtos, títulos) via `Promise.allSettled`, mínimo 2 letras, ordem
-  fixa, seção vazia some; `telasQueCasam()` cruza termo×labels do registry.
-  `CommandPalette` reescrita: linhas achatadas (setas/Enter atravessam
-  seções), seções com `role="group"`, footer "Ver todos os resultados" →
-  `/app/busca?q=`. Rota nova `/app/busca` (grupo `visao`, **`sidebar:false`
-  de propósito** — não pode estourar a dobra L≤18). Endpoints novos:
-  `GET /api/v1/leads` (viewer, clamp `limite` 1–20) e param `busca` em
-  `/api/v1/titulos` (dígitos→numero eq, texto→cliente_nome ilike; sem
-  `.or()` combinado). Prefill `?busca=` em produtos e títulos (threading
-  `buscaInicial` + recarregar debounced). Testes: `command-palette` (8
-  casos com FIXTURES mockadas), `busca-global`, `leads/route.test`,
-  `titulos/route.test`; e2e `navegacao.spec.ts` **13/13** (novo: ponte
-  paleta→`/app/busca` + rota escrita à mão). ⚠️ O gate `evidencia-citada`
-  cobrou as 6 fotos da marca-logo versionadas em `d949973d5` —
-  `evidence/marca-logo/README.md` agora as cita (arquivo novo só conta
-  depois de `git add`: o gate lê `git ls-files`, não o disco).
+- **Fase 3a `37b35a029` — `StatusPage` 6→1**: uma tela de erro em
+  `components/nexus-ui/feedback/StatusPage.tsx` serve 403/404/500/503/
+  account-suspended/admin.forbidden; `lib/i18n/idioma-da-pagina.ts` resolve o
+  idioma do documento fora do provider React (as páginas de erro não têm
+  `useT`). Teste `status-page.test.tsx`.
+- **Fase 3b `ab0545095` — `AdminDataTable` 7→1 + badges**: as 7 tabelas admin
+  (audit, incidents, lgpd, platform-admins, tenants, usage, users) montam
+  skeleton/empty/badge/load-more sobre `components/admin/AdminDataTable.tsx`;
+  variantes de status agrupadas em `admin/incidents/badges.tsx` +
+  `admin/tenants/status-badge.tsx` (consumidos por `incidents/[id]/_client` e
+  `tenants/[id]/layout`, que deixaram de ter cópias locais).
+- **Fase 3c `eafb9c071` — confirmações unificadas**: `NexusConfirmDialog`
+  estendeu o contrato (title `ReactNode`, description opcional, `busyLabel`,
+  slot `children`, modo trigger `triggerLabel` OU controlado `aberto`/`aoFechar`,
+  `try/catch` no `onConfirm` — erro mantém a dialog aberta para retry) e ganhou
+  `forms/ConfirmacaoProvider.tsx` (`useConfirmar()` promise-based; montado em
+  `app/app/layout.tsx` dentro do `IdiomaProvider`; exportado no barril
+  `nexus-ui`). Migraram **7 `window.confirm`** (financeiro estornar; expedição
+  reotimizar×2, excluirCarga; categorias apagar; pedidos excluirEmMassa e
+  excluir; prospecção excluir) e **13 `AlertDialogContent`** (RulesTab,
+  Templates, DeleteFollowupFlow, Impersonate, ContactsTable, CredentialCard,
+  AgentRowMenu, VersionHistory, PublishConfirm, SourceDetail, QueueTab,
+  routers, DossieDoFollowup). Restam 4 `AlertDialogContent` = FORM:
+  `SuspendDialog`+`ReactivateDialog` (fundir → Fase 3d),
+  `ResolveIncidentDialog`, `ApproveButton`. Teste novo
+  `tests/unit/confirmacao-provider.test.tsx` (8 casos); e2e `followup-queue` e
+  `retorno-anti-morte` migraram `execFileSync("npx")` → `execNpx` (Windows).
+- **Gates da torno**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
+  `test:unit` = flakes de baseline (4 arquivos conhecidos: guarda-da-release,
+  namespace-das-imagens, performed-at, rate-limit) · `pnpm build` ✓ ·
+  e2e `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
+  `navegacao` 13/13 ✓ · `pnpm format:check` reprova pré-existente no repo
+  inteiro (não é gate).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); resta Fase 3-6**:
-   a. **Fase 3 — consolidações**: `StatusPage` 6→1 (403/404/500/503/
-      account-suspended + `forbidden`); `AdminDataTable` 7 tabelas→1 +
-      `STATUS_VARIANTS`→`ui/badge`; `NexusConfirmDialog` (18 AlertDialog + 7
-      `window.confirm`); `SuspendDialog`+`ReactivateDialog`→1; overlays
-      manuais restantes→`ui/sheet` (2 de 4 já migrados via ContextualDrawer);
-      toasts→`nexusToast`.
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a/3b/3c ✅; resta 3d-3f + Fases 4-6**:
+   a. **Fase 3 — consolidações**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
+      `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
+      `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
+      `ConfirmacaoProvider`); resta: **3d** `SuspendDialog`+`ReactivateDialog`→1
+      (`TenantReasonDialog`; `ResolveIncidentDialog`/`ApproveButton` opcional
+      na mesma leva); **3e** overlays manuais restantes→`ui/sheet` (2 de 4 já
+      migrados via ContextualDrawer); **3f** toasts→`nexusToast`.
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
       `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
       tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
@@ -109,8 +87,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
    notification-center, contextual-drawer, admin-topbar, sidebar-grupos,
-   command-palette, busca-global, leads/titulos route, navegacao-*) + e2e
-   alvo + evidence/ quando a tela mudar.
+   command-palette, busca-global, leads/titulos route, status-page,
+   confirmacao-provider, navegacao-*) + e2e alvo + evidence/ quando a tela
+   mudar.
 2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
    specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
    e2e-cobertura).
@@ -183,6 +162,11 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   fundo segue sendo `w32tm /resync` como admin (sem permissão interativa).
   MFA lockout = cookie 3 falhas/60s. Seed: `npx tsx
   scripts/seed-e2e-credentials.ts` + `seed-e2e-followup-agent.ts`.
+- `execNpx` (`tests/e2e/utils/npx.ts`, shell só no win32) é obrigatório para
+  chamar `npx` de spec: `execFileSync("npx")` cru dá `ENOENT` no Windows (CI
+  Linux ok). 2 specs migrados na Fase 3c (`followup-queue`,
+  `retorno-anti-morte`); os call sites restantes só quebram quem roda e2e
+  local no Windows — migrar ao tocar no spec.
 - `AuthProvider` só nasce em `app/app/layout.tsx`; `/admin` ganhou o seu em
   `(protected)/layout.tsx` (Fase 2e). Qualquer componente novo em `/admin` que
   use `useUser`/`useAuth` depende dessa junção — sem ela, SSR derruba a rota.

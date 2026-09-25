@@ -100,8 +100,9 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
 - Comportamento (sort `aria-sort` + seleção em massa §22): `contacts/ContactsTable`
   (único) — **extrair hooks** `useTableSort`/`useRowSelection`.
 - **7 tabelas admin = 1.412 linhas** do mesmo padrão (skeleton+empty+badge+load-more)
-  → **`AdminDataTable`** único. As 4-5 cópias de `STATUS_VARIANTS` → variantes de
-  `ui/badge`.
+  → **`AdminDataTable` único** ✅ Fase 3b (`ab0545095`) + variantes de status em
+  `ui/badge` (badges agrupados em `admin/incidents/badges` e
+  `admin/tenants/status-badge`).
 - **26 wrappers de página** reinventam o entorno da tabela sobre `ui/table`
   (pior: `pedidos/_client` 966, `prospeccao/_empresas` 852) → migrar a
   `NexusDataTable` (ordem crescente de tamanho).
@@ -113,9 +114,11 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
 **Diálogos/estados:**
 - `NexusFormDialog` (62 linhas) com **0 uso** vs **55 `DialogContent`** em domínio →
   adotar (começar por contacts, ai, inbox, kanban, admin, webhooks).
-- `NexusConfirmDialog` (84 linhas) com **0 uso prod** vs **18 `AlertDialogContent`** +
-  **7 `window.confirm`** → adotar; fundir `SuspendDialog`×`ReactivateDialog`
-  (107/123 linhas idênticas) em `TenantReasonDialog`.
+- `NexusConfirmDialog` **ADOPTADO na Fase 3c** (`eafb9c071`): os 7 `window.confirm`
+  + 13 dos 17 `AlertDialogContent` de domínio viraram `NexusConfirmDialog` (trigger)
+  ou `useConfirmar()` (`ConfirmacaoProvider` em `app/app/layout.tsx`); restam 4
+  `AlertDialogContent` no FORM — `SuspendDialog`/`ReactivateDialog` (fundir em
+  `TenantReasonDialog`, Fase 3d), `ResolveIncidentDialog`, `ApproveButton`.
 - **4 overlays manuais** (`fixed inset-0 z-50`): `prospeccao/_empresas`,
   `prospeccao/_importar-arquivo`, `auth/MfaEnrollModal`, `GradeNotas` → `ui/sheet/dialog`.
 - Empty: **2 APIs ativas** (`components/empty` 20 importadores × `NexusEmptyState` 12)
@@ -174,10 +177,10 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    `admin/layout`, `app/(admin)/`), `motion` fantasma se existir.
 3. **Fase 2 — shell §17**: `Breadcrumb` (registry) + `ContextualDrawer` no
    `AppShell` + `NotificationCenter` (AlertsBell→painel) + Global Search estendida.
-4. **Fase 3 — consolidações de alto alavanco**: `StatusPage` 6→1; `AdminDataTable`
-   7→1 (+`STATUS_VARIANTS`→`ui/badge`); `NexusConfirmDialog` (18 AlertDialog +
-   7 `window.confirm`); `SuspendDialog`+`ReactivateDialog`→1; overlays manuais→
-   `ui/sheet`; toasts→`nexusToast`.
+4. **Fase 3 — consolidações de alto alavanco**: `StatusPage` 6→1 ✅ (`37b35a029`);
+   `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`); `NexusConfirmDialog`
+   ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`); resta: `SuspendDialog`+
+   `ReactivateDialog`→1; overlays manuais→`ui/sheet`; toasts→`nexusToast`.
 5. **Fase 4 — refatoração por módulo (prioridade A)**: `/contacts` → `/pedidos`
    (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
