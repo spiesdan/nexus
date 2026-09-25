@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { MobileDock } from "@/components/shell/MobileDock";
 import { TopBar } from "@/components/shell/TopBar";
+import { Breadcrumb } from "@/components/shell/Breadcrumb";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useInboundMessageAlerts } from "@/hooks/notifications/useInboundMessageAlerts";
 import { useCrmAlerts } from "@/hooks/notifications/useCrmAlerts";
@@ -55,8 +56,16 @@ export function AppShell({ sidebarCollapsed, children }: AppShellProps) {
       */}
       <div className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
-        {/* `pb-24 md:pb-6`: o dock mobile é fixo e cobriria o fim do conteúdo. */}
-        <main className="min-h-0 flex-1 overflow-auto p-6 pb-24 md:pb-6">{children}</main>
+        {/* `pb-24 md:pb-6`: o dock mobile é fixo e cobriria o fim do conteúdo.
+            O `main` virou coluna flex para o Breadcrumb (§17) ocupar uma faixa
+            própria sem empurrar o wrapper de conteúdo abaixo do viewport: o
+            wrapper é `flex-1 min-h-0`, então as páginas com `h-full` enchem
+            exatamente o que sobra — mesmo quando a trilha não renderiza (um
+            nível só) e mesmo quando ela aparece (dois ou mais). */}
+        <main className="flex min-h-0 flex-1 flex-col overflow-auto p-6 pb-24 md:pb-6">
+          <Breadcrumb />
+          <div className="min-h-0 flex-1">{children}</div>
+        </main>
       </div>
       <MobileDock />
       {/* Assistente de ajuda: só na área logada (/app/*), canto inferior
