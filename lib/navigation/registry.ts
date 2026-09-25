@@ -33,6 +33,7 @@ import {
   Robot,
   ScalesSimple,
   ShieldCheck,
+  ShoppingCart,
   Signpost,
   Storefront,
   Sun,
@@ -333,6 +334,16 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     icon: Truck,
     group: "crm",
     sidebar: true,
+  },
+  {
+    // Compras (NEXUS §47): mesma dobra de Títulos/Recuperação — consulta
+    // eventual de fornecedor e pedido de compra, porta no ⌘K; a entrada no
+    // sidebar vem com a taxonomia nova da §19 (grupo OPERAÇÃO).
+    href: "/app/compras",
+    label: "Compras",
+    description: "Pedidos de compra aos fornecedores e quem os fornece.",
+    icon: ShoppingCart,
+    group: "crm",
   },
   {
     // Prospecção B2B: descobrir empresas por região/categoria e levar ao CRM.
