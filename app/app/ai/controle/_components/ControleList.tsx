@@ -90,6 +90,22 @@ export function ControleList() {
   const ativos = (followups.data ?? []).filter((f) => f.status === "active" || f.status === "agendada").length;
   const custo = uso.data?.totals.cost_cents ?? 0;
 
+  const resumo = useQuery({
+    queryKey: ["controle", "resumo"],
+    queryFn: () =>
+      apiClient
+        .get<{
+          data: {
+            conversas_automatico: number;
+            erros_7d: number;
+            ultimo_erro: { codigo: string | null; em: string } | null;
+            pedidos_ia_30d: number;
+          };
+        }>(`/api/v1/ai/controle/resumo`)
+        .then((r) => r.data),
+  });
+  const res = resumo.data;
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Cartao
@@ -127,6 +143,33 @@ export function ControleList() {
         hrefLabel={t("Abrir uso")}
         loading={uso.isLoading}
         erro={uso.isError}
+      />
+      <Cartao
+        titulo={t("Conversas com a IA")}
+        valor={String(res?.conversas_automatico ?? 0)}
+        detalhe={t("no comando automático agora")}
+        href="/app/inbox"
+        hrefLabel={t("Abrir inbox")}
+        loading={resumo.isLoading}
+        erro={resumo.isError}
+      />
+      <Cartao
+        titulo={t("Erros de IA (7d)")}
+        valor={String(res?.erros_7d ?? 0)}
+        detalhe={res?.ultimo_erro ? `${t("último")}: ${res.ultimo_erro.codigo ?? "—"}` : t("sem erro na semana")}
+        href="/app/ai/runs"
+        hrefLabel={t("Ver execuções")}
+        loading={resumo.isLoading}
+        erro={resumo.isError}
+      />
+      <Cartao
+        titulo={t("Pedidos da IA (30d)")}
+        valor={String(res?.pedidos_ia_30d ?? 0)}
+        detalhe={t("criados pelo agente")}
+        href="/app/pedidos"
+        hrefLabel={t("Abrir pedidos")}
+        loading={resumo.isLoading}
+        erro={resumo.isError}
       />
     </div>
   );
