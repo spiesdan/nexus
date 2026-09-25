@@ -296,6 +296,8 @@ aplica.
 | `20260923130000` | `0239_radar_digest_restaura_o_vocabulario` | Forward-fix da 0237: a reconstrução da constraint derrubou 13 kinds canônicos (a classe da 0062/0129, na porta da cadeia de migrations). Reconstrói `agent_inbox_items_kind_check` com a lista VERBATIM do baseline — que ganha `radar_digest`, que a 0237 só declarou na migration — e `tests/unit/kind-check-migration-x-baseline.test.ts` volta a bater. |
 | `20260925010000` | `0240_separacao_da_carga` | **Separação e conferência antes da rota (NEXUS §48–§49).** `shipment_orders` ganha `separado_em` + `separado_por` (quem/quando conferiu, NULL = pendente); a API trava `montando → em_rota` com item não separado. Sem tabela nova, RLS inalterada. Apêndice no fim do baseline. |
 | `20260925020000` | `0241_politica_execucao_autonoma` | **Política de execução autônoma (NEXUS §35, FASE 10).** `ai_execution_policies` (1 linha/org): teto de nível, follow-up executável, fluxo padrão. Sem linha, nada executa. RLS molde 0221. Apêndice no fim do baseline. |
+| `20260925030000` | `0242_movimentos_de_estoque` | **Razão do estoque (NEXUS §46).** `inventory_movements` (entrada/saída/ajuste com origem e documento) + `catalog_products.estoque_minimo`. Saldo segue cacheado, atualizado pelos mesmos escritores. RLS molde 0221. Apêndice no fim do baseline. |
+| `20260925040000` | `0243_compras_fornecedores_e_pedidos` | **Compras (NEXUS §47).** `suppliers`, `purchase_orders` (+items com snapshot, numeração atômica `fn_proximo_numero_compra`), recebimento idempotente que vira entrada no razão. FK do movimento amarrada aqui. RLS molde 0221. Apêndice no fim do baseline. |
 
 ## Reproducibility
 

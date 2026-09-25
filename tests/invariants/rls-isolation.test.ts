@@ -109,6 +109,7 @@ beforeAll(() => {
       v_search uuid;
       v_prospect uuid;
       v_camp uuid;
+      v_compra uuid;
       v_tag text;
       v_chave text;
     begin
@@ -395,6 +396,33 @@ beforeAll(() => {
           insert into public.commercial_activities (organization_id)
             values (v_org);
         end if;
+
+        -- migrations 0241–0243 — política de execução, razão de estoque, compras.
+        if not exists (select 1 from public.ai_execution_policies where organization_id = v_org) then
+          insert into public.ai_execution_policies (organization_id)
+            values (v_org);
+        end if;
+        if not exists (select 1 from public.inventory_movements where organization_id = v_org) then
+          insert into public.inventory_movements (organization_id, tipo, quantidade)
+            values (v_org, 'ajuste', 1);
+        end if;
+        if not exists (select 1 from public.suppliers where organization_id = v_org) then
+          insert into public.suppliers (organization_id, nome)
+            values (v_org, 'Fornecedor RLS Invariant');
+        end if;
+        if not exists (select 1 from public.purchase_orders where organization_id = v_org) then
+          insert into public.purchase_orders (organization_id, numero)
+            values (v_org, 1) returning id into v_compra;
+        end if;
+        select id into v_compra from public.purchase_orders where organization_id = v_org limit 1;
+        if not exists (select 1 from public.purchase_order_items where organization_id = v_org) then
+          insert into public.purchase_order_items (organization_id, purchase_order_id, produto_codigo, produto_nome, quantidade, custo_unit_cents, subtotal_cents)
+            values (v_org, v_compra, 'RLS', 'Item RLS Invariant', 1, 100, 100);
+        end if;
+        if not exists (select 1 from public.purchase_order_counters where organization_id = v_org) then
+          insert into public.purchase_order_counters (organization_id)
+            values (v_org);
+        end if;
       end loop;
     end
     $seed$;
@@ -486,6 +514,15 @@ export const TABLES = [
   "commercial_titulo_baixas",
   "commercial_tasks",
   "commercial_activities",
+  // migrations 0241–0243 — política de execução, razão de estoque, compras.
+  // Mesmo molde: leitura org-scoped sem gate de papel; escrita agent+
+  // provada nas rotas. Seed em `beforeAll`.
+  "ai_execution_policies",
+  "inventory_movements",
+  "suppliers",
+  "purchase_orders",
+  "purchase_order_items",
+  "purchase_order_counters",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

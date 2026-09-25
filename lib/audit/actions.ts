@@ -443,6 +443,13 @@ export const AUDIT_ACTIONS = [
   "shipment.rota.ordenada",
   "shipment.rota.iniciada",
   "shipment.rota.finalizada",
+  // Compras e estoque (migrations 0242/0243, NEXUS §46–§47). Mercadoria e
+  // dinheiro de compra com rastro de quem, quando e por quê.
+  "supplier.created",
+  "purchase.created",
+  "purchase.status",
+  "purchase.received",
+  "inventory.movement",
   // Fiscal (migration 0213). Nota é fato fiscal: criação e cancelamento com
   // rastro de quem, quando e por quê.
   "invoice.created",
