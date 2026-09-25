@@ -9,9 +9,9 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `b5ae07bed feat(nexus-v2): Dashboard centro de comando - clientes para agir, roadmap, radar e IA (52)`
-  (anteriores: `259023c91` Financeiro 51 · `31d9411a9` Estoque · `28d9f4fbd` docs ·
-  `3c5126932` Compras)
+- HEAD: `4126a9681 feat(nexus-v2): Sidebar §19 - taxonomia de 9 grupos, 18 portas, dobra fechada (53)`
+  (anteriores: `31e1b6655` login helper Windows · `7225f5c80` docs ·
+  `b5ae07bed` Dashboard 52 · `259023c91` Financeiro 51 · `3c5126932` Compras)
 - Remotes: `nexus` = escrita canônica (`https://github.com/spiesdan/nexus`) —
   **todo push vai para `nexus`**; `origin`/`fork` = somente leitura (AGENTS.md);
   o spec §101 quer SÓ o nexus — **decisão pendente do usuário** (ver abaixo).
@@ -20,46 +20,54 @@
 
 ## Última ação
 
-Passo 4 da ordem aprovada (Dashboard §20/§91) FECHADO em `b5ae07bed`: novas
-seções em `app/app/_home.tsx` via `app/app/_home-secoes.tsx` —
-**Clientes para agir** (chips Recompra/Risco/Oportunidades/Follow-up +
-lista top-5 do radar com `ROTULO_RECOMPRA` + follow-ups vencidos via
-`GET /api/v1/ai/followups/queue?limit=100`), **Sales roadmap**
-(`GET /api/v1/roadmap`, ComposedChart 12 meses: realizado × meta × projeção,
-nota de amostra parcial), **Sales radar** (contagens risco/oportunidade/recompra
-com o MESMO agrupamento do `RadarCategorias`) e **IA** (`<BrainRecomendacoes />`
-zero-props, já usava `useSalesBrain(6)`). Todos os fetches em react-query com
-staleTime 5-10min (o radar agrega a base inteira — 60s de timeout). Gates:
-`tsc` 0, `eslint` 0, i18n+branding 34 verdes, suíte completa = só os 4 flakes
-Windows (`guarda-da-release`/`namespace-das-imagens`/`performed-at`/`rate-limit`),
-7360 passam.
+Passo 5 (Sidebar §19) FECHADO em `4126a9681` (helper de e2e em `31e1b6655`):
+`lib/navigation/registry.ts` reescrito para os **9 grupos da §19** (ids `visao`,
+`vendas`, `atendimento`, `ia`/Inteligência, `operacao`, `financeiro`, `fiscal`,
+`equipe`, `organizacao`/Configurações — `crm`/`canais`/`analise` deletados).
+**Medição real da dobra** (script temporário `medir-dobra.spec.ts`, já apagado):
+`nav763 · conteudo744 · folga+19 · rola=false · links18 · títulos8` com a ordem
+EXATA da §19 (Dashboard, Meu Dia | Pedidos, Clientes, Produtos, Funis, Prospecção |
+Inbox, Radar, Follow-ups, Agenda | Ver tudo em IA | Estoque, Compras, Expedição |
+Contas a Receber | Notas fiscais | Comissões). Orçamento validado:
+`conteudo = 4 + 30·L + 25·H ≤ 763` → H=8 ⇒ L≤18 (mediu exato).
+Decisões INFIDO travadas na implementação (ver conversa/proxy): Agenda é o único
+link não-listado da §19 (porta do dia); Etapas do funil e `/app/team` moram no
+hub Configurações (porta = ⌘K); INTELIGÊNCIA hub-only (só o link "Ver tudo em IA"
+entra — única aritmética que cabe); EQUIPE no sidebar = só Comissões; hub de
+Canais é a última seção do hub; `/app` (Dashboard) virou destino+sidebar com
+exceção de `isActive` em `components/shell/Sidebar.tsx` (senão `aria-current`
+em toda tela); `sidebarGroups()` mantém grupo hub-only vivo com 0 itens.
+Gates: `tsc` 0 · `eslint` 0 errors · unit 42/42 novos verdes (budget 18/8,
+portas, hub-only) · suíte completa = só os 4 flakes Windows + 1 timeout de
+carga (`telas-sem-dado-de-mentira` passa solto) · e2e local verdes:
+`navegacao` 11 · `webhooks`+`vps-ssrf`+`agenda-tela-do-produto` 9 ·
+medição 1. `next.config.ts` já está **revertido** (sem `ignoreBuildErrors`);
+temporários `next.config.ts.bak`/`medir-dobra.spec.ts` apagados.
 
-Passos 1-3 já fechados: Compras (`3c5126932`), Estoque (`31d9411a9`), Financeiro
-com as 5 abas (`259023c91`). Padrões aprendidos (mantidos): `toLocaleDateString`
-com tag de `useTagDeIdioma()`; `// eslint-disable-next-line
-react-hooks/set-state-in-effect` antes de `void carregar()` (precedente
-`financeiro/_client.tsx:142`); **o lint do react-compiler reprova `Date.now()`
-dentro do render** ("Cannot call impure function during render") — o corte
-"vencido" foi pro `queryFn`.
+Helper de e2e (`31e1b6655`): `login-admin.ts` mede o skew relógio local×servidor
+(header `Date` do `/auth/v1/health`) e compensa no TOTP — este PC está +46~47s
+adiantado (CMOS sem NTP; corrigir de vez com `w32tm /resync` **como admin**);
+e `tests/e2e/utils/npx.ts` (`execNpx`) — `execFileSync("npx")` sem shell dá
+`ENOENT` no Windows (o `.cmd` só resolve em shell), quebrando os beforeAll de
+seed de ~75 specs no Windows (CI Linux não afeta).
+
+Passo 4 (Dashboard `b5ae07bed`) e passos 1-3 (Compras `3c5126932`, Estoque
+`31d9411a9`, Financeiro `259023c91`) já fechados.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Sidebar §19 (passo 5)** — taxonomia nova (9 grupos do spec vs 6 atuais em
-   `lib/navigation/registry.ts`); destinos faltantes: Estoque, Compras,
-   Campanhas (hoje embutida em Prospecção), Metas, Notas, Cobranças.
-   Cuidado com o gate da dobra (sidebar `sidebar: true` = 27 hoje).
-2. **Redesign §100 (passo 6, o monstro, ~70% do esforço)** — só **15 de 291**
+1. **Redesign §100 (passo 6, o monstro, ~70% do esforço)** — só **15 de 291**
    arquivos usam `nexus-ui`; ordem: inventário classificado
    (NOVO/REFATORAR/CONSOLIDAR/REMOVER) → tokens/shell → módulos por prioridade
    (Dashboard → Clientes → 360 → Pedidos → Inbox → Radar → resto) → mobile.
-3. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
+2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
    specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
    e2e-cobertura).
-4. **Fechamento (passo 8)** — docs (`parity-matrix`/`migration-plan`
+3. **Fechamento (passo 8)** — docs (`parity-matrix`/`migration-plan`
    desatualizados desde a Etapa 1-3), checklist §94 recontado, **abrir PR**
    (ordem do usuário), CI Linux, deploy medido na VPS (§84).
-   Antes de fechar: checar o spec linha a linha (§20/§91 já cumpridos no
-   Dashboard; confirmar §51-§53, §14, §19 contra o spec).
+   Antes de fechar: checar o spec linha a linha (§19/§20/§91 já cumpridos;
+   confirmar §51-§53, §14 contra o spec).
 
 ## Decisões pendentes do usuário (NÃO decidir sozinho)
 
@@ -102,6 +110,24 @@ dentro do render** ("Cannot call impure function during render") — o corte
 - `<BrainRecomendacoes />` não tem props (busca sozinho via `useSalesBrain(6)`);
   Badge aceita variant `error|warning|info`; filtros de fila vencida:
   `status ∈ {active, waiting_reply, agendada}` e `next_fire_at < agora`.
+- Padrões de UI aprendidos nos passos 1-4 (mantidos): `toLocaleDateString`
+  com tag de `useTagDeIdioma()`; `// eslint-disable-next-line
+  react-hooks/set-state-in-effect` antes de `void carregar()` (precedente
+  `financeiro/_client.tsx:142`); **o lint do react-compiler reprova `Date.now()`
+  dentro do render** ("Cannot call impure function during render").
+- **Orçamento da dobra (medido)**: `conteudo = 4 + 30·L + 25·H ≤ 763` no
+  viewport 1280×900 do spec; H=8 títulos ⇒ L≤18 links. MEXER no sidebar exige
+  re-medição (o script `medir-dobra.spec.ts` foi temporário e saiu do repo;
+  recrie medindo `nav`/`conteudo` antes de adicionar qualquer `sidebar: true`).
+- **`pnpm e2e:build` no Windows**: a cada `next build`, 4 junctions dentro de
+  `.next/node_modules/` nascem vazios (Next#87737 — `require-in-the-middle`,
+  `import-in-the-middle`, `pg`, `@react-pdf/renderer`). Reparo: `Remove-Item`
+  + `cmd /c mklink /J <link> <absoluto em node_modules\.pnpm\…>`; se estiverem
+  vazios o `next start` cai com MODULE_NOT_FOUND no runtime.
+- Relógio desta máquina +46~47s adiantado: sem compensação todo TOTP dá 422.
+  O helper compensa (31e1b6655); a correção de fundo é `w32tm /resync` como
+  admin. MFA lockout = cookie 3 falhas/60s. Seed: `npx tsx
+  scripts/seed-e2e-credentials.ts` + `seed-e2e-followup-agent.ts`.
 
 ## Arquivos de contexto do projeto
 
