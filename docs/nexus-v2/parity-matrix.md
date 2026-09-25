@@ -45,3 +45,38 @@
 | Mercos/ERP sync | ❌ (só scrape) | — | — | — | — | ✅ (arquivar) | `scripts/mercos-scrape/` → `docs/legacy/`; **nunca** adapter/sync |
 
 **Vereditos**: NEXUS já é System of Record de facto (`commercial_orders` própria, radar deriva dela, Mercos sem sync). Sales Brain/Orchestrator/Copilot/Approvals/Meu Dia/Estoque-Compras/Deploy.sh são os únicos RECRIAR. Todo o resto é PRESERVAR+REFATORAR.
+
+## Entregue na branch `nexus-v2` (2026-09-24/25, tudo commitado e no ar)
+
+| Entrega | Commit | Prova |
+|---|---|---|
+| FASE 0 docs (11) + branch + tag | — | `docs/nexus-v2/`, `nexus-v1-archive` |
+| Sales Brain puro + batch | `327f6a637` | `lib/ai/sales-brain/*` 10 testes |
+| Orchestrator puro (níveis 0–6) | `327f6a637` | `lib/ai/orchestrator/decide.ts` |
+| Facades `lib/crm\|sales\|finance` | `327f6a637` | re-export sem quebra |
+| `GET /api/v1/sales-brain` | `327f6a637` | recomendações sobre pedidos reais |
+| `scripts/deploy.sh` + CI concurrency | `327f6a637` | `set -euo pipefail`, 9 passos |
+| Brain operacional na Inteligência | `62631898c` | `BrainRecomendacoes.tsx` |
+| Copilot contexto (cliente/radar) | `00e0349af` | `/api/v1/copilot/context` + RLS |
+| Copilot pedido + fiscal | `babc7c961`, `dc353505d` | travas + saúde fiscal |
+| Brain no 360 | `0480cbf54` | `_inteligencia360.tsx` primeiro insight |
+| Bulk-tag + seleção em massa | `0480cbf54` | `contacts/bulk-tag`, checkboxes |
+| Afinidade X→Y + recorrentes | `babc7c961` | `lib/comercial/afins` + API |
+| Quem leva junto no pedido | `7cd824127` | `_afins.tsx` no editor |
+| Sales Roadmap anual | `085ee13f3` | `/api/v1/roadmap` + metas |
+| Inbox 360 (Brain + follow-ups) | `c43627a81` | `PainelBrainFollowups` + `?contact_id=` |
+| Sugestão de compra | `225996ef8` | `/api/v1/inventory/sugestoes` |
+| Separação + trava (migration 0240) | `aa61bba1c` | schema + 2 portas, 1 regra |
+| Fluxo de caixa | `c97ac801b` | `/api/v1/financeiro/fluxo` |
+| Runner + propose + Decisões | `962e97728`, `66e21c072` | Decision Log na auditoria |
+| Meu Dia | `f6019dc4e` | `/app/meu-dia` + registry |
+| Controle de IA (7 cartões) | `eaa7fbcbf`, `55d0e2fb8` | `/app/ai/controle` + resumo |
+| Marca padrão NEXUS | `3c0905cb2` | default + gates + instalador |
+
+## Fica para a parte 2 (motivo escrito, sem gambiarra)
+
+- Movimentações/reservas/estoque mínimo e fornecedores/compras: pedem tabela nova + `test:db` (Docker fora do ar aqui).
+- Execução autônoma (envio/matrícula de pedido): exige política explícita (qual fluxo? qual aprovação?) — não inventada.
+- Redesign global 100%: exige QA visual rota a rota.
+- `docs/legacy/` do scrape Mercos: arquivamento (mover scripts, sem apagar história).
+- Deploy medido: `deploy-performance.md` preenche no primeiro deploy `nexus-v2`.

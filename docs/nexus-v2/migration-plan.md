@@ -5,17 +5,15 @@
 ## FASE 0 — Auditoria ✅ CONCLUÍDA (2026-09-24)
 
 - [x] Inventário (`inventory.md`), arquitetura, rotas, API, banco, IA, segurança, infra, design, parity-matrix, este plano
-- [x] Branch `nexus-v2` + tag `nexus-v1-archive` (push pendente)
-- [ ] Push tag+branch p/ `nexus` remote + registrar `deploy-performance.md` baseline
+- [x] Branch `nexus-v2` + tag `nexus-v1-archive` + push p/ `nexus` + `deploy-performance.md` baseline (a medir)
 
-## FASE 1 — Fundação (atual, 1–2 semanas)
+## FASE 1 — Fundação ✅ PARTE 1 (2026-09-24/25, commits na `nexus-v2`)
 
-1. `lib/crm|sales|finance/` fachadas (re-export, zero quebra) + `lib/ai/sales-brain/` stub real sobre radar
-2. Registry → taxonomia §19 (grupos NEXUS, rotas CRIAR como placeholder fora do sidebar até prontas)
-3. Design tokens NEXUS (consolidar `ui`+`nexus-ui`+`uimaxxing` — começar por `NexusDataTable`, `NexusPageHeader`, `NexusEmptyState`)
-4. `DEFAULT_APP_NAME` → `NEXUS` + conceito white-label por tenant (manter `DeskcommCRM` só como fallback legado + protocolo `x-deskcomm-signature` intacto)
-5. `scripts/deploy.sh` canônico + `ci.yml` concurrency/paths + `Dockerfile.worker` multi-stage + `prod.yml` sem `build:`
-6. `/api/v1/copilot/*` stub + `sales-brain/*` leitura (radar real, sem mock)
+- [x] `lib/crm|sales|finance/` fachadas + `lib/ai/sales-brain/` real + Orchestrator puro + `lib/ai/copilot/`
+- [x] `scripts/deploy.sh` + `ci.yml` concurrency (paths e worker multi-stage ficam p/ parte 2)
+- [x] `DEFAULT_APP_NAME` → `NEXUS` (protocolo/infra intactos de propósito)
+- [x] `/api/v1/sales-brain`, `/api/v1/copilot/context` (cliente/radar/pedido/fiscal), páginas Meu Dia, Decisões, Controle
+- [ ] Registry → taxonomia §19 completa · Design tokens consolidados (parte 2, com QA visual)
 
 ## FASE 2 — CRM
 
