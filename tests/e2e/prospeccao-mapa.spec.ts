@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
@@ -34,7 +34,7 @@ async function entrar(page: Page, creds: Creds) {
 }
 
 test.beforeAll(() => {
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-prospeccao-mapa.ts"], { stdio: "inherit", cwd: RAIZ });
+  execNpx(["tsx", "scripts/seed-e2e-prospeccao-mapa.ts"], { stdio: "inherit", cwd: RAIZ });
 });
 
 test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ page }) => {

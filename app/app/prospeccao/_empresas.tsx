@@ -35,6 +35,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
+import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import { distanciaKm, limitesDosPontos, centroERaioDoBbox, ordemDeVisita, comprimentoDaRota } from "@/lib/prospeccao/geo";
 import type { PontoMapa } from "./_mapa";
 import {
@@ -764,18 +765,13 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         </>
       )}
       {detalhe && (
-        <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l bg-background p-4 shadow-xl" role="dialog" aria-label={detalhe.nome}>
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <div>
-              <p className="font-medium text-text">{detalhe.nome}</p>
-              <p className="text-xs text-muted-foreground">
-                {[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => setDetalheId(null)} aria-label={t("Fechar")}>
-              ×
-            </Button>
-          </div>
+        <ContextualDrawer
+          aberto
+          onFechar={() => setDetalheId(null)}
+          titulo={detalhe.nome}
+          subtitulo={[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
+          className="max-w-md"
+        >
           <div className="space-y-2 text-sm">
             {detalhe.nota !== null && <p>★ {detalhe.nota} · {detalhe.total_avaliacoes} {t("avaliações")}</p>}
             {detalhe.endereco && <p className="text-muted-foreground">{detalhe.endereco}</p>}
@@ -838,7 +834,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               </Button>
             )}
           </div>
-        </div>
+        </ContextualDrawer>
       )}
       {podeOperar && (
         <ImportarArquivoDialog
