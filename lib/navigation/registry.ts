@@ -61,7 +61,16 @@ import {
  * Doutrina: docs/doctrine/sistema-vivo.md — "por qual porta se chega até mim?"
  */
 
-export type NavGroupId = "atendimento" | "crm" | "ia" | "canais" | "analise" | "organizacao";
+export type NavGroupId =
+  | "visao"
+  | "vendas"
+  | "atendimento"
+  | "ia"
+  | "operacao"
+  | "financeiro"
+  | "fiscal"
+  | "equipe"
+  | "organizacao";
 
 export interface NavGroup {
   id: NavGroupId;
@@ -92,27 +101,48 @@ export interface NavDestination {
 }
 
 /**
- * Grupos por OBJETIVO, na ordem de uso: o que se abre toda hora primeiro, o que
- * se ajusta uma vez por mês por último.
+ * Grupos por OBJETIVO, na ordem de uso — NEXUS §19 (Sidebar):
  *
- * "Análise" e não "Observabilidade": quem instala isto numa VPS é dono de PME,
- * não engenheiro. E configurar o sistema (grupo IA) é atividade diferente de
- * observar o sistema funcionando (grupo Análise) — por isso Evolução da IA mora
- * aqui, e não junto dos agentes.
+ *   Visão geral · Vendas · Atendimento · Inteligência · Operação ·
+ *   Financeiro · Fiscal · Equipe · Configurações (rodapé)
  *
- * Hub só onde o grupo passa de 4 telas. Abaixo disso ele cabe inteiro no
- * sidebar, e um hub de 3 itens seria só um clique a mais para chegar onde já
- * dava para chegar.
+ * Os quatro primeiros são o dia a dia (do dono, do comercial, do operador e
+ * da IA); Operação/Financeiro/Fiscal/Equipe são o back-office; Configurações
+ * (era "Organização") fica fixa no rodapé.
+ *
+ * ORÇAMENTO DA DOBRA — medido, não estimado (§19 "a dobra é medida"):
+ * medição real em 1280×900 (`tests/e2e/medir-dobra.spec.ts`) deu nav=763px e
+ * o modelo `conteudo = 4 + 30·L + 25·H` (L = links do grupo rolável,
+ * H = títulos), com a linha do item INTOCADA em 28px. Restrição
+ * `12 + 30L + 25H ≤ 763` ⇒ `30L + 25H ≤ 751`. Com H = 8 títulos (Configurações
+ * é rodapé, não conta): L ≤ 18. O menu antigo media 25 links + 5 títulos =
+ * 879px contra 763px — FOLGA −116px, rolava; era por isso que o teste da dobra
+ * passava vazia (org e2e inexistente ⇒ nav sem links). As 18 portas abaixo
+ * dão 740px ⇒ FOLGA +23px.
+ *
+ * O que o §19 NÃO lista ficou de fora do sidebar (porta = hub do grupo ou
+ * ⌘K), com a dobra medida como motivo: Indicadores, Desempenho, Relatórios,
+ * Etapas do funil, Respostas rápidas, Agentes, Roteadores, Conexões,
+ * Nuvemshop, Webhooks, Evolução da IA, Audit Log. Três INFIDOS, por terem
+ * teste dedicado que decide: Agenda fica (papel de "porta do dia",
+ * agenda-tela-do-produto); Funis = "Oportunidades" da §19 (label mantido);
+ * a raiz de Financeiro = as quatro abas da §19 numa tela só (labels das abas
+ * carregam os nomes §19). Dissolvidos: os grupos Canais e Análise (§19 não
+ * os tem) — suas telas viraram seções do hub de Configurações e de
+ * Inteligência.
  */
 export const NAV_GROUPS: NavGroup[] = [
+  { id: "visao", label: "Visão geral" },
+  { id: "vendas", label: "Vendas" },
   { id: "atendimento", label: "Atendimento" },
-  { id: "crm", label: "CRM" },
-  { id: "ia", label: "Agente de IA", hub: { href: "/app/ai", label: "Ver tudo em IA" } },
-  { id: "canais", label: "Canais" },
-  { id: "analise", label: "Análise" },
+  { id: "ia", label: "Inteligência", hub: { href: "/app/ai", label: "Ver tudo em IA" } },
+  { id: "operacao", label: "Operação" },
+  { id: "financeiro", label: "Financeiro" },
+  { id: "fiscal", label: "Fiscal" },
+  { id: "equipe", label: "Equipe" },
   {
     id: "organizacao",
-    label: "Organização",
+    label: "Configurações",
     hub: { href: "/app/settings", label: "Configurações" },
   },
 ];
@@ -142,17 +172,49 @@ export const GRUPO_NO_RODAPE: NavGroupId = "organizacao";
  * fechada e por isso não vira `minRole`.
  */
 export const NAV_DESTINATIONS: NavDestination[] = [
-  // ---- Atendimento — onde o operador passa o dia ----
+  // ---- Visão geral — a mesa do dono: onde o dia começa ----
   {
-    // NEXUS §21: "o que preciso fazer agora?" — tarefas, follow-ups e
-    // recomendações num lugar só. Sem sidebar (doutrina da dobra): a
-    // porta é o ⌘K; a landing pós-login segue o inbox.
+    // NEXUS §19 (VISÃO GERAL) + §20: o Dashboard é o primeiro item do sidebar,
+    // a porta de entrada (`app/app/page.tsx` já é a Home, não um redirect).
+    // O logo do topo também aponta para cá — o item existe porque a §19 o
+    // lista, e dois caminhos para a mesma tela custam uma linha, não um pixel
+    // de descoberta. ⚠️ href "/app" é prefixo de TODO caminho do tenant: o
+    // `isActive` do Sidebar trata esta rota com igualdade exata, senão o
+    // Dashboard ficaria ativo em todas as telas.
+    href: "/app",
+    label: "Dashboard",
+    description: "Clientes para agir, roadmap, radar e o que a IA recomenda agora.",
+    icon: Gauge,
+    group: "visao",
+    sidebar: true,
+  },
+  {
+    // NEXUS §21/§19: "o que preciso fazer agora?" — tarefas, follow-ups e
+    // recomendações num lugar só. A §19 o lista em VISÃO GERAL (não em
+    // Atendimento), porque é a tela de quem decide o dia, não de quem atende
+    // o telefone. Portas: este item e o ⌘K; a landing pós-login continua
+    // sendo o Dashboard.
     href: "/app/meu-dia",
     label: "Meu Dia",
     description: "O que fazer agora: tarefas, follow-ups ativos e recomendações.",
     icon: Sun,
-    group: "atendimento",
+    group: "visao",
+    sidebar: true,
   },
+  {
+    // A §19 mantém em VISÃO GERAL só Dashboard + Meu Dia. Medição da dobra
+    // (18 links + 8 títulos = 744px de 763px) não comporta um terceiro: a
+    // porta do Indicadores é o ⌘K e o Dashboard, que herda os agregados do mês
+    // (mesma fonte, `agregadosDoMes` — a mesma pergunta respondida em dois
+    // lugar é o que este destino nunca devia ter sido).
+    href: "/app/indicadores",
+    label: "Indicadores",
+    description: "Evolução de venda, carteira de clientes, ranking e curva ABC do mês.",
+    icon: ChartLineUp,
+    group: "visao",
+  },
+
+  // ---- Atendimento — onde o operador passa o dia ----
   {
     href: "/app/inbox",
     label: "Inbox",
@@ -170,6 +232,20 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     sidebar: true,
   },
   {
+    // §19 (ATENDIMENTO): terceiro item do grupo na ordem da spec — Inbox,
+    // Radar, Follow-ups. Era tela do hub de IA; vira item de sidebar com o
+    // minRole manager que sempre teve (o grupo de hub perde um card da
+    // jornada "Montar o agente" — sem prejuízo: o hub é inventário completo,
+    // e o card também aparece no ⌘K).
+    href: "/app/ai/followups",
+    label: "Follow-ups",
+    description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
+    icon: FlowArrow,
+    group: "atendimento",
+    minRole: "manager",
+    sidebar: true,
+  },
+  {
     // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
     // dia acontece e não onde ele se configura: quem atende abre isto de manhã
     // junto com o Inbox. Os TIPOS de agendamento — que são configuração de
@@ -182,6 +258,12 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // investigação inteira: quem leu isto aqui concluiu que faltava construir a
     // tela, quando o que faltava era o CAMINHO até ela. O aviso da Agenda agora
     // aponta para `/app/team?aba=atendimento`.
+    //
+    // §19 INFIDO: a Agenda não está na lista da §19, e entra mesmo assim. É a
+    // "porta do dia" (a doutrina do Hub: onde o dia acontece é diferente de onde
+    // ele se configura), e tem teste e2e dedicado clicando nela no menu
+    // (`agenda-tela-do-produto.spec.ts`). O que cedeu na dobra medida foi as
+    // Etapas do funil, que passou para o hub de Configurações.
     href: "/app/agenda",
     label: "Agenda",
     description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
@@ -193,27 +275,51 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
     // Composer do inbox. O nome "Templates" fica livre para os da Meta (HSM),
     // onde é o termo técnico correto.
+    //
+    // §19: "Respostas rápidas" não está na lista — SEM sidebar (a dobra medida
+    // é o motivo, junto com Indicadores/Agentes/Roteadores). As portas são o
+    // composer do Inbox (a tela que consome o conteúdo) e o ⌘K.
     href: "/app/templates",
     label: "Respostas rápidas",
     description: "Scripts salvos para responder mais rápido, seus ou da equipe.",
     icon: FileText,
     group: "atendimento",
-    sidebar: true,
   },
 
-  // ---- CRM — o funil ----
+  // ---- Vendas — o funil ----
   {
-    // A mesa do dono. Primeiro do grupo porque é onde o dia começa — mas NÃO
-    // é a landing pós-login (essa segue /app/inbox, porta documentada na
-    // allowlist e nos e2e; trocar quebraria as duas).
+    // ATT.txt Fase 2: o coração comercial. §19 o primeiro de VENDAS — pedido
+    // nasce do funil e da conversa, não é configuração.
+    href: "/app/pedidos",
+    label: "Pedidos",
+    description:
+      "Os pedidos da loja, com origem (IA, vendedor, WhatsApp, B2B) e status do ciclo comercial.",
+    icon: Receipt,
+    group: "vendas",
+    sidebar: true,
+  },
+  {
+    href: "/app/contacts",
+    label: "Clientes",
+    description: "Seus clientes e o histórico de cada um.",
+    icon: Users,
+    group: "vendas",
+    sidebar: true,
+  },
+  {
+    // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
+    // vinha com "procurar produto na loja" ligada por padrão, lendo uma tabela
+    // que ninguém nunca preencheu — e o efeito não era silêncio: era o agente
+    // respondendo "não tenho nada com esse nome" para uma loja de estoque cheio.
     //
-    // Era duas telas ("Dashboard" + "Indicadores") para a mesma pergunta e o
-    // dono comparava as duas em vez de agir. Ficou só esta.
-    href: "/app/indicadores",
-    label: "Indicadores",
-    description: "Evolução de venda, carteira de clientes, ranking e curva ABC do mês.",
-    icon: ChartLineUp,
-    group: "crm",
+    // Fica no grupo de VENDAS, e não em Configurações, porque consultar preço é
+    // trabalho de quem ATENDE, todo dia — diferente de "tipos de agendamento",
+    // que se configura uma vez.
+    href: "/app/products",
+    label: "Produtos",
+    description: "O catálogo da loja, com o preço que o atendente de IA responde.",
+    icon: Storefront,
+    group: "vendas",
     sidebar: true,
   },
   {
@@ -227,73 +333,61 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // Ficou "Funis" porque é o que esta tela É: a lista dos funis, de onde se
     // abre o quadro de cada um. "Pipeline" é palavra de quem construiu o
     // sistema; "funil de vendas" é palavra de quem vende.
+    //
+    // §19 INFIDO: chama "Oportunidades" na lista do sidebar. Mantém "Funis" —
+    // é o nome que a tela já é, com teste e2e exigindo-o por extenso, e o
+    // vocabulário do dono de PME; renomear sem decisão explícita do dono seria
+    // inventar regra de produto. A ordem física do array É a ordem do menu:
+    // Pedidos, Clientes, Produtos, Oportunidades — a da §19.
     href: "/app/kanban",
     label: "Funis",
     description: "Seus funis de venda — clique em um para abrir o quadro de clientes.",
     icon: Kanban,
-    group: "crm",
+    group: "vendas",
     sidebar: true,
   },
   {
-    href: "/app/contacts",
-    label: "Clientes",
-    description: "Seus clientes e o histórico de cada um.",
-    icon: Users,
-    group: "crm",
-    sidebar: true,
-  },
-  {
-    // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
-    // vinha com "procurar produto na loja" ligada por padrão, lendo uma tabela
-    // que ninguém nunca preencheu — e o efeito não era silêncio: era o agente
-    // respondendo "não tenho nada com esse nome" para uma loja de estoque cheio.
-    //
-    // Fica no grupo do CRM, e não em Configurações, porque consultar preço é
-    // trabalho de quem ATENDE, todo dia — diferente de "tipos de agendamento",
-    // que se configura uma vez.
-    href: "/app/products",
-    label: "Produtos",
-    description: "O catálogo da loja, com o preço que o atendente de IA responde.",
-    icon: Storefront,
-    group: "crm",
-    sidebar: true,
-  },
-  {
-    // 0226: o "quanto cada vendedor leva" com Dar Baixa. No CRM porque a
-    // pergunta é do dia a dia do dono — não configuração.
+    // 0226: o "quanto cada vendedor leva" com Dar Baixa. O dono pergunta todo
+    // mês — §19 o põe em EQUIPE, ao lado de quem compõe a comissão.
     href: "/app/comissoes",
     label: "Comissões",
     description: "Comissão por pedido no mês, com baixa do que já foi pago.",
     icon: ChartBar,
-    group: "crm",
+    group: "equipe",
     sidebar: true,
   },
   {
-    // Títulos e Faturamento: consulta eventual de cobrança (doutrina da dobra,
-    // como Notas e Recuperação) — sem sidebar, com porta no ⌘K e no Indicadores.
+    // Títulos: consulta eventual de cobrança — SEM sidebar (§19: a dobra é
+    // medida, e o grupo FINANCEIRO tem UMA porta rolável). A porta é o ⌘K e
+    // a própria tela de Financeiro, que lista os títulos na aba "Receber".
     href: "/app/titulos",
     label: "Títulos",
     description: "Contas a receber por vencimento, derivadas dos pedidos faturados.",
     icon: ClockCountdown,
-    group: "crm",
+    group: "financeiro",
   },
   {
+    // §19: consulta eventual (doutrina da dobra, como Recuperação) — sem
+    // sidebar; porta no ⌘K e no grupo FISCAL.
     href: "/app/faturamento",
     label: "Faturamento",
     description: "Pedidos faturados com a NF vinculada.",
     icon: Archive,
-    group: "crm",
+    group: "fiscal",
   },
   {
-    // Financeiro como entidade (0233): dinheiro do dia a dia, no menu junto
-    // de Comissões e Pedidos. ATENÇÃO à dobra: cada linha aqui custa 28px no
-    // e2e `navegacao.spec.ts` (menu inteiro em 900px sem scroll); se estourar,
-    // a saída documentada é um hub do CRM, não raspar pixel (ver Sidebar).
+    // FINANCEIRO — §19 lista o grupo com QUATRO portas ("Contas a Pagar",
+    // "Contas a Receber", "Cobranças", "Fluxo de Caixa"), e esta tela as tem
+    // como abas. Rotas finas por aba (§19 literal) virariam 4×30px sem ganho
+    // de descoberta; a tela-com-abas entrega as quatro atrás de um link —
+    // decisão registrada no handoff (passo 5). O rótulo do link é a primeira
+    // porta da lista.
     href: "/app/financeiro",
-    label: "Financeiro",
-    description: "Contas a receber, recebimentos e conciliação pedido × NF × financeiro.",
+    label: "Contas a Receber",
+    description:
+      "O financeiro inteiro: contas a receber, pagar, cobranças e fluxo de caixa, com conciliação pedido × NF.",
     icon: Wallet,
-    group: "crm",
+    group: "financeiro",
     sidebar: true,
   },
   {
@@ -304,56 +398,47 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     label: "Carteira",
     description: "Clientes por situação — ativos, inativos e prospects.",
     icon: Users,
-    group: "crm",
+    group: "vendas",
   },
   {
     // Rotina do vendedor externo (visitas, check-in, atividades). Sem sidebar
-    // (doutrina da dobra): a porta é o ⌘K.
+    // (§19 não a lista; dobra medida): a porta é o ⌘K.
     href: "/app/tarefas",
     label: "Tarefas",
     description: "Visitas agendadas, check-in e atividades realizadas.",
     icon: ClockCountdown,
-    group: "crm",
-  },
-  {
-    // ATT.txt Fase 2: o coração comercial. Fica no CRM porque pedido nasce do
-    // funil e da conversa — não é configuração, é operação diária.
-    href: "/app/pedidos",
-    label: "Pedidos",
-    description:
-      "Os pedidos da loja, com origem (IA, vendedor, WhatsApp, B2B) e status do ciclo comercial.",
-    icon: Receipt,
-    group: "crm",
-    sidebar: true,
-  },
-  {
-    // ATT.txt Fase 3: transporte próprio. No CRM porque expedir é o dia a dia
-    // de quem vende com entrega — não configuração.
-    href: "/app/expedicao",
-    label: "Expedição",
-    description: "Cargas do transporte próprio, romaneio e controle de entregas.",
-    icon: Truck,
-    group: "crm",
-    sidebar: true,
-  },
-  {
-    // Compras (NEXUS §47): mesma dobra de Títulos/Recuperação — consulta
-    // eventual de fornecedor e pedido de compra, porta no ⌘K; a entrada no
-    // sidebar vem com a taxonomia nova da §19 (grupo OPERAÇÃO).
-    href: "/app/compras",
-    label: "Compras",
-    description: "Pedidos de compra aos fornecedores e quem os fornece.",
-    icon: ShoppingCart,
-    group: "crm",
+    group: "vendas",
   },
   {
     // Estoque (NEXUS §46): saldo, razão de movimentações e sugestão de
-    // recomposição. Mesma dobra de Compras — sidebar com a taxonomia §19.
+    // recomposição. OPERAÇÃO na §19 — e a ordem física É a da spec: Estoque,
+    // Compras, Expedição.
     href: "/app/estoque",
     label: "Estoque",
     description: "Saldo dos produtos, movimentações e sugestão de compra.",
     icon: Package,
-    group: "crm",
+    group: "operacao",
+    sidebar: true,
+  },
+  {
+    // Compras (NEXUS §47): a §19 a lista em OPERAÇÃO, e a entrada no sidebar
+    // vem com ela — a promessa do comentário antigo, cumprida.
+    href: "/app/compras",
+    label: "Compras",
+    description: "Pedidos de compra aos fornecedores e quem os fornece.",
+    icon: ShoppingCart,
+    group: "operacao",
+    sidebar: true,
+  },
+  {
+    // ATT.txt Fase 3: transporte próprio. §19 o lista em OPERAÇÃO — expedir é
+    // back-office: acontece depois da venda, no galpão.
+    href: "/app/expedicao",
+    label: "Expedição",
+    description: "Cargas do transporte próprio, romaneio e controle de entregas.",
+    icon: Truck,
+    group: "operacao",
+    sidebar: true,
   },
   {
     // Prospecção B2B: descobrir empresas por região/categoria e levar ao CRM.
@@ -362,29 +447,26 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     label: "Prospecção",
     description: "Encontre empresas por região e categoria e leve ao CRM.",
     icon: MagnifyingGlass,
-    group: "crm",
+    group: "vendas",
     sidebar: true,
   },
   {
-    // ATT.txt Fase 3: fiscal. SEM sidebar de propósito: em 900px o menu já
-    // ATENÇÃO à dobra: cada linha aqui custa 28px no e2e `navegacao.spec.ts`
-    // (menu inteiro em 900px sem scroll); se estourar, a saída documentada
-    // é um hub do CRM, não raspar pixel (ver Sidebar).
+    // ATT.txt Fase 3: fiscal. §19 a única porta rolável do grupo FISCAL.
     href: "/app/notas",
     label: "Notas fiscais",
     description: "Emita a partir do pedido faturado e acompanhe o status na SEFAZ.",
     icon: Archive,
-    group: "crm",
+    group: "fiscal",
     sidebar: true,
   },
   {
-    // ATT.txt Fase 4: recuperação. SEM sidebar pelo mesmo motivo da fiscal —
-    // a porta é o alerta do Dashboard ("clientes sumidos") e o ⌘K.
+    // ATT.txt Fase 4: recuperação. §19 não a lista — SEM sidebar; a porta é o
+    // alerta do Dashboard ("clientes sumidos") e o ⌘K.
     href: "/app/recuperacao",
     label: "Recuperação",
     description: "Quem comprava e parou, por ordem de prioridade — com ação direta.",
     icon: ClockCountdown,
-    group: "crm",
+    group: "vendas",
   },
   {
     // A promessa que o comentário da Agenda fazia desde que ela nasceu. Aqui se
@@ -418,17 +500,29 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // com nomes que não diziam qual servia para quê. A diferença real é o VERBO,
     // e é ela que o nome carrega agora: lá se ABRE o funil, aqui se CONFIGURA o
     // que ele significa.
+    //
+    // §19: a lista não tem Etapas, e a dobra medida (−116px no menu antigo;
+    // 18 links + 8 títulos = 744px de 763px no novo) não comportava mantê-la.
+    // De volta ao hub de Configurações — que agora É um hub, com seção própria,
+    // a um clique do rodapé fixo. O que sobrevive do achado original é o que
+    // importa: FUNIS (o uso, o dia a dia) continua no sidebar, sem passar por
+    // Configurações; a CONFIGURAÇÃO das colunas é tarefa ocasional, e o e2e
+    // `navegacao.spec.ts` acompanhou a porta nova (hub → card → tela).
     href: "/app/settings/tenant/pipelines",
     label: "Etapas do funil",
     description: "As colunas de cada funil, o vocabulário do negócio e os motivos de perda.",
     icon: Funnel,
-    group: "crm",
+    group: "organizacao",
     minRole: "manager",
-    sidebar: true,
+    section: "Sua empresa",
   },
 
-  // ---- Agente de IA — montar, ensinar, acompanhar ----
+  // ---- Inteligência — montar, ensinar, acompanhar (100% hub) ----
   {
+    // §19: Agentes não está na lista — SEM sidebar (a dobra medida é o motivo).
+    // O grupo INTELIGÊNCIA é o primeiro hub-only do menu: nenhum item rola no
+    // sidebar, só o link "Ver tudo em IA". Agentes continua a primeira tela da
+    // jornada "Montar o agente" lá dentro.
     href: "/app/ai/agents",
     label: "Agentes",
     description: "Quem atende por você: instruções, modelo, ferramentas e publicação.",
@@ -436,19 +530,9 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
-    href: "/app/ai/followups",
-    label: "Follow-ups",
-    description: "Como o agente retoma uma conversa que esfriou, para nenhuma morrer no silêncio.",
-    icon: FlowArrow,
-    group: "ia",
-    section: "Montar o agente",
-    minRole: "manager",
-    sidebar: true,
-  },
-  {
+    // §19 não lista Roteadores — SEM sidebar (mesma medição de Agentes).
     href: "/app/ai/routers",
     label: "Roteadores",
     description: "Qual agente pega qual conversa, e quando o humano assume.",
@@ -456,7 +540,6 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
     href: "/app/ai/credentials",
@@ -478,10 +561,8 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    // SEM `sidebar: true`, como as outras nove telas deste grupo. Adicionar as
-    // duas telas novas à sidebar estourou a dobra em 900px — medido pelo e2e
-    // `navegacao.spec.ts`, que existe justamente porque agrupar o menu o faz
-    // crescer. Configurar provedor é tarefa de poucas vezes; o caminho é o hub
+    // SEM `sidebar: true`, como TODAS as telas deste grupo (é 100% hub, §19).
+    // Configurar provedor é tarefa de poucas vezes; o caminho é o hub
     // "Ver tudo em IA", igual a Credenciais, Conhecimento, Memória e Skills.
   },
   {
@@ -585,94 +666,65 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     minRole: "manager",
   },
 
-  // ---- Canais — por onde as mensagens entram e saem ----
+  // ---- Olhar o sistema funcionando — o grupo Análise, repartido pela §19 ----
+  // A §19 não tem grupo "Análise": Desempenho/Relatórios/Audit Log viram
+  // destinos de VISÃO GERAL sem sidebar (o dono olha o negócio), e
+  // Evolução da IA/Inteligência passaram para o hub de INTELIGÊNCIA (a
+  // jornada do agente). Porta de todos: ⌘K — e o hub, onde houver.
   {
-    href: "/app/connections",
-    label: "Conexões",
-    // Cobre os DOIS caminhos desde o PR #105: número por QR e canal oficial da
-    // Meta (com os templates dele), cada um numa aba. A descrição cita "oficial"
-    // e "Meta" de propósito — é por esses nomes que se procura no ⌘K, e a busca
-    // varre a descrição além do rótulo.
-    description:
-      "Seus números de WhatsApp: por QR ou canal oficial da Meta, com saúde, reconexão e templates.",
-    icon: PlugsConnected,
-    group: "canais",
-    minRole: "admin",
-    sidebar: true,
-    healthDot: true,
-  },
-  {
-    // Não tinha link nenhum no app inteiro: só se chegava digitando a URL.
-    href: "/app/integrations/nuvemshop",
-    label: "Nuvemshop",
-    description: "Conecte a loja para trazer pedidos e clientes para dentro do CRM.",
-    icon: Storefront,
-    group: "canais",
-    // A página não filtra por papel, mas as Server Actions de conectar e
-    // desconectar exigem admin — mostrar a um viewer seria oferecer botão morto.
-    minRole: "admin",
-    sidebar: true,
-  },
-  {
-    href: "/app/webhooks",
-    label: "Webhooks",
-    description: "Avise outros sistemas quando algo acontecer aqui dentro.",
-    icon: WebhooksLogo,
-    group: "canais",
-    minRole: "manager",
-    sidebar: true,
-  },
-
-  // ---- Análise — olhar o sistema funcionando ----
-  {
+    // §19 não lista Desempenho — SEM sidebar (medido: 18 links/8 títulos já
+    // ocupam 744px dos 763px da nav em 1280×900).
     href: "/app/metrics",
     label: "Desempenho",
     description: "Funil e performance por atendente nos últimos 30 dias.",
     icon: ChartBar,
-    group: "analise",
-    sidebar: true,
+    group: "visao",
   },
   {
-    // Observabilidade, não configuração: por isso não fica junto dos agentes.
+    // Observabilidade do agente: era o motivo de o grupo Análise existir
+    // separado dos agentes. Com a §19 dissolvendo Análise, ela entra na
+    // jornada — "Acompanhar" é o terceiro passo dela — e sai do sidebar
+    // (mesma medição de Agentes/Roteadores).
     href: "/app/ai/evolution",
     label: "Evolução da IA",
     description: "Se o agente está melhorando, onde ele erra e o que falta ensinar.",
     icon: ChartLineUp,
-    group: "analise",
+    group: "ia",
+    section: "Acompanhar o agente",
     minRole: "manager",
-    sidebar: true,
   },
   {
+    // §19 não lista Audit Log — SEM sidebar (medido). minRole manager fica.
     href: "/app/audit",
     label: "Audit Log",
     description: "Quem fez o quê, quando — o histórico que não se apaga.",
     icon: ClockCounterClockwise,
-    group: "analise",
+    group: "visao",
     minRole: "manager",
-    sidebar: true,
   },
   {
     // ATT.txt F5 (sem B2B): vendas por vendedor/cliente/produto + Curva ABC.
-    // SEM sidebar (dobra 900px): chega-se pelos Pedidos e pelo ⌘K.
+    // §19 não lista — SEM sidebar; chega-se pelos Pedidos e pelo ⌘K.
     href: "/app/relatorios",
     label: "Relatórios",
     description: "Vendas por vendedor, cliente e produto, com Curva ABC e exportação.",
     icon: ClipboardText,
-    group: "analise",
+    group: "visao",
     minRole: "manager",
   },
   {
     // Grafo funcional de inteligência (NEXUS FASE 2): clientes, regiões,
     // situações de recompra, riscos, conhecimento e métricas — tudo lido das
-    // APIs reais, nada decorativo. SEM sidebar pelo mesmo motivo dos Relatórios
-    // (a dobra em 900px é medida pelo e2e `navegacao.spec.ts`): as portas são o
-    // ⌘K, o link no Radar e o botão na Inteligência. Vira `sidebar: true` só
-    // com medição nova da dobra.
+    // APIs reais, nada decorativo. SEM sidebar (dobra medida): as portas são o
+    // ⌘K, o link no Radar e o hub de Inteligência. Entra na seção
+    // "Acompanhar o agente" porque é a tela de olhar o negócio enquanto o
+    // agente trabalha — o hub é a única porta que o grupo tem.
     href: "/app/inteligencia",
     label: "Inteligência",
     description: "O grafo vivo do negócio — selecione nós e monte contextos para agir.",
     icon: Brain,
-    group: "analise",
+    group: "ia",
+    section: "Acompanhar o agente",
   },
 
   // ---- Organização — conta, empresa, acesso ----
@@ -705,8 +757,11 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     label: "Equipe",
     description: "Quem trabalha aqui, com qual papel e quanta conversa cada um aguenta.",
     icon: UsersThree,
-    group: "organizacao",
-    section: "Sua empresa",
+    group: "equipe",
+    // §19 (EQUIPE): o dono gerencia pessoas no grupo, não dentro de
+    // Configurações. Sem sidebar (dobra medida) e sem seção — EQUIPE não tem
+    // hub; a porta é o ⌘K e os cards de Comissões. O card SUMIU do hub de
+    // Configurações junto com o movimento (seção obrigatória em grupo com hub).
   },
   {
     // A porta que faltava (issue #144): rodízio de atendimento e restrição de
@@ -771,6 +826,53 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     section: "Dados e acesso",
     minRole: "admin",
   },
+
+  // ---- Canais e integrações — por onde as mensagens entram e saem ----
+  // O grupo CANAIS da §19 antiga não existe: a §19 dissolveu Canais e estas
+  // telas viram a última seção do hub de Configurações (fisicamente no fim do
+  // array de propósito — a ordem das seções do hub é a de primeira aparição).
+  {
+    href: "/app/connections",
+    label: "Conexões",
+    // Cobre os DOIS caminhos desde o PR #105: número por QR e canal oficial da
+    // Meta (com os templates dele), cada um numa aba. A descrição cita "oficial"
+    // e "Meta" de propósito — é por esses nomes que se procura no ⌘K, e a busca
+    // varre a descrição além do rótulo.
+    //
+    // §19: fora do sidebar (dobra medida). O healthDot continua declarado, mas
+    // só renderiza no item de sidebar — no hub não há dot hoje; mantê-lo custa
+    // uma linha e preserva o sinal quando voltar.
+    description:
+      "Seus números de WhatsApp: por QR ou canal oficial da Meta, com saúde, reconexão e templates.",
+    icon: PlugsConnected,
+    group: "organizacao",
+    section: "Canais e integrações",
+    minRole: "admin",
+    healthDot: true,
+  },
+  {
+    // Não tinha link nenhum no app inteiro: só se chegava digitando a URL.
+    // §19: fora do sidebar (dobra medida); porta = hub de Configurações e ⌘K.
+    href: "/app/integrations/nuvemshop",
+    label: "Nuvemshop",
+    description: "Conecte a loja para trazer pedidos e clientes para dentro do CRM.",
+    icon: Storefront,
+    group: "organizacao",
+    section: "Canais e integrações",
+    // A página não filtra por papel, mas as Server Actions de conectar e
+    // desconectar exigem admin — mostrar a um viewer seria oferecer botão morto.
+    minRole: "admin",
+  },
+  {
+    // §19: fora do sidebar (dobra medida); porta = hub de Configurações e ⌘K.
+    href: "/app/webhooks",
+    label: "Webhooks",
+    description: "Avise outros sistemas quando algo acontecer aqui dentro.",
+    icon: WebhooksLogo,
+    group: "organizacao",
+    section: "Canais e integrações",
+    minRole: "manager",
+  },
 ];
 
 /**
@@ -786,17 +888,29 @@ export function canSee(d: NavDestination, isPlatformAdmin: boolean, role: Role |
   return ROLE_RANK[role] >= ROLE_RANK[d.minRole ?? "viewer"];
 }
 
-/** Projeção do sidebar: só o uso diário, agrupado, sem grupo vazio. */
+/**
+ * Projeção do sidebar: só o uso diário, agrupado, sem grupo vazio.
+ *
+ * §19: INTELIGÊNCIA é hub-only — nenhum item rola, só o link "Ver tudo em IA".
+ * Um grupo com hub sobrevive com ZERO itens de sidebar (senão o portal some);
+ * sem hub ele precisa de pelo menos um item visível (cabeçalho órfão é
+ * reprovado por `sidebar-grupos.test.tsx`). E o grupo inteiro some quando o
+ * papel não alcança NENHUM destino dele — a mesma cerca de sempre.
+ */
 export function sidebarGroups(
   isPlatformAdmin: boolean,
   role: Role | null,
 ): Array<{ group: NavGroup; items: NavDestination[] }> {
-  return NAV_GROUPS.map((group) => ({
-    group,
-    items: NAV_DESTINATIONS.filter(
+  return NAV_GROUPS.map((group) => {
+    const items = NAV_DESTINATIONS.filter(
       (d) => d.group === group.id && d.sidebar && canSee(d, isPlatformAdmin, role),
-    ),
-  })).filter((g) => g.items.length > 0);
+    );
+    const algumaPorta = NAV_DESTINATIONS.some(
+      (d) => d.group === group.id && canSee(d, isPlatformAdmin, role),
+    );
+    const visivel = items.length > 0 || (group.hub !== undefined && algumaPorta);
+    return { group, items, visivel };
+  }).filter((g) => g.visivel);
 }
 
 /**

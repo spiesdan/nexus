@@ -14,7 +14,7 @@
  * bloqueia hosts privados —, então essa metade fica para a sessão de deploy
  * real (mesma categoria do WhatsApp com número real).
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as http from "node:http";
 import type { AddressInfo } from "node:net";
@@ -33,7 +33,7 @@ interface Creds {
 
 function loadCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
@@ -102,7 +102,11 @@ test.describe("J6.8 — anti-SSRF do outbound call_webhook (real, ponta a ponta)
 
     try {
       // --- fonte inbound (para gerar o lead que dispara a regra) ---
+      // A porta de Webhooks é o hub de Configurações desde a §19 (o grupo
+      // Canais foi dissolvido pela dobra medida).
       await login(page, creds.users.manager!.email);
+      await page.getByRole("link", { name: "Configurações", exact: true }).click();
+      await page.waitForURL(/\/app\/settings$/);
       await page.getByRole("link", { name: "Webhooks" }).click();
       await page.waitForURL(/\/app\/webhooks/);
       await page.getByRole("button", { name: /Nova fonte|Criar primeira fonte/ }).click();

@@ -86,8 +86,10 @@ export function SidebarContent({
         {/*
           O logo é a PORTA do Dashboard (/app) — a Home de quem entra no app.
           Antes ele não era link nenhum e o Dashboard, quando existisse, não teria
-          como ser alcançado pela navegação: só digitando a URL. O mesmo template
-          do item de nav preserva a densidade (o menu não ganha mais nenhum item).
+          como ser alcançado pela navegação: só digitando a URL. Com a §19 o
+          Dashboard também é item de sidebar (primeiro do grupo VISÃO GERAL);
+          o logo continua apontando para cá porque marca e home são a mesma
+          porta — e isto NÃO conta na dobra, que se mede na área rolável.
         */}
         <Link
           href="/app"
@@ -169,7 +171,14 @@ export function SidebarContent({
                 className="space-y-0.5"
               >
                 {items.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  // "/app" (o Dashboard, §19) é prefixo de TODO caminho do
+                  // tenant: sem a igualdade exata, ele ficaria `aria-current`
+                  // em todas as telas. Os demais hrefs são rota fechada — o
+                  // prefixo cobre só as subrotas legítimas (/app/pedidos/123).
+                  const isActive =
+                    item.href === "/app"
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(item.href + "/");
                   const Icon = item.icon;
                   return (
                     <li key={item.href}>

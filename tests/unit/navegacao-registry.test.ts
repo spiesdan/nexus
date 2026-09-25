@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  GRUPO_NO_RODAPE,
   NAV_DESTINATIONS,
   NAV_GROUPS,
   canSee,
@@ -83,34 +84,61 @@ describe("sidebarGroups", () => {
 
   it("só inclui destino marcado como sidebar", () => {
     const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
-    // Conhecimento existe no registro, mas é do hub — não do sidebar.
+    // Conhecimento e Agentes existem no registro, mas são do hub — §19 os
+    // tirou do sidebar; Estoque é uma das portas novas da lista.
     expect(hrefs).not.toContain("/app/ai/knowledge/sources");
-    expect(hrefs).toContain("/app/ai/agents");
+    expect(hrefs).not.toContain("/app/ai/agents");
+    expect(hrefs).toContain("/app/estoque");
   });
 
-  it("promove Funis para o grupo de CRM — o achado que originou esta mudança", () => {
-    const crm = sidebarGroups(true, null).find((g) => g.group.id === "crm");
-    expect(crm?.items.map((i) => i.href)).toContain("/app/settings/tenant/pipelines");
+  it("mantém Funis no sidebar e devolve as Etapas ao hub — §19 + dobra medida", () => {
+    const vendas = sidebarGroups(true, null).find((g) => g.group.id === "vendas");
+    expect(vendas?.items.map((i) => i.href)).toContain("/app/kanban");
+    // O uso (abrir o funil) não passa por Configurações; a CONFIGURAÇÃO das
+    // colunas voltou para o hub porque a medição da dobra não a comportava
+    // (18 links + 8 títulos = 744px de 763px).
+    const hrefs = sidebarGroups(true, null).flatMap((g) => g.items.map((i) => i.href));
+    expect(hrefs).not.toContain("/app/settings/tenant/pipelines");
   });
 
-  it("omite o grupo inteiro quando o papel não vê nenhum item dele", () => {
-    // CANAIS é todo manager+/admin: um agent não deve ver o título órfão.
-    const ids = sidebarGroups(AGENT.platform, AGENT.role).map((g) => g.group.id);
-    expect(ids).not.toContain("canais");
-    expect(ids).toContain("atendimento");
-  });
-
-  it("a ordem dentro do grupo de IA é a do uso real: agentes, follow-ups, roteadores", () => {
-    // Provedores e Execuções NÃO entram aqui, e a razão é medida: pô-las na
-    // sidebar estourou a dobra em 900px (e2e `navegacao.spec.ts`). Elas seguem
-    // o padrão das outras nove telas do grupo — alcançáveis pelo hub "Ver tudo
-    // em IA", que é o desenho existente para tela de configuração.
-    const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
-    expect(ia?.items.map((i) => i.href)).toEqual([
-      "/app/ai/agents",
-      "/app/ai/followups",
-      "/app/ai/routers",
+  it("§19: o menu rolável tem 18 links e 8 títulos — o orçamento da dobra", () => {
+    // "A dobra é medida, não estimada." Este é o guarda de orçamento que derruba a
+    // contagem ANTES do e2e (1280×900, modelo 4 + 30·L + 25·H ≤ 763px). Link
+    // novo entra só se outro sair — ou se a medição real do e2e mudar.
+    const grupos = sidebarGroups(true, null).filter((g) => g.group.id !== GRUPO_NO_RODAPE);
+    const links = grupos.reduce((n, g) => n + g.items.length + (g.group.hub ? 1 : 0), 0);
+    expect(links, "18 portas roláveis: 17 destinos + o hub de Inteligência").toBe(18);
+    expect(grupos.map((g) => g.group.id), "8 títulos — Configurações é rodapé").toEqual([
+      "visao",
+      "vendas",
+      "atendimento",
+      "ia",
+      "operacao",
+      "financeiro",
+      "fiscal",
+      "equipe",
     ]);
+  });
+
+  it("omite o grupo inteiro quando o papel não vê nenhum destino dele", () => {
+    // Sem papel não há menu — nem o hub-only de Inteligência sobrevive: o
+    // grupo de hub aparece só se o papel alcança AO MENOS um destino dele
+    // (senão vira cabeçalho órfão com link morto).
+    expect(sidebarGroups(false, null).map((g) => g.group.id)).toEqual([]);
+    expect(sidebarGroups(AGENT.platform, AGENT.role).map((g) => g.group.id)).toContain(
+      "atendimento",
+    );
+  });
+
+  it("o grupo de Inteligência é 100% hub: nenhum item rola, só a porta de entrada", () => {
+    // §19: Agentes, Roteadores e Follow-ups saíram do sidebar (dobra medida;
+    // o Follow-ups foi para ATENDIMENTO, na lista da §19). O grupo permanece
+    // com zero itens porque tem hub — "Ver tudo em IA" é o link que impede o
+    // título de ficar órfão.
+    const ia = sidebarGroups(true, null).find((g) => g.group.id === "ia");
+    expect(ia, "o portal de Inteligência não pode sumir do menu").toBeDefined();
+    expect(ia?.items).toEqual([]);
+    expect(ia?.group.hub?.href).toBe("/app/ai");
   });
 });
 
@@ -124,6 +152,24 @@ describe("hubSections", () => {
     const hrefs = hubSections("ia", true, null).flatMap((s) => s.items.map((i) => i.href));
     expect(hrefs).toContain("/app/ai/agents");
     expect(hrefs).toContain("/app/ai/knowledge/sources");
+    // O grupo Análise da §19 antiga foi dissolvido: Evolução e o grafo
+    // de Inteligência entraram na jornada "Acompanhar o agente".
+    expect(hrefs).toContain("/app/ai/evolution");
+    expect(hrefs).toContain("/app/inteligencia");
+  });
+
+  it("as telas de canais viraram a última seção do hub de Configurações", () => {
+    // §19 dissolveu o grupo CANAIS; a porta continua sendo o hub (e o ⌘K),
+    // agora com seção própria — e ainda no fim da leitura, porque a ordem das
+    // seções é a de primeira aparição no registro.
+    const secoes = hubSections("organizacao", true, null).map((s) => s.section);
+    expect(secoes).toContain("Canais e integrações");
+    expect(secoes[secoes.length - 1]).toBe("Canais e integrações");
+    const hrefs = hubSections("organizacao", true, null).flatMap((s) =>
+      s.items.map((i) => i.href),
+    );
+    expect(hrefs).toContain("/app/connections");
+    expect(hrefs).toContain("/app/settings/tenant/pipelines");
   });
 
   it("não vaza destino acima do papel", () => {

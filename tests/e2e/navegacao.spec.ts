@@ -85,15 +85,20 @@ test.describe("navegação agrupada", () => {
   test("o sidebar tem hierarquia: grupos na ordem de uso", async ({ page }) => {
     await loginAdmin(page);
 
-    // Organização não aparece como título aqui: seu hub (Configurações) vive no
-    // rodapé fixo — ver o teste de dobra abaixo.
+    // Configurações não aparece como título aqui: seu hub vive no
+    // rodapé fixo — ver o teste de dobra abaixo. Os oito títulos são o
+    // orçamento da §19: 18 links roláveis + 8 títulos = 744px dos 763px da
+    // nav em 1280×900 (contagem guardada também em `navegacao-registry`).
     const titulos = sidebar(page).getByRole("heading");
     await expect(titulos).toHaveText([
+      "Visão geral",
+      "Vendas",
       "Atendimento",
-      "CRM",
-      "Agente de IA",
-      "Canais",
-      "Análise",
+      "Inteligência",
+      "Operação",
+      "Financeiro",
+      "Fiscal",
+      "Equipe",
     ]);
 
     await page.screenshot({
@@ -102,23 +107,25 @@ test.describe("navegação agrupada", () => {
     });
   });
 
-  test("chega nas Etapas do funil pelo CRM, sem passar por Configurações", async ({ page }) => {
+  test("chega nas Etapas do funil pelo hub de Configurações", async ({ page }) => {
     await loginAdmin(page);
 
     // O caso que originou tudo: o usuário não sabia que esta tela existia.
-    //
-    // ⚠️ O ITEM MUDOU DE NOME, e o nome antigo ("Funis") passou para o VIZINHO —
-    // a lista de funis, em /app/kanban. Um teste que continuasse clicando em
-    // "Funis" seguiria verde medindo a outra tela; por isso a asserção de URL
-    // abaixo é específica (`settings/tenant/pipelines`) e não o antigo
-    // /pipelines/, que casa com as duas.
-    await sidebar(page).getByRole("link", { name: "Etapas do funil" }).click();
+    // A §19 não lista Etapas, e a dobra medida não a comportava no menu — a
+    // porta virou o rodapé fixo → hub → card. A URL não mudou, e a asserção
+    // abaixo é específica (`settings/tenant/pipelines`): o antigo `/pipelines/`
+    // casaria com a lista de funis, que é OUTRA tela.
+    await page.getByRole("link", { name: "Configurações", exact: true }).click();
+    await page.waitForURL(/\/app\/settings$/);
+    await page.getByRole("link", { name: "Etapas do funil" }).click();
     await page.waitForURL(/settings\/tenant\/pipelines/);
     await expect(page.getByRole("heading", { name: "Etapas do funil", level: 1 })).toBeVisible();
   });
 
-  test("e a lista de funis é o item vizinho, com nome próprio", async ({ page }) => {
+  test("a lista de funis é item de sidebar, com nome próprio", async ({ page }) => {
     await loginAdmin(page);
+    // O uso (abrir o funil) nunca passa por Configurações — é o que sobra do
+    // achado original depois que a configuração das colunas foi para o hub.
     await sidebar(page).getByRole("link", { name: "Funis", exact: true }).click();
     await page.waitForURL(/\/app\/kanban/);
     await expect(page.getByRole("heading", { name: "Funis", level: 1 })).toBeVisible();
@@ -143,13 +150,16 @@ test.describe("navegação agrupada", () => {
 
   /**
    * O canal oficial saiu de Configurações no PR #105 e virou aba de Conexões.
-   * A porta, portanto, é Conexões — que agora vive no grupo CANAIS do sidebar,
-   * e não mais como um card perdido em Configurações.
+   * A §19 dissolveu o grupo CANAIS (a dobra medida é o motivo): a porta do
+   * hub de Configurações, e de lá a aba de Conexões. A porta antiga — um
+   * link de sidebar — deixou de existir junto com o grupo.
    */
-  test("chega ao canal oficial pelo grupo Canais, não por Configurações", async ({ page }) => {
+  test("chega ao canal oficial pelo hub de Configurações", async ({ page }) => {
     await loginAdmin(page);
 
-    await sidebar(page).getByRole("link", { name: "Conexões" }).click();
+    await page.getByRole("link", { name: "Configurações", exact: true }).click();
+    await page.waitForURL(/\/app\/settings$/);
+    await page.getByRole("link", { name: "Conexões" }).click();
     await page.waitForURL(/\/app\/connections/);
     await expect(page.getByRole("tab", { name: /oficial/i })).toBeVisible();
   });
@@ -187,7 +197,10 @@ test.describe("navegação agrupada", () => {
    * e Organização ficavam fora da dobra. Trocar "17 itens sem hierarquia" por
    * "20 itens que não cabem" seria recriar o problema em outra forma.
    *
-   * Medido por ferramenta, nunca a olho.
+   * Medido por ferramenta, nunca a olho. A referência da §19: 1280×900,
+   * nav=763px, e o menu antigo dava 879px — FOLGA −116px, rolava (e era por
+   * isso que este teste passava vazio: a org e2e não existia e o menu vinha
+   * sem links). O menu novo fecha em 744px (18 links + 8 títulos), folga +19.
    */
   test("nenhum grupo fica fora da dobra, e em 900px o menu não rola", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -254,11 +267,15 @@ test.describe("navegação agrupada", () => {
     expect(dentroDaNav, "Configurações não pode depender de scroll para aparecer").toBe(false);
   });
 
-  test("um agent não vê o cabeçalho de um grupo que a permissão esvaziou", async ({ page }) => {
+  test("um agent vê um grupo só-hub com a porta dele, e não o grupo que a §19 dissolveu", async ({ page }) => {
     await login(page, creds.users.agent!.email);
 
-    // CANAIS é todo manager+/admin: o título não pode sobrar sozinho.
+    // INTELIGÊNCIA não tem item rolável para ninguém (§19: 100% hub): o
+    // título só é legível junto do link "Ver tudo em IA" — sem ele seria
+    // cabeçalho órfão. "Canais", o grupo antigo, deixou de existir na §19.
     await expect(sidebar(page).getByRole("heading", { name: "Canais" })).toHaveCount(0);
+    await expect(sidebar(page).getByRole("heading", { name: "Inteligência" })).toBeVisible();
+    await expect(sidebar(page).getByRole("link", { name: "Ver tudo em IA" })).toBeVisible();
     await expect(sidebar(page).getByRole("heading", { name: "Atendimento" })).toBeVisible();
   });
 });
