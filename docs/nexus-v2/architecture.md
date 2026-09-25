@@ -15,12 +15,12 @@ Next.js 16 (App Router) + React 19
 
 Padrão de API já canônico: `lib/api/wrappers.ts` (`ok()`/`fail()` + `X-Request-Id` + cursor pagination) + `lib/api/errors.ts` (ApiErrorCodes). Uso em 219 pontos.
 Navegação já canônica: `lib/navigation/registry.ts` (774 linhas, 56 destinations, 27 sidebar) + testes `navegacao-registry` + `navegacao-completude` (rota fora do registro reprova).
-Shell já existe: `components/shell/*` (14 arquivos: Sidebar, AnimatedAppSidebar, TopBar, CommandPalette, MobileDock…).
+Shell já existe: `components/shell/*` (12 arquivos: Sidebar, MobileSidebar, TopBar, CommandPalette, MobileDock, UserMenu, TenantSwitcher, AlertsBell, SearchTrigger, NavHub, VersionFooter, SidebarNotice - faltam Breadcrumb, ContextualDrawer, NotificationCenter, ver `redesign-inventory.md`).
 
 ## 2. Problemas estruturais (não reescrever, migrar gradual)
 
 1. **Lógica comercial espalhada**: `lib/comercial/`, `lib/leads/`, `lib/fiscal/`, `lib/entregas/` (1 arquivo!) — sem separação domain/application/infrastructure/ui.
-2. **Componentes duplicados**: `ui/` vs `nexus-ui/` vs `uimaxxing/` vs `motion/`; `DataTableA/B/Old`, `TableNew`.
+2. **Componentes duplicados**: `ui/` vs `nexus-ui/` vs `uimaxxing/`; 7 tabelas admin iguais + 26 wrappers de página sobre `ui/table` (recontado 2026-09-25 — `DataTableA/B/Old`/`TableNew` não existem, era alvo fantasma; ver `redesign-inventory.md`).
 3. **Branding**: `DEFAULT_APP_NAME="DeskcommCRM"` (`lib/branding.ts:19`); `Visitors` é design-system, não produto; `Nexus*` é namespace de código (94 matches em components) mas não white-label.
 4. **Domínios sem pasta**: `lib/crm`, `lib/sales`, `lib/finance` não existem (equivalentes: `lib/leads`, `lib/comercial`, `lib/fiscal`).
 5. **Workers**: `Dockerfile.worker` single-stage; sem `domain/` separado.

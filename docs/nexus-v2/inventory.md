@@ -44,9 +44,9 @@
 
 Domínios top: `ai:63`, `cron:23`, `admin:21`, `conversations:19`, `leads:13`, `shipments:13`, `prospecting:10`, `contacts:9`, `webhooks:9`, `invoices:8`, `pipelines:7`, `financeiro:7`, `team:6`, `agenda:6`, `commercial-orders:6`, `products:5`, `channels:5`, `automation-rules:5`, `system:5`, `lgpd:5`, `channel-sessions:4`, `fiscal-entradas:4`, resto 1–3 cada. Detalhe completo em `api.md`.
 
-## 4. Components (336)
+## 4. Components (276 `.tsx` — recontado 2026-09-25; a contagem original 336 incluía `.ts` e defasou)
 
-`uimaxxing:66`, `motion:50`, `inbox:35`, `admin:29`, `ui:27`, `kanban:20`, `ai:16`, `nexus-ui:16`, `shell:14`, resto disperso. Duplicação conhecida: `DataTableA/B/Old`, `TableNew`, `ui/*` vs `nexus-ui/*` vs `uimaxxing/*` → consolidar (ver `migration-plan.md`).
+`uimaxxing:66` (~60 sem importador), `inbox:36`, `admin:29`, `ui:27`, `kanban:20`, `nexus-ui:19`, `ai:16`, `shell:12`, resto disperso. **`motion/` não existe** (o "motion:50" era fantasma; sem `framer-motion` no package.json). Duplicação real: 7 tabelas admin (1.412 linhas do mesmo padrão) + 26 wrappers de página sobre `ui/table` + `ui/*` vs `nexus-ui/*` vs `uimaxxing/*` → consolidar (ver `redesign-inventory.md`; `DataTableA/B/Old`/`TableNew` nunca existiram — alvo fantasma da FASE 0).
 
 ## 5. lib/ por domínio
 

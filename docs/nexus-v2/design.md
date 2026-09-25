@@ -5,7 +5,7 @@
 ## 1. Estado atual
 
 - Tema `beUI black premium` (branch atual) + `Visitors` como style reference (`DESIGN.md`, `globals.css` tokens dark-first) + `Nexus UI` (`components/nexus-ui/*`: `NexusPageHeader`, `NexusDataTable`, `NexusEmptyState`, `NexusIntelligence`, `NexusGraphCanvas`, `NexusAiBriefing`…) + `uimaxxing/` (66) + `motion/` (50 micro-interações).
-- Shell existe: `Sidebar`, `AnimatedAppSidebar`, `TopBar`, `CommandPalette` (⌘K), `MobileDock`, `UserMenu`, `TenantSwitcher`, `AlertsBell`, `SearchTrigger`, `NavHub`.
+- Shell existe: `Sidebar`, `MobileSidebar`, `TopBar`, `CommandPalette` (⌘K), `MobileDock`, `UserMenu`, `TenantSwitcher`, `AlertsBell`, `SearchTrigger`, `NavHub` (12 arquivos em `components/shell/`).
 - Registry canônico alimenta sidebar/hubs/⌘K/atalhos/breadcrumbs.
 
 ## 2. Design System NEXUS (único — consolidar `ui`+`nexus-ui`+`uimaxxing`)

@@ -11,7 +11,7 @@
 | sistema | 4 | `/403`, `/500`, `/503`, `/account-suspended` |
 | admin | 21 | `/admin`, `/admin/dashboard`, `/admin/audit`, `/admin/inbox`, `/admin/incidents`, `/admin/lgpd`, `/admin/marca`, `/admin/platform-admins`, `/admin/tenants`, `/admin/usage`, `/admin/users`, `/admin/google` (+ subids) |
 | onboarding | 9 | `/onboarding/*` (welcome, connect-whatsapp, connect-nuvemshop, setup-ai, funil, invite-team, testar, done) |
-| legal/design/extras | 6 | `/legal/terms`, `/legal/privacy`, `/design`, `/design/premium`, `/team/accept-invite/[token]`, `/vitrine-agenda` |
+| legal/design/extras | 5 | `/legal/terms`, `/legal/privacy`, `/design`, `/team/accept-invite/[token]`, `/vitrine-agenda` |
 | tenant `app/app` | 74 | ver §2 |
 
 ## 2. Tenant (74) — espinha NEXUS
