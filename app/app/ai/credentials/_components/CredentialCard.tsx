@@ -9,16 +9,7 @@ import { refreshCredentialsView } from "../_actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import {
   Tooltip,
   TooltipContent,
@@ -85,20 +76,22 @@ export function CredentialCard({ credential, canWrite, usageCount }: Props) {
     });
   };
 
-  const onDelete = () => {
-    startTransition(async () => {
-      try {
-        await apiClient.delete(`/api/v1/ai/credentials/${credential.id}`);
-        toast.success(t("Credencial removida."));
-        setDeleteOpen(false);
-        await qc.invalidateQueries({ queryKey: credentialsListQueryKey });
-        await refreshCredentialsView();
-        router.refresh();
-      } catch (err) {
-        showApiError(err);
-      }
+  const onDelete = () =>
+    new Promise<void>((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          await apiClient.delete(`/api/v1/ai/credentials/${credential.id}`);
+          toast.success(t("Credencial removida."));
+          await qc.invalidateQueries({ queryKey: credentialsListQueryKey });
+          await refreshCredentialsView();
+          router.refresh();
+          resolve();
+        } catch (err) {
+          showApiError(err);
+          reject(err);
+        }
+      });
     });
-  };
 
   const deleteButton = (
     <Button
@@ -198,24 +191,24 @@ export function CredentialCard({ credential, canWrite, usageCount }: Props) {
         </div>
       )}
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+      {deleteOpen && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setDeleteOpen(false)}
+          title={
+            <>
               {t("Remover credencial")} &ldquo;{credential.label}&rdquo;?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Agents que usam esta credencial vão falhar ao executar. Esta ação não pode ser desfeita.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction onClick={onDelete} disabled={isPending}>
-              {t("Remover")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </>
+          }
+          description={t(
+            "Agents que usam esta credencial vão falhar ao executar. Esta ação não pode ser desfeita.",
+          )}
+          confirmLabel={t("Remover")}
+          busyLabel={t("Remover")}
+          busy={isPending}
+          onConfirm={onDelete}
+        />
+      )}
     </Card>
   );
 }

@@ -13,6 +13,7 @@ import {
   SavedFilters,
   type ActiveChip,
 } from "@/components/filters/FilterBar";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,7 @@ export function PedidosClient({
   textos: Textos;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
   const [pedidos, setPedidos] = React.useState(inicial);
   const filtrosIniciais = React.useMemo<Filtros>(
@@ -415,11 +417,13 @@ export function PedidosClient({
 
   async function excluirEmMassa() {
     const alvos = pedidos.filter((p) => selecionados.includes(p.id));
-    if (
-      !window.confirm(
-        t(`Excluir ${alvos.length} pedido(s)? Estoque baixado volta. Com NF ou em carga, o pedido é pulado com aviso.`),
-      )
-    ) {
+    const confirmado = await confirmar({
+      title: t(
+        `Excluir ${alvos.length} pedido(s)? Estoque baixado volta. Com NF ou em carga, o pedido é pulado com aviso.`,
+      ),
+      confirmLabel: t("Excluir"),
+    });
+    if (!confirmado) {
       return;
     }
     let ok = 0;

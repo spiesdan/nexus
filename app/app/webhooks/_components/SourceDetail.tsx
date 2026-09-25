@@ -19,17 +19,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Copy, Trash, CaretDown } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
@@ -91,6 +81,7 @@ export function SourceDetail({ source, open, onOpenChange }: Props) {
   );
   const [testing, setTesting] = React.useState(false);
   const [testOk, setTestOk] = React.useState(false);
+  const [excluindo, setExcluindo] = React.useState(false);
 
   const url = publicUrl(source.path_token);
   const events = eventsRes?.data ?? [];
@@ -128,6 +119,7 @@ export function SourceDetail({ source, open, onOpenChange }: Props) {
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
@@ -269,37 +261,27 @@ export function SourceDetail({ source, open, onOpenChange }: Props) {
             />
           </section>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button type="button" variant="destructive">
-                <Trash /> {t("Excluir fonte")}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("Excluir esta fonte?")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t(
-                    "O endereço para de funcionar imediatamente. Leads já recebidos continuam no seu funil — só a captação futura é interrompida. Essa ação não pode ser desfeita.",
-                  )}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={async () => {
-                    await del.mutateAsync(source.id);
-                    toast.success(t("Fonte excluída."));
-                    onOpenChange(false);
-                  }}
-                >
-                  {t("Excluir")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button type="button" variant="destructive" onClick={() => setExcluindo(true)}>
+            <Trash /> {t("Excluir fonte")}
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
+    <NexusConfirmDialog
+      aberto={excluindo}
+      aoFechar={setExcluindo}
+      title={t("Excluir esta fonte?")}
+      description={t(
+        "O endereço para de funcionar imediatamente. Leads já recebidos continuam no seu funil — só a captação futura é interrompida. Essa ação não pode ser desfeita.",
+      )}
+      confirmLabel={t("Excluir")}
+      busy={del.isPending}
+      onConfirm={async () => {
+        await del.mutateAsync(source.id);
+        toast.success(t("Fonte excluída."));
+        onOpenChange(false);
+      }}
+    />
+    </>
   );
 }

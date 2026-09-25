@@ -21,16 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { useT } from "@/hooks/i18n/useT";
 
 import type { AgentVersionRow } from "@/hooks/ai/useAgentVersions";
@@ -191,28 +182,29 @@ export function VersionHistory({ agentId, versions, readOnly }: Props) {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={revertTarget != null}
-        onOpenChange={(o) => !o && setRevertTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("Reverter para v")}{revertTarget?.version_number}?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Uma nova versão idêntica a v")}{revertTarget?.version_number}
+      {revertTarget && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setRevertTarget(null)}
+          title={
+            <>
+              {t("Reverter para v")}
+              {revertTarget.version_number}?
+            </>
+          }
+          description={
+            <>
+              {t("Uma nova versão idêntica a v")}
+              {revertTarget.version_number}
               {t(" será criada e publicada imediatamente. A versão atualmente publicada vira superseded.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={reverting}>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRevert} disabled={reverting}>
-              {reverting ? t("Revertendo…") : t("Confirmar revert")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </>
+          }
+          confirmLabel={t("Confirmar revert")}
+          busyLabel={t("Revertendo…")}
+          busy={reverting}
+          onConfirm={handleRevert}
+        />
+      )}
     </>
   );
 }

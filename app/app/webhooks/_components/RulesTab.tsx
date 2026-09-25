@@ -8,16 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Robot, Plus, Trash, PencilSimple } from "@/lib/ui/icons";
 import { SeloDeAutoria } from "@/components/operacao/SeloDeAutoria";
 import {
@@ -162,29 +153,23 @@ export function RulesTab() {
 
       <RuleEditor open={editorOpen} onOpenChange={setEditorOpen} rule={editing} />
 
-      <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Excluir esta automação?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleting?.name} {t("para de rodar imediatamente. Essa ação não pode ser desfeita.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (!deleting) return;
-                await del.mutateAsync(deleting.id);
-                toast.success(t("Automação excluída."));
-                setDeleting(null);
-              }}
-            >
-              {t("Excluir")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleting && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setDeleting(null)}
+          title={t("Excluir esta automação?")}
+          description={
+            <>
+              {deleting.name} {t("para de rodar imediatamente. Essa ação não pode ser desfeita.")}
+            </>
+          }
+          busy={del.isPending}
+          onConfirm={async () => {
+            await del.mutateAsync(deleting.id);
+            toast.success(t("Automação excluída."));
+          }}
+        />
+      )}
     </div>
   );
 }

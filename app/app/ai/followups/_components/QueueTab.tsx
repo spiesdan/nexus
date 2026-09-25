@@ -6,7 +6,7 @@ import Link from "next/link";
 import { format, formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,16 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Clock, MagnifyingGlass, Trash } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
 import { rotuloDoStatus, tomDoStatus } from "@/lib/followup/eventos-legiveis";
@@ -275,35 +266,30 @@ export function QueueTab({ canWrite }: Props) {
         </div>
       )}
 
-      <AlertDialog open={pendingCancel !== null} onOpenChange={(open) => !open && setPendingCancel(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {pendingCancel?.source === "promise"
-                ? t("Cancelar este retorno?")
-                : t("Cancelar este follow-up?")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingCancel?.source === "promise"
-                ? t("O agente não voltará a falar com esta pessoa no horário combinado, e vai saber que você desmarcou.")
-                : t("O lead não receberá mais mensagens deste fluxo. Essa ação não pode ser desfeita.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Voltar")}</AlertDialogCancel>
-            <AlertDialogAction
-              className={buttonVariants({ variant: "destructive" })}
-              onClick={() => {
-                if (pendingCancel?.source === "promise") cancelPromise.mutate(pendingCancel.id);
-                else if (pendingCancel) cancelEnrollment.mutate(pendingCancel.id);
-                setPendingCancel(null);
-              }}
-            >
-              {pendingCancel?.source === "promise" ? t("Cancelar retorno") : t("Cancelar follow-up")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {pendingCancel && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(open) => !open && setPendingCancel(null)}
+          title={
+            pendingCancel.source === "promise"
+              ? t("Cancelar este retorno?")
+              : t("Cancelar este follow-up?")
+          }
+          description={
+            pendingCancel.source === "promise"
+              ? t("O agente não voltará a falar com esta pessoa no horário combinado, e vai saber que você desmarcou.")
+              : t("O lead não receberá mais mensagens deste fluxo. Essa ação não pode ser desfeita.")
+          }
+          cancelLabel={t("Voltar")}
+          confirmLabel={
+            pendingCancel.source === "promise" ? t("Cancelar retorno") : t("Cancelar follow-up")
+          }
+          onConfirm={() => {
+            if (pendingCancel.source === "promise") cancelPromise.mutate(pendingCancel.id);
+            else cancelEnrollment.mutate(pendingCancel.id);
+          }}
+        />
+      )}
     </div>
   );
 }

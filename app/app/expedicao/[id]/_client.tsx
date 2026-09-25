@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,6 +78,7 @@ export function CargaClient({
   textos: Textos;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const [detalhe, setDetalhe] = React.useState<Detalhe | null>(null);
   const [modo, setModo] = React.useState<"operador" | "motorista">("operador");
@@ -170,7 +172,12 @@ export function CargaClient({
   }
 
   async function excluirCarga() {
-    if (!window.confirm(textos.confirmarExcluir)) return;
+    const ok = await confirmar({
+      title: textos.confirmarExcluir,
+      confirmLabel: textos.confirmar,
+      cancelLabel: textos.cancelar,
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/shipments/${cargaId}`);
       toast.success(t("Romaneio excluído."));

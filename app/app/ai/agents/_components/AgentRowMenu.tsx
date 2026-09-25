@@ -12,16 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { DotsThree, PencilSimple, Copy, Pause, Play, Archive } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
 import { deriveAgentStatus } from "./AgentStatusBadge";
@@ -135,30 +126,24 @@ export function AgentRowMenu({ agent }: Props) {
         onOpenChange={setRenameOpen}
       />
 
-      <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+      {archiveOpen && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setArchiveOpen(false)}
+          title={
+            <>
               {t("Arquivar")} &ldquo;{agent.name}&rdquo;?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                "O agent deixa de responder gatilhos e some das listas ativas. Versões publicadas são preservadas para auditoria. Não é possível desarquivar pela UI nesta versão.",
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                run(t("Agent arquivado."), () => archiveAgentAction(agent.id))
-              }
-            >
-              {t("Arquivar")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </>
+          }
+          description={t(
+            "O agent deixa de responder gatilhos e some das listas ativas. Versões publicadas são preservadas para auditoria. Não é possível desarquivar pela UI nesta versão.",
+          )}
+          confirmLabel={t("Arquivar")}
+          onConfirm={() =>
+            run(t("Agent arquivado."), () => archiveAgentAction(agent.id))
+          }
+        />
+      )}
     </>
   );
 }

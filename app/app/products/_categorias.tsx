@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ export function CategoriasClient({
   podeEditar: boolean;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const [nome, setNome] = React.useState("");
   const [pai, setPai] = React.useState("");
@@ -55,7 +57,11 @@ export function CategoriasClient({
   }
 
   async function apagar(id: string) {
-    if (!window.confirm(t("Apagar a categoria e as subcategorias? Os produtos ficam sem categoria."))) return;
+    const ok = await confirmar({
+      title: t("Apagar a categoria e as subcategorias? Os produtos ficam sem categoria."),
+      confirmLabel: t("Apagar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/categories/${id}`);
       toast.success(t("Categoria apagada"));

@@ -22,15 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { useDeleteContact } from "@/hooks/contacts/useDeleteContact";
 import type { ContactOrderBy } from "@/lib/schemas/contacts";
 import type { Contact } from "@/lib/types/contacts";
@@ -165,19 +157,7 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
     }
   }
 
-  async function confirmarExclusao() {
-    if (!alvo) return;
-    try {
-      await del.mutateAsync(alvo.id);
-      toast.success(t("Cliente excluído."));
-      setAlvo(null);
-    } catch {
-      // hook handles toast
-    }
-  }
-
-  return (
-    <>
+  return (    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -327,28 +307,23 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
       </TableBody>
     </Table>
 
-    <AlertDialog open={alvo !== null} onOpenChange={(open) => { if (!open) setAlvo(null); }}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("Excluir cliente?")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {alvo
-              ? `${t("Isso remove")} ${displayName(alvo, t)} ${t("e a conversa associada, se houver. Esta ação não pode ser desfeita.")}`
-              : null}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={del.isPending}>{t("Cancelar")}</AlertDialogCancel>
-          <Button
-            variant="destructive"
-            onClick={() => void confirmarExclusao()}
-            disabled={del.isPending}
-          >
-            {del.isPending ? t("Excluindo…") : t("Excluir")}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    {alvo && (
+      <NexusConfirmDialog
+        aberto
+        aoFechar={(open) => {
+          if (!open) setAlvo(null);
+        }}
+        title={t("Excluir cliente?")}
+        description={`${t("Isso remove")} ${displayName(alvo, t)} ${t("e a conversa associada, se houver. Esta ação não pode ser desfeita.")}`}
+        confirmLabel={t("Excluir")}
+        busyLabel={t("Excluindo…")}
+        busy={del.isPending}
+        onConfirm={async () => {
+          await del.mutateAsync(alvo.id);
+          toast.success(t("Cliente excluído."));
+        }}
+      />
+    )}
     </>
   );
 }

@@ -8,6 +8,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
 import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
 import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -946,6 +947,7 @@ function DetalheRecebivel({
   aoMudar: () => void;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const [dados, setDados] = React.useState<{
     pagamentos: Pagamento[];
     pedido: { id: string; numero: number } | null;
@@ -996,7 +998,11 @@ function DetalheRecebivel({
   }
 
   async function estornar(pagamentoId: string) {
-    if (!window.confirm(t("Estornar este recebimento?"))) return;
+    const ok = await confirmar({
+      title: t("Estornar este recebimento?"),
+      confirmLabel: t("Estornar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/financeiro/pagamentos/${pagamentoId}`);
       toast.success(t("Estornado"));

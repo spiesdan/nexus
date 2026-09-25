@@ -18,6 +18,7 @@ import {
   FilterSelect,
   type ActiveChip,
 } from "@/components/filters/FilterBar";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,7 @@ const VAZIOS: Filtros = {
 
 export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const paramsUrl = useSearchParams();
   const [filtros, setFiltros] = React.useState<Filtros>(() => ({
@@ -395,7 +397,11 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   }
 
   async function excluir(id: string, nome: string) {
-    if (!window.confirm(t(`Excluir "${nome}" da base? (LGPD)`))) return;
+    const ok = await confirmar({
+      title: t(`Excluir "${nome}" da base? (LGPD)`),
+      confirmLabel: t("Excluir"),
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/prospecting/prospects/${id}`);
       await buscar(filtros);

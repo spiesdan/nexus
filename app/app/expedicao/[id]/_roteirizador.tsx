@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -98,6 +99,7 @@ export function Roteirizador({
   aoMudar: () => void;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const [rota, setRota] = React.useState<RotaCarregada | null>(null);
   const [ordem, setOrdem] = React.useState<string[]>([]);
   const [proposta, setProposta] = React.useState<Proposta | null>(null);
@@ -280,10 +282,20 @@ export function Roteirizador({
   }
 
   async function otimizar(modoEscolhido: "tsp" | "distancia") {
-    if (ordemMudou && !window.confirm(t("A ordem manual será substituída pela otimizada. Reotimizar mesmo assim?"))) return;
+    if (
+      ordemMudou &&
+      !(await confirmar({
+        title: t("A ordem manual será substituída pela otimizada. Reotimizar mesmo assim?"),
+        confirmLabel: t("Reotimizar"),
+      }))
+    )
+      return;
     if (
       rota?.carga.status === "em_rota" &&
-      !window.confirm(t("A rota está em andamento — o motorista verá a nova sequência. Reotimizar mesmo assim?"))
+      !(await confirmar({
+        title: t("A rota está em andamento — o motorista verá a nova sequência. Reotimizar mesmo assim?"),
+        confirmLabel: t("Reotimizar"),
+      }))
     )
       return;
     setTrabalhando("otimizar");

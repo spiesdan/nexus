@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
@@ -238,6 +239,7 @@ export function DetalheDoPedido({
 }) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const [pedido, setPedido] = React.useState(inicial);
   const [editando, setEditando] = React.useState(false);
@@ -303,7 +305,11 @@ export function DetalheDoPedido({
   }
 
   async function excluir() {
-    if (!window.confirm(t("Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso."))) {
+    const ok = await confirmar({
+      title: t("Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso."),
+      confirmLabel: t("Excluir"),
+    });
+    if (!ok) {
       return;
     }
     try {

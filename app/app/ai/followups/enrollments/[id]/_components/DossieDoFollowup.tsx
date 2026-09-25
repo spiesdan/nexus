@@ -8,7 +8,7 @@ import Link from "next/link";
 import { format, formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,16 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { CaretLeft, Clock, Pause, Play, SkipForward, Trash, Warning } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import {
@@ -416,29 +407,21 @@ export function DossieDoFollowup({ id, canWrite }: Props) {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={cancelando} onOpenChange={setCancelando}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Cancelar este follow-up?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("O lead não receberá mais mensagens deste fluxo. Diferente de pausar, isto não pode ser desfeito.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Voltar")}</AlertDialogCancel>
-            <AlertDialogAction
-              className={buttonVariants({ variant: "destructive" })}
-              data-testid="dossie-cancelar-confirmar"
-              onClick={() => {
-                cancelar.mutate(id);
-                setCancelando(false);
-              }}
-            >
-              {t("Cancelar follow-up")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {cancelando && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setCancelando(false)}
+          title={t("Cancelar este follow-up?")}
+          description={t(
+            "O lead não receberá mais mensagens deste fluxo. Diferente de pausar, isto não pode ser desfeito.",
+          )}
+          cancelLabel={t("Voltar")}
+          confirmLabel={t("Cancelar follow-up")}
+          onConfirm={() => {
+            cancelar.mutate(id);
+          }}
+        />
+      )}
 
       <Dialog open={pulando} onOpenChange={setPulando}>
         <DialogContent>

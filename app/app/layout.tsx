@@ -21,6 +21,7 @@ import {
 } from "@/components/app/ImpersonateBanner";
 import { ConexaoCaidaBanner } from "@/components/app/ConexaoCaidaBanner";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -154,7 +155,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     user.id,
     activeOrg?.orgId,
   );
-  const shell = <AppShell sidebarCollapsed={collapsed}>{children}</AppShell>;
+  // O ConfirmacaoProvider envolve o shell inteiro: é ele que dá ao
+  // `useConfirmar()` a superfície única de confirmação (a mesma do
+  // NexusConfirmDialog) para os handlers de produto que antes chamavam
+  // `window.confirm`. Precisa do IdiomaProvider acima (a dialog usa `useT`).
+  const shell = (
+    <ConfirmacaoProvider>
+      <AppShell sidebarCollapsed={collapsed}>{children}</AppShell>
+    </ConfirmacaoProvider>
+  );
 
   return (
     // O idioma envolve a árvore inteira e recebe o código PRONTO — ele não

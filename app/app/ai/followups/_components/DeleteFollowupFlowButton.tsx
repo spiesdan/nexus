@@ -5,16 +5,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Trash } from "@/lib/ui/icons";
 import { useDeleteFollowupFlow } from "@/hooks/followup/useFollowupFlow";
@@ -58,33 +49,22 @@ export function DeleteFollowupFlowButton({
         <Trash size={14} aria-hidden className="mr-1" />
         Excluir
       </Button>
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir &ldquo;{flowName}&rdquo;?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("Inscrições e versões deste fluxo são apagadas junto. Não é possível desfazer.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={del.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                del.mutate(flowId, {
-                  onSuccess: () => {
-                    setOpen(false);
-                    if (redirectToList) router.push("/app/ai/followups");
-                  },
-                });
-              }}
-            >
-              {del.isPending ? "Excluindo…" : "Excluir"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <NexusConfirmDialog
+        aberto={open}
+        aoFechar={setOpen}
+        title={`Excluir “${flowName}”?`}
+        description={t(
+          "Inscrições e versões deste fluxo são apagadas junto. Não é possível desfazer.",
+        )}
+        cancelLabel="Cancelar"
+        confirmLabel="Excluir"
+        busyLabel="Excluindo…"
+        busy={del.isPending}
+        onConfirm={async () => {
+          await del.mutateAsync(flowId);
+          if (redirectToList) router.push("/app/ai/followups");
+        }}
+      />
     </>
   );
 }

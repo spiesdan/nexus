@@ -8,17 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Plus, PencilSimple, Trash } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -43,6 +33,7 @@ export function TemplatesClient({ canShare, currentUserId }: Props) {
   });
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<MessageTemplate | null>(null);
+  const [excluindo, setExcluindo] = React.useState<MessageTemplate | null>(null);
 
   const openNew = () => {
     setEditing(null);
@@ -105,38 +96,15 @@ export function TemplatesClient({ canShare, currentUserId }: Props) {
                     >
                       <PencilSimple />
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t("Excluir template")}
-                        >
-                          <Trash />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>{t("Excluir este template?")}</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            {t("Essa ação não pode ser desfeita.")}
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() =>
-                              del.mutate(template.id, {
-                                onSuccess: () => toast.success(t("Template excluído.")),
-                              })
-                            }
-                          >
-                            {t("Excluir")}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("Excluir template")}
+                      onClick={() => setExcluindo(template)}
+                    >
+                      <Trash />
+                    </Button>
                   </div>
                 )}
               </li>
@@ -150,6 +118,19 @@ export function TemplatesClient({ canShare, currentUserId }: Props) {
         canShare={canShare}
         template={editing}
       />
+      {excluindo && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setExcluindo(null)}
+          title={t("Excluir este template?")}
+          description={t("Essa ação não pode ser desfeita.")}
+          onConfirm={() =>
+            del.mutate(excluindo.id, {
+              onSuccess: () => toast.success(t("Template excluído.")),
+            })
+          }
+        />
+      )}
     </div>
   );
 }
