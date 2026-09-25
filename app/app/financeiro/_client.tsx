@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
-import { CrmKpi, CrmKpiGrid } from "@/components/uimaxxing/crm/crm-kpi";
+import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
+import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

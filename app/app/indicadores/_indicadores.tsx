@@ -21,8 +21,8 @@ import {
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
-import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
-import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
+import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
+import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";

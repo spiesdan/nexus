@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
-import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
+import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
 import { RadarTabs } from "./_tabs";
 
 export const dynamic = "force-dynamic";

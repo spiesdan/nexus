@@ -3,8 +3,8 @@
 import Link from "next/link";
 
 import { BrainRecomendacoes } from "@/components/nexus-ui/intelligence/BrainRecomendacoes";
-import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
-import { CrmKpi, CrmKpiGrid } from "@/components/uimaxxing/crm/crm-kpi";
+import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
+import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
 import { comoMoeda } from "@/lib/format/moeda";

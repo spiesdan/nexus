@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
-import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
+import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
 import type { Role } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { IDIOMA_PADRAO, type Idioma } from "@/lib/i18n/idiomas";
