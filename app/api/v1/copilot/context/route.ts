@@ -3,8 +3,9 @@
  *
  * Fundação do Copilot: `?pagina=cliente&contact_id=` devolve contato +
  * histórico de compra real; `?pagina=radar` devolve os 12 casos de maior
- * prioridade numa varredura limitada (pedidos recentes, `amostra_parcial`
- * declarado — a contagem exata mora em `/api/v1/radar-compras`).
+ * prioridade numa varredura limitada; `?pagina=pedido` devolve as travas
+ * comerciais; `?pagina=fiscal` devolve a saúde da emissão. Contagens com
+ * `amostra_parcial` declarado quando limitadas.
  *
  * Leitura pura via RLS de sessão (`createClient`), `organization_id`
  * explícito. Responder em linguagem natural sobre este contexto é FASE 5.
@@ -19,6 +20,7 @@ import {
   contagemVazia,
   perguntasPara,
   resumirCliente,
+  resumirFiscal,
   resumirPolitica,
   resumirRadar,
   type PaginaCopilot,
@@ -30,7 +32,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const PAGINAS = ["cliente", "radar", "pedido"] as const;
+const PAGINAS = ["cliente", "radar", "pedido", "fiscal"] as const;
 const LIMITE_VARREDURA = 5000;
 
 type LinhaPedido = {
@@ -60,7 +62,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const pagina = req.nextUrl.searchParams.get("pagina")?.trim() ?? "";
   if (!(PAGINAS as readonly string[]).includes(pagina)) {
-    return fail("validation_failed", "pagina aceita: cliente, radar, pedido.", 422, { requestId });
+    return fail("validation_failed", "pagina aceita: cliente, radar, pedido, fiscal.", 422, { requestId });
   }
   const hoje = new Date().toISOString().slice(0, 10);
   const supabase = await createClient();
@@ -139,6 +141,56 @@ export async function GET(req: NextRequest): Promise<Response> {
     return ok({ pagina: pg, resumo: resumirPolitica(politica), politica, perguntas: perguntasPara(pg) }, { requestId });
   }
 
+  // pagina === "fiscal": saúde da emissão (travadas + fila + sem nota).
+  // Antes do radar de propósito: o fiscal não precisa da varredura de 5000.
+  if (pagina === "fiscal") {
+    const [{ count: notasErro, error: erroNotas }, { count: jobsAbertos, error: erroJobs }] = await Promise.all([
+      supabase
+        .from("invoices")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .eq("status", "erro"),
+      supabase
+        .from("fiscal_jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId)
+        .in("status", ["pendente", "processando", "erro"]),
+    ]);
+    if (erroNotas || erroJobs) return fail("internal_error", "Erro ao ler a fila fiscal.", 500, { requestId });
+
+    const { data: faturados, error: erroFat } = await supabase
+      .from("commercial_orders")
+      .select("id")
+      .eq("organization_id", orgId)
+      .in("status", ["faturado", "expedido", "entregue"])
+      .order("created_at", { ascending: false })
+      .limit(2000);
+    if (erroFat) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
+    const idsFat = ((faturados ?? []) as { id: string }[]).map((p) => p.id);
+    let faturadosSemNota = 0;
+    const parcialFiscal = (faturados ?? []).length >= 2000;
+    if (idsFat.length > 0) {
+      const comNota = new Set<string>();
+      for (let i = 0; i < idsFat.length; i += 100) {
+        const { data: nfs } = await supabase
+          .from("invoices")
+          .select("order_id")
+          .eq("organization_id", orgId)
+          .in("order_id", idsFat.slice(i, i + 100));
+        for (const n of (nfs ?? []) as { order_id: string }[]) comNota.add(n.order_id);
+      }
+      faturadosSemNota = idsFat.filter((id) => !comNota.has(id)).length;
+    }
+    const pg: PaginaCopilot = "fiscal";
+    const sinal = {
+      notas_erro: notasErro ?? 0,
+      jobs_abertos: jobsAbertos ?? 0,
+      faturados_sem_nota: faturadosSemNota,
+      amostra_parcial: parcialFiscal,
+    };
+    return ok({ pagina: pg, resumo: resumirFiscal(sinal), ...sinal, perguntas: perguntasPara(pg) }, { requestId });
+  }
+
   // pagina === "radar": varredura limitada dos pedidos recentes, top 12 por
   // prioridade. Parcial por desenho (rápido no Copilot); o exato está no radar.
   const { data: recentes, error: erroRecentes } = await supabase
@@ -181,6 +233,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     primeira_compra: 5,
   };
   casos.sort((a, b) => (PESO[a.situacao] ?? 6) - (PESO[b.situacao] ?? 6) || b.atraso_dias - a.atraso_dias);
+  // Daqui em diante só resta o radar (cliente/pedido/fiscal retornaram acima).
   const pg: PaginaCopilot = "radar";
   return ok(
     {

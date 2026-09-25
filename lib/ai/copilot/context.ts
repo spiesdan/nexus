@@ -11,9 +11,9 @@ import type { HistoricoCompra, SituacaoRecompra } from "@/lib/comercial/radar-co
  * contrato de dados já nasce correto.
  */
 
-export type PaginaCopilot = "cliente" | "radar" | "pedido";
+export type PaginaCopilot = "cliente" | "radar" | "pedido" | "fiscal";
 
-export const PAGINAS_COPILOT = ["cliente", "radar", "pedido"] as const;
+export const PAGINAS_COPILOT = ["cliente", "radar", "pedido", "fiscal"] as const;
 
 /** Perguntas que o Copilot sugere em cada página (§33). Chaves estáveis. */
 export function perguntasPara(pagina: PaginaCopilot): string[] {
@@ -24,6 +24,8 @@ export function perguntasPara(pagina: PaginaCopilot): string[] {
       return ["quem_agir_primeiro", "porque_aqui", "oportunidades_abertas"];
     case "pedido":
       return ["desconto_dentro_da_politica", "credito_do_cliente", "estoque_dos_itens"];
+    case "fiscal":
+      return ["nota_travada", "faturado_sem_nota", "fila_fiscal"];
   }
 }
 
@@ -39,6 +41,22 @@ export function resumirPolitica(p: PoliticaComercial): string {
     `desconto máximo do vendedor ${p.desconto_max_vendedor_pct}%; ` +
     `estoque negativo ${p.permite_estoque_negativo ? "permitido" : "bloqueado"}; ` +
     `comissão padrão ${p.comissao_padrao_pct ?? "—"}%.`
+  );
+}
+
+export interface SinalFiscal {
+  notas_erro: number;
+  jobs_abertos: number;
+  faturados_sem_nota: number;
+  amostra_parcial: boolean;
+}
+
+/** Uma frase sobre a saúde fiscal (travadas + fila + faturados sem nota). */
+export function resumirFiscal(s: SinalFiscal): string {
+  const amostra = s.amostra_parcial ? " (amostra parcial)" : "";
+  return (
+    `${s.notas_erro} nota(s) em erro, ${s.jobs_abertos} job(s) aberto(s) na fila, ` +
+    `${s.faturados_sem_nota} pedido(s) faturado(s) sem nota${amostra}.`
   );
 }
 

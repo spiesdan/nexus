@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { contagemVazia, perguntasPara, resumirCliente, resumirPolitica, resumirRadar } from "@/lib/ai/copilot/context";
+import { contagemVazia, perguntasPara, resumirCliente, resumirFiscal, resumirPolitica, resumirRadar } from "@/lib/ai/copilot/context";
 
 describe("copilot context (puro, dados reais)", () => {
   it("perguntas estáveis por página", () => {
     expect(perguntasPara("cliente")).toContain("risco_do_cliente");
     expect(perguntasPara("radar")).toContain("quem_agir_primeiro");
     expect(perguntasPara("pedido")).toContain("desconto_dentro_da_politica");
+    expect(perguntasPara("fiscal")).toContain("nota_travada");
   });
 
   it("resumo do cliente cita ciclo e atraso", () => {
@@ -56,5 +57,11 @@ describe("copilot context (puro, dados reais)", () => {
     });
     expect(r).toContain("10%");
     expect(r).toContain("bloqueado");
+  });
+
+  it("resumo fiscal cita travadas, fila e sem nota", () => {
+    const r = resumirFiscal({ notas_erro: 2, jobs_abertos: 1, faturados_sem_nota: 5, amostra_parcial: false });
+    expect(r).toContain("2 nota(s) em erro");
+    expect(r).toContain("5 pedido(s) faturado(s) sem nota");
   });
 });
