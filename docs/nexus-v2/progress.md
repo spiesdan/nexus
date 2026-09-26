@@ -9,9 +9,9 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `7340d3e54 feat(nexus-v2): Fase 3d do redesign - SuspendDialog + ReactivateDialog viram TenantReasonDialog (§100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 3d**.
-  (anteriores: `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
+- HEAD: `41173e58d feat(nexus-v2): Fase 3e do redesign - overlays manuais viram ui/dialog e confirm( globais viram useConfirmar (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 3e**.
+  (anteriores: `7340d3e54` Fase 3d TenantReasonDialog · `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
   `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
   `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
   `6f12049c0` infra e2e · `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
@@ -27,8 +27,8 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c/3d EXECUTADAS nesta
-torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
+**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c/3d/3e EXECUTADAS
+neste torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -68,25 +68,47 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    `TenantActions.tsx` monta 2× `TenantReasonDialog`. Teste novo
    `tests/unit/tenant-reason-dialog.test.tsx` (5 casos: régua, copy/endpoint
    por ação, falha mantém aberto, fechar limpa o motivo). `AlertDialogContent`
-   no repo: 5 → **3** (`NexusConfirmDialog`, `ResolveIncidentDialog`,
-   `ApproveButton`).
-- **Gates da torno**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
-  `test:unit` = baseline (7.423 pass / 15 flakes conhecidos: guarda-da-release,
-  namespace-das-imagens, performed-at, rate-limit) · `pnpm build` ✓ ·
-  e2e `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
-  `navegacao` 13/13 ✓ · `pnpm format:check` reprova pré-existente no repo
-  inteiro (não é gate) · nenhum e2e visita `/admin/tenants` (unit é o gate da 3d).
+    no repo: 5 → **3** (`NexusConfirmDialog`, `ResolveIncidentDialog`,
+    `ApproveButton`).
+ - **Fase 3e `41173e58d` — overlays→`ui/dialog` + `confirm(` globais→`useConfirmar`**:
+   - Os 3 overlays manuais que sobravam (`fixed inset-0 z-50` fora dos primitivos
+     `ui/`): `prospeccao/_importar-arquivo` e `GradeNotas` (Carta de correção)
+     viraram `Dialog`+`DialogContent` com Esc/portal/foco do Radix; e o
+     `MfaEnrollModal` ganhou modalidade — `motivo="obrigatorio"` (o gate)
+     RECUSA fechar e esconde o X nativo via `[&>button:last-child]:hidden` (o
+     `Close` é o último filho de `DialogContent`, `ui/dialog.tsx:50`);
+     `motivo="escolha"` (Segurança→Ativar) ganhou saída por prop NOVA
+     `onFechar`, ligada em `settings/security/_client.tsx`. `#mfa-title`
+     preservado no `DialogTitle` (e2e `mfa-opcional` usa o id e o heading).
+   - Os **5 `confirm(` globais** que a 3c omitiu (grep era só `window.confirm(`)
+     viraram `useConfirmar()`: `settings/security/_client.tsx` ×3
+     (regenerar códigos, sair de todos os dispositivos, desligar MFA — este
+     ganhou função `desligar()` extraída), `ConversationHeader` (Fechar
+     conversa) e `InboxKeyboardShortcuts` (atalho `e`). Teste
+     `inbox-header-nao-trava.test.tsx` envolve o header com
+     `ConfirmacaoProvider` (sem provider o hook lança, por contrato).
+   - Resíduo medido: `confirm(`/`window.confirm(` fora do próprio provider = 0;
+     `fixed inset-0 z-50` = só os primitivos `ui/{dialog,alert-dialog,sheet}`.
+ - **Gates da torno**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
+   `test:unit` = baseline (7.423 pass / 15 flakes conhecidos: guarda-da-release,
+   namespace-das-imagens, performed-at, rate-limit) · `pnpm build` ✓ ·
+   e2e da 3e: `mfa-opcional` 4/4 ✓ + smoke `inbox-quem-manda`/
+   `inbox-abas-espelham-o-comando` 3/3 ✓ · e2e da 3d:
+   `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
+   `navegacao` 13/13 ✓ · `pnpm format:check` reprova pré-existente no repo
+   inteiro (não é gate) · nenhum e2e visita `/admin/tenants` (unit é o gate da 3d).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a-3d ✅; resta 3e-3f + Fases 4-6**:
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a-3e ✅; resta 3f + Fases 4-6**:
    a. **Fase 3 — consolidações**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
       `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
       `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
       `ConfirmacaoProvider`); ✅ `SuspendDialog`+`ReactivateDialog`→1
-      (`TenantReasonDialog`, `7340d3e54`); resta: **3e** overlays manuais
-      restantes→`ui/sheet` (2 de 4 já migrados via ContextualDrawer);
-      **3f** toasts→`nexusToast`.
+      (`TenantReasonDialog`, `7340d3e54`); ✅ overlays→`ui/dialog` (3
+      restantes) + 5 `confirm(` globais→`useConfirmar` (`41173e58d`);
+      resta: **3f** toasts→`nexusToast` (sonner cru 155 linhas, `nexusToast`
+      9, `ApiErrorToast`).
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
       `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
       tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →

@@ -122,8 +122,11 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
   herdou a régua dos 10 caracteres). Restam 2 `AlertDialogContent` no FORM —
   `ResolveIncidentDialog` e `ApproveButton` (3 no total, contando a própria
   `NexusConfirmDialog`).
-- **4 overlays manuais** (`fixed inset-0 z-50`): `prospeccao/_empresas`,
-  `prospeccao/_importar-arquivo`, `auth/MfaEnrollModal`, `GradeNotas` → `ui/sheet/dialog`.
+- **4 overlays manuais** (`fixed inset-0 z-50`): `prospeccao/_empresas` →
+  `ui/sheet` (Fase 2b); `prospeccao/_importar-arquivo`, `auth/MfaEnrollModal`,
+  `GradeNotas` → `ui/dialog` (**Fase 3e**, `41173e58d` — com o split
+  obrigatório/escolha do MFA e os 5 `confirm(` globais restantes na
+  `useConfirmar()`). Resíduo: só os primitivos `ui/{dialog,alert-dialog,sheet}`.
 - Empty: **2 APIs ativas** (`components/empty` 20 importadores × `NexusEmptyState` 12)
   → declarar SoR única (alias).
 - Toast: 3 APIs (`sonner` cru 155 linhas, `nexusToast` 9, `ApiErrorToast`) →
@@ -183,8 +186,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
 4. **Fase 3 — consolidações de alto alavanco**: `StatusPage` 6→1 ✅ (`37b35a029`);
    `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`); `NexusConfirmDialog`
    ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`); `SuspendDialog`+
-   `ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`); resta: overlays
-   manuais→`ui/sheet`; toasts→`nexusToast`.
+   `ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`); overlays manuais→
+   `ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅ (`41173e58d`);
+   resta: toasts→`nexusToast`.
 5. **Fase 4 — refatoração por módulo (prioridade A)**: `/contacts` → `/pedidos`
    (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
