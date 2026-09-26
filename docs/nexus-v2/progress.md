@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `eafb9c071 feat(nexus-v2): Fase 3c do redesign - NexusConfirmDialog adotado: 7 window.confirm + 13 AlertDialog (§100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 3 (3a/3b/3c)**.
-  (anteriores: `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
+- HEAD: `7340d3e54 feat(nexus-v2): Fase 3d do redesign - SuspendDialog + ReactivateDialog viram TenantReasonDialog (§100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 3d**.
+  (anteriores: `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
+  `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
   `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
   `6f12049c0` infra e2e · `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
   `cd0caeccc` NotificationCenter · `359c03e3f` Breadcrumb · `0353cd57b` Fase 1 mata uimaxxing ·
@@ -26,7 +27,7 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c EXECUTADAS nesta
+**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c/3d EXECUTADAS nesta
 torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -53,28 +54,39 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   excluir; prospecção excluir) e **13 `AlertDialogContent`** (RulesTab,
   Templates, DeleteFollowupFlow, Impersonate, ContactsTable, CredentialCard,
   AgentRowMenu, VersionHistory, PublishConfirm, SourceDetail, QueueTab,
-  routers, DossieDoFollowup). Restam 4 `AlertDialogContent` = FORM:
-  `SuspendDialog`+`ReactivateDialog` (fundir → Fase 3d),
-  `ResolveIncidentDialog`, `ApproveButton`. Teste novo
-  `tests/unit/confirmacao-provider.test.tsx` (8 casos); e2e `followup-queue` e
-  `retorno-anti-morte` migraram `execFileSync("npx")` → `execNpx` (Windows).
+   routers, DossieDoFollowup). Teste novo
+   `tests/unit/confirmacao-provider.test.tsx` (8 casos); e2e `followup-queue` e
+   `retorno-anti-morte` migraram `execFileSync("npx")` → `execNpx` (Windows).
+ - **Fase 3d `7340d3e54` — `TenantReasonDialog`**: `SuspendDialog` ×
+   `ReactivateDialog` (123 linhas idênticas, cópias e endpoints distintos)
+   viraram UM componente em `components/admin/tenants/TenantReasonDialog.tsx`,
+   montado sobre o `NexusConfirmDialog` controlado — `Textarea` do motivo no
+   slot `children`, `busyLabel` com a cópia de pending de cada ação, `danger`
+   só em suspender, e a régua dos 10 caracteres herdada via prop NOVA
+   `confirmDisabled` no `NexusConfirmDialog` (o estado de erro dos antigos era
+   inalcançável — o botão já saía desabilitado). Consumidor único
+   `TenantActions.tsx` monta 2× `TenantReasonDialog`. Teste novo
+   `tests/unit/tenant-reason-dialog.test.tsx` (5 casos: régua, copy/endpoint
+   por ação, falha mantém aberto, fechar limpa o motivo). `AlertDialogContent`
+   no repo: 5 → **3** (`NexusConfirmDialog`, `ResolveIncidentDialog`,
+   `ApproveButton`).
 - **Gates da torno**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
-  `test:unit` = flakes de baseline (4 arquivos conhecidos: guarda-da-release,
+  `test:unit` = baseline (7.423 pass / 15 flakes conhecidos: guarda-da-release,
   namespace-das-imagens, performed-at, rate-limit) · `pnpm build` ✓ ·
   e2e `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
   `navegacao` 13/13 ✓ · `pnpm format:check` reprova pré-existente no repo
-  inteiro (não é gate).
+  inteiro (não é gate) · nenhum e2e visita `/admin/tenants` (unit é o gate da 3d).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a/3b/3c ✅; resta 3d-3f + Fases 4-6**:
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a-3d ✅; resta 3e-3f + Fases 4-6**:
    a. **Fase 3 — consolidações**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
       `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
       `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
-      `ConfirmacaoProvider`); resta: **3d** `SuspendDialog`+`ReactivateDialog`→1
-      (`TenantReasonDialog`; `ResolveIncidentDialog`/`ApproveButton` opcional
-      na mesma leva); **3e** overlays manuais restantes→`ui/sheet` (2 de 4 já
-      migrados via ContextualDrawer); **3f** toasts→`nexusToast`.
+      `ConfirmacaoProvider`); ✅ `SuspendDialog`+`ReactivateDialog`→1
+      (`TenantReasonDialog`, `7340d3e54`); resta: **3e** overlays manuais
+      restantes→`ui/sheet` (2 de 4 já migrados via ContextualDrawer);
+      **3f** toasts→`nexusToast`.
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
       `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
       tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
@@ -88,8 +100,8 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
    notification-center, contextual-drawer, admin-topbar, sidebar-grupos,
    command-palette, busca-global, leads/titulos route, status-page,
-   confirmacao-provider, navegacao-*) + e2e alvo + evidence/ quando a tela
-   mudar.
+   confirmacao-provider, tenant-reason-dialog, navegacao-*) + e2e alvo +
+   evidence/ quando a tela mudar.
 2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
    specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
    e2e-cobertura).

@@ -116,9 +116,12 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
   adotar (começar por contacts, ai, inbox, kanban, admin, webhooks).
 - `NexusConfirmDialog` **ADOPTADO na Fase 3c** (`eafb9c071`): os 7 `window.confirm`
   + 13 dos 17 `AlertDialogContent` de domínio viraram `NexusConfirmDialog` (trigger)
-  ou `useConfirmar()` (`ConfirmacaoProvider` em `app/app/layout.tsx`); restam 4
-  `AlertDialogContent` no FORM — `SuspendDialog`/`ReactivateDialog` (fundir em
-  `TenantReasonDialog`, Fase 3d), `ResolveIncidentDialog`, `ApproveButton`.
+  ou `useConfirmar()` (`ConfirmacaoProvider` em `app/app/layout.tsx`); e a fusão
+  **Fase 3d** (`7340d3e54`) fundiu `SuspendDialog`+`ReactivateDialog` em
+  `TenantReasonDialog` (sobre o `NexusConfirmDialog` + `confirmDisabled`, que
+  herdou a régua dos 10 caracteres). Restam 2 `AlertDialogContent` no FORM —
+  `ResolveIncidentDialog` e `ApproveButton` (3 no total, contando a própria
+  `NexusConfirmDialog`).
 - **4 overlays manuais** (`fixed inset-0 z-50`): `prospeccao/_empresas`,
   `prospeccao/_importar-arquivo`, `auth/MfaEnrollModal`, `GradeNotas` → `ui/sheet/dialog`.
 - Empty: **2 APIs ativas** (`components/empty` 20 importadores × `NexusEmptyState` 12)
@@ -179,8 +182,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    `AppShell` + `NotificationCenter` (AlertsBell→painel) + Global Search estendida.
 4. **Fase 3 — consolidações de alto alavanco**: `StatusPage` 6→1 ✅ (`37b35a029`);
    `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`); `NexusConfirmDialog`
-   ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`); resta: `SuspendDialog`+
-   `ReactivateDialog`→1; overlays manuais→`ui/sheet`; toasts→`nexusToast`.
+   ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`); `SuspendDialog`+
+   `ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`); resta: overlays
+   manuais→`ui/sheet`; toasts→`nexusToast`.
 5. **Fase 4 — refatoração por módulo (prioridade A)**: `/contacts` → `/pedidos`
    (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
