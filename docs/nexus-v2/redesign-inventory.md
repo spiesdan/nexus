@@ -66,7 +66,7 @@ Sinais medidos no tenant: 18/80 rotas importam algo de `nexus-ui`; 9 usam
 | `/app/titulos` | REDIRECT→`/financeiro` | decisão do usuário: aba `?aba=titulos`; `_client.tsx` virou `financeiro/_titulos.tsx` (`679b65fb3`) |
 | `/app/financeiro` | CONSOLIDAR ✅ | 4 `<table>` cruas→`ui/table`+`NexusDataTable` (erros/empty por aba), `NexusPageHeader`, 6 abas com Títulos (`679b65fb3`) |
 | `/app/kanban` | CONSOLIDAR | é lista de funis; duplica `/settings/tenant/pipelines` |
-| `/app/metrics` | CONSOLIDAR | duplica `/indicadores`+`/relatorios` |
+| `/app/metrics` | REDIRECT→`/indicadores` | fusão na 4g: virou a seção `#desempenho` (`f13ca808d`); rota mantida como redirect com `#` |
 | `/app/recuperacao` | REDIRECT→`/radar` | fusão na 4f: virou a seção `#radar-recuperacao` (`b60fe1a1f`); rota mantida como redirect com `#` |
 | `/app/inbox/[id]` | CONSOLIDAR | rota-resolver (push) — **manter**, não é UI |
 | `/app/leads/[id]` | CONSOLIDAR | rota-resolver (permalinks radar/webhooks) — **manter** |
@@ -206,8 +206,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     (`679b65fb3`: `NexusPageHeader` + 4 `<table>` cruas→`NexusDataTable`,
     `/titulos` virou aba com redirect legado) → ✅ `/radar` (`b60fe1a1f`:
     `NexusPageHeader`, `/recuperacao` virou a 4ª seção com redirect `#`,
-    gráficos em tokens de tema) → `/indicadores` (+fusão
-    `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
+    gráficos em tokens de tema) → ✅ `/indicadores` (`f13ca808d`:
+    `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
+    `#desempenho` com redirect) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,

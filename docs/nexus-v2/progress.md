@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `b60fe1a1f feat(nexus-v2): Fase 4f do redesign - radar ganha NexusPageHeader, 4 secoes com a recuperacao vinda de /app/recuperacao e graficos em tokens de tema (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4f**.
-  (anteriores: `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
+- HEAD: `f13ca808d feat(nexus-v2): Fase 4g do redesign - indicadores adota NexusPageHeader e ui/table no ranking, desempenho vira secao #desempenho com redirect de /app/metrics (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4g**.
+  (anteriores: `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
+  `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
   `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
   `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
   `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
@@ -35,8 +36,9 @@
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
-4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`) + 4f =
-`/radar` (fusão `/recuperacao`) EXECUTADAS neste torno; fases 0/1/2 + shell §17
+4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
+`/radar` (fusão `/recuperacao`) + 4g = `/indicadores` (fusão `/metrics`)
+EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -345,6 +347,39 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     completude, busca-global, inventario, risk-radar, inatividade,
     mapas-de-arquitetura, e2e-cobertura) · e2e: evidência 1/1 ✓ +
     regressões recompra/risk/retorno 6/6 ✓ + `navegacao` 13/13 ✓.
+  - **Fase 4g `f13ca808d` — `/indicadores` (fusão com `/metrics`)**:
+    - Mesma mecânica das fusões anteriores: o "Desempenho" (atrito, funil,
+      performance por atendente — `MetricsClient` + `AtritoPanel`) virou a
+      **seção `#desempenho` no fim de `/app/indicadores`** (h2 + subtítulo
+      com as 2 variantes manager/agent já existentes); a rota antiga virou
+      **redirect puro** `redirect("/app/indicadores#desempenho")` (padrão
+      stub; o `#` sobrevive, provado na evidência).
+    - Feito: `CrmPageHeader`→`NexusPageHeader` (title "Indicadores",
+      subtitle = `rotuloMes`; eyebrow "Sales Intelligence" caiu, régua da
+      4e/4f); saudação `_saudacao` desce de `h1`→`h2` (mesmas classes — um
+      h1 só por página); **ranking cru → `ui/table`** (classes duplicadas de
+      thead/linha removidas, alinhamentos via `className` — 0 `<table>`
+      crua no diretório); `IndicadoresClient` ganhou `canCompare`
+      (ROLE_RANK, mesma regra §6.1 da rota antiga) + `currentUserId`;
+      `MetricsClient` estados → 3×`Skeleton` + `NexusErrorState`
+      (onRetry=`refetch` do useQuery); registry href `/app/metrics`
+      mantido (gate); **5 sondas `tests/sonda-atrito-*`/`sonda-overflow`**
+      atualizadas para `#desempenho` (não são gates, mas eram a ferramenta
+      de medição da rota antiga).
+    - Prova visual: `evidence/fase4-indicadores/1-indicadores-desktop.png`
+      (h1 + saudação h2 + ranking), `evidence/fase4-indicadores/2-desempenho-secao-desktop.png`
+      (seção com atrito/funil/performance),
+      `evidence/fase4-indicadores/3-redirect-metrics-desktop.png` (URL
+      `…/indicadores#desempenho`) e
+      `evidence/fase4-indicadores/4-indicadores-mobile-390.png`.
+    - Atenção medida: `CardTitle` do shadcn é `div`, não heading — o e2e
+      casa "Performance por atendente" por **texto**, não por role heading.
+  - **Gates da 4g**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ (rotas
+    `ƒ /app/indicadores` + `ƒ /app/metrics`) · unit alvo 44/44 ·
+    `test:unit` = baseline (15 flakes nos mesmos 4 arquivos) · e2e:
+    evidência 1/1 ✓ + regressão `navegacao` 13/13 ✓ (primeira tentativa
+    abortou num hang transiente do webServer; re-rodada limpa) — nenhuma
+    spec navega em `/app/indicadores` ou `/app/metrics`.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -366,7 +401,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         `/titulos` virou aba com redirect legado preservando `?busca=`); ✅
         `/radar` (`b60fe1a1f`: `NexusPageHeader`, 4ª seção com a
         `/recuperacao` movida para cá + redirect `#radar-recuperacao`,
-        gráficos em tokens) → próximo `/indicadores` (+`/metrics`) →
+        gráficos em tokens); ✅ `/indicadores` (`f13ca808d`:
+        `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
+        `#desempenho` com redirect) → próximo `/prospeccao` →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
