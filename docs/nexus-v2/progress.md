@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `921435fe8 feat(nexus-v2): Fase 4b do redesign - /pedidos troca os hexes do Mercos por tokens e ganha NexusPageHeader (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4b**.
-  (anteriores: `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
+- HEAD: `3612818d7 feat(nexus-v2): Fase 4c do redesign - cabecalho 360 adota NexusPageHeader sem perder a tag header do e2e (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4c**.
+  (anteriores: `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
+  `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
   `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
   `958806f13` docs handoff 3e · `41173e58d` Fase 3e overlays+confirm ·
   `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
@@ -30,9 +31,9 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts` + 4b = `/pedidos`
-EXECUTADAS neste torno; fases 0/1/2 + shell §17 fechados no handoff
-`727faf650`.** Inventário:
+Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts`, 4b = `/pedidos`
++ 4c = `360` EXECUTADAS neste torno; fases 0/1/2 + shell §17 fechados no
+handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -174,6 +175,40 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    (15 flakes nos mesmos 4 arquivos · 7.424 pass / 710 arquivos) ·
    `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ ·
    hexes em `app/app/pedidos` = 0.
+ - **Fase 4c `3612818d7` — `360` (`contacts/[id]`)**: o `Cabecalho360`
+   (header manual com `<h1>` próprio) adotou `NexusPageHeader`
+   (title = `rotuloDoContato`, subtitle = `email • telefone` juntos,
+   actions = Editar, condicionada a `!is_anonymized`); badges + KPIs
+   (`<dl>` última compra/valor acumulado/negócios) ficam num bloco logo
+   abaixo, dentro da MESMA tag `<header>` — **obrigatório**: o e2e
+   `confirmar-dado-do-contato` ancora o email em
+   `page.locator("header").getByText(email)` (linha 136/142) e a troca da
+   tag por `<div>` quebraria o gate. Subtítulo monta-se com
+   `.filter(Boolean).join(" • ")` (contato sem email/telefone → `undefined`,
+   sem `<p>` vazio). Sombra do map de tags renomeada `t` → `tag` (antojam o
+   `t()` de tradução). Módulo já estava na régua em outro ponto: 0 hexes,
+   tabs = `ui/tabs`, estados loading/empty/error existem — nada a criar.
+   Prova visual: `evidence/fase4-360/1-contato-360-desktop.png` (header
+   canônico + badge "Recompra atrasada" + KPIs) e
+   `evidence/fase4-360/2-contato-360-mobile-390.png` (Editar empilhado).
+   - Lições medidas: (1) a captura desktop saiu com o SKELETO na 1ª tentativa
+     — a espera agora é explícita no `dt` "Última compra" + 600ms de settle;
+     (2) o read de imagem do ambiente serviu mídia CACHEADA (pelo hash do
+     arquivo) em leituras repetidas — confirme dimensões com
+     `System.Drawing` antes de concluir que a evidência está errada;
+     (3) rodada combinada de 2 specs e2e flakou no TOTP/timeout e passou
+     isolada (2/2) — regressões daqui: `confirmar-dado-do-contato` 2/2 ✓ +
+     `contato-salva-email` 1/1 ✓.
+ - **Gates da 4c**: typecheck ✓ · lint 0/338 ✓ · `test:unit` = baseline
+   (15 flakes documentados nos mesmos 4 arquivos) + flakes novos de
+   TIMEOUT 15s em testes de varredura (`branding-marca-css`,
+   `consulta-usa-o-vocabulario-do-banco`, `sem-marcador-de-conflito`,
+   `telas-sem-dado-de-mentira`, `aritmetica-de-timestamp-infinito`) sob
+   carga da suíte — **prova de que não são do diff**: com `git stash` do
+   arquivo (árvore limpa) a suíte reproduz o mesmo tipo de falha (17/6,
+   7 timeouts) e TODOS os suspeitos passam isolados (5/5 e 34/34) ·
+   `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ +
+   regressões do 360 3/3 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -187,8 +222,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       ✅ toasts→`nexusToast` porta única (`6ed0d5670`, 121 arquivos).
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): ✅ `/contacts`
       (lista, `e062aa3b5`); ✅ `/pedidos` (`921435fe8`: hex Mercos→tokens +
-      `NexusPageHeader` com os `titulo`/`subtitulo` que eram props mortas) →
-      próximo `360` (= `contacts/[id]`) → `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
+      `NexusPageHeader`); ✅ `360` (`3612818d7`: `Cabecalho360` no
+      `NexusPageHeader`, `<header>` preservada pro e2e) → próximo
+      `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
       `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à

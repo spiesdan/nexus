@@ -198,7 +198,8 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    (`41173e58d`); toasts→`nexusToast` ✅ (`6ed0d5670`).
 5. **Fase 4 — refatoração por módulo (prioridade A)**: ✅ `/contacts` (lista)
    (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → ✅ `/pedidos`
-   (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
+   (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → ✅ `360`
+   (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
    `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
