@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ConversationHeader } from "@/components/inbox/ConversationHeader";
+import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 
 /**
  * CATRACA: o header do inbox não pode voltar a travar a largura da tela.
@@ -69,7 +70,11 @@ function renderHeader() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <ConversationHeader conversation={conversation} />
+      {/* O "Fechar" do header confirma via useConfirmar() — sem o provider o
+          componente lança na montagem (contrato do ConfirmacaoProvider). */}
+      <ConfirmacaoProvider>
+        <ConversationHeader conversation={conversation} />
+      </ConfirmacaoProvider>
     </QueryClientProvider>,
   );
 }

@@ -20,6 +20,7 @@ import { SnoozeButton } from "@/components/inbox/SnoozeButton";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 
 interface Props {
   conversation: ConversationWithContact;
@@ -53,6 +54,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function ConversationHeader({ conversation }: Props) {
   const t = useT();
+  const confirmar = useConfirmar();
   const { user } = useAuth();
   const claim = useClaimConversation();
   const release = useReleaseConversation();
@@ -294,8 +296,13 @@ export function ConversationHeader({ conversation }: Props) {
             size="sm"
             variant="outline"
             disabled={close.isPending}
-            onClick={() => {
-              if (confirm(t("Fechar esta conversa?"))) {
+            onClick={async () => {
+              if (
+                await confirmar({
+                  title: t("Fechar esta conversa?"),
+                  confirmLabel: t("Fechar"),
+                })
+              ) {
                 close.mutate({ conversation_id: conversation.id });
               }
             }}

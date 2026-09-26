@@ -1,6 +1,7 @@
 "use client";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useT } from "@/hooks/i18n/useT";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 
 interface Props {
   /** Currently visible conversation ids in the list (for j/k nav). */
@@ -25,6 +26,7 @@ export function InboxKeyboardShortcuts({
   enabled = true,
 }: Props) {
   const t = useT();
+  const confirmar = useConfirmar();
   function step(delta: number) {
     if (visibleIds.length === 0) return;
     const idx = selectedId ? visibleIds.indexOf(selectedId) : -1;
@@ -48,8 +50,15 @@ export function InboxKeyboardShortcuts({
   useHotkeys("a", () => onClaim(), { enabled, preventDefault: true });
   useHotkeys(
     "e",
-    () => {
-      if (confirm(t("Fechar conversa?"))) onClose();
+    async () => {
+      if (
+        await confirmar({
+          title: t("Fechar conversa?"),
+          confirmLabel: t("Fechar"),
+        })
+      ) {
+        onClose();
+      }
     },
     { enabled, preventDefault: true },
   );

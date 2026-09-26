@@ -13,6 +13,7 @@ import {
   desativarMfaDaConta,
 } from "@/app/actions/auth/politicaDeMfa";
 import { useT } from "@/hooks/i18n/useT";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 
 export function SecurityClient({
   mfaEnrolled,
@@ -28,20 +29,19 @@ export function SecurityClient({
   empresaExige: boolean;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const [codes, setCodes] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isSigningOut, startSignOut] = useTransition();
   const [ativando, setAtivando] = useState(false);
   const [mexendo, startMexer] = useTransition();
 
-  function handleRegenerate() {
-    if (
-      !confirm(
-        t("Gerar novos códigos invalida TODOS os atuais. Tem certeza?"),
-      )
-    ) {
-      return;
-    }
+  async function handleRegenerate() {
+    const ok = await confirmar({
+      title: t("Gerar novos códigos invalida TODOS os atuais. Tem certeza?"),
+      confirmLabel: t("Regenerar códigos de recuperação"),
+    });
+    if (!ok) return;
     startTransition(async () => {
       const r = await regenerateRecoveryCodes();
       if (r.ok) {
@@ -53,23 +53,42 @@ export function SecurityClient({
     });
   }
 
-  function handleSignOutAll() {
-    if (
-      !confirm(
-        t("Sair de TODOS os dispositivos? Você precisará fazer login de novo."),
-      )
-    )
-      return;
+  async function handleSignOutAll() {
+    const ok = await confirmar({
+      title: t("Sair de TODOS os dispositivos? Você precisará fazer login de novo."),
+      confirmLabel: t("Sair de todos os dispositivos"),
+    });
+    if (!ok) return;
     startSignOut(async () => {
       await signOutEverywhere();
+    });
+  }
+
+  async function desligar() {
+    const ok = await confirmar({
+      title: t("Desligar a verificação em duas etapas desta conta?"),
+      confirmLabel: t("Desligar"),
+    });
+    if (!ok) return;
+    startMexer(async () => {
+      const r = await desativarMfaDaConta();
+      if (!r.ok) {
+        toast.error(t(r.erro));
+        return;
+      }
+      toast.success(t("Verificação desligada."));
+      window.location.reload();
     });
   }
 
   return (
     <div className="flex flex-col gap-4">
       {/* O modal é o MESMO do bloqueador de tela cheia — reusado, não copiado.
-          Ele recarrega a página ao terminar, e o servidor reavalia o estado. */}
-      {ativando ? <MfaEnrollModal motivo="escolha" /> : null}
+          Ele recarrega a página ao terminar, e o servidor reavalia o estado.
+          Em "escolha" ele também fecha pelo Esc/X, que devolve a tela. */}
+      {ativando ? (
+        <MfaEnrollModal motivo="escolha" onFechar={() => setAtivando(false)} />
+      ) : null}
 
       <Card className="hover-raise space-y-3 p-6">
         <div className="flex items-start justify-between gap-4">
@@ -106,19 +125,7 @@ export function SecurityClient({
                 variant="outline"
                 size="sm"
                 disabled={mexendo}
-                onClick={() => {
-                  if (!confirm(t("Desligar a verificação em duas etapas desta conta?")))
-                    return;
-                  startMexer(async () => {
-                    const r = await desativarMfaDaConta();
-                    if (!r.ok) {
-                      toast.error(t(r.erro));
-                      return;
-                    }
-                    toast.success(t("Verificação desligada."));
-                    window.location.reload();
-                  });
-                }}
+                onClick={() => void desligar()}
               >
                 {mexendo ? t("Desligando…") : t("Desligar")}
               </Button>

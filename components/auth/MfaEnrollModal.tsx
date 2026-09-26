@@ -4,6 +4,11 @@ import { useEffect, useState, useTransition } from "react";
 
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TOTPInput } from "@/components/auth/TOTPInput";
 import { RecoveryCodesPanel } from "@/components/auth/RecoveryCodesPanel";
 import { enrollMfa } from "@/app/actions/auth/enrollMfa";
@@ -25,8 +30,24 @@ interface EnrollState {
  *  3. Recovery codes display + acknowledgement
  *
  * On completion, reloads the page so the parent layout re-evaluates the gate.
+ *
+ * Migrado do overlay manual (`fixed inset-0`) para o `ui/dialog` na Fase 3e:
+ * portal, esc e foco agora vêm do Radix. As DUAS modalidades se comportam
+ * diferente — e é isso que o `onOpenChange` abaixo protege:
+ *
+ *  - `obrigatorio` (o gate): RECUSA fechar (Esc/X/overlay não passam) e o X
+ *    nativo sai de cena via CSS — fechar deixaria a pessoa numa parede vazia
+ *    sem como reabrir;
+ *  - `escolha` (Segurança → Ativar): fecha por `onFechar`, que devolve o
+ *    controle à tela (antes não havia saída exceto concluir).
  */
-export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigatorio" | "escolha" } = {}) {
+export function MfaEnrollModal({
+  motivo = "obrigatorio",
+  onFechar,
+}: {
+  motivo?: "obrigatorio" | "escolha";
+  onFechar?: () => void;
+} = {}) {
   const t = useT();
   const [step, setStep] = useState<Step>("intro");
   const [enrollState, setEnrollState] = useState<EnrollState | null>(null);
@@ -76,19 +97,23 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="mfa-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (o) return;
+        if (motivo === "escolha") onFechar?.();
+      }}
     >
-      <div className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
+      <DialogContent
+        className={`max-w-md ${motivo === "obrigatorio" ? "[&>button:last-child]:hidden" : ""}`}
+        aria-describedby={undefined}
+      >
         {step === "intro" && (
           <div className="space-y-4">
             <div>
-              <h2 id="mfa-title" className="text-xl font-semibold">
+              <DialogTitle id="mfa-title" className="text-xl font-semibold">
                 {t("Configure a verificação em duas etapas")}
-              </h2>
+              </DialogTitle>
               {/*
                 ⚠️ O MESMO MODAL ATENDE DOIS MOMENTOS OPOSTOS. Ele nasceu dentro
                 do bloqueador de tela cheia, onde "sua conta exige" era verdade;
@@ -128,9 +153,9 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
         {step === "scan" && (
           <div className="space-y-5">
             <div>
-              <h2 id="mfa-title" className="text-xl font-semibold">
+              <DialogTitle id="mfa-title" className="text-xl font-semibold">
                 {t("Escaneie o QR code")}
-              </h2>
+              </DialogTitle>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("Abra seu app autenticador, adicione uma nova conta e digite o código de 6 dígitos abaixo.")}
               </p>
@@ -195,9 +220,9 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
         {step === "codes" && recoveryCodes && (
           <div className="space-y-4">
             <div>
-              <h2 id="mfa-title" className="text-xl font-semibold">
+              <DialogTitle id="mfa-title" className="text-xl font-semibold">
                 {t("Códigos de recuperação")}
-              </h2>
+              </DialogTitle>
             </div>
             <RecoveryCodesPanel
               codes={recoveryCodes}
@@ -207,7 +232,7 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
             />
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

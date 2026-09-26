@@ -12,6 +12,13 @@ import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +40,6 @@ import {
   Plus,
   Printer,
   Receipt,
-  X,
 } from "@/lib/ui/icons";
 
 import type { Textos } from "./textos";
@@ -529,27 +535,17 @@ export function GradeNotas({
       )}
 
       {cartaPara && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <Card className="hover-raise w-full max-w-lg space-y-3 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-medium text-text">{textos.cartaCorrecao}</h2>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label={textos.cancelarBtn}
-                onClick={() => setCartaPara(null)}
-              >
-                <X size={14} />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
+        <Dialog open onOpenChange={(o) => { if (!o) setCartaPara(null); }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-base font-medium text-text">
+                {textos.cartaCorrecao}
+              </DialogTitle>
+            </DialogHeader>
+            <DialogDescription className="text-sm text-muted-foreground">
               {textos.numNota} {cartaPara.numero ?? textos.semNumero}/{cartaPara.serie} ·{" "}
               {textos.registradaLocal}
-            </p>
+            </DialogDescription>
             <div className="space-y-1.5">
               <Label htmlFor="correcao">{textos.correcao}</Label>
               <textarea
@@ -572,8 +568,8 @@ export function GradeNotas({
                 {registrandoCarta ? t("Enviando…") : textos.registrarCarta}
               </Button>
             </div>
-          </Card>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -6,12 +6,18 @@ import { toast } from "sonner";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { apiClient } from "@/lib/api/client";
 import { mapearExportMaps, type ArquivoMapsPronto } from "@/lib/prospeccao/importacao-maps";
-import { UploadSimple, X } from "@/lib/ui/icons";
+import { UploadSimple } from "@/lib/ui/icons";
 
 /**
  * Ponte do Google Maps Scraper: o usuário coleta no Firefox (Tampermonkey) e
@@ -87,21 +93,18 @@ export function ImportarArquivoDialog({
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <Card className="hover-raise w-full max-w-lg space-y-3 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-base font-medium text-text">
+    <Dialog open onOpenChange={(o) => { if (!o) fechar(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader className="flex-row items-center gap-2 space-y-0">
+          <DialogTitle className="flex items-center gap-2 text-base font-medium text-text">
             <UploadSimple size={18} className="text-muted-foreground" />
             {t("Importar arquivo")}
-          </h2>
-          <Button size="sm" variant="ghost" aria-label={t("Fechar")} onClick={fechar}>
-            <X size={14} />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
-        <p className="text-xs text-muted-foreground">
+        <DialogDescription className="text-xs text-muted-foreground">
           {t("Exporte o JSON no userscript (Export Data → Export JSON) e envie aqui.")}
-        </p>
+        </DialogDescription>
 
         <div className="space-y-1.5">
           <Label htmlFor="arq-categoria">{t("Categoria da importação")}</Label>
@@ -157,7 +160,7 @@ export function ImportarArquivoDialog({
             {enviando ? t("Enviando…") : t("Enviar")}
           </Button>
         </div>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
