@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `e062aa3b5 feat(nexus-v2): Fase 4a do redesign - /contacts adota NexusPageHeader e FilterBar canonicos (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4a**.
-  (anteriores: `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
+- HEAD: `921435fe8 feat(nexus-v2): Fase 4b do redesign - /pedidos troca os hexes do Mercos por tokens e ganha NexusPageHeader (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4b**.
+  (anteriores: `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
+  `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
   `958806f13` docs handoff 3e · `41173e58d` Fase 3e overlays+confirm ·
   `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
   `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
@@ -29,8 +30,9 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts` EXECUTADA neste
-torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
+Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts` + 4b = `/pedidos`
+EXECUTADAS neste torno; fases 0/1/2 + shell §17 fechados no handoff
+`727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -134,8 +136,44 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    `pnpm build` ✓. Atenção medida: a stack Docker/WSL caiu entre as rodadas
    (11h de gap) — login do e2e falhava com `fetch failed` até reiniciar o
    Docker Desktop; e o `next start` serviu o build ANTIGO na 1ª tentativa
-   (heading aparecia mas o label novo não) — SEMPRE `pnpm build` depois de
-   mexer em UI antes de rodar e2e.
+    (heading aparecia mas o label novo não) — SEMPRE `pnpm build` depois de
+    mexer em UI antes de rodar e2e.
+ - **Fase 4b `921435fe8` — `/pedidos` (hex Mercos→tokens + header)**:
+   - Os 20 hexes do "molde Mercos" sumiram (`grep` de `#[0-9a-f]{3,8}` em
+     `app/app/pedidos` = **0**): `bg-[#f4f4f3]` da página → canvas temático;
+     botão primário `#4b2e83`/hover `#3d2569` → variante default (accent);
+     `border-[#d9d9d9]` da busca → borda default; os 8 `text-[#6a2fb3]`
+     (links, selects da frase, resumo) → `text-accent`; os cinzas
+     `#555`/`#3c3c3c`/`#333`/`#222`/`#8a8a8a`/`#b5b5b5` dos cards →
+     `text-muted-foreground`/`text-text`/`text-text-subtle` (a view Cartões
+     era cinza-fixado fora do tema — some no dark); pill "Concluído"
+     `bg-[#7cb342] text-white` → `bg-green-100 text-green-800` (mesma
+     família light-chip dos 6 irmãos em `_pills.tsx`).
+   - `textos.titulo`/`subtitulo` eram **props mortas**: a lista não tinha
+     `<h1>` nenhum (medido: `grep '<h1'` em `app/app/pedidos` só achava
+     `novo/_editor`). Agora renderizadas via `NexusPageHeader`, com as 3
+     ações (Criar pedido / Criar com IA / Imprimir) no slot `actions`
+     (`PageHeader` já envolve em `flex flex-wrap gap-2`); a barra
+     justify-between antiga virou a linha de busca avulsa.
+   - Já canônico e preservado: `FilterChips` + `SavedFilters` +
+     `FilterNumber` + `FilterActions`. A "frase" Mercos (`Mostrando X feitos
+     por Y via Z`) ficou intacta de propósito — trocá-la por `FilterSelect`
+     é redesign de UX, decisão de produto, não migração de token.
+   - Prova visual: `evidence/fase4-pedidos/1-lista-pedidos-desktop.png`
+     (cards com rótulo de dia, pill e acentos temizados) e
+     `evidence/fase4-pedidos/2-lista-pedidos-mobile-390.png` (header
+     empilhado + bottom dock). Dados: `scripts/seed-e2e-recompra.ts` +
+     `UPDATE commercial_orders SET status='entregue'` pontual para
+     fotografar a pill verde.
+   - Lições medidas: **nenhuma spec e2e visita a lista de pedidos** — a
+     evidência temporária (apagada depois) É o gate e2e deste módulo; o
+     locator do "Criar pedido" é `getByRole("link")` (o `Button` é
+     `asChild`); o TOTP do login caiu 1× com "Código inválido" e o retry
+     resolveu, como documenta `helpers/login-admin.ts`.
+ - **Gates da 4b**: typecheck ✓ · lint 0/338 ✓ · `test:unit` = baseline
+   (15 flakes nos mesmos 4 arquivos · 7.424 pass / 710 arquivos) ·
+   `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ ·
+   hexes em `app/app/pedidos` = 0.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -148,9 +186,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       restantes) + 5 `confirm(` globais→`useConfirmar` (`41173e58d`);
       ✅ toasts→`nexusToast` porta única (`6ed0d5670`, 121 arquivos).
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): ✅ `/contacts`
-      (lista, `e062aa3b5`; resta decidir o `360` = `contacts/[id]`, passo
-      separado na ordem) → próximo `/pedidos` (hex Mercos→tokens) → `360` →
-      `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
+      (lista, `e062aa3b5`); ✅ `/pedidos` (`921435fe8`: hex Mercos→tokens +
+      `NexusPageHeader` com os `titulo`/`subtitulo` que eram props mortas) →
+      próximo `360` (= `contacts/[id]`) → `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
       `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
