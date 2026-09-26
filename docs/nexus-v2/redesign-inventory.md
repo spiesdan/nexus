@@ -196,7 +196,8 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    `SuspendDialog`+`ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`);
    overlays manuais→`ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅
    (`41173e58d`); toasts→`nexusToast` ✅ (`6ed0d5670`).
-5. **Fase 4 — refatoração por módulo (prioridade A)**: `/contacts` → `/pedidos`
+5. **Fase 4 — refatoração por módulo (prioridade A)**: ✅ `/contacts` (lista)
+   (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → `/pedidos`
    (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
    `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →

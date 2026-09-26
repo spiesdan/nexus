@@ -9,10 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `6ed0d5670 feat(nexus-v2): Fase 3f do redesign - toasts unificados na porta nexusToast, 121 arquivos deixam o sonner cru (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 3f**.
-  (anteriores: `41173e58d` Fase 3e overlays+confirm · `958806f13` docs handoff 3e ·
-  `7340d3e54` Fase 3d TenantReasonDialog · `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
+- HEAD: `e062aa3b5 feat(nexus-v2): Fase 4a do redesign - /contacts adota NexusPageHeader e FilterBar canonicos (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4a**.
+  (anteriores: `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
+  `958806f13` docs handoff 3e · `41173e58d` Fase 3e overlays+confirm ·
   `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
   `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
   `6f12049c0` infra e2e · `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
@@ -28,8 +28,9 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a-3f COMPLETA neste torno;
-fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
+**Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
+Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts` EXECUTADA neste
+torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -111,6 +112,30 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
    `navegacao` 13/13 ✓ · `pnpm format:check` reprova pré-existente no repo
    inteiro (não é gate) · nenhum e2e visita `/admin/tenants` (unit é o gate da 3d).
+ - **Fase 4a `e062aa3b5` — `/contacts` (lista)**: `<header>/<h1>` à mão →
+   `NexusPageHeader` (actions = Importar CSV + Novo cliente, com o `shrink-0`
+   do PR #267 preservado dentro do slot); a filter bar caseira (dropdowns
+   Tag/Origem/por-página + "Limpar filtros") → `FilterBar`+`FilterPrimary` +
+   `FilterSearch` (label visível "Buscar") + 3× `FilterSelect` + `FilterChips`
+   (remoção individual por chip + limpar tudo) — o mesmo módulo que já usam
+   pedidos/products/prospeccao/relatorios/titulos. `SOURCE_OPTIONS` perdeu a
+   entrada `undefined` (virou `allLabel`). Estados loading/error/empty e a
+   tabela (`ContactsTable`, MANTER com sort/seleção) já estavam na régua e
+   não mudaram. Prova visual: `evidence/fase4-contacts/1-lista-clientes-desktop.png`
+   (desktop 1280) e `evidence/fase4-contacts/2-lista-clientes-mobile-390.png`
+   (390px — header empilhado, botões sem comprimir, filtros em coluna).
+   Bônus: `confirmar-dado-do-contato.spec.ts` migrado de
+   `execFileSync("npx")` → `execNpx` (3 call sites; era o único dos specs de
+   contacts que ainda quebrava no Windows).
+ - **Gates da 4a**: typecheck ✓ · lint 0/338 ✓ · `test:unit` = baseline
+   (15 flakes / 7.423 pass; 1 rodada transitória acusou +1 em
+   `activity-write-failure` — passa isolado) · e2e: evidência (spec temporária,
+   apagada) 1/1 ✓ + `confirmar-dado-do-contato` 2/2 ✓ (após execNpx) ·
+   `pnpm build` ✓. Atenção medida: a stack Docker/WSL caiu entre as rodadas
+   (11h de gap) — login do e2e falhava com `fetch failed` até reiniciar o
+   Docker Desktop; e o `next start` serviu o build ANTIGO na 1ª tentativa
+   (heading aparecia mas o label novo não) — SEMPRE `pnpm build` depois de
+   mexer em UI antes de rodar e2e.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -122,11 +147,15 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       (`TenantReasonDialog`, `7340d3e54`); ✅ overlays→`ui/dialog` (3
       restantes) + 5 `confirm(` globais→`useConfirmar` (`41173e58d`);
       ✅ toasts→`nexusToast` porta única (`6ed0d5670`, 121 arquivos).
-   b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
-      `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
-      tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
-      `/indicadores` (+`/metrics`) → `/prospeccao` → funis → `/agenda` →
-      `pedidos/[id]`/`novo` → `/webhooks` → admin.
+   b. **Fase 4 — refatoração por módulo** (inventário §2.1): ✅ `/contacts`
+      (lista, `e062aa3b5`; resta decidir o `360` = `contacts/[id]`, passo
+      separado na ordem) → próximo `/pedidos` (hex Mercos→tokens) → `360` →
+      `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
+      `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
+      `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
+      `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
+      mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
+      estados ausentes→criar; `pnpm build` antes do e2e de evidência.
    c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
       `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→
       `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
