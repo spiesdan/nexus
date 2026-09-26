@@ -544,31 +544,31 @@ export function RadarDashboard() {
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={serieMista} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
-                <CartesianGrid stroke="#e8e8e8" vertical={false} />
+                <CartesianGrid stroke="var(--color-border)" vertical={false} />
                 <XAxis
                   dataKey="rotulo"
-                  tick={{ fontSize: 11, fill: "#666666" }}
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                   interval={2}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "#666666" }}
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                   axisLine={false}
                   tickLine={false}
                   allowDecimals={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "#ffffff",
-                    border: "1px solid #e8e8e8",
+                    background: "var(--color-popover)",
+                    border: "1px solid var(--color-border)",
                     borderRadius: 12,
                     fontSize: 12,
                   }}
                   formatter={(v) => [v, metricaSaude === "compras" ? t("compras") : t("clientes")]}
                   labelFormatter={(l) => `${t("Semana de")} ${l}`}
                 />
-                <Bar dataKey={metricaSaude} fill="#7e77f0" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={metricaSaude} fill="var(--color-accent)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -610,8 +610,8 @@ export function RadarDashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "#ffffff",
-                      border: "1px solid #e8e8e8",
+                      background: "var(--color-popover)",
+                      border: "1px solid var(--color-border)",
                       borderRadius: 12,
                       fontSize: 12,
                     }}
@@ -772,12 +772,12 @@ export function RadarDashboard() {
         <RecompraRadarList situacaoExterna={drill} onSituacaoExternaChange={setDrill} />
       </div>
 
-      {/* Inativos — top recuperável + rota para a recuperação completa. */}
+      {/* Inativos — top recuperável + âncora da seção de recuperação completa. */}
       <Card className="hover-raise space-y-2 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-medium text-text">{t("Maiores chances de recuperação")}</h2>
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/app/recuperacao">{t("Abrir recuperação")}</Link>
+          <Button size="sm" variant="outline" onClick={() => rolarPara("radar-recuperacao")}>
+            {t("Abrir recuperação")}
           </Button>
         </div>
         {inativos === null ? (

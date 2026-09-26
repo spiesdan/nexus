@@ -475,7 +475,11 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   },
   {
     // ATT.txt Fase 4: recuperação. §19 não a lista — SEM sidebar; a porta é o
-    // alerta do Dashboard ("clientes sumidos") e o ⌘K.
+    // alerta do Dashboard ("clientes sumidos"), o briefing de indicadores e o
+    // ⌘K. A rota virou REDIRECIONAMENTO na fusão com o Radar (S100): o href
+    // fica como está porque `navegacao-completude` exige href ∈ rota em disco
+    // (match exato) — e é o redirect que entrega o usuário em
+    // `#radar-recuperacao`.
     href: "/app/recuperacao",
     label: "Recuperação",
     description: "Quem comprava e parou, por ordem de prioridade — com ação direta.",

@@ -5,10 +5,12 @@ import Link from "next/link";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import {
   linkWhatsAppRecuperacao,
@@ -18,39 +20,33 @@ import {
 } from "@/lib/comercial/inatividade";
 import { comoMoeda } from "@/lib/format/moeda";
 
-interface Textos {
-  titulo: string;
-  subtitulo: string;
-  periodo: string;
-  aplicar: string;
-  vazio: string;
-  semBase: string;
-  chamar: string;
-  ficha: string;
-  novoPedido: string;
-  ultimaCompra: string;
-  dias: string;
-  totalHistorico: string;
-  pedidos: string;
-}
-
 const COR_DA_FAIXA: Record<FaixaDeInatividade, string> = {
   atencao: "bg-yellow-100 text-yellow-800",
   morno: "bg-orange-100 text-orange-800",
   frio: "bg-red-100 text-red-800",
 };
 
-export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; textos: Textos }) {
+/**
+ * Seção "Recuperação de clientes" do Radar — era a página /app/recuperacao,
+ * movida para cá na fusão (S100). O título (h2) e o link de âncora
+ * `#radar-recuperacao` vivem em `../_tabs`; aqui ficam subtítulo, filtro e
+ * lista, com estados na mesma régua das listas vizinhas (Skeleton, erro com
+ * retry, cards de vazio/sem base já existentes).
+ */
+export function RecuperacaoLista({ temBase }: { temBase: boolean }) {
   const t = useT();
   const [dias, setDias] = React.useState("60");
   const [lista, setLista] = React.useState<ClienteInativo[] | null>(null);
+  const [falhou, setFalhou] = React.useState(false);
 
   const buscar = React.useCallback(async (d: string) => {
+    setFalhou(false);
     try {
       const corpo = await apiClient.get<{ data: ClienteInativo[] }>(`/api/v1/comercial/inativos?dias=${d || "60"}`);
       setLista(Array.isArray(corpo?.data) ? corpo.data : []);
     } catch (e) {
       showApiError(e);
+      setFalhou(true);
     }
   }, []);
 
@@ -60,24 +56,16 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
   }, [buscar]);
 
   if (!temBase) {
-    return (
-      <div className="space-y-6 p-6">
-        <h1 className="text-2xl font-medium tracking-tight text-text">{textos.titulo}</h1>
-        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.semBase}</Card>
-      </div>
-    );
+    return <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{t("Ainda não há pedidos antigos para medir inatividade.")}</Card>;
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{textos.titulo}</h1>
-        <p className="text-sm text-muted-foreground">{textos.subtitulo}</p>
-      </div>
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">{t("Quem comprava e parou — por ordem de prioridade.")}</p>
 
       <div className="flex items-end gap-2">
         <div className="space-y-1.5">
-          <Label htmlFor="dias">{textos.periodo}</Label>
+          <Label htmlFor="dias">{t("Sem compra há ao menos (dias)")}</Label>
           <Input
             id="dias"
             type="number"
@@ -87,13 +75,19 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
             onChange={(e) => setDias(e.target.value)}
           />
         </div>
-        <Button onClick={() => void buscar(dias)}>{textos.aplicar}</Button>
+        <Button onClick={() => void buscar(dias)}>{t("Aplicar")}</Button>
       </div>
 
-      {lista === null ? (
-        <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
+      {falhou && lista === null ? (
+        <NexusErrorState onRetry={() => void buscar(dias)} />
+      ) : lista === null ? (
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
       ) : lista.length === 0 ? (
-        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.vazio}</Card>
+        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{t("Ninguém inativo neste período. Boas vendas!")}</Card>
       ) : (
         <ul className="space-y-2">
           {lista.map((c) => {
@@ -105,9 +99,9 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{c.nome}</p>
                     <p className="text-xs text-muted-foreground">
-                      {textos.ultimaCompra} {c.dias_sem_compra} {textos.dias} ·{" "}
-                      {comoMoeda(c.total_historico_cents, "BRL")} {textos.totalHistorico} ·{" "}
-                      {c.qtd_pedidos} {textos.pedidos}
+                      {t("Última compra há")} {c.dias_sem_compra} {t("dias")} ·{" "}
+                      {comoMoeda(c.total_historico_cents, "BRL")} {t("Total histórico")} ·{" "}
+                      {c.qtd_pedidos} {t("pedidos")}
                     </p>
                   </div>
                   <span
@@ -120,15 +114,15 @@ export function RecuperacaoClient({ temBase, textos }: { temBase: boolean; texto
                   {zap && (
                     <Button size="sm" asChild>
                       <a href={zap} target="_blank" rel="noopener noreferrer">
-                        {textos.chamar}
+                        {t("Chamar no WhatsApp")}
                       </a>
                     </Button>
                   )}
                   <Button size="sm" variant="outline" asChild>
-                    <Link href={`/app/contacts/${c.contact_id}`}>{textos.ficha}</Link>
+                    <Link href={`/app/contacts/${c.contact_id}`}>{t("Ficha")}</Link>
                   </Button>
                   <Button size="sm" variant="outline" asChild>
-                    <Link href="/app/pedidos/novo">{textos.novoPedido}</Link>
+                    <Link href="/app/pedidos/novo">{t("Novo pedido")}</Link>
                   </Button>
                 </div>
               </li>

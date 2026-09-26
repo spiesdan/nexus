@@ -72,7 +72,7 @@ export function Briefing({ necessarioDia }: { necessarioDia: number | null }) {
       text: `${parados} ${t("cliente(s) sem comprar há 60 dias ou mais.")}`,
       actionLabel: t("Recuperar"),
       onAction: () => {
-        window.location.href = "/app/recuperacao";
+        window.location.href = "/app/radar#radar-recuperacao";
       },
     });
   }
