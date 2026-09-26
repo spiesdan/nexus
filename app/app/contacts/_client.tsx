@@ -1,19 +1,19 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
-import { Plus, MagnifyingGlass, UploadSimple } from "@/lib/ui/icons";
-import { Input } from "@/components/ui/input";
+import { Plus, UploadSimple } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  FilterBar,
+  FilterChips,
+  FilterPrimary,
+  FilterSearch,
+  FilterSelect,
+  type ActiveChip,
+} from "@/components/filters/FilterBar";
 import { useContactList } from "@/hooks/contacts/useContactList";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
 import { BulkTagBar } from "./_bulkbar";
@@ -23,7 +23,6 @@ import { EmptyContacts } from "@/components/empty";
 import type { ContactOrderBy } from "@/lib/schemas/contacts";
 
 const SOURCE_OPTIONS = [
-  { value: undefined, label: "Todas as origens" },
   { value: "manual", label: "Manual" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "nuvemshop", label: "Nuvemshop" },
@@ -79,113 +78,103 @@ export function ContactsListClient() {
     [orderBy],
   );
 
+  function limparFiltros() {
+    setSearchInput("");
+    setSearch("");
+    setTag(undefined);
+    setSource(undefined);
+  }
+
+  const chips: ActiveChip[] = [];
+  if (search) {
+    chips.push({
+      key: "busca",
+      label: `${t("Buscar")}: ${search}`,
+      onRemove: () => {
+        setSearchInput("");
+        setSearch("");
+      },
+    });
+  }
+  if (tag) {
+    chips.push({ key: "tag", label: `${t("Tag")}: ${tag}`, onRemove: () => setTag(undefined) });
+  }
+  if (source) {
+    chips.push({
+      key: "origem",
+      label: `${t("Origem")}: ${t(SOURCE_OPTIONS.find((s) => s.value === source)?.label ?? source)}`,
+      onRemove: () => setSource(undefined),
+    });
+  }
+
   return (
     <div className="space-y-4 p-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-medium tracking-tight text-text">{t("Clientes")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("Customer 360 — busque, filtre e gerencie clientes.")}
-          </p>
-        </div>
-        {/*
-          A estrutura é a da main (o "Importar CSV" do PR #313); o `shrink-0`
-          vem do PR #267, e vale para os DOIS botões agora: numa tela de 390px
-          uma linha de dois botões sem isso comprime os rótulos.
-        */}
-        <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <UploadSimple size={16} weight="bold" aria-hidden />
-            <span>{t("Importar CSV")}</span>
-          </Button>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus size={16} weight="bold" aria-hidden />
-            <span>{t("Novo cliente")}</span>
-          </Button>
-        </div>
-      </header>
+      <NexusPageHeader
+        title={t("Clientes")}
+        subtitle={t("Customer 360 — busque, filtre e gerencie clientes.")}
+        actions={
+          /*
+            A estrutura é a da main (o "Importar CSV" do PR #313); o `shrink-0`
+            vem do PR #267, e vale para os DOIS botões agora: numa tela de 390px
+            uma linha de dois botões sem isso comprime os rótulos.
+          */
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <UploadSimple size={16} weight="bold" aria-hidden />
+              <span>{t("Importar CSV")}</span>
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus size={16} weight="bold" aria-hidden />
+              <span>{t("Novo cliente")}</span>
+            </Button>
+          </div>
+        }
+      />
 
-      <div className="hover-raise flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-2">
-        <div className="relative w-full sm:w-72">
-          <MagnifyingGlass
-            size={16}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            type="search"
-            placeholder={t("Buscar por nome, email ou telefone…")}
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSearch
+            id="busca-contatos"
+            label={t("Buscar")}
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="h-9 w-full pl-8"
+            onChange={setSearchInput}
+            placeholder={t("Buscar por nome, email ou telefone…")}
+            dataTestId="busca-contatos"
           />
-        </div>
+          <FilterSelect
+            id="filtro-tag"
+            label={t("Tag")}
+            value={tag ?? ""}
+            onChange={(v) => setTag(v || undefined)}
+            options={tagOptions.map((tagOption) => ({ value: tagOption, label: tagOption }))}
+            allLabel={t("Todas")}
+          />
+          <FilterSelect
+            id="filtro-origem"
+            label={t("Origem")}
+            value={source ?? ""}
+            onChange={(v) => setSource(v || undefined)}
+            options={SOURCE_OPTIONS.map((s) => ({
+              value: s.value,
+              label: t(s.label),
+            }))}
+            allLabel={t("Todas as origens")}
+          />
+          <FilterSelect
+            id="filtro-por-pagina"
+            label={t("Por página")}
+            value={String(limit)}
+            onChange={(v) => setLimit(Number(v))}
+            options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: String(n) }))}
+          />
+        </FilterPrimary>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" disabled={tagOptions.length === 0}>
-              {tag ? `${t("Tag")}: ${tag}` : `${t("Tag")}: ${t("todas")}`}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>{t("Tag")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setTag(undefined)}>{t("Todas")}</DropdownMenuItem>
-            {tagOptions.map((tagOption) => (
-              <DropdownMenuItem key={tagOption} onClick={() => setTag(tagOption)}>
-                {tagOption}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              {t(SOURCE_OPTIONS.find((s) => s.value === source)?.label ?? "Origem")}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {SOURCE_OPTIONS.map((s) => (
-              <DropdownMenuItem key={s.label} onClick={() => setSource(s.value)}>
-                {t(s.label)}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              {limit} {t("por página")}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>{t("Itens por página")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {PAGE_SIZE_OPTIONS.map((n) => (
-              <DropdownMenuItem key={n} onClick={() => setLimit(n)}>
-                {n}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {(search || tag || source) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSearchInput("");
-              setSearch("");
-              setTag(undefined);
-              setSource(undefined);
-            }}
-          >
-            {t("Limpar filtros")}
-          </Button>
-        )}
-      </div>
+        <FilterChips
+          chips={chips}
+          onClearAll={limparFiltros}
+          clearLabel={t("Limpar filtros")}
+        />
+      </FilterBar>
 
       {q.isLoading ? (
         <div className="space-y-2">
