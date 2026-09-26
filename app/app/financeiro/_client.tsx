@@ -6,7 +6,9 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
+import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
@@ -23,10 +25,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { randomId } from "@/lib/random-id";
+import { AbaTitulos } from "./_titulos";
 
 type Situacao = "aberto" | "parcial" | "pago" | "vencido" | "cancelado";
 
@@ -77,9 +88,17 @@ function maisDias(n: number): string {
   return dataIso(new Date(Date.now() + n * 86400000));
 }
 
-export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) {
+export function FinanceiroClient({
+  podeRegistrar,
+  abaInicial,
+  buscaInicial,
+}: {
+  podeRegistrar: boolean;
+  abaInicial?: string;
+  buscaInicial?: string;
+}) {
   const t = useT();
-  const [aba, setAba] = React.useState("recebiveis");
+  const [aba, setAba] = React.useState(abaInicial ?? "recebiveis");
   const [linhas, setLinhas] = React.useState<Recebivel[] | null>(null);
   const [total, setTotal] = React.useState(0);
   const [pagina, setPagina] = React.useState(1);
@@ -89,6 +108,8 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
   const [de, setDe] = React.useState("");
   const [ate, setAte] = React.useState("");
   const [kpis, setKpis] = React.useState<Record<string, number> | null>(null);
+  const [erroRecebiveis, setErroRecebiveis] = React.useState(false);
+  const [erroConciliacao, setErroConciliacao] = React.useState(false);
   const [divergencias, setDivergencias] = React.useState<
     { tipo: string; [k: string]: unknown }[] | null
   >(null);
@@ -108,9 +129,11 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
         }>(`/api/v1/financeiro/recebiveis?${qs}`);
         setLinhas(corpo.data ?? []);
         setTotal(corpo.meta?.total ?? 0);
+        setErroRecebiveis(false);
       } catch (e) {
         showApiError(e);
         setLinhas([]);
+        setErroRecebiveis(true);
       }
     },
     [],
@@ -133,9 +156,11 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
         "/api/v1/financeiro/conciliacao",
       );
       setDivergencias(corpo.data ?? []);
+      setErroConciliacao(false);
     } catch (e) {
       showApiError(e);
       setDivergencias([]);
+      setErroConciliacao(true);
     }
   }, []);
 
@@ -189,10 +214,9 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
 
   return (
     <div className="space-y-6 p-6">
-      <CrmPageHeader
-        eyebrow={t("Financeiro")}
+      <NexusPageHeader
         title={t("Financeiro")}
-        description={t("Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação.")}
+        subtitle={t("Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação.")}
       />
 
       {kpis === null ? (
@@ -232,6 +256,7 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
           <TabsTrigger value="cobrancas">{t("Cobranças")}</TabsTrigger>
           <TabsTrigger value="conciliacao">{t("Conciliação")}</TabsTrigger>
           <TabsTrigger value="fluxo">{t("Fluxo de caixa")}</TabsTrigger>
+          <TabsTrigger value="titulos">{t("Títulos")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recebiveis" className="mt-4 space-y-3">
@@ -310,108 +335,35 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
             </div>
           </Card>
 
-          {linhas === null ? (
-            <div className="space-y-2" aria-live="polite">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : linhas.length === 0 ? (
-            <EmptyFilterResults
-              primary={{
-                label: t("Limpar filtros"),
-                onClick: () => {
-                  setBusca("");
-                  setBuscaAplicada("");
-                  setStatus("");
-                  setDe("");
-                  setAte("");
-                  setPagina(1);
-                  void carregar(1, { busca: "", status: "", de: "", ate: "" });
-                },
-              }}
-            />
-          ) : (
-            <>
-              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
-                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Cliente")}</th>
-                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
-                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Valor")}</th>
-                      <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Saldo")}</th>
-                      <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Status")}</th>
-                      <th className="px-3 py-2">
-                        <span className="sr-only">{t("Ações")}</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {linhas.map((l) => (
-                      <React.Fragment key={l.id}>
-                        <tr className="row-hover border-b align-top last:border-0">
-                          <td className="px-3 py-2 whitespace-nowrap tabular-nums">
-                            {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
-                            {l.dias_atraso > 0 && (
-                              <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <span className="font-medium">{l.contato_nome ?? "—"}</span>
-                            {l.contato_cidade && (
-                              <span className="block text-xs text-muted-foreground">
-                                {l.contato_cidade}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 whitespace-nowrap tabular-nums">
-                            {l.parcela_n}/{l.total_parcelas}
-                            {l.pedido_numero != null && (
-                              <span className="block text-xs text-muted-foreground">
-                                #{l.pedido_numero}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
-                            {comoMoeda(l.valor_original_cents, "BRL")}
-                          </td>
-                          <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
-                            {comoMoeda(l.saldo_cents, "BRL")}
-                          </td>
-                          <td className="px-3 py-2">
-                            <Badge variant={VARIANTE_SITUACAO[l.situacao]}>{l.situacao}</Badge>
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setExpandido(expandido === l.id ? null : l.id)}
-                            >
-                              {expandido === l.id ? t("Fechar") : t("Detalhe")}
-                            </Button>
-                          </td>
-                        </tr>
-                        {expandido === l.id && (
-                          <tr className="border-b bg-muted/30">
-                            <td colSpan={7} className="px-3 py-3">
-                              <DetalheRecebivel
-                                id={l.id}
-                                podeRegistrar={podeRegistrar}
-                                aoMudar={() => {
-                                  void carregar(pagina, { busca: buscaAplicada, status, de, ate });
-                                  void carregarKpis();
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {totalPaginas > 1 && (
+          <NexusDataTable<Recebivel>
+            state={
+              linhas === null
+                ? "loading"
+                : erroRecebiveis
+                  ? "error"
+                  : linhas.length === 0
+                    ? "empty"
+                    : "ready"
+            }
+            onRetry={() => void carregar(pagina, { busca: buscaAplicada, status, de, ate })}
+            empty={
+              <EmptyFilterResults
+                primary={{
+                  label: t("Limpar filtros"),
+                  onClick: () => {
+                    setBusca("");
+                    setBuscaAplicada("");
+                    setStatus("");
+                    setDe("");
+                    setAte("");
+                    setPagina(1);
+                    void carregar(1, { busca: "", status: "", de: "", ate: "" });
+                  },
+                }}
+              />
+            }
+            pagination={
+              totalPaginas > 1 ? (
                 <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
                   <Button
                     size="sm"
@@ -433,14 +385,95 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
                     {t("Próxima")}
                   </Button>
                 </div>
-              )}
-            </>
-          )}
+              ) : undefined
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("Vencimento")}</TableHead>
+                    <TableHead>{t("Cliente")}</TableHead>
+                    <TableHead>{t("Parcela")}</TableHead>
+                    <TableHead className="text-right">{t("Valor")}</TableHead>
+                    <TableHead className="text-right">{t("Saldo")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
+                    <TableHead>
+                      <span className="sr-only">{t("Ações")}</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(linhas ?? []).map((l) => (
+                    <React.Fragment key={l.id}>
+                      <TableRow className="align-top">
+                        <TableCell className="whitespace-nowrap tabular-nums">
+                          {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
+                          {l.dias_atraso > 0 && (
+                            <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">{l.contato_nome ?? "—"}</span>
+                          {l.contato_cidade && (
+                            <span className="block text-xs text-muted-foreground">
+                              {l.contato_cidade}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap tabular-nums">
+                          {l.parcela_n}/{l.total_parcelas}
+                          {l.pedido_numero != null && (
+                            <span className="block text-xs text-muted-foreground">
+                              #{l.pedido_numero}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap tabular-nums">
+                          {comoMoeda(l.valor_original_cents, "BRL")}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap tabular-nums">
+                          {comoMoeda(l.saldo_cents, "BRL")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={VARIANTE_SITUACAO[l.situacao]}>{l.situacao}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setExpandido(expandido === l.id ? null : l.id)}
+                          >
+                            {expandido === l.id ? t("Fechar") : t("Detalhe")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      {expandido === l.id && (
+                        <TableRow className="bg-muted/30 align-top">
+                          <TableCell colSpan={7}>
+                            <DetalheRecebivel
+                              id={l.id}
+                              podeRegistrar={podeRegistrar}
+                              aoMudar={() => {
+                                void carregar(pagina, { busca: buscaAplicada, status, de, ate });
+                                void carregarKpis();
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            }
+          />
         </TabsContent>
 
         <TabsContent value="conciliacao" className="mt-4">
           {divergencias === null ? (
             <Skeleton className="h-24 w-full" />
+          ) : erroConciliacao ? (
+            <NexusErrorState onRetry={() => void carregarConciliacao()} />
           ) : divergencias.length === 0 ? (
             <Card className="hover-raise p-8 text-center">
               <p className="font-medium">{t("Tudo conciliado")}</p>
@@ -479,11 +512,15 @@ export function FinanceiroClient({ podeRegistrar }: { podeRegistrar: boolean }) 
         </TabsContent>
 
         <TabsContent value="cobrancas" className="mt-4">
-          <AbaCobrancas />
+          <AbaCobrancas aoAbrirTitulos={() => setAba("titulos")} />
         </TabsContent>
 
         <TabsContent value="fluxo" className="mt-4">
           <AbaFluxo />
+        </TabsContent>
+
+        <TabsContent value="titulos" className="mt-4">
+          <AbaTitulos podeDarBaixa={podeRegistrar} buscaInicial={buscaInicial} />
         </TabsContent>
       </Tabs>
     </div>
@@ -532,24 +569,26 @@ function situacaoDoPagavel(p: Pagavel, hoje: string): Situacao {
 function AbaPagar() {
   const t = useT();
   const [pagaveis, setPagaveis] = React.useState<Pagavel[] | null>(null);
+  const [erro, setErro] = React.useState(false);
   const [statusFiltro, setStatusFiltro] = React.useState("");
   const [busca, setBusca] = React.useState("");
 
-  React.useEffect(() => {
-    let vivo = true;
-    apiClient
-      .get<{ data: Pagavel[] }>("/api/v1/financial-pagaveis")
-      .then((c) => {
-        if (vivo) setPagaveis(c.data ?? []);
-      })
-      .catch((e) => {
-        showApiError(e);
-        if (vivo) setPagaveis([]);
-      });
-    return () => {
-      vivo = false;
-    };
+  const carregar = React.useCallback(async () => {
+    try {
+      const c = await apiClient.get<{ data: Pagavel[] }>("/api/v1/financial-pagaveis");
+      setPagaveis(c.data ?? []);
+      setErro(false);
+    } catch (e) {
+      showApiError(e);
+      setPagaveis([]);
+      setErro(true);
+    }
   }, []);
+
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void carregar();
+  }, [carregar]);
 
   const hoje = hojeIso();
   const linhas = (pagaveis ?? []).filter((p) => {
@@ -583,6 +622,7 @@ function AbaPagar() {
       </div>
     );
   }
+  if (erro) return <NexusErrorState onRetry={() => void carregar()} />;
 
   return (
     <div className="space-y-4">
@@ -632,27 +672,29 @@ function AbaPagar() {
         </p>
       </Card>
 
-      {linhas.length === 0 ? (
-        <Card className="hover-raise p-8 text-center">
-          <p className="font-medium">{t("Nenhuma conta a pagar")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("As parcelas das notas de entrada aparecem aqui.")}
-          </p>
-        </Card>
-      ) : (
-        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Fornecedor")}</th>
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
-                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Valor")}</th>
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Status")}</th>
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Forma")}</th>
-              </tr>
-            </thead>
-            <tbody>
+      <NexusDataTable<Pagavel>
+        state={linhas.length === 0 ? "empty" : "ready"}
+        empty={
+          <Card className="hover-raise p-8 text-center">
+            <p className="font-medium">{t("Nenhuma conta a pagar")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("As parcelas das notas de entrada aparecem aqui.")}
+            </p>
+          </Card>
+        }
+        table={
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("Fornecedor")}</TableHead>
+                <TableHead>{t("Parcela")}</TableHead>
+                <TableHead>{t("Vencimento")}</TableHead>
+                <TableHead className="text-right">{t("Valor")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Forma")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {linhas.map((p) => {
                 const sit = situacaoDoPagavel(p, hoje);
                 const atrasoDias =
@@ -664,64 +706,71 @@ function AbaPagar() {
                       )
                     : 0;
                 return (
-                  <tr key={p.id} className="row-hover border-b align-top last:border-0">
-                    <td className="px-3 py-2">
+                  <TableRow key={p.id} className="align-top">
+                    <TableCell>
                       <span className="font-medium">{p.fornecedor_nome ?? t("Sem fornecedor")}</span>
                       {p.fornecedor_cnpj && (
-                        <span className="block text-xs text-muted-foreground">{p.fornecedor_cnpj}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {p.fornecedor_cnpj}
+                        </span>
                       )}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">
                       {p.parcela_n}/{p.total_parcelas}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">
                       {new Date(`${p.vencimento}T12:00:00Z`).toLocaleDateString()}
                       {atrasoDias > 0 && (
                         <span className="block text-xs text-error-fg">+{atrasoDias}d</span>
                       )}
-                    </td>
-                    <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap tabular-nums">
                       {comoMoeda(p.valor_original_cents, "BRL")}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={VARIANTE_SITUACAO[sit]}>{sit}</Badge>
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground">{p.forma_pagamento ?? "—"}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {p.forma_pagamento ?? "—"}
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </TableBody>
+          </Table>
+        }
+      />
     </div>
   );
 }
 
-function AbaCobrancas() {
+function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
   const t = useT();
   const [linhas, setLinhas] = React.useState<Recebivel[] | null>(null);
+  const [erro, setErro] = React.useState(false);
+
+  const carregar = React.useCallback(async () => {
+    try {
+      const qs = new URLSearchParams({ status: "vencido", limit: "200", ordem: "vencimento" });
+      const c = await apiClient.get<{ data: Recebivel[] }>(`/api/v1/financeiro/recebiveis?${qs}`);
+      setLinhas(c.data ?? []);
+      setErro(false);
+    } catch (e) {
+      showApiError(e);
+      setLinhas([]);
+      setErro(true);
+    }
+  }, []);
 
   React.useEffect(() => {
-    let vivo = true;
-    const qs = new URLSearchParams({ status: "vencido", limit: "200", ordem: "vencimento" });
-    apiClient
-      .get<{ data: Recebivel[] }>(`/api/v1/financeiro/recebiveis?${qs}`)
-      .then((c) => {
-        if (vivo) setLinhas(c.data ?? []);
-      })
-      .catch((e) => {
-        showApiError(e);
-        if (vivo) setLinhas([]);
-      });
-    return () => {
-      vivo = false;
-    };
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void carregar();
+  }, [carregar]);
 
   if (linhas === null) {
     return <Skeleton className="h-32 w-full" aria-live="polite" />;
   }
+  if (erro) return <NexusErrorState onRetry={() => void carregar()} />;
 
   const totalVencido = linhas.reduce((acc, l) => acc + l.saldo_cents, 0);
   const maiorAtraso = linhas.reduce((acc, l) => Math.max(acc, l.dias_atraso), 0);
@@ -749,53 +798,64 @@ function AbaCobrancas() {
         {t("A baixa e a negociação do título vivem em Títulos; aqui é o painel do que está atrasado.")}
       </p>
 
-      <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b text-left text-muted-foreground">
-              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Cliente")}</th>
-              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vencimento")}</th>
-              <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Parcela")}</th>
-              <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Saldo")}</th>
-              <th className="px-3 py-2">
-                <span className="sr-only">{t("Ações")}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {linhas.map((l) => (
-              <tr key={l.id} className="row-hover border-b align-top last:border-0">
-                <td className="px-3 py-2">
-                  <span className="font-medium">{l.contato_nome ?? "—"}</span>
-                  {l.contato_cidade && (
-                    <span className="block text-xs text-muted-foreground">{l.contato_cidade}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap tabular-nums">
-                  {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
-                  {l.dias_atraso > 0 && (
-                    <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap tabular-nums">
-                  {l.parcela_n}/{l.total_parcelas}
-                  {l.pedido_numero != null && (
-                    <span className="block text-xs text-muted-foreground">#{l.pedido_numero}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
-                  {comoMoeda(l.saldo_cents, "BRL")}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href="/app/titulos">{t("Abrir em Títulos")}</Link>
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <NexusDataTable<Recebivel>
+        state={linhas.length === 0 ? "empty" : "ready"}
+        empty={
+          <Card className="hover-raise p-8 text-center">
+            <p className="font-medium">{t("Nada vencido")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("Nenhum título passou do vencimento. As cobranças estão em dia.")}
+            </p>
+          </Card>
+        }
+        table={
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("Cliente")}</TableHead>
+                <TableHead>{t("Vencimento")}</TableHead>
+                <TableHead>{t("Parcela")}</TableHead>
+                <TableHead className="text-right">{t("Saldo")}</TableHead>
+                <TableHead>
+                  <span className="sr-only">{t("Ações")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {linhas.map((l) => (
+                <TableRow key={l.id} className="align-top">
+                  <TableCell>
+                    <span className="font-medium">{l.contato_nome ?? "—"}</span>
+                    {l.contato_cidade && (
+                      <span className="block text-xs text-muted-foreground">{l.contato_cidade}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap tabular-nums">
+                    {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
+                    {l.dias_atraso > 0 && (
+                      <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap tabular-nums">
+                    {l.parcela_n}/{l.total_parcelas}
+                    {l.pedido_numero != null && (
+                      <span className="block text-xs text-muted-foreground">#{l.pedido_numero}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap tabular-nums">
+                    {comoMoeda(l.saldo_cents, "BRL")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="outline" onClick={aoAbrirTitulos}>
+                      {t("Abrir em Títulos")}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        }
+      />
     </div>
   );
 }
@@ -804,25 +864,31 @@ function AbaFluxo() {
   const t = useT();
   const [dias, setDias] = React.useState(60);
   const [fluxo, setFluxo] = React.useState<Fluxo | null>(null);
+  const [erro, setErro] = React.useState(false);
 
-  React.useEffect(() => {
-    let vivo = true;
-    apiClient
-      .get<{ data: Fluxo }>(`/api/v1/financeiro/fluxo?dias=${dias}`)
-      .then((c) => {
-        if (vivo) setFluxo(c.data);
-      })
-      .catch((e) => {
-        showApiError(e);
-        if (vivo) setFluxo(null);
-      });
-    return () => {
-      vivo = false;
-    };
+  const carregar = React.useCallback(async () => {
+    try {
+      const c = await apiClient.get<{ data: Fluxo }>(`/api/v1/financeiro/fluxo?dias=${dias}`);
+      setFluxo(c.data);
+      setErro(false);
+    } catch (e) {
+      showApiError(e);
+      setFluxo(null);
+      setErro(true);
+    }
   }, [dias]);
 
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void carregar();
+  }, [carregar]);
+
   if (fluxo === null) {
-    return <Skeleton className="h-32 w-full" aria-live="polite" />;
+    return erro ? (
+      <NexusErrorState onRetry={() => void carregar()} />
+    ) : (
+      <Skeleton className="h-32 w-full" aria-live="polite" />
+    );
   }
 
   const comMovimento = fluxo.dias.filter(
@@ -879,57 +945,59 @@ function AbaFluxo() {
         />
       </CrmKpiGrid>
 
-      {comMovimento.length === 0 ? (
-        <Card className="hover-raise p-8 text-center">
-          <p className="font-medium">{t("Sem movimento no período")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("Nenhum vencimento de receber ou pagar nos próximos dias.")}
-          </p>
-        </Card>
-      ) : (
-        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Dia")}</th>
-                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("A receber")}</th>
-                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("A pagar")}</th>
-                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Líquido")}</th>
-                <th className="px-3 py-2 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Acumulado")}</th>
-              </tr>
-            </thead>
-            <tbody>
+      <NexusDataTable<DiaFluxo>
+        state={comMovimento.length === 0 ? "empty" : "ready"}
+        empty={
+          <Card className="hover-raise p-8 text-center">
+            <p className="font-medium">{t("Sem movimento no período")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("Nenhum vencimento de receber ou pagar nos próximos dias.")}
+            </p>
+          </Card>
+        }
+        table={
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("Dia")}</TableHead>
+                <TableHead className="text-right">{t("A receber")}</TableHead>
+                <TableHead className="text-right">{t("A pagar")}</TableHead>
+                <TableHead className="text-right">{t("Líquido")}</TableHead>
+                <TableHead className="text-right">{t("Acumulado")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {comMovimento.map((d) => (
-                <tr key={d.dia} className="row-hover border-b align-top last:border-0">
-                  <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                <TableRow key={d.dia} className="align-top">
+                  <TableCell className="whitespace-nowrap tabular-nums">
                     {new Date(`${d.dia}T12:00:00Z`).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap tabular-nums">
                     {comoMoeda(d.receber_cents, "BRL")}
-                  </td>
-                  <td className="px-3 py-2 text-right whitespace-nowrap tabular-nums">
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap tabular-nums">
                     {comoMoeda(d.pagar_cents, "BRL")}
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right whitespace-nowrap tabular-nums ${
+                  </TableCell>
+                  <TableCell
+                    className={`text-right whitespace-nowrap tabular-nums ${
                       d.liquido_cents < 0 ? "text-error-fg" : ""
                     }`}
                   >
                     {comoMoeda(d.liquido_cents, "BRL")}
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right whitespace-nowrap tabular-nums font-medium ${
+                  </TableCell>
+                  <TableCell
+                    className={`text-right whitespace-nowrap tabular-nums font-medium ${
                       d.acumulado_cents < 0 ? "text-error-fg" : ""
                     }`}
                   >
                     {comoMoeda(d.acumulado_cents, "BRL")}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </TableBody>
+          </Table>
+        }
+      />
       <p className="text-xs text-muted-foreground">
         {t("Dias sem vencimento não aparecem. A posição acumulada já parte do líquido vencido de hoje.")}
       </p>

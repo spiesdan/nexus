@@ -184,7 +184,7 @@ export async function buscarEntidades(termo: string, limite = 5): Promise<SecaoD
       titulos.status === "fulfilled"
         ? (titulos.value.data ?? []).slice(0, limite).map((tl) => ({
             id: `${tl.order_id}#${tl.parcela}`,
-            href: `/app/titulos?busca=${busca}`,
+            href: `/app/financeiro?aba=titulos&busca=${busca}`,
             titulo: numeroDoPedido(tl.numero),
             subtitulo: `${tl.cliente_nome} · parcela ${tl.parcela}/${tl.de}`,
           }))

@@ -371,8 +371,9 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   },
   {
     // Títulos: consulta eventual de cobrança — SEM sidebar (§19: a dobra é
-    // medida, e o grupo FINANCEIRO tem UMA porta rolável). A porta é o ⌘K e
-    // a própria tela de Financeiro, que lista os títulos na aba "Receber".
+    // medida, e o grupo FINANCEIRO tem UMA porta rolável). Virou aba do
+    // Financeiro (S100 4e): a porta é o ⌘K e esta rota redireciona para
+    // /app/financeiro?aba=titulos, preservando links salvos.
     href: "/app/titulos",
     label: "Títulos",
     description: "Contas a receber por vencimento, derivadas dos pedidos faturados.",

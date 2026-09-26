@@ -7,7 +7,6 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
-import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { FilterSearch } from "@/components/filters/FilterBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,13 @@ function SituacaoTitulo({ l, t }: { l: Titulo; t: (texto: string) => string }) {
   return <Badge variant="success">{t("A vencer")}</Badge>;
 }
 
-export function TitulosClient({
+/**
+ * Aba "Títulos" do Financeiro (S100 4e): era a rota /app/titulos inteira —
+ * hoje vive dentro de /app/financeiro e a rota antiga redireciona para cá.
+ * Sem cabeçalho de página: quem titula a tela é o NexusPageHeader do
+ * Financeiro; o gatilho da aba já é o rótulo "Títulos".
+ */
+export function AbaTitulos({
   podeDarBaixa,
   buscaInicial,
 }: {
@@ -161,24 +166,7 @@ export function TitulosClient({
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
-      <NexusPageHeader
-        title={t("Títulos")}
-        subtitle={t("Contas a receber derivadas dos pedidos faturados, por vencimento.")}
-        actions={
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/app/financeiro">{t("Abrir financeiro")}</Link>
-            </Button>
-            {linhas.length > 0 ? (
-              <Button size="sm" variant="outline" onClick={exportar}>
-                Excel
-              </Button>
-            ) : undefined}
-          </div>
-        }
-      />
-
+    <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <FilterSearch
           id="busca-titulo"
@@ -208,6 +196,11 @@ export function TitulosClient({
             </SelectContent>
           </Select>
         </div>
+        {linhas.length > 0 ? (
+          <Button size="sm" variant="outline" className="ml-auto" onClick={exportar}>
+            Excel
+          </Button>
+        ) : undefined}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

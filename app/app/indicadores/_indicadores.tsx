@@ -665,7 +665,7 @@ export function IndicadoresClient({
               <Link href="/app/faturamento" className="underline underline-offset-4">
                 {t("Ver faturamento")}
               </Link>
-              <Link href="/app/titulos" className="underline underline-offset-4">
+              <Link href="/app/financeiro?aba=titulos" className="underline underline-offset-4">
                 {t("Ver títulos")}
               </Link>
             </div>
