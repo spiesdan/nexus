@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `f13ca808d feat(nexus-v2): Fase 4g do redesign - indicadores adota NexusPageHeader e ui/table no ranking, desempenho vira secao #desempenho com redirect de /app/metrics (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4g**.
-  (anteriores: `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
+- HEAD: `bd4635147 feat(nexus-v2): Fase 4h do redesign - prospeccao adota NexusPageHeader e estados vazios/erro/loading canonicos em Pesquisas, Empresas, Campanhas, Mercado e Config (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4h**.
+  (anteriores: `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
+  `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
   `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
   `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
   `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
@@ -37,7 +38,8 @@
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
-`/radar` (fusão `/recuperacao`) + 4g = `/indicadores` (fusão `/metrics`)
+`/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
+4h = `/prospeccao`
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -380,6 +382,33 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     evidência 1/1 ✓ + regressão `navegacao` 13/13 ✓ (primeira tentativa
     abortou num hang transiente do webServer; re-rodada limpa) — nenhuma
     spec navega em `/app/indicadores` ou `/app/metrics`.
+  - **Fase 4h `bd4635147` — `/prospeccao`**:
+    - Rota única com 6 abas (Nova busca, Pesquisas, Empresas, Mercado,
+      Campanhas, Config); tabela de Empresas já era `ui/table`, 0 `<table>`
+      crua no diretório. Feito: `CrmPageHeader`-à-mão (`h1`+`<p>` do
+      `_client`) → `NexusPageHeader` (mesmas classes do `PageHeader`, h1
+      único preservado); **estados vazios crua→`NexusEmptyState`** (buscas
+      vazias, "Nenhuma empresa com estes filtros.", "Nenhuma campanha
+      ainda.", aviso de permissão "Criar busca exige papel…" com ícone
+      `LockKey`); **loading `Carregando…`→3×`Skeleton`** (Campanhas, Config,
+      Mercado) e **bug do loading infinito corrigido** (catch só fazia toast
+      e a tela ficava presa em Carregando/skeleton): `erro` state +
+      `NexusErrorState onRetry` em Campanhas, Config, Mercado e Empresas
+      (`buscar(filtros)` no retry); hexes do `_mapa` (paleta de status
+      novo/crm/cliente + divIcons Leaflet) mantidos com comentário —
+      codificação de série, mesma regra 4f.
+    - Prova visual: `evidence/fase4-prospeccao/1-prospeccao-desktop.png`
+      (header + Nova busca), `evidence/fase4-prospeccao/2-pesquisas-vazio-desktop.png`,
+      `evidence/fase4-prospeccao/3-empresas-desktop.png`,
+      `evidence/fase4-prospeccao/4-campanhas-vazio-desktop.png`,
+      `evidence/fase4-prospeccao/5-config-desktop.png` e
+      `evidence/fase4-prospeccao/6-prospeccao-mobile-390.png`.
+    - `EmptyFilterResults` (sem chips) já era canônico — mantido.
+  - **Gates da 4h**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ · unit
+    alvo 64/64 (prospeccao-lib/providers/buscas + branding + e2e-cobertura)
+    · `test:unit` = baseline (15 flakes nos mesmos 4 arquivos) · e2e:
+    evidência 1/1 ✓ + regressão do módulo `prospeccao-mapa` 1/1 ✓ (única
+    spec que cita a rota).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -403,8 +432,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         `/recuperacao` movida para cá + redirect `#radar-recuperacao`,
         gráficos em tokens); ✅ `/indicadores` (`f13ca808d`:
         `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
-        `#desempenho` com redirect) → próximo `/prospeccao` →
-      `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
+        `#desempenho` com redirect); ✅ `/prospeccao` (`bd4635147`:
+        `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6
+        abas) → próximo funis →
+      `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.

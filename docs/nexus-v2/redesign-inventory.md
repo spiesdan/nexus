@@ -208,7 +208,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `NexusPageHeader`, `/recuperacao` virou a 4ª seção com redirect `#`,
     gráficos em tokens de tema) → ✅ `/indicadores` (`f13ca808d`:
     `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
-    `#desempenho` com redirect) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
+    `#desempenho` com redirect) → ✅ `/prospeccao` (`bd4635147`:
+    `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6 abas;
+    hexes do mapa mantidos por serem paleta de dados) → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
