@@ -7,7 +7,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
  * humano; aplicar cria uma versão NOVA do agente (publish-por-ponteiro).
  */
 import { formatDistanceToNowStrict } from "date-fns";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -3,7 +3,7 @@
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import type { ChannelDeletionImpact } from "@/app/api/v1/channel-sessions/[id]/route";
 import { apiClient } from "@/lib/api/client";

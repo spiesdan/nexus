@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useT } from "@/hooks/i18n/useT";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { idiomaAtual } from "@/lib/i18n/IdiomaProvider";

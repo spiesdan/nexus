@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useT } from "@/hooks/i18n/useT";
 
 const ERROR_MESSAGES: Record<string, string> = {

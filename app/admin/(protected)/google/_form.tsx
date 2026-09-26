@@ -4,7 +4,7 @@ import { useT } from "@/hooks/i18n/useT";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { updateGoogleOAuth } from "@/app/actions/settings/updateGoogleOAuth";
 import { Button } from "@/components/ui/button";

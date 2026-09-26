@@ -5,7 +5,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import type { Locale } from "date-fns";
 import * as React from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";

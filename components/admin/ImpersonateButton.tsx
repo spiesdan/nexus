@@ -11,7 +11,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/i18n/useT";

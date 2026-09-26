@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Tag, Receipt, Users, ArrowRight } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { activityLabel, actorLabel, actorShape } from "@/lib/leads/activity-vocabulary";
 import { ConversationTagsEditor } from "./ConversationTagsEditor";

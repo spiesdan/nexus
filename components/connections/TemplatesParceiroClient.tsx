@@ -3,7 +3,7 @@
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
 import { PreviaDaDefinicao } from "./PreviaDaDefinicao";

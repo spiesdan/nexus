@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { FUSOS_OFERECIDOS } from "@/lib/tempo/fusos";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

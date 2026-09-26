@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { updateBranding } from "@/app/actions/settings/updateBranding";
 import { CampoDeLogo } from "@/components/branding/CampoDeLogo";
