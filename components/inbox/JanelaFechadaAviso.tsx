@@ -4,13 +4,19 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { useT } from "@/hooks/i18n/useT";
 
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api/client";
 import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { fonteDeTemplates, rotaDeTemplates } from "@/lib/channels/templates-fonte";
 import { lerConteudo } from "@/lib/channels/template-conteudo";
-import { cn } from "@/lib/utils";
 
 /**
  * A janela fechou — e aqui está o caminho de volta.
@@ -136,24 +142,26 @@ export function JanelaFechadaAviso({
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={escolhido}
-            onChange={(e) => setEscolhido(e.target.value)}
+          <Select
+            value={escolhido || undefined}
+            onValueChange={setEscolhido}
             disabled={send.isPending}
-            aria-label={t("Modelo aprovado")}
-            className={cn(
-              "h-9 min-w-[16rem] flex-1 rounded-lg border border-input bg-background px-2 text-sm",
-              "focus:outline-hidden focus:ring-1 focus:ring-ring",
-            )}
           >
-            <option value="">{t("Escolha um modelo aprovado…")}</option>
-            {aprovados.map((tpl) => (
-              <option key={`${tpl.name}|${tpl.language}`} value={`${tpl.name}|${tpl.language}`}>
-                {tpl.name} ({tpl.language})
-                {(tpl.slots?.length ?? 0) > 0 ? ` · ${tpl.slots!.length} ${t("parâmetro(s)")}` : ""}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 min-w-[16rem] flex-1" aria-label={t("Modelo aprovado")}>
+              <SelectValue placeholder={t("Escolha um modelo aprovado…")} />
+            </SelectTrigger>
+            <SelectContent>
+              {aprovados.map((tpl) => (
+                <SelectItem
+                  key={`${tpl.name}|${tpl.language}`}
+                  value={`${tpl.name}|${tpl.language}`}
+                >
+                  {tpl.name} ({tpl.language})
+                  {(tpl.slots?.length ?? 0) > 0 ? ` · ${tpl.slots!.length} ${t("parâmetro(s)")}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button type="button" size="sm" onClick={enviar} disabled={!atual || send.isPending}>
             {send.isPending ? t("Enviando…") : t("Enviar modelo")}
           </Button>

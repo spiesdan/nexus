@@ -60,13 +60,41 @@ async function login(page: Page, email: string): Promise<void> {
  */
 async function abrirConversaComMensagens(page: Page): Promise<boolean> {
   await page.goto("/app/inbox?filter=all");
-  const bolhas = page.locator("[class*='rounded-2xl']");
-  const primeira = page.locator("li, [role='listitem']").first();
-  if (await primeira.count()) await primeira.click();
-  await expect(bolhas.first())
-    .toBeVisible({ timeout: 8000 })
-    .catch(() => undefined);
-  return (await bolhas.count()) > 0;
+  // Linha da conversa = `<button data-conversation-id>`. O locator antigo
+  // (`li, [role='listitem']`) casava PRIMEIRO os `li` da sidebar — clicava no
+  // Dashboard e a spec "passava" o resto do teste no /app, onde `rounded-2xl`
+  // dos cards fingia ser bolha. Medido no ambiente local em 2026-09-26.
+  const linhas = page.locator("button[data-conversation-id]");
+  await expect(linhas.first()).toBeVisible({ timeout: 15_000 });
+  // Percorre as primeiras linhas em vez de só a primeira: a mais recente pode
+  // ser uma conversa sem mensagens (a spec não semeia), e desistir na primeira
+  // transformava o teste num skip rotineiro que nunca exercitava nada.
+  const total = Math.min(await linhas.count(), 8);
+  for (let i = 0; i < total; i++) {
+    await linhas.nth(i).click();
+    const temBolha = await bolhas(page)
+      .first()
+      .waitFor({ state: "visible", timeout: 4_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (temBolha) return true;
+  }
+  return false;
+}
+
+/**
+ * A bolha de mensagem de verdade.
+ *
+ * `rounded-2xl` sozinho casa cards do dashboard, do painel lateral e do widget
+ * de ajuda — qualquer um deles faria o pulo honesto virar um falso "tem
+ * mensagens". `rounded-br-sm`/`rounded-bl-sm` é o rabo da bolha (WhatsApp), que
+ * nenhum card tem.
+ */
+function bolhas(page: Page) {
+  return page.locator(
+    "[data-testid='chat-thread'] [class*='rounded-2xl'][class*='rounded-br-sm'], " +
+      "[data-testid='chat-thread'] [class*='rounded-2xl'][class*='rounded-bl-sm']",
+  );
 }
 
 test.describe("responder citando", () => {
@@ -80,7 +108,7 @@ test.describe("responder citando", () => {
     // O botão vive em `opacity-0` até o hover. `toBeVisible` do Playwright
     // considera opacidade 0 como visível, então o hover é o que prova de
     // verdade que ele é alcançável — e o clique, que é clicável.
-    await page.locator("[class*='rounded-2xl']").first().hover();
+    await bolhas(page).first().hover();
     await expect(responder).toBeVisible();
     await responder.click();
 
@@ -103,7 +131,7 @@ test.describe("responder citando", () => {
     const temMensagens = await abrirConversaComMensagens(page);
     test.skip(!temMensagens, "ambiente sem conversa com mensagens");
 
-    await page.locator("[class*='rounded-2xl']").first().hover();
+    await bolhas(page).first().hover();
     const responder = page.getByRole("button", { name: /Responder a esta mensagem/i }).first();
     await responder.click();
     await expect(page.getByRole("button", { name: /Cancelar resposta/i })).toBeVisible();

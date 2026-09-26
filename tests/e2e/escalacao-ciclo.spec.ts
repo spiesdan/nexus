@@ -27,7 +27,7 @@
  *   pnpm exec tsx --env-file=.env.local scripts/seed-e2e-escalacao.ts
  *   pnpm build && E2E_PORT=3021 pnpm exec playwright test tests/e2e/escalacao-ciclo.spec.ts
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -105,10 +105,10 @@ function blocoDeAberturaDoTurno(orgId: string, contactId: string): string {
   const arquivo = path.join(process.cwd(), ".e2e-abertura-turno.mts");
   fs.writeFileSync(arquivo, script);
   try {
-    return execFileSync(
-      "pnpm",
+    // `execNpx` em vez de `execFileSync("pnpm", ["exec", "tsx", ...])`: sem
+    // shell o spawn devolve ENOENT no Windows (o `.cmd` só resolve por shell).
+    return execNpx(
       [
-        "exec",
         "tsx",
         // SEM `--env-file=.env.local`. Esse arquivo não existe no worktree dedicado
         // de e2e — e a ausência dele é a proteção que impede a suíte de escrever em
@@ -127,7 +127,10 @@ function blocoDeAberturaDoTurno(orgId: string, contactId: string): string {
         contactId,
       ],
       { encoding: "utf8", cwd: process.cwd() },
-    );
+      // Mesmo cast de `retorno-anti-morte.spec.ts`: com `encoding: "utf8"` o
+      // retorno é string na runtime, mas a assinatura genérica devolve
+      // `string | Buffer`.
+    ) as string;
   } finally {
     fs.unlinkSync(arquivo);
   }
@@ -156,7 +159,7 @@ test.describe("IA 360 W3 — o agente para, a pessoa continua, o agente retoma s
     // Só semeia quando falta: o seed cria uma conversa nova a cada execução
     // (`e2e-escalacao-${Date.now()}`), então rodá-lo sempre deixaria lixo por corrida.
     if (!creds.escalacao) {
-      execFileSync("npx", ["tsx", "scripts/seed-e2e-escalacao.ts"], { stdio: "inherit" });
+      execNpx(["tsx", "scripts/seed-e2e-escalacao.ts"], { stdio: "inherit" });
       creds = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
     }
     if (!creds.escalacao) {
