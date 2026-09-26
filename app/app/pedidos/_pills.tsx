@@ -10,7 +10,7 @@ const CLASSE_DA_PILL: Record<StatusDoPedido, string> = {
   aprovado: "bg-blue-100 text-blue-800",
   faturado: "bg-violet-100 text-violet-800",
   expedido: "bg-indigo-100 text-indigo-800",
-  entregue: "bg-[#7cb342] text-white",
+  entregue: "bg-green-100 text-green-800",
   cancelado: "bg-muted text-muted-foreground",
 };
 

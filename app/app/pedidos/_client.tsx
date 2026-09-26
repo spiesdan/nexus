@@ -6,6 +6,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults, EmptyState } from "@/components/empty";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import {
   FilterActions,
   FilterChips,
@@ -502,74 +503,79 @@ export function PedidosClient({
   }, [pedidos, tagIdioma]);
 
   return (
-    <div className="min-h-full space-y-3 bg-[#f4f4f3] p-4 sm:p-6">
-      {/* Barra de acoes no molde do Mercos */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {podeCriar && (
-            <Button asChild className="bg-[#4b2e83] font-semibold text-white hover:bg-[#3d2569]">
-              <Link href="/app/pedidos/novo">
-                <Plus size={16} weight="bold" /> {t("Criar pedido / orçamento")}
+    <div className="min-h-full space-y-3 p-4 sm:p-6">
+      <NexusPageHeader
+        title={textos.titulo}
+        subtitle={textos.subtitulo}
+        actions={
+          <>
+            {podeCriar && (
+              <Button asChild className="font-semibold">
+                <Link href="/app/pedidos/novo">
+                  <Plus size={16} weight="bold" /> {t("Criar pedido / orçamento")}
+                </Link>
+              </Button>
+            )}
+            <Button variant="outline" asChild className="bg-surface">
+              <Link href="/app/ai">
+                <Robot size={16} /> {t("Criar com IA no WhatsApp")}
               </Link>
             </Button>
-          )}
-          <Button variant="outline" asChild className="bg-surface">
-            <Link href="/app/ai">
-              <Robot size={16} /> {t("Criar com IA no WhatsApp")}
-            </Link>
-          </Button>
-          <Button variant="outline" asChild className="bg-surface">
-            <Link
-              href={
-                selecionados.length > 0
-                  ? `/app/pedidos/imprimir?ids=${selecionados.join(",")}`
-                  : `/app/pedidos/imprimir?ids=${pedidos
-                      .map((x) => x.id)
-                      .slice(0, 50)
-                      .join(",")}`
-              }
-            >
-              <Printer size={16} /> {t("Imprimir pedidos")}
-            </Link>
-          </Button>
-        </div>
-        <div className="w-full sm:w-auto">
-          <div className="flex">
-            <Input
-              value={filtros.busca}
-              onChange={(e) => mudar({ busca: e.target.value }, true)}
-              placeholder={t("Pedido, cliente ou representada")}
-              aria-label={textos.buscar}
-              className="h-9 w-full rounded-r-none border-[#d9d9d9] bg-surface sm:w-64"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              aria-label={textos.buscar}
-              className="rounded-l-none border-l-0 bg-surface"
-              onClick={() => void recarregar(filtros)}
-            >
-              <MagnifyingGlass size={16} />
+            <Button variant="outline" asChild className="bg-surface">
+              <Link
+                href={
+                  selecionados.length > 0
+                    ? `/app/pedidos/imprimir?ids=${selecionados.join(",")}`
+                    : `/app/pedidos/imprimir?ids=${pedidos
+                        .map((x) => x.id)
+                        .slice(0, 50)
+                        .join(",")}`
+                }
+              >
+                <Printer size={16} /> {t("Imprimir pedidos")}
+              </Link>
             </Button>
-          </div>
-          <button
+          </>
+        }
+      />
+
+      {/* Busca + atalho dos filtros avancados */}
+      <div className="w-full sm:w-auto">
+        <div className="flex">
+          <Input
+            value={filtros.busca}
+            onChange={(e) => mudar({ busca: e.target.value }, true)}
+            placeholder={t("Pedido, cliente ou representada")}
+            aria-label={textos.buscar}
+            className="h-9 w-full rounded-r-none bg-surface sm:w-64"
+          />
+          <Button
             type="button"
-            className="mt-1 text-xs text-[#6a2fb3] hover:underline"
-            onClick={() => setAvancadosAbertos((a) => !a)}
+            variant="outline"
+            aria-label={textos.buscar}
+            className="rounded-l-none border-l-0 bg-surface"
+            onClick={() => void recarregar(filtros)}
           >
-            {t("Pesquise por nota fiscal, data de emissão, etc.")}
-          </button>
+            <MagnifyingGlass size={16} />
+          </Button>
         </div>
+        <button
+          type="button"
+          className="mt-1 text-xs text-accent hover:underline"
+          onClick={() => setAvancadosAbertos((a) => !a)}
+        >
+          {t("Pesquise por nota fiscal, data de emissão, etc.")}
+        </button>
       </div>
 
       {/* Linha de filtros por frase, como no Mercos */}
-      <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px] text-[#555]">
+      <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px] text-muted-foreground">
         <span>{t("Mostrando")}</span>
         <select
           value={filtros.status}
           onChange={(e) => mudar({ status: e.target.value })}
           aria-label={textos.statusLabel}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
         >
           <option value="">{t("Pedidos ativos")}</option>
           {STATUS_DO_PEDIDO.map((st) => (
@@ -588,7 +594,7 @@ export function PedidosClient({
             else mudar({ meus: false, vendedorId: v });
           }}
           aria-label={t("Vendedor")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
         >
           <option value="">{t("Todos os vendedores")}</option>
           <option value="meus">{textos.meus}</option>
@@ -603,7 +609,7 @@ export function PedidosClient({
           value={filtros.origem}
           onChange={(e) => mudar({ origem: e.target.value })}
           aria-label={t("Origem")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
         >
           <option value="">{t("Todas as plataformas")}</option>
           {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
@@ -616,7 +622,7 @@ export function PedidosClient({
           value=""
           onChange={() => {}}
           aria-label={t("Envio")}
-          className="cursor-pointer bg-transparent font-semibold text-[#6a2fb3] outline-hidden"
+          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
         >
           <option value="">{t("Sem considerar o envio")}</option>
         </select>
@@ -627,7 +633,7 @@ export function PedidosClient({
       {/* Avancados + salvos + troca de visao (colapsado para nao poluir o molde) */}
       <div className="flex flex-wrap items-center gap-2">
         <details open={avancadosAbertos} className="text-sm">
-          <summary className="cursor-pointer text-xs text-[#6a2fb3] hover:underline">
+          <summary className="cursor-pointer text-xs text-accent hover:underline">
             {textos.avancados}
             {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
           </summary>
@@ -754,7 +760,7 @@ export function PedidosClient({
         <div className="space-y-5">
           {porDia.map((g) => (
             <section key={g.chave} aria-label={g.rotulo}>
-              <p className="mb-2 text-[13px] font-normal uppercase tracking-wide text-[#8a8a8a]">
+              <p className="mb-2 text-[13px] font-normal uppercase tracking-wide text-text-subtle">
                 {g.rotulo.toUpperCase()}
               </p>
               <div className="space-y-3">
@@ -780,11 +786,11 @@ export function PedidosClient({
                           <span className="truncate">
                             <Link
                               href={`/app/pedidos/${p.id}`}
-                              className="font-bold text-[#6a2fb3] hover:underline"
+                              className="font-bold text-accent hover:underline"
                             >
                               {numeroDoPedido(p.numero)}
                             </Link>{" "}
-                            <span className="text-[#3c3c3c]">
+                            <span className="text-muted-foreground">
                               {t("emitido por")} {emissor}
                             </span>
                           </span>
@@ -793,20 +799,20 @@ export function PedidosClient({
                       </div>
                       <Link
                         href={`/app/pedidos/${p.id}`}
-                        className="block space-y-1 px-3 py-2.5 text-[13px] leading-5 text-[#333]"
+                        className="block space-y-1 px-3 py-2.5 text-[13px] leading-5 text-text"
                       >
                         <span className="flex items-center gap-1.5">
-                          <Storefront size={13} className="shrink-0 text-[#b5b5b5]" />
+                          <Storefront size={13} className="shrink-0 text-text-subtle" />
                           <span className="truncate font-medium uppercase">{p.cliente_nome}</span>
                         </span>
                         {segundaLinha && (
-                          <span className="block truncate pl-5 text-[#555]">{segundaLinha}</span>
+                          <span className="block truncate pl-5 text-muted-foreground">{segundaLinha}</span>
                         )}
-                        <span className="flex items-center gap-1.5 text-[#555]">
-                          <CalendarBlank size={13} className="shrink-0 text-[#b5b5b5]" />
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <CalendarBlank size={13} className="shrink-0 text-text-subtle" />
                           <span className="truncate uppercase">{p.condicao_pagamento || "—"}</span>
                         </span>
-                        <span className="block pl-5 font-bold text-[#222]">
+                        <span className="block pl-5 font-bold text-text">
                           {comoMoeda(p.total_cents, p.moeda)}
                         </span>
                       </Link>
