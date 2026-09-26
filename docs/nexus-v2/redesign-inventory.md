@@ -129,8 +129,15 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
   `useConfirmar()`). Resíduo: só os primitivos `ui/{dialog,alert-dialog,sheet}`.
 - Empty: **2 APIs ativas** (`components/empty` 20 importadores × `NexusEmptyState` 12)
   → declarar SoR única (alias).
-- Toast: 3 APIs (`sonner` cru 155 linhas, `nexusToast` 9, `ApiErrorToast`) →
-  `nexusToast` única porta.
+- Toast: era 3 APIs (`sonner` cru 128 arquivos, `nexusToast` 9, `ApiErrorToast`) →
+  **`nexusToast` única porta ✅ (Fase 3f, `6ed0d5670`)**: a porta ganhou toda a
+  superfície usada (chamada `toast(...)`, `success/error/warning/info/loading/
+  message/dismiss`, repasse transparente de 1 ou 2 args e segundo arg string→
+  `{description}`), os 121 arquivos prod importam `nexusToast as toast` (411
+  call sites intactos) e `showApiError` segue como MAPA de código→tom sobre a
+  porta. Exceções: `lib/notifications/deliver.ts` (runtime de servidor, fica
+  com `sonner`) e `app/layout.tsx` (`<Toaster/>` = infraestrutura); os testes
+  seguem mockando `sonner` — o mock intercepta via porta.
 - Skeletons locais (8+) → `NexusTableSkeleton`.
 - `NexusLoading`/`NexusAiSources`/`NexusAiContextMeter`/`NexusGraphCanvas`:
   0 uso prod → usar ou apagar (decidir por categoria).
@@ -183,12 +190,12 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    `admin/layout`, `app/(admin)/`), `motion` fantasma se existir.
 3. **Fase 2 — shell §17**: `Breadcrumb` (registry) + `ContextualDrawer` no
    `AppShell` + `NotificationCenter` (AlertsBell→painel) + Global Search estendida.
-4. **Fase 3 — consolidações de alto alavanco**: `StatusPage` 6→1 ✅ (`37b35a029`);
-   `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`); `NexusConfirmDialog`
-   ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`); `SuspendDialog`+
-   `ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`); overlays manuais→
-   `ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅ (`41173e58d`);
-   resta: toasts→`nexusToast`.
+4. **Fase 3 — consolidações de alto alavanco ✅ FECHADA**: `StatusPage` 6→1 ✅
+   (`37b35a029`); `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`);
+   `NexusConfirmDialog` ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`);
+   `SuspendDialog`+`ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`);
+   overlays manuais→`ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅
+   (`41173e58d`); toasts→`nexusToast` ✅ (`6ed0d5670`).
 5. **Fase 4 — refatoração por módulo (prioridade A)**: `/contacts` → `/pedidos`
    (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão

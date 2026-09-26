@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `41173e58d feat(nexus-v2): Fase 3e do redesign - overlays manuais viram ui/dialog e confirm( globais viram useConfirmar (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 3e**.
-  (anteriores: `7340d3e54` Fase 3d TenantReasonDialog · `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
+- HEAD: `6ed0d5670 feat(nexus-v2): Fase 3f do redesign - toasts unificados na porta nexusToast, 121 arquivos deixam o sonner cru (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 3f**.
+  (anteriores: `41173e58d` Fase 3e overlays+confirm · `958806f13` docs handoff 3e ·
+  `7340d3e54` Fase 3d TenantReasonDialog · `a6c01e6fa` docs handoff 3a-3c · `eafb9c071` Fase 3c ConfirmDialog ·
   `ab0545095` Fase 3b AdminDataTable · `37b35a029` Fase 3a StatusPage ·
   `c343a9993` Fase 2d Global Search · `727faf650` handoff fases 0/1/2 ·
   `6f12049c0` infra e2e · `d949973d5` TopBar admin · `40e049aab` ContextualDrawer ·
@@ -27,8 +28,8 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a/3b/3c/3d/3e EXECUTADAS
-neste torno; fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
+**Passo 6 (redesign §100) — Fase 3 (consolidações) 3a-3f COMPLETA neste torno;
+fases 0/1/2 + shell §17 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -89,9 +90,22 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
      `ConfirmacaoProvider` (sem provider o hook lança, por contrato).
    - Resíduo medido: `confirm(`/`window.confirm(` fora do próprio provider = 0;
      `fixed inset-0 z-50` = só os primitivos `ui/{dialog,alert-dialog,sheet}`.
+ - **Fase 3f `6ed0d5670` — toasts → `nexusToast` porta única**: a porta
+   (`components/nexus-ui/feedback/nexus-toast.ts`) passou a ofertar a superfície
+   toda do sonner usada no repo (chamada `toast(...)` + `success/error/warning/
+   info/loading/message/dismiss`, retorno de id, 2º arg `string | ExternalToast`
+   com string→`{description}`) e repassa 1 arg quando não há 2º (mantém os
+   `toHaveBeenCalledWith(msg)` dos testes idênticos). **121 arquivos prod**
+   trocaram `import { toast } from "sonner"` por `nexusToast as toast` (~411
+   call sites intactos); `showApiError` virou mapa de código→tom sobre a porta.
+   Exceções (medidas): `lib/notifications/deliver.ts` (server runtime) e
+   `app/layout.tsx` (`<Toaster/>`) seguem com `sonner`; os testes mockam
+   `sonner` e o mock intercepta via porta (nada de mock mudou). Resíduo
+   `from "sonner"` em prod = exatamente esses 3 arquivos.
  - **Gates da torno**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
    `test:unit` = baseline (7.423 pass / 15 flakes conhecidos: guarda-da-release,
    namespace-das-imagens, performed-at, rate-limit) · `pnpm build` ✓ ·
+   e2e da 3f: `webhooks`+`followup-queue`+`marca-logo` 9/9 ✓ ·
    e2e da 3e: `mfa-opcional` 4/4 ✓ + smoke `inbox-quem-manda`/
    `inbox-abas-espelham-o-comando` 3/3 ✓ · e2e da 3d:
    `webhooks`+`followup-queue`+`retorno-anti-morte` 6/6 ✓ ·
@@ -100,15 +114,14 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3a-3e ✅; resta 3f + Fases 4-6**:
-   a. **Fase 3 — consolidações**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3 COMPLETA (3a-3f ✅); resta Fases 4-6**:
+   a. **Fase 3 — consolidações ✅ TODA**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
       `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
       `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
       `ConfirmacaoProvider`); ✅ `SuspendDialog`+`ReactivateDialog`→1
       (`TenantReasonDialog`, `7340d3e54`); ✅ overlays→`ui/dialog` (3
       restantes) + 5 `confirm(` globais→`useConfirmar` (`41173e58d`);
-      resta: **3f** toasts→`nexusToast` (sonner cru 155 linhas, `nexusToast`
-      9, `ApiErrorToast`).
+      ✅ toasts→`nexusToast` porta única (`6ed0d5670`, 121 arquivos).
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): `/contacts` →
       `/pedidos` (hex Mercos→tokens) → `360` → `/inbox` → `/financeiro` (8
       tabelas + fusão com `/titulos`) → `/radar` (+`/recuperacao`) →
