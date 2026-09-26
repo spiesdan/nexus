@@ -199,7 +199,10 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
 5. **Fase 4 — refatoração por módulo (prioridade A)**: ✅ `/contacts` (lista)
    (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → ✅ `/pedidos`
    (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → ✅ `360`
-   (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → `/inbox` → `/financeiro` (8 tabelas + fusão com
+   (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → ✅ `/inbox`
+   (`0228f8c9f`: hexes soltos → `whatsapp-theme.ts` (tema WhatsApp mantido de
+   propósito, decisão registrada) + `JanelaFechadaAviso` `<select>`→`ui/select`;
+   sem página-header por desenho — three-pane full-viewport) → `/financeiro` (8 tabelas + fusão com
    `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
    `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.

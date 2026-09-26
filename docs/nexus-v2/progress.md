@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `3612818d7 feat(nexus-v2): Fase 4c do redesign - cabecalho 360 adota NexusPageHeader sem perder a tag header do e2e (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4c**.
-  (anteriores: `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
+- HEAD: `0228f8c9f feat(nexus-v2): Fase 4d do redesign - inbox centraliza a paleta WhatsApp, seletor da janela fechada vira ui/select e specs de regressao corrigidas (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4d**.
+  (anteriores: `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
+  `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
   `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
   `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
   `958806f13` docs handoff 3e · `41173e58d` Fase 3e overlays+confirm ·
@@ -31,9 +32,9 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts`, 4b = `/pedidos`
-+ 4c = `360` EXECUTADAS neste torno; fases 0/1/2 + shell §17 fechados no
-handoff `727faf650`.** Inventário:
+Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts`, 4b = `/pedidos`,
+4c = `360` + 4d = `/inbox` EXECUTADAS neste torno; fases 0/1/2 + shell §17
+fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
@@ -207,8 +208,65 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    carga da suíte — **prova de que não são do diff**: com `git stash` do
    arquivo (árvore limpa) a suíte reproduz o mesmo tipo de falha (17/6,
    7 timeouts) e TODOS os suspeitos passam isolados (5/5 e 34/34) ·
-   `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ +
-   regressões do 360 3/3 ✓.
+    `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ +
+    regressões do 360 3/3 ✓.
+  - **Fase 4d `0228f8c9f` — `/inbox` (componentes em `components/inbox/`)**:
+    - Diagnóstico: o módulo estava **quase todo na régua** — `InboxFilters`
+      já usa primitivos canônicos (Tabs/Select/Input/Switch); `ConversationList`
+      já tem skeleton + `q.isError` + botão de refetch; sem `<h1>` por DESENHO
+      (three-pane `h-[calc(100dvh-...)]` — master-detail não é página; um
+      `NexusPageHeader` em cima empurraria a lista numa tela onde espaço é
+      escasso; hierarquia §100 não exige h1 em painel); diálogos do módulo já
+      são `DialogContent` (migração `NexusFormDialog` é trilha da Fase 5).
+    - Feito (1) **paleta WhatsApp centralizada**: os 2 hexes que vazaram do
+      tema voltaram para dentro dele — `WA.dayLabel` (`#54656f`, divisor de
+      dia, ChatThread) e `WA.quote`/`WA.quoteOut` (`#075e54`, barra da
+      citação, MessageBubble); hexes fora do `whatsapp-theme.ts` em
+      `components/inbox` = **0**. Os 8 hexes DENTRO do tema ficaram de
+      propósito: o arquivo é a assimilação visual do WhatsApp (cabeçalho
+      documenta "SÓ COR… escopo estrito"), consumido também por
+      `pedidos/[id]`, `prospeccao` e `radar` — **decisão: não converter para
+      tokens Nexus**.
+    - Feito (2) **`JanelaFechadaAviso`**: `<select>` nativo → `ui/select`
+      (`SelectTrigger` com `aria-label="Modelo aprovado"`,
+      `value={escolhido || undefined}` no precedente de
+      `CredentialPicker`/`ModelPicker`, placeholder no `SelectValue`);
+      import de `cn` removido (ficou sem uso).
+    - Prova visual: `evidence/fase4-inbox/1-aviso-janela-fechada-desktop.png`
+      (banner da janela fechada + seletor fechado),
+      `evidence/fase4-inbox/2-seletor-modelo-desktop.png` (dropdown Radix
+      aberto com o modelo APPROVED) e
+      `evidence/fase4-inbox/3-aviso-janela-fechada-mobile.png`.
+    - Fixture da evidência (spec temporária, apagada): o ambiente e2e só tem
+      conversas `waha` (sem restrição de janela) — a spec criou sessão
+      `meta_cloud` (+ `meta_phone_number_id`, exigido pelo check
+      `channel_sessions_provider_ref_check`), contato, conversa com
+      `last_inbound_at` NULO (janela que nunca abriu) e `meta_templates`
+      `APPROVED`; `bot_silenced_until='infinity'` porque
+      `fn_comando_da_conversa` sem trava devolve `automatico` e a conversa
+      não caía na aba Fila (default da tela).
+    - Specs corrigidas — **falhas pré-existentes, provadas com stash** (o
+      mesmo vermelho com a árvore limpa):
+      `inbox-responder-citando` clicava no `li` da SIDEBAR (locator
+      `li, [role='listitem']` casava o Dashboard primeiro) e contava
+      `rounded-2xl` dos cards como bolha — migrou para
+      `button[data-conversation-id]`, bolhas escopadas em
+      `[data-testid='chat-thread']` com `rounded-br-sm`/`rounded-bl-sm`,
+      percorrendo até 8 linhas (a mais recente pode não ter mensagens);
+      `escalacao-ciclo` (2 sites: `pnpm exec tsx`→`execNpx(["tsx", …])` +
+      `npx`→`execNpx`, cast `as string` no precedente de
+      `retorno-anti-morte`) e `queue-assign` (npx→`execNpx`) migrados para
+      rodar no Windows.
+  - **Gates da 4d**: typecheck ✓ · lint 0/338 ✓ · `test:unit` = baseline
+    (15 flakes nos mesmos 4 arquivos) + `lib/ui/icons.test.ts` (barrel de
+    ~1300 módulos, timeout documentado no próprio teste; passa isolado 1/1) ·
+    `pnpm build` ✓ · e2e: evidência (spec temporária, apagada) 1/1 ✓ +
+    regressão das 7 specs do inbox — citando 2/2 ✓ (após o fix), quem-manda
+    3/3 ✓, abas ✓, scope ✓, tempo-real ✓, escalacao 1/1 ✓, queue 1/1 ✓;
+    uma rodada COMBINADA derrubou quem-manda + escalacao no error boundary
+    "Algo deu errado" (transiente, problema conhecido — PR aberto de socket
+    hang up no e2e) e as duas passaram re-rodadas isoladas · imagens
+    `evidence/*` sobrescritas pela regressão restauradas com `git checkout`.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -223,9 +281,11 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    b. **Fase 4 — refatoração por módulo** (inventário §2.1): ✅ `/contacts`
       (lista, `e062aa3b5`); ✅ `/pedidos` (`921435fe8`: hex Mercos→tokens +
       `NexusPageHeader`); ✅ `360` (`3612818d7`: `Cabecalho360` no
-      `NexusPageHeader`, `<header>` preservada pro e2e) → próximo
-      `/inbox` → `/financeiro` (8 tabelas + fusão com `/titulos`) →
-      `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
+       `NexusPageHeader`, `<header>` preservada pro e2e); ✅ `/inbox`
+       (`0228f8c9f`: paleta WhatsApp centralizada, seletor da janela
+       fechada→`ui/select`, specs de regressão corrigidas) → próximo
+       `/financeiro` (8 tabelas + fusão com `/titulos`) →
+       `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
