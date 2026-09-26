@@ -57,8 +57,8 @@ async function main() {
   }
   console.log(`   → ${page.url().replace(BASE, "")}`);
 
-  console.log("2. /app/metrics…");
-  await page.goto(`${BASE}/app/metrics`, { waitUntil: "networkidle" });
+  console.log("2. /app/indicadores#desempenho…");
+  await page.goto(`${BASE}/app/indicadores#desempenho`, { waitUntil: "networkidle" });
   await page.waitForTimeout(2500);
   console.log(`   → ${page.url().replace(BASE, "")}`);
 

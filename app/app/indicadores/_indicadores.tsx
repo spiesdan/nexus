@@ -21,7 +21,8 @@ import {
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
-import { CrmPageHeader } from "@/components/nexus-ui/crm/crm-page-header";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -31,6 +32,7 @@ import { Saudacao } from "./_saudacao";
 import { Briefing } from "./_briefing";
 import { Funil } from "./_funil";
 import { Atividade } from "./_atividade";
+import { MetricsClient } from "../metrics/_components/MetricsClient";
 
 export interface DadosIndicadores {
   mes: string;
@@ -257,10 +259,14 @@ export function IndicadoresClient({
   dados,
   nome,
   hora,
+  canCompare,
+  currentUserId,
 }: {
   dados: DadosIndicadores;
   nome: string | null;
   hora: number;
+  canCompare: boolean;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const t = useT();
@@ -306,11 +312,7 @@ export function IndicadoresClient({
 
   return (
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
-      <CrmPageHeader
-        eyebrow={t("Sales Intelligence")}
-        title={t("Indicadores")}
-        description={dados.rotuloMes}
-      />
+      <NexusPageHeader title={t("Indicadores")} subtitle={dados.rotuloMes} />
       <Saudacao nome={nome} hora={hora} dados={dados} />
 
       <Briefing necessarioDia={dados.necessarioDia} />
@@ -716,41 +718,39 @@ export function IndicadoresClient({
             {t("Ver comissões")}
           </Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                <th className="py-1 pr-3 text-[10px] font-medium uppercase tracking-[0.12em]">{t("Vendedor")}</th>
-                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Pedidos")}</th>
-                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Ticket médio")}</th>
-                <th className="py-1 pr-3 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Total")}</th>
-                <th className="py-1 text-right text-[10px] font-medium uppercase tracking-[0.12em]">{t("Meta")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dados.ranking.map((r) => (
-                <tr key={r.id} className="row-hover border-t">
-                  <td className="py-2 pr-3 font-medium">{r.nome}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{r.qtd}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{brl(r.ticket)}</td>
-                  <td className="py-2 pr-3 text-right font-semibold tabular-nums">
-                    {brl(r.total)}
-                  </td>
-                  <td className="py-2 text-right tabular-nums">
-                    {r.meta != null ? `${brl(r.meta)} (${(r.pctMeta ?? 0).toFixed(0)}%)` : "—"}
-                  </td>
-                </tr>
-              ))}
-              {dados.ranking.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
-                    {t("Sem vendas no período.")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("Vendedor")}</TableHead>
+              <TableHead className="text-right">{t("Pedidos")}</TableHead>
+              <TableHead className="text-right">{t("Ticket médio")}</TableHead>
+              <TableHead className="text-right">{t("Total")}</TableHead>
+              <TableHead className="text-right">{t("Meta")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {dados.ranking.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.nome}</TableCell>
+                <TableCell className="text-right tabular-nums">{r.qtd}</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(r.ticket)}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">
+                  {brl(r.total)}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {r.meta != null ? `${brl(r.meta)} (${(r.pctMeta ?? 0).toFixed(0)}%)` : "—"}
+                </TableCell>
+              </TableRow>
+            ))}
+            {dados.ranking.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  {t("Sem vendas no período.")}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </Card>
 
       {dados.cortado && (
@@ -758,6 +758,19 @@ export function IndicadoresClient({
           {t("Janela limitada a 25 mil linhas — os totais consideram o período cortado.")}
         </p>
       )}
+
+      {/* Desempenho — era a página /app/metrics, movida para cá na fusão
+          (S100). O h2 e a âncora `#desempenho` vivem aqui; o redirect da rota
+          antiga entrega nela. */}
+      <section id="desempenho" className="scroll-mt-20 space-y-3">
+        <h2 className="text-base font-medium text-text">{t("Desempenho")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {canCompare
+            ? t("Atrito, funil e performance por atendente nos últimos 30 dias.")
+            : t("Atrito, seu funil e sua performance nos últimos 30 dias.")}
+        </p>
+        <MetricsClient canCompare={canCompare} currentUserId={currentUserId} />
+      </section>
     </div>
   );
 }

@@ -6,7 +6,9 @@ import { useState } from "react";
 import { useAttendantMetrics, type AttendantMetric } from "@/hooks/metrics/useAttendantMetrics";
 import { AtritoPanel } from "./AtritoPanel";
 import { useTeamMembers } from "@/hooks/team/useTeamMembers";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -47,13 +49,19 @@ export function MetricsClient({ canCompare, currentUserId }: Props) {
   const t = useT();
   const [owner, setOwner] = useState<string>(ALL);
   const selectedOwner = owner === ALL ? null : owner;
-  const { data, isLoading, isError } = useAttendantMetrics(selectedOwner);
+  const { data, isLoading, isError, refetch } = useAttendantMetrics(selectedOwner);
   // Opções do filtro: só manager+ (a rota /team é manager+). Agent nem vê o filtro.
   const team = useTeamMembers({ enabled: canCompare });
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>;
-  if (isError || !data)
-    return <p className="text-sm text-destructive">{t("Erro ao carregar métricas.")}</p>;
+  if (isLoading)
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
+    );
+  if (isError || !data) return <NexusErrorState onRetry={() => void refetch()} />;
 
   const metrics = data.data;
   const funnelTotal = metrics.funnel.reduce((acc, s) => acc + s.count, 0);

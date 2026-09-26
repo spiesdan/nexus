@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { ROLE_RANK } from "@/lib/auth/types";
 import { isServiceRoleConfigured } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -204,5 +205,15 @@ export default async function IndicadoresPage({
     ),
   );
 
-  return <IndicadoresClient dados={dados} nome={user.full_name} hora={hora} />;
+  return (
+    <IndicadoresClient
+      dados={dados}
+      nome={user.full_name}
+      hora={hora}
+      // spec 13 §6.1 (vinha da antiga /app/metrics): agent vê as próprias
+      // (RLS); a comparação por atendente é manager+.
+      canCompare={ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager}
+      currentUserId={user.id}
+    />
+  );
 }

@@ -14,7 +14,7 @@ async function main() {
   await p.locator('input[type="password"]').pressSequentially(c.password, { delay: 8 });
   await p.click('button[type="submit"]');
   await p.waitForURL(/\/app/, { timeout: 30000 });
-  await p.goto(`${BASE}/app/metrics`, { waitUntil: "networkidle" });
+  await p.goto(`${BASE}/app/indicadores#desempenho`, { waitUntil: "networkidle" });
   await p.waitForTimeout(2500);
   const m = await p.evaluate(`(() => {
     var t = document.body.innerText;

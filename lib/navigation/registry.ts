@@ -691,7 +691,10 @@ export const NAV_DESTINATIONS: NavDestination[] = [
   // jornada do agente). Porta de todos: ⌘K — e o hub, onde houver.
   {
     // §19 não lista Desempenho — SEM sidebar (medido: 18 links/8 títulos já
-    // ocupam 744px dos 763px da nav em 1280×900).
+    // ocupam 744px dos 763px da nav em 1280×900). A rota virou REDIRECIONAMENTO
+    // na fusão com Indicadores (S100): o href fica como está porque
+    // `navegacao-completude` exige href ∈ rota em disco (match exato) — é o
+    // redirect que entrega o usuário em `#desempenho`.
     href: "/app/metrics",
     label: "Desempenho",
     description: "Funil e performance por atendente nos últimos 30 dias.",
