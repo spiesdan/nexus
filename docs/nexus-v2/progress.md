@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `0228f8c9f feat(nexus-v2): Fase 4d do redesign - inbox centraliza a paleta WhatsApp, seletor da janela fechada vira ui/select e specs de regressao corrigidas (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4d**.
-  (anteriores: `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
+- HEAD: `679b65fb3 feat(nexus-v2): Fase 4e do redesign - /financeiro adota NexusPageHeader e NexusDataTable nas 4 tabelas e /titulos vira aba com redirect legado (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4e**.
+  (anteriores: `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
+  `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
   `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
   `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
   `05359785a` docs handoff 3f · `6ed0d5670` Fase 3f toasts ·
@@ -32,8 +33,9 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) ABERTA com 4a = `/contacts`, 4b = `/pedidos`,
-4c = `360` + 4d = `/inbox` EXECUTADAS neste torno; fases 0/1/2 + shell §17
+Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
+4c = `360`, 4d = `/inbox` + 4e = `/financeiro` (fusão `/titulos`) EXECUTADAS
+neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -266,7 +268,39 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     uma rodada COMBINADA derrubou quem-manda + escalacao no error boundary
     "Algo deu errado" (transiente, problema conhecido — PR aberto de socket
     hang up no e2e) e as duas passaram re-rodadas isoladas · imagens
-    `evidence/*` sobrescritas pela regressão restauradas com `git checkout`.
+     `evidence/*` sobrescritas pela regressão restauradas com `git checkout`.
+  - **Fase 4e `679b65fb3` — `/financeiro` (fusão com `/titulos`)**:
+    - **Decisão do usuário** (question tool): `/titulos` vira **aba de
+      `/financeiro`**. Rota antiga permanece como **redirect puro** (padrão
+      `settings/whatsapp`, sem auth interno) preservando `?busca=`; links e
+      busca global passam a apontar `/app/financeiro?aba=titulos`; **registry
+      mantém href `/app/titulos`** — `navegacao-completude` exige href ∈ rota
+      em disco com match exato (sem query string), por isso a rota não morre.
+    - Feito: `TitulosClient` movido para `financeiro/_titulos.tsx` (`AbaTitulos`,
+      sem header/padding próprios, Excel na row de filtros); `page.tsx` lê
+      `searchParams` (`aba` validada em `ABAS_CONHECIDAS`, `busca`) e troca a
+      aba por `key={aba|busca}` (remount — sem estado stale); 6º TabsTrigger;
+      `CrmPageHeader`→`NexusPageHeader` (eyebrow redundante removido); as 4
+      `<table>` cruas (receber/pagar/cobranças/fluxo) → `ui/table` +
+      `NexusDataTable` com `state` (erro→`onRetry`, empty→empty existente,
+      `pagination` na recebíveis); `AbaPagar`/`AbaCobrancas`/`AbaFluxo`
+      ganharam `erro` real (o catch mostrava empty no lugar de erro); botão
+      "Abrir em Títulos" em Cobranças → `setAba("titulos")` sem navegar.
+    - Prova visual: `evidence/fase4-financeiro/1-recebiveis-desktop.png`
+      (aba Contas a receber), `evidence/fase4-financeiro/2-titulos-desktop.png`
+      (aba Títulos com as 8 parcelas), `evidence/fase4-financeiro/3-redirect-titulos-desktop.png`
+      (redirect legado caindo na aba) e
+      `evidence/fase4-financeiro/4-recebiveis-mobile.png` (390).
+    - Fixture da evidência (spec temporária, apagada): Docker religado (stack
+      Supabase subiu com restart policy); `financial_receivables` ganhou 2
+      linhas (1 a vencer +5d, 1 vencido -3d, 150000 cents); os 8 pedidos
+      faturados aptos a título já existiam no org e2e.
+  - **Gates da 4e**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ (rotas
+    `ƒ /app/financeiro` + `ƒ /app/titulos`) · `test:unit` = baseline (15
+    flakes nos mesmos 4 arquivos; o "Failed Suites 1" é o mesmo
+    `guarda-da-release` com EPERM no `rmSync`, flake Windows conhecido) ·
+    e2e: evidência 1/1 ✓ + regressão `navegacao` 13/13 ✓; nenhuma spec cita
+    `/app/titulos` nem visita `/app/financeiro`.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -283,9 +317,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       `NexusPageHeader`); ✅ `360` (`3612818d7`: `Cabecalho360` no
        `NexusPageHeader`, `<header>` preservada pro e2e); ✅ `/inbox`
        (`0228f8c9f`: paleta WhatsApp centralizada, seletor da janela
-       fechada→`ui/select`, specs de regressão corrigidas) → próximo
-       `/financeiro` (8 tabelas + fusão com `/titulos`) →
-       `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
+        fechada→`ui/select`, specs de regressão corrigidas); ✅ `/financeiro`
+        (`679b65fb3`: `NexusPageHeader` + `NexusDataTable` nas 4 tabelas,
+        `/titulos` virou aba com redirect legado preservando `?busca=`) →
+        próximo `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;

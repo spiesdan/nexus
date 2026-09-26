@@ -63,8 +63,8 @@ Sinais medidos no tenant: 18/80 rotas importam algo de `nexus-ui`; 9 usam
 | `/app/faturamento` | NOVO | header+DataTable+estados |
 | `/app/inteligencia` | NOVO | `NexusIntelligence`+loading/error; pendência `CrmPageHeader` |
 | `/app/notas` | NOVO | header nexus; pendência: 4 `Table` shadcn fora do DataTable |
-| `/app/titulos` | NOVO | header+DataTable+estados |
-| `/app/financeiro` | CONSOLIDAR | 8 `<table>` cruas; aba "Receber" duplica `/titulos` |
+| `/app/titulos` | REDIRECT→`/financeiro` | decisão do usuário: aba `?aba=titulos`; `_client.tsx` virou `financeiro/_titulos.tsx` (`679b65fb3`) |
+| `/app/financeiro` | CONSOLIDAR ✅ | 4 `<table>` cruas→`ui/table`+`NexusDataTable` (erros/empty por aba), `NexusPageHeader`, 6 abas com Títulos (`679b65fb3`) |
 | `/app/kanban` | CONSOLIDAR | é lista de funis; duplica `/settings/tenant/pipelines` |
 | `/app/metrics` | CONSOLIDAR | duplica `/indicadores`+`/relatorios` |
 | `/app/recuperacao` | CONSOLIDAR | duplica Radar (recompra/risk); sem loading/responsivo |
@@ -200,11 +200,12 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → ✅ `/pedidos`
    (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → ✅ `360`
    (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → ✅ `/inbox`
-   (`0228f8c9f`: hexes soltos → `whatsapp-theme.ts` (tema WhatsApp mantido de
-   propósito, decisão registrada) + `JanelaFechadaAviso` `<select>`→`ui/select`;
-   sem página-header por desenho — three-pane full-viewport) → `/financeiro` (8 tabelas + fusão com
-   `/titulos`) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
-   `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
+    (`0228f8c9f`: hexes soltos → `whatsapp-theme.ts` (tema WhatsApp mantido de
+    propósito, decisão registrada) + `JanelaFechadaAviso` `<select>`→`ui/select`;
+    sem página-header por desenho — three-pane full-viewport) → ✅ `/financeiro`
+    (`679b65fb3`: `NexusPageHeader` + 4 `<table>` cruas→`NexusDataTable`,
+    `/titulos` virou aba com redirect legado) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
+    `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
