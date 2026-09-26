@@ -67,7 +67,7 @@ Sinais medidos no tenant: 18/80 rotas importam algo de `nexus-ui`; 9 usam
 | `/app/financeiro` | CONSOLIDAR ✅ | 4 `<table>` cruas→`ui/table`+`NexusDataTable` (erros/empty por aba), `NexusPageHeader`, 6 abas com Títulos (`679b65fb3`) |
 | `/app/kanban` | CONSOLIDAR | é lista de funis; duplica `/settings/tenant/pipelines` |
 | `/app/metrics` | CONSOLIDAR | duplica `/indicadores`+`/relatorios` |
-| `/app/recuperacao` | CONSOLIDAR | duplica Radar (recompra/risk); sem loading/responsivo |
+| `/app/recuperacao` | REDIRECT→`/radar` | fusão na 4f: virou a seção `#radar-recuperacao` (`b60fe1a1f`); rota mantida como redirect com `#` |
 | `/app/inbox/[id]` | CONSOLIDAR | rota-resolver (push) — **manter**, não é UI |
 | `/app/leads/[id]` | CONSOLIDAR | rota-resolver (permalinks radar/webhooks) — **manter** |
 | `/app/settings/canal-oficial` | REMOVER* | stub redirect → `connections?aba=oficial` |
@@ -204,7 +204,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     propósito, decisão registrada) + `JanelaFechadaAviso` `<select>`→`ui/select`;
     sem página-header por desenho — three-pane full-viewport) → ✅ `/financeiro`
     (`679b65fb3`: `NexusPageHeader` + 4 `<table>` cruas→`NexusDataTable`,
-    `/titulos` virou aba com redirect legado) → `/radar` (+fusão `/recuperacao`) → `/indicadores` (+fusão
+    `/titulos` virou aba com redirect legado) → ✅ `/radar` (`b60fe1a1f`:
+    `NexusPageHeader`, `/recuperacao` virou a 4ª seção com redirect `#`,
+    gráficos em tokens de tema) → `/indicadores` (+fusão
     `/metrics`) → `/prospeccao` → funis (`/kanban`+`settings/tenant/pipelines`) →
    `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar

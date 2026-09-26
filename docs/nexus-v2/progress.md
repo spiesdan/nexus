@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `679b65fb3 feat(nexus-v2): Fase 4e do redesign - /financeiro adota NexusPageHeader e NexusDataTable nas 4 tabelas e /titulos vira aba com redirect legado (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4e**.
-  (anteriores: `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
+- HEAD: `b60fe1a1f feat(nexus-v2): Fase 4f do redesign - radar ganha NexusPageHeader, 4 secoes com a recuperacao vinda de /app/recuperacao e graficos em tokens de tema (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4f**.
+  (anteriores: `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
+  `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
   `e373d0545` docs handoff 4c · `3612818d7` Fase 4c 360 ·
   `6f32a5f5c` docs handoff 4b · `921435fe8` Fase 4b /pedidos ·
   `b7850a0bb` docs handoff 4a · `e062aa3b5` Fase 4a /contacts ·
@@ -34,8 +35,8 @@
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
-4c = `360`, 4d = `/inbox` + 4e = `/financeiro` (fusão `/titulos`) EXECUTADAS
-neste torno; fases 0/1/2 + shell §17
+4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`) + 4f =
+`/radar` (fusão `/recuperacao`) EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -301,6 +302,49 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     `guarda-da-release` com EPERM no `rmSync`, flake Windows conhecido) ·
     e2e: evidência 1/1 ✓ + regressão `navegacao` 13/13 ✓; nenhuma spec cita
     `/app/titulos` nem visita `/app/financeiro`.
+  - **Fase 4f `b60fe1a1f` — `/radar` (fusão com `/recuperacao`)**:
+    - Mesma mecânica da fusão decidida na 4e (precedente do usuário): o
+      conteúdo da antiga `/app/recuperacao` virou a **4ª seção do Radar**
+      (`#radar-recuperacao`, botão que rola — não aba, porque os e2e
+      `recompra-radar`/`risk-radar`/`retorno-anti-morte` leem as seções SEM
+      clique intermediário); a rota antiga virou **redirect puro**
+      `redirect("/app/radar#radar-recuperacao")` (padrão stub `settings`,
+      **o `#` sobrevive ao `redirect()`** — provado na evidência).
+    - Feito: `CrmPageHeader`→`NexusPageHeader` (eyebrow "Sales Intelligence"
+      caiu, como na 4e); contagem `temBase` (pedidos >60d) movida da página
+      antiga para `radar/page.tsx` e passada por `RadarTabs`; o client virou
+      `radar/_components/RecuperacaoLista.tsx` **sem `textos`** (tudo via
+      `useT`, as 13 strings originais intactas), `<h1>`/`p-6` saíram (o h2 da
+      seção é estrutura), loading `Carregando…`→3×`Skeleton h-16` (padrão das
+      listas vizinhas) e erro ganhou `NexusErrorState` com retry (copy
+      canônica); card "Maiores chances de recuperação" agora rola para a
+      seção em vez de navegar; briefing de indicadores aponta para a âncora;
+      registry href `/app/recuperacao` **mantido** (gate exige href ∈ rota em
+      disco; comentário explica o redirect).
+    - Gráficos (hex→tokens na régua do módulo): grid `#e8e8e8`→
+      `var(--color-border)` (**era literalmente o valor do token**), ticks
+      `#666666`→`var(--color-muted-foreground)`, tooltip `#ffffff`/`#e8e8e8`
+      →`var(--color-popover)`/`var(--color-border)`, barra `#7e77f0`→
+      `var(--color-accent)` (o hex era a cor de marca do tema). Paleta de
+      status do donut (`#33c758`/`#ffa600`/`#ff3e00`/`#a94a3c`) **mantida**
+      — não há token com esses valores (só success/warning/error apagados);
+      converter mudaria a visualização = decisão de design para a Fase 5
+      (`NexusChart`).
+    - Prova visual: `evidence/fase4-radar/1-radar-desktop.png` (header +
+      4 botões de seção), `evidence/fase4-radar/2-recuperacao-lista-desktop.png`
+      (lista com `dias=1`: um inativo do org e2e), `evidence/fase4-radar/3-redirect-recuperacao-desktop.png`
+      (URL `…/radar#radar-recuperacao`) e `evidence/fase4-radar/4-radar-mobile-390.png`.
+    - Specs `risk-radar`/`recompra-radar` migradas para `execNpx` (mesmo
+      ENOENT Windows que a 4d corrigiu em outras 3; **~60 specs ainda usam
+      `execFileSync("npx")`** — débito conhecido, fora do escopo do passo 6;
+      só os gates do módulo foram corrigidos).
+  - **Gates da 4f**: typecheck ✓ · lint 0/338 ✓ (`Date.now()` em render dá
+    `react-hooks/purity`; `new Date().getTime()` — a forma da página antiga —
+    passa) · `pnpm build` ✓ · `test:unit` = baseline (15 flakes nos mesmos 4
+    arquivos, sem Failed Suite) · alvos 131/131 (navegacao-registry,
+    completude, busca-global, inventario, risk-radar, inatividade,
+    mapas-de-arquitetura, e2e-cobertura) · e2e: evidência 1/1 ✓ +
+    regressões recompra/risk/retorno 6/6 ✓ + `navegacao` 13/13 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -319,8 +363,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
        (`0228f8c9f`: paleta WhatsApp centralizada, seletor da janela
         fechada→`ui/select`, specs de regressão corrigidas); ✅ `/financeiro`
         (`679b65fb3`: `NexusPageHeader` + `NexusDataTable` nas 4 tabelas,
-        `/titulos` virou aba com redirect legado preservando `?busca=`) →
-        próximo `/radar` (+`/recuperacao`) → `/indicadores` (+`/metrics`) →
+        `/titulos` virou aba com redirect legado preservando `?busca=`); ✅
+        `/radar` (`b60fe1a1f`: `NexusPageHeader`, 4ª seção com a
+        `/recuperacao` movida para cá + redirect `#radar-recuperacao`,
+        gráficos em tokens) → próximo `/indicadores` (+`/metrics`) →
       `/prospeccao` → funis → `/agenda` → `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
