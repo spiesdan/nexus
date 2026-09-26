@@ -3,10 +3,12 @@
 import * as React from "react";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { useT } from "@/hooks/i18n/useT";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 
 /**
@@ -32,13 +34,16 @@ export function MercadoTab() {
   const t = useT();
   const [cidade, setCidade] = React.useState("");
   const [dados, setDados] = React.useState<Mercado | null>(null);
+  const [erro, setErro] = React.useState(false);
 
   const carregar = React.useCallback(async (c: string) => {
     try {
       const qs = c.trim() ? `?cidade=${encodeURIComponent(c.trim())}` : "";
       const corpo = await apiClient.get<{ data: Mercado | null }>(`/api/v1/prospecting/mercado${qs}`);
       setDados(corpo?.data ?? null);
+      setErro(false);
     } catch (e) {
+      setErro(true);
       showApiError(e);
     }
   }, []);
@@ -67,8 +72,14 @@ export function MercadoTab() {
         </div>
       </div>
 
-      {!dados ? (
-        <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
+      {!dados && erro ? (
+        <NexusErrorState onRetry={() => void carregar(cidade)} />
+      ) : !dados ? (
+        <div className="space-y-2" aria-live="polite">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">

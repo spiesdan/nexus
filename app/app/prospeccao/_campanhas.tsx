@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { Megaphone } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import { CampanhaWizard } from "./_campanha-wizard";
@@ -47,13 +50,16 @@ export function CampanhasTab({
 }) {
   const t = useT();
   const [lista, setLista] = React.useState<Campanha[] | null>(null);
+  const [erro, setErro] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
       const corpo = await apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns");
       const dados = (corpo as { data?: unknown } | null)?.data;
       setLista(Array.isArray(dados) ? dados : []);
+      setErro(false);
     } catch (e) {
+      setErro(true);
       showApiError(e);
     }
   }, []);
@@ -85,12 +91,16 @@ export function CampanhasTab({
         <CampanhaWizard categorias={categorias} aoConcluir={() => void recarregar()} />
       )}
 
-      {lista === null ? (
-        <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
+      {erro && lista === null ? (
+        <NexusErrorState onRetry={() => void recarregar()} />
+      ) : lista === null ? (
+        <div className="space-y-2" aria-live="polite">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
       ) : lista.length === 0 ? (
-        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
-          {t("Nenhuma campanha ainda.")}
-        </Card>
+        <NexusEmptyState icon={Megaphone} headline={t("Nenhuma campanha ainda.")} />
       ) : (
         <ul className="space-y-2">
           {lista.map((c) => (

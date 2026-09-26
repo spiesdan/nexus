@@ -3,7 +3,10 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Buildings } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
@@ -103,6 +106,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     status: paramsUrl.get("status") ?? "",
   }));
   const [lista, setLista] = React.useState<(Prospect & { ja_e_cliente: boolean })[] | null>(null);
+  const [erro, setErro] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const [visao, setVisao] = React.useState<"tabela" | "mapa">("tabela");
   const [dono, setDono] = React.useState("");
@@ -143,7 +147,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       const dados = (corpo as { data?: unknown } | null)?.data;
       setLista(Array.isArray(dados) ? dados : []);
       setSelecionados([]);
+      setErro(false);
     } catch (e) {
+      setErro(true);
       showApiError(e);
     }
   }, []);
@@ -504,7 +510,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         </FilterActions>
       </FilterBar>
 
-      {lista === null ? (
+      {lista === null && erro ? (
+        <NexusErrorState onRetry={() => void buscar(filtros)} />
+      ) : lista === null ? (
         <div className="space-y-2" aria-live="polite">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
@@ -629,9 +637,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       ) : lista.length === 0 && chips.length > 0 ? (
         <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
       ) : lista.length === 0 ? (
-        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
-          {t("Nenhuma empresa com estes filtros.")}
-        </Card>
+        <NexusEmptyState icon={Buildings} headline={t("Nenhuma empresa com estes filtros.")} />
       ) : (
         <>
           {podeOperar && (

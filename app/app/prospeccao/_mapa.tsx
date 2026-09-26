@@ -36,6 +36,9 @@ export interface PontoMapa extends PontoGeo {
   score: number;
 }
 
+// Paleta de dados dos marcadores (status novo/crm/cliente) — codificação de
+// série, não chrome; mantida como está (mesma regra dos hexes de gráfico da
+// decisão 4f). O mesmo vale para os hexes inline dos divIcons do Leaflet.
 const CORES: Record<StatusMapa, string> = {
   novo: "#7c3aed",
   crm: "#2563eb",
