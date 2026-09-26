@@ -45,6 +45,8 @@ export type NexusConfirmDialogProps = {
   busyLabel?: string;
   danger?: boolean;
   busy?: boolean;
+  /** Desabilita o botão de confirmação enquanto `true` (validação do chamador: campo obrigatório, mínimo de caracteres…). */
+  confirmDisabled?: boolean;
   onConfirm: () => void | Promise<void>;
   /** Conteúdo entre o cabeçalho e o rodapé (resumo de diff, detalhes, etc.). */
   children?: React.ReactNode;
@@ -71,6 +73,7 @@ export function NexusConfirmDialog({
   busyLabel,
   danger = true,
   busy = false,
+  confirmDisabled = false,
   triggerLabel,
   onConfirm,
   children,
@@ -127,7 +130,7 @@ export function NexusConfirmDialog({
             {cancelLabel ?? t("Cancelar")}
           </AlertDialogCancel>
           <AlertDialogAction
-            disabled={busy}
+            disabled={busy || confirmDisabled}
             onClick={(e) => {
               e.preventDefault();
               void confirmar();

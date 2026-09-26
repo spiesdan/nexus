@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SuspendDialog } from "./SuspendDialog";
-import { ReactivateDialog } from "./ReactivateDialog";
+import { TenantReasonDialog } from "./TenantReasonDialog";
 import { ImpersonateButton } from "@/components/admin/ImpersonateButton";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -81,13 +80,15 @@ export function TenantActions({
         )}
       </div>
 
-      <SuspendDialog
+      <TenantReasonDialog
+        acao="suspender"
         open={suspendOpen}
         onClose={() => setSuspendOpen(false)}
         organizationId={organizationId}
       />
 
-      <ReactivateDialog
+      <TenantReasonDialog
+        acao="reativar"
         open={reactivateOpen}
         onClose={() => setReactivateOpen(false)}
         organizationId={organizationId}
