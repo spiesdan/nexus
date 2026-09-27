@@ -62,7 +62,7 @@ const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
  * Seção FINANCEIRO da ficha do pedido — recebíveis gerados, com ação de
  * gerar e atalho para a central. O vínculo NF aparece quando existir.
  */
-function FinanceiroDoPedido({ pedidoId }: { pedidoId: string }) {
+function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: string }) {
   const t = useT();
   const [linhas, setLinhas] = React.useState<{ id: string; parcela_n: number; total_parcelas: number; valor_original_cents: number; vencimento: string; situacao: string; saldo_cents: number }[] | null>(null);
   const [gerando, setGerando] = React.useState(false);
@@ -76,7 +76,11 @@ function FinanceiroDoPedido({ pedidoId }: { pedidoId: string }) {
     } catch {
       setLinhas([]);
     }
-  }, [pedidoId]);
+    // O `status` viaja nas dependências de propósito: o "Faturar pedido" gera
+    // os recebíveis DENTRO do PATCH, e sem este refetch o card continuava
+    // dizendo "Sem financeiro gerado" até um F5 — medido pela jornada e2e.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- status é o GATILHO do refetch, não um dado lido aqui
+  }, [pedidoId, status]);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -649,7 +653,7 @@ export function DetalheDoPedido({
       </Card>
 
       {/* FINANCEIRO */}
-      <FinanceiroDoPedido pedidoId={pedido.id} />
+      <FinanceiroDoPedido pedidoId={pedido.id} status={pedido.status} />
 
       {/* FISCAL */}
       <FiscalDoPedido pedidoId={pedido.id} />

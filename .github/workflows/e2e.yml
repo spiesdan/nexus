@@ -212,6 +212,7 @@ jobs:
         agenda-tela-do-produto.spec.ts
         notificacoes-diz-o-que-falta.spec.ts
         relogio-http-cron-externo.spec.ts
+        compras-do-rascunho-ao-estoque.spec.ts estoque-entrada-saida-e-saldo.spec.ts
       # ⚠️ A ORDEM DESTA LISTA NÃO DECIDE A ORDEM DE EXECUÇÃO. O Playwright
       # ordena os arquivos por CAMINHO, não pela ordem em que são passados na
       # linha de comando. Medido no run 31838253496: `marca-logo.spec.ts` estava
@@ -313,6 +314,8 @@ jobs:
         form-field-canonico.spec.ts
         responsividade-nas-rotas.spec.ts
         auditoria-aceite-11-itens.spec.ts
+        jornada-venda.spec.ts jornada-expedicao.spec.ts jornada-financeiro.spec.ts
+        jornada-fiscal.spec.ts jornada-ia.spec.ts
       # Cada item aqui tem o motivo MEDIDO, não presumido — e o gate cobra que a
       # lista exista e some com as outras duas.
       #
@@ -671,6 +674,13 @@ jobs:
           # busca na internet). Sem esta linha, `prova-painel-provedores` mede a
           # sorte do ambiente em vez da tela.
           pnpm exec tsx scripts/seed-e2e-catalogo-openrouter.ts
+          # A senha do certificado fiscal só grava se `fn_encrypt_oauth` achar a
+          # chave de cifra em `private.app_secrets` — no self-hoster quem cria é
+          # o setup (`hostgator-setup-kit/_common.sh`), e em banco fresco do CI
+          # ninguém criou. Sem a linha, o PUT de `/api/v1/fiscal-settings`
+          # responde 422 para qualquer `certificado_senha`, a pré-validação cobra
+          # a senha e `jornada-fiscal.spec.ts` falha antes de emitir.
+          pnpm exec tsx scripts/seed-e2e-fiscal-cifra.ts
 
       # O que ficou DE FORA (e por quê) é declarado no passo de summary —
       # cobertura parcial silenciosa se lê como cobertura total.

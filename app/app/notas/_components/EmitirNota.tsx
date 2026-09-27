@@ -49,12 +49,15 @@ export function EmitirNota({
     setPendencias(null);
     try {
       // Pré-validação: a SEFAZ nunca é a primeira a dizer que falta NCM.
-      const prev = await apiClient.post<{ ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] }>(
+      // O envelope `ok()` chega como `{data}` — ler `prev.ok` em cima dele era
+      // `undefined`, caía no ramo de pendências com `pendencias === undefined`
+      // e o render derrubava o boundary (`undefined.length`).
+      const prev = await apiClient.post<{ data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] } }>(
         "/api/v1/invoices/validar",
         { order_id: pedidoId },
       );
-      if (!prev.ok) {
-        setPendencias(prev.pendencias);
+      if (!prev.data.ok) {
+        setPendencias(prev.data.pendencias);
         return;
       }
       await apiClient.post("/api/v1/invoices", { order_id: pedidoId });
