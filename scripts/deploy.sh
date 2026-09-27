@@ -54,6 +54,16 @@ echo "[nexus] 7/7 health check..."
 # de confiar neste passo. Um critério, um lugar: o mesmo probe do kit.
 if corpo="$(wait_app_healthy 30 5)"; then
   echo "[nexus] healthy: $corpo"
+  # Grava o pin no .env (a mesma razão do `gravar_imagens` do update.sh:
+  # uma escolha precisa sobreviver ao processo que a fez). Sem esta linha o
+  # deploy só existe enquanto este script vive: qualquer `up -d` rodado à mão
+  # re-resolve as três serviços pelo .env e volta para o pin antigo do
+  # install. Medido no incidente de 2026-09-27: o .env ainda dizia 1.14.0
+  # enquanto os containers rodavam nexus-v2, e o rollback do agente usou
+  # esse pin para desfazer o deploy. O pull é explícito acima (etapa 3), então
+  # a tag republicada chega mesmo com pull_policy=missing — mesma conta do
+  # update.sh (docs/doctrine/packaging.md, invariante 5).
+  gravar_imagens .env "$NEXUS_TAG"
   dc --env-file .env ps
   exit 0
 fi

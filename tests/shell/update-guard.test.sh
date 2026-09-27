@@ -173,9 +173,13 @@ echo topo > topo.txt; git add -A; git commit --quiet -m "topo da main"
 
 OUTFILE="$WORK/saida.txt"
 run_update() {  # run_update <args...> → saída em $OUTFILE, status em $RC
+  # `|| RC=$?` (e não `; RC=$?`): o caso 10 sourceia o _common.sh NO SHELL DO
+  # TESTE, e ele liga `set -e`. Com rc esperado 3 numa recusa, a forma velha
+  # abortava a suíte inteira no meio do caso 13 — medido. O RC=0 antes garante
+  # que um update com sucesso também não deixe o valor da recusa anterior.
   rm -f "$BACKUP_MARK"
-  bash hostgator-setup-kit/update.sh "$@" > "$OUTFILE" 2>&1
-  RC=$?
+  RC=0
+  bash hostgator-setup-kit/update.sh "$@" > "$OUTFILE" 2>&1 || RC=$?
 }
 
 echo "── 1. Alvo anterior ao instalado é recusado antes do backup"
@@ -481,6 +485,105 @@ R="$( printf "APP_IMAGE=${NS}/deskcommcrm:1.3.0\n" > "$PIN_DIR/.env"
       cd "$PIN_DIR" && PATH="$PIN_DIR/bin:$PATH" DUBLE_VERSION="<no value>" bash -c \
         ". '$KIT_DIR_TESTE/_common.sh'; completar_pin_ausente .env" 2>/dev/null || true )"
 check "imagem sem label de versão → não inventa pin" test -z "$R"
+
+echo "── 12. Porta de entrada: o comecar.sh nasce no repositório canônico"
+# O default do REPO_URL do comecar.sh apontava para o projeto irmão: o clone
+# fresco nascia com as tags do projeto irmão no `origin`, e o agente de cron
+# oferecia a versão alheia — a MESMA topologia do incidente de 2026-09-27,
+# recriada por quem instalasse pelo caminho documentado no README. O
+# install.sh:18 já tinha o default certo; a gêmea ficou para trás.
+check "REPO_URL do comecar.sh aponta para spiesdan/nexus (igual ao install.sh)" \
+  grep -q 'REPO_URL:-https://github.com/spiesdan/nexus.git' "$REPO_ROOT/hostgator-setup-kit/comecar.sh"
+check "a URL de bootstrap do README também" \
+  grep -q 'raw.githubusercontent.com/spiesdan/nexus/main/hostgator-setup-kit/comecar.sh' "$REPO_ROOT/README.md"
+
+echo "── 13. Contenção: tag que só existe localmente é recusada — nem sem --to, nem com --force"
+# Incidente medido na VPS crm.billhigiene.tech em 2026-09-27: o clone herdou do
+# bootstrap antigo 52 tags do projeto irmão, o agente de cron ofereceu a maior
+# (v1.56.0) e o update.sh validava o alvo SÓ contra o `git tag` local — fez
+# checkout do código alheio e o pull das imagens falhou, deixando o git numa
+# versão que ninguém publicou daqui. A autoridade agora é o `origin`: tag sem
+# passaporte lá não entra, nem com --force (a flag volta no tempo; não muda de
+# país). A prova roda no clone RASO, cujo origin é o $SRC de verdade — a tag
+# v9.9.9 existe aqui e nunca foi para lá.
+cd "$RASO" || exit 1
+git config user.email t@t.t; git config user.name t   # clone não herda a identidade (o CI não tem global)
+RAMO_ANTES="$(git branch --show-current)"
+git checkout --quiet -b linhagem-alheia
+echo estrangeiro > estrangeiro.txt; git add -A
+git commit --quiet -m "commit que só existe nesta cópia"
+git tag v9.9.9
+git checkout --quiet "$RAMO_ANTES"
+HEAD_ANTES="$(git rev-parse HEAD)"
+ENV_ANTES="$(grep '^APP_IMAGE=' .env)"
+run_update                                   # sem --to: alvo = maior tag local = v9.9.9
+check "aborta com o código de recusa (3)" test "$RC" -eq 3
+check "diz que a tag não existe no repositório oficial" \
+  grep -q "não existe no repositório oficial" "$OUTFILE"
+check "não chegou a rodar o backup" test ! -f "$BACKUP_MARK"
+check "NÃO mexeu no código: o HEAD é o mesmo de antes" \
+  test "$(git rev-parse HEAD)" = "$HEAD_ANTES"
+check "o .env ficou intacto" test "$(grep '^APP_IMAGE=' .env)" = "$ENV_ANTES"
+run_update --to v9.9.9 --force               # nem o --force passa por cima da autoridade
+check "com --force a tag alheia também não entra" test "$RC" -eq 3
+check "  e a recusa continua ANTES do backup" test ! -f "$BACKUP_MARK"
+check "  a mensagem nomeia o repositório oficial" \
+  grep -q "não existe no repositório oficial" "$OUTFILE"
+
+echo "── 14. A contenção não prende o legítimo: tag publicada no origin segue até o fim"
+# Sem esta prova a de cima passaria por vacuidade — recusar TUDO também é
+# verde. O v1.1.0 existe no $SRC (foi ele quem o caso 8 publicou), não está
+# no HEAD do RASO e não é retrocesso: é exatamente o alvo que tem que entrar.
+run_update --to v1.1.0
+check "a atualização publicada termina com sucesso" test "$RC" -eq 0
+check "rodou o backup antes de mexer (o caminho normal preservado)" \
+  test -f "$BACKUP_MARK"
+check "o código agora é a v1.1.0" \
+  test "$(git describe --tags --exact-match HEAD 2>/dev/null)" = "v1.1.0"
+check "o .env gravou a versão instalada" \
+  grep -q "^APP_IMAGE=${NS}/deskcommcrm:1.1.0$" .env
+
+echo "── 15. Agente: a autoridade também é o origin — tag estrangeira não é anunciada"
+# O coração do incidente: era esta linha que escolhia o alvo do update pela
+# MAIOR TAG LOCAL. Aqui a cópia tem uma v9.9.9 (commit numa linha lateral que o
+# origin nunca viu) acima da última publicada — antes da contenção o heartbeat
+# anunciava v9.9.9; agora anuncia a v1.1.0, que é a que existe no canônico.
+AGENTE2="$WORK/agente2"
+git -c advice.detachedHead=false clone --depth 1 --branch v0.9.0 --quiet "file://$SRC" "$AGENTE2"
+cp "$RASO/.env" "$AGENTE2/.env"; chmod 600 "$AGENTE2/.env"
+cd "$AGENTE2" || exit 1
+git config user.email t@t.t; git config user.name t   # clone não herda a identidade (o CI não tem global)
+git checkout --quiet -b linhagem-alheia
+echo x > so-aqui.txt; git add -A
+git commit --quiet -m "commit que o origin nunca viu"
+git tag v9.9.9
+git checkout --quiet v0.9.0
+: > "$CURL_LOG"; rm -f "$BACKUP_MARK"
+bash hostgator-setup-kit/agent.sh > "$WORK/agente2.out" 2>&1 || true
+check "o heartbeat anunciou a última versão PUBLICADA no origin" \
+  grep -q '"latest_version":"v1.1.0"' "$CURL_LOG"
+check "e nunca citou a tag que só existe localmente" \
+  test -z "$(grep -F 'v9.9.9' "$CURL_LOG" || true)"
+
+echo "── 16. deploy.sh grava o pin — depois dele, um up -d à mão não volta pro canal antigo"
+# Medido no incidente de 2026-09-27: o deploy deixou os containers em
+# nexus-v2, mas o .env continuava dizendo 1.14.0 — e é o .env que qualquer
+# `up -d` manual re-resolve, e que o rollback do agente usou para desfazer o
+# deploy. O update.sh já gravava o pin (gravar_imagens); o deploy.sh só
+# exportava enquanto o processo vivia.
+cd "$PROJ" || exit 1
+DEP_RC=0
+NEXUS_IMAGE="${NS}/deskcommcrm:nexus-v2" bash "$REPO_ROOT/scripts/deploy.sh" > "$WORK/deploy.out" 2>&1 || DEP_RC=$?
+check "o deploy termina saudável" test "$DEP_RC" -eq 0
+check "o .env pinado na tag deployada" \
+  grep -q "^APP_IMAGE=${NS}/deskcommcrm:nexus-v2$" .env
+check "  o worker na MESMA tag" \
+  grep -q "^WORKER_IMAGE=${NS}/deskcomm-worker:nexus-v2$" .env
+check "  o scheduler na MESMA tag" \
+  grep -q "^SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:nexus-v2$" .env
+check "  pull_policy da tag (missing — o pull é explícito na etapa 3)" \
+  grep -q '^APP_PULL_POLICY=missing$' .env
+check "  e sem duplicar chave nenhuma" test "$(grep -c '^APP_IMAGE=' .env)" -eq 1
 
 if [ "$FAILS" -eq 0 ]; then echo "OK — todas as provas passaram."; else echo "FALHOU — $FAILS prova(s)."; fi
 exit $((FAILS > 0))
