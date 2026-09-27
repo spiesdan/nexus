@@ -219,7 +219,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     "Novo agendamento" intactos; empty/loading/erro já canônicos; 7 specs
     livres de `execFileSync`) → ✅ `pedidos/[id]`/`pedidos/novo`
     (`badee8467`: número como title + ações no slot + pill em linha
-    própria no detalhe; h1 copiado → componente no novo) → `/webhooks` → admin.
+    própria no detalhe; h1 copiado → componente no novo) → ✅ `/webhooks`
+    (`4262e415b`: `NexusPageHeader` + `NexusErrorState` com retry nas
+    abas Sources/Rules/Activity; empties ricos de produto mantidos) → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
    `NexusKpi`/`NexusChart`, `FormField`.

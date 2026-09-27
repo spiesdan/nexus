@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `badee8467 feat(nexus-v2): Fase 4k do redesign - pedidos/[id] e /novo no NexusPageHeader (numero como title, acoes no slot, pill em linha propria); novo troca h1 copiado pelo componente (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4k**.
-  (anteriores: `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
+- HEAD: `4262e415b feat(nexus-v2): Fase 4l do redesign - /webhooks com NexusPageHeader e NexusErrorState com retry nas abas Sources/Rules/Activity (erro nao vira lista vazia); 2 specs livres de execFileSync (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4l**.
+  (anteriores: `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
+  `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
   `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
   `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
   `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
@@ -43,7 +44,7 @@ Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
 `/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
 4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`) +
-4j = `/agenda` + 4k = `pedidos/[id]`/`novo`
+4j = `/agenda` + 4k = `pedidos/[id]`/`novo` + 4l = `/webhooks`
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -501,6 +502,40 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     e2e-cobertura + branding) · `test:unit` = baseline (15 flakes nos
     mesmos 4 arquivos) · e2e: evidência 1/1 ✓ (8.8s) + canário
     `navegacao` 13/13 ✓.
+  - **Fase 4l `4262e415b` — `/webhooks`**:
+    - Feito: `page.tsx` — `<header>` à mão (h1 + subtítulo copiando as
+      classes do `PageHeader`) → `NexusPageHeader` (title literal
+      "Webhooks", subtítulo traduzido intacto; sem ações). O cliente já
+      era canônico (skeleton SSR + `ui/tabs`, decisão documentada).
+    - **Bug de erro corrigido nas 3 abas**: `SourcesTab`, `RulesTab` e
+      `ActivityTab` liam `{ data, isLoading }` sem `isError` — a falha da
+      consulta renderizava o EMPTY da aba ("Conecte sua landing page",
+      "Crie sua primeira automação", "Nenhuma automação rodou ainda"), o
+      mesmo anti-padrão que o `CapturasTab` já corrigia com comentário.
+      Agora as três têm `NexusErrorState onRetry={refetch}` (copy
+      canônica, `role="alert"`); `CapturasTab` ficou intacto (copy de
+      produto específica + já tratado). Empties RICOS (ex.: os 3 passos
+      em `<ol>` de SourcesTab) mantidos — copy de produto não cabe em
+      `subcopy` string.
+    - Specs da regressão livres da dívida Windows: `execFileSync("npx")`
+      → `execNpx` em `automacao-diz-a-verdade` (3 chamadas) e
+      `historico-de-captacao` (1).
+    - Evidência: `evidence/fase4-webhooks/1-header-desktop.png`,
+      `evidence/fase4-webhooks/2-header-mobile-390.png` e
+      `evidence/fase4-webhooks/3-erro-com-retry.png` (estado de erro
+      FORÇADO com `page.route(abort)` na consulta de fontes — prova de
+      que a aba deixa de fingir que está vazia).
+    - Imagens `evidence/ia-360-w4/*` sobrescritas pela regressão
+      RESTAURADAS com `git checkout` (mesma regra das fases anteriores).
+  - **Gates da 4l**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ ·
+    unit alvo 50/50 (spec-de-envio + navegacao-completude + breadcrumb +
+    e2e-cobertura + branding) · `test:unit` = baseline (15 flakes nos
+    mesmos 4 arquivos) · e2e: evidência 1/1 ✓ (10.1s) + regressão das 5
+    specs que visitam `/app/webhooks` (`webhooks`, `agente-organiza`,
+    `automacao-diz-a-verdade`, `historico-de-captacao`,
+    `vps-webhook-outbound-ssrf`): 6/7 verdes e 1 falha de flake
+    (query transitória — a re-execução passou 2/2 e o estado de erro
+    novo é justamente o comportamento correto); imagens W4 restauradas.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -531,8 +566,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com ações no slot,
         7 specs livres de `execFileSync`); ✅ `pedidos/[id]`/`novo`
         (`badee8467`: número como title, ações no slot, pill em linha
-        própria; novo troca o h1 copiado pelo componente) → próximo
-        `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
+        própria; novo troca o h1 copiado pelo componente); ✅ `/webhooks`
+        (`4262e415b`: `NexusPageHeader` + `NexusErrorState` com retry em
+        3 abas — erro não vira lista vazia; 2 specs livres de
+        `execFileSync`) → próximo admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
    c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
