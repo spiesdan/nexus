@@ -146,7 +146,8 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
 - `ui/gradient-button`, `orb-button`, `pill-button`, `typing-field`, `select-menu`
   + ~12 botões `uimaxxing` = só servem `uimaxxing` morto → remover junto.
 - **Lacuna: `FormField`** (140 arquivos com `<Label>` solto, sem campo canônico) → CRIAR.
-- Tabs: 6 `role="tab"` manuais + `_tab-nav` locais → `ui/tabs`.
+- Tabs: 6 `role="tab"` manuais + `_tab-nav` locais → `ui/tabs` ✅ (Fase 5c
+  `c370b8c8a`, ver §5.6).
 - Filtros: **5 FilterBar distintos** (1.290 linhas) → consolidar em
   `components/filters/FilterBar`.
 - Headers: **3** (`layout/PageHeader` 3, `NexusPageHeader` 9, `CrmPageHeader` 5 —
@@ -237,10 +238,23 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    caseiras (`fd6a18d9e`: compras pedidos+fornecedores, estoque saldos+
    movimentos, carteira → `FilterBar`/`FilterPrimary`/`FilterSearch`/
    `FilterSelect`/`FilterActions` com copy intacta; regressão permanente
-   `filterbar-unica-nas-listas.spec.ts`; as barras nomeadas de DOMÍNIO —
-   kanban, inbox, admin audit/tenants, usage, agents — seguem decisão por
-   categoria); resta tabs manuais→
-   `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
+    `filterbar-unica-nas-listas.spec.ts`; as barras nomeadas de DOMÍNIO —
+    kanban, inbox, admin audit/tenants, usage, agents — seguem decisão por
+    categoria) · ✅ abas canônicas nas 7 telas (`c370b8c8a`: os 6
+    `role="tab"` manuais — produtos, radar, histórico da agenda, tipo de
+    pessoa nos 2 dialogs de contato, papéis do agente — e a sub-nav do
+    detalhe de tenant passaram a montar `ui/tabs` com copy/wiring/testids
+    intactos; `_tab-nav` = `TabsTrigger asChild` sobre `Link`, de modo que
+    navegação segue sendo URL — href, ctrl+click e botão voltar; helper
+    `loginComoDono` + `execNpx` em 2 specs; regressão permanente
+    `abas-canonicas-nas-telas.spec.ts` em `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-tabs-unicas/1-produtos-abas-desktop.png`,
+    `evidence/fase5-tabs-unicas/2-radar-categorias-desktop.png`,
+    `evidence/fase5-tabs-unicas/3-agenda-historico-desktop.png`,
+    `evidence/fase5-tabs-unicas/4-dialog-tipo-pessoa-desktop.png`,
+    `evidence/fase5-tabs-unicas/5-agente-papeis-desktop.png`,
+    `evidence/fase5-tabs-unicas/6-admin-tenant-abas-desktop.png`); resta
+    `NexusKpi`/`NexusChart`, `FormField`.
 7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
    e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
 

@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `fd6a18d9e feat(nexus-v2): Fase 5b do redesign - 5 toolbars caseiras de compras (pedidos e fornecedores), estoque (saldos e movimentos) e carteira viram a FilterBar canonica (FilterSearch/FilterSelect/FilterActions com copy intacta, acoes a direita como em prospeccao); regressao permanente filterbar-unica-nas-listas.spec.ts registrada em SPECS_PARTE_2 (3 telas com zero cobertura e2e, asserta barra + ausencia de erro de API) (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 5b**.
-  (anteriores: `c9d294721` docs handoff 5a · `0a9409f58` Fase 5a header +
+- HEAD: `c370b8c8a refactor(fase-5c): abas canonicas - 7 telas em ui/tabs com tabs/controlado` — as 6 telas com `role="tab"` manual (produtos, radar, histórico da agenda, tipo de pessoa nos 2 dialogs de contato, papéis do agente) + a sub-nav do detalhe de tenant montam `ui/tabs` (copy/wiring/testids intactos; `_tab-nav` = `TabsTrigger asChild` sobre `Link`, navegação segue sendo URL); helper `loginComoDono` + `execNpx` em 2 specs; regressão permanente `abas-canonicas-nas-telas.spec.ts` em `SPECS_PARTE_2`; evidência `evidence/fase5-tabs-unicas/`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 5c**.
+  (anteriores: `9843f3ed9` docs handoff 5b · `fd6a18d9e` Fase 5b FilterBar ·
+  `c9d294721` docs handoff 5a · `0a9409f58` Fase 5a header +
   fix #185 · `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
   `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
   `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
@@ -45,9 +46,9 @@
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 EM CURSO com
 5a = cabeçalho único (PageHeader/CrmPageHeader mortos, `headingLevel`)
-+ fix do React #185 de `/app/inteligencia` e 5b = FilterBar única nas 5
-toolbars caseiras de compras/estoque/carteira EXECUTADAS neste torno;
-fases 0/1/2 + shell §17
++ fix do React #185 de `/app/inteligencia`, 5b = FilterBar única nas 5
+toolbars caseiras de compras/estoque/carteira e 5c = abas canônicas nas 7
+telas EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -750,10 +751,17 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
       único (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup
       absorvido, `headingLevel 1|2`, 5 sites convertidos, fix do React #185
       da Inteligência com regressão `inteligencia-carrega.spec.ts`); ✅
-      FilterBar única nas 5 toolbars caseiras de compras/estoque/carteira
-      (`fd6a18d9e`, regressão `filterbar-unica-nas-listas.spec.ts` — as
-      barras nomeadas de domínio kanban/inbox/admin seguem por categoria);
-      resta tabs manuais→`ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
+       FilterBar única nas 5 toolbars caseiras de compras/estoque/carteira
+       (`fd6a18d9e`, regressão `filterbar-unica-nas-listas.spec.ts` — as
+       barras nomeadas de domínio kanban/inbox/admin seguem por categoria);
+       ✅ abas canônicas (`c370b8c8a`: 7 telas em `ui/tabs` — os 6
+       `role="tab"` manuais + `_tab-nav` do tenant com `asChild` sobre
+       `Link`; regressão `abas-canonicas-nas-telas.spec.ts` nas 6 telas,
+       evidência `evidence/fase5-tabs-unicas/`; junto: helper
+       `loginComoDono`/`dono_totp` e `execNpx` em 2 specs, `fireEvent.mouseDown`
+       no unit do histórico da agenda; flake `recompra-radar` (+8→+9) provado
+       pré-existente — falha igual no HEAD); resta `NexusKpi`/`NexusChart`,
+       `FormField`.
    d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
