@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `66aa9927b feat(nexus-v2): Fase 4j do redesign - agenda adota NexusPageHeader com acoes no slot canonico; 7 specs de regressao livres de execFileSync (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4j**.
-  (anteriores: `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
+- HEAD: `badee8467 feat(nexus-v2): Fase 4k do redesign - pedidos/[id] e /novo no NexusPageHeader (numero como title, acoes no slot, pill em linha propria); novo troca h1 copiado pelo componente (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4k**.
+  (anteriores: `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
+  `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
   `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
   `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
   `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
@@ -42,7 +43,7 @@ Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
 `/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
 4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`) +
-4j = `/agenda`
+4j = `/agenda` + 4k = `pedidos/[id]`/`novo`
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -475,6 +476,31 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     `auth_permissions_unavailable: JWT issued at future` (flake de
     relógio host↔GoTrue, −48s, anotado no globalSetup) e a re-execução
     passou **24/24**, batch3 6/6 ✓.
+  - **Fase 4k `badee8467` — `pedidos/[id]` + `pedidos/novo`**:
+    - Feito: no DETALHE, o Card de chroma (número `text-lg` + pill), o link
+      "← Pedidos" solto e a div de ações irmã viraram `NexusPageHeader`
+      (title = `PED-XXXX`, navigation = link dos pedidos, actions = os
+      8 botões intocados dentro do `flex flex-wrap gap-2` canônico); a
+      `PillDoStatus` ficou numa linha própria logo abaixo — mesmo arranjo
+      de `compras/[id]`; a rota ganhou `<h1>` (antes não tinha nenhum).
+      No NOVO, o `<h1>` copiado à mão das classes do `PageHeader` virou
+      `NexusPageHeader`; o "· salvo há X" do autosave virou string no
+      subtitle (texto idêntico). Sem confirm/hex/`<table>` crua/`Carregando`
+      nesses arquivos — a dívida era só o header.
+    - Evidência: `evidence/fase4-pedidos/1-detalhe-desktop.png`,
+      `evidence/fase4-pedidos/2-detalhe-mobile-390.png`,
+      `evidence/fase4-pedidos/3-novo-desktop.png` e
+      `evidence/fase4-pedidos/4-novo-mobile-390.png` (os 2 `lista-*` da
+      pasta são da 4b, intactos). Pedido da prova nasce pela API na mesma
+      sessão (não existe seed de `commercial_orders`).
+    - Sem regressão e2e dedicada: **nenhuma spec** de `tests/e2e` cita
+      `/app/pedidos` (medido) — a evidência cobre as duas rotas e o
+      canário `navegacao` passou 13/13.
+  - **Gates da 4k**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ · unit
+    alvo 53/53 (navegacao-completude + breadcrumb + busca-global +
+    e2e-cobertura + branding) · `test:unit` = baseline (15 flakes nos
+    mesmos 4 arquivos) · e2e: evidência 1/1 ✓ (8.8s) + canário
+    `navegacao` 13/13 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -503,8 +529,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         abas); ✅ funis (`65ec570f3`: `NexusPageHeader` nos dois +
         loading/erro/empty canônicos, 3 specs livres de `execFileSync`);
         ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com ações no slot,
-        7 specs livres de `execFileSync`) → próximo `pedidos/[id]`/`novo` →
-      `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
+        7 specs livres de `execFileSync`); ✅ `pedidos/[id]`/`novo`
+        (`badee8467`: número como title, ações no slot, pill em linha
+        própria; novo troca o h1 copiado pelo componente) → próximo
+        `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
    c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar

@@ -217,7 +217,9 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `execFileSync`) → ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com o
     bloco de ações no slot canônico — "Hoje", motivo-condicional e
     "Novo agendamento" intactos; empty/loading/erro já canônicos; 7 specs
-    livres de `execFileSync`) → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
+    livres de `execFileSync`) → ✅ `pedidos/[id]`/`pedidos/novo`
+    (`badee8467`: número como title + ações no slot + pill em linha
+    própria no detalhe; h1 copiado → componente no novo) → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
    `NexusKpi`/`NexusChart`, `FormField`.
