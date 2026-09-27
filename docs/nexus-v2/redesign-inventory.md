@@ -154,9 +154,19 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
   este último é o que o **shell/NavHub** importa) → `NexusPageHeader` único; mover
   NavHub encerra a dependência shell→uimaxxing.
 - KPI: 4 variantes (`KPICards`, `crm-kpi`, 3 `StatCard` locais) → `NexusKpi` sobre
-  `crm-kpi` (único já em tela).
+  `crm-kpi` (único já em tela) ✅ (Fase 5d `05857124a`: `nexus-kpi.tsx` com
+  label/value/hint/variation/trend/comparison/period/icon/tone; as 5
+  superfícies — home, financeiro, dashboard admin, AI usage, AI evolution,
+  TenantOverview — convertem; `crm-kpi.tsx` apagado; valores `number` saem
+  em pt-BR).
 - Charts: 5 `uimaxxing` mortos + 2 irmãos (`ai/UsageChart` × `admin/usage/UsageCharts`)
-  → fundir; criar `NexusChart` (wrapper recharts).
+  → fundir; criar `NexusChart` (wrapper recharts) ✅ (Fase 5d `05857124a`:
+  os 5 `uimaxxing` morreram na Fase 1; `nexus-ui/charts/nexus-chart.tsx`
+  guardou o literal dos irmãos — `ChartCard`, `ChartEmpty`, tooltip, eixo/
+  grid/margin, `formatTickDia` com parse UTC único, `formatNumero`/
+  `formatTokens`, catálogo `CORES_DA_SERIE` — consumido pelos 2 irmãos +
+  tooltip do `GraficoDiario`; os gráficos de domínio (indicadores, radar,
+  home-secoes) seguem com vocabulário próprio por decisão por categoria).
 - **`uimaxxing/` = ~60 arquivos sem importador** (inclui `markets-table` 322,
   `collateral-table` 109, os 5 charts) → remover; sobrar `crm/*` (6, em uso) +
   loaders → mover para `nexus-ui/crm/`.
@@ -253,8 +263,21 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `evidence/fase5-tabs-unicas/3-agenda-historico-desktop.png`,
     `evidence/fase5-tabs-unicas/4-dialog-tipo-pessoa-desktop.png`,
     `evidence/fase5-tabs-unicas/5-agente-papeis-desktop.png`,
-    `evidence/fase5-tabs-unicas/6-admin-tenant-abas-desktop.png`); resta
-    `NexusKpi`/`NexusChart`, `FormField`.
+    `evidence/fase5-tabs-unicas/6-admin-tenant-abas-desktop.png`) · ✅ KPI
+    único + primitivos de chart (`05857124a`: `NexusKpi` sobre o `CrmKpi`
+    absorve `KPICards` + os 3 `StatCard` locais — copy intacta, `value`
+    number em pt-BR; `nexus-ui/charts/nexus-chart.tsx` guarda o literal dos
+    2 irmãos `UsageChart`/`UsageCharts` + o tooltip do `GraficoDiario`;
+    regressão permanente `kpi-e-charts-canonicos.spec.ts` em
+    `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-kpi-charts/1-home-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/2-financeiro-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/3-admin-dashboard-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/4-ai-usage-kpi-chart-desktop.png`,
+    `evidence/fase5-kpi-charts/5-ai-evolution-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/6-admin-usage-chart-desktop.png`,
+    `evidence/fase5-kpi-charts/7-tenant-volume-kpi-desktop.png`); resta
+    `FormField`.
 7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
    e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
 

@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `c370b8c8a refactor(fase-5c): abas canonicas - 7 telas em ui/tabs com tabs/controlado` — as 6 telas com `role="tab"` manual (produtos, radar, histórico da agenda, tipo de pessoa nos 2 dialogs de contato, papéis do agente) + a sub-nav do detalhe de tenant montam `ui/tabs` (copy/wiring/testids intactos; `_tab-nav` = `TabsTrigger asChild` sobre `Link`, navegação segue sendo URL); helper `loginComoDono` + `execNpx` em 2 specs; regressão permanente `abas-canonicas-nas-telas.spec.ts` em `SPECS_PARTE_2`; evidência `evidence/fase5-tabs-unicas/`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 5c**.
-  (anteriores: `9843f3ed9` docs handoff 5b · `fd6a18d9e` Fase 5b FilterBar ·
+- HEAD: `05857124a refactor(fase-5d): NexusKpi unico + primitivos NexusChart dos graficos irmaos` — `NexusKpi` nasce sobre o `CrmKpi` e absorve `KPICards` + os 3 `StatCard` locais (5 superfícies; copy intacta; `value` number em pt-BR; `crm-kpi.tsx` apagado); `components/nexus-ui/charts/nexus-chart.tsx` guarda o literal dos 2 irmãos (`ChartCard`/`ChartEmpty`/tooltip/eixo/cores/`formatTickDia` UTC) consumido por `UsageChart`, `UsageCharts` e o `GraficoDiario`; regressão permanente `kpi-e-charts-canonicos.spec.ts` em `SPECS_PARTE_2`; evidência `evidence/fase5-kpi-charts/`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 5d**.
+  (anteriores: `1f2239e18` docs handoff 5c · `c370b8c8a` Fase 5c abas ·
+  `9843f3ed9` docs handoff 5b · `fd6a18d9e` Fase 5b FilterBar ·
   `c9d294721` docs handoff 5a · `0a9409f58` Fase 5a header +
   fix #185 · `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
   `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
@@ -45,10 +46,9 @@
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 EM CURSO com
-5a = cabeçalho único (PageHeader/CrmPageHeader mortos, `headingLevel`)
-+ fix do React #185 de `/app/inteligencia`, 5b = FilterBar única nas 5
-toolbars caseiras de compras/estoque/carteira e 5c = abas canônicas nas 7
-telas EXECUTADAS neste torno; fases 0/1/2 + shell §17
+5a = cabeçalho único, 5b = FilterBar única, 5c = abas canônicas nas 7 telas
+e 5d = `NexusKpi` único + primitivos `NexusChart` EXECUTADAS neste torno;
+fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -760,8 +760,14 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
        evidência `evidence/fase5-tabs-unicas/`; junto: helper
        `loginComoDono`/`dono_totp` e `execNpx` em 2 specs, `fireEvent.mouseDown`
        no unit do histórico da agenda; flake `recompra-radar` (+8→+9) provado
-       pré-existente — falha igual no HEAD); resta `NexusKpi`/`NexusChart`,
-       `FormField`.
+       pré-existente — falha igual no HEAD); ✅ `NexusKpi` único +
+       primitivos `NexusChart` (`05857124a`: o `CrmKpi` virou `NexusKpi`
+       absorvendo `KPICards` + os 3 `StatCard` locais nas 5 superfícies,
+       copy intacta; `nexus-ui/charts/nexus-chart.tsx` guardou o literal
+       dos irmãos `UsageChart`/`UsageCharts` + tooltip do `GraficoDiario`;
+       regressão `kpi-e-charts-canonicos.spec.ts` em 7 telas; flakes do
+       lote provados pré-existentes: `agente-novo-e-uso` falha igual no
+       HEAD, `olhar-telas` verde isolado); resta `FormField`.
    d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
