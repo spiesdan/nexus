@@ -3,6 +3,7 @@
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Badge } from "@/components/ui/badge";
 import { Warning } from "@/lib/ui/icons";
+import { NexusKpi } from "@/components/nexus-ui/kpi/nexus-kpi";
 import type {
   TenantOrganization,
   TenantCounts,
@@ -63,22 +64,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function StatCard({ label, value, warning }: { label: string; value: number; warning?: boolean }) {
-  const t = useT();
-  return (
-    <div className={[
-      "rounded-2xl border p-4 flex flex-col gap-1",
-      warning && value > 0 ? "border-warning/40 bg-warning-bg" : "bg-card",
-    ].join(" ")}>
-      <span className="text-2xl font-bold tabular-nums text-text">{value.toLocaleString("pt-BR")}</span>
-      <span className="text-xs text-muted-foreground leading-tight">{label}</span>
-      {warning && value > 0 && (
-        <Warning size={14} weight="fill" className="text-warning-fg mt-0.5" aria-label={t("Atenção")} />
-      )}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -133,11 +118,11 @@ export function TenantOverview({ organization, counts, integrations }: TenantOve
           {t("Volumes")}
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <StatCard label={t("Usuários")} value={counts.user_count} />
-          <StatCard label={t("Conversas")} value={counts.conversations_count} />
-          <StatCard label={t("Mensagens")} value={counts.messages_count} />
-          <StatCard label={t("Leads")} value={counts.leads_count} />
-          <StatCard label={t("Pedidos")} value={counts.orders_count} />
+          <NexusKpi label={t("Usuários")} value={counts.user_count} />
+          <NexusKpi label={t("Conversas")} value={counts.conversations_count} />
+          <NexusKpi label={t("Mensagens")} value={counts.messages_count} />
+          <NexusKpi label={t("Leads")} value={counts.leads_count} />
+          <NexusKpi label={t("Pedidos")} value={counts.orders_count} />
         </div>
       </div>
 

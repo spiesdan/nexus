@@ -9,7 +9,7 @@ import { EmptyFilterResults } from "@/components/empty";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
-import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
+import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
@@ -226,27 +226,27 @@ export function FinanceiroClient({
           ))}
         </div>
       ) : (
-        <CrmKpiGrid>
-          <CrmKpi
+        <NexusKpiGrid>
+          <NexusKpi
             label={t("A receber")}
             value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")}
           />
-          <CrmKpi
+          <NexusKpi
             label={t("Vencido")}
             value={comoMoeda(kpis.vencido_cents ?? 0, "BRL")}
             trend={(kpis.vencido_cents ?? 0) > 0 ? "down" : "flat"}
           />
-          <CrmKpi
+          <NexusKpi
             label={t("Vence hoje / 7 dias")}
             value={comoMoeda(kpis.vence_hoje_cents ?? 0, "BRL")}
             comparison={`7d: ${comoMoeda(kpis.vence_7d_cents ?? 0, "BRL")}`}
           />
-          <CrmKpi
+          <NexusKpi
             label={t("Recebido (período)")}
             value={comoMoeda(kpis.recebido_periodo_cents ?? 0, "BRL")}
             comparison={`${t("Vendas")}: ${comoMoeda(kpis.vendas_periodo_cents ?? 0, "BRL")}`}
           />
-        </CrmKpiGrid>
+        </NexusKpiGrid>
       )}
 
       <Tabs value={aba} onValueChange={setAba}>
@@ -626,16 +626,16 @@ function AbaPagar() {
 
   return (
     <div className="space-y-4">
-      <CrmKpiGrid>
-        <CrmKpi label={t("Em aberto")} value={comoMoeda(emAbertoCents, "BRL")} />
-        <CrmKpi
+      <NexusKpiGrid>
+        <NexusKpi label={t("Em aberto")} value={comoMoeda(emAbertoCents, "BRL")} />
+        <NexusKpi
           label={t("Vencido")}
           value={comoMoeda(vencidoCents, "BRL")}
           trend={vencidoCents > 0 ? "down" : "flat"}
         />
-        <CrmKpi label={t("Pago")} value={comoMoeda(pagoCents, "BRL")} />
-        <CrmKpi label={t("Títulos")} value={String(pagaveis.length)} />
-      </CrmKpiGrid>
+        <NexusKpi label={t("Pago")} value={comoMoeda(pagoCents, "BRL")} />
+        <NexusKpi label={t("Títulos")} value={String(pagaveis.length)} />
+      </NexusKpiGrid>
 
       <Card className="hover-raise space-y-3 p-4">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -788,11 +788,11 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
 
   return (
     <div className="space-y-4">
-      <CrmKpiGrid>
-        <CrmKpi label={t("Total vencido")} value={comoMoeda(totalVencido, "BRL")} trend="down" />
-        <CrmKpi label={t("Títulos")} value={String(linhas.length)} />
-        <CrmKpi label={t("Maior atraso")} value={`${maiorAtraso}d`} trend="down" />
-      </CrmKpiGrid>
+      <NexusKpiGrid>
+        <NexusKpi label={t("Total vencido")} value={comoMoeda(totalVencido, "BRL")} trend="down" />
+        <NexusKpi label={t("Títulos")} value={String(linhas.length)} />
+        <NexusKpi label={t("Maior atraso")} value={`${maiorAtraso}d`} trend="down" />
+      </NexusKpiGrid>
 
       <p className="text-xs text-muted-foreground">
         {t("A baixa e a negociação do título vivem em Títulos; aqui é o painel do que está atrasado.")}
@@ -923,27 +923,27 @@ function AbaFluxo() {
         ) : null}
       </div>
 
-      <CrmKpiGrid>
-        <CrmKpi
+      <NexusKpiGrid>
+        <NexusKpi
           label={t("Vencido a receber")}
           value={comoMoeda(fluxo.vencido_receber_cents, "BRL")}
           trend="down"
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Vencido a pagar")}
           value={comoMoeda(fluxo.vencido_pagar_cents, "BRL")}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Líquido vencido")}
           value={comoMoeda(liquidoVencido, "BRL")}
           trend={liquidoVencido < 0 ? "down" : "flat"}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Posição no fim do período")}
           value={comoMoeda(posicaoFinal, "BRL")}
           trend={posicaoFinal < 0 ? "down" : "flat"}
         />
-      </CrmKpiGrid>
+      </NexusKpiGrid>
 
       <NexusDataTable<DiaFluxo>
         state={comMovimento.length === 0 ? "empty" : "ready"}

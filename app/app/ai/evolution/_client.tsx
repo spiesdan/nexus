@@ -20,6 +20,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EvolutionGaps } from "@/components/ai/EvolutionGaps";
 import { EvolutionTimeline } from "@/components/ai/EvolutionTimeline";
 import { useEvolution } from "@/hooks/ai/useEvolution";
+import { NexusKpi } from "@/components/nexus-ui/kpi/nexus-kpi";
+import {
+  chartTooltipStyle,
+  eixoComum,
+  formatTickDia,
+  gridComum,
+  margemDoChart,
+} from "@/components/nexus-ui/charts/nexus-chart";
 import type { EvolutionPayload } from "@/lib/ai/evolution/aggregate";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -127,14 +135,6 @@ function num(n: number): string {
   return n.toLocaleString("pt-BR");
 }
 
-function diaCurto(s: string, idioma: string): string {
-  return new Date(`${s}T00:00:00Z`).toLocaleDateString(idioma, {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "UTC",
-  });
-}
-
 function Bloco({
   titulo,
   descricao,
@@ -154,25 +154,6 @@ function Bloco({
       </div>
       {children}
     </section>
-  );
-}
-
-function StatCard({
-  rotulo,
-  valor,
-  significa,
-}: {
-  rotulo: string;
-  valor: string;
-  /** O que o número quer dizer. Nunca opcional: número sozinho não informa. */
-  significa: string;
-}) {
-  return (
-    <Card className="hover-raise flex flex-col p-4">
-      <p className="text-xs text-text-muted">{rotulo}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{valor}</p>
-      <p className="mt-2 text-xs leading-relaxed text-text-muted">{significa}</p>
-    </Card>
   );
 }
 
@@ -240,32 +221,23 @@ function GraficoDiario({
           </p>
           <div className="mt-2">
             <ResponsiveContainer width="100%" height={160}>
-              <LineChart data={dados} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+              <LineChart data={dados} margin={margemDoChart}>
+                <CartesianGrid {...gridComum} />
                 <XAxis
                   dataKey="day"
-                  tickFormatter={(v) => diaCurto(v, tagDoIdioma)}
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
+                  tickFormatter={(v) => formatTickDia(v, tagDoIdioma)}
+                  {...eixoComum}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
+                  {...eixoComum}
                   allowDecimals={false}
                   width={36}
                 />
                 <Tooltip
                   formatter={(v) => [num(Number(v)), t("no dia")]}
-                  labelFormatter={(l) => diaCurto(String(l), tagDoIdioma)}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    border: "1px solid hsl(var(--border))",
-                    background: "hsl(var(--popover))",
-                  }}
+                  labelFormatter={(l) => formatTickDia(String(l), tagDoIdioma)}
+                  contentStyle={chartTooltipStyle}
                 />
                 <Line type="monotone" dataKey="value" stroke={cor} strokeWidth={2} dot={false} />
               </LineChart>
@@ -420,24 +392,24 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
         descricao={t("Tudo o que entrou na cabeça dele neste período, e de onde veio.")}
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <StatCard
-            rotulo={t("Regras que você ensinou")}
-            valor={num(learned.memory_entries)}
-            significa={t(
+          <NexusKpi
+            label={t("Regras que você ensinou")}
+            value={num(learned.memory_entries)}
+            hint={t(
               "Instruções publicadas na Memória da IA. Valem para toda conversa, de todos os agentes.",
             )}
           />
-          <StatCard
-            rotulo={t("Melhorias que você aprovou")}
-            valor={num(learned.proposals_applied)}
-            significa={t(
+          <NexusKpi
+            label={t("Melhorias que você aprovou")}
+            value={num(learned.proposals_applied)}
+            hint={t(
               "Sugestões que o sistema tirou dos próprios atendimentos e que você revisou e aceitou.",
             )}
           />
-          <StatCard
-            rotulo={t("Habilidades instaladas")}
-            valor={num(learned.skills_installed)}
-            significa={t(
+          <NexusKpi
+            label={t("Habilidades instaladas")}
+            value={num(learned.skills_installed)}
+            hint={t(
               "Skills que o agente passou a carregar quando a conversa pede — por exemplo, fechar um agendamento.",
             )}
           />
@@ -561,30 +533,30 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
         descricao={descricaoResultado(outcome, t)}
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            rotulo={t("Negócios fechados pelo agente")}
-            valor={num(outcome.won)}
-            significa={t(SIGNIFICA_GANHOS)}
+          <NexusKpi
+            label={t("Negócios fechados pelo agente")}
+            value={num(outcome.won)}
+            hint={t(SIGNIFICA_GANHOS)}
           />
-          <StatCard
-            rotulo={t("Negócios perdidos pelo agente")}
-            valor={num(outcome.lost)}
-            significa={t(SIGNIFICA_PERDIDOS)}
+          <NexusKpi
+            label={t("Negócios perdidos pelo agente")}
+            value={num(outcome.lost)}
+            hint={t(SIGNIFICA_PERDIDOS)}
           />
-          <StatCard
-            rotulo={t("Mudanças de passo no atendimento")}
-            valor={num(outcome.stage_transitions)}
-            significa={t(SIGNIFICA_MUDANCAS)}
+          <NexusKpi
+            label={t("Mudanças de passo no atendimento")}
+            value={num(outcome.stage_transitions)}
+            hint={t(SIGNIFICA_MUDANCAS)}
           />
-          <StatCard
-            rotulo={t("Casos que precisaram de uma pessoa")}
-            valor={taxaDeAjuda(outcome.handoff_rate, t)}
-            significa={t(SIGNIFICA_AJUDA)}
+          <NexusKpi
+            label={t("Casos que precisaram de uma pessoa")}
+            value={taxaDeAjuda(outcome.handoff_rate, t)}
+            hint={t(SIGNIFICA_AJUDA)}
           />
-          <StatCard
-            rotulo={t("Custo da IA no período")}
-            valor={usd.format(outcome.cost_cents / 100)}
-            significa={t("O que você pagou aos provedores de IA para tudo isto acontecer.")}
+          <NexusKpi
+            label={t("Custo da IA no período")}
+            value={usd.format(outcome.cost_cents / 100)}
+            hint={t("O que você pagou aos provedores de IA para tudo isto acontecer.")}
           />
         </div>
       </Bloco>

@@ -11,46 +11,24 @@ import {
   Tooltip,
 } from "recharts";
 import type { UsageSeries } from "@/app/api/v1/admin/usage/route";
+// DÓLAR: o número é `llm_calls.cost_cents`, e `pricing.ts` cota o provedor em USD.
 import { formatCentsUSD } from "@/lib/money";
 import { useT } from "@/hooks/i18n/useT";
+import {
+  ChartCard,
+  ChartEmpty,
+  CORES_DA_SERIE,
+  chartTooltipStyle,
+  eixoComum,
+  formatNumero,
+  formatTickDia,
+  formatTokens,
+  gridComum,
+  margemDoChart,
+} from "@/components/nexus-ui/charts/nexus-chart";
 
 interface UsageChartsProps {
   series: UsageSeries;
-}
-
-function formatDateTick(date: string, idioma: string): string {
-  const d = new Date(date + "T00:00:00");
-  return d.toLocaleDateString(idioma, { day: "2-digit", month: "2-digit" });
-}
-
-// DÓLAR: o número é `llm_calls.cost_cents`, e `pricing.ts` cota o provedor em USD.
-const formatCurrency = formatCentsUSD;
-
-function formatNumber(n: number): string {
-  return n.toLocaleString("pt-BR");
-}
-
-function EmptyChart() {
-  const t = useT();
-  return (
-    <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-      {t("Sem dados no período")}
-    </div>
-  );
-}
-
-interface ChartCardProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-function ChartCard({ title, children }: ChartCardProps) {
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="mb-4 text-sm font-medium text-muted-foreground">{title}</h3>
-      {children}
-    </div>
-  );
 }
 
 export function UsageCharts({ series }: UsageChartsProps) {
@@ -65,12 +43,12 @@ export function UsageCharts({ series }: UsageChartsProps) {
       {/* Messages per day */}
       <ChartCard title={t("Mensagens / dia")}>
         {!hasMessages ? (
-          <EmptyChart />
+          <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart
               data={series.messages}
-              margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+              margin={margemDoChart}
             >
               <defs>
                 <linearGradient id="colorMsg" x1="0" y1="0" x2="0" y2="1">
@@ -78,30 +56,22 @@ export function UsageCharts({ series }: UsageChartsProps) {
                   <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+              <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="date"
-                tickFormatter={(v) => formatDateTick(v, tagDoIdioma)}
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
+                tickFormatter={(v) => formatTickDia(v, tagDoIdioma)}
+                {...eixoComum}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={formatNumber}
+                {...eixoComum}
+                tickFormatter={formatNumero}
                 width={45}
               />
               <Tooltip
-                formatter={(value) => [formatNumber(Number(value)), t("Mensagens")]}
-                labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
-                contentStyle={{
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  border: "1px solid hsl(var(--border))",
-                }}
+                formatter={(value) => [formatNumero(Number(value)), t("Mensagens")]}
+                labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
+                contentStyle={chartTooltipStyle}
               />
               <Area
                 type="monotone"
@@ -118,12 +88,12 @@ export function UsageCharts({ series }: UsageChartsProps) {
       {/* AI Cost per day */}
       <ChartCard title={t("Custo AI / dia (R$)")}>
         {!hasCost ? (
-          <EmptyChart />
+          <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart
               data={series.ai_cost}
-              margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+              margin={margemDoChart}
             >
               <defs>
                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
@@ -131,37 +101,29 @@ export function UsageCharts({ series }: UsageChartsProps) {
                   <stop offset="95%" stopColor="hsl(var(--chart-2,142 76% 36%))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+              <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="date"
-                tickFormatter={(v) => formatDateTick(v, tagDoIdioma)}
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
+                tickFormatter={(v) => formatTickDia(v, tagDoIdioma)}
+                {...eixoComum}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
+                {...eixoComum}
                 tickFormatter={(v: number) =>
-                  formatCurrency(v)
+                  formatCentsUSD(v)
                 }
                 width={70}
               />
               <Tooltip
-                formatter={(value) => [formatCurrency(Number(value)), t("Custo")]}
-                labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
-                contentStyle={{
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  border: "1px solid hsl(var(--border))",
-                }}
+                formatter={(value) => [formatCentsUSD(Number(value)), t("Custo")]}
+                labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
+                contentStyle={chartTooltipStyle}
               />
               <Area
                 type="monotone"
                 dataKey="cents"
-                stroke="hsl(142 76% 36%)"
+                stroke={CORES_DA_SERIE.custo}
                 strokeWidth={2}
                 fill="url(#colorCost)"
               />
@@ -174,12 +136,12 @@ export function UsageCharts({ series }: UsageChartsProps) {
       <div className="md:col-span-2">
         <ChartCard title={t("AI Tokens / dia")}>
           {!hasTokens ? (
-            <EmptyChart />
+            <ChartEmpty />
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart
                 data={series.ai_tokens}
-                margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+                margin={margemDoChart}
               >
                 <defs>
                   <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
@@ -187,39 +149,27 @@ export function UsageCharts({ series }: UsageChartsProps) {
                     <stop offset="95%" stopColor="hsl(var(--chart-3,262 83% 58%))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+                <CartesianGrid {...gridComum} />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(v) => formatDateTick(v, tagDoIdioma)}
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
+                  tickFormatter={(v) => formatTickDia(v, tagDoIdioma)}
+                  {...eixoComum}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v: number) => {
-                    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-                    if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
-                    return String(v);
-                  }}
+                  {...eixoComum}
+                  tickFormatter={formatTokens}
                   width={50}
                 />
                 <Tooltip
-                  formatter={(value) => [formatNumber(Number(value)), "Tokens"]}
-                  labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    border: "1px solid hsl(var(--border))",
-                  }}
+                  formatter={(value) => [formatNumero(Number(value)), "Tokens"]}
+                  labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
+                  contentStyle={chartTooltipStyle}
                 />
                 <Area
                   type="monotone"
                   dataKey="tokens"
-                  stroke="hsl(262 83% 58%)"
+                  stroke={CORES_DA_SERIE.tokens}
                   strokeWidth={2}
                   fill="url(#colorTokens)"
                 />

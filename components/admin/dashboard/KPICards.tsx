@@ -1,47 +1,27 @@
 "use client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Buildings, Clock, WifiSlash, Scales, ChartBar } from "@/lib/ui/icons";
 import type { DashboardKPIs } from "@/app/api/v1/admin/dashboard/kpis/route";
-import type { ElementType } from "react";
 import { useT } from "@/hooks/i18n/useT";
+import { NexusKpi } from "@/components/nexus-ui/kpi/nexus-kpi";
 
 interface KPICardProps {
   label: string;
   value: number;
   subtitle: string;
-  Icon: ElementType;
+  Icon: typeof Buildings;
   accent?: boolean;
   danger?: boolean;
 }
 
 function KPICard({ label, value, subtitle, Icon, accent, danger }: KPICardProps) {
-  const iconColor = danger
-    ? "text-red-500"
-    : accent
-      ? "text-amber-500"
-      : "text-muted-foreground";
-
-  const valueColor = danger
-    ? "text-red-600"
-    : accent
-      ? "text-amber-600"
-      : "text-foreground";
-
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {label}
-            </p>
-            <p className={`text-3xl font-bold tabular-nums ${valueColor}`}>{value}</p>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          </div>
-          <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${iconColor}`} />
-        </div>
-      </CardContent>
-    </Card>
+    <NexusKpi
+      label={label}
+      value={value}
+      hint={subtitle}
+      icon={Icon}
+      tone={danger ? "danger" : accent ? "accent" : "default"}
+    />
   );
 }
 

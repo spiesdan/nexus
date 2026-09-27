@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAiUsage, type AiUsageFilters } from "@/hooks/ai/useAiUsage";
 import { UsageFilters, type UsageFiltersAgent } from "@/components/ai/UsageFilters";
 import { UsageChart } from "@/components/ai/UsageChart";
+import { NexusKpi } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { formatCentsUSD } from "@/lib/money";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -16,24 +17,6 @@ interface Props {
     from?: string;
     to?: string;
   };
-}
-
-function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <Card className="hover-raise p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-    </Card>
-  );
 }
 
 function StatSkeletons() {
@@ -87,17 +70,17 @@ export function UsageDashboardClient({ agents, initial }: Props) {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
+            <NexusKpi
               label={t("Custo no período")}
               // DÓLAR: esta tela mostrava o MESMO número em duas moedas — o card de
-              // orçamento logo acima em US$ e este StatCard em R$, dois centímetros abaixo.
+              // orçamento logo acima em US$ e este card em R$, dois centímetros abaixo.
               value={formatCentsUSD(q.data.totals.cost_cents)}
             />
-            <StatCard
+            <NexusKpi
               label={t("Atendimentos com IA")}
               value={q.data.totals.invocations.toLocaleString("pt-BR")}
             />
-            <StatCard
+            <NexusKpi
               label={t("Passaram para uma pessoa")}
               value={`${(q.data.totals.handoff_rate * 100).toFixed(2)}%`}
               hint={t("quanto mais alto, mais a IA precisou de ajuda")}
@@ -108,7 +91,7 @@ export function UsageDashboardClient({ agents, initial }: Props) {
               casos ruins), mas o rótulo não pode ser a sigla — quem lê a tela
               precisa saber o que fazer com o número, não decorar estatística.
             */}
-            <StatCard
+            <NexusKpi
               label={t("Tempo de resposta")}
               value={`${(q.data.totals.p95_latency_ms / 1000).toLocaleString("pt-BR", {
                 maximumFractionDigits: 1,

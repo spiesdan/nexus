@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { BrainRecomendacoes } from "@/components/nexus-ui/intelligence/BrainRecomendacoes";
 import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
-import { CrmKpi, CrmKpiGrid } from "@/components/nexus-ui/crm/crm-kpi";
+import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
 import { comoMoeda } from "@/lib/format/moeda";
@@ -60,30 +60,30 @@ export function DashboardHome(dados: DadosDashboard) {
         </p>
       </div>
 
-      <CrmKpiGrid>
-        <CrmKpi
+      <NexusKpiGrid>
+        <NexusKpi
           label={t("Vendido hoje")}
           value={brl(dados.vendidoHoje)}
           comparison={t("hoje")}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Vendido no mês")}
           value={brl(dados.vendidoMes)}
           comparison={ticket != null ? t("ticket médio") + " " + brl(Math.round(ticket)) : undefined}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Meta do mês")}
           value={dados.objetivo != null ? brl(dados.objetivo) : "—"}
           variation={dados.objetivo != null && dados.pctObjetivo != null ? `${dados.pctObjetivo.toFixed(1)}%` : undefined}
           trend={(dados.pctObjetivo ?? 0) >= 100 ? "up" : "down"}
           comparison={dados.necessarioDia != null ? brl(Math.round(dados.necessarioDia)) + " " + t("por dia útil") : undefined}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Previsão de fechamento")}
           value={brl(dados.previsaoMes)}
           comparison={`${dados.diasUteisRestantes} ${t("dias úteis")}`}
         />
-      </CrmKpiGrid>
+      </NexusKpiGrid>
 
       {dados.serie.length > 0 && (
         <CrmSalesChart
