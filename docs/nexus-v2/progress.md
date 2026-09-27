@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `8935da608 feat(fase-6b): varredura da auditoria recusa rota que renderizou erro` — fecho do reforço da auditoria de aceite; o corpo da 6b veio em `6b3732ee0` (spec DOM `auditoria-aceite-11-itens.spec.ts` + gate de fonte `tests/unit/auditoria-aceite-100.test.ts` + 3 conversões: notifications/VersionDiff → `ui/table`, título do nuvemshop → 24px) e o da 6a em `b12004435`; evidência `evidence/fase6b-aceite/` + `evidence/fase6-mobile/`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 6 COMPLETA (6a+6b) — PASSO 6 FECHADO**.
-  (anteriores: `448269803` docs handoff 6a · `b12004435` Fase 6a responsividade ·
+- HEAD: `e83ac2fdd feat(passo-7): jornadas E2E §86 — 7 specs novas verdes (venda, expedicao, financeiro, fiscal, IA, compras, estoque)` — o **PASSO 7**: 5 jornadas nomeadas do §86 + specs de Compras/Estoque, todas em `SPECS_PARTE_*`, seed da cifra fiscal no CI, e os fixes de produto que a jornada achou (envelope do `ok()` lido sem `.data` em `EmitirNota`; `codigo_municipio` faltando no select de `carregarContextoSped` — a pré-validação acusava IBGE SEMPRE; `?aba=` que não trocava a `Tabs` uncontrolled no push client-side; envelope dobrado da conciliação; refetch dos recebíveis na ficha do pedido por `status`).
+  — e o commit que entrega este arquivo **fecha o handoff do PASSO 7**.
+  (anteriores: `57bdcc511` docs handoff 6 · `8935da608`/`6b3732ee0` Fase 6b ·
+  `448269803` docs handoff 6a · `b12004435` Fase 6a ·
   `061042c5f` docs handoff 5e · `3fbd91b21` Fase 5e FormField ·
   `4015614b7` docs handoff 5d · `05857124a` Fase 5d NexusKpi +
   NexusChart · `1f2239e18` docs handoff 5c · `c370b8c8a` Fase 5c abas ·
@@ -47,7 +48,38 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — FECHADO. Fase 3 COMPLETA (3a-3f); Fase 4
+**Passo 7 (E2E §86) — FECHADO. 7 specs novas verdes e registradas no CI.**
+Commit `e83ac2fdd`:
+
+- **Specs** (`tests/e2e/`): `jornada-venda`, `jornada-expedicao`,
+  `jornada-financeiro`, `jornada-fiscal`, `jornada-ia` (as 5 jornadas
+  nomeadas do §86 — a 6ª, `recompra-radar`, já existia) +
+  `compras-do-rascunho-ao-estoque` + `estoque-entrada-saida-e-saldo`;
+  helper `tests/e2e/helpers/pedidos.ts` ganhou `ncm?` (NCM 8 dígitos: a
+  pré-validação fiscal cobra antes da SEFAZ).
+- **CI**: `e2e.yml` PARTE_1 += compras/estoque, PARTE_2 += as 5 jornadas
+  (as 3 antigas estavam órfãs — o gate reprovava); seed
+  `scripts/seed-e2e-fiscal-cifra.ts` + linha no workflow (sem a chave em
+  `private.app_secrets`, `fn_encrypt_oauth` derruba o PUT de
+  `fiscal-settings` com 422 na senha do certificado — o self-hoster tem
+  essa linha no setup, o banco fresco do CI não).
+- **Fixes de produto achados pela jornada**: envelope do `ok()` em
+  `EmitirNota` (`.data` — sem ele `setPendencias(undefined)` derrubava o
+  boundary com `undefined.length` e o POST de emissão nunca saía);
+  `carregarContextoSped` não pedia `codigo_municipio` (toda config
+  "passava" e a pré-validação dizia IBGE faltando); `?aba=` da
+  `/app/notas` não trocava a `Tabs` uncontrolled no push client-side
+  (`key={abaInicial}`); conciliação com envelope dobrado (`{data:{data}}`
+  → `.map` na aba); ficha do pedido refetch por `status` (o "Faturar
+  pedido" gera os recebíveis dentro do PATCH).
+- **Verificação**: typecheck 0 · lint 0 erros/340 warnings (baseline) ·
+  `pnpm build` ✓ · unit = baseline (16 flakes nos mesmos 5 arquivos) ·
+  **7/7 specs em 2,9min** (regressão de uma tacada) · gates
+  `evidencia-citada` + `e2e-cobertura-completa` **49/49**.
+- Próximo: **passo 8 — fechamento** (`parity-matrix`/`migration-plan`,
+  checklist §94, PR só com ordem explícita).
+
+(estado anterior — passo 6:) Fase 3 COMPLETA (3a-3f); Fase 4
 COMPLETA (4a-4m); Fase 5 COMPLETA (5a-5e); Fase 6 COMPLETA (6a
 responsividade §60 + 6b auditoria de aceite §100 — checklist dos 11
 itens comprovado: 106 rotas varridas com VIOLACOES(0)/FAMILIAS(1),
@@ -57,7 +89,6 @@ fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 com os hashes + §6 com
 o checklist comprovado item a item).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
-Próximo: **passo 7 — E2E §86**.
 
 - **Fase 3a `37b35a029` — `StatusPage` 6→1**: uma tela de erro em
   `components/nexus-ui/feedback/StatusPage.tsx` serve 403/404/500/503/
@@ -823,9 +854,12 @@ Próximo: **passo 7 — E2E §86**.
    command-palette, busca-global, leads/titulos route, status-page,
    confirmacao-provider, tenant-reason-dialog, navegacao-*) + e2e alvo +
    evidence/ quando a tela mudar.
-2. **E2E §86 (passo 7)** — 6 jornadas nomeadas (hoje só `recompra-radar`) +
-   specs das telas novas (Compras/Estoque) em `SPECS_PARTE_*` (gate
-   e2e-cobertura).
+2. **E2E §86 (passo 7) — FECHADO (`e83ac2fdd`)**: 5 jornadas nomeadas do
+   §86 (`jornada-venda`/`expedicao`/`financeiro`/`fiscal`/`ia`; a 6ª,
+   `recompra-radar`, já existia) + `compras-do-rascunho-ao-estoque` +
+   `estoque-entrada-saida-e-saldo`, todas nas `SPECS_PARTE_*` (gate
+   e2e-cobertura 49/49); seed da cifra fiscal no workflow; regressão
+   7/7 verdes; 4 fixes de produto (detalhe na "Última ação").
 3. **Fechamento (passo 8)** — docs (`parity-matrix`/`migration-plan`
    desatualizados desde a Etapa 1-3), checklist §94 recontado, **abrir PR**
    (ordem do usuário), CI Linux, deploy medido na VPS (§84).

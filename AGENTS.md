@@ -98,10 +98,12 @@ mudança toca schema, RLS ou UI, `gov:verify` verde **não** é prova — rode `
 **O que o CI cobre.** `.github/workflows/ci.yml`: `verify` = typecheck + lint + test:unit;
 `invariants` = `pnpm test:db` (isolamento RLS + invariantes de governança contra Postgres
 efêmero pg15). `.github/workflows/perf.yml`: `build-and-size` = `pnpm build`.
-`.github/workflows/e2e.yml` roda **45 das 46 specs** Playwright contra um Supabase local de
+`.github/workflows/e2e.yml` roda **88 das 90 specs** Playwright contra um Supabase local de
 verdade com o `baseline.sql` aplicado — o mesmo banco que o self-hoster tem. **É check
-obrigatório desde 2026-08-08.** A **única** de fora é `vps-fresh-onboarding` (WAHA + Redis +
-Resend + Nuvemshop; é a P0 da doutrina de QA) — ou seja, `e2e` verde não prova a jornada de
+obrigatório desde 2026-08-08.** As **duas** de fora são `vps-fresh-onboarding` (WAHA + Redis +
+Resend + Nuvemshop; é a P0 da doutrina de QA) e `inbox-tempo-real` (o caso com chave precisa de
+conta Google de teste com consentimento pré-aprovado; sem ela o job pendura no login — motivo
+medido no bloco `FORA_DO_CI`) — ou seja, `e2e` verde não prova a jornada de
 instalação fresca. `followup-journey`, `webhooks` e `capacidades-do-agente` estiveram fora e
 **voltaram**: rodam hoje (`e2e.yml`, listas `SPECS_PARTE_1`/`SPECS_PARTE_2`).
 
@@ -188,9 +190,10 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
 - Arquivos de invariante de banco em `tests/invariants/` — RLS/isolamento cross-tenant, RBAC,
   governança (G1–G6). Excluídos do `test:unit` de propósito; rodam via `pnpm test:db` **e no job
   `invariants` do CI**. Quantos: `git ls-files 'tests/invariants/*.test.ts' | wc -l`.
-- Specs Playwright em `tests/e2e/`, **todas no CI menos uma** (via `e2e.yml`, **obrigatório**). A
-  única de fora é `vps-fresh-onboarding`, por dependência de serviço externo
-  (WAHA/Redis/Resend/Nuvemshop). Ver issue #63. Quantas: `ls tests/e2e/*.spec.ts | wc -l`.
+- Specs Playwright em `tests/e2e/`, **todas no CI menos duas** (via `e2e.yml`, **obrigatório**). As
+  duas de fora são `vps-fresh-onboarding` (dependência de serviço externo —
+  WAHA/Redis/Resend/Nuvemshop; ver issue #63) e `inbox-tempo-real` (conta Google de teste;
+  motivo em `FORA_DO_CI`). Quantas: `ls tests/e2e/*.spec.ts | wc -l`.
 
 > **Os dois números saíram daqui, e é decisão, não descuido.** Estavam em 102 e 46/45 quando o
 > medido era 114 e 51/50 — envelheceram porque toda entrega que acrescenta um teste os falsifica,
@@ -200,11 +203,12 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
 
 ## Limitações conhecidas (estado em 2026-07-29, contra `origin/main` @ 789dfa6)
 
-- **1 das 46 specs E2E segue fora do CI** (`vps-fresh-onboarding`), e o `e2e` **é** check
+- **2 das 90 specs E2E seguem fora do CI** (`vps-fresh-onboarding` e `inbox-tempo-real`), e o
+  `e2e` **é** check
   obrigatório desde 2026-08-08. Ou seja: um PR que quebre o `e2e` não entra — mas a jornada de
   instalação fresca, que é o produto que se vende, continua sem gate. Se você mexeu nela, a
   prova é sua. *(Corrigido em 2026-08-14; a redação anterior — "4 das 32, não-obrigatório" —
-  mudava a régua de qualquer triagem que a lesse.)*
+  mudava a régua de qualquer triagem que a lesse. Recontado em 2026-09-27 no passo 7.)*
 - Rate limit HTTP: `lib/auth/rate-limit.ts` cobre **login, signup, recuperação de senha e
   aceite de convite** (contando por IP **e** por identificador hasheado); `checkRateLimit` cobre
   o webhook de captação e o dispatcher de IA. **Crons e MCP seguem sem.** Meça antes de agir:
