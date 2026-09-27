@@ -145,7 +145,13 @@ arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
 **Botões/inputs/tabs/filtros/KPI/charts:**
 - `ui/gradient-button`, `orb-button`, `pill-button`, `typing-field`, `select-menu`
   + ~12 botões `uimaxxing` = só servem `uimaxxing` morto → remover junto.
-- **Lacuna: `FormField`** (140 arquivos com `<Label>` solto, sem campo canônico) → CRIAR.
+- **Lacuna: `FormField`** (140 arquivos com `<Label>` solto, sem campo canônico)
+  → CRIAR ✅ (Fase 5e `3fbd91b21`: `nexus-ui/forms/form-field.tsx` —
+  rótulo + controle + ajuda + recusa com `id`/`aria-describedby`/
+  `aria-invalid` injetados por clone e `role="alert"`; os 7 `_form.tsx` de
+  configuração convertidos, ~30 campos; os 130 arquivos restantes
+  — incluindo os 2 campos de cor com seletor composto — seguem fora por
+  decisão de escopo; ver §5.6).
 - Tabs: 6 `role="tab"` manuais + `_tab-nav` locais → `ui/tabs` ✅ (Fase 5c
   `c370b8c8a`, ver §5.6).
 - Filtros: **5 FilterBar distintos** (1.290 linhas) → consolidar em
@@ -276,8 +282,21 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `evidence/fase5-kpi-charts/4-ai-usage-kpi-chart-desktop.png`,
     `evidence/fase5-kpi-charts/5-ai-evolution-kpi-desktop.png`,
     `evidence/fase5-kpi-charts/6-admin-usage-chart-desktop.png`,
-    `evidence/fase5-kpi-charts/7-tenant-volume-kpi-desktop.png`); resta
-    `FormField`.
+    `evidence/fase5-kpi-charts/7-tenant-volume-kpi-desktop.png`); ✅
+    `FormField` canônico (`3fbd91b21`: `nexus-ui/forms/form-field.tsx`
+    fecha a lacuna — rótulo+controle+ajuda+recusa com
+    `id`/`aria-describedby`/`aria-invalid` por clone e `role="alert"`;
+    os 7 `_form.tsx` de configuração convertidos, ~30 campos, copy e
+    testids intactos; os campos de cor com seletor composto ficam com
+    markup próprio; regressão permanente `form-field-canonico.spec.ts`
+    em `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-formfield/1-admin-marca-desktop.png`,
+    `evidence/fase5-formfield/2-admin-tenants-new-desktop.png`,
+    `evidence/fase5-formfield/3-settings-profile-desktop.png`,
+    `evidence/fase5-formfield/4-settings-tenant-desktop.png`,
+    `evidence/fase5-formfield/5-settings-atendimento-desktop.png`,
+    `evidence/fase5-formfield/6-settings-marca-desktop.png`) → **Fase 5
+    COMPLETA (5a-5e)**.
 7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
    e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
 

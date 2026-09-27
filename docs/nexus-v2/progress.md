@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `05857124a refactor(fase-5d): NexusKpi unico + primitivos NexusChart dos graficos irmaos` — `NexusKpi` nasce sobre o `CrmKpi` e absorve `KPICards` + os 3 `StatCard` locais (5 superfícies; copy intacta; `value` number em pt-BR; `crm-kpi.tsx` apagado); `components/nexus-ui/charts/nexus-chart.tsx` guarda o literal dos 2 irmãos (`ChartCard`/`ChartEmpty`/tooltip/eixo/cores/`formatTickDia` UTC) consumido por `UsageChart`, `UsageCharts` e o `GraficoDiario`; regressão permanente `kpi-e-charts-canonicos.spec.ts` em `SPECS_PARTE_2`; evidência `evidence/fase5-kpi-charts/`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 5d**.
-  (anteriores: `1f2239e18` docs handoff 5c · `c370b8c8a` Fase 5c abas ·
+- HEAD: `3fbd91b21 feat(fase-5e): FormField canonico nos 7 forms de configuracao` — `components/nexus-ui/forms/form-field.tsx` fecha a lacuna inventariada (rótulo + controle + ajuda + recusa com `id`/`aria-describedby`/`aria-invalid` injetados por clone no controle único, `role="alert"` na recusa); os 7 forms de configuração convertidos (~30 campos; copy/testids intactos; os 2 campos de cor com seletor composto ficam com markup próprio); regressão permanente `form-field-canonico.spec.ts` (6 telas, com asserts de vínculo label→input) em `SPECS_PARTE_2`; evidência `evidence/fase5-formfield/`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 5e**.
+  (anteriores: `4015614b7` docs handoff 5d · `05857124a` Fase 5d NexusKpi +
+  NexusChart · `1f2239e18` docs handoff 5c · `c370b8c8a` Fase 5c abas ·
   `9843f3ed9` docs handoff 5b · `fd6a18d9e` Fase 5b FilterBar ·
   `c9d294721` docs handoff 5a · `0a9409f58` Fase 5a header +
   fix #185 · `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
@@ -45,9 +46,9 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 EM CURSO com
-5a = cabeçalho único, 5b = FilterBar única, 5c = abas canônicas nas 7 telas
-e 5d = `NexusKpi` único + primitivos `NexusChart` EXECUTADAS neste torno;
+Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 (superfície
+compartilhada) COMPLETA (5a-5e ✅: cabeçalho único, FilterBar única, abas
+canônicas nas 7 telas, `NexusKpi`+`NexusChart`, `FormField`);
 fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -767,7 +768,16 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
        dos irmãos `UsageChart`/`UsageCharts` + tooltip do `GraficoDiario`;
        regressão `kpi-e-charts-canonicos.spec.ts` em 7 telas; flakes do
        lote provados pré-existentes: `agente-novo-e-uso` falha igual no
-       HEAD, `olhar-telas` verde isolado); resta `FormField`.
+        HEAD, `olhar-telas` verde isolado); ✅ `FormField` canônico
+        (`3fbd91b21`: `nexus-ui/forms/form-field.tsx` com clone de
+        `id`/`aria-describedby`/`aria-invalid` no controle único e
+        `role="alert"` na recusa; os 7 `_form.tsx` de configuração
+        convertidos — admin google/marca/tenants-new e settings
+        atendimento/marca/profile/tenant, ~30 campos, copy e testids
+        intactos; os 2 campos de cor com seletor+erro inline ficam com
+        markup próprio; regressão `form-field-canonico.spec.ts` em 6 telas
+        com asserts de vínculo label→input; flake JWT do lote de regressão
+        re-exec verde) → **Fase 5 TODA (5a-5e ✅); próximo Fase 6**.
    d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
