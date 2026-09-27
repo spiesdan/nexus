@@ -19,11 +19,11 @@ GitHub já nasceu `fork: false`).
 
 Os remotes `origin` (`melgarafael/DeskcommCRM`, upstream histórico) e `fork`
 (`spiesdan/DeskcommCRM`, espelho legado) foram **removidos** em 2026-09-27.
-Antes disso, as tags versionadas (v1.0.0–v1.56.0 + `arquivo/*`) foram
-migradas para o `nexus`, então o comando de versão abaixo não precisa do
-origin. Se um doc/commit antigo citar `origin/main`, leia `nexus/main` — os
-registros históricos em `docs/handoffs/`/`docs/audits/` mantêm a citação de
-origem porque descrevem o que foi medido na época.
+Antes disso as tags da NOSSA linhagem (v1.0.0–v1.14.0, `arquivo/*`,
+`nexus-v1-archive`) foram migradas para o `nexus`, então o comando de versão
+abaixo não precisa do origin. Se um doc/commit antigo citar `origin/main`,
+leia `nexus/main` — os registros históricos em `docs/handoffs/`/`docs/audits/`
+mantêm a citação de origem porque descrevem o que foi medido na época.
 
 Antes de `push`/`pr create`, confira com `git remote -v` (só `nexus`) e
 `git status -sb` (upstream precisa ser `nexus/...`). Errou o remoto? Não
@@ -63,10 +63,16 @@ git ls-remote --tags --refs nexus 'refs/tags/v*' \
                                                                 # em maquina com ugrep aquele nao roda
 ```
 
-(Em 2026-09-27 o remote `origin` saiu de cena — §101: repo a parte, sem fork.
-As tags v1.0.0–v1.56.0 foram migradas para o `nexus` antes disso, então este
-comando não perde nada. Nenhuma tag v2 existe ainda: a NEXUS 2.0 ainda não
-publicou release.)
+(Em 2026-09-27 o remote `origin` saiu de cena — §101: repo a parte, sem
+fork — e as tags da nossa linhagem (v1.0.0–v1.14.0) migraram para o
+`nexus`, então este comando não perde nada. As 52 tags da linhagem PARALELA
+do upstream (`melgarafael/DeskcommCRM`, v1.15.0–v1.56.0 — 4.582 commits
+fora do nosso histórico) foram trazidas junto e **removidas no mesmo dia,
+por decisão do usuário**: manter faria este comando responder `1.56.0`
+(código alheio ao nosso CHANGELOG) e faria o agente de atualização da VPS
+oferecer a linhagem upstream por cima da instalação. Elas continuam no
+`melgarafael/DeskcommCRM` para consulta. Nenhuma tag v2 existe ainda: a
+NEXUS 2.0 ainda não publicou release.)
 
 O `package.json` **não** é a fonte da versão do produto (segue em `0.1.0`, e é assim de
 propósito). A fonte é a tag `v*` mais a seção do `CHANGELOG.md` — que é tela de produto, lida

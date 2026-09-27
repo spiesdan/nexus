@@ -9,7 +9,7 @@
 ## FASE 0 — Auditoria ✅ CONCLUÍDA (2026-09-24)
 
 - [x] Inventário (`inventory.md`), arquitetura, rotas, API, banco, IA, segurança, infra, design, parity-matrix, este plano
-- [x] Branch `nexus-v2` + tag `nexus-v1-archive` + push p/ `nexus` + `deploy-performance.md` baseline (a medir — ver §94)
+- [x] Branch `nexus-v2` + tag `nexus-v1-archive` + push p/ `nexus` + `deploy-performance.md` baseline (medido em 2026-09-27 — ver §94)
 
 ## FASE 1 — Fundação ✅ CONCLUÍDA
 
@@ -85,7 +85,7 @@
 
 ## Critério de sucesso (§94) — RECONTADO no passo 8 (2026-09-27)
 
-> 41 itens: **38 ✅ · 2 ⚠️ · 1 ❌**. Cada um com prova (arquivo/spec/check).
+> 41 itens: **39 ✅ · 2 ⚠️ · 0 ❌**. Cada um com prova (arquivo/spec/check).
 > Fonte do texto: spec §94 (linha 2852).
 
 | # | Item (§94) | | Prova (medida) |
@@ -129,12 +129,13 @@
 | 37 | GHCR funciona | ✅ | `publish-image.yml` — 3 imagens, check `imagens-ok` obrigatório |
 | 38 | health check funciona | ✅ | probe TCP no compose + `/api/v1/health` (+ `healthcheck.sh` do kit) |
 | 39 | rollback funciona | ✅ | `agent.sh:234` — `PREV_IMAGE`, rollback automático em RC≠0, persiste `APP_IMAGE` |
-| 40 | deploy foi medido | ❌ | `docs/infrastructure/deploy-performance.md` = placeholder (coluna "Medido" toda "—"); só se preenche no primeiro deploy na VPS (§84) |
+| 40 | deploy foi medido | ✅ | `docs/infrastructure/deploy-performance.md` preenchido com cronômetro real (2026-09-27, commit `d4416bfe4`): `deploy.sh` = **80s** (pull frio 59s + up/health 18s + probe 2s), baseline de schema = 350s, backup = 99s, checkout = 1s; health público `d4416bf` verde, 3 containers `nexus-v2` healthy |
 | 41 | documentação foi atualizada | ✅ | `docs/nexus-v2/` (13 arquivos recontados no passo 8) + handoff deste passo |
 
-**O que falta para dizer "§94 fechado":** só o **item 40** (deploy real
-medido na VPS, meta §84 ≤5min / 1–3min quente — em andamento, decisão do
-usuário de 2026-09-27: rodar agora). Os dois ⚠️ foram **aceitos pelo
+**§94 fechado em 2026-09-27:** o último ❌ (item 40, deploy medido na VPS)
+caiu com o cronômetro real — `deploy.sh` = 80s (meta §84 ≤5min), baseline de
+schema = 350s, health público verde com as 3 imagens `nexus-v2`
+(`docs/infrastructure/deploy-performance.md`). Os dois ⚠️ foram **aceitos pelo
 usuário em 2026-09-27** como estão: 24 (executores: só `agendar_followup`;
 política de ação autônoma não inventada) e 28 (Lighthouse deferido
 S-12.05; performance medida como build+bundle).

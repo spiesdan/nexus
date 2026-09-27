@@ -57,15 +57,16 @@ decisão do usuário (PR + deploy medido na VPS).**
   Dia/Estoque-Compras/deploy.sh viraram ✅ com commit e prova; Financeiro
   e Fiscal de "parcial" para ✅ (jornadas verdes); Mercos = "sem
   integração, kit arquivado". Seção "O que ainda NÃO está fechado"
-  lista: deploy medido, executores autônomos, Lighthouse, PR.
+  lista: executores autônomos, Lighthouse, PR (deploy medido fechou em
+  2026-09-27 — `deploy-performance.md`).
 - **migration-plan.md**: FASE 0-1 ✅ (itens pendentes da FASE 1
   fechados: §19 sidebar `4126a9681`, tokens pelo gate de auditoria);
   FASES 2-9 ✅ com a E2E de cada uma mapeada; FASE 10 ⚠️ (só executor
   `agendar_followup`); limpeza legado com ✅/pendências.
-- **§94 recontado item a item** (migration-plan): 41 itens = 38 ✅ /
+- **§94 recontado item a item** (migration-plan): 41 itens = 39 ✅ /
   2 ⚠️ (24 vendedor autônomo com executor único; 28 performance sem
-  Lighthouse) / 1 ❌ (40 deploy medido — placeholder em
-  `deploy-performance.md`).
+  Lighthouse) / 0 ❌ — o item 40 (deploy medido) fechou em 2026-09-27
+  com cronômetro real na VPS (`deploy-performance.md`).
 - **§51/§52/§53/§14 confirmados contra o código** (seção "Auditoria
   linha-a-linha" no migration-plan): 6 módulos financeiros medidos nas
   abas; fluxo fiscal ponta a ponta pela jornada; aba Financeiro do 360
@@ -79,7 +80,8 @@ decisão do usuário (PR + deploy medido na VPS).**
   CI, 2 fora — `vps-fresh-onboarding` e `inbox-tempo-real`).
 - **Bloqueios honestos**: abrir PR `nexus-v2 → main` (só com ordem
   explícita), §101 (remotes origin/fork), deploy real na VPS para
-  preencher o §84 — as três são decisão do usuário (abaixo).
+  preencher o §84 — as três eram decisão do usuário e **foram respondidas
+  em 2026-09-27** (PR aberto, §101 feito, deploy medido — detalhe abaixo).
 
 (passo 7 — FECHADO em `e83ac2fdd`+`7839671f1`:) 7 specs E2E verdes (5
 jornadas do §86 + compras + estoque), registradas nas `SPECS_PARTE_*`,
@@ -866,13 +868,14 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    e2e-cobertura 49/49); seed da cifra fiscal no workflow; regressão
    7/7 verdes; 4 fixes de produto (detalhe na "Última ação").
 3. **Fechamento (passo 8) — docs ✅ FEITOS** (`parity-matrix`/`migration-plan`
-   recontados, §94 = 38✅/2⚠️(aceitos)/1❌(deploy, em andamento),
+   recontados, §94 = 39✅/2⚠️(aceitos)/0❌,
    §51-§53/§14 confirmados, kit Mercos arquivado, AGENTS.md recontado
    88/90). **Decisões respondidas em 2026-09-27 (detalhe abaixo):**
    - PR `nexus-v2 → main` **aberto** (5 checks obrigatórios na CI Linux);
    - §101 **feito**: tags migradas p/ `nexus` (75), remotes `origin`/`fork`
      removidos, AGENTS/CLAUDE atualizados;
-   - deploy na VPS **em andamento** (preenche o único ❌ do §94);
+   - deploy na VPS **feito e medido** (fecha o último ❌ do §94 —
+     `deploy.sh` 80s, baseline 350s, health `d4416bf` verde);
    - ⚠️ 24/28 do §94 **aceitos como está**.
 
 ## Decisões do usuário (respondidas em 2026-09-27 — eram "pendentes")
@@ -880,16 +883,28 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
 - **PR**: **abrir `nexus-v2 → main`** — ordem dada; o PR roda os 5 checks
   obrigatórios na CI Linux (verify, build-and-size, invariants, e2e,
   imagens-ok).
-- **§101**: **"repo a parte, sem fork"** — FEITO: as 52 tags que faltavam
-  (v1.15.0–v1.56.0) foram migradas para o `nexus` (75 no total, com
-  `arquivo/*` e `nexus-v1-archive`; a `v1.14.0` do `nexus` é a tag de
-  archive do agente — a do upstream tem outro SHA, **não sobrescrever**),
-  os remotes `origin`/`fork` foram removidos, e AGENTS.md (seção Remotes +
-  comando de versão → `nexus`) e CLAUDE.md (higiene de branches →
-  `nexus/main`) foram atualizados. Docs históricos (`docs/handoffs/`,
-  `docs/audits/`) mantêm `origin/main` como citação de época.
-- **Deploy (§84)**: **rodar agora, com credenciais do usuário** — preenche
-  o único ❌ do §94 (`deploy-performance.md`).
+- **§101**: **"repo a parte, sem fork"** — FEITO: as tags da nossa linhagem
+  (v1.0.0–v1.14.0, `arquivo/*`, `nexus-v1-archive`) migradas para o
+  `nexus` (23 no total; a `v1.14.0` do `nexus` é a tag de archive do
+  agente — a do upstream tem outro SHA, **não sobrescrever**), os remotes
+  `origin`/`fork` removidos, e AGENTS.md (seção Remotes + comando de
+  versão → `nexus`) e CLAUDE.md (higiene de branches → `nexus/main`)
+  atualizados. Docs históricos (`docs/handoffs/`, `docs/audits/`) mantêm
+  `origin/main` como citação de época. **Tags upstream removidas no
+  mesmo dia** (decisão do usuário): as 52 tags da linhagem paralela do
+  `melgarafael/DeskcommCRM` (v1.15.0–v1.56.0, 4.582 commits fora do nosso
+  histórico) foram trazidas na migração e logo apagadas do `nexus` —
+  manter faria o comando de versão responder `1.56.0` (alheio ao nosso
+  CHANGELOG, que para na 1.14.0) e o agente de atualização da VPS
+  oferecer a linhagem upstream por cima da instalação (cron de 5min
+  lê `ultima_versao_publicada` do nexus; medido: voltou a responder
+  `1.14.0` após a remoção). Local permanece com as tags para consulta.
+- **Deploy (§84)**: **rodar agora, com credenciais do usuário** — FEITO em
+  2026-09-27: `deploy.sh` = 80s (pull frio 59s + up/health 18s + probe 2s),
+  baseline de schema = 350s (0 ERROR, 6 tabelas novas), backup = 99s,
+  checkout = 1s; health público `d4416bf` com supabase/redis/waha ok, 3
+  containers `nexus-v2` healthy, homepage 307 em 0.6s — preenche o último ❌
+  do §94 (`deploy-performance.md`).
 - **⚠️ do §94**: **aceitos como está** — 24 (executores: só
   `agendar_followup`, política de ação autônoma não inventada) e 28
   (Lighthouse deferido S-12.05; performance = build+bundle) ficam
@@ -900,6 +915,11 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
 - Testes: `pnpm test:unit` ~5min · `pnpm test:db` (Docker) ~16-18min ·
   `tsc --noEmit -p tsconfig.typecheck.json` ~40s. `pnpm gov:verify` NÃO cobre
   test:db nem e2e.
+- Deploy (medido 2026-09-27 na VPS, commit `d4416bfe4`): `deploy.sh` = 80s
+  (pull frio 59s + up/health 18s + probe 2s) · baseline de schema = 350s ·
+  backup = 99s · checkout = 1s · CI: `verify` 10m54s, `invariants` 5m11s,
+  `build-and-size` 2m54s, `imagens-ok` 4m22s — tudo em
+  `docs/infrastructure/deploy-performance.md`.
 - Flakes pré-existentes (NÃO são nossos, provados na main limpa):
   `contato-consent-e-auditoria`, `triagem194-defeitos-alegados` (test:db);
   unit no Windows: `namespace-das-imagens`/`guarda-da-release` (falta `grep`),
