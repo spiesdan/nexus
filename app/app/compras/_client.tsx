@@ -8,6 +8,7 @@ import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { FilterActions, FilterBar, FilterPrimary, FilterSearch, FilterSelect } from "@/components/filters/FilterBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -209,27 +210,32 @@ function AbaPedidos({ podeEscrever }: { podeEscrever: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-44">
-          <Select value={status || "todos"} onValueChange={(v) => setStatus(v === "todos" ? "" : v)}>
-            <SelectTrigger aria-label="Filtrar por status">
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              <SelectItem value="rascunho">Rascunho</SelectItem>
-              <SelectItem value="enviado">Enviado</SelectItem>
-              <SelectItem value="recebido">Recebido</SelectItem>
-              <SelectItem value="cancelado">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSelect
+            id="compras-status"
+            label="Status"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "rascunho", label: "Rascunho" },
+              { value: "enviado", label: "Enviado" },
+              { value: "recebido", label: "Recebido" },
+              { value: "cancelado", label: "Cancelado" },
+            ]}
+            allLabel="Todos os status"
+          />
+        </FilterPrimary>
         {podeEscrever ? (
-          <Button onClick={() => setDialogoAberto(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Nova compra
-          </Button>
+          <FilterActions>
+            <div className="ml-auto flex gap-2">
+              <Button onClick={() => setDialogoAberto(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Nova compra
+              </Button>
+            </div>
+          </FilterActions>
         ) : null}
-      </div>
+      </FilterBar>
 
       <NexusDataTable
         state={estado}
@@ -343,19 +349,26 @@ function AbaFornecedores({ podeEscrever }: { podeEscrever: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          className="max-w-xs"
-          placeholder="Buscar fornecedor pelo nome"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSearch
+            id="fornecedores-busca"
+            label="Buscar"
+            value={busca}
+            onChange={setBusca}
+            placeholder="Buscar fornecedor pelo nome"
+          />
+        </FilterPrimary>
         {podeEscrever ? (
-          <Button onClick={() => setDialogoAberto(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo fornecedor
-          </Button>
+          <FilterActions>
+            <div className="ml-auto flex gap-2">
+              <Button onClick={() => setDialogoAberto(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Novo fornecedor
+              </Button>
+            </div>
+          </FilterActions>
         ) : null}
-      </div>
+      </FilterBar>
 
       <NexusDataTable
         state={estado}

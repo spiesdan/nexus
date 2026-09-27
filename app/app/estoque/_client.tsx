@@ -8,6 +8,13 @@ import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import {
+  FilterActions,
+  FilterBar,
+  FilterPrimary,
+  FilterSearch,
+  FilterSelect,
+} from "@/components/filters/FilterBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -219,19 +226,26 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          className="max-w-xs"
-          placeholder="Buscar produto pelo nome ou código"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSearch
+            id="estoque-busca"
+            label="Buscar"
+            value={busca}
+            onChange={setBusca}
+            placeholder="Buscar produto pelo nome ou código"
+          />
+        </FilterPrimary>
         {podeEscrever ? (
-          <Button onClick={() => abrirMovimento(null)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo movimento
-          </Button>
+          <FilterActions>
+            <div className="ml-auto flex gap-2">
+              <Button onClick={() => abrirMovimento(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Novo movimento
+              </Button>
+            </div>
+          </FilterActions>
         ) : null}
-      </div>
+      </FilterBar>
 
       <NexusDataTable
         state={estado}
@@ -375,26 +389,31 @@ function AbaMovimentos({ podeEscrever }: { podeEscrever: boolean }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-44">
-          <Select value={tipo || "todos"} onValueChange={(v) => setTipo(v === "todos" ? "" : v)}>
-            <SelectTrigger aria-label="Filtrar por tipo">
-              <SelectValue placeholder="Todos os tipos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os tipos</SelectItem>
-              <SelectItem value="entrada">Entrada</SelectItem>
-              <SelectItem value="saida">Saída</SelectItem>
-              <SelectItem value="ajuste">Ajuste</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSelect
+            id="estoque-tipo"
+            label="Tipo"
+            value={tipo}
+            onChange={setTipo}
+            options={[
+              { value: "entrada", label: "Entrada" },
+              { value: "saida", label: "Saída" },
+              { value: "ajuste", label: "Ajuste" },
+            ]}
+            allLabel="Todos os tipos"
+          />
+        </FilterPrimary>
         {podeEscrever ? (
-          <Button onClick={() => abrirMovimento(null)}>
-            <Plus className="mr-2 h-4 w-4" /> Novo movimento
-          </Button>
+          <FilterActions>
+            <div className="ml-auto flex gap-2">
+              <Button onClick={() => abrirMovimento(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Novo movimento
+              </Button>
+            </div>
+          </FilterActions>
         ) : null}
-      </div>
+      </FilterBar>
 
       <NexusDataTable
         state={estado}
