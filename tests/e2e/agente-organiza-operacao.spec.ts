@@ -31,7 +31,7 @@
  * Self-contido: nomes com sufixo de timestamp, e o que foi criado é removido no
  * final para reruns ficarem verdes num banco compartilhado com outras sessões.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as http from "node:http";
 import type { AddressInfo } from "node:net";
@@ -63,14 +63,14 @@ interface TokenDoAgente {
 
 function loadCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
 
 function tokenDoAgente(): TokenDoAgente {
   // Sempre reemite: o token tem validade curta e o seed é idempotente.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-agente-mcp.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-agente-mcp.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(AGENTE_PATH, "utf8")) as TokenDoAgente;
 }
 

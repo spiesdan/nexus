@@ -3,6 +3,7 @@
 import { useT } from "@/hooks/i18n/useT";
 import { useState, useTransition } from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import { updatePipelineConfig } from "@/app/actions/settings/updatePipelineConfi
 import type { PipelineConfigPatch } from "@/lib/schemas/settings";
 import { camposDoFunil } from "@/lib/leads/campos-do-funil";
 import { customFieldSchema, type CustomFieldDef } from "@/lib/schemas/settings";
-import { Plus, Trash } from "@/lib/ui/icons";
+import { GitBranch, Plus, Trash } from "@/lib/ui/icons";
 import { AgentMappingSection, ancoraDoMapeamento } from "./_mapping";
 import { StagesSection, ancoraDasEtapas } from "./_stages";
 
@@ -54,9 +55,13 @@ export function PipelinesClient({
     // vazio manda "Ir para Configurações": pingue-pongue fechado, com o usuário
     // procurando um botão que não existe em lugar nenhum.
     return (
-      <Card className="hover-raise p-6 text-sm leading-relaxed text-muted-foreground">
-        {t("Você ainda não tem nenhum funil. Enquanto for assim, o agente atende normalmente, mas não tem para onde levar o card de ninguém — não há etapas para onde mover. Criar o funil é feito por quem instalou o sistema, direto no banco; depois ele aparece aqui para você escolher a etapa de cada passo.")}
-      </Card>
+      <NexusEmptyState
+        icon={GitBranch}
+        headline={t("Você ainda não tem nenhum funil.")}
+        subcopy={t(
+          "Enquanto for assim, o agente atende normalmente, mas não tem para onde levar o card de ninguém — não há etapas para onde mover. Criar o funil é feito por quem instalou o sistema, direto no banco; depois ele aparece aqui para você escolher a etapa de cada passo.",
+        )}
+      />
     );
   }
   return (

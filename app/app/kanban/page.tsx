@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { Kanban } from "@/lib/ui/icons";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/server";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { FunisClient, type FunilDaLista } from "./_client";
 
 export const dynamic = "force-dynamic";
@@ -51,17 +51,14 @@ export default async function KanbanPickerPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
-      <header className="flex items-center gap-3">
-        <Kanban size={28} className="text-muted-foreground" weight="duotone" />
-        {/* Era "Pipelines" — nome de quem construiu o sistema, não de quem
-            vende. O comentário anterior aqui listava o preço de trocá-lo
-            (`rbac-roles.spec.ts` e `invite-lifecycle.spec.ts`) e dizia que
-            uniformizar era decisão do dono do produto. Ela foi tomada, e o preço
-            era maior do que o comentário contava: são QUATRO assertions em TRÊS
-            specs, e `pipelines-gestao.spec.ts` — a spec da própria feature que
-            gerou o comentário — é uma delas. Todas atualizadas junto. */}
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Funis")}</h1>
-      </header>
+      {/* Era "Pipelines" — nome de quem construiu o sistema, não de quem
+          vende. O comentário anterior aqui listava o preço de trocá-lo
+          (`rbac-roles.spec.ts` e `invite-lifecycle.spec.ts`) e dizia que
+          uniformizar era decisão do dono do produto. Ela foi tomada, e o preço
+          era maior do que o comentário contava: são QUATRO assertions em TRÊS
+          specs, e `pipelines-gestao.spec.ts` — a spec da própria feature que
+          gerou o comentário — é uma delas. Todas atualizadas junto. */}
+      <NexusPageHeader title={t("Funis")} />
 
       <FunisClient funis={funis} podeGerenciar={podeGerenciar} podeImportar={podeImportar} />
     </div>

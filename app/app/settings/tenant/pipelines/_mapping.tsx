@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -204,17 +206,15 @@ export function AgentMappingSection({
   }, [data, dataUpdatedAt]);
 
   if (consulta.isError) {
-    return (
-      <p className="text-sm text-text-muted" data-testid="mapeamento-erro-leitura">
-        {t("Não foi possível carregar as etapas deste funil agora. Recarregue a página.")}
-      </p>
-    );
+    return <NexusErrorState onRetry={() => void consulta.refetch()} />;
   }
   if (!data || !rascunho) {
     return (
-      <p className="text-sm text-text-muted" data-testid="mapeamento-carregando">
-        {t("Carregando as etapas deste funil…")}
-      </p>
+      <div className="space-y-2" aria-live="polite">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
     );
   }
 
