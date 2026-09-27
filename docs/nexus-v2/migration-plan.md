@@ -132,10 +132,12 @@
 | 40 | deploy foi medido | ❌ | `docs/infrastructure/deploy-performance.md` = placeholder (coluna "Medido" toda "—"); só se preenche no primeiro deploy na VPS (§84) |
 | 41 | documentação foi atualizada | ✅ | `docs/nexus-v2/` (13 arquivos recontados no passo 8) + handoff deste passo |
 
-**O que falta para dizer "§94 fechado":** item 40 (deploy real medido na VPS,
-meta §84 ≤5min / 1–3min quente) e, se o usuário quiser contar como pronto,
-resolver os dois ⚠️ (24: executores/política de ação autônoma; 28: Lighthouse
-ou aceite explícito de "performance = build+bundle").
+**O que falta para dizer "§94 fechado":** só o **item 40** (deploy real
+medido na VPS, meta §84 ≤5min / 1–3min quente — em andamento, decisão do
+usuário de 2026-09-27: rodar agora). Os dois ⚠️ foram **aceitos pelo
+usuário em 2026-09-27** como estão: 24 (executores: só `agendar_followup`;
+política de ação autônoma não inventada) e 28 (Lighthouse deferido
+S-12.05; performance medida como build+bundle).
 
 ---
 

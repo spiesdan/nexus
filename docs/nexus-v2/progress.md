@@ -866,30 +866,34 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    e2e-cobertura 49/49); seed da cifra fiscal no workflow; regressão
    7/7 verdes; 4 fixes de produto (detalhe na "Última ação").
 3. **Fechamento (passo 8) — docs ✅ FEITOS** (`parity-matrix`/`migration-plan`
-   recontados, §94 = 38✅/2⚠️/1❌, §51-§53/§14 confirmados, kit Mercos
-   arquivado, AGENTS.md recontado 88/90). **Resta (depende de decisão
-   sua, abaixo):**
-   - **abrir PR `nexus-v2 → main`** (ordem explícita; aí os 5 checks
-     obrigatórios rodam na CI Linux de verdade);
-   - **deploy medido na VPS (§84)** — preenche o item 40 do §94 em
-     `docs/infrastructure/deploy-performance.md` (meta ≤5min, 1–3min
-     quente; nada afirmado sem medir);
-   - §51-§53/§91/§19/§20 checados; se quiser fechar os 2 ⚠️ do §94:
-     executores de ação autônoma (política sua, não inventada) e
-     Lighthouse (S-12.05 deferido — pode ser aceito como está).
+   recontados, §94 = 38✅/2⚠️(aceitos)/1❌(deploy, em andamento),
+   §51-§53/§14 confirmados, kit Mercos arquivado, AGENTS.md recontado
+   88/90). **Decisões respondidas em 2026-09-27 (detalhe abaixo):**
+   - PR `nexus-v2 → main` **aberto** (5 checks obrigatórios na CI Linux);
+   - §101 **feito**: tags migradas p/ `nexus` (75), remotes `origin`/`fork`
+     removidos, AGENTS/CLAUDE atualizados;
+   - deploy na VPS **em andamento** (preenche o único ❌ do §94);
+   - ⚠️ 24/28 do §94 **aceitos como está**.
 
-## Decisões pendentes do usuário (NÃO decidir sozinho)
+## Decisões do usuário (respondidas em 2026-09-27 — eram "pendentes")
 
-- **PR**: abrir `nexus-v2 → main` quando? (passo 8 fechado do lado do
-  código/docs; o PR é o próximo passo natural — só com ordem explícita).
-- **§101**: posso remover os remotes `origin`/`fork` (critério de aceite do
-  spec diz `git remote -v` só com NEXUS, mas AGENTS.md os declara permanentes)?
-- **Deploy (§84)**: qual VPS/credenciais para o primeiro deploy real e
-  medir o tempo (único ❌ do §94)? Sem isso `deploy-performance.md`
-  fica honestamente em "a medir".
-- **⚠️ do §94 (opcional para fechar)**: 24 = executores de ação autônoma
-  (qual política de aprovação? qual fluxo pode rodar sozinho?); 28 =
-  Lighthouse entrar como gate ou aceitar "performance = build+bundle".
+- **PR**: **abrir `nexus-v2 → main`** — ordem dada; o PR roda os 5 checks
+  obrigatórios na CI Linux (verify, build-and-size, invariants, e2e,
+  imagens-ok).
+- **§101**: **"repo a parte, sem fork"** — FEITO: as 52 tags que faltavam
+  (v1.15.0–v1.56.0) foram migradas para o `nexus` (75 no total, com
+  `arquivo/*` e `nexus-v1-archive`; a `v1.14.0` do `nexus` é a tag de
+  archive do agente — a do upstream tem outro SHA, **não sobrescrever**),
+  os remotes `origin`/`fork` foram removidos, e AGENTS.md (seção Remotes +
+  comando de versão → `nexus`) e CLAUDE.md (higiene de branches →
+  `nexus/main`) foram atualizados. Docs históricos (`docs/handoffs/`,
+  `docs/audits/`) mantêm `origin/main` como citação de época.
+- **Deploy (§84)**: **rodar agora, com credenciais do usuário** — preenche
+  o único ❌ do §94 (`deploy-performance.md`).
+- **⚠️ do §94**: **aceitos como está** — 24 (executores: só
+  `agendar_followup`, política de ação autônoma não inventada) e 28
+  (Lighthouse deferido S-12.05; performance = build+bundle) ficam
+  declarados nos docs com a prova do que existe.
 
 ## Fatos para não alucinar (medidos)
 

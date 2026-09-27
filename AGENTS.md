@@ -10,18 +10,24 @@
 ## Remotes — onde commitar (REGRA PERMANENTE)
 
 O repositório canônico deste projeto é **`spiesdan/nexus`**
-(`https://github.com/spiesdan/nexus`). **Todo commit, push e PR vai para ele.
-Sempre.** Sem exceção, sem perguntar de novo.
+(`https://github.com/spiesdan/nexus`) — e ele é o **único remote**: repo a
+parte, sem fork (decisão do usuário em 2026-09-27, §101 do spec — o repo no
+GitHub já nasceu `fork: false`).
 
-- `nexus` → escrita. É para cá que `git push` aponta (upstream das branches).
-- `origin` (`melgarafael/DeskcommCRM`) → somente leitura (upstream histórico).
-  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
-- `fork` (`spiesdan/DeskcommCRM`) → somente leitura (espelho legado).
-  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
+- `nexus` → o único remote. **Todo commit, push e PR vai para ele. Sempre.**
+  Sem exceção, sem perguntar de novo.
 
-Antes de `push`/`pr create`, confira com `git remote -v` e `git status -sb`
-(upstream precisa ser `nexus/...`). Errou o remoto? Não conserte com push
-duplo — apague a ref errada e refaça no `nexus`.
+Os remotes `origin` (`melgarafael/DeskcommCRM`, upstream histórico) e `fork`
+(`spiesdan/DeskcommCRM`, espelho legado) foram **removidos** em 2026-09-27.
+Antes disso, as tags versionadas (v1.0.0–v1.56.0 + `arquivo/*`) foram
+migradas para o `nexus`, então o comando de versão abaixo não precisa do
+origin. Se um doc/commit antigo citar `origin/main`, leia `nexus/main` — os
+registros históricos em `docs/handoffs/`/`docs/audits/` mantêm a citação de
+origem porque descrevem o que foi medido na época.
+
+Antes de `push`/`pr create`, confira com `git remote -v` (só `nexus`) e
+`git status -sb` (upstream precisa ser `nexus/...`). Errou o remoto? Não
+conserte com push duplo — apague a ref errada e refaça no `nexus`.
 
 ## Objetivo do projeto
 
@@ -52,10 +58,15 @@ v1.6.0 — seis minors de atraso, e nenhum teste a vigiava. Afirmação de vers�
 release; comando não. A que está publicada agora:
 
 ```bash
-git ls-remote --tags --refs origin 'refs/tags/v*' \
+git ls-remote --tags --refs nexus 'refs/tags/v*' \
   | sed 's#.*refs/tags/v##' | awk '!/-/' | sort -V | tail -1   # awk, nao grep -v -- '-':
                                                                 # em maquina com ugrep aquele nao roda
 ```
+
+(Em 2026-09-27 o remote `origin` saiu de cena — §101: repo a parte, sem fork.
+As tags v1.0.0–v1.56.0 foram migradas para o `nexus` antes disso, então este
+comando não perde nada. Nenhuma tag v2 existe ainda: a NEXUS 2.0 ainda não
+publicou release.)
 
 O `package.json` **não** é a fonte da versão do produto (segue em `0.1.0`, e é assim de
 propósito). A fonte é a tag `v*` mais a seção do `CHANGELOG.md` — que é tela de produto, lida
