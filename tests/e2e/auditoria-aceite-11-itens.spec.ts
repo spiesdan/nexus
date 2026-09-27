@@ -143,6 +143,14 @@ async function medir(page: Page, rota: string, camada: "tenant" | "admin" | "pub
     }
 
     const familia = getComputedStyle(document.body).fontFamily;
+    // item 6 (estados) + item 1: rota que renderizou a página de erro do
+    // produto não pode passar pela auditoria como se estivesse saudável —
+    // o error boundary do Next mantém o shell e passaria nas checagens de
+    // navegação/tabela
+    const corpo = document.body.innerText;
+    if (corpo.includes("Algo deu errado")) achados.push("estado-erro: Algo deu errado");
+    if (/Erro ao (carregar|listar)/.test(corpo)) achados.push("estado-erro: Erro ao carregar/listar");
+
     // título da página (h1 canônico do NexusPageHeader; rotas sem h1 contam)
     const h1 = escopo.querySelector("h1");
     const h1px = h1 ? getComputedStyle(h1).fontSize : "sem-h1";
