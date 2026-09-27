@@ -210,8 +210,11 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
     `#desempenho` com redirect) → ✅ `/prospeccao` (`bd4635147`:
     `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6 abas;
-    hexes do mapa mantidos por serem paleta de dados) → funis (`/kanban`+`settings/tenant/pipelines`) →
-   `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
+    hexes do mapa mantidos por serem paleta de dados) → ✅ funis
+    (`65ec570f3`: `NexusPageHeader` em `/app/kanban` e
+    `/settings/tenant/pipelines`, loading/erro/empty canônicos; ícone
+    decorativo do kanban caiu com o header; 3 specs livres de
+    `execFileSync`) → `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
    `NexusKpi`/`NexusChart`, `FormField`.

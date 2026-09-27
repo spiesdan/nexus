@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `bd4635147 feat(nexus-v2): Fase 4h do redesign - prospeccao adota NexusPageHeader e estados vazios/erro/loading canonicos em Pesquisas, Empresas, Campanhas, Mercado e Config (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4h**.
-  (anteriores: `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
+- HEAD: `65ec570f3 feat(nexus-v2): Fase 4i do redesign - funis com NexusPageHeader em /kanban e /settings/tenant/pipelines, estados de loading/erro canonicos e empty em NexusEmptyState; specs das 3 regressoes livres de execFileSync (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4i**.
+  (anteriores: `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
+  `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
   `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
   `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
   `eb09ce298` docs handoff 4d · `0228f8c9f` Fase 4d /inbox ·
@@ -39,7 +40,7 @@
 Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
 `/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
-4h = `/prospeccao`
+4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`)
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -409,6 +410,39 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     · `test:unit` = baseline (15 flakes nos mesmos 4 arquivos) · e2e:
     evidência 1/1 ✓ + regressão do módulo `prospeccao-mapa` 1/1 ✓ (única
     spec que cita a rota).
+  - **Fase 4i `65ec570f3` — funis (`/app/kanban` + `/app/settings/tenant/pipelines`)**:
+    - Feito: `/app/kanban` header à mão (ícone `Kanban` + `h1`) →
+      `NexusPageHeader` (título "Funis" preservado; **o ícone decorativo
+      caiu**, mesma régua do eyebrow das 4e-4g; comentário sobre o rename
+      "Pipelines"→"Funis" mantido); `/settings/tenant/pipelines` `<header>`
+      h1+`<p>` → `NexusPageHeader` com subtítulo montado no servidor
+      (mesma frase: base + trecho condicional de admin + ponto); empty do
+      `PipelinesClient` (Card com copy longa sobre quem cria o funil —
+      texto NÃO tocado, só re-segmentado no período já existente) →
+      `NexusEmptyState` (`GitBranch` do barril `@/lib/ui/icons`, ADR-05);
+      loading `Carregando as etapas…` → 3×`Skeleton` e erro de leitura →
+      `NexusErrorState onRetry=refetch` em `_stages` e `_mapping` (testids
+      `etapas-carregando`/`*-erro-leitura` não tinham nenhum teste; copy
+      específica substituída pela canônica); empty do `/kanban` já usava
+      `EmptyPipeline` — mantido; 0 hex e 0 `<table>` cru no par.
+    - Specs da regressão livres da dívida Windows: `execFileSync("npx")` →
+      `execNpx` em `pipelines-gestao`, `invite-lifecycle` e
+      `agente-organiza-operacao` (as 3 falhavam com ENOENT antes de rodar;
+      mesma correção da 4f).
+    - Prova visual: `evidence/fase4-funis/1-kanban-funis-desktop.png`
+      (h1 "Funis"), `evidence/fase4-funis/2-etapas-do-funil-desktop.png`
+      (h1 "Etapas do funil" + subtítulo + cartões) e
+      `evidence/fase4-funis/3-kanban-funis-mobile-390.png`.
+    - Imagens W4 sobrescritas pela regressão (`qa-selo`/`agente-organiza`)
+      RESTAURADAS com `git checkout` — evidência histórica não muda.
+  - **Gates da 4i**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ (rotas
+    `ƒ /app/kanban` + `ƒ /app/settings/tenant/pipelines`) · unit alvo
+    91/91 (`_stages`, `_mapping`, `kanban/_client`, branding,
+    e2e-cobertura) · `test:unit` = baseline (15 flakes nos mesmos 4
+    arquivos) · e2e: evidência 1/1 ✓ + regressão 34/34 em 6 specs
+    (`navegacao`, `rbac-roles`, `invite-lifecycle`, `pipelines-gestao`,
+    `agente-organiza-operacao` — falha 1× pós-seed e 2× verde seguidas —,
+    `qa-selo-no-funil-usado`).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -434,8 +468,10 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
         `#desempenho` com redirect); ✅ `/prospeccao` (`bd4635147`:
         `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6
-        abas) → próximo funis →
-      `/agenda` → `pedidos/[id]`/`novo` →
+        abas); ✅ funis (`65ec570f3`: `NexusPageHeader` nos dois +
+        loading/erro/empty canônicos, 3 specs livres de `execFileSync`) →
+        próximo `/agenda` →
+      `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
