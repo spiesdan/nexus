@@ -213,6 +213,29 @@ jobs:
         notificacoes-diz-o-que-falta.spec.ts
         relogio-http-cron-externo.spec.ts
         compras-do-rascunho-ao-estoque.spec.ts estoque-entrada-saida-e-saldo.spec.ts
+        navegacao.spec.ts olhar-telas-do-epico.spec.ts pipelines-gestao.spec.ts
+        qa-agente-usa-as-maos.spec.ts qa-selo-no-funil-usado.spec.ts
+        qa-telas-descobertas-w4.spec.ts responsividade-nas-rotas.spec.ts
+        retorno-anti-morte.spec.ts troca-de-organizacao-tem-volta.spec.ts
+        webhooks.spec.ts
+      # Rebalance de 2026-09-27 — o canário de 30min da PARTE_2 estourou nos
+      # runs 36334137223 e 36348502150 (`##[error] ... timed out after 30
+      # minutes`), e a medição do segundo diz o motivo: na ordem por caminho,
+      # `marca-logo` era a 44ª das 54 e só começou em T+20,2min da parte; a
+      # cauda dela até o kill consumiu 10 dos 30min e ainda faltavam ~7 testes
+      # — projeto da PARTE_2 inteira ≈36min contra os 10,4min medidos na
+      # PARTE_1. Estas DEZ = exatamente essa cauda (tudo que na ordem por
+      # caminho vinha DEPOIS de `marca-logo`); mudam de lado: ≈22min + ≈23min,
+      # as duas sob o teto com margem, e o job fecha em ≈51min dos 60
+      # (setup ≈6 + as duas partes).
+      #
+      # A lista não decide onde elas caem — a ordem continua por CAMINHO:
+      # `navegacao`/`olhar`/`pipelines`/`qa-*` ficam entre `mfa-opcional` e
+      # `relogio-http` (antes do tick); `responsividade`/`retorno`/`troca`/
+      # `webhooks` caem depois dele. As DEZ foram varridas
+      # (`grep enrollment|current_node_id` → 0): o tick não altera nada que
+      # elas leem. A regra de `relogio-` logo abaixo continua de pé para as
+      # specs de follow-up, que seguem todas antes do tick ou na PARTE_2.
       # ⚠️ A ORDEM DESTA LISTA NÃO DECIDE A ORDEM DE EXECUÇÃO. O Playwright
       # ordena os arquivos por CAMINHO, não pela ordem em que são passados na
       # linha de comando. Medido no run 31838253496: `marca-logo.spec.ts` estava
@@ -282,12 +305,8 @@ jobs:
         agenda-tipos-de-agendamento.spec.ts agenda-grade-interativa.spec.ts
         agente-novo-e-uso.spec.ts agente-organiza-operacao.spec.ts
         central-de-avisos-capacidades.spec.ts escalacao-ciclo.spec.ts
-        navegacao.spec.ts olhar-telas-do-epico.spec.ts pipelines-gestao.spec.ts
-        qa-agente-usa-as-maos.spec.ts qa-selo-no-funil-usado.spec.ts
-        qa-telas-descobertas-w4.spec.ts retorno-anti-morte.spec.ts
         followup-builder.spec.ts followup-queue.spec.ts
         distribuicao-atendimento.spec.ts followup-journey.spec.ts
-        webhooks.spec.ts
         capacidades-do-agente.spec.ts
         escopo-de-funil-do-agente.spec.ts
         followup-dossie.spec.ts followup-tempo-adaptativo.spec.ts
@@ -302,7 +321,6 @@ jobs:
         agenda-painel-cabe-na-tela.spec.ts
         agenda-ver-na-agenda.spec.ts
         agenda-escopo-da-organizacao.spec.ts
-        troca-de-organizacao-tem-volta.spec.ts
         agenda-caminho-ate-os-horarios.spec.ts
         agenda-google-volta-do-consentimento.spec.ts
         agenda-google-volta-nao-desloga.spec.ts
@@ -312,7 +330,6 @@ jobs:
         abas-canonicas-nas-telas.spec.ts
         kpi-e-charts-canonicos.spec.ts
         form-field-canonico.spec.ts
-        responsividade-nas-rotas.spec.ts
         auditoria-aceite-11-itens.spec.ts
         jornada-venda.spec.ts jornada-expedicao.spec.ts jornada-financeiro.spec.ts
         jornada-fiscal.spec.ts jornada-ia.spec.ts
