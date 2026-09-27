@@ -214,7 +214,10 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     (`65ec570f3`: `NexusPageHeader` em `/app/kanban` e
     `/settings/tenant/pipelines`, loading/erro/empty canônicos; ícone
     decorativo do kanban caiu com o header; 3 specs livres de
-    `execFileSync`) → `/agenda` → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
+    `execFileSync`) → ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com o
+    bloco de ações no slot canônico — "Hoje", motivo-condicional e
+    "Novo agendamento" intactos; empty/loading/erro já canônicos; 7 specs
+    livres de `execFileSync`) → `pedidos/[id]`/`pedidos/novo` → `/webhooks` → admin.
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
    `NexusKpi`/`NexusChart`, `FormField`.

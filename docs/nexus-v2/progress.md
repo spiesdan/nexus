@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `65ec570f3 feat(nexus-v2): Fase 4i do redesign - funis com NexusPageHeader em /kanban e /settings/tenant/pipelines, estados de loading/erro canonicos e empty em NexusEmptyState; specs das 3 regressoes livres de execFileSync (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4i**.
-  (anteriores: `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
+- HEAD: `66aa9927b feat(nexus-v2): Fase 4j do redesign - agenda adota NexusPageHeader com acoes no slot canonico; 7 specs de regressao livres de execFileSync (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4j**.
+  (anteriores: `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
+  `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
   `dc8a5b8ae` docs handoff 4g · `f13ca808d` Fase 4g /indicadores ·
   `ff482cdc4` docs handoff 4f · `b60fe1a1f` Fase 4f /radar ·
   `b9d45b3ef` docs handoff 4e · `679b65fb3` Fase 4e /financeiro ·
@@ -40,7 +41,8 @@
 Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
 `/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
-4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`)
+4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`) +
+4j = `/agenda`
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -443,6 +445,36 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     (`navegacao`, `rbac-roles`, `invite-lifecycle`, `pipelines-gestao`,
     `agente-organiza-operacao` — falha 1× pós-seed e 2× verde seguidas —,
     `qa-selo-no-funil-usado`).
+  - **Fase 4j `66aa9927b` — `/agenda`**:
+    - Feito: `<header>` à mão (h1 "Agenda" + subtítulo + bloco de ações:
+      "Hoje", motivo-condicional e "Novo agendamento" com testids
+      `motivo-novo-agendamento`/`novo-agendamento`) → `NexusPageHeader`
+      (title/subtitle/actions — o `PageHeader` por baixo tem EXATAMENTE o
+      layout do header antigo: `flex-col gap-3 sm:flex-row
+      sm:items-center sm:justify-between`); todos os comentários de
+      produto (botão desabilitado com motivo, testid vs rótulo) mantidos
+      intactos; `loading.tsx`→`AgendaCarregando`, `error.tsx`→
+      `SegmentError`, empty→`EmptyAgenda`, tudo já canônico — fora do
+      header não havia nada a converter (0 hex, 0 `<table>`).
+    - Specs da regressão livres da dívida Windows: `execFileSync("npx")` →
+      `execNpx` em 7 specs (`agenda-escopo-da-organizacao`,
+      `agenda-grade-interativa`, `agenda-marcar-pela-tela`,
+      `agenda-painel-cabe-na-tela`, `agenda-remarcar-e-cancelar`,
+      `agenda-tipos-de-agendamento`, `agente-marca-consulta`).
+    - Prova visual: `evidence/fase4-agenda/1-agenda-desktop.png` (h1 +
+      subtítulo + ações) e `evidence/fase4-agenda/2-agenda-mobile-390.png`
+      (ações empilhadas pelo layout do `PageHeader`).
+    - Imagens `evidence/calendario/*` sobrescritas pela regressão
+      RESTAURADAS com `git checkout` (mesma regra da 4i).
+  - **Gates da 4j**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ · unit
+    alvo 61/61 (agenda-spec-não-escolhe/aviso/cartão + branding +
+    e2e-cobertura) · `test:unit` = baseline (15 flakes nos mesmos 4
+    arquivos) · e2e: evidência 1/1 ✓ + regressão em 3 batches — 13 specs
+    que visitam `/app/agenda`: batch1 17/17 ✓ (após `execNpx`; 9 falhas
+    ENOENT antes), batch2 20+2 → as 2 falhas eram
+    `auth_permissions_unavailable: JWT issued at future` (flake de
+    relógio host↔GoTrue, −48s, anotado no globalSetup) e a re-execução
+    passou **24/24**, batch3 6/6 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -469,9 +501,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         `#desempenho` com redirect); ✅ `/prospeccao` (`bd4635147`:
         `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6
         abas); ✅ funis (`65ec570f3`: `NexusPageHeader` nos dois +
-        loading/erro/empty canônicos, 3 specs livres de `execFileSync`) →
-        próximo `/agenda` →
-      `pedidos/[id]`/`novo` →
+        loading/erro/empty canônicos, 3 specs livres de `execFileSync`);
+        ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com ações no slot,
+        7 specs livres de `execFileSync`) → próximo `pedidos/[id]`/`novo` →
       `/webhooks` → admin. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
