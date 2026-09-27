@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
@@ -383,60 +384,66 @@ export function DetalheDoPedido({
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
-      <Link href="/app/pedidos" className="text-sm text-muted-foreground underline underline-offset-4">
-        {t("← Pedidos")}
-      </Link>
+      {/* Cabeçalho canônico: número no título, ações no slot (molde de
+          compras/[id]). A pill do status fica numa linha própria logo abaixo —
+          mesmo arranjo do Mercos (número + pill), sem Card de chroma. */}
+      <NexusPageHeader
+        title={numeroDoPedido(pedido.numero)}
+        navigation={
+          <Link href="/app/pedidos" className="underline underline-offset-4 hover:text-text">
+            {t("← Pedidos")}
+          </Link>
+        }
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {podeEditar && proximo && (
+              <Button size="sm" onClick={() => void avancar()}>
+                {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
+              </Button>
+            )}
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                {t("Visualizar PDF")}
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("Enviar por WhatsApp")}
+              </a>
+            </Button>
+            {contato?.email && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={copiarLink}>
+              {t("Copiar link do pedido")}
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
+                {t("Imprimir pedido")}
+              </Link>
+            </Button>
+            {podeEditar && (
+              <Button size="sm" variant="outline" onClick={() => void duplicar()}>
+                {t("Duplicar")}
+              </Button>
+            )}
+            {podeExcluir && (
+              <Button size="sm" variant="destructive" onClick={() => void excluir()}>
+                {t("Excluir pedido")}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
-      {/* Cabeçalho: número + pill, como no Mercos. */}
-      <Card className="hover-raise flex items-center justify-between gap-3 p-4">
-        <p className="text-lg font-semibold">{numeroDoPedido(pedido.numero)}</p>
+      <div className="flex flex-wrap items-center gap-3">
         <PillDoStatus status={pedido.status as StatusDoPedido} />
-      </Card>
-
-      {/* Ações */}
-      <div className="flex flex-wrap gap-2">
-        {podeEditar && proximo && (
-          <Button size="sm" onClick={() => void avancar()}>
-            {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
-          </Button>
-        )}
-        <Button size="sm" variant="outline" asChild>
-          <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
-            {t("Visualizar PDF")}
-          </Link>
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("Enviar por WhatsApp")}
-          </a>
-        </Button>
-        {contato?.email && (
-          <Button size="sm" variant="outline" asChild>
-            <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={copiarLink}>
-          {t("Copiar link do pedido")}
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
-            {t("Imprimir pedido")}
-          </Link>
-        </Button>
-        {podeEditar && (
-          <Button size="sm" variant="outline" onClick={() => void duplicar()}>
-            {t("Duplicar")}
-          </Button>
-        )}
-        {podeExcluir && (
-          <Button size="sm" variant="destructive" onClick={() => void excluir()}>
-            {t("Excluir pedido")}
-          </Button>
-        )}
       </div>
 
       {/* CLIENTE */}
