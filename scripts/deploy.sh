@@ -3,7 +3,18 @@
 # Uso: NEXUS_IMAGE=ghcr.io/<org>/nexus:<tag> ./scripts/deploy.sh
 set -euo pipefail
 
-: "${NEXUS_IMAGE:?NEXUS_IMAGE é obrigatória (ex.: ghcr.io/spiesdan/nexus:v1.4.3)}"
+# O exemplo da mensagem abaixo deriva da FONTE única do namespace
+# (`IMG_NS` em hostgator-setup-kit/_common.sh). O literal não se repete:
+# `tests/unit/namespace-das-imagens.test.ts` reprova qualquer cópia fora dos
+# quatro arquivos permitidos — o deploy.sh roda do diretório do projeto, onde
+# o _common.sh existe; sem ele (caminho errado), o exemplo vira placeholder.
+img_ns_exemplo() {
+  local ns
+  ns="$(sed -n 's/^IMG_NS="\(.*\)"$/\1/p' hostgator-setup-kit/_common.sh 2>/dev/null | head -1 || true)"
+  printf '%s' "${ns:-ghcr.io/<dono>}"
+}
+
+: "${NEXUS_IMAGE:?NEXUS_IMAGE é obrigatória (ex.: $(img_ns_exemplo)/nexus:v1.4.3)}"
 COMPOSE="${COMPOSE_FILES:-docker-compose.prod.yml}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/v1/health}"
 
