@@ -297,8 +297,19 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `evidence/fase5-formfield/5-settings-atendimento-desktop.png`,
     `evidence/fase5-formfield/6-settings-marca-desktop.png`) → **Fase 5
     COMPLETA (5a-5e)**.
-7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
-   e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
+7. **Fase 6 — responsividade §60 + auditoria §100**: ✅ 6a
+   responsividade fechada (`b12004435`) — spec permanente
+   `responsividade-nas-rotas.spec.ts` (em `SPECS_PARTE_2`): as 5 telas
+   mobile-priority em 390 com evidência `evidence/fase6-mobile/1-meu-dia-390.png`,
+   `evidence/fase6-mobile/2-clientes-390.png`,
+   `evidence/fase6-mobile/3-inbox-390.png`,
+   `evidence/fase6-mobile/4-pedidos-390.png`,
+   `evidence/fase6-mobile/5-radar-390.png`, + varredura das 69 rotas
+   estáticas de `/app` em 390/430/768 com régua de `scrollWidth` — 0px de
+   overflow em 207 combos; único defeito: célula "Atualizar/Limpar
+   filtros" do Radar sem `flex-wrap` vazava em 390 → corrigido; "Rotas"
+   do §60 não tem rota no produto — não inventada. Resta 6b **auditoria
+   visual de aceite §100** (checklist dos 11 itens) com evidência.
 
 Guardas por fase: `pnpm typecheck` + `pnpm lint` + `pnpm test:unit` (nexus-ui,
 command-palette, sidebar-grupos, navegação) + e2e alvo; screenshots em
