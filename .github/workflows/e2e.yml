@@ -312,6 +312,7 @@ jobs:
         kpi-e-charts-canonicos.spec.ts
         form-field-canonico.spec.ts
         responsividade-nas-rotas.spec.ts
+        auditoria-aceite-11-itens.spec.ts
       # Cada item aqui tem o motivo MEDIDO, não presumido — e o gate cobra que a
       # lista exista e some com as outras duas.
       #

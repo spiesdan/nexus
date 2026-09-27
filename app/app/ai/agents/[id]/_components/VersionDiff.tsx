@@ -11,6 +11,7 @@
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Table } from "@/components/ui/table";
 import { useT } from "@/hooks/i18n/useT";
 import type { AgentVersionRow } from "@/hooks/ai/useAgentVersions";
 
@@ -121,29 +122,29 @@ export function VersionDiff({ versionA, versionB }: Props) {
         {fields.length === 0 ? (
           <p className="text-xs text-muted-foreground">{t("Sem mudanças.")}</p>
         ) : (
-          // `overflow-x-auto` isolado: campos como `channel_session_id`
-          // (uuid, monoespaçado) em 3 colunas passavam da largura de um
-          // celular pequeno sem isso.
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-1 pr-3">{t("Campo")}</th>
-                  <th className="py-1 pr-3">v{versionA.version_number}</th>
-                  <th className="py-1">v{versionB.version_number}</th>
+          // últimas tabelas cruas do produto (medição §100): a primitiva de
+          // `ui/table` traz o wrapper `overflow-auto` — o mesmo que segurava
+          // campos como `channel_session_id` (uuid, monoespaçado) em 3
+          // colunas passando da largura de um celular pequeno — e a
+          // assinatura de cabeçalho canônica; markup interno e copy intactos.
+          <Table className="text-xs">
+            <thead>
+              <tr className="text-left text-muted-foreground">
+                <th className="py-1 pr-3">{t("Campo")}</th>
+                <th className="py-1 pr-3">v{versionA.version_number}</th>
+                <th className="py-1">v{versionB.version_number}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((f) => (
+                <tr key={f.key} className="border-t border-border/40">
+                  <td className="whitespace-nowrap py-1 pr-3 font-mono">{t(f.label)}</td>
+                  <td className="whitespace-nowrap py-1 pr-3 font-mono text-destructive">{String(f.a)}</td>
+                  <td className="whitespace-nowrap py-1 font-mono text-emerald-600">{String(f.b)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {fields.map((f) => (
-                  <tr key={f.key} className="border-t border-border/40">
-                    <td className="whitespace-nowrap py-1 pr-3 font-mono">{t(f.label)}</td>
-                    <td className="whitespace-nowrap py-1 pr-3 font-mono text-destructive">{String(f.a)}</td>
-                    <td className="whitespace-nowrap py-1 font-mono text-emerald-600">{String(f.b)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </Table>
         )}
       </Section>
 

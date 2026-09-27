@@ -6,6 +6,14 @@ import { useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useNotificationPermission } from "@/hooks/notifications/useNotificationPermission";
 import {
   NOTIFY_UI_CATEGORIES,
@@ -44,19 +52,23 @@ export function NotificationPrefsClient() {
 
   return (
     <Card className="hover-raise p-0">
-      <table className="w-full text-sm">
-        <thead className="border-b">
-          <tr>
-            <th className="px-4 py-3 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("Categoria")}</th>
-            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Email</th>
-            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">In-app</th>
-            <th className="px-4 py-3 text-center text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Push</th>
-          </tr>
-        </thead>
-        <tbody>
+      {/* última tabela crua do produto (medição §100): a primitiva canônica
+          de `ui/table` já traz a mesma assinatura de cabeçalho — caixa alta,
+          tracking largo, `text-[10px]` — então a troca é de moldura, não de
+          visual; copy, `aria-label` e testids intactos */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-4 py-3">{t("Categoria")}</TableHead>
+            <TableHead className="px-4 py-3 text-center">Email</TableHead>
+            <TableHead className="px-4 py-3 text-center">In-app</TableHead>
+            <TableHead className="px-4 py-3 text-center">Push</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {NOTIFY_UI_CATEGORIES.map((cat) => (
-            <tr key={cat} className="row-hover border-b last:border-0">
-              <td className="px-4 py-3">
+            <TableRow key={cat} className="last:border-0">
+              <TableCell className="px-4 py-3">
                 {t(LABELS[cat])}
                 {cat === "message" && denied ? (
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -65,18 +77,18 @@ export function NotificationPrefsClient() {
                     )}
                   </p>
                 ) : null}
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch checked={false} disabled aria-label={`${t(LABELS[cat])} via email`} />
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch
                   checked={prefs[cat].in_app}
                   onCheckedChange={(on) => void onToggle(cat, "in_app", on)}
                   aria-label={`${t(LABELS[cat])} via in_app`}
                 />
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch
                   checked={prefs[cat].push}
                   disabled={denied || unsupported}
@@ -84,11 +96,11 @@ export function NotificationPrefsClient() {
                   aria-label={`${t(LABELS[cat])} via push`}
                   data-testid={cat === "message" ? (canalLigado("message", "push") ? "alerts-toggle" : "alerts-enable") : undefined}
                 />
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </Card>
   );
 }
