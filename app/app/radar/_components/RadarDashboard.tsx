@@ -404,7 +404,10 @@ export function RadarDashboard() {
               placeholder="0"
             />
           </div>
-          <div className="flex items-end gap-2">
+          {/* flex-wrap: em 390 esta célula tem ~155px e os DOIS botões não
+              cabem juntos — sem quebrar, "Limpar filtros" vazava pra fora da
+              viewport (medido na auditoria §60, evidence/fase6-mobile/5). */}
+          <div className="flex flex-wrap items-end gap-2">
             <Button variant="outline" onClick={() => void carregar()}>
               {t("Atualizar")}
             </Button>
