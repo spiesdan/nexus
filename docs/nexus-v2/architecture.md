@@ -60,5 +60,5 @@ Fluxo canônico:
 
 NEXUS é SoR de clientes, contatos, produtos, preços, estoque, compras, pedidos, vendedores, metas, comissões, financeiro, fiscal, logística, CRM, WhatsApp, oportunidades, campanhas, IA, automações, histórico.
 - PROIBIDO: ERP Adapter/Connector, sync Mercos, importação operacional permanente.
-- Mercos = carga histórica one-shot arquivada (`scripts/mercos-scrape/` → `docs/legacy/`). `commercial_orders.origem='mercos'` é vestígio, não sync.
+- Mercos = carga histórica one-shot arquivada em `docs/legacy/mercos-scrape/` (passo 8, `256ee46ef`; saiu de `scripts/`). `commercial_orders.origem='mercos'` é vestígio, não sync.
 - Integrações permitidas (complementares, nunca SoR): WhatsApp/WAHA, Meta, provedores IA, e-mail, mapas/geocode, Nuvemshop.

@@ -78,7 +78,7 @@ Domínios top: `ai:63`, `cron:23`, `admin:21`, `conversations:19`, `leads:13`, `
 - IA real: `lib/ai` (93) + `lib/agent-engine` (123) + `workers/ai-*` + `agent-worker/main.ts`. Intent Router, Memory, RAG, Skills, Follow-up, Handoff existem e são reais. Agent Runs quase vazio (0 linhas prod em 2026-08-30). **Sales Brain: 0 hits — CRIAR. Orchestrator genérico: 0 — só handoff orchestrator.**
 - WhatsApp: canal canônico WAHA (`lib/channels/adapters/waha.ts` + `lib/waha/*` + webhooks `waha/[token]`), 10 testes `waha-*`.
 - Cron: 24 rotas (`event-log-drain`, `followup-flow-worker`, `agent-dispatcher`, `risk-watcher`, `fiscal-drain`, etc.).
-- Mercos: **só scrape one-shot** (`scripts/mercos-scrape/*`, 35 scripts). Zero adapter/sync/rota/cron no `lib/` ou `app/api`. Nuvemshop é o único adapter real.
+- Mercos: **só scrape one-shot, já arquivado** (`docs/legacy/mercos-scrape/*`, 35 scripts — saíram de `scripts/` no passo 8, `256ee46ef`). Zero adapter/sync/rota/cron no `lib/` ou `app/api`. Nuvemshop é o único adapter real.
 
 ## 8. Infra (resumo — detalhe em `infrastructure.md`)
 
@@ -92,4 +92,4 @@ Domínios top: `ai:63`, `cron:23`, `admin:21`, `conversations:19`, `leads:13`, `
 - KEEP: `lib/comercial/radar-compras.ts`, `risk-radar.ts`, `radar-de-risco.ts`, `lib/ai/handoff/orchestrator.ts`, `lib/agent-engine/agent/*`, `lib/api/wrappers.ts`, `lib/navigation/registry.ts`, `components/shell/*`, `app/api/v1/health`, `Dockerfile`, `publish-image.yml`.
 - REFACTOR: `components/` (consolidar em Nexus Design System), `lib/branding` (trocar default DeskcommCRM→NEXUS), `Dockerfile.worker` (multi-stage), `ci.yml` (concurrency+paths), sidebar groups (→ taxonomia NEXUS §19).
 - REPLACE: `scripts/deploy.sh` (criar canônico sobre hostgator-kit), `lib/nexus/graph.ts` (evoluir → Sales Brain real).
-- REMOVE: `scripts/mercos-scrape/*` do runtime (arquivar em `docs/legacy/`), `DataTable*` duplicados, `tenant_id` residual, `middleware.ts` fantasma (já é `proxy.ts`).
+- REMOVE: ✅ `mercos-scrape` do runtime (arquivado em `docs/legacy/`, passo 8), ✅ `DataTable*` duplicados, `tenant_id` residual, ✅ `middleware.ts` fantasma (já é `proxy.ts`).

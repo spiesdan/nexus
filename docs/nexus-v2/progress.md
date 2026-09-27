@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `e83ac2fdd feat(passo-7): jornadas E2E §86 — 7 specs novas verdes (venda, expedicao, financeiro, fiscal, IA, compras, estoque)` — o **PASSO 7**: 5 jornadas nomeadas do §86 + specs de Compras/Estoque, todas em `SPECS_PARTE_*`, seed da cifra fiscal no CI, e os fixes de produto que a jornada achou (envelope do `ok()` lido sem `.data` em `EmitirNota`; `codigo_municipio` faltando no select de `carregarContextoSped` — a pré-validação acusava IBGE SEMPRE; `?aba=` que não trocava a `Tabs` uncontrolled no push client-side; envelope dobrado da conciliação; refetch dos recebíveis na ficha do pedido por `status`).
-  — e o commit que entrega este arquivo **fecha o handoff do PASSO 7**.
-  (anteriores: `57bdcc511` docs handoff 6 · `8935da608`/`6b3732ee0` Fase 6b ·
+- HEAD: `256ee46ef refactor(legado): kit de scrape Mercos arquivado em docs/legacy/ - fora do runtime` — **PASSO 8 (fechamento)**: parity-matrix e migration-plan recontados contra o código (§94 = **38 ✅ / 2 ⚠️ / 1 ❌**; o ❌ é "deploy foi medido" — só se preenche no primeiro deploy na VPS, §84); auditoria linha-a-linha de §51/§52/§53/§14 confirmada no `migration-plan.md`; kit de scrape Mercos (35 scripts) movido para `docs/legacy/` com imports corrigidos e fora dos tsconfigs (baseline de 8 erros de tipo pré-existentes idêntica antes/depois, zero TS2307).
+  — e o commit que entrega este arquivo **fecha o handoff do PASSO 8**.
+  (anteriores: `7839671f1` docs handoff 7 · `e83ac2fdd` passo 7 E2E §86 ·
+  `57bdcc511` docs handoff 6 · `8935da608`/`6b3732ee0` Fase 6b ·
   `448269803` docs handoff 6a · `b12004435` Fase 6a ·
   `061042c5f` docs handoff 5e · `3fbd91b21` Fase 5e FormField ·
   `4015614b7` docs handoff 5d · `05857124a` Fase 5d NexusKpi +
@@ -48,46 +49,50 @@
 
 ## Última ação
 
-**Passo 7 (E2E §86) — FECHADO. 7 specs novas verdes e registradas no CI.**
-Commit `e83ac2fdd`:
+**Passo 8 (fechamento) — docs recontados; resta só o que depende de
+decisão do usuário (PR + deploy medido na VPS).**
 
-- **Specs** (`tests/e2e/`): `jornada-venda`, `jornada-expedicao`,
-  `jornada-financeiro`, `jornada-fiscal`, `jornada-ia` (as 5 jornadas
-  nomeadas do §86 — a 6ª, `recompra-radar`, já existia) +
-  `compras-do-rascunho-ao-estoque` + `estoque-entrada-saida-e-saldo`;
-  helper `tests/e2e/helpers/pedidos.ts` ganhou `ncm?` (NCM 8 dígitos: a
-  pré-validação fiscal cobra antes da SEFAZ).
-- **CI**: `e2e.yml` PARTE_1 += compras/estoque, PARTE_2 += as 5 jornadas
-  (as 3 antigas estavam órfãs — o gate reprovava); seed
-  `scripts/seed-e2e-fiscal-cifra.ts` + linha no workflow (sem a chave em
-  `private.app_secrets`, `fn_encrypt_oauth` derruba o PUT de
-  `fiscal-settings` com 422 na senha do certificado — o self-hoster tem
-  essa linha no setup, o banco fresco do CI não).
-- **Fixes de produto achados pela jornada**: envelope do `ok()` em
-  `EmitirNota` (`.data` — sem ele `setPendencias(undefined)` derrubava o
-  boundary com `undefined.length` e o POST de emissão nunca saía);
-  `carregarContextoSped` não pedia `codigo_municipio` (toda config
-  "passava" e a pré-validação dizia IBGE faltando); `?aba=` da
-  `/app/notas` não trocava a `Tabs` uncontrolled no push client-side
-  (`key={abaInicial}`); conciliação com envelope dobrado (`{data:{data}}`
-  → `.map` na aba); ficha do pedido refetch por `status` (o "Faturar
-  pedido" gera os recebíveis dentro do PATCH).
-- **Verificação**: typecheck 0 · lint 0 erros/340 warnings (baseline) ·
-  `pnpm build` ✓ · unit = baseline (16 flakes nos mesmos 5 arquivos) ·
-  **7/7 specs em 2,9min** (regressão de uma tacada) · gates
-  `evidencia-citada` + `e2e-cobertura-completa` **49/49**.
-- Próximo: **passo 8 — fechamento** (`parity-matrix`/`migration-plan`,
-  checklist §94, PR só com ordem explícita).
+- **parity-matrix.md recontada** (2026-09-27): nenhuma linha sobra como
+  RECRIAR — Sales Brain/Orchestrator/Copilot/Decision Log/Controle/Meu
+  Dia/Estoque-Compras/deploy.sh viraram ✅ com commit e prova; Financeiro
+  e Fiscal de "parcial" para ✅ (jornadas verdes); Mercos = "sem
+  integração, kit arquivado". Seção "O que ainda NÃO está fechado"
+  lista: deploy medido, executores autônomos, Lighthouse, PR.
+- **migration-plan.md**: FASE 0-1 ✅ (itens pendentes da FASE 1
+  fechados: §19 sidebar `4126a9681`, tokens pelo gate de auditoria);
+  FASES 2-9 ✅ com a E2E de cada uma mapeada; FASE 10 ⚠️ (só executor
+  `agendar_followup`); limpeza legado com ✅/pendências.
+- **§94 recontado item a item** (migration-plan): 41 itens = 38 ✅ /
+  2 ⚠️ (24 vendedor autônomo com executor único; 28 performance sem
+  Lighthouse) / 1 ❌ (40 deploy medido — placeholder em
+  `deploy-performance.md`).
+- **§51/§52/§53/§14 confirmados contra o código** (seção "Auditoria
+  linha-a-linha" no migration-plan): 6 módulos financeiros medidos nas
+  abas; fluxo fiscal ponta a ponta pela jornada; aba Financeiro do 360
+  com limite/em aberto/vencido; §14 pela spec de auditoria do passo 6.
+- **Legado arquivado (`256ee46ef`)**: 35 scripts `mercos-scrape` →
+  `docs/legacy/mercos-scrape/` (23 imports relativos corrigidos;
+  `docs/legacy/**` no exclude dos dois tsconfigs espelhando `scripts/**`;
+  typecheck/lint/build/unit = baseline depois da mudança).
+- Gates da documentação: `evidencia-citada` + `e2e-cobertura-completa` +
+  `agents-md-versoes` 57/57 (AGENTS.md recontado: **88 das 90 specs** no
+  CI, 2 fora — `vps-fresh-onboarding` e `inbox-tempo-real`).
+- **Bloqueios honestos**: abrir PR `nexus-v2 → main` (só com ordem
+  explícita), §101 (remotes origin/fork), deploy real na VPS para
+  preencher o §84 — as três são decisão do usuário (abaixo).
 
-(estado anterior — passo 6:) Fase 3 COMPLETA (3a-3f); Fase 4
-COMPLETA (4a-4m); Fase 5 COMPLETA (5a-5e); Fase 6 COMPLETA (6a
-responsividade §60 + 6b auditoria de aceite §100 — checklist dos 11
-itens comprovado: 106 rotas varridas com VIOLACOES(0)/FAMILIAS(1),
-gates de fonte 8/8, evidência em `evidence/fase6b-aceite/` e
-`evidence/fase6-mobile/`); fases 0/1/2 + shell §17
-fechados no handoff `727faf650`.** Inventário:
-`docs/nexus-v2/redesign-inventory.md` (tabela §5 com os hashes + §6 com
-o checklist comprovado item a item).
+(passo 7 — FECHADO em `e83ac2fdd`+`7839671f1`:) 7 specs E2E verdes (5
+jornadas do §86 + compras + estoque), registradas nas `SPECS_PARTE_*`,
+seed da cifra fiscal no CI e 5 fixes de produto (envelope do `ok()` em
+`EmitirNota`; `codigo_municipio` no select do SPED; `?aba=` na Tabs da
+`/app/notas`; envelope dobrado da conciliação; refetch por `status` na
+ficha do pedido) — typecheck/lint/build/unit baseline, regressão 7/7 em
+2,9min, gates 49/49. Passo 6 (redesign §100) FECHADO antes: Fase 3
+COMPLETA (3a-3f); Fase 4 COMPLETA (4a-4m); Fase 5 COMPLETA (5a-5e);
+Fase 6 COMPLETA (6a+6b — VIOLACOES(0)/106 rotas,
+`evidence/fase6b-aceite/` e `evidence/fase6-mobile/`); fases 0/1/2 +
+shell §17 fechados no handoff `727faf650`. Inventário:
+`docs/nexus-v2/redesign-inventory.md`.
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
 
 - **Fase 3a `37b35a029` — `StatusPage` 6→1**: uma tela de erro em
@@ -860,17 +865,31 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    `estoque-entrada-saida-e-saldo`, todas nas `SPECS_PARTE_*` (gate
    e2e-cobertura 49/49); seed da cifra fiscal no workflow; regressão
    7/7 verdes; 4 fixes de produto (detalhe na "Última ação").
-3. **Fechamento (passo 8)** — docs (`parity-matrix`/`migration-plan`
-   desatualizados desde a Etapa 1-3), checklist §94 recontado, **abrir PR**
-   (ordem do usuário), CI Linux, deploy medido na VPS (§84).
-   Antes de fechar: checar o spec linha a linha (§19/§20/§91 já cumpridos;
-   confirmar §51-§53, §14 contra o spec).
+3. **Fechamento (passo 8) — docs ✅ FEITOS** (`parity-matrix`/`migration-plan`
+   recontados, §94 = 38✅/2⚠️/1❌, §51-§53/§14 confirmados, kit Mercos
+   arquivado, AGENTS.md recontado 88/90). **Resta (depende de decisão
+   sua, abaixo):**
+   - **abrir PR `nexus-v2 → main`** (ordem explícita; aí os 5 checks
+     obrigatórios rodam na CI Linux de verdade);
+   - **deploy medido na VPS (§84)** — preenche o item 40 do §94 em
+     `docs/infrastructure/deploy-performance.md` (meta ≤5min, 1–3min
+     quente; nada afirmado sem medir);
+   - §51-§53/§91/§19/§20 checados; se quiser fechar os 2 ⚠️ do §94:
+     executores de ação autônoma (política sua, não inventada) e
+     Lighthouse (S-12.05 deferido — pode ser aceito como está).
 
 ## Decisões pendentes do usuário (NÃO decidir sozinho)
 
+- **PR**: abrir `nexus-v2 → main` quando? (passo 8 fechado do lado do
+  código/docs; o PR é o próximo passo natural — só com ordem explícita).
 - **§101**: posso remover os remotes `origin`/`fork` (critério de aceite do
   spec diz `git remote -v` só com NEXUS, mas AGENTS.md os declara permanentes)?
-- **PR**: abrir `nexus-v2 → main` em qual ponto (antes ou depois do redesign)?
+- **Deploy (§84)**: qual VPS/credenciais para o primeiro deploy real e
+  medir o tempo (único ❌ do §94)? Sem isso `deploy-performance.md`
+  fica honestamente em "a medir".
+- **⚠️ do §94 (opcional para fechar)**: 24 = executores de ação autônoma
+  (qual política de aprovação? qual fluxo pode rodar sozinho?); 28 =
+  Lighthouse entrar como gate ou aceitar "performance = build+bundle".
 
 ## Fatos para não alucinar (medidos)
 
