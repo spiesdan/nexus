@@ -359,6 +359,10 @@ test.describe("followup flow builder — canvas visual (Task 6.2)", () => {
     await page.screenshot({ path: "test-results/followup-6.2-05-built-incomplete.png", fullPage: true });
 
     // 4. Publish INCOMPLETE — expect 422 anchored to the offending nodes.
+    // Guarda de toasts: o sonner (pauseOnHover) mantém "Rascunho salvo." vivo
+    // enquanto o mouse pairar sobre ele; o ponto de clique fica embaixo do
+    // toast e o timer pausa — impasse. Espera a região secar (mouse fora).
+    await expect(page.getByText("Rascunho salvo.")).toBeHidden();
     await page.getByTestId("publish-button").click();
     await expect(page.getByText(/reprovado na validação/i)).toBeVisible();
     await expect(page.locator(`[data-testid="node-error-${waitId}"]`)).toBeVisible();
@@ -369,6 +373,15 @@ test.describe("followup flow builder — canvas visual (Task 6.2)", () => {
     // 5. Fix: connect action→end.
     await connectHandles(page, actionId, endId);
     await expect(page.locator(".react-flow__edge")).toHaveCount(3);
+
+    // Guarda de toasts (run 36354989790): o sonner tem pauseOnHover e o ponto
+    // de clique (centro do Publicar) fica embaixo do toast de "Rascunho salvo."/
+    // "Fluxo reprovado..." — o hover pausa o timer e o toast nunca sai; o clique
+    // fica interceptado os 30s inteiros do timeout. Local passou em 9,7s (a
+    // corrida só aparece no runner do CI). Espera a região secar com o mouse
+    // fora dela (após connectHandles ele está no canvas).
+    await expect(page.getByText(/reprovado na valida/i)).toBeHidden({ timeout: 15_000 });
+    await expect(page.getByText("Rascunho salvo.")).toBeHidden({ timeout: 15_000 });
 
     // 6. Publish for real — expect success + "Ativo" badge + toast.
     await page.getByTestId("publish-button").click();

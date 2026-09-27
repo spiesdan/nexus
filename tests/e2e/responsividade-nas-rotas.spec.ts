@@ -69,6 +69,13 @@ test("fase 6 — telas mobile-priority em 390", async ({ page }) => {
  * fases 4/5.)
  */
 test("fase 6 — nenhuma rota do app vaza em 390, 430 e 768", async ({ page }) => {
+  // Medido em 2026-09-27: local a varredura de 207 combos leva 210s — 87,5%
+  // do teto de 240s do arquivo, folga que o runner do GitHub (mais lento)
+  // não tem: no run 36354989790 esta foi a ÚNICA falha da parte 1, estourando
+  // os 240s. 480s = 2x o tempo local medido. O piso que protege de verdade é
+  // o do passo (30min): a parte 1 fechou em 22,6min, e mesmo a varredura
+  // consumindo os 8min inteiros o passo fecha em ~26,6min.
+  test.setTimeout(480_000);
   await loginComoDono(page, creds);
 
   const rotas = [
