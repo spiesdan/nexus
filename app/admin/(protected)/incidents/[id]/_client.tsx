@@ -16,6 +16,7 @@ import {
   IncidentStatusBadge,
 } from "@/components/admin/incidents/badges";
 import type { IncidentSeverity, IncidentStatus } from "@/hooks/useAdminIncidents";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 // ---------------------------------------------------------------------------
@@ -72,40 +73,34 @@ export function IncidentDetailClient({ id }: IncidentDetailClientProps) {
         </Link>
       </div>
 
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="min-w-0 space-y-2">
-          <h1 className="break-words text-2xl font-medium tracking-tight font-mono text-text">
-            {incident.type}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <IncidentSeverityBadge severity={severity} />
-            <IncidentStatusBadge status={status} />
-            {incident.tenant && (
-              <Badge variant="neutral" className="font-mono text-xs">
-                {incident.tenant.slug}
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {t("Criado")}{" "}
-            {formatDistanceToNow(new Date(incident.created_at), {
-              addSuffix: true,
-              locale: localeDaData,
-            })}
-            {" · "}
-            {format(new Date(incident.created_at), "dd/MM/yyyy HH:mm", {
-              locale: localeDaData,
-            })}
-          </p>
-        </div>
-
-        {status !== "resolved" && (
-          <div className="shrink-0">
+      <NexusPageHeader
+        title={incident.type}
+        actions={
+          status !== "resolved" ? (
             <ResolveIncidentDialog incidentId={id} />
-          </div>
+          ) : undefined
+        }
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <IncidentSeverityBadge severity={severity} />
+        <IncidentStatusBadge status={status} />
+        {incident.tenant && (
+          <Badge variant="neutral" className="font-mono text-xs">
+            {incident.tenant.slug}
+          </Badge>
         )}
       </div>
+      <p className="text-xs text-muted-foreground">
+        {t("Criado")}{" "}
+        {formatDistanceToNow(new Date(incident.created_at), {
+          addSuffix: true,
+          locale: localeDaData,
+        })}
+        {" · "}
+        {format(new Date(incident.created_at), "dd/MM/yyyy HH:mm", {
+          locale: localeDaData,
+        })}
+      </p>
 
       <Separator />
 

@@ -14,6 +14,7 @@ import {
   UsersTableAdmin,
   UsersTableAdminSkeleton,
 } from "@/components/admin/users/UsersTableAdmin";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 // ---------------------------------------------------------------------------
@@ -68,15 +69,14 @@ export function UsersClient() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Usuários")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isLoading
+      <NexusPageHeader
+        title={t("Usuários")}
+        subtitle={
+          isLoading
             ? t("Carregando...")
-            : `${total} ${total !== 1 ? t("usuários") : t("usuário")}${hasNextPage ? "+" : ""}`}
-        </p>
-      </div>
+            : `${total} ${total !== 1 ? t("usuários") : t("usuário")}${hasNextPage ? "+" : ""}`
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">

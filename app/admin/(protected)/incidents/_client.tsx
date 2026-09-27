@@ -18,6 +18,7 @@ import {
   type IncidentStatus,
   type IncidentSeverity,
 } from "@/hooks/useAdminIncidents";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 const STATUS_OPTIONS: { value: IncidentStatus; label: string }[] = [
@@ -46,17 +47,14 @@ export function IncidentsClient() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium text-text tracking-tight">{t("Incidentes")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLoading
-              ? t("Carregando...")
-              : `${total} ${total !== 1 ? t("incidentes") : t("incidente")}${hasNextPage ? "+" : ""}`}
-          </p>
-        </div>
-      </div>
+      <NexusPageHeader
+        title={t("Incidentes")}
+        subtitle={
+          isLoading
+            ? t("Carregando...")
+            : `${total} ${total !== 1 ? t("incidentes") : t("incidente")}${hasNextPage ? "+" : ""}`
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">

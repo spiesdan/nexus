@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TenantBadge } from "@/components/admin/inbox/TenantBadge";
 import { useAdminLgpdRequest } from "@/hooks/useAdminLgpdRequest";
 import type { AdminLgpdStatus, AdminLgpdRequestType } from "@/hooks/useAdminLGPDRequests";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 // ---------------------------------------------------------------------------
@@ -224,7 +226,7 @@ interface Props {
 export function LgpdRequestAdminDetail({ id }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const { data, isLoading, error } = useAdminLgpdRequest(id);
+  const { data, isLoading, error, refetch } = useAdminLgpdRequest(id);
 
   if (isLoading) {
     return (
@@ -240,9 +242,10 @@ export function LgpdRequestAdminDetail({ id }: Props) {
 
   if (error || !data) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {t("Falha ao carregar solicitação.")}
-      </div>
+      <NexusErrorState
+        description={t("Falha ao carregar solicitação.")}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -271,8 +274,8 @@ export function LgpdRequestAdminDetail({ id }: Props) {
 
       {/* Header */}
       <div className="flex flex-col gap-2">
+        <NexusPageHeader title={`#${shortId}`} />
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-xl font-semibold tracking-tight font-mono">#{shortId}</h1>
           <Badge variant={STATUS_VARIANT[request.status] ?? "secondary"}>{statusLabel}</Badge>
           <Badge variant="outline">{typeLabel}</Badge>
           {request.emergency && <Badge variant="destructive">{t("Urgente")}</Badge>}

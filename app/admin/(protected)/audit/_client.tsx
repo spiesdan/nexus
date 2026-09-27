@@ -7,6 +7,7 @@ import {
   AuditTable,
   AuditTableSkeleton,
 } from "@/components/admin/audit/AuditTable";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 export function AuditClient() {
@@ -29,15 +30,14 @@ export function AuditClient() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Audit Log")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isLoading
+      <NexusPageHeader
+        title={t("Audit Log")}
+        subtitle={
+          isLoading
             ? t("Carregando...")
-            : `${total} ${total !== 1 ? t("eventos") : t("evento")}${hasNextPage ? "+" : ""}`}
-        </p>
-      </div>
+            : `${total} ${total !== 1 ? t("eventos") : t("evento")}${hasNextPage ? "+" : ""}`
+        }
+      />
 
       {/* Filters */}
       <AuditFiltersAdmin filters={filters} onChange={setFilters} tenants={tenants} />

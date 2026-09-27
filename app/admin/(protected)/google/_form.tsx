@@ -5,6 +5,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { updateGoogleOAuth } from "@/app/actions/settings/updateGoogleOAuth";
 import { Button } from "@/components/ui/button";
@@ -49,12 +50,12 @@ export function FormularioDoGoogle({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Google Agenda desta instalação")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("Com estas duas informações, quem atende consegue conectar a agenda pessoal do Google e ver os compromissos do CRM lá. Elas valem para a instalação inteira — cada pessoa conecta a conta dela depois, sozinha.")}
-        </p>
-      </header>
+      <NexusPageHeader
+        title={t("Google Agenda desta instalação")}
+        subtitle={t(
+          "Com estas duas informações, quem atende consegue conectar a agenda pessoal do Google e ver os compromissos do CRM lá. Elas valem para a instalação inteira — cada pessoa conecta a conta dela depois, sozinha.",
+        )}
+      />
 
       <Card className="hover-raise flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-1.5">

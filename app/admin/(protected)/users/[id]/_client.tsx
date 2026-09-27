@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { CaretLeft } from "@/lib/ui/icons";
 import { useAdminUser } from "@/hooks/useAdminUser";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 // ---------------------------------------------------------------------------
@@ -124,14 +125,11 @@ export function UserDetailClient({ id }: UserDetailClientProps) {
         </Link>
       </div>
 
-      {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-medium tracking-tight text-text">
-          {user.full_name ?? user.email ?? t("Usuário sem nome")}
-        </h1>
-        {user.full_name && (
-          <p className="font-mono text-sm text-muted-foreground">{user.email}</p>
-        )}
+        <NexusPageHeader
+          title={user.full_name ?? user.email ?? t("Usuário sem nome")}
+          subtitle={user.full_name && user.email ? user.email : undefined}
+        />
         <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
       </div>
 

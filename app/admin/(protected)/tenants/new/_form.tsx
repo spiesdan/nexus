@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateTenant } from "@/hooks/useCreateTenant";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { ApiError } from "@/lib/api/types";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -146,12 +147,10 @@ export function NewTenantForm() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Novo Tenant")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t("Cria um novo tenant com status")} <em>onboarding</em>.
-        </p>
-      </div>
+      <NexusPageHeader
+        title={t("Novo Tenant")}
+        subtitle={`${t("Cria um novo tenant com status")} onboarding.`}
+      />
 
       <Card>
         <CardHeader>
