@@ -297,19 +297,60 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     `evidence/fase5-formfield/5-settings-atendimento-desktop.png`,
     `evidence/fase5-formfield/6-settings-marca-desktop.png`) → **Fase 5
     COMPLETA (5a-5e)**.
-7. **Fase 6 — responsividade §60 + auditoria §100**: ✅ 6a
-   responsividade fechada (`b12004435`) — spec permanente
+7. **Fase 6 — responsividade §60 + auditoria §100 ✅ COMPLETA (6a+6b)**:
+   ✅ 6a responsividade fechada (`b12004435`) — spec permanente
    `responsividade-nas-rotas.spec.ts` (em `SPECS_PARTE_2`): as 5 telas
    mobile-priority em 390 com evidência `evidence/fase6-mobile/1-meu-dia-390.png`,
    `evidence/fase6-mobile/2-clientes-390.png`,
    `evidence/fase6-mobile/3-inbox-390.png`,
    `evidence/fase6-mobile/4-pedidos-390.png`,
    `evidence/fase6-mobile/5-radar-390.png`, + varredura das 69 rotas
-   estáticas de `/app` em 390/430/768 com régua de `scrollWidth` — 0px de
-   overflow em 207 combos; único defeito: célula "Atualizar/Limpar
+   estáticas de `/app` em 390/430/768 com régua de `scrollWidth`,
+   0px de overflow em 207 combos; único defeito: célula "Atualizar/Limpar
    filtros" do Radar sem `flex-wrap` vazava em 390 → corrigido; "Rotas"
-   do §60 não tem rota no produto — não inventada. Resta 6b **auditoria
-   visual de aceite §100** (checklist dos 11 itens) com evidência.
+   do §60 não tem rota no produto — não inventada.
+   ✅ 6b auditoria de aceite (`6b3732ee0` + reforço `8935da608`) — spec
+   permanente `auditoria-aceite-11-itens.spec.ts` (em `SPECS_PARTE_2`)
+   varre as 106 rotas estáticas (69 tenant + 14 admin + 23 públicas) em
+   1280 com régua DOM (navegação, assinatura de `ui/table`, hex inline,
+   transição >400ms, glass, estado-erro, família de fonte, tamanho de
+   título): **VIOLACOES(0) · FAMILIAS(1) · títulos ≤3 tamanhos**;
+   gate de fonte `tests/unit/auditoria-aceite-100.test.ts` (8 testes)
+   verde. Achados corrigidos: últimas 2 tabelas cruas → `ui/table`
+   (`app/app/settings/notifications/_client.tsx`,
+   `app/app/ai/agents/[id]/_components/VersionDiff.tsx`) e título
+   `text-xl` → 24px canônico (`app/app/integrations/nuvemshop/page.tsx`);
+   exceções declaradas na spec (editor de cor da marca, `/admin/forbidden`,
+   impressão/galeria). Evidência:
+   `evidence/fase6b-aceite/1-novo-design-meu-dia.png`,
+   `evidence/fase6b-aceite/2-tabela-canonica-notifications.png`,
+   `evidence/fase6b-aceite/3-navegacao-shell.png`,
+   `evidence/fase6b-aceite/4-tabelas-financeiro.png`,
+   `evidence/fase6b-aceite/5-formularios-tenant.png`,
+   `evidence/fase6b-aceite/6-estados-prospeccao.png`,
+   `evidence/fase6b-aceite/7-tipografia-clientes.png`,
+   `evidence/fase6b-aceite/8-cores-radar.png`
+   → **PASSO 6 FECHADO**.
+
+## 6. Checklist de aceite §100 — comprovação item a item
+
+Critério do spec: "executar auditoria visual de todas as rotas existentes
+e comprovar" (linhas 3192-3206 do spec). Como cada um dos 11 itens foi
+provado neste passo:
+
+| # | item do checklist | comprovação |
+|---|---|---|
+| 1 | nenhuma tela importante usa visual legado | gate `auditoria-aceite-100.test.ts`: 0 importações da Fase 1 (uimaxxing/gradient/orb/pill/typing-field/select-menu), arquivos apagados, `window.confirm`/`sonner` só nas portas documentadas; DOM: 0 glass, 0 cor inline fora do editor de cor |
+| 2 | nenhuma rota importante usa componentes antigos sem justificativa | as últimas 2 tabelas cruas convertidas na 6b (`notifications`, `VersionDiff`); `<table>` crua só sob exceção declarada (impressão, galeria); allowlists do gate = exceções do inventário §3 |
+| 3 | navegação é consistente | varredura DOM: `aside`+`nav` do shell em todas as 69 tenant + 13 admin (exceção justificada: `/admin/forbidden`, fora do `(protected)` por loop do guard, documentado no `admin/layout.tsx`); evidência `evidence/fase6b-aceite/3-navegacao-shell.png` |
+| 4 | tabelas são consistentes | varredura DOM: todo `<table>` em `main` com assinatura `ui/table` (207 combos da 6a + 106 da 6b); evidência `evidence/fase6b-aceite/2-tabela-canonica-notifications.png`, `evidence/fase6b-aceite/4-tabelas-financeiro.png` |
+| 5 | formulários são consistentes | `FormField` canônico nas 7 telas de configuração (Fase 5e, escopo registrado §5 item 6); evidência `evidence/fase6b-aceite/5-formularios-tenant.png` |
+| 6 | estados são consistentes | varredura recusa rota que renderizou "Algo deu errado"/"Erro ao carregar" (0 em 106); estados canônicos (`NexusErrorState`/`NexusEmptyState`/`NexusTableSkeleton`) adotados nas telas das fases 4-5 (registro por fase no §5); evidência `evidence/fase6b-aceite/6-estados-prospeccao.png` |
+| 7 | mobile foi tratado | Fase 6a: 5 telas mobile-priority + 69 rotas × 3 larguras, 0 overflow em 207 combos; evidência `evidence/fase6-mobile/` |
+| 8 | animações seguem o mesmo padrão | varredura DOM: 0 transição >400ms no que o usuário toca em 106 rotas; gate de fonte: `animate-` só do catálogo Tailwind (keyframes curtos do assistente declarados como exceção) |
+| 9 | tipografia é consistente | varredura DOM: 1 família (`Geist...`) em 106 rotas e títulos em ≤3 tamanhos (24px canônico, 22px da galeria `/design`, rota sem título por desenho); h1 do nuvemshop corrigido de 20px na 6b; `text-[10px]` = assinatura de cabeçalho de tabela do próprio `ui/table` |
+| 10 | espaçamento é consistente | gate de fonte: 0 valor arbitrário de espaçamento (`p-[`/`m-[`/`gap-[`…) — carve-out único: `pb-[env(safe-area-inset-bottom)]` do `MobileDock` (inset do iOS, não escolha de escala) |
+| 11 | cores são consistentes | gate de fonte: 0 hex em classe (`bg-#`/`text-#`…); varredura DOM: 0 hex em `style` inline fora do editor de cor da marca (onde o hex é o dado); evidência `evidence/fase6b-aceite/8-cores-radar.png` |
 
 Guardas por fase: `pnpm typecheck` + `pnpm lint` + `pnpm test:unit` (nexus-ui,
 command-palette, sidebar-grupos, navegação) + e2e alvo; screenshots em

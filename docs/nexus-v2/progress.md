@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `b12004435 feat(fase-6a): responsividade §60 medida em 207 combos - 69 rotas x 390/430/768 sem overflow` — spec permanente `responsividade-nas-rotas.spec.ts` (5 telas mobile-priority em 390 com evidência + varredura das 69 rotas estáticas de `/app` em 390/430/768 com régua de `scrollWidth`); único defeito achado e corrigido: célula "Atualizar/Limpar filtros" do Radar sem `flex-wrap` vazava em 390; evidência `evidence/fase6-mobile/`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 6a**.
-  (anteriores: `061042c5f` docs handoff 5e · `3fbd91b21` Fase 5e FormField ·
+- HEAD: `8935da608 feat(fase-6b): varredura da auditoria recusa rota que renderizou erro` — fecho do reforço da auditoria de aceite; o corpo da 6b veio em `6b3732ee0` (spec DOM `auditoria-aceite-11-itens.spec.ts` + gate de fonte `tests/unit/auditoria-aceite-100.test.ts` + 3 conversões: notifications/VersionDiff → `ui/table`, título do nuvemshop → 24px) e o da 6a em `b12004435`; evidência `evidence/fase6b-aceite/` + `evidence/fase6-mobile/`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 6 COMPLETA (6a+6b) — PASSO 6 FECHADO**.
+  (anteriores: `448269803` docs handoff 6a · `b12004435` Fase 6a responsividade ·
+  `061042c5f` docs handoff 5e · `3fbd91b21` Fase 5e FormField ·
   `4015614b7` docs handoff 5d · `05857124a` Fase 5d NexusKpi +
   NexusChart · `1f2239e18` docs handoff 5c · `c370b8c8a` Fase 5c abas ·
   `9843f3ed9` docs handoff 5b · `fd6a18d9e` Fase 5b FilterBar ·
@@ -46,15 +47,17 @@
 
 ## Última ação
 
-**Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 (superfície
-compartilhada) COMPLETA (5a-5e ✅); Fase 6 EM CURSO com 6a =
-responsividade §60 EXECUTADA neste torno (69 rotas × 390/430/768 sem
-overflow, 1 fix no Radar); resta a 6b (auditoria visual §100, checklist
-dos 11 itens); fases 0/1/2 + shell §17
+**Passo 6 (redesign §100) — FECHADO. Fase 3 COMPLETA (3a-3f); Fase 4
+COMPLETA (4a-4m); Fase 5 COMPLETA (5a-5e); Fase 6 COMPLETA (6a
+responsividade §60 + 6b auditoria de aceite §100 — checklist dos 11
+itens comprovado: 106 rotas varridas com VIOLACOES(0)/FAMILIAS(1),
+gates de fonte 8/8, evidência em `evidence/fase6b-aceite/` e
+`evidence/fase6-mobile/`); fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
-`docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
+`docs/nexus-v2/redesign-inventory.md` (tabela §5 com os hashes + §6 com
+o checklist comprovado item a item).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
+Próximo: **passo 7 — E2E §86**.
 
 - **Fase 3a `37b35a029` — `StatusPage` 6→1**: uma tela de erro em
   `components/nexus-ui/feedback/StatusPage.tsx` serve 403/404/500/503/
@@ -715,7 +718,7 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3 COMPLETA (3a-3f ✅); Fase 4 COMPLETA (4a-4m ✅); resta Fases 5-6**:
+1. **Redesign §100 (passo 6) — FECHADO: shell §17 (2a-2e ✅); Fase 3 COMPLETA (3a-3f ✅); Fase 4 COMPLETA (4a-4m ✅); Fase 5 COMPLETA (5a-5e ✅); Fase 6 COMPLETA (6a-6b ✅)**:
    a. **Fase 3 — consolidações ✅ TODA**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
       `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
       `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
@@ -750,7 +753,7 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         → **Fase 4 TODA (4a-4m ✅); próximo Fase 5**. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
-   c. **Fase 5 — superfície compartilhada EM CURSO**: ✅ `NexusPageHeader`
+   c. **Fase 5 — superfície compartilhada ✅ COMPLETA**: ✅ `NexusPageHeader`
       único (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup
       absorvido, `headingLevel 1|2`, 5 sites convertidos, fix do React #185
       da Inteligência com regressão `inteligencia-carrega.spec.ts`); ✅
@@ -780,16 +783,41 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         markup próprio; regressão `form-field-canonico.spec.ts` em 6 telas
         com asserts de vínculo label→input; flake JWT do lote de regressão
         re-exec verde) → **Fase 5 TODA (5a-5e ✅); próximo Fase 6**.
-   d. **Fase 6 — responsividade §60 + auditoria §100**: ✅ 6a
-      responsividade (`b12004435`: spec permanente
+   d. **Fase 6 — responsividade §60 + auditoria §100 ✅ COMPLETA (6a+6b)**:
+      ✅ 6a responsividade (`b12004435`: spec permanente
       `responsividade-nas-rotas.spec.ts` — as 5 telas mobile-priority em
       390 com evidência `evidence/fase6-mobile/` + varredura das 69 rotas
       estáticas de `/app` em 390/430/768 com régua de `scrollWidth`,
       0px de overflow em 207 combos; único defeito: célula
       "Atualizar/Limpar filtros" do Radar sem `flex-wrap` vazava em 390 →
-      corrigido; "Rotas" do §60 não tem rota no produto — não inventada);
-      resta 6b **auditoria visual de aceite §100** (checklist dos 11
-      itens) com evidência.
+      corrigido; "Rotas" do §60 não tem rota no produto — não inventada).
+      ✅ 6b auditoria de aceite (`6b3732ee0` + fecho `8935da608`): a
+      spec permanente `auditoria-aceite-11-itens.spec.ts` varre as 106
+      rotas estáticas (69 tenant + 14 admin + 23 públicas) em 1280 com
+      régua DOM — navegação do shell, assinatura de `ui/table` em todo
+      `<table>`, hex em `style` inline, transição >400ms, glass,
+      estado-erro, família de fonte única e tamanho de título —
+      **VIOLACOES(0), FAMILIAS(1), títulos em ≤3 tamanhos**; exceções
+      declaradas na própria spec (editor de cor da marca = o hex é o
+      dado; `/admin/forbidden` fora do `(protected)` por loop do guard;
+      impressão/galeria do inventário). Achados corrigidos: as últimas 2
+      tabelas cruas (`settings/notifications` e `ai/agents/[id]`
+      `VersionDiff`) → `ui/table`; título `text-xl` de
+      `/app/integrations/nuvemshop` → assinatura canônica 24px. Gate de
+      fonte permanente `tests/unit/auditoria-aceite-100.test.ts` (8
+      testes: legado Fase 1 não volta, `window.confirm`/`sonner` só nas
+      portas documentadas, sem espaçamento arbitrário — carve-out
+      `env(safe-area)` —, sem hex em classe, `animate-` só do catálogo).
+      Evidência: `evidence/fase6b-aceite/1-novo-design-meu-dia.png`,
+      `evidence/fase6b-aceite/2-tabela-canonica-notifications.png`,
+      `evidence/fase6b-aceite/3-navegacao-shell.png`,
+      `evidence/fase6b-aceite/4-tabelas-financeiro.png`,
+      `evidence/fase6b-aceite/5-formularios-tenant.png`,
+      `evidence/fase6b-aceite/6-estados-prospeccao.png`,
+      `evidence/fase6b-aceite/7-tipografia-clientes.png`,
+      `evidence/fase6b-aceite/8-cores-radar.png`
+      → **PASSO 6 FECHADO; próximo item 2 (E2E §86)**.
+   Checklist §100 item a item: ver inventário §6.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
    notification-center, contextual-drawer, admin-topbar, sidebar-grupos,
    command-palette, busca-global, leads/titulos route, status-page,
