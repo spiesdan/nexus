@@ -5,7 +5,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import {
   Select,
   SelectContent,
@@ -70,23 +70,14 @@ export function ProfileForm({
   return (
     <form onSubmit={handleSubmit} className="max-w-xl">
       <Card className="hover-raise space-y-4 p-6">
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("Email")}</Label>
-          <Input id="email" value={email} disabled />
-          <p className="text-xs text-muted-foreground">{t("Trocar email — em breve.")}</p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="full_name">{t("Nome completo")}</Label>
-          <Input
-            id="full_name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            maxLength={120}
-          />
-        </div>
+        <FormField label={t("Email")} id="email" hint={t("Trocar email — em breve.")}>
+          <Input value={email} disabled />
+        </FormField>
+        <FormField label={t("Nome completo")} id="full_name">
+          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
+        </FormField>
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="locale">{t("Idioma")}</Label>
+          <FormField label={t("Idioma")} id="locale">
             <Select value={locale} onValueChange={(v) => setLocale(v as Locale)}>
               <SelectTrigger id="locale">
                 <SelectValue />
@@ -98,9 +89,8 @@ export function ProfileForm({
                 <SelectItem value="pt-BR">Português (BR)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="timezone">{t("Fuso horário")}</Label>
+          </FormField>
+          <FormField label={t("Fuso horário")} id="timezone">
             <Select value={timezone} onValueChange={setTimezone}>
               <SelectTrigger id="timezone">
                 <SelectValue />
@@ -113,21 +103,20 @@ export function ProfileForm({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="avatar_url">{t("Avatar URL")}</Label>
+        <FormField
+          label="Avatar URL"
+          id="avatar_url"
+          hint={t("Upload de arquivo — em breve. Cole uma URL pública.")}
+        >
           <Input
-            id="avatar_url"
             type="url"
             placeholder="https://…"
             value={avatarUrl}
             onChange={(e) => setAvatarUrl(e.target.value)}
           />
-          <p className="text-xs text-muted-foreground">
-            {t("Upload de arquivo — em breve. Cole uma URL pública.")}
-          </p>
-        </div>
+        </FormField>
         <div className="flex sm:justify-end">
           <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
             {isPending ? t("Salvando…") : t("Salvar")}

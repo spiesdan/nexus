@@ -9,6 +9,7 @@ import { CampoDeLogo } from "@/components/branding/CampoDeLogo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import { Label } from "@/components/ui/label";
 import { cssDaMarca } from "@/lib/branding/css";
 import { ehHexValido, K, normalizarHex } from "@/lib/branding/rampa";
@@ -211,15 +212,21 @@ export function FormularioDaMarca({
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
       <Card className="hover-raise space-y-2 p-6">
-        <Label htmlFor="app_name">{t("Nome do sistema")}</Label>
-        <Input
+        <FormField
+          label={t("Nome do sistema")}
           id="app_name"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder={nomeEmVigor}
-          maxLength={120}
-          autoComplete="off"
-        />
+          hint={t(
+            "Deixe em branco para voltar ao nome padrão. Este nome já aparece no título da aba do navegador, nos menus laterais, nos e-mails que o sistema envia (para as empresas que não definiram um nome próprio), no aplicativo de verificação em duas etapas e no arquivo de códigos de recuperação que o usuário baixa. Ainda NÃO chega às telas de entrada e cadastro nem às da configuração inicial: essas continuam com o nome gravado no arquivo de instalação do servidor até a próxima atualização da stack.",
+          )}
+        >
+          <Input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            placeholder={nomeEmVigor}
+            maxLength={120}
+            autoComplete="off"
+          />
+        </FormField>
         {/*
           Esta frase precisa ser VERDADE enquanto a dívida existir, e ela já
           envelheceu DUAS vezes. Primeiro dizia que "o menu ainda mostra o nome do
@@ -252,11 +259,6 @@ export function FormularioDaMarca({
           da aba (banco) contra o texto do login (arquivo) e a spec mediria nada
           se os dois viessem da mesma fonte.
         */}
-        <p className="text-xs text-text-muted">
-          {t(
-            "Deixe em branco para voltar ao nome padrão. Este nome já aparece no título da aba do navegador, nos menus laterais, nos e-mails que o sistema envia (para as empresas que não definiram um nome próprio), no aplicativo de verificação em duas etapas e no arquivo de códigos de recuperação que o usuário baixa. Ainda NÃO chega às telas de entrada e cadastro nem às da configuração inicial: essas continuam com o nome gravado no arquivo de instalação do servidor até a próxima atualização da stack.",
-          )}
-        </p>
       </Card>
 
       <Card className="hover-raise space-y-4 p-6">

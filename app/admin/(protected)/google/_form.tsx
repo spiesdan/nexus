@@ -11,7 +11,7 @@ import { updateGoogleOAuth } from "@/app/actions/settings/updateGoogleOAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 
 interface Props {
   readonly clientIdSalvo: string | null;
@@ -58,48 +58,51 @@ export function FormularioDoGoogle({
       />
 
       <Card className="hover-raise flex flex-col gap-4 p-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="redirect">{t("Endereço de retorno")}</Label>
+        <FormField
+          label={t("Endereço de retorno")}
+          id="redirect"
+          hint={
+            <>
+              Cole exatamente isto em &ldquo;URIs de redirecionamento autorizados&rdquo;, na tela
+              de credenciais do Google Cloud.
+            </>
+          }
+        >
           {/*
             O valor que precisa estar registrado no console do Google, pronto
             para copiar. Ele é comparado BYTE A BYTE pelo Google, então digitar à
             mão é a origem clássica do `redirect_uri_mismatch` — um erro que
             aponta para o Google e não para a divergência.
           */}
-          <Input id="redirect" readOnly value={enderecoDeRetorno} data-testid="google-redirect" />
-          <p className="text-xs text-muted-foreground">
-            Cole exatamente isto em &ldquo;URIs de redirecionamento autorizados&rdquo;, na tela
-            de credenciais do Google Cloud.
-          </p>
-        </div>
+          <Input readOnly value={enderecoDeRetorno} data-testid="google-redirect" />
+        </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-id">ID do cliente</Label>
+        <FormField label="ID do cliente" id="client-id">
           <Input
-            id="client-id"
             data-testid="google-client-id"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com"
           />
-        </div>
+        </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-secret">Chave secreta do cliente</Label>
+        <FormField
+          label="Chave secreta do cliente"
+          id="client-secret"
+          hint={
+            temSegredoSalvo
+              ? t("Já existe uma chave cadastrada. Deixe em branco para mantê-la, ou digite uma nova para substituir.")
+              : t("Ela é guardada cifrada e nunca volta a aparecer nesta tela.")
+          }
+        >
           <Input
-            id="client-secret"
             data-testid="google-client-secret"
             type="password"
             value={clientSecret}
             onChange={(e) => setClientSecret(e.target.value)}
             placeholder={temSegredoSalvo ? "••••••••  (já cadastrada)" : "GOCSPX-…"}
           />
-          <p className="text-xs text-muted-foreground">
-            {temSegredoSalvo
-              ? t("Já existe uma chave cadastrada. Deixe em branco para mantê-la, ou digite uma nova para substituir.")
-              : t("Ela é guardada cifrada e nunca volta a aparecer nesta tela.")}
-          </p>
-        </div>
+        </FormField>
 
         {/*
           ONDE ESTÁ O QUE VALE. Sem isto, quem tem o par no `.env` abre a tela

@@ -5,7 +5,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import {
   Select,
   SelectContent,
@@ -63,43 +63,34 @@ export function TenantForm({ initial }: Props) {
     <form onSubmit={handleSubmit} className="max-w-2xl">
       <Card className="hover-raise space-y-4 p-6">
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="display_name">{t("Nome de exibição")}</Label>
+          <FormField label={t("Nome de exibição")} id="display_name">
             <Input
-              id="display_name"
               value={form.display_name}
               onChange={(e) => set("display_name", e.target.value)}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="legal_name">{t("Razão social")}</Label>
+          </FormField>
+          <FormField label={t("Razão social")} id="legal_name">
             <Input
-              id="legal_name"
               value={form.legal_name}
               onChange={(e) => set("legal_name", e.target.value)}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">{t("CNPJ")}</Label>
+          </FormField>
+          <FormField label="CNPJ" id="cnpj">
             <Input
-              id="cnpj"
               value={form.cnpj ?? ""}
               onChange={(e) => set("cnpj", e.target.value || null)}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dpo_email">{t("DPO email")}</Label>
+          </FormField>
+          <FormField label="DPO email" id="dpo_email">
             <Input
-              id="dpo_email"
               type="email"
               value={form.dpo_email ?? ""}
               onChange={(e) => set("dpo_email", e.target.value || null)}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="timezone">{t("Fuso horário")}</Label>
+          </FormField>
+          <FormField label={t("Fuso horário")} id="timezone">
             <Select value={form.timezone} onValueChange={(v) => set("timezone", v)}>
               <SelectTrigger id="timezone">
                 <SelectValue />
@@ -112,9 +103,8 @@ export function TenantForm({ initial }: Props) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="locale">{t("Idioma")}</Label>
+          </FormField>
+          <FormField label={t("Idioma")} id="locale">
             <Select value={form.locale} onValueChange={(v) => set("locale", v as Locale)}>
               <SelectTrigger id="locale">
                 <SelectValue />
@@ -123,43 +113,36 @@ export function TenantForm({ initial }: Props) {
                 <SelectItem value="pt-BR">Português (BR)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="media_retention_days">{t("Retenção de mídia (dias)")}</Label>
+          </FormField>
+          <FormField label={t("Retenção de mídia (dias)")} id="media_retention_days">
             <Input
-              id="media_retention_days"
               type="number"
               min={30}
               max={3650}
               value={form.media_retention_days}
               onChange={(e) => set("media_retention_days", Number(e.target.value))}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="privacy_policy_url">{t("URL política de privacidade")}</Label>
+          </FormField>
+          <FormField label={t("URL política de privacidade")} id="privacy_policy_url">
             <Input
-              id="privacy_policy_url"
               type="url"
               value={form.privacy_policy_url ?? ""}
               onChange={(e) => set("privacy_policy_url", e.target.value || null)}
             />
-          </div>
+          </FormField>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="lost_reasons">
-            {t("Motivos de perda extras (separados por vírgula)")}
-          </Label>
+        <FormField
+          label={t("Motivos de perda extras (separados por vírgula)")}
+          id="lost_reasons"
+          hint={t("Adicionados ao set padrão. Cada pipeline pode ter seus próprios motivos.")}
+        >
           <Input
-            id="lost_reasons"
             value={reasonsText}
             onChange={(e) => setReasonsText(e.target.value)}
             placeholder={t("ex: Sem orçamento, Concorrente")}
           />
-          <p className="text-xs text-muted-foreground">
-            {t("Adicionados ao set padrão. Cada pipeline pode ter seus próprios motivos.")}
-          </p>
-        </div>
+        </FormField>
 
         <div className="flex sm:justify-end">
           <Button type="submit" disabled={isPending} className="w-full sm:w-auto">

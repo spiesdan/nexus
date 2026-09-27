@@ -310,6 +310,7 @@ jobs:
         filterbar-unica-nas-listas.spec.ts
         abas-canonicas-nas-telas.spec.ts
         kpi-e-charts-canonicos.spec.ts
+        form-field-canonico.spec.ts
       # Cada item aqui tem o motivo MEDIDO, não presumido — e o gate cobra que a
       # lista exista e some com as outras duas.
       #

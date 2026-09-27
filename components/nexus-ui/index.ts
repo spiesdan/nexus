@@ -18,6 +18,7 @@ export {
   useConfirmar,
 } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 export { NexusFormDialog } from "@/components/nexus-ui/forms/NexusFormDialog";
+export { FormField } from "@/components/nexus-ui/forms/form-field";
 export { NexusSteps } from "@/components/nexus-ui/forms/NexusSteps";
 export { NexusQuantityStepper } from "@/components/nexus-ui/forms/NexusQuantityStepper";
 export { NexusDataTable, type NexusDataState } from "@/components/nexus-ui/data/NexusDataTable";
