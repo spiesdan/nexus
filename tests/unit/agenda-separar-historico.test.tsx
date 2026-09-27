@@ -89,9 +89,14 @@ function contador(aba: AbaDoHistorico): number {
  * Os ids que a pessoa VÊ naquela aba — abre a aba antes, porque só a ativa
  * desenha lista. Ler o contador não bastaria: contador diz QUANTOS, e o defeito
  * que importa é o QUAL (o cancelado que aparece entre os próximos).
+ *
+ * `mouseDown` e não `click`: a barra canônica (`ui/tabs`, Radix) ativa o
+ * gatilho em `mousedown`/`focus`/`Space|Enter` — a mesma sequência que um
+ * clique real dispara no browser e que o Playwright dispara na e2e. Um
+ * `fireEvent.click` solto pula o `mousedown` e nunca troca a aba.
  */
 function idsNaAba(aba: AbaDoHistorico): string[] {
-  fireEvent.click(screen.getByTestId(`aba-${aba}`));
+  fireEvent.mouseDown(screen.getByTestId(`aba-${aba}`));
   return Array.from(document.querySelectorAll("[data-testid^='linha-']")).map((el) =>
     (el.getAttribute("data-testid") ?? "").slice("linha-".length),
   );
@@ -241,13 +246,13 @@ describe("histórico da agenda — a repartição nas quatro abas", () => {
     // passaria sozinho.
     montar([ag("so-futuro", 45)]);
 
-    fireEvent.click(screen.getByTestId("aba-cancelados"));
+    fireEvent.mouseDown(screen.getByTestId("aba-cancelados"));
     expect(
       screen.getByTestId("historico-vazio").textContent,
       "aba vazia sem frase parece aba que não carregou, e quem atende recarrega a página atrás de dado que não existe",
     ).toContain("Nenhum cancelamento");
 
-    fireEvent.click(screen.getByTestId("aba-proximos"));
+    fireEvent.mouseDown(screen.getByTestId("aba-proximos"));
     expect(screen.queryByTestId("historico-vazio"), "com linha na aba, o vazio tem que sumir").toBeNull();
     expect(screen.getByTestId("linha-so-futuro")).toBeTruthy();
   });

@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -575,34 +576,24 @@ export function AgentForm(props: Props) {
         vocabulário interno; quem configura pensa em "quem fala com meu cliente" e
         "quem organiza minha casa".
       */}
-      <div className="flex flex-wrap gap-1 border-b" role="tablist" aria-label={t("Papéis do agente")}>
-        {(
-          [
-            ["conversa", t("Conversa com o cliente")],
-            ["operacao", t("Organiza o sistema")],
-            // O TERCEIRO PAPEL. O rótulo diz o que ele FAZ, como os outros dois:
-            // "Segurança" é o nosso nome; quem configura quer saber o que é
-            // conferido antes de a mensagem chegar ao cliente dele.
-            ["seguranca", t("Confere antes de enviar")],
-          ] as const
-        ).map(([id, rotulo]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={papel === id}
-            data-testid={`papel-${id}`}
-            onClick={() => setPapel(id)}
-            className={
-              papel === id
-                ? "border-b-2 border-foreground px-3 py-2 text-sm font-medium"
-                : "border-b-2 border-transparent px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-            }
-          >
-            {t(rotulo)}
-          </button>
-        ))}
-      </div>
+      <Tabs value={papel} onValueChange={(v) => setPapel(v as typeof papel)}>
+        <TabsList aria-label={t("Papéis do agente")}>
+          {(
+            [
+              ["conversa", t("Conversa com o cliente")],
+              ["operacao", t("Organiza o sistema")],
+              // O TERCEIRO PAPEL. O rótulo diz o que ele FAZ, como os outros dois:
+              // "Segurança" é o nosso nome; quem configura quer saber o que é
+              // conferido antes de a mensagem chegar ao cliente dele.
+              ["seguranca", t("Confere antes de enviar")],
+            ] as const
+          ).map(([id, rotulo]) => (
+            <TabsTrigger key={id} value={id} data-testid={`papel-${id}`}>
+              {rotulo}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {papel === "seguranca" ? <PainelDeSeguranca /> : null}
 

@@ -9,6 +9,7 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 import { AvatarDaPessoa } from "./AvatarDaPessoa";
@@ -115,46 +116,30 @@ export function HistoricoDaAgenda({
 
   return (
     <div data-testid="historico-da-agenda" data-aba={aba} className={cn("flex min-h-0 flex-col", className)}>
-      <div
-        role="tablist"
-        aria-label={t("Filtrar o histórico")}
-        className="flex flex-wrap items-center gap-0.5 rounded-full border border-border bg-surface p-0.5"
-      >
-        {ABAS.map((a) => {
-          const n = grupos[a.id].length;
-          return (
-            <button
-              key={a.id}
-              role="tab"
-              type="button"
-              data-testid={`aba-${a.id}`}
-              aria-selected={aba === a.id}
-              onClick={() => setAba(a.id)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-xs transition-colors duration-fast ease-out",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500",
-                aba === a.id
-                  ? "bg-accent font-semibold text-accent-fg"
-                  : "text-text-muted hover:bg-surface-elevated hover:text-text",
-              )}
-            >
-              <span>{t(a.rotulo)}</span>
-              {/* O contador vem SEMPRE, inclusive zero: "Cancelados 0" responde a
-                  pergunta sem gastar um clique, e some-lo faria a aba vazia
-                  parecer não carregada. */}
-              <span
-                data-testid={`contador-${a.id}`}
-                className={cn(
-                  "rounded-full px-1.5 text-[10px] tabular-nums",
-                  aba === a.id ? "bg-accent-fg/20" : "bg-surface-elevated text-text-subtle",
-                )}
-              >
-                {n}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <Tabs value={aba} onValueChange={(v) => setAba(v as AbaDoHistorico)}>
+        <TabsList aria-label={t("Filtrar o histórico")}>
+          {ABAS.map((a) => {
+            const n = grupos[a.id].length;
+            return (
+              <TabsTrigger key={a.id} value={a.id} data-testid={`aba-${a.id}`}>
+                <span>{t(a.rotulo)}</span>
+                {/* O contador vem SEMPRE, inclusive zero: "Cancelados 0" responde a
+                    pergunta sem gastar um clique, e some-lo faria a aba vazia
+                    parecer não carregada. */}
+                <span
+                  data-testid={`contador-${a.id}`}
+                  className={cn(
+                    "rounded-full px-1.5 text-[10px] tabular-nums",
+                    aba === a.id ? "bg-accent-fg/20" : "bg-surface-elevated text-text-subtle",
+                  )}
+                >
+                  {n}
+                </span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
 
       <div className="hover-raise mt-3 min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-surface">
         {daAba.length === 0 ? (

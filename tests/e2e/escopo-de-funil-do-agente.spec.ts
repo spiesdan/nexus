@@ -23,7 +23,7 @@
  * cabeçalho que não rodava em CI nenhum. Este entra na lista do workflow no
  * mesmo commit — prova nova fora do gate é repetir o defeito que ele registra.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 
 import { test, expect, type Browser, type Page } from "@playwright/test";
 
@@ -68,7 +68,7 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
   // `default_agent_id` do seed de credenciais é um `rag_bot` — outro tipo,
   // outra tela. Depender de um `mcp_agent` que outra spec deixou é depender da
   // ordem alfabética dos arquivos.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-capacidades.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-capacidades.ts"], { stdio: "inherit" });
   creds = lerCreds();
 });
 

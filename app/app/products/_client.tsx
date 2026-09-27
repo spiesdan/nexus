@@ -10,6 +10,7 @@ import { FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/Fil
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { precoDeVitrine, precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
@@ -318,35 +319,13 @@ export function ProdutosClient({
         </FilterPrimary>
       </FilterBar>
 
-      <div className="flex gap-2" role="tablist" aria-label={t("Abas do catálogo")}>
-        <Button
-          size="sm"
-          variant={aba === "todos" ? "default" : "outline"}
-          onClick={() => setAba("todos")}
-          role="tab"
-          aria-selected={aba === "todos"}
-        >
-          {t("Produtos")}
-        </Button>
-        <Button
-          size="sm"
-          variant={aba === "promocoes" ? "default" : "outline"}
-          onClick={() => setAba("promocoes")}
-          role="tab"
-          aria-selected={aba === "promocoes"}
-        >
-          {t("Promoções")}
-        </Button>
-        <Button
-          size="sm"
-          variant={aba === "destaques" ? "default" : "outline"}
-          onClick={() => setAba("destaques")}
-          role="tab"
-          aria-selected={aba === "destaques"}
-        >
-          {t("Destaques")}
-        </Button>
-      </div>
+      <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
+        <TabsList aria-label={t("Abas do catálogo")}>
+          <TabsTrigger value="todos">{t("Produtos")}</TabsTrigger>
+          <TabsTrigger value="promocoes">{t("Promoções")}</TabsTrigger>
+          <TabsTrigger value="destaques">{t("Destaques")}</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {podeEditar ? (
         // Rota de API que devolve o arquivo com `content-disposition:
