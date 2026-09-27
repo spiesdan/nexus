@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -52,7 +52,7 @@ function lerCreds(): Creds {
   if (!fs.existsSync(p)) throw new Error("`.e2e-creds.json` ausente — rode `scripts/seed-e2e-credentials.ts`");
   let c = JSON.parse(fs.readFileSync(p, "utf8")) as Creds;
   if (!c.duas_orgs) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-duas-organizacoes.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-duas-organizacoes.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(p, "utf8")) as Creds;
   }
   if (!c.duas_orgs) throw new Error("o seed rodou e não gravou o bloco `duas_orgs`");

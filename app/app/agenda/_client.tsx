@@ -18,6 +18,7 @@ import { EmptyAgenda } from "@/components/empty";
 import { rotuloDoLocal } from "@/lib/agenda/locais";
 import { Button } from "@/components/ui/button";
 import { PainelDeMarcacao } from "@/components/agenda/PainelDeMarcacao";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAgendamentos } from "@/hooks/agenda/useAgendamentos";
 import { useHorariosLivres } from "@/hooks/agenda/useHorariosLivres";
@@ -262,60 +263,58 @@ export function AgendaClient({
         enderecoDeRetorno={enderecoDeRetorno}
       />
 
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-medium tracking-tight text-text">{t("Agenda")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("O que está marcado, com quem, e quem atende — seu e da equipe.")}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAncora(new Date())}>
-            {t("Hoje")}
-          </Button>
-          {/*
-            DESABILITADO COM O MOTIVO À VISTA, e não ligado a um `onClick` vazio.
-            Enquanto a frente 1 não expõe `/api/v1/agenda` não há o que marcar, e
-            um botão primário, com cor de ação e sem `disabled`, que não faz nada
-            ao clique é pior do que não existir: quem clica conclui que o produto
-            está quebrado e não tem o que reportar além de "não abre". É o
-            anti-pattern de controle decorativo, e esta base já pagou por ele.
+      <NexusPageHeader
+        title={t("Agenda")}
+        subtitle={t("O que está marcado, com quem, e quem atende — seu e da equipe.")}
+        actions={
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setAncora(new Date())}>
+              {t("Hoje")}
+            </Button>
+            {/*
+              DESABILITADO COM O MOTIVO À VISTA, e não ligado a um `onClick` vazio.
+              Enquanto a frente 1 não expõe `/api/v1/agenda` não há o que marcar, e
+              um botão primário, com cor de ação e sem `disabled`, que não faz nada
+              ao clique é pior do que não existir: quem clica conclui que o produto
+              está quebrado e não tem o que reportar além de " não abre". É o
+              anti-pattern de controle decorativo, e esta base já pagou por ele.
 
-            O motivo vai em texto ao lado, não só no `title`: atributo de
-            hover não existe para quem usa toque, que é o dono de clínica no
-            celular.
-          */}
-          {!tipo && (
-            // Sem NENHUM tipo de agendamento cadastrado não há o que marcar — e
-            // isto é diferente de "a API não existe": a ação faz sentido, falta
-            // configuração. Por isso o motivo à vista, e não um botão mudo.
-            <span
-              data-testid="motivo-novo-agendamento"
-              className="hidden text-xs text-text-subtle sm:inline"
+              O motivo vai em texto ao lado, não só no `title`: atributo de
+              hover não existe para quem usa toque, que é o dono de clínica no
+              celular.
+            */}
+            {!tipo && (
+              // Sem NENHUM tipo de agendamento cadastrado não há o que marcar — e
+              // isto é diferente de "a API não existe": a ação faz sentido, falta
+              // configuração. Por isso o motivo à vista, e não um botão mudo.
+              <span
+                data-testid="motivo-novo-agendamento"
+                className="hidden text-xs text-text-subtle sm:inline"
+              >
+                {t("Cadastre um tipo de agendamento para começar")}
+              </span>
+            )}
+            <Button
+              size="sm"
+              disabled={!tipo}
+              // `data-testid` porque o RÓTULO deixou de ser estável: até este PR
+              // ele era literal, e `agenda-escopo-da-organizacao.spec.ts` o acha
+              // por `getByRole("button", { name: /Novo agendamento/i })`. Com o
+              // texto passando por `t()`, casar por rótulo passa a depender do
+              // idioma da conta de teste — hoje passa porque a conta nasce em
+              // português, mas é acoplamento que não precisa existir. O testid é
+              // o caminho estável; trocar a spec para usá-lo é decisão de quem a
+              // escreveu, e vai anotada no PR.
+              data-testid="novo-agendamento"
+              title={tipo ? undefined : t("Cadastre um tipo de agendamento para começar")}
+              onClick={() => setMarcando(true)}
             >
-              {t("Cadastre um tipo de agendamento para começar")}
-            </span>
-          )}
-          <Button
-            size="sm"
-            disabled={!tipo}
-            // `data-testid` porque o RÓTULO deixou de ser estável: até este PR
-            // ele era literal, e `agenda-escopo-da-organizacao.spec.ts` o acha
-            // por `getByRole("button", { name: /Novo agendamento/i })`. Com o
-            // texto passando por `t()`, casar por rótulo passa a depender do
-            // idioma da conta de teste — hoje passa porque a conta nasce em
-            // português, mas é acoplamento que não precisa existir. O testid é
-            // o caminho estável; trocar a spec para usá-lo é decisão de quem a
-            // escreveu, e vai anotada no PR.
-            data-testid="novo-agendamento"
-            title={tipo ? undefined : t("Cadastre um tipo de agendamento para começar")}
-            onClick={() => setMarcando(true)}
-          >
-            <CalendarPlus size={16} weight="bold" aria-hidden />
-            <span>{t("Novo agendamento")}</span>
-          </Button>
-        </div>
-      </header>
+              <CalendarPlus size={16} weight="bold" aria-hidden />
+              <span>{t("Novo agendamento")}</span>
+            </Button>
+          </div>
+        }
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">

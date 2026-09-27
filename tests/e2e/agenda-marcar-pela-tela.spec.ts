@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -88,7 +88,7 @@ function lerCreds(): Creds {
     // (ela só passava com o banco sujo de outra spec).
     //
     // O seed é idempotente, então chamá-lo aqui não atrapalha quem já o chamou.
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(p, "utf8")) as Creds;
   }
   if (!c.agenda) throw new Error("seed-e2e-agenda não gravou o bloco `agenda`");

@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -48,7 +48,7 @@ function lerCreds(): Creds {
     // Mesma razão das irmãs: depender de outra spec ter semeado antes é
     // depender da ORDEM de execução, que é o defeito que `agenda-tela-do-produto`
     // já pagou. O seed é idempotente.
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(p, "utf8")) as Creds;
   }
   if (!c.agenda) throw new Error("seed-e2e-agenda não gravou o bloco `agenda`");

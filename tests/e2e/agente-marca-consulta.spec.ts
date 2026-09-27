@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -74,14 +74,14 @@ interface TokenDoAgente {
 
 function credenciais(): Required<Creds> {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   let c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   if (!c.agenda) {
     // O seed de agenda é infra compartilhada (`scripts/seed-e2e-agenda.ts`): sem tipo,
     // jornada e contato, `crm_find_free_slots` responde `sem_responsavel` ou
     // `publicou_horarios:false` — os caminhos de RECUSA, não o caminho feliz.
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   }
   if (!c.agenda) throw new Error("seed-e2e-agenda não gravou o bloco `agenda`");
@@ -90,7 +90,7 @@ function credenciais(): Required<Creds> {
 
 function tokenDoAgente(): TokenDoAgente {
   // Sempre reemite: o token tem validade curta e o seed é idempotente.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-agente-mcp.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-agente-mcp.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(AGENTE_PATH, "utf8")) as TokenDoAgente;
 }
 
