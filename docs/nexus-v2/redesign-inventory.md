@@ -227,9 +227,14 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     formulários; 4 estados de erro bespoke → `NexusErrorState` com retry;
     erros que já tinham ação própria, three-pane do inbox e rotas de
     fusão intactos).
-6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
-   `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
-   `NexusKpi`/`NexusChart`, `FormField`.
+6. **Fase 5 — superfície compartilhada EM CURSO**: ✅ `NexusPageHeader` único
+   ✅ (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup absorvido,
+   `headingLevel 1|2` — h1 único por página, 5 sites convertidos: products,
+   relatorios, tarefas, inteligencia, NavHub; junto saiu o fix do React #185
+   que derrubava `/app/inteligencia` — loop `setNodes` do ReactFlow por
+   referência nova no setter da seleção, com regressão permanente
+   `inteligencia-carrega.spec.ts`); resta FilterBar único, tabs manuais→
+   `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
 7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
    e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
 

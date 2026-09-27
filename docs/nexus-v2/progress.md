@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `f681effb4 feat(nexus-v2): Fase 4m do redesign - 16 cabecalhos manuscritos do admin viram NexusPageHeader (listas, detalhes e formularios); estados de erro bespoke de usage/platform-admins/audit/lgpd viram NexusErrorState com retry (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4m**.
-  (anteriores: `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
+- HEAD: `0a9409f58 feat(nexus-v2): Fase 5a do redesign - layout/PageHeader e CrmPageHeader mortos, NexusPageHeader absorve o markup e ganha headingLevel 1|2 (h1 unico por pagina, NexusIntelligence vira h2), 5 sites convertidos (products, relatorios, tarefas, inteligencia com eyebrow Sales Intelligence caindo, NavHub); fix do React #185 que derrubava /app/inteligencia (loop setNodes do ReactFlow por referencia nova no setter da selecao, pre-existente e reproduzido 2/2 em prod) com regressao permanente inteligencia-carrega.spec.ts (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 5a**.
+  (anteriores: `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
+  `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
   `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
   `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
   `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
@@ -41,13 +42,10 @@
 ## Última ação
 
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
-Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos`,
-4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
-`/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
-4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`) +
-4j = `/agenda` + 4k = `pedidos/[id]`/`novo` + 4l = `/webhooks` +
-4m = admin (16 cabeçalhos)
-EXECUTADAS neste torno; fases 0/1/2 + shell §17
+Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 EM CURSO com
+5a = cabeçalho único (PageHeader/CrmPageHeader mortos, `headingLevel`)
++ fix do React #185 de `/app/inteligencia` EXECUTADAS neste torno;
+fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
 Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam claro).
@@ -584,10 +582,70 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     `test:unit` = baseline (15 flakes nos mesmos 4 arquivos) · e2e:
     evidência 1/1 ✓ (9.1s) + regressão `marca-logo` 6/6 ✓ + canário
     `navegacao` 13/13 ✓.
+  - **Fase 5a `0a9409f58` — cabeçalho único (mata `layout/PageHeader` +
+    `CrmPageHeader`)**:
+    - `git rm` nos 2 componentes mortos; o markup do `PageHeader` (wrapper
+      `space-y-3` + slot `navigation` + flex mobile/desktop com ação
+      principal primeiro) foi absorvido pelo `NexusPageHeader` — mesma
+      identidade visual, mesmo componente.
+    - Novo prop `headingLevel?: 1 | 2` (default 1, `Titulo` vira `h1`/`h2`
+      com as mesmas classes): um `h1` por página. Os 4 `NexusPageHeader`
+      internos de `components/nexus-ui/intelligence/NexusIntelligence.tsx`
+      usam `headingLevel={2}` — corrige double-h1 pré-existente em
+      `/app/inteligencia` (único importador do componente interno:
+      `app/app/inteligencia/_client.tsx:6`).
+    - 5 sites convertidos: `products`, `relatorios`, `tarefas` (ações
+      intactas; tag `.NET` preservada em products), `inteligencia` (eyebrow
+      "Sales Intelligence" CAIU — régua 4e-4f-4g; `description`→`subtitle`),
+      `NavHub` (`title`/`description`→`title`/`subtitle` — hubs `/app/ai` e
+      `/app/settings`). Barrel `nexus-ui/index.ts` perdeu o export
+      `CrmPageHeader`; zero imports remanescentes dos 2 mortos.
+    - **Fix de bug pré-existente que a evidência pegou**: `/app/inteligencia`
+      morria com React #185 ("Maximum update depth exceeded") logo após o
+      mount — reproduzido 2/2 em build de produção e 1/1 em dev; a primeira
+      leva de PNGs saiu COM A PÁGINA DE ERRO apesar das asserções passarem
+      (crash acontecia entre o assert e o screenshot). Causa (stack do dev):
+      `SelectionListenerInner` emite `onSelectionChange` →
+      `setSelectedIds(mapped)` com referência NOVA mesmo com o mesmo conteúdo
+      → re-render → `nos` array novo → `StoreUpdater` manda `setNodes` no
+      store → nova emissão (o `aoSelecionar` é inline, identidade muda
+      sempre) → ciclo até o teto do React. Correção: guarda de conteúdo no
+      setter (`selecionarNos`, bailout de `Object.is` em
+      `NexusIntelligence.tsx`).
+    - Regressão PERMANENTE `tests/e2e/inteligencia-carrega.spec.ts`
+      (registrada em `SPECS_PARTE_2`, `.github/workflows/e2e.yml`): h1
+      único → pulso zerado → re-assert do h1 + `Algo deu errado` count 0 —
+      exatamente o intervalo em que a página quebrada passava e morria.
+    - Evidência: `evidence/fase5-header-unico/1-inteligencia-desktop.png`,
+      `evidence/fase5-header-unico/2-inteligencia-mobile-390.png`,
+      `evidence/fase5-header-unico/3-hub-ia-desktop.png` e
+      `evidence/fase5-header-unico/4-hub-settings-desktop.png` (h1
+      re-assertado IMEDIATAMENTE antes de cada shot; as 4 conferidas).
+    - Medido no caminho: nenhum spec visita products/relatorios/tarefas/
+      inteligencia via `goto`; hubs exatos `/app/ai`+`/app/settings` em
+      `prova-painel-provedores`, `agenda-tipos-de-agendamento`,
+      `distribuicao-atendimento` + canário `navegacao`; `rotulo-do-contato`
+      (usa `git ls-files`) reprova com a exclusão do PageHeader ainda não
+      stageada — verde depois do `git add` (não é bug, é índice).
+    - Fixture medida: `prova-painel-provedores` F3/F1 reprovavam com
+      `ai_models` (openrouter) VAZIO (04/05 datavam de 03/09 — pré-existente,
+      nada a ver com headers) — `seed-e2e-catalogo-openrouter.ts` reexecutado
+      (62 modelos) e os 2 casos passaram 2/2.
+    - Regressão da 5a: evidência 1/1 ✓ (4 PNGs) + batch `navegacao` +
+      `prova-painel-provedores` + `agenda-tipos` + `distribuicao` +
+      `inteligencia-carrega` = 29/29 ✓ (2 falhas = fixture do catálogo,
+      resolvidas acima); imagens sobrescritas por specs de regressão
+      (`evidence/calendario`, `evidence/provedores`) RESTAURADAS com
+      `git checkout`.
+  - **Gates da 5a**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
+    `pnpm build` ✓ · `test:unit` = baseline (15 flakes nos mesmos 4
+    arquivos; `rotulo-do-contato` verde com exclusão stageada; os 4 PNGs
+    novos citados acima para o gate `evidencia-citada`) · e2e: evidência
+    1/1 ✓ + regressão 29/29 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
-1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3 COMPLETA (3a-3f ✅); resta Fases 4-6**:
+1. **Redesign §100 (passo 6) — shell §17 FECHADO (2a-2e ✅); Fase 3 COMPLETA (3a-3f ✅); Fase 4 COMPLETA (4a-4m ✅); resta Fases 5-6**:
    a. **Fase 3 — consolidações ✅ TODA**: ✅ `StatusPage` 6→1 (`37b35a029`); ✅
       `AdminDataTable` 7 tabelas→1 + badges (`ab0545095`); ✅
       `NexusConfirmDialog` (`eafb9c071`: 7 `window.confirm` + 13 AlertDialog +
@@ -622,9 +680,12 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         → **Fase 4 TODA (4a-4m ✅); próximo Fase 5**. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
-   c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
-      `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→
-      `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
+   c. **Fase 5 — superfície compartilhada EM CURSO**: ✅ `NexusPageHeader`
+      único (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup
+      absorvido, `headingLevel 1|2`, 5 sites convertidos, fix do React #185
+      da Inteligência com regressão `inteligencia-carrega.spec.ts`); resta
+      FilterBar único, tabs manuais→`ui/tabs`, `NexusKpi`/`NexusChart`,
+      `FormField`.
    d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,
