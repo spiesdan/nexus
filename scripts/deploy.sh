@@ -14,7 +14,6 @@ set -euo pipefail
 
 : "${NEXUS_IMAGE:?NEXUS_IMAGE é obrigatória (ex.: ${IMG_APP}:nexus-v2)}"
 COMPOSE="${COMPOSE_FILES:-$COMPOSE}"
-HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/v1/health}"
 
 # As três imagens saem da MESMA tag: o CI publica as três juntas
 # (publish-image.yml, matrix de três) e o compose lê APP_IMAGE/WORKER_IMAGE/
@@ -48,13 +47,15 @@ echo "[nexus] 6/7 subindo containers..."
 dc --env-file .env up -d app worker scheduler
 
 echo "[nexus] 7/7 health check..."
-for i in $(seq 1 30); do
-  if curl -fsS "$HEALTH_URL" >/dev/null 2>&1; then
-    echo "[nexus] healthy (tentativa $i)."
-    dc --env-file .env ps
-    exit 0
-  fi
-  sleep 5
-done
+# O probe é DE DENTRO do contêiner (wait_app_healthy, do kit — já sourced):
+# o app não publica porta no host (só o Caddy publica 80/443, doctrine de
+# packaging), então um curl em 127.0.0.1:3000 morre "connection refused"
+# em toda instalação SAUDÁVEL — medido na VPS crm.billhigiene.tech antes
+# de confiar neste passo. Um critério, um lugar: o mesmo probe do kit.
+if corpo="$(wait_app_healthy 30 5)"; then
+  echo "[nexus] healthy: $corpo"
+  dc --env-file .env ps
+  exit 0
+fi
 echo "[nexus] health FALHOU — execute rollback trocando NEXUS_IMAGE (§78, sem rebuild)."
 exit 1
