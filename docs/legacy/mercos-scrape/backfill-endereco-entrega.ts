@@ -10,8 +10,8 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { enderecoEmLinha } from "../../lib/contacts/endereco-em-linha";
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { enderecoEmLinha } from "../../../lib/contacts/endereco-em-linha";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 interface EnderecoContato {
   logradouro: string | null;

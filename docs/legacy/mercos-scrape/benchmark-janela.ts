@@ -1,8 +1,8 @@
 /** Benchmark: janela sequencial x paralela (prova da melhora). */
 import { createClient } from "@supabase/supabase-js";
 
-import { carregarJanelaDeVendas } from "../../lib/comercial/janela";
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarJanelaDeVendas } from "../../../lib/comercial/janela";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 const ORG = "4bc721ce-157a-41b9-97ae-ba633650859c";
 

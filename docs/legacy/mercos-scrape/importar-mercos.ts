@@ -22,10 +22,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { canonicalPhoneBR } from "../../lib/channels/phone-variants";
-import { hashCpf } from "../../lib/contacts/cpf";
-import { precoParaCentavos } from "../../lib/schemas/produtos";
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { canonicalPhoneBR } from "../../../lib/channels/phone-variants";
+import { hashCpf } from "../../../lib/contacts/cpf";
+import { precoParaCentavos } from "../../../lib/schemas/produtos";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 const SAIDA = join(process.env.TEMP ?? process.env.TMP ?? "/tmp", "opencode", "mercos");
 

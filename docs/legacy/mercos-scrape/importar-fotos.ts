@@ -13,7 +13,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 const SAIDA = join(process.env.TEMP ?? process.env.TMP ?? "/tmp", "opencode", "mercos");
 const MAX_BYTES = 2 * 1024 * 1024;

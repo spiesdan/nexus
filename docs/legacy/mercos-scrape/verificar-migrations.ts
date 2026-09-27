@@ -1,7 +1,7 @@
 /** Confere as tabelas/colunas das migrations 0226-0229 no banco. */
 import pg from "pg";
 
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 async function main(): Promise<void> {
   const env = carregarEnvLocal();

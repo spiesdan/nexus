@@ -1,7 +1,7 @@
 /** Liga permite_estoque_negativo na org (vender sem estoque). */
 import { createClient } from "@supabase/supabase-js";
 
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 async function main(): Promise<void> {
   const org = process.argv[2] ?? "4bc721ce-157a-41b9-97ae-ba633650859c";

@@ -1,7 +1,7 @@
 /** Lista organizações (para escolher o --org do importador). */
 import { createClient } from "@supabase/supabase-js";
 
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 async function main(): Promise<void> {
   const env = carregarEnvLocal();

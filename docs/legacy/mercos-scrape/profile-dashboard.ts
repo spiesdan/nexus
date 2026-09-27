@@ -1,7 +1,7 @@
 /** Profile das etapas do dashboard (acha os 10s). */
 import { createClient } from "@supabase/supabase-js";
 
-import { carregarEnvLocal } from "../lib/env-de-teste";
+import { carregarEnvLocal } from "../../../scripts/lib/env-de-teste";
 
 const ORG = "4bc721ce-157a-41b9-97ae-ba633650859c";
 
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   };
 
   await t("janela", async () => {
-    const { carregarJanelaDeVendas } = await import("../../lib/comercial/janela");
+    const { carregarJanelaDeVendas } = await import("../../../lib/comercial/janela");
     await carregarJanelaDeVendas(admin, ORG, "2025-08-01");
   });
   await t("metas+membros+count", async () => {

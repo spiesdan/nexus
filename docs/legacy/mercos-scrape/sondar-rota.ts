@@ -2,8 +2,8 @@
  * Sonda ao vivo do roteirizador: Nominatim + OSRM trip com endereços reais
  * da base (Canoinhas/SC). Uso: pnpm exec tsx scripts/mercos-scrape/sondar-rota.ts
  */
-import { geocodificarEndereco } from "../../lib/rotas/geocodificacao";
-import { otimizarComFallback, OsmrmProvider } from "../../lib/rotas/osrm";
+import { geocodificarEndereco } from "../../../lib/rotas/geocodificacao";
+import { otimizarComFallback, OsmrmProvider } from "../../../lib/rotas/osrm";
 
 async function main(): Promise<void> {
   const enderecos = [
