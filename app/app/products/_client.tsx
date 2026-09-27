@@ -7,7 +7,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
 import { FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
@@ -274,7 +274,7 @@ export function ProdutosClient({
   }
 
   const cabecalho = esconderCabecalho ? null : (
-    <PageHeader
+    <NexusPageHeader
       title={textos.titulo}
       subtitle={textos.subtitulo}
       actions={

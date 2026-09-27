@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FilterActions, FilterBar } from "@/components/filters/FilterBar";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { paraCSV, reais, type LinhaABC, type LinhaAgregada } from "@/lib/comercial/relatorios";
 import { comoMoeda } from "@/lib/format/moeda";
 
@@ -122,7 +122,7 @@ export function RelatoriosClient({
 }) {
   return (
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
-      <PageHeader title={textos.titulo} subtitle={textos.subtitulo} />
+      <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
       <FilterBar>
         <FilterActions>
