@@ -24,7 +24,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 
 import { test, expect, type Page, type Locator, type APIRequestContext } from "@playwright/test";
 import { carregarEnvLocal } from "../../scripts/lib/env-de-teste";
@@ -39,12 +39,12 @@ interface Creds {
 
 function loadCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   // Um número CONECTADO é pré-condição: a tela desabilita todo número que não
   // esteja `WORKING`, e o seed base não cria nenhum. Conectar de verdade exige
   // ler QR no celular, o que não existe num rig — ver o cabeçalho do seed.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
 
@@ -108,7 +108,7 @@ test.describe("a automação conta o que aconteceu de verdade", () => {
   // Reexecutar é barato: o seed é idempotente pelo `waha_session_name` e
   // reafirma `status='WORKING'` quando a linha já existe.
   test.beforeAll(() => {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
   });
 
   test("envio que morre aparece como FALHOU, com a razão — nunca como sucesso", async ({

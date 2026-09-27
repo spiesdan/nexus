@@ -23,7 +23,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 
 import { test, expect, type Page } from "@playwright/test";
 
@@ -42,7 +42,7 @@ function loadCreds(): Creds {
     return !c.users?.manager || !c.users?.viewer;
   };
   if (precisaSemear()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }

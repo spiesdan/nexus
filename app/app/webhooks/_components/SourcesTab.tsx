@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { PlugsConnected, Plus } from "@/lib/ui/icons";
 import { SeloDeAutoria } from "@/components/operacao/SeloDeAutoria";
 import { useWebhookSources, type WebhookSourceRow } from "@/hooks/webhooks/useWebhookSources";
@@ -25,7 +26,7 @@ function lastReceivedLabel(iso: string | null, t: (texto: string) => string, loc
 export function SourcesTab() {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const { data, isLoading } = useWebhookSources();
+  const { data, isLoading, isError, refetch } = useWebhookSources();
   const [createOpen, setCreateOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<WebhookSourceRow | null>(null);
 
@@ -36,6 +37,17 @@ export function SourcesTab() {
       <div className="grid gap-3 pt-4 sm:grid-cols-2">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  // ERRO NÃO É LISTA VAZIA (mesmo molde do CapturasTab): sem este ramo, a
+  // falha da consulta caía no empty "Conecte sua landing page" — a tela mais
+  // tranquilizadora possível para quem está sem resposta do servidor.
+  if (isError) {
+    return (
+      <div className="pt-4">
+        <NexusErrorState onRetry={() => void refetch()} />
       </div>
     );
   }

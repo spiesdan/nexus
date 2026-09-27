@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ function triggerLabel(trigger: string, t: (texto: string) => string): string {
 
 export function RulesTab() {
   const t = useT();
-  const { data, isLoading } = useAutomationRules();
+  const { data, isLoading, isError, refetch } = useAutomationRules();
   const update = useUpdateAutomationRule();
   const del = useDeleteAutomationRule();
   const qc = useQueryClient();
@@ -68,6 +69,16 @@ export function RulesTab() {
       <div className="grid gap-3 pt-4 sm:grid-cols-2">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  // ERRO NÃO É LISTA VAZIA (mesmo molde do CapturasTab): sem este ramo, a
+  // falha da consulta caía no empty "crie sua primeira automação".
+  if (isError) {
+    return (
+      <div className="pt-4">
+        <NexusErrorState onRetry={() => void refetch()} />
       </div>
     );
   }
