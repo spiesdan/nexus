@@ -196,7 +196,7 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    `SuspendDialog`+`ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`);
    overlays manuais→`ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅
    (`41173e58d`); toasts→`nexusToast` ✅ (`6ed0d5670`).
-5. **Fase 4 — refatoração por módulo (prioridade A)**: ✅ `/contacts` (lista)
+5. **Fase 4 — refatoração por módulo (prioridade A) ✅ FECHADA (4a-4m)**: ✅ `/contacts` (lista)
    (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → ✅ `/pedidos`
    (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → ✅ `360`
    (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → ✅ `/inbox`
@@ -221,7 +221,12 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
     (`badee8467`: número como title + ações no slot + pill em linha
     própria no detalhe; h1 copiado → componente no novo) → ✅ `/webhooks`
     (`4262e415b`: `NexusPageHeader` + `NexusErrorState` com retry nas
-    abas Sources/Rules/Activity; empties ricos de produto mantidos) → admin.
+    abas Sources/Rules/Activity; empties ricos de produto mantidos) → ✅
+    admin (`f681effb4`: os 16 cabeçalhos manuscritos de
+    `app/admin/(protected)/**` → `NexusPageHeader` — listas, detalhes e
+    formulários; 4 estados de erro bespoke → `NexusErrorState` com retry;
+    erros que já tinham ação própria, three-pane do inbox e rotas de
+    fusão intactos).
 6. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
    `layout/PageHeader`+`CrmPageHeader`), FilterBar único, tabs manuais→`ui/tabs`,
    `NexusKpi`/`NexusChart`, `FormField`.

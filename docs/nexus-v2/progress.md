@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `4262e415b feat(nexus-v2): Fase 4l do redesign - /webhooks com NexusPageHeader e NexusErrorState com retry nas abas Sources/Rules/Activity (erro nao vira lista vazia); 2 specs livres de execFileSync (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 4l**.
-  (anteriores: `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
+- HEAD: `f681effb4 feat(nexus-v2): Fase 4m do redesign - 16 cabecalhos manuscritos do admin viram NexusPageHeader (listas, detalhes e formularios); estados de erro bespoke de usage/platform-admins/audit/lgpd viram NexusErrorState com retry (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 4m**.
+  (anteriores: `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
+  `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
   `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
   `a8eb3d118` docs handoff 4i · `65ec570f3` Fase 4i funis ·
   `05d32dadd` docs handoff 4h · `bd4635147` Fase 4h /prospeccao ·
@@ -44,7 +45,8 @@ Fase 4 (refatoração por módulo) EM CURSO com 4a = `/contacts`, 4b = `/pedidos
 4c = `360`, 4d = `/inbox`, 4e = `/financeiro` (fusão `/titulos`), 4f =
 `/radar` (fusão `/recuperacao`), 4g = `/indicadores` (fusão `/metrics`) +
 4h = `/prospeccao` + 4i = funis (`/kanban` + `settings/tenant/pipelines`) +
-4j = `/agenda` + 4k = `pedidos/[id]`/`novo` + 4l = `/webhooks`
+4j = `/agenda` + 4k = `pedidos/[id]`/`novo` + 4l = `/webhooks` +
+4m = admin (16 cabeçalhos)
 EXECUTADAS neste torno; fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -536,6 +538,52 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     `vps-webhook-outbound-ssrf`): 6/7 verdes e 1 falha de flake
     (query transitória — a re-execução passou 2/2 e o estado de erro
     novo é justamente o comportamento correto); imagens W4 restauradas.
+  - **Fase 4m `f681effb4` — admin (última da Fase 4)**:
+    - Feito: os **16** cabeçalhos manuscritos de `app/admin/(protected)/**`
+      → `NexusPageHeader`: listas (`audit`, `dashboard`, `incidents`,
+      `lgpd`, `tenants`, `users`, `usage`, `platform-admins`), detalhes
+      (`audit/[entryId]`, `incidents/[id]`, `lgpd/requests/[id]`,
+      `users/[id]`, `tenants/[id]` layout) e formulários (`google/_form`,
+      `marca`, `tenants/new/_form`). Subtítulos dinâmicos de contagem
+      (ex.: `50 eventos+`) viraram expression strings no `subtitle`;
+      ações existentes (`Novo tenant`, select de período) ocuparam o slot
+      `actions`; badges/status de detalhe ficaram em linha própria abaixo
+      do header (mesmo padrão de `pedidos/[id]`).
+    - Estados de erro bespoke → `NexusErrorState` com `onRetry=refetch`
+      (copy existente preservada como `description`): `usage`,
+      `platform-admins`, `audit/[entryId]` e `lgpd/requests/[id]` —
+      o divisor "erro não é tela muda" ganhou ação canônica. Os erros
+      COM ação própria (`incidents/[id]`, `users/[id]`, que já oferiam
+      "Voltar" para a lista) ficaram intactos — converteria perder navegação.
+    - Fora do escopo de UI: `audit`/`lgpd`/`marca`/`forbidden` SEGUEM
+      rotas separadas (fusão é decisão à parte); `inbox` admin é three-pane
+      sem header por desenho (decisão 4d); hexes de `marca/_form`
+      (color picker) mantidos com comentário.
+    - **Medido no caminho**: `loginComoAdmin` (helper) loga como
+      `users.admin` = admin de TENANT → o proxy manda `/admin/*` para
+      `/admin/forbidden`. Superfície de plataforma loga como `users.dono`
+      + `seed-e2e-system-update.ts` (promoção idempotente, mesmo passo do
+      `marca-logo.spec.ts`). Também medido: nenhum e2e/unit afirma heading
+      de página admin (só `marca-logo` visita `/admin`, sem asserir o h1).
+    - Evidência: `evidence/fase4-admin/1-dashboard-desktop.png`,
+      `evidence/fase4-admin/2-tenants-desktop.png`,
+      `evidence/fase4-admin/3-audit-desktop.png`,
+      `evidence/fase4-admin/4-dashboard-mobile-390.png`,
+      `evidence/fase4-admin/5-tenants-mobile-390.png`,
+      `evidence/fase4-admin/6-audit-mobile-390.png` e
+      `evidence/fase4-admin/7-tenant-detalhe-desktop.png` (cada tela com
+      EXATAMENTE UM `h1`, contado na spec; conteúdo carregado — espera
+      `.animate-pulse` zerar, `networkidle` não serve: dashboard mantém
+      canal de realtime aberto).
+    - Imagens `evidence/marca-logo/*` sobrescritas pela regressão
+      RESTAURADAS com `git checkout` (mesma regra das fases anteriores).
+  - **Gates da 4m**: typecheck ✓ · lint 0/338 ✓ · `pnpm build` ✓ ·
+    unit alvo 152/152 (13 arquivos: admin-shell-tooltip, admin-topbar,
+    audit-lista, inventario-de-telas, marca-*, tenant-reason-dialog,
+    navegacao-*, breadcrumb, branding, e2e-cobertura, evidencia-citada) ·
+    `test:unit` = baseline (15 flakes nos mesmos 4 arquivos) · e2e:
+    evidência 1/1 ✓ (9.1s) + regressão `marca-logo` 6/6 ✓ + canário
+    `navegacao` 13/13 ✓.
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -569,7 +617,9 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
         própria; novo troca o h1 copiado pelo componente); ✅ `/webhooks`
         (`4262e415b`: `NexusPageHeader` + `NexusErrorState` com retry em
         3 abas — erro não vira lista vazia; 2 specs livres de
-        `execFileSync`) → próximo admin. Padrão de cada módulo (medido na 4a): header à
+        `execFileSync`); ✅ admin (`f681effb4`: 16 cabeçalhos →
+        `NexusPageHeader`, 4 erros bespoke → `NexusErrorState` com retry)
+        → **Fase 4 TODA (4a-4m ✅); próximo Fase 5**. Padrão de cada módulo (medido na 4a): header à
       mão→`NexusPageHeader`; filter bar caseira→`FilterBar`; hex→tokens;
       estados ausentes→criar; `pnpm build` antes do e2e de evidência.
    c. **Fase 5 — superfície compartilhada**: `NexusPageHeader` único (matar
