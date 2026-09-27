@@ -732,7 +732,21 @@ export function AgentForm(props: Props) {
               instalacaoTemChave={(props.provedoresDaInstalacao ?? []).includes(form.provider)}
             />
             {validation.credential_id ? (
-              <p className="text-xs text-destructive">{validation.credential_id}</p>
+              <>
+                <p className="text-xs text-destructive">{validation.credential_id}</p>
+                {/* A instrução diz O QUE falta; sem o caminho, quem não tem a
+                    chave trava sem pista (exigido pelo caso "sem exigir que o
+                    usuário adivinhe" de agente-novo-e-uso.spec.ts — a §19 tirou
+                    Conexões do sidebar e sobrou página nenhuma apontando). */}
+                <p className="text-xs text-text-muted">
+                  <Link
+                    href="/app/ai/credentials"
+                    className="font-medium underline underline-offset-2"
+                  >
+                    {t("Cadastre ou escolha uma credencial em IA › Credenciais")}
+                  </Link>
+                </p>
+              </>
             ) : null}
             {cred && credSt && credSt !== "validated" ? (
               <p className="text-xs text-warning-fg">
@@ -793,7 +807,20 @@ export function AgentForm(props: Props) {
                 </SelectContent>
               </Select>
               {validation.channel_session_id ? (
-                <p className="text-xs text-destructive">{validation.channel_session_id}</p>
+                <>
+                  <p className="text-xs text-destructive">{validation.channel_session_id}</p>
+                  {/* Mesmo caminho que o bloco da credencial acima: o número
+                      também se consegue pela tela, e a §19 tirou Conexões do
+                      sidebar sem deixar ponta aqui. */}
+                  <p className="text-xs text-text-muted">
+                    <Link
+                      href="/app/connections"
+                      className="font-medium underline underline-offset-2"
+                    >
+                      {t("Conecte um número em Configurações › Conexões")}
+                    </Link>
+                  </p>
+                </>
               ) : null}
             </div>
           </Card>
