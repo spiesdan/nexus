@@ -9,9 +9,13 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `256ee46ef refactor(legado): kit de scrape Mercos arquivado em docs/legacy/ - fora do runtime` — **PASSO 8 (fechamento)**: parity-matrix e migration-plan recontados contra o código (§94 = **38 ✅ / 2 ⚠️ / 1 ❌**; o ❌ é "deploy foi medido" — só se preenche no primeiro deploy na VPS, §84); auditoria linha-a-linha de §51/§52/§53/§14 confirmada no `migration-plan.md`; kit de scrape Mercos (35 scripts) movido para `docs/legacy/` com imports corrigidos e fora dos tsconfigs (baseline de 8 erros de tipo pré-existentes idêntica antes/depois, zero TS2307).
-  — e o commit que entrega este arquivo **fecha o handoff do PASSO 8**.
-  (anteriores: `7839671f1` docs handoff 7 · `e83ac2fdd` passo 7 E2E §86 ·
+- HEAD: `6ff9db071 fix(agents): tela de novo agente aponta onde cadastrar credencial e numero` — **torno da contenção**: o kit de atualização não vira mais o site para a linhagem upstream (guarda de autoridade no `agent.sh`/`update.sh`, `deploy.sh` grava o pin no `.env`, `comecar.sh`+READMEs/docs → `spiesdan/nexus`, `update-guard` casos 12–16 = `434d3573b`), a tela de novo agente ganhou os caminhos de credencial e número (`6ff9db071`), `spiesdan/nexus` virou **público** (decisão do usuário — destravou o `test:shell`) e o e2e da parte 2 foi diagnosticado (timeout de 30min; falha `agente-novo-e-uso` consertada — ver "Última ação").
+  — e o commit que entrega este arquivo **fecha o handoff deste torno**.
+  (anteriores: `bd74efd80` deploy medido · `d4416bfe4` health probe ·
+  `dbbebc1ee` APP/WORKER/SCHEDULER · `bf6483903` catraca namespace ·
+  `ca4882a6f` §101 repo a parte · `e3b133423` docs handoff 8 ·
+  `256ee46ef` kit Mercos arquivado ·
+  `7839671f1` docs handoff 7 · `e83ac2fdd` passo 7 E2E §86 ·
   `57bdcc511` docs handoff 6 · `8935da608`/`6b3732ee0` Fase 6b ·
   `448269803` docs handoff 6a · `b12004435` Fase 6a ·
   `061042c5f` docs handoff 5e · `3fbd91b21` Fase 5e FormField ·
@@ -41,16 +45,75 @@
   `9c26fd26e` inventário §100 · `4126a9681` Sidebar §19 ·
   `31e1b6655` helper Windows · `7225f5c80` docs · passos 1-4: `b5ae07bed`/
   `259023c91`/`31d9411a9`/`3c5126932`)
-- Remotes: `nexus` = escrita canônica (`https://github.com/spiesdan/nexus`) —
-  **todo push vai para `nexus`**; `origin`/`fork` = somente leitura (AGENTS.md);
-  o spec §101 quer SÓ o nexus — **decisão pendente do usuário** (ver abaixo).
-- Não existe PR `nexus-v2 → main` ainda (abrir só com ordem explícita).
+- Remotes: `nexus` = **único remote** (`git remote -v` medido em 2026-09-27:
+  só `https://github.com/spiesdan/nexus`) — `origin`/`fork` removidos no §101
+  (decisão do usuário, respondida; AGENTS.md é a doutrina da seção). Todo
+  push vai para `nexus`.
+- **PR #8 `nexus-v2 → main` ABERTO** (medido em 2026-09-27): os 5 checks
+  obrigatórios rodam — verify, build-and-size, invariants, e2e, imagens-ok.
 - Árvore limpa (nada de WIP). Todos os commits acima já estão em `nexus`.
 
 ## Última ação
 
-**Passo 8 (fechamento) — docs recontados; resta só o que depende de
-decisão do usuário (PR + deploy medido na VPS).**
+**Torno da contenção (2026-09-27) — o kit não vira mais o site para a
+linhagem upstream; e2e parte 2 diagnosticado; spec do novo agente
+consertada.**
+
+- **`434d3573b` — kit com guarda de autoridade**: `agent.sh` só anuncia tag
+  que EXISTE no `origin` (candidatas `v*` em ordem decrescente; sem origin,
+  local é tudo que há; `ls-remote || true` para o pipefail não derrubar o
+  agente); `update.sh` recusa (código 3, nada tocado) alvo que
+  `ls-remote --exit-code --tags --refs origin` não confirma — vale também
+  com `--force`, e rc 128 (rede duvidosa) também recusa; `scripts/deploy.sh`
+  grava `gravar_imagens .env "$NEXUS_TAG"` após o health verde (o pin
+  sobrevive a `up -d` manual); `comecar.sh` REPO_URL/curl →
+  `spiesdan/nexus`; READMEs pt/en/es + `docs/deploy-selfhost` +
+  `docs/deploy-hostgator` → clone/curl/badge de `spiesdan/nexus`;
+  `update-guard.test.sh` casos 12–16 com harness (`run_update` tolera
+  rc≠0 para o caso de recusa, `git config user.*` nos fixtures). Contexto:
+  incidente de 2026-09-27 — cron de 5min do `agent.sh` escolhia a maior tag
+  LOCAL e a VPS tinha herdado 52 tags do projeto irmão → `update.sh`
+  instalou a linhagem alheia (rollback no mesmo dia; VPS depois medida com
+  23 tags, 3 containers `nexus-v2` healthy, agente quieto).
+- **`spiesdan/nexus` virou PÚBLICO** (decisão do usuário, 2026-09-27, via
+  pergunta no meio da sessão): foi a causa do `pnpm test:shell` travar sem
+  CI — `git ls-remote .../spiesdan/nexus.git` pendurava no 401 de repo
+  privado (git tentando credencial; `curl github.com` respondia 200 em
+  0,16s, rede OK; evidência: pstree com `git-remote-https` vivo +
+  `GIT_CURL_VERBOSE` com `www-authenticate: Basic realm="GitHub"` + `gh api`
+  `private:true`; no CI passava porque o checkout persiste o header de
+  auth). Feito com `gh repo edit --visibility public
+  --accept-visibility-change-consequences`; ls-remote anônimo medido
+  depois: 23 tags, resposta na hora.
+- **`6ff9db071` — tela de novo agente aponta os caminhos**: a §19
+  (`4126a9681`, 09-25) tirou "Conexões" do sidebar e
+  `tests/e2e/agente-novo-e-uso.spec.ts:132` passou a falhar (0 links
+  `/credencial|conex|whatsapp|numero|número|canal/i` na página — em 09-24
+  ainda passava pelo link do menu). Agora, quando a instrução de credencial
+  aparece → link `/app/ai/credentials`, e quando a de número →
+  `/app/connections` (mesmo idiom do link do roteador em `AgentForm.tsx:753`;
+  render só com a própria instrução; `t()` é identidade em pt-BR —
+  `lib/i18n/dicionario.ts:15`).
+- **e2e run `36334137223` (bd74efd8) diagnosticado**: parte 1 ✅ (109
+  testes/10,0min); **parte 2 = timeout de 30min** (`E2E — parte 2 de 2`,
+  149 testes, `--workers=1`, `retries:0`, `timeout 30_000`/teste; logs do CI
+  só têm `[WebServer]` — reporter sem progresso). Artefato
+  `playwright-report` baixado: único test-file falho = `agente-novo-e-uso`
+  (consertado acima). A falha `navegacao` de 09-24 ("em 900px o menu inteiro
+  tem de caber sem scroll", spec:192) era de spec+sidebar anteriores ao
+  09-25 — confirmar no próximo run. **Culpado do timeout ainda não
+  isolado** (hang × slowdown sistêmico): as 7 `jornada-*` (novas de
+  `e83ac2fdd`) nunca rodaram no CI; esperas delas foram conferidas e são
+  todas limitadas (sem wait infinito). Relatório do run de 09-24 salvo em
+  `$env:TEMP\opencode\pw-report-0924`.
+- **Gates do torno**: typecheck 0 · lint 0 erros/340 warnings (baseline) ·
+  `pnpm build` ✓ · `test:unit` = baseline (15 failed/4 arquivos —
+  guarda-da-release, namespace-das-imagens, performed-at, rate-limit —,
+  7.450 pass) · docs gates 57/57 · `pnpm test:shell` **4/4 verde** (o caso
+  de integração só passou com o repo público).
+
+(passo 8 — FECHADO em `e3b133423`; as três pendências de decisão dele
+foram respondidas em 2026-09-27 — PR #8 aberto, §101 feito, deploy medido):
 
 - **parity-matrix.md recontada** (2026-09-27): nenhuma linha sobra como
   RECRIAR — Sales Brain/Orchestrator/Copilot/Decision Log/Controle/Meu
@@ -876,13 +939,29 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
      removidos, AGENTS/CLAUDE atualizados;
    - deploy na VPS **feito e medido** (fecha o último ❌ do §94 —
      `deploy.sh` 80s, baseline 350s, health `d4416bf` verde);
-   - ⚠️ 24/28 do §94 **aceitos como está**.
+    - ⚠️ 24/28 do §94 **aceitos como está**.
+4. **PR #8 — e2e verde (em aberto, 2026-09-27)**: o run `36334137223` deu
+   parte 1 ✅ / parte 2 timeout de 30min; o único test-file falho
+   (`agente-novo-e-uso`) está consertado em `6ff9db071`. No próximo run
+   confirmar: (a) `agente-novo-e-uso` verde, (b) `navegacao` caso 900px
+   (era a falha de 09-24), (c) se o timeout de 30min repete — culpado não
+   isolado; se repetir, `playwright-report` novo + comparar com
+   `$env:TEMP\opencode\pw-report-0924` (relatório de 09-24 já baixado).
+   Depois do push: `git pull` na VPS + conferir o agente quieto no cron de
+   5min (a VPS está em `bd74efd80`; os commits do torno são `434d3573b` e
+   `6ff9db071`). Fechar o PR quando os 5 checks estiverem verdes.
 
 ## Decisões do usuário (respondidas em 2026-09-27 — eram "pendentes")
 
 - **PR**: **abrir `nexus-v2 → main`** — ordem dada; o PR roda os 5 checks
   obrigatórios na CI Linux (verify, build-and-size, invariants, e2e,
-  imagens-ok).
+  imagens-ok). Aberto como **#8** (medido em 2026-09-27).
+- **Repo `spiesdan/nexus` público**: **tornar público** — ordem dada em
+  2026-09-27 (via pergunta no meio da sessão), executada com `gh repo edit
+  --visibility public --accept-visibility-change-consequences`. Sem isso
+  `pnpm test:shell` travava no WSL: o `git ls-remote` pendurava no 401 de
+  repo privado (o CI passava porque o checkout do Actions persiste o header
+  de auth). Depois da virada: ls-remote anônimo responde na hora (23 tags).
 - **§101**: **"repo a parte, sem fork"** — FEITO: as tags da nossa linhagem
   (v1.0.0–v1.14.0, `arquivo/*`, `nexus-v1-archive`) migradas para o
   `nexus` (23 no total; a `v1.14.0` do `nexus` é a tag de archive do
