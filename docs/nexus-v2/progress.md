@@ -9,9 +9,10 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `0a9409f58 feat(nexus-v2): Fase 5a do redesign - layout/PageHeader e CrmPageHeader mortos, NexusPageHeader absorve o markup e ganha headingLevel 1|2 (h1 unico por pagina, NexusIntelligence vira h2), 5 sites convertidos (products, relatorios, tarefas, inteligencia com eyebrow Sales Intelligence caindo, NavHub); fix do React #185 que derrubava /app/inteligencia (loop setNodes do ReactFlow por referencia nova no setter da selecao, pre-existente e reproduzido 2/2 em prod) com regressao permanente inteligencia-carrega.spec.ts (S100)`
-  — e o commit que entrega este arquivo **fecha o handoff da Fase 5a**.
-  (anteriores: `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
+- HEAD: `fd6a18d9e feat(nexus-v2): Fase 5b do redesign - 5 toolbars caseiras de compras (pedidos e fornecedores), estoque (saldos e movimentos) e carteira viram a FilterBar canonica (FilterSearch/FilterSelect/FilterActions com copy intacta, acoes a direita como em prospeccao); regressao permanente filterbar-unica-nas-listas.spec.ts registrada em SPECS_PARTE_2 (3 telas com zero cobertura e2e, asserta barra + ausencia de erro de API) (S100)`
+  — e o commit que entrega este arquivo **fecha o handoff da Fase 5b**.
+  (anteriores: `c9d294721` docs handoff 5a · `0a9409f58` Fase 5a header +
+  fix #185 · `3c5c7f97d` docs handoff 4m · `f681effb4` Fase 4m admin ·
   `aa8f4b4bd` docs handoff 4l · `4262e415b` Fase 4l /webhooks ·
   `8afd3cbe2` docs handoff 4k · `badee8467` Fase 4k pedidos/[id]/novo ·
   `2bf70b937` docs handoff 4j · `66aa9927b` Fase 4j /agenda ·
@@ -44,7 +45,8 @@
 **Passo 6 (redesign §100) — Fase 3 (consolidações) COMPLETA (3a-3f);
 Fase 4 (refatoração por módulo) COMPLETA (4a-4m ✅); Fase 5 EM CURSO com
 5a = cabeçalho único (PageHeader/CrmPageHeader mortos, `headingLevel`)
-+ fix do React #185 de `/app/inteligencia` EXECUTADAS neste torno;
++ fix do React #185 de `/app/inteligencia` e 5b = FilterBar única nas 5
+toolbars caseiras de compras/estoque/carteira EXECUTADAS neste torno;
 fases 0/1/2 + shell §17
 fechados no handoff `727faf650`.** Inventário:
 `docs/nexus-v2/redesign-inventory.md` (tabela §5 atualizada com os hashes).
@@ -642,6 +644,70 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
     arquivos; `rotulo-do-contato` verde com exclusão stageada; os 4 PNGs
     novos citados acima para o gate `evidencia-citada`) · e2e: evidência
     1/1 ✓ + regressão 29/29 ✓.
+  - **Fase 5b `fd6a18d9e` — FilterBar única nas toolbars caseiras**:
+    - Medição (varredura por `type="search"`/`placeholder Buscar` +
+      `Filtrar por` em `app/app` e `components`): 5 toolbars caseiras
+      (`div.flex` + `Input`/`Select` shadcn cru, sem card nem Label)
+      fora dos 2 componentes nomeados `FilterBar`: compras (abas pedidos
+      + fornecedores), estoque (abas saldos + movimentos) e carteira.
+      Nenhuma spec e2e visitava essas 3 telas (medido).
+    - Convertidas para a barra canônica: `FilterBar` > `FilterPrimary` >
+      `FilterSearch`/`FilterSelect`, com a ação da tela em
+      `FilterActions` + `div.ml-auto` (mesmo arranjo de
+      `prospeccao/_empresas`). Copy 100% intacta — os novos `label`
+      visíveis vêm do vocabulário existente ("Status" = `t("Status")`
+      de `pedidos/page.tsx`, "Tipo" = `t("Tipo")` do admin/LGPD, "Buscar"
+      = já usado em contacts/carteira/financeiro); o `aria-label`
+      "Filtrar por status/tipo" virou Label associada (mesmo nome de
+      acessibilidade, agora visível). Wiring idêntico: os `useEffect`
+      em `[status]`/`[tipo]`/`[busca]` não mudaram; a opção "todos"
+      shadcn (`value="todos"`) virou `allLabel` com `value=""`.
+    - Fora de escopo DECIDIDO: `components/kanban/FilterBar.tsx` é
+      barra de DOMÍNIO (pills de `LeadFilters`, debounce, dono com
+      agentes) — não é toolbar de lista e não entra nesta consolidação;
+      `InboxFilters`/`AuditFiltersAdmin`/`TenantsFilters`/`UsageFilters`/
+      `AgentsListFilters` são também de domínio e seguem para decisão
+      por categoria na continuação da Fase 5 (o §3 do inventário conta
+      5 "FilterBar distintos" = esta canônica + as nomeadas de domínio).
+    - **Achado de ambiente (não do diff)**: a primeira leva da evidência
+      saiu com "Erro ao carregar movimentos" — sonda de rede mostrou
+      `GET /api/v1/inventory/movements` **500 determinístico** e
+      `/api/v1/products` 200. Causa raiz: `inventory_movements`
+      INEXISTENTE no banco local (migration `0242` de 25/09 nunca
+      aplicada aqui; o baseline local estava defasado). `supabase/
+      baseline.sql` reaplicado pelo mesmo caminho do CI (`psql -v
+      ON_ERROR_STOP=1 -q -f`, EXIT=0; idempotente, 901 `IF NOT
+      EXISTS`, dados intactos — catálogo openrouter 62 ✓) e a API
+      passou a 200 (confirmado por sonda, apagada depois). É o mesmo
+      caminho que o `install.sh`/`update.sh` do self-host usa.
+    - Evidência (6 PNGs, todos conferidos): `evidence/fase5-filterbar-unico/1-compras-pedidos-desktop.png`,
+      `evidence/fase5-filterbar-unico/2-compras-fornecedores-desktop.png`,
+      `evidence/fase5-filterbar-unico/3-estoque-saldos-desktop.png`,
+      `evidence/fase5-filterbar-unico/4-estoque-movimentos-desktop.png`,
+      `evidence/fase5-filterbar-unico/5-carteira-desktop.png` e
+      `evidence/fase5-filterbar-unico/6-estoque-saldos-mobile-390.png`
+      — a de carteira prova a busca filtrando de verdade ("ana" → "Ana
+      E2E 1790351494016").
+    - Regressão PERMANENTE `tests/e2e/filterbar-unica-nas-listas.spec.ts`
+      (registrada em `SPECS_PARTE_2`): eram 3 telas com ZERO cobertura;
+      cada visita asserta a barra canônica (label + ação) e que a tela
+      NÃO cai em "Erro ao (carregar|listar)" — o contrato que o 500
+      quebrava. A sonda de diagnóstico (`sonda-estoque-apis`,
+      `sonda-iat`) foi temporária e saiu do repo.
+    - Regressão da 5b: lote `navegacao` + `inteligencia-carrega` +
+      `agenda-tipos` + `distribuicao` + `prova-painel-provedores` +
+      `filterbar-unica-nas-listas` = 30 passed/1 failed — a falha foi
+      `agenda-tipos` no teste1 com `auth_permissions_unavailable: JWT
+      issued at future` (flake de relógio host↔GoTrue já documentado
+      neste arquivo na 4j, −47s medido hoje; `w32tm /resync` negado sem
+      admin) e a re-execução passou 4/4 → **31/31 efetivo**. Imagens
+      sobrescritas (`evidence/calendario/d6-tipo-com-responsavel.png`,
+      `evidence/provedores/*`) RESTAURADAS com `git checkout`.
+  - **Gates da 5b**: typecheck ✓ · lint 0 erros/338 warnings (baseline) ·
+    `pnpm build` ✓ · `test:unit` = baseline + 1 (`lib/ui/icons.test.ts`
+    estourou 48s de timeout sob carga; isolado roda em 3,6s e passa —
+    os 15 flakes são os mesmos 4 arquivos de sempre) · e2e: evidência
+    2/2 ✓ + regressão 31/31 ✓ (flake de relógio acima).
 
 ## Próximos passos (ordem aprovada — continue por aqui)
 
@@ -683,9 +749,11 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
    c. **Fase 5 — superfície compartilhada EM CURSO**: ✅ `NexusPageHeader`
       único (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup
       absorvido, `headingLevel 1|2`, 5 sites convertidos, fix do React #185
-      da Inteligência com regressão `inteligencia-carrega.spec.ts`); resta
-      FilterBar único, tabs manuais→`ui/tabs`, `NexusKpi`/`NexusChart`,
-      `FormField`.
+      da Inteligência com regressão `inteligencia-carrega.spec.ts`); ✅
+      FilterBar única nas 5 toolbars caseiras de compras/estoque/carteira
+      (`fd6a18d9e`, regressão `filterbar-unica-nas-listas.spec.ts` — as
+      barras nomeadas de domínio kanban/inbox/admin seguem por categoria);
+      resta tabs manuais→`ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
    d. **Fase 6 — responsividade §60** (24 rotas sem breakpoint) + auditoria
       visual de aceite §100 (checklist dos 11 itens) com evidência.
    Guarda por fase: `pnpm typecheck` + `pnpm lint` + `test:unit` (breadcrumb,

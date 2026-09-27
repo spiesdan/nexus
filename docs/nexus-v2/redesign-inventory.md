@@ -233,7 +233,13 @@ Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
    relatorios, tarefas, inteligencia, NavHub; junto saiu o fix do React #185
    que derrubava `/app/inteligencia` — loop `setNodes` do ReactFlow por
    referência nova no setter da seleção, com regressão permanente
-   `inteligencia-carrega.spec.ts`); resta FilterBar único, tabs manuais→
+   `inteligencia-carrega.spec.ts`) · ✅ FilterBar única nas 5 toolbars
+   caseiras (`fd6a18d9e`: compras pedidos+fornecedores, estoque saldos+
+   movimentos, carteira → `FilterBar`/`FilterPrimary`/`FilterSearch`/
+   `FilterSelect`/`FilterActions` com copy intacta; regressão permanente
+   `filterbar-unica-nas-listas.spec.ts`; as barras nomeadas de DOMÍNIO —
+   kanban, inbox, admin audit/tenants, usage, agents — seguem decisão por
+   categoria); resta tabs manuais→
    `ui/tabs`, `NexusKpi`/`NexusChart`, `FormField`.
 7. **Fase 6 — responsividade §60** (24 rotas sem breakpoint; `renderCard` em 6)
    e **auditoria visual de aceite §100** (checklist dos 11 itens) com evidência.
