@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.15.1] — 2026-09-28
+
+### Corrigido
+
+- **A limpeza das autorizações de agenda usadas volta a rodar** A limpeza diária das autorizações de agenda já usadas e vencidas — a que impede que uma autorização capturada seja reaproveitada — falhava todos os dias e não apagava nada, e a tabela só crescia. A causa era um nome: a rotina pedia a limpeza por `p_retencao_dias`/`p_limite`, como faz com as outras podas, e a função do banco tinha sido criada com outro nome de parâmetro, então o banco não encontrava a função e devolvia erro antes de apagar. De quebra, a rodada inteira de limpeza era registrada como falha no histórico, escondendo as contagens do que já tinha sido apagado logo antes. Agora os dois lados falam a mesma língua, e a instalação que já existe recebe o conserto na atualização — não só as novas. Nada muda na tela e ninguém precisa fazer nada: o que passa a acontecer é a limpeza que a instalação já tinha contratado.
+
 ## [1.15.0] — 2026-09-28
 
 ### Alterado
@@ -2397,7 +2403,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.1...HEAD
+[1.15.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.12.0...v1.13.0
