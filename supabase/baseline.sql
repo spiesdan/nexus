@@ -1212,7 +1212,20 @@ CREATE TABLE IF NOT EXISTS "public"."ai_provider_credentials" (
 ALTER TABLE "public"."ai_provider_credentials" OWNER TO "postgres";
 
 
-CREATE OR REPLACE VIEW "public"."ai_provider_credentials_safe" WITH ("security_invoker"='true') AS
+-- POR QUE DROP + CREATE e não CREATE OR REPLACE: o Postgres recusa em `create
+-- or replace` uma definição que precise REMOVER coluna existente ("cannot drop
+-- columns from view"). Uma instalação que tenha recebido coluna extra de uma
+-- migração alheia — a tentativa de atualização de 2026-09-27 deixou `base_url`
+-- nesta view — ficaria presa na definição antiga para sempre, e o `update.sh`
+-- reportava exatamente isso como aviso a cada atualização. O drop derruba
+-- também os ACLs da view, e o par de `grant` do bloco de permissões lá abaixo
+-- (ALL para `authenticated` e `service_role`; `anon` nunca recebe) os repõe na
+-- MESMA aplicação do arquivo — a ordem do baseline garante. A definição é a de
+-- DOZE colunas, a canônica: nenhum segredo por aqui (o que esconde o segredo é
+-- o GRANT POR COLUNA da 0150 sobre a tabela base), e `security_invoker=true`
+-- permanece, para que a RLS da base continue valendo para quem consulta.
+DROP VIEW IF EXISTS "public"."ai_provider_credentials_safe";
+CREATE VIEW "public"."ai_provider_credentials_safe" WITH ("security_invoker"='true') AS
  SELECT "id",
     "organization_id",
     "provider",
@@ -16023,8 +16036,30 @@ create policy calendar_oauth_nonces_ninguem_le
   using (false);
 
 -- A quarta poda do `data-retention`. Assinatura idêntica às três irmãs
--- (`p_dias`, `p_lote`) para o mesmo laço de lotes servir sem caso especial.
-create or replace function public.fn_expurgar_nonces_de_oauth(p_dias int, p_lote int default 500)
+-- (`p_retencao_dias`, `p_limite`) para o mesmo laço de lotes servir sem caso
+-- especial — e os NOMES são o contrato: o PostgREST resolve sobrecarga pelo
+-- nome do argumento, e é assim que o cron manda (o laço `drenar` de
+-- `app/api/v1/cron/data-retention/route.ts:122`). Nascida na 0190 como
+-- (`p_dias`, `p_lote`), esta poda não achava sobrecarga nenhuma: `PGRST202`
+-- todo dia — medido em produção, `retention.sweep_run` com `falhou=true`
+-- diário de 2026-09-23 a 2026-09-27 —, `calendar_oauth_nonces` crescendo para
+-- sempre, e a varredura inteira reportada como falha mesmo com as três podas
+-- anteriores já tendo rodado.
+--
+-- O drop abaixo é o que faz a ATUALIZAÇÃO receber o conserto: `create or
+-- replace` NÃO troca nome de parâmetro de entrada — o Postgres recusa com
+-- "cannot change name of input parameter", porque o nome faz parte da
+-- identidade da função para quem chama por nome. Sem ele, a instalação que já
+-- existe (e que reaplica este arquivo inteiro pelo `update.sh`) ficaria com a
+-- função antiga. A assinatura `(int, int)` não muda, e o drop leva os ACLs
+-- junto: por isso o `revoke`/`grant` da 0192 se reaplica logo abaixo. O mesmo
+-- conserto, em forma de migration, é a 0244.
+drop function if exists public.fn_expurgar_nonces_de_oauth(int, int);
+
+create or replace function public.fn_expurgar_nonces_de_oauth(
+  p_retencao_dias int default null,
+  p_limite int default null
+)
 returns int
 language plpgsql
 security definer
@@ -16036,15 +16071,17 @@ begin
   -- Piso no CORPO, como as irmãs: um chamador que passe 0 não apaga nonce que
   -- ainda protege. O prazo do state é de 10 minutos, então um dia já é folga
   -- de duas ordens de grandeza.
-  if p_dias is null or p_dias < 1 then
-    p_dias := 1;
+  if p_retencao_dias is null or p_retencao_dias < 1 then
+    p_retencao_dias := 1;
   end if;
 
   with alvo as (
     select nonce
       from public.calendar_oauth_nonces
-     where expira_em < now() - make_interval(days => p_dias)
-     limit greatest(p_lote, 1)
+     where expira_em < now() - make_interval(days => p_retencao_dias)
+     -- 500 era o default DECLARADO na 0190; agora mora no corpo, como nas
+     -- irmãs, e o efeito de quem omite o argumento é o mesmo.
+     limit greatest(coalesce(p_limite, 500), 1)
   )
   delete from public.calendar_oauth_nonces n
    using alvo
@@ -16058,6 +16095,8 @@ end$$;
 -- `authenticated` entra aqui pela migration 0192: as duas irmãs de assinatura
 -- idêntica já o revogavam, e o grant vem do `ALTER DEFAULT PRIVILEGES` do
 -- corpo deste arquivo — omissão que aparece como linha AUSENTE, não errada.
+-- O `drop function` logo acima, da 0244, derrubou a função COM os ACLs dela:
+-- este par é o que repõe o estado que a 0192 deixou, e não redundância com ela.
 revoke execute on function public.fn_expurgar_nonces_de_oauth(int, int) from public, anon, authenticated;
 grant execute on function public.fn_expurgar_nonces_de_oauth(int, int) to service_role;
 -- ---- playbook `agendamento` v2: cita as ferramentas de agenda (migration 0191) ----
