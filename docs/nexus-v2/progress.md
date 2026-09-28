@@ -96,6 +96,17 @@ referência (home + indicadores), nome do cliente nas Recomendações, e
   ![indicadores, Comparar ligado — escada de mês/ano passado](evidence/ui-evolucao-vendas/indicadores-comparar.png) ·
   ![botões no FilterBar de produtos](evidence/ui-evolucao-vendas/products.png) ·
   ![nomes nas Recomendações do meu dia](evidence/ui-evolucao-vendas/meu-dia.png).
+- **CI em `935560356` (2026-09-28): 5/5 checks verdes** — run `36437991218`:
+  `e2e = pass 51m53s` (p1 138 passed/23,9min, p2 114 passed/21,9min,
+  6 skipped), `verify` 10m23s, `invariants` 5m43s, `build-and-size` 2m45s,
+  `imagens-ok` 4s (+ perf/docker/image também verdes).
+- **Prática de teste acordada nesta sessão**: pré-push, rodar localmente só
+  o subset das specs ligadas às rotas afetadas —
+  `pnpm exec playwright test kpi-e-charts-canonicos filterbar-unica-nas-listas
+  inteligencia-carrega responsividade-nas-rotas abas-canonicas-nas-telas smoke` —
+  e manter o **full de 2 partes só no CI**. O mapeamento é heurístico
+  (efeito colateral de UI compartilhada só o full pega), então o gate
+  obrigatório segue sendo o e2e completo do PR #8.
 - **Gates locais**: typecheck 0 · lint 0 erros/339 warnings (baseline 340)
   · unit na baseline Windows (15 falhas/4 arquivos conhecidas: bash/EPERM
   da guarda de release, rate-limit por timeout, namespace/performed-at pré-
