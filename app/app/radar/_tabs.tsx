@@ -4,6 +4,7 @@ import * as React from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { RadarDashboard } from "./_components/RadarDashboard";
+import { RecuperacaoLista } from "./_components/RecuperacaoLista";
 
 /**
  * Navegação por seções do Radar — página única, todo o conteúdo renderizado.
@@ -12,14 +13,18 @@ import { RadarDashboard } from "./_components/RadarDashboard";
  * `risk-radar` e `retorno-anti-morte` leem a lista clássica, os testids do
  * risco e o cabeçalho "Radar de risco" SEM clique intermediário. Esconder uma
  * seção atrás de aba quebraria os três; rolar até ela, não.
+ *
+ * A quarta seção é a antiga /app/recuperacao, movida para cá na fusão
+ * (S100) — mesma razão: o conteúdo nasce visível e o botão só rola.
  */
 const SECOES = [
   { id: "radar-visao", rotulo: "Visão geral" },
   { id: "radar-oportunidades", rotulo: "Recompra" },
   { id: "radar-demandas", rotulo: "Risco de demandas" },
+  { id: "radar-recuperacao", rotulo: "Recuperação" },
 ] as const;
 
-export function RadarTabs() {
+export function RadarTabs({ temBase }: { temBase: boolean }) {
   const t = useT();
   return (
     <div className="space-y-6">
@@ -37,6 +42,10 @@ export function RadarTabs() {
       </div>
       <div id="radar-visao" className="scroll-mt-20">
         <RadarDashboard />
+      </div>
+      <div id="radar-recuperacao" className="scroll-mt-20 space-y-3">
+        <h2 className="text-base font-medium text-text">{t("Recuperação de clientes")}</h2>
+        <RecuperacaoLista temBase={temBase} />
       </div>
     </div>
   );

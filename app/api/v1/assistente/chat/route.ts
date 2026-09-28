@@ -24,6 +24,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { montarFerramentas, type PropostaMontada } from "@/lib/assistente/ferramentas";
 import { SYSTEM_PROMPT_DO_ASSISTENTE } from "@/lib/assistente/prompt";
+import { blocoDeContexto } from "@/lib/ai/copilot/paraPrompt";
+import { resumoDaPagina } from "@/lib/ai/copilot/resumoDaPagina";
 import type { LanguageModel } from "ai";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +38,15 @@ const mensagemSchema = z.object({
 
 const chatSchema = z.object({
   mensagens: z.array(mensagemSchema).min(1).max(30),
+  // Copilot §33: de onde o usuário chama (prenúncio de contexto, não ordem).
+  // contact_id fora da org rende NULL (sem vazar dado alheio); resumo real
+  // vem do servidor, nunca do client.
+  contexto: z
+    .object({
+      pagina: z.string().trim().min(1).max(120),
+      contact_id: z.string().uuid().optional(),
+    })
+    .optional(),
 });
 
 const ROTULO_DA_FERRAMENTA: Record<string, string> = {
@@ -66,10 +77,11 @@ function rodarTurno(input: {
   model: LanguageModel;
   mensagens: { papel: "user" | "assistente"; texto: string }[];
   ferramentas: ReturnType<typeof montarFerramentas>;
+  contexto?: string;
 }) {
   return generateText({
     model: input.model,
-    system: SYSTEM_PROMPT_DO_ASSISTENTE,
+    system: SYSTEM_PROMPT_DO_ASSISTENTE + (input.contexto ?? ""),
     messages: input.mensagens.map((m) => ({
       role: m.papel === "user" ? ("user" as const) : ("assistant" as const),
       content: m.texto,
@@ -105,6 +117,18 @@ export async function POST(req: NextRequest): Promise<Response> {  const request
     admin: createAdminClient(),
   });
 
+  // Copilot §33: o modelo sabe de onde chamam (resumo real do servidor).
+  let contexto = "";
+  if (parsed.data.contexto) {
+    const resumo = await resumoDaPagina(
+      supabase,
+      authz.org.orgId,
+      parsed.data.contexto.pagina,
+      parsed.data.contexto.contact_id,
+    ).catch(() => null);
+    contexto = blocoDeContexto(parsed.data.contexto.pagina, resumo);
+  }
+
   // Sem anotação de tipo no resultado: o `generateText` infere o ToolSet das
   // ferramentas passadas, e anotar com os genéricos padrão quebra a
   // atribuição (mesmo motivo de `lib/ai/runtime/agent.ts` não anotar).
@@ -114,6 +138,7 @@ export async function POST(req: NextRequest): Promise<Response> {  const request
       model: resolvido.model,
       mensagens: parsed.data.mensagens,
       ferramentas,
+      contexto,
     });
   } catch (err) {
     logger.warn("[assistente] falha no modelo", {

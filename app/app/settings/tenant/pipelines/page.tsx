@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/server";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { PipelinesClient, type PipelineRow } from "./_client";
 import { traduzir } from "@/lib/i18n/dicionario";
 
@@ -41,21 +42,15 @@ export default async function PipelinesSettingsPage() {
 
   const pipelines = (data ?? []) as PipelineRow[];
   const idioma = user.idioma;
+  // Monta a MESMA frase do header antigo (base + trecho condicional + ponto).
+  const subtitulo =
+    traduzir("Para onde o agente leva o card em cada passo do atendimento", idioma) +
+    (podeEditarConfig ? traduzir(", vocabulário, custom fields e motivos de perda", idioma) : "") +
+    ".";
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">
-          {traduzir("Etapas do funil", idioma)}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir("Para onde o agente leva o card em cada passo do atendimento", idioma)}
-          {podeEditarConfig
-            ? traduzir(", vocabulário, custom fields e motivos de perda", idioma)
-            : ""}
-          .
-        </p>
-      </header>
+      <NexusPageHeader title={traduzir("Etapas do funil", idioma)} subtitle={subtitulo} />
       <PipelinesClient pipelines={pipelines} podeEditarConfig={podeEditarConfig} />
     </div>
   );

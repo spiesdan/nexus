@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/card";
-import { CrmPageHeader } from "@/components/uimaxxing/crm/crm-page-header";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import type { Role } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { IDIOMA_PADRAO, type Idioma } from "@/lib/i18n/idiomas";
@@ -53,7 +53,7 @@ export function NavHub({ group, isPlatformAdmin, role, title, subtitle, locale =
 
   return (
     <div className="flex h-full flex-col gap-8 p-6">
-      <CrmPageHeader title={traduzir(title, locale)} description={subtitle ? traduzir(subtitle, locale) : undefined} />
+      <NexusPageHeader title={traduzir(title, locale)} subtitle={subtitle ? traduzir(subtitle, locale) : undefined} />
 
       {secoes.map(({ section, items }) => (
         <section key={section} aria-labelledby={`hub-${group}-${slug(section)}`} className="space-y-3">

@@ -15,14 +15,20 @@
  *    existe mais e todo login falha com "MFA falhou" — sintoma que lê como bug
  *    de senha, de relógio ou da tela de MFA. Medido nesta sessão: quatro vezes.
  *    A saída é re-semear UMA vez e tentar de novo, em vez de acusar a tela.
+ *
+ * 3. **O relógio desta máquina pode não ser o do servidor.** O GoTrue julga o
+ *    TOTP pelo tempo do contêiner; o host pode andar à frente (medido: +47 s).
+ *    A compensação mora em `utils/totp.ts` e é medida uma vez por run pelo
+ *    `globalSetup` (`E2E_CLOCK_OFFSET_MS`) — todos os specs digitam TOTP com
+ *    o relógio do servidor.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "../utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
 
-import { generateTotp, msUntilNextTotpWindow } from "../utils/totp";
+import { agoraNoServidor, generateTotp, medirDeslocamentoRelogio, msUntilNextTotpWindow } from "../utils/totp";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 
@@ -30,6 +36,8 @@ export interface CredsE2E {
   password: string;
   users: Record<string, { email: string }>;
   admin_totp?: { secret: string; factor_id?: string };
+  /** TOTP do `e2e-dono` — dono do servidor (`/admin/*` é superfície dele). */
+  dono_totp?: { secret: string; factor_id?: string };
   /**
    * O agente que o seed de credenciais cria. **É um `rag_bot`** — a tela de
    * configuração por papéis é do `mcp_agent`, então não serve para ela.
@@ -61,19 +69,27 @@ export function lerCreds(): CredsE2E {
  * de qualquer forma.
  */
 export function semearCredenciais(): CredsE2E {
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as CredsE2E;
 }
 
 let ultimoCodigoEnviado: string | null = null;
 
+// Relógio (host↔GoTrue) mora em `utils/totp.ts` desde que o `globalSetup` do
+// Playwright passou a medi-lo uma vez por run e publicar em
+// `E2E_CLOCK_OFFSET_MS` — a explicação completa (e o sintoma de offset: todo
+// código TOTP recusado, lido como bug de MFA) está lá. Aqui só importa.
+
 async function tentarMfa(page: Page, secret: string, tentativas: number): Promise<boolean> {
   for (let i = 0; i < tentativas; i++) {
-    if (msUntilNextTotpWindow() < 3_000 || generateTotp(secret) === ultimoCodigoEnviado) {
-      await page.waitForTimeout(msUntilNextTotpWindow() + 300);
+    if (
+      msUntilNextTotpWindow(agoraNoServidor()) < 3_000 ||
+      generateTotp(secret, agoraNoServidor()) === ultimoCodigoEnviado
+    ) {
+      await page.waitForTimeout(msUntilNextTotpWindow(agoraNoServidor()) + 300);
     }
-    const codigo = generateTotp(secret);
+    const codigo = generateTotp(secret, agoraNoServidor());
     ultimoCodigoEnviado = codigo;
 
     const digito = page.locator('input[aria-label="Dígito 1"]');
@@ -88,28 +104,40 @@ async function tentarMfa(page: Page, secret: string, tentativas: number): Promis
       await page.waitForURL(/\/app\//, { timeout: 10_000 });
       return true;
     } catch {
-      await page.waitForTimeout(msUntilNextTotpWindow() + 300);
+      await page.waitForTimeout(msUntilNextTotpWindow(agoraNoServidor()) + 300);
     }
   }
   return false;
 }
 
 /**
- * Loga como admin. Devolve as credenciais em vigor — que podem ter sido
- * re-semeadas no meio do caminho, e nesse caso são diferentes das que o chamador
- * tinha em mãos.
+ * Login genérico com MFA. O secret é relido DE CADA volta do retry: a
+ * re-semeadura reenrola o fator no meio do caminho, e um secret lido antes do
+ * retry seria o fator que já não existe. `rotulo` só nomeia a falha.
  */
-export async function loginComoAdmin(page: Page, creds: CredsE2E): Promise<CredsE2E> {
+async function loginCom(
+  page: Page,
+  creds: CredsE2E,
+  chaveUser: "admin" | "dono",
+  chaveTotp: "admin_totp" | "dono_totp",
+  rotulo: string,
+): Promise<CredsE2E> {
   let atuais = creds;
+  await medirDeslocamentoRelogio();
 
   for (let volta = 0; volta < 2; volta++) {
+    const email = atuais.users[chaveUser]!.email;
+    const secret = atuais[chaveTotp]?.secret;
+    if (!secret) {
+      expect(false, `.e2e-creds.json sem ${chaveTotp} — rode seed-e2e-credentials.ts`).toBe(true);
+    }
     await page.goto("/login");
-    await page.locator("#email").fill(atuais.users.admin!.email);
+    await page.locator("#email").fill(email);
     await page.locator("#password").fill(atuais.password);
     await page.getByRole("button", { name: /entrar/i }).click();
     await page.waitForURL(/\/login\/mfa/, { timeout: 30_000 });
 
-    if (await tentarMfa(page, atuais.admin_totp!.secret, 3)) return atuais;
+    if (await tentarMfa(page, secret!, 3)) return atuais;
 
     if (volta === 0) {
       // O segredo em disco não vale mais: outra sessão rodou o seed. Re-semeia
@@ -122,7 +150,25 @@ export async function loginComoAdmin(page: Page, creds: CredsE2E): Promise<Creds
 
   expect(
     false,
-    "MFA do admin falhou mesmo depois de re-semear as credenciais — o problema não é o fator rotacionado",
+    `MFA de ${rotulo} falhou mesmo depois de re-semear as credenciais — o problema não é o fator rotacionado`,
   ).toBe(true);
   return atuais;
+}
+
+/**
+ * Loga como admin. Devolve as credenciais em vigor - que podem ter sido
+ * re-semeadas no meio do caminho, e nesse caso são diferentes das que o chamador
+ * tinha em mãos.
+ */
+export async function loginComoAdmin(page: Page, creds: CredsE2E): Promise<CredsE2E> {
+  return loginCom(page, creds, "admin", "admin_totp", "admin");
+}
+
+/**
+ * Loga como `e2e-dono` (dono do servidor). `/admin/*` é superfície EXCLUSIVA
+ * dele: `requirePlatformAdmin` lê `platform_admins` e o `e2e-admin` não tem
+ * linha lá (medido — cai em `/admin/forbidden`).
+ */
+export async function loginComoDono(page: Page, creds: CredsE2E): Promise<CredsE2E> {
+  return loginCom(page, creds, "dono", "dono_totp", "dono");
 }

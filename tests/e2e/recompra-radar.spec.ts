@@ -1,7 +1,8 @@
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+
+import { execNpx } from "./utils/npx";
 
 /**
  * Jornada da Recompra (Radar sobre pedidos reais).
@@ -33,7 +34,7 @@ async function entrar(page: Page, creds: Creds) {
 }
 
 test.beforeAll(() => {
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-recompra.ts"], { stdio: "inherit", cwd: RAIZ });
+  execNpx(["tsx", "scripts/seed-e2e-recompra.ts"], { stdio: "inherit", cwd: RAIZ });
 });
 
 test("recompra atrasada aparece com atraso e link para os pedidos", async ({ page }) => {

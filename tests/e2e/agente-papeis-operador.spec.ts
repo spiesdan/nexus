@@ -19,7 +19,7 @@
  * ⚠️ Roda contra o Supabase LOCAL. O `playwright.config.ts` injeta o `.env.e2e`
  * e recusa subir sem ele — antes disso, esta suíte escrevia em produção.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 
 import { test, expect, type Browser, type Page } from "@playwright/test";
 
@@ -45,7 +45,7 @@ test.describe.configure({ timeout: 240_000 });
  * `agente-novo-e-uso` vir antes de `followup-builder`).
  */
 test.beforeAll(() => {
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-capacidades.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-capacidades.ts"], { stdio: "inherit" });
   creds = lerCreds();
 });
 

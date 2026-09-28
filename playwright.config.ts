@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { defineConfig } from "@playwright/test";
+import { defineConfig, type ReporterDescription } from "@playwright/test";
 
 /**
  * Lê o `.env.e2e` — o ambiente LOCAL da suíte.
@@ -91,6 +91,10 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Mede o deslocamento relógio host↔GoTrue e publica E2E_CLOCK_OFFSET_MS
+  // antes dos workers nascerem — o TOTP de todos os specs compensa sem cada
+  // spec precisar lembrar. Ver `tests/e2e/global-setup.ts`.
+  globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 30_000,
   fullyParallel: false,
   /**
@@ -111,6 +115,20 @@ export default defineConfig({
    */
   workers: 1,
   retries: 0,
+  /**
+   * `list` no log — e `github` no CI, para a falha virar anotação no PR.
+   *
+   * Sem `reporter` declarado, o passo do CI imprimia apenas pontos `·`, SEM
+   * newline: os pontos ficavam no buffer do runner e só vazavam quando
+   * qualquer spec imprimia uma linha inteira. Medido no run 36348502150
+   * (2026-09-27): o flush de 22 pontos — 22 testes concluídos — apareceu
+   * JUNTO com o console do `qa-agente-usa-as-maos`, 7min depois do último
+   * newline, e o passo morreu no teto de 30min sem resumo nenhum: impossível
+   * dizer qual teste rodava nem quanto tempo levou. Com `list`, cada teste é
+   * uma linha datada na hora — o log de um passo que estoura o teto continua
+   * dizendo onde ele andava.
+   */
+  reporter: (process.env.CI ? [["list"], ["github"]] : [["list"]]) as ReporterDescription[],
   use: {
     baseURL: BASE_URL,
     // ⚠️ Era `on-first-retry`, e com `retries: 0` logo acima isso significa

@@ -2,14 +2,15 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterActions, FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { precoDeVitrine, precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
@@ -118,15 +119,22 @@ export function ProdutosClient({
    * nenhuma tela existente muda.
    */
   esconderCabecalho,
+  /**
+   * Termo que veio na URL (`/app/products?busca=`), o caminho de quem clicou
+   * num produto na busca global (§17): o campo já nasce com o que a pessoa
+   * digitou, em vez de pedir para digitar de novo na lista inteira.
+   */
+  buscaInicial,
 }: {
   inicial: Produto[];
   podeEditar: boolean;
   textos: Textos;
   esconderCabecalho?: boolean;
+  buscaInicial?: string;
 }) {
   const t = useT();
   const router = useRouter();
-  const [busca, setBusca] = React.useState("");
+  const [busca, setBusca] = React.useState(buscaInicial ?? "");
   const [aba, setAba] = React.useState<"todos" | "promocoes" | "destaques">("todos");
   const [criando, setCriando] = React.useState(false);
   const [rascunho, setRascunho] = React.useState<Rascunho>(VAZIO);
@@ -267,22 +275,7 @@ export function ProdutosClient({
   }
 
   const cabecalho = esconderCabecalho ? null : (
-    <PageHeader
-      title={textos.titulo}
-      subtitle={textos.subtitulo}
-      actions={
-        podeEditar ? (
-          <>
-            <Button variant="outline" disabled={importando} onClick={() => arquivoRef.current?.click()} data-testid="importar-planilha">
-              {t(importando ? "Importando…" : "Importar planilha")}
-            </Button>
-            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
-              {t(criando ? "Cancelar" : "Novo produto")}
-            </Button>
-          </>
-        ) : undefined
-      }
-    />
+    <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
   );
 
   const corpo = (
@@ -309,37 +302,33 @@ export function ProdutosClient({
             dataTestId="busca-produto"
           />
         </FilterPrimary>
+        {podeEditar ? (
+          // Vivia no cabeçalho, que o catálogo em abas esconde
+          // (esconderCabecalho) — o botão de novo produto sumia em
+          // /app/products inteiro. Aqui o FilterBar é renderizado sempre.
+          <FilterActions>
+            <Button
+              variant="outline"
+              disabled={importando}
+              onClick={() => arquivoRef.current?.click()}
+              data-testid="importar-planilha"
+            >
+              {t(importando ? "Importando…" : "Importar planilha")}
+            </Button>
+            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
+              {t(criando ? "Cancelar" : "Novo produto")}
+            </Button>
+          </FilterActions>
+        ) : null}
       </FilterBar>
 
-      <div className="flex gap-2" role="tablist" aria-label={t("Abas do catálogo")}>
-        <Button
-          size="sm"
-          variant={aba === "todos" ? "default" : "outline"}
-          onClick={() => setAba("todos")}
-          role="tab"
-          aria-selected={aba === "todos"}
-        >
-          {t("Produtos")}
-        </Button>
-        <Button
-          size="sm"
-          variant={aba === "promocoes" ? "default" : "outline"}
-          onClick={() => setAba("promocoes")}
-          role="tab"
-          aria-selected={aba === "promocoes"}
-        >
-          {t("Promoções")}
-        </Button>
-        <Button
-          size="sm"
-          variant={aba === "destaques" ? "default" : "outline"}
-          onClick={() => setAba("destaques")}
-          role="tab"
-          aria-selected={aba === "destaques"}
-        >
-          {t("Destaques")}
-        </Button>
-      </div>
+      <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
+        <TabsList aria-label={t("Abas do catálogo")}>
+          <TabsTrigger value="todos">{t("Produtos")}</TabsTrigger>
+          <TabsTrigger value="promocoes">{t("Promoções")}</TabsTrigger>
+          <TabsTrigger value="destaques">{t("Destaques")}</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {podeEditar ? (
         // Rota de API que devolve o arquivo com `content-disposition:

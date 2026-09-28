@@ -17,11 +17,12 @@
  *
  * O seed roda a cada execução e reseta o retorno, então o teste é repetível.
  */
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { test, expect, type Page } from "@playwright/test";
+
+import { execNpx } from "./utils/npx";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 const EVIDENCIA = path.join(process.cwd(), ".superpowers", "evidence");
@@ -41,7 +42,7 @@ interface Creds {
 }
 
 function tsx(script: string): string {
-  return execFileSync("npx", ["tsx", script], { encoding: "utf8" });
+  return execNpx(["tsx", script], { encoding: "utf8" }) as string;
 }
 
 function loadCreds(): Creds {

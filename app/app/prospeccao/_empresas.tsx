@@ -3,7 +3,10 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { Buildings } from "@phosphor-icons/react";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
@@ -18,6 +21,7 @@ import {
   FilterSelect,
   type ActiveChip,
 } from "@/components/filters/FilterBar";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
@@ -35,6 +39,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
+import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import { distanciaKm, limitesDosPontos, centroERaioDoBbox, ordemDeVisita, comprimentoDaRota } from "@/lib/prospeccao/geo";
 import type { PontoMapa } from "./_mapa";
 import {
@@ -89,6 +94,7 @@ const VAZIOS: Filtros = {
 
 export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const paramsUrl = useSearchParams();
   const [filtros, setFiltros] = React.useState<Filtros>(() => ({
@@ -100,6 +106,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     status: paramsUrl.get("status") ?? "",
   }));
   const [lista, setLista] = React.useState<(Prospect & { ja_e_cliente: boolean })[] | null>(null);
+  const [erro, setErro] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const [visao, setVisao] = React.useState<"tabela" | "mapa">("tabela");
   const [dono, setDono] = React.useState("");
@@ -140,7 +147,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       const dados = (corpo as { data?: unknown } | null)?.data;
       setLista(Array.isArray(dados) ? dados : []);
       setSelecionados([]);
+      setErro(false);
     } catch (e) {
+      setErro(true);
       showApiError(e);
     }
   }, []);
@@ -394,7 +403,11 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   }
 
   async function excluir(id: string, nome: string) {
-    if (!window.confirm(t(`Excluir "${nome}" da base? (LGPD)`))) return;
+    const ok = await confirmar({
+      title: t(`Excluir "${nome}" da base? (LGPD)`),
+      confirmLabel: t("Excluir"),
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/prospecting/prospects/${id}`);
       await buscar(filtros);
@@ -497,7 +510,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         </FilterActions>
       </FilterBar>
 
-      {lista === null ? (
+      {lista === null && erro ? (
+        <NexusErrorState onRetry={() => void buscar(filtros)} />
+      ) : lista === null ? (
         <div className="space-y-2" aria-live="polite">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
@@ -622,9 +637,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       ) : lista.length === 0 && chips.length > 0 ? (
         <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
       ) : lista.length === 0 ? (
-        <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">
-          {t("Nenhuma empresa com estes filtros.")}
-        </Card>
+        <NexusEmptyState icon={Buildings} headline={t("Nenhuma empresa com estes filtros.")} />
       ) : (
         <>
           {podeOperar && (
@@ -764,18 +777,13 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         </>
       )}
       {detalhe && (
-        <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md overflow-y-auto border-l bg-background p-4 shadow-xl" role="dialog" aria-label={detalhe.nome}>
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <div>
-              <p className="font-medium text-text">{detalhe.nome}</p>
-              <p className="text-xs text-muted-foreground">
-                {[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => setDetalheId(null)} aria-label={t("Fechar")}>
-              ×
-            </Button>
-          </div>
+        <ContextualDrawer
+          aberto
+          onFechar={() => setDetalheId(null)}
+          titulo={detalhe.nome}
+          subtitulo={[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
+          className="max-w-md"
+        >
           <div className="space-y-2 text-sm">
             {detalhe.nota !== null && <p>★ {detalhe.nota} · {detalhe.total_avaliacoes} {t("avaliações")}</p>}
             {detalhe.endereco && <p className="text-muted-foreground">{detalhe.endereco}</p>}
@@ -838,7 +846,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               </Button>
             )}
           </div>
-        </div>
+        </ContextualDrawer>
       )}
       {podeOperar && (
         <ImportarArquivoDialog

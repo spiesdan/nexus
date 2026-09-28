@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

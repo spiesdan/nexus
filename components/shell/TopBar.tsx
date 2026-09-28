@@ -1,5 +1,5 @@
 "use client";
-import { AlertsBell } from "./AlertsBell";
+import { NotificationCenter } from "./NotificationCenter";
 import { MobileSidebar } from "./MobileSidebar";
 import { TenantSwitcher } from "./TenantSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -21,7 +21,7 @@ export function TopBar() {
           <SearchTrigger />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <AlertsBell />
+          <NotificationCenter />
           <UserMenu />
         </div>
       </header>

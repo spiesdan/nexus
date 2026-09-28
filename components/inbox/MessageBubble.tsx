@@ -126,7 +126,7 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
           <div
             className={cn(
               "mb-1 rounded-md border-l-2 px-2 py-1 text-xs",
-              isOutbound ? "border-[#075e54]/60 bg-black/5" : "border-[#075e54] bg-black/5",
+              isOutbound ? `${WA.quoteOut} bg-black/5` : `${WA.quote} bg-black/5`,
             )}
           >
             <div className="font-medium opacity-80">

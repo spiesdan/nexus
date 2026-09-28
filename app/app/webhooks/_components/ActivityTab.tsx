@@ -6,7 +6,8 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 
 import type { Locale } from "date-fns";
 import * as React from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -181,7 +182,7 @@ function ActionLine({ action, run }: { action: AutomationRuleRunActionResult; ru
 export function ActivityTab() {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const { data, isLoading, refetch, isRefetching } = useAutomationRuns();
+  const { data, isLoading, refetch, isRefetching, isError } = useAutomationRuns();
   const runs = data?.data ?? [];
 
   return (
@@ -203,6 +204,10 @@ export function ActivityTab() {
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
         </div>
+      ) : isError ? (
+        // ERRO NÃO É HISTÓRICO VAZIO (mesmo molde do CapturasTab): a falha da
+        // consulta não pode renderizar "Nenhuma automação rodou ainda".
+        <NexusErrorState onRetry={() => void refetch()} />
       ) : runs.length === 0 ? (
         <div className="flex justify-center pt-10">
           <Card className="hover-raise max-w-md">

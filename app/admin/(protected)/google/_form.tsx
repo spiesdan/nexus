@@ -4,13 +4,14 @@ import { useT } from "@/hooks/i18n/useT";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { updateGoogleOAuth } from "@/app/actions/settings/updateGoogleOAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 
 interface Props {
   readonly clientIdSalvo: string | null;
@@ -49,56 +50,59 @@ export function FormularioDoGoogle({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Google Agenda desta instalação")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("Com estas duas informações, quem atende consegue conectar a agenda pessoal do Google e ver os compromissos do CRM lá. Elas valem para a instalação inteira — cada pessoa conecta a conta dela depois, sozinha.")}
-        </p>
-      </header>
+      <NexusPageHeader
+        title={t("Google Agenda desta instalação")}
+        subtitle={t(
+          "Com estas duas informações, quem atende consegue conectar a agenda pessoal do Google e ver os compromissos do CRM lá. Elas valem para a instalação inteira — cada pessoa conecta a conta dela depois, sozinha.",
+        )}
+      />
 
       <Card className="hover-raise flex flex-col gap-4 p-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="redirect">{t("Endereço de retorno")}</Label>
+        <FormField
+          label={t("Endereço de retorno")}
+          id="redirect"
+          hint={
+            <>
+              Cole exatamente isto em &ldquo;URIs de redirecionamento autorizados&rdquo;, na tela
+              de credenciais do Google Cloud.
+            </>
+          }
+        >
           {/*
             O valor que precisa estar registrado no console do Google, pronto
             para copiar. Ele é comparado BYTE A BYTE pelo Google, então digitar à
             mão é a origem clássica do `redirect_uri_mismatch` — um erro que
             aponta para o Google e não para a divergência.
           */}
-          <Input id="redirect" readOnly value={enderecoDeRetorno} data-testid="google-redirect" />
-          <p className="text-xs text-muted-foreground">
-            Cole exatamente isto em &ldquo;URIs de redirecionamento autorizados&rdquo;, na tela
-            de credenciais do Google Cloud.
-          </p>
-        </div>
+          <Input readOnly value={enderecoDeRetorno} data-testid="google-redirect" />
+        </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-id">ID do cliente</Label>
+        <FormField label="ID do cliente" id="client-id">
           <Input
-            id="client-id"
             data-testid="google-client-id"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com"
           />
-        </div>
+        </FormField>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-secret">Chave secreta do cliente</Label>
+        <FormField
+          label="Chave secreta do cliente"
+          id="client-secret"
+          hint={
+            temSegredoSalvo
+              ? t("Já existe uma chave cadastrada. Deixe em branco para mantê-la, ou digite uma nova para substituir.")
+              : t("Ela é guardada cifrada e nunca volta a aparecer nesta tela.")
+          }
+        >
           <Input
-            id="client-secret"
             data-testid="google-client-secret"
             type="password"
             value={clientSecret}
             onChange={(e) => setClientSecret(e.target.value)}
             placeholder={temSegredoSalvo ? "••••••••  (já cadastrada)" : "GOCSPX-…"}
           />
-          <p className="text-xs text-muted-foreground">
-            {temSegredoSalvo
-              ? t("Já existe uma chave cadastrada. Deixe em branco para mantê-la, ou digite uma nova para substituir.")
-              : t("Ela é guardada cifrada e nunca volta a aparecer nesta tela.")}
-          </p>
-        </div>
+        </FormField>
 
         {/*
           ONDE ESTÁ O QUE VALE. Sem isto, quem tem o par no `.env` abre a tela

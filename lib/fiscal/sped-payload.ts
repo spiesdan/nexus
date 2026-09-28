@@ -127,7 +127,7 @@ export async function carregarContextoSped(orgId: string): Promise<ContextoSped 
     .from("fiscal_settings")
     .select(
       "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, " +
-        "logradouro, numero_end, bairro, municipio, uf, cep, ambiente, provedor, " +
+        "logradouro, numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, " +
         "certificado_path, certificado_senha_encrypted",
     )
     .eq("organization_id", orgId)

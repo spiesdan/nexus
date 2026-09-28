@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import {
   Select,
   SelectContent,
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateTenant } from "@/hooks/useCreateTenant";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { ApiError } from "@/lib/api/types";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -146,12 +147,10 @@ export function NewTenantForm() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Novo Tenant")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t("Cria um novo tenant com status")} <em>onboarding</em>.
-        </p>
-      </div>
+      <NexusPageHeader
+        title={t("Novo Tenant")}
+        subtitle={`${t("Cria um novo tenant com status")} onboarding.`}
+      />
 
       <Card>
         <CardHeader>
@@ -160,78 +159,66 @@ export function NewTenantForm() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-5" noValidate>
             {/* display_name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="display_name">
-                {t("Nome de exibição")} <span className="text-error-fg">*</span>
-              </Label>
+            <FormField
+              label={t("Nome de exibição")}
+              id="display_name"
+              obrigatorio
+              erro={errors.display_name ? t(errors.display_name.message ?? "") : undefined}
+            >
               <Input
-                id="display_name"
                 placeholder={t("Loja da Maria")}
                 {...register("display_name")}
                 onChange={(e) => handleDisplayNameChange(e.target.value)}
-                aria-invalid={!!errors.display_name}
               />
-              {errors.display_name && (
-                <p className="text-xs text-error-fg">{t(errors.display_name.message ?? "")}</p>
-              )}
-            </div>
+            </FormField>
 
             {/* slug */}
-            <div className="space-y-1.5">
-              <Label htmlFor="slug">
-                Slug <span className="text-error-fg">*</span>
-              </Label>
+            <FormField
+              label="Slug"
+              id="slug"
+              obrigatorio
+              hint={t("Apenas letras minúsculas, números e hífens. Gerado automaticamente.")}
+              erro={errors.slug ? t(errors.slug.message ?? "") : undefined}
+            >
               <Input
-                id="slug"
                 placeholder="tienda-de-maria"
                 {...register("slug")}
                 onChange={(e) => handleSlugChange(e.target.value)}
-                aria-invalid={!!errors.slug}
                 className="font-mono"
               />
-              <p className="text-xs text-muted-foreground">
-                {t("Apenas letras minúsculas, números e hífens. Gerado automaticamente.")}
-              </p>
-              {errors.slug && (
-                <p className="text-xs text-error-fg">{t(errors.slug.message ?? "")}</p>
-              )}
-            </div>
+            </FormField>
 
             {/* legal_name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="legal_name">{t("Razão social")}</Label>
-              <Input
-                id="legal_name"
-                placeholder={t("Maria da Silva LTDA")}
-                {...register("legal_name")}
-                aria-invalid={!!errors.legal_name}
-              />
-              {errors.legal_name && (
-                <p className="text-xs text-error-fg">{t(errors.legal_name.message ?? "")}</p>
-              )}
-            </div>
+            <FormField
+              label={t("Razão social")}
+              id="legal_name"
+              erro={errors.legal_name ? t(errors.legal_name.message ?? "") : undefined}
+            >
+              <Input placeholder={t("Maria da Silva LTDA")} {...register("legal_name")} />
+            </FormField>
 
             {/* cnpj */}
-            <div className="space-y-1.5">
-              <Label htmlFor="cnpj">CNPJ</Label>
+            <FormField
+              label="CNPJ"
+              id="cnpj"
+              erro={errors.cnpj ? t(errors.cnpj.message ?? "") : undefined}
+            >
               <Input
-                id="cnpj"
                 placeholder="00.000.000/0000-00"
                 {...register("cnpj")}
                 onChange={(e) => handleCnpjChange(e.target.value)}
                 inputMode="numeric"
                 maxLength={18}
-                aria-invalid={!!errors.cnpj}
                 className="font-mono"
               />
-              {errors.cnpj && (
-                <p className="text-xs text-error-fg">{t(errors.cnpj.message ?? "")}</p>
-              )}
-            </div>
+            </FormField>
 
             {/* plan */}
-            <div className="space-y-1.5">
-              <Label htmlFor="plan">{t("Plano")}</Label>
+            <FormField
+              label={t("Plano")}
+              id="plan"
+              erro={errors.plan ? t(errors.plan.message ?? "") : undefined}
+            >
               <Select
                 value={planValue}
                 onValueChange={(v) =>
@@ -247,27 +234,21 @@ export function NewTenantForm() {
                   <SelectItem value="enterprise">Enterprise</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.plan && (
-                <p className="text-xs text-error-fg">{t(errors.plan.message ?? "")}</p>
-              )}
-            </div>
+            </FormField>
 
             {/* owner_email */}
-            <div className="space-y-1.5">
-              <Label htmlFor="owner_email">
-                {t("E-mail do responsável")} <span className="text-error-fg">*</span>
-              </Label>
+            <FormField
+              label={t("E-mail do responsável")}
+              id="owner_email"
+              obrigatorio
+              erro={errors.owner_email ? t(errors.owner_email.message ?? "") : undefined}
+            >
               <Input
-                id="owner_email"
                 type="email"
                 placeholder="responsable@empresa.com"
                 {...register("owner_email")}
-                aria-invalid={!!errors.owner_email}
               />
-              {errors.owner_email && (
-                <p className="text-xs text-error-fg">{t(errors.owner_email.message ?? "")}</p>
-              )}
-            </div>
+            </FormField>
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-2">

@@ -51,10 +51,10 @@ export function Saudacao({
   return (
     <div className="space-y-3">
       <div>
-        <h1 className="text-2xl font-medium tracking-tight text-text">
+        <h2 className="text-2xl font-medium tracking-tight text-text">
           {cumprimento}
           {primeiro ? `, ${primeiro}` : ""}.
-        </h1>
+        </h2>
         <p className="text-sm text-muted-foreground">
           {dados.rotuloMes} · Vendido, carteira, ranking e curva ABC.
         </p>

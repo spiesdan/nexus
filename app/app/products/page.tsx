@@ -33,11 +33,16 @@ export const dynamic = "force-dynamic";
  * atende precisa dela. Cadastrar e alterar preço é `manager`, e a rota cobra de
  * novo — a tela esconder o botão é cortesia, não autorização.
  */
-export default async function ProdutosPage() {
+export default async function ProdutosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ busca?: string }>;
+}) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
+  const { busca } = await searchParams;
 
   const podeEditar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
@@ -71,6 +76,7 @@ export default async function ProdutosPage() {
       categorias={(categorias ?? []) as unknown as Categoria[]}
       tabelas={(tabelas ?? []) as unknown as TabelaDePreco[]}
       podeEditar={podeEditar}
+      buscaInicial={busca ?? ""}
       textosProdutos={{
         titulo: t("Produtos"),
         subtitulo: t(

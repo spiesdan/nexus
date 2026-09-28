@@ -3,9 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,6 +78,7 @@ export function CargaClient({
   textos: Textos;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const [detalhe, setDetalhe] = React.useState<Detalhe | null>(null);
   const [modo, setModo] = React.useState<"operador" | "motorista">("operador");
@@ -157,8 +159,25 @@ export function CargaClient({
     }
   }
 
+  // Separação e conferência (0240): marca por item, só com a carga montando.
+  async function separar(orderId: string, marcar: boolean) {
+    try {
+      await apiClient.patch(`/api/v1/shipments/${cargaId}/orders/${orderId}`, {
+        separado: marcar,
+      });
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function excluirCarga() {
-    if (!window.confirm(textos.confirmarExcluir)) return;
+    const ok = await confirmar({
+      title: textos.confirmarExcluir,
+      confirmLabel: textos.confirmar,
+      cancelLabel: textos.cancelar,
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/shipments/${cargaId}`);
       toast.success(t("Romaneio excluído."));
@@ -209,6 +228,8 @@ export function CargaClient({
   const pendentes = itens.filter((i) =>
     ["na_carga", "em_rota", "em_atendimento"].includes(i.status),
   ).length;
+  // Conferência §49: quantos itens na carga ainda não foram separados.
+  const naoSeparados = itens.filter((i) => i.status === "na_carga" && i.separado_em == null).length;
   const concluidas = itens.filter((i) => ["entregue", "devolvido"].includes(i.status)).length;
   const totalMercadorias = itens.reduce((s, i) => s + (i.pedido.total_cents || 0), 0);
   const aCobrar = itens
@@ -273,7 +294,15 @@ export function CargaClient({
               </Link>
             </Button>
             {podeOperar && carga.status === "montando" && (
-              <Button onClick={() => void mudarStatus("em_rota")}>{textos.sairRota}</Button>
+              <Button onClick={() => void mudarStatus("em_rota")} disabled={naoSeparados > 0}>
+                {textos.sairRota}
+              </Button>
+            )}
+            {podeOperar && carga.status === "montando" && naoSeparados > 0 && (
+              <p className="w-full text-xs text-muted-foreground">
+                {t("Faltam separar")} {naoSeparados} {naoSeparados === 1 ? t("pedido") : t("pedidos")} —{" "}
+                {t("a rota só sai com tudo conferido.")}
+              </p>
             )}
             {podeOperar && carga.status === "em_rota" && (
               <Button onClick={() => void mudarStatus("concluida")} disabled={pendentes > 0}>
@@ -350,6 +379,18 @@ export function CargaClient({
                   <span className="text-xs text-muted-foreground">
                     {ROTULO_NA_CARGA[i.status as StatusNaCarga] ?? i.status}
                   </span>
+                  {podeOperar && carga.status === "montando" && i.status === "na_carga" && (
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-current"
+                        checked={i.separado_em != null}
+                        onChange={(e) => void separar(i.order_id, e.target.checked)}
+                        aria-label={`${t("Separado")}: ${numeroDoPedido(i.pedido.numero)}`}
+                      />
+                      {t("Separado")}
+                    </label>
+                  )}
                 </div>
                 {podeOperar && ["na_carga", "em_rota", "em_atendimento"].includes(i.status) && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">

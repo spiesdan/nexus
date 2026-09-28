@@ -56,11 +56,11 @@ export async function carregarCargaComParadas(
 
   const { data: itens } = await supabase
     .from("shipment_orders")
-    .select("id, order_id, sequencia, status")
+    .select("id, order_id, sequencia, status, separado_em")
     .eq("shipment_id", shipmentId)
     .eq("organization_id", orgId)
     .order("sequencia");
-  const lista = ((itens ?? []) as unknown as { id: string; order_id: string; sequencia: number; status: string }[]);
+  const lista = ((itens ?? []) as unknown as { id: string; order_id: string; sequencia: number; status: string; separado_em: string | null }[]);
   if (lista.length === 0) {
     return { carga: carga as unknown as CargaRota, itens: [], paradas: [] };
   }
@@ -126,6 +126,7 @@ export async function carregarCargaComParadas(
       order_id: i.order_id,
       sequencia: i.sequencia,
       status: i.status,
+      separado_em: i.separado_em,
       numero: p?.numero ?? 0,
       cliente_nome: p?.cliente_nome ?? "?",
       contact_id: p?.contact_id ?? null,

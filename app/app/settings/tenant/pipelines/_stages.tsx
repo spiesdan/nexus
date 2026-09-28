@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import { LEAD_STAGES, type LeadStage } from "@/lib/agent-engine/agent/lead-state
 import { ApiError } from "@/lib/api/types";
 import { ROTULO_DO_PASSO } from "@/lib/leads/agent-mapping";
 import { Archive, CaretDown, CaretUp, Plus, Warning } from "@/lib/ui/icons";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SeloDeAutoria } from "@/components/operacao/SeloDeAutoria";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -218,17 +220,15 @@ export function StagesSection({
   const [nova, setNova] = useState<string | null>(null);
 
   if (consulta.isError) {
-    return (
-      <p className="text-sm text-text-muted" data-testid="etapas-erro-leitura">
-        {t("Não foi possível carregar as etapas deste funil agora. Recarregue a página.")}
-      </p>
-    );
+    return <NexusErrorState onRetry={() => void consulta.refetch()} />;
   }
   if (!consulta.data) {
     return (
-      <p className="text-sm text-text-muted" data-testid="etapas-carregando">
-        {t("Carregando as etapas deste funil…")}
-      </p>
+      <div className="space-y-2" aria-live="polite">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
     );
   }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { METADADOS_PROVIDERS } from "@/lib/prospeccao/providers/registro";
 
@@ -36,6 +38,7 @@ interface Config {
 export function ConfigTab() {
   const t = useT();
   const [cfg, setCfg] = React.useState<Config | null>(null);
+  const [erro, setErro] = React.useState(false);
   const [chave, setChave] = React.useState("");
   const [form, setForm] = React.useState<Record<string, string>>({});
   const [salvando, setSalvando] = React.useState(false);
@@ -46,6 +49,7 @@ export function ConfigTab() {
       const c = corpo?.data;
       if (!c || typeof c !== "object") return;
       setCfg(c);
+      setErro(false);
       setForm({
         provider_ativo: String(c.provider_ativo ?? "google_places"),
         limite_por_busca: String(c.limite_por_busca ?? 500),
@@ -59,6 +63,7 @@ export function ConfigTab() {
         cache_ttl_dias: String(c.cache_ttl_dias ?? 30),
       });
     } catch (e) {
+      setErro(true);
       showApiError(e);
     }
   }, []);
@@ -95,7 +100,14 @@ export function ConfigTab() {
   }
 
   if (!cfg) {
-    return <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>;
+    if (erro) return <NexusErrorState onRetry={() => void recarregar()} />;
+    return (
+      <div className="space-y-2" aria-live="polite">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+      </div>
+    );
   }
 
   const campo = (id: string, rotulo: string, tipo = "text") => (

@@ -17,7 +17,7 @@
  * :3001 — reuseExistingServer teria reusado o servidor ERRADO). Por isso este
  * spec usa APP_URL absoluto em vez do baseURL do config.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -41,7 +41,7 @@ function loadCreds(): Creds {
     return !c.users?.manager || !c.users?.agent;
   };
   if (needsBase()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
@@ -112,7 +112,7 @@ test.describe("webhooks & automações — fluxo completo", () => {
   // dia inteiro. O seed declara a janela do rig (0h-24h, `garantirJanelaSempreAberta`),
   // e é ele que tira a hora do CI de dentro da conta deste teste.
   test.beforeAll(() => {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-numero-conectado.ts"], { stdio: "inherit" });
   });
 
   test("cria fonte, cria automação, dispara lead real, confere atividade e kanban; agent sem acesso", async ({
@@ -125,8 +125,11 @@ test.describe("webhooks & automações — fluxo completo", () => {
     let pipelineId: string | undefined;
 
     try {
-      // --- Step 1: login como manager; sidebar mostra "Webhooks" ---
+      // --- Step 1: login como manager; a porta de Webhooks é o hub de
+      // Configurações (a §19 dissolveu o grupo Canais — dobra medida) ---
       await login(page, creds.users.manager!.email);
+      await page.getByRole("link", { name: "Configurações", exact: true }).click();
+      await page.waitForURL(/\/app\/settings$/);
       await expect(page.getByRole("link", { name: "Webhooks" })).toBeVisible();
       await page.getByRole("link", { name: "Webhooks" }).click();
       await page.waitForURL(/\/app\/webhooks/);

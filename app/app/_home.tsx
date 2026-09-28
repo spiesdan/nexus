@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 
-import { CrmSalesChart } from "@/components/uimaxxing/crm/crm-sales-chart";
-import { CrmKpi, CrmKpiGrid } from "@/components/uimaxxing/crm/crm-kpi";
+import { BrainRecomendacoes } from "@/components/nexus-ui/intelligence/BrainRecomendacoes";
+import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
+import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
 import { comoMoeda } from "@/lib/format/moeda";
 import { NAV_DESTINATIONS } from "@/lib/navigation/registry";
+import { ClientesParaAgir, SalesRadar, SalesRoadmap } from "./_home-secoes";
 import { Atividade } from "./indicadores/_atividade";
 
 export interface DadosDashboard {
@@ -15,6 +17,7 @@ export interface DadosDashboard {
   hora: number;
   mes: string;
   rotuloMes: string;
+  diaHoje: number;
   serie: { dia: number; vendaAc: number; metaAc: number | null; projecao: number | null }[];
   vendidoMes: number;
   qtdMes: number;
@@ -58,30 +61,30 @@ export function DashboardHome(dados: DadosDashboard) {
         </p>
       </div>
 
-      <CrmKpiGrid>
-        <CrmKpi
+      <NexusKpiGrid>
+        <NexusKpi
           label={t("Vendido hoje")}
           value={brl(dados.vendidoHoje)}
           comparison={t("hoje")}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Vendido no mês")}
           value={brl(dados.vendidoMes)}
           comparison={ticket != null ? t("ticket médio") + " " + brl(Math.round(ticket)) : undefined}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Meta do mês")}
           value={dados.objetivo != null ? brl(dados.objetivo) : "—"}
           variation={dados.objetivo != null && dados.pctObjetivo != null ? `${dados.pctObjetivo.toFixed(1)}%` : undefined}
           trend={(dados.pctObjetivo ?? 0) >= 100 ? "up" : "down"}
           comparison={dados.necessarioDia != null ? brl(Math.round(dados.necessarioDia)) + " " + t("por dia útil") : undefined}
         />
-        <CrmKpi
+        <NexusKpi
           label={t("Previsão de fechamento")}
           value={brl(dados.previsaoMes)}
           comparison={`${dados.diasUteisRestantes} ${t("dias úteis")}`}
         />
-      </CrmKpiGrid>
+      </NexusKpiGrid>
 
       {dados.serie.length > 0 && (
         <CrmSalesChart
@@ -94,8 +97,24 @@ export function DashboardHome(dados: DadosDashboard) {
           metaAc={dados.objetivo ?? 0}
           projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
           previsaoMes={dados.previsaoMes}
+          mes={dados.mes}
+          diaHoje={dados.diaHoje}
+          vendidoMes={dados.vendidoMes}
+          vendidoHoje={dados.vendidoHoje}
+          objetivo={dados.objetivo}
+          pctObjetivo={dados.pctObjetivo}
+          necessarioDia={dados.necessarioDia}
+          diasUteisRestantes={dados.diasUteisRestantes}
         />
       )}
+
+      <ClientesParaAgir />
+
+      <SalesRoadmap />
+
+      <SalesRadar />
+
+      <BrainRecomendacoes />
 
       <section aria-label={t("Acesso rápido")}>
         <h2 className="mb-3 text-sm font-semibold tracking-wide text-foreground">{t("Acesso rápido")}</h2>

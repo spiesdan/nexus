@@ -1,0 +1,357 @@
+# NEXUS 2.0 — Inventário visual classificado (§100, passo 6)
+
+> Gerado em 2026-09-25 na branch `nexus-v2`, medição direta (3 auditorias read-only).
+> A §100 exige: inventário de rotas/páginas/modais/componentes classificado em
+> **NOVO DESIGN / REFATORAR / CONSOLIDAR / REMOVER** ANTES de qualquer fase visual.
+> Régua: `# 14. NOVO DESIGN` (premium, limpo, denso, hierarquia; sem glassmorphism,
+> sombras pesadas, cards gigantes, AI gimmick), `# 15. DESIGN SYSTEM` (bordas 1px,
+> superfícies, tipografia forte, controles compactos, escala única de espaçamento,
+> poucos níveis de elevação), `# 16. MICROANIMAÇÕES`, `# 17. SHELL`,
+> `# 60. RESPONSIVIDADE` (1920→390) e a referência de estilo `DESIGN.md` (raiz).
+
+## 0. Decisões de régua (INFIDO — registradas para não reabrir)
+
+- **Tema: dark-first MANTIDO.** O spec não manda tema claro (§14/§15 falam de
+  estrutura: bordas, densidade, hierarquia — não de inversão de tema), o repo tem
+  a escolha registrada como deliberada (`lib/theme.tsx`: "Dark-first (PROMPT V4)",
+  `app/layout.tsx:286` fixa `data-theme="dark"` no SSR, `THEME_INIT_SCRIPT` só
+  inverte para `light` se o usuário gravou a escolha) e `light` continua
+  disponível pela mesma chave. Inverter default seria inventar regra que o spec
+  não escreveu. A auditoria visual julga a LINGUAGEM (bordas/densidade/tipografia),
+  válida nos dois temas.
+- **`DESIGN.md` é referência de estilo**, não mandato de produto: os valores
+  (Carbon `#181925`, Fog `#e8e8e8`, Lavender `#918df6`, pill 9999px) são o
+  alvo onde o spec não fecha o número.
+- **`DataTableA/B/Old` e `TableNew` NÃO EXISTEM** — alvo citado em
+  `architecture.md:23`/`inventory.md:49` é fantasma (`git ls-files` + histórico = 0).
+  A duplicação real de tabela é outra (ver §3). Corrigir os docs na Fase 0.
+- Contagens corrigidas vs `inventory.md`: `components/` = **276 `.tsx`** (não 336);
+  `shell/` = **12** (não 14); `nexus-ui/` = **19** (não 16); **`motion/` = 0**
+  (o "50 do inventory" é fantasma — não existe `components/motion` nem `framer-motion`).
+
+## 1. Visão geral (142 itens classificados)
+
+| área | NOVO DESIGN | REFATORAR | CONSOLIDAR | REMOVER | total |
+|---|---:|---:|---:|---:|---:|
+| rotas do tenant `app/app/**` | 14 | 55 | 8 | 3* | 80 |
+| fora do tenant (admin/public/onboarding/legal/systemo) | 24 | 23 | 12 | 3 | 62 |
+| **total de rotas/layouts** | **38** | **78** | **20** | **6** | **142** |
+
+\* 3 `REMOVER*` do tenant são stubs de redirect (condicional — ver §2.1).
+Sinais medidos no tenant: 18/80 rotas importam algo de `nexus-ui`; 9 usam
+`NexusPageHeader`; 6 usam `NexusDataTable`; **44** escrevem `<header>/<h1>` à mão;
+5 usam `<table>` crua; 8 arquivos com hex literal; **31 sem estado de erro**;
+19 sem empty; ~26 sem loading; 24 sem nenhum breakpoint; só 6 `loading.tsx` + 2
+`error.tsx` em 80 rotas.
+
+## 2. Rotas classificadas
+
+### 2.1 Tenant — `app/app/**` (80)
+
+| rota | classe | evidência curta |
+|---|---|---|
+| `/app` (Dashboard) | NOVO | centro de comando pós-tag; KPI/gráfico uimaxxing + `BrainRecomendacoes` |
+| `/app/meu-dia` | NOVO | `MeuDiaClient` nexus-ui, estados completos |
+| `/app/ai/decisoes` | NOVO | `DecisoesList` nexus-ui (tabela/empty/error) |
+| `/app/ai/proposals` | NOVO | `ProposalsList` nexus-ui |
+| `/app/carteira` | NOVO | `NexusPageHeader`+`NexusDataTable`+`NexusEmptyState` |
+| `/app/comissoes` | NOVO | `NexusPageHeader`+`NexusDataTable`+estados |
+| `/app/compras` | NOVO | pós-tag; header+DataTable+empty/erro |
+| `/app/compras/[id]` | NOVO | pós-tag; header+estados (tabela ainda shadcn) |
+| `/app/estoque` | NOVO | pós-tag; header+3×DataTable+`nexusToast` |
+| `/app/expedicao` | NOVO | header+`NexusEmptyState`+estados |
+| `/app/faturamento` | NOVO | header+DataTable+estados |
+| `/app/inteligencia` | NOVO | `NexusIntelligence`+loading/error; pendência `CrmPageHeader` |
+| `/app/notas` | NOVO | header nexus; pendência: 4 `Table` shadcn fora do DataTable |
+| `/app/titulos` | REDIRECT→`/financeiro` | decisão do usuário: aba `?aba=titulos`; `_client.tsx` virou `financeiro/_titulos.tsx` (`679b65fb3`) |
+| `/app/financeiro` | CONSOLIDAR ✅ | 4 `<table>` cruas→`ui/table`+`NexusDataTable` (erros/empty por aba), `NexusPageHeader`, 6 abas com Títulos (`679b65fb3`) |
+| `/app/kanban` | CONSOLIDAR | é lista de funis; duplica `/settings/tenant/pipelines` |
+| `/app/metrics` | REDIRECT→`/indicadores` | fusão na 4g: virou a seção `#desempenho` (`f13ca808d`); rota mantida como redirect com `#` |
+| `/app/recuperacao` | REDIRECT→`/radar` | fusão na 4f: virou a seção `#radar-recuperacao` (`b60fe1a1f`); rota mantida como redirect com `#` |
+| `/app/inbox/[id]` | CONSOLIDAR | rota-resolver (push) — **manter**, não é UI |
+| `/app/leads/[id]` | CONSOLIDAR | rota-resolver (permalinks radar/webhooks) — **manter** |
+| `/app/settings/canal-oficial` | REMOVER* | stub redirect → `connections?aba=oficial` |
+| `/app/settings/templates` | REMOVER* | stub redirect → `connections?sub=templates` |
+| `/app/settings/tenant/whatsapp` | REMOVER* | stub redirect → `/app/connections` |
+| `/app/agenda`, `/app/ai` (hub), `/app/ai/agents`(3), `/app/ai/cases`, `/app/ai/controle`, `/app/ai/credentials`, `/app/ai/evolution`†, `/app/ai/followups`(3), `/app/ai/inbox`, `/app/ai/knowledge/sources`, `/app/ai/memory`, `/app/ai/providers`, `/app/ai/routers`(2), `/app/ai/runs`, `/app/ai/skills`, `/app/ai/usage`, `/app/audit`, `/app/connections`, `/app/contacts`, `/app/contacts/[id]`, `/app/expedicao/[id]`, `/app/inbox`, `/app/indicadores`, `/app/integrations/nuvemshop`, `/app/lgpd/requests`(2), `/app/pedidos`, `/app/pedidos/imprimir`, `/app/pedidos/novo`, `/app/pedidos/[id]`, `/app/pipelines/[id]`, `/app/products`, `/app/prospeccao`, `/app/radar`, `/app/relatorios`, `/app/settings`(hub), `/app/settings/api-tokens`, `/app/settings/atendimento`, `/app/settings/atualizacao`, `/app/settings/billing`, `/app/settings/marca`, `/app/settings/notifications`, `/app/settings/profile`, `/app/settings/security`, `/app/settings/tenant`, `/app/settings/tenant/agenda`, `/app/settings/tenant/pipelines`†, `/app/team`(2), `/app/templates`, `/app/tarefas`, `/app/webhooks` | REFATORAR | († = ver §4) |
+
+\* os 3 stubs só saem se aceitarmos 404 em links salvos (o código documenta essa
+troca). Não remover sem decidir.
+
+### 2.2 Fora do tenant (62)
+
+| área | NOVO | REFATORAR | CONSOLIDAR | REMOVER |
+|---|---|---|---|---|
+| layouts (11) | `(public)`, `legal` | `app/layout` (dark-first mantido §0), `app/app/layout` (falta Breadcrumb/Drawer), `admin/(protected)`, `admin/inbox`, `admin/tenants/[id]`, `onboarding` | `app/design` (4ª fonte de tokens) | `app/ai/layout` (wrapper morto), `admin/layout` (`<>{children}</>`) |
+| admin (21) | dashboard? não — ver col. | `admin/dashboard`, `audit/[entryId]`, `google`, `inbox`(2), `incidents/[id]`, `tenants/[id]`, `health`, `users/[id]` | `audit` (duplica `/app/audit`), `lgpd`(2, duplica tenant), `marca` (duplica `settings/marca`), `forbidden` (clone de `/403`) | — |
+| public (6) | `forgot`, `reset`, `signup` | `login` (4 blocos alerta copy-paste), `mfa`, `recovery` (não usam RHF+Zod como os irmãos) | — | — |
+| onboarding (9) | 7 | `setup-ai`, `funil` (wizards próprios; `NexusSteps` não usado) | — | — |
+| sistema/erros (9) | `error.tsx`×2, `not-found`… | `global-error` | `403`/`404`/`500`/`503`/`account-suspended` = **6 clones** → 1 `StatusPage` | — |
+| extras (4) | — | `team/accept-invite` (0 `components/ui`, botão à mão), `vitrine-agenda` | `app/design` galeria | `app/(admin)/` (órfão só README) |
+
+Detalhe linha-a-linha completo: ver histórico das 3 auditorias (tabelas com
+arquivo+evidência) — reproduzir aqui duplicaria; este documento é a norma.
+
+## 3. Componentes — duplicação real e fonte de verdade por categoria
+
+**Tabelas (a duplicação que EXISTE):**
+- Primitiva: `components/ui/table.tsx` (35 importadores) — **MANTER**.
+- Container de estados: `nexus-ui/data/NexusDataTable` (6 páginas) — **MANTER/evoluir**.
+- Comportamento (sort `aria-sort` + seleção em massa §22): `contacts/ContactsTable`
+  (único) — **extrair hooks** `useTableSort`/`useRowSelection`.
+- **7 tabelas admin = 1.412 linhas** do mesmo padrão (skeleton+empty+badge+load-more)
+  → **`AdminDataTable` único** ✅ Fase 3b (`ab0545095`) + variantes de status em
+  `ui/badge` (badges agrupados em `admin/incidents/badges` e
+  `admin/tenants/status-badge`).
+- **26 wrappers de página** reinventam o entorno da tabela sobre `ui/table`
+  (pior: `pedidos/_client` 966, `prospeccao/_empresas` 852) → migrar a
+  `NexusDataTable` (ordem crescente de tamanho).
+- **6 `<table>` crua**: `financeiro`(8 ocorrências), `indicadores/_indicadores`,
+  `ai/agents/[id]/VersionDiff`, `settings/notifications` → `ui/table`/`NexusDataTable`;
+  exceções documentadas: `pedidos/imprimir` (visual de impressão) e
+  `design/SectionTokens` (galeria).
+
+**Diálogos/estados:**
+- `NexusFormDialog` (62 linhas) com **0 uso** vs **55 `DialogContent`** em domínio →
+  adotar (começar por contacts, ai, inbox, kanban, admin, webhooks).
+- `NexusConfirmDialog` **ADOPTADO na Fase 3c** (`eafb9c071`): os 7 `window.confirm`
+  + 13 dos 17 `AlertDialogContent` de domínio viraram `NexusConfirmDialog` (trigger)
+  ou `useConfirmar()` (`ConfirmacaoProvider` em `app/app/layout.tsx`); e a fusão
+  **Fase 3d** (`7340d3e54`) fundiu `SuspendDialog`+`ReactivateDialog` em
+  `TenantReasonDialog` (sobre o `NexusConfirmDialog` + `confirmDisabled`, que
+  herdou a régua dos 10 caracteres). Restam 2 `AlertDialogContent` no FORM —
+  `ResolveIncidentDialog` e `ApproveButton` (3 no total, contando a própria
+  `NexusConfirmDialog`).
+- **4 overlays manuais** (`fixed inset-0 z-50`): `prospeccao/_empresas` →
+  `ui/sheet` (Fase 2b); `prospeccao/_importar-arquivo`, `auth/MfaEnrollModal`,
+  `GradeNotas` → `ui/dialog` (**Fase 3e**, `41173e58d` — com o split
+  obrigatório/escolha do MFA e os 5 `confirm(` globais restantes na
+  `useConfirmar()`). Resíduo: só os primitivos `ui/{dialog,alert-dialog,sheet}`.
+- Empty: **2 APIs ativas** (`components/empty` 20 importadores × `NexusEmptyState` 12)
+  → declarar SoR única (alias).
+- Toast: era 3 APIs (`sonner` cru 128 arquivos, `nexusToast` 9, `ApiErrorToast`) →
+  **`nexusToast` única porta ✅ (Fase 3f, `6ed0d5670`)**: a porta ganhou toda a
+  superfície usada (chamada `toast(...)`, `success/error/warning/info/loading/
+  message/dismiss`, repasse transparente de 1 ou 2 args e segundo arg string→
+  `{description}`), os 121 arquivos prod importam `nexusToast as toast` (411
+  call sites intactos) e `showApiError` segue como MAPA de código→tom sobre a
+  porta. Exceções: `lib/notifications/deliver.ts` (runtime de servidor, fica
+  com `sonner`) e `app/layout.tsx` (`<Toaster/>` = infraestrutura); os testes
+  seguem mockando `sonner` — o mock intercepta via porta.
+- Skeletons locais (8+) → `NexusTableSkeleton`.
+- `NexusLoading`/`NexusAiSources`/`NexusAiContextMeter`/`NexusGraphCanvas`:
+  0 uso prod → usar ou apagar (decidir por categoria).
+
+**Botões/inputs/tabs/filtros/KPI/charts:**
+- `ui/gradient-button`, `orb-button`, `pill-button`, `typing-field`, `select-menu`
+  + ~12 botões `uimaxxing` = só servem `uimaxxing` morto → remover junto.
+- **Lacuna: `FormField`** (140 arquivos com `<Label>` solto, sem campo canônico)
+  → CRIAR ✅ (Fase 5e `3fbd91b21`: `nexus-ui/forms/form-field.tsx` —
+  rótulo + controle + ajuda + recusa com `id`/`aria-describedby`/
+  `aria-invalid` injetados por clone e `role="alert"`; os 7 `_form.tsx` de
+  configuração convertidos, ~30 campos; os 130 arquivos restantes
+  — incluindo os 2 campos de cor com seletor composto — seguem fora por
+  decisão de escopo; ver §5.6).
+- Tabs: 6 `role="tab"` manuais + `_tab-nav` locais → `ui/tabs` ✅ (Fase 5c
+  `c370b8c8a`, ver §5.6).
+- Filtros: **5 FilterBar distintos** (1.290 linhas) → consolidar em
+  `components/filters/FilterBar`.
+- Headers: **3** (`layout/PageHeader` 3, `NexusPageHeader` 9, `CrmPageHeader` 5 —
+  este último é o que o **shell/NavHub** importa) → `NexusPageHeader` único; mover
+  NavHub encerra a dependência shell→uimaxxing.
+- KPI: 4 variantes (`KPICards`, `crm-kpi`, 3 `StatCard` locais) → `NexusKpi` sobre
+  `crm-kpi` (único já em tela) ✅ (Fase 5d `05857124a`: `nexus-kpi.tsx` com
+  label/value/hint/variation/trend/comparison/period/icon/tone; as 5
+  superfícies — home, financeiro, dashboard admin, AI usage, AI evolution,
+  TenantOverview — convertem; `crm-kpi.tsx` apagado; valores `number` saem
+  em pt-BR).
+- Charts: 5 `uimaxxing` mortos + 2 irmãos (`ai/UsageChart` × `admin/usage/UsageCharts`)
+  → fundir; criar `NexusChart` (wrapper recharts) ✅ (Fase 5d `05857124a`:
+  os 5 `uimaxxing` morreram na Fase 1; `nexus-ui/charts/nexus-chart.tsx`
+  guardou o literal dos irmãos — `ChartCard`, `ChartEmpty`, tooltip, eixo/
+  grid/margin, `formatTickDia` com parse UTC único, `formatNumero`/
+  `formatTokens`, catálogo `CORES_DA_SERIE` — consumido pelos 2 irmãos +
+  tooltip do `GraficoDiario`; os gráficos de domínio (indicadores, radar,
+  home-secoes) seguem com vocabulário próprio por decisão por categoria).
+- **`uimaxxing/` = ~60 arquivos sem importador** (inclui `markets-table` 322,
+  `collateral-table` 109, os 5 charts) → remover; sobrar `crm/*` (6, em uso) +
+  loaders → mover para `nexus-ui/crm/`.
+
+**Barril `nexus-ui/index.ts`:** 0 imports pelo barril (todos caminho fundo) — ou o
+repo passa a importar `@/components/nexus-ui` ou o barril mente sobre a própria regra.
+
+## 4. Shell §17 — status medido
+
+| peça §17 | status | ação |
+|---|---|---|
+| Sidebar | ✅ (`shell/Sidebar` + `MobileSidebar`, §19 fechado) | — |
+| Topbar | ✅ no tenant (`shell/TopBar`) e no admin (Fase 2e: `AdminShell` com busca/⌘K/sino/UserMenu) | — |
+| Command Palette | ✅ (`CommandPalette` via `SearchTrigger`; Fase 2d: seções de entidade + ponte para `/app/busca`) | — |
+| Global Search | ✅ Fase 2d: 6 entidades em `lib/busca/global.ts` (conversas, clientes, pedidos, leads, produtos, títulos) + rota `/app/busca?q=` | — |
+| Notifications | ✅ `NotificationCenter` (Fase 2c) | — |
+| Contextual Drawer | ✅ `shell/ContextualDrawer` no `AppShell` (Fase 2b) | — |
+| Breadcrumb | ✅ `shell/Breadcrumb` sobre `lib/navigation/registry.ts` (Fase 2a) | — |
+| User Menu | ✅ (`UserMenu`, `TenantSwitcher`) | — |
+
+Docs a corrigir: `design.md:8`/`architecture.md:18` citam `AnimatedAppSidebar`
+(inexistente); `routes.md` cita `/design/premium` (inexistente).
+
+## 5. Ordem de execução do passo 6 (fuses com prioridade das auditorias)
+
+1. **Fase 0 — corrigir docs**: este arquivo + `architecture.md`/`inventory.md`
+   (alvo fantasma `DataTable*`, contagens `motion/shell/nexus-ui`).
+2. **Fase 1 — morte primeiro** (0 risco, valida com typecheck/lint):
+   apagar `uimaxxing` sem importador (~60), primitivos `ui/` órfãos
+   (`gradient-button`, `orb-button`, `pill-button`, `typing-field`,
+   `select-menu`, `scroll-area`, `sonner`?), layouts mortos (`app/ai/layout`,
+   `admin/layout`, `app/(admin)/`), `motion` fantasma se existir.
+3. **Fase 2 — shell §17**: `Breadcrumb` (registry) + `ContextualDrawer` no
+   `AppShell` + `NotificationCenter` (AlertsBell→painel) + Global Search estendida.
+4. **Fase 3 — consolidações de alto alavanco ✅ FECHADA**: `StatusPage` 6→1 ✅
+   (`37b35a029`); `AdminDataTable` 7→1 + badges de status ✅ (`ab0545095`);
+   `NexusConfirmDialog` ✅ 7 `window.confirm` + 13 AlertDialog (`eafb9c071`);
+   `SuspendDialog`+`ReactivateDialog`→`TenantReasonDialog` ✅ (`7340d3e54`);
+   overlays manuais→`ui/dialog` ✅ + 5 `confirm(` globais→`useConfirmar` ✅
+   (`41173e58d`); toasts→`nexusToast` ✅ (`6ed0d5670`).
+5. **Fase 4 — refatoração por módulo (prioridade A) ✅ FECHADA (4a-4m)**: ✅ `/contacts` (lista)
+   (`e062aa3b5`: `NexusPageHeader` + `FilterBar`) → ✅ `/pedidos`
+   (`921435fe8`: hex Mercos→tokens + `NexusPageHeader`) → ✅ `360`
+   (`3612818d7`: `Cabecalho360` no `NexusPageHeader`) → ✅ `/inbox`
+    (`0228f8c9f`: hexes soltos → `whatsapp-theme.ts` (tema WhatsApp mantido de
+    propósito, decisão registrada) + `JanelaFechadaAviso` `<select>`→`ui/select`;
+    sem página-header por desenho — three-pane full-viewport) → ✅ `/financeiro`
+    (`679b65fb3`: `NexusPageHeader` + 4 `<table>` cruas→`NexusDataTable`,
+    `/titulos` virou aba com redirect legado) → ✅ `/radar` (`b60fe1a1f`:
+    `NexusPageHeader`, `/recuperacao` virou a 4ª seção com redirect `#`,
+    gráficos em tokens de tema) → ✅ `/indicadores` (`f13ca808d`:
+    `NexusPageHeader`, ranking em `ui/table`, `/metrics` virou a seção
+    `#desempenho` com redirect) → ✅ `/prospeccao` (`bd4635147`:
+    `NexusPageHeader`, estados vazios/erro/loading canônicos nas 6 abas;
+    hexes do mapa mantidos por serem paleta de dados) → ✅ funis
+    (`65ec570f3`: `NexusPageHeader` em `/app/kanban` e
+    `/settings/tenant/pipelines`, loading/erro/empty canônicos; ícone
+    decorativo do kanban caiu com o header; 3 specs livres de
+    `execFileSync`) → ✅ `/agenda` (`66aa9927b`: `NexusPageHeader` com o
+    bloco de ações no slot canônico — "Hoje", motivo-condicional e
+    "Novo agendamento" intactos; empty/loading/erro já canônicos; 7 specs
+    livres de `execFileSync`) → ✅ `pedidos/[id]`/`pedidos/novo`
+    (`badee8467`: número como title + ações no slot + pill em linha
+    própria no detalhe; h1 copiado → componente no novo) → ✅ `/webhooks`
+    (`4262e415b`: `NexusPageHeader` + `NexusErrorState` com retry nas
+    abas Sources/Rules/Activity; empties ricos de produto mantidos) → ✅
+    admin (`f681effb4`: os 16 cabeçalhos manuscritos de
+    `app/admin/(protected)/**` → `NexusPageHeader` — listas, detalhes e
+    formulários; 4 estados de erro bespoke → `NexusErrorState` com retry;
+    erros que já tinham ação própria, three-pane do inbox e rotas de
+    fusão intactos).
+6. **Fase 5 — superfície compartilhada EM CURSO**: ✅ `NexusPageHeader` único
+   ✅ (`0a9409f58`: mata `layout/PageHeader`+`CrmPageHeader`, markup absorvido,
+   `headingLevel 1|2` — h1 único por página, 5 sites convertidos: products,
+   relatorios, tarefas, inteligencia, NavHub; junto saiu o fix do React #185
+   que derrubava `/app/inteligencia` — loop `setNodes` do ReactFlow por
+   referência nova no setter da seleção, com regressão permanente
+   `inteligencia-carrega.spec.ts`) · ✅ FilterBar única nas 5 toolbars
+   caseiras (`fd6a18d9e`: compras pedidos+fornecedores, estoque saldos+
+   movimentos, carteira → `FilterBar`/`FilterPrimary`/`FilterSearch`/
+   `FilterSelect`/`FilterActions` com copy intacta; regressão permanente
+    `filterbar-unica-nas-listas.spec.ts`; as barras nomeadas de DOMÍNIO —
+    kanban, inbox, admin audit/tenants, usage, agents — seguem decisão por
+    categoria) · ✅ abas canônicas nas 7 telas (`c370b8c8a`: os 6
+    `role="tab"` manuais — produtos, radar, histórico da agenda, tipo de
+    pessoa nos 2 dialogs de contato, papéis do agente — e a sub-nav do
+    detalhe de tenant passaram a montar `ui/tabs` com copy/wiring/testids
+    intactos; `_tab-nav` = `TabsTrigger asChild` sobre `Link`, de modo que
+    navegação segue sendo URL — href, ctrl+click e botão voltar; helper
+    `loginComoDono` + `execNpx` em 2 specs; regressão permanente
+    `abas-canonicas-nas-telas.spec.ts` em `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-tabs-unicas/1-produtos-abas-desktop.png`,
+    `evidence/fase5-tabs-unicas/2-radar-categorias-desktop.png`,
+    `evidence/fase5-tabs-unicas/3-agenda-historico-desktop.png`,
+    `evidence/fase5-tabs-unicas/4-dialog-tipo-pessoa-desktop.png`,
+    `evidence/fase5-tabs-unicas/5-agente-papeis-desktop.png`,
+    `evidence/fase5-tabs-unicas/6-admin-tenant-abas-desktop.png`) · ✅ KPI
+    único + primitivos de chart (`05857124a`: `NexusKpi` sobre o `CrmKpi`
+    absorve `KPICards` + os 3 `StatCard` locais — copy intacta, `value`
+    number em pt-BR; `nexus-ui/charts/nexus-chart.tsx` guarda o literal dos
+    2 irmãos `UsageChart`/`UsageCharts` + o tooltip do `GraficoDiario`;
+    regressão permanente `kpi-e-charts-canonicos.spec.ts` em
+    `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-kpi-charts/1-home-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/2-financeiro-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/3-admin-dashboard-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/4-ai-usage-kpi-chart-desktop.png`,
+    `evidence/fase5-kpi-charts/5-ai-evolution-kpi-desktop.png`,
+    `evidence/fase5-kpi-charts/6-admin-usage-chart-desktop.png`,
+    `evidence/fase5-kpi-charts/7-tenant-volume-kpi-desktop.png`); ✅
+    `FormField` canônico (`3fbd91b21`: `nexus-ui/forms/form-field.tsx`
+    fecha a lacuna — rótulo+controle+ajuda+recusa com
+    `id`/`aria-describedby`/`aria-invalid` por clone e `role="alert"`;
+    os 7 `_form.tsx` de configuração convertidos, ~30 campos, copy e
+    testids intactos; os campos de cor com seletor composto ficam com
+    markup próprio; regressão permanente `form-field-canonico.spec.ts`
+    em `SPECS_PARTE_2`; evidência:
+    `evidence/fase5-formfield/1-admin-marca-desktop.png`,
+    `evidence/fase5-formfield/2-admin-tenants-new-desktop.png`,
+    `evidence/fase5-formfield/3-settings-profile-desktop.png`,
+    `evidence/fase5-formfield/4-settings-tenant-desktop.png`,
+    `evidence/fase5-formfield/5-settings-atendimento-desktop.png`,
+    `evidence/fase5-formfield/6-settings-marca-desktop.png`) → **Fase 5
+    COMPLETA (5a-5e)**.
+7. **Fase 6 — responsividade §60 + auditoria §100 ✅ COMPLETA (6a+6b)**:
+   ✅ 6a responsividade fechada (`b12004435`) — spec permanente
+   `responsividade-nas-rotas.spec.ts` (em `SPECS_PARTE_2`): as 5 telas
+   mobile-priority em 390 com evidência `evidence/fase6-mobile/1-meu-dia-390.png`,
+   `evidence/fase6-mobile/2-clientes-390.png`,
+   `evidence/fase6-mobile/3-inbox-390.png`,
+   `evidence/fase6-mobile/4-pedidos-390.png`,
+   `evidence/fase6-mobile/5-radar-390.png`, + varredura das 69 rotas
+   estáticas de `/app` em 390/430/768 com régua de `scrollWidth`,
+   0px de overflow em 207 combos; único defeito: célula "Atualizar/Limpar
+   filtros" do Radar sem `flex-wrap` vazava em 390 → corrigido; "Rotas"
+   do §60 não tem rota no produto — não inventada.
+   ✅ 6b auditoria de aceite (`6b3732ee0` + reforço `8935da608`) — spec
+   permanente `auditoria-aceite-11-itens.spec.ts` (em `SPECS_PARTE_2`)
+   varre as 106 rotas estáticas (69 tenant + 14 admin + 23 públicas) em
+   1280 com régua DOM (navegação, assinatura de `ui/table`, hex inline,
+   transição >400ms, glass, estado-erro, família de fonte, tamanho de
+   título): **VIOLACOES(0) · FAMILIAS(1) · títulos ≤3 tamanhos**;
+   gate de fonte `tests/unit/auditoria-aceite-100.test.ts` (8 testes)
+   verde. Achados corrigidos: últimas 2 tabelas cruas → `ui/table`
+   (`app/app/settings/notifications/_client.tsx`,
+   `app/app/ai/agents/[id]/_components/VersionDiff.tsx`) e título
+   `text-xl` → 24px canônico (`app/app/integrations/nuvemshop/page.tsx`);
+   exceções declaradas na spec (editor de cor da marca, `/admin/forbidden`,
+   impressão/galeria). Evidência:
+   `evidence/fase6b-aceite/1-novo-design-meu-dia.png`,
+   `evidence/fase6b-aceite/2-tabela-canonica-notifications.png`,
+   `evidence/fase6b-aceite/3-navegacao-shell.png`,
+   `evidence/fase6b-aceite/4-tabelas-financeiro.png`,
+   `evidence/fase6b-aceite/5-formularios-tenant.png`,
+   `evidence/fase6b-aceite/6-estados-prospeccao.png`,
+   `evidence/fase6b-aceite/7-tipografia-clientes.png`,
+   `evidence/fase6b-aceite/8-cores-radar.png`
+   → **PASSO 6 FECHADO**.
+
+## 6. Checklist de aceite §100 — comprovação item a item
+
+Critério do spec: "executar auditoria visual de todas as rotas existentes
+e comprovar" (linhas 3192-3206 do spec). Como cada um dos 11 itens foi
+provado neste passo:
+
+| # | item do checklist | comprovação |
+|---|---|---|
+| 1 | nenhuma tela importante usa visual legado | gate `auditoria-aceite-100.test.ts`: 0 importações da Fase 1 (uimaxxing/gradient/orb/pill/typing-field/select-menu), arquivos apagados, `window.confirm`/`sonner` só nas portas documentadas; DOM: 0 glass, 0 cor inline fora do editor de cor |
+| 2 | nenhuma rota importante usa componentes antigos sem justificativa | as últimas 2 tabelas cruas convertidas na 6b (`notifications`, `VersionDiff`); `<table>` crua só sob exceção declarada (impressão, galeria); allowlists do gate = exceções do inventário §3 |
+| 3 | navegação é consistente | varredura DOM: `aside`+`nav` do shell em todas as 69 tenant + 13 admin (exceção justificada: `/admin/forbidden`, fora do `(protected)` por loop do guard, documentado no `admin/layout.tsx`); evidência `evidence/fase6b-aceite/3-navegacao-shell.png` |
+| 4 | tabelas são consistentes | varredura DOM: todo `<table>` em `main` com assinatura `ui/table` (207 combos da 6a + 106 da 6b); evidência `evidence/fase6b-aceite/2-tabela-canonica-notifications.png`, `evidence/fase6b-aceite/4-tabelas-financeiro.png` |
+| 5 | formulários são consistentes | `FormField` canônico nas 7 telas de configuração (Fase 5e, escopo registrado §5 item 6); evidência `evidence/fase6b-aceite/5-formularios-tenant.png` |
+| 6 | estados são consistentes | varredura recusa rota que renderizou "Algo deu errado"/"Erro ao carregar" (0 em 106); estados canônicos (`NexusErrorState`/`NexusEmptyState`/`NexusTableSkeleton`) adotados nas telas das fases 4-5 (registro por fase no §5); evidência `evidence/fase6b-aceite/6-estados-prospeccao.png` |
+| 7 | mobile foi tratado | Fase 6a: 5 telas mobile-priority + 69 rotas × 3 larguras, 0 overflow em 207 combos; evidência `evidence/fase6-mobile/` |
+| 8 | animações seguem o mesmo padrão | varredura DOM: 0 transição >400ms no que o usuário toca em 106 rotas; gate de fonte: `animate-` só do catálogo Tailwind (keyframes curtos do assistente declarados como exceção) |
+| 9 | tipografia é consistente | varredura DOM: 1 família (`Geist...`) em 106 rotas e títulos em ≤3 tamanhos (24px canônico, 22px da galeria `/design`, rota sem título por desenho); h1 do nuvemshop corrigido de 20px na 6b; `text-[10px]` = assinatura de cabeçalho de tabela do próprio `ui/table` |
+| 10 | espaçamento é consistente | gate de fonte: 0 valor arbitrário de espaçamento (`p-[`/`m-[`/`gap-[`…) — carve-out único: `pb-[env(safe-area-inset-bottom)]` do `MobileDock` (inset do iOS, não escolha de escala) |
+| 11 | cores são consistentes | gate de fonte: 0 hex em classe (`bg-#`/`text-#`…); varredura DOM: 0 hex em `style` inline fora do editor de cor da marca (onde o hex é o dado); evidência `evidence/fase6b-aceite/8-cores-radar.png` |
+
+Guardas por fase: `pnpm typecheck` + `pnpm lint` + `pnpm test:unit` (nexus-ui,
+command-palette, sidebar-grupos, navegação) + e2e alvo; screenshots em
+`evidence/` quando a tela mudar de visual.

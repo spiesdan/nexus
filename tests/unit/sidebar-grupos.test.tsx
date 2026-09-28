@@ -1,9 +1,12 @@
 /**
- * Sidebar agrupado por objetivo. O que estes testes protegem:
+ * Sidebar agrupado por objetivo (NEXUS §19). O que estes testes protegem:
  *
  *  - a hierarquia existe (o usuário reclamou de 17 itens no mesmo peso visual);
- *  - Funis é alcançável sem passar por Configurações — o achado que originou tudo;
- *  - agrupar não criou cabeçalho órfão (grupo cujos filhos a permissão filtrou);
+ *  - a taxonomia é a da §19: oito títulos, na ordem declarada, com o orçamento
+ *    da dobra (18 links roláveis) — o uso diário (Funis) segue sem passar por
+ *    Configurações; a configuração de colunas voltou para o hub por medição;
+ *  - agrupar não criou cabeçalho órfão (grupo sem porta some; grupo de hub
+ *    sobrevive sem item, com o link do hub);
  *  - colapsado não renderiza título nenhum: 6 rótulos em 64px seria ilegível.
  *
  * A regra de quem-vê-o-quê é do registro e está coberta em
@@ -59,35 +62,53 @@ describe("Sidebar agrupado", () => {
       .getAllByRole("heading")
       .map((el) => el.textContent?.trim())
       .filter(Boolean);
-    // Organização não tem título aqui: seu hub (Configurações) vive no rodapé
-    // fixo, fora da área que rola — medido, ele caía fora da dobra até em 1080px.
-    expect(titulos).toEqual(["Atendimento", "CRM", "Agente de IA", "Canais", "Análise"]);
+    // Configurações não tem título aqui: seu hub vive no rodapé fixo, fora da
+    // área que rola — medido, ele caía fora da dobra até em 1080px. Os oito
+    // títulos abaixo são o orçamento da §19 (18 links + 8 títulos = 744px de
+    // 763px em 1280×900; a contagem também é guardada em
+    // `navegacao-registry.test.ts`).
+    expect(titulos).toEqual([
+      "Visão geral",
+      "Vendas",
+      "Atendimento",
+      "Inteligência",
+      "Operação",
+      "Financeiro",
+      "Fiscal",
+      "Equipe",
+    ]);
   });
 
-  it("leva às Etapas do funil sem passar por Configurações", () => {
+  it("Etapas do funil fica atrás do hub de Configurações — §19, dobra medida", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // O rótulo mudou: "Funis" passou a ser a LISTA (/app/kanban) e esta tela,
-    // que configura as colunas, virou "Etapas do funil". Antes as duas
-    // disputavam o mesmo nome no mesmo grupo do menu.
-    const etapas = screen.getByRole("link", { name: "Etapas do funil" });
-    expect(etapas).toHaveAttribute("href", "/app/settings/tenant/pipelines");
+    // Era item de CRM ("sem passar por Configurações") e a §19 não a lista.
+    // A medição (18 links/8 títulos) não a comportava; a porta agora é o
+    // rodapé fixo → hub → card. O uso — FUNIS — continua aqui embaixo.
+    expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
   });
 
   it("e os dois itens de funil não disputam o mesmo nome", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
+    // Só "Funis" está no menu agora; "Etapas do funil" mora no hub. O nome
+    // disputado acabou por construção — o assert fica como registro disso.
     expect(screen.getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
+    expect(screen.queryByRole("link", { name: "Etapas do funil" })).toBeNull();
   });
 
-  it("desenterra Nuvemshop e Audit Log", () => {
+  it("as portas novas da §19 estão no menu, e as recolhidas saíram", () => {
     comoPapel("admin");
     render(<Sidebar collapsed={false} />);
-    // Nuvemshop não tinha link nenhum no app; Audit Log só existia via card em
-    // Configurações. Canal oficial não está aqui de propósito: virou aba de
-    // Conexões no PR #105, e Conexões é a porta.
-    expect(screen.getByRole("link", { name: /Nuvemshop/ })).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Audit Log/ })).toBeTruthy();
+    // Entra: Estoque/Compras (OPERACAO) e Meu Dia (VISÃO GERAL), que a §19
+    // lista. Sai: Nuvemshop e Audit Log, recolhidos pela dobra medida — as
+    // portas deles são o hub de Configurações (Nuvemshop, na seção de
+    // canais) e o ⌘K (Audit).
+    expect(screen.getByRole("link", { name: /Estoque/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Compras/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Meu Dia/ })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /Nuvemshop/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Audit Log/ })).toBeNull();
   });
 
   it("Configurações fica no rodapé, nunca dependendo de scroll", () => {
@@ -101,12 +122,17 @@ describe("Sidebar agrupado", () => {
   });
 
   it("não deixa cabeçalho órfão quando a permissão esvazia o grupo", () => {
-    // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho.
+    // Para um agent, INTELIGÊNCIA não tem nenhum item rolável (§19: 100% hub) —
+    // o título só pode existir junto da porta, o link "Ver tudo em IA". Grupo
+    // sem porta some; grupo com porta sobrevive sem item. "Canais" nem existe
+    // mais (dissolvido pela §19) — o assert fica como guarda do nome velho.
     comoPapel("agent");
     render(<Sidebar collapsed={false} />);
     const titulos = screen.getAllByRole("heading").map((el) => el.textContent?.trim());
     expect(titulos).not.toContain("Canais");
     expect(titulos).toContain("Atendimento");
+    expect(titulos).toContain("Inteligência");
+    expect(screen.getByRole("link", { name: /Ver tudo em IA/ })).toHaveAttribute("href", "/app/ai");
   });
 
   it("oferece o hub dos grupos que têm um", () => {

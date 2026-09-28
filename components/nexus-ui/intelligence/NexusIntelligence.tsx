@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -24,6 +24,7 @@ import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState"
 import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { BrainRecomendacoes } from "./BrainRecomendacoes";
 
 /**
  * @xyflow/react só entra nesta rota (`ssr: false` — fora do bundle principal,
@@ -93,6 +94,19 @@ export function NexusIntelligence() {
   const t = useT();
   const { graph, radarRows, isLoading, isError, refetch } = useNexusIntelligence();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  /**
+   * Guarda de conteúdo no setter da seleção. O `onSelectionChange` do ReactFlow
+   * emite de novo a cada identidade nova de callback (o `aoSelecionar` é
+   * inline), e `setSelectedIds(mapped)` com o MESMO conteúdo mas referência
+   * nova re-renderizava → `nos` novo → `setNodes` no store → nova emissão →
+   * loop infinito (#185, "Maximum update depth exceeded"). Mantendo a
+   * referência quando o conteúdo não muda, o React faz bailout e o ciclo morre.
+   */
+  const selecionarNos = useCallback((ids: string[]) => {
+    setSelectedIds((atual) =>
+      atual.length === ids.length && atual.every((id, i) => id === ids[i]) ? atual : ids,
+    );
+  }, []);
   const [busyTask, setBusyTask] = useState(false);
 
   const porId = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph]);
@@ -180,6 +194,7 @@ export function NexusIntelligence() {
     return (
       <div className="space-y-4">
         <NexusPageHeader
+          headingLevel={2}
           title={t("Inteligência")}
           subtitle={t("O grafo vivo do negócio — cada nó é um dado real.")}
         />
@@ -192,7 +207,7 @@ export function NexusIntelligence() {
   if (isError) {
     return (
       <div className="space-y-4">
-        <NexusPageHeader title={t("Inteligência")} />
+        <NexusPageHeader headingLevel={2} title={t("Inteligência")} />
         <NexusErrorState
           title={t("Inteligência indisponível")}
           description={t("Não foi possível ler as fontes (radar, riscos, IA). Tente novamente.")}
@@ -206,6 +221,7 @@ export function NexusIntelligence() {
     return (
       <div className="space-y-4">
         <NexusPageHeader
+          headingLevel={2}
           title={t("Inteligência")}
           subtitle={t("O grafo vivo do negócio — cada nó é um dado real.")}
         />
@@ -222,6 +238,7 @@ export function NexusIntelligence() {
   return (
     <div className="space-y-6">
       <NexusPageHeader
+        headingLevel={2}
         title={t("Inteligência")}
         subtitle={t("Selecione nós para montar o contexto — filtrar, explicar, criar tarefas.")}
         actions={
@@ -237,10 +254,11 @@ export function NexusIntelligence() {
           </>
         }
       />
+      <BrainRecomendacoes />
 
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <div className="min-w-0">
-          <Canvas graph={graph} selectedIds={selectedIds} onSelect={setSelectedIds} />
+          <Canvas graph={graph} selectedIds={selectedIds} onSelect={selecionarNos} />
           <p className="mt-2 text-xs text-muted-foreground">
             {t(
               "Clique para selecionar · Shift+clique para combinar · tracejado = derivado por regra.",

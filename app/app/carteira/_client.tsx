@@ -6,6 +6,7 @@ import Link from "next/link";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
 import { UsersThree } from "@/lib/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -150,17 +151,17 @@ export function CarteiraClient({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">{t("Buscar")}</span>
-          <input
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSearch
+            id="busca-carteira"
+            label={t("Buscar")}
             value={busca}
-            onChange={(e) => setBusca(e.target.value)}
+            onChange={setBusca}
             placeholder={t("Nome do cliente…")}
-            className="h-9 rounded-lg border bg-background px-3"
           />
-        </label>
-      </div>
+        </FilterPrimary>
+      </FilterBar>
 
       <NexusDataTable<LinhaCarteira>
         state={visiveis.length === 0 ? "empty" : "ready"}

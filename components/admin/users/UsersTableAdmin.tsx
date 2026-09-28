@@ -6,20 +6,14 @@ import type { Locale } from "date-fns";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/empty";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Users } from "@/lib/ui/icons";
 import type { AdminUserRow } from "@/hooks/useAdminUsers";
 import { useT } from "@/hooks/i18n/useT";
+import {
+  AdminDataTable,
+  AdminDataTableSkeleton,
+  type ColunaAdmin,
+} from "@/components/admin/AdminDataTable";
 
 // ---------------------------------------------------------------------------
 // Role badge
@@ -68,37 +62,88 @@ function relativeDate(iso: string | null, locale: Locale): string {
 }
 
 // ---------------------------------------------------------------------------
+// Colunas
+// ---------------------------------------------------------------------------
+
+function colunasAdmin(
+  t: (texto: string) => string,
+  locale: Locale | undefined,
+): ColunaAdmin<AdminUserRow>[] {
+  return [
+    {
+      id: "email",
+      cabecalho: "Email",
+      classeCelula: "font-mono text-xs",
+      celula: (row) => row.email ?? "—",
+    },
+    {
+      id: "nome",
+      cabecalho: t("Nome"),
+      classeCabecalho: "w-[160px]",
+      classeCelula: "font-medium",
+      celula: (row) => row.full_name ?? <span className="text-muted-foreground">—</span>,
+    },
+    {
+      id: "tenant",
+      cabecalho: "Tenant",
+      classeCabecalho: "w-[160px]",
+      celula: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-xs font-medium">{row.tenant_name}</span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {row.tenant_slug}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "role",
+      cabecalho: "Role",
+      classeCabecalho: "w-[100px]",
+      celula: (row) => <RoleBadge role={row.role} />,
+    },
+    {
+      id: "ultimo-acesso",
+      cabecalho: t("Último acesso"),
+      classeCabecalho: "w-[160px]",
+      classeCelula: "text-xs text-muted-foreground",
+      celula: (row) =>
+        locale ? relativeDate(row.last_sign_in_at, locale) : row.last_sign_in_at ?? "—",
+    },
+    {
+      id: "status",
+      cabecalho: t("Status"),
+      classeCabecalho: "w-[100px]",
+      celula: (row) =>
+        row.revoked_at ? (
+          <Badge variant="error">{t("Revogado")}</Badge>
+        ) : (
+          <Badge variant="success">{t("Ativo")}</Badge>
+        ),
+    },
+    {
+      id: "acoes",
+      cabecalho: "",
+      classeCabecalho: "w-[60px]",
+      celula: (row) => (
+        <Link
+          href={`/admin/users/${row.user_id}`}
+          className="text-xs font-medium text-accent hover:underline"
+        >
+          {t("Ver")}
+        </Link>
+      ),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // Skeleton
 // ---------------------------------------------------------------------------
 
 export function UsersTableAdminSkeleton() {
   const t = useT();
-  return (
-    <div className="rounded-3xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {["Email", t("Nome"), "Tenant", "Role", t("Último acesso"), t("Status"), ""].map(
-              (h) => (
-                <TableHead key={h}>{h}</TableHead>
-              ),
-            )}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={i}>
-              {Array.from({ length: 7 }).map((__, j) => (
-                <TableCell key={j}>
-                  <Skeleton className="h-4 w-full max-w-[140px]" />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+  return <AdminDataTableSkeleton colunas={colunasAdmin(t, undefined)} linhas={5} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,87 +165,22 @@ export function UsersTableAdmin({
 }: UsersTableAdminProps) {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  if (data.length === 0) {
-    return (
-      <EmptyState
-        icon={Users}
-        headline="Nenhum usuário encontrado"
-        subcopy="Ajuste os filtros para refinar a busca."
-      />
-    );
-  }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead className="w-[160px]">{t("Nome")}</TableHead>
-              <TableHead className="w-[160px]">Tenant</TableHead>
-              <TableHead className="w-[100px]">Role</TableHead>
-              <TableHead className="w-[160px]">{t("Último acesso")}</TableHead>
-              <TableHead className="w-[100px]">{t("Status")}</TableHead>
-              <TableHead className="w-[60px]" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row) => (
-              <TableRow key={`${row.user_id}:${row.organization_id}`}>
-                <TableCell className="font-mono text-xs">
-                  {row.email ?? "—"}
-                </TableCell>
-                <TableCell className="font-medium">
-                  {row.full_name ?? <span className="text-muted-foreground">—</span>}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-medium">{row.tenant_name}</span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {row.tenant_slug}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <RoleBadge role={row.role} />
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {relativeDate(row.last_sign_in_at, localeDaData)}
-                </TableCell>
-                <TableCell>
-                  {row.revoked_at ? (
-                    <Badge variant="error">{t("Revogado")}</Badge>
-                  ) : (
-                    <Badge variant="success">{t("Ativo")}</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={`/admin/users/${row.user_id}`}
-                    className="text-xs font-medium text-accent hover:underline"
-                  >
-                    {t("Ver")}
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onLoadMore}
-            disabled={isFetchingNextPage}
-          >
-            {isFetchingNextPage ? t("Carregando...") : t("Carregar mais")}
-          </Button>
-        </div>
-      )}
-    </div>
+    <AdminDataTable
+      colunas={colunasAdmin(t, localeDaData)}
+      linhas={data}
+      chave={(row) => `${row.user_id}:${row.organization_id}`}
+      vazio={{
+        icon: Users,
+        headline: "Nenhum usuário encontrado",
+        subcopy: "Ajuste os filtros para refinar a busca.",
+      }}
+      paginacao={{
+        temProxima: hasNextPage,
+        buscando: isFetchingNextPage,
+        carregarMais: onLoadMore,
+      }}
+    />
   );
 }

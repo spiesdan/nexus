@@ -14,13 +14,14 @@
  */
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -575,34 +576,24 @@ export function AgentForm(props: Props) {
         vocabulário interno; quem configura pensa em "quem fala com meu cliente" e
         "quem organiza minha casa".
       */}
-      <div className="flex flex-wrap gap-1 border-b" role="tablist" aria-label={t("Papéis do agente")}>
-        {(
-          [
-            ["conversa", t("Conversa com o cliente")],
-            ["operacao", t("Organiza o sistema")],
-            // O TERCEIRO PAPEL. O rótulo diz o que ele FAZ, como os outros dois:
-            // "Segurança" é o nosso nome; quem configura quer saber o que é
-            // conferido antes de a mensagem chegar ao cliente dele.
-            ["seguranca", t("Confere antes de enviar")],
-          ] as const
-        ).map(([id, rotulo]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={papel === id}
-            data-testid={`papel-${id}`}
-            onClick={() => setPapel(id)}
-            className={
-              papel === id
-                ? "border-b-2 border-foreground px-3 py-2 text-sm font-medium"
-                : "border-b-2 border-transparent px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-            }
-          >
-            {t(rotulo)}
-          </button>
-        ))}
-      </div>
+      <Tabs value={papel} onValueChange={(v) => setPapel(v as typeof papel)}>
+        <TabsList aria-label={t("Papéis do agente")}>
+          {(
+            [
+              ["conversa", t("Conversa com o cliente")],
+              ["operacao", t("Organiza o sistema")],
+              // O TERCEIRO PAPEL. O rótulo diz o que ele FAZ, como os outros dois:
+              // "Segurança" é o nosso nome; quem configura quer saber o que é
+              // conferido antes de a mensagem chegar ao cliente dele.
+              ["seguranca", t("Confere antes de enviar")],
+            ] as const
+          ).map(([id, rotulo]) => (
+            <TabsTrigger key={id} value={id} data-testid={`papel-${id}`}>
+              {rotulo}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {papel === "seguranca" ? <PainelDeSeguranca /> : null}
 
@@ -741,7 +732,21 @@ export function AgentForm(props: Props) {
               instalacaoTemChave={(props.provedoresDaInstalacao ?? []).includes(form.provider)}
             />
             {validation.credential_id ? (
-              <p className="text-xs text-destructive">{validation.credential_id}</p>
+              <>
+                <p className="text-xs text-destructive">{validation.credential_id}</p>
+                {/* A instrução diz O QUE falta; sem o caminho, quem não tem a
+                    chave trava sem pista (exigido pelo caso "sem exigir que o
+                    usuário adivinhe" de agente-novo-e-uso.spec.ts — a §19 tirou
+                    Conexões do sidebar e sobrou página nenhuma apontando). */}
+                <p className="text-xs text-text-muted">
+                  <Link
+                    href="/app/ai/credentials"
+                    className="font-medium underline underline-offset-2"
+                  >
+                    {t("Cadastre ou escolha uma credencial em IA › Credenciais")}
+                  </Link>
+                </p>
+              </>
             ) : null}
             {cred && credSt && credSt !== "validated" ? (
               <p className="text-xs text-warning-fg">
@@ -802,7 +807,20 @@ export function AgentForm(props: Props) {
                 </SelectContent>
               </Select>
               {validation.channel_session_id ? (
-                <p className="text-xs text-destructive">{validation.channel_session_id}</p>
+                <>
+                  <p className="text-xs text-destructive">{validation.channel_session_id}</p>
+                  {/* Mesmo caminho que o bloco da credencial acima: o número
+                      também se consegue pela tela, e a §19 tirou Conexões do
+                      sidebar sem deixar ponta aqui. */}
+                  <p className="text-xs text-text-muted">
+                    <Link
+                      href="/app/connections"
+                      className="font-medium underline underline-offset-2"
+                    >
+                      {t("Conecte um número em Configurações › Conexões")}
+                    </Link>
+                  </p>
+                </>
               ) : null}
             </div>
           </Card>

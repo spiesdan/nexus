@@ -136,4 +136,7 @@ export {
   ArrowsOutSimple,
   // expedição (o caminhão da entrega, não a seta genérica de fluxo)
   Truck,
+  // compras/estoque (carrinho do fornecedor, caixa do produto)
+  ShoppingCart,
+  Package,
 } from "@phosphor-icons/react/dist/ssr";

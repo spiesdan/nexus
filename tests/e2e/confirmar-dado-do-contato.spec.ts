@@ -10,11 +10,12 @@
  *  3. descartar tira da tela SEM gravar;
  *  4. decidida uma vez, a seção some — não fica botão para o que já acabou.
  */
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { test, expect, type Page } from "@playwright/test";
+
+import { execNpx } from "./utils/npx";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 
@@ -26,11 +27,11 @@ interface Creds {
 
 function lerCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   let c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   if (!c.users?.manager) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   }
   return c;
@@ -79,7 +80,7 @@ async function cenario(page: Page, nome: string, valor: string, trecho: string):
   try {
     // A proposta é criada pela MESMA função que a ferramenta MCP chama — não por
     // um insert à mão, que mentiria sobre a origem e sobre as recusas.
-    const saida = execFileSync("npx", ["tsx", tmp], { encoding: "utf8" });
+    const saida = execNpx(["tsx", tmp], { encoding: "utf8" });
     expect(saida, "a proposta precisa ter sido criada de verdade").toContain("PROPOSTA_OK");
   } finally {
     fs.unlinkSync(tmp);

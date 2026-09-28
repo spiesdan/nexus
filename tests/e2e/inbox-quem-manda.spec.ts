@@ -18,7 +18,7 @@
  *   pnpm e2e:env && pnpm e2e:build
  *   E2E_PORT=3021 pnpm exec playwright test tests/e2e/inbox-quem-manda.spec.ts
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -75,7 +75,7 @@ test.describe("Inbox — quem manda nesta conversa", () => {
 
   test.beforeAll(async () => {
     if (!fs.existsSync(CREDS_PATH)) {
-      execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+      execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
     }
     creds = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 

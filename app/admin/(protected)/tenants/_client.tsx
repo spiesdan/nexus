@@ -9,6 +9,7 @@ import {
   TenantsTableSkeleton,
 } from "@/components/admin/tenants/TenantsTable";
 import { useAdminTenants, type AdminTenantsFilters } from "@/hooks/useAdminTenants";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 export function TenantsClient() {
@@ -23,21 +24,22 @@ export function TenantsClient() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-medium text-text tracking-tight">{t("Tenants")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLoading ? t("Carregando...") : `${total} tenant${total !== 1 ? "s" : ""}${hasNextPage ? "+" : ""}`}
-          </p>
-        </div>
-        <Button asChild size="sm" className="shrink-0">
-          <Link href="/admin/tenants/new">
-            <Plus size={16} aria-hidden />
-            {t("Novo tenant")}
-          </Link>
-        </Button>
-      </div>
+      <NexusPageHeader
+        title={t("Tenants")}
+        subtitle={
+          isLoading
+            ? t("Carregando...")
+            : `${total} tenant${total !== 1 ? "s" : ""}${hasNextPage ? "+" : ""}`
+        }
+        actions={
+          <Button asChild size="sm" className="shrink-0">
+            <Link href="/admin/tenants/new">
+              <Plus size={16} aria-hidden />
+              {t("Novo tenant")}
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <TenantsFilters filters={filters} onChange={setFilters} />

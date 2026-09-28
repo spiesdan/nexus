@@ -20,7 +20,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { updateMarcaDaOrganizacao } from "@/app/actions/settings/updateMarcaDaOrganizacao";
 import { CampoDeLogo } from "@/components/branding/CampoDeLogo";
@@ -28,6 +28,7 @@ import { TiraDeTons, type ItemDaLegenda } from "@/components/branding/TiraDeTons
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import { Label } from "@/components/ui/label";
 import { cssDaMarca, ESCOPO_DA_ORGANIZACAO } from "@/lib/branding/css";
 import { avisosDaMarca, type Aviso, type DistanciaAteSuaCor, type Tom } from "@/lib/branding/linguagem";
@@ -256,10 +257,17 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
           {t("Como sua empresa aparece")}
         </h2>
 
-        <div className="space-y-2">
-          <Label htmlFor="org_app_name">{t("Nome da sua empresa")}</Label>
+        <FormField
+          label={t("Nome da sua empresa")}
+          id="org_app_name"
+          hint={
+            <>
+              {t("Aparece no menu lateral, para quem trabalha aqui. Deixe em branco para usar")}{" "}
+              {semAOrganizacao.name}.
+            </>
+          }
+        >
           <Input
-            id="org_app_name"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             // O placeholder é o nome EM VIGOR sem esta camada, e não um texto
@@ -268,11 +276,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
             maxLength={120}
             autoComplete="off"
           />
-          <p className="text-xs text-text-muted">
-            {t("Aparece no menu lateral, para quem trabalha aqui. Deixe em branco para usar")}{" "}
-            {semAOrganizacao.name}.
-          </p>
-        </div>
+        </FormField>
 
         <div className="space-y-2">
           <Label htmlFor="org_accent_hex">{t("Cor da sua marca")}</Label>

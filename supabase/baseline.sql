@@ -19857,6 +19857,40 @@ create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
 
 notify pgrst, 'reload schema';
 
+-- Função do apêndice 0243 ANTES da varredura de propósito: o teste
+-- `varredura-anon-e-o-ultimo-bloco` proíbe `create function` depois dela
+-- (o ALTER DEFAULT PRIVILEGES faria a função nascer com EXECUTE para anon
+-- em quem atualiza). Os grants abaixo já negam anon explicitamente; a
+-- posição garante a cura mesmo assim.
+create or replace function public.fn_proximo_numero_compra(p_org uuid)
+returns integer
+  language plpgsql security definer
+  set search_path to 'public', 'pg_temp'
+as $$
+declare
+  v_numero integer;
+begin
+  if not exists (select 1 from public.fn_user_org_ids() where fn_user_org_ids = p_org)
+     and not public.fn_is_platform_admin() then
+    raise exception 'compra_numero_org_invalida' using errcode = '42501';
+  end if;
+
+  insert into public.purchase_order_counters (organization_id, ultimo_numero, updated_at)
+  values (p_org, 1, now())
+  on conflict (organization_id)
+  do update set ultimo_numero = public.purchase_order_counters.ultimo_numero + 1, updated_at = now()
+  returning ultimo_numero into v_numero;
+
+  return v_numero;
+end;
+$$;
+
+alter function public.fn_proximo_numero_compra(uuid) owner to postgres;
+
+revoke execute on function public.fn_proximo_numero_compra(uuid) from public, anon;
+grant execute on function public.fn_proximo_numero_compra(uuid) to authenticated;
+grant execute on function public.fn_proximo_numero_compra(uuid) to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
@@ -20267,3 +20301,303 @@ comment on column public.fiscal_entradas.emitente_cnpj is
   'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
 comment on column public.financial_pagaveis.fornecedor_nome is
   'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
+
+-- APÊNDICE 0240 - SEPARAÇÃO DA CARGA (idempotente; fonte:
+-- supabase/migrations/20260925010000_0240_separacao_da_carga.sql)
+alter table public.shipment_orders
+  add column if not exists separado_em timestamptz;
+
+alter table public.shipment_orders
+  add column if not exists separado_por uuid references auth.users(id) on delete set null;
+
+comment on column public.shipment_orders.separado_em is
+  'Quando o item foi separado e conferido (NULL = pendente). A carga só sai de montando com tudo separado.';
+
+comment on column public.shipment_orders.separado_por is
+  'Quem separou e conferiu o item.';
+
+-- APÊNDICE 0241 - POLÍTICA DE EXECUÇÃO AUTÔNOMA (idempotente; fonte:
+-- supabase/migrations/20260925020000_0241_politica_execucao_autonoma.sql)
+create table if not exists public.ai_execution_policies (
+  organization_id uuid primary key references public.organizations(id) on delete cascade,
+  nivel_maximo integer not null default 1 check (nivel_maximo >= 0 and nivel_maximo <= 6),
+  executar_followup boolean not null default false,
+  default_flow_pointer_id uuid references public.followup_flow_pointers(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.ai_execution_policies enable row level security;
+
+drop policy if exists ai_execution_policies_select on public.ai_execution_policies;
+create policy ai_execution_policies_select on public.ai_execution_policies
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists ai_execution_policies_write on public.ai_execution_policies;
+create policy ai_execution_policies_write on public.ai_execution_policies
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  );
+
+revoke all on public.ai_execution_policies from anon;
+grant select, insert, update, delete on public.ai_execution_policies to authenticated;
+grant all on public.ai_execution_policies to service_role;
+
+drop trigger if exists trg_ai_execution_policies_updated_at on public.ai_execution_policies;
+create trigger trg_ai_execution_policies_updated_at
+  before update on public.ai_execution_policies
+  for each row execute function public.fn_set_updated_at();
+
+comment on table public.ai_execution_policies is
+  'Política de execução autônoma da org (NEXUS §35): teto de nível, follow-up executável e fluxo padrão. Sem linha, nada executa.';
+
+-- APÊNDICE 0242 - MOVIMENTAÇÕES DE ESTOQUE (idempotente; fonte:
+-- supabase/migrations/20260925030000_0242_movimentos_de_estoque.sql)
+alter table public.catalog_products
+  add column if not exists estoque_minimo integer not null default 0;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'catalog_products_estoque_minimo_valido'
+  ) then
+    alter table public.catalog_products
+      add constraint catalog_products_estoque_minimo_valido check (estoque_minimo >= 0);
+  end if;
+end $$;
+
+create table if not exists public.inventory_movements (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  product_id uuid references public.catalog_products(id) on delete set null,
+  tipo text not null check (tipo in ('entrada', 'saida', 'ajuste')),
+  quantidade integer not null check (
+    (tipo in ('entrada', 'saida') and quantidade > 0)
+    or (tipo = 'ajuste' and quantidade <> 0)
+  ),
+  origem text not null default 'manual' check (origem in ('manual', 'compra', 'pedido', 'inventario')),
+  order_id uuid references public.commercial_orders(id) on delete restrict,
+  purchase_order_id uuid,
+  observacao text,
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+
+alter table public.inventory_movements enable row level security;
+
+drop policy if exists inventory_movements_select on public.inventory_movements;
+create policy inventory_movements_select on public.inventory_movements
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists inventory_movements_write on public.inventory_movements;
+create policy inventory_movements_write on public.inventory_movements
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+revoke all on public.inventory_movements from anon;
+grant select, insert, update, delete on public.inventory_movements to authenticated;
+grant all on public.inventory_movements to service_role;
+
+create index if not exists inventory_movements_produto_idx
+  on public.inventory_movements (organization_id, product_id, created_at desc);
+
+comment on table public.inventory_movements is
+  'Razão do estoque (NEXUS §46): cada linha diz quem/quando/quanto/porquê. O saldo em catalog_products.quantidade é cache atualizado pelos mesmos escritores.';
+comment on column public.catalog_products.estoque_minimo is
+  'Ponto de atenção (NEXUS §46): abaixo disto o produto entra na sugestão de compra.';
+
+-- APÊNDICE 0243 - COMPRAS (idempotente; fonte:
+-- supabase/migrations/20260925040000_0243_compras_fornecedores_e_pedidos.sql)
+create table if not exists public.suppliers (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  nome text not null,
+  cnpj text,
+  email text,
+  telefone text,
+  observacoes text,
+  ativo boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.purchase_order_counters (
+  organization_id uuid primary key references public.organizations(id) on delete cascade,
+  ultimo_numero integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.purchase_orders (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  numero integer not null,
+  supplier_id uuid references public.suppliers(id) on delete set null,
+  status text not null default 'rascunho' check (status in ('rascunho', 'enviado', 'recebido', 'cancelado')),
+  observacoes text,
+  created_by uuid,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists purchase_orders_org_numero_key
+  on public.purchase_orders (organization_id, numero);
+
+create table if not exists public.purchase_order_items (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  purchase_order_id uuid not null references public.purchase_orders(id) on delete cascade,
+  product_id uuid references public.catalog_products(id) on delete set null,
+  produto_codigo text not null,
+  produto_nome text not null,
+  quantidade integer not null check (quantidade > 0),
+  recebido_qtd integer not null default 0 check (recebido_qtd >= 0),
+  custo_unit_cents bigint not null check (custo_unit_cents >= 0),
+  subtotal_cents bigint not null check (subtotal_cents >= 0),
+  created_at timestamptz not null default now()
+);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'inventory_movements_purchase_order_fk'
+  ) then
+    alter table public.inventory_movements
+      add constraint inventory_movements_purchase_order_fk
+      foreign key (purchase_order_id) references public.purchase_orders(id) on delete restrict;
+  end if;
+end $$;
+
+-- A função fn_proximo_numero_compra vive ACIMA da varredura anon (ver nota
+-- lá): aqui no apêndice ficam só tabelas, policies, grants de tabela,
+-- triggers e comentários — nada de `create function` depois da varredura.
+
+alter table public.suppliers enable row level security;
+alter table public.purchase_orders enable row level security;
+alter table public.purchase_order_items enable row level security;
+alter table public.purchase_order_counters enable row level security;
+
+drop policy if exists suppliers_select on public.suppliers;
+create policy suppliers_select on public.suppliers
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists suppliers_write on public.suppliers;
+create policy suppliers_write on public.suppliers
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+drop policy if exists purchase_orders_select on public.purchase_orders;
+create policy purchase_orders_select on public.purchase_orders
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists purchase_orders_write on public.purchase_orders;
+create policy purchase_orders_write on public.purchase_orders
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+drop policy if exists purchase_order_items_select on public.purchase_order_items;
+create policy purchase_order_items_select on public.purchase_order_items
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists purchase_order_items_write on public.purchase_order_items;
+create policy purchase_order_items_write on public.purchase_order_items
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+drop policy if exists purchase_order_counters_select on public.purchase_order_counters;
+create policy purchase_order_counters_select on public.purchase_order_counters
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists purchase_order_counters_write on public.purchase_order_counters;
+create policy purchase_order_counters_write on public.purchase_order_counters
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+revoke all on public.suppliers from anon;
+grant select, insert, update, delete on public.suppliers to authenticated;
+grant all on public.suppliers to service_role;
+
+revoke all on public.purchase_orders from anon;
+grant select, insert, update, delete on public.purchase_orders to authenticated;
+grant all on public.purchase_orders to service_role;
+
+revoke all on public.purchase_order_items from anon;
+grant select, insert, update, delete on public.purchase_order_items to authenticated;
+grant all on public.purchase_order_items to service_role;
+
+revoke all on public.purchase_order_counters from anon;
+grant select, insert, update, delete on public.purchase_order_counters to authenticated;
+grant all on public.purchase_order_counters to service_role;
+
+drop trigger if exists trg_suppliers_updated_at on public.suppliers;
+create trigger trg_suppliers_updated_at
+  before update on public.suppliers
+  for each row execute function public.fn_set_updated_at();
+
+drop trigger if exists trg_purchase_orders_updated_at on public.purchase_orders;
+create trigger trg_purchase_orders_updated_at
+  before update on public.purchase_orders
+  for each row execute function public.fn_set_updated_at();
+
+comment on table public.suppliers is
+  'Fornecedores da org (NEXUS §47).';
+comment on table public.purchase_orders is
+  'Pedidos de compra (NEXUS §47): rascunho → enviado → recebido/cancelado. Receber vira entrada no razão.';

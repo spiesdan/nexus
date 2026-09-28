@@ -10,7 +10,7 @@
  */
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { apiClient } from "@/lib/api/client";
 import { useRealtimeChannel } from "@/hooks/realtime/useRealtimeChannel";

@@ -3,7 +3,8 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 /**
- * Data Table — padrão de tabela UImaxxing (ver `markets-table.tsx`).
+ * Data Table — primitiva canônica de tabela do design system (o container de
+ * estados/estilos vive em `NexusDataTable`).
  * Cabeçalho em caixa alta com tracking largo (assinatura do registry), linhas
  * com `row-hover` (hover sutil em tema claro e escuro via `--ink`). O raio do
  * contêiner fica com quem envolve a tabela — a base não impõe moldura para não

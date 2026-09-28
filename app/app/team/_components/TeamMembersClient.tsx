@@ -2,7 +2,7 @@
 
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useState } from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { useT } from "@/hooks/i18n/useT";
 import { useTeamMembers, type TeamMember } from "@/hooks/team/useTeamMembers";

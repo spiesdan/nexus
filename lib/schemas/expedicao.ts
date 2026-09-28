@@ -67,6 +67,8 @@ export interface PedidoNaCarga {
   order_id: string;
   sequencia: number;
   status: StatusNaCarga;
+  /** NULL/ausente = ainda não separado/conferido (0240). */
+  separado_em?: string | null;
   pedido: {
     numero: number;
     cliente_nome: string;

@@ -23,12 +23,14 @@ export function CatalogoClient({
   tabelas,
   podeEditar,
   textosProdutos,
+  buscaInicial,
 }: {
   produtos: Produto[];
   categorias: Categoria[];
   tabelas: TabelaDePreco[];
   podeEditar: boolean;
   textosProdutos: React.ComponentProps<typeof ProdutosClient>["textos"];
+  buscaInicial?: string;
 }) {
   const t = useT();
   return (
@@ -51,6 +53,7 @@ export function CatalogoClient({
             podeEditar={podeEditar}
             textos={textosProdutos}
             esconderCabecalho
+            buscaInicial={buscaInicial}
           />
         </TabsContent>
         <TabsContent value="categorias" className="mt-4">

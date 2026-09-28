@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
@@ -60,7 +62,7 @@ const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
  * Seção FINANCEIRO da ficha do pedido — recebíveis gerados, com ação de
  * gerar e atalho para a central. O vínculo NF aparece quando existir.
  */
-function FinanceiroDoPedido({ pedidoId }: { pedidoId: string }) {
+function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: string }) {
   const t = useT();
   const [linhas, setLinhas] = React.useState<{ id: string; parcela_n: number; total_parcelas: number; valor_original_cents: number; vencimento: string; situacao: string; saldo_cents: number }[] | null>(null);
   const [gerando, setGerando] = React.useState(false);
@@ -74,7 +76,11 @@ function FinanceiroDoPedido({ pedidoId }: { pedidoId: string }) {
     } catch {
       setLinhas([]);
     }
-  }, [pedidoId]);
+    // O `status` viaja nas dependências de propósito: o "Faturar pedido" gera
+    // os recebíveis DENTRO do PATCH, e sem este refetch o card continuava
+    // dizendo "Sem financeiro gerado" até um F5 — medido pela jornada e2e.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- status é o GATILHO do refetch, não um dado lido aqui
+  }, [pedidoId, status]);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -238,6 +244,7 @@ export function DetalheDoPedido({
 }) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const [pedido, setPedido] = React.useState(inicial);
   const [editando, setEditando] = React.useState(false);
@@ -303,7 +310,11 @@ export function DetalheDoPedido({
   }
 
   async function excluir() {
-    if (!window.confirm(t("Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso."))) {
+    const ok = await confirmar({
+      title: t("Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso."),
+      confirmLabel: t("Excluir"),
+    });
+    if (!ok) {
       return;
     }
     try {
@@ -377,60 +388,66 @@ export function DetalheDoPedido({
 
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
-      <Link href="/app/pedidos" className="text-sm text-muted-foreground underline underline-offset-4">
-        {t("← Pedidos")}
-      </Link>
+      {/* Cabeçalho canônico: número no título, ações no slot (molde de
+          compras/[id]). A pill do status fica numa linha própria logo abaixo —
+          mesmo arranjo do Mercos (número + pill), sem Card de chroma. */}
+      <NexusPageHeader
+        title={numeroDoPedido(pedido.numero)}
+        navigation={
+          <Link href="/app/pedidos" className="underline underline-offset-4 hover:text-text">
+            {t("← Pedidos")}
+          </Link>
+        }
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {podeEditar && proximo && (
+              <Button size="sm" onClick={() => void avancar()}>
+                {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
+              </Button>
+            )}
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                {t("Visualizar PDF")}
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("Enviar por WhatsApp")}
+              </a>
+            </Button>
+            {contato?.email && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={copiarLink}>
+              {t("Copiar link do pedido")}
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
+                {t("Imprimir pedido")}
+              </Link>
+            </Button>
+            {podeEditar && (
+              <Button size="sm" variant="outline" onClick={() => void duplicar()}>
+                {t("Duplicar")}
+              </Button>
+            )}
+            {podeExcluir && (
+              <Button size="sm" variant="destructive" onClick={() => void excluir()}>
+                {t("Excluir pedido")}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
-      {/* Cabeçalho: número + pill, como no Mercos. */}
-      <Card className="hover-raise flex items-center justify-between gap-3 p-4">
-        <p className="text-lg font-semibold">{numeroDoPedido(pedido.numero)}</p>
+      <div className="flex flex-wrap items-center gap-3">
         <PillDoStatus status={pedido.status as StatusDoPedido} />
-      </Card>
-
-      {/* Ações */}
-      <div className="flex flex-wrap gap-2">
-        {podeEditar && proximo && (
-          <Button size="sm" onClick={() => void avancar()}>
-            {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
-          </Button>
-        )}
-        <Button size="sm" variant="outline" asChild>
-          <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
-            {t("Visualizar PDF")}
-          </Link>
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("Enviar por WhatsApp")}
-          </a>
-        </Button>
-        {contato?.email && (
-          <Button size="sm" variant="outline" asChild>
-            <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={copiarLink}>
-          {t("Copiar link do pedido")}
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
-            {t("Imprimir pedido")}
-          </Link>
-        </Button>
-        {podeEditar && (
-          <Button size="sm" variant="outline" onClick={() => void duplicar()}>
-            {t("Duplicar")}
-          </Button>
-        )}
-        {podeExcluir && (
-          <Button size="sm" variant="destructive" onClick={() => void excluir()}>
-            {t("Excluir pedido")}
-          </Button>
-        )}
       </div>
 
       {/* CLIENTE */}
@@ -636,7 +653,7 @@ export function DetalheDoPedido({
       </Card>
 
       {/* FINANCEIRO */}
-      <FinanceiroDoPedido pedidoId={pedido.id} />
+      <FinanceiroDoPedido pedidoId={pedido.id} status={pedido.status} />
 
       {/* FISCAL */}
       <FiscalDoPedido pedidoId={pedido.id} />

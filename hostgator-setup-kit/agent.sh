@@ -108,7 +108,36 @@ git fetch --tags --quiet origin 2>/dev/null || FETCH_OK=0
 
 CURRENT_TAG="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
 CURRENT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
-LATEST_TAG="$(git tag -l 'v*' --sort=-v:refname | head -1)" || true
+
+# A autoridade é o `origin` — o remoto de onde este servidor baixa o código.
+# Tag que existe SÓ localmente não foi publicada daqui: veio de outro clone
+# (fork, projeto irmão) ou de um fetch antigo. Medido na VPS em 2026-09-27:
+# 52 tags do projeto irmão herdadas do bootstrap antigo faziam esta linha
+# anunciar v1.56.0 como "última versão", e o update.sh — validando só o
+# local — ia instalar código alheio por cima da instalação. Então: candidatas
+# em ordem decrescente, e fica a primeira que EXISTE no origin. Sem `origin`
+# (fixture de teste, repo local) não há o que consultar — local é tudo que há.
+# `ls-remote | awk | sed` com `|| true`: sob `set -o pipefail` (vem do
+# _common.sh) um origin inalcançável derrubaria o agente inteiro na atribuição;
+# vazio aqui significa "não anuncio nada", que o compare_failed de baixo
+# traduz para o app como "não consegui saber".
+_candidatas="$(git tag -l 'v*' --sort=-v:refname)"
+LATEST_TAG=""
+_tags_oficiais=""
+if git remote get-url origin >/dev/null 2>&1; then
+  _tags_oficiais="$(git ls-remote --tags --refs origin 2>/dev/null \
+    | awk '{print $2}' | sed 's#^refs/tags/##' || true)"
+  while IFS= read -r _t; do
+    [ -n "$_t" ] || continue
+    if grep -qxF "$_t" <<< "$_tags_oficiais"; then LATEST_TAG="$_t"; break; fi
+  done <<< "$_candidatas"
+else
+  while IFS= read -r _t; do
+    [ -n "$_t" ] || continue
+    LATEST_TAG="$_t"; break
+  done <<< "$_candidatas"
+fi
+unset _candidatas _tags_oficiais _t
 
 # Guardado ANTES de qualquer zeragem abaixo: "vi uma tag" e "não anunciei"
 # são coisas diferentes. Sem isto, um fork sem NENHUMA tag `v*` chega ao app

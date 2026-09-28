@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CaretLeft } from "@/lib/ui/icons";
 import { useAdminAuditEntry } from "@/hooks/useAdminAuditEntry";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 // ---------------------------------------------------------------------------
@@ -72,7 +74,7 @@ interface AuditDetailClientProps {
 export function AuditDetailClient({ entryId }: AuditDetailClientProps) {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const { data, isLoading, isError } = useAdminAuditEntry(entryId);
+  const { data, isLoading, isError, refetch } = useAdminAuditEntry(entryId);
   const detail = data?.data;
 
   if (isLoading) {
@@ -89,9 +91,10 @@ export function AuditDetailClient({ entryId }: AuditDetailClientProps) {
 
   if (isError || !detail) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-6 py-10 text-center text-sm text-destructive">
-        {t("Entrada de audit não encontrada.")}
-      </div>
+      <NexusErrorState
+        description={t("Entrada de audit não encontrada.")}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -108,24 +111,21 @@ export function AuditDetailClient({ entryId }: AuditDetailClientProps) {
         </Link>
       </Button>
 
-      {/* Header */}
-      <div className="space-y-1">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-mono text-xl font-semibold">{entry.action}</h1>
-          {tenant && (
-            <Badge variant="neutral" className="font-mono text-xs">
-              {tenant.slug}
-            </Badge>
-          )}
-          {entry.acting_as_platform_admin && (
-            <Badge variant="warning" className="text-xs">
-              Platform Admin
-            </Badge>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {formatDate(entry.created_at, localeDaData)}&nbsp;·&nbsp;{relativeDate(entry.created_at, localeDaData)}
-        </p>
+      <NexusPageHeader
+        title={entry.action}
+        subtitle={`${formatDate(entry.created_at, localeDaData)}\u00A0·\u00A0${relativeDate(entry.created_at, localeDaData)}`}
+      />
+      <div className="flex flex-wrap items-center gap-3">
+        {tenant && (
+          <Badge variant="neutral" className="font-mono text-xs">
+            {tenant.slug}
+          </Badge>
+        )}
+        {entry.acting_as_platform_admin && (
+          <Badge variant="warning" className="text-xs">
+            Platform Admin
+          </Badge>
+        )}
       </div>
 
       {/* Body — 2 columns */}

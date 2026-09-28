@@ -8,6 +8,9 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { List } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
+import { SearchTrigger } from "@/components/shell/SearchTrigger";
+import { NotificationCenter } from "@/components/shell/NotificationCenter";
+import { UserMenu } from "@/components/shell/UserMenu";
 
 interface AdminShellProps {
   userEmail: string;
@@ -85,21 +88,35 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
             </SheetContent>
           </Sheet>
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            {/* Sem TopBar própria no admin (era só sidebar + main): esta barra
-                existe só pra carregar o hambúrguer abaixo de `lg`, onde a
-                sidebar fixa não está mais no DOM. */}
-            <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-3 lg:hidden">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                onClick={() => setMobileNavOpen(true)}
-                aria-label={t("Abrir menu de navegação")}
-              >
-                <List size={20} aria-hidden />
-              </Button>
-              <span className="text-sm font-semibold tracking-tight">{t("Admin Plataforma")}</span>
+            {/* TopBar do admin (§17): a mesma casa do tenant — hambúrguer
+                abaixo de `lg` (onde a sidebar fixa não está no DOM), busca
+                (⌘K) no meio, sino da central e menu do usuário à direita.
+                Antes era só o hambúrguer num header `lg:hidden`: no desktop
+                o admin não tinha porta de busca nem de sair sem voltar pro
+                sidebar. */}
+            <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur md:gap-4 md:px-6 print:hidden">
+              <div className="flex min-w-0 items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 lg:hidden"
+                  onClick={() => setMobileNavOpen(true)}
+                  aria-label={t("Abrir menu de navegação")}
+                >
+                  <List size={20} aria-hidden />
+                </Button>
+                <span className="truncate text-sm font-semibold tracking-tight">
+                  {t("Admin Plataforma")}
+                </span>
+              </div>
+              <div className="flex min-w-0 flex-1 justify-center md:max-w-md">
+                <SearchTrigger />
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <NotificationCenter />
+                <UserMenu />
+              </div>
             </header>
             {/* `overflow-x-hidden` como rede de segurança — mesmo motivo do
                 `AppShell` (ver comentário lá): se algo estourar a largura, a

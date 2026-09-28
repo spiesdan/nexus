@@ -65,7 +65,10 @@ export default async function NuvemshopIntegrationPage() {
           <Storefront size={28} weight="duotone" className="text-muted-foreground" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold">Nuvemshop</h1>
+          {/* assinatura canônica do título de página (NexusPageHeader, 24px)
+              — o tile do ícone fica por ser o único símbolo da integração;
+              copy intacta, só a moldura da tipografia mudou (§100) */}
+          <h1 className="text-2xl font-medium tracking-tight text-text">Nuvemshop</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {traduzir("Sincroniza pedidos, produtos e clientes via OAuth + webhooks.", idioma)}
           </p>

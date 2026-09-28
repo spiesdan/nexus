@@ -9,7 +9,7 @@
  * Pré-requisito: scripts/seed-e2e-credentials.ts + scripts/seed-e2e-queue.ts
  * (o beforeAll re-roda o queue seed para restaurar o estado de fila).
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -58,7 +58,7 @@ test.describe("G5-03 — fila com posição + atribuição", () => {
 
   test.beforeAll(async () => {
     // Restaura o estado de fila (idempotente) antes do fluxo.
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-queue.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-queue.ts"], { stdio: "inherit" });
     creds = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
     if (!creds.queue) throw new Error("queue seed block ausente em .e2e-creds.json");
 

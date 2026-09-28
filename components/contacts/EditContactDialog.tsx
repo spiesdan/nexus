@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useT } from "@/hooks/i18n/useT";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { contactPatchSchema, type ContactPatch } from "@/lib/schemas/contacts";
 import { useUpdateContact } from "@/hooks/contacts/useUpdateContact";
 import type { Contact } from "@/lib/types/contacts";
@@ -131,28 +132,12 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
           <DialogTitle>{t("Editar cliente")}</DialogTitle>
           <DialogDescription>{t("Atualize os dados deste cliente.")}</DialogDescription>
         </DialogHeader>
-        <div className="flex gap-2" role="tablist" aria-label={t("Tipo de pessoa")}>
-          <Button
-            type="button"
-            size="sm"
-            variant={tipo === "J" ? "default" : "outline"}
-            onClick={() => setTipo("J")}
-            role="tab"
-            aria-selected={tipo === "J"}
-          >
-            {t("Pessoa jurídica")}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={tipo === "F" ? "default" : "outline"}
-            onClick={() => setTipo("F")}
-            role="tab"
-            aria-selected={tipo === "F"}
-          >
-            {t("Pessoa física")}
-          </Button>
-        </div>
+        <Tabs value={tipo} onValueChange={(v) => setTipo(v as "F" | "J")}>
+          <TabsList aria-label={t("Tipo de pessoa")}>
+            <TabsTrigger value="J">{t("Pessoa jurídica")}</TabsTrigger>
+            <TabsTrigger value="F">{t("Pessoa física")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {tipo === "J" && (
             <fieldset className="space-y-3 rounded-2xl border p-3">

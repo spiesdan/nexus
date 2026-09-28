@@ -24,4 +24,10 @@ export const WA = {
   hover: "hover:bg-[#f5f6f6]",
   /** Selo de não-lidas. */
   unread: "border-transparent bg-[#25d366] text-white",
+  /** Rótulo do divisor de dia no fio. */
+  dayLabel: "text-[#54656f]",
+  /** Barra vertical da citação, saída (loja) — verde a 60%. */
+  quoteOut: "border-[#075e54]/60",
+  /** Barra vertical da citação, entrada (cliente) — verde cheio. */
+  quote: "border-[#075e54]",
 } as const;

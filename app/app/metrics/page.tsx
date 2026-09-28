@@ -1,34 +1,15 @@
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
-import { traduzir } from "@/lib/i18n/dicionario";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { redirect } from "next/navigation";
 
-import { MetricsClient } from "./_components/MetricsClient";
-
-export const dynamic = "force-dynamic";
-
-export default async function MetricsPage() {
-  const user = await requireAuth();
-  const activeOrg = await resolveActiveOrg(user);
-  // spec 13 §6.1: agent vê as próprias (RLS); a comparação por atendente é manager+.
-  const canCompare = !!activeOrg && ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
-  // `t` local em vez do hook: esta página é componente de SERVIDOR, e lá o
-  // idioma vem resolvido em `user.idioma` (a cadeia pessoa → organização →
-  // padrão vive em `lib/auth/server.ts`), sem reler o `locale` cru.
-  const idioma = user.idioma;
-  const t = (texto: string) => traduzir(texto, idioma);
-
-  return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Desempenho")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {canCompare
-            ? t("Atrito, funil e performance por atendente nos últimos 30 dias.")
-            : t("Atrito, seu funil e sua performance nos últimos 30 dias.")}
-        </p>
-      </header>
-
-      <MetricsClient canCompare={canCompare} currentUserId={user.id} />
-    </div>
-  );
+/**
+ * Rota antiga, mantida como REDIRECIONAMENTO — o Desempenho virou seção do
+ * Indicadores (fusão §100): o conteúdo vive em `#desempenho`, com o mesmo
+ * filtro por atendente, funil, performance e o painel de atrito.
+ *
+ * Não é gordura: é o que impede que o link do ⌘K, os favoritos e as sondas
+ * de atrito (`tests/sonda-atrito-*.ts`, já apontando para a âncora) virem um
+ * 404 depois da mudança. Apagar a rota economizaria um arquivo e cobraria
+ * isso do usuário.
+ */
+export default function Page(): never {
+  redirect("/app/indicadores#desempenho");
 }

@@ -2,33 +2,13 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CaretLeft } from "@/lib/ui/icons";
+import { TenantStatusBadge } from "@/components/admin/tenants/status-badge";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { TabNav } from "./_tab-nav";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
 import { traduzir } from "@/lib/i18n/dicionario";
-
-// ---------------------------------------------------------------------------
-// Status badge helpers (same palette as TenantsTable)
-// ---------------------------------------------------------------------------
-
-const STATUS_VARIANTS: Record<
-  string,
-  "success" | "info" | "warning" | "error" | "neutral"
-> = {
-  active: "success",
-  onboarding: "info",
-  suspended: "warning",
-  redacted: "error",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  active: "Ativo",
-  onboarding: "Onboarding",
-  suspended: "Suspenso",
-  redacted: "Redigido",
-};
 
 // ---------------------------------------------------------------------------
 // Sub-nav tabs definition
@@ -88,23 +68,14 @@ export default async function TenantDetailLayout({
         {traduzir("Tenants", idioma)}
       </Link>
 
-      {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-medium tracking-tight text-text">
-            {org?.display_name ?? id}
-          </h1>
-          {org?.slug && (
-            <code className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
-              {org.slug}
-            </code>
-          )}
-          {org?.status && (
-            <Badge variant={STATUS_VARIANTS[org.status] ?? "neutral"}>
-              {traduzir(STATUS_LABELS[org.status] ?? org.status, idioma)}
-            </Badge>
-          )}
-        </div>
+      <NexusPageHeader title={org?.display_name ?? id} />
+      <div className="flex flex-wrap items-center gap-3">
+        {org?.slug && (
+          <code className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
+            {org.slug}
+          </code>
+        )}
+        {org?.status && <TenantStatusBadge status={org.status} />}
       </div>
 
       {/* Sub-nav */}

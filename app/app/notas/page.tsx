@@ -309,7 +309,12 @@ export default async function NotasPage({
     <div className="flex h-full flex-col gap-4 p-6">
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
-      <Tabs defaultValue={abaInicial} className="flex flex-1 flex-col">
+      {/* `key` = o `?aba=` só troca de verdade se a `Tabs` REMONTAR: ela é
+          uncontrolled (`defaultValue` vale só no mount), e a navegação
+          client-side entre abas da MESMA rota (ex.: o push que o "Emitir nota"
+          faz para `?aba=notas`) reconcilia sem remontar — a URL muda e a aba
+          fica onde estava. A tecla força o mount novo com o valor da URL. */}
+      <Tabs key={abaInicial} defaultValue={abaInicial} className="flex flex-1 flex-col">
         <TabsList aria-label={textos.abas}>
           {abasVisiveis.map((a) => (
             <TabsTrigger key={a} value={a}>

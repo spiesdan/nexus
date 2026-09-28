@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { ROTULO_RECOMPRA, type SituacaoRecompra } from "@/lib/comercial/radar-compras";
@@ -209,38 +210,28 @@ export function RadarCategorias({
       <p className="text-xs text-muted-foreground">
         {t("Risco, recompra, oportunidade, follow-up, perda e cobrança — com próxima ação.")}
       </p>
-      <div
-        className="mt-3 flex gap-1.5 overflow-x-auto pb-1"
-        role="tablist"
-        aria-label={t("Categorias")}
+      <Tabs
+        value={categoria}
+        onValueChange={(v) => setCategoria(v as CategoriaId)}
+        className="mt-3"
       >
-        {CATEGORIAS.map((c) => {
-          const qtd = contagens[c.id];
-          const ativa = categoria === c.id;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              role="tab"
-              aria-selected={ativa}
-              onClick={() => setCategoria(c.id)}
-              className={`nexus-transition flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
-                ativa
-                  ? "border-transparent bg-accent text-accent-foreground"
-                  : "hover:border-accent"
-              }`}
-            >
-              <span
-                aria-hidden
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: c.cor }}
-              />
-              {ROTULO_CATEGORIA[c.id]}
-              <span className="tabular-nums">{qtd === null ? "…" : qtd}</span>
-            </button>
-          );
-        })}
-      </div>
+        <TabsList aria-label={t("Categorias")}>
+          {CATEGORIAS.map((c) => {
+            const qtd = contagens[c.id];
+            return (
+              <TabsTrigger key={c.id} value={c.id} className="gap-1.5">
+                <span
+                  aria-hidden
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: c.cor }}
+                />
+                {ROTULO_CATEGORIA[c.id]}
+                <span className="tabular-nums">{qtd === null ? "…" : qtd}</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
 
       <div className="mt-3">
         {(categoria === "risco" ||

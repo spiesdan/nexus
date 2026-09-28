@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, formatRelative, isToday, isYesterday } from "date-fns";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { CaretDown, CaretUp, ChatCircle, Trash } from "@/lib/ui/icons";
 import {
   Table,
@@ -22,15 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { useDeleteContact } from "@/hooks/contacts/useDeleteContact";
 import type { ContactOrderBy } from "@/lib/schemas/contacts";
 import type { Contact } from "@/lib/types/contacts";
@@ -42,6 +34,9 @@ interface Props {
   orderBy: ContactOrderBy;
   orderDir: "asc" | "desc";
   onSort: (column: ContactOrderBy) => void;
+  /** Seleção (§22 ações em massa). Ausente = tabela sem seleção (comportamento atual). */
+  selecionados?: string[];
+  onSelecaoChange?: (ids: string[]) => void;
 }
 
 function displayName(c: Contact, t: (texto: string) => string = (texto) => texto): string {
@@ -105,7 +100,7 @@ function SortableHead({
   );
 }
 
-export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
+export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionados, onSelecaoChange }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
   const del = useDeleteContact();
@@ -113,6 +108,29 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const router = useRouter();
   const qc = useQueryClient();
+
+  const comSelecao = selecionados !== undefined && onSelecaoChange !== undefined;
+  const todosIds = contacts.map((c) => c.id);
+  const todosMarcados = comSelecao && contacts.length > 0 && todosIds.every((id) => selecionados.includes(id));
+  const algunsMarcados = comSelecao && todosIds.some((id) => selecionados.includes(id)) && !todosMarcados;
+
+  function alternarTodos(marcar: boolean) {
+    if (!onSelecaoChange) return;
+    if (marcar) {
+      onSelecaoChange([...new Set([...(selecionados ?? []), ...todosIds])]);
+    } else {
+      onSelecaoChange((selecionados ?? []).filter((id) => !todosIds.includes(id)));
+    }
+  }
+
+  function alternarUm(id: string, marcar: boolean) {
+    if (!onSelecaoChange) return;
+    onSelecaoChange(
+      marcar
+        ? [...new Set([...(selecionados ?? []), id])]
+        : (selecionados ?? []).filter((s) => s !== id),
+    );
+  }
 
   async function iniciarConversa(c: Contact) {
     if (!c.phone_number || abrindo) return;
@@ -139,22 +157,24 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
     }
   }
 
-  async function confirmarExclusao() {
-    if (!alvo) return;
-    try {
-      await del.mutateAsync(alvo.id);
-      toast.success(t("Cliente excluído."));
-      setAlvo(null);
-    } catch {
-      // hook handles toast
-    }
-  }
-
-  return (
-    <>
+  return (    <>
     <Table>
       <TableHeader>
         <TableRow>
+          {comSelecao ? (
+            <TableHead className="w-[40px]">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-current"
+                checked={Boolean(todosMarcados)}
+                ref={(el) => {
+                  if (el) el.indeterminate = Boolean(algunsMarcados);
+                }}
+                onChange={(e) => alternarTodos(e.target.checked)}
+                aria-label={t("Selecionar todos")}
+              />
+            </TableHead>
+          ) : null}
           <SortableHead
             label={t("Nome")}
             column="display_name"
@@ -194,6 +214,17 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
       <TableBody>
         {contacts.map((c) => (
           <TableRow key={c.id} className="cursor-pointer">
+            {comSelecao ? (
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-current"
+                  checked={(selecionados ?? []).includes(c.id)}
+                  onChange={(e) => alternarUm(c.id, e.target.checked)}
+                  aria-label={`${t("Selecionar")} ${displayName(c, t)}`}
+                />
+              </TableCell>
+            ) : null}
             <TableCell className="font-medium">
               <Link href={`/app/contacts/${c.id}`} className="hover:underline">
                 {displayName(c)}
@@ -276,28 +307,23 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort }: Props) {
       </TableBody>
     </Table>
 
-    <AlertDialog open={alvo !== null} onOpenChange={(open) => { if (!open) setAlvo(null); }}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("Excluir cliente?")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {alvo
-              ? `${t("Isso remove")} ${displayName(alvo, t)} ${t("e a conversa associada, se houver. Esta ação não pode ser desfeita.")}`
-              : null}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={del.isPending}>{t("Cancelar")}</AlertDialogCancel>
-          <Button
-            variant="destructive"
-            onClick={() => void confirmarExclusao()}
-            disabled={del.isPending}
-          >
-            {del.isPending ? t("Excluindo…") : t("Excluir")}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    {alvo && (
+      <NexusConfirmDialog
+        aberto
+        aoFechar={(open) => {
+          if (!open) setAlvo(null);
+        }}
+        title={t("Excluir cliente?")}
+        description={`${t("Isso remove")} ${displayName(alvo, t)} ${t("e a conversa associada, se houver. Esta ação não pode ser desfeita.")}`}
+        confirmLabel={t("Excluir")}
+        busyLabel={t("Excluindo…")}
+        busy={del.isPending}
+        onConfirm={async () => {
+          await del.mutateAsync(alvo.id);
+          toast.success(t("Cliente excluído."));
+        }}
+      />
+    )}
     </>
   );
 }

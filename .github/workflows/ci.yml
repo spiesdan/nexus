@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
 
+# NEXUS 2.0 §73: cancela commits antigos do mesmo ref (não desperdiça runner
+# com A/B/C quando D é o estado atual).
+concurrency:
+  group: nexus-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 # O GITHUB_TOKEN destes jobs serve a `actions/checkout` (clone) e a
 # `actions/setup-node` (manifest de `actions/node-versions`, repo público) —
 # `contents: read` cobre os dois, que é o escopo que o próprio modelo de dados do

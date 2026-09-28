@@ -115,5 +115,9 @@ export async function GET(_req: NextRequest): Promise<Response> {
     }
   }
 
-  return ok({ data: out.slice(0, 200), total: out.length }, { requestId });
+  // Envelope canônico `{ data, meta }`: `ok()` JÁ embrulha em `{ data: ... }`
+  // — passar `ok({ data, total })` aqui dobrava o invólucro (`{data:{data}}`)
+  // e o client, que lia `corpo.data` como array, estourava em `.map is not a
+  // function` (error page da aba). O total (cap de 200) vai em `meta`.
+  return ok(out.slice(0, 200), { requestId, meta: { total: out.length } });
 }

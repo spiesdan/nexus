@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminUsage, type UsageRange } from "@/hooks/useAdminUsage";
 import { UsageCharts } from "@/components/admin/usage/UsageCharts";
 import { UsageTable } from "@/components/admin/usage/UsageTable";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 const RANGE_OPTIONS: { value: UsageRange; label: string }[] = [
@@ -23,35 +25,30 @@ export function UsageClient() {
   const t = useT();
   const [range, setRange] = useState<UsageRange>("30d");
 
-  const { data, isLoading, isError } = useAdminUsage(range);
+  const { data, isLoading, isError, refetch } = useAdminUsage(range);
 
   const usageData = data;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-text tracking-tight">{t("Uso & Custo")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("Consumo de mensagens, conversas e AI por tenant")}
-          </p>
-        </div>
-
-        {/* Range selector */}
-        <Select value={range} onValueChange={(v) => setRange(v as UsageRange)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={t("Período")} />
-          </SelectTrigger>
-          <SelectContent>
-            {RANGE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {t(opt.label)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <NexusPageHeader
+        title={t("Uso & Custo")}
+        subtitle={t("Consumo de mensagens, conversas e AI por tenant")}
+        actions={
+          <Select value={range} onValueChange={(v) => setRange(v as UsageRange)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t("Período")} />
+            </SelectTrigger>
+            <SelectContent>
+              {RANGE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {t(opt.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      />
 
       {/* Charts */}
       {isLoading ? (
@@ -61,9 +58,10 @@ export function UsageClient() {
           <Skeleton className="h-56 rounded-lg md:col-span-2" />
         </div>
       ) : isError || !usageData ? (
-        <div className="flex items-center justify-center rounded-lg border py-12 text-sm text-muted-foreground">
-          {t("Erro ao carregar dados de uso. Tente recarregar.")}
-        </div>
+        <NexusErrorState
+          description={t("Erro ao carregar dados de uso. Tente recarregar.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <>
           <UsageCharts series={usageData.series} />

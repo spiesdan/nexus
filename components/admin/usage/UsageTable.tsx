@@ -1,20 +1,12 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/empty";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ChartBar } from "@/lib/ui/icons";
 import type { UsageTenantRow } from "@/app/api/v1/admin/usage/route";
 import type { UsageRange } from "@/hooks/useAdminUsage";
 import { formatCentsUSD } from "@/lib/money";
 import { useT } from "@/hooks/i18n/useT";
+import { AdminDataTable, type ColunaAdmin } from "@/components/admin/AdminDataTable";
 
 // ---------------------------------------------------------------------------
 // Formatters
@@ -65,6 +57,62 @@ function exportCSV(tenants: UsageTenantRow[], range: UsageRange): void {
 }
 
 // ---------------------------------------------------------------------------
+// Colunas
+// ---------------------------------------------------------------------------
+
+function colunasAdmin(t: (texto: string) => string): ColunaAdmin<UsageTenantRow>[] {
+  return [
+    {
+      id: "tenant",
+      cabecalho: "Tenant",
+      celula: (row) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-sm">{row.tenant_name}</span>
+          <Badge variant="secondary" className="w-fit text-[10px] px-1.5 py-0">
+            {row.tenant_slug}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      id: "mensagens",
+      cabecalho: t("Mensagens"),
+      classeCabecalho: "text-right",
+      classeCelula: "text-right tabular-nums text-sm",
+      celula: (row) => fmtNum(row.messages_count),
+    },
+    {
+      id: "conversas",
+      cabecalho: t("Conversas"),
+      classeCabecalho: "text-right",
+      classeCelula: "text-right tabular-nums text-sm",
+      celula: (row) => fmtNum(row.conversations_count),
+    },
+    {
+      id: "invocacoes",
+      cabecalho: t("Invoc. AI"),
+      classeCabecalho: "text-right",
+      classeCelula: "text-right tabular-nums text-sm",
+      celula: (row) => fmtNum(row.ai_invocations_count),
+    },
+    {
+      id: "tokens",
+      cabecalho: "Tokens",
+      classeCabecalho: "text-right",
+      classeCelula: "text-right tabular-nums text-sm",
+      celula: (row) => fmtNum(row.ai_tokens_total),
+    },
+    {
+      id: "custo",
+      cabecalho: t("Custo AI"),
+      classeCabecalho: "text-right",
+      classeCelula: "text-right tabular-nums text-sm font-medium",
+      celula: (row) => fmtUSD(row.ai_cost_cents),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -75,14 +123,17 @@ interface UsageTableProps {
 
 export function UsageTable({ tenants, range }: UsageTableProps) {
   const t = useT();
+  const colunas = colunasAdmin(t);
+  const vazio = {
+    icon: ChartBar,
+    headline: "Nenhum tenant encontrado",
+    subcopy: "Não há dados de uso no período selecionado.",
+  };
+
+  // Vazio SEM a barra de cima — o original devolvia só o EmptyState, e a
+  // toolbar (título + Exportar CSV) não existia para quem não tinha dado.
   if (tenants.length === 0) {
-    return (
-      <EmptyState
-        icon={ChartBar}
-        headline="Nenhum tenant encontrado"
-        subcopy="Não há dados de uso no período selecionado."
-      />
-    );
+    return <AdminDataTable colunas={colunas} linhas={[]} chave={(r) => r.organization_id} vazio={vazio} />;
   }
 
   return (
@@ -101,49 +152,12 @@ export function UsageTable({ tenants, range }: UsageTableProps) {
         </Button>
       </div>
 
-      <div className="rounded-3xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tenant</TableHead>
-              <TableHead className="text-right">{t("Mensagens")}</TableHead>
-              <TableHead className="text-right">{t("Conversas")}</TableHead>
-              <TableHead className="text-right">{t("Invoc. AI")}</TableHead>
-              <TableHead className="text-right">Tokens</TableHead>
-              <TableHead className="text-right">{t("Custo AI")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tenants.map((row) => (
-              <TableRow key={row.organization_id}>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-sm">{row.tenant_name}</span>
-                    <Badge variant="secondary" className="w-fit text-[10px] px-1.5 py-0">
-                      {row.tenant_slug}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {fmtNum(row.messages_count)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {fmtNum(row.conversations_count)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {fmtNum(row.ai_invocations_count)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {fmtNum(row.ai_tokens_total)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm font-medium">
-                  {fmtUSD(row.ai_cost_cents)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <AdminDataTable
+        colunas={colunas}
+        linhas={tenants}
+        chave={(row) => row.organization_id}
+        vazio={vazio}
+      />
     </div>
   );
 }

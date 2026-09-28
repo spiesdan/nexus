@@ -10,18 +10,24 @@
 ## Remotes — onde commitar (REGRA PERMANENTE)
 
 O repositório canônico deste projeto é **`spiesdan/nexus`**
-(`https://github.com/spiesdan/nexus`). **Todo commit, push e PR vai para ele.
-Sempre.** Sem exceção, sem perguntar de novo.
+(`https://github.com/spiesdan/nexus`) — e ele é o **único remote**: repo a
+parte, sem fork (decisão do usuário em 2026-09-27, §101 do spec — o repo no
+GitHub já nasceu `fork: false`).
 
-- `nexus` → escrita. É para cá que `git push` aponta (upstream das branches).
-- `origin` (`melgarafael/DeskcommCRM`) → somente leitura (upstream histórico).
-  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
-- `fork` (`spiesdan/DeskcommCRM`) → somente leitura (espelho legado).
-  Nunca commitar, nunca dar push, nunca abrir PR contra ele.
+- `nexus` → o único remote. **Todo commit, push e PR vai para ele. Sempre.**
+  Sem exceção, sem perguntar de novo.
 
-Antes de `push`/`pr create`, confira com `git remote -v` e `git status -sb`
-(upstream precisa ser `nexus/...`). Errou o remoto? Não conserte com push
-duplo — apague a ref errada e refaça no `nexus`.
+Os remotes `origin` (`melgarafael/DeskcommCRM`, upstream histórico) e `fork`
+(`spiesdan/DeskcommCRM`, espelho legado) foram **removidos** em 2026-09-27.
+Antes disso as tags da NOSSA linhagem (v1.0.0–v1.14.0, `arquivo/*`,
+`nexus-v1-archive`) foram migradas para o `nexus`, então o comando de versão
+abaixo não precisa do origin. Se um doc/commit antigo citar `origin/main`,
+leia `nexus/main` — os registros históricos em `docs/handoffs/`/`docs/audits/`
+mantêm a citação de origem porque descrevem o que foi medido na época.
+
+Antes de `push`/`pr create`, confira com `git remote -v` (só `nexus`) e
+`git status -sb` (upstream precisa ser `nexus/...`). Errou o remoto? Não
+conserte com push duplo — apague a ref errada e refaça no `nexus`.
 
 ## Objetivo do projeto
 
@@ -52,10 +58,21 @@ v1.6.0 — seis minors de atraso, e nenhum teste a vigiava. Afirmação de vers�
 release; comando não. A que está publicada agora:
 
 ```bash
-git ls-remote --tags --refs origin 'refs/tags/v*' \
+git ls-remote --tags --refs nexus 'refs/tags/v*' \
   | sed 's#.*refs/tags/v##' | awk '!/-/' | sort -V | tail -1   # awk, nao grep -v -- '-':
                                                                 # em maquina com ugrep aquele nao roda
 ```
+
+(Em 2026-09-27 o remote `origin` saiu de cena — §101: repo a parte, sem
+fork — e as tags da nossa linhagem (v1.0.0–v1.14.0) migraram para o
+`nexus`, então este comando não perde nada. As 52 tags da linhagem PARALELA
+do upstream (`melgarafael/DeskcommCRM`, v1.15.0–v1.56.0 — 4.582 commits
+fora do nosso histórico) foram trazidas junto e **removidas no mesmo dia,
+por decisão do usuário**: manter faria este comando responder `1.56.0`
+(código alheio ao nosso CHANGELOG) e faria o agente de atualização da VPS
+oferecer a linhagem upstream por cima da instalação. Elas continuam no
+`melgarafael/DeskcommCRM` para consulta. Nenhuma tag v2 existe ainda: a
+NEXUS 2.0 ainda não publicou release.)
 
 O `package.json` **não** é a fonte da versão do produto (segue em `0.1.0`, e é assim de
 propósito). A fonte é a tag `v*` mais a seção do `CHANGELOG.md` — que é tela de produto, lida
@@ -98,10 +115,12 @@ mudança toca schema, RLS ou UI, `gov:verify` verde **não** é prova — rode `
 **O que o CI cobre.** `.github/workflows/ci.yml`: `verify` = typecheck + lint + test:unit;
 `invariants` = `pnpm test:db` (isolamento RLS + invariantes de governança contra Postgres
 efêmero pg15). `.github/workflows/perf.yml`: `build-and-size` = `pnpm build`.
-`.github/workflows/e2e.yml` roda **45 das 46 specs** Playwright contra um Supabase local de
+`.github/workflows/e2e.yml` roda **88 das 90 specs** Playwright contra um Supabase local de
 verdade com o `baseline.sql` aplicado — o mesmo banco que o self-hoster tem. **É check
-obrigatório desde 2026-08-08.** A **única** de fora é `vps-fresh-onboarding` (WAHA + Redis +
-Resend + Nuvemshop; é a P0 da doutrina de QA) — ou seja, `e2e` verde não prova a jornada de
+obrigatório desde 2026-08-08.** As **duas** de fora são `vps-fresh-onboarding` (WAHA + Redis +
+Resend + Nuvemshop; é a P0 da doutrina de QA) e `inbox-tempo-real` (o caso com chave precisa de
+conta Google de teste com consentimento pré-aprovado; sem ela o job pendura no login — motivo
+medido no bloco `FORA_DO_CI`) — ou seja, `e2e` verde não prova a jornada de
 instalação fresca. `followup-journey`, `webhooks` e `capacidades-do-agente` estiveram fora e
 **voltaram**: rodam hoje (`e2e.yml`, listas `SPECS_PARTE_1`/`SPECS_PARTE_2`).
 
@@ -188,9 +207,10 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
 - Arquivos de invariante de banco em `tests/invariants/` — RLS/isolamento cross-tenant, RBAC,
   governança (G1–G6). Excluídos do `test:unit` de propósito; rodam via `pnpm test:db` **e no job
   `invariants` do CI**. Quantos: `git ls-files 'tests/invariants/*.test.ts' | wc -l`.
-- Specs Playwright em `tests/e2e/`, **todas no CI menos uma** (via `e2e.yml`, **obrigatório**). A
-  única de fora é `vps-fresh-onboarding`, por dependência de serviço externo
-  (WAHA/Redis/Resend/Nuvemshop). Ver issue #63. Quantas: `ls tests/e2e/*.spec.ts | wc -l`.
+- Specs Playwright em `tests/e2e/`, **todas no CI menos duas** (via `e2e.yml`, **obrigatório**). As
+  duas de fora são `vps-fresh-onboarding` (dependência de serviço externo —
+  WAHA/Redis/Resend/Nuvemshop; ver issue #63) e `inbox-tempo-real` (conta Google de teste;
+  motivo em `FORA_DO_CI`). Quantas: `ls tests/e2e/*.spec.ts | wc -l`.
 
 > **Os dois números saíram daqui, e é decisão, não descuido.** Estavam em 102 e 46/45 quando o
 > medido era 114 e 51/50 — envelheceram porque toda entrega que acrescenta um teste os falsifica,
@@ -200,11 +220,12 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
 
 ## Limitações conhecidas (estado em 2026-07-29, contra `origin/main` @ 789dfa6)
 
-- **1 das 46 specs E2E segue fora do CI** (`vps-fresh-onboarding`), e o `e2e` **é** check
+- **2 das 90 specs E2E seguem fora do CI** (`vps-fresh-onboarding` e `inbox-tempo-real`), e o
+  `e2e` **é** check
   obrigatório desde 2026-08-08. Ou seja: um PR que quebre o `e2e` não entra — mas a jornada de
   instalação fresca, que é o produto que se vende, continua sem gate. Se você mexeu nela, a
   prova é sua. *(Corrigido em 2026-08-14; a redação anterior — "4 das 32, não-obrigatório" —
-  mudava a régua de qualquer triagem que a lesse.)*
+  mudava a régua de qualquer triagem que a lesse. Recontado em 2026-09-27 no passo 7.)*
 - Rate limit HTTP: `lib/auth/rate-limit.ts` cobre **login, signup, recuperação de senha e
   aceite de convite** (contando por IP **e** por identificador hasheado); `checkRateLimit` cobre
   o webhook de captação e o dispatcher de IA. **Crons e MCP seguem sem.** Meça antes de agir:

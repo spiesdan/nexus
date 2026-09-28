@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -177,7 +177,7 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
-      <PageHeader
+      <NexusPageHeader
         title={t("Tarefas")}
         subtitle={t("Agendadas, check-in de visita e atividades realizadas.")}
         actions={

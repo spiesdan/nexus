@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/badge";
@@ -8,16 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { Robot, Plus, Trash, PencilSimple } from "@/lib/ui/icons";
 import { SeloDeAutoria } from "@/components/operacao/SeloDeAutoria";
 import {
@@ -38,7 +30,7 @@ function triggerLabel(trigger: string, t: (texto: string) => string): string {
 
 export function RulesTab() {
   const t = useT();
-  const { data, isLoading } = useAutomationRules();
+  const { data, isLoading, isError, refetch } = useAutomationRules();
   const update = useUpdateAutomationRule();
   const del = useDeleteAutomationRule();
   const qc = useQueryClient();
@@ -77,6 +69,16 @@ export function RulesTab() {
       <div className="grid gap-3 pt-4 sm:grid-cols-2">
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  // ERRO NÃO É LISTA VAZIA (mesmo molde do CapturasTab): sem este ramo, a
+  // falha da consulta caía no empty "crie sua primeira automação".
+  if (isError) {
+    return (
+      <div className="pt-4">
+        <NexusErrorState onRetry={() => void refetch()} />
       </div>
     );
   }
@@ -162,29 +164,23 @@ export function RulesTab() {
 
       <RuleEditor open={editorOpen} onOpenChange={setEditorOpen} rule={editing} />
 
-      <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("Excluir esta automação?")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleting?.name} {t("para de rodar imediatamente. Essa ação não pode ser desfeita.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (!deleting) return;
-                await del.mutateAsync(deleting.id);
-                toast.success(t("Automação excluída."));
-                setDeleting(null);
-              }}
-            >
-              {t("Excluir")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleting && (
+        <NexusConfirmDialog
+          aberto
+          aoFechar={(o) => !o && setDeleting(null)}
+          title={t("Excluir esta automação?")}
+          description={
+            <>
+              {deleting.name} {t("para de rodar imediatamente. Essa ação não pode ser desfeita.")}
+            </>
+          }
+          busy={del.isPending}
+          onConfirm={async () => {
+            await del.mutateAsync(deleting.id);
+            toast.success(t("Automação excluída."));
+          }}
+        />
+      )}
     </div>
   );
 }

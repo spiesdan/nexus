@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { Button } from "@/components/ui/button";
 import { connectNuvemshop } from "@/app/actions/integrations/connectNuvemshop";
 import { disconnectNuvemshop } from "@/app/actions/integrations/disconnectNuvemshop";

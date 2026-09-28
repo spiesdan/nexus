@@ -8,12 +8,12 @@
  * consequência escrita — inclusive a ruim.
  */
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import { apiClient } from "@/lib/api/client";
 import type { VisibilityMode } from "@/lib/auth/types";
 import { ROUTING_MODES, VISIBILITY_MODES, type RoutingMode } from "@/lib/schemas/routing";
@@ -159,10 +159,14 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
 
         {form.mode === "round_robin" ? (
           <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label htmlFor="max_retries">{t("Tentativas antes de desistir")}</Label>
+            <FormField
+              label={t("Tentativas antes de desistir")}
+              id="max_retries"
+              hint={t(
+                "Quando não há ninguém disponível, o sistema tenta de novo mais tarde. Ao estourar, a conversa fica na fila esperando alguém.",
+              )}
+            >
               <Input
-                id="max_retries"
                 type="number"
                 min={0}
                 max={20}
@@ -172,18 +176,9 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
                   setForm((f) => ({ ...f, max_retries: Number(e.target.value) }))
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Quando não há ninguém disponível, o sistema tenta de novo mais tarde. Ao estourar, a conversa fica na fila esperando alguém.",
-                )}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="backoff_seconds">
-                {t("Espera entre tentativas (segundos)")}
-              </Label>
+            </FormField>
+            <FormField label={t("Espera entre tentativas (segundos)")} id="backoff_seconds">
               <Input
-                id="backoff_seconds"
                 type="number"
                 min={1}
                 max={3600}
@@ -193,7 +188,7 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
                   setForm((f) => ({ ...f, backoff_seconds: Number(e.target.value) }))
                 }
               />
-            </div>
+            </FormField>
           </div>
         ) : null}
       </Card>

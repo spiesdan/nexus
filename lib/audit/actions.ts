@@ -424,6 +424,17 @@ export const AUDIT_ACTIONS = [
   "shipment.deleted",
   "shipment_order.status",
   "shipment_order.removed",
+  // Separação (migration 0240). Conferência antes da rota: quem separou
+  // e quando, por item — o romaneio diz o que deveria ir, isto diz o que foi.
+  "shipment_order.separado",
+  // Vendedor autônomo (NEXUS FASE 10). Decisões do Orchestrator com a
+  // trilha de governança no metadata (quem/agente/dados/ferramentas/
+  // políticas/resultado) — o Decision Log se lê em /api/v1/audit.
+  "ai.action.proposed",
+  "ai.action.approved",
+  "ai.action.rejected",
+  "ai.policy.updated",
+  "ai.action.executed",
   "shipment.proof_uploaded",
   // Roteirizador (migration 0231). Rota é dinheiro em movimento com GPS no
   // meio: otimização, sequência, posição manual, início e fim com rastro.
@@ -432,6 +443,13 @@ export const AUDIT_ACTIONS = [
   "shipment.rota.ordenada",
   "shipment.rota.iniciada",
   "shipment.rota.finalizada",
+  // Compras e estoque (migrations 0242/0243, NEXUS §46–§47). Mercadoria e
+  // dinheiro de compra com rastro de quem, quando e por quê.
+  "supplier.created",
+  "purchase.created",
+  "purchase.status",
+  "purchase.received",
+  "inventory.movement",
   // Fiscal (migration 0213). Nota é fato fiscal: criação e cancelamento com
   // rastro de quem, quando e por quê.
   "invoice.created",

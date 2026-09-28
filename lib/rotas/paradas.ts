@@ -28,6 +28,8 @@ export interface ItemDaCargaParaParada {
   order_id: string;
   sequencia: number;
   status: string;
+  /** NULL/ausente = ainda não separado/conferido (0240). */
+  separado_em?: string | null;
   numero: number;
   cliente_nome: string;
   contact_id: string | null;

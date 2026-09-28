@@ -57,6 +57,7 @@ export default async function DashboardHomePage() {
     metaAc,
     projecaoAc,
     vendidoHoje,
+    diasDecorridos,
     necessarioDia,
     diasUteisRestantes,
     previsaoMes,
@@ -75,6 +76,7 @@ export default async function DashboardHomePage() {
       hora={hora}
       mes={mes}
       rotuloMes={rotuloDoMes(mes)}
+      diaHoje={diasDecorridos}
       serie={ag.serieDiaria.map((s, i) => ({
         dia: Number(s.dia.slice(8, 10)),
         vendaAc: vendaAc[i] ?? 0,

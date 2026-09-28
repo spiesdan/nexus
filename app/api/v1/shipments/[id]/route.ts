@@ -1,8 +1,9 @@
 /**
  * GET   /api/v1/shipments/[id] — a carga com os pedidos em ordem de rota.
  * PATCH /api/v1/shipments/[id] — muda status/veículo/motorista.
- *         Sair de `montando` para `em_rota` vira os itens para `em_rota`
- *         junto; concluir exige zero pendência (tudo entregue ou devolvido).
+ *         Sair de `montando` para `em_rota` exige tudo separado (0240) e
+ *         vira os itens para `em_rota` junto; concluir exige zero
+ *         pendência (tudo entregue ou devolvido).
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -11,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { cargaPatchSchema, COLUNAS_DA_CARGA } from "@/lib/schemas/expedicao";
+import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +30,7 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
 
   const { data: itens, error: erroItens } = await supabase
     .from("shipment_orders")
-    .select("id, order_id, sequencia, status")
+    .select("id, order_id, sequencia, status, separado_em")
     .eq("shipment_id", id)
     .eq("organization_id", orgId)
     .order("sequencia");
@@ -71,7 +73,7 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
   return {
     carga,
     itens: (itens ?? []).map((i) => {
-      const r = i as unknown as { id: string; order_id: string; sequencia: number; status: string };
+      const r = i as unknown as { id: string; order_id: string; sequencia: number; status: string; separado_em: string | null };
       return {
         ...r,
         pedido: pedidos[r.order_id] ?? null,
@@ -118,12 +120,24 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
   const statusAtual = (antes.carga as unknown as { status: string }).status;
 
   // Regras de transição (a máquina é pequena e mora aqui, legível):
-  // - sair de montando para em_rota: vira os itens junto;
+  // - sair de montando para em_rota: exige tudo separado e vira os itens junto;
   // - concluir: só sem pendência (na_carga/em_rota abertos);
   // - carga concluída/cancelada não reabre (histórico não se reescreve).
   if (parsed.data.status) {
     if (statusAtual === "concluida" || statusAtual === "cancelada") {
       return fail("validation_failed", "Carga encerrada não muda de status.", 422, { requestId });
+    }
+    if (parsed.data.status === "em_rota" && statusAtual === "montando") {
+      // Conferência §49 (mesma regra do iniciar — ver lib/entregas/separacao).
+      const naoSeparados = qtdNaoSeparados(antes.itens);
+      if (naoSeparados > 0) {
+        return fail(
+          "validation_failed",
+          `${naoSeparados} pedido(s) ainda sem separação/conferência.`,
+          422,
+          { requestId },
+        );
+      }
     }
     if (parsed.data.status === "concluida") {
       // em_atendimento é pendência: chegou ≠ entregue.

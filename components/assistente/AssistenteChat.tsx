@@ -44,6 +44,11 @@ async function lerEnvelope(res: Response): Promise<{ data?: unknown; code?: stri
   }
 }
 
+export interface ContextoDaPagina {
+  pagina: string;
+  contact_id?: string;
+}
+
 /**
  * Janela do assistente — painel ancorado no canto, não modal.
  *
@@ -54,8 +59,19 @@ async function lerEnvelope(res: Response): Promise<{ data?: unknown; code?: stri
  *
  * Escrita SEMPRE com OK humano: a IA só monta a proposta; o botão Confirmar
  * chama `/api/v1/assistente/executar`, que revalida tudo e executa auditado.
+ *
+ * Copilot §33: `contexto` diz de onde chamam (pathname + contato quando a
+ * URL carrega um); o servidor cola o resumo real no prompt.
  */
-export function AssistenteChat({ aberto, onFechar }: { aberto: boolean; onFechar: () => void }) {
+export function AssistenteChat({
+  aberto,
+  onFechar,
+  contexto,
+}: {
+  aberto: boolean;
+  onFechar: () => void;
+  contexto?: ContextoDaPagina;
+}) {
   const t = useT();
   const [mensagens, setMensagens] = useState<Mensagem[]>([
     {
@@ -99,7 +115,7 @@ export function AssistenteChat({ aberto, onFechar }: { aberto: boolean; onFechar
       const res = await fetch("/api/v1/assistente/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ mensagens: historicoParaIA(comUsuario) }),
+        body: JSON.stringify({ mensagens: historicoParaIA(comUsuario), ...(contexto ? { contexto } : {}) }),
       });
       const env = await lerEnvelope(res);
       if (!res.ok || !env.data) {

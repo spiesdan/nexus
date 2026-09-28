@@ -1,7 +1,7 @@
 "use client";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useRealtimeChannel } from "@/hooks/realtime/useRealtimeChannel";
 import type { AlertKind } from "@/app/api/v1/admin/dashboard/kpis/route";
 

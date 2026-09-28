@@ -25,11 +25,12 @@
  * saída) antes de qualquer interação seguinte — serializa cada troca de
  * filtro em vez de confiar que o clique do item já fechou tudo a tempo.
  */
-import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { test, expect, type Page } from "@playwright/test";
+
+import { execNpx } from "./utils/npx";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 // test-results/ é limpo pelo outputDir do Playwright a cada run — preserva as
@@ -50,7 +51,7 @@ function loadCreds(): Creds {
     return !c.users?.manager;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
@@ -141,7 +142,7 @@ async function cleanupLiveEnrollment(page: Page, live: LiveEnrollment): Promise<
 
 test.describe("followup queue — fila unificada (Task 7.1)", () => {
   test.beforeAll(() => {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-promise.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-followup-promise.ts"], { stdio: "inherit" });
   // O seed ESCREVE em .e2e-creds.json, e `creds` foi lido no carregamento do
     // módulo — sem reler, o objeto em memória nunca vê o bloco que o seed
     // acabou de gravar. Foi por isto que esta spec ficou fora do CI: a mensagem

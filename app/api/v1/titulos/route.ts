@@ -42,16 +42,27 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (situacao !== "" && situacao !== "vencido" && situacao !== "a_vencer") {
     return fail("validation_failed", "situacao aceita: vencido, a_vencer.", 422, { requestId });
   }
+  // A busca da Global Search (§17): casa por cliente ou pelo NÚMERO do pedido.
+  // Só dígitos → `numero` exato (é o que se digita ao procurar o pedido "1237");
+  // qualquer outro termo → `cliente_nome` ilike, o mesmo vocabulário da tela.
+  // Sem `.or()` combinado de propósito: o ilike do PostgREST em or-queue
+  // quebra com vírgula no termo, e dois ramos separados não têm essa boca.
+  const busca = req.nextUrl.searchParams.get("busca")?.trim() ?? "";
 
   const hoje = new Date().toISOString().slice(0, 10);
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let q = supabase
     .from("commercial_orders")
     .select("id, numero, cliente_nome, total_cents, condicao_pagamento, created_at")
     .eq("organization_id", authz.org.orgId)
     .in("status", TITULOS_STATUS)
-    .order("created_at", { ascending: false })
-    .limit(2000);
+    .order("created_at", { ascending: false });
+  if (busca !== "") {
+    q = /^\d+$/.test(busca)
+      ? q.eq("numero", Number(busca))
+      : q.ilike("cliente_nome", `%${busca}%`);
+  }
+  const { data, error } = await q.limit(2000);
   if (error) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
 
   const titulos: Titulo[] = [];

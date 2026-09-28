@@ -2,7 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { LockKey, MagnifyingGlass } from "@phosphor-icons/react";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -197,10 +200,7 @@ export function ProspeccaoClient({
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{textos.titulo}</h1>
-        <p className="text-sm text-muted-foreground">{textos.subtitulo}</p>
-      </div>
+      <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
       <Tabs defaultValue="buscar">
         <TabsList className="flex-wrap">
@@ -283,15 +283,16 @@ export function ProspeccaoClient({
               </Button>
             </Card>
           ) : (
-            <Card className="hover-raise p-6 text-center text-sm text-muted-foreground">
-              {t("Criar busca exige papel de atendente ou superior.")}
-            </Card>
+            <NexusEmptyState
+              icon={LockKey}
+              headline={t("Criar busca exige papel de atendente ou superior.")}
+            />
           )}
         </TabsContent>
 
         <TabsContent value="pesquisas" className="mt-4">
           {listaBuscas.length === 0 ? (
-            <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{textos.vazias}</Card>
+            <NexusEmptyState icon={MagnifyingGlass} headline={textos.vazias} />
           ) : (
             <ul className="space-y-3">
               {listaBuscas.map((b) => {

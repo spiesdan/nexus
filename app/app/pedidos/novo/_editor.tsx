@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusSteps } from "@/components/nexus-ui/forms/NexusSteps";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
 import { CustomerSelector, type ContatoOpcao } from "./_cliente";
 import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "./_produtos";
 import { OrderItems, type LinhaDoPedido } from "./_itens";
+import { AfinsNoPedido } from "./_afins";
 import { OrderSummary } from "./_resumo";
 import { haQuantoTempo, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
@@ -486,20 +488,14 @@ export function OrderEditor({
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pb-24 lg:pb-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-medium tracking-tight text-text">{textos.titulo}</h1>
-          <p className="text-sm text-muted-foreground">
-            {textos.subtitulo}
-            {linhas.length > 0 && salvoEm && (
-              <>
-                {" "}
-                · {t("salvo")} {haQuantoTempo(salvoEm) ?? ""}
-              </>
-            )}
-          </p>
-        </div>
-      </div>
+      <NexusPageHeader
+        title={textos.titulo}
+        subtitle={
+          linhas.length > 0 && salvoEm
+            ? `${textos.subtitulo} · ${t("salvo")} ${haQuantoTempo(salvoEm) ?? ""}`
+            : textos.subtitulo
+        }
+      />
 
       <NexusSteps steps={PASSOS} current={passo} reached={alcancado} onGo={(i) => setPasso(i)} />
 
@@ -560,6 +556,13 @@ export function OrderEditor({
             linhas={linhas}
             aoMudar={mudarLinha}
             aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
+          />
+
+          <AfinsNoPedido
+            carrinho={linhas.map((l) => l.product_id)}
+            contatoId={contatoId}
+            porId={porId}
+            aoAdicionar={adicionar}
           />
 
           {relacionados.length > 0 && (

@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { FormularioDaMarca } from "./_form";
 
@@ -80,15 +81,13 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{traduzir("Marca", idioma)}</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {traduzir(
-            "O nome e a cor que este sistema mostra para todo mundo que usa esta instalação.",
-            idioma,
-          )}
-        </p>
-      </div>
+      <NexusPageHeader
+        title={traduzir("Marca", idioma)}
+        subtitle={traduzir(
+          "O nome e a cor que este sistema mostra para todo mundo que usa esta instalação.",
+          idioma,
+        )}
+      />
 
       <FormularioDaMarca
         gravada={{

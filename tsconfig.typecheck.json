@@ -24,5 +24,8 @@
     "tests/**/*.ts",
     "tests/**/*.tsx"
   ],
-  "exclude": ["node_modules", ".next", "dist", "scripts/**"]
+  // `docs/legacy/**` = kit de scrape Mercos arquivado (ferramenta offline, erros
+  // de tipo pré-existentes — em `scripts/**` também estava fora). Fora do
+  // typecheck e do build de propósito: código morto, não é produto.
+  "exclude": ["node_modules", ".next", "dist", "scripts/**", "docs/legacy/**"]
 }

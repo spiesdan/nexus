@@ -101,6 +101,13 @@ const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
       "app/api/v1/commercial-orders/route.ts:105, [id]/duplicar/route.ts:138 e " +
       "lib/assistente/propostas.ts:116. A função confere membership via auth.uid().",
   },
+  {
+    fn: "fn_proximo_numero_compra(uuid)",
+    razao:
+      "POST /api/v1/purchase-orders chama com a sessão do usuário (createClient, " +
+      "rpc com p_org da org ativa dentro do handler com requireRole('agent')). " +
+      "A função confere membership via auth.uid().",
+  },
 ];
 
 interface Definer {

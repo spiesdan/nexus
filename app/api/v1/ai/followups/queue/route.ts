@@ -146,6 +146,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("invalid_request", "pointer_id inválido.", 400, { requestId });
   }
   const q = sp.get("q")?.trim() || null;
+  const contactIdParam = sp.get("contact_id")?.trim() || null;
+  if (contactIdParam !== null && !UUID_RX.test(contactIdParam)) {
+    return fail("invalid_request", "contact_id inválido.", 400, { requestId });
+  }
   const cursorRaw = sp.get("cursor");
   const cursor = cursorRaw ? decodeCursor(cursorRaw) : null;
   if (cursorRaw && !cursor) {
@@ -197,6 +201,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (status !== null) enrollQuery = enrollQuery.eq("status", status);
   if (pointerId !== null) enrollQuery = enrollQuery.eq("pointer_id", pointerId);
   if (contactIds) enrollQuery = enrollQuery.in("contact_id", contactIds);
+  if (contactIdParam !== null) enrollQuery = enrollQuery.eq("contact_id", contactIdParam);
   if (cursor) {
     enrollQuery =
       cursor.next_fire_at !== null
@@ -219,6 +224,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .order("id", { ascending: true })
     .limit(limit + 1);
   if (contactIds) promiseQuery = promiseQuery.in("contact_id", contactIds);
+  if (contactIdParam !== null) promiseQuery = promiseQuery.eq("contact_id", contactIdParam);
   if (cursor) {
     promiseQuery =
       cursor.next_fire_at !== null

@@ -103,6 +103,41 @@ if [ -z "$FORCE" ] && [ -z "$MESMA_TAG" ]; then
        bash hostgator-setup-kit/update.sh --to $TARGET_TAG --force" ;;
   esac
 fi
+
+# ── O alvo tem que existir NO REPOSITÓRIO OFICIAL, não só nesta cópia ─────────
+# Medido na VPS crm.billhigiene.tech em 2026-09-27: o clone tinha 52 tags do
+# projeto irmão que NUNCA passaram por aqui (herdadas do bootstrap antigo), o
+# agente de cron ofereceu a maior delas, e este script validava o alvo só
+# contra o `git tag` LOCAL — fez checkout do código alheio, e só depois o pull
+# das imagens falhou, deixando o repositório numa versão que ninguém publicou
+# daqui. Agora a autoridade é o `origin` (o remoto de onde este servidor baixa
+# o código): tag que não existe lá não entra, nem com --force. Sem `origin`
+# (fixture de teste, repo local) não há o que consultar — local é tudo que há.
+# Falha de rede também recusa: prefiro não mexer a instalar tag de origem que
+# não sei. Recusa = código 3, nada tocado (o agente não tenta desfazer nada).
+# `ls-remote --exit-code` devolve 2 quando o padrão não casa com tag nenhuma e
+# 128 quando nem conseguiu falar — daí os dois braços do case. Tag com caractere
+# curinga é impossível: o git proíbe ?*[ em ref, então o padrão casa ou não
+# casa com a tag inteira.
+if git remote get-url origin >/dev/null 2>&1; then
+  _origem="$(git remote get-url origin)"
+  if git ls-remote --exit-code --tags --refs origin "refs/tags/${TARGET_TAG}" >/dev/null 2>&1; then
+    :
+  else
+    _rc=$?
+    case "$_rc" in
+      2) refuse "A versão $TARGET_TAG não existe no repositório oficial de onde este servidor
+     baixa as atualizações ($_origem) — ninguém publicou ela daqui; nesta cópia ela só
+     existe como tag escrita à mão ou herdada de outro clone.
+     Não mexi em nada: nem no banco, nem no app — está tudo como estava." ;;
+      *) refuse "Não consegui confirmar com o repositório oficial ($_origem) se a versão
+     $TARGET_TAG foi publicada. Prefiro não mexer a instalar uma tag de origem que não
+     sei. Não mexi em nada. Tente de novo em alguns minutos; se insistir, confira a
+     internet do servidor." ;;
+    esac
+  fi
+fi
+
 if [ -n "$MESMA_TAG" ]; then
   c_ylw "O código já está na $TARGET_TAG, mas o app está rodando uma imagem antiga. Vou atualizar a imagem."
 else

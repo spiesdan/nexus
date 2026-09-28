@@ -11,6 +11,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "./_carga";
+import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 
 export async function transicaoDeRota(
   _req: NextRequest,
@@ -31,6 +32,13 @@ export async function transicaoDeRota(
     }
     if (d.paradas.length === 0) {
       return fail("validation_failed", "Carga sem pedidos.", 422, { requestId });
+    }
+    // Conferência §49 (0240): o romaneio diz o que deveria ir; o separado diz o que foi.
+    const naoSeparados = qtdNaoSeparados(d.itens);
+    if (naoSeparados > 0) {
+      return fail("validation_failed", `${naoSeparados} pedido(s) ainda sem separação/conferência.`, 422, {
+        requestId,
+      });
     }
     const { error } = await supabase
       .from("shipments")

@@ -5,21 +5,20 @@ import {
   PlatformAdminsTableSkeleton,
 } from "@/components/admin/platform-admins/PlatformAdminsTable";
 import { useAdminPlatformAdmins } from "@/hooks/useAdminPlatformAdmins";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 export function PlatformAdminsClient() {
   const t = useT();
-  const { data, isLoading, isError } = useAdminPlatformAdmins();
+  const { data, isLoading, isError, refetch } = useAdminPlatformAdmins();
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-medium text-text tracking-tight">{t("Platform Admins")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("Administradores com acesso privilegiado à plataforma")}
-        </p>
-      </div>
+      <NexusPageHeader
+        title={t("Platform Admins")}
+        subtitle={t("Administradores com acesso privilegiado à plataforma")}
+      />
 
       {/* T-04 Notice — proeminente, antes da tabela */}
       <DBAOnlyNotice />
@@ -28,9 +27,10 @@ export function PlatformAdminsClient() {
       {isLoading ? (
         <PlatformAdminsTableSkeleton />
       ) : isError ? (
-        <div className="flex items-center justify-center rounded-lg border py-12 text-sm text-muted-foreground">
-          {t("Erro ao carregar platform admins. Tente recarregar.")}
-        </div>
+        <NexusErrorState
+          description={t("Erro ao carregar platform admins. Tente recarregar.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <PlatformAdminsTable data={data ?? []} />
       )}

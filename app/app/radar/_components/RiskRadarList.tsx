@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
