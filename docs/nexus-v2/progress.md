@@ -9,9 +9,9 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `ef09cc9ae feat(ui): Evoluicao de Vendas no molde da referencia, nome no Brain e botao de novo produto` — **3 melhorias de UI entregues** (2026-09-28): seção Evolução de Vendas no molde da referência na home e em `/app/indicadores`, nome do cliente nas Recomendações do Sales Brain, e "Novo produto"/"Importar planilha" de volta em `/app/products`. Prova visual: 5 screenshots citados em "Última ação" (`evidence/ui-evolucao-vendas/`).
-  Antes: `30d414ae6` **e2e do PR #8 FECHOU VERDE** (run `36359178690`: p1 138 passed/20,6min, p2 114 passed/19,1min, `e2e = pass 45m12s`, 5/5 checks obrigatórios). Antes: rebalance + reporter `list` (`b5631e70e`), torno da contenção (`434d3573b`/`6ff9db071`), repo público (destravou `test:shell`).
-  — e o commit que entrega este arquivo **fecha o handoff deste torno**.
+- HEAD: `2da983b7d release(1.15.0): a versão montada a partir dos fragmentos declarados` — **PR #8 MERGEADO e v1.15.0 PUBLICADA (2026-09-28)**: `gh pr merge 8 --merge` → `f8e29bbff`; fragmento `.changes/nexus-2-fases-0-8.md` em `b936dabc6`; corte manual do CHANGELOG (seção 1.15.0, fragmento consumido) em `2da983b7d`; tag anotada `v1.15.0` (`907bc0249`, no origin e igual à local); `publish-image` da tag **8/8 jobs ✅** (run `36454673277`: trava `a-tag-veio-da-main`, 3 builds, boot gate `imagem-do-app-sobe`, `promover-stable`); **sonda de digest: `stable` == `1.15.0` nas três imagens** — a VPS puxa na próxima rodada do agente (maior tag do origin = `v1.15.0`). `nexus-v2` fast-forward para `2da983b7d` (as duas branches estão iguais).
+  **Corte MANUAL no precedente da v1.14.0 (`8dd9637a6`)**: o `release.yml` do CI está quebrado — os secrets `RELEASE_APP_ID`/`RELEASE_APP_PRIVATE_KEY` **não existem** na repo e TODO run morre em ~8s no `create-github-app-token` (medido: `36453815769`, `36453827262`, `36454669046`; todo push na `main` re-executa e re-falha — ruído pré-existente, não bloqueia nada). Para consertar de verdade falta criar o GitHub App e os 2 secrets.
+  Antes: `ef09cc9ae` 3 melhorias de UI (prova visual citada abaixo em `evidence/ui-evolucao-vendas/`) · `30d414ae6` e2e do PR #8 verde (run `36359178690`) · `b5631e70e` rebalance + reporter · contenção `434d3573b`/`6ff9db071` · repo público (destravou `test:shell`).
   (anteriores: `bd74efd80` deploy medido · `d4416bfe4` health probe ·
   `dbbebc1ee` APP/WORKER/SCHEDULER · `bf6483903` catraca namespace ·
   `ca4882a6f` §101 repo a parte · `e3b133423` docs handoff 8 ·
@@ -50,11 +50,11 @@
   só `https://github.com/spiesdan/nexus`) — `origin`/`fork` removidos no §101
   (decisão do usuário, respondida; AGENTS.md é a doutrina da seção). Todo
   push vai para `nexus`.
-- **PR #8 `nexus-v2 → main` ABERTO** (medido em 2026-09-27): os 5 checks
-  obrigatórios rodam — verify, build-and-size, invariants, e2e, imagens-ok.
-  **Todos VERDES em `30d414ae6`** (e2e 45m12s — medido após o run
-  `36359178690`; antes disso o e2e reprovava por timeout de 30min na
-  parte 2).
+- **PR #8 `nexus-v2 → main` MERGEADO** (`f8e29bbff`, 2026-09-28 ~16:48Z;
+  100 commits, 648 arquivos; `main` era ancestral — fast-forward possível).
+  Os 5 checks obrigatórios estavam verdes no head `c42fc37b5` (verify,
+  build-and-size, invariants, e2e 48m59s, imagens-ok — run `36445911505`
+  e irmãos). PR fechado; trabalho novo continua na `nexus-v2`.
 - Árvore limpa (nada de WIP). Todos os commits acima já estão em `nexus`.
 
 ## Última ação
@@ -120,6 +120,20 @@ referência (home + indicadores), nome do cliente nas Recomendações, e
   `.env.e2e` precisa ser recarregado a cada chamada (env de shell não
   persiste entre comandos); Docker/WSL derramado durante o build
   (2,5 GB livres → `wsl --shutdown` + religar depois).
+- **Publicação da v1.15.0 (2026-09-28, ordem medida)**: merge do PR #8 →
+  fragmento no `main` (`b936dabc6`, validado antes por
+  `cortar-release.ts` sem `--escrever`) → corte do CHANGELOG
+  (`--escrever`, commits `release(1.15.0):` no precedente `8dd9637a6`) →
+  tag anotada criada LOCALMENTE e push de `main` e tag (nesta ordem, para
+  a trava `a-tag-veio-da-main` ver a tag contida) → `publish-image` 8/8 ✅
+  → sonda de digest `stable == 1.15.0` nas três imagens. **O caminho do CI
+  está quebrado** (secrets do App inexistentes — ver "Estado do
+  repositório"); enquanto não houver App, o corte é este. Tags remanescentes
+  da linhagem upstream `melgarafael/DeskcommCRM` (`v1.15.1`–`v1.18.0`,
+  autor Rafael Melgaço, removidas do origin no §101) foram **apagadas do
+  clone local** — sobravam como carga morta de um `git push --tags` que
+  repoluiria o origin; a nossa `v1.15.0` (tagger `Nexus Agent`,
+  `907bc0249`) é a única `v1.15.*` local.
 
 ### Anterior (2026-09-27)
 
