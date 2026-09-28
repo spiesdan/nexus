@@ -9,7 +9,7 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `6ff9db071 fix(agents): tela de novo agente aponta onde cadastrar credencial e numero` — **torno da contenção**: o kit de atualização não vira mais o site para a linhagem upstream (guarda de autoridade no `agent.sh`/`update.sh`, `deploy.sh` grava o pin no `.env`, `comecar.sh`+READMEs/docs → `spiesdan/nexus`, `update-guard` casos 12–16 = `434d3573b`), a tela de novo agente ganhou os caminhos de credencial e número (`6ff9db071`), `spiesdan/nexus` virou **público** (decisão do usuário — destravou o `test:shell`) e o e2e da parte 2 foi diagnosticado (timeout de 30min; falha `agente-novo-e-uso` consertada — ver "Última ação").
+- HEAD: `30d414ae6 test(e2e): conserta as 2 falhas do run 36354989790 - varredura responsiva e toasts do builder` — **e2e do PR #8 FECHOU VERDE** (run `36359178690`: p1 138 passed/20,6min, p2 114 passed/19,1min, `e2e = pass 45m12s`, 5/5 checks obrigatórios). Antes: rebalance + reporter `list` (`b5631e70e`), torno da contenção (`434d3573b`/`6ff9db071`), repo público (destravou `test:shell`).
   — e o commit que entrega este arquivo **fecha o handoff deste torno**.
   (anteriores: `bd74efd80` deploy medido · `d4416bfe4` health probe ·
   `dbbebc1ee` APP/WORKER/SCHEDULER · `bf6483903` catraca namespace ·
@@ -51,13 +51,16 @@
   push vai para `nexus`.
 - **PR #8 `nexus-v2 → main` ABERTO** (medido em 2026-09-27): os 5 checks
   obrigatórios rodam — verify, build-and-size, invariants, e2e, imagens-ok.
+  **Todos VERDES em `30d414ae6`** (e2e 45m12s — medido após o run
+  `36359178690`; antes disso o e2e reprovava por timeout de 30min na
+  parte 2).
 - Árvore limpa (nada de WIP). Todos os commits acima já estão em `nexus`.
 
 ## Última ação
 
 **Torno da contenção (2026-09-27) — o kit não vira mais o site para a
-linhagem upstream; e2e parte 2 diagnosticado; spec do novo agente
-consertada.**
+linhagem upstream; e2e do PR #8 diagnosticado, consertado e FECHADO
+VERDE; spec do novo agente consertada.**
 
 - **`434d3573b` — kit com guarda de autoridade**: `agent.sh` só anuncia tag
   que EXISTE no `origin` (candidatas `v*` em ordem decrescente; sem origin,
@@ -105,7 +108,32 @@ consertada.**
   isolado** (hang × slowdown sistêmico): as 7 `jornada-*` (novas de
   `e83ac2fdd`) nunca rodaram no CI; esperas delas foram conferidas e são
   todas limitadas (sem wait infinito). Relatório do run de 09-24 salvo em
-  `$env:TEMP\opencode\pw-report-0924`.
+   `$env:TEMP\opencode\pw-report-0924`.
+- **e2e FECHOU VERDE (2026-09-27/28, `b5631e70e` + `30d414ae6`, run
+  `36359178690`)** — dois consertos em sequência:
+  1. **Rebalance + reporter (`b5631e70e`)**: o reporter default em CI
+     imprimia pontos `·` sem newline e sem duração por teste (invisível);
+     `playwright.config.ts` passou a `["list"]` + `["github"]` em CI. As
+     **10 specs da cauda** migraram PARTE_2→PARTE_1 — medida no run
+     `36348502150`: p1 = 10,4min/34 specs, p2 = 54 specs com `marca-logo`
+     (44ª alfabética) só em T+20,2min, projetado ~36min contra o teto de
+     30min. As 10 migradas foram varridas antes = **0 ocorrências de
+     `enrollment|current_node_id`** (regra do relogio-http-cron-externo
+     intacta); YAML parseado = 44/44/2 = 90 specs (js-yaml).
+  2. **As 2 falhas do run `36354989790`**: (a) `responsividade-nas-rotas:71`
+     ("nenhuma rota vaza em 390/430/768", 207 combos) estourou os 240s —
+     local medido **210s = 87,5% do teto**, folga que o runner do GitHub
+     não tem; conserto = `test.setTimeout(480_000)` no teste (2x o medido;
+     p1 fecha ≤26,6min mesmo no pior caso). (b) `followup-builder:307`
+     ficou 30s sem aterrissar o clique no `publish-button`: o sonner tem
+     `pauseOnHover` e o centro do botão fica **embaixo** dos toasts
+     ("Fluxo reprovado..." + "Rascunho salvo.") — o hover pausa o timer e o
+     toast nunca sai (impasse; local passava em 9,7s por corrida diferente).
+     Conserto = `toBeHidden({ timeout: 15_000 })` nos dois textos antes dos
+     dois cliques de publicar. **Prova final**: run `36359178690` —
+     p1 **138 passed/20,6min**, p2 **114 passed/19,1min**, varredura em
+     3,7min (teto novo 8min), teste do builder em 14,7s com as guardas,
+     `e2e = pass 45m12s` e os 5 checks do PR #8 todos verdes.
 - **Gates do torno**: typecheck 0 · lint 0 erros/340 warnings (baseline) ·
   `pnpm build` ✓ · `test:unit` = baseline (15 failed/4 arquivos —
   guarda-da-release, namespace-das-imagens, performed-at, rate-limit —,
