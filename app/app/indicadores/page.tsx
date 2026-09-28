@@ -161,6 +161,7 @@ export default async function IndicadoresPage({
   const dados: DadosIndicadores = {
     mes,
     rotuloMes: `${ROTULOS_MES[Number(mm || "0") - 1] ?? mm}/${ano.slice(2)}`,
+    diaHoje: diasDecorridos,
     serie: ag.serieDiaria.map((s, i) => ({
       dia: Number(s.dia.slice(8, 10)),
       vendas: s.cents,

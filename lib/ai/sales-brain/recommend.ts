@@ -14,6 +14,12 @@ export type BrainAcao = "ver_cliente" | "criar_pedido" | "whatsapp" | "aprovar_i
 
 export interface BrainRecomendacao {
   contact_id: string;
+  /**
+   * Nome do contato, anexado pela ROTA (join em `contacts`, filtrado por
+   * organization_id) — o motor é função pura e não lê a tabela. Opcional para
+   * não quebrar consumidores antigos (o fallback é o id curto).
+   */
+  contact_name?: string | null;
   prioridade: BrainPrioridade;
   motivo: string;
   recomendacao: string;

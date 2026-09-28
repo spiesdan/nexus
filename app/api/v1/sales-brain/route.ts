@@ -11,6 +11,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { brainDoLote } from "@/lib/ai/sales-brain/batch";
+import type { BrainRecomendacao } from "@/lib/ai/sales-brain/recommend";
 import type { PedidoParaRadar } from "@/lib/comercial/radar-compras";
 import { requireRole } from "@/lib/auth/require-role";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -81,11 +82,35 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
   }
 
-  const recs = brainDoLote(pedidos, hoje);
-  const filtradas = (prioridade ? recs.filter((r) => r !== null && r.prioridade === prioridade) : recs).slice(
+  // `brainDoLote` já filtra null na hora, mas o tipo herda `| null` de
+  // `recomendar` — estreita aqui para o resto da rota ficar tipado limpo.
+  const recs = brainDoLote(pedidos, hoje).filter((r): r is BrainRecomendacao => r !== null);
+  const filtradas = (prioridade ? recs.filter((r) => r.prioridade === prioridade) : recs).slice(
     0,
     limit,
   );
 
-  return ok(filtradas, { requestId });
+  // Nome do cliente (exibição) — join defensivo em `contacts`. admin client
+  // bypassa RLS, então o filtro de organization_id é OBRIGATÓRIO aqui.
+  const ids = [...new Set(filtradas.map((r) => r.contact_id))];
+  const nomes: Record<string, string> = {};
+  if (ids.length > 0) {
+    const { data: contatos, error: erroContatos } = await supabase
+      .from("contacts")
+      .select("id, display_name")
+      .eq("organization_id", orgId)
+      .in("id", ids);
+    if (!erroContatos) {
+      for (const c of (contatos ?? []) as { id: string; display_name: string | null }[]) {
+        const nome = c.display_name?.trim();
+        if (nome) nomes[c.id] = nome;
+      }
+    }
+    // Sem nome: o card usa o id curto — não derruba a tela por isso.
+  }
+
+  return ok(
+    filtradas.map((r) => ({ ...r, contact_name: nomes[r.contact_id] ?? null })),
+    { requestId },
+  );
 }

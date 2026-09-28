@@ -13,7 +13,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -37,6 +36,7 @@ import { MetricsClient } from "../metrics/_components/MetricsClient";
 export interface DadosIndicadores {
   mes: string;
   rotuloMes: string;
+  diaHoje: number;
   serie: {
     dia: number;
     vendas: number;
@@ -425,153 +425,37 @@ export function IndicadoresClient({
         </label>
       </div>
 
-      {/* EVOLUÇÃO DE VENDA */}
-      <Card className="hover-raise p-4">
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold tracking-wide">{t("EVOLUÇÃO DE VENDA")}</p>
-          <p className="text-xs text-muted-foreground uppercase">{dados.rotuloMes}</p>
-        </div>
-        {comparar ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_260px]">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dados.serie} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
-                <XAxis dataKey="dia" tick={{ fontSize: 11 }} interval={2} />
-                <YAxis
-                  tickFormatter={(v: number) => `${Math.round(v / 100 / 1000)}k`}
-                  tick={{ fontSize: 11 }}
-                  width={44}
-                />
-                <Tooltip
-                  formatter={(v) => brl(Math.round(Number(v ?? 0)))}
-                  labelFormatter={(d) => `${t("Dia")} ${d}`}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="vendaAc"
-                  name={t("Vendas no mês")}
-                  stroke="#16a34a"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                {dados.serie.some((s) => s.metaAc != null) && (
-                  <Line
-                    type="monotone"
-                    dataKey="metaAc"
-                    name={t("Objetivo")}
-                    stroke="#7c3aed"
-                    strokeDasharray="6 3"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                )}
-                {/* Simulação do fechamento: continua de hoje até o fim do mês no
-                    ritmo médio. Amarelo como a linha de Previsão — mesma conta. */}
-                {dados.serie.some((s) => s.projecao != null) && (
-                  <Line
-                    type="monotone"
-                    dataKey="projecao"
-                    name={t("Projeção")}
-                    stroke="#eab308"
-                    strokeDasharray="6 3"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                )}
-                {comparar && (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="mesAnt"
-                      name={t("Mês anterior")}
-                      stroke="#94a3b8"
-                      strokeDasharray="6 3"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="mesAno"
-                      name={t("Ano passado")}
-                      stroke="#cbd5e1"
-                      strokeDasharray="2 3"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </>
-                )}
-                <ReferenceLine
-                  y={dados.previsaoMes}
-                  stroke="#eab308"
-                  strokeDasharray="4 3"
-                  label={{ value: t("Previsão"), fontSize: 11 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">{t("Vendido no mês")}</p>
-              <p className="text-2xl font-semibold tabular-nums">{brl(dados.vendidoMes)}</p>
-              <p className="text-xs text-muted-foreground">
-                {t("Hoje")} {brl(dados.vendidoHoje)} · {dados.qtdMes} {t("pedidos")}
-              </p>
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground uppercase">{t("Objetivo do mês")}</p>
-                {dados.objetivo == null && (
-                  <Link href="/app/relatorios" className="text-xs underline underline-offset-4">
-                    {t("Definir metas")}
-                  </Link>
-                )}
-              </div>
-              <p className="text-2xl font-semibold tabular-nums">
-                {dados.objetivo != null ? brl(dados.objetivo) : "—"}
-              </p>
-              <div className="mt-1">
-                <Barra pct={dados.pctObjetivo} cor="bg-violet-500" />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {dados.pctObjetivo != null
-                  ? `${dados.pctObjetivo.toFixed(1)}% ${t("da meta")}`
-                  : t("Nenhuma meta definida")}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase">{t("Necessário vender")}</p>
-              <p className="text-lg font-semibold tabular-nums">
-                {dados.necessarioDia != null
-                  ? `${brl(Math.round(dados.necessarioDia))} ${t("por dia útil")}`
-                  : "—"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {dados.diasUteisRestantes} {t("dias úteis restantes")}
-              </p>
-            </div>
-          </div>
-        </div>
-        ) : (
-          <CrmSalesChart
-            pontos={dados.serie.map((s) => ({
-              dia: s.dia,
-              vendidoAc: s.vendaAc,
-              metaAc: s.metaAc,
-              projecao: s.projecao,
-            }))}
-            metaAc={dados.objetivo ?? 0}
-            projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
-            previsaoMes={dados.previsaoMes}
-          />
-        )}
-        <div className="mt-2 border-t pt-2 text-center">
-          <Link href="/app/pedidos" className="text-sm underline underline-offset-4">
-            {t("Detalhar por vendedor")}
-          </Link>
-        </div>
-      </Card>
+      {/* EVOLUÇÃO DE VENDAS — seção no molde da referência: KPIs com régua
+          da meta, gráfico com eixos/área/marcador de hoje e painel de
+          resumo. O "Comparar" do painel e o checkbox dos filtros são o
+          MESMO estado: ligado, desenha mês anterior e ano passado. */}
+      <CrmSalesChart
+        pontos={dados.serie.map((s) => ({
+          dia: s.dia,
+          vendidoAc: s.vendaAc,
+          metaAc: s.metaAc,
+          projecao: s.projecao,
+          mesAnt: s.mesAnt,
+          mesAno: s.mesAno,
+        }))}
+        metaAc={dados.objetivo ?? 0}
+        projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
+        previsaoMes={dados.previsaoMes}
+        mes={dados.mes}
+        diaHoje={dados.diaHoje}
+        vendidoMes={dados.vendidoMes}
+        vendidoHoje={dados.vendidoHoje}
+        objetivo={dados.objetivo}
+        pctObjetivo={dados.pctObjetivo}
+        necessarioDia={dados.necessarioDia}
+        diasUteisRestantes={dados.diasUteisRestantes}
+        comparar={{ ativo: comparar, onToggle: () => setComparar((v) => !v) }}
+      />
+      <div className="text-center">
+        <Link href="/app/pedidos" className="text-sm underline underline-offset-4">
+          {t("Detalhar por vendedor")}
+        </Link>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* CARTEIRA */}

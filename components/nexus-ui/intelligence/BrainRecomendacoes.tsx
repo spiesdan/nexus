@@ -53,7 +53,7 @@ function CartaoRecomendacao({ item }: { item: SalesBrainItem }) {
           href={`/app/contacts/${item.contact_id}`}
           className="truncate text-sm font-medium text-text hover:text-accent"
         >
-          {t("Cliente")} {item.contact_id.slice(0, 8)}
+          {item.contact_name?.trim() || `${t("Cliente")} ${item.contact_id.slice(0, 8)}`}
         </Link>
         <Badge variant={VARIANTE[item.prioridade]}>
           {item.prioridade === "alta"

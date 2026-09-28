@@ -17,6 +17,7 @@ export interface DadosDashboard {
   hora: number;
   mes: string;
   rotuloMes: string;
+  diaHoje: number;
   serie: { dia: number; vendaAc: number; metaAc: number | null; projecao: number | null }[];
   vendidoMes: number;
   qtdMes: number;
@@ -96,6 +97,14 @@ export function DashboardHome(dados: DadosDashboard) {
           metaAc={dados.objetivo ?? 0}
           projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
           previsaoMes={dados.previsaoMes}
+          mes={dados.mes}
+          diaHoje={dados.diaHoje}
+          vendidoMes={dados.vendidoMes}
+          vendidoHoje={dados.vendidoHoje}
+          objetivo={dados.objetivo}
+          pctObjetivo={dados.pctObjetivo}
+          necessarioDia={dados.necessarioDia}
+          diasUteisRestantes={dados.diasUteisRestantes}
         />
       )}
 

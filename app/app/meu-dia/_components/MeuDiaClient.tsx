@@ -181,6 +181,9 @@ export function MeuDiaClient({ nome, saudacao }: { nome: string | null; saudacao
           <>
             {listaBrain.map((r) => (
               <li key={r.contact_id} className="rounded-lg border border-border bg-surface p-3">
+                {r.contact_name ? (
+                  <p className="truncate text-sm font-medium text-text">{r.contact_name}</p>
+                ) : null}
                 <p className="text-sm text-text">{r.recomendacao}</p>
                 <Link
                   href={`/app/contacts/${r.contact_id}`}

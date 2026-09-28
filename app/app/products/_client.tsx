@@ -6,7 +6,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
+import { FilterActions, FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
@@ -275,22 +275,7 @@ export function ProdutosClient({
   }
 
   const cabecalho = esconderCabecalho ? null : (
-    <NexusPageHeader
-      title={textos.titulo}
-      subtitle={textos.subtitulo}
-      actions={
-        podeEditar ? (
-          <>
-            <Button variant="outline" disabled={importando} onClick={() => arquivoRef.current?.click()} data-testid="importar-planilha">
-              {t(importando ? "Importando…" : "Importar planilha")}
-            </Button>
-            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
-              {t(criando ? "Cancelar" : "Novo produto")}
-            </Button>
-          </>
-        ) : undefined
-      }
-    />
+    <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
   );
 
   const corpo = (
@@ -317,6 +302,24 @@ export function ProdutosClient({
             dataTestId="busca-produto"
           />
         </FilterPrimary>
+        {podeEditar ? (
+          // Vivia no cabeçalho, que o catálogo em abas esconde
+          // (esconderCabecalho) — o botão de novo produto sumia em
+          // /app/products inteiro. Aqui o FilterBar é renderizado sempre.
+          <FilterActions>
+            <Button
+              variant="outline"
+              disabled={importando}
+              onClick={() => arquivoRef.current?.click()}
+              data-testid="importar-planilha"
+            >
+              {t(importando ? "Importando…" : "Importar planilha")}
+            </Button>
+            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
+              {t(criando ? "Cancelar" : "Novo produto")}
+            </Button>
+          </FilterActions>
+        ) : null}
       </FilterBar>
 
       <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
