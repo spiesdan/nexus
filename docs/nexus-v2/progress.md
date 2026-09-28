@@ -9,7 +9,8 @@
 ## Estado do repositório (última medição)
 
 - Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
-- HEAD: `30d414ae6 test(e2e): conserta as 2 falhas do run 36354989790 - varredura responsiva e toasts do builder` — **e2e do PR #8 FECHOU VERDE** (run `36359178690`: p1 138 passed/20,6min, p2 114 passed/19,1min, `e2e = pass 45m12s`, 5/5 checks obrigatórios). Antes: rebalance + reporter `list` (`b5631e70e`), torno da contenção (`434d3573b`/`6ff9db071`), repo público (destravou `test:shell`).
+- HEAD: `ef09cc9ae feat(ui): Evoluicao de Vendas no molde da referencia, nome no Brain e botao de novo produto` — **3 melhorias de UI entregues** (2026-09-28): seção Evolução de Vendas no molde da referência na home e em `/app/indicadores`, nome do cliente nas Recomendações do Sales Brain, e "Novo produto"/"Importar planilha" de volta em `/app/products`. Prova visual: 5 screenshots citados em "Última ação" (`evidence/ui-evolucao-vendas/`).
+  Antes: `30d414ae6` **e2e do PR #8 FECHOU VERDE** (run `36359178690`: p1 138 passed/20,6min, p2 114 passed/19,1min, `e2e = pass 45m12s`, 5/5 checks obrigatórios). Antes: rebalance + reporter `list` (`b5631e70e`), torno da contenção (`434d3573b`/`6ff9db071`), repo público (destravou `test:shell`).
   — e o commit que entrega este arquivo **fecha o handoff deste torno**.
   (anteriores: `bd74efd80` deploy medido · `d4416bfe4` health probe ·
   `dbbebc1ee` APP/WORKER/SCHEDULER · `bf6483903` catraca namespace ·
@@ -57,6 +58,59 @@
 - Árvore limpa (nada de WIP). Todos os commits acima já estão em `nexus`.
 
 ## Última ação
+
+**Torno das 3 melhorias de UI (2026-09-28) — Evolução de Vendas no molde da
+referência (home + indicadores), nome do cliente nas Recomendações, e
+"Novo produto" de volta em `/app/products`.**
+
+- **`ef09cc9ae` — `crm-sales-chart.tsx` reescrito** (648 linhas no diff):
+  coluna de KPIs (Meta/Projeção/Previsão com régua da meta e badge ↑/↓%),
+  gráfico SVG com eixo Y "bonito" (1/2/2,5/5×10ⁿ), área, pontos da
+  realizada, projeção tracejada só DEPOIS de hoje (ligada ao ponto de hoje),
+  marcador de HOJE e painel de resumo do mês (Vendido/Objetivo/Necessário).
+  Faixas 1D/1W/1M/Tudo recortam a série real — 3M/1A da referência
+  exigiriam série multimes, e seletor não é decorativo. Sem meta: barra
+  vazia, "—", sem badge (nada inventado; a referência tinha mock). Séries
+  de mês/ano passado só com **Comparar** ligado — o botão do painel é o
+  MESMO `setComparar` do checkbox dos filtros. Props novos: `mes`,
+  `diaHoje` (= `diasDecorridos`), `vendidoMes/vendidoHoje/objetivo/
+  pctObjetivo/necessarioDia/diasUteisRestantes`, `comparar`;
+  `CrmSalesPoint` ganhou `mesAnt/mesAno`. Call sites: `_home.tsx` +
+  `page.tsx` e `_indicadores.tsx` + `page.tsx` (Card e branch Recharts de
+  ~140 linhas removidos; `ReferenceLine` saiu dos imports).
+- **Nome do cliente no Sales Brain**: `BrainRecomendacao.contact_name?`
+  (campo opcional anexado pela ROTA — o motor é função pura e não lê
+  tabela); join defensivo em `contacts` **filtrando `organization_id`
+  (obrigatório: `createAdminClient` bypassa RLS)**, erro de join vira
+  null sem derrubar a tela; `MeuDiaClient` e `BrainRecomendacoes` exibem
+  o nome com fallback no id curto.
+- **`/app/products` ganhou os botões de volta**: "Importar planilha" e
+  "Novo produto" viviam só no `NexusPageHeader`, e o catálogo em abas
+  passa `esconderCabecalho` (Fase 5c `c370b8c8a`) — a ação sumia na
+  rota inteira. Agora no `FilterActions` do `FilterBar` (renderizado
+  sempre), mantendo testids `importar-planilha`/`novo-produto` e o gate
+  `podeEditar`.
+- **Prova visual** (build e2e local + login manager, viewport 1440px):
+  ![home com a nova seção](evidence/ui-evolucao-vendas/app-home.png) ·
+  ![indicadores, Comparar desligado](evidence/ui-evolucao-vendas/indicadores.png) ·
+  ![indicadores, Comparar ligado — escada de mês/ano passado](evidence/ui-evolucao-vendas/indicadores-comparar.png) ·
+  ![botões no FilterBar de produtos](evidence/ui-evolucao-vendas/products.png) ·
+  ![nomes nas Recomendações do meu dia](evidence/ui-evolucao-vendas/meu-dia.png).
+- **Gates locais**: typecheck 0 · lint 0 erros/339 warnings (baseline 340)
+  · unit na baseline Windows (15 falhas/4 arquivos conhecidas: bash/EPERM
+  da guarda de release, rate-limit por timeout, namespace/performed-at pré-
+  existentes; `lib/ui/icons.test.ts` piscou 1× sob carga e passa isolado).
+  Achados do caminho, todos medidos: `Set-Content` do PS5.1 corrompe UTF-8
+  (mojibake + BOM) — reescrita de arquivo só via ferramenta de arquivo;
+  **Git Bash filtra `NODE_OPTIONS`** (probe imprimiu vazio) e por isso
+  `pnpm e2e:build` OOM-ava o typecheck a ~2 GB — o build contra Supabase
+  local foi feito em PowerShell puro com `--max-old-space-size=8192` +
+  prova de host (controle OK: host local no bundle, `.env.local` local);
+  `.env.e2e` precisa ser recarregado a cada chamada (env de shell não
+  persiste entre comandos); Docker/WSL derramado durante o build
+  (2,5 GB livres → `wsl --shutdown` + religar depois).
+
+### Anterior (2026-09-27)
 
 **Torno da contenção (2026-09-27) — o kit não vira mais o site para a
 linhagem upstream; e2e do PR #8 diagnosticado, consertado e FECHADO
