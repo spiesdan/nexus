@@ -53,6 +53,11 @@ vi.mock("next/navigation", () => ({
     throw err;
   },
 }));
+// `patchOnboardingState` chama `revalidatePath("/onboarding")` para purgar o
+// Client Cache (staleTimes.dynamic) antes do redirect do wizard — fora de um
+// request real não há store do Next e a chamada derruba o teste. Mesmo mock
+// de arquivar-agente-arquiva-mesmo.test.ts.
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/auth/server", () => ({
   mfaEmDivida: vi.fn(async () => false),
