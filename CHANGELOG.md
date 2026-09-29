@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.0] — 2026-09-28
+
+### Alterado
+
+- **Modo claro no topo, seletor de mês na Evolução de Vendas e inbox redesenhado** O CRM ganhou um **alternador de tema no cabeçalho** (ao lado do sino): um clique passa do modo escuro para o claro e lembra a escolha. O modo claro foi refinado de ponta a ponta — fundo cinza-frio onde os cards brancos saltam, bordas e sombras em camadas —, e agora nenhum canto do produto ignora mais o tema.
+
+  A seção **Evolução de Vendas** (home e indicadores) ganhou **seletor de mês**: as setas ao lado do título voltam e avançam no tempo, mostram o mês escolhido e param no mês corrente; o filtro de vendedor é mantido ao navegar. No gráfico, **passe o mouse sobre qualquer dia** para ver o dia, o acumulado, a meta do dia, a projeção e como foi o mesmo dia no mês e no ano passado — e em meses já encerrados nada mais finge que ainda acontece.
+
+  O **inbox foi redesenhado** para a mesma linguagem visual do restante: o fundo da conversa agora acompanha o tema (acabou o bege fixo no modo escuro), a lista de conversas vira linhas de chat com filete de destaque, o divisor de datas e o selo de status viraram pílulas, e o campo de escrito e as abas do composer seguem o padrão do produto. Nada muda em atalho, regra ou permissão — só a cara. Ninguém precisa fazer nada para receber isto.
+
 ## [1.15.1] — 2026-09-28
 
 ### Corrigido
@@ -2403,7 +2413,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.1...v1.16.0
 [1.15.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.13.0...v1.14.0
