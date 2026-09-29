@@ -122,8 +122,11 @@ describe("extrairRegua — os pares saem do globals.css, nunca de lista à mão"
     const razao = (papel: string, superficie: string) =>
       pares.find((p) => p.papel === papel && p.superficie === superficie)?.razao ?? 0;
 
-    expect(razao("--color-accent", "--color-bg")).toBeCloseTo(3.63, 2);
-    expect(razao(":focus-visible/outline", "--color-bg")).toBeCloseTo(3.63, 2);
+    // Medidos sobre o canvas cinza-frio (#f6f7f9) — o antigo branco dava 3,63;
+    // o foco continua folgado acima do piso 3,0 e o `outline` × elevated (3,48)
+    // não mudou, porque o `--color-surface-elevated` continua #fafafa.
+    expect(razao("--color-accent", "--color-bg")).toBeCloseTo(3.387, 2);
+    expect(razao(":focus-visible/outline", "--color-bg")).toBeCloseTo(3.387, 2);
     expect(razao(":focus-visible/outline", "--color-surface-elevated")).toBeCloseTo(3.48, 2);
   });
 

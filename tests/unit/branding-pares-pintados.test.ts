@@ -347,8 +347,9 @@ describe("controle positivo — o produto sem marca não pode se mexer", () => {
     expect(cor.derivada?.escuro.deslocamento).toBe(0);
 
     const p = pintadosDaSemente("#7e77f0");
-    // Claro: o anel sai do 600, então estes são os mesmos 3,63/3,48 da régua.
-    expect(foco(p.claro, "--color-bg")).toBeCloseTo(3.63, 2);
+    // Claro: o anel sai do 600, então estes são os mesmos 3,387/3,48 da régua
+    // (o primeiro caiu de 3,63 quando o canvas deixou de ser branco puro).
+    expect(foco(p.claro, "--color-bg")).toBeCloseTo(3.387, 2);
     expect(foco(p.claro, "--color-surface-elevated")).toBeCloseTo(3.48, 2);
     // Escuro: rampa violeta emitida com d=0 sobre bases escuras. (Na Sage eram
     // 6,30/5,22 porque a rampa derivada coincidia com os literais do dark.)
@@ -373,10 +374,11 @@ describe("a navy #0f172a — o defeito que a prova em tela achou", () => {
     // escuro 2,86 e 2,37 — os dois de baixo abaixo do piso 3,0, porque o anel
     // pintava `--color-accent-400`, o stop CRU. O defeito em si (rampa crua ×
     // papéis deslocados) continua guardado aqui como história; os números de
-    // HOJE saem do anel no 600: claro 17,85/17,10, escuro 5,28/4,38 (o escuro
-    // anda -1 como antes, e esses dois nem se mexeram).
+    // HOJE saem do anel no 600: claro 16,655/17,10, escuro 5,28/4,38 (o escuro
+    // anda -1 como antes; o claro × bg caiu de 17,85 por causa do canvas
+    // cinza-frio, e o × elevated nem se mexeram).
     const p = pintadosDaSemente("#0f172a");
-    expect(foco(p.claro, "--color-bg")).toBeCloseTo(17.85, 2);
+    expect(foco(p.claro, "--color-bg")).toBeCloseTo(16.655, 2);
     expect(foco(p.claro, "--color-surface-elevated")).toBeCloseTo(17.1, 2);
     expect(foco(p.escuro, "--color-bg")).toBeCloseTo(5.28, 2);
     expect(foco(p.escuro, "--color-surface-elevated")).toBeCloseTo(4.375, 2);

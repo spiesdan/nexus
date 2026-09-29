@@ -44,8 +44,15 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Surfaces (light) — Visitors: Paper canvas, Linen bands */
-  --color-bg: #ffffff;
+  /* Surfaces (light) — Visitors: Paper canvas, Linen bands.
+     O canvas é cinza-frio leve (#f6f7f9) e NÃO branco puro de propósito:
+     sobre branco-em-branco os cartões brancos não tinhum contorno além da
+     hairline, e a tela parecia inacabada. Com o canvas levemente cinza, o
+     `--color-surface` (#ffffff) salta sozinho — o mesmo truque de papel
+     branco sobre mesa cinza. Medido: trocar isto mexe nos pares fixados em
+     `branding-contraste.test.ts` e `branding-pares-pintados.test.ts`, que
+     são a régua que este bloco tem de continuar passando. */
+  --color-bg: #f6f7f9;
   --color-surface: #ffffff;
   --color-surface-elevated: #fafafa;
   --color-overlay: rgba(24, 25, 37, 0.42);
@@ -55,9 +62,12 @@
   --color-text-muted: #666666;
   --color-text-subtle: #999999;
 
-  /* Borders (light) — Fog hairlines */
-  --color-border: #e8e8e8;
-  --color-border-strong: #e8e8e8;
+  /* Borders (light) — Fog hairlines, com hierarquia: a `strong` era LITERALMENTE
+     igual à `border` (#e8e8e8 nos dois), ou seja, um token sem efeito — todo
+     `border-strong` pintava igual a `border`. Ela agora é um degrau visível
+     acima, para os lugares que pedem mais definição (inputs, cabecilhos). */
+  --color-border: #e7e9ee;
+  --color-border-strong: #d6dae2;
 
   /* Accent — rampa derivada da semente #7e77f0 (ver cabeçalho do bloco).
      Grau 500 (#918dff) é a lavanda do DESIGN.md; o funcional é o 600. */
@@ -141,16 +151,21 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* Shadows — Visitors: flat, três camadas no máximo (ver DESIGN.md) */
-  --shadow-xs: rgba(0, 0, 0, 0.08) 0px 1px 1px 1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 0.5px;
-  --shadow-sm: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
-  --shadow-md: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+  /* Shadows — premium em camadas (era flat com md==sm e lg==xl, ou seja,
+     duas alturas disfarçadas de cinco). Agora cada degrau tem contato
+     curto (perto da base) + queda longa (distância): o olho lê profundidade
+     real em vez de um halo. Tinta fria (24,25,37) para casar com o canvas
+     cinza-frio. Espelhado idêntico em `[data-theme="light"]`. */
+  --shadow-xs:
+    rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
+  --shadow-sm:
+    rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
+  --shadow-md:
+    rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
   --shadow-lg:
-    rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px,
-    rgba(0, 0, 0, 0.02) 0px 0px 0px 1px;
+    rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
   --shadow-xl:
-    rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px,
-    rgba(0, 0, 0, 0.02) 0px 0px 0px 1px;
+    rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
 
   /* Density — Aerada */
   --density-row: 56px;
@@ -284,15 +299,15 @@
    (lib/branding/css.ts), que só ganha consumidor com a tela de marca.
    ───────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --color-bg: #ffffff;
+  --color-bg: #f6f7f9;
   --color-surface: #ffffff;
   --color-surface-elevated: #fafafa;
   --color-overlay: rgba(24, 25, 37, 0.42);
   --color-text: #181925;
   --color-text-muted: #666666;
   --color-text-subtle: #999999;
-  --color-border: #e8e8e8;
-  --color-border-strong: #e8e8e8;
+  --color-border: #e7e9ee;
+  --color-border-strong: #d6dae2;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #181925;
   --color-accent-soft: var(--color-accent-100);
@@ -333,15 +348,16 @@
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
-  --shadow-xs: rgba(0, 0, 0, 0.08) 0px 1px 1px 1px, rgba(0, 0, 0, 0.06) 0px 0px 0px 0.5px;
-  --shadow-sm: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
-  --shadow-md: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px;
+  --shadow-xs:
+    rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
+  --shadow-sm:
+    rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
+  --shadow-md:
+    rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
   --shadow-lg:
-    rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px,
-    rgba(0, 0, 0, 0.02) 0px 0px 0px 1px;
+    rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
   --shadow-xl:
-    rgba(0, 0, 0, 0.06) 0px 1px 3px 0px, rgba(0, 0, 0, 0.06) 0px 8px 16px 0px,
-    rgba(0, 0, 0, 0.02) 0px 0px 0px 1px;
+    rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
   --background: var(--color-bg);
   --foreground: var(--color-text);
   --card: var(--color-surface);
