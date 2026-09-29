@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.1] — 2026-09-28
+
+### Alterado
+
+- **Inbox alinhado ao padrão visual do produto** O **inbox** foi ajustado para seguir a mesma linguagem visual do restante do CRM: as abas Fila / Minhas / Todas / Fechadas / Automático agora são um controle segmentado com destaque sólido e contadores na cor da marca, a busca vem primeiro e sem ícone, os itens da lista respiram na mesma grade, e o cabeçalho da conversa, o composer e todos os botões de ação passaram a usar a geometria padrão (raio 8, altura 34, peso 600).
+
+  No meio da conversa, o divisor de datas virou pílula de fundo sólido, as bolhas perderam a cauda assimétrica em favor de raio uniforme, e a nota interna segue o card âmbar tracejado da referência. O painel lateral ganhou seções separadas por filete, títulos na caixa normal (sem caixa alta) e cartões de raio 10.
+
+  Nada muda em atalho, regra ou permissão — só a cara. Ninguém precisa fazer nada para receber isto.
+
 ## [1.16.0] — 2026-09-28
 
 ### Alterado
@@ -2413,7 +2423,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.1...v1.16.0
 [1.15.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.14.0...v1.15.0
