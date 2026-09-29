@@ -51,6 +51,15 @@ tratada como prova. Os capturadores:
 | `tests/capture-wave-1-bulk.ts` | atribuição em massa sobre lead de dono agente |
 | `tests/capture-wave-2.ts` | gate de altura constante, orçamento de elementos, axe |
 | `tests/compose-antes-depois.ts` | o antes/depois lado a lado (cenário 8) |
+| `tests/sonda-abas-do-inbox.ts` | a faixa de abas do inbox em 5 larguras (medição, não captura) |
+
+A sonda de abas do inbox não captura cenas de usuário: ela **mede** a faixa de
+filtros (colisão de rótulo, estouro de caixa, rolagem) em cinco larguras — md,
+xl e 2xl — e grava a prova de cada medição: `evidence/abas-inbox-900.png`,
+`evidence/abas-inbox-1280.png`, `evidence/abas-inbox-1440.png`,
+`evidence/abas-inbox-1536.png` e `evidence/abas-inbox-1920.png`. O caso é o
+conserto das abas colidindo em coluna estreita (PR do branch
+`fix/inbox-abas-sem-sobreposicao`), e o `1280` é o aperto máximo: coluna de 272px.
 
 `tests/capture-wave-2.ts` tem dois modos que auditam o **próprio instrumento**:
 
