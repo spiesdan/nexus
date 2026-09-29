@@ -120,10 +120,17 @@ export function InboxFilters({ value, onChange }: Props) {
       />
 
       <Tabs value={value.tab} onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}>
-        <TabsList
-          className="grid h-auto w-full max-w-full gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5"
-          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
-        >
+        {/* `.tabs` da referência é `display:flex;gap:4px` — e o flex aqui não é
+            detalhe de estilo, é o que impede os rótulos de colidir. A versão em
+            `grid` + `minmax(0,1fr)` dava colunas iguais MENORES que o texto
+            ("Automático" mede ~64px onde a coluna tinha ~44px em 272px de
+            largura) e o `justify-center` transbordava para os dois lados: as
+            abas vizinhas se sobrepunham. No flex, `min-width:auto` do filho
+            dá piso no tamanho do conteúdo — a faixa encolhe igual até o
+            min-content e, se um dia não couber, o `overflow-x-auto` do
+            primitivo rola a faixa (precedente em components/ui/tabs.tsx) em
+            vez de espremer o texto. */}
+        <TabsList className="flex h-auto w-full max-w-full gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5">
           {tabs.map((tab) => {
             const meta = INBOX_TABS.find((t) => t.value === tab)!;
             const count = countFor[tab];
@@ -131,11 +138,15 @@ export function InboxFilters({ value, onChange }: Props) {
               <TabsTrigger
                 key={tab}
                 value={tab}
-                // `.tabs` da referência: fundo `--surface`, botão de raio 7,
-                // ativo com `--surface-2` + filete inset de `--line` — segmented
-                // control, não sublinhado. O sublinhado base some porque o
-                // `border-transparent` ativo vence o `border-accent` do primitivo.
-                className="gap-1 rounded-[7px] px-1 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-muted data-[state=active]:shadow-[inset_0_0_0_1px_var(--color-border)]"
+                // `.tabs button` da referência: `flex:1` (divide sobrando, sem
+                // ficar menor que o rótulo), raio 7, e o segmented control no
+                // ativo — `--surface-2` + filete inset de `--line`. O
+                // sublinhado base some porque o `border-transparent` ativo
+                // vence o `border-accent` do primitivo. `px-0.5`/`gap-0.5` em
+                // vez de 4px porque são CINCO abas em 272px de coluna (a
+                // referência tem quatro em 330px) — 6px a menos por aba é o
+                // que fecha a conta sem rolagem no xl.
+                className="flex-1 gap-0.5 rounded-[7px] px-0.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-muted data-[state=active]:shadow-[inset_0_0_0_1px_var(--color-border)]"
               >
                 {t(meta.label)}
                 {/* Contador na cor da marca em negrito — é o número que a aba
