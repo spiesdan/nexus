@@ -222,7 +222,10 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     <>
       <div
         className={cn(
-          "relative border-t border-border bg-card px-3 py-2",
+          // `.composer` da referência: filete em cima, 10/18/14 de respiro
+          // (grade §15: 16 de lateral), fundo de painel — e o campo em
+          // `--surface`, um degrau acima.
+          "relative border-t border-border bg-card px-4 pt-2.5 pb-3.5",
           mode === "note" && "border-warning/40 bg-warning-bg",
         )}
       >
@@ -246,7 +249,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             type="button"
             onClick={() => setMode("reply")}
             className={cn(
-              "border-b-2 px-0.5 pb-1.5 text-xs font-semibold transition-colors",
+              "border-b-2 px-0 py-1 text-sm font-semibold transition-colors",
               mode === "reply"
                 ? "border-accent text-accent"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -258,7 +261,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             type="button"
             onClick={() => setMode("note")}
             className={cn(
-              "border-b-2 px-0.5 pb-1.5 text-xs font-semibold transition-colors",
+              "border-b-2 px-0 py-1 text-sm font-semibold transition-colors",
               mode === "note"
                 ? "border-warning text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -377,11 +380,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 : t("Enter envia · Shift+Enter quebra linha")
             }
             className={cn(
-              // Campo do composer da referência: retângulo de raio médio sobre
-              // a superfície do tema — o `bg-white` fixo deixava um "pílula
-              // branca" flutuando no tema escuro, era a mesma mancha do
-              // `#efeae2` do fio em outra escala.
-              "max-h-40 min-h-10 flex-1 resize-none rounded-lg border border-input bg-card px-4 py-2.5 text-sm",
+              // Campo `.input` da referência a 40px: raio 8, 12px de recuo,
+              // fundo `--surface` (um degrau acima do painel do composer) — o
+              // `bg-white` fixo virava pílula branca no tema escuro, e o
+              // `bg-card` igual ao do painel sumia com a borda do campo.
+              "max-h-40 min-h-10 flex-1 resize-none rounded-lg border border-input bg-muted px-3 py-2.5 text-sm",
               "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
@@ -391,7 +394,8 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             <Button
               type="button"
               size="icon"
-              className="h-9 w-9 shrink-0 rounded-full"
+              // `.send` da referência: 40px redondo na cor da marca.
+              className="h-10 w-10 shrink-0 rounded-full lg:h-10 lg:w-10"
               onClick={handleSubmit}
               disabled={(mode === "note" ? isDisabled : respostaBarrada) || !text.trim()}
               aria-label={t("Enviar")}

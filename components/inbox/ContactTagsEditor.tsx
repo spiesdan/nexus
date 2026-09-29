@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Plus } from "@/lib/ui/icons";
+import { CARD_REF } from "@/components/inbox/estilos-da-referencia";
 import { useUpdateContact } from "@/hooks/contacts/useUpdateContact";
 
 interface Props {
@@ -35,11 +36,11 @@ export function ContactTagsEditor({ contactId, tags }: Props) {
   }
 
   return (
-    <div className="mt-2 space-y-2 rounded-2xl border border-border p-2">
+    <div className={`${CARD_REF} mt-3 space-y-2`}>
       <div className="flex flex-wrap gap-1">
         {tags.length > 0 ? (
           tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="h-5 gap-1 px-1.5 text-[10px]">
+            <Badge key={tag} variant="secondary" className="h-5 gap-1 px-2.5 py-0.5 text-xs">
               {tag}
               <button
                 type="button"
@@ -70,13 +71,13 @@ export function ContactTagsEditor({ contactId, tags }: Props) {
           placeholder={t("Nova tag…")}
           maxLength={40}
           disabled={mutation.isPending || tags.length >= 20}
-          className="h-7 text-xs"
+          className="h-8 rounded-lg bg-muted text-xs"
           aria-label={t("Adicionar tag ao contato")}
         />
         <Button
           size="sm"
           variant="outline"
-          className="h-7 px-2"
+          className="h-8 rounded-lg px-2"
           onClick={() => add(draft)}
           disabled={mutation.isPending || !draft.trim() || tags.length >= 20}
           aria-label={t("Adicionar tag")}

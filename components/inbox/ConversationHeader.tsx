@@ -21,6 +21,7 @@ import type { ConversationWithContact } from "@/hooks/inbox/useConversationsReal
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
+import { BTN_REF, BTN_REF_LINK, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -158,8 +159,11 @@ export function ConversationHeader({ conversation }: Props) {
     // de antes (uma linha), e quando aperta a barra desce para a linha de baixo.
     // Nenhuma ação some — um menu "mais" esconderia o "Lembrar" que a spec
     // `canais-baseline` clica, e, pior, esconderia ação de quem atende.
+    // `.chat-h` da referência: 16×20 de respiro, filete embaixo, 12px de
+    // intervalo — e as ações todas com a geometria de `.btn` (raio 8, 34px,
+    // peso 600), não a pílula da casca.
     <div
-      className={`flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3`}
+      className={`flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-5 py-4`}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -167,7 +171,7 @@ export function ConversationHeader({ conversation }: Props) {
           <Badge
             variant="outline"
             className={cn(
-              "h-5 rounded-full px-2 text-[11px] font-bold",
+              "h-5 rounded-full px-2.5 text-xs font-bold",
               COR_DO_STATUS[status] ?? "border-border text-muted-foreground",
             )}
           >
@@ -215,7 +219,7 @@ export function ConversationHeader({ conversation }: Props) {
           )}
         </div>
         {phone && (
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+          <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground">
             <Phone size={11} weight="regular" aria-hidden /> {phone}
           </p>
         )}
@@ -224,11 +228,12 @@ export function ConversationHeader({ conversation }: Props) {
       {/* `shrink-0` saiu daqui: era ele que impunha o piso de largura. Agora a
           barra pode encolher e quebrar internamente, e os botões continuam
           todos visíveis e clicáveis — só que em duas linhas quando preciso. */}
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {isOpen && (
           <Button
             size="sm"
             variant="default"
+            className={BTN_REF}
             disabled={claim.isPending}
             // O rótulo NÃO muda (é contrato: `inbox-header-nao-trava` e o
             // dicionário de espanhol o citam). O que faltava era a consequência
@@ -249,6 +254,7 @@ export function ConversationHeader({ conversation }: Props) {
           <Button
             size="sm"
             variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
             disabled={release.isPending}
             onClick={() => release.mutate({ conversation_id: conversation.id })}
           >
@@ -271,6 +277,7 @@ export function ConversationHeader({ conversation }: Props) {
           <Button
             size="sm"
             variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
             disabled={retomar.isPending}
             data-testid="devolver-ao-automatico"
             // O ALCANCE DA VOLTA NÃO É SEMPRE O MESMO, e a tela precisa dizer qual é.
@@ -295,6 +302,7 @@ export function ConversationHeader({ conversation }: Props) {
           <Button
             size="sm"
             variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
             disabled={pausar.isPending}
             data-testid="pausar-o-automatico"
             // `podePausar` já exige dono != null, então este botão NUNCA aparece
@@ -307,7 +315,12 @@ export function ConversationHeader({ conversation }: Props) {
           </Button>
         )}
         {status !== "closed" && status !== "archived" && (
-          <Button size="sm" variant="outline" onClick={() => setReassignOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
+            onClick={() => setReassignOpen(true)}
+          >
             {t("Transferir")}
           </Button>
         )}
@@ -321,6 +334,7 @@ export function ConversationHeader({ conversation }: Props) {
           <Button
             size="sm"
             variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
             disabled={close.isPending}
             onClick={async () => {
               if (
@@ -348,7 +362,7 @@ export function ConversationHeader({ conversation }: Props) {
             contato — por isso a condição é a mesma do painel, e não um valor
             escolhido à parte. Não é esconder ação; é não repeti-la. */}
         {c?.id && (
-          <Button asChild size="sm" variant="ghost" className="xl:hidden">
+          <Button asChild size="sm" variant="ghost" className={`${BTN_REF_LINK} xl:hidden`}>
             <Link href={`/app/contacts/${c.id}`} className="flex items-center gap-1">
               {t("Ver contato")}
               <ArrowRight size={12} weight="regular" aria-hidden />

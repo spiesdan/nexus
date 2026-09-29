@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Plus } from "@/lib/ui/icons";
+import { CHIP_REF, H3_REF, SEC_REF } from "@/components/inbox/estilos-da-referencia";
 import {
   useUpdateConversationTags,
   useConversationTagVocabulary,
@@ -42,15 +43,13 @@ export function ConversationTagsEditor({ conversationId, orgId, tags }: Props) {
   const suggestions = (vocabulary ?? []).filter((v) => !tags.includes(v)).slice(0, 8);
 
   return (
-    <section>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {t("Tags da conversa")}
-      </h3>
+    <section className={SEC_REF}>
+      <h3 className={H3_REF}>{t("Tags da conversa")}</h3>
 
       <div className="mt-2 flex flex-wrap gap-1">
         {tags.length > 0 ? (
           tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="h-5 gap-1 px-1.5 text-[10px]">
+            <Badge key={tag} variant="secondary" className="h-5 gap-1 px-2.5 py-0.5 text-xs">
               {tag}
               <button
                 type="button"
@@ -81,13 +80,13 @@ export function ConversationTagsEditor({ conversationId, orgId, tags }: Props) {
           placeholder={t("Nova tag…")}
           maxLength={40}
           disabled={mutation.isPending || tags.length >= 20}
-          className="h-7 text-xs"
+          className="h-8 rounded-lg bg-muted text-xs"
           aria-label={t("Adicionar tag à conversa")}
         />
         <Button
           size="sm"
           variant="outline"
-          className="h-7 px-2"
+          className="h-8 rounded-lg px-2"
           onClick={() => add(draft)}
           disabled={mutation.isPending || !draft.trim() || tags.length >= 20}
           aria-label={t("Adicionar tag")}
@@ -104,7 +103,7 @@ export function ConversationTagsEditor({ conversationId, orgId, tags }: Props) {
               type="button"
               onClick={() => add(tag)}
               disabled={mutation.isPending || tags.length >= 20}
-              className="rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:border-solid hover:text-foreground disabled:opacity-50"
+              className={`${CHIP_REF} disabled:opacity-50`}
             >
               + {tag}
             </button>

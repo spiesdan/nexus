@@ -5,6 +5,7 @@ import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
+import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 
@@ -116,7 +117,7 @@ export function ConversationList({
         <Button
           size="sm"
           variant="outline"
-          className="mt-2"
+          className={`mt-2 ${BTN_REF} ${BTN_REF_SEC}`}
           onClick={() => q.refetch()}
         >
           Tentar novamente
@@ -153,6 +154,7 @@ export function ConversationList({
             <Button
               size="sm"
               variant="outline"
+              className={`${BTN_REF} ${BTN_REF_SEC}`}
               onClick={() => q.fetchNextPage()}
               disabled={q.isFetchingNextPage}
             >

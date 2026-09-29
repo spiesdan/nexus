@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Clock } from "@/lib/ui/icons";
+import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 import { useSnoozeConversation } from "@/hooks/inbox/useSnoozeConversation";
 
 interface Props {
@@ -39,7 +40,7 @@ export function SnoozeButton({ conversationId, snoozeUntil, disabled }: Props) {
           size="sm"
           variant="outline"
           disabled={disabled || isPending}
-          className="flex items-center gap-1"
+          className={`flex items-center gap-1 ${BTN_REF} ${BTN_REF_SEC}`}
         >
           <Clock size={12} weight="regular" aria-hidden />
           {isActive ? t("Lembrete ativo") : t("Lembrar")}

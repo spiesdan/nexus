@@ -174,7 +174,7 @@ export function ConversationListItem({
             <AvatarImage src={`/api/v1/contacts/${c.id}/avatar`} alt="" className="object-cover" />
           ) : null}
           <AvatarFallback
-            className={cn("text-xs", isSelected && "bg-accent text-accent-foreground")}
+            className={cn("text-[13px] font-bold", isSelected && "bg-accent text-accent-foreground")}
           >
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
@@ -197,7 +197,7 @@ export function ConversationListItem({
             >
               {queuePosition}º
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs font-semibold text-error-fg">
               {waitingLabel(conversation, t, localeDaData)}
             </span>
           </div>
@@ -211,7 +211,7 @@ export function ConversationListItem({
           >
             {displayName}
           </span>
-          <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
             {time}
           </span>
         </div>

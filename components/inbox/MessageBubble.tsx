@@ -3,7 +3,7 @@
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { ArrowBendUpLeft, Check, Checks, Robot, WarningOctagon } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, Check, Checks, WarningOctagon } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
@@ -63,12 +63,12 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
   })();
 
   return (
-    <div
-      className={cn(
-        "group flex w-full items-center gap-1 px-4 py-1",
-        isOutbound ? "justify-end" : "justify-start",
-      )}
-    >
+      <div
+        className={cn(
+          "group flex w-full items-center gap-1 py-1",
+          isOutbound ? "justify-end" : "justify-start",
+        )}
+      >
       {/*
         RESPONDER — aparece ao passar o mouse, como no WhatsApp Web.
         Fica FORA da bolha para não disputar espaço com o texto, e do lado de
@@ -106,12 +106,15 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
       )}
       <div
         className={cn(
-          "max-w-[75%] text-sm",
+          // `.m` da referência: largura `min(520px, 78%)`, respiro 10/12/6 na
+          // grade de 4px da §15 (folha: 9/13/6) e raio 14 UNIFORME — a cauda
+          // assimétrica era gramática WhatsApp, e a folha não tem canto cortado.
+          "max-w-[min(520px,78%)] text-sm",
           isBareSticker
             ? "px-0 py-0"
             : cn(
-                "rounded-2xl px-3 py-2",
-                isOutbound ? cn("rounded-br-sm", WA.outgoing) : cn("rounded-bl-sm", WA.incoming),
+                "rounded-[14px] px-3 pt-2.5 pb-1.5",
+                isOutbound ? WA.outgoing : WA.incoming,
               ),
           isFailed && "border border-destructive",
         )}
@@ -150,13 +153,10 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
           </div>
         )}
         {senderLabel && (
-          // RÓTULO DA IA — verde da saída, 11px bold (referência: `.m.out .src`),
-          // herdando a tinta da bolha faria o rótulo desaparecer no verde pálido
-          // e a cor não diria "quem mandou" de relance.
-          <div className="mb-0.5 flex items-center gap-1 text-[11px] font-bold text-[#2f6b1f]">
-            {senderLabel === "IA" ? <Robot size={11} weight="duotone" aria-hidden /> : null}
-            {senderLabel && t(senderLabel)}
-          </div>
+          // RÓTULO DA IA — `.m.out .src` da referência: 12px bold na tinta de
+          // saída, sem ícone (a folha só escreve a origem); verde escuro, não
+          // o verde pálido do fundo, para o rótulo não sumir na bolha.
+          <div className="mb-0.5 text-xs font-bold text-[#2f6b1f]">{t(senderLabel)}</div>
         )}
 
         {apagada ? (
@@ -186,7 +186,7 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
           </>
         )}
 
-        <div className={cn("mt-1 flex items-center justify-end gap-1 text-[10px]", WA.bubbleMeta)}>
+        <div className={cn("mt-0.5 flex items-center justify-end gap-1 text-[11px]", WA.bubbleMeta)}>
           {editada && (
             // Ao lado da hora, não no corpo: o texto mostrado JÁ é o novo, e o
             // que falta é avisar que ele mudou. Sem isso, um combinado de preço
