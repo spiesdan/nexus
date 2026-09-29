@@ -11,11 +11,13 @@
  * provenance-mark: uim1-1ea983e5.44807c29
  */
 import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { toArea } from "@/lib/series";
 import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
-import { ChartLineUp, Clock, Flag, Info, Wallet } from "@/lib/ui/icons";
+import { CaretLeft, CaretRight, ChartLineUp, Clock, Flag, Info, Wallet } from "@/lib/ui/icons";
+import { deslocarMes } from "@/lib/comercial/visao-do-mes";
 
 export interface CrmSalesPoint {
   dia: number;
@@ -45,6 +47,19 @@ export interface CrmSalesPoint {
  * - faixas: 1D/1W/1M/Tudo recortam a série REAL (renormalizando o teto).
  *   3M/1A da referência exigiriam série multimes — seletor não é decorativo,
  *   então não existem aqui.
+ * - SELETOR DE MÊS: navega por `?mes=AAAA-MM` (o servidor já tem o agregador
+ *   de qualquer mês — `agregadosDoMes` —, então a troca é um RSC refetch, não
+ *   um fetch novo no browser). O parâmetro atual é preservado (o `vendedor`
+ *   dos Indicadores sobrevive à troca), o próximo fica travado no mês corrente
+ *   da organização (mês futuro = série vazia) e voltar ao mês corrente apaga
+ *   o parâmetro, deixando a URL limpa. `ehMesAtual` existe porque a grade
+ *   passada chega inteira: sem a trava, o marcador de HOJE e a linha "Hoje
+ *   R$ 0" pintariam o último dia do mês de agosto como se fosse hoje.
+ * - TOOLTIP: hover por coluna (retângulo invisível por dia) ancora o balão no
+ *   ponto e desce a árvore do dia — realizado, acumulado, meta do dia,
+ *   projeção (só depois de hoje) e as comparações enquanto o COMPARAR estiver
+ *   ligado. Teclado não navega o gráfico de propósito: o svg é `aria-hidden`
+ *   e os números que ele conta estão nos KPIs ao lado, em texto selecionável.
  * - o rótulo do mês segue quem lê: `useTagDeIdioma()` (o guarda i18n reprova
  *   "pt-BR" fixo fora da camada de data).
  */
@@ -93,6 +108,14 @@ function rotuloDoMes(mes: string, tag: string): string {
 function letraDoDia(mes: string, dia: number): string {
   const [ano = "", mm = ""] = mes.split("-");
   return DIAS_SEMANA[new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).getUTCDay()] ?? "";
+}
+
+function diaExtenso(mes: string, dia: number, tag: string): string {
+  const [ano = "", mm = ""] = mes.split("-");
+  return new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).toLocaleDateString(tag, {
+    weekday: "long",
+    timeZone: "UTC",
+  });
 }
 
 interface PropsKpi {
@@ -181,6 +204,8 @@ export function CrmSalesChart({
   necessarioDia,
   diasUteisRestantes,
   comparar,
+  ehMesAtual,
+  mesAtual,
 }: {
   pontos: CrmSalesPoint[];
   metaAc: number;
@@ -195,11 +220,31 @@ export function CrmSalesChart({
   necessarioDia: number | null;
   diasUteisRestantes: number;
   comparar?: { ativo: boolean; onToggle: () => void };
+  /** A grade chegou inteira porque o mês já fechou — trava o marcador de hoje. */
+  ehMesAtual?: boolean;
+  /** Mês corrente da organização — trava o "próximo mês" no futuro. */
+  mesAtual?: string;
 }) {
   const t = useT();
   const tag = useTagDeIdioma();
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
   const [range, setRange] = useState<Range>(ACTIVE_RANGE);
+  const [hover, setHover] = useState<number | null>(null);
   const n = pontos.length;
+
+  const atual = ehMesAtual !== false;
+  const proximoBloqueado = mesAtual != null && deslocarMes(mes, 1) > mesAtual;
+
+  const navegarMes = (delta: number) => {
+    const prox = deslocarMes(mes, delta);
+    const qs = new URLSearchParams(params.toString());
+    if (mesAtual != null && prox === mesAtual) qs.delete("mes");
+    else qs.set("mes", prox);
+    const busca = qs.toString();
+    router.push(busca ? `${pathname}?${busca}` : pathname);
+  };
 
   const janelaN = janela(n, range);
   const visiveis = janelaN >= n ? pontos : pontos.slice(n - janelaN);
@@ -292,8 +337,41 @@ export function CrmSalesChart({
   const linhaMesAno = serieMesAno ? polylinesDe(serieMesAno)[0] ?? null : null;
 
   const areaVendido = serieVendido.length > 1 ? toArea(serieVendido, { width: IW, height: IH }) : null;
-  const xDoIdx = (i: number): number => i * (IW / Math.max(1, visiveis.length - 1));
+  const passoX = IW / Math.max(1, visiveis.length - 1);
+  const xDoIdx = (i: number): number => i * passoX;
   const xHoje = idxHoje >= 0 ? M.left + xDoIdx(idxHoje) : null;
+
+  const pontoHover = hover != null ? visiveis[hover] : null;
+  const deltaDe = (valor: number | null | undefined, anterior: number | null | undefined): number | null =>
+    valor == null ? null : valor - (anterior ?? 0);
+
+  // A árvore do dia sob o cursor: o que ELE vendeu (delta do acumulado), o que
+  // já acumulou, e o que a linha contínua não conta — a meta daquele dia, a
+  // projeção de quem ainda vai vir e as comparações só com o COMPARAR ligado.
+  const futuro = idxHoje >= 0 && hover != null && hover > idxHoje;
+  const linhasTooltip: { rotulo: string; valor: number | null }[] = [];
+  if (pontoHover && hover != null) {
+    const anterior = hover > 0 ? visiveis[hover - 1] : null;
+    if (!futuro) {
+      linhasTooltip.push({ rotulo: t("No dia"), valor: deltaDe(pontoHover.vendidoAc, anterior?.vendidoAc) });
+    }
+    linhasTooltip.push({ rotulo: t("Acumulado"), valor: pontoHover.vendidoAc });
+    if (pontoHover.metaAc != null) {
+      linhasTooltip.push({ rotulo: t("Meta do dia"), valor: deltaDe(pontoHover.metaAc, anterior?.metaAc) });
+    }
+    if (futuro && pontoHover.projecao != null) {
+      linhasTooltip.push({
+        rotulo: t("Projeção do dia"),
+        valor: deltaDe(pontoHover.projecao, anterior?.projecao ?? anterior?.vendidoAc),
+      });
+    }
+    if (comparar?.ativo && pontoHover.mesAnt != null) {
+      linhasTooltip.push({ rotulo: t("Mês passado"), valor: deltaDe(pontoHover.mesAnt, anterior?.mesAnt) });
+    }
+    if (comparar?.ativo && pontoHover.mesAno != null) {
+      linhasTooltip.push({ rotulo: t("Ano passado"), valor: deltaDe(pontoHover.mesAno, anterior?.mesAno) });
+    }
+  }
 
   const pctMeta = (v: number): number | null =>
     objetivo != null && objetivo > 0 ? (v / objetivo) * 100 : null;
@@ -350,9 +428,38 @@ export function CrmSalesChart({
         {/* Gráfico */}
         <div className="min-w-0 rounded-xl border border-border fill-well p-4">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <span className="text-xs text-fg-secondary">
-              {t("Vendas acumuladas")} · {janelaN} {janelaN === 1 ? t("dia") : t("dias")}
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5" data-testid="seletor-de-mes">
+                <button
+                  type="button"
+                  aria-label={t("Mês anterior")}
+                  title={t("Mês anterior")}
+                  onClick={() => navegarMes(-1)}
+                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg"
+                >
+                  <CaretLeft size={12} weight="bold" />
+                </button>
+                <span
+                  className="min-w-[7.5rem] text-center text-[11px] font-medium text-fg"
+                  data-testid="mes-exibido"
+                >
+                  {rotuloDoMes(mes, tag)}
+                </span>
+                <button
+                  type="button"
+                  aria-label={t("Próximo mês")}
+                  title={t("Próximo mês")}
+                  disabled={proximoBloqueado}
+                  onClick={() => navegarMes(1)}
+                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  <CaretRight size={12} weight="bold" />
+                </button>
+              </div>
+              <span className="text-xs text-fg-secondary">
+                {t("Vendas acumuladas")} · {janelaN} {janelaN === 1 ? t("dia") : t("dias")}
+              </span>
+            </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               {RANGES.map((r) => (
                 <button
@@ -370,10 +477,13 @@ export function CrmSalesChart({
             </div>
           </div>
 
+          <div className="relative">
           <svg
+            data-testid="svg-vendas"
             viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
             className="mt-4 h-auto w-full"
             aria-hidden="true"
+            onMouseLeave={() => setHover(null)}
           >
             <defs>
               <linearGradient id="crm-sales-fill" x1="0" y1="0" x2="0" y2="1">
@@ -478,8 +588,9 @@ export function CrmSalesChart({
                 ))}
               </g>
 
-              {/* marcador de HOJE */}
-              {xHoje != null ? (
+              {/* marcador de HOJE — só quando o mês é o corrente; a grade
+                  passada chega inteira e o "hoje" dela seria o último dia. */}
+              {atual && xHoje != null ? (
                 <line
                   x1={xHoje}
                   x2={xHoje}
@@ -489,6 +600,44 @@ export function CrmSalesChart({
                   strokeOpacity={0.5}
                   strokeDasharray="3 3"
                 />
+              ) : null}
+
+              {/* alvos de hover: um retângulo por coluna do dia */}
+              {visiveis.map((p, i) => (
+                <rect
+                  key={`alvo-${p.dia}`}
+                  data-dia={p.dia}
+                  x={M.left + xDoIdx(i) - passoX / 2}
+                  y={M.top}
+                  width={passoX}
+                  height={IH}
+                  fill="transparent"
+                  onMouseEnter={() => setHover(i)}
+                />
+              ))}
+
+              {/* crosshair + ponto do dia sob o cursor */}
+              {hover != null && visiveis[hover] ? (
+                <g>
+                  <line
+                    x1={M.left + xDoIdx(hover)}
+                    x2={M.left + xDoIdx(hover)}
+                    y1={M.top}
+                    y2={M.top + IH}
+                    stroke="#94a3b8"
+                    strokeOpacity={0.7}
+                  />
+                  {serieVendido[hover] != null ? (
+                    <circle
+                      cx={M.left + xDoIdx(hover)}
+                      cy={M.top + IH * (1 - serieVendido[hover])}
+                      r={3.4}
+                      fill="#34d399"
+                      stroke="var(--color-surface)"
+                      strokeWidth={1.5}
+                    />
+                  ) : null}
+                </g>
               ) : null}
             </g>
 
@@ -500,7 +649,7 @@ export function CrmSalesChart({
                   y={M.top + IH + 14}
                   textAnchor="middle"
                   fontSize={8.5}
-                  fill={p.dia === diaHoje ? "#e4e4e7" : "#94a3b8"}
+                  fill={p.dia === diaHoje && atual ? "#e4e4e7" : "#94a3b8"}
                 >
                   {p.dia}
                 </text>
@@ -517,6 +666,32 @@ export function CrmSalesChart({
               </g>
             ))}
           </svg>
+
+          {pontoHover && hover != null ? (
+            <div
+              data-testid="tooltip-dia"
+              className="pointer-events-none absolute z-10 min-w-[10.5rem] -translate-x-1/2 -translate-y-full rounded-lg border border-border fill-panel px-2.5 py-2 shadow-lg"
+              style={{
+                left: `${Math.min(86, Math.max(14, ((M.left + xDoIdx(hover)) / PLOT_W) * 100))}%`,
+                top: `${Math.min(84, Math.max(20, ((M.top + IH * (1 - norm(pontoHover.vendidoAc))) / PLOT_H) * 100))}%`,
+              }}
+            >
+              <p className="mb-1.5 border-b border-border pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-fg-muted">
+                {pontoHover.dia} · {diaExtenso(mes, pontoHover.dia, tag)}
+              </p>
+              <div className="space-y-1">
+                {linhasTooltip.map((linha) => (
+                  <div key={linha.rotulo} className="flex items-center justify-between gap-4">
+                    <span className="text-[10px] text-fg-muted">{linha.rotulo}</span>
+                    <span className="text-[10px] font-medium tabular-nums text-fg">
+                      {linha.valor == null ? "—" : fmtBRL.format(linha.valor / 100)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
             <Legenda cor="bg-[#34d399]" rotulo={t("Vendas no mês")} />
@@ -578,9 +753,11 @@ export function CrmSalesChart({
             <p className="mt-1.5 text-xl font-semibold tabular-nums text-fg">
               {fmtBRL.format(vendidoMes / 100)}
             </p>
-            <p className="mt-0.5 text-[11px] text-fg-muted">
-              {t("Hoje")} {fmtBRL.format(vendidoHoje / 100)}
-            </p>
+            {atual ? (
+              <p className="mt-0.5 text-[11px] text-fg-muted">
+                {t("Hoje")} {fmtBRL.format(vendidoHoje / 100)}
+              </p>
+            ) : null}
           </div>
 
           <div className="my-4 border-t border-border" />

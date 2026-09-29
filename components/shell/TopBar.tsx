@@ -2,6 +2,7 @@
 import { NotificationCenter } from "./NotificationCenter";
 import { MobileSidebar } from "./MobileSidebar";
 import { TenantSwitcher } from "./TenantSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { SearchTrigger } from "./SearchTrigger";
 
@@ -21,6 +22,7 @@ export function TopBar() {
           <SearchTrigger />
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <NotificationCenter />
           <UserMenu />
         </div>

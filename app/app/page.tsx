@@ -17,8 +17,19 @@ export const dynamic = "force-dynamic";
  * o número que esta tela mostra é o mesmo que o painel e o Indicador IA
  * mostram — nenhuma linha de pedido viaja ao browser e zero duplicação de
  * cálculo. O servidor entrega os agregados do mês corrente e o cliente desenha.
+ *
+ * `?mes=AAAA-MM` (o seletor do "Evolução de Vendas") troca o mês agregado no
+ * servidor — mesma validação e mesmo fallback dos Indicadores: mês malformado
+ * cai no corrente do fuso da organização, nunca num 404.
  */
-export default async function DashboardHomePage() {
+
+const ANO_MES = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
+
+export default async function DashboardHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string }>;
+}) {
   const user = await requireAuth();
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app/inbox");
@@ -35,7 +46,9 @@ export default async function DashboardHomePage() {
     (org as unknown as { timezone?: string | null } | null)?.timezone ?? null,
   );
 
-  const mes = mesAtualNoFuso(fuso, agoraMs);
+  const params = await searchParams;
+  const mesAtual = mesAtualNoFuso(fuso, agoraMs);
+  const mes = ANO_MES.test(params.mes ?? "") ? (params.mes as string) : mesAtual;
   const hoje = new Intl.DateTimeFormat("en-CA", {
     timeZone: fuso,
     year: "numeric",
@@ -62,6 +75,7 @@ export default async function DashboardHomePage() {
     diasUteisRestantes,
     previsaoMes,
     pctObjetivo,
+    ehMesAtual,
   } = montarGradeDoMes({ agregados: ag, mes, hoje });
 
   const hora = Number(
@@ -75,6 +89,8 @@ export default async function DashboardHomePage() {
       nome={user.full_name}
       hora={hora}
       mes={mes}
+      mesAtual={mesAtual}
+      ehMesAtual={ehMesAtual}
       rotuloMes={rotuloDoMes(mes)}
       diaHoje={diasDecorridos}
       serie={ag.serieDiaria.map((s, i) => ({

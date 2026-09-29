@@ -16,6 +16,8 @@ export interface DadosDashboard {
   nome: string | null;
   hora: number;
   mes: string;
+  mesAtual: string;
+  ehMesAtual: boolean;
   rotuloMes: string;
   diaHoje: number;
   serie: { dia: number; vendaAc: number; metaAc: number | null; projecao: number | null }[];
@@ -105,6 +107,8 @@ export function DashboardHome(dados: DadosDashboard) {
           pctObjetivo={dados.pctObjetivo}
           necessarioDia={dados.necessarioDia}
           diasUteisRestantes={dados.diasUteisRestantes}
+          ehMesAtual={dados.ehMesAtual}
+          mesAtual={dados.mesAtual}
         />
       )}
 

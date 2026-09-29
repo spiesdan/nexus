@@ -159,8 +159,8 @@ export function ConversationListItem({
       data-conversation-id={conversation.id}
       onClick={() => onSelect(conversation.id)}
       className={cn(
-        "row-hover interactive group flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left",
-        isSelected ? "border-accent/50 bg-accent-soft" : "border-transparent",
+        "row-hover interactive group flex w-full items-start gap-3 border-b border-l-[3px] px-4 py-3 text-left",
+        isSelected ? `${WA.selected} border-l-accent` : "border-l-transparent",
       )}
       aria-current={isSelected ? "true" : undefined}
     >
@@ -173,7 +173,9 @@ export function ConversationListItem({
           {c?.avatar_storage_path && !c?.is_anonymized ? (
             <AvatarImage src={`/api/v1/contacts/${c.id}/avatar`} alt="" className="object-cover" />
           ) : null}
-          <AvatarFallback className="text-xs">
+          <AvatarFallback
+            className={cn("text-xs", isSelected && "bg-accent text-accent-foreground")}
+          >
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
@@ -203,13 +205,13 @@ export function ConversationListItem({
         <div className="flex items-baseline justify-between gap-2">
           <span
             className={cn(
-              "truncate text-sm font-medium",
+              "truncate text-sm font-semibold",
               c?.is_anonymized && "text-muted-foreground italic",
             )}
           >
             {displayName}
           </span>
-          <span className="shrink-0 text-[10px] tracking-wide text-muted-foreground uppercase">
+          <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
             {time}
           </span>
         </div>

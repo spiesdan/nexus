@@ -44,9 +44,8 @@ export default async function IndicadoresPage({
     (org as unknown as { timezone?: string | null } | null)?.timezone ?? null,
   );
 
-  const mes = ANO_MES.test(params.mes ?? "")
-    ? (params.mes as string)
-    : mesAtualNoFuso(fuso, agoraMs);
+  const mesAtual = mesAtualNoFuso(fuso, agoraMs);
+  const mes = ANO_MES.test(params.mes ?? "") ? (params.mes as string) : mesAtual;
   const hoje = new Intl.DateTimeFormat("en-CA", {
     timeZone: fuso,
     year: "numeric",
@@ -82,6 +81,7 @@ export default async function IndicadoresPage({
     necessarioDia,
     diasUteisRestantes,
     previsaoMes,
+    ehMesAtual,
   } = montarGradeDoMes({ agregados: ag, mes, hoje });
   const compAntSerie = ag.seriesExtras[mesAnterior] ?? [] as { dia: string; cents: number }[];
   const compAnoSerie = ag.seriesExtras[mesAnoPassado] ?? [] as { dia: string; cents: number }[];
@@ -160,6 +160,8 @@ export default async function IndicadoresPage({
   ];
   const dados: DadosIndicadores = {
     mes,
+    mesAtual,
+    ehMesAtual,
     rotuloMes: `${ROTULOS_MES[Number(mm || "0") - 1] ?? mm}/${ano.slice(2)}`,
     diaHoje: diasDecorridos,
     serie: ag.serieDiaria.map((s, i) => ({

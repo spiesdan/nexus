@@ -233,15 +233,23 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           onPick={applyTemplate}
           onClose={() => setMenuDismissed(true)}
         />
-        <div className="mb-1.5 flex gap-1">
+        {/*
+          ABAS DE MODO — sublinhado da referência, não pílula.
+          Pílula cheia aqui brigava com a cor do fundo inteiro (em "Nota
+          interna" o composer já tinta `warning-bg`, e a pílula `warning`
+          em cima virava um bloco de cor sólido dentro do outro). O
+          sublinhado diz o mesmo com 2px: qual modo está ativo, pela cor
+          da marca (responder) e do aviso (nota).
+        */}
+        <div className="mb-2 flex gap-4">
           <button
             type="button"
             onClick={() => setMode("reply")}
             className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+              "border-b-2 px-0.5 pb-1.5 text-xs font-semibold transition-colors",
               mode === "reply"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted",
+                ? "border-accent text-accent"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t("Responder")}
@@ -250,10 +258,10 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             type="button"
             onClick={() => setMode("note")}
             className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+              "border-b-2 px-0.5 pb-1.5 text-xs font-semibold transition-colors",
               mode === "note"
-                ? "bg-warning text-warning-fg"
-                : "text-muted-foreground hover:bg-muted",
+                ? "border-warning text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t("Nota interna")}
@@ -369,7 +377,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 : t("Enter envia · Shift+Enter quebra linha")
             }
             className={cn(
-              "max-h-40 min-h-9 flex-1 resize-none rounded-full border border-input bg-white px-4 py-2 text-sm",
+              // Campo do composer da referência: retângulo de raio médio sobre
+              // a superfície do tema — o `bg-white` fixo deixava um "pílula
+              // branca" flutuando no tema escuro, era a mesma mancha do
+              // `#efeae2` do fio em outra escala.
+              "max-h-40 min-h-10 flex-1 resize-none rounded-lg border border-input bg-card px-4 py-2.5 text-sm",
               "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
@@ -379,7 +391,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             <Button
               type="button"
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className="h-9 w-9 shrink-0 rounded-full"
               onClick={handleSubmit}
               disabled={(mode === "note" ? isDisabled : respostaBarrada) || !text.trim()}
               aria-label={t("Enviar")}

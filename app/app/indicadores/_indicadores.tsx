@@ -35,6 +35,8 @@ import { MetricsClient } from "../metrics/_components/MetricsClient";
 
 export interface DadosIndicadores {
   mes: string;
+  mesAtual: string;
+  ehMesAtual: boolean;
   rotuloMes: string;
   diaHoje: number;
   serie: {
@@ -450,6 +452,8 @@ export function IndicadoresClient({
         necessarioDia={dados.necessarioDia}
         diasUteisRestantes={dados.diasUteisRestantes}
         comparar={{ ativo: comparar, onToggle: () => setComparar((v) => !v) }}
+        ehMesAtual={dados.ehMesAtual}
+        mesAtual={dados.mesAtual}
       />
       <div className="text-center">
         <Link href="/app/pedidos" className="text-sm underline underline-offset-4">

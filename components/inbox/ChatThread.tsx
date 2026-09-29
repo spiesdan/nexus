@@ -218,7 +218,7 @@ export function ChatThread({ conversationId, onResponder }: Props) {
           <div key={g.key} className="space-y-1">
             <div className="sticky top-0 z-10 flex justify-center py-1">
               <span
-                className={`rounded-lg bg-white px-3 py-1 text-[11px] font-medium tracking-wide uppercase shadow-sm ${WA.dayLabel}`}
+                className={`rounded-full border border-border bg-card px-3 py-0.5 text-[11px] font-semibold shadow-sm ${WA.dayLabel}`}
               >
                 {dayLabel(g.date, t, localeDaData)}
               </span>
