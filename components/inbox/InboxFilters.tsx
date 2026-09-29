@@ -117,7 +117,7 @@ export function InboxFilters({ value, onChange }: Props) {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder={t("Buscar por nome, telefone ou mensagem…")}
-          className="h-8 pl-8 text-sm"
+          className="h-9 rounded-lg pl-8 text-sm"
           aria-label={t("Buscar conversas")}
         />
       </div>
@@ -167,7 +167,7 @@ export function InboxFilters({ value, onChange }: Props) {
 
       <Tabs value={value.tab} onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}>
         <TabsList
-          className="grid h-8 w-full"
+          className="grid h-9 w-full gap-0.5 rounded-lg p-1"
           style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
         >
           {tabs.map((tab) => {
@@ -176,8 +176,11 @@ export function InboxFilters({ value, onChange }: Props) {
             return (
               <TabsTrigger key={tab} value={tab} className="gap-1 text-[11px]">
                 {t(meta.label)}
+                {/* Contador na cor da marca em negrito — é o número que a aba
+                    existe para responder, e em cinza ele disputava atenção com
+                    o próprio rótulo (referência: `.tabs b` em `--brand`). */}
                 {typeof count === "number" && count > 0 && (
-                  <span className="text-[10px] text-muted-foreground tabular-nums">{count}</span>
+                  <span className="text-[10px] font-bold text-accent tabular-nums">{count}</span>
                 )}
               </TabsTrigger>
             );

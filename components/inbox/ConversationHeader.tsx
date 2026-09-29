@@ -21,6 +21,7 @@ import type { ConversationWithContact } from "@/hooks/inbox/useConversationsReal
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
+import { cn } from "@/lib/utils";
 
 interface Props {
   conversation: ConversationWithContact;
@@ -50,6 +51,25 @@ const STATUS_LABEL: Record<string, string> = {
   resolved: "Resolvida",
   closed: "Fechada",
   archived: "Arquivada",
+};
+
+/**
+ * A PÍLULA DE STATUS — cor por CICLO DE VIDA, nos tokens do tema.
+ *
+ * Tintas (`*-bg` + `*-fg`) e não cores sólidas da paleta Tailwind: os pares
+ * pintados aqui já passaram na régua de contraste do branding, e a tinta
+ * acompanha o `data-theme` (no escuro o `success-bg` clareia junto). Cinza
+ * outline para quem já acabou — o mesmo `Badge variant="outline"` de antes,
+ * só que com a geometria de pílula da referência.
+ */
+const COR_DO_STATUS: Record<string, string> = {
+  open: "border-transparent bg-success-bg text-success-fg",
+  pending: "border-transparent bg-success-bg text-success-fg",
+  claimed: "border-transparent bg-success-bg text-success-fg",
+  ai_handling: "border-transparent bg-success-bg text-success-fg",
+  resolved: "border-transparent bg-accent-soft text-accent",
+  closed: "border-border text-muted-foreground",
+  archived: "border-border text-muted-foreground",
 };
 
 export function ConversationHeader({ conversation }: Props) {
@@ -143,8 +163,14 @@ export function ConversationHeader({ conversation }: Props) {
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <h2 className="truncate text-sm font-semibold">{displayName}</h2>
-          <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+          <h2 className="truncate text-base font-bold">{displayName}</h2>
+          <Badge
+            variant="outline"
+            className={cn(
+              "h-5 rounded-full px-2 text-[11px] font-bold",
+              COR_DO_STATUS[status] ?? "border-border text-muted-foreground",
+            )}
+          >
             {t(STATUS_LABEL[status] ?? status)}
           </Badge>
           {/* Ao lado do estado, não escondido num painel: a pergunta "dá para

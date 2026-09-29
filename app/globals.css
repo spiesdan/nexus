@@ -1086,13 +1086,21 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Inbox · fundo do fio estilo WhatsApp (assimilação do usuário final).
+   Inbox · fundo do fio — textura sutil HERDADA do WhatsApp, mas TEMA-AWARE.
+   Antes isto era `#efeae2` fixo (papel bege do WhatsApp Light): no tema
+   escuro o fio continuava BEGE — a única área do produto que ignorava o
+   `data-theme` inteiro. Agora o canvas é o `--color-bg` corrente e a trama
+   de pontos tinge pelo texto do tema (`color-mix` a 5%), para clarear no
+   claro e escurecer no escuro sem segredo de arquivo.
    Estático de propósito: é textura, não animação — nada para congelar em
    `reduced-motion`. Escopo: só o inbox usa (`.wa-chat-bg`).
    ───────────────────────────────────────────────────────────────────────── */
 .wa-chat-bg {
-  background-color: #efeae2;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+  background-color: var(--color-bg);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-text) 5%, transparent) 1px,
+    transparent 1px
+  );
   background-size: 22px 22px;
 }
 
