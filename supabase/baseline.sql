@@ -20640,3 +20640,8 @@ comment on table public.suppliers is
   'Fornecedores da org (NEXUS §47).';
 comment on table public.purchase_orders is
   'Pedidos de compra (NEXUS §47): rascunho → enviado → recebido/cancelado. Receber vira entrada no razão.';
+
+-- APÊNDICE 0245 — ÍNDICE DA FILA DO INBOX (idempotente; fonte: supabase/migrations/20260929090000_0245_indice_fila_inbox_last_inbound.sql)
+
+create index if not exists idx_conversations_org_last_inbound
+  on public.conversations (organization_id, last_inbound_at asc nulls last, id);

@@ -51,6 +51,22 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   experimental: {
     optimizePackageImports: ["@phosphor-icons/react", "lucide-react", "date-fns"],
+    /**
+     * Cache do client router (default desde o v15: `dynamic: 0` = NADA cacheado
+     * — cada clique refazia o render do layout, e com ele a cascata de auth que
+     * o `app/app/layout.tsx` resolve). `dynamic: 30` guarda o segmento por 30s:
+     * navegar inbox → dashboard → inbox não paga mais a mesma rede duas vezes.
+     *
+     * Contrapartida conhecida: uma mutação via server action que só chamar
+     * `revalidatePath` pode exibir dado velho por até 30s no MESMO caminho — as
+     * mutações do app já chamam `router.refresh()` (37 ocorrências) ou navegam,
+     * que é request novo. Se aparecer dado velho, baixe `dynamic` para 15 antes
+     * de investigar outro lugar.
+     */
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
     // Dev no Windows: o cache persistente do Turbopack em disco trava o
     // servidor em "compaction" (medido: 10–34s parado). Desligar troca boot
     // frio mais lento por steady-state sem stalls. Só afeta `next dev`.

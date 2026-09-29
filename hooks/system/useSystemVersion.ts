@@ -39,8 +39,17 @@ export interface SystemVersion {
  * Estado da versão desta instalação. Fonte única do rodapé da sidebar e da
  * tela de atualização. Poll folgado (5 min) porque o agente do host só reporta
  * a cada 5 min — bater mais rápido não traria informação nova.
+ *
+ * `refetchInterval` também aceita a FORMA DE FUNÇÃO do react-query: é o que a
+ * tela de atualização usa para voltar aos 5s **só enquanto há um run de pé**
+ * (a checklist de PASSOS lê `last_step` desta query) e cair para 60s parado.
  */
-export function useSystemVersion(opts?: { refetchInterval?: number }) {
+type IntervaloDePoll =
+  | number
+  | false
+  | ((consulta: { state: { data?: SystemVersion } }) => number | false);
+
+export function useSystemVersion(opts?: { refetchInterval?: IntervaloDePoll }) {
   return useQuery({
     queryKey: ["system-version"],
     queryFn: async () => {

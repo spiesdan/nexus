@@ -34,7 +34,16 @@ export interface AgregadosIndicadores {
   seriesExtras: Record<string, { dia: string; cents: number }[]>;
 }
 
-const LIMITE = 25000;
+// Teto de LINHAS da janela — o corte de segurança, não o corte do período. O
+// período já vem de fora em `inicioJanela` (14 meses no painel, o mês corrente
+// na home), e é ele que define o que entra; o teto existe para o pico medido no
+// dev-server.log (10s de application-code carregando dezenas de milhares de
+// pedidos) não virar 5 rajadas de 1000 por request. Em 5 mil cabe UMA rajada
+// paralela (5 × 1000) — metade do roundtrip de antes — e a home, cuja janela é
+// só o mês, nunca chega perto. Se o teto estourar, `cortado` sobe na tela; a
+// leitura sai da mais recente para a mais antiga (lib/comercial/janela.ts), então
+// quem fica de fora é o começo mais antigo da janela — nunca o mês na tela.
+const LIMITE = 5000;
 
 export async function agregadosDoMes(args: {
   supabase: SupabaseClient;

@@ -92,6 +92,8 @@ export function useWebhookSourceEvents(sourceId: string | null) {
         `/api/v1/webhook-sources/${sourceId}/events?limit=20`,
       ),
     enabled: !!sourceId,
+    // 5s de propósito: é a CAUDA ao vivo de "o webhook chegou?" enquanto o
+    // integrador testa. Alongar aqui transforma tela de depuração em tela morta.
     refetchInterval: 5_000,
   });
 }

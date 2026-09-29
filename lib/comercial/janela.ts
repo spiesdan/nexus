@@ -8,7 +8,17 @@ import type { PedidoIntel } from "./inteligencia";
  * O loop sequencial de 1000 em 1000 custava um roundtrip por página (11 idas
  * para 10 mil pedidos no dashboard — 10s de application-code medidos no
  * dev-server.log). Rajadas de 5 derrubam o muro para ~5 idas. Só leitura,
- * mesma ordem crescente, mesmo teto de 25 mil com corte documentado.
+ * mesmo teto com corte documentado.
+ *
+ * A ordem é da MAIS RECENTE para a MAIS ANTIGA de propósito: o `limite` é uma
+ * contagem de linhas, e quem fica de fora precisa ser o PASSADO, não o mês que
+ * está na tela. Com a ordem antiga (crescente) um teto de 5 mil cortava o mês
+ * corrente inteiro em qualquer org com mais de 5 mil pedidos na janela de 14
+ * meses — o painel mostraria ~0 para hoje com a faixa de "período cortado"
+ * embaixo. Decrescente torna o corte o que a UI promete: corte POR JANELA DE
+ * DATA (sai o começo mais antigo) e não "as primeiras N linhas". Nenhum
+ * agregador depende da ordem de chegada — série, totais, ranking e ciclo
+ * somam/ordenam por si (ver lib/comercial/carteira.ts).
  */
 export async function carregarJanelaDeVendas(
   supabase: SupabaseClient,
@@ -29,7 +39,7 @@ export async function carregarJanelaDeVendas(
         .eq("organization_id", orgId)
         .not("status", "in", "(rascunho,cancelado)")
         .gte("created_at", `${inicioJanela}T00:00:00Z`)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .range(de, de + pagina - 1);
     });
     const resultados = await Promise.all(pedidos);

@@ -8,6 +8,7 @@
  */
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -101,7 +102,33 @@ export function ehSessaoAusente(error: { name?: string } | null | undefined): bo
   return error?.name === "AuthSessionMissingError";
 }
 
-export async function loadAuthUser(): Promise<AuthUser | null> {
+/**
+ * Memoizado por REQUEST com `React.cache` — e este comentário é o contrato.
+ *
+ * ─── Por que ────────────────────────────────────────────────────────────────
+ * `loadAuthUser()` custa 1 chamada HTTP ao GoTrue + 2 queries (`platform_admins`,
+ * `user_organizations`). Sem a memoização, CADA navegação em `/app` pagava ela
+ * DUAS vezes — `app/app/layout.tsx` e a página que ele monta chamam na mesma
+ * passada de render —, e ainda uma terceira em rotas cujo handler chama
+ * `loadAuthUser()` junto do `requireRole` (que delega para cá). Medido em
+ * `dev-server.log`: proxy 44–112 ms + 3 roundtrips GoTrue antes do primeiro
+ * pixel de qualquer tela.
+ *
+ * ─── O contrato ─────────────────────────────────────────────────────────────
+ * O cache vive no dispatcher do request (dispatcher do React). Fora de um
+ * render — vitest, scripts — não há dispatcher e `React.cache` cai na chamada
+ * DIRETA: mesmo comportamento de sempre, zero memoização. Dentro do request,
+ * a primeira chamada resolve e as repetições reusam a promessa.
+ *
+ * Consequência a conhecer (quem for escrever server action nova): uma ação que
+ * chame `loadAuthUser()` ANTES de mutar dados que o layout lê (user_metadata,
+ * memberships) e depois `revalidatePath` pode, no re-render do MESMO request,
+ * exibir o valor anterior — a navegação seguinte é um request novo e corrige.
+ * Hoje: `setActiveOrg` muta o cookie `active_org`, que é lido FORA deste cache
+ * (`resolveActiveOrg` não é memoizado, de propósito); `acceptInviteAction` não
+ * tem chamada pré-mutação; `trocarIdioma` é código morto.
+ */
+const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -249,7 +276,14 @@ export async function loadAuthUser(): Promise<AuthUser | null> {
     timezone,
     organizations: memberships,
   };
-}
+};
+
+/**
+ * A superfície pública — memoizada por request. `requireRole`, `requireAuth`,
+ * o layout e as páginas importam ESTA; quem quiser forçar leitura fresca
+ * (não há caso hoje) chama `carregarUsuarioDoRequest` direto.
+ */
+export const loadAuthUser = cache(carregarUsuarioDoRequest);
 
 /**
  * Resolves the active organization for the current request.
