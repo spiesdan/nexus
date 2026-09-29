@@ -5,10 +5,16 @@ import { useEffect, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/client";
 import { ROTULO_RECOMPRA } from "@/lib/comercial/radar-compras";
+import {
+  BTN_REF,
+  BTN_REF_SEC,
+  CARD_REF,
+  H3_REF,
+  SEC_REF,
+} from "@/components/inbox/estilos-da-referencia";
 
 /** O tipo vem da ROTA, não é redigitado aqui. */
 export type { QueueRow } from "@/app/api/v1/ai/followups/queue/route";
@@ -61,41 +67,41 @@ export function BrainNoPainel({ contactId }: { contactId: string }) {
   }, [contactId, tentativa]);
 
   return (
-    <>
-      <Separator />
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Recompra e IA")}
-        </h3>
-        {erro ? (
-          <div className="mt-2 space-y-1">
-            <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
-            <Button size="sm" variant="outline" onClick={() => setTentativa((n) => n + 1)}>
-              {t("Tentar de novo")}
-            </Button>
+    <section className={SEC_REF}>
+      <h3 className={H3_REF}>{t("Recompra e IA")}</h3>
+      {erro ? (
+        <div className="mt-2 space-y-1">
+          <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
+            onClick={() => setTentativa((n) => n + 1)}
+          >
+            {t("Tentar de novo")}
+          </Button>
+        </div>
+      ) : ctx === null ? (
+        <Skeleton className="mt-2 h-14 w-full" />
+      ) : ctx.historico ? (
+        <div className={`${CARD_REF} mt-2 space-y-1.5 text-xs`}>
+          <div>
+            <Badge variant={ctx.historico.atraso_dias > 0 ? "warning" : "success"}>
+              {ROTULO_RECOMPRA[ctx.historico.situacao]}
+            </Badge>
           </div>
-        ) : ctx === null ? (
-          <Skeleton className="mt-2 h-14 w-full" />
-        ) : ctx.historico ? (
-          <div className="mt-2 space-y-1.5 rounded-lg border border-border p-2 text-xs">
-            <div>
-              <Badge variant={ctx.historico.atraso_dias > 0 ? "warning" : "success"}>
-                {ROTULO_RECOMPRA[ctx.historico.situacao]}
-              </Badge>
-            </div>
-            <p className="leading-relaxed text-muted-foreground">{ctx.resumo}</p>
-            <Link
-              href={`/app/contacts/${contactId}`}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {t("Ver no 360")}
-            </Link>
-          </div>
-        ) : (
-          <p className="mt-2 text-xs text-muted-foreground">{t("Sem compras ainda.")}</p>
-        )}
-      </section>
-    </>
+          <p className="leading-relaxed text-muted-foreground">{ctx.resumo}</p>
+          <Link
+            href={`/app/contacts/${contactId}`}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("Ver no 360")}
+          </Link>
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-muted-foreground">{t("Sem compras ainda.")}</p>
+      )}
+    </section>
   );
 }
 
@@ -127,34 +133,34 @@ export function FollowupsNoPainel({ contactId }: { contactId: string }) {
   }, [contactId, tentativa]);
 
   return (
-    <>
-      <Separator />
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Follow-ups ativos")}
-        </h3>
-        {erro ? (
-          <div className="mt-2 space-y-1">
-            <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
-            <Button size="sm" variant="outline" onClick={() => setTentativa((n) => n + 1)}>
-              {t("Tentar de novo")}
-            </Button>
-          </div>
-        ) : linhas === null ? (
-          <Skeleton className="mt-2 h-14 w-full" />
-        ) : linhas.length > 0 ? (
-          <ul className="mt-2 space-y-1.5">
-            {linhas.map((l) => (
-              <li key={`${l.source}-${l.id}`} className="rounded-lg border border-border p-2 text-xs">
-                <div className="truncate font-medium">{l.flow_name ?? t("Fluxo")}</div>
-                <div className="truncate text-muted-foreground">{l.node_or_reason}</div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-xs text-muted-foreground">{t("Nenhum follow-up ativo.")}</p>
-        )}
-      </section>
-    </>
+    <section className={SEC_REF}>
+      <h3 className={H3_REF}>{t("Follow-ups ativos")}</h3>
+      {erro ? (
+        <div className="mt-2 space-y-1">
+          <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
+            onClick={() => setTentativa((n) => n + 1)}
+          >
+            {t("Tentar de novo")}
+          </Button>
+        </div>
+      ) : linhas === null ? (
+        <Skeleton className="mt-2 h-14 w-full" />
+      ) : linhas.length > 0 ? (
+        <ul className="mt-2 space-y-1.5">
+          {linhas.map((l) => (
+            <li key={`${l.source}-${l.id}`} className={`${CARD_REF} text-xs`}>
+              <div className="truncate font-medium">{l.flow_name ?? t("Fluxo")}</div>
+              <div className="truncate text-muted-foreground">{l.node_or_reason}</div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-muted-foreground">{t("Nenhum follow-up ativo.")}</p>
+      )}
+    </section>
   );
 }

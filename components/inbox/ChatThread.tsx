@@ -9,6 +9,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WA } from "@/components/inbox/whatsapp-theme";
+import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 import { MessageBubble } from "./MessageBubble";
 import { NoteCard } from "./NoteCard";
 import { useMessagesRealtime } from "@/hooks/inbox/useMessagesRealtime";
@@ -170,7 +171,12 @@ export function ChatThread({ conversationId, onResponder }: Props) {
         className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground"
       >
         <p>{t("Erro ao carregar mensagens.")}</p>
-        <Button size="sm" variant="outline" onClick={() => q.refetch()}>
+        <Button
+          size="sm"
+          variant="outline"
+          className={`${BTN_REF} ${BTN_REF_SEC}`}
+          onClick={() => q.refetch()}
+        >
           {t("Tentar novamente")}
         </Button>
       </div>
@@ -200,12 +206,19 @@ export function ChatThread({ conversationId, onResponder }: Props) {
 
   return (
     <div {...sinalDoCanal} className={`flex h-full flex-col ${WA.chatBg}`}>
-      <div ref={scrollerRef} className="flex-1 overflow-y-auto py-2">
+      <div
+        ref={scrollerRef}
+        // `.msgs` da referência: 22×26 de respiro (aqui na grade de 4px da
+        // §15: 20×24) — o padding mora no scroller para a pílula de dia, as
+        // bolhas e a nota nascerem todas alinhadas na mesma margem.
+        className="flex-1 overflow-y-auto px-6 py-5"
+      >
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button
               size="sm"
               variant="ghost"
+              className={`rounded-lg ${BTN_REF}`}
               onClick={() => q.fetchNextPage()}
               disabled={q.isFetchingNextPage}
             >
@@ -216,9 +229,11 @@ export function ChatThread({ conversationId, onResponder }: Props) {
 
         {groups.map((g) => (
           <div key={g.key} className="space-y-1">
-            <div className="sticky top-0 z-10 flex justify-center py-1">
+            <div className="sticky top-0 z-10 flex justify-center py-1.5">
               <span
-                className={`rounded-full border border-border bg-card px-3 py-0.5 text-[11px] font-semibold shadow-sm ${WA.dayLabel}`}
+                // `.day` da referência: 12px/600, 3×12 de respiro, fundo
+                // `--surface` com filete de `--line`, sem sombra.
+                className={`rounded-full border border-border bg-muted px-3 py-0.5 text-xs font-semibold ${WA.dayLabel}`}
               >
                 {dayLabel(g.date, t, localeDaData)}
               </span>

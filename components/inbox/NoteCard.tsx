@@ -3,7 +3,7 @@
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { Note as NoteIcon, Trash } from "@/lib/ui/icons";
+import { Trash } from "@/lib/ui/icons";
 import type { Note } from "@/lib/types/messaging";
 
 interface Props {
@@ -18,11 +18,14 @@ export function NoteCard({ note, onDelete }: Props) {
   const time = format(new Date(note.created_at), "HH:mm", { locale: localeDaData });
 
   return (
-    <div className="group flex w-full justify-center px-4 py-1">
-      <div className="max-w-[85%] rounded-xl border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg shadow-sm">
+    <div className="group flex w-full justify-end py-1">
+      {/* `.note` da referência: âncora à direita, largura da bolha de saída,
+          12px de raio e o card âmbar DASHED da folha — respiro 10/12 na grade
+          de 4px da §15 (folha: 9/13), origem em 12px/600 a 75% de opacidade,
+          sem caixa de ícone nem "uppercase". */}
+      <div className="max-w-[min(520px,78%)] rounded-[12px] border border-dashed border-[#b98f57] bg-[#e7c9a3] px-3 py-2.5 text-sm text-[#3a2a14]">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide opacity-80">
-            <NoteIcon size={12} weight="fill" aria-hidden />
+          <div className="flex items-center gap-1.5 text-xs font-bold opacity-75">
             <span>{note.created_by_name ?? t("Alguém")}</span>
             <span aria-hidden>·</span>
             <span>{t("Nota interna · só o time vê")}</span>
@@ -31,7 +34,7 @@ export function NoteCard({ note, onDelete }: Props) {
             <button
               type="button"
               onClick={onDelete}
-              className="opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+              className="opacity-0 transition-opacity hover:text-[#7a1f12] group-hover:opacity-100"
               aria-label={t("Excluir nota")}
             >
               <Trash size={12} weight="bold" />
@@ -39,7 +42,7 @@ export function NoteCard({ note, onDelete }: Props) {
           )}
         </div>
         <p className="mt-1 whitespace-pre-wrap break-words leading-snug">{note.body}</p>
-        <div className="mt-1 text-right text-[10px] opacity-70">{time}</div>
+        <div className="mt-1 text-right text-[11px] opacity-70">{time}</div>
       </div>
     </div>
   );

@@ -7,12 +7,19 @@ import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Tag, Receipt, Users, ArrowRight } from "@/lib/ui/icons";
+import {
+  BTN_REF,
+  BTN_REF_LINK,
+  BTN_REF_SEC,
+  CARD_REF,
+  CHIP_REF,
+  H3_REF,
+  SEC_REF,
+} from "@/components/inbox/estilos-da-referencia";
 import { apiClient } from "@/lib/api/client";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -144,7 +151,7 @@ function MarcarProximoPasso({ demandaId, onPronto }: { demandaId: string; onPron
       <Button
         size="sm"
         variant="outline"
-        className="mt-1.5 h-7 text-xs"
+        className={`mt-1.5 ${BTN_REF} ${BTN_REF_SEC}`}
         data-testid="marcar-proximo-passo"
         onClick={() => setAberto(true)}
       >
@@ -167,19 +174,24 @@ function MarcarProximoPasso({ demandaId, onPronto }: { demandaId: string; onPron
         placeholder={t("O que acontece a seguir?")}
         aria-label={t("Próximo passo desta demanda")}
         data-testid="campo-proximo-passo"
-        className="w-full rounded-lg border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-ring focus:outline-hidden"
+        className="w-full rounded-lg border border-input bg-muted px-2 py-1 text-xs focus:ring-1 focus:ring-ring focus:outline-hidden"
       />
       <div className="flex gap-1.5">
         <Button
           size="sm"
-          className="h-7 text-xs"
+          className="h-7 rounded-lg text-xs"
           disabled={salvando || texto.trim().length < 3}
           data-testid="salvar-proximo-passo"
           onClick={() => void salvar()}
         >
           {salvando ? t("Salvando…") : t("Salvar")}
         </Button>
-        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAberto(false)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 rounded-lg text-xs"
+          onClick={() => setAberto(false)}
+        >
           {t("Cancelar")}
         </Button>
       </div>
@@ -227,7 +239,12 @@ function SemLista({
   return (
     <div className="mt-2 space-y-1">
       <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
-      <Button size="sm" variant="outline" onClick={onTentarDeNovo}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={`${BTN_REF} ${BTN_REF_SEC}`}
+        onClick={onTentarDeNovo}
+      >
         {t("Tentar de novo")}
       </Button>
     </div>
@@ -267,8 +284,9 @@ function InboxLeadEditor({
                   aria-pressed={marcado}
                   onClick={() => onSelecionar(l.id)}
                   className={cn(
-                    "w-full rounded-lg border p-2 text-left text-xs",
-                    marcado ? "border-accent bg-accent/10" : "border-border",
+                    CARD_REF,
+                    "w-full text-left text-xs",
+                    marcado && "border-accent bg-accent/10",
                   )}
                 >
                   <div className="truncate font-medium">{l.title}</div>
@@ -342,7 +360,7 @@ function CamposDoFunil({
       />
       <Button
         size="sm"
-        className="h-7 w-full text-xs"
+        className="h-7 w-full rounded-lg text-xs"
         disabled={edit.isPending}
         onClick={() => void salvar()}
       >
@@ -482,59 +500,56 @@ export function CRMSidePanel({ conversation }: Props) {
   }
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-border bg-background p-4">
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Contato")}
-        </h3>
-        <Card className="hover-raise mt-2 space-y-2 p-3 text-sm">
-          <div className="font-medium">{displayName}</div>
-          {contact?.phone_number && (
-            <div className="text-xs text-muted-foreground">
-              {phoneForDisplay(contact.phone_number)}
-            </div>
-          )}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.map((t) => (
-                <Badge key={t} variant="secondary" className="h-4 px-1.5 text-[10px]">
-                  {t}
-                </Badge>
-              ))}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              disabled={!contactId}
-              aria-pressed={tagEditorOpen}
-              onClick={() => setTagEditorOpen((v) => !v)}
-            >
-              <Tag size={12} className="mr-1" weight="regular" aria-hidden /> {t("Tag")}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              disabled={!contactId || (leadDialogOpen && defaultPipeline.isLoading)}
-              onClick={() => setLeadDialogOpen(true)}
-            >
-              <Users size={12} className="mr-1" weight="regular" aria-hidden />
-              {leadDialogOpen && defaultPipeline.isLoading ? t("Carregando…") : t("Lead")}
-            </Button>
-            {contactId && (
-              <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
-                <Link href={`/app/contacts/${contactId}`}>
-                  {t("Ver contato")}
-                  <ArrowRight size={12} className="ml-1" weight="regular" aria-hidden />
-                </Link>
-              </Button>
-            )}
+    <aside className="flex h-full flex-col overflow-y-auto border-l border-border bg-card">
+      {/* O DOSSIÊ ABRE COM A PESSOA, não com um rótulo: a referência não tem
+          "Contato" como cabeçalho — o nome é o título da seção, e as ações de
+          etiqueta viram `.chip`, pílula quieta, em vez de botão de caixa. */}
+      <section className={SEC_REF}>
+        <div className="text-base font-bold">{displayName}</div>
+        {contact?.phone_number && (
+          <div className="mt-0.5 text-[13px] text-muted-foreground">
+            {phoneForDisplay(contact.phone_number)}
           </div>
-          {tagEditorOpen && contactId && <ContactTagsEditor contactId={contactId} tags={tags} />}
-        </Card>
+        )}
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {tags.map((t) => (
+              <Badge key={t} variant="secondary" className="h-5 px-2.5 py-0.5 text-xs font-normal">
+                {t}
+              </Badge>
+            ))}
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={!contactId}
+            aria-pressed={tagEditorOpen}
+            onClick={() => setTagEditorOpen((v) => !v)}
+            className={CHIP_REF}
+          >
+            <Tag size={12} weight="regular" aria-hidden /> {t("Tag")}
+          </button>
+          <button
+            type="button"
+            disabled={!contactId || (leadDialogOpen && defaultPipeline.isLoading)}
+            onClick={() => setLeadDialogOpen(true)}
+            className={CHIP_REF}
+          >
+            <Users size={12} weight="regular" aria-hidden />
+            {leadDialogOpen && defaultPipeline.isLoading ? t("Carregando…") : t("Lead")}
+          </button>
+        </div>
+        {contactId && (
+          <Link
+            href={`/app/contacts/${contactId}`}
+            className={`mt-3 inline-flex items-center gap-1 ${BTN_REF_LINK}`}
+          >
+            {t("Ver contato")}
+            <ArrowRight size={12} weight="regular" aria-hidden />
+          </Link>
+        )}
+        {tagEditorOpen && contactId && <ContactTagsEditor contactId={contactId} tags={tags} />}
       </section>
 
       {contactId && defaultPipeline.data && (
@@ -551,24 +566,18 @@ export function CRMSidePanel({ conversation }: Props) {
         />
       )}
 
-      <Separator />
-
       <ConversationTagsEditor
         conversationId={conversation.id}
         orgId={conversation.organization_id}
         tags={conversation.tags ?? []}
       />
 
-      <Separator />
-
       {/* ANTES dos negócios de propósito (doutrina cap. 5): lead é o negócio,
           conversa é o canal, demanda é o que precisa acabar. Quem abre esta
           conversa está atendendo alguém que pediu alguma coisa — a primeira
           pergunta a responder é o que ainda está pendente, não quanto vale. */}
-      <section data-testid="inbox-demandas">
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Demandas abertas")}
-        </h3>
+      <section data-testid="inbox-demandas" className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Demandas abertas")}</h3>
         {sectionsLoading ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : demandas && demandas.length > 0 ? (
@@ -580,21 +589,27 @@ export function CRMSidePanel({ conversation }: Props) {
                   key={d.id}
                   data-testid={semPasso ? "demanda-sem-proximo-passo" : "demanda-com-proximo-passo"}
                   className={cn(
-                    "rounded-lg border p-2 text-xs",
-                    semPasso ? "border-warning-border bg-warning-bg/40" : "border-border",
+                    // `.dem` da referência: cartão de raio 10 com respiro
+                    // 10/12; a demanda SEM próximo passo ganha o aviso âmbar,
+                    // única tinta de urgência do painel.
+                    CARD_REF,
+                    "text-xs",
+                    semPasso && "border-warning-border bg-warning-bg/40",
                   )}
                 >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-medium">
+                  <div className="flex items-baseline justify-between gap-2 text-muted-foreground">
+                    <span className="truncate">
                       {t(ESTADO_LEGIVEL[d.estado] ?? d.estado)}
                     </span>
-                    <span className="shrink-0 text-muted-foreground tabular-nums">
+                    <span className="shrink-0 tabular-nums">
                       {t("há")} {horasDesde(d.aberta_em)}h
                     </span>
                   </div>
                   {/* O invariante 4 na frase, não só na cor: quem enxerga mal
-                      cor precisa ler a mesma informação. */}
-                  <div className={cn("mt-0.5", semPasso ? "font-medium" : "text-muted-foreground")}>
+                      cor precisa ler a mesma informação. `strong` da referência:
+                      sempre peso 600 — tinta cheia quando é a pendência,
+                      apagada quando o passo já está posto. */}
+                  <div className={cn("mt-1 font-semibold", !semPasso && "text-muted-foreground")}>
                     {d.proximo_passo ?? t("Sem próximo passo definido")}
                   </div>
                   {/* A SAÍDA. Sem ela esta seção só denunciava: o atendente via o
@@ -615,12 +630,8 @@ export function CRMSidePanel({ conversation }: Props) {
         )}
       </section>
 
-      <Separator />
-
-      <section data-testid="inbox-campos-lead">
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Leads recentes")}
-        </h3>
+      <section data-testid="inbox-campos-lead" className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Leads recentes")}</h3>
         {sectionsLoading ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : leads && leads.length > 0 ? (
@@ -639,12 +650,8 @@ export function CRMSidePanel({ conversation }: Props) {
         )}
       </section>
 
-      <Separator />
-
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Pedidos recentes")}
-        </h3>
+      <section className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Pedidos recentes")}</h3>
         {sectionsLoading ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : orders && orders.length > 0 ? (
@@ -652,7 +659,7 @@ export function CRMSidePanel({ conversation }: Props) {
             {orders.map((o) => (
               <li
                 key={o.id}
-                className="flex items-center justify-between rounded-lg border border-border p-2 text-xs"
+                className={cn(CARD_REF, "flex items-center justify-between text-xs")}
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-1 truncate font-medium">
@@ -681,18 +688,14 @@ export function CRMSidePanel({ conversation }: Props) {
       {contactId && <BrainNoPainel contactId={contactId} />}
       {contactId && <FollowupsNoPainel contactId={contactId} />}
 
-      <Separator />
-
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Atividade")}
-        </h3>
+      <section className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Atividade")}</h3>
         {sectionsLoading ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : activities && activities.length > 0 ? (
           <ul className="mt-2 space-y-1.5">
             {activities.map((a) => (
-              <li key={a.id} className="rounded-lg border border-border p-2 text-xs">
+              <li key={a.id} className={cn(CARD_REF, "text-xs")}>
                 {/* Rótulo do vocabulário único (activity-vocabulary), nunca o
                     tipo cru: a tela e o banco divergiram justamente por manter
                     duas listas. Marcador por ator, forma e não cor (§5). */}

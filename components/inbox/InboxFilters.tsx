@@ -1,7 +1,6 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useState } from "react";
-import { MagnifyingGlass } from "@/lib/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -105,22 +104,51 @@ export function InboxFilters({ value, onChange }: Props) {
   }, [searchInput]);
 
   return (
-    <div className="space-y-3 border-b border-border bg-card px-3 py-3">
-      <div className="relative">
-        <MagnifyingGlass
-          size={14}
-          weight="regular"
-          className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <Input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder={t("Buscar por nome, telefone ou mensagem…")}
-          className="h-9 rounded-lg pl-8 text-sm"
-          aria-label={t("Buscar conversas")}
-        />
-      </div>
+    // `.list-top` da referência: 16px de respiro, filete embaixo, grade com
+    // 10px de intervalo — e a ordem da folha: busca primeiro, as abas logo
+    // embaixo dela. Os seletores e o alternador não existem na referência e
+    // ficam depois das abas, que são a âncora visual da coluna.
+    <div className="grid gap-2.5 border-b border-border bg-card px-4 py-4">
+      <Input
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        placeholder={t("Buscar por nome, telefone ou mensagem…")}
+        // `.input` da referência: 38px, raio 8, 12px de recuo — sem ícone,
+        // a folha não tem lupa e o placeholder já diz o que é o campo.
+        className="h-[38px] rounded-lg bg-muted px-3 text-sm"
+        aria-label={t("Buscar conversas")}
+      />
+
+      <Tabs value={value.tab} onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}>
+        <TabsList
+          className="grid h-auto w-full max-w-full gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5"
+          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+        >
+          {tabs.map((tab) => {
+            const meta = INBOX_TABS.find((t) => t.value === tab)!;
+            const count = countFor[tab];
+            return (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                // `.tabs` da referência: fundo `--surface`, botão de raio 7,
+                // ativo com `--surface-2` + filete inset de `--line` — segmented
+                // control, não sublinhado. O sublinhado base some porque o
+                // `border-transparent` ativo vence o `border-accent` do primitivo.
+                className="gap-1 rounded-[7px] px-1 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-muted data-[state=active]:shadow-[inset_0_0_0_1px_var(--color-border)]"
+              >
+                {t(meta.label)}
+                {/* Contador na cor da marca em negrito — é o número que a aba
+                    existe para responder, e em cinza ele disputava atenção com
+                    o próprio rótulo (referência: `.tabs b` em `--brand`). */}
+                {typeof count === "number" && count > 0 && (
+                  <span className="text-[10px] font-bold text-accent tabular-nums">{count}</span>
+                )}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
 
       {showChannelSwitch && (
         <Select
@@ -129,7 +157,10 @@ export function InboxFilters({ value, onChange }: Props) {
             onChange({ ...value, channel_session_id: v === "all" ? undefined : v })
           }
         >
-          <SelectTrigger className="h-8 text-sm" aria-label={t("Filtrar por número de WhatsApp")}>
+          <SelectTrigger
+            className="h-[38px] rounded-lg bg-muted shadow-none text-sm"
+            aria-label={t("Filtrar por número de WhatsApp")}
+          >
             <SelectValue placeholder={t("Todos os números")} />
           </SelectTrigger>
           <SelectContent>
@@ -151,7 +182,10 @@ export function InboxFilters({ value, onChange }: Props) {
           value={value.tag ?? "all"}
           onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
         >
-          <SelectTrigger className="h-8 text-sm" aria-label={t("Filtrar por tag")}>
+          <SelectTrigger
+            className="h-[38px] rounded-lg bg-muted shadow-none text-sm"
+            aria-label={t("Filtrar por tag")}
+          >
             <SelectValue placeholder={t("Todas as tags")} />
           </SelectTrigger>
           <SelectContent>
@@ -164,29 +198,6 @@ export function InboxFilters({ value, onChange }: Props) {
           </SelectContent>
         </Select>
       )}
-
-      <Tabs value={value.tab} onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}>
-        <TabsList
-          className="grid h-9 w-full gap-0.5 rounded-lg p-1"
-          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
-        >
-          {tabs.map((tab) => {
-            const meta = INBOX_TABS.find((t) => t.value === tab)!;
-            const count = countFor[tab];
-            return (
-              <TabsTrigger key={tab} value={tab} className="gap-1 text-[11px]">
-                {t(meta.label)}
-                {/* Contador na cor da marca em negrito — é o número que a aba
-                    existe para responder, e em cinza ele disputava atenção com
-                    o próprio rótulo (referência: `.tabs b` em `--brand`). */}
-                {typeof count === "number" && count > 0 && (
-                  <span className="text-[10px] font-bold text-accent tabular-nums">{count}</span>
-                )}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
 
       <div className="flex items-center justify-between">
         <Label htmlFor="only-unread" className="text-xs text-muted-foreground">

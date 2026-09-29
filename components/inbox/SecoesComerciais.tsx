@@ -5,10 +5,16 @@ import { useEffect, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import type { ItemDoPedido } from "@/lib/schemas/pedidos";
+import {
+  BTN_REF,
+  BTN_REF_SEC,
+  CARD_REF,
+  H3_REF,
+  SEC_REF,
+} from "@/components/inbox/estilos-da-referencia";
 
 interface PedidoLista {
   id: string;
@@ -112,7 +118,12 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
     return (
       <div className="mt-2 space-y-1">
         <p className="text-xs text-error-fg">{t("Não consegui ler estes dados.")}</p>
-        <Button size="sm" variant="outline" onClick={() => setTentativa((n) => n + 1)}>
+        <Button
+          size="sm"
+          variant="outline"
+          className={`${BTN_REF} ${BTN_REF_SEC}`}
+          onClick={() => setTentativa((n) => n + 1)}
+        >
           {t("Tentar de novo")}
         </Button>
       </div>
@@ -121,11 +132,8 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
 
   return (
     <>
-      <Separator />
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Últimas compras")}
-        </h3>
+      <section className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Últimas compras")}</h3>
         {carregando ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : erro ? (
@@ -135,7 +143,7 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
             {pedidos.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-xs"
+                className={`${CARD_REF} flex items-center justify-between gap-2 text-xs`}
               >
                 <Link
                   href={`/app/pedidos/${p.id}`}
@@ -154,11 +162,8 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
         )}
       </section>
 
-      <Separator />
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Produtos")}
-        </h3>
+      <section className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Produtos")}</h3>
         {carregando ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : erro ? (
@@ -166,7 +171,7 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
         ) : produtos && produtos.length > 0 ? (
           <ul className="mt-2 space-y-1.5">
             {produtos.map((p) => (
-              <li key={p.nome} className="rounded-lg border border-border p-2 text-xs">
+              <li key={p.nome} className={`${CARD_REF} text-xs`}>
                 <div className="truncate font-medium">{p.nome}</div>
                 <div className="text-muted-foreground tabular-nums">
                   {p.qtd} un. · {comoMoeda(p.total, "BRL")}
@@ -179,17 +184,14 @@ export function SecoesComerciais({ contactId }: { contactId: string }) {
         )}
       </section>
 
-      <Separator />
-      <section>
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {t("Títulos")}
-        </h3>
+      <section className={SEC_REF}>
+        <h3 className={H3_REF}>{t("Títulos")}</h3>
         {carregando ? (
           <Skeleton className="mt-2 h-14 w-full" />
         ) : erro ? (
           tentarDeNovo()
         ) : titulos && titulos.qtd > 0 ? (
-          <div className="mt-2 rounded-lg border border-border p-2 text-xs">
+          <div className={`${CARD_REF} mt-2 text-xs`}>
             <p className="tabular-nums">
               {t("Em aberto")}: <strong>{comoMoeda(titulos.aberto, "BRL")}</strong>
             </p>
