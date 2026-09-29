@@ -108,7 +108,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
     isLoading,
     isError,
     schemaOutdated,
-  } = useChannelSessions({ refetchInterval: 10_000 });
+  } = useChannelSessions({ refetchInterval: 30_000 });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [checking, setChecking] = useState(false);

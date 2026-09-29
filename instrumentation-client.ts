@@ -23,14 +23,18 @@ Sentry.init({
     Sentry.replayIntegration(),
   ],
 
-  // No Sentry da comunidade, só erro (issue #100): sem trace, sem replay de
-  // sessão e sem sessão de release health (ver integracoesDoCliente). O replay DE
-  // ERRO continua, porque é o que explica o stack trace — e o replayIntegration()
-  // sem argumentos já aplica maskAllText/blockAllMedia.
-  tracesSampleRate: community ? 0 : 1,
+  // 0 de TRAÇO e 0 de replay de sessão — decisão de performance, não de
+  // diagnóstico (EPIC-12 §S-12.05: bundle raiz medido em 206 KB gz só de Sentry,
+  // e `tracesSampleRate: 1` gravava CADA transição de rota no ingest — os docs
+  // registram 429 de lá). O que continua ligado é o que explica erro:
+  // `replaysOnErrorSampleRate` (replay do momento do crash, com
+  // maskAllText/blockAllMedia do `replayIntegration()` sem argumentos) e os
+  // próprios eventos de erro. Trace pontual para investigar um incidente
+  // específico: suba `tracesSampleRate` temporariamente, meça, volte a 0.
+  tracesSampleRate: 0,
   enableLogs: true,
 
-  replaysSessionSampleRate: community ? 0 : 0.1,
+  replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1.0,
 
   sendDefaultPii: false,

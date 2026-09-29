@@ -1,0 +1,23 @@
+-- ============================================================================
+-- 0245 — INDICE DA FILA DO INBOX (organization_id, last_inbound_at, id)
+--
+-- A aba Fila ordena por TEMPO DE ESPERA: `last_inbound_at asc nulls last, id
+-- asc` (app/api/v1/conversations/_handler.ts:105 + lib/routing/queue.ts:80 —
+-- "quem espera ha mais tempo primeiro"). O unico indice com essa coluna era
+-- PARCIAL (idx_conversations_open_unassigned: so status='open' E sem dono),
+-- entao qualquer outra visao — Tudo, filtrada, atribuida — caia em Sort sobre
+-- todas as linhas do tenant antes de entregar 51 linhas.
+--
+-- O `id` nao e enfeite: o ORDER BY tem `id` como desempate (e o invariante
+-- gov-5d confirma o tuple). Com o `id` no indice, o planner faz index scan
+-- puro ate o LIMIT, sem ordenacao final.
+--
+-- Direcao ASC de proposito: a Fila e asc (nulls last = quem nunca falou por
+-- ultimo). Os dois consumidores em DESC (before-send, admin inbox) continuam
+-- ordenando como hoje — um indice ASC nulls last nao serve scan reverso com
+-- nulls last, e eles sao volume baixo.
+--
+-- Indice idempotente, sem RLS nova (so colunas, mesma politica).
+-- ============================================================================
+create index if not exists idx_conversations_org_last_inbound
+  on public.conversations (organization_id, last_inbound_at asc nulls last, id);

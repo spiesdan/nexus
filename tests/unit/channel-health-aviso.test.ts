@@ -277,8 +277,13 @@ describe("os elos que somem sem barulho", () => {
     // montasse o select à mão divergiria — e o invariante `canais-selecionaveis`
     // reprova, porque foi assim que três seletores passaram a oferecer canal
     // arquivado.
+    // O `await ` da linha não é o que este caso prende: desde a cascata
+    // paralela do layout (Promise.all) a chamada vive DENTRO do array, e quem
+    // espera por ela é o `await Promise.all([...])` — provar aqui `await ` na
+    // frente da chamada seria travar a FORMA serial que o layout deixou de ter.
+    // O que importa é a tela chamar o seam, e é o que o regex abaixo prende.
     const layout = readFileSync("app/app/layout.tsx", "utf8");
-    expect(layout).toMatch(/await listarConexoesCaidas\(/);
+    expect(layout).toMatch(/listarConexoesCaidas\(/);
     expect(layout).toMatch(/<ConexaoCaidaBanner/);
     expect(layout, "tela montando o select de canais à mão").not.toMatch(
       /from\(\s*["'`]channel_sessions/,

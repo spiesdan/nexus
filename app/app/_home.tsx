@@ -149,7 +149,7 @@ export function DashboardHome(dados: DadosDashboard) {
 
       {dados.cortado && (
         <p className="text-xs text-muted-foreground">
-          {t("Janela limitada a 25 mil linhas — os totais consideram o período cortado.")}
+          {t("Janela limitada a 5 mil linhas — os totais consideram o período cortado.")}
         </p>
       )}
     </div>

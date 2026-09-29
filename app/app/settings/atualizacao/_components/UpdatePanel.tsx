@@ -50,7 +50,14 @@ const PASSOS = [
 
 export function UpdatePanel() {
   const t = useT();
-  const { data, isError } = useSystemVersion({ refetchInterval: 5_000 });
+  const { data, isError } = useSystemVersion({
+    // 5s SÓ enquanto um run está de pé: é desta query que a checklist de PASSOS
+    // lê `last_step` (o "✓" avança aqui). Parado, 60s — o host só reporta de
+    // verdade a cada 5min (ver `useSystemVersion`), então os 5s de antes eram
+    // 12 batidas por minuto sem nenhuma informação nova, em toda aba aberta
+    // em Configurações › Atualização.
+    refetchInterval: (q) => (q.state.data?.run?.status === "dispatched" ? 5_000 : 60_000),
+  });
   const queryClient = useQueryClient();
   const [erro, setErro] = useState<string | null>(null);
 

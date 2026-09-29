@@ -96,16 +96,16 @@ export default async function IndicadoresPage({
     compAno.push(sAno);
   }
 
-  const { data: membros } = await supabase
-    .from("user_organizations")
-    .select("user_id")
-    .eq("organization_id", activeOrg.orgId)
-    .is("revoked_at", null)
-    .neq("role", "viewer")
-    .limit(50);
-
+  // Nome de vendedor é cortesia (o id curto abaixo cobre), mas cada um custa UMA
+  // chamada à Admin API do Auth. Resolver todos os membros da org — até 50 com a
+  // query antiga em `user_organizations` — gastava 50 chamadas para, na maioria
+  // dos meses, três nomes aparecerem na tela. Alvo = quem EXISTE no ranking do
+  // mês, que é o único lugar onde `nomeVendedor` é usado (ranking + filtro de
+  // vendedor saem do mesmo `ag.ranking`). Vendedor que saiu da org continua
+  // resolvendo — a Admin API não olha membership — e o fantasma `sem_vendedor`
+  // (venda sem dono) não é usuário: fica no rótulo fixo.
   const nomes: Record<string, string> = {};
-  const ids = ((membros ?? []) as unknown as { user_id: string }[]).map((m) => m.user_id);
+  const ids = [...new Set(ag.ranking.map((r) => r.vendedorId))].filter((id) => id !== "sem_vendedor");
   if (isServiceRoleConfigured() && ids.length > 0) {
     const admin = createAdminClient();
     await Promise.all(

@@ -40,15 +40,51 @@ export default async function AppLayout({ children }: { children: React.ReactNod
    */
   let cssDaOrganizacao: string | null = null;
 
+  const admin = createAdminClient();
+
+  /**
+   * A cascata de auth MORREU aqui — virou UM `Promise.all`.
+   *
+   * Até esta mudança estes seis `await` rodavam EM SÉRIE a cada navegação:
+   * org row, marca (memo de 30s), conexões caídas, cookies, MFA (roundtrip ao
+   * GoTrue) e a política de MFA (até 2 queries). Todos dependem só de
+   * `user`/`activeOrg`, já resolvidos acima — não havia por que esperar um
+   * para começar o outro. Medido antes: 44–112 ms de proxy + 3 roundtrips
+   * GoTrue antes do primeiro pixel (ver `dev-server.log`).
+   *
+   * `loadAuthUser` também é memoizado por request (`lib/auth/server.ts`), então
+   * a página que este layout monta reusa a MESMA resolução em vez de pagar o
+   * GoTrue de novo.
+   */
+  const [orgResultado, marcaInstalacao, conexoesCaidas, store, enrolled, needsMfaGate] =
+    await Promise.all([
+      activeOrg
+        ? admin
+            .from("organizations")
+            .select("onboarded_at, status, settings")
+            .eq("id", activeOrg.orgId)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      activeOrg ? marcaDaInstalacao() : Promise.resolve(null),
+      // A conexão caiu? A consulta mora no seam (`lib/channels/health`), não aqui:
+      // tela que monta o select de `channel_sessions` à mão foi o que deixou três
+      // seletores oferecendo canal arquivado, e o invariante `canais-selecionaveis`
+      // existe por causa disso. De quebra, o filtro de estados fica LITERALMENTE o
+      // mesmo que decide o aviso da Central — duas listas divergiriam com o tempo.
+      activeOrg
+        ? listarConexoesCaidas(admin, activeOrg.orgId)
+        : Promise.resolve<ConexaoCaida[]>([]),
+      cookies(),
+      isMfaEnrolled(),
+      // A decisão deixou de ser uma constante de papel: ela lê a política de quem
+      // pode exigir (a plataforma e a empresa). Ver `lib/auth/politica-mfa.ts`.
+      requiresMfa(activeOrg?.role, user.is_platform_admin, user.id, activeOrg?.orgId),
+    ]);
+  const orgRow = orgResultado.data;
+
   // EPIC-02: gate /app/* on completed onboarding.
   // EPIC-11: gate /app/* on org not being suspended (S-11.08).
   if (activeOrg) {
-    const admin = createAdminClient();
-    const { data: orgRow } = await admin
-      .from("organizations")
-      .select("onboarded_at, status, settings")
-      .eq("id", activeOrg.orgId)
-      .maybeSingle();
     if (orgRow && !orgRow.onboarded_at) redirect("/onboarding");
     if (orgRow?.status === "suspended") redirect("/account-suspended");
     // G4-02: expõe visibility_mode ao client (inbox decide visões visíveis).
@@ -63,7 +99,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // por render, não uma derivação de rampa por requisição.
     const marca = resolverMarcaDaOrganizacao(
       orgRow?.settings ?? null,
-      await marcaDaInstalacao(),
+      marcaInstalacao,
       env,
     );
 
@@ -109,17 +145,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     }
   }
 
-  // A conexão caiu? A consulta mora no seam (`lib/channels/health`), não aqui:
-  // tela que monta o select de `channel_sessions` à mão foi o que deixou três
-  // seletores oferecendo canal arquivado, e o invariante `canais-selecionaveis`
-  // existe por causa disso. De quebra, o filtro de estados fica LITERALMENTE o
-  // mesmo que decide o aviso da Central — duas listas divergiriam com o tempo.
-  const conexoesCaidas: ConexaoCaida[] = activeOrg
-    ? await listarConexoesCaidas(createAdminClient(), activeOrg.orgId)
-    : [];
-
-  // Read sidebar collapsed state SSR to avoid flash.
-  const store = await cookies();
+  // Read sidebar collapsed state SSR to avoid flash. (`store` veio do
+  // Promise.all acima — o mesmo await de antes, só que não serializado.)
   const collapsed = store.get("sidebar_collapsed")?.value === "1";
 
   // Impersonate (S-11.07): verify cookie server-side and resolve tenant name.
@@ -130,7 +157,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (impCookie) {
     const result = verifyImpersonateCookie(impCookie);
     if (result.valid && result.payload) {
-      const admin = createAdminClient();
       const { data: org } = await admin
         .from("organizations")
         .select("display_name")
@@ -146,15 +172,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     }
   }
 
-  const enrolled = await isMfaEnrolled();
-  // A decisão deixou de ser uma constante de papel: ela lê a política de quem
-  // pode exigir (a plataforma e a empresa). Ver `lib/auth/politica-mfa.ts`.
-  const needsMfaGate = await requiresMfa(
-    activeOrg?.role,
-    user.is_platform_admin,
-    user.id,
-    activeOrg?.orgId,
-  );
   // O ConfirmacaoProvider envolve o shell inteiro: é ele que dá ao
   // `useConfirmar()` a superfície única de confirmação (a mesma do
   // NexusConfirmDialog) para os handlers de produto que antes chamavam
