@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.5] — 2026-09-30
+
+### Alterado
+
+- **Legenda do Evolução de Vendas vira botão — cada item liga e desliga a própria série** Os cinco itens da legenda do gráfico (Vendas no mês, Objetivo, Previsão de
+  vendas, Mês passado e Ano passado) agora são botões: clicar esconde e volta a
+  mostrar aquela linha, e a linha correspondente some/do tooltip acompanha o
+  clique. Os itens de comparação acendem o botão "Comparar" dos Indicadores
+  quando ele está desligado — depois disso cada um some isoladamente. Item sem
+  dado nenhum (meta inexistente, ou comparação num mês que a fonte não preenche)
+  fica desabilitado em vez de fingir que o clique fez efeito. Nenhum número ou
+  regra de negócio mudou.
+
 ## [1.16.4] — 2026-09-30
 
 ### Alterado
@@ -2476,7 +2489,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.4...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.5...HEAD
+[1.16.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.4...v1.16.5
 [1.16.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.1...v1.16.2
