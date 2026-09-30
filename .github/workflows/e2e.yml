@@ -654,7 +654,7 @@ jobs:
       # digitado à mão para apodrecer.
       - name: Restaurar Chromium do cache
         id: cache-chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
