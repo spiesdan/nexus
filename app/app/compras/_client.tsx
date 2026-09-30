@@ -43,6 +43,7 @@ import {
   rotuloStatusCompra,
   tonalidadeStatusCompra,
 } from "@/lib/comercial/rotulo-status-compra";
+import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { Package, Plus, Storefront, Trash } from "@/lib/ui/icons";
 
 type CompraLinha = {
@@ -79,15 +80,20 @@ const VARIANTE: Record<string, React.ComponentProps<typeof Badge>["variant"]> = 
 };
 
 export function ComprasClient({ podeEscrever }: { podeEscrever: boolean }) {
-  const router = useRouter();
+  // A aba é ESTADO LOCAL; a URL é espelho (deep-link lido na montagem) — ver
+  // `lib/navigation/shallow.ts`. O `router.replace` de antes re-renderizava o
+  // RSC do /app inteiro a cada clique de aba em produção.
   const params = useSearchParams();
-  const aba = params.get("aba") === "fornecedores" ? "fornecedores" : "pedidos";
+  const [aba, setAba] = React.useState(() =>
+    params.get("aba") === "fornecedores" ? "fornecedores" : "pedidos",
+  );
 
   const trocarAba = (prox: string) => {
-    const q = new URLSearchParams(params.toString());
-    if (prox === "pedidos") q.delete("aba");
-    else q.set("aba", prox);
-    router.replace(`/app/compras${q.toString() ? `?${q}` : ""}`, { scroll: false });
+    setAba(prox);
+    atualizarQueryDaUrl((q) => {
+      if (prox === "pedidos") q.delete("aba");
+      else q.set("aba", prox);
+    });
   };
 
   return (
@@ -276,12 +282,15 @@ function AbaPedidos({ podeEscrever }: { podeEscrever: boolean }) {
         aberto={dialogoAberto}
         onOpenChange={(v) => {
           setDialogoAberto(v);
+          // Limpar o prefill da URL (?novo=1&produto=&qtd=, vindo do Estoque)
+          // também é shallow: é higiene de URL, não uma navegação — o servidor
+          // não tem nada a dizer sobre apagar parâmetro.
           if (!v && (params.get("novo") ?? "") === "1") {
-            const q = new URLSearchParams(params.toString());
-            q.delete("novo");
-            q.delete("produto");
-            q.delete("qtd");
-            router.replace(`/app/compras${q.toString() ? `?${q}` : ""}`, { scroll: false });
+            atualizarQueryDaUrl((q) => {
+              q.delete("novo");
+              q.delete("produto");
+              q.delete("qtd");
+            });
           }
         }}
         fornecedores={fornecedores}

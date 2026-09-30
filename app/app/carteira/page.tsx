@@ -32,21 +32,40 @@ export default async function CarteiraPage() {
 
   const supabase = await createClient();
   const agoraMs = new Date().getTime();
-  const { data: org } = await supabase
+
+  // As TRÊS leituras não dependem uma da outra: o fuso da org, a janela de
+  // vendas (recebe só `supabase`, `orgId` e a data inicial) e a lista de
+  // contatos. Serializá-las eram 3 estágios × 182–225ms (Supabase cloud,
+  // medido 2026-09-30) antes do primeiro pixel; só o `map` da janela usa o
+  // fuso, e ele acontece DEPOIS, embaixo. Builders são lazy — o `Promise.all`
+  // é que dispara as idas juntas.
+  const promessaOrg = supabase
     .from("organizations")
     .select("timezone")
     .eq("id", activeOrg.orgId)
     .maybeSingle();
+  const promessaVendas = carregarJanelaDeVendas(
+    supabase,
+    activeOrg.orgId,
+    "2000-01-01",
+  );
+  const promessaContatos = supabase
+    .from("contacts")
+    .select("id, display_name, name, phone_number")
+    .eq("organization_id", activeOrg.orgId)
+    .limit(10000);
+
+  const [{ data: org }, { linhas: vendasCruas }, { data: contatos }] = await Promise.all([
+    promessaOrg,
+    promessaVendas,
+    promessaContatos,
+  ]);
+
   const fuso = fusoValido((org as unknown as { timezone?: string | null } | null)?.timezone ?? null);
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, year: "numeric", month: "2-digit", day: "2-digit" }).format(
     new Date(agoraMs),
   );
 
-  const { linhas: vendasCruas } = await carregarJanelaDeVendas(
-    supabase,
-    activeOrg.orgId,
-    "2000-01-01",
-  );
   const vendas: { contact_id: string | null; total_cents: number; status: string; dia: string }[] =
     vendasCruas.map((p) => ({
       contact_id: p.contact_id,
@@ -54,12 +73,6 @@ export default async function CarteiraPage() {
       status: p.status,
       dia: diaNoFuso(p.created_at, fuso),
     }));
-
-  const { data: contatos } = await supabase
-    .from("contacts")
-    .select("id, display_name, name, phone_number")
-    .eq("organization_id", activeOrg.orgId)
-    .limit(10000);
   const nomes = new Map(
     ((contatos ?? []) as { id: string; display_name: string | null; name: string | null; phone_number: string | null }[]).map(
       (c) => [c.id, { nome: c.display_name ?? c.name ?? "—", fone: c.phone_number }],

@@ -64,27 +64,39 @@ export default async function RelatoriosPage({
   // listagem de inbox, ver 0202).
   const idsVendedores = [...new Set(vendas.map((v) => v.vendedor_user_id).filter(Boolean))] as string[];
   const nomes: Record<string, string> = {};
-  if (idsVendedores.length > 0) {
-    const admin = createAdminClient();
-    await Promise.all(
-      idsVendedores.slice(0, 50).map(async (id) => {
-        const { data } = await admin.auth.admin.getUserById(id);
-        const meta = data?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
-        nomes[id] = meta?.full_name ?? meta?.name ?? data?.user?.email ?? "Equipe";
-      }),
-    );
-  }
-
   const ids = [...new Set(vendas.map((v) => v.id).filter(Boolean))];
+
+  // Os DOIS blocos de enriquecimento partem só de `vendas` e não dependem um
+  // do outro, então saem juntos: serial era 2 estágios — até 50 idas ao GoTrue
+  // (251ms por ida em produção, medido 2026-09-30) + uma query de itens
+  // (182–225ms) — depois de já ter esperado os pedidos.
+  const promessaNomes =
+    idsVendedores.length > 0
+      ? (async () => {
+          const admin = createAdminClient();
+          await Promise.all(
+            idsVendedores.slice(0, 50).map(async (id) => {
+              const { data } = await admin.auth.admin.getUserById(id);
+              const meta = data?.user?.user_metadata as { full_name?: string; name?: string } | undefined;
+              nomes[id] = meta?.full_name ?? meta?.name ?? data?.user?.email ?? "Equipe";
+            }),
+          );
+        })()
+      : Promise.resolve();
+  const promessaItens =
+    ids.length > 0
+      ? supabase
+          .from("commercial_order_items")
+          .select("produto_nome, quantidade, subtotal_cents")
+          .eq("organization_id", activeOrg.orgId)
+          .in("order_id", ids.slice(0, 1000))
+          .limit(10000)
+      : Promise.resolve(null);
+
+  const [, respItens] = await Promise.all([promessaNomes, promessaItens]);
   let itens: { produto_nome: string; quantidade: number; subtotal_cents: number }[] = [];
-  if (ids.length > 0) {
-    const { data: itensDb } = await supabase
-      .from("commercial_order_items")
-      .select("produto_nome, quantidade, subtotal_cents")
-      .eq("organization_id", activeOrg.orgId)
-      .in("order_id", ids.slice(0, 1000))
-      .limit(10000);
-    itens = (itensDb ?? []) as unknown as typeof itens;
+  if (respItens) {
+    itens = (respItens.data ?? []) as unknown as typeof itens;
   }
 
   const porVendedor = vendasPorVendedor(vendas, inicio, agora, nomes);

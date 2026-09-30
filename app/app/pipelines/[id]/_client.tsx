@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useT } from "@/hooks/i18n/useT";
 import { useBoard } from "@/hooks/kanban/useBoard";
+import { substituirQueryDaUrl } from "@/lib/navigation/shallow";
 
 function formatError(err: unknown, t: (texto: string) => string): string {
   if (err instanceof Error) return err.message;
@@ -38,17 +39,16 @@ export function PipelinePageClient({
 }) {
   const t = useT();
   const { data, isLoading, error, pulses, realtimeStatus, seguranca } = useBoard(pipelineId);
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const filters = useMemo(() => filtersFromParams(searchParams), [searchParams]);
-  const setFilters = useCallback(
-    (next: LeadFilters) => {
-      const qs = filtersToParams(next);
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [router, pathname],
-  );
+  // Os filtros são ESTADO LOCAL; a URL é espelho (deep-link lido na montagem)
+  // — ver `lib/navigation/shallow.ts`. O `router.replace` de antes re-renderi-
+  // zava o RSC do /app inteiro a cada tag/fonte clicada, em produção ~1–2s
+  // (auditoria de 2026-09-30), para o servidor dizer o que o cliente já sabe.
+  const [filters, aplicarFiltros] = useState<LeadFilters>(() => filtersFromParams(searchParams));
+  const setFilters = useCallback((next: LeadFilters) => {
+    aplicarFiltros(next);
+    substituirQueryDaUrl(filtersToParams(next));
+  }, []);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [newOpen, setNewOpen] = useState(false);
 

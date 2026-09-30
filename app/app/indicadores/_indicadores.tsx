@@ -275,6 +275,7 @@ export function IndicadoresClient({
   const [mes, setMes] = React.useState(dados.mes);
   const [vendedor, setVendedor] = React.useState(dados.filtroVendedor);
   const [comparar, setComparar] = React.useState(false);
+  const [navegando, startTransition] = React.useTransition();
   const [paineis, setPaineis] = React.useState<{ nome: string; mes: string; vendedor: string }[]>(
     () => {
       try {
@@ -297,11 +298,21 @@ export function IndicadoresClient({
     }
   }
 
+  /**
+   * Mês/vendedor mudam AGREGADOS, ranking e KPIs que o SERVIDOR monta — então
+   * aqui a navegação segue `router.push` de propósito (a home, cujo mês é só o
+   * gráfico, trocou por fetch leve + replaceState em 2026-09-30). O
+   * `startTransition` é o que dá feedback: os controles ficam `disabled`
+   * durante a busca em vez de ignorar o clique em silêncio — sem ele, o
+   * duplo clique em "mês" disparava duas navegações RSC seriais.
+   */
   function aplicar(novoMes: string, novoVendedor: string) {
     const qs = new URLSearchParams();
     if (novoMes) qs.set("mes", novoMes);
     if (novoVendedor) qs.set("vendedor", novoVendedor);
-    router.push(`/app/indicadores${qs.toString() ? `?${qs}` : ""}`);
+    startTransition(() => {
+      router.push(`/app/indicadores${qs.toString() ? `?${qs}` : ""}`);
+    });
   }
 
   const donut = [
@@ -333,6 +344,7 @@ export function IndicadoresClient({
           <input
             type="month"
             value={mes}
+            disabled={navegando}
             onChange={(e) => {
               setMes(e.target.value);
               aplicar(e.target.value, vendedor);
@@ -344,6 +356,7 @@ export function IndicadoresClient({
           <span className="mb-1 block text-muted-foreground">{t("Vendedor")}</span>
           <select
             value={vendedor}
+            disabled={navegando}
             onChange={(e) => {
               setVendedor(e.target.value);
               aplicar(mes, e.target.value);

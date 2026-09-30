@@ -88,23 +88,28 @@ export default async function AgendaPage() {
   // organizações via seis tipos onde há três — e clicar no da outra org dava
   // "Tipo de agendamento não encontrado", porque a rota que marca ESCAPA a org
   // certa e não achava o tipo que esta tela ofereceu.
-  const [{ data: tipos }, { data: linhas }] = await Promise.all([
-    supabase
-      .from("calendar_event_types")
-      .select("id, name, duration_minutes, location_kind, location_details, is_active, default_owner_user_id")
-      .eq("organization_id", activeOrg.orgId)
-      .eq("is_active", true)
-      .order("name"),
-    supabase
-      .from("calendar_appointments")
-      .select(
-        "id, title, starts_at, ends_at, status, owner_user_id, contact_id, event_type_id, location_kind, contacts(name, display_name)",
-      )
-      .eq("organization_id", activeOrg.orgId)
-      .gte("starts_at", inicio.toISOString())
-      .lt("starts_at", fim.toISOString())
-      .order("starts_at"),
-  ]);
+  // As QUATRO consultas desta página (tipos, agendamentos, ocupação do Google,
+  // conexão) dependem só de `activeOrg`, `user` e a janela da semana — nenhuma
+  // lê o resultado da outra. Serializá-las eram 4 estágios × 182–225ms (ida ao
+  // Supabase cloud, medido 2026-09-30) antes do primeiro pixel da Agenda. Os
+  // builders do postgrest-js são lazy (buscam só em `.then()`), então construir
+  // todos sem `await` e juntar no `Promise.all` é o que faz as idas partirem
+  // juntas.
+  const promessaTipos = supabase
+    .from("calendar_event_types")
+    .select("id, name, duration_minutes, location_kind, location_details, is_active, default_owner_user_id")
+    .eq("organization_id", activeOrg.orgId)
+    .eq("is_active", true)
+    .order("name");
+  const promessaLinhas = supabase
+    .from("calendar_appointments")
+    .select(
+      "id, title, starts_at, ends_at, status, owner_user_id, contact_id, event_type_id, location_kind, contacts(name, display_name)",
+    )
+    .eq("organization_id", activeOrg.orgId)
+    .gte("starts_at", inicio.toISOString())
+    .lt("starts_at", fim.toISOString())
+    .order("starts_at");
 
   /**
    * A OCUPAÇÃO QUE VEM DO GOOGLE — o que o dono cria lá e não via aqui.
@@ -156,7 +161,7 @@ export default async function AgendaPage() {
    * O dono vem por `connection_id → calendar_connections.user_id`, porque esta
    * tabela não tem `user_id` — é a mesma junção que `ocupados.ts` já faz.
    */
-  const { data: externos } = await supabase
+  const promessaExternos = supabase
     .from("calendar_external_events")
     .select("id, starts_at, ends_at, status, transparency, calendar_connections!inner(user_id)")
     .eq("organization_id", activeOrg.orgId)
@@ -172,7 +177,7 @@ export default async function AgendaPage() {
   // QUAL conta está conectada — o prop existia no cartão e NUNCA era passado,
   // então o ramo "Agenda conectada" era código morto e o botão "Conectar Google"
   // não sumia depois de conectar. Segunda conexão era um clique no mesmo botão.
-  const { data: conexao } = await supabase
+  const promessaConexao = supabase
     .from("calendar_connections")
     .select("account_email, status")
     .eq("organization_id", activeOrg.orgId)
@@ -191,7 +196,16 @@ export default async function AgendaPage() {
   // `.env`. `faltaParaConectarOGoogle` já só devolve nomes de variável quando as
   // DUAS fontes estão vazias — mandar editar o `.env` de uma instalação que
   // gravou a credencial pela tela seria pior que não dizer nada.
-  const googleConfigurado = await googleEstaConfigurado();
+  const promessaGoogle = googleEstaConfigurado();
+
+  // O `await` ÚNICO: as quatro consultas + a checagem do Google saem juntas
+  // (ver o bloco acima, onde elas são construídas).
+  const [{ data: tipos }, { data: linhas }, { data: externos }, { data: conexao }, googleConfigurado] =
+    await Promise.all([promessaTipos, promessaLinhas, promessaExternos, promessaConexao, promessaGoogle]);
+
+  // `falta` só existe quando o Google NÃO está configurado — aí uma ida a mais
+  // não importa (instalação recém-conectando), e o `await` condicional de antes
+  // é quem decide.
   const faltaNoGoogle = googleConfigurado ? [] : await faltaParaConectarOGoogle();
 
   return (

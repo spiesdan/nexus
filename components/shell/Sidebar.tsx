@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { ArrowRight, CaretDoubleLeft, CaretDoubleRight, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
@@ -17,6 +17,8 @@ interface SidebarContentProps {
   collapsed: boolean;
   showCollapseControl?: boolean;
   onNavigate?: () => void;
+  /** O clique do controle de recolher: vem do `Sidebar`, que é quem guarda o estado. */
+  onToggle?: () => void;
 }
 
 /**
@@ -31,6 +33,7 @@ export function SidebarContent({
   collapsed,
   showCollapseControl = true,
   onNavigate,
+  onToggle,
 }: SidebarContentProps) {
   // A barra lateral aparece em TODA tela — traduzi-la aqui é o que faz a
   // escolha de idioma virar algo visível no primeiro clique.
@@ -265,7 +268,10 @@ export function SidebarContent({
         {showCollapseControl && (
           <button
             type="button"
-            onClick={() => startTransition(() => toggleSidebar(collapsed))}
+            onClick={
+              onToggle ??
+              (() => startTransition(() => toggleSidebar(collapsed)))
+            }
             disabled={isPending}
             className={cn(
               "row-hover interactive flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground",
@@ -286,7 +292,35 @@ export function SidebarContent({
   );
 }
 
-export function Sidebar({ collapsed }: { collapsed: boolean }) {
+export function Sidebar({ collapsed: inicial }: { collapsed: boolean }) {
+  /**
+   * O recolher virou ESTADO LOCAL, e a mudança é de propósito.
+   *
+   * Antes, o clique chamava `toggleSidebar()` que fazia
+   * `revalidatePath("/app", "layout")` — o servidor re-renderizava a casca
+   * inteira para o prop `collapsed` mudar de `false` para `true`. Em produção
+   * (Supabase cloud a 120ms por roundtrip) isso travava o botão por ~1s para
+   * trocar a largura de uma div; o `disabled={isPending}` era esse travamento
+   * sendo exibido.
+   *
+   * Agora o clique alterna aqui na hora, e a ação SERVER só grava o cookie em
+   * paralelo (`fire-and-forget`) — `app/app/layout.tsx:150` lê esse cookie no
+   * SSR da próxima navegação, então o estado continua consistente entre
+   * renderizações sem flash (gate: `marca-sem-divergencia-de-hidratacao`).
+   *
+   * O `useEffect` abaixo não é enfeite: sem ele, o estado local IGNORARIA o
+   * valor do servidor — abrir numa aba anônima/privativa em outro estado, ou
+   * alternar noutra aba, deixaria este lado divergente até um F5.
+   */
+  const [collapsed, setCollapsed] = useState(inicial);
+  useEffect(() => setCollapsed(inicial), [inicial]);
+
+  const alternar = () => {
+    const proximo = !collapsed;
+    setCollapsed(proximo);
+    void toggleSidebar(collapsed);
+  };
+
   return (
     <aside
       className={cn(
@@ -313,7 +347,7 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         collapsed ? "w-16" : "w-60",
       )}
     >
-      <SidebarContent collapsed={collapsed} />
+      <SidebarContent collapsed={collapsed} onToggle={alternar} />
     </aside>
   );
 }

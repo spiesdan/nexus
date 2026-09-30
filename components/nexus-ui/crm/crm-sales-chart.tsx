@@ -47,14 +47,19 @@ export interface CrmSalesPoint {
  * - faixas: 1D/1W/1M/Tudo recortam a série REAL (renormalizando o teto).
  *   3M/1A da referência exigiriam série multimes — seletor não é decorativo,
  *   então não existem aqui.
- * - SELETOR DE MÊS: navega por `?mes=AAAA-MM` (o servidor já tem o agregador
- *   de qualquer mês — `agregadosDoMes` —, então a troca é um RSC refetch, não
- *   um fetch novo no browser). O parâmetro atual é preservado (o `vendedor`
- *   dos Indicadores sobrevive à troca), o próximo fica travado no mês corrente
- *   da organização (mês futuro = série vazia) e voltar ao mês corrente apaga
- *   o parâmetro, deixando a URL limpa. `ehMesAtual` existe porque a grade
- *   passada chega inteira: sem a trava, o marcador de HOJE e a linha "Hoje
- *   R$ 0" pintariam o último dia do mês de agosto como se fosse hoje.
+ * - SELETOR DE MÊS: navega por `?mes=AAAA-MM`. Quem NÃO passa `onNavegarMes`
+ *   (os Indicadores) continua com o `router.push` de antes — mês e vendedor
+ *   mudam agregados, ranking e KPIs que o servidor monta, então ali a navegação
+ *   RSC é a fonte. Quem PASSA (a home) gerencia o mês em `useState` e busca em
+ *   `GET /api/v1/home/mes`; a URL é atualizada por `history.replaceState`
+ *   (`lib/navigation/shallow.ts`), sem refetch do RSC — em produção o clique
+ *   antigo custava ~2s (auditoria de 2026-09-30). Nos dois casos o parâmetro
+ *   atual é preservado (`vendedor`/`filtro` sobrevivem), o próximo fica travado
+ *   no mês corrente da organização (mês futuro = série vazia) e voltar ao mês
+ *   corrente apaga o parâmetro, deixando a URL limpa. `ehMesAtual` existe porque
+ *   a grade passada chega inteira: sem a trava, o marcador de HOJE e a linha
+ *   "Hoje R$ 0" pintariam o último dia do mês de agosto como se fosse hoje.
+ *   `carregando` trava as setas enquanto o fetch do mês novo voa.
  * - TOOLTIP: hover por coluna (retângulo invisível por dia) ancora o balão no
  *   ponto e desce a árvore do dia — realizado, acumulado, meta do dia,
  *   projeção (só depois de hoje) e as comparações enquanto o COMPARAR estiver
@@ -206,6 +211,8 @@ export function CrmSalesChart({
   comparar,
   ehMesAtual,
   mesAtual,
+  onNavegarMes,
+  carregando,
 }: {
   pontos: CrmSalesPoint[];
   metaAc: number;
@@ -224,6 +231,14 @@ export function CrmSalesChart({
   ehMesAtual?: boolean;
   /** Mês corrente da organização — trava o "próximo mês" no futuro. */
   mesAtual?: string;
+  /**
+   * Quem GERENCIA o mês fora daqui (a home: estado local + fetch leve). Sem
+   * esta prop o comportamento é o antigo — `router.push(?mes=)`, navegação
+   * RSC, que é o que os Indicadores querem.
+   */
+  onNavegarMes?: (delta: number) => void;
+  /** Busca do mês em andamento — trava as setas para não disparar corrida. */
+  carregando?: boolean;
 }) {
   const t = useT();
   const tag = useTagDeIdioma();
@@ -238,6 +253,13 @@ export function CrmSalesChart({
   const proximoBloqueado = mesAtual != null && deslocarMes(mes, 1) > mesAtual;
 
   const navegarMes = (delta: number) => {
+    if (carregando) return;
+    // Modo "casa" (home): o pai busca o agregado e faz o replaceState da URL.
+    if (onNavegarMes) {
+      onNavegarMes(delta);
+      return;
+    }
+    // Modo navegação (Indicadores): `?mes=` muda agregados que o servidor monta.
     const prox = deslocarMes(mes, delta);
     const qs = new URLSearchParams(params.toString());
     if (mesAtual != null && prox === mesAtual) qs.delete("mes");
@@ -435,7 +457,8 @@ export function CrmSalesChart({
                   aria-label={t("Mês anterior")}
                   title={t("Mês anterior")}
                   onClick={() => navegarMes(-1)}
-                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg"
+                  disabled={carregando}
+                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <CaretLeft size={12} weight="bold" />
                 </button>
@@ -449,7 +472,7 @@ export function CrmSalesChart({
                   type="button"
                   aria-label={t("Próximo mês")}
                   title={t("Próximo mês")}
-                  disabled={proximoBloqueado}
+                  disabled={proximoBloqueado || carregando}
                   onClick={() => navegarMes(1)}
                   className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >

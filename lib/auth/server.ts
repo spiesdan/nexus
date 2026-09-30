@@ -178,7 +178,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // ⚠️ O erro é capturado de propósito: aqui `data: null` é AMBÍGUO — significa tanto
   // "não é platform admin" (RLS filtrou, estado normal) quanto "a query falhou".
   // Sem separar os dois, um banco instável rebaixa silenciosamente um super-admin.
-  const { data: paRow, error: paErro } = await supabase
+  const promessaPlataforma = supabase
     .from("platform_admins")
     .select("user_id, revoked_at")
     .eq("user_id", user.id)
@@ -200,13 +200,26 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // reconhece como "a minha"; `organization_id` como desempate, para o resultado
   // ser determinístico mesmo quando as duas entraram no mesmo instante (é o caso
   // de quem foi convidado para várias no mesmo lote).
-  const { data: rawMemberships, error: membErro } = await supabase
+  const promessaMembros = supabase
     .from("user_organizations")
     .select("organization_id, role, accepted_at, organizations(display_name, locale)")
     .eq("user_id", user.id)
     .is("revoked_at", null)
     .order("accepted_at", { ascending: true, nullsFirst: true })
     .order("organization_id", { ascending: true });
+
+  // As DUAS leituras não dependem uma da outra (as duas sabem só de `user.id`),
+  // então viram UM roundtrip em vez de dois: em produção, cada ida ao Supabase
+  // cloud mede 182–225ms (2026-09-30), e `loadAuthUser` roda em TODA navegação
+  // de /app. Serial aqui era ~200ms de graça antes do primeiro pixel.
+  //
+  // Os builders do postgrest-js são lazy — só buscam em `.then()` —, então
+  // construir os dois antes do `Promise.all` é o que faz as duas chamadas
+  // partirem juntas.
+  const [{ data: paRow, error: paErro }, { data: rawMemberships, error: membErro }] = await Promise.all([
+    promessaPlataforma,
+    promessaMembros,
+  ]);
 
   /**
    * FALHA ALTO, não baixo.
@@ -310,12 +323,19 @@ export async function requireAuth(): Promise<AuthUser> {
 /**
  * Returns true if the current session has at least one verified TOTP factor.
  * Use only in Server Components / Server Actions (cookie session).
+ *
+ * Memoizado por REQUEST (`React.cache`) — o mesmo contrato de `loadAuthUser`.
+ * Quem chama duas vezes no mesmo render paga UMA ida ao GoTrue; sem isto,
+ * `app/app/layout.tsx` e `app/app/settings/security/page.tsx` pagavam duas
+ * (idênticas) em toda visita à tela de segurança — ~251ms por chamada em
+ * produção, medido 2026-09-30.
  */
-export async function isMfaEnrolled(): Promise<boolean> {
+const consultarMfaEnrolled = async function (): Promise<boolean> {
   const supabase = await createClient();
   const { data } = await supabase.auth.mfa.listFactors();
   return !!data?.totp?.some((f) => f.status === "verified");
-}
+};
+export const isMfaEnrolled = cache(consultarMfaEnrolled);
 
 /**
  * Quem é OBRIGADO a cadastrar a verificação em duas etapas.
@@ -334,38 +354,57 @@ export async function isMfaEnrolled(): Promise<boolean> {
  *
  * Carrega as duas leituras porque o layout precisa delas de qualquer forma; quem
  * já tem a política em mãos deve chamar `exigeCadastroDeMfa` direto.
+ *
+ * Memoizada por REQUEST (`React.cache`, argumentos fazem parte da chave): o
+ * layout já chama isto em toda navegação, então a chamada de
+ * `settings/security/page.tsx` reusa a promessa em vez de repetir duas queries
+ * — o mesmo roundtrip que as duas telas disputavam.
  */
-export async function requiresMfa(
+const resolverExigenciaDeMfa = async (
   role: Role | undefined,
   isPlatformAdmin: boolean,
   userId?: string,
   orgId?: string,
-): Promise<boolean> {
+): Promise<boolean> => {
   const admin = createAdminClient();
 
+  // As DUAS leituras não dependem uma da outra, então saem juntas: em produção
+  // cada ida ao Supabase cloud mede 182–225ms (2026-09-30), e as duas condições
+  // podem estar verdadeiras ao mesmo tempo (platform admin que é admin da org).
+  // O `null` de cada ramo é o "não pergunta" de antes — a query simplesmente não
+  // nasce, e a leitura condicional continua explícita na linha seguinte.
+  const promessaPlataforma =
+    isPlatformAdmin && userId
+      ? admin
+          .from("platform_admins")
+          .select("mfa_required")
+          .eq("user_id", userId)
+          .is("revoked_at", null)
+          .maybeSingle()
+      : null;
+  const promessaEmpresa = orgId
+    ? admin
+        .from("organizations")
+        .select("settings")
+        .eq("id", orgId)
+        .maybeSingle()
+    : null;
+
+  const [respPlataforma, respEmpresa] = await Promise.all([promessaPlataforma, promessaEmpresa]);
+
   let plataformaExige: boolean | null = null;
-  if (isPlatformAdmin && userId) {
-    const { data } = await admin
-      .from("platform_admins")
-      .select("mfa_required")
-      .eq("user_id", userId)
-      .is("revoked_at", null)
-      .maybeSingle();
-    plataformaExige = (data?.mfa_required as boolean | undefined) ?? null;
+  if (respPlataforma) {
+    plataformaExige = (respPlataforma.data?.mfa_required as boolean | undefined) ?? null;
   }
 
   let empresaExige = false;
-  if (orgId) {
-    const { data } = await admin
-      .from("organizations")
-      .select("settings")
-      .eq("id", orgId)
-      .maybeSingle();
-    empresaExige = empresaExigeMfa(data?.settings);
+  if (respEmpresa) {
+    empresaExige = empresaExigeMfa(respEmpresa.data?.settings);
   }
 
   return exigeCadastroDeMfa({ role, isPlatformAdmin, plataformaExige, empresaExige });
-}
+};
+export const requiresMfa = cache(resolverExigenciaDeMfa);
 
 /**
  * Nível de garantia da SESSÃO atual: `aal2` = o segundo fator foi provado nesta

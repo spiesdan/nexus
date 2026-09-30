@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
@@ -45,6 +45,7 @@ import {
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
+import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { FlowArrow, Lightbulb, Package, Plus } from "@/lib/ui/icons";
 
 type ProdutoEstoque = {
@@ -101,17 +102,22 @@ const VARIANTE_TIPO: Record<
 };
 
 export function EstoqueClient({ podeEscrever }: { podeEscrever: boolean }) {
-  const router = useRouter();
+  // A aba é ESTADO LOCAL; a URL é espelho (deep-link lido na montagem) — ver
+  // `lib/navigation/shallow.ts`. O `router.replace` de antes re-renderizava o
+  // RSC do /app inteiro a cada clique de aba em produção.
   const params = useSearchParams();
-  const aba = ["movimentos", "sugestoes"].includes(params.get("aba") ?? "")
-    ? (params.get("aba") as string)
-    : "saldos";
+  const [aba, setAba] = React.useState(() =>
+    ["movimentos", "sugestoes"].includes(params.get("aba") ?? "")
+      ? (params.get("aba") as string)
+      : "saldos",
+  );
 
   const trocarAba = (prox: string) => {
-    const q = new URLSearchParams(params.toString());
-    if (prox === "saldos") q.delete("aba");
-    else q.set("aba", prox);
-    router.replace(`/app/estoque${q.toString() ? `?${q}` : ""}`, { scroll: false });
+    setAba(prox);
+    atualizarQueryDaUrl((q) => {
+      if (prox === "saldos") q.delete("aba");
+      else q.set("aba", prox);
+    });
   };
 
   return (

@@ -1,7 +1,9 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { substituirQueryDaUrl } from "@/lib/navigation/shallow";
 
 import { CanalOficialClient } from "./CanalOficialClient";
 import { CanalParceiroClient } from "./CanalParceiroClient";
@@ -28,27 +30,33 @@ import { useT } from "@/hooks/i18n/useT";
  * a item de primeiro nível sugeriria uma escolha que não existe.
  *
  * ─── A aba vive na URL ──────────────────────────────────────────────────────
- * `?aba=` e `?sub=` em vez de estado só em memória: as rotas antigas
+ * `?aba=` e `?sub=` seguem na URL: as rotas antigas
  * (`/app/settings/canal-oficial`, `/app/settings/templates`) redirecionam para cá
- * apontando a aba certa, e um link colado no chat abre onde deveria. Aba que só
- * existe em `useState` transforma todo link salvo em "abre e procura de novo".
+ * apontando a aba certa, e um link colado no chat abre onde deveria. O que mudou
+ * em 2026-09-30 (auditoria de performance) é COMO o clique atualiza essa URL:
+ * era `router.replace`, que re-renderizava o RSC do /app inteiro (~1–2s em
+ * produção) para o servidor devolver o mesmo HTML; agora é
+ * `history.replaceState` (`lib/navigation/shallow.ts`) — a URL continua
+ * compartilhável e o deep-link continua honrado, porque o valor inicial é lido
+ * de `useSearchParams` na montagem. A aba em si virou `useState`.
  */
 export function ConexoesShell({ wahaConfigured }: { wahaConfigured: boolean }) {
   const t = useT();
-  const router = useRouter();
   const params = useSearchParams();
-  const abaParam = params.get("aba");
-  const aba = abaParam === "oficial" ? "oficial" : abaParam === "parceiro" ? "parceiro" : "numeros";
-  const sub = params.get("sub") === "templates" ? "templates" : "conexao";
+  const [aba, setAba] = useState(() => {
+    const p = params.get("aba");
+    return p === "oficial" ? "oficial" : p === "parceiro" ? "parceiro" : "numeros";
+  });
+  const [sub, setSub] = useState(() => (params.get("sub") === "templates" ? "templates" : "conexao"));
 
   const irPara = (proximaAba: string, proximaSub?: string): void => {
+    setAba(proximaAba);
+    setSub(proximaSub ?? sub);
     const q = new URLSearchParams();
     if (proximaAba !== "numeros") q.set("aba", proximaAba);
-    if (proximaSub && proximaSub !== "conexao") q.set("sub", proximaSub);
-    const qs = q.toString();
-    // `scroll: false`: trocar de aba não é navegar para outra página; jogar o
-    // usuário para o topo a cada clique faz a tela parecer que recarregou.
-    router.replace(qs ? `/app/connections?${qs}` : "/app/connections", { scroll: false });
+    const subFinal = proximaSub ?? sub;
+    if (subFinal && subFinal !== "conexao") q.set("sub", subFinal);
+    substituirQueryDaUrl(q.toString());
   };
 
   return (

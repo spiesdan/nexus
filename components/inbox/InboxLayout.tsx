@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { estadoDaJanela, formatarDecorrido } from "@/lib/channels/janela";
 import { JanelaFechadaAviso } from "@/components/inbox/JanelaFechadaAviso";
@@ -31,6 +31,7 @@ import { CaretLeft, IdentificationCard } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { comandosDaFila } from "@/lib/inbox/comando-da-conversa";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 
@@ -118,12 +119,15 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const { activeOrg } = useAuth();
   const orgId = activeOrg?.orgId ?? null;
 
-  const router = useRouter();
-  const pathname = usePathname();
+  // A tab é ESTADO LOCAL; `?filter=` é espelho — o deep-link continua honrado
+  // porque o valor inicial é lido de `useSearchParams` na montagem, e a URL
+  // continua compartilhável porque o clique grava via `history.replaceState`
+  // (`lib/navigation/shallow.ts`). O `router.replace` de antes era uma
+  // NAVEGAÇÃO a cada troca de fila (~1–2s em produção, auditoria de
+  // 2026-09-30) — e a lista inteira é client-side: o servidor não tinha o que
+  // devolver. Os demais filtros seguem como sempre, estado local de sessão.
   const searchParams = useSearchParams();
-  const tab = parseFilterParam(searchParams.get("filter"));
-
-  // tab vive na URL (?filter=); os demais filtros são estado local de sessão.
+  const [tab, setTab] = useState<InboxTab>(() => parseFilterParam(searchParams.get("filter")));
   const [aux, setAux] = useState<Omit<InboxFiltersValue, "tab">>({
     search: "",
     onlyUnread: false,
@@ -132,14 +136,13 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
   const setFilterValue = useCallback(
     (next: InboxFiltersValue) => {
       if (next.tab !== tab) {
-        const params = new URLSearchParams(searchParams);
-        params.set("filter", next.tab);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        setTab(next.tab);
+        atualizarQueryDaUrl((q) => q.set("filter", next.tab));
       }
       const { tab: _t, ...rest } = next;
       setAux(rest);
     },
-    [tab, searchParams, router, pathname],
+    [tab],
   );
 
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);

@@ -63,10 +63,17 @@ export async function agregadosDoMes(args: {
     id: string; total_cents: number; status: string; origem: string;
     vendedor_user_id: string | null; contact_id: string | null; created_at: string;
   };
-  const { linhas: linhasCruas, cortado } = await carregarJanelaDeVendas(supabase, orgId, inicioJanela, LIMITE);
-  const linhas = linhasCruas as unknown as Linha[];
-
-  const [{ data: metas }, { count: totalContatos }] = await Promise.all([
+  // As TRÊS leituras não dependem uma da outra (a janela dá as linhas, as
+  // outras duas são agregados independentes), então saem juntas: eram 2
+  // estágios — a janela inteira + uma rodada de metas/contatos (182–225ms por
+  // ida ao Supabase cloud, medido 2026-09-30). Isto beneficia a home, o painel
+  // de Indicadores e o endpoint de perguntas da IA, que leem daqui.
+  const [
+    { linhas: linhasCruas, cortado },
+    { data: metas },
+    { count: totalContatos },
+  ] = await Promise.all([
+    carregarJanelaDeVendas(supabase, orgId, inicioJanela, LIMITE),
     supabase
       .from("commercial_goals")
       .select("vendedor_user_id, valor_cents, ano_mes")
@@ -74,6 +81,7 @@ export async function agregadosDoMes(args: {
       .eq("ano_mes", mes),
     supabase.from("contacts").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
   ]);
+  const linhas = linhasCruas as unknown as Linha[];
   const listaMetas = (metas ?? []) as { vendedor_user_id: string | null; valor_cents: number }[];
   const metasVendedores: Record<string, number> = {};
   for (const m of listaMetas) {
