@@ -65,12 +65,25 @@ export interface CrmSalesPoint {
  *   projeção (só depois de hoje) e as comparações enquanto o COMPARAR estiver
  *   ligado. Teclado não navega o gráfico de propósito: o svg é `aria-hidden`
  *   e os números que ele conta estão nos KPIs ao lado, em texto selecionável.
+ * - LEGENDA: cada item é um botão que liga e desliga a própria série (pressed =
+ *   desenhada). "Mês passado"/"Ano passado" nascem de trás da alavanca
+ *   COMPARAR: clicar com ela desligada acende a comparação e mostra a linha;
+ *   depois disso cada uma some isoladamente. Item sem dado nenhum (meta
+ *   inexistente, comparação num mês que a fonte não preenche — a home nunca
+ *   traz mesAnt/mesAno) fica desabilitado: não há o que ligar, e fingir que
+ *   clique faz efeito seria mentira de UI. Esconder a série some também a
+ *   linha dela no tooltip; o pico do eixo Y não muda com o clique (o mesmo
+ *   que já acontece quando o COMPARAR desliga as duas comparações) — a tela
+ *   não pisca ao alternar.
  * - o rótulo do mês segue quem lê: `useTagDeIdioma()` (o guarda i18n reprova
  *   "pt-BR" fixo fora da camada de data).
  */
 const RANGES = ["1D", "1W", "1M", "Tudo"] as const;
 type Range = (typeof RANGES)[number];
 const ACTIVE_RANGE: Range = "1M";
+
+/** As cinco séries que a legenda liga e desliga. */
+type SerieId = "vendido" | "meta" | "projecao" | "mesAnt" | "mesAno";
 
 const PLOT_W = 680;
 const PLOT_H = 262;
@@ -177,21 +190,47 @@ function Legenda({
   rotulo,
   tracejado,
   ausente,
+  aoClicar,
+  desabilitada,
 }: {
   cor: string;
   rotulo: string;
   tracejado?: boolean;
+  /** A série não está desenhada agora (porta desligada, comparação off ou sem dado). */
   ausente?: boolean;
+  aoClicar?: () => void;
+  /** A série não existe nos dados — não há o que ligar. */
+  desabilitada?: boolean;
 }) {
-  return (
-    <div className={cn("flex items-center gap-1.5", ausente && "opacity-40")}>
+  const apagado = (
+    <>
       {tracejado ? (
         <span className={cn("h-0 w-4 border-t-2 border-dashed", cor)} />
       ) : (
         <span className={cn("size-1.5 rounded-full", cor)} />
       )}
       <span className="text-[11px] text-fg-secondary">{rotulo}</span>
-    </div>
+    </>
+  );
+
+  if (!aoClicar) {
+    return <div className={cn("flex items-center gap-1.5", ausente && "opacity-40")}>{apagado}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={aoClicar}
+      disabled={desabilitada}
+      aria-pressed={!ausente}
+      className={cn(
+        "interactive -mx-1 flex items-center gap-1.5 rounded-sm px-1 hover:bg-white/[0.06]",
+        ausente && "opacity-40",
+        desabilitada && "cursor-not-allowed hover:bg-transparent",
+      )}
+    >
+      {apagado}
+    </button>
   );
 }
 
@@ -247,6 +286,13 @@ export function CrmSalesChart({
   const params = useSearchParams();
   const [range, setRange] = useState<Range>(ACTIVE_RANGE);
   const [hover, setHover] = useState<number | null>(null);
+  const [ocultas, setOcultas] = useState<Record<SerieId, boolean>>({
+    vendido: false,
+    meta: false,
+    projecao: false,
+    mesAnt: false,
+    mesAno: false,
+  });
   const n = pontos.length;
 
   const atual = ehMesAtual !== false;
@@ -270,6 +316,26 @@ export function CrmSalesChart({
 
   const janelaN = janela(n, range);
   const visiveis = janelaN >= n ? pontos : pontos.slice(n - janelaN);
+
+  /** Existência NOS DADOS — independe da porta da legenda e do COMPARAR. */
+  const temDados: Record<SerieId, boolean> = {
+    vendido: visiveis.length > 0,
+    meta: visiveis.some((v) => v.metaAc != null),
+    projecao: visiveis.some((v) => v.projecao != null),
+    mesAnt: visiveis.some((v) => v.mesAnt != null),
+    mesAno: visiveis.some((v) => v.mesAno != null),
+  };
+
+  const alternarSerie = (id: SerieId) => {
+    // Mês/ano passado nascem de trás do COMPARAR: clicar com ela desligada
+    // acende a comparação e mostra a clicada.
+    if ((id === "mesAnt" || id === "mesAno") && comparar && !comparar.ativo) {
+      setOcultas((o) => ({ ...o, [id]: false }));
+      comparar.onToggle();
+      return;
+    }
+    setOcultas((o) => ({ ...o, [id]: !o[id] }));
+  };
 
   const pico = useMemo(
     () =>
@@ -352,13 +418,16 @@ export function CrmSalesChart({
     return saida.filter((s) => s.includes(","));
   };
 
-  const linhasVendido = polylinesDe(serieVendido);
-  const linhaMeta = serieMeta ? polylinesDe(serieMeta)[0] ?? null : null;
-  const linhasProjecao = serieProjecao ? polylinesDe(serieProjecao) : [];
-  const linhaMesAnt = serieMesAnt ? polylinesDe(serieMesAnt)[0] ?? null : null;
-  const linhaMesAno = serieMesAno ? polylinesDe(serieMesAno)[0] ?? null : null;
+  // As portas da legenda cortam aqui, junto do resto: o pico do eixo Y fica
+  // como está (mesma regra do COMPARAR desligado) — a tela não pisca.
+  const linhasVendido = ocultas.vendido ? [] : polylinesDe(serieVendido);
+  const linhaMeta = !ocultas.meta && serieMeta ? polylinesDe(serieMeta)[0] ?? null : null;
+  const linhasProjecao = !ocultas.projecao && serieProjecao ? polylinesDe(serieProjecao) : [];
+  const linhaMesAnt = !ocultas.mesAnt && serieMesAnt ? polylinesDe(serieMesAnt)[0] ?? null : null;
+  const linhaMesAno = !ocultas.mesAno && serieMesAno ? polylinesDe(serieMesAno)[0] ?? null : null;
 
-  const areaVendido = serieVendido.length > 1 ? toArea(serieVendido, { width: IW, height: IH }) : null;
+  const areaVendido =
+    !ocultas.vendido && serieVendido.length > 1 ? toArea(serieVendido, { width: IW, height: IH }) : null;
   const passoX = IW / Math.max(1, visiveis.length - 1);
   const xDoIdx = (i: number): number => i * passoX;
   const xHoje = idxHoje >= 0 ? M.left + xDoIdx(idxHoje) : null;
@@ -374,23 +443,25 @@ export function CrmSalesChart({
   const linhasTooltip: { rotulo: string; valor: number | null }[] = [];
   if (pontoHover && hover != null) {
     const anterior = hover > 0 ? visiveis[hover - 1] : null;
-    if (!futuro) {
+    if (!futuro && !ocultas.vendido) {
       linhasTooltip.push({ rotulo: t("No dia"), valor: deltaDe(pontoHover.vendidoAc, anterior?.vendidoAc) });
     }
-    linhasTooltip.push({ rotulo: t("Acumulado"), valor: pontoHover.vendidoAc });
-    if (pontoHover.metaAc != null) {
+    if (!ocultas.vendido) {
+      linhasTooltip.push({ rotulo: t("Acumulado"), valor: pontoHover.vendidoAc });
+    }
+    if (!ocultas.meta && pontoHover.metaAc != null) {
       linhasTooltip.push({ rotulo: t("Meta do dia"), valor: deltaDe(pontoHover.metaAc, anterior?.metaAc) });
     }
-    if (futuro && pontoHover.projecao != null) {
+    if (!ocultas.projecao && futuro && pontoHover.projecao != null) {
       linhasTooltip.push({
         rotulo: t("Projeção do dia"),
         valor: deltaDe(pontoHover.projecao, anterior?.projecao ?? anterior?.vendidoAc),
       });
     }
-    if (comparar?.ativo && pontoHover.mesAnt != null) {
+    if (comparar?.ativo && !ocultas.mesAnt && pontoHover.mesAnt != null) {
       linhasTooltip.push({ rotulo: t("Mês passado"), valor: deltaDe(pontoHover.mesAnt, anterior?.mesAnt) });
     }
-    if (comparar?.ativo && pontoHover.mesAno != null) {
+    if (comparar?.ativo && !ocultas.mesAno && pontoHover.mesAno != null) {
       linhasTooltip.push({ rotulo: t("Ano passado"), valor: deltaDe(pontoHover.mesAno, anterior?.mesAno) });
     }
   }
@@ -545,28 +616,33 @@ export function CrmSalesChart({
                 </g>
               ) : null}
 
-              <g
-                transform={`translate(${M.left},${M.top})`}
-                fill="none"
-                stroke="#34d399"
-                strokeWidth={1.6}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              >
-                {linhasVendido.map((pts, i) => (
-                  <polyline key={i} points={pts} />
-                ))}
-              </g>
+              {linhasVendido.length > 0 ? (
+                <g
+                  data-serie="vendido"
+                  transform={`translate(${M.left},${M.top})`}
+                  fill="none"
+                  stroke="#34d399"
+                  strokeWidth={1.6}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                >
+                  {linhasVendido.map((pts, i) => (
+                    <polyline key={i} points={pts} />
+                  ))}
+                </g>
+              ) : null}
 
               {/* pontos da realizada (como na referência) */}
-              <g transform={`translate(${M.left},${M.top})`} fill="#34d399">
-                {serieVendido.map((v, i) =>
-                  v == null ? null : <circle key={i} cx={xDoIdx(i)} cy={IH * (1 - v)} r={1.8} />,
-                )}
-              </g>
+              {!ocultas.vendido ? (
+                <g data-serie="vendido-pontos" transform={`translate(${M.left},${M.top})`} fill="#34d399">
+                  {serieVendido.map((v, i) =>
+                    v == null ? null : <circle key={i} cx={xDoIdx(i)} cy={IH * (1 - v)} r={1.8} />,
+                  )}
+                </g>
+              ) : null}
 
               {linhaMesAno ? (
-                <g transform={`translate(${M.left},${M.top})`}>
+                <g data-serie="mesAno" transform={`translate(${M.left},${M.top})`}>
                   <polyline
                     points={linhaMesAno}
                     fill="none"
@@ -577,7 +653,7 @@ export function CrmSalesChart({
                 </g>
               ) : null}
               {linhaMesAnt ? (
-                <g transform={`translate(${M.left},${M.top})`}>
+                <g data-serie="mesAnt" transform={`translate(${M.left},${M.top})`}>
                   <polyline
                     points={linhaMesAnt}
                     fill="none"
@@ -588,7 +664,7 @@ export function CrmSalesChart({
                 </g>
               ) : null}
               {linhaMeta ? (
-                <g transform={`translate(${M.left},${M.top})`}>
+                <g data-serie="meta" transform={`translate(${M.left},${M.top})`}>
                   <polyline
                     points={linhaMeta}
                     fill="none"
@@ -598,18 +674,21 @@ export function CrmSalesChart({
                   />
                 </g>
               ) : null}
-              <g
-                transform={`translate(${M.left},${M.top})`}
-                fill="none"
-                stroke="#eab308"
-                strokeWidth={1.4}
-                strokeDasharray="6 3"
-                strokeLinejoin="round"
-              >
-                {linhasProjecao.map((pts, i) => (
-                  <polyline key={i} points={pts} />
-                ))}
-              </g>
+              {linhasProjecao.length > 0 ? (
+                <g
+                  data-serie="projecao"
+                  transform={`translate(${M.left},${M.top})`}
+                  fill="none"
+                  stroke="#eab308"
+                  strokeWidth={1.4}
+                  strokeDasharray="6 3"
+                  strokeLinejoin="round"
+                >
+                  {linhasProjecao.map((pts, i) => (
+                    <polyline key={i} points={pts} />
+                  ))}
+                </g>
+              ) : null}
 
               {/* marcador de HOJE — só quando o mês é o corrente; a grade
                   passada chega inteira e o "hoje" dela seria o último dia. */}
@@ -650,7 +729,7 @@ export function CrmSalesChart({
                     stroke="#94a3b8"
                     strokeOpacity={0.7}
                   />
-                  {serieVendido[hover] != null ? (
+                  {!ocultas.vendido && serieVendido[hover] != null ? (
                     <circle
                       cx={M.left + xDoIdx(hover)}
                       cy={M.top + IH * (1 - serieVendido[hover])}
@@ -717,29 +796,43 @@ export function CrmSalesChart({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-            <Legenda cor="bg-[#34d399]" rotulo={t("Vendas no mês")} />
+            <Legenda
+              cor="bg-[#34d399]"
+              rotulo={t("Vendas no mês")}
+              aoClicar={() => alternarSerie("vendido")}
+              desabilitada={!temDados.vendido}
+              ausente={ocultas.vendido || linhasVendido.length === 0}
+            />
             <Legenda
               cor="border-[#9a7bff]"
               tracejado
               rotulo={t("Objetivo")}
+              aoClicar={() => alternarSerie("meta")}
+              desabilitada={!temDados.meta}
               ausente={linhaMeta == null}
             />
             <Legenda
               cor="border-[#eab308]"
               tracejado
               rotulo={t("Previsão de vendas")}
+              aoClicar={() => alternarSerie("projecao")}
+              desabilitada={!temDados.projecao}
               ausente={linhasProjecao.length === 0}
             />
             <Legenda
               cor="border-[#94a3b8]"
               tracejado
               rotulo={t("Mês passado")}
+              aoClicar={() => alternarSerie("mesAnt")}
+              desabilitada={!temDados.mesAnt || !comparar}
               ausente={linhaMesAnt == null}
             />
             <Legenda
               cor="border-[#cbd5e1]"
               tracejado
               rotulo={t("Ano passado")}
+              aoClicar={() => alternarSerie("mesAno")}
+              desabilitada={!temDados.mesAno || !comparar}
               ausente={linhaMesAno == null}
             />
           </div>

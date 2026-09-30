@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { CrmSalesChart, type CrmSalesPoint } from "@/components/nexus-ui/crm/crm-sales-chart";
 
 /**
- * O "Evolução de Vendas" ganhou duas alavancas novas, e este teste prende a
+ * O "Evolução de Vendas" ganhou três alavancas, e este teste prende a
  * promessa de cada uma:
  *
  * 1. O SELETOR DE MÊS navega por `?mes=AAAA-MM` no servidor (nada de estado
@@ -13,6 +13,9 @@ import { CrmSalesChart, type CrmSalesPoint } from "@/components/nexus-ui/crm/crm
  *    mês corrente e apaga o parâmetro quando volta para o corrente (URL limpa).
  * 2. O TOOLTIP só existe no hover e conta o DIA, não a série: o delta do
  *    acumulado é o que a pessoa quer ("quanto entrou dia 2?"), não o total.
+ * 3. A LEGENDA é botão: cada item liga e desliga a própria série (inclusive
+ *    a linha do tooltip), "Mês passado" acende o COMPARAR quando ele está
+ *    desligado, e item sem dado nenhum fica desabilitado.
  */
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -111,5 +114,71 @@ describe("o tooltip do dia", () => {
     fireEvent.mouseOver(container.querySelector('rect[data-dia="1"]') as Element);
     expect(screen.getByTestId("tooltip-dia")).toHaveTextContent("No dia");
     expect(screen.queryByText(/Hoje R\$/)).toBeNull();
+  });
+});
+
+describe("a legenda", () => {
+  afterEach(() => cleanup());
+
+  it("'Vendas no mês' esconde a série realizada e volta a mostrar", () => {
+    const { container } = renderizar();
+    expect(container.querySelector('g[data-serie="vendido"]')).not.toBeNull();
+
+    const botao = screen.getByRole("button", { name: "Vendas no mês" });
+    expect(botao).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(botao);
+    expect(container.querySelector('g[data-serie="vendido"]')).toBeNull();
+    expect(screen.getByRole("button", { name: "Vendas no mês" })).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: "Vendas no mês" }));
+    expect(container.querySelector('g[data-serie="vendido"]')).not.toBeNull();
+  });
+
+  it("'Objetivo' fica desabilitado quando não há meta nos dados", () => {
+    renderizar({
+      pontos: [
+        { dia: 1, vendidoAc: 10000, metaAc: null, projecao: null },
+        { dia: 2, vendidoAc: 25000, metaAc: null, projecao: null },
+      ],
+    });
+    expect(screen.getByRole("button", { name: "Objetivo" })).toBeDisabled();
+  });
+
+  it("'Mês passado' com a comparação desligada acende o COMPARAR", () => {
+    const onToggle = vi.fn();
+    renderizar({
+      pontos: PONTOS.map((p) => ({ ...p, mesAnt: p.vendidoAc + 5000 })),
+      comparar: { ativo: false, onToggle },
+    });
+    const botao = screen.getByRole("button", { name: "Mês passado" });
+    expect(botao).not.toBeDisabled();
+    fireEvent.click(botao);
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("com a comparação ligada, cada item some só a própria linha", () => {
+    const { container } = renderizar({
+      pontos: PONTOS.map((p) => ({ ...p, mesAnt: p.vendidoAc + 5000, mesAno: p.vendidoAc + 9000 })),
+      comparar: { ativo: true, onToggle: vi.fn() },
+    });
+    expect(container.querySelector('g[data-serie="mesAnt"]')).not.toBeNull();
+    expect(container.querySelector('g[data-serie="mesAno"]')).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Mês passado" }));
+    expect(container.querySelector('g[data-serie="mesAnt"]')).toBeNull();
+    expect(container.querySelector('g[data-serie="mesAno"]')).not.toBeNull();
+  });
+
+  it("esconder a série tira a linha dela do tooltip", () => {
+    const { container } = renderizar();
+    fireEvent.mouseOver(container.querySelector('rect[data-dia="2"]') as Element);
+    expect(screen.getByTestId("tooltip-dia")).toHaveTextContent("Acumulado");
+
+    fireEvent.click(screen.getByRole("button", { name: "Vendas no mês" }));
+    const tooltip = screen.getByTestId("tooltip-dia");
+    expect(tooltip).not.toHaveTextContent("Acumulado");
+    // A meta continua visível — o clique mexeu só na série clicada.
+    expect(tooltip).toHaveTextContent("Meta do dia");
   });
 });
