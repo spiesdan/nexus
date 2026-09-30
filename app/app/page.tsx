@@ -2,8 +2,15 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
-import { agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
-import { fusoValido, mesAtualNoFuso, montarGradeDoMes, rotuloDoMes } from "@/lib/comercial/visao-do-mes";
+import { acumuladoDiario, agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
+import { diasNoMes } from "@/lib/comercial/inteligencia";
+import {
+  deslocarMes,
+  fusoValido,
+  mesAtualNoFuso,
+  montarGradeDoMes,
+  rotuloDoMes,
+} from "@/lib/comercial/visao-do-mes";
 
 import { DashboardHome } from "./_home";
 
@@ -21,6 +28,11 @@ export const dynamic = "force-dynamic";
  * `?mes=AAAA-MM` (o seletor do "Evolução de Vendas") troca o mês agregado no
  * servidor — mesma validação e mesmo fallback dos Indicadores: mês malformado
  * cai no corrente do fuso da organização, nunca num 404.
+ *
+ * `mesesExtras` entrega as séries acumuladas de "Mês passado"/"Ano passado"
+ * da legenda — mesma janela de 14 meses dos Indicadores e o MESMO laço
+ * (`acumuladoDiario`); as extras saem das linhas da própria janela, sem query
+ * nova. Sem elas a legenda ficava permanentemente desabilitada aqui.
  */
 
 const ANO_MES = /^[0-9]{4}-(0[1-9]|1[0-2])$/;
@@ -56,14 +68,21 @@ export default async function DashboardHomePage({
     day: "2-digit",
   }).format(new Date(agoraMs));
 
+  const mesAnterior = deslocarMes(mes, -1);
+  const mesAnoPassado = deslocarMes(mes, -12);
   const { agregados: ag, cortado } = await agregadosDoMes({
     supabase,
     orgId: activeOrg.orgId,
     mes,
     fuso,
     hoje,
-    inicioJanela: `${mes}-01`,
+    inicioJanela: `${deslocarMes(mes, -13)}-01`,
+    mesesExtras: [mesAnterior, mesAnoPassado],
   });
+
+  const dias = diasNoMes(mes);
+  const compAnt = acumuladoDiario(ag.seriesExtras[mesAnterior], dias);
+  const compAno = acumuladoDiario(ag.seriesExtras[mesAnoPassado], dias);
 
   const {
     vendaAc,
@@ -98,6 +117,8 @@ export default async function DashboardHomePage({
         vendaAc: vendaAc[i] ?? 0,
         metaAc: metaAc?.[i] ?? null,
         projecao: projecaoAc[i] ?? null,
+        mesAnt: compAnt[i] ?? null,
+        mesAno: compAno[i] ?? null,
       }))}
       vendidoMes={ag.vendidoMes}
       qtdMes={ag.qtdMes}

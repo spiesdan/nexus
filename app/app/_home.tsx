@@ -25,7 +25,14 @@ export interface DadosDashboard {
   ehMesAtual: boolean;
   rotuloMes: string;
   diaHoje: number;
-  serie: { dia: number; vendaAc: number; metaAc: number | null; projecao: number | null }[];
+  serie: {
+    dia: number;
+    vendaAc: number;
+    metaAc: number | null;
+    projecao: number | null;
+    mesAnt: number | null;
+    mesAno: number | null;
+  }[];
   vendidoMes: number;
   qtdMes: number;
   vendidoHoje: number;
@@ -67,6 +74,15 @@ export function DashboardHome(inicial: DadosDashboard) {
   const [carregandoMes, setCarregandoMes] = useState(false);
   const [mesNavegado, setMesNavegado] = useState(false);
   const buscandoMes = useRef(false);
+
+  /**
+   * O COMPARAR da legenda vive aqui como nos Indicadores: a alavanca é do
+   * painel direito do gráfico, e ela é que deixa "Mês passado"/"Ano passado"
+   * desenháveis (clicar num desses itens com ela desligada acende a
+   * comparação — regra do próprio gráfico). Sobrevive à troca de mês, porque
+   * é preferência de tela, não dado do mês.
+   */
+  const [comparar, setComparar] = useState(false);
 
   const navegarMes = useCallback(
     async (delta: number) => {
@@ -150,6 +166,8 @@ export function DashboardHome(inicial: DadosDashboard) {
             vendidoAc: s.vendaAc,
             metaAc: s.metaAc,
             projecao: s.projecao,
+            mesAnt: s.mesAnt,
+            mesAno: s.mesAno,
           }))}
           metaAc={dados.objetivo ?? 0}
           projecao={dados.serie[dados.serie.length - 1]?.projecao ?? 0}
@@ -164,6 +182,7 @@ export function DashboardHome(inicial: DadosDashboard) {
           diasUteisRestantes={dados.diasUteisRestantes}
           ehMesAtual={dados.ehMesAtual}
           mesAtual={dados.mesAtual}
+          comparar={{ ativo: comparar, onToggle: () => setComparar((v) => !v) }}
           onNavegarMes={navegarMes}
           carregando={carregandoMes}
         />

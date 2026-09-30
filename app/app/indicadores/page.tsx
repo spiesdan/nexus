@@ -5,7 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { isServiceRoleConfigured } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
+import { acumuladoDiario, agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
 import { diasNoMes } from "@/lib/comercial/inteligencia";
 import { deslocarMes, fusoValido, mesAtualNoFuso, montarGradeDoMes } from "@/lib/comercial/visao-do-mes";
 
@@ -83,18 +83,8 @@ export default async function IndicadoresPage({
     previsaoMes,
     ehMesAtual,
   } = montarGradeDoMes({ agregados: ag, mes, hoje });
-  const compAntSerie = ag.seriesExtras[mesAnterior] ?? [] as { dia: string; cents: number }[];
-  const compAnoSerie = ag.seriesExtras[mesAnoPassado] ?? [] as { dia: string; cents: number }[];
-  const compAnt: number[] = [];
-  const compAno: number[] = [];
-  let sAnt = 0;
-  let sAno = 0;
-  for (let i = 0; i < dias; i++) {
-    sAnt += compAntSerie[i]?.cents ?? 0;
-    sAno += compAnoSerie[i]?.cents ?? 0;
-    compAnt.push(sAnt);
-    compAno.push(sAno);
-  }
+  const compAnt = acumuladoDiario(ag.seriesExtras[mesAnterior], dias);
+  const compAno = acumuladoDiario(ag.seriesExtras[mesAnoPassado], dias);
 
   // Nome de vendedor é cortesia (o id curto abaixo cobre), mas cada um custa UMA
   // chamada à Admin API do Auth. Resolver todos os membros da org — até 50 com a

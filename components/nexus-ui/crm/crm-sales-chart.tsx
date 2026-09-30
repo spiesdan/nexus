@@ -24,7 +24,7 @@ export interface CrmSalesPoint {
   vendidoAc: number;
   metaAc: number | null;
   projecao: number | null;
-  /** Só o Indicadores preenche (comparação com mês anterior/ano passado). */
+  /** Comparação com mês anterior/ano passado — Indicadores e home preenchem. */
   mesAnt?: number | null;
   mesAno?: number | null;
 }
@@ -69,8 +69,8 @@ export interface CrmSalesPoint {
  *   desenhada). "Mês passado"/"Ano passado" nascem de trás da alavanca
  *   COMPARAR: clicar com ela desligada acende a comparação e mostra a linha;
  *   depois disso cada uma some isoladamente. Item sem dado nenhum (meta
- *   inexistente, comparação num mês que a fonte não preenche — a home nunca
- *   traz mesAnt/mesAno) fica desabilitado: não há o que ligar, e fingir que
+ *   inexistente, projeção num mês sem dias futuros, comparação num mês que a
+ *   fonte não preenche) fica desabilitado: não há o que ligar, e fingir que
  *   clique faz efeito seria mentira de UI. Esconder a série some também a
  *   linha dela no tooltip; o pico do eixo Y não muda com o clique (o mesmo
  *   que já acontece quando o COMPARAR desliga as duas comparações) — a tela

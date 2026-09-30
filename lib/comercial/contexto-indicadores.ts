@@ -35,15 +35,36 @@ export interface AgregadosIndicadores {
 }
 
 // Teto de LINHAS da janela — o corte de segurança, não o corte do período. O
-// período já vem de fora em `inicioJanela` (14 meses no painel, o mês corrente
-// na home), e é ele que define o que entra; o teto existe para o pico medido no
-// dev-server.log (10s de application-code carregando dezenas de milhares de
-// pedidos) não virar 5 rajadas de 1000 por request. Em 5 mil cabe UMA rajada
-// paralela (5 × 1000) — metade do roundtrip de antes — e a home, cuja janela é
-// só o mês, nunca chega perto. Se o teto estourar, `cortado` sobe na tela; a
+// período já vem de fora em `inicioJanela` (14 meses no painel E na home desde
+// que a legenda passou a ligar "Mês passado"/"Ano passado" na home), e é ele
+// que define o que entra; o teto existe para o pico medido no dev-server.log
+// (10s de application-code carregando dezenas de milhares de pedidos) não virar
+// 5 rajadas de 1000 por request. Em 5 mil cabe UMA rajada paralela (5 × 1000) —
+// metade do roundtrip de antes. Se o teto estourar, `cortado` sobe na tela; a
 // leitura sai da mais recente para a mais antiga (lib/comercial/janela.ts), então
 // quem fica de fora é o começo mais antigo da janela — nunca o mês na tela.
 const LIMITE = 5000;
+
+/**
+ * ACUMULADO DIÁRIO de um mês extra — a mesma convenção da grade de
+ * `montarGradeDoMes`: índice i = dia i+1, `dias` posições no total. Série curta
+ * (mês de menos dias na comparação, dias sem linha) vira 0 no resto; sem série,
+ * tudo em 0. Usado pela home e pelos Indicadores para desenhar "Mês passado" e
+ * "Ano passado" — um laço só, para as três telas não divergirem do que a
+ * comparação vale.
+ */
+export function acumuladoDiario(
+  serie: { dia: string; cents: number }[] | undefined,
+  dias: number,
+): number[] {
+  const acumulado: number[] = [];
+  let soma = 0;
+  for (let i = 0; i < dias; i++) {
+    soma += serie?.[i]?.cents ?? 0;
+    acumulado.push(soma);
+  }
+  return acumulado;
+}
 
 export async function agregadosDoMes(args: {
   supabase: SupabaseClient;

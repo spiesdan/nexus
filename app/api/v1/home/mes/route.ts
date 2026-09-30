@@ -17,7 +17,12 @@
  * `agregadosDoMes` + `montarGradeDoMes` — os MESMOS módulos da página, então o
  * número do clique é o número do F5 na URL resultante. Mesma validação e
  * mesmo fallback: mês malformado cai no mês corrente do fuso da organização,
- * nunca num 404 (regra da página, linha ~51).
+ * nunca num 404 (regra da página, linha ~63).
+ *
+ * A janela de 13 meses e `mesesExtras` acompanham a página de propósito: as
+ * séries acumuladas de "Mês passado"/"Ano passado" da legenda precisam existir
+ * também no clique do seletor — entregar um `DadosDoMes` sem elas apagaria a
+ * comparação da tela no primeiro troca de mês.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -26,8 +31,15 @@ import { z } from "zod";
 import type { DadosDoMes } from "@/app/app/_home";
 import { ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
-import { fusoValido, mesAtualNoFuso, montarGradeDoMes, rotuloDoMes } from "@/lib/comercial/visao-do-mes";
+import { acumuladoDiario, agregadosDoMes } from "@/lib/comercial/contexto-indicadores";
+import { diasNoMes } from "@/lib/comercial/inteligencia";
+import {
+  deslocarMes,
+  fusoValido,
+  mesAtualNoFuso,
+  montarGradeDoMes,
+  rotuloDoMes,
+} from "@/lib/comercial/visao-do-mes";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -67,16 +79,22 @@ export async function GET(req: NextRequest): Promise<Response> {
     day: "2-digit",
   }).format(new Date(agoraMs));
 
+  const mesAnterior = deslocarMes(mes, -1);
+  const mesAnoPassado = deslocarMes(mes, -12);
   const { agregados: ag, cortado } = await agregadosDoMes({
     supabase,
     orgId: authz.org.orgId,
     mes,
     fuso,
     hoje,
-    inicioJanela: `${mes}-01`,
+    inicioJanela: `${deslocarMes(mes, -13)}-01`,
+    mesesExtras: [mesAnterior, mesAnoPassado],
   });
 
   const grade = montarGradeDoMes({ agregados: ag, mes, hoje });
+  const dias = diasNoMes(mes);
+  const compAnt = acumuladoDiario(ag.seriesExtras[mesAnterior], dias);
+  const compAno = acumuladoDiario(ag.seriesExtras[mesAnoPassado], dias);
 
   const dados: DadosDoMes = {
     mes,
@@ -89,6 +107,8 @@ export async function GET(req: NextRequest): Promise<Response> {
       vendaAc: grade.vendaAc[i] ?? 0,
       metaAc: grade.metaAc?.[i] ?? null,
       projecao: grade.projecaoAc[i] ?? null,
+      mesAnt: compAnt[i] ?? null,
+      mesAno: compAno[i] ?? null,
     })),
     vendidoMes: ag.vendidoMes,
     qtdMes: ag.qtdMes,
