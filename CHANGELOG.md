@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.3] — 2026-09-29
+
+### Corrigido
+
+- **Bolha de entrada branca no tema claro do inbox** No tema claro, a bolha da mensagem recebida saía preta, com o texto invisível
+  por cima. A causa era uma alavanca do design system: o tema claro aponta
+  `--color-white` para `#111118` de propósito (para os tints `bg-white/10`
+  virarem sombra), e a bolha usava `bg-white`, que o Tailwind v4 compila para
+  `var(--color-white)`. A bolha passou a usar o branco literal `bg-[#ffffff]` —
+  branca nos dois temas, como a referência —, e o mesmo vale para os três
+  containers de QR code que também queriam branco de verdade (onboarding do
+  WhatsApp, modal de MFA e conexões), que antes ficavam escuros no tema claro.
+  Ninguém precisa fazer nada para receber isto.
+
 ## [1.16.2] — 2026-09-29
 
 ### Alterado
@@ -2444,7 +2458,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...HEAD
+[1.16.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.15.1...v1.16.0
