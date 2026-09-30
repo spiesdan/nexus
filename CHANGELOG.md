@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.7] — 2026-09-30
+
+### Corrigido
+
+- **KPI Projeção não mostra mais R$ 0 em mês fechado e a legenda desligada explica o motivo** No último dia do mês e em qualquer mês fechado a série de projeção vem vazia —
+  não sobra amanhã para projetar — e o card **Projeção** interpretava isso como
+  zero: o dono via **R$ 0,00** do lado da Previsão com o valor certo. O card
+  agora cai para a previsão do mês, que é exatamente a projeção quando ela
+  existe, e nunca mais exibe zero por falta de dado. A legenda de previsão de
+  vendas, quando não há o que ligar, passa a dizer o motivo no hover ("Sem dias
+  futuros no mês para projetar") em vez de ficar muda; com dias futuros no mês
+  corrente ela acende e some como sempre.
+
 ## [1.16.6] — 2026-09-30
 
 ### Corrigido
@@ -2502,7 +2515,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.6...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.7...HEAD
+[1.16.7]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.6...v1.16.7
 [1.16.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.5...v1.16.6
 [1.16.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.4...v1.16.5
 [1.16.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...v1.16.4
