@@ -17,9 +17,11 @@ import { CrmSalesChart, type CrmSalesPoint } from "@/components/nexus-ui/crm/crm
  *    a linha do tooltip), "Mês passado" acende o COMPARAR quando ele está
  *    desligado, e item sem dado nenhum fica desabilitado — com o motivo no
  *    `title`, porque desabilitado mudo é beco sem saída.
- * 4. O KPI "Projeção" nunca mostra R$ 0 por falta de dado: sem amanhã na série
- *    (último dia do mês, mês fechado) ele cai para a previsão do mês, que é a
- *    própria projeção quando ela existe.
+ * 4. O KPI "Projeção" nunca mostra R$ 0 por falta de dado: quando não há
+ *    ritmo nenhum (mês que ainda não começou) ele cai para a previsão do mês,
+ *    que é a própria projeção quando ela existe. E a linha de ritmo é do mês
+ *    INTEIRO — existe nos dias passados, atravessa o último dia e sobrevive
+ *    a mês fechado (a realizada não é truncada no dia de número igual a hoje).
  */
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -121,6 +123,52 @@ describe("o tooltip do dia", () => {
   });
 });
 
+describe("a linha de ritmo (projeção)", () => {
+  afterEach(cleanup);
+
+  const COM_RITMO: CrmSalesPoint[] = [
+    { dia: 1, vendidoAc: 10000, metaAc: 5000, projecao: 8000 },
+    { dia: 2, vendidoAc: 25000, metaAc: 10000, projecao: 16000 },
+  ];
+
+  it("atravessa o mês inteiro — existe do dia 1 ao último, inclusive no dia de hoje", () => {
+    const { container } = renderizar({ pontos: COM_RITMO });
+    const serie = container.querySelector('g[data-serie="projecao"]');
+    expect(serie).not.toBeNull();
+    const pontos = serie?.querySelector("polyline")?.getAttribute("points") ?? "";
+    expect(pontos.split(" ").filter(Boolean)).toHaveLength(2);
+  });
+
+  it("mostra a projeção do dia também nos dias passados — o ritmo não é só futuro", () => {
+    const { container } = renderizar({ pontos: COM_RITMO });
+    // dia 1 é passado (diaHoje=2): o tooltip conta as DUAS verdades do dia.
+    fireEvent.mouseOver(container.querySelector('rect[data-dia="1"]') as Element);
+    const tooltip = screen.getByTestId("tooltip-dia");
+    expect(tooltip).toHaveTextContent("No dia");
+    expect(tooltip).toHaveTextContent("Projeção do dia");
+    // Delta do dia 1 = 8000 (não há dia anterior) → R$ 80.
+    expect(tooltip).toHaveTextContent("R$ 80");
+  });
+
+  it("mês fechado desenha a realizada INTEIRA — o dia 3 não some por ter número maior que hoje", () => {
+    const { container } = renderizar({
+      ehMesAtual: false,
+      mes: "2026-08",
+      pontos: [
+        { dia: 1, vendidoAc: 10000, metaAc: 5000, projecao: null },
+        { dia: 2, vendidoAc: 25000, metaAc: 10000, projecao: null },
+        { dia: 3, vendidoAc: 40000, metaAc: 15000, projecao: null },
+      ],
+    });
+    const linha = container.querySelector('g[data-serie="vendido"] polyline');
+    expect((linha?.getAttribute("points") ?? "").split(" ").filter(Boolean)).toHaveLength(3);
+
+    fireEvent.mouseOver(container.querySelector('rect[data-dia="3"]') as Element);
+    expect(screen.getByTestId("tooltip-dia")).toHaveTextContent("No dia");
+    expect(screen.queryByText(/Hoje R\$/)).toBeNull();
+  });
+});
+
 describe("a legenda", () => {
   afterEach(() => cleanup());
 
@@ -186,11 +234,11 @@ describe("a legenda", () => {
     expect(tooltip).toHaveTextContent("Meta do dia");
   });
 
-  it("'Previsão de vendas' sem dias futuros fica desabilitada e explica o porquê", () => {
+  it("'Previsão de vendas' sem dado de projeção fica desabilitada e explica o porquê", () => {
     renderizar();
     const botao = screen.getByRole("button", { name: "Previsão de vendas" });
     expect(botao).toBeDisabled();
-    expect(botao).toHaveAttribute("title", "Sem dias futuros no mês para projetar");
+    expect(botao).toHaveAttribute("title", "Sem previsão para este mês");
   });
 
   it("'Previsão de vendas' com dado na série é acionável e não ganha aviso", () => {
@@ -204,7 +252,7 @@ describe("a legenda", () => {
 describe("o card Projeção", () => {
   afterEach(cleanup);
 
-  it("sem amanhã na série, mostra a previsão do mês — nunca R$ 0", () => {
+  it("sem ritmo na série, mostra a previsão do mês — nunca R$ 0", () => {
     renderizar({ projecao: null, previsaoMes: 123456 });
     const card = screen.getByText("Projeção").closest(".rounded-xl") as Element;
     expect(card).toHaveTextContent("R$ 1.235");

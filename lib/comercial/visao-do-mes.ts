@@ -107,18 +107,19 @@ export function montarGradeDoMes(args: {
   const previsaoMes = Math.round((ag.vendidoMes / diasDecorridos) * dias);
 
   /**
-   * PROJEÇÃO — a "simulação" que a linha do realizado não faz. `vendaAc` é
-   * acumulado REALIZADO (retas nos dias futuros); esta série continua de hoje
-   * até o fim do mês no ritmo médio, terminando em `previsaoMes`. Só no mês
-   * corrente e só do dia seguinte em diante.
+   * PROJEÇÃO — a linha de RITMO do mês (esperado vs realizado): a taxa média
+   * `vendidoMes / diasDecorridos` projetada sobre CADA dia, do dia 1 ao
+   * último. Por construção ela passa exatamente pelo acumulado de hoje (taxa ×
+   * dias decorridos = o vendido até aqui) e termina em `previsaoMes` — no
+   * último dia do mês ela atravessa o mês inteiro, e num mês fechado vira a
+   * régua do ritmo médio até o total final. Mês que ainda não começou não tem
+   * ritmo: null.
    */
+  const comecou = mes <= hoje.slice(0, 7);
   const ehMesAtual = hoje.slice(0, 7) === mes;
-  const vendaAcHoje = vendaAc[diasDecorridos - 1] ?? ag.vendidoMes;
   const taxaDiaria = diasDecorridos > 0 ? ag.vendidoMes / diasDecorridos : 0;
   const projecaoAc: (number | null)[] = vendaAc.map((_, i) =>
-    ehMesAtual && diasDecorridos < dias && i + 1 > diasDecorridos
-      ? Math.round(vendaAcHoje + taxaDiaria * (i + 1 - diasDecorridos))
-      : null,
+    comecou ? Math.round(taxaDiaria * (i + 1)) : null,
   );
 
   const uteisRestantes = diasUteisRest(mes, hoje);

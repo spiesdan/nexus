@@ -32,16 +32,18 @@ export interface CrmSalesPoint {
 /**
  * ADAPT do `rates-chart` (UImaxxing Registry) — seção "Evolução de Vendas"
  * no molde da referência do produto: coluna de KPIs (Meta/Projeção/Previsão
- * com régua e badge), gráfico com eixos, área, marcador de HOJE e projeção
- * tracejada só DEPOIS de hoje, e painel de resumo do mês à direita.
+ * com régua e badge), gráfico com eixos, área, marcador de HOJE e a linha de
+ * ritmo tracejada atravessando o mês inteiro, e painel de resumo do mês à
+ * direita.
  *
  * Medições que travam o desenho:
- * - `projecao` só existe dos dias futuros (`montarGradeDoMes` devolve null
- *   até hoje) — a linha tracejada nasce exatamente onde a realizada termina;
- *   no último dia do mês e em mês fechado não sobra amanhã para projetar, e
- *   isto NÃO vira R$ 0: o KPI "Projeção" cai para `previsaoMes` (que é a
- *   própria projeção, quando ela existe) e a legenda desabilita dizendo o
- *   motivo no `title` — desabilitado mudo é beco sem saída;
+ * - `projecao` é o RITMO médio do mês (`taxaDiaria × dia`, de `montarGradeDoMes`)
+ *   e existe do dia 1 ao último, em todo mês que já começou — no último dia
+ *   do mês e em mês fechado a linha atravessa o mês inteiro (no fechado ela
+ *   vira a régua do ritmo médio até o total final). Só o mês que ainda não
+ *   começou vem todo null: aí isto NÃO vira R$ 0 — o KPI "Projeção" cai para
+ *   `previsaoMes` e a legenda desabilita dizendo o motivo no `title` —
+ *   desabilitado mudo é beco sem saída;
  * - `metaAc` é tudo-ou-nada (null só quando a loja não tem meta) — sem
  *   fallback para a linha realizada (o card antigo DESENHAVA a meta por cima
  *   do realizado quando meta era null, mentindo a comparação);
@@ -66,16 +68,18 @@ export interface CrmSalesPoint {
  *   `carregando` trava as setas enquanto o fetch do mês novo voa.
  * - TOOLTIP: hover por coluna (retângulo invisível por dia) ancora o balão no
  *   ponto e desce a árvore do dia — realizado, acumulado, meta do dia,
- *   projeção (só depois de hoje) e as comparações enquanto o COMPARAR estiver
- *   ligado. Teclado não navega o gráfico de propósito: o svg é `aria-hidden`
+ *   projeção (o ritmo daquele dia, presente ou passado) e as comparações
+ *   enquanto o COMPARAR estiver ligado. Teclado não navega o gráfico de
+ *   propósito: o svg é `aria-hidden`
  *   e os números que ele conta estão nos KPIs ao lado, em texto selecionável.
  * - LEGENDA: cada item é um botão que liga e desliga a própria série (pressed =
  *   desenhada). "Mês passado"/"Ano passado" nascem de trás da alavanca
  *   COMPARAR: clicar com ela desligada acende a comparação e mostra a linha;
  *   depois disso cada uma some isoladamente. Item sem dado nenhum (meta
- *   inexistente, projeção num mês sem dias futuros, comparação num mês que a
- *   fonte não preenche) fica desabilitado com o motivo no `title`: não há o
- *   que ligar, e fingir que clique faz efeito seria mentira de UI. Esconder a série some também a
+ *   inexistente, projeção num mês que ainda não começou, comparação num mês
+ *   que a fonte não preenche) fica desabilitado com o motivo no `title`: não
+ *   há o que ligar, e fingir que clique faz efeito seria mentira de UI. Esconder
+ *   a série some também a
  *   linha dela no tooltip; o pico do eixo Y não muda com o clique (o mesmo
  *   que já acontece quando o COMPARAR desliga as duas comparações) — a tela
  *   não pisca ao alternar.
@@ -263,7 +267,7 @@ export function CrmSalesChart({
 }: {
   pontos: CrmSalesPoint[];
   metaAc: number;
-  /** Último dia da série; `null` sem dias futuros — o KPI cai para `previsaoMes`. */
+  /** Último dia da linha de ritmo; `null` só se o mês ainda não começou — o KPI cai para `previsaoMes`. */
   projecao: number | null;
   previsaoMes: number;
   mes: string;
@@ -360,11 +364,15 @@ export function CrmSalesChart({
   const tetoCents = Math.max(teto * 100, 1);
   const norm = (v: number): number => Math.max(0, Math.min(1, v / tetoCents));
 
-  const idxHoje = visiveis.findIndex((p) => p.dia === diaHoje);
+  // Hoje só existe no mês corrente: em mês fechado todo dia é passado — achar
+  // `diaHoje` ali truncaria a realizada no dia de número igual e faria o
+  // tooltip esconder "No dia" dos últimos dias.
+  const idxHoje = atual ? visiveis.findIndex((p) => p.dia === diaHoje) : -1;
 
   const serieVendido = useMemo(() => {
-    // A realizada para em HOJE (a referência faz igual); se a janela não
-    // alcança hoje (faixas só futuras), desenha o que existe.
+    // No mês corrente a realizada para em HOJE (a referência faz igual); mês
+    // fechado desenha o mês inteiro, e se a janela não alcança hoje (faixas só
+    // futuras), desenha o que existe.
     const fim = idxHoje >= 0 ? idxHoje + 1 : visiveis.length;
     return visiveis.slice(0, fim).map((v) => norm(v.vendidoAc));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -378,13 +386,10 @@ export function CrmSalesChart({
 
   const serieProjecao = useMemo(() => {
     const bruta = visiveis.map((v) => (v.projecao == null ? null : norm(v.projecao)));
-    const primeiro = bruta.findIndex((v) => v != null);
-    if (primeiro < 0) return null;
-    // Liga a cauda à ponta da realizada (o ponto de HOJE) — senão nasce solta.
-    if (primeiro > 0) {
-      const anterior = visiveis[primeiro - 1];
-      bruta[primeiro - 1] = anterior ? norm(anterior.vendidoAc) : null;
-    }
+    if (!bruta.some((v) => v != null)) return null;
+    // O ritmo existe do dia 1 ao último — ele não nasce no ponto de HOJE, então
+    // não há ponta de realizada a ligar: ou o mês inteiro tem ritmo, ou nenhum
+    // dia tem (mês que ainda não começou).
     return bruta;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visiveis, tetoCents]);
@@ -446,8 +451,8 @@ export function CrmSalesChart({
     valor == null ? null : valor - (anterior ?? 0);
 
   // A árvore do dia sob o cursor: o que ELE vendeu (delta do acumulado), o que
-  // já acumulou, e o que a linha contínua não conta — a meta daquele dia, a
-  // projeção de quem ainda vai vir e as comparações só com o COMPARAR ligado.
+  // já acumulou, e o que a linha contínua não conta — a meta daquele dia, o
+  // ritmo projetado para ele e as comparações só com o COMPARAR ligado.
   const futuro = idxHoje >= 0 && hover != null && hover > idxHoje;
   const linhasTooltip: { rotulo: string; valor: number | null }[] = [];
   if (pontoHover && hover != null) {
@@ -461,7 +466,7 @@ export function CrmSalesChart({
     if (!ocultas.meta && pontoHover.metaAc != null) {
       linhasTooltip.push({ rotulo: t("Meta do dia"), valor: deltaDe(pontoHover.metaAc, anterior?.metaAc) });
     }
-    if (!ocultas.projecao && futuro && pontoHover.projecao != null) {
+    if (!ocultas.projecao && pontoHover.projecao != null) {
       linhasTooltip.push({
         rotulo: t("Projeção do dia"),
         valor: deltaDe(pontoHover.projecao, anterior?.projecao ?? anterior?.vendidoAc),
@@ -477,7 +482,7 @@ export function CrmSalesChart({
 
   const pctMeta = (v: number): number | null =>
     objetivo != null && objetivo > 0 ? (v / objetivo) * 100 : null;
-  // Sem amanhã para projetar (último dia do mês ou mês fechado) a série vem
+  // Sem ritmo nenhum (mês que ainda não começou, ou sem dado) a série vem
   // vazia: o card cai para a previsão do mês — que É a projeção quando ela
   // existe, o mesmo número — em vez de lavar o zero por falta de dado.
   const projecaoKpi = projecao ?? previsaoMes;
@@ -832,7 +837,7 @@ export function CrmSalesChart({
               rotulo={t("Previsão de vendas")}
               aoClicar={() => alternarSerie("projecao")}
               desabilitada={!temDados.projecao}
-              motivo={t("Sem dias futuros no mês para projetar")}
+              motivo={t("Sem previsão para este mês")}
               ausente={linhasProjecao.length === 0}
             />
             <Legenda
