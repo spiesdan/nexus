@@ -149,25 +149,50 @@ describe("suítes do e2e (tests/e2e/suites/*.txt)", () => {
     ).toEqual([]);
   });
 
-  it("consumo — scripts e workflow apontam para as listas", () => {
-    for (const [nome, script] of [
+  it("consumo — scripts e workflow leem as listas de verdade", () => {
+    // O consumo local passou a ser pelo `scripts/test-e2e-suite.ts`. A forma
+    // antiga (`playwright test @arquivo`) não existe no Playwright: 1.62.1
+    // trata a linha como filtro regex que não casa nada e o run morre com
+    // "No tests found" — medido depois de os gates estarem verdes. Declarar a
+    // lista não garante que o mecanismo de consumo funciona, mas o caminho
+    // atual tem de continuar sendo o script (e não voltar ao `@arquivo`).
+    const script = readFileSync(path.join(RAIZ, "scripts", "test-e2e-suite.ts"), "utf8");
+    expect(script, "scripts/test-e2e-suite.ts não lê tests/e2e/suites/${nome}.txt").toMatch(
+      /tests\/e2e\/suites\/\$\{nome\}\.txt/,
+    );
+    // O script tem de passar as specs como ARGUMENTO para o CLI (o caminho que
+    // o modo full já usa). A forma antiga (`playwright test @arquivo`) não
+    // existe no Playwright e morre com "No tests found"; o comentário do
+    // script a cita de propósito como contr exemplo, por isso a asserção é
+    // sobre a invocação e não sobre o texto corrido.
+    expect(script, "scripts/test-e2e-suite.ts não invoca o CLI com as specs como argumento").toMatch(
+      /\[cli, "test", "--workers=1", \.\.\.specs/,
+    );
+    for (const [nome, scriptName] of [
       ["smoke", "test:e2e:smoke"],
       ["critical", "test:e2e:critical"],
       ["full", "test:e2e:full"],
     ] as const) {
       expect(
-        pkg.scripts[script] ?? "",
-        `package.json: script ${script} ausente ou não referencia ${nome}.txt`,
-      ).toContain(`@tests/e2e/suites/${nome}.txt`);
+        pkg.scripts[scriptName] ?? "",
+        `package.json: script ${scriptName} ausente ou não roda a suíte ${nome}`,
+      ).toBe(`tsx scripts/test-e2e-suite.ts ${nome}`);
     }
-    // O workflow roda smoke/critical pelo arquivo e o full pelas variáveis
-    // SPECS_PARTE_* — é a mesma ponta de `e2e-cobertura-completa`: declarar
-    // não é executar.
-    expect(yml, "workflow não referencia smoke.txt no passo da suíte").toMatch(
-      /@tests\/e2e\/suites\/smoke\.txt/,
+    // O workflow roda smoke/critical lendo a lista do evento e o full pelas
+    // variáveis SPECS_PARTE_* — é a mesma ponta de `e2e-cobertura-completa`:
+    // declarar não é executar.
+    expect(yml, "workflow não lê tests/e2e/suites/$SUITE.txt no passo do evento").toMatch(
+      /cat "?tests\/e2e\/suites\/\$SUITE\.txt"?/,
     );
-    expect(yml, "workflow não referencia critical.txt no passo da suíte").toMatch(
-      /@tests\/e2e\/suites\/critical\.txt/,
+    expect(yml, "workflow voltou a invocar @arquivo (sintaxe inexistente)").not.toMatch(
+      /playwright test @/,
+    );
+    const posDeploy = readFileSync(
+      path.join(RAIZ, ".github", "workflows", "e2e-pos-deploy.yml"),
+      "utf8",
+    );
+    expect(posDeploy, "e2e-pos-deploy não lê tests/e2e/suites/critical.txt").toMatch(
+      /cat tests\/e2e\/suites\/critical\.txt/,
     );
     expect(yml, "SUITE do workflow não mapeia pull_request → smoke").toMatch(
       /github\.event_name == 'pull_request' && 'smoke'/,

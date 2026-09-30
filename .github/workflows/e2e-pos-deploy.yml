@@ -241,11 +241,20 @@ jobs:
       # alcançaria um next start local, que não existe neste modo) — o teto é
       # o do alvo, e a densidade da critical (27 specs em ~15min) cabe na
       # janela de 60/300s medida no e2e.yml.
+      #
+      # A lista entra como ARGUMENTO ($LISTA), nunca `@arquivo` — essa sintaxe
+      # não existe no Playwright (1.62.1 trata a linha como filtro regex e o
+      # run morre com "No tests found"); ver script `scripts/test-e2e-suite.ts`.
       - name: E2E — suíte critical contra o alvo
         id: suite
         env:
           E2E_BASE_URL: ${{ inputs.url }}
-        run: pnpm exec playwright test --workers=1 @tests/e2e/suites/critical.txt
+        run: |
+          set -euo pipefail
+          LISTA=$(cat tests/e2e/suites/critical.txt)
+          [ -n "$LISTA" ] || { echo "::error::lista critical vazia"; exit 1; }
+          echo "suíte critical: $(printf '%s\n' "$LISTA" | grep -c .) specs"
+          pnpm exec playwright test --workers=1 $LISTA
 
       - uses: actions/upload-artifact@v7
         if: failure()

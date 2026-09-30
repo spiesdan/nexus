@@ -730,8 +730,8 @@ jobs:
 
       # A SUÍTE DESTE EVENTO decide o que roda (env SUITE lá no topo do job):
       #
-      #   smoke    → @tests/e2e/suites/smoke.txt      (pull_request — ciclo rápido)
-      #   critical → @tests/e2e/suites/critical.txt   (push na main / dispatch)
+      #   smoke    → tests/e2e/suites/smoke.txt       (pull_request — ciclo rápido)
+      #   critical → tests/e2e/suites/critical.txt    (push na main / dispatch)
       #   full     → SPECS_PARTE_1 + SPECS_PARTE_2    (schedule noturno / dispatch)
       #
       # As listas de suíte moram em `tests/e2e/suites/*.txt` (UMA fonte por
@@ -780,11 +780,19 @@ jobs:
           echo "INICIO_SUITE=$(date +%s)" >> "$GITHUB_ENV"
           echo "suíte do evento: $SUITE"
           case "$SUITE" in
-            smoke)
-              pnpm exec playwright test --workers=1 @tests/e2e/suites/smoke.txt
-              ;;
-            critical)
-              pnpm exec playwright test --workers=1 @tests/e2e/suites/critical.txt
+            smoke|critical)
+              # A lista entra COMO ARGUMENTO, nunca `@arquivo`: esta sintaxe não
+              # existe no Playwright (medido em 1.62.1 — a linha vira um filtro
+              # regex que não casa nada e o run inteiro morre com "No tests
+              # found" em 4s; foi o que derrubou o primeiro push destas suítes,
+              # depois de os gates estarem verdes). É o mesmo mecanismo do modo
+              # full: $LISTA sem aspas, que o bash quebra em palavras.
+              LISTA=$(cat "tests/e2e/suites/$SUITE.txt")
+              # Falha alto se a lista vier vazia: sem isto o playwright rodaria
+              # zero specs e o job ficaria verde sem medir nada.
+              [ -n "$LISTA" ] || { echo "::error::lista da suíte $SUITE vazia"; exit 1; }
+              echo "suíte $SUITE: $(printf '%s\n' "$LISTA" | grep -c .) specs"
+              pnpm exec playwright test --workers=1 $LISTA
               ;;
             full)
               # A lista continua vindo da variável do job: `e2e-cobertura-completa`
