@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.4] — 2026-09-30
+
+### Alterado
+
+- **Telas mais rápidas — abas, filas e o seletor de mês param de recarregar a casca do app** Trocar de aba (Estoque, Compras, funis, Conexões), mudar a fila do Inbox e navegar o
+  mês do gráfico da Home agora atualizam a URL sem pedir um novo render ao servidor: o
+  clique passa a ser estado local do navegador + gravação no histórico, e o mês da Home
+  busca um endpoint leve em vez de recarregar a página inteira. Em produção, cada um
+  desses cliques custava de 1 a 2 segundos — agora é imediato, com o mesmo link
+  compartilhável e o mesmo deep-link de antes.
+
+  As consultas que rodavam em série sem depender uma da outra (permissões do usuário,
+  fuso/janela/contatos da Carteira, as quatro leituras da Agenda, itens dos Relatórios e
+  a grade dos Indicadores) passam a correr em paralelo, e a verificação em duas etapas
+  deixa de repetir a mesma pergunta que a tela de Segurança acabou de receber do layout.
+  Recolher a barra lateral também ficou instantâneo. Nenhum número, tela ou regra de
+  negócio mudou.
+
 ## [1.16.3] — 2026-09-29
 
 ### Corrigido
@@ -2458,7 +2476,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.4...HEAD
+[1.16.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.0...v1.16.1
