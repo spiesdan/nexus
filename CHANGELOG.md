@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.16.6] — 2026-09-30
+
+### Corrigido
+
+- **Legenda da Evolução de Vendas funciona na Home — mês/ano passado chegam aos dados** A Home pedia só o mês corrente, então "Mês passado" e "Ano passado" da legenda
+  ficavam permanentemente desabilitados ali, enquanto os Indicadores funcionavam.
+  A página e o endpoint de troca de mês agora buscam a mesma janela de 14 meses
+  dos Indicadores, e as séries de comparação saem das linhas da própria janela —
+  sem query nova — com o mesmo acumulado (`acumuladoDiario`) nas três telas. O
+  painel direito do gráfico ganhou a alavanca "Comparar" na Home, e clicar num
+  item de comparação com ela desligada acende a comparação, pela regra que o
+  próprio gráfico já aplicava. Nenhum número do mês corrente mudou.
+
 ## [1.16.5] — 2026-09-30
 
 ### Alterado
@@ -2489,7 +2502,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.5...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.6...HEAD
+[1.16.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.5...v1.16.6
 [1.16.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.4...v1.16.5
 [1.16.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.2...v1.16.3
