@@ -110,6 +110,7 @@ beforeAll(() => {
       v_prospect uuid;
       v_camp uuid;
       v_compra uuid;
+      v_va uuid;
       v_tag text;
       v_chave text;
     begin
@@ -423,6 +424,26 @@ beforeAll(() => {
           insert into public.purchase_order_counters (organization_id)
             values (v_org);
         end if;
+
+        -- migration 0246 — Venda Automática: campanha → fila → timeline.
+        -- A fila semeada fica em status ATIVO ('contacted') de propósito: é o
+        -- que exercita o unique parcial (org, contato) sob os status ativos.
+        if not exists (select 1 from public.automatic_sales_campaigns where organization_id = v_org) then
+          insert into public.automatic_sales_campaigns
+            (organization_id, nome, cidade, categorias, limite_diario)
+            values (v_org, 'Campanha Venda Automática RLS', 'São Paulo', array['padaria'], 10)
+            returning id into v_va;
+        end if;
+        select id into v_va from public.automatic_sales_campaigns where organization_id = v_org limit 1;
+        if not exists (select 1 from public.automatic_sales_queue where organization_id = v_org) then
+          insert into public.automatic_sales_queue
+            (organization_id, campaign_id, prospect_id, contact_id, dia, status)
+            values (v_org, v_va, v_prospect, v_contact, current_date, 'contacted');
+        end if;
+        if not exists (select 1 from public.automatic_sales_events where organization_id = v_org) then
+          insert into public.automatic_sales_events (organization_id, campaign_id, event_type)
+            values (v_org, v_va, 'descoberta');
+        end if;
       end loop;
     end
     $seed$;
@@ -523,6 +544,13 @@ export const TABLES = [
   "purchase_orders",
   "purchase_order_items",
   "purchase_order_counters",
+  // migration 0246 (spec 18) - Venda Automática: campanha, fila e timeline.
+  // Mesmo molde da onda acima: leitura org-scoped sem gate de papel (o `agent`
+  // semeado lê a própria org); escrita agent+ provada nas rotas da API e no
+  // worker (service role) de `lib/venda-automatica/`.
+  "automatic_sales_campaigns",
+  "automatic_sales_queue",
+  "automatic_sales_events",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {
