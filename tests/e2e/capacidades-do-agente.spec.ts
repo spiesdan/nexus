@@ -16,7 +16,7 @@
  * O teste devolve o estado como encontrou: o rascunho volta com a lista de
  * capacidades que tinha antes, então roda quantas vezes for preciso.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -41,7 +41,7 @@ interface Creds {
 }
 
 function seed(script: string): void {
-  execFileSync("npx", ["tsx", `scripts/${script}`], { stdio: "inherit" });
+  execNpx(["tsx", `scripts/${script}`], { stdio: "inherit" });
 }
 
 function loadCreds(): Creds {

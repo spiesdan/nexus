@@ -32,7 +32,7 @@
  *   nem autenticaria — o arquivo INTEIRO pula em vez de falhar por motivo
  *   errado (ausência de ambiente ≠ defeito).
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -65,11 +65,11 @@ function loadCreds(): E2ECreds {
     return !c.users?.agent || !c.users?.dono || !c.admin_totp?.secret || !c.dono_totp?.secret;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   // Dono do servidor (platform_admins) + system_version/system_update_runs
   // limpos — idempotente, roda sempre pra deixar o teste repetível.
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as E2ECreds;
 }
 
@@ -175,7 +175,7 @@ async function runProgress(
 
 /** Volta o estado da instalação ao zero (sem run nenhum), como um seed. */
 function resetEstado(): void {
-  execFileSync("npx", ["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
+  execNpx(["tsx", "scripts/seed-e2e-system-update.ts"], { stdio: "inherit" });
 }
 
 test("quem pula versões vê os avisos de TODAS elas, não só o da mais nova", async ({

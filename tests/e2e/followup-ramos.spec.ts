@@ -20,7 +20,7 @@
  * que ramifica cresce, e crescer sem limite é o jeito de transformar a correção
  * num problema novo.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -45,7 +45,7 @@ function loadCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
     // O seed é do maestro (ele rotaciona o TOTP do admin e derruba o run alheio).
     // Só cai aqui se o arquivo não tiver sido copiado — e aí é melhor falhar alto.
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }

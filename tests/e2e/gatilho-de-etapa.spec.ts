@@ -19,7 +19,7 @@
  * caminhos já tem spec própria. O que esta spec dirige pela tela é exatamente o
  * que a frente de gatilhos entregou: o controle de gatilho e o efeito dele.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -121,7 +121,7 @@ const GRAFO_MINIMO = {
 test.describe("gatilho de etapa do funil", () => {
   test.beforeAll(() => {
     if (!creds.followup_agent_fixtures) {
-      execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
+      execNpx(["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
       creds = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
     }
     // ⚠️ A PRECONDIÇÃO DO PUBLISH É EXPLÍCITA AQUI, e não herdada de outra spec.
@@ -132,7 +132,7 @@ test.describe("gatilho de etapa do funil", () => {
     // de OUTRA spec tinha validado as fixtures neste banco. Num ambiente fresco
     // (o que a doutrina de QA Visual manda) o publish devolveria 422, e a
     // mensagem acusaria o gate do agente, que não é a causa.
-    execFileSync("npx", ["tsx", "scripts/e2e-followup-journey-helpers.ts", "prepare-agent-fixtures"], {
+    execNpx(["tsx", "scripts/e2e-followup-journey-helpers.ts", "prepare-agent-fixtures"], {
       stdio: "inherit",
     });
   });

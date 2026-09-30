@@ -15,7 +15,7 @@
  * Cobre também o RBAC da tela (agent não entra) e a persistência de verdade
  * (recarrega e o estado voltou do banco, não do estado local do React).
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -34,7 +34,7 @@ function loadCreds(): Creds {
     const c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
     return !c.users?.manager;
   };
-  if (precisa()) execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+  if (precisa()) execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
 

@@ -42,7 +42,7 @@
  * worker), e o número da asserção sai da mesma rota que alimenta a tabela —
  * o print e a asserção falam do mesmo dado.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -72,7 +72,7 @@ function loadCreds(): Creds {
     return !c.users?.manager;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }

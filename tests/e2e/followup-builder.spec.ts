@@ -7,7 +7,7 @@
  *
  * Cada run usa um nome com timestamp único, então não colide entre execuções.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -36,7 +36,7 @@ function loadCreds(): Creds {
     return !c.users?.manager;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
@@ -638,7 +638,7 @@ test.describe("followup flow builder — editor de condição de aresta / ai_cla
  */
 test.describe("followup flow selector no editor do agente (Task 7.2)", () => {
   test.beforeAll(() => {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
   // O seed ESCREVE em .e2e-creds.json, e `creds` foi lido no carregamento do
     // módulo — sem reler, o objeto em memória nunca vê o bloco que o seed
     // acabou de gravar. Foi por isto que esta spec ficou fora do CI: a mensagem

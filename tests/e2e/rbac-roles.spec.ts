@@ -8,7 +8,7 @@
  * Pré-requisito: `npx tsx scripts/seed-e2e-credentials.ts` (o spec roda o seed
  * sozinho se .e2e-creds.json estiver ausente/incompleto).
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -33,7 +33,7 @@ function loadCreds(): E2ECreds {
     return !c.users?.viewer || !c.admin_totp?.secret;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as E2ECreds;
 }

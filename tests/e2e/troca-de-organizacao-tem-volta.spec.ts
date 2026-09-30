@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -50,8 +50,8 @@ function lerCreds(): Creds {
   // rodado antes seria depender da ORDEM, que é o defeito que esta suíte já
   // pagou mais de uma vez.
   if (!c.funis || !c.duas_orgs) {
-    if (!c.duas_orgs) execFileSync("npx", ["tsx", "scripts/seed-e2e-duas-organizacoes.ts"], { stdio: "inherit" });
-    if (!c.funis) execFileSync("npx", ["tsx", "scripts/seed-e2e-funis.ts"], { stdio: "inherit" });
+    if (!c.duas_orgs) execNpx(["tsx", "scripts/seed-e2e-duas-organizacoes.ts"], { stdio: "inherit" });
+    if (!c.funis) execNpx(["tsx", "scripts/seed-e2e-funis.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(p, "utf8")) as Creds;
   }
   if (!c.funis?.segunda_org_id) throw new Error("o seed de funis não gravou `funis.segunda_org_id`");

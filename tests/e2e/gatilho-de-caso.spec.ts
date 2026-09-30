@@ -24,7 +24,7 @@
  * tabela, e o INSERT passa pelo MESMO trigger que o turno do agente dispararia:
  * o caminho ATÉ o gatilho é encurtado, o gatilho não.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -78,7 +78,7 @@ test.beforeAll(async () => {
 });
 
 function helper<T>(...args: string[]): T {
-  const saida = execFileSync("npx", ["tsx", "scripts/e2e-followup-journey-helpers.ts", ...args], {
+  const saida = execNpx(["tsx", "scripts/e2e-followup-journey-helpers.ts", ...args], {
     encoding: "utf8",
   });
   // O helper imprime JSON na última linha não-vazia.
@@ -140,13 +140,13 @@ async function drena(page: Page, secret: string): Promise<void> {
 test.describe("gatilho de caso aberto", () => {
   test.beforeAll(() => {
     if (!creds.followup_agent_fixtures) {
-      execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
+      execNpx(["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
       creds = loadCreds();
     }
     // O seed cria a credential SEM `validated_at` e a sessão em 'STARTING'; o
     // publish do agente EXIGE os dois. Explícito aqui em vez de herdado do run
     // de outra spec — num ambiente fresco isso daria 422 acusando o gate.
-    execFileSync("npx", ["tsx", "scripts/e2e-followup-journey-helpers.ts", "prepare-agent-fixtures"], {
+    execNpx(["tsx", "scripts/e2e-followup-journey-helpers.ts", "prepare-agent-fixtures"], {
       stdio: "inherit",
     });
   });

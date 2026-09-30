@@ -18,7 +18,7 @@
  *  2. a timeline explica de onde ele veio ("Entrou pelo WhatsApp");
  *  3. a segunda mensagem do MESMO contato não abre um segundo card.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -35,15 +35,15 @@ interface Creds {
 
 function lerCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   let c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   if (!c.users?.manager) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   }
   if (!c.nascimento?.webhook_token) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-nascimento-do-lead.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-nascimento-do-lead.ts"], { stdio: "inherit" });
     c = JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
   }
   return c;

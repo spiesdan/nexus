@@ -19,7 +19,7 @@
  * ⚠️ CONSOME CRÉDITO DE VERDADE. É o preço de saber se funciona de fato.
  * Não é gate de CI: é instrumento de observação, rodado sob demanda.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -41,7 +41,7 @@ interface Creds {
 
 function loadCreds(): Creds {
   if (!fs.existsSync(CREDS_PATH)) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }

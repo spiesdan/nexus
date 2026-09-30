@@ -33,7 +33,7 @@
  * conversa/mensagens via helper) — nomes com timestamp único, não acumula
  * nem colide entre runs.
  */
-import { execFileSync } from "node:child_process";
+import { execNpx } from "./utils/npx";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -62,7 +62,7 @@ function loadCreds(): Creds {
     return !c.users?.admin || !c.admin_totp;
   };
   if (needsSeed()) {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-credentials.ts"], { stdio: "inherit" });
   }
   return JSON.parse(fs.readFileSync(CREDS_PATH, "utf8")) as Creds;
 }
@@ -95,7 +95,7 @@ const secret = loadInternalSecret();
 
 /** Roda 1 subcomando do helper de SQL cru e devolve o JSON impresso na última linha. */
 function runHelper(args: string[]): unknown {
-  const stdout = execFileSync("npx", ["tsx", "scripts/e2e-followup-journey-helpers.ts", ...args], {
+  const stdout = execNpx(["tsx", "scripts/e2e-followup-journey-helpers.ts", ...args], {
     encoding: "utf8",
   });
   const lastLine = stdout.trim().split("\n").filter(Boolean).pop();
@@ -214,7 +214,7 @@ test.describe("followup — jornada completa (Task 8.3)", () => {
   test.use({ viewport: { width: 1600, height: 1000 } });
 
   test.beforeAll(() => {
-    execFileSync("npx", ["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
+    execNpx(["tsx", "scripts/seed-e2e-followup-agent.ts"], { stdio: "inherit" });
     // O seed ESCREVE em .e2e-creds.json, e `creds` foi lido no carregamento do
     // módulo — sem reler, o objeto em memória nunca vê o bloco que o seed
     // acabou de gravar. Mesmo idioma de queue-assign.spec.ts, que passa por isso.
