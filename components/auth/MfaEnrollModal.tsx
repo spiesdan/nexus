@@ -174,7 +174,7 @@ export function MfaEnrollModal({
                     alt={t("QR code para configurar autenticador")}
                     width={240}
                     height={240}
-                    className="rounded-2xl border border-border bg-white p-2"
+                    className="rounded-2xl border border-border bg-[#ffffff] p-2"
                   />
                 </div>
                 <details className="text-xs text-muted-foreground">

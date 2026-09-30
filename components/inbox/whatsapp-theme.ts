@@ -16,8 +16,17 @@ export const WA = {
   chatBg: "wa-chat-bg",
   /** Bolha de quem enviou (loja) — verde-pálido da referência. */
   outgoing: "border border-black/5 bg-[#c8e6bb] text-[#1c2b16] shadow-sm",
-  /** Bolha de quem recebeu (cliente) — branca nos DOIS temas, como na referência. */
-  incoming: "border border-black/5 bg-white text-[#141414] shadow-sm",
+  /**
+   * Bolha de quem recebeu (cliente) — branca nos DOIS temas, como na referência.
+   *
+   * `bg-[#ffffff]` e NUNCA `bg-white`: no tema claro, `app/uimaxxing.css`
+   * (leva do design system, `:root[data-theme="light"]`) aponta
+   * `--color-white` para `#111118` de propósito — o Tailwind v4 compila
+   * `bg-white` para `var(--color-white)` e a bolha saía PRETA com a tinta
+   * `#141414` invisível por cima (medido no inbox light em produção).
+   * Valor arbitrário vira literal na folha compilada e não passa pela variável.
+   */
+  incoming: "border border-black/5 bg-[#ffffff] text-[#141414] shadow-sm",
   /**
    * Hora e metadados DENTRO da bolha branca. `#667781` e não o `--mute` da
    * referência (`#9a9a9d`): este texto vive sobre branco nos dois temas, e

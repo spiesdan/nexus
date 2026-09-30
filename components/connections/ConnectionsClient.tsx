@@ -650,7 +650,7 @@ function QrDialog({
             <img
               src={`/api/v1/channel-sessions/${sessionId}/qr?t=${tick}`}
               alt={t("QR Code para conectar WhatsApp")}
-              className="h-64 w-64 rounded-lg border bg-white p-2"
+              className="h-64 w-64 rounded-lg border bg-[#ffffff] p-2"
             />
           ) : status === "WORKING" ? (
             <div className="flex flex-col items-center gap-2 text-sm font-medium text-success-fg">

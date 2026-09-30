@@ -26,7 +26,11 @@ describe("tema da conversa no inbox", () => {
     // Verde-pálido `#c8e6bb` da referência no lugar do `#d9fdd3` do WhatsApp.
     expect(WA.outgoing).toContain("#c8e6bb");
     // Branca nos DOIS temas — vem do `:root` da referência, não do modo.
-    expect(WA.incoming).toContain("bg-white");
+    // Literal `bg-[#ffffff]`, nunca `bg-white`: no tema claro a leva
+    // `--color-white: #111118` de `app/uimaxxing.css` sequestra a classe e a
+    // bolha saía preta com a tinta invisível (bug medido no inbox light).
+    expect(WA.incoming).toContain("bg-[#ffffff]");
+    expect(WA.incoming).not.toMatch(/(?<![\w-])bg-white(?![\w-])/);
     // Contador de não-lidas na cor da marca, como os contadores das abas.
     expect(WA.unread).toContain("bg-accent");
     // Seleção da lista no `--brand-soft`, não num accent genérico.
