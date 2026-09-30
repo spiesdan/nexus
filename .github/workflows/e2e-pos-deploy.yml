@@ -1,0 +1,274 @@
+name: e2e-pos-deploy
+
+# ═══════════════════════════════════════════════════════════════════════════
+# E2E CONTRA UMA INSTALAÇÃO JÁ PUBLICADA — o `e2e` de sempre, apontado para
+# fora da máquina do CI.
+#
+# ═══ O QUE ESTE WORKFLOW É ═══
+#
+# O `e2e.yml` prova o CÓDIGO contra um Supabase local que ele mesmo sobe.
+# Este prova a INSTALAÇÃO: você publicou (VPS, staging, ambiente do cliente),
+# e aqui a suíte `critical` roda contra aquela URL, com
+# `E2E_BASE_URL` (playwright.config.ts) desligando o `next start` local — quem
+# serve é o alvo, e o `baseURL` aponta para ele.
+#
+# A cadeia, nessa ordem (falha barata primeiro):
+#
+#   1. Entrada validada (scheme http/https + confirmação de escrita).
+#   2. Health gate: `GET /api/v1/health` com retry — rota PÚBLICA
+#      (lib/auth/public-paths.ts:15), é o barato que descarta alvo fora do ar
+#      antes de 8 minutos de install.
+#   3. `.env.e2e` montado dos secrets do alvo — o MESMO contrato de sempre
+#      (playwright.config.ts exige o arquivo, e ele é a única fonte).
+#   4. Seeds (mesmos do `e2e.yml`) e então `playwright test` na suíte
+#      `tests/e2e/suites/critical.txt`.
+#
+# ═══ ⚠️ ISTO ESCREVE NO ALVO ═══
+#
+# Os seeds e as próprias specs criam organização, usuários, TOTP e fixtures
+# DIRETO no Supabase do alvo — é assim que a suíte funciona em qualquer lugar
+# (no CI ela faz o mesmo no banco local). Contra uma instalação publicada isso
+# significa: dado de teste no banco daquele ambiente. É por isto que o input
+# `confirmar` existe e exige `sim` literal — não é capricho, é o único degrau
+# entre "disparar um workflow" e "escrever num ambiente que não é seu".
+#
+# ═══ SECRETS NECESSÁRIOS (repo) ═══
+#
+# O workflow falha ALTO e lista o que falta ANTES de rodar qualquer seed. São
+# cinco, e os valores são os DO ALVO (não os do CI local):
+#
+#   gh secret set E2E_SUPABASE_URL            # URL do Supabase do alvo
+#   gh secret set E2E_SUPABASE_ANON_KEY
+#   gh secret set E2E_SUPABASE_SERVICE_ROLE_KEY
+#   gh secret set E2E_SUPABASE_DB_URL          # postgresql://… do alvo (seeds pg)
+#   gh secret set E2E_INTERNAL_SECRET          # INTERNAL_SECRET do alvo — as specs
+#                                             # autenticam rotas internas com ele
+#
+# As chaves de CIFRA (CPF_ENCRYPTION_KEY/WAHA_BYO/AI_CRED_AES) NÃO entram aqui:
+# elas pertencem ao servidor do alvo (que tem as suas), o processo de teste não
+# as referencia (medido: zero referências em scripts/seed-*.ts e tests/e2e/) e
+# `required()` do lib/env.ts é `default("")` fora de produção. Se um seed um
+# dia passar a cifrar no cliente, o erro (aes_gcm: chave ausente) será alto —
+# aí, e só aí, este arquivo ganha o secret.
+#
+# ═══ O QUE ESTE WORKFLOW NÃO É ═══
+#
+# Não é check obrigatório (é dispatch manual — a branch protection exige o
+# `e2e` do e2e.yml, que continua rodando sozinho em PR/main/schedule). Não é
+# deploy: ele não publica nada. E não é substituto do `e2e` local: é a prova
+# do artefato instalado, que o `e2e.yml` por construção não alcança.
+# ═══════════════════════════════════════════════════════════════════════════
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL base da instalação publicada (ex.: https://exemplo.com)"
+        required: true
+        type: string
+      confirmar:
+        description: "Escreva EXATAMENTE 'sim' — seeds e specs ESCREVEM dados de teste no alvo"
+        required: true
+        type: string
+
+# Privilégio mínimo na ponta do scanner (actions/missing-workflow-permissions):
+# este workflow só LÊ o repo. Nenhum escopo de escrita — não publica imagem,
+# não cria release, não escreve em `contents`.
+permissions:
+  contents: read
+
+jobs:
+  e2e-pos-deploy:
+    runs-on: ubuntu-latest
+    # Setup (~7min) + seeds (~2min) + critical (~15-20min) + folga. O teto do
+    # JOB é o canário: se a suíte crescer até estourar, o erro diz "timeout"
+    # e não "spec falhou".
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      # Validação ANTES do install: entrada errada morre em segundos, não em
+      # minutos de pnpm. `inputs.*` entra via env, nunca interpolado no script
+      # — input de dispatch é texto de quem dispara, e `${{ }}` dentro de
+      # `run:` é injeção de shell por definição.
+      - name: Validar a entrada (scheme + confirmação de escrita)
+        env:
+          ALVO: ${{ inputs.url }}
+          CONFIRMA: ${{ inputs.confirmar }}
+        run: |
+          set -euo pipefail
+          case "$ALVO" in
+            http://*|https://*) ;;
+            *) echo "::error::'url' precisa começar com http:// ou https:// — recebido: $ALVO"; exit 1 ;;
+          esac
+          if [ "$CONFIRMA" != "sim" ]; then
+            echo "::error::Confirmação ausente: seeds e specs ESCREVEM dados de teste no alvo. Digite 'sim' no input 'confirmar' para prosseguir."
+            exit 1
+          fi
+          # Barra final fora: o valor vira $ALVO nos passos adiante e vira
+          # $ALVO/api/v1/health — com barra, viraria …//api/….
+          echo "ALVO=${ALVO%/}" >> "$GITHUB_ENV"
+
+      # Health gate. /api/v1/health é pública (lib/auth/public-paths.ts) — sem
+      # autenticação, então o gate não depende de nenhum secret existir. Retry
+      # com backoff fixo: alvo recém-publicado ainda pode estar aquecendo
+      # (contêiner subindo, DNS propagando). `--fail` + `--retry-all-errors`
+      # cobre 5xx e recusa de conexão; 404/erro de rota NÃO é transitório e
+      # cai direto — que é o comportamento certo: app no ar mas sem a rota é
+      # defeito, não azar.
+      - name: Health gate — o alvo precisa estar de pé
+        run: |
+          echo "GET $ALVO/api/v1/health"
+          corpo=$(curl --fail --silent --show-error --location \
+            --max-time 30 --retry 5 --retry-delay 15 --retry-all-errors \
+            "$ALVO/api/v1/health") \
+            || { echo "::error::Health gate falhou em $ALVO/api/v1/health — alvo fora do ar ou sem a rota. Nada foi executado contra ele."; exit 1; }
+          echo "health OK: $corpo"
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # O `.env.e2e` NASCE aqui (mesmo contrato do e2e.yml: playwright.config
+      # exige o arquivo e falha alto sem ele). Os cinco secrets são obrigatórios
+      # e checados ANTES de qualquer seed — secret vazio viraria chamada com
+      # credencial vazia três camadas adiante, e a mensagem daqui diz exatamente
+      # qual `gh secret set` falta rodar.
+      #
+      # `printf '%s\n'` com valor entre aspas: secret com `$`, `&` ou `@`
+      # (uma URL de banco tem todos) chega intacto, sem expansão de shell.
+      - name: Montar o .env.e2e do alvo (a partir dos secrets do repo)
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+          E2E_SUPABASE_DB_URL: ${{ secrets.E2E_SUPABASE_DB_URL }}
+          E2E_INTERNAL_SECRET: ${{ secrets.E2E_INTERNAL_SECRET }}
+        run: |
+          set -euo pipefail
+          faltando=()
+          [ -n "$E2E_SUPABASE_URL" ]           || faltando+=("E2E_SUPABASE_URL")
+          [ -n "$E2E_SUPABASE_ANON_KEY" ]      || faltando+=("E2E_SUPABASE_ANON_KEY")
+          [ -n "$E2E_SUPABASE_SERVICE_ROLE_KEY" ] || faltando+=("E2E_SUPABASE_SERVICE_ROLE_KEY")
+          [ -n "$E2E_SUPABASE_DB_URL" ]        || faltando+=("E2E_SUPABASE_DB_URL")
+          [ -n "$E2E_INTERNAL_SECRET" ]        || faltando+=("E2E_INTERNAL_SECRET")
+          if [ "${#faltando[@]}" -gt 0 ]; then
+            {
+              echo "::error::Secrets do alvo ausentes: ${faltando[*]}"
+              echo "São os valores DO ALVO (não do CI local). Exemplo:"
+              echo "  gh secret set E2E_SUPABASE_URL   # valor do .env da instalação"
+            } >&2
+            exit 1
+          fi
+          {
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n'   "$E2E_SUPABASE_URL"
+            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$E2E_SUPABASE_ANON_KEY"
+            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n'  "$E2E_SUPABASE_SERVICE_ROLE_KEY"
+            printf 'SUPABASE_DB_URL=%s\n'            "$E2E_SUPABASE_DB_URL"
+            # NEXT_PUBLIC_APP_URL tem de bater com o baseURL do Playwright —
+            # é ela que monta os links de e-mail/redirect que as specs seguem.
+            printf 'NEXT_PUBLIC_APP_URL=%s\n'        "$ALVO"
+            # As specs autenticam /api/internal/* no ALVO com o segredo DO
+            # ALVO — placeholder local daria 401 em todo tick/cron testado.
+            printf 'INTERNAL_SECRET=%s\n'            "$E2E_INTERNAL_SECRET"
+            # Placeholders abaixo são os MESMOS do CI local (nenhuma specs da
+            # suíte critical usa WAHA/Redis de verdade; sem eles o lib/env
+            # required() de produção — do SERVIDOR DO ALVO — nem lê daqui).
+            printf 'WAHA_API_BASE_URL=%s\n'          "http://127.0.0.1:3999"
+            printf 'WAHA_API_KEY=%s\n'               "e2e-placeholder-nao-e-segredo"
+            printf 'WAHA_WEBHOOK_BASE_URL=%s\n'      "$ALVO"
+            printf 'UPSTASH_REDIS_REST_URL=%s\n'     "http://127.0.0.1:3998"
+            printf 'UPSTASH_REDIS_REST_TOKEN=%s\n'   "e2e-placeholder-nao-e-segredo"
+            printf 'NEXT_TELEMETRY_DISABLED=%s\n'    "1"
+            printf 'SENTRY_DSN=%s\n'                 "off"
+          } > .env.e2e
+          echo ".env.e2e montado para $ALVO (5 secrets do alvo + placeholders)"
+
+      # Mesmo caminho do e2e.yml: uma fonte só. `process.env` vence o arquivo
+      # em scripts/lib/env-de-teste.ts, então os seeds (execFileSync) e o
+      # processo de teste leem literalmente o que está no arquivo.
+      - name: Publicar o .env.e2e no ambiente do job
+        run: grep -vE '^[[:space:]]*(#|$)' .env.e2e >> "$GITHUB_ENV"
+
+      # Mesmo cache do e2e.yml: ~/.cache/ms-playwright fora do workspace, chave
+      # amarrada ao pnpm-lock (bump de Playwright invalida sozinho).
+      - name: Restaurar Chromium do cache
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Instalar o browser
+        run: |
+          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
+            sudo "$(which pnpm)" exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      # Os MESMOS seeds do e2e.yml, agora escrevendo no banco do ALVO (o
+      # `anunciarDestino` de scripts/lib/env-de-teste.ts imprime "⚠️ REMOTO"
+      # em cada um — a linha é a prova, não um detalhe).
+      #
+      # Idempotência medida onde importa: seed-e2e-credentials faz upsert por
+      # email/org e rotaciona o TOTP (re-run é seguro); seed-e2e-escalacao usa
+      # `on conflict`. Reexecuções contra o MESMO alvo dependem disso — se um
+      # seed novo não for idempotente, o segundo run é que dirá.
+      - name: Semear as fixtures no alvo (ESCREVE no banco do alvo)
+        run: |
+          set -euo pipefail
+          cp .env.e2e .env.local
+          pnpm exec tsx scripts/seed-e2e-credentials.ts
+          pnpm exec tsx scripts/seed-e2e-escalacao.ts
+          pnpm exec tsx --env-file=.env.local scripts/seed-e2e-capacidades-ausentes.ts
+          pnpm exec tsx scripts/seed-e2e-followup-agent.ts
+          pnpm exec tsx scripts/seed-e2e-catalogo-openrouter.ts
+          pnpm exec tsx scripts/seed-e2e-fiscal-cifra.ts
+
+      # A suíte crítica — a mesma lista que o CI roda na main
+      # (tests/e2e/suites/critical.txt, cobrada por
+      # tests/unit/e2e-suices-aderentes.test.ts).
+      #
+      # `E2E_BASE_URL` liga o modo externo do playwright.config.ts: sem
+      # webServer, baseURL = alvo. Sem AUTH_RATE_LIMIT_LOGIN_IP aqui de
+      # propósito: o limitador de login mora no SERVIDOR DO ALVO (este env só
+      # alcançaria um next start local, que não existe neste modo) — o teto é
+      # o do alvo, e a densidade da critical (27 specs em ~15min) cabe na
+      # janela de 60/300s medida no e2e.yml.
+      - name: E2E — suíte critical contra o alvo
+        id: suite
+        env:
+          E2E_BASE_URL: ${{ inputs.url }}
+        run: pnpm exec playwright test --workers=1 @tests/e2e/suites/critical.txt
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-pos-deploy
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      # O registro do que aconteceu — inclusive quando tudo falhou antes do
+      # Playwright (health gate/secrets): o summary é `always()`, então o
+      # dispatch nunca termina sem dizer em que pé ficou.
+      - name: Registrar o que este dispatch fez
+        if: always()
+        env:
+          SUITE_RESULTADO: ${{ steps.suite.outcome }}
+        run: |
+          {
+            echo "## e2e-pos-deploy"
+            echo ""
+            echo "- **Alvo:** $ALVO"
+            echo "- **Suíte:** critical (\`tests/e2e/suites/critical.txt\`)"
+            echo "- **Escrita:** seeds e specs escreveram dados de teste no alvo (confirmado no input \`confirmar\`)"
+            echo "- **Resultado do Playwright:** ${SUITE_RESULTADO:-não executou}"
+          } >> "$GITHUB_STEP_SUMMARY"

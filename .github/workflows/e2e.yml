@@ -9,9 +9,14 @@ name: e2e
 # é a quarta fonte da mesma verdade, e as três anteriores já divergiram — este
 # cabeçalho dizia "29 de 33" quando o disco tinha 45 e o job rodava 44.
 #
-# A execução é dividida em DUAS invocações do playwright de propósito: o
-# limitador de login do produto é por IP (60/300s) e no CI todos os specs vêm do
-# mesmo 127.0.0.1. Ver o comentário do passo "E2E — parte 1 de 2".
+# TRÊS SUÍTES, escolhidas por evento (env SUITE do job): `pull_request` roda o
+# SMOKE (ciclo de desenvolvimento rápido), `push` na main roda o CRITICAL (a
+# régua do "dá para publicar?"), `schedule`/`workflow_dispatch` rodam o FULL (as
+# 88). As listas moram em `tests/e2e/suites/*.txt`, uma fonte por suíte.
+# No modo full a execução continua dividida em DUAS invocações do playwright de
+# propósito: o limitador de login do produto é por IP (60/300s) e no CI todos os
+# specs vêm do mesmo 127.0.0.1. Ver o comentário do passo "E2E — a suíte do
+# evento".
 #
 # É CHECK OBRIGATÓRIO. A régua, para reconferir em vez de acreditar nesta linha:
 #   $ gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
@@ -36,9 +41,22 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # Suíte FULL de madrugada: cobre as 88 sem segurar o ciclo de desenvolvimento.
+  # O que cada evento executa está em SUITE, no env do job.
+  schedule:
+    - cron: "0 3 * * *"
   # Manual, para re-rodar sem push (ex.: após um 429 do GHCR que não tem nada
-  # a ver com o código).
+  # a ver com o código) ou para escolher a suíte na mão.
   workflow_dispatch:
+    inputs:
+      suite:
+        description: "Suíte a executar (full = as 88, critical = deployável, smoke = o essencial)"
+        type: choice
+        options:
+          - full
+          - critical
+          - smoke
+        default: full
 
 # O GITHUB_TOKEN deste job serve a `actions/checkout` (clone) e a
 # `actions/setup-node` (manifest de `actions/node-versions`, repo público).
@@ -79,14 +97,17 @@ jobs:
   # virou `toomanyrequests` com o stack morrendo ainda no setup (2026-09-23).
   #
   # Agora: 1 runner, 1 install, 1 Supabase, 1 build, 1 Chromium (com cache),
-  # 1 conjunto de seeds. As duas partes do Playwright continuam existindo,
-  # como passos SEQUENCIAIS do mesmo job, contra o MESMO banco.
+  # 1 conjunto de seeds. No modo full, as DUAS invocações do Playwright
+  # continuam existindo dentro do passo "E2E — a suíte do evento", contra o
+  # MESMO banco.
   #
   # O que NÃO muda com a junção, e por quê é seguro:
   #
   # - Cobertura: as listas SPECS_PARTE_1/2 e FORA_DO_CI continuam as únicas
-  #   fontes, e `e2e-cobertura-completa.test.ts` continua cobrando.
-  # - Login por IP: o teto segue em 1000 no CI (ver passo das partes), e cada
+  #   fontes, e `e2e-cobertura-completa.test.ts` continua cobrando. As suítes
+  #   de arquivo (tests/e2e/suites/*.txt) são SUBCONJUNTOS desse conjunto,
+  #   cobrados por `e2e-suices-aderentes.test.ts`.
+  # - Login por IP: o teto segue em 1000 no CI (ver passo da suíte), e cada
   #   invocação do Playwright sobe o SEU `next start` (webServer do
   #   playwright.config.ts, `reuseExistingServer: false`) — ou seja, cada
   #   parte roda num processo novo, com o contador em memória zerado, como
@@ -102,10 +123,11 @@ jobs:
   # sobras da parte 1. Se uma spec presumia banco fresco por parte, o vermelho
   # dirá qual — e o conserto é na spec, não aqui.
   #
-  # O teto: 60 min no job, 30 min por parte (passo). O 30 do job virou 60
-  # porque as partes SOMAM agora (medido em 08: 8,2 + 16,3 + setup 4,5 ≈ 29);
-  # o canário contra a suíte crescendo desce para o nível da parte, que é
-  # onde ele morava de verdade.
+  # O teto: 60 min no job, 50 min no passo da suíte. O full mede ~44 min de
+  # passo (partes somadas; setup ~6 min), então 50 é fôlego com margem para a
+  # suíte crescer, e o teto do JOB (60) é o canário que reclama primeiro quando
+  # ela crescer demais. Smoke/critical são ordens de magnitude menores — as
+  # medidas de cada um ficam no summary do job.
   #
   # O NOME DESTE JOB É O CHECK OBRIGATÓRIO: a branch protection da `main`
   # exige um check chamado exatamente `e2e` (verify, build-and-size,
@@ -194,6 +216,13 @@ jobs:
       # pontas no mesmo lugar: se um dia o config mudar, quem lê este env
       # percebe que há um contrato do outro lado.
       E2E_PORT: "3001"
+      # Qual SUÍTE este evento executa. PR = smoke (ciclo de desenvolvimento
+      # rápido), push na main = critical (a régua do "dá para publicar?"),
+      # schedule = full (as 88), dispatch = o input escolhido. As listas vivem
+      # em `tests/e2e/suites/*.txt` — uma fonte por suíte, consumida aqui e no
+      # `package.json`, e cobrada por `tests/unit/e2e-suices-aderentes.test.ts`.
+      SUITE: >-
+        ${{ (github.event_name == 'pull_request' && 'smoke') || (github.event_name == 'push' && 'critical') || (github.event_name == 'schedule' && 'full') || inputs.suite || 'full' }}
       SPECS_PARTE_1: >-
         smoke.spec.ts auth.spec.ts error-pages.spec.ts
         icone-da-marca.spec.ts
@@ -699,19 +728,25 @@ jobs:
           # a senha e `jornada-fiscal.spec.ts` falha antes de emitir.
           pnpm exec tsx scripts/seed-e2e-fiscal-cifra.ts
 
-      # O que ficou DE FORA (e por quê) é declarado no passo de summary —
-      # cobertura parcial silenciosa se lê como cobertura total.
+      # A SUÍTE DESTE EVENTO decide o que roda (env SUITE lá no topo do job):
       #
-      # `next start` roda com NODE_ENV=production, e aí toda var marcada
-      # `required()` no lib/env.ts vira obrigatória, inclusive as de serviço que
-      # estes specs nem tocam. Os valores abaixo são PLACEHOLDERS FALSOS, só
-      # para o boot passar da validação Zod — nenhum segredo real entra aqui.
-      # DUAS INVOCAÇÕES SEQUENCIAIS, e não uma — o motivo é medido, não estético.
+      #   smoke    → @tests/e2e/suites/smoke.txt      (pull_request — ciclo rápido)
+      #   critical → @tests/e2e/suites/critical.txt   (push na main / dispatch)
+      #   full     → SPECS_PARTE_1 + SPECS_PARTE_2    (schedule noturno / dispatch)
+      #
+      # As listas de suíte moram em `tests/e2e/suites/*.txt` (UMA fonte por
+      # suíte, consumida aqui e nos scripts do `package.json`, cobrada por
+      # `tests/unit/e2e-suices-aderentes.test.ts`); o full continua saindo das
+      # variáveis SPECS_PARTE_1/2 deste workflow, que `e2e-cobertura-completa`
+      # lê como a definição de "tudo que o CI cobre".
+      #
+      # No modo full são DUAS invocações sequenciais do Playwright, e não uma —
+      # o motivo é medido, não estético.
       #
       # `lib/auth/rate-limit.ts` limita login a 60 por IP a cada 300s. No CI todo
       # spec loga do mesmo 127.0.0.1, e ao subir a suíte de 15 para 29 specs o
       # pico passou a ser 69–73 tentativas na janela: a suíte estourava o próprio
-      # teto do produto. O sintoma não é honesto — o login simplesmente não
+      # teto do produto. O sintoma não é honeste — o login simplesmente não
       # redireciona, e a spec sorteada pelo momento da saturação é a que falha.
       # Foi assim que `risk-radar` caiu na main e `rbac-roles` num PR, sem
       # nenhuma das duas ter mudado.
@@ -723,7 +758,7 @@ jobs:
       # contadores, e o pico por processo volta para ~40. É também por isto que
       # NÃO há `next start` manual neste job: o Playwright sobe um servidor por
       # invocação, espera a URL (health check com timeout de 120s no config) e
-      # o derruba no fim — o restart do Next entre as partes sai daí, sem PID
+      # o derruba no fim — o restart do Next entre as invocações sai daí, sem PID
       # para gerenciar e sem brigar pela porta.
       #
       # A alternativa seria afrouxar o teto por env — mexer num controle de
@@ -734,22 +769,47 @@ jobs:
       # workers, dois specs gerando o mesmo código no mesmo intervalo de 30s
       # fazem o segundo ser recusado como replay. Foi o que derrubava a
       # `reset-password-mfa` (issue #80): ela passa sozinha e falha em paralelo.
-      - name: E2E — parte 1 de 2
-        id: parte1
-        timeout-minutes: 30
+      # Entre arquivos a interferência também foi medida (2026-07-31: 10 a 15
+      # specs vermelhas com workers>1, todas verdes isoladas) — paralelismo só
+      # entra depois de isolar DADO por spec, não antes.
+      - name: E2E — a suíte do evento
+        id: suite
+        timeout-minutes: 50
         run: |
           set -euo pipefail
-          echo "INICIO_P1=$(date +%s)" >> "$GITHUB_ENV"
-          # A lista continua vindo da variável do job: `e2e-cobertura-completa`
-          # lê DELA a cobertura, e ler por indireção aqui (não duplicar a
-          # lista) mantém UMA fonte por parte.
-          LISTA="$SPECS_PARTE_1"
-          # Falha alto se a variável vier vazia: sem isto, um typo no nome faria
-          # o playwright rodar a suíte INTEIRA (ou nenhuma) e o job ficaria
-          # verde medindo outra coisa.
-          [ -n "$LISTA" ] || { echo "::error::lista da parte 1 vazia"; exit 1; }
-          pnpm exec playwright test --workers=1 $LISTA
-          echo "FIM_P1=$(date +%s)" >> "$GITHUB_ENV"
+          echo "INICIO_SUITE=$(date +%s)" >> "$GITHUB_ENV"
+          echo "suíte do evento: $SUITE"
+          case "$SUITE" in
+            smoke)
+              pnpm exec playwright test --workers=1 @tests/e2e/suites/smoke.txt
+              ;;
+            critical)
+              pnpm exec playwright test --workers=1 @tests/e2e/suites/critical.txt
+              ;;
+            full)
+              # A lista continua vindo da variável do job: `e2e-cobertura-completa`
+              # lê DELA a cobertura, e ler por indireção aqui (não duplicar a
+              # lista) mantém UMA fonte por parte.
+              LISTA="$SPECS_PARTE_1"
+              # Falha alto se a variável vier vazia: sem isto, um typo no nome faria
+              # o playwright rodar a suíte INTEIRA (ou nenhuma) e o job ficaria
+              # verde medindo outra coisa.
+              [ -n "$LISTA" ] || { echo "::error::lista da parte 1 vazia"; exit 1; }
+              echo "INICIO_P1=$(date +%s)" >> "$GITHUB_ENV"
+              pnpm exec playwright test --workers=1 $LISTA
+              echo "FIM_P1=$(date +%s)" >> "$GITHUB_ENV"
+              LISTA="$SPECS_PARTE_2"
+              [ -n "$LISTA" ] || { echo "::error::lista da parte 2 vazia"; exit 1; }
+              echo "INICIO_P2=$(date +%s)" >> "$GITHUB_ENV"
+              pnpm exec playwright test --workers=1 $LISTA
+              echo "FIM_P2=$(date +%s)" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "::error::SUITE desconhecida: '$SUITE' — opções: smoke, critical, full"
+              exit 1
+              ;;
+          esac
+          echo "FIM_SUITE=$(date +%s)" >> "$GITHUB_ENV"
         env:
           # Só o que NÃO vem do `.env.e2e`: isto é ajuste de CI, não config do
           # produto. CI = 1 IP para todos os specs, e o teto de produção
@@ -759,33 +819,16 @@ jobs:
           # ver o comentário do passo de build: vazio NÃO desliga.
           SENTRY_DSN: "off"
 
-      # Roda mesmo se a parte 1 quebrar (`always`): o comportamento antigo era
-      # `fail-fast: false` na matrix, e o primeiro vermelho escondendo o outro
-      # transformava o conserto numa rodada por parte. O passo de gate abaixo é
-      # que dá o veredito — este aqui só mede.
-      - name: E2E — parte 2 de 2
-        id: parte2
-        if: always()
-        timeout-minutes: 30
-        run: |
-          set -euo pipefail
-          echo "INICIO_P2=$(date +%s)" >> "$GITHUB_ENV"
-          LISTA="$SPECS_PARTE_2"
-          [ -n "$LISTA" ] || { echo "::error::lista da parte 2 vazia"; exit 1; }
-          pnpm exec playwright test --workers=1 $LISTA
-          echo "FIM_P2=$(date +%s)" >> "$GITHUB_ENV"
-        env:
-          AUTH_RATE_LIMIT_LOGIN_IP: "1000"
-          SENTRY_DSN: "off"
-
-      # O veredito: `success` nas DUAS partes é o único desfecho aceito. Sem
-      # este passo, a parte 2 com `always()` deixaria o job verde com a parte 1
-      # vermelha — o mesmo "verde que não distingue" que o cabeçalho proíbe.
-      - name: Falhar se qualquer parte não passou
+      # O veredito: `success` no passo da suíte é o único desfecho aceito. O
+      # passo acima roda SEM `if:` e com `set -euo pipefail`; este, com
+      # `always()`, lê o `outcome` real — sem ele, um job interrompido no meio
+      # deixaria o veredito ambíguo, que é o "verde que não distingue" que o
+      # cabeçalho proíbe.
+      - name: Falhar se a suíte não passou
         if: always()
         run: |
-          echo "parte 1: ${{ steps.parte1.outcome }} · parte 2: ${{ steps.parte2.outcome }}"
-          [ "${{ steps.parte1.outcome }}" = "success" ] && [ "${{ steps.parte2.outcome }}" = "success" ]
+          echo "suíte $SUITE: ${{ steps.suite.outcome }}"
+          [ "${{ steps.suite.outcome }}" = "success" ]
 
       - uses: actions/upload-artifact@v7
         if: failure()
@@ -827,23 +870,42 @@ jobs:
           bloco() { sed -n "/^      $1: >-/,/^      [A-Z_0-9]*:/p" .github/workflows/e2e.yml \
                     | grep -oE "[a-z0-9-]+\.spec\.ts" | sort -u; }
           NO_DISCO=$(ls tests/e2e/*.spec.ts | wc -l | tr -d " ")
-          RODOU=$( { bloco SPECS_PARTE_1; bloco SPECS_PARTE_2; } | sort -u | wc -l | tr -d " ")
+          INVENTARIO=$( { bloco SPECS_PARTE_1; bloco SPECS_PARTE_2; } | sort -u | wc -l | tr -d " ")
           FORA_LISTA=$(bloco FORA_DO_CI)
           FORA=$(echo "$FORA_LISTA" | grep -c . || true)
           # Falha alto se o recorte parou de casar: listas vazias fariam este
           # passo anunciar "0 de N" como se fosse notícia, em vez de erro.
-          [ "$RODOU" -gt 10 ] || { echo "::error::o recorte das listas do workflow parou de casar"; exit 1; }
+          [ "$INVENTARIO" -gt 10 ] || { echo "::error::o recorte das listas do workflow parou de casar"; exit 1; }
           duracao() {
             [ -n "${1:-}" ] && [ -n "${2:-}" ] && echo "$(( ($2 - $1) / 60 )) min" || echo "não mediu"
           }
+          # O que RODOU depende da suíte do evento — e a contagem vem dos
+          # PRÓPRIOS arquivos (grep -c), nunca de número digitado aqui.
+          case "$SUITE" in
+            smoke)
+              RODOU=$(grep -c . tests/e2e/suites/smoke.txt)
+              RODEI="suíte \`smoke\` (\`tests/e2e/suites/smoke.txt\`)"
+              ;;
+            critical)
+              RODOU=$(grep -c . tests/e2e/suites/critical.txt)
+              RODEI="suíte \`critical\` (\`tests/e2e/suites/critical.txt\`)"
+              ;;
+            full)
+              RODOU=$INVENTARIO
+              RODEI="suíte \`full\` — as SPECS_PARTE_1+2, em duas invocações (parte 1: $(duracao "${INICIO_P1:-}" "${FIM_P1:-}"), parte 2: $(duracao "${INICIO_P2:-}" "${FIM_P2:-}"))"
+              ;;
+            *)
+              RODOU=0
+              RODEI="SUITE desconhecida (\`$SUITE\`)"
+              ;;
+          esac
           {
             echo "## E2E — cobertura deste job"
             echo ""
-            echo "**Rodou: ${RODOU} de ${NO_DISCO} specs**, em duas partes sequenciais no mesmo job (parte 1: $(duracao "${INICIO_P1:-}" "${FIM_P1:-}"), parte 2: $(duracao "${INICIO_P2:-}" "${FIM_P2:-}"))."
+            echo "**Rodou: ${RODOU} de ${NO_DISCO} specs do disco** — ${RODEI}. Duração da suíte: $(duracao "${INICIO_SUITE:-}" "${FIM_SUITE:-}")."
             echo ""
-            echo "**Não rodou (${FORA}):**"
+            echo "**Não rodou nesta suíte (${FORA} fora do CI + as que não pertencem à suíte do evento).** Fora do CI, com o motivo:"
             for s in $FORA_LISTA; do echo "- \`${s}\` — precisa de WAHA + Redis + Resend + Nuvemshop (P0 da doutrina de QA Visual)"; done
             echo ""
-            echo "A soma é conferida mecanicamente por \`tests/unit/e2e-cobertura-completa.test.ts\`:"
-            echo "spec no disco que não esteja em nenhuma das três listas reprova o build."
+            echo "As 88 specs cobertas pelo CI somam \`SPECS_PARTE_1 + SPECS_PARTE_2\`; a aderência das suítes smoke/critical/full a esse conjunto é conferida por \`tests/unit/e2e-suices-aderentes.test.ts\`, e a completude do conjunto por \`tests/unit/e2e-cobertura-completa.test.ts\`."
           } >> "$GITHUB_STEP_SUMMARY"

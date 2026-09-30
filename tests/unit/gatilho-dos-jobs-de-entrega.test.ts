@@ -145,6 +145,15 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "`e2e-parte` com `always()`; com um job só, não há fachada — o veredito " +
       "sai do passo de gate interno. SEM `if:` de job de propósito.",
   },
+  "e2e-pos-deploy.yml::e2e-pos-deploy": {
+    condicao: null,
+    efeito:
+      "Este é o E2E contra uma instalação JÁ PUBLICADA (dispatch manual com a " +
+      "URL do alvo). SEM `if:` de propósito: o health gate e a confirmação de " +
+      "escrita são PASSOS, e um job pulado contaria como check satisfeito para " +
+      "quem o colocasse na branch protection — o desfecho tem que sair de um " +
+      "passo que executa, não da ausência do job.",
+  },
   "perf.yml::build-and-size": {
     condicao: null,
     efeito: "Este é o check obrigatório `build-and-size` (`pnpm build` em Node 22).",

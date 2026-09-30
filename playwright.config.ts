@@ -30,8 +30,13 @@ function envDoE2E(): Record<string, string> {
   }
   const url = env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   // Um `.env.e2e` apontando para fora do localhost é pior que nenhum, porque
-  // parece seguro.
-  if (!url.startsWith("http://127.0.0.1") && !url.startsWith("http://localhost")) {
+  // parece seguro — NO MODO LOCAL. Com `E2E_BASE_URL` o alvo é remoto de
+  // propósito (pós-deploy: o `.env.e2e` precisa apontar para o MESMO ambiente
+  // da URL, ou o login falha porque o usuário não existe lá); aí quem valida é
+  // o health gate do workflow e o próprio teste, e recusar aqui mataria o
+  // caminho inteiro descrito abaixo.
+  const externa = (process.env.E2E_BASE_URL ?? "") !== "";
+  if (!externa && !url.startsWith("http://127.0.0.1") && !url.startsWith("http://localhost")) {
     throw new Error(`.env.e2e aponta para um Supabase que não é local (${url}) — recusado.`);
   }
   return env;
@@ -87,7 +92,29 @@ function publicarNoProcesso(env: Record<string, string>): Record<string, string>
 // Porta do dev server sob teste. Default 3001; sobrescreva com E2E_PORT quando
 // a 3001 já estiver ocupada por outro checkout/worktree.
 const PORT = process.env.E2E_PORT ?? "3001";
-const BASE_URL = `http://localhost:${PORT}`;
+
+/**
+ * Execução CONTRA UMA INSTALAÇÃO JÁ PUBLICADA (pós-deploy).
+ *
+ * `E2E_BASE_URL` define a alvo: a suíte NÃO sobe `next local` (o app sob teste
+ * é o remoto) e o `baseURL` aponta para lá. Sem a variável, o comportamento é
+ * exatamente o de antes — localhost:${PORT} com webServer.
+ *
+ * Os dados de teste continuam vindo do `.env.e2e` (obrigatório nos dois casos,
+ * inclusive aqui): as specs semeiam suas precondições no Supabase que o
+ * arquivo aponta. Aponte o `.env.e2e` de um run pós-deploy para o MESMO
+ * ambiente da URL — dois ambientes diferentes resulta em login falhando
+ * (usuário não existe no alvo), não em dano.
+ */
+const BASE_URL_EXTERNA = process.env.E2E_BASE_URL ?? "";
+const BASE_URL = BASE_URL_EXTERNA !== "" ? BASE_URL_EXTERNA : `http://localhost:${PORT}`;
+
+// Uma vez por processo de teste (antes: uma vez por construção do `webServer`
+// — que ficava avaliado no mesmo momento do carregamento do módulo). Publica o
+// `.env.e2e` no ambiente do RUNNER também, para os scripts de seed que as
+// specs chamam por `execFileSync`; e é a mesma chamada que FALHA ALTO sem o
+// arquivo, nos dois modos (local e E2E_BASE_URL).
+const envE2E = publicarNoProcesso(envDoE2E());
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -147,7 +174,10 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  webServer: {
+  // Com E2E_BASE_URL não há webServer: quem serve é a instalação publicada.
+  ...(BASE_URL_EXTERNA === ""
+    ? {
+        webServer: {
     // Produção (`next build` antes!): dev-server compila por rota (40-80s) e
     // Turbopack dev quebra cookies() fora do request scope — inviável p/ e2e.
     command: `pnpm exec next start --port ${PORT}`,
@@ -163,7 +193,7 @@ export default defineConfig({
     // `publicarNoProcesso` acima que garante que o `process.env` do runner tenha
     // o que aquele conserto precisa: sem ele, num worktree sem `.env.local`, o
     // seed não tinha NENHUMA das duas fontes.
-    env: publicarNoProcesso(envDoE2E()),
+    env: envE2E,
     url: BASE_URL,
     // false: reusar um server que já ocupa a porta pode ser OUTRO processo
     // (ex.: bundle do Remotion na 3000) — o teste precisa do NOSSO next start.
@@ -185,6 +215,8 @@ export default defineConfig({
     // `.env.e2e` inteiro no ambiente do job em vez de redigitar valores: uma
     // fonte não colide consigo mesma.
     timeout: 120_000,
-  },
+        },
+    }
+    : {}),
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
 });

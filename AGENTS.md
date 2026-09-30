@@ -105,6 +105,9 @@ pnpm typecheck        # tsc --noEmit (estrito)
 pnpm test:unit        # vitest — EXCLUI tests/invariants e tests/e2e
 pnpm test:db          # invariantes de banco + gate do baseline (PRECISA de Docker)
 pnpm test:e2e         # Playwright (PRECISA de app rodando + banco semeado)
+pnpm test:e2e:smoke   # só a suíte smoke — o que o CI roda em PR (tests/e2e/suites/smoke.txt)
+pnpm test:e2e:critical  # a suíte critical — o que o CI roda na main (critical.txt)
+pnpm test:e2e:full    # o conjunto completo (full.txt)
 pnpm gov:verify       # typecheck + lint + test:unit  ← verificação única atual
 ```
 
@@ -117,7 +120,12 @@ mudança toca schema, RLS ou UI, `gov:verify` verde **não** é prova — rode `
 efêmero pg15). `.github/workflows/perf.yml`: `build-and-size` = `pnpm build`.
 `.github/workflows/e2e.yml` roda **88 das 90 specs** Playwright contra um Supabase local de
 verdade com o `baseline.sql` aplicado — o mesmo banco que o self-hoster tem. **É check
-obrigatório desde 2026-08-08.** As **duas** de fora são `vps-fresh-onboarding` (WAHA + Redis +
+obrigatório desde 2026-08-08.** A suíte de cada evento é escolhida pelo env `SUITE` do job:
+`pull_request` = **smoke**, `push` na main = **critical**, `schedule` noturno e
+`workflow_dispatch` = **full** (as 88, em duas invocações). Ou seja, **`e2e` verde em PR
+prova o smoke, não a suíte inteira** — a hierarquia smoke ⊆ critical ⊆ full e a fidelidade
+do full às listas `SPECS_PARTE_*` são cobradas por `tests/unit/e2e-suices-aderentes.test.ts`.
+As **duas** de fora são `vps-fresh-onboarding` (WAHA + Redis +
 Resend + Nuvemshop; é a P0 da doutrina de QA) e `inbox-tempo-real` (o caso com chave precisa de
 conta Google de teste com consentimento pré-aprovado; sem ela o job pendura no login — motivo
 medido no bloco `FORA_DO_CI`) — ou seja, `e2e` verde não prova a jornada de

@@ -1,0 +1,8 @@
+smoke.spec.ts
+auth.spec.ts
+navegacao.spec.ts
+error-pages.spec.ts
+contato-salva-email.spec.ts
+risk-radar.spec.ts
+jornada-venda.spec.ts
+inbox-scope.spec.ts
