@@ -15,7 +15,11 @@ import { CrmSalesChart, type CrmSalesPoint } from "@/components/nexus-ui/crm/crm
  *    acumulado é o que a pessoa quer ("quanto entrou dia 2?"), não o total.
  * 3. A LEGENDA é botão: cada item liga e desliga a própria série (inclusive
  *    a linha do tooltip), "Mês passado" acende o COMPARAR quando ele está
- *    desligado, e item sem dado nenhum fica desabilitado.
+ *    desligado, e item sem dado nenhum fica desabilitado — com o motivo no
+ *    `title`, porque desabilitado mudo é beco sem saída.
+ * 4. O KPI "Projeção" nunca mostra R$ 0 por falta de dado: sem amanhã na série
+ *    (último dia do mês, mês fechado) ele cai para a previsão do mês, que é a
+ *    própria projeção quando ela existe.
  */
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -180,5 +184,37 @@ describe("a legenda", () => {
     expect(tooltip).not.toHaveTextContent("Acumulado");
     // A meta continua visível — o clique mexeu só na série clicada.
     expect(tooltip).toHaveTextContent("Meta do dia");
+  });
+
+  it("'Previsão de vendas' sem dias futuros fica desabilitada e explica o porquê", () => {
+    renderizar();
+    const botao = screen.getByRole("button", { name: "Previsão de vendas" });
+    expect(botao).toBeDisabled();
+    expect(botao).toHaveAttribute("title", "Sem dias futuros no mês para projetar");
+  });
+
+  it("'Previsão de vendas' com dado na série é acionável e não ganha aviso", () => {
+    renderizar({ pontos: PONTOS.map((p) => ({ ...p, projecao: 30000 })) });
+    const botao = screen.getByRole("button", { name: "Previsão de vendas" });
+    expect(botao).not.toBeDisabled();
+    expect(botao).not.toHaveAttribute("title");
+  });
+});
+
+describe("o card Projeção", () => {
+  afterEach(cleanup);
+
+  it("sem amanhã na série, mostra a previsão do mês — nunca R$ 0", () => {
+    renderizar({ projecao: null, previsaoMes: 123456 });
+    const card = screen.getByText("Projeção").closest(".rounded-xl") as Element;
+    expect(card).toHaveTextContent("R$ 1.235");
+  });
+
+  it("com projeção na série, mostra o valor dela — não o da previsão", () => {
+    renderizar({ projecao: 999999, previsaoMes: 111111 });
+    const projecao = screen.getByText("Projeção").closest(".rounded-xl") as Element;
+    expect(projecao).toHaveTextContent("R$ 10.000");
+    const previsao = screen.getByText("Previsão").closest(".rounded-xl") as Element;
+    expect(previsao).toHaveTextContent("R$ 1.111");
   });
 });

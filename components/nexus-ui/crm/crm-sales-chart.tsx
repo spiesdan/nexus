@@ -38,6 +38,10 @@ export interface CrmSalesPoint {
  * Medições que travam o desenho:
  * - `projecao` só existe dos dias futuros (`montarGradeDoMes` devolve null
  *   até hoje) — a linha tracejada nasce exatamente onde a realizada termina;
+ *   no último dia do mês e em mês fechado não sobra amanhã para projetar, e
+ *   isto NÃO vira R$ 0: o KPI "Projeção" cai para `previsaoMes` (que é a
+ *   própria projeção, quando ela existe) e a legenda desabilita dizendo o
+ *   motivo no `title` — desabilitado mudo é beco sem saída;
  * - `metaAc` é tudo-ou-nada (null só quando a loja não tem meta) — sem
  *   fallback para a linha realizada (o card antigo DESENHAVA a meta por cima
  *   do realizado quando meta era null, mentindo a comparação);
@@ -70,8 +74,8 @@ export interface CrmSalesPoint {
  *   COMPARAR: clicar com ela desligada acende a comparação e mostra a linha;
  *   depois disso cada uma some isoladamente. Item sem dado nenhum (meta
  *   inexistente, projeção num mês sem dias futuros, comparação num mês que a
- *   fonte não preenche) fica desabilitado: não há o que ligar, e fingir que
- *   clique faz efeito seria mentira de UI. Esconder a série some também a
+ *   fonte não preenche) fica desabilitado com o motivo no `title`: não há o
+ *   que ligar, e fingir que clique faz efeito seria mentira de UI. Esconder a série some também a
  *   linha dela no tooltip; o pico do eixo Y não muda com o clique (o mesmo
  *   que já acontece quando o COMPARAR desliga as duas comparações) — a tela
  *   não pisca ao alternar.
@@ -192,6 +196,7 @@ function Legenda({
   ausente,
   aoClicar,
   desabilitada,
+  motivo,
 }: {
   cor: string;
   rotulo: string;
@@ -201,6 +206,8 @@ function Legenda({
   aoClicar?: () => void;
   /** A série não existe nos dados — não há o que ligar. */
   desabilitada?: boolean;
+  /** Por que não há o que ligar, no hover — desabilitado sem explicação é beco. */
+  motivo?: string;
 }) {
   const apagado = (
     <>
@@ -222,6 +229,7 @@ function Legenda({
       type="button"
       onClick={aoClicar}
       disabled={desabilitada}
+      title={desabilitada ? motivo : undefined}
       aria-pressed={!ausente}
       className={cn(
         "interactive -mx-1 flex items-center gap-1.5 rounded-sm px-1 hover:bg-white/[0.06]",
@@ -255,7 +263,8 @@ export function CrmSalesChart({
 }: {
   pontos: CrmSalesPoint[];
   metaAc: number;
-  projecao: number;
+  /** Último dia da série; `null` sem dias futuros — o KPI cai para `previsaoMes`. */
+  projecao: number | null;
   previsaoMes: number;
   mes: string;
   diaHoje: number;
@@ -468,7 +477,11 @@ export function CrmSalesChart({
 
   const pctMeta = (v: number): number | null =>
     objetivo != null && objetivo > 0 ? (v / objetivo) * 100 : null;
-  const pctProjecao = pctMeta(projecao);
+  // Sem amanhã para projetar (último dia do mês ou mês fechado) a série vem
+  // vazia: o card cai para a previsão do mês — que É a projeção quando ela
+  // existe, o mesmo número — em vez de lavar o zero por falta de dado.
+  const projecaoKpi = projecao ?? previsaoMes;
+  const pctProjecao = pctMeta(projecaoKpi);
   const pctPrevisao = pctMeta(previsaoMes);
   const pctVendido = pctObjetivo;
 
@@ -500,7 +513,7 @@ export function CrmSalesChart({
           />
           <CartaoKpi
             label={t("Projeção")}
-            valor={projecao}
+            valor={projecaoKpi}
             pct={pctProjecao}
             cor="text-violet-400"
             bgCor="bg-violet-400/15"
@@ -801,6 +814,7 @@ export function CrmSalesChart({
               rotulo={t("Vendas no mês")}
               aoClicar={() => alternarSerie("vendido")}
               desabilitada={!temDados.vendido}
+              motivo={t("Sem dados de venda no mês")}
               ausente={ocultas.vendido || linhasVendido.length === 0}
             />
             <Legenda
@@ -809,6 +823,7 @@ export function CrmSalesChart({
               rotulo={t("Objetivo")}
               aoClicar={() => alternarSerie("meta")}
               desabilitada={!temDados.meta}
+              motivo={t("Sem meta definida para o mês")}
               ausente={linhaMeta == null}
             />
             <Legenda
@@ -817,6 +832,7 @@ export function CrmSalesChart({
               rotulo={t("Previsão de vendas")}
               aoClicar={() => alternarSerie("projecao")}
               desabilitada={!temDados.projecao}
+              motivo={t("Sem dias futuros no mês para projetar")}
               ausente={linhasProjecao.length === 0}
             />
             <Legenda
@@ -825,6 +841,7 @@ export function CrmSalesChart({
               rotulo={t("Mês passado")}
               aoClicar={() => alternarSerie("mesAnt")}
               desabilitada={!temDados.mesAnt || !comparar}
+              motivo={t("Sem comparação disponível para o mês")}
               ausente={linhaMesAnt == null}
             />
             <Legenda
@@ -833,6 +850,7 @@ export function CrmSalesChart({
               rotulo={t("Ano passado")}
               aoClicar={() => alternarSerie("mesAno")}
               desabilitada={!temDados.mesAno || !comparar}
+              motivo={t("Sem comparação disponível para o mês")}
               ausente={linhaMesAno == null}
             />
           </div>
