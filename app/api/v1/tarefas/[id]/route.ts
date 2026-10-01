@@ -3,6 +3,8 @@
  *
  * Concluir carimba `concluida_em`; check-in carimba lugar + hora juntos
  * (lugar sem hora não prova visita). Reabrir é voltar para pendente.
+ * FASE 12 (§31): concluir uma tarefa espelhada da prospecção limpa a
+ * `proximo_passo` do prospect — as duas pontas falam a mesma verdade.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -66,6 +68,26 @@ export async function PATCH(
       resourceId: id,
       requestId,
     });
+
+    // FASE 12 (§31/D7): concluir a espelhada resolve a PRÓXIMA AÇÃO do
+    // prospect — o texto que a tarefa representava. Cancelada não mexe
+    // (adiar é decisão do vendedor); tarefa sem prospect não tem passo.
+    const prospectId = (data as unknown as { prospect_id?: string | null }).prospect_id ?? null;
+    if (prospectId) {
+      await supabase
+        .from("business_prospects")
+        .update({ proximo_passo: null })
+        .eq("id", prospectId)
+        .eq("organization_id", authz.org.orgId);
+      await audit({
+        organizationId: authz.org.orgId,
+        actorUserId: authz.user.id,
+        action: "prospect.updated",
+        resourceType: "business_prospects",
+        resourceId: prospectId,
+        requestId,
+      });
+    }
   }
 
   return ok(data, { requestId });

@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–11 concluídas · FASE 12 (Meu Dia) em andamento.
+> **Status:** FASE 1–12 concluídas · FASE 13 (usage/budget/painel §21) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -30,7 +30,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       nunca sistema de mensagens novo).
 - [x] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
 - [x] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
-- [ ] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
+- [x] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
 - [ ] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
       `DailyProspectingLimits`, painel de consumo; preços em config, não hardcoded).
 - [ ] **FASE 14** — Testes (dedupe, match, cache/TTL, expansion, usage, budget,
@@ -355,6 +355,23 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   seção; exemplos do §30 sem regra escrita ("semelhantes aos melhores
   clientes", "oportunidades por cidade" como agrupador) ficam em gap — não
   inventar.
+- **D20 — a ponte do Meu Dia é a própria tarefa espelhada (FECHADA na FASE 12):**
+  D7 já decidiu ("Meu Dia recebe tarefas via `commercial_tasks`") e o §31 pede
+  que a Prospecção não fique isolada — sem bloco novo no Meu Dia: ele já lê
+  `commercial_tasks`. O gatilho é a PRÓXIMA AÇÃO do drawer (§16): passo
+  (re)definido → a rota do prospect reabre/cria a espelhada (`commercial_tasks`
+  ganhou `prospect_id`, FK `business_prospects` com `on delete set null`,
+  migration `0249` + baseline + MANIFEST); passo limpo → cancelada (histórico
+  fica — apagar seria apagar trabalho feito); prospect excluído → cancela a
+  espelhada antes do delete; concluir a tarefa (Meu Dia/tarefas) →
+  `proximo_passo` volta a `null` (cancelada não mexe: adiar é decisão do
+  vendedor); dono trocado → só o responsável da espelhada acompanha. Título no
+  molde do §31 ("Contatar - Restaurante X" — ação + nome, cortado em 200
+  pontos de código para nunca abrir surrogate), tipo `outro` (ação livre, sem
+  verbo garantido), `agendada_para` = dia do criador só no CREATE (§31 coloca
+  tudo em "Hoje"; a coluna é `date` — hora não existe, ver gap) e edição não
+  redata. Espelho best-effort: o prospect salva primeiro (molde do claim da
+  FASE 9). Helper puro `lib/prospeccao/tarefa.ts` — uma regra, não duas.
 - **FASE 10** — *(FECHADA na FASE 10: migration `0248_campanhas_objetivo`
   (`objetivo text` nas DUAS tabelas de campanha — as três da doutrina:
   migration, baseline create + apêndice idempotente, MANIFEST); rotas novas
@@ -382,7 +399,19 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   "oportunidades por cidade" como agrupador do §30 sem regra escrita (não
   inventar); "restaurantes próximos" já é a aba Mapa; e2e da seção nova é
   FASE 14.)*
-- **FASE 12** — Meu Dia (D7).
+- **FASE 12** — *(FECHADA na FASE 12: migration `0249_commercial_tasks_prospect`
+  (`commercial_tasks.prospect_id` + índice parcial org+prospect; as três da
+  doutrina: migration, baseline — create + apêndice — e MANIFEST); helper puro
+  `lib/prospeccao/tarefa.ts` com 5 testes (título §31, payload de
+  criar/editar); PATCH do prospect espelha passo/dono, DELETE cancela antes de
+  apagar, concluir a tarefa limpa o passo de volta (+ audit
+  `prospect.updated`); `prospect_id` no `COLUNAS_DA_TAREFA`. D20 acima.
+  Gaps: §31 escreve HORAS (08:30) e a coluna é `date` — sem regra de hora,
+  não inventar coluna; "Prospectar 10 restaurantes em Canoinhas" (tarefa de
+  CAMPANHA) sem gatilho escrito — não inventar; link de volta "ver prospect"
+  nas telas de tarefas/Meu Dia (o nome já está no título, e a tela de tarefas
+  não muda nesta fase); resync além de concluir (renomear/cancelar tarefa na
+  tela de tarefas não reescreve o passo — fonte única é o drawer).)*
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
   (espelhar cota diária da VA).
 - **FASE 14** — testes de rota/API (B13).

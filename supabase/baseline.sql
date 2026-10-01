@@ -19338,6 +19338,8 @@ create table if not exists public.commercial_tasks (
   tipo text not null default 'visita' check (tipo in ('visita', 'ligacao', 'retorno', 'outro')),
   status text not null default 'pendente' check (status in ('pendente', 'concluida', 'cancelada')),
   contact_id uuid references public.contacts(id) on delete set null,
+  -- Fila de prospeccao (FASE 12/31): a tarefa espelhada da proxima acao.
+  prospect_id uuid references public.business_prospects(id) on delete set null,
   responsavel_user_id uuid,
   agendada_para date,
   checkin_em timestamptz,
@@ -20884,3 +20886,19 @@ comment on column public.prospecting_campaigns.objetivo is
   'Objetivo comercial da campanha de descoberta (spec 19, secao 28). Texto livre do produto; preenchido no painel de campanhas.';
 comment on column public.automatic_sales_campaigns.objetivo is
   'Objetivo comercial da campanha de venda automatica (spec 19, secao 28). Texto livre do produto; preenchido no painel de campanhas.';
+
+-- ---------------------------------------------------------------------
+-- 0249_commercial_tasks_prospect - FASE 12 da spec 19 (secao 31, MEU DIA)
+-- O update.sh reaplica o baseline inteiro: quem ja tem a tabela nao a
+-- recria, entao a coluna chega por este alter idempotente. Quem instala
+-- fresco ja nasce com ela no create table acima.
+-- ---------------------------------------------------------------------
+alter table public.commercial_tasks
+  add column if not exists prospect_id uuid references public.business_prospects(id) on delete set null;
+
+create index if not exists commercial_tasks_prospect_idx
+  on public.commercial_tasks (organization_id, prospect_id)
+  where prospect_id is not null;
+
+comment on column public.commercial_tasks.prospect_id is
+  'Prospect da fila de prospeccao que originou a tarefa (spec 19, FASE 12/31). On delete set null: apagar o prospect desvincula, nao apaga o historico da tarefa.';

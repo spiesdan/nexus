@@ -63,6 +63,8 @@ export interface Tarefa {
   tipo: TipoTarefa;
   status: StatusTarefa;
   contact_id: string | null;
+  /** Prospect da fila que originou a espelhada (FASE 12/§31); null = tarefa comum. */
+  prospect_id: string | null;
   contato_nome: string | null;
   responsavel_user_id: string | null;
   agendada_para: string | null;
@@ -74,7 +76,7 @@ export interface Tarefa {
 }
 
 export const COLUNAS_DA_TAREFA =
-  "id, titulo, descricao, tipo, status, contact_id, responsavel_user_id, " +
+  "id, titulo, descricao, tipo, status, contact_id, prospect_id, responsavel_user_id, " +
   "agendada_para, checkin_em, checkin_lat, checkin_lng, concluida_em, created_at";
 
 export const ROTULO_TIPO_TAREFA: Record<TipoTarefa, string> = {
