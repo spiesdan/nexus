@@ -4,19 +4,28 @@
  * Filtros: categoria, cidade, estado, com_telefone, com_website,
  * com_whatsapp, nota_min, avaliacoes_min, origem(provider), status_comercial,
  * so_sem_cliente (ainda não é cliente), busca (nome/telefone/cidade/website).
- * "ja_e_cliente" sai por coluna computada: contact vinculado OU match por
- * telefone/email com contacts (batch, não N+1).
+ *
+ * Cruzamento com a base (§9) em lote, 3 queries, nunca N+1: contacts
+ * (telefone/email → "já é cliente") + crm_leads (lead_id ou contato → lead,
+ * aberto?). Daí nasce `classificacao` (§10, derivada por linha — D13 da spec
+ * 19). As verdades vêm do service role com organization_id explícito: é
+ * verdade do TENANT, não do recorte de RLS de quem está olhando — um viewer
+ * com visão parcial não pode ser mandado a "abordar" um cliente existente.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
+import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
+import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const LIMITE_CRUZAMENTO = 2000;
 
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
@@ -72,15 +81,21 @@ export async function GET(req: NextRequest): Promise<Response> {
   const linhas = (data ?? []) as unknown as {
     id: string;
     contact_id: string | null;
+    lead_id: string | null;
     telefone: string | null;
     email: string | null;
+    status_comercial: string;
   }[];
 
-  // "Já é cliente": vínculo OU match por telefone/email com contacts.
-  // Em lote (2 queries), nunca N+1.
+  // --- Verdades do CRM em lote (§9), service role + organization_id explícito.
+  const admin = createAdminClient();
+
   const fones = [...new Set(linhas.map((l) => l.telefone).filter(Boolean))] as string[];
   const emails = [...new Set(linhas.map((l) => l.email).filter(Boolean))] as string[];
-  const clientes = new Set<string>();
+
+  // contacts → quem é cliente, e o id do contato para achar lead depois.
+  const idPorFone = new Map<string, string>();
+  const idPorEmail = new Map<string, string>();
   if (fones.length > 0 || emails.length > 0) {
     const conds: string[] = [];
     if (fones.length > 0) {
@@ -88,28 +103,78 @@ export async function GET(req: NextRequest): Promise<Response> {
       conds.push(`phone_number.in.(${canonicos.join(",")})`);
     }
     if (emails.length > 0) conds.push(`email.in.(${emails.join(",")})`);
-    const { data: contatos } = await supabase
+    const { data: contatos } = await admin
       .from("contacts")
-      .select("phone_number, email")
+      .select("id, phone_number, email")
       .eq("organization_id", authz.org.orgId)
       .or(conds.join(","))
-      .limit(2000);
-    const fonesCli = new Set(((contatos ?? []) as { phone_number: string | null }[]).map((c) => c.phone_number).filter(Boolean));
-    const emailsCli = new Set(((contatos ?? []) as { email: string | null }[]).map((c) => c.email).filter(Boolean));
-    for (const l of linhas) {
-      if (l.contact_id) {
-        clientes.add(l.id);
-        continue;
-      }
-      if (l.telefone && fonesCli.has(canonicalPhoneBR(l.telefone))) clientes.add(l.id);
-      else if (l.email && emailsCli.has(l.email)) clientes.add(l.id);
+      .limit(LIMITE_CRUZAMENTO);
+    for (const c of (contatos ?? []) as { id: string; phone_number: string | null; email: string | null }[]) {
+      if (c.phone_number && !idPorFone.has(c.phone_number)) idPorFone.set(c.phone_number, c.id);
+      if (c.email && !idPorEmail.has(c.email)) idPorEmail.set(c.email, c.id);
     }
-  } else {
-    for (const l of linhas) if (l.contact_id) clientes.add(l.id);
   }
 
+  // Contato correspondente por linha (vínculo direto vence o match).
+  const contatoDaLinha = (l: (typeof linhas)[number]): string | null => {
+    if (l.contact_id) return l.contact_id;
+    if (l.telefone) {
+      const id = idPorFone.get(canonicalPhoneBR(l.telefone));
+      if (id) return id;
+    }
+    if (l.email) {
+      const id = idPorEmail.get(l.email);
+      if (id) return id;
+    }
+    return null;
+  };
+
+  // crm_leads → lead direto ou pelo contato; aberto = oportunidade em andamento.
+  const leadIds = [...new Set(linhas.map((l) => l.lead_id).filter(Boolean))] as string[];
+  const contatoIds = [
+    ...new Set(linhas.map(contatoDaLinha).filter((id): id is string => id !== null)),
+  ];
+  const leadPorId = new Map<string, string>(); // leadId → status
+  const contatosComLeadAberto = new Set<string>();
+  const contatosComLead = new Set<string>();
+  if (leadIds.length > 0 || contatoIds.length > 0) {
+    const conds: string[] = [];
+    if (leadIds.length > 0) conds.push(`id.in.(${leadIds.join(",")})`);
+    if (contatoIds.length > 0) conds.push(`contact_id.in.(${contatoIds.join(",")})`);
+    const { data: leads } = await admin
+      .from("crm_leads")
+      .select("id, contact_id, status")
+      .eq("organization_id", authz.org.orgId)
+      .or(conds.join(","))
+      .limit(LIMITE_CRUZAMENTO);
+    for (const ld of (leads ?? []) as { id: string; contact_id: string | null; status: string }[]) {
+      leadPorId.set(ld.id, ld.status);
+      if (ld.contact_id) {
+        contatosComLead.add(ld.contact_id);
+        if (ld.status === "open") contatosComLeadAberto.add(ld.contact_id);
+      }
+    }
+  }
+
+  const cliente = (l: (typeof linhas)[number], contatoId: string | null): boolean =>
+    Boolean(l.contact_id) || contatoId !== null;
+
   return ok(
-    linhas.map((l) => ({ ...l, ja_e_cliente: clientes.has(l.id) })),
+    linhas.map((l) => {
+      const contatoId = contatoDaLinha(l);
+      const statusLeadDireto = l.lead_id ? leadPorId.get(l.lead_id) : undefined;
+      const temLead =
+        statusLeadDireto !== undefined || (contatoId !== null && contatosComLead.has(contatoId));
+      const leadAberto =
+        statusLeadDireto === "open" ||
+        (contatoId !== null && contatosComLeadAberto.has(contatoId));
+      const crm = { cliente: cliente(l, contatoId), temLead, leadAberto };
+      return {
+        ...l,
+        ja_e_cliente: crm.cliente,
+        classificacao: classificarProspect(l.status_comercial, crm),
+      };
+    }),
     { requestId },
   );
 }

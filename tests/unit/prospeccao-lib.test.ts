@@ -10,7 +10,7 @@ import {
   partirEndereco,
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
-import { scoreDeProspect } from "@/lib/prospeccao/score";
+import { bonusDeAderencia, scoreDeProspect, PESOS_SCORE } from "@/lib/prospeccao/score";
 
 /**
  * A LIB DE PROSPECÇÃO — cerca do plano §§5–8, 19, 31–33.
@@ -166,9 +166,18 @@ describe("decidirDedup", () => {
 });
 
 describe("scoreDeProspect", () => {
-  it("completo e quente soma 100", () => {
+  it("completo, quente e no centro soma 100", () => {
     expect(
-      scoreDeProspect({ temTelefone: true, temWebsite: true, whatsappPotencial: true, nota: 5, totalAvaliacoes: 542, bonusCategoria: 10 }),
+      scoreDeProspect({
+        temTelefone: true,
+        temWebsite: true,
+        whatsappPotencial: true,
+        nota: 5,
+        totalAvaliacoes: 542,
+        bonusCategoria: 15,
+        distanciaKm: 0,
+        raioKm: 30,
+      }),
     ).toBe(100);
   });
 
@@ -176,6 +185,37 @@ describe("scoreDeProspect", () => {
     expect(
       scoreDeProspect({ temTelefone: false, temWebsite: false, whatsappPotencial: false, nota: null, totalAvaliacoes: 0 }),
     ).toBe(0);
+  });
+
+  it("distância: meio do raio vale metade do peso, borda vale zero", () => {
+    const base = { temTelefone: false, temWebsite: false, whatsappPotencial: false, nota: null, totalAvaliacoes: 0 };
+    const meio = scoreDeProspect({ ...base, distanciaKm: 15, raioKm: 30 });
+    const borda = scoreDeProspect({ ...base, distanciaKm: 30, raioKm: 30 });
+    const fora = scoreDeProspect({ ...base, distanciaKm: 90, raioKm: 30 });
+    expect(meio).toBe(8); // round(15 * 0.5)
+    expect(borda).toBe(0);
+    expect(fora).toBe(0);
+  });
+
+  it("sem âncora (arquivo) a distância não pontua", () => {
+    expect(
+      scoreDeProspect({
+        temTelefone: false,
+        temWebsite: false,
+        whatsappPotencial: false,
+        nota: null,
+        totalAvaliacoes: 0,
+        distanciaKm: 1,
+        raioKm: null,
+      }),
+    ).toBe(0);
+  });
+});
+
+describe("bonusDeAderencia", () => {
+  it("termo pedido vale cheio; expansão da família vale metade", () => {
+    expect(bonusDeAderencia(true)).toBe(PESOS_SCORE.categoria);
+    expect(bonusDeAderencia(false)).toBe(Math.round(PESOS_SCORE.categoria / 2));
   });
 });
 

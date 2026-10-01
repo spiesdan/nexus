@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { custoDe } from "@/lib/prospeccao/custos";
 import { termosDeDescoberta } from "@/lib/prospeccao/expansao";
+import { distanciaKm } from "@/lib/prospeccao/geo";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import {
   decidirDedup,
@@ -18,7 +19,7 @@ import {
   partirEndereco,
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
-import { scoreDeProspect } from "@/lib/prospeccao/score";
+import { bonusDeAderencia, scoreDeProspect } from "@/lib/prospeccao/score";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import type { NegocioDescoberto } from "@/lib/prospeccao/tipos";
 
@@ -277,7 +278,8 @@ export async function processarTick(
     try {
       // Expansão (§5): default 1 termo = a mesma chamada de antes; ligada
       // (PROSPECCAO_EXPANSAO=true), varre a família da categoria na mesma célula.
-      for (const termo of termosDeDescoberta(categoria)) {
+      const termos = termosDeDescoberta(categoria);
+      for (const [indiceTermo, termo] of termos.entries()) {
         if (!primeiraChamada && pausaMs > 0) await new Promise((r) => setTimeout(r, pausaMs));
         primeiraChamada = false;
         const r = await provider.search({
@@ -291,7 +293,15 @@ export async function processarTick(
         detalhes += r.detalhes;
         custo += r.requisicoes * preco.busca + r.detalhes * preco.detalhe;
 
-        const { novas: nn, duplicadas: dd } = await ingerirNegocios(admin, busca, r.negocios, termo.termo);
+        // Índice 0 é sempre o termo que o operador pediu (§5); os irmãos da
+        // expansão valem aderência parcial no score (§11/§12, D13).
+        const { novas: nn, duplicadas: dd } = await ingerirNegocios(
+          admin,
+          busca,
+          r.negocios,
+          termo.termo,
+          indiceTermo === 0,
+        );
         novas += nn;
         duplicadas += dd;
         encontradas += r.negocios.length;
@@ -331,9 +341,13 @@ export async function processarTick(
 
 async function ingerirNegocios(
   admin: SupabaseClient,
-  busca: Pick<LinhaBusca, "organization_id" | "provider"> & { id: string | null },
+  busca: Pick<
+    LinhaBusca,
+    "organization_id" | "provider" | "latitude" | "longitude" | "raio_km"
+  > & { id: string | null },
   negocios: NegocioDescoberto[],
   categoriaBusca: string,
+  categoriaPedida: boolean,
 ): Promise<{ novas: number; duplicadas: number }> {
   let novas = 0;
   let duplicadas = 0;
@@ -392,7 +406,14 @@ async function ingerirNegocios(
   for (const c of candidatos) {
     const decisao = decidirDedup(c, [...vistos.values()]);
     if (decisao.nivel === "proximidade_sugestao" || decisao.nivel === "novo") {
-      const inserido = await inserirProspect(admin, busca, c, categoriaBusca, decisao.nivel === "proximidade_sugestao" ? decisao.comQuem : null);
+      const inserido = await inserirProspect(
+        admin,
+        busca,
+        c,
+        categoriaBusca,
+        categoriaPedida,
+        decisao.nivel === "proximidade_sugestao" ? decisao.comQuem : null,
+      );
       if (inserido) {
         novas++;
         vistos.set(inserido, {
@@ -440,9 +461,19 @@ export async function importarNegociosDeArquivo(
   const validos = brutos.filter((b) => b.nome && b.nome.trim());
   const { novas, duplicadas } = await ingerirNegocios(
     admin,
-    { organization_id: orgId, provider: "maps_arquivo", id: null },
+    // Arquivo não tem âncora de busca: distância não pontua (D13 da spec 19).
+    {
+      organization_id: orgId,
+      provider: "maps_arquivo",
+      id: null,
+      latitude: null,
+      longitude: null,
+      raio_km: 0,
+    },
     validos,
     categoria,
+    // O rótulo do arquivo É o que o operador pediu — aderência cheia.
+    true,
   );
   return { novas, duplicadas, recusadas: brutos.length - validos.length };
 }
@@ -466,19 +497,32 @@ async function vincularResultado(
 
 async function inserirProspect(
   admin: SupabaseClient,
-  busca: Pick<LinhaBusca, "organization_id">,
+  busca: Pick<LinhaBusca, "organization_id" | "latitude" | "longitude" | "raio_km">,
   c: ProspectCandidato & { bruto: NegocioDescoberto },
   categoriaBusca: string,
+  categoriaPedida: boolean,
   sugestaoDe: string | null,
 ): Promise<string | null> {
   const b = c.bruto;
   const partes = partirEndereco(b.endereco);
+  // Distância ao âncora da busca dentro do raio escolhido (§11): sem âncora
+  // (arquivo) ou sem coordenadas, vale zero — nunca inventa geografia.
+  const distancia =
+    busca.latitude != null &&
+    busca.longitude != null &&
+    b.latitude != null &&
+    b.longitude != null
+      ? distanciaKm(busca.latitude, busca.longitude, b.latitude, b.longitude)
+      : null;
   const score = scoreDeProspect({
     temTelefone: Boolean(c.telefone_normalizado),
     temWebsite: Boolean(c.dominio),
     whatsappPotencial: whatsappPotencial(c.telefone_normalizado),
     nota: b.nota,
     totalAvaliacoes: b.totalAvaliacoes,
+    bonusCategoria: bonusDeAderencia(categoriaPedida),
+    distanciaKm: distancia,
+    raioKm: busca.raio_km > 0 ? busca.raio_km : null,
   });
   const { data, error } = await admin
     .from("business_prospects")

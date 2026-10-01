@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–4 concluídas · FASE 5 (matching + classificação) em andamento.
+> **Status:** FASE 1–5 concluídas · FASE 6 (UX "Encontrar empresas") em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -19,7 +19,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       nunca acoplado à UI).
 - [x] **FASE 4** — Cache + deduplicação (`DISCOVERY_CACHE_TTL`,
       `ProspectDeduplicationService` com prioridade de identificadores).
-- [ ] **FASE 5** — Customer matching (cruza com clientes/leads/prospects/oportunidades
+- [x] **FASE 5** — Customer matching (cruza com clientes/leads/prospects/oportunidades
       existentes; classificação comercial do prospect).
 - [ ] **FASE 6** — Nova UX de Prospecção (tela comercial "Encontrar empresas";
       sem termos técnicos na frente).
@@ -176,6 +176,25 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   a variável) como default de instalação atrás do TTL por org (Config, 0–365).
   Dedupe (§8) já existia em 5 níveis em `dedup.ts` — fechado sem código novo;
   testes de dedupe/cache/TTL ficam na FASE 14.
+- **D13 — Classificação derivada, score só da descoberta (FECHADA na FASE 5):**
+  `classificacao` (§10, 8 classes com rótulo pt-BR) nasce a cada GET — cliente
+  (vínculo/`contact_id` ou match telefone/email), em negociação
+  (`crm_leads.status='open'`), lead existente, sem potencial, já abordado,
+  qualificado, aguardando qualificação, novo — e **nunca é gravada**: gravação
+  envelhece mentindo (o CRM muda depois). O detalhe segue no
+  `status_comercial` (workflow do vendedor). Verdades vêm do service role com
+  `organization_id` explícito (verdade do TENANT, não do RLS de quem olha —
+  viewer com visão parcial não pode ser mandado a abordar um cliente) em 3
+  queries sem N+1. Score (§11) ganhou distância (15 pts, linear do âncora da
+  busca até o raio) e aderência (15 pts: termo pedido cheio; expansão §5
+  vale metade — §12 diz que o perfil completo da Bill vem "futuramente");
+  pesos rebalanceados somam 100 (telefone 20, site 10, WhatsApp 10, nota 15,
+  avaliações 15, categoria 15, distância 15). "Já é cliente/já abordado"
+  NÃO entram no score: são verdade de leitura (classificação) — misturar
+  faria a mesma linha pontuar diferente para cada espectador. Aproveitando:
+  `email` estava morto no select da rota (o match por email nunca tinha
+  rodado) — consertado. Testes: `prospeccao-classificacao.test.ts` + bloco
+  de score estendido em `prospeccao-lib.test.ts`.
 
 ### Gaps por fase (de onde cada uma parte)
 
@@ -191,6 +210,8 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   Details = decisão D11.)*
 - **FASE 5** — match existe (`ja_e_cliente`); falta classificação completa
   (lead/oportunidade/já abordado) e score com distância/aderência Bill.
+  *(FECHADA na FASE 5: `classificacao` (§10) derivada a cada GET cruzando
+  contacts + crm_leads; score com distância e aderência — ver D13.)*
 - **FASE 6/7** — UX: "Encontrar empresas", deep-link, janela maior (B1-B3, B9, B14).
 - **FASE 8** — migration (owner + próximo passo) + "Minha fila".
 - **FASE 9/10/11/12** — Inbox, funil de campanhas, Radar, Meu Dia (D7).

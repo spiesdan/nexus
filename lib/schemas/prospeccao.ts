@@ -157,6 +157,6 @@ export interface Prospect {
 }
 
 export const COLUNAS_DO_PROSPECT =
-  "id, nome, categoria, cidade, estado, telefone, website, whatsapp_potencial, " +
+  "id, nome, categoria, cidade, estado, telefone, email, website, whatsapp_potencial, " +
   "nota, total_avaliacoes, provider, status_comercial, score, contact_id, lead_id, " +
   "do_not_contact, latitude, longitude, endereco, discovered_at";
