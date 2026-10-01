@@ -117,6 +117,7 @@ function temParametrosDeEmpresa(params: URLSearchParams): boolean {
     "com_website",
     "com_whatsapp",
     "so_sem_cliente",
+    "minha_fila",
   ]) {
     if (params.get(chave)) return true;
   }
@@ -128,12 +129,14 @@ export function ProspeccaoClient({
   categorias,
   podeBuscar,
   podeGerenciar,
+  usuarioId,
   textos,
 }: {
   buscasIniciais: BuscaResumo[];
   categorias: MacroCategoria[];
   podeBuscar: boolean;
   podeGerenciar: boolean;
+  usuarioId: string;
   textos: Textos;
 }) {
   const t = useT();
@@ -417,7 +420,7 @@ export function ProspeccaoClient({
         </TabsContent>
 
         <TabsContent value="empresas" className="mt-4">
-          <EmpresasTab podeOperar={podeBuscar} />
+          <EmpresasTab podeOperar={podeBuscar} usuarioId={usuarioId} />
         </TabsContent>
 
         <TabsContent value="mercado" className="mt-4">

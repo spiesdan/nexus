@@ -132,7 +132,14 @@ const VAZIOS: Filtros = {
   soSemCliente: false,
 };
 
-export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
+export function EmpresasTab({
+  podeOperar,
+  usuarioId,
+}: {
+  podeOperar: boolean;
+  /** O usuário da sessão — dono da "Minha fila" (item 16). */
+  usuarioId: string;
+}) {
   const t = useT();
   const confirmar = useConfirmar();
   const router = useRouter();
@@ -176,6 +183,13 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const [modoMapa, setModoMapa] = React.useState<"marcadores" | "densidade">("marcadores");
   const [ordem, setOrdem] = React.useState<string>(() => paramsUrl.get("ordem") ?? "relevancia");
   const [detalheId, setDetalheId] = React.useState<string | null>(null);
+  // Rascunho da próxima ação (§16): ancorado no id aberto — trocar de prospect
+  // descarta o rascunho velho sem precisar de effect (react-hooks/set-state-in-effect)
+  // e a refetch pós-save não engole o que a pessoa acabou de digitar.
+  const [proximoRascunho, setProximoRascunho] = React.useState<{
+    id: string;
+    texto: string;
+  } | null>(null);
   const [rotaIds, setRotaIds] = React.useState<string[] | null>(null);
   const [visiveis, setVisiveis] = React.useState(100);
   const [importandoArquivo, setImportandoArquivo] = React.useState(false);
@@ -183,6 +197,10 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const [soAlta, setSoAlta] = React.useState(false);
   const [soNovos, setSoNovos] = React.useState(false);
   const [soAbordados, setSoAbordados] = React.useState(false);
+  // §16: "Minha fila" — só os prospects que tenho como dono. Cliente por
+  // enquanto (a janela de 200 cabe na memória); o corte server-side é o
+  // param `minha_fila` da API, pronto para quando a paginação chegar.
+  const [soMinhaFila, setSoMinhaFila] = React.useState(() => paramsUrl.get("minha_fila") === "true");
   const refsLinhas = React.useRef(new Map<string, HTMLDivElement>());
 
   React.useEffect(() => {
@@ -307,6 +325,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     setSoAlta(false);
     setSoNovos(false);
     setSoAbordados(false);
+    setSoMinhaFila(false);
     setAvancadosAbertos(false);
     void buscar(VAZIOS, null);
   }
@@ -329,6 +348,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     if (filtros.comWebsite) qs.set("com_website", "true");
     if (filtros.comWhatsapp) qs.set("com_whatsapp", "true");
     if (filtros.soSemCliente) qs.set("so_sem_cliente", "true");
+    if (soMinhaFila) qs.set("minha_fila", "true");
     if (ordem !== "relevancia") qs.set("ordem", ordem);
     if (selecionadoId) qs.set("empresa", selecionadoId);
     router.replace(`/app/prospeccao${qs.toString() ? `?${qs}` : ""}`, { scroll: false });
@@ -344,6 +364,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     filtros.comWebsite,
     filtros.comWhatsapp,
     filtros.soSemCliente,
+    soMinhaFila,
     ordem,
     selecionadoId,
     router,
@@ -359,11 +380,12 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         if (soAlta && !prioridadeAlta(p.score)) return false;
         if (soNovos && p.classificacao !== "novo") return false;
         if (soAbordados && p.classificacao !== "ja_abordado") return false;
+        if (soMinhaFila && p.owner_user_id !== usuarioId) return false;
         return true;
       }),
-    [lista, soAlta, soNovos, soAbordados],
+    [lista, soAlta, soNovos, soAbordados, soMinhaFila, usuarioId],
   );
-  const chipsResultadoAtivos = soAlta || soNovos || soAbordados;
+  const chipsResultadoAtivos = soAlta || soNovos || soAbordados || soMinhaFila;
   const temFiltroAtivo = chips.length > 0 || chipsResultadoAtivos;
 
   const comGeo = React.useMemo(
@@ -548,13 +570,32 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     }
   }
 
-  async function mudarStatus(id: string, status_comercial: string) {
+  async function atualizarProspect(id: string, patch: Record<string, unknown>) {
     try {
-      await apiClient.patch(`/api/v1/prospecting/prospects/${id}`, { status_comercial });
+      await apiClient.patch(`/api/v1/prospecting/prospects/${id}`, patch);
       await buscar(filtros, buscaId);
     } catch (e) {
       showApiError(e);
     }
+  }
+
+  async function mudarStatus(id: string, status_comercial: string) {
+    await atualizarProspect(id, { status_comercial });
+  }
+
+  // §13/§14: "Adicionar à fila" = eu viro o dono. Sem dono nenhum a fila não
+  // existe; o primeiro passo é sempre "assumir".
+  function adicionarNaFila(id: string) {
+    return atualizarProspect(id, { owner_user_id: usuarioId || null });
+  }
+
+  async function ignorar(id: string, nome: string) {
+    const sim = await confirmar({
+      title: t(`Marcar "${nome}" como sem interesse?`),
+      confirmLabel: t("Ignorar"),
+    });
+    if (!sim) return;
+    await mudarStatus(id, "sem_interesse");
   }
 
   async function excluir(id: string, nome: string) {
@@ -698,6 +739,14 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               onClick={() => setSoAlta((v) => !v)}
             >
               {t("Alta prioridade")}
+            </Button>
+            <Button
+              size="sm"
+              variant={soMinhaFila ? "default" : "outline"}
+              aria-pressed={soMinhaFila}
+              onClick={() => setSoMinhaFila((v) => !v)}
+            >
+              {t("Minha fila")}
             </Button>
             <Button
               size="sm"
@@ -869,6 +918,18 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                             </a>
                           </Button>
                         )}
+                        {podeOperar && p.owner_user_id !== usuarioId && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void adicionarNaFila(p.id);
+                            }}
+                          >
+                            {t("Na fila")}
+                          </Button>
+                        )}
                         {podeOperar && (
                           <Button
                             size="sm"
@@ -899,6 +960,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               onSelecionar={selecionar}
               onVer={(id) => setDetalheId(id)}
               onAdicionar={(ids) => void importar(ids)}
+              onFila={podeOperar ? (id) => void adicionarNaFila(id) : undefined}
               centro={centroRaio ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude } : null}
               raioKm={centroRaio?.raioKm ?? null}
               modo={modoMapa}
@@ -1100,6 +1162,85 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                 ? t("já é cliente")
                 : t("ainda não cadastrado como cliente")}
             </p>
+            {!podeOperar && detalhe.proximo_passo && (
+              <p className="text-xs text-muted-foreground">
+                {t("Próxima ação")}: {detalhe.proximo_passo}
+              </p>
+            )}
+            {/* §16: cada prospect da fila tem status, vendedor e próxima ação. */}
+            {podeOperar && (
+              <div className="space-y-2 border-t pt-2">
+                <label className="block text-sm">
+                  <span className="mb-1 block text-muted-foreground">{t("Status")}</span>
+                  <select
+                    className="h-9 w-full rounded-lg border bg-background px-3"
+                    value={detalhe.status_comercial}
+                    onChange={(e) => void mudarStatus(detalhe.id, e.target.value)}
+                    aria-label={t("Status comercial")}
+                  >
+                    {STATUS_COMERCIAL.map((s) => (
+                      <option key={s} value={s}>
+                        {t(ROTULO_STATUS_COMERCIAL[s])}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-muted-foreground">{t("Vendedor")}</span>
+                  <select
+                    className="h-9 w-full rounded-lg border bg-background px-3"
+                    value={detalhe.owner_user_id ?? ""}
+                    onChange={(e) =>
+                      void atualizarProspect(detalhe.id, { owner_user_id: e.target.value || null })
+                    }
+                    aria-label={t("Vendedor")}
+                  >
+                    <option value="">{t("Sem vendedor")}</option>
+                    {detalhe.owner_user_id &&
+                      !vendedores.some((v) => v.user_id === detalhe.owner_user_id) && (
+                        <option value={detalhe.owner_user_id}>
+                          {detalhe.owner_user_id.slice(0, 8)}…
+                        </option>
+                      )}
+                    {vendedores.map((v) => (
+                      <option key={v.user_id} value={v.user_id}>
+                        {v.full_name ?? v.user_id.slice(0, 8)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="flex items-end gap-2">
+                  <label className="block flex-1 text-sm">
+                    <span className="mb-1 block text-muted-foreground">{t("Próxima ação")}</span>
+                    <input
+                      className="h-9 w-full rounded-lg border bg-background px-3"
+                      value={
+                        proximoRascunho?.id === detalhe.id
+                          ? proximoRascunho.texto
+                          : (detalhe.proximo_passo ?? "")
+                      }
+                      onChange={(e) => setProximoRascunho({ id: detalhe.id, texto: e.target.value })}
+                      placeholder={t("Ex.: ligar amanhã de manhã")}
+                      maxLength={300}
+                    />
+                  </label>
+                  {proximoRascunho?.id === detalhe.id &&
+                    proximoRascunho.texto.trim() !== (detalhe.proximo_passo ?? "") && (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          await atualizarProspect(detalhe.id, {
+                            proximo_passo: proximoRascunho.texto.trim() || null,
+                          });
+                          setProximoRascunho(null);
+                        }}
+                      >
+                        {t("Salvar")}
+                      </Button>
+                    )}
+                </div>
+              </div>
+            )}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {(() => {
@@ -1114,6 +1255,11 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
             })()}
             {podeOperar && (
               <>
+                {detalhe.owner_user_id !== usuarioId && (
+                  <Button size="sm" onClick={() => void adicionarNaFila(detalhe.id)}>
+                    {t("Adicionar à fila")}
+                  </Button>
+                )}
                 <Button size="sm" onClick={() => void importar([detalhe.id])}>
                   {t("Adicionar ao CRM")}
                 </Button>
@@ -1130,6 +1276,15 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                 <Button size="sm" variant="ghost" onClick={() => void excluir(detalhe.id, detalhe.nome)}>
                   {t("Excluir")}
                 </Button>
+                {detalhe.status_comercial !== "sem_interesse" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => void ignorar(detalhe.id, detalhe.nome)}
+                  >
+                    {t("Ignorar")}
+                  </Button>
+                )}
               </>
             )}
             {detalhe.latitude !== null && (

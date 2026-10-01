@@ -5,7 +5,9 @@
  * com_whatsapp, nota_min, avaliacoes_min, origem(provider), status_comercial,
  * so_sem_cliente (ainda não é cliente), busca (nome/telefone/cidade/website),
  * busca_id (somente os prospects de UMA busca — o "Ver empresas" da aba
- * Pesquisas, B1 da spec 19: uuid nunca vai para o campo de texto).
+ * Pesquisas, B1 da spec 19: uuid nunca vai para o campo de texto),
+ * minha_fila (só os que tenho como dono — item 16; o dono vem do authz,
+ * nunca da query string: não existe "fila de outra pessoa" como parâmetro).
  *
  * Cruzamento com a base (§9) em lote, 3 queries, nunca N+1: contacts
  * (telefone/email → "já é cliente") + crm_leads (lead_id ou contato → lead,
@@ -52,6 +54,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const notaMin = Number(p.get("nota_min") ?? 0) || 0;
   const avalMin = Number(p.get("avaliacoes_min") ?? 0) || 0;
   const soSemCliente = p.get("so_sem_cliente") === "true";
+  const minhaFila = p.get("minha_fila") === "true";
   const limite = Math.min(200, Math.max(1, Number(p.get("limite") ?? 50) || 50));
 
   const supabase = await createClient();
@@ -102,6 +105,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (notaMin > 0) q = q.gte("nota", notaMin);
   if (avalMin > 0) q = q.gte("total_avaliacoes", avalMin);
   if (soSemCliente) q = q.is("contact_id", null);
+  if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
   if (busca) {
     q = q.or(`nome.ilike.%${busca}%,telefone.ilike.%${busca}%,cidade.ilike.%${busca}%,website.ilike.%${busca}%`);
   }

@@ -18703,6 +18703,10 @@ create table if not exists public.business_prospects (
   do_not_contact boolean not null default false,
   bloqueado boolean not null default false,
 
+  -- Fila de prospeccao (item 16 da spec 19): vendedor dono + proxima acao.
+  owner_user_id uuid references auth.users(id) on delete set null,
+  proximo_passo text,
+
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -20847,3 +20851,22 @@ comment on table public.automatic_sales_queue is
   'Fila diária da Venda Automática: uma linha por prospect da campanha, com jornada, interesse e follow-up (spec 18).';
 comment on table public.automatic_sales_events is
   'Timeline imutável da Venda Automática: descoberta → seleção → envio → resposta → conversão (spec 18 §22).';
+
+-- ---------------------------------------------------------------------
+-- 0247_prospeccao_fila — FASE 8 da spec 19 (item 16, FILA DE PROSPECÇÃO)
+-- O update.sh reaplica o baseline inteiro: quem ja tem a tabela nao a
+-- recria, entao as colunas chegam por este alter idempotente. Quem instala
+-- fresco ja nasce com elas no create table acima.
+-- ---------------------------------------------------------------------
+alter table public.business_prospects
+  add column if not exists owner_user_id uuid references auth.users(id) on delete set null,
+  add column if not exists proximo_passo text;
+
+create index if not exists business_prospects_org_owner_idx
+  on public.business_prospects (organization_id, owner_user_id)
+  where owner_user_id is not null;
+
+comment on column public.business_prospects.owner_user_id is
+  'Vendedor dono do prospect na fila (item 16 da spec 19). NULL = sem dono; nao entra na fila de ninguem. On delete set null: sair do time desvincula, nao apaga o prospect.';
+comment on column public.business_prospects.proximo_passo is
+  'Proxima acao combinada pelo vendedor no drawer (item 16 da spec 19). Texto livre do produto, nao do provider.';

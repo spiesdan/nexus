@@ -99,6 +99,7 @@ export function MapaProspects({
   onSelecionar,
   onVer,
   onAdicionar,
+  onFila,
   centro,
   raioKm,
   modo,
@@ -113,6 +114,8 @@ export function MapaProspects({
   onSelecionar: (id: string | null) => void;
   onVer: (id: string) => void;
   onAdicionar: (ids: string[]) => void;
+  /** "Adicionar à fila" do preview (§14) — só quando a tela tem dono para dar. */
+  onFila?: (id: string) => void;
   centro: { latitude: number; longitude: number } | null;
   raioKm: number | null;
   modo: "marcadores" | "densidade";
@@ -126,9 +129,9 @@ export function MapaProspects({
   const refCaixa = React.useRef<HTMLDivElement>(null);
   const refMapa = React.useRef<MapaLeaflet | null>(null);
   const refCamada = React.useRef<LayerGroup | null>(null);
-  const cbRef = React.useRef({ onSelecionar, onVer, onAdicionar, onArea });
+  const cbRef = React.useRef({ onSelecionar, onVer, onAdicionar, onFila, onArea });
   React.useEffect(() => {
-    cbRef.current = { onSelecionar, onVer, onAdicionar, onArea };
+    cbRef.current = { onSelecionar, onVer, onAdicionar, onFila, onArea };
   });
   const [zoom, setZoom] = React.useState(12);
   // O desenho SÓ acontece quando o mapa existe: o efeito de desenho roda no
@@ -236,16 +239,23 @@ export function MapaProspects({
           : "";
         const mk = L.marker([p.latitude, p.longitude], { icon: iconePonto(M, p, selecionadoId, selecionados) }).addTo(camada);
         (mk as unknown as CamadaComId)._pontoId = p.id;
+        // §14: preview com as ações da fila. "Ver empresa" é o contrato do
+        // e2e prosspeccao-mapa — some só se a tela tirar o callback, nunca muda.
+        const fila = cbRef.current.onFila
+          ? ` · <button data-acao="fila" style="text-decoration:underline">Adicionar à fila</button>`
+          : "";
         mk.bindPopup(
           `<b>${escapar(p.nome)}</b><br>${escapar([p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · "))}${fone}${zap}` +
             `<br><br><button data-acao="ver" style="text-decoration:underline">Ver empresa</button>` +
-            ` · <button data-acao="crm" style="text-decoration:underline">Adicionar ao CRM</button>`,
+            ` · <button data-acao="crm" style="text-decoration:underline">Adicionar ao CRM</button>` +
+            fila,
         );
         mk.on("click", () => cbRef.current.onSelecionar(p.id));
         mk.on("popupopen", (e) => {
           const el = (e as { popup: { getElement: () => HTMLElement | undefined } }).popup.getElement();
           el?.querySelector('[data-acao="ver"]')?.addEventListener("click", () => cbRef.current.onVer(p.id));
           el?.querySelector('[data-acao="crm"]')?.addEventListener("click", () => cbRef.current.onAdicionar([p.id]));
+          el?.querySelector('[data-acao="fila"]')?.addEventListener("click", () => cbRef.current.onFila?.(p.id));
         });
       }
 

@@ -67,6 +67,10 @@ export const prospectPatchSchema = z.object({
   status_comercial: z.enum(STATUS_COMERCIAL).optional(),
   do_not_contact: z.boolean().optional(),
   bloqueado: z.boolean().optional(),
+  // FASE 8 (item 16): fila — vendedor dono e próxima ação. null explícito é
+  // válido (desatribuir / limpar o passo), por isso o .nullable().
+  owner_user_id: z.string().uuid().nullable().optional(),
+  proximo_passo: z.string().trim().max(300).nullable().optional(),
 });
 
 export type ProspectPatch = z.infer<typeof prospectPatchSchema>;
@@ -156,6 +160,9 @@ export interface Prospect {
   longitude: number | null;
   endereco: string | null;
   discovered_at: string;
+  /** Fila (item 16): vendedor dono e próxima ação. */
+  owner_user_id: string | null;
+  proximo_passo: string | null;
   /** Derivada a cada GET (§10/D13) — opcional porque nem toda rota que devolve linha a calcula. */
   classificacao?: Classificacao;
 }
@@ -163,4 +170,4 @@ export interface Prospect {
 export const COLUNAS_DO_PROSPECT =
   "id, nome, categoria, cidade, estado, telefone, email, website, whatsapp_potencial, " +
   "nota, total_avaliacoes, provider, status_comercial, score, contact_id, lead_id, " +
-  "do_not_contact, latitude, longitude, endereco, discovered_at";
+  "do_not_contact, latitude, longitude, endereco, discovered_at, owner_user_id, proximo_passo";

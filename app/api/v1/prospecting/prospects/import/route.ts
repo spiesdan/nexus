@@ -182,6 +182,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         contact_id: contatoId,
         lead_id: (lead as unknown as { id: string }).id,
         status_comercial: "contato_pendente",
+        // FASE 8 (item 16): o dono escolhido no import também vira dono do
+        // prospect — lead e prospect andam com o mesmo vendedor.
+        ...(parsed.data.owner_user_id ? { owner_user_id: parsed.data.owner_user_id } : {}),
       })
       .eq("id", p.id)
       .eq("organization_id", authz.org.orgId);

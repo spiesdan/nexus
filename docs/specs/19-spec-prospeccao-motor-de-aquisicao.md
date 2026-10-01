@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–7 concluídas · FASE 8 (fila de prospecção: migration owner + "Minha fila") em andamento.
+> **Status:** FASE 1–8 concluídas · FASE 9 (Inbox de prospecção) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -25,7 +25,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       sem termos técnicos na frente).
 - [x] **FASE 7** — Mapa + resultados (cards + mapa + preview de marcador; lista é
       modo secundário).
-- [ ] **FASE 8** — Fila de prospecção (status comerciais; prioridade; vendedor).
+- [x] **FASE 8** — Fila de prospecção (status comerciais; prioridade; vendedor).
 - [ ] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
       nunca sistema de mensagens novo).
 - [ ] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
@@ -116,7 +116,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 | B8 | Expansão de categoria é 1:1 rótulo→termo; não há termos relacionados nem serviço configurável | `categorias.ts:99` | FASE 2/5 |
 | B9 | Status em inglês cru na aba Pesquisas (`queued`, `running`, `paused`…) | `_client.tsx:309` | FASE 6 — fechado na FASE 3 (`ROTULO_STATUS_BUSCA`) |
 | B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 — fechado por D10/D11 (detalhe já vem na descoberta; Details sem consumidor até a etapa 2) |
-| B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 |
+| B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 — fechado (migration `0247_prospeccao_fila`: `owner_user_id` + `proximo_passo` + índice parcial org+dono) |
 | B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 |
 | B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 |
 | B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 — fechado (entrada 1.17.0 corrigida) |
@@ -209,6 +209,16 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   "Novos"/"Já abordados" recortam pela `classificacao` (§10) que a API já
   devolve; "Com WhatsApp" é filtro de servidor (mesmo caminho dos toggles
   avançados). "Todos" = limpar tudo.
+- **D15 — o funil do §16 usa os status que já existem (FECHADA na FASE 8):**
+  o prompt lista Novo → Em contato → Respondeu → Qualificado → Oportunidade →
+  Cotação → Pedido → Cliente, mas `status_comercial` (0220) já cobre o arco do
+  PROSPECT (novo, contatado, respondeu, qualificado, cliente, sem interesse…)
+  e Oportunidade/Cotação/Pedido são estágios do CRM que já vivem em
+  `crm_leads`/pedidos — duplicar a pilha no prospect faria dois funis
+  discordantes (doutrina: não inventar nem duplicar entidade). Fila = dono +
+  status_comercial + prioridade (D14) + próxima ação; o vínculo lead/cliente
+  no drawer carrega o resto do funil. "Última ação" (§16) fica para quando
+  houver log de eventos de fila — sem regra escrita, não inventamos.
 
 ### Gaps por fase (de onde cada uma parte)
 
@@ -246,9 +256,17 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   marcador (§14) já existia com nome, contato, WhatsApp, "Ver empresa" e
   "Adicionar ao CRM". Ações "Adicionar à fila", "ignorar" e "atribuir
   vendedor" (§13/§14) nascem na FASE 8 junto com a fila.)*
-- **FASE 8** — migration (owner + próximo passo) + "Minha fila" + ações de
-  fila nos cards/preview (§13, §14, §16).
-- **FASE 8** — migration (owner + próximo passo) + "Minha fila".
+- **FASE 8** — *(FECHADA na FASE 8: migration `0247_prospeccao_fila` (+
+  `owner_user_id` FK `auth.users` com set null + `proximo_passo` + índice
+  parcial org+dono; as três da doutrina: migration, baseline — create table E
+  apêndice — e MANIFEST) = B11; PATCH aceita dono/próxima ação; GET ganha o
+  filtro `minha_fila` (o dono vem do authz, nunca da query string); chip
+  "Minha fila" (§16) na linha de resultados + URL `minha_fila`; ações
+  "Adicionar à fila" em card, drawer e preview do marcador (§13/§14) e
+  "Ignorar" (→ sem interesse, com confirm) no drawer; drawer com status,
+  vendedor e próxima ação editáveis (§16); import leva o dono também para o
+  prospect. Ver D15.)*
+- **FASE 9** — Inbox de prospecção (§17, D7): a fila vira caixa de entrada.
 - **FASE 9/10/11/12** — Inbox, funil de campanhas, Radar, Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
   (espelhar cota diária da VA).

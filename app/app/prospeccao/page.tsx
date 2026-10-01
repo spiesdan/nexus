@@ -47,6 +47,7 @@ export default async function ProspeccaoPage() {
       categorias={CATEGORIAS_COMERCIAIS}
       podeBuscar={podeBuscar}
       podeGerenciar={podeGerenciar}
+      usuarioId={user.id}
       textos={{
         titulo: t("Prospecção"),
         subtitulo: t("Encontre empresas por região e categoria e leve ao CRM."),

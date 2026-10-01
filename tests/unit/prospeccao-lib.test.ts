@@ -11,6 +11,7 @@ import {
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
 import { bonusDeAderencia, prioridadeAlta, scoreDeProspect, PESOS_SCORE, CORTE_ALTA_PRIORIDADE } from "@/lib/prospeccao/score";
+import { prospectPatchSchema } from "@/lib/schemas/prospeccao";
 
 /**
  * A LIB DE PROSPECÇÃO — cerca do plano §§5–8, 19, 31–33.
@@ -236,5 +237,33 @@ describe("termosDeBusca", () => {
       expect(macros.has(m)).toBe(true);
     }
     expect(termos.some((t) => t.busca === "Oficina mecânica")).toBe(true);
+  });
+});
+
+// FASE 8 (item 16): a fila entra pelo PATCH — dono e próxima ação são o
+// contrato que a tela de fila depende.
+describe("prospectPatchSchema — fila (item 16)", () => {
+  const UUID = "3f1d2b7a-9c4e-4f6a-8b2d-1e5a7c9f0a11";
+
+  it("aceita dono, desatribuir (null) e próxima ação", () => {
+    expect(prospectPatchSchema.safeParse({ owner_user_id: UUID }).success).toBe(true);
+    expect(prospectPatchSchema.safeParse({ owner_user_id: null }).success).toBe(true);
+    expect(
+      prospectPatchSchema.safeParse({ proximo_passo: "ligar amanhã de manhã" }).success,
+    ).toBe(true);
+    expect(prospectPatchSchema.safeParse({ proximo_passo: null }).success).toBe(true);
+  });
+
+  it("recusa uuid inválido e próximo passo acima de 300 caracteres", () => {
+    expect(prospectPatchSchema.safeParse({ owner_user_id: "eu-mesmo" }).success).toBe(false);
+    expect(
+      prospectPatchSchema.safeParse({ proximo_passo: "x".repeat(301) }).success,
+    ).toBe(false);
+  });
+
+  it("continua aceitando status e os campos de LGPD", () => {
+    expect(prospectPatchSchema.safeParse({ status_comercial: "contatado" }).success).toBe(true);
+    expect(prospectPatchSchema.safeParse({ do_not_contact: true }).success).toBe(true);
+    expect(prospectPatchSchema.safeParse({ status_comercial: "inventado" }).success).toBe(false);
   });
 });
