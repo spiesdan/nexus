@@ -167,7 +167,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const [lista, setLista] = React.useState<(Prospect & { ja_e_cliente: boolean })[] | null>(null);
   const [erro, setErro] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
-  const [visao, setVisao] = React.useState<"tabela" | "mapa">("tabela");
+  // §37: cards + mapa são o modo PRINCIPAL; a tabela é o modo secundário
+  // (ações em lote) — quem entra vê a tela comercial, não a planilha.
+  const [visao, setVisao] = React.useState<"tabela" | "mapa">("mapa");
   const [dono, setDono] = React.useState("");
   const [vendedores, setVendedores] = React.useState<{ user_id: string; full_name: string | null }[]>([]);
   const [selecionadoId, setSelecionadoId] = React.useState<string | null>(() => paramsUrl.get("empresa"));
@@ -806,35 +808,84 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
           )}
           <div className="grid gap-3 lg:grid-cols-[35%_65%]">
             <div className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
-              {ordenada.slice(0, visiveis).map((p) => (
-                <div
-                  key={p.id}
-                  ref={(el) => {
-                    if (el) refsLinhas.current.set(p.id, el);
-                    else refsLinhas.current.delete(p.id);
-                  }}
-                >
-                  <Card
-                    className={`cursor-pointer p-2.5 transition-colors hover:border-primary/40 ${selecionadoId === p.id ? "border-primary ring-1 ring-primary" : ""}`}
-                    onClick={() => selecionar(p.id === selecionadoId ? null : p.id)}
+              {ordenada.slice(0, visiveis).map((p) => {
+                const zap = zapHref(p);
+                return (
+                  <div
+                    key={p.id}
+                    ref={(el) => {
+                      if (el) refsLinhas.current.set(p.id, el);
+                      else refsLinhas.current.delete(p.id);
+                    }}
                   >
-                    <p className="truncate text-sm font-medium">{p.nome}</p>
-                    {p.classificacao && (
-                      <p className="mt-0.5 flex flex-wrap items-center gap-1">
-                        <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                    <Card
+                      className={`cursor-pointer p-2.5 transition-colors hover:border-primary/40 ${selecionadoId === p.id ? "border-primary ring-1 ring-primary" : ""}`}
+                      onClick={() => selecionar(p.id === selecionadoId ? null : p.id)}
+                    >
+                      <p className="truncate text-sm font-medium">{p.nome}</p>
+                      {p.classificacao && (
+                        <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                          <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                        </p>
+                      )}
+                      <p className="truncate text-xs text-muted-foreground">
+                        {[p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
                       </p>
-                    )}
-                    <p className="truncate text-xs text-muted-foreground">
-                      {[p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
-                    </p>
-                    <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                      {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : ""}
-                      {p.ja_e_cliente ? ` · ${t("Cliente")}` : p.contact_id || p.lead_id ? ` · ${t("No CRM")}` : ""}
-                      {` · ${p.score}`}
-                    </p>
-                  </Card>
-                </div>
-              ))}
+                      <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+                        {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : ""}
+                        {p.ja_e_cliente ? ` · ${t("Cliente")}` : p.contact_id || p.lead_id ? ` · ${t("No CRM")}` : ""}
+                        {` · ${p.score}`}
+                      </p>
+                      {/* §13: telefone + status na cara do card. */}
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        {p.telefone && <span className="tabular-nums">{p.telefone}</span>}
+                        {p.status_comercial !== "novo" && (
+                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] text-foreground">
+                            {t(ROTULO_STATUS_COMERCIAL[p.status_comercial])}
+                          </span>
+                        )}
+                      </p>
+                      {/* §13: Abrir empresa · Iniciar conversa · levar ao CRM. */}
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetalheId(p.id);
+                          }}
+                        >
+                          {t("Abrir")}
+                        </Button>
+                        {zap && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a
+                              href={zap}
+                              onClick={(e) => e.stopPropagation()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {t("WhatsApp")}
+                            </a>
+                          </Button>
+                        )}
+                        {podeOperar && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void importar([p.id]);
+                            }}
+                          >
+                            {t("CRM")}
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  </div>
+                );
+              })}
               {ordenada.length > visiveis && (
                 <Button size="sm" variant="outline" onClick={() => setVisiveis((v) => v + 100)} className="w-full">
                   {t("Mostrar mais")} ({ordenada.length - visiveis} {t("restantes")})

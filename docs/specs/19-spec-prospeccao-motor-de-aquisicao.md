@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–6 concluídas · FASE 7 (mapa + resultados) em andamento.
+> **Status:** FASE 1–7 concluídas · FASE 8 (fila de prospecção: migration owner + "Minha fila") em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -23,7 +23,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       existentes; classificação comercial do prospect).
 - [x] **FASE 6** — Nova UX de Prospecção (tela comercial "Encontrar empresas";
       sem termos técnicos na frente).
-- [ ] **FASE 7** — Mapa + resultados (cards + mapa + preview de marcador; lista é
+- [x] **FASE 7** — Mapa + resultados (cards + mapa + preview de marcador; lista é
       modo secundário).
 - [ ] **FASE 8** — Fila de prospecção (status comerciais; prioridade; vendedor).
 - [ ] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
@@ -237,8 +237,17 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   linha "N oportunidades encontradas" com chips §36 (Todos / Alta prioridade /
   Com WhatsApp / Novos / Já abordados); "Células" fora da linha de progresso;
   B9 (status em pt-BR, já na FASE 3) e B14 (CHANGELOG) confirmados.)*
-- **FASE 7** — mapa: preview de marcador, cards como modo principal (§14, §37);
-  a lista/tabela é modo secundário.
+- **FASE 7** — *(FECHADA na FASE 7: visão padrão virou cards + mapa — §37
+  "principal: cards/lista + mapa + drawer; tabela é modo secundário" — a
+  tabela continua acessível pelo alternador e concentra as ações em lote;
+  card comercial do §13 completo (nome, classificação + prioridade,
+  categoria · cidade/UF, nota/score, telefone, status quando difere de
+  novo, botões Abrir / WhatsApp "iniciar conversa" / CRM); preview de
+  marcador (§14) já existia com nome, contato, WhatsApp, "Ver empresa" e
+  "Adicionar ao CRM". Ações "Adicionar à fila", "ignorar" e "atribuir
+  vendedor" (§13/§14) nascem na FASE 8 junto com a fila.)*
+- **FASE 8** — migration (owner + próximo passo) + "Minha fila" + ações de
+  fila nos cards/preview (§13, §14, §16).
 - **FASE 8** — migration (owner + próximo passo) + "Minha fila".
 - **FASE 9/10/11/12** — Inbox, funil de campanhas, Radar, Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
