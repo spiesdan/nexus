@@ -35,7 +35,11 @@ export function criarProvider(nome: string, opts: OpcoesDeProvider = {}): Busine
   }
 }
 
-/** Metadados para a tela (seletor de provider) — sem segredo aqui. */
+/**
+ * Metadados para a tela de Configuração (seletor de provider) — sem segredo
+ * aqui. O esqueleto `maps_browser` fica FORA: é rejeitado pela rota e não é
+ * opção real (§1 da spec 19 — a UI só oferece o que existe).
+ */
 export const METADADOS_PROVIDERS: { nome: NomeDeProvider; rotulo: string; descricao: string }[] = [
   {
     nome: "google_places",
@@ -46,10 +50,5 @@ export const METADADOS_PROVIDERS: { nome: NomeDeProvider; rotulo: string; descri
     nome: "osm_overpass",
     rotulo: "OpenStreetMap (grátis)",
     descricao: "Diretório aberto, sem chave e sem custo. Nome, endereço e mapa; telefone/site quando cadastrados, sem avaliações. Cobertura varia por cidade.",
-  },
-  {
-    nome: "maps_browser",
-    rotulo: "Navegador (desligado)",
-    descricao: "Coleta via navegador automatizado — esqueleto. Requer implementação e respeita bloqueios do fornecedor.",
   },
 ];

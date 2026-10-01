@@ -28,14 +28,20 @@ const TETO_CELULAS = 2000;
 async function cfgDaBusca(admin: Awaited<ReturnType<typeof createAdminClient>>, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
-    .select("cache_ttl_dias, limite_por_busca")
+    .select("cache_ttl_dias, limite_por_busca, provider_ativo")
     .eq("organization_id", orgId)
     .maybeSingle();
   const cfg = data as unknown as {
     cache_ttl_dias: number;
     limite_por_busca: number;
+    provider_ativo: string;
   } | null;
-  return { ttl: cfg?.cache_ttl_dias ?? 30, teto: cfg?.limite_por_busca ?? 500 };
+  return {
+    ttl: cfg?.cache_ttl_dias ?? 30,
+    teto: cfg?.limite_por_busca ?? 500,
+    // Mesmo default honesto do motor: sem linha de settings, só o OSM roda.
+    providerAtivo: cfg?.provider_ativo ?? "osm_overpass",
+  };
 }
 
 export async function GET(_req: NextRequest): Promise<Response> {
@@ -75,7 +81,24 @@ export async function POST(req: NextRequest): Promise<Response> {
   const entrada = parsed.data;
   const forcar = (body as { forcar?: boolean } | null)?.forcar === true;
 
-  if (entrada.provider === "maps_browser") {
+  if (!entrada.cidade && (entrada.latitude == null || entrada.longitude == null)) {
+    return fail("validation_failed", "Informe ao menos a cidade (busca estadual usa campanha).", 422, { requestId });
+  }
+
+  const admin = createAdminClient();
+  const { ttl, teto, providerAtivo } = await cfgDaBusca(admin, authz.org.orgId);
+  // Provider escolhido é o da Configuração → Prospecção (a tela nem manda);
+  // quem mandar diferente é recusado na hora, igual o motor recusaria depois.
+  if (entrada.provider && entrada.provider !== providerAtivo) {
+    return fail(
+      "validation_failed",
+      `Provider ${entrada.provider} desligado nas configurações (Configurações → Prospecção).`,
+      422,
+      { requestId },
+    );
+  }
+  const provider = providerAtivo;
+  if (provider === "maps_browser") {
     return fail(
       "validation_failed",
       "Provider via navegador desligado (esqueleto). Use osm_overpass (grátis) ou google_places.",
@@ -83,20 +106,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       { requestId },
     );
   }
-  if (entrada.provider === "google_places" && !googlePlacesHabilitado()) {
+  if (provider === "google_places" && !googlePlacesHabilitado()) {
     return fail("validation_failed", "GOOGLE_PLACES_ENABLED=false nesta instalação.", 422, { requestId });
   }
-  if (!entrada.cidade && (entrada.latitude == null || entrada.longitude == null)) {
-    return fail("validation_failed", "Informe ao menos a cidade (busca estadual usa campanha).", 422, { requestId });
-  }
-
-  const admin = createAdminClient();
-  const { ttl, teto } = await cfgDaBusca(admin, authz.org.orgId);
   const chave =
-    entrada.provider === "google_places"
+    provider === "google_places"
       ? (await resolverChaveGoogle(admin, authz.org.orgId)).chave
       : null;
-  if (entrada.provider === "google_places" && !chave) {
+  if (provider === "google_places" && !chave) {
     return fail(
       "validation_failed",
       "Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção ou use osm_overpass (grátis).",
@@ -112,13 +129,13 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (entrada.latitude != null && entrada.longitude != null) {
     geo = { latitude: entrada.latitude, longitude: entrada.longitude };
   } else {
-    let provider;
+    let geoProvider;
     try {
-      provider = criarProvider(entrada.provider, { chaveGoogle: chave ?? "" });
+      geoProvider = criarProvider(provider, { chaveGoogle: chave ?? "" });
     } catch (e) {
       return fail("validation_failed", e instanceof Error ? e.message : String(e), 422, { requestId });
     }
-    geo = (await provider
+    geo = (await geoProvider
       .geocodificar?.(
         `${entrada.cidade}${entrada.estado ? `, ${entrada.estado}` : ""}, ${entrada.pais}`,
       )
@@ -159,7 +176,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     cidade: entrada.cidade ?? entrada.rotulo ?? null,
     estado: entrada.estado ?? null,
     raioKm: entrada.raio_km,
-    provider: entrada.provider,
+    provider,
     latitude: entrada.latitude ?? null,
     longitude: entrada.longitude ?? null,
   });
@@ -193,7 +210,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       longitude: geo.longitude,
       raio_km: entrada.raio_km,
       max_empresas: Math.min(entrada.max_empresas, teto),
-      provider: entrada.provider,
+      provider,
       campaign_id: entrada.campaign_id ?? null,
       status: "queued",
       grid_size_km: Number(cfg.grid_size_km ?? 5),

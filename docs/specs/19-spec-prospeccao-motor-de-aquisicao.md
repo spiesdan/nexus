@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1 concluída (auditoria gravada abaixo) · FASE 2 em andamento.
+> **Status:** FASE 1–3 concluídas · FASE 4 (cache + dedup) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -13,9 +13,9 @@ para todas: perguntar ao código existente antes de escrever código novo.
 
 - [x] **FASE 1** — Auditoria do sistema atual (repo, `/app/prospeccao`, componentes,
       APIs, modelos do banco, integrações; o que já existe e deve ser reaproveitado).
-- [ ] **FASE 2** — Discovery Engine (abstração `DiscoveryProvider`, orquestração
+- [x] **FASE 2** — Discovery Engine (abstração `DiscoveryProvider`, orquestração
       normalização → dedupe → match → qualificação → score).
-- [ ] **FASE 3** — Google Places Provider (atrás da abstração; campos mínimos;
+- [x] **FASE 3** — Google Places Provider (atrás da abstração; campos mínimos;
       nunca acoplado à UI).
 - [ ] **FASE 4** — Cache + deduplicação (`DISCOVERY_CACHE_TTL`,
       `ProspectDeduplicationService` com prioridade de identificadores).
@@ -150,6 +150,21 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   novos prospects com asmesmas 3 ações (FASE 11).
 - **D8 — Enriquecimento em 2 etapas só onde custa:** Place Details sob demanda
   (drawer/fila); OSM não tem etapa 2 (já vem completo e sem custo).
+- **D9 — Expansão opt-in (feita na FASE 2):** `CategoryExpansionService` existe
+  (`lib/prospeccao/expansao.ts`), mas a varredura de termos relacionados só
+  liga com `PROSPECCAO_EXPANSAO=true` — cada termo extra é 1 chamada paga por
+  célula, e §6 (custo) pesa mais que §5 (expansão) até o budget guard da
+  FASE 13 existir. Default = 1:1, idêntico ao de antes.
+- **D10 — Etapa 2 estrutural, não automática (FECHADA na FASE 3):**
+  `getDetails` existe atrás da abstração com `X-Goog-FieldMask` mínimo (sem
+  wildcard, §22 ✓), **só que a descoberta já pede os mesmos campos que o
+  Details devolveria** (masks idênticos) — ligar enriquecimento automático
+  hoje seria pagar 11¢ para repetir dado. A etapa 2 vira real quando: (a)
+  campos novos entrarem só na máscara do Details, ou (b) prospect OSM sem
+  telefone/site merecer busca Google cross-provider — aí com budget guard
+  (FASE 13) no caminho. Dedupe por telefone/domínio (§8) também exige o
+  contato já na descoberta: não enxugar a máscara da etapa 1 sem antes
+  resolver isso.
 
 ### Gaps por fase (de onde cada uma parte)
 

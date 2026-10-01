@@ -112,7 +112,6 @@ describe("criarProvider", () => {
     }
     expect(METADADOS_PROVIDERS.map((m) => m.nome).sort()).toEqual([
       "google_places",
-      "maps_browser",
       "osm_overpass",
     ]);
   });

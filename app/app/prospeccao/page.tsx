@@ -4,7 +4,6 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { CATEGORIAS_COMERCIAIS } from "@/lib/prospeccao/categorias";
-import { METADADOS_PROVIDERS } from "@/lib/prospeccao/providers/registro";
 import { createClient } from "@/lib/supabase/server";
 
 import { ProspeccaoClient, type BuscaResumo } from "./_client";
@@ -15,8 +14,9 @@ export const dynamic = "force-dynamic";
  * A PROSPECÇÃO B2B — descobrir empresas por região/categoria e levar ao CRM.
  *
  * Uma tela com abas (Buscar, Pesquisas, e nas próximas entregas: Empresas,
- * Mapa, Mercado, Campanhas, Config). A biblioteca de categorias e os
- * metadados de providers vêm do servidor (sem segredo no cliente).
+ * Mapa, Mercado, Campanhas, Config). A biblioteca de categorias vem do
+ * servidor; provider/custos ficam só na aba Config (§1 da spec 19 — o
+ * vendedor nunca escolhe nem vê de onde vêm os dados).
  */
 export default async function ProspeccaoPage() {
   const user = await requireAuth();
@@ -33,7 +33,7 @@ export default async function ProspeccaoPage() {
   const { data: buscas } = await supabase
     .from("prospecting_searches")
     .select(
-      "id, categorias, cidade, estado, raio_km, max_empresas, provider, status, " +
+      "id, categorias, cidade, estado, raio_km, max_empresas, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
         "requisicoes, custo_estimado_cents, ultimo_erro, created_at, finished_at",
     )
@@ -45,7 +45,6 @@ export default async function ProspeccaoPage() {
     <ProspeccaoClient
       buscasIniciais={(Array.isArray(buscas) ? buscas : []) as unknown as BuscaResumo[]}
       categorias={CATEGORIAS_COMERCIAIS}
-      providers={METADADOS_PROVIDERS}
       podeBuscar={podeBuscar}
       podeGerenciar={podeGerenciar}
       textos={{
@@ -62,7 +61,6 @@ export default async function ProspeccaoPage() {
         estado: t("UF"),
         raio: t("Raio (km)"),
         maximo: t("Máximo de empresas"),
-        provedor: t("Provider"),
         buscar: t("Buscar empresas"),
         buscando: t("Criando busca…"),
         progresso: t("Progresso"),

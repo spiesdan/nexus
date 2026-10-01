@@ -20,7 +20,7 @@ import { ConfigTab } from "./_config";
 import { EmpresasTab } from "./_empresas";
 import { MercadoTab } from "./_mercado";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
-import type { METADADOS_PROVIDERS } from "@/lib/prospeccao/providers/registro";
+import { ROTULO_STATUS_BUSCA } from "@/lib/schemas/prospeccao";
 import { comoMoeda } from "@/lib/format/moeda";
 
 export interface BuscaResumo {
@@ -30,7 +30,6 @@ export interface BuscaResumo {
   estado: string | null;
   raio_km: number;
   max_empresas: number;
-  provider: string;
   status: string;
   total_celulas: number;
   celulas_processadas: number;
@@ -59,7 +58,6 @@ interface Textos {
   estado: string;
   raio: string;
   maximo: string;
-  provedor: string;
   buscar: string;
   buscando: string;
   progresso: string;
@@ -105,14 +103,12 @@ export function comoListaBuscas(valor: unknown): BuscaResumo[] {
 export function ProspeccaoClient({
   buscasIniciais,
   categorias,
-  providers,
   podeBuscar,
   podeGerenciar,
   textos,
 }: {
   buscasIniciais: BuscaResumo[];
   categorias: MacroCategoria[];
-  providers: typeof METADADOS_PROVIDERS;
   podeBuscar: boolean;
   podeGerenciar: boolean;
   textos: Textos;
@@ -124,7 +120,6 @@ export function ProspeccaoClient({
   const [uf, setUf] = React.useState("");
   const [raio, setRaio] = React.useState("30");
   const [maximo, setMaximo] = React.useState("500");
-  const [provedor, setProvedor] = React.useState("osm_overpass");
   const [criando, setCriando] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
@@ -175,7 +170,6 @@ export function ProspeccaoClient({
           ...(uf.trim() ? { estado: uf.trim().toUpperCase() } : {}),
           raio_km: Number(raio) || 30,
           max_empresas: Number(maximo) || 500,
-          provider: provedor,
         },
       );
       const r = corpo?.data ?? {};
@@ -245,7 +239,7 @@ export function ProspeccaoClient({
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="cidade">{textos.cidade}</Label>
                   <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder={textos.exemploCidade} />
@@ -261,21 +255,6 @@ export function ProspeccaoClient({
                 <div className="space-y-1.5">
                   <Label htmlFor="maximo">{textos.maximo}</Label>
                   <Input id="maximo" type="number" min={1} max={10000} value={maximo} onChange={(e) => setMaximo(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="provedor">{textos.provedor}</Label>
-                  <select
-                    id="provedor"
-                    className="rounded-lg border bg-background px-3 py-2 text-sm"
-                    value={provedor}
-                    onChange={(e) => setProvedor(e.target.value)}
-                  >
-                    {providers.map((p) => (
-                      <option key={p.nome} value={p.nome}>
-                        {p.rotulo}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
               <Button onClick={criar} disabled={criando}>
@@ -306,7 +285,7 @@ export function ProspeccaoClient({
                         {[b.cidade, b.estado].filter(Boolean).join("/")} · {b.raio_km} km
                       </span>
                       <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COR[b.status] ?? ""}`}>
-                        {b.status}
+                        {t(ROTULO_STATUS_BUSCA[b.status as keyof typeof ROTULO_STATUS_BUSCA] ?? b.status)}
                       </span>
                     </div>
                     {(ativa || b.total_celulas > 0) && (

@@ -48,6 +48,15 @@ import {
   type Prospect,
 } from "@/lib/schemas/prospeccao";
 
+/** Origem comercial do prospect — nome cru de provider (google_places) não é linguagem de vendedor (§1 da spec 19). */
+const ROTULO_ORIGEM: Record<string, string> = {
+  google_places: "Busca de prospecção",
+  osm_overpass: "Busca de prospecção",
+  maps_browser: "Busca de prospecção",
+  maps_arquivo: "Arquivo importado",
+  maps_scraper: "Arquivo importado",
+};
+
 /**
  * Aba EMPRESAS — tabela + mapa sincronizados (§§14, 20 do plano).
  *
@@ -337,7 +346,6 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         longitude: Math.round(centro.longitude * 10000) / 10000,
         raio_km: Math.min(500, raio),
         rotulo: "Área do mapa",
-        provider: "osm_overpass",
       });
       toast.success(t("Busca da área criada — acompanhe na aba Pesquisas."));
     } catch (e) {
@@ -847,7 +855,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               </a>
             )}
             <p className="text-muted-foreground">
-              {t("Origem")}: {detalhe.provider} · {t("Score")} {detalhe.score}
+              {t("Origem")}: {t(ROTULO_ORIGEM[detalhe.provider] ?? "Cadastro externo")} · {t("Score")} {detalhe.score}
               {detalhe.latitude !== null && ` · ${detalhe.latitude.toFixed(4)}, ${detalhe.longitude?.toFixed(4)}`}
             </p>
             <p className="text-muted-foreground">

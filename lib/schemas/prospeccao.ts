@@ -11,7 +11,10 @@ export const buscaCreateSchema = z.object({
   pais: z.string().trim().length(2).default("BR"),
   raio_km: z.number().int().min(1).max(500).default(30),
   max_empresas: z.number().int().min(1).max(10000).default(500),
-  provider: z.enum(["google_places", "osm_overpass", "maps_browser"]).default("osm_overpass"),
+  // Opcional SEM default: quem escolhe o provider é Configurações →
+  // Prospecção (provider_ativo); a tela principal nem manda nem vê provider
+  // (§1 da spec 19). Mandado e diferente do ativo, a rota recusa na hora.
+  provider: z.enum(["google_places", "osm_overpass", "maps_browser"]).optional(),
   campaign_id: z.string().uuid().nullable().optional(),
   /** "Buscar nesta área": centro direto do mapa — dispensa cidade/geocode. */
   latitude: z.number().min(-90).max(90).nullable().optional(),
@@ -22,6 +25,16 @@ export const buscaCreateSchema = z.object({
 export type BuscaCreate = z.infer<typeof buscaCreateSchema>;
 
 export const STATUS_BUSCA = ["queued", "running", "paused", "completed", "failed", "cancelled"] as const;
+
+/** Rótulos comerciais dos status de busca — o usuário nunca lê "running". */
+export const ROTULO_STATUS_BUSCA: Record<(typeof STATUS_BUSCA)[number], string> = {
+  queued: "Na fila",
+  running: "Procurando",
+  paused: "Pausada",
+  completed: "Concluída",
+  failed: "Falhou",
+  cancelled: "Cancelada",
+};
 
 export const STATUS_COMERCIAL = [
   "novo",
