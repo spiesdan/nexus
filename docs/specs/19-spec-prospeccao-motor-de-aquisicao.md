@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–8 concluídas · FASE 9 (Inbox de prospecção) em andamento.
+> **Status:** FASE 1–9 concluídas · FASE 10 (Campanhas / funil) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -26,7 +26,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
 - [x] **FASE 7** — Mapa + resultados (cards + mapa + preview de marcador; lista é
       modo secundário).
 - [x] **FASE 8** — Fila de prospecção (status comerciais; prioridade; vendedor).
-- [ ] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
+- [x] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
       nunca sistema de mensagens novo).
 - [ ] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
 - [ ] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
@@ -219,6 +219,30 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   status_comercial + prioridade (D14) + próxima ação; o vínculo lead/cliente
   no drawer carrega o resto do funil. "Última ação" (§16) fica para quando
   houver log de eventos de fila — sem regra escrita, não inventamos.
+- **D16 — o Inbox recebe o contexto pela rota que já abre conversa (FECHADA na
+  FASE 9):** §17 manda reutilizar o Inbox, e a rota certa já existe:
+  `POST /api/v1/conversations/open-with-contact` (a mesma do cartão de
+  contato). Ela ganhou 4 campos **opcionais** — quem só quer abrir manda o
+  corpo de sempre e nada muda: `source` + `source_metadata` gravados no
+  contato (`source` só entra se o contato ainda não tinha origem — abrir a
+  partir da prospecção não reescreve a verdade de um contato que veio de
+  outro canal — e o metadata junta com o antigo vencendo choque de chave);
+  `tags` (categoria, cidade) entram como **união de conjuntos** no contato;
+  `conversation_tags` ("prospeccao") idem na conversa — leitura-depois-
+  escrita do jeito que `etiquetarConversa` da VA já faz, porque `text[]` não
+  tem append no PostgREST. Falha em gravar contexto NÃO derruba a abertura
+  (log warn; a conversa é o essencial, o contexto é cortesia). O botão do
+  §13/§17 vira "Iniciar conversa" no card, na tabela e no drawer, e leva a
+  `/app/inbox?id=…`; wa.me permanece no drawer como canal direto. Vendedor:
+  se quem abriu É o dono do prospect, a conversa nasce assumida (claim pela
+  rota auditada, best-effort — falhou, o vendedor assume na tela); abridor ≠
+  dono, atribuir pelo ReassignDialog do Inbox — não inventar API de
+  atribuição a terceiro sem a trilha que o claim já tem. "Produtos
+  potencialmente relevantes" (§17) fica documentado como gap: o §12 diz que
+  a associação categoria → produtos reais do catálogo vem "futuramente" e
+  manda "NÃO inventar produtos" — sem regra escrita, não há tela.
+  Histórico já vem de graça: é a mesma conversa (mensagens) + o resumo CRM
+  que o painel lateral sempre mostrou.
 
 ### Gaps por fase (de onde cada uma parte)
 
@@ -266,8 +290,19 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   "Ignorar" (→ sem interesse, com confirm) no drawer; drawer com status,
   vendedor e próxima ação editáveis (§16); import leva o dono também para o
   prospect. Ver D15.)*
-- **FASE 9** — Inbox de prospecção (§17, D7): a fila vira caixa de entrada.
-- **FASE 9/10/11/12** — Inbox, funil de campanhas, Radar, Meu Dia (D7).
+- **FASE 9** — *(FECHADA na FASE 9: botão "Iniciar conversa" (§13/§17) em card,
+  tabela e drawer abre o Inbox existente com `POST open-with-contact` estendido
+  (D16) — origem "prospeccao" + metadata (`prospect_id`, categoria, cidade) e
+  tags [categoria, cidade] no contato, tag "prospeccao" na conversa, claim
+  automático quando o abridor é o dono do prospect; linha "Origem" no painel
+  CRM do Inbox (o select da lista de conversas ganhou `source`). O rótulo
+  "WhatsApp" do card/tabela (que o FASE 7 usou como "iniciar conversa")
+  virou "Iniciar conversa" — §17 define o botão como Inbox; wa.me continua
+  no drawer. Gaps abertos: produtos potencialmente relevantes (§12 "futuramente"
+  — sem regra escrita, não inventar), atribuição a terceiros (ReassignDialog)
+  e "iniciar conversa" direto do preview do marcador (§14 — fica pelo drawer
+  para não poluir o popup).)*
+- **FASE 10/11/12** — funil de campanhas, Radar, Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
   (espelhar cota diária da VA).
 - **FASE 14** — testes de rota/API (B13).

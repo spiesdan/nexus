@@ -27,6 +27,12 @@ export interface ContactSummary {
    * atendimento aparece. Opcional: conversas em cache de antes do campo existir.
    */
   force_human?: boolean | null;
+  /**
+   * Origem do lead (spec 19, item 17): "prospeccao" quando a conversa abriu
+   * pela fila de prospecção, "manual"/"whatsapp"/… nos demais casos. Opcional
+   * porque conversas em cache podem ser de antes do campo existir na lista.
+   */
+  source?: string | null;
 }
 
 /**

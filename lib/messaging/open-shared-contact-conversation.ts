@@ -8,6 +8,7 @@ import { ensureConversation, sessaoProntaParaEnvio } from "@/lib/automation/star
 import { encontrarContatoPorTelefone } from "@/lib/channels/contato-por-telefone";
 import { phoneLookupVariants, canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { parseDialablePhone } from "@/lib/messaging/contact-card";
+import { logger } from "@/lib/logger";
 
 type Admin = SupabaseClient;
 
@@ -16,6 +17,13 @@ export interface OpenSharedContactInput {
   contact_id?: string;
   phone_number?: string;
   name?: string;
+  /** Contexto de origem (spec 19, item 17): gravado NO CONTATO na abertura. */
+  source?: string;
+  source_metadata?: Record<string, unknown>;
+  /** Tags do contato (categoria, cidade…). */
+  tags?: string[];
+  /** Tags da conversa ("prospeccao") — mesma separação que a VA usa. */
+  conversation_tags?: string[];
 }
 
 export interface OpenSharedContactResult {
@@ -77,6 +85,85 @@ async function resolveContactId(
   return contactId as string;
 }
 
+/**
+ * Grava o contexto de quem abriu a conversa (spec 19, item 17) sem apagar nada
+ * que já exista: `source` só entra se o contato ainda não tinha origem (a
+ * abertura não reescreve a verdade de um contato que já veio de outro canal),
+ * o metadata junta com o antigo vencendo choque de chave, e as tags são união
+ * de conjuntos — leitura-depois-escrita, porque `text[]` não tem append no
+ * PostgREST (mesma conta de `etiquetarConversa`). Falha aqui NÃO derruba a
+ * abertura da conversa: o contexto é cortesia, a conversa é o essencial.
+ */
+async function aplicarContexto(
+  admin: Admin,
+  orgId: string,
+  contactId: string,
+  conversationId: string,
+  input: OpenSharedContactInput,
+): Promise<void> {
+  if (input.source || input.source_metadata || input.tags?.length) {
+    const { data } = await admin
+      .from("contacts")
+      .select("source, source_metadata, tags")
+      .eq("organization_id", orgId)
+      .eq("id", contactId)
+      .maybeSingle();
+    const atual = (data ?? null) as {
+      source?: string | null;
+      source_metadata?: Record<string, unknown> | null;
+      tags?: string[] | null;
+    } | null;
+    const patch: Record<string, unknown> = {};
+    if (input.source && !atual?.source) patch.source = input.source;
+    if (input.source_metadata) {
+      patch.source_metadata = { ...input.source_metadata, ...(atual?.source_metadata ?? {}) };
+    }
+    if (input.tags?.length) {
+      const uniao = [...new Set([...(atual?.tags ?? []), ...input.tags])];
+      if (uniao.length !== (atual?.tags?.length ?? 0)) patch.tags = uniao;
+    }
+    if (Object.keys(patch).length > 0) {
+      const { error } = await admin
+        .from("contacts")
+        .update({ ...patch, updated_at: new Date().toISOString() })
+        .eq("organization_id", orgId)
+        .eq("id", contactId);
+      if (error) {
+        logger.warn("[inbox] contexto de origem não gravado no contato", {
+          organizationId: orgId,
+          contactId,
+          causa: error.message,
+        });
+      }
+    }
+  }
+
+  if (input.conversation_tags?.length) {
+    const { data } = await admin
+      .from("conversations")
+      .select("tags")
+      .eq("organization_id", orgId)
+      .eq("id", conversationId)
+      .maybeSingle();
+    const atuais = ((data as { tags?: string[] | null } | null)?.tags ?? []) as string[];
+    const uniao = [...new Set([...atuais, ...input.conversation_tags])];
+    if (uniao.length !== atuais.length) {
+      const { error } = await admin
+        .from("conversations")
+        .update({ tags: uniao, updated_at: new Date().toISOString() })
+        .eq("organization_id", orgId)
+        .eq("id", conversationId);
+      if (error) {
+        logger.warn("[inbox] etiqueta da conversa não gravada", {
+          organizationId: orgId,
+          conversationId,
+          causa: error.message,
+        });
+      }
+    }
+  }
+}
+
 /** Garante contato + conversa na sessão indicada; reabre conversa fechada se existir. */
 export async function openSharedContactConversation(
   admin: Admin,
@@ -101,5 +188,6 @@ export async function openSharedContactConversation(
     contactId,
     sessionId,
   );
+  await aplicarContexto(admin, organizationId, contactId, conversationId, input);
   return { conversation_id: conversationId, contact_id: contactId };
 }

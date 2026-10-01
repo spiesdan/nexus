@@ -165,13 +165,25 @@ export const patchConversationSchema = z
 
 export type PatchConversationInput = z.infer<typeof patchConversationSchema>;
 
-/** POST /conversations/open-with-contact — abrir inbox a partir de cartão de contato. */
+/**
+ * POST /conversations/open-with-contact — abrir inbox a partir de cartão de contato.
+ *
+ * Os campos de contexto (spec 19, item 16/17) são TODOS opcionais: quem só
+ * quer abrir a conversa continua mandando o corpo de sempre. Vindo da
+ * prospecção, `source`/`source_metadata`/`tags` contam NO CONTATO de onde a
+ * empresa veio (molde da venda automática) e `conversation_tags` etiqueta a
+ * conversa na caixa de entrada — mesma separação que a VA usa.
+ */
 export const openConversationWithContactSchema = z
   .object({
     channel_session_id: z.string().uuid().optional(),
     contact_id: z.string().uuid().optional(),
     phone_number: z.string().min(8).max(32).optional(),
     name: z.string().trim().min(1).max(200).optional(),
+    source: z.string().trim().min(1).max(40).optional(),
+    source_metadata: z.record(z.string(), z.unknown()).optional(),
+    tags: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+    conversation_tags: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
   })
   .refine((d) => !!d.contact_id || !!d.phone_number?.trim(), {
     message: "Informe contact_id ou phone_number.",

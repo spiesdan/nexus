@@ -93,7 +93,8 @@ function BadgeClassificacao({ classe, score, t }: { classe: Classificacao; score
  *
  * Filtros e lista vivem aqui; o mapa (`_mapa.tsx`, leaflet via dynamic +
  * ssr:false para não pesar o bundle) recebe a MESMA lista filtrada — tabela
- * e mapa sempre mostram o mesmo conjunto. Ações: WhatsApp (wa.me, nunca
+ * e mapa sempre mostram o mesmo conjunto. Ações: Iniciar conversa (abre o
+ * Inbox com contexto do prospect, §17), WhatsApp (wa.me no drawer, nunca
  * campanha automática), status, excluir (LGPD), importar ao CRM (unitário e
  * em lote).
  */
@@ -598,6 +599,39 @@ export function EmpresasTab({
     await mudarStatus(id, "sem_interesse");
   }
 
+  // §17: o botão abre o Inbox EXISTENTE com o contexto do prospect (origem,
+  // categoria/cidade em tag, conversa etiquetada como "prospeccao") — nunca um
+  // sistema de mensagens novo. Se o dono da prospecção sou eu, a conversa já
+  // nasce assumida; o claim é best-effort (falhou, a conversa continua aberta).
+  async function iniciarConversa(p: Prospect): Promise<void> {
+    if (!p.telefone) return;
+    try {
+      const corpo = await apiClient.post<{ data: { conversation_id?: string } | null }>(
+        "/api/v1/conversations/open-with-contact",
+        {
+          phone_number: p.telefone,
+          name: p.nome,
+          source: "prospeccao",
+          source_metadata: { prospect_id: p.id, categoria: p.categoria, cidade: p.cidade },
+          tags: [p.categoria, p.cidade].filter(Boolean) as string[],
+          conversation_tags: ["prospeccao"],
+        },
+      );
+      const conversa = corpo?.data?.conversation_id;
+      if (!conversa) return;
+      if (p.owner_user_id && p.owner_user_id === usuarioId) {
+        try {
+          await apiClient.post(`/api/v1/conversations/${conversa}/claim`, {});
+        } catch {
+          // assumir é cortesia — o vendedor assume pela tela se o claim falhar.
+        }
+      }
+      router.push(`/app/inbox?id=${conversa}`);
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function excluir(id: string, nome: string) {
     const ok = await confirmar({
       title: t(`Excluir "${nome}" da base? (LGPD)`),
@@ -857,9 +891,7 @@ export function EmpresasTab({
           )}
           <div className="grid gap-3 lg:grid-cols-[35%_65%]">
             <div className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
-              {ordenada.slice(0, visiveis).map((p) => {
-                const zap = zapHref(p);
-                return (
+              {ordenada.slice(0, visiveis).map((p) => (
                   <div
                     key={p.id}
                     ref={(el) => {
@@ -894,7 +926,7 @@ export function EmpresasTab({
                           </span>
                         )}
                       </p>
-                      {/* §13: Abrir empresa · Iniciar conversa · levar ao CRM. */}
+                      {/* §13/§17: Abrir empresa · Iniciar conversa (Inbox) · fila · CRM. */}
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         <Button
                           size="sm"
@@ -906,16 +938,16 @@ export function EmpresasTab({
                         >
                           {t("Abrir")}
                         </Button>
-                        {zap && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a
-                              href={zap}
-                              onClick={(e) => e.stopPropagation()}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {t("WhatsApp")}
-                            </a>
+                        {podeOperar && p.telefone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void iniciarConversa(p);
+                            }}
+                          >
+                            {t("Iniciar conversa")}
                           </Button>
                         )}
                         {podeOperar && p.owner_user_id !== usuarioId && (
@@ -945,8 +977,7 @@ export function EmpresasTab({
                       </div>
                     </Card>
                   </div>
-                );
-              })}
+              ))}
               {ordenada.length > visiveis && (
                 <Button size="sm" variant="outline" onClick={() => setVisiveis((v) => v + 100)} className="w-full">
                   {t("Mostrar mais")} ({ordenada.length - visiveis} {t("restantes")})
@@ -1016,9 +1047,7 @@ export function EmpresasTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ordenada.slice(0, visiveis).map((p) => {
-                  const zap = zapHref(p);
-                  return (
+                {ordenada.slice(0, visiveis).map((p) => (
                     <TableRow key={p.id} className="align-top">
                       {podeOperar && (
                         <TableCell>
@@ -1083,15 +1112,17 @@ export function EmpresasTab({
                           <Button size="sm" variant="outline" onClick={() => setDetalheId(p.id)}>
                             {t("Ver")}
                           </Button>
-                          {zap && (
-                            <Button size="sm" variant="outline" asChild>
-                              <a href={zap} target="_blank" rel="noopener noreferrer">
-                                {t("WhatsApp")}
-                              </a>
-                            </Button>
-                          )}
                           {podeOperar && (
                             <>
+                              {p.telefone && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => void iniciarConversa(p)}
+                                >
+                                  {t("Iniciar conversa")}
+                                </Button>
+                              )}
                               <Button size="sm" variant="outline" onClick={() => void importar([p.id])}>
                                 {t("CRM")}
                               </Button>
@@ -1103,8 +1134,7 @@ export function EmpresasTab({
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -1243,6 +1273,11 @@ export function EmpresasTab({
             )}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            {podeOperar && detalhe.telefone && (
+              <Button size="sm" onClick={() => void iniciarConversa(detalhe)}>
+                {t("Iniciar conversa")}
+              </Button>
+            )}
             {(() => {
               const zap = zapHref(detalhe);
               return zap ? (

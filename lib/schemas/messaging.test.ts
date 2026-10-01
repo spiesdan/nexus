@@ -206,4 +206,48 @@ describe("openConversationWithContactSchema", () => {
       openConversationWithContactSchema.safeParse({ channel_session_id: session }).success,
     ).toBe(false);
   });
+
+  it("aceita o contexto de prospecção completo (spec 19, item 17)", () => {
+    const r = openConversationWithContactSchema.safeParse({
+      phone_number: "+5511999998888",
+      name: "Padaria Central",
+      source: "prospeccao",
+      source_metadata: { prospect_id: "33333333-3333-4333-8333-333333333333" },
+      tags: ["Alimentação", "Canoinhas"],
+      conversation_tags: ["prospeccao"],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("mantém o corpo legado válido — contexto é opcional", () => {
+    expect(
+      openConversationWithContactSchema.safeParse({
+        contact_id: "22222222-2222-4222-8222-222222222222",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejeita tag vazia e tag acima de 40", () => {
+    expect(
+      openConversationWithContactSchema.safeParse({
+        phone_number: "+5511999998888",
+        tags: ["  "],
+      }).success,
+    ).toBe(false);
+    expect(
+      openConversationWithContactSchema.safeParse({
+        phone_number: "+5511999998888",
+        conversation_tags: ["x".repeat(41)],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejeita mais de 10 tags", () => {
+    expect(
+      openConversationWithContactSchema.safeParse({
+        phone_number: "+5511999998888",
+        tags: Array.from({ length: 11 }, (_, i) => `tag-${i}`),
+      }).success,
+    ).toBe(false);
+  });
 });

@@ -511,6 +511,11 @@ export function CRMSidePanel({ conversation }: Props) {
             {phoneForDisplay(contact.phone_number)}
           </div>
         )}
+        {contact?.source && (
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {t("Origem")}: {t(contact.source)}
+          </div>
+        )}
         {tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {tags.map((t) => (
