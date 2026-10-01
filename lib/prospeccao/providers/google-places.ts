@@ -21,9 +21,8 @@ import type {
 const BASE = "https://places.googleapis.com/v1";
 const GEOCODE = "https://maps.googleapis.com/maps/api/geocode/json";
 
-/** Estimativas em centavos de BRL (Places AT 2025; reajuste = trocar aqui). */
-export const CUSTO_SEARCH_CENTS = 18;
-export const CUSTO_DETAILS_CENTS = 11;
+// Preços não moram aqui: quem os define é o arquivo neutro de custos
+// (lib/prospeccao/custos.ts) — fornecedor não precifica a si mesmo.
 
 export interface Geocodificado {
   latitude: number;

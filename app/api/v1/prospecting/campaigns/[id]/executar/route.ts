@@ -4,7 +4,8 @@
  * Uma busca queued por cidade (com TODAS as categorias da campanha): N
  * cidades = N buscas, nunca N×M jobs simultâneos fora de controle. Cada busca
  * carrega `campaign_id` e entra na fila normal (o drain processa uma por vez).
- * Geocodificação acontece no tick (a criação é barata e não falha por rede).
+ * O provider vem do registro (`criarProvider`) com o `provider_ativo` do
+ * tenant — nunca um `new GooglePlacesProvider` direto (B5 da spec 19).
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -12,12 +13,15 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { GooglePlacesProvider } from "@/lib/prospeccao/providers/google-places";
+import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { decryptWebhookSecret } from "@/lib/webhooks/secrets";
 
 export const dynamic = "force-dynamic";
+
+/** Os mesmos dois com executor ligado que o motor aceita (`motor.ts`). */
+const PROVIDERS_COM_EXECUTOR = ["google_places", "osm_overpass"];
 
 export async function POST(
   _req: NextRequest,
@@ -47,37 +51,55 @@ export async function POST(
     return fail("validation_failed", "Campanha concluída.", 422, { requestId });
   }
 
-  // Geocodifica no fan-out (falha rápida nomeando a cidade, não job morto
-  // depois). Sem chave, 422 antes de criar qualquer busca.
+  // Geocodifica no fan-out com o provider ATIVO do tenant (falha rápida
+  // nomeando a cidade, não job morto depois). Google sem chave ou desligado =
+  // 422 antes de criar qualquer busca.
   const admin = createAdminClient();
   const { data: settings } = await admin
     .from("prospecting_settings")
-    .select("raio_padrao_km, google_api_key_encrypted")
+    .select("raio_padrao_km, provider_ativo")
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  const cfg = (settings ?? {}) as { raio_padrao_km?: number; google_api_key_encrypted?: string | null };
+  const cfg = (settings ?? {}) as { raio_padrao_km?: number; provider_ativo?: string | null };
   const raio = cfg.raio_padrao_km ?? 30;
-  let chave: string | null = null;
-  if (cfg.google_api_key_encrypted) {
-    chave = await decryptWebhookSecret(admin, cfg.google_api_key_encrypted);
-  }
-  if (!chave) chave = process.env.GOOGLE_MAPS_API_KEY?.trim() || null;
-  if (!chave) {
+  // Sem linha de settings, o default honesto é o mesmo do motor: osm_overpass.
+  const providerAtivo = cfg.provider_ativo ?? "osm_overpass";
+  if (!PROVIDERS_COM_EXECUTOR.includes(providerAtivo)) {
     return fail(
       "validation_failed",
-      "Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção.",
+      `Provider "${providerAtivo}" sem executor ligado. Use Configurações → Prospecção.`,
       422,
       { requestId },
     );
   }
-  const geo = new GooglePlacesProvider(chave);
+  let chave: string | null = null;
+  if (providerAtivo === "google_places") {
+    if (!googlePlacesHabilitado()) {
+      return fail("validation_failed", "GOOGLE_PLACES_ENABLED=false nesta instalação.", 422, { requestId });
+    }
+    chave = (await resolverChaveGoogle(admin, authz.org.orgId)).chave;
+    if (!chave) {
+      return fail(
+        "validation_failed",
+        "Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção.",
+        422,
+        { requestId },
+      );
+    }
+  }
+  let geo;
+  try {
+    geo = criarProvider(providerAtivo, { chaveGoogle: chave ?? "" });
+  } catch (e) {
+    return fail("validation_failed", e instanceof Error ? e.message : String(e), 422, { requestId });
+  }
 
   const criadas: string[] = [];
   const semMapa: string[] = [];
   for (const c of camp.cidades) {
-    const ponto = await geo
-      .geocodificar(`${c.cidade}${c.estado ? `, ${c.estado}` : ""}, BR`)
-      .catch(() => null);
+    const ponto = (await geo
+      .geocodificar?.(`${c.cidade}${c.estado ? `, ${c.estado}` : ""}, BR`)
+      .catch(() => null)) ?? null;
     if (!ponto) {
       semMapa.push(c.cidade);
       continue;
@@ -95,7 +117,7 @@ export async function POST(
         longitude: ponto.longitude,
         raio_km: raio,
         max_empresas: 500,
-        provider: "google_places",
+        provider: providerAtivo,
         status: "queued",
         total_celulas: 0,
         created_by: authz.user.id,

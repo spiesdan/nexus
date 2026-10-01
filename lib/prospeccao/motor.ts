@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "@/lib/logger";
-import { decryptWebhookSecret } from "@/lib/webhooks/secrets";
+import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { custoDe } from "@/lib/prospeccao/custos";
+import { termosDeDescoberta } from "@/lib/prospeccao/expansao";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import {
   decidirDedup,
@@ -18,7 +20,6 @@ import {
 } from "@/lib/prospeccao/normalizacao";
 import { scoreDeProspect } from "@/lib/prospeccao/score";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
-import { CUSTO_DETAILS_CENTS, CUSTO_SEARCH_CENTS } from "@/lib/prospeccao/providers/google-places";
 import type { NegocioDescoberto } from "@/lib/prospeccao/tipos";
 
 /**
@@ -92,26 +93,6 @@ interface LinhaBusca {
   requisicoes: number;
   detalhes: number;
   custo_estimado_cents: number;
-}
-
-async function resolverChave(
-  admin: SupabaseClient,
-  orgId: string,
-): Promise<{ chave: string | null; origem: string }> {
-  const { data } = await admin
-    .from("prospecting_settings")
-    .select("google_api_key_encrypted")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  const enc = (data as unknown as { google_api_key_encrypted: string | null } | null)
-    ?.google_api_key_encrypted;
-  if (enc) {
-    const chave = await decryptWebhookSecret(admin, enc);
-    if (chave) return { chave, origem: "tenant" };
-  }
-  const envKey = process.env.GOOGLE_MAPS_API_KEY?.trim();
-  if (envKey) return { chave: envKey, origem: "instalacao" };
-  return { chave: null, origem: "nenhuma" };
 }
 
 async function lerSettings(admin: SupabaseClient, orgId: string) {
@@ -210,11 +191,10 @@ export async function processarTick(
   // Google exige chave (tenant cifrada ou instalação); OSM é aberto.
   let chave: string | null = null;
   if (busca.provider === "google_places") {
-    if (process.env.GOOGLE_PLACES_ENABLED === "false") {
+    if (!googlePlacesHabilitado()) {
       return falhar("GOOGLE_PLACES_ENABLED=false nesta instalação.");
     }
-    const resolvida = await resolverChave(admin, busca.organization_id);
-    chave = resolvida.chave;
+    chave = (await resolverChaveGoogle(admin, busca.organization_id)).chave;
     if (!chave) {
       return falhar("Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção.");
     }
@@ -226,10 +206,7 @@ export async function processarTick(
 
   let provider;
   try {
-    provider =
-      busca.provider === "osm_overpass"
-        ? criar("osm_overpass", {})
-        : criar("google_places", { chaveGoogle: chave ?? "" });
+    provider = criar(busca.provider, { chaveGoogle: chave ?? "" });
   } catch (e) {
     return falhar(e instanceof Error ? e.message : String(e));
   }
@@ -283,6 +260,13 @@ export async function processarTick(
       })
       .eq("id", busca.id);
 
+  // Preço por provider vem do arquivo neutro de custos (OSM = 0 naturalmente);
+  // a FASE 13 sobrepõe com as configurações do tenant (D4 da spec 19).
+  const preco = custoDe(busca.provider);
+  // Ritmo do tenant (§11): pausa entre CHAMADAS, não entre células — com a
+  // expansão de categoria ligada, uma célula vira N chamadas e todas ritmadas.
+  let primeiraChamada = true;
+
   for (let n = 0; n < CELULAS_POR_TICK && processadas < total; n++) {
     const idxCat = Math.floor(processadas / grade.length);
     const idxCel = processadas % grade.length;
@@ -291,26 +275,27 @@ export async function processarTick(
     if (!celula) break;
 
     try {
-      // Ritmo do tenant (§11): sem ele, rajada estoura a cota e o 429 trava a fila.
-      if (n > 0 && pausaMs > 0) await new Promise((r) => setTimeout(r, pausaMs));
-      const r = await provider.search({
-        categoria,
-        latitude: celula.latitude,
-        longitude: celula.longitude,
-        raioMetros: celula.raioMetros,
-        limite: 60,
-      });
-      requisicoes += r.requisicoes;
-      detalhes += r.detalhes;
-      // OSM é gratuito: conta requisições (ritmo/cota), nunca custo.
-      if (busca.provider !== "osm_overpass") {
-        custo += r.requisicoes * CUSTO_SEARCH_CENTS + r.detalhes * CUSTO_DETAILS_CENTS;
-      }
+      // Expansão (§5): default 1 termo = a mesma chamada de antes; ligada
+      // (PROSPECCAO_EXPANSAO=true), varre a família da categoria na mesma célula.
+      for (const termo of termosDeDescoberta(categoria)) {
+        if (!primeiraChamada && pausaMs > 0) await new Promise((r) => setTimeout(r, pausaMs));
+        primeiraChamada = false;
+        const r = await provider.search({
+          categoria: termo.termo,
+          latitude: celula.latitude,
+          longitude: celula.longitude,
+          raioMetros: celula.raioMetros,
+          limite: 60,
+        });
+        requisicoes += r.requisicoes;
+        detalhes += r.detalhes;
+        custo += r.requisicoes * preco.busca + r.detalhes * preco.detalhe;
 
-      const { novas: nn, duplicadas: dd } = await ingerirNegocios(admin, busca, r.negocios, categoria);
-      novas += nn;
-      duplicadas += dd;
-      encontradas += r.negocios.length;
+        const { novas: nn, duplicadas: dd } = await ingerirNegocios(admin, busca, r.negocios, termo.termo);
+        novas += nn;
+        duplicadas += dd;
+        encontradas += r.negocios.length;
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       erros++;

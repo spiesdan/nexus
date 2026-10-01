@@ -13,35 +13,29 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import { buscaCreateSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { decryptWebhookSecret } from "@/lib/webhooks/secrets";
 
 export const dynamic = "force-dynamic";
 
 const TETO_CELULAS = 2000;
 
-async function chaveGoogle(admin: Awaited<ReturnType<typeof createAdminClient>>, orgId: string) {
+async function cfgDaBusca(admin: Awaited<ReturnType<typeof createAdminClient>>, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
-    .select("google_api_key_encrypted, cache_ttl_dias, limite_por_busca")
+    .select("cache_ttl_dias, limite_por_busca")
     .eq("organization_id", orgId)
     .maybeSingle();
   const cfg = data as unknown as {
-    google_api_key_encrypted: string | null;
     cache_ttl_dias: number;
     limite_por_busca: number;
   } | null;
-  let chave: string | null = null;
-  if (cfg?.google_api_key_encrypted) {
-    chave = await decryptWebhookSecret(admin, cfg.google_api_key_encrypted);
-  }
-  if (!chave) chave = process.env.GOOGLE_MAPS_API_KEY?.trim() || null;
-  return { chave, ttl: cfg?.cache_ttl_dias ?? 30, teto: cfg?.limite_por_busca ?? 500 };
+  return { ttl: cfg?.cache_ttl_dias ?? 30, teto: cfg?.limite_por_busca ?? 500 };
 }
 
 export async function GET(_req: NextRequest): Promise<Response> {
@@ -89,7 +83,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       { requestId },
     );
   }
-  if (entrada.provider === "google_places" && process.env.GOOGLE_PLACES_ENABLED === "false") {
+  if (entrada.provider === "google_places" && !googlePlacesHabilitado()) {
     return fail("validation_failed", "GOOGLE_PLACES_ENABLED=false nesta instalação.", 422, { requestId });
   }
   if (!entrada.cidade && (entrada.latitude == null || entrada.longitude == null)) {
@@ -97,7 +91,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const { chave, ttl, teto } = await chaveGoogle(admin, authz.org.orgId);
+  const { ttl, teto } = await cfgDaBusca(admin, authz.org.orgId);
+  const chave =
+    entrada.provider === "google_places"
+      ? (await resolverChaveGoogle(admin, authz.org.orgId)).chave
+      : null;
   if (entrada.provider === "google_places" && !chave) {
     return fail(
       "validation_failed",
@@ -116,10 +114,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   } else {
     let provider;
     try {
-      provider =
-        entrada.provider === "osm_overpass"
-          ? criarProvider("osm_overpass", {})
-          : criarProvider("google_places", { chaveGoogle: chave ?? "" });
+      provider = criarProvider(entrada.provider, { chaveGoogle: chave ?? "" });
     } catch (e) {
       return fail("validation_failed", e instanceof Error ? e.message : String(e), 422, { requestId });
     }

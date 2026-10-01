@@ -183,6 +183,11 @@ const schema = z.object({
   MAPS_BROWSER_ENABLED: z.enum(["true", "false"]).optional().default("false"),
   // Overpass: espelho público padrão; trocar sem código (uso justo do espelho).
   OSM_OVERPASS_URL: z.string().optional().default(""),
+  // Expansão de categoria (§5 da spec 19): "true" faz o motor varrer termos
+  // relacionados da família escolhida (cada termo extra = 1 chamada paga por
+  // célula). Default "false" = 1:1 — custo (§6) pesa mais que expansão até o
+  // budget guard da FASE 13. Leitura direta em lib/prospeccao/expansao.ts.
+  PROSPECCAO_EXPANSAO: z.enum(["true", "false"]).optional().default("false"),
 
   // Fusão (Fase 4): DONO ÚNICO dos eventos ai_agent.dispatch_requested.
   // 'engine' (default) = o worker agent-engine é o único consumidor (o cron
