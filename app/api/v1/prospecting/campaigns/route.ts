@@ -22,7 +22,9 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospecting_campaigns")
-    .select("id, nome, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at")
+    .select(
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at",
+    )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     .insert({
       organization_id: authz.org.orgId,
       nome: parsed.data.nome,
+      objetivo: parsed.data.objetivo ?? null,
       categorias: parsed.data.categorias,
       cidades: parsed.data.cidades,
       recorrencia_dias: parsed.data.recorrencia_dias ?? null,

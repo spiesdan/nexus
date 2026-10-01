@@ -14,6 +14,7 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const campanhaVaCreateSchema = z
   .object({
     nome: z.string().trim().min(1, "Informe o nome da campanha.").max(120),
+    objetivo: z.string().trim().max(300).nullable().optional(),
     cidade: z.string().trim().min(1, "Informe a cidade.").max(120),
     uf: z
       .string()
@@ -54,6 +55,7 @@ export type CampanhaVaCreate = z.infer<typeof campanhaVaCreateSchema>;
 export const campanhaVaUpdateSchema = z
   .object({
     nome: z.string().trim().min(1).max(120),
+    objetivo: z.string().trim().max(300).nullable(),
     status: z.enum(["active", "paused", "completed"]),
     limite_diario: z.number().int().min(1).max(500),
     janela_inicio: z.string().regex(HHMM),

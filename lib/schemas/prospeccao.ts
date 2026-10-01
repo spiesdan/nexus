@@ -117,12 +117,22 @@ export type ArquivoMaps = z.infer<typeof arquivoMapsSchema>;
 
 export const campanhaCreateSchema = z.object({
   nome: z.string().trim().min(2).max(120),
+  objetivo: z.string().trim().max(300).nullable().optional(),
   categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10),
   cidades: z
     .array(z.object({ cidade: z.string().trim().min(2).max(120), estado: z.string().trim().max(10).optional() }))
     .min(1)
     .max(50),
   recorrencia_dias: z.number().int().min(7).max(365).nullable().optional(),
+});
+
+/**
+ * FASE 10 (§28): objetivo é o único campo editável da campanha por enquanto —
+ * o PATCH existe para o painel preencher o "Objetivo" que a spec cobra.
+ * null explícito limpa o campo (mesmo contrato do prospectPatchSchema).
+ */
+export const campanhaPatchSchema = z.object({
+  objetivo: z.string().trim().max(300).nullable(),
 });
 
 export const settingsPutSchema = z.object({

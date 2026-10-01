@@ -19,7 +19,7 @@ import { campanhaVaCreateSchema } from "@/lib/venda-automatica/schemas";
 export const dynamic = "force-dynamic";
 
 const LISTA =
-  "id, nome, status, cidade, uf, categorias, limite_diario, janela_inicio, janela_fim, " +
+  "id, nome, objetivo, status, cidade, uf, categorias, limite_diario, janela_inicio, janela_fim, " +
   "oferta_produtos, perfil_abordagem, followup_horas, followup_textos, responsavel_user_id, created_at";
 
 export async function GET(_req: NextRequest): Promise<Response> {
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     .insert({
       organization_id: authz.org.orgId,
       nome: parsed.data.nome,
+      objetivo: parsed.data.objetivo ?? null,
       status: "active",
       cidade: parsed.data.cidade,
       uf: parsed.data.uf ?? null,

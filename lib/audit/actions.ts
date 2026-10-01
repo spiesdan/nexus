@@ -476,6 +476,7 @@ export const AUDIT_ACTIONS = [
   "prospect.imported_to_crm",
   "prospect.importado_arquivo",
   "prospecting_settings.updated",
+  "prospecting_campaign.updated",
   // Metas comerciais (migration 0225). Meta é decisão gerencial com efeito no
   // dashboard de todo mundo — quem mudou e para quanto fica registrado.
   "commercial_goal.saved",

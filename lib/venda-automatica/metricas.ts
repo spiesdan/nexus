@@ -7,6 +7,9 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { contaComoVenda } from "@/lib/comercial/dashboard";
+import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
+
 import { cotaRestante } from "./elegibilidade";
 import { STATUS_DA_FILA, type StatusDaFila } from "./tipos";
 
@@ -25,6 +28,9 @@ export interface ResumoDaCampanha {
   taxa_resposta_pct: number;
   leads_criados: number;
   oportunidades: number;
+  /** FASE 10 (§28): pedidos/faturamento dos contatos com lead da campanha. */
+  pedidos: number;
+  faturamento_cents: number;
 }
 
 function zero(): Record<StatusDaFila, number> {
@@ -39,6 +45,8 @@ export async function resumoDaCampanha(
   campaignId: string,
   dia: string,
   limiteDiario: number,
+  /** FASE 10: criado em — pedidos ANTES da campanha não foram por ela (D18). */
+  desdeIso?: string,
 ): Promise<ResumoDaCampanha> {
   const { data } = await admin
     .from("automatic_sales_queue")
@@ -64,6 +72,8 @@ export async function resumoDaCampanha(
   let responderam = 0;
   let leads_criados = 0;
   let oportunidades = 0;
+  let pedidos = 0;
+  let faturamento = 0;
 
   const CONSUMEM = new Set([
     "contacting", "contacted", "responded", "qualified_lead", "opportunity",
@@ -89,6 +99,38 @@ export async function resumoDaCampanha(
     if (l.status === "opportunity") oportunidades++;
   }
 
+  // FASE 10 (§28): o fim do funil — pedidos dos contatos que têm lead DESTA
+  // campanha (fila.lead_id → crm_leads.contact_id → commercial_orders),
+  // só a partir da criação da campanha (D18). Sem lead não há vínculo: a
+  // fila é a única ponte campanha→contato que existe.
+  const idsLead = [...new Set(linhas.map((l) => l.lead_id).filter((v): v is string => !!v))];
+  if (desdeIso && idsLead.length > 0) {
+    const { data: leads } = await admin
+      .from("crm_leads")
+      .select("id, contact_id")
+      .eq("organization_id", organizationId)
+      .in("id", idsLead)
+      .limit(10000);
+    const contatos = [
+      ...new Set(((leads ?? []) as { contact_id: string | null }[]).map((l) => l.contact_id).filter((v): v is string => !!v)),
+    ];
+    if (contatos.length > 0) {
+      const { data: pedidosLinhas } = await admin
+        .from("commercial_orders")
+        .select("total_cents, status")
+        .eq("organization_id", organizationId)
+        .in("contact_id", contatos)
+        .gte("created_at", desdeIso)
+        .limit(5000);
+      for (const linha of (pedidosLinhas ?? []) as { total_cents: number; status: string }[]) {
+        if (contaComoVenda(linha.status)) {
+          pedidos++;
+          faturamento += linha.total_cents;
+        }
+      }
+    }
+  }
+
   return {
     dia,
     limite_diario: limiteDiario,
@@ -104,6 +146,33 @@ export async function resumoDaCampanha(
     taxa_resposta_pct: contatados > 0 ? Math.round((responderam / contatados) * 100) : 0,
     leads_criados,
     oportunidades,
+    pedidos,
+    faturamento_cents: faturamento,
+  };
+}
+
+/**
+ * FASE 10 (§28): o resumo da VA virando o funil canônico da spec. Os rótulos
+ * do §28 (Encontrados → … → Pedidos) traduzidos para a jornada da fila:
+ * selecionados = saiu da descoberta/qualificação automática e entrou no
+ * envio (queued + quem passou por ele); qualificados = lead estruturado
+ * (qualified_lead + opportunity + order). Contagem independente por estágio
+ * — ver o cabeçalho de `lib/prospeccao/funil.ts` (pedido sem oportunidade
+ * fechada é dado real, não erro).
+ */
+export function funilDaCampanhaVa(r: ResumoDaCampanha): FunilDaCampanha {
+  const naoSelecionados =
+    (r.por_status.discovered ?? 0) + (r.por_status.qualified ?? 0) + (r.por_status.invalid_contact ?? 0);
+  return {
+    encontrados: r.total,
+    selecionados: Math.max(0, r.total - naoSelecionados),
+    contatados: r.contatados,
+    responderam: r.responderam,
+    qualificados:
+      (r.por_status.qualified_lead ?? 0) + (r.por_status.opportunity ?? 0) + (r.por_status.order ?? 0),
+    oportunidades: r.oportunidades,
+    pedidos: r.pedidos,
+    faturamento_cents: r.faturamento_cents,
   };
 }
 

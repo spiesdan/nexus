@@ -9,7 +9,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
-import { resumoDaCampanha, timelineDaCampanha } from "@/lib/venda-automatica/metricas";
+import { funilDaCampanhaVa, resumoDaCampanha, timelineDaCampanha } from "@/lib/venda-automatica/metricas";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
   const { data: campanha, error } = await supabase
     .from("automatic_sales_campaigns")
-    .select("id, limite_diario")
+    .select("id, limite_diario, created_at, objetivo")
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
@@ -42,11 +42,21 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   const fuso = fusoSeguro((org as { timezone?: string | null } | null)?.timezone);
   const { dia } = relogioNoFuso(new Date().toISOString(), fuso);
 
-  const linha = campanha as unknown as { limite_diario: number };
+  const linha = campanha as unknown as {
+    id: string;
+    limite_diario: number;
+    created_at: string;
+    objetivo: string | null;
+  };
   const [resumo, eventos] = await Promise.all([
-    resumoDaCampanha(supabase, authz.org.orgId, id, dia, linha.limite_diario),
+    resumoDaCampanha(supabase, authz.org.orgId, id, dia, linha.limite_diario, linha.created_at),
     timelineDaCampanha(supabase, authz.org.orgId, id),
   ]);
 
-  return ok({ dia, resumo, eventos }, { requestId });
+  // FASE 10 (§28): o funil Encontrados → … → Pedidos sai pronto daqui — a
+  // tela das duas campanhas consome o MESMO formato (ver lib/prospeccao/funil.ts).
+  return ok(
+    { dia, resumo, eventos, funil: funilDaCampanhaVa(resumo), campanha: { id: linha.id, objetivo: linha.objetivo } },
+    { requestId },
+  );
 }

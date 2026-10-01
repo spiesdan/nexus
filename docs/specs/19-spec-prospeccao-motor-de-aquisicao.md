@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–9 concluídas · FASE 10 (Campanhas / funil) em andamento.
+> **Status:** FASE 1–10 concluídas · FASE 11 (Radar) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -28,7 +28,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
 - [x] **FASE 8** — Fila de prospecção (status comerciais; prioridade; vendedor).
 - [x] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
       nunca sistema de mensagens novo).
-- [ ] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
+- [x] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
 - [ ] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
 - [ ] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
 - [ ] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
@@ -302,7 +302,55 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   — sem regra escrita, não inventar), atribuição a terceiros (ReassignDialog)
   e "iniciar conversa" direto do preview do marcador (§14 — fica pelo drawer
   para não poluir o popup).)*
-- **FASE 10/11/12** — funil de campanhas, Radar, Meu Dia (D7).
+- **D17 — o funil conta estágios por contagem independente, e os rótulos do
+  §28 mapeiam para a jornada real (FECHADA na FASE 10):** o §28 desenha um
+  funil de anéis Encontrados → Selecionados → Contatados → Responderam →
+  Qualificados → Oportunidades → Pedidos → Faturamento. Os dados reais são
+  contagens que se cruzam (um pedido pode nascer sem passar por
+  "responderam" — importação/manual), então cada estágio é contado à parte
+  e a barra cresce/decresce com o dado; anel matemático encadeado seria
+  mentira sobre o banco. Tradução dos rótulos: **Encontrados** = prospects
+  da campanha (descoberta: `prospect_search_results`; VA: linhas da fila);
+  **Selecionados** = dono OU `status_comercial` fora de {novo, nao_analisado}
+  na descoberta; na VA = saiu da descoberta/qualificação automática
+  (`total − discovered − qualified − invalid_contact`); **Contatados** =
+  contatados + respondeu + sem_interesse + qualificado + cliente +
+  contato_pendente (`sem_interesse`/`descartado` NÃO contam: o botão
+  "Ignorar" da FASE 8 não é tentativa de contato); **Responderam** = os
+  que responderam de fato (respondeu + os estágios adiante); **Qualificados**
+  = status ≥ qualificado; **Oportunidades** = `crm_leads` com oportunidade
+  ligada ao lead do prospect; **Pedidos/Faturamento** = pedidos dos contatos
+  com vínculo à campanha (D18). Sets aninhados em `lib/prospeccao/funil.ts`
+  (puro, testado); as duas rotas de painel devolvem o MESMO formato de
+  funil — a tela não sabe qual é qual.
+- **D18 — faturamento atribuído por data da campanha, sem tabela terceira
+  (FECHADA na FASE 10):** o pedido NÃO criado pela campanha não pode ser
+  contado como consequência dela (pedido anterior é anterior). Regra: pedido
+  do contato que tem lead desta campanha com `created_at >= created_at` da
+  campanha, status com `contaComoVenda` (≠ rascunho/cancelado). Vínculo
+  campanha→contato: descoberta = `prospect_search_results` →
+  `business_prospects.contact_id`; VA = `automatic_sales_queue.lead_id` →
+  `crm_leads.contact_id` (a fila é a única ponte que existe — D2 decidiu
+  sem terceira tabela, e atribuição exata exigiria evento por pedido;
+  data da campanha é o piso razoável documentado). Sem lead não há
+  faturamento atribuível. Dinheiro em `_cents` + `comoMoeda` na tela.
+- **FASE 10** — *(FECHADA na FASE 10: migration `0248_campanhas_objetivo`
+  (`objetivo text` nas DUAS tabelas de campanha — as três da doutrina:
+  migration, baseline create + apêndice idempotente, MANIFEST); rotas novas
+  `prospecting/campaigns/[id]` (GET detalhe + PATCH objetivo auditado) e
+  painel de funil para cada tipo (`…/campaigns/[id]/painel` devolve o MESMO
+  `FunilDaCampanha` — descoberta cruza `prospect_search_results` →
+  `business_prospects` → `crm_leads` → contacts → `commercial_orders`; VA
+  adapta o resumo da fila e pedidos dos contatos — D17/D18); aba Campanhas
+  reescrita de lista técnica para painel de cards (D2: as duas campanhas
+  juntas, badge de tipo) com Nome, Objetivo editável no lugar, Região,
+  Categorias, os 6 KPIs do §28 (prospects, contatados, respostas,
+  oportunidades, pedidos, faturamento) e funil de barras em 7 estágios.
+  Gaps: wizard de criação NÃO ganhou campo objetivo (edição é no painel;
+  sem regra pedindo no wizard, não inventar); status `order` da fila da VA
+  nunca é escrito pelo motor (faturamento sai dos `commercial_orders`
+  reais); N+1 do painel (1 request por campanha) fica para a FASE 15.)*
+- **FASE 11/12** — Radar, Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
   (espelhar cota diária da VA).
 - **FASE 14** — testes de rota/API (B13).

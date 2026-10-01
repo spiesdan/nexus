@@ -18813,6 +18813,7 @@ create table if not exists public.prospecting_campaigns (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   nome text not null,
+  objetivo text,
   categorias text[] not null default '{}',
   -- [{cidade, estado}] — JSON porque cidade não é entidade (sem ciclo próprio).
   cidades jsonb not null default '[]',
@@ -20657,6 +20658,7 @@ create table if not exists public.automatic_sales_campaigns (
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
   nome text not null,
+  objetivo text,
   status text not null default 'active'
     check (status in ('active', 'paused', 'completed')),
 
@@ -20870,3 +20872,15 @@ comment on column public.business_prospects.owner_user_id is
   'Vendedor dono do prospect na fila (item 16 da spec 19). NULL = sem dono; nao entra na fila de ninguem. On delete set null: sair do time desvincula, nao apaga o prospect.';
 comment on column public.business_prospects.proximo_passo is
   'Proxima acao combinada pelo vendedor no drawer (item 16 da spec 19). Texto livre do produto, nao do provider.';
+
+
+alter table public.prospecting_campaigns
+  add column if not exists objetivo text;
+
+alter table public.automatic_sales_campaigns
+  add column if not exists objetivo text;
+
+comment on column public.prospecting_campaigns.objetivo is
+  'Objetivo comercial da campanha de descoberta (spec 19, secao 28). Texto livre do produto; preenchido no painel de campanhas.';
+comment on column public.automatic_sales_campaigns.objetivo is
+  'Objetivo comercial da campanha de venda automatica (spec 19, secao 28). Texto livre do produto; preenchido no painel de campanhas.';
