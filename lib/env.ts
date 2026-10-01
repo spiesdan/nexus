@@ -188,6 +188,12 @@ const schema = z.object({
   // célula). Default "false" = 1:1 — custo (§6) pesa mais que expansão até o
   // budget guard da FASE 13. Leitura direta em lib/prospeccao/expansao.ts.
   PROSPECCAO_EXPANSAO: z.enum(["true", "false"]).optional().default("false"),
+  // Dias de validade da cache de descoberta (§7 da spec 19) quando a
+  // organização ainda não tem linha em prospecting_settings — por org o TTL
+  // mora em Configurações → Prospecção ("Cache (dias, 0 desliga)"), que SEMPRE
+  // vence. "0" desliga a cache; 7/15/30 são os exemplos do plano. Leitura em
+  // app/api/v1/prospecting/searches/route.ts.
+  DISCOVERY_CACHE_TTL: z.string().optional().default("30"),
 
   // Fusão (Fase 4): DONO ÚNICO dos eventos ai_agent.dispatch_requested.
   // 'engine' (default) = o worker agent-engine é o único consumidor (o cron

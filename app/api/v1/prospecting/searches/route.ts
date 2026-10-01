@@ -2,10 +2,12 @@
  * POST /api/v1/prospecting/searches — cria uma busca (job).
  * GET  /api/v1/prospecting/searches — lista com progresso.
  *
- * Criar valida, geocodifica (cidade→coordenadas), estima a grade e recusa
- * grade gigante (cap 2000 células — estado inteiro pede campanha fatiada).
- * Cache: mesmo hash dentro do TTL devolve a busca existente (reutilizada),
- * a menos que `forcar: true`.
+ * Criar valida, tenta a cache, geocodifica (cidade→coordenadas), estima a
+ * grade e recusa grade gigante (cap 2000 células — estado inteiro pede
+ * campanha fatiada).
+ * Cache (§7): mesmo hash dentro do TTL devolve a busca existente com
+ * `do_cache: true`, a menos que `forcar: true`. O hit vem ANTES do geocode —
+ * repetição dentro do TTL não paga NEM uma chamada de mapa.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -13,6 +15,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { env } from "@/lib/env";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
@@ -25,22 +28,34 @@ export const dynamic = "force-dynamic";
 
 const TETO_CELULAS = 2000;
 
+/** Default da instalação (§7): "30" é o piso; lixo cai no 30 também. */
+function ttlInstalacao(): number {
+  const bruto = Number(env.DISCOVERY_CACHE_TTL);
+  return Number.isFinite(bruto) && bruto >= 0 ? bruto : 30;
+}
+
 async function cfgDaBusca(admin: Awaited<ReturnType<typeof createAdminClient>>, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
-    .select("cache_ttl_dias, limite_por_busca, provider_ativo")
+    .select("cache_ttl_dias, limite_por_busca, provider_ativo, grid_size_km, grid_overlap_pct")
     .eq("organization_id", orgId)
     .maybeSingle();
   const cfg = data as unknown as {
     cache_ttl_dias: number;
     limite_por_busca: number;
     provider_ativo: string;
+    grid_size_km: number;
+    grid_overlap_pct: number;
   } | null;
   return {
-    ttl: cfg?.cache_ttl_dias ?? 30,
+    ttl: cfg?.cache_ttl_dias ?? ttlInstalacao(),
     teto: cfg?.limite_por_busca ?? 500,
     // Mesmo default honesto do motor: sem linha de settings, só o OSM roda.
     providerAtivo: cfg?.provider_ativo ?? "osm_overpass",
+    grade: {
+      tamanho: Number(cfg?.grid_size_km ?? 5),
+      sobreposicao: Number(cfg?.grid_overlap_pct ?? 10),
+    },
   };
 }
 
@@ -86,7 +101,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const { ttl, teto, providerAtivo } = await cfgDaBusca(admin, authz.org.orgId);
+  const { ttl, teto, providerAtivo, grade: cfgGrade } = await cfgDaBusca(admin, authz.org.orgId);
   // Provider escolhido é o da Configuração → Prospecção (a tela nem manda);
   // quem mandar diferente é recusado na hora, igual o motor recusaria depois.
   if (entrada.provider && entrada.provider !== providerAtivo) {
@@ -122,6 +137,42 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
 
+  // Cache (§7/§30): o hash usa só a entrada (cidade/UF/raio/provider), então o
+  // hit vem ANTES do geocode — mesma pesquisa dentro do TTL não paga nem uma
+  // chamada de mapa. Grade gigante também: hit não cria job novo.
+  const hash = hashDaBusca({
+    categorias: entrada.categorias,
+    cidade: entrada.cidade ?? entrada.rotulo ?? null,
+    estado: entrada.estado ?? null,
+    raioKm: entrada.raio_km,
+    provider,
+    latitude: entrada.latitude ?? null,
+    longitude: entrada.longitude ?? null,
+  });
+  if (!forcar && ttl > 0) {
+    const desde = new Date(Date.now() - ttl * 86400000).toISOString();
+    const { data: recente } = await admin
+      .from("prospecting_searches")
+      .select("id, status")
+      .eq("organization_id", authz.org.orgId)
+      .eq("search_hash", hash)
+      .eq("status", "completed")
+      .gte("finished_at", desde)
+      .order("finished_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recente) {
+      return ok(
+        {
+          reutilizada: (recente as unknown as { id: string }).id,
+          do_cache: true,
+          ttl_dias: ttl,
+        },
+        { requestId },
+      );
+    }
+  }
+
   // Geocodifica AGORA (falha rápida, não job falho depois de 40 células).
   // OSM usa Nominatim (grátis); Google usa Geocoding (mesma chave).
   // Com coordenadas ("Buscar nesta área"), pula o geocode e usa o ponto.
@@ -147,19 +198,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   // Grade estimada antes de gravar: estado inteiro numa busca só é recusado
   // aqui, com número, em vez de travar a fila por dias.
-  const { data: settings } = await admin
-    .from("prospecting_settings")
-    .select("grid_size_km, grid_overlap_pct")
-    .eq("organization_id", authz.org.orgId)
-    .maybeSingle();
-  const cfg = (settings ?? {}) as { grid_size_km?: number; grid_overlap_pct?: number };
-  const grade = gerarGrade(
-    geo.latitude,
-    geo.longitude,
-    entrada.raio_km,
-    Number(cfg.grid_size_km ?? 5),
-    Number(cfg.grid_overlap_pct ?? 10),
-  );
+  const grade = gerarGrade(geo.latitude, geo.longitude, entrada.raio_km, cfgGrade.tamanho, cfgGrade.sobreposicao);
   const totalCelulas = grade.length * entrada.categorias.length;
   if (totalCelulas > TETO_CELULAS) {
     return fail(
@@ -168,33 +207,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       422,
       { requestId },
     );
-  }
-
-  // Cache (§30): mesmo hash dentro do TTL reutiliza (sem reconsultar tudo).
-  const hash = hashDaBusca({
-    categorias: entrada.categorias,
-    cidade: entrada.cidade ?? entrada.rotulo ?? null,
-    estado: entrada.estado ?? null,
-    raioKm: entrada.raio_km,
-    provider,
-    latitude: entrada.latitude ?? null,
-    longitude: entrada.longitude ?? null,
-  });
-  if (!forcar && ttl > 0) {
-    const desde = new Date(Date.now() - ttl * 86400000).toISOString();
-    const { data: recente } = await admin
-      .from("prospecting_searches")
-      .select("id, status")
-      .eq("organization_id", authz.org.orgId)
-      .eq("search_hash", hash)
-      .eq("status", "completed")
-      .gte("finished_at", desde)
-      .order("finished_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (recente) {
-      return ok({ reutilizada: (recente as unknown as { id: string }).id }, { requestId });
-    }
   }
 
   const supabase = await createClient();
@@ -213,8 +225,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       provider,
       campaign_id: entrada.campaign_id ?? null,
       status: "queued",
-      grid_size_km: Number(cfg.grid_size_km ?? 5),
-      grid_overlap_pct: Number(cfg.grid_overlap_pct ?? 10),
+      grid_size_km: cfgGrade.tamanho,
+      grid_overlap_pct: cfgGrade.sobreposicao,
       total_celulas: totalCelulas,
       search_hash: hash,
       created_by: authz.user.id,

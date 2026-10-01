@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–3 concluídas · FASE 4 (cache + dedup) em andamento.
+> **Status:** FASE 1–4 concluídas · FASE 5 (matching + classificação) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -17,7 +17,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       normalização → dedupe → match → qualificação → score).
 - [x] **FASE 3** — Google Places Provider (atrás da abstração; campos mínimos;
       nunca acoplado à UI).
-- [ ] **FASE 4** — Cache + deduplicação (`DISCOVERY_CACHE_TTL`,
+- [x] **FASE 4** — Cache + deduplicação (`DISCOVERY_CACHE_TTL`,
       `ProspectDeduplicationService` com prioridade de identificadores).
 - [ ] **FASE 5** — Customer matching (cruza com clientes/leads/prospects/oportunidades
       existentes; classificação comercial do prospect).
@@ -115,7 +115,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 | B7 | `maps_browser` (esqueleto) segue nos metadados expostos à UI | `registro.ts:12,50` (rota já rejeita em `searches/route.ts:84`) | FASE 3/6 |
 | B8 | Expansão de categoria é 1:1 rótulo→termo; não há termos relacionados nem serviço configurável | `categorias.ts:99` | FASE 2/5 |
 | B9 | Status em inglês cru na aba Pesquisas (`queued`, `running`, `paused`…) | `_client.tsx:309` | FASE 6 |
-| B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 |
+| B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 — fechado por D10/D11 (detalhe já vem na descoberta; Details sem consumidor até a etapa 2) |
 | B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 |
 | B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 |
 | B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 |
@@ -165,6 +165,17 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   (FASE 13) no caminho. Dedupe por telefone/domínio (§8) também exige o
   contato já na descoberta: não enxugar a máscara da etapa 1 sem antes
   resolver isso.
+- **D11 — Cache de Place Details = a própria linha do prospect (FECHADA na
+  FASE 4):** o §32 sugere uma entidade `DiscoveryCache`, mas não há o que
+  cachear fora do banco enquanto `getDetails` não tem consumidor (D10): a
+  descoberta já grava os detalhes pagos nas colunas de `business_prospects`,
+  e o dedup nível 1 (provider+external_id) reutiliza a linha em vez de
+  recriar. Tabela nova de Details só quando a etapa 2 ligar (D10b, com budget
+  guard da FASE 13). O que a FASE 4 entregou de cache: hit de busca **antes**
+  do geocode, resposta `do_cache` na API, e `DISCOVERY_CACHE_TTL` (§7 nomeia
+  a variável) como default de instalação atrás do TTL por org (Config, 0–365).
+  Dedupe (§8) já existia em 5 níveis em `dedup.ts` — fechado sem código novo;
+  testes de dedupe/cache/TTL ficam na FASE 14.
 
 ### Gaps por fase (de onde cada uma parte)
 
@@ -173,7 +184,11 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 - **FASE 3** — provider Google já é o FASE 3 (field masks ✓); falta enriquecimento
   sob demanda (B10) e tirar `maps_browser` do seletor (B7).
 - **FASE 4** — busca já tem hash+TTL; falta cache de Details e resposta "do cache"
-  visível sem reconsulta.
+  visível sem reconsulta. *(FECHADA na FASE 4: hit de cache ANTES do geocode —
+  repetição não paga nem chamada de mapa; resposta `do_cache` + `ttl_dias` (a UI
+  já avisava "Busca recente reutilizada"); default de instalação
+  `DISCOVERY_CACHE_TTL` (§7) atrás do TTL por org; uma leitura só de settings;
+  Details = decisão D11.)*
 - **FASE 5** — match existe (`ja_e_cliente`); falta classificação completa
   (lead/oportunidade/já abordado) e score com distância/aderência Bill.
 - **FASE 6/7** — UX: "Encontrar empresas", deep-link, janela maior (B1-B3, B9, B14).
