@@ -557,4 +557,4 @@ _Registrar as escolhas tomadas conforme "tomar as melhores decisões"._
 - [x] ETAPA 12 — auditoria
 - [x] ETAPA 13 — testes de idempotência/duplicidade
 - [x] Validação (typecheck, lint, gov:verify, test:db)
-- [ ] Release + deploy VPS
+- [x] Release + deploy VPS
