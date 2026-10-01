@@ -200,6 +200,20 @@ export const PONTOS_DE_IA: readonly PontoDeIa[] = [
     registraEm: "llm_calls",
   },
   {
+    id: "automatic_sales_message",
+    rotulo: "Escrever a abordagem da Venda Automática",
+    oQueFaz:
+      "Escreve a primeira mensagem de uma campanha de Venda Automática, com o nome, a cidade e os produtos reais do seu catálogo — sem preço inventado.",
+    papel: "atender",
+    // Sem tools: quem envia é o worker da campanha, com janela de horário,
+    // cota diária e opt-out. Dar `send_message` ao modelo faria dele o remetente.
+    exige: {},
+    emissor: "lib/venda-automatica/abordagem.ts",
+    sintomaDeFalha:
+      "A campanha enfileira os contatos certos, mas nenhuma primeira mensagem é enviada — a fila para em 'falha' sem ninguém ter recebido nada.",
+    registraEm: "llm_calls",
+  },
+  {
     id: "draft_suggestion",
     rotulo: "Sugerir resposta ao atendente",
     oQueFaz:
@@ -282,6 +296,18 @@ export const PONTOS_DE_IA: readonly PontoDeIa[] = [
     emissor: "lib/agent-engine/agent/followup-flow-classify.ts",
     sintomaDeFalha:
       "As retomadas saem todas no mesmo horário fixo, sem respeitar o ritmo de cada cliente.",
+    registraEm: "llm_calls",
+  },
+  {
+    id: "automatic_sales_classification",
+    rotulo: "Classificar a resposta da Venda Automática",
+    oQueFaz:
+      "Lê a resposta de quem recebeu a abordagem e decide se é interesse alto, médio, baixo ou recusa — o que move a linha da campanha e cria o lead.",
+    papel: "entender",
+    exige: {},
+    emissor: "lib/venda-automatica/classificacao.ts",
+    sintomaDeFalha:
+      "As respostas chegam na caixa de entrada, mas a fila da campanha não marca interesse nem cria lead — parece que ninguém respondeu.",
     registraEm: "llm_calls",
   },
 

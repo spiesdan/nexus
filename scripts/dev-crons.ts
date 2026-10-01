@@ -15,6 +15,7 @@ const PATHS = [
   "/api/v1/cron/event-log-drain",
   "/api/v1/cron/followup-flow-worker",
   "/api/v1/cron/prospecting-drain",
+  "/api/v1/cron/automatic-sales",
   "/api/v1/cron/fiscal-drain",
 ] as const;
 

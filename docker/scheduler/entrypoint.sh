@@ -63,6 +63,7 @@ CRONS="
 * * * * *|25|api/v1/cron/routing-worker
 * * * * *|25|api/v1/cron/recover-stuck-messages
 * * * * *|45|api/v1/cron/prospecting-drain
+* * * * *|60|api/v1/cron/automatic-sales
 */2 * * * *|120|api/v1/cron/fiscal-drain
 */5 * * * *|25|api/v1/cron/storage-redaction?limit=50
 */5 * * * *|25|api/v1/cron/snooze-watcher

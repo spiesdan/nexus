@@ -495,6 +495,13 @@ export const AUDIT_ACTIONS = [
   "commercial_task.created",
   "commercial_task.concluida",
   "commercial_activity.created",
+  // Venda Automática (spec 18 / migration 0246). A campanha decide para quem
+  // a empresa fala e quanto gasta por dia — criar, pausar e pular/bloquear um
+  // contato são gesto com dono, data e motivo.
+  "automatic_sales.campaign_created",
+  "automatic_sales.campaign_updated",
+  "automatic_sales.campaign_deleted",
+  "automatic_sales.queue_action",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
