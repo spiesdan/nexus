@@ -13,13 +13,13 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 ### Adicionado
 
 - **Venda Automática — campanhas de abordagem com cota diária, janela de horário e follow-ups** A **Venda Automática** entra no produto: você monta uma campanha por
-  cidade (e categorias do Radar), o sistema escolhe os candidatos do dia
+  cidade (e categorias da prospecção), o sistema escolhe os candidatos do dia
   dentro de uma cota diária, manda a primeira mensagem pela IA dentro da
   janela de horário que você definiu, faz os follow-ups (24h e 48h por
   padrão), classifica as respostas e encaminha interessados como lead —
   tudo com fila visível e ações humanas.
 
-  **Como usar:** Radar → aba Empresas → filtre pela cidade e as
+  **Como usar:** Prospecção → aba Empresas → filtre pela cidade e as
   categorias → botão **“Criar venda automática”** (usa o filtro atual, a
   lista ou a seleção de prospects como cota). A tela abre em
   **Venda Automática** no menu lateral: campanhas, painel do dia, fila

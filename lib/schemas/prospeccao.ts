@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { Classificacao } from "@/lib/prospeccao/classificacao";
+
 /**
  * O CONTRATO DA PROSPECÇÃO — um só, lido pela tela E pelas rotas.
  */
@@ -154,6 +156,8 @@ export interface Prospect {
   longitude: number | null;
   endereco: string | null;
   discovered_at: string;
+  /** Derivada a cada GET (§10/D13) — opcional porque nem toda rota que devolve linha a calcula. */
+  classificacao?: Classificacao;
 }
 
 export const COLUNAS_DO_PROSPECT =

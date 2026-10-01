@@ -46,6 +46,18 @@ export function bonusDeAderencia(categoriaPedida: boolean): number {
   return categoriaPedida ? PESOS_SCORE.categoria : Math.round(PESOS_SCORE.categoria / 2);
 }
 
+/**
+ * "Alta prioridade" (§11: "Prioridade alta = alta aderência ao perfil
+ * comercial"; §13 e §36 pedem a badge e o chip de filtro). A spec não define
+ * número — D14 da spec 19 fixa 3/4 da escala: ordena a fila, não é verdade
+ * absoluta (§11), e o corte vive aqui para mudar num lugar só.
+ */
+export const CORTE_ALTA_PRIORIDADE = 70;
+
+export function prioridadeAlta(score: number): boolean {
+  return score >= CORTE_ALTA_PRIORIDADE;
+}
+
 export function scoreDeProspect(e: EntradaScore): number {
   let score = 0;
   if (e.temTelefone) score += PESOS_SCORE.telefone;

@@ -41,6 +41,8 @@ import { apiClient } from "@/lib/api/client";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import { distanciaKm, limitesDosPontos, centroERaioDoBbox, ordemDeVisita, comprimentoDaRota } from "@/lib/prospeccao/geo";
+import { prioridadeAlta } from "@/lib/prospeccao/score";
+import { ROTULO_CLASSIFICACAO, type Classificacao } from "@/lib/prospeccao/classificacao";
 import type { PontoMapa } from "./_mapa";
 import {
   ROTULO_STATUS_COMERCIAL,
@@ -56,6 +58,35 @@ const ROTULO_ORIGEM: Record<string, string> = {
   maps_arquivo: "Arquivo importado",
   maps_scraper: "Arquivo importado",
 };
+
+/** Cores da classificação (§10) — badge lê "Novo prospect", nunca "novo" cru. */
+const CLASSE_COR: Record<Classificacao, string> = {
+  cliente_existente: "bg-green-100 text-green-800",
+  em_negociacao: "bg-blue-100 text-blue-800",
+  lead_existente: "bg-sky-100 text-sky-800",
+  sem_potencial: "bg-muted text-muted-foreground",
+  ja_abordado: "bg-orange-100 text-orange-800",
+  qualificado: "bg-purple-100 text-purple-800",
+  aguardando_qualificacao: "bg-yellow-100 text-yellow-800",
+  novo: "bg-teal-100 text-teal-800",
+};
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function BadgeClassificacao({ classe, score, t }: { classe: Classificacao; score: number; t: (s: string) => string }) {
+  return (
+    <>
+      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${CLASSE_COR[classe]}`}>
+        {t(ROTULO_CLASSIFICACAO[classe])}
+      </span>
+      {prioridadeAlta(score) && (
+        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">
+          {t("Alta prioridade")}
+        </span>
+      )}
+    </>
+  );
+}
 
 /**
  * Aba EMPRESAS — tabela + mapa sincronizados (§§14, 20 do plano).
@@ -106,14 +137,33 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const confirmar = useConfirmar();
   const router = useRouter();
   const paramsUrl = useSearchParams();
-  const [filtros, setFiltros] = React.useState<Filtros>(() => ({
-    ...VAZIOS,
-    busca: paramsUrl.get("busca") ?? "",
-    categoria: paramsUrl.get("categoria") ?? "",
-    cidade: paramsUrl.get("cidade") ?? "",
-    estado: paramsUrl.get("estado") ?? "",
-    status: paramsUrl.get("status") ?? "",
-  }));
+  // "Ver empresas" desta busca (B1): uuid vive em busca_id, nunca no campo
+  // de texto — link antigo `?busca=<uuid>` também é reconhecido.
+  const [buscaId, setBuscaId] = React.useState<string | null>(() => {
+    const id = paramsUrl.get("busca_id");
+    if (id) return id;
+    const texto = paramsUrl.get("busca") ?? "";
+    return UUID_RE.test(texto) ? texto : null;
+  });
+  const [filtros, setFiltros] = React.useState<Filtros>(() => {
+    const texto = paramsUrl.get("busca") ?? "";
+    return {
+      ...VAZIOS,
+      busca: UUID_RE.test(texto) ? "" : texto,
+      categoria: paramsUrl.get("categoria") ?? "",
+      cidade: paramsUrl.get("cidade") ?? "",
+      estado: paramsUrl.get("estado") ?? "",
+      status: paramsUrl.get("status") ?? "",
+      notaMin: paramsUrl.get("nota_min") ?? "",
+      comTelefone: paramsUrl.get("com_telefone") === "true",
+      comWebsite: paramsUrl.get("com_website") === "true",
+      comWhatsapp: paramsUrl.get("com_whatsapp") === "true",
+      soSemCliente: paramsUrl.get("so_sem_cliente") === "true",
+    };
+  });
+  // B2: o 1º fetch tem que partir da URL, não de VAZIOS — senão deep-link
+  // carrega os campos e a lista ignora tudo. Congelado no primeiro render.
+  const iniciaisRef = React.useRef({ filtros, buscaId });
   const [lista, setLista] = React.useState<(Prospect & { ja_e_cliente: boolean })[] | null>(null);
   const [erro, setErro] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
@@ -127,6 +177,10 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const [rotaIds, setRotaIds] = React.useState<string[] | null>(null);
   const [visiveis, setVisiveis] = React.useState(100);
   const [importandoArquivo, setImportandoArquivo] = React.useState(false);
+  // Chips de resultado (§36) — recorte do que JÁ foi buscado, sem request novo.
+  const [soAlta, setSoAlta] = React.useState(false);
+  const [soNovos, setSoNovos] = React.useState(false);
+  const [soAbordados, setSoAbordados] = React.useState(false);
   const refsLinhas = React.useRef(new Map<string, HTMLDivElement>());
 
   React.useEffect(() => {
@@ -137,9 +191,13 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       .catch(() => undefined);
   }, [podeOperar]);
 
-  const buscar = React.useCallback(async (f: Filtros) => {
+  const buscar = React.useCallback(async (f: Filtros, idBusca: string | null) => {
     try {
       const qs = new URLSearchParams();
+      // Janela da API (máx 200) — B3: sem isto a lista só via 50 linhas e as
+      // contagens mentiam; paginação de verdade é FASE 15.
+      qs.set("limite", "200");
+      if (idBusca) qs.set("busca_id", idBusca);
       if (f.busca.trim()) qs.set("busca", f.busca.trim());
       if (f.categoria.trim()) qs.set("categoria", f.categoria.trim());
       if (f.cidade.trim()) qs.set("cidade", f.cidade.trim());
@@ -150,9 +208,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       if (f.comWhatsapp) qs.set("com_whatsapp", "true");
       if (f.notaMin) qs.set("nota_min", f.notaMin);
       if (f.soSemCliente) qs.set("so_sem_cliente", "true");
-      const corpo = await apiClient.get<{ data: unknown }>(
-        `/api/v1/prospecting/prospects${qs.toString() ? `?${qs}` : ""}`,
-      );
+      const corpo = await apiClient.get<{ data: unknown }>(`/api/v1/prospecting/prospects?${qs.toString()}`);
       const dados = (corpo as { data?: unknown } | null)?.data;
       setLista(Array.isArray(dados) ? dados : []);
       setSelecionados([]);
@@ -164,19 +220,21 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   }, []);
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void buscar(VAZIOS);
+    void buscar(iniciaisRef.current.filtros, iniciaisRef.current.buscaId);
   }, [buscar]);
 
   // Texto espera 350ms parada; selects e toggles aplicam na hora — o mesmo
   // vocabulário da tela de pedidos.
-  const buscarDevagar = useDebouncedCallback((f: Filtros) => void buscar(f), 350);
+  const buscarDevagar = useDebouncedCallback(
+    (f: Filtros) => void buscar(f, buscaId),
+    350,
+  );
 
   function mudar(patch: Partial<Filtros>, devagar = false) {
     setFiltros((atual) => {
       const f = { ...atual, ...patch };
       if (devagar) buscarDevagar(f);
-      else void buscar(f);
+      else void buscar(f, buscaId);
       return f;
     });
   }
@@ -192,6 +250,16 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   ].filter(Boolean).length;
 
   const chips: ActiveChip[] = [];
+  if (buscaId) {
+    chips.push({
+      key: "busca_id",
+      label: `${t("Busca específica")}: ${buscaId.slice(0, 8)}…`,
+      onRemove: () => {
+        setBuscaId(null);
+        void buscar(filtros, null);
+      },
+    });
+  }
   if (filtros.busca.trim()) {
     chips.push({
       key: "busca",
@@ -233,8 +301,12 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
 
   function limparFiltros() {
     setFiltros(VAZIOS);
+    setBuscaId(null);
+    setSoAlta(false);
+    setSoNovos(false);
+    setSoAbordados(false);
     setAvancadosAbertos(false);
-    void buscar(VAZIOS);
+    void buscar(VAZIOS, null);
   }
 
   function alternar(id: string) {
@@ -244,20 +316,57 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   // URL state (§40): filtros + ordem + empresa sobrevivem a reload e link.
   React.useEffect(() => {
     const qs = new URLSearchParams();
+    if (buscaId) qs.set("busca_id", buscaId);
     if (filtros.busca.trim()) qs.set("busca", filtros.busca.trim());
     if (filtros.categoria.trim()) qs.set("categoria", filtros.categoria.trim());
     if (filtros.cidade.trim()) qs.set("cidade", filtros.cidade.trim());
     if (filtros.estado.trim()) qs.set("estado", filtros.estado.trim());
     if (filtros.status) qs.set("status", filtros.status);
+    if (filtros.notaMin) qs.set("nota_min", filtros.notaMin);
+    if (filtros.comTelefone) qs.set("com_telefone", "true");
+    if (filtros.comWebsite) qs.set("com_website", "true");
+    if (filtros.comWhatsapp) qs.set("com_whatsapp", "true");
+    if (filtros.soSemCliente) qs.set("so_sem_cliente", "true");
     if (ordem !== "relevancia") qs.set("ordem", ordem);
     if (selecionadoId) qs.set("empresa", selecionadoId);
     router.replace(`/app/prospeccao${qs.toString() ? `?${qs}` : ""}`, { scroll: false });
-  }, [filtros.busca, filtros.categoria, filtros.cidade, filtros.estado, filtros.status, ordem, selecionadoId, router]);
+  }, [
+    buscaId,
+    filtros.busca,
+    filtros.categoria,
+    filtros.cidade,
+    filtros.estado,
+    filtros.status,
+    filtros.notaMin,
+    filtros.comTelefone,
+    filtros.comWebsite,
+    filtros.comWhatsapp,
+    filtros.soSemCliente,
+    ordem,
+    selecionadoId,
+    router,
+  ]);
 
   type ItemLista = Prospect & { ja_e_cliente: boolean };
+
+  // Recorte dos chips de resultado (§36) — alta prioridade (D14), novos e já
+  // abordados vêm da classificação derivada (§10/D13) devolvida pela API.
+  const listaFiltrada = React.useMemo(
+    () =>
+      (lista ?? []).filter((p) => {
+        if (soAlta && !prioridadeAlta(p.score)) return false;
+        if (soNovos && p.classificacao !== "novo") return false;
+        if (soAbordados && p.classificacao !== "ja_abordado") return false;
+        return true;
+      }),
+    [lista, soAlta, soNovos, soAbordados],
+  );
+  const chipsResultadoAtivos = soAlta || soNovos || soAbordados;
+  const temFiltroAtivo = chips.length > 0 || chipsResultadoAtivos;
+
   const comGeo = React.useMemo(
-    () => (lista ?? []).filter((p) => p.latitude !== null && p.longitude !== null),
-    [lista],
+    () => listaFiltrada.filter((p) => p.latitude !== null && p.longitude !== null),
+    [listaFiltrada],
   );
   const pontos: PontoMapa[] = React.useMemo(
     () =>
@@ -283,7 +392,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   const centroRaio = React.useMemo(() => (limites ? centroERaioDoBbox(limites) : null), [limites]);
 
   const ordenada = React.useMemo(() => {
-    const base = [...(lista ?? [])];
+    const base = [...listaFiltrada];
     const ref = centroRaio;
     const dist = (p: ItemLista): number =>
       ref && p.latitude !== null && p.longitude !== null
@@ -303,10 +412,10 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       default:
         return base.sort((a, b) => b.score - a.score);
     }
-  }, [lista, ordem, centroRaio]);
+  }, [listaFiltrada, ordem, centroRaio]);
 
   const analise = React.useMemo(() => {
-    const l = lista ?? [];
+    const l = listaFiltrada;
     const comFone = l.filter((p) => p.telefone).length;
     const comSite = l.filter((p) => p.website).length;
     const notas = l.map((p) => p.nota).filter((n): n is number => n !== null);
@@ -319,7 +428,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       comSite,
       ratingMedio: notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null,
     };
-  }, [lista]);
+  }, [listaFiltrada]);
 
   function selecionar(id: string | null) {
     setSelecionadoId(id);
@@ -332,7 +441,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   }
 
   async function buscarNestaArea(lim: { sul: number; oeste: number; norte: number; leste: number }) {
-    const categorias = [...new Set((lista ?? []).map((p) => p.categoria).filter(Boolean))].slice(0, 10) as string[];
+    const categorias = [...new Set(listaFiltrada.map((p) => p.categoria).filter(Boolean))].slice(0, 10) as string[];
     if (categorias.length === 0) {
       toast.error(t("Sem categorias nos resultados para buscar na área."));
       return;
@@ -395,7 +504,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
       const r = corpo?.data ?? { vinculados: 0, criados: 0, recusados: 0, detalhes: [] as string[] };
       toast.success(t(`CRM: ${r.criados} criados, ${r.vinculados} vinculados, ${r.recusados} recusados`));
       if (Array.isArray(r.detalhes) && r.detalhes.length > 0) toast.info(r.detalhes.slice(0, 3).join(" "));
-      await buscar(filtros);
+      await buscar(filtros, buscaId);
     } catch (e) {
       showApiError(e);
     }
@@ -411,7 +520,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     const cidade = filtros.cidade.trim();
     if (!cidade) return;
     const quantidade = Math.min(
-      Math.max(selecionados.length > 0 ? selecionados.length : (lista?.length ?? 30), 1),
+      Math.max(selecionados.length > 0 ? selecionados.length : listaFiltrada.length, 1),
       500,
     );
     try {
@@ -440,7 +549,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
   async function mudarStatus(id: string, status_comercial: string) {
     try {
       await apiClient.patch(`/api/v1/prospecting/prospects/${id}`, { status_comercial });
-      await buscar(filtros);
+      await buscar(filtros, buscaId);
     } catch (e) {
       showApiError(e);
     }
@@ -454,7 +563,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/prospecting/prospects/${id}`);
-      await buscar(filtros);
+      await buscar(filtros, buscaId);
     } catch (e) {
       showApiError(e);
     }
@@ -566,18 +675,73 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         </FilterActions>
       </FilterBar>
 
+      {/* §36: "N oportunidades encontradas" + os filtros rápidos do vendedor. */}
+      {listaFiltrada.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2" aria-live="polite">
+          <p className="text-sm font-semibold">
+            {analise.total} {t("oportunidades encontradas")}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              size="sm"
+              variant={chipsResultadoAtivos || filtros.comWhatsapp ? "outline" : "default"}
+              onClick={limparFiltros}
+            >
+              {t("Todos")}
+            </Button>
+            <Button
+              size="sm"
+              variant={soAlta ? "default" : "outline"}
+              aria-pressed={soAlta}
+              onClick={() => setSoAlta((v) => !v)}
+            >
+              {t("Alta prioridade")}
+            </Button>
+            <Button
+              size="sm"
+              variant={filtros.comWhatsapp ? "default" : "outline"}
+              aria-pressed={filtros.comWhatsapp}
+              onClick={() => mudar({ comWhatsapp: !filtros.comWhatsapp })}
+            >
+              {t("Com WhatsApp")}
+            </Button>
+            <Button
+              size="sm"
+              variant={soNovos ? "default" : "outline"}
+              aria-pressed={soNovos}
+              onClick={() => {
+                setSoNovos((v) => !v);
+                setSoAbordados(false);
+              }}
+            >
+              {t("Novos")}
+            </Button>
+            <Button
+              size="sm"
+              variant={soAbordados ? "default" : "outline"}
+              aria-pressed={soAbordados}
+              onClick={() => {
+                setSoAbordados((v) => !v);
+                setSoNovos(false);
+              }}
+            >
+              {t("Já abordados")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {lista === null && erro ? (
-        <NexusErrorState onRetry={() => void buscar(filtros)} />
+        <NexusErrorState onRetry={() => void buscar(filtros, buscaId)} />
       ) : lista === null ? (
         <div className="space-y-2" aria-live="polite">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-3/4" />
         </div>
-      ) : visao === "mapa" ? (
+      ) : visao === "mapa" && listaFiltrada.length > 0 ? (
         <div className="space-y-3">
-          {(lista?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-live="polite">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-live="polite">
               <span><strong className="text-foreground tabular-nums">{analise.total}</strong> {t("encontradas")}</span>
               <span><strong className="text-foreground tabular-nums">{analise.novas}</strong> {t("novas")}</span>
               <span><strong className="text-foreground tabular-nums">{analise.noCrm}</strong> {t("no CRM")}</span>
@@ -587,8 +751,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
               {analise.ratingMedio != null && (
                 <span>★ <strong className="text-foreground tabular-nums">{analise.ratingMedio.toFixed(1)}</strong> {t("médio")}</span>
               )}
-            </div>
-          )}
+          </div>
           <div className="flex flex-wrap items-end gap-3">
             <label className="block text-sm">
               <span className="mb-1 block text-muted-foreground">{t("Ordenar")}</span>
@@ -656,6 +819,11 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                     onClick={() => selecionar(p.id === selecionadoId ? null : p.id)}
                   >
                     <p className="truncate text-sm font-medium">{p.nome}</p>
+                    {p.classificacao && (
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                        <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                      </p>
+                    )}
                     <p className="truncate text-xs text-muted-foreground">
                       {[p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
                     </p>
@@ -690,9 +858,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
             />
           </div>
         </div>
-      ) : lista.length === 0 && chips.length > 0 ? (
+      ) : listaFiltrada.length === 0 && temFiltroAtivo ? (
         <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
-      ) : lista.length === 0 ? (
+      ) : listaFiltrada.length === 0 ? (
         <NexusEmptyState icon={Buildings} headline={t("Nenhuma empresa com estes filtros.")} />
       ) : (
         <>
@@ -735,7 +903,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lista.slice(0, visiveis).map((p) => {
+                {ordenada.slice(0, visiveis).map((p) => {
                   const zap = zapHref(p);
                   return (
                     <TableRow key={p.id} className="align-top">
@@ -751,6 +919,11 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
                       )}
                       <TableCell>
                         <p className="font-medium">{p.nome}</p>
+                        {p.classificacao && (
+                          <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                            <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                          </p>
+                        )}
                         {p.website && (
                           <a
                             href={p.website.startsWith("http") ? p.website : `https://${p.website}`}
@@ -825,9 +998,9 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
           <p className="text-xs text-muted-foreground">
             {t("WhatsApp abre conversa manual — nunca campanha automática sem consentimento.")}
           </p>
-          {lista.length > visiveis && (
+          {ordenada.length > visiveis && (
             <Button size="sm" variant="outline" onClick={() => setVisiveis((v) => v + 200)} className="w-full">
-              {t("Mostrar mais")} ({lista.length - visiveis} {t("restantes")})
+              {t("Mostrar mais")} ({ordenada.length - visiveis} {t("restantes")})
             </Button>
           )}
         </>
@@ -861,6 +1034,20 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
             <p className="text-muted-foreground">
               {t("Status")}: {ROTULO_STATUS_COMERCIAL[detalhe.status_comercial]}
               {detalhe.ja_e_cliente ? ` · ${t("Cliente já cadastrado")}` : ""}
+            </p>
+            {detalhe.classificacao && (
+              <p className="text-muted-foreground">
+                {t("Situação")}: {t(ROTULO_CLASSIFICACAO[detalhe.classificacao])}
+                {prioridadeAlta(detalhe.score) ? ` · ${t("Alta prioridade")}` : ""}
+              </p>
+            )}
+            {/* §13: motivo da oportunidade — fato do prospect, não fórmula. */}
+            <p className="text-xs text-muted-foreground">
+              {detalhe.categoria ?? ""}
+              {detalhe.cidade ? ` em ${detalhe.cidade}` : ""} ·{" "}
+              {detalhe.ja_e_cliente
+                ? t("já é cliente")
+                : t("ainda não cadastrado como cliente")}
             </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -908,7 +1095,7 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
         <ImportarArquivoDialog
           aberto={importandoArquivo}
           onFechar={() => setImportandoArquivo(false)}
-          onImportado={() => void buscar(filtros)}
+          onImportado={() => void buscar(filtros, buscaId)}
         />
       )}
     </div>

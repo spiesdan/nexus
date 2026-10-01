@@ -10,7 +10,7 @@ import {
   partirEndereco,
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
-import { bonusDeAderencia, scoreDeProspect, PESOS_SCORE } from "@/lib/prospeccao/score";
+import { bonusDeAderencia, prioridadeAlta, scoreDeProspect, PESOS_SCORE, CORTE_ALTA_PRIORIDADE } from "@/lib/prospeccao/score";
 
 /**
  * A LIB DE PROSPECÇÃO — cerca do plano §§5–8, 19, 31–33.
@@ -216,6 +216,15 @@ describe("bonusDeAderencia", () => {
   it("termo pedido vale cheio; expansão da família vale metade", () => {
     expect(bonusDeAderencia(true)).toBe(PESOS_SCORE.categoria);
     expect(bonusDeAderencia(false)).toBe(Math.round(PESOS_SCORE.categoria / 2));
+  });
+});
+
+describe("prioridadeAlta", () => {
+  it("corte em 3/4 da escala (D14): 70 vale, 69 não", () => {
+    expect(CORTE_ALTA_PRIORIDADE).toBe(70);
+    expect(prioridadeAlta(70)).toBe(true);
+    expect(prioridadeAlta(69)).toBe(false);
+    expect(prioridadeAlta(100)).toBe(true);
   });
 });
 

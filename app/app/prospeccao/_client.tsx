@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { LockKey, MagnifyingGlass } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -53,7 +54,9 @@ interface Textos {
   abaMercado: string;
   abaCampanhas: string;
   abaConfig: string;
-  categorias: string;
+  onde: string;
+  tipoEmpresa: string;
+  oQueEncontrar: string;
   cidade: string;
   estado: string;
   raio: string;
@@ -61,7 +64,6 @@ interface Textos {
   buscar: string;
   buscando: string;
   progresso: string;
-  celulas: string;
   encontradas: string;
   novas: string;
   duplicadas: string;
@@ -100,6 +102,27 @@ export function comoListaBuscas(valor: unknown): BuscaResumo[] {
   return [];
 }
 
+/** Parâmetros que significam "quero ver a aba Empresas" (deep-link, B1). */
+function temParametrosDeEmpresa(params: URLSearchParams): boolean {
+  for (const chave of [
+    "busca_id",
+    "busca",
+    "empresa",
+    "categoria",
+    "cidade",
+    "estado",
+    "status",
+    "nota_min",
+    "com_telefone",
+    "com_website",
+    "com_whatsapp",
+    "so_sem_cliente",
+  ]) {
+    if (params.get(chave)) return true;
+  }
+  return false;
+}
+
 export function ProspeccaoClient({
   buscasIniciais,
   categorias,
@@ -114,6 +137,24 @@ export function ProspeccaoClient({
   textos: Textos;
 }) {
   const t = useT();
+  const paramsUrl = useSearchParams();
+  // Abas controladas (B1): quem decide a aba é o estado + a URL — "Ver
+  // empresas" troca de aba mesmo sem recarregar a página.
+  const [aba, setAba] = React.useState<string>(() => (temParametrosDeEmpresa(paramsUrl) ? "empresas" : "buscar"));
+  React.useEffect(() => {
+    // Mesma rota com query nova (Link) preserva o componente — o initializer
+    // não roda de novo, então a troca reage à URL aqui.
+    if (temParametrosDeEmpresa(paramsUrl)) setAba("empresas");
+  }, [paramsUrl]);
+  // "O que você quer encontrar?" (§36) — critérios da busca vêm junto no
+  // "Ver empresas": a descoberta não filtra (o provider devolve a região
+  // inteira), então a intenção do vendedor é aplicada nos resultados.
+  const [criterios, setCriterios] = React.useState({
+    novos: false,
+    comTelefone: false,
+    comWhatsapp: false,
+    soSemCliente: false,
+  });
   const [buscas, setBuscas] = React.useState<BuscaResumo[]>(() => comoListaBuscas(buscasIniciais));
   const [marcadas, setMarcadas] = React.useState<string[]>([]);
   const [cidade, setCidade] = React.useState("");
@@ -176,6 +217,9 @@ export function ProspeccaoClient({
       toast.success(r.reutilizada ? textos.reutilizada : textos.buscaCriada);
       setMarcadas([]);
       await recarregar();
+      // Encontrar empresas é assíncrono: cai na aba Pesquisas para ver o
+      // progresso; "Ver empresas" (com os critérios) leva aos resultados.
+      setAba("pesquisas");
     } catch (e) {
       showApiError(e);
     } finally {
@@ -192,11 +236,22 @@ export function ProspeccaoClient({
     }
   }
 
+  /** "Ver empresas" desta busca já filtrado pelos critérios escolhidos (B1: uuid vira busca_id, nunca texto). */
+  function hrefEmpresas(buscaId: string): string {
+    const qs = new URLSearchParams();
+    qs.set("busca_id", buscaId);
+    if (criterios.novos) qs.set("status", "novo");
+    if (criterios.comTelefone) qs.set("com_telefone", "true");
+    if (criterios.comWhatsapp) qs.set("com_whatsapp", "true");
+    if (criterios.soSemCliente) qs.set("so_sem_cliente", "true");
+    return `/app/prospeccao?${qs.toString()}`;
+  }
+
   return (
     <div className="space-y-6 p-6">
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
-      <Tabs defaultValue="buscar">
+      <Tabs value={aba} onValueChange={setAba}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="buscar">{textos.abaBuscar}</TabsTrigger>
           <TabsTrigger value="pesquisas">{textos.abaPesquisas}</TabsTrigger>
@@ -210,7 +265,28 @@ export function ProspeccaoClient({
           {podeBuscar ? (
             <Card className="hover-raise space-y-4 p-4">
               <div>
-                <p className="mb-2 text-sm font-medium">{textos.categorias}</p>
+                <p className="mb-2 text-sm font-medium">{textos.onde}</p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cidade">{textos.cidade}</Label>
+                    <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder={textos.exemploCidade} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="uf">{textos.estado}</Label>
+                    <Input id="uf" value={uf} onChange={(e) => setUf(e.target.value)} placeholder="SC" maxLength={2} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="raio">{textos.raio}</Label>
+                    <Input id="raio" type="number" min={1} max={500} value={raio} onChange={(e) => setRaio(e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="maximo">{textos.maximo}</Label>
+                    <Input id="maximo" type="number" min={1} max={10000} value={maximo} onChange={(e) => setMaximo(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-medium">{textos.tipoEmpresa}</p>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {categorias.map((m) => (
                     <fieldset key={m.macro} className="rounded-lg border p-3">
@@ -239,23 +315,32 @@ export function ProspeccaoClient({
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cidade">{textos.cidade}</Label>
-                  <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder={textos.exemploCidade} />
+              <div>
+                <p className="mb-2 text-sm font-medium">{textos.oQueEncontrar}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(
+                    [
+                      ["novos", t("Novos clientes")],
+                      ["comTelefone", t("Com telefone")],
+                      ["comWhatsapp", t("Com WhatsApp")],
+                      ["soSemCliente", t("Que ainda não são clientes")],
+                    ] as const
+                  ).map(([campo, rotulo]) => (
+                    <Button
+                      key={campo}
+                      type="button"
+                      size="sm"
+                      variant={criterios[campo] ? "default" : "outline"}
+                      aria-pressed={criterios[campo]}
+                      onClick={() => setCriterios((c) => ({ ...c, [campo]: !c[campo] }))}
+                    >
+                      {rotulo}
+                    </Button>
+                  ))}
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="uf">{textos.estado}</Label>
-                  <Input id="uf" value={uf} onChange={(e) => setUf(e.target.value)} placeholder="SC" maxLength={2} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="raio">{textos.raio}</Label>
-                  <Input id="raio" type="number" min={1} max={500} value={raio} onChange={(e) => setRaio(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="maximo">{textos.maximo}</Label>
-                  <Input id="maximo" type="number" min={1} max={10000} value={maximo} onChange={(e) => setMaximo(e.target.value)} />
-                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {t("Valem nos resultados — a busca encontra todas as empresas da região e estes filtros ficam aplicados ao abrir.")}
+                </p>
               </div>
               <Button onClick={criar} disabled={criando}>
                 {criando ? textos.buscando : textos.buscar}
@@ -294,9 +379,9 @@ export function ProspeccaoClient({
                           <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {textos.progresso} {pct}% · {textos.celulas} {b.celulas_processadas}/{b.total_celulas} ·{" "}
-                          {textos.encontradas} {b.encontradas} · {textos.novas} {b.novas} ·{" "}
-                          {textos.duplicadas} {b.duplicadas} · {textos.erros} {b.erros} · {textos.custo}{" "}
+                          {textos.progresso} {pct}% · {textos.encontradas} {b.encontradas} · {textos.novas} {b.novas} ·{" "}
+                          {textos.duplicadas} {b.duplicadas} · {textos.erros} {b.erros} ·{" "}
+                          {textos.custo}{" "}
                           {comoMoeda(b.custo_estimado_cents, "BRL")}
                         </p>
                       </div>
@@ -306,7 +391,7 @@ export function ProspeccaoClient({
                     )}
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" asChild>
-                        <Link href={`/app/prospeccao?busca=${b.id}`}>{textos.verEmpresas}</Link>
+                        <Link href={hrefEmpresas(b.id)}>{textos.verEmpresas}</Link>
                       </Button>
                       {podeBuscar && b.status === "running" && (
                         <Button size="sm" variant="outline" onClick={() => void acao(b.id, "pause")}>

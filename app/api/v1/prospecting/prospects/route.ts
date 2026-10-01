@@ -3,7 +3,9 @@
  *
  * Filtros: categoria, cidade, estado, com_telefone, com_website,
  * com_whatsapp, nota_min, avaliacoes_min, origem(provider), status_comercial,
- * so_sem_cliente (ainda não é cliente), busca (nome/telefone/cidade/website).
+ * so_sem_cliente (ainda não é cliente), busca (nome/telefone/cidade/website),
+ * busca_id (somente os prospects de UMA busca — o "Ver empresas" da aba
+ * Pesquisas, B1 da spec 19: uuid nunca vai para o campo de texto).
  *
  * Cruzamento com a base (§9) em lote, 3 queries, nunca N+1: contacts
  * (telefone/email → "já é cliente") + crm_leads (lead_id ou contato → lead,
@@ -27,6 +29,8 @@ export const dynamic = "force-dynamic";
 
 const LIMITE_CRUZAMENTO = 2000;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "business_prospects" });
@@ -39,6 +43,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const status = p.get("status")?.trim() ?? "";
   const origem = p.get("origem")?.trim() ?? "";
   const busca = p.get("busca")?.trim() ?? "";
+  const buscaId = p.get("busca_id")?.trim() ?? "";
   const comTelefone = p.get("com_telefone") === "true";
   const semTelefone = p.get("sem_telefone") === "true";
   const comWebsite = p.get("com_website") === "true";
@@ -50,11 +55,37 @@ export async function GET(req: NextRequest): Promise<Response> {
   const limite = Math.min(200, Math.max(1, Number(p.get("limite") ?? 50) || 50));
 
   const supabase = await createClient();
+  const admin = createAdminClient();
   let q = supabase
     .from("business_prospects")
     .select(COLUNAS_DO_PROSPECT)
     .eq("organization_id", authz.org.orgId)
     .eq("bloqueado", false);
+
+  // "Ver empresas" desta busca (B1): ponte busca↔prospect, com a busca
+  // precisa existir para este tenant — busca de outro org responde vazio,
+  // sem vazar nem confirmar existência.
+  if (buscaId) {
+    if (!UUID_RE.test(buscaId)) {
+      return fail("validation_failed", "busca_id inválido.", 400, { requestId });
+    }
+    const { data: buscaRow } = await admin
+      .from("prospecting_searches")
+      .select("id")
+      .eq("organization_id", authz.org.orgId)
+      .eq("id", buscaId)
+      .maybeSingle();
+    if (!buscaRow) return ok([], { requestId });
+    const { data: vinculos } = await admin
+      .from("prospect_search_results")
+      .select("prospect_id")
+      .eq("organization_id", authz.org.orgId)
+      .eq("search_id", buscaId)
+      .limit(LIMITE_CRUZAMENTO);
+    const idsDaBusca = ((vinculos ?? []) as { prospect_id: string }[]).map((v) => v.prospect_id);
+    if (idsDaBusca.length === 0) return ok([], { requestId });
+    q = q.in("id", idsDaBusca);
+  }
 
   if (categoria) q = q.eq("categoria", categoria);
   if (cidade) q = q.ilike("cidade", `%${cidade}%`);
@@ -88,8 +119,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   }[];
 
   // --- Verdades do CRM em lote (§9), service role + organization_id explícito.
-  const admin = createAdminClient();
-
   const fones = [...new Set(linhas.map((l) => l.telefone).filter(Boolean))] as string[];
   const emails = [...new Set(linhas.map((l) => l.email).filter(Boolean))] as string[];
 

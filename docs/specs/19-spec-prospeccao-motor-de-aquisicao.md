@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–5 concluídas · FASE 6 (UX "Encontrar empresas") em andamento.
+> **Status:** FASE 1–6 concluídas · FASE 7 (mapa + resultados) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -21,7 +21,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       `ProspectDeduplicationService` com prioridade de identificadores).
 - [x] **FASE 5** — Customer matching (cruza com clientes/leads/prospects/oportunidades
       existentes; classificação comercial do prospect).
-- [ ] **FASE 6** — Nova UX de Prospecção (tela comercial "Encontrar empresas";
+- [x] **FASE 6** — Nova UX de Prospecção (tela comercial "Encontrar empresas";
       sem termos técnicos na frente).
 - [ ] **FASE 7** — Mapa + resultados (cards + mapa + preview de marcador; lista é
       modo secundário).
@@ -106,20 +106,20 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 
 | # | Achado | Onde | Fase |
 |---|---|---|---|
-| B1 | "Ver empresas" quebra: manda `?busca=<uuid da busca>` para um campo de **texto** e a aba é incontrolada (não troca para Empresas) | `_client.tsx:330` + abas sem `value` (`:207-212`) | FASE 6 |
-| B2 | Deep-link não aplica: `filtros` lê a URL, mas o 1º fetch roda `buscar(VAZIOS)` | `_empresas.tsx:100-107` vs `:157-160` | FASE 6 |
-| B3 | Janela de 50: GET de prospects default `limite=50` e a UI nunca manda `limite`; contagens ("86 oportunidades") saem dessas 50 linhas | `prospects/route.ts:41,69`, `_empresas.tsx:131-155,306-308` | FASE 6/15 |
+| B1 | "Ver empresas" quebra: manda `?busca=<uuid da busca>` para um campo de **texto** e a aba é incontrolada (não troca para Empresas) | `_client.tsx:330` + abas sem `value` (`:207-212`) | FASE 6 — fechado (abas controladas + `busca_id` novo filtro da rota) |
+| B2 | Deep-link não aplica: `filtros` lê a URL, mas o 1º fetch roda `buscar(VAZIOS)` | `_empresas.tsx:100-107` vs `:157-160` | FASE 6 — fechado (1º fetch parte dos valores congelados da URL) |
+| B3 | Janela de 50: GET de prospects default `limite=50` e a UI nunca manda `limite`; contagens ("86 oportunidades") saem dessas 50 linhas | `prospects/route.ts:41,69`, `_empresas.tsx:131-155,306-308` | FASE 6 — fechado na janela (UI manda `limite=200` = máximo da API; paginação de verdade fica na FASE 15) |
 | B4 | Chave Google resolvida em 3 lugares (drift de comportamento) | `motor.ts:97`, `searches/route.ts:28`, `executar/route.ts:60` | FASE 2 |
 | B5 | `executar` ignora o registro: `new GooglePlacesProvider` direto e grava `provider: "google_places"` fixo | `executar/route.ts:15,73,98` | FASE 2 |
 | B6 | Fronteira invertida: o motor importa `CUSTO_*` de dentro do provider Google | `motor.ts:21,307` | FASE 2/13 |
 | B7 | `maps_browser` (esqueleto) segue nos metadados expostos à UI | `registro.ts:12,50` (rota já rejeita em `searches/route.ts:84`) | FASE 3/6 |
 | B8 | Expansão de categoria é 1:1 rótulo→termo; não há termos relacionados nem serviço configurável | `categorias.ts:99` | FASE 2/5 |
-| B9 | Status em inglês cru na aba Pesquisas (`queued`, `running`, `paused`…) | `_client.tsx:309` | FASE 6 |
+| B9 | Status em inglês cru na aba Pesquisas (`queued`, `running`, `paused`…) | `_client.tsx:309` | FASE 6 — fechado na FASE 3 (`ROTULO_STATUS_BUSCA`) |
 | B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 — fechado por D10/D11 (detalhe já vem na descoberta; Details sem consumidor até a etapa 2) |
 | B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 |
 | B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 |
 | B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 |
-| B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 |
+| B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 — fechado (entrada 1.17.0 corrigida) |
 | B15 | Performance: `mercado` puxa `limit(10000)×3 + 5000` por request; wizard geocoda até 5 cidades em série | `mercado/route.ts:32,53,82,100`, `_campanha-wizard.tsx:106` | FASE 15 |
 | B16 | `lib/database.types.ts` desatualizado (não conhece as tabelas de prospecção; rotas usam `as unknown as`) | tipos gerados | nota (regenerar quando houver acesso) |
 
@@ -143,7 +143,12 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 - **D6 — O técnico vai para a aba Config:** provider/limite/custo/TTL/erros só em
   "Config" (manager-only, já é). A busca vira "Encontrar empresas"
   (Onde/Que tipo/O que encontrar); o **raio permanece** na frente — é linguagem
-  comercial ("30 km daqui"), não técnica.
+  comercial ("30 km daqui"), não técnica. *(Leitura fechada na FASE 6: D6 trata
+  dos CAMPOS técnicos de Config — provider, limites, TTL, retries; o "Custo
+  estimado" e a contagem de erros da linha de progresso da aba Pesquisas são
+  resultado por busca, não configuração, e ficam até o painel de custos da
+  FASE 13 (§21) nascer — sumir antes deixaria o gasto invisível. "Células"
+  saiu da linha: era o único termo de grade na frente.)*
 - **D7 — Integrações sem mensagens novas:** Inbox recebe contexto via
   `POST /api/v1/conversations/open-with-contact` + tags (molde da VA, FASE 9);
   Meu Dia recebe tarefas via `commercial_tasks` (FASE 12); Radar ganha seção de
@@ -195,6 +200,15 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   `email` estava morto no select da rota (o match por email nunca tinha
   rodado) — consertado. Testes: `prospeccao-classificacao.test.ts` + bloco
   de score estendido em `prospeccao-lib.test.ts`.
+- **D14 — "Alta prioridade" = score ≥ 70 (FECHADA na FASE 6):** §11 define a
+  banda como "alta aderência ao perfil comercial" e §13/§36 pedem badge e chip
+  de filtro, mas nenhum lugar da spec dá número — inventar um seria regra
+  escondida. O corte vira constante documentada (`CORTE_ALTA_PRIORIDADE` em
+  `score.ts`, 3/4 da escala, 70) para calibrar num lugar só quando o dono
+  definir outro. O chip "Alta prioridade" (§36) recorta a lista já carregada;
+  "Novos"/"Já abordados" recortam pela `classificacao` (§10) que a API já
+  devolve; "Com WhatsApp" é filtro de servidor (mesmo caminho dos toggles
+  avançados). "Todos" = limpar tudo.
 
 ### Gaps por fase (de onde cada uma parte)
 
@@ -212,7 +226,19 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   (lead/oportunidade/já abordado) e score com distância/aderência Bill.
   *(FECHADA na FASE 5: `classificacao` (§10) derivada a cada GET cruzando
   contacts + crm_leads; score com distância e aderência — ver D13.)*
-- **FASE 6/7** — UX: "Encontrar empresas", deep-link, janela maior (B1-B3, B9, B14).
+- **FASE 6** — *(FECHADA na FASE 6: fluxo do §36 na aba "Encontrar empresas"
+  (Onde você quer vender? → Que tipo de empresa? → O que você quer encontrar?
+  → botão "Encontrar empresas" que cai na aba Pesquisas com progresso); abas
+  controladas + novo filtro `busca_id` da rota (uuid nunca vai para o campo de
+  texto — link antigo `?busca=<uuid>` também é reconhecido) = B1; 1º fetch
+  parte dos valores congelados da URL + critérios sincronizados na URL = B2;
+  `limite=200` na listagem = B3; badges de `classificacao` (§10) + "Alta
+  prioridade" (D14) em cards/tabela/drawer + motivo da oportunidade (§13);
+  linha "N oportunidades encontradas" com chips §36 (Todos / Alta prioridade /
+  Com WhatsApp / Novos / Já abordados); "Células" fora da linha de progresso;
+  B9 (status em pt-BR, já na FASE 3) e B14 (CHANGELOG) confirmados.)*
+- **FASE 7** — mapa: preview de marcador, cards como modo principal (§14, §37);
+  a lista/tabela é modo secundário.
 - **FASE 8** — migration (owner + próximo passo) + "Minha fila".
 - **FASE 9/10/11/12** — Inbox, funil de campanhas, Radar, Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
