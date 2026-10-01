@@ -27,6 +27,7 @@ import {
   MagnifyingGlass,
   Package,
   Palette,
+  PaperPlaneTilt,
   Plugs,
   PlugsConnected,
   PuzzlePiece,
@@ -463,6 +464,19 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     icon: MagnifyingGlass,
     group: "vendas",
     sidebar: true,
+  },
+  {
+    // Venda Automática (spec 18): o Radar vira fila, a fila vira conversa.
+    // Campanha com cota diária, janela de horário e follow-up — e a IA só
+    // fala dentro do que a campanha permite. SEM sidebar (§19: a dobra é
+    // medida, 18 portas roláveis — link novo entra só se outro sair); a
+    // porta é o botão "Criar venda automática" no Radar e o ⌘K — mesmo
+    // precedente de Carteira e Tarefas (§19: fora do sidebar, dobra medida).
+    href: "/app/venda-automatica",
+    label: "Venda Automática",
+    description: "Campanhas de abordagem automática com cota, janela e follow-up.",
+    icon: PaperPlaneTilt,
+    group: "vendas",
   },
   {
     // ATT.txt Fase 3: fiscal. §19 a única porta rolável do grupo FISCAL.

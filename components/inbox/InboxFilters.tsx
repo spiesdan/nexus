@@ -52,6 +52,25 @@ export interface InboxFiltersValue {
   tag?: string;
 }
 
+/**
+ * §25 do spec da Venda Automática (decisão D4): filtro AUXILIAR por assunto,
+ * por cima das abas que já existem — nenhuma aba nova (o gate
+ * `inbox-abas-espelham-o-comando` reprova aba fora do comando). "Humanos" e
+ * "IA" do spec vivem na barra de abas (Fila/Minhas/Todas são humanas;
+ * "Automático" é a IA); o resto é tag, e estes cinco são os destinos que a
+ * Venda Automática promete — curados de propósito, porque o select por
+ * vocabulário só aparecia quando a org já tinha tags e nascia VAZIO numa
+ * instalação nova. As tags livres da org seguem depois, sem duplicar as
+ * curadas.
+ */
+const ASSUNTOS_CURADOS: readonly { tag: string; label: string }[] = [
+  { tag: "venda-automatica", label: "Venda Automática" },
+  { tag: "radar", label: "Radar" },
+  { tag: "va-interessado", label: "Interessados" },
+  { tag: "va-sem-resposta", label: "Sem resposta" },
+  { tag: "va-oportunidade", label: "Oportunidades" },
+];
+
 interface Props {
   value: InboxFiltersValue;
   onChange: (next: InboxFiltersValue) => void;
@@ -91,6 +110,18 @@ export function InboxFilters({ value, onChange }: Props) {
     !channels.some((c) => c.id === value.channel_session_id);
   // Alternador só aparece com 2+ números — com um só não há o que alternar.
   const showChannelSwitch = (channels?.length ?? 0) >= 2 || filtroForaDaLista;
+
+  // O select de assunto (§25): curados primeiro, vocabulário da org depois.
+  const vocabulario = tagVocabulary ?? [];
+  const extras = vocabulario.filter((tag) => !ASSUNTOS_CURADOS.some((c) => c.tag === tag));
+  // Filtro que aponta para tag que sumiu do vocabulário (a org mudou as tags):
+  // o select FICA e nomeia a tag — mesmo espelho do "Número removido" do
+  // seletor de canais; sumir levaria junto o único jeito de desligar um
+  // filtro que continua valendo.
+  const assuntoForaDaLista =
+    value.tag != null &&
+    !ASSUNTOS_CURADOS.some((c) => c.tag === value.tag) &&
+    !vocabulario.includes(value.tag);
 
   // Debounce search input → propagate to parent.
   useEffect(() => {
@@ -188,27 +219,33 @@ export function InboxFilters({ value, onChange }: Props) {
         </Select>
       )}
 
-      {(tagVocabulary?.length ?? 0) > 0 && (
-        <Select
-          value={value.tag ?? "all"}
-          onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
+      <Select
+        value={value.tag ?? "all"}
+        onValueChange={(v) => onChange({ ...value, tag: v === "all" ? undefined : v })}
+      >
+        <SelectTrigger
+          className="h-[38px] rounded-lg bg-muted shadow-none text-sm"
+          aria-label={t("Filtrar por assunto")}
         >
-          <SelectTrigger
-            className="h-[38px] rounded-lg bg-muted shadow-none text-sm"
-            aria-label={t("Filtrar por tag")}
-          >
-            <SelectValue placeholder={t("Todas as tags")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("Todas as tags")}</SelectItem>
-            {tagVocabulary?.map((tag) => (
-              <SelectItem key={tag} value={tag}>
-                {tag}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+          <SelectValue placeholder={t("Todos")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{t("Todos")}</SelectItem>
+          {ASSUNTOS_CURADOS.map((a) => (
+            <SelectItem key={a.tag} value={a.tag}>
+              {t(a.label)}
+            </SelectItem>
+          ))}
+          {assuntoForaDaLista && value.tag && (
+            <SelectItem value={value.tag}>{value.tag}</SelectItem>
+          )}
+          {extras.map((tag) => (
+            <SelectItem key={tag} value={tag}>
+              {tag}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <div className="flex items-center justify-between">
         <Label htmlFor="only-unread" className="text-xs text-muted-foreground">

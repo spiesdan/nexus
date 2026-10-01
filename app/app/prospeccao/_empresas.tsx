@@ -3,7 +3,7 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Buildings } from "@phosphor-icons/react";
+import { Buildings, PaperPlaneTilt } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
@@ -393,6 +393,42 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
     }
   }
 
+  /**
+   * §24 do spec da Venda Automática: a ação nasce do filtro ATUAL — cidade,
+   * categoria e a quantidade que a lista (ou a seleção) já mostrou. A cidade é
+   * obrigatória porque a elegibilidade da campanha casa por cidade; sem ela o
+   * botão fica desligado em vez de criar campanha que nunca casa candidato.
+   */
+  async function criarVendaAutomatica(): Promise<void> {
+    const cidade = filtros.cidade.trim();
+    if (!cidade) return;
+    const quantidade = Math.min(
+      Math.max(selecionados.length > 0 ? selecionados.length : (lista?.length ?? 30), 1),
+      500,
+    );
+    try {
+      const corpo = await apiClient.post<{ data: { id: string } | null }>(
+        "/api/v1/automatic-sales/campaigns",
+        {
+          nome: `Radar ${cidade}${filtros.categoria.trim() ? ` · ${filtros.categoria.trim()}` : ""}`,
+          cidade,
+          uf: filtros.estado.trim() ? filtros.estado.trim().toUpperCase() : null,
+          categorias: filtros.categoria.trim() ? [filtros.categoria.trim()] : [],
+          limite_diario: quantidade,
+          janela_inicio: "09:00",
+          janela_fim: "17:30",
+          followup_horas: [24, 48],
+        },
+      );
+      if (corpo?.data?.id) {
+        toast.success(t("Campanha de venda automática criada"));
+        router.push("/app/venda-automatica");
+      }
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function mudarStatus(id: string, status_comercial: string) {
     try {
       await apiClient.patch(`/api/v1/prospecting/prospects/${id}`, { status_comercial });
@@ -495,6 +531,18 @@ export function EmpresasTab({ podeOperar }: { podeOperar: boolean }) {
 
         <FilterActions>
           <div className="ml-auto flex gap-2">
+            {podeOperar && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!filtros.cidade.trim()}
+                title={!filtros.cidade.trim() ? t("Informe a cidade no filtro") : undefined}
+                onClick={() => void criarVendaAutomatica()}
+              >
+                <PaperPlaneTilt className="h-4 w-4" />
+                {t("Criar venda automática")}
+              </Button>
+            )}
             {podeOperar && (
               <Button size="sm" variant="outline" onClick={() => setImportandoArquivo(true)}>
                 {t("Importar arquivo")}

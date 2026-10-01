@@ -1,4 +1,4 @@
-# 18-spec — Venda Automática diária por cidade + Radar
+﻿# 18-spec — Venda Automática diária por cidade + Radar
 
 > **Fonte**: prompt do dono do produto (2026-09-30), preservado VERBATIM abaixo.
 > Este arquivo é o guia de execução do módulo. Cada etapa marcada aqui foi
@@ -543,18 +543,18 @@ _Registrar as escolhas tomadas conforme "tomar as melhores decisões"._
 
 # CHECKPOINT DE EXECUÇÃO
 
-- [ ] ETAPA 1 — análise do repositório (apresentada ao dono)
-- [ ] ETAPA 2 — modelo de dados (migration 0246 + baseline + MANIFEST + RLS)
-- [ ] ETAPA 3 — campanha (API + tela)
-- [ ] ETAPA 4 — Radar → fila
-- [ ] ETAPA 5 — fila → Inbox
-- [ ] ETAPA 6 — 1ª mensagem IA
-- [ ] ETAPA 7 — controle diário
-- [ ] ETAPA 8 — classificação de respostas
-- [ ] ETAPA 9 — follow-up
-- [ ] ETAPA 10 — Lead → Oportunidade → Pedido
-- [ ] ETAPA 11 — dashboard
-- [ ] ETAPA 12 — auditoria
-- [ ] ETAPA 13 — testes de idempotência/duplicidade
-- [ ] Validação (typecheck, lint, gov:verify, test:db)
+- [x] ETAPA 1 — análise do repositório (apresentada ao dono)
+- [x] ETAPA 2 — modelo de dados (migration 0246 + baseline + MANIFEST + RLS)
+- [x] ETAPA 3 — campanha (API + tela)
+- [x] ETAPA 4 — Radar → fila
+- [x] ETAPA 5 — fila → Inbox
+- [x] ETAPA 6 — 1ª mensagem IA
+- [x] ETAPA 7 — controle diário
+- [x] ETAPA 8 — classificação de respostas
+- [x] ETAPA 9 — follow-up
+- [x] ETAPA 10 — Lead → Oportunidade → Pedido
+- [x] ETAPA 11 — dashboard
+- [x] ETAPA 12 — auditoria
+- [x] ETAPA 13 — testes de idempotência/duplicidade
+- [x] Validação (typecheck, lint, gov:verify, test:db)
 - [ ] Release + deploy VPS
