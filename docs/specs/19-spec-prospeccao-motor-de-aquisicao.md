@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–10 concluídas · FASE 11 (Radar) em andamento.
+> **Status:** FASE 1–11 concluídas · FASE 12 (Meu Dia) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -29,7 +29,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
 - [x] **FASE 9** — Inbox (reutilizar o Inbox existente; passar contexto do prospect;
       nunca sistema de mensagens novo).
 - [x] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
-- [ ] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
+- [x] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
 - [ ] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
 - [ ] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
       `DailyProspectingLimits`, painel de consumo; preços em config, não hardcoded).
@@ -117,7 +117,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 | B9 | Status em inglês cru na aba Pesquisas (`queued`, `running`, `paused`…) | `_client.tsx:309` | FASE 6 — fechado na FASE 3 (`ROTULO_STATUS_BUSCA`) |
 | B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 — fechado por D10/D11 (detalhe já vem na descoberta; Details sem consumidor até a etapa 2) |
 | B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 — fechado (migration `0247_prospeccao_fila`: `owner_user_id` + `proximo_passo` + índice parcial org+dono) |
-| B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 |
+| B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 — fechado (seção "Novos prospects" lê a rota de prospects; o botão de VA continua sendo da tela de origem, onde o filtro que o alimenta nasce) |
 | B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 |
 | B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 — fechado (entrada 1.17.0 corrigida) |
 | B15 | Performance: `mercado` puxa `limit(10000)×3 + 5000` por request; wizard geocoda até 5 cidades em série | `mercado/route.ts:32,53,82,100`, `_campanha-wizard.tsx:106` | FASE 15 |
@@ -334,6 +334,27 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   sem terceira tabela, e atribuição exata exigiria evento por pedido;
   data da campanha é o piso razoável documentado). Sem lead não há
   faturamento atribuível. Dinheiro em `_cents` + `comoMoeda` na tela.
+- **D19 — o Radar ganha a seção, não uma tela nova (FECHADA na FASE 11):**
+  D7 já decidiu ("Radar ganha seção de novos prospects com as mesmas 3
+  ações"); o §30 traz a pergunta e a lista de exemplos. O que ficou:
+  seção `#radar-prospeccao` "Novos prospects" no fim do Radar (append,
+  nada das seções existentes se move — os e2e `recompra`/`risk`/`retorno`
+  leem sem clique e continuam lendo), dados da rota de prospects de sempre
+  com `status=novo,nao_analisado` (filtro em lista, aditivo) ordenada por
+  score, top 30. As 3 ações do §30 são as mesmas da aba Empresas (§13/§17),
+  sem variação: **Abrir** = deep-link `?prospect=<uuid>` para o drawer da
+  Prospecção (filtro `id` novo na rota — o prospect pode estar fora da
+  janela de 200, então o detalhe é buscado por id e guardado à parte,
+  com refetch nos PATCH/import/delete para a classificação derivada não
+  envelhecer); **Adicionar à fila** = PATCH de dono (eu viro o dono);
+  **Iniciar conversa** = payload da FASE 9 AGORA extraída em
+  `lib/prospeccao/conversa.ts` (uma regra, não duas — o Radar e a aba
+  Empresas mandam o corpo idêntico, tags [categoria, cidade],
+  conversation_tags ["prospeccao"], claim best-effort só se o dono sou eu).
+  Chip de WhatsApp na linha cobre "empresas com WhatsApp" como DIMENSÃO da
+  seção; exemplos do §30 sem regra escrita ("semelhantes aos melhores
+  clientes", "oportunidades por cidade" como agrupador) ficam em gap — não
+  inventar.
 - **FASE 10** — *(FECHADA na FASE 10: migration `0248_campanhas_objetivo`
   (`objetivo text` nas DUAS tabelas de campanha — as três da doutrina:
   migration, baseline create + apêndice idempotente, MANIFEST); rotas novas
@@ -350,7 +371,18 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   sem regra pedindo no wizard, não inventar); status `order` da fila da VA
   nunca é escrito pelo motor (faturamento sai dos `commercial_orders`
   reais); N+1 do painel (1 request por campanha) fica para a FASE 15.)*
-- **FASE 11/12** — Radar, Meu Dia (D7).
+- **FASE 11** — *(FECHADA na FASE 11: seção "Novos prospects" no Radar
+  (`#radar-prospeccao`, D19) com as 3 ações do §30 — Abrir (deep-link
+  `?prospect=` + filtro `id` da rota), Adicionar à fila (PATCH de dono) e
+  Iniciar conversa (payload FASE 9 extraída em `lib/prospeccao/conversa.ts`,
+  compartilhada com a aba Empresas); rota de prospects ganhou `status` em
+  lista (`novo,nao_analisado`) — aditivo, filtros antigos intactos; página
+  do Radar passa `podeOperar`/`usuarioId` (mesmo critério agent+ da
+  Prospecção); B12 fechado. Gaps: "semelhantes aos melhores clientes" e
+  "oportunidades por cidade" como agrupador do §30 sem regra escrita (não
+  inventar); "restaurantes próximos" já é a aba Mapa; e2e da seção nova é
+  FASE 14.)*
+- **FASE 12** — Meu Dia (D7).
 - **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
   (espelhar cota diária da VA).
 - **FASE 14** — testes de rota/API (B13).

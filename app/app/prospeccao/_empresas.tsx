@@ -41,6 +41,7 @@ import { apiClient } from "@/lib/api/client";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import { distanciaKm, limitesDosPontos, centroERaioDoBbox, ordemDeVisita, comprimentoDaRota } from "@/lib/prospeccao/geo";
+import { abrirConversaDoProspect } from "@/lib/prospeccao/conversa";
 import { prioridadeAlta } from "@/lib/prospeccao/score";
 import { ROTULO_CLASSIFICACAO, type Classificacao } from "@/lib/prospeccao/classificacao";
 import type { PontoMapa } from "./_mapa";
@@ -184,6 +185,15 @@ export function EmpresasTab({
   const [modoMapa, setModoMapa] = React.useState<"marcadores" | "densidade">("marcadores");
   const [ordem, setOrdem] = React.useState<string>(() => paramsUrl.get("ordem") ?? "relevancia");
   const [detalheId, setDetalheId] = React.useState<string | null>(null);
+  // FASE 11 (§30): o "Abrir" do Radar chega como ?prospect=<uuid>. O prospect
+  // pode não estar na lista (fora da janela de 200 ou fora do recorte), então o
+  // id é capturado uma única vez na entrada e o detalhe vem da rota por id — o
+  // sync de URL abaixo nunca o reescreve porque este estado só é lido.
+  const [prospectAbertoId] = React.useState<string | null>(() => {
+    const v = paramsUrl.get("prospect");
+    return v && UUID_RE.test(v) ? v : null;
+  });
+  const [detalheExtra, setDetalheExtra] = React.useState<(Prospect & { ja_e_cliente: boolean }) | null>(null);
   // Rascunho da próxima ação (§16): ancorado no id aberto — trocar de prospect
   // descarta o rascunho velho sem precisar de effect (react-hooks/set-state-in-effect)
   // e a refetch pós-save não engole o que a pessoa acabou de digitar.
@@ -211,6 +221,24 @@ export function EmpresasTab({
       .then((r) => setVendedores(Array.isArray(r?.data) ? r.data : []))
       .catch(() => undefined);
   }, [podeOperar]);
+
+  // FASE 11: deep-link ?prospect= → traz o detalhe mesmo fora da lista.
+  React.useEffect(() => {
+    if (!prospectAbertoId) return;
+    apiClient
+      .get<{ data: unknown }>(`/api/v1/prospecting/prospects?id=${prospectAbertoId}&limite=1`)
+      .then((corpo) => {
+        const dados = (corpo as { data?: unknown } | null)?.data;
+        const linha = Array.isArray(dados)
+          ? ((dados[0] as (Prospect & { ja_e_cliente: boolean }) | undefined) ?? null)
+          : null;
+        if (linha) {
+          setDetalheExtra(linha);
+          setDetalheId(linha.id);
+        }
+      })
+      .catch(() => undefined);
+  }, [prospectAbertoId]);
 
   const buscar = React.useCallback(async (f: Filtros, idBusca: string | null) => {
     try {
@@ -508,7 +536,12 @@ export function EmpresasTab({
     return { pontos: pts, km: comprimentoDaRota(pts.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude }))) };
   }, [rotaIds, pontos]);
 
-  const detalhe = detalheId ? (lista ?? []).find((p) => p.id === detalheId) ?? null : null;
+  // O detalhe vivo é o da lista; ?prospect= (FASE 11) cai no extra quando o
+  // id não está na janela carregada.
+  const detalhe = detalheId
+    ? (lista ?? []).find((p) => p.id === detalheId) ??
+      (detalheExtra && detalheExtra.id === detalheId ? detalheExtra : null)
+    : null;
 
   function navegarHref(p: { latitude: number | null; longitude: number | null }): string {
     return `https://www.openstreetmap.org/directions?to=${p.latitude},${p.longitude}`;
@@ -530,6 +563,9 @@ export function EmpresasTab({
       toast.success(t(`CRM: ${r.criados} criados, ${r.vinculados} vinculados, ${r.recusados} recusados`));
       if (Array.isArray(r.detalhes) && r.detalhes.length > 0) toast.info(r.detalhes.slice(0, 3).join(" "));
       await buscar(filtros, buscaId);
+      // FASE 11: o detalhe de ?prospect= pode ter sido um dos importados —
+      // a verdade de "já é cliente" muda na hora.
+      if (detalheExtra && ids.includes(detalheExtra.id)) await refetchDetalheExtra(detalheExtra.id);
     } catch (e) {
       showApiError(e);
     }
@@ -571,10 +607,26 @@ export function EmpresasTab({
     }
   }
 
+  // Detalhe vindo de ?prospect= (fora da lista): refaz o GET para a
+  // classificação derivada (§10/D13) não ficar velha depois do PATCH.
+  async function refetchDetalheExtra(id: string) {
+    try {
+      const corpo = await apiClient.get<{ data: unknown }>(`/api/v1/prospecting/prospects?id=${id}&limite=1`);
+      const dados = (corpo as { data?: unknown } | null)?.data;
+      const linha = Array.isArray(dados)
+        ? ((dados[0] as (Prospect & { ja_e_cliente: boolean }) | undefined) ?? null)
+        : null;
+      setDetalheExtra((atual) => (atual && atual.id === id ? (linha ?? atual) : atual));
+    } catch {
+      // deep-link é cortesia da FASE 11 — falhou, a lista continua a verdade.
+    }
+  }
+
   async function atualizarProspect(id: string, patch: Record<string, unknown>) {
     try {
       await apiClient.patch(`/api/v1/prospecting/prospects/${id}`, patch);
       await buscar(filtros, buscaId);
+      if (detalheExtra?.id === id) await refetchDetalheExtra(id);
     } catch (e) {
       showApiError(e);
     }
@@ -601,31 +653,13 @@ export function EmpresasTab({
 
   // §17: o botão abre o Inbox EXISTENTE com o contexto do prospect (origem,
   // categoria/cidade em tag, conversa etiquetada como "prospeccao") — nunca um
-  // sistema de mensagens novo. Se o dono da prospecção sou eu, a conversa já
-  // nasce assumida; o claim é best-effort (falhou, a conversa continua aberta).
+  // sistema de mensagens novo. A payload/claim moram em
+  // lib/prospeccao/conversa.ts porque o Radar faz a MESMA chamada (FASE 11).
   async function iniciarConversa(p: Prospect): Promise<void> {
     if (!p.telefone) return;
     try {
-      const corpo = await apiClient.post<{ data: { conversation_id?: string } | null }>(
-        "/api/v1/conversations/open-with-contact",
-        {
-          phone_number: p.telefone,
-          name: p.nome,
-          source: "prospeccao",
-          source_metadata: { prospect_id: p.id, categoria: p.categoria, cidade: p.cidade },
-          tags: [p.categoria, p.cidade].filter(Boolean) as string[],
-          conversation_tags: ["prospeccao"],
-        },
-      );
-      const conversa = corpo?.data?.conversation_id;
+      const conversa = await abrirConversaDoProspect(p, usuarioId);
       if (!conversa) return;
-      if (p.owner_user_id && p.owner_user_id === usuarioId) {
-        try {
-          await apiClient.post(`/api/v1/conversations/${conversa}/claim`, {});
-        } catch {
-          // assumir é cortesia — o vendedor assume pela tela se o claim falhar.
-        }
-      }
       router.push(`/app/inbox?id=${conversa}`);
     } catch (e) {
       showApiError(e);
@@ -640,6 +674,12 @@ export function EmpresasTab({
     if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/prospecting/prospects/${id}`);
+      // FASE 11: se o aberto veio de ?prospect=, some com ele — senão o
+      // fallback manteria na tela um prospect que o banco já não tem.
+      if (detalheExtra?.id === id) {
+        setDetalheExtra(null);
+        setDetalheId(null);
+      }
       await buscar(filtros, buscaId);
     } catch (e) {
       showApiError(e);

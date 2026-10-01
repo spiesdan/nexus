@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { createClient } from "@/lib/supabase/server";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
@@ -17,6 +18,10 @@ export default async function RadarPage() {
   // padrão vive em `lib/auth/server.ts`), sem reler o `locale` cru.
   const idioma = user.idioma;
   const t = (texto: string) => traduzir(texto, idioma);
+
+  // FASE 11 (§30): a seção de prospecção tem as MESMAS ações da aba Empresas —
+  // fila e conversa exigem agent+, mesmo critério da tela de origem.
+  const podeOperar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
 
   // Base da seção de recuperação (contagem saía da antiga /app/recuperacao):
   // sem pedido anterior a 60 dias não há o que medir, e a seção mostra "sem
@@ -38,7 +43,7 @@ export default async function RadarPage() {
         title={t("Radar Comercial")}
         subtitle={t("Identifique riscos, oportunidades de recompra e clientes que precisam de atenção.")}
       />
-      <RadarTabs temBase={(count ?? 0) > 0} />
+      <RadarTabs temBase={(count ?? 0) > 0} podeOperar={podeOperar} usuarioId={user.id} />
     </div>
   );
 }

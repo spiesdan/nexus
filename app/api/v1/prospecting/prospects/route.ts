@@ -2,8 +2,12 @@
  * GET /api/v1/prospecting/prospects — a tabela (§14 do plano).
  *
  * Filtros: categoria, cidade, estado, com_telefone, com_website,
- * com_whatsapp, nota_min, avaliacoes_min, origem(provider), status_comercial,
- * so_sem_cliente (ainda não é cliente), busca (nome/telefone/cidade/website),
+ * com_whatsapp, nota_min, avaliacoes_min, origem(provider), status_comercial
+ * (aceita lista separada por vírgula — o Radar da FASE 11 pediu
+ * "novo,nao_analisado" de uma vez), so_sem_cliente (ainda não é cliente),
+ * busca (nome/telefone/cidade/website), id (UM prospect pelo id — o "Abrir"
+ * do Radar, FASE 11: o drawer da Prospecção abre por deep-link
+ * `?prospect=<uuid>` mesmo fora da janela da lista),
  * busca_id (somente os prospects de UMA busca — o "Ver empresas" da aba
  * Pesquisas, B1 da spec 19: uuid nunca vai para o campo de texto),
  * minha_fila (só os que tenho como dono — item 16; o dono vem do authz,
@@ -43,6 +47,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const cidade = p.get("cidade")?.trim() ?? "";
   const estado = p.get("estado")?.trim() ?? "";
   const status = p.get("status")?.trim() ?? "";
+  const soId = p.get("id")?.trim() ?? "";
   const origem = p.get("origem")?.trim() ?? "";
   const busca = p.get("busca")?.trim() ?? "";
   const buscaId = p.get("busca_id")?.trim() ?? "";
@@ -90,11 +95,26 @@ export async function GET(req: NextRequest): Promise<Response> {
     q = q.in("id", idsDaBusca);
   }
 
+  // "Abrir" do Radar (FASE 11): uuid puro, casa com ou sem os outros filtros
+  // — id de outro tenant cai no where organization_id e volta vazio.
+  if (soId) {
+    if (!UUID_RE.test(soId)) {
+      return fail("validation_failed", "id inválido.", 400, { requestId });
+    }
+    q = q.eq("id", soId);
+  }
+
   if (categoria) q = q.eq("categoria", categoria);
   if (cidade) q = q.ilike("cidade", `%${cidade}%`);
   if (estado) q = q.eq("estado", estado.toUpperCase());
-  if (status !== "" && (STATUS_COMERCIAL as readonly string[]).includes(status)) {
-    q = q.eq("status_comercial", status);
+  if (status !== "") {
+    // Lista por vírgula (Radar): cada item tem que estar no vocabulário;
+    // o que não estiver cai fora (mesmo silêncio do filtro único antigo).
+    const statuses = status
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s !== "" && (STATUS_COMERCIAL as readonly string[]).includes(s));
+    if (statuses.length > 0) q = q.in("status_comercial", statuses);
   }
   if (origem) q = q.eq("provider", origem);
   if (comTelefone) q = q.not("telefone_normalizado", "is", null);

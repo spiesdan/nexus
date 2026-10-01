@@ -5,6 +5,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { RadarDashboard } from "./_components/RadarDashboard";
 import { RecuperacaoLista } from "./_components/RecuperacaoLista";
+import { NovosProspects } from "./_components/NovosProspects";
 
 /**
  * Navegação por seções do Radar — página única, todo o conteúdo renderizado.
@@ -16,15 +17,27 @@ import { RecuperacaoLista } from "./_components/RecuperacaoLista";
  *
  * A quarta seção é a antiga /app/recuperacao, movida para cá na fusão
  * (S100) — mesma razão: o conteúdo nasce visível e o botão só rola.
+ * A quinta (Prospecção) nasceu na FASE 11 da spec 19 (§30): novos prospects
+ * com as 3 ações — mesmo molde, conteúdo visível sem clique.
  */
 const SECOES = [
   { id: "radar-visao", rotulo: "Visão geral" },
   { id: "radar-oportunidades", rotulo: "Recompra" },
   { id: "radar-demandas", rotulo: "Risco de demandas" },
   { id: "radar-recuperacao", rotulo: "Recuperação" },
+  { id: "radar-prospeccao", rotulo: "Prospecção" },
 ] as const;
 
-export function RadarTabs({ temBase }: { temBase: boolean }) {
+export function RadarTabs({
+  temBase,
+  podeOperar,
+  usuarioId,
+}: {
+  temBase: boolean;
+  /** agent+ (ou platform admin) — libera fila/conversa na seção de prospecção. */
+  podeOperar: boolean;
+  usuarioId: string;
+}) {
   const t = useT();
   return (
     <div className="space-y-6">
@@ -47,6 +60,7 @@ export function RadarTabs({ temBase }: { temBase: boolean }) {
         <h2 className="text-base font-medium text-text">{t("Recuperação de clientes")}</h2>
         <RecuperacaoLista temBase={temBase} />
       </div>
+      <NovosProspects podeOperar={podeOperar} usuarioId={usuarioId} />
     </div>
   );
 }
