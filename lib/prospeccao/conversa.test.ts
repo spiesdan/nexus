@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Prospect } from "@/lib/schemas/prospeccao";
-import { payloadDaConversaDoProspect } from "@/lib/prospeccao/conversa";
+import { abrirConversaDoProspect, payloadDaConversaDoProspect } from "@/lib/prospeccao/conversa";
+
+const post = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/api/client", () => ({ apiClient: { post } }));
 
 const base: Prospect = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -28,6 +31,10 @@ const base: Prospect = {
   proximo_passo: null,
 };
 
+const EU = "11111111-1111-4111-8111-111111111111";
+const OUTRO = "11111111-1111-4111-8111-999999999999";
+const CONVERSA = "99999999-9999-4999-8999-999999999999";
+
 describe("payloadDaConversaDoProspect", () => {
   it("manda origem, metadata e etiquetas do §17 — o mesmo corpo das duas telas", () => {
     const corpo = payloadDaConversaDoProspect(base);
@@ -46,5 +53,53 @@ describe("payloadDaConversaDoProspect", () => {
   it("categoria/cidade nulos não viram tag vazia (união limpa, D16)", () => {
     const corpo = payloadDaConversaDoProspect({ ...base, categoria: null, cidade: null });
     expect(corpo.tags).toEqual([]);
+  });
+});
+
+describe("abrirConversaDoProspect (FASE 9 — Inbox)", () => {
+  beforeEach(() => {
+    post.mockReset();
+  });
+
+  it("sem telefone → null e nenhuma chamada de API (não abre conversa sem número)", async () => {
+    const conversa = await abrirConversaDoProspect({ ...base, telefone: null }, EU);
+    expect(conversa).toBeNull();
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("se o dono sou eu, abre e assume com claim (best-effort)", async () => {
+    post
+      .mockResolvedValueOnce({ data: { conversation_id: CONVERSA } })
+      .mockResolvedValueOnce({ data: null });
+    const comDono = { ...base, owner_user_id: EU };
+    const conversa = await abrirConversaDoProspect(comDono, EU);
+    expect(conversa).toBe(CONVERSA);
+    expect(post).toHaveBeenNthCalledWith(1, "/api/v1/conversations/open-with-contact", payloadDaConversaDoProspect(comDono));
+    expect(post).toHaveBeenNthCalledWith(2, `/api/v1/conversations/${CONVERSA}/claim`, {});
+  });
+
+  it("dono é outro vendedor → abre sem claim (a fila é dele)", async () => {
+    post.mockResolvedValueOnce({ data: { conversation_id: CONVERSA } });
+    const conversa = await abrirConversaDoProspect({ ...base, owner_user_id: OUTRO }, EU);
+    expect(conversa).toBe(CONVERSA);
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it("sem conversation_id na resposta → null", async () => {
+    post.mockResolvedValueOnce({ data: null });
+    expect(await abrirConversaDoProspect(base, EU)).toBeNull();
+  });
+
+  it("claim falhou → a conversa continua aberta (assumir é cortesia)", async () => {
+    post
+      .mockResolvedValueOnce({ data: { conversation_id: CONVERSA } })
+      .mockRejectedValueOnce(new Error("403"));
+    const conversa = await abrirConversaDoProspect({ ...base, owner_user_id: EU }, EU);
+    expect(conversa).toBe(CONVERSA);
+  });
+
+  it("erro na abertura propaga para o chamador tratar (sem toast aqui)", async () => {
+    post.mockRejectedValueOnce(new Error("rede fora"));
+    await expect(abrirConversaDoProspect(base, EU)).rejects.toThrow("rede fora");
   });
 });

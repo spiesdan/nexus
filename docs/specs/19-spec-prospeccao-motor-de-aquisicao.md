@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–13 concluídas · FASE 14 (testes de rota/API, B13) em andamento.
+> **Status:** FASE 1–14 concluídas · FASE 15 (performance/produção, B15) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -33,7 +33,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
 - [x] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
 - [x] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
       `DailyProspectingLimits`, painel de consumo; preços em config, não hardcoded).
-- [ ] **FASE 14** — Testes (dedupe, match, cache/TTL, expansion, usage, budget,
+- [x] **FASE 14** — Testes (dedupe, match, cache/TTL, expansion, usage, budget,
       provider, fallback, fila, inbox, score, filtros, permissões).
 - [ ] **FASE 15** — Performance e produção (batch, sem N+1, estados de UI,
       mobile, fallback, observabilidade).
@@ -118,10 +118,11 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 | B10 | Sem enriquecimento em 2 etapas nem cache de Place Details (todo detalhe é pago na hora) | `google-places.ts` | FASE 3/4 — fechado por D10/D11 (detalhe já vem na descoberta; Details sem consumidor até a etapa 2) |
 | B11 | Sem vendedor/próxima ação no prospect: `business_prospects` não tem `owner` nem `próximo_passo` | schema 0220 | FASE 8 — fechado (migration `0247_prospeccao_fila`: `owner_user_id` + `proximo_passo` + índice parcial org+dono) |
 | B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 — fechado (seção "Novos prospects" lê a rota de prospects; o botão de VA continua sendo da tela de origem, onde o filtro que o alimenta nasce) |
-| B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 |
+| B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 — fechado (`tests/api/prospecting-routes.test.ts`: 34 testes cobrindo searches/settings/consumo/prospects/[id] com RBAC, 429 do orçamento, cache hit, audit e espelho de `proximo_passo`; `lib/prospeccao/conversa.test.ts` += 6 de `abrirConversaDoProspect`) |
 | B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 — fechado (entrada 1.17.0 corrigida) |
 | B15 | Performance: `mercado` puxa `limit(10000)×3 + 5000` por request; wizard geocoda até 5 cidades em série | `mercado/route.ts:32,53,82,100`, `_campanha-wizard.tsx:106` | FASE 15 |
 | B16 | `lib/database.types.ts` desatualizado (não conhece as tabelas de prospecção; rotas usam `as unknown as`) | tipos gerados | nota (regenerar quando houver acesso) |
+| B17 | e2e da seção "Novos prospects" do Radar (prometido na FASE 11 como "FASE 14") nunca escrito; a FASE 14 fechou só unit/rota (B13) | `tests/e2e/**` | pendente (não inventa spec sem conseguir rodá-la) |
 
 ### Decisões da evolução
 
@@ -180,7 +181,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   do geocode, resposta `do_cache` na API, e `DISCOVERY_CACHE_TTL` (§7 nomeia
   a variável) como default de instalação atrás do TTL por org (Config, 0–365).
   Dedupe (§8) já existia em 5 níveis em `dedup.ts` — fechado sem código novo;
-  testes de dedupe/cache/TTL ficam na FASE 14.
+  testes de dedupe/cache/TTL entraram na FASE 14.
 - **D13 — Classificação derivada, score só da descoberta (FECHADA na FASE 5):**
   `classificacao` (§10, 8 classes com rótulo pt-BR) nasce a cada GET — cliente
   (vínculo/`contact_id` ou match telefone/email), em negociação
@@ -425,8 +426,8 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   do Radar passa `podeOperar`/`usuarioId` (mesmo critério agent+ da
   Prospecção); B12 fechado. Gaps: "semelhantes aos melhores clientes" e
   "oportunidades por cidade" como agrupador do §30 sem regra escrita (não
-  inventar); "restaurantes próximos" já é a aba Mapa; e2e da seção nova é
-  FASE 14.)*
+  inventar);   "restaurantes próximos" já é a aba Mapa; e2e da seção nova NÃO entrou na
+  FASE 14 (checklist sem e2e — queda registrada em B17).)*
 - **FASE 12** — *(FECHADA na FASE 12: migration `0249_commercial_tasks_prospect`
   (`commercial_tasks.prospect_id` + índice parcial org+prospect; as três da
   doutrina: migration, baseline — create + apêndice — e MANIFEST); helper puro
@@ -459,9 +460,14 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   consumo elevado, cache baixo, erro de API…) não é checklist desta fase — o
   único alerta entregue é o do §21/§24; geocode do POST não entra no custo
   contado (só a busca, como desde a FASE 6); registrar hit é best-effort
-  (falha loga, não derruba o hit); rota de consumo ainda sem teste de rota —
-  B13 é FASE 14.)*
-- **FASE 14** — testes de rota/API (B13).
+  (falha loga, não derruba o hit); rota de consumo ganhou teste na FASE 14
+  (B13 fechado).)*
+- **FASE 14** — testes de rota/API (B13 — fechado; o que já existia de
+  dedupe/match/score/expansion/usage/provider ficou como está, era só
+  conferir; o motor de guarda 90%/100% (`motor.ts`) continua sem teste de
+  DB — o orçamento puro já está coberto em `prospeccao-custos.test.ts` e a
+  rota 429 em `prospecting-routes.test.ts`; rota de execução única
+  (`executar`) segue fora do escopo deste arquivo de teste).
 - **FASE 15** — N+1, paginação de verdade, mobile, observabilidade (B15).
 
 ---
