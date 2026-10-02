@@ -15,6 +15,7 @@ jornada-expedicao.spec.ts
 jornada-financeiro.spec.ts
 jornada-fiscal.spec.ts
 jornada-venda.spec.ts
+meu-dia.spec.ts
 navegacao.spec.ts
 password-recovery.spec.ts
 pipelines-gestao.spec.ts

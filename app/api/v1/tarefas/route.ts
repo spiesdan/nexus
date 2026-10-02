@@ -1,5 +1,5 @@
 /**
- * GET  /api/v1/tarefas — lista com filtro por status (leitura: viewer+).
+ * GET  /api/v1/tarefas — lista com filtro por status e responsavel (leitura: viewer+).
  * POST /api/v1/tarefas — agenda (escrita: agent+).
  */
 import { randomUUID } from "node:crypto";
@@ -23,6 +23,17 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "status aceita: pendente, concluida, cancelada.", 422, { requestId });
   }
 
+  // `responsavel=minhas` = as minhas (responsavel_user_id = eu) MAIS as sem
+  // dono (null) — a coluna é um filtro da EQUIPE (quem serve), não de
+  // propriedade: tarefa sem dono cai na fila que qualquer um pode pegar, e
+  // deixá-la de fora esconderia trabalho aberto de quem olha "só o que é meu"
+  // na aba Meu Dia. O default continua sendo a organização inteira — o
+  // filtro é opt-in, para não mudar o que as telas atuais (Kanban) pedem.
+  const responsavel = req.nextUrl.searchParams.get("responsavel")?.trim() ?? "";
+  if (responsavel !== "" && responsavel !== "minhas") {
+    return fail("validation_failed", "responsavel aceita: minhas.", 422, { requestId });
+  }
+
   const supabase = await createClient();
   let q = supabase
     .from("commercial_tasks")
@@ -32,6 +43,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     .order("created_at", { ascending: false })
     .limit(500);
   if (status) q = q.eq("status", status);
+  if (responsavel === "minhas") {
+    q = q.or(`responsavel_user_id.eq.${authz.user.id},responsavel_user_id.is.null`);
+  }
   const { data, error } = await q;
   if (error) return fail("internal_error", "Erro ao ler as tarefas.", 500, { requestId });
 

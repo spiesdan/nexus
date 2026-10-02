@@ -197,7 +197,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // sendo o Dashboard.
     href: "/app/meu-dia",
     label: "Meu Dia",
-    description: "O que fazer agora: tarefas, follow-ups ativos e recomendações.",
+    description: "Sua linha do tempo de hoje: tarefas, agenda, mensagens e follow-ups.",
     icon: Sun,
     group: "visao",
     sidebar: true,
