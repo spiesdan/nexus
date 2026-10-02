@@ -72,8 +72,20 @@ export async function GET(_req: NextRequest): Promise<Response> {
   // rollback, o host reporta a versão nova (o `git checkout` deu certo; quem
   // não subiu foi o container), então `current_version` nomearia justamente a
   // versão que quebrou. Quem sabe qual imagem voltou ao ar é o run.
+  //
+  // O override vale SÓ enquanto o heartbeat ainda nomeia a versão-alvo do run
+  // — a janela que o parágrafo acima descreve. Um heartbeat que já foi para
+  // OUTRA versão (update manual via `update.sh`, release aplicada por fora) é
+  // a verdade, e segurar `from_version` para sempre virou mentira em
+  // produção: em 2026-10-02 a tela respondia a versão do rollback de 27/09
+  // enquanto o host já estava na 1.18.0.
   const running =
-    run?.status === "failed_rolled_back" && run.from_version ? run.from_version : current;
+    run?.status === "failed_rolled_back" &&
+    run.from_version &&
+    run.to_version &&
+    current === run.to_version
+      ? run.from_version
+      : current;
 
   if (!user.is_platform_admin) {
     return ok({ current_version: running, is_owner: false });

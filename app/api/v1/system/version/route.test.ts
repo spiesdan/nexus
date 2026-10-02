@@ -244,6 +244,29 @@ describe("GET /api/v1/system/version", () => {
     expect(body.data.notes.sections.map((s: { version: string }) => s.version)).toEqual(["1.1.0"]);
   });
 
+  it("um heartbeat que já foi para OUTRA versão vence o rollback antigo", async () => {
+    // Medido em produção (2026-10-02): o run de rollback de 27/09 segurou a
+    // tela por dias depois de um update manual — a 1.18.0 publicada ficou sem
+    // botão. O override vale só enquanto o heartbeat ainda nomeia a versão-alvo
+    // do run; adiante disso, o heartbeat É a verdade.
+    versionRow.current_version = "1.18.0";
+    versionRow.latest_version = "1.18.0";
+    runRow = {
+      id: "run-1",
+      status: "failed_rolled_back",
+      from_version: "d4416bfe4",
+      to_version: "1.56.0",
+      last_step: null,
+      log_tail: "",
+      dispatched_at: new Date().toISOString(),
+    } as never;
+    vi.mocked(loadAuthUser).mockResolvedValue(OWNER as never);
+    const { GET } = await import("../version/route");
+    const body = await (await GET(get())).json();
+    expect(body.data.current_version).toBe("1.18.0");
+    expect(body.data.update_available).toBe(false);
+  });
+
   it("entrega compare_failed para a tela poder dizer 'não sei' em vez de 'está em dia'", async () => {
     versionRow.latest_version = "";
     versionRow.compare_failed = true;

@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/types";
 import { copyToClipboard } from "@/lib/clipboard";
 import { useSystemVersion } from "@/hooks/system/useSystemVersion";
 import { markdownParaTextoSimples } from "@/lib/system/changelog";
+import { falhaObsoleta } from "@/lib/system/update-run";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
@@ -94,6 +95,27 @@ export function UpdatePanel() {
   const versao = semV(data.current_version);
   const nova = semV(data.latest_version);
 
+  const ehFalha =
+    data.run?.status === "failed" ||
+    data.run?.status === "failed_rolled_back" ||
+    data.run?.status === "unknown";
+  // A falha manda na tela só ENQUANTO ainda descreve onde a instalação está.
+  // Medido em produção (2026-10-02): o run de rollback de 27/09 segurou esta
+  // tela por dias depois de um update manual — a 1.18.0 publicada ficou sem
+  // botão, atrás de uma falha que já não descrevia nada. O diagnóstico
+  // (tentativa, log) não some: ele desce para um aviso nas telas em dia.
+  const falhaDesatualizada =
+    ehFalha &&
+    data.run != null &&
+    falhaObsoleta({
+      status: data.run.status,
+      agentOnline: data.agent_online ?? false,
+      versaoInstalada: data.current_version,
+      fromVersion: data.run.from_version,
+      toVersion: data.run.to_version,
+    });
+  const mostrarFalha = ehFalha && !falhaDesatualizada;
+
   if (rodando) {
     return (
       <Layout titulo={`${t("Atualizando para a versão")} ${nova}`}>
@@ -125,7 +147,7 @@ export function UpdatePanel() {
   const alvo = semV(data.run?.to_version);
   const anterior = semV(data.run?.from_version);
 
-  if (data.run?.status === "failed_rolled_back") {
+  if (mostrarFalha && data.run?.status === "failed_rolled_back") {
     return (
       <Layout titulo={`${t("A atualização para a versão")} ${alvo} ${t("não deu certo")}`}>
         <p className="text-sm">
@@ -150,7 +172,7 @@ export function UpdatePanel() {
     );
   }
 
-  if (data.run?.status === "failed") {
+  if (mostrarFalha && data.run?.status === "failed") {
     // Já houve aqui um texto próprio para "o host recusou antes de começar",
     // detectado por `last_step` nulo. Era sinal errado: `run_progress` não tem
     // retry e engole falha (o `run_result` insiste por ~2 min), então uma
@@ -185,7 +207,7 @@ export function UpdatePanel() {
     );
   }
 
-  if (data.run?.status === "unknown") {
+  if (mostrarFalha && data.run?.status === "unknown") {
     return (
       <Layout titulo={t("Não sei dizer como terminou")}>
         <p className="text-sm">
@@ -253,6 +275,7 @@ export function UpdatePanel() {
   if (!data.update_available && !data.off_release) {
     return (
       <Layout titulo={`${t("Você está na versão")} ${versao}`}>
+        {falhaDesatualizada && <AvisoTentativaAntiga alvo={alvo} log={data.run?.log_tail} />}
         <p className="text-sm text-muted-foreground">
           {t("É a mais recente. Não há nada a fazer.")}
         </p>
@@ -275,6 +298,7 @@ export function UpdatePanel() {
     if (!data.has_known_release) {
       return (
         <Layout titulo={t("Ainda não há nenhuma versão publicada")}>
+          {falhaDesatualizada && <AvisoTentativaAntiga alvo={alvo} log={data.run?.log_tail} />}
           <p className="text-sm">
             {t(
               "Este projeto ainda não tem nenhuma versão publicada para comparar com a sua instalação — normal em um fork novo ou recém-criado a partir do código-fonte.",
@@ -293,6 +317,7 @@ export function UpdatePanel() {
     }
     return (
       <Layout titulo={t("Você está à frente da versão publicada")}>
+        {falhaDesatualizada && <AvisoTentativaAntiga alvo={alvo} log={data.run?.log_tail} />}
         <p className="text-sm">
           {t("Seu sistema roda uma versão mais nova do que a última publicada, então")}{" "}
           <strong>{t("não há nada a atualizar")}</strong>.{" "}
@@ -313,6 +338,7 @@ export function UpdatePanel() {
 
   return (
     <Layout titulo={`${t("Versão")} ${nova} ${t("disponível")}`}>
+      {falhaDesatualizada && <AvisoTentativaAntiga alvo={alvo} log={data.run?.log_tail} />}
       {data.off_release && (
         <p className="mb-4 rounded-lg border border-warning bg-warning-bg p-3 text-sm text-warning-fg">
           {t("Sua instalação está numa versão de desenvolvimento. Atualizar vai levá-la para a versão publicada")}{" "}
@@ -442,6 +468,31 @@ function Saida({
       <p className="text-sm text-muted-foreground">{texto}</p>
       <Comando comando={comando} />
     </div>
+  );
+}
+
+/**
+ * A última tentativa ficou para trás: a instalação já foi adiante por conta
+ * própria (update manual pelo terminal, release aplicada por outro caminho) e
+ * a tela de falha seria mentira agora. O aviso preserva o DIAGNÓSTICO — que a
+ * tentativa existiu, falhou e deixou log — sem sequestrar o estado atual.
+ */
+function AvisoTentativaAntiga({ alvo, log }: { alvo: string; log: string | undefined }) {
+  const t = useT();
+  if (!alvo) return null;
+  return (
+    <>
+      <div className="mb-4 rounded-lg border border-warning bg-warning-bg p-3 text-sm text-warning-fg">
+        <p className="mb-1 font-medium">⚠️ {t("Tentativa antiga")}</p>
+        <p>
+          {t("A atualização para a versão")} {alvo}{" "}
+          {t(
+            "não deu certo numa tentativa anterior — desde então o sistema foi adiante por conta própria, e este estado não é mais o que está no ar.",
+          )}
+        </p>
+      </div>
+      <DetalhesTecnicos texto={log} />
+    </>
   );
 }
 
