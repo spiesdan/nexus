@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
@@ -274,6 +275,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
     listaFollow.length === 0 &&
     listaBrain.length === 0;
 
+  const tagDoIdioma = useTagDeIdioma();
   const titulo = agora
     ? `${saudacaoDoDia(agora)}${nome ? `, ${nome}` : ""}`
     : t("Meu Dia");
@@ -286,7 +288,9 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
   ]
     .filter(Boolean)
     .join(" · ");
-  const subtitulo = agora ? [dataPorExtenso(agora), resumo].filter(Boolean).join(" · ") : undefined;
+  const subtitulo = agora
+    ? [dataPorExtenso(agora, tagDoIdioma), resumo].filter(Boolean).join(" · ")
+    : undefined;
 
   const acoes: AcoesDaLinha = {
     concluindoId: concluir.isPending ? (concluir.variables ?? null) : null,

@@ -172,9 +172,15 @@ export function saudacaoDoDia(agora: Date): string {
   return "Boa noite";
 }
 
-/** "sexta-feira, 2 de outubro" — data por extenso no fuso de quem olha. */
-export function dataPorExtenso(agora: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", {
+/**
+ * "sexta-feira, 2 de outubro" — data por extenso no fuso de quem olha.
+ *
+ * A tag BCP-47 vem de quem chama (`useTagDeIdioma()` no componente): escrever
+ * o idioma aqui dentro faria a data ignorar quem está lendo — é o que o gate
+ * `i18n-a-data-segue-o-idioma` cobra.
+ */
+export function dataPorExtenso(agora: Date, tag: string): string {
+  return new Intl.DateTimeFormat(tag, {
     weekday: "long",
     day: "numeric",
     month: "long",

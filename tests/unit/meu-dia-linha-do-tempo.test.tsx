@@ -29,6 +29,9 @@ vi.mock("@/lib/api/client", () => ({
 vi.mock("@/hooks/i18n/useT", () => ({
   useT: () => (chave: string) => chave,
 }));
+vi.mock("@/hooks/i18n/useLocaleDeData", () => ({
+  useTagDeIdioma: () => "pt-BR",
+}));
 vi.mock("@/components/feedback/ApiErrorToast", () => ({
   showApiError: vi.fn(),
 }));
@@ -136,7 +139,7 @@ describe("MeuDiaClient — a linha do tempo do dia", () => {
     ).toBeInTheDocument();
     // Subtítulo = data por extenso + o resumo de contagens da própria tela.
     expect(
-      screen.getByText(`${dataPorExtenso(new Date())} · 1 atrasada · 2 hoje`),
+      screen.getByText(`${dataPorExtenso(new Date(), "pt-BR")} · 1 atrasada · 2 hoje`),
     ).toBeInTheDocument();
   });
 

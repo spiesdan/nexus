@@ -152,7 +152,9 @@ describe("saudacaoDoDia", () => {
 
 describe("dataPorExtenso", () => {
   it("data por extenso em pt-BR", () => {
-    expect(dataPorExtenso(new Date(2026, 9, 2))).toBe("sexta-feira, 2 de outubro");
+    expect(dataPorExtenso(new Date(2026, 9, 2), "pt-BR")).toBe(
+      "sexta-feira, 2 de outubro",
+    );
   });
 });
 
