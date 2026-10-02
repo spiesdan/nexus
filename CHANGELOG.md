@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.18.1] — 2026-10-02
+
+### Corrigido
+
+- **Tela de atualização — falha antiga não esconde mais o estado atual** A **Atualização do sistema** deixou de ser sequestrada por uma falha antiga.
+  Quando uma tentativa de atualização falha, a tela passa a mostrar o erro — e
+  fica assim enquanto o sistema continua onde a tentativa o deixou. Mas se a
+  instalação foi adiante por conta própria (um update rodado direto no servidor,
+  por exemplo), aquela tela de falha não descreve mais nada: ela ficava no caminho
+  do botão de atualizar, escondendo o estado real da sua versão.
+
+  **O que muda:** a falha que já não descreve a instalação desce para um aviso
+  dentro da tela normal — a tentativa antiga, o log e o comando de saída seguem
+  à mão, mas o estado atual ("você está na versão X", "versão Y disponível") volta
+  a mandar na tela, com o botão de atualizar de volta. A falha que AINDA descreve
+  o host continua com a mesma tela de saída de sempre.
+
 ## [1.18.0] — 2026-10-02
 
 ### Adicionado
@@ -2624,7 +2641,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.1...HEAD
+[1.18.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.0...v1.18.1
 [1.18.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.8...v1.17.0
 [1.16.8]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.7...v1.16.8
