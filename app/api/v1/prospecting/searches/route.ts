@@ -7,7 +7,10 @@
  * campanha fatiada).
  * Cache (§7): mesmo hash dentro do TTL devolve a busca existente com
  * `do_cache: true`, a menos que `forcar: true`. O hit vem ANTES do geocode —
- * repetição dentro do TTL não paga NEM uma chamada de mapa.
+ * repetição dentro do TTL não paga NEM uma chamada de mapa — e é contado em
+ * `prospecting_cache_hits` (§21, FASE 13).
+ * Budget guard (§24): provider pago a 100% do teto mensal recusa ANTES do
+ * geocode (429) — depois do cache, para nunca barrar dado grátis.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -17,9 +20,11 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { env } from "@/lib/env";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
+import { MENSAGEM_ORCAMENTO_ATINGIDO, orcamentoDoMes, registrarCacheHit } from "@/lib/prospeccao/uso";
 import { buscaCreateSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -37,7 +42,10 @@ function ttlInstalacao(): number {
 async function cfgDaBusca(admin: Awaited<ReturnType<typeof createAdminClient>>, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
-    .select("cache_ttl_dias, limite_por_busca, provider_ativo, grid_size_km, grid_overlap_pct")
+    .select(
+      "cache_ttl_dias, limite_por_busca, provider_ativo, grid_size_km, grid_overlap_pct, " +
+        "orcamento_mensal_cents, preco_busca_cents, preco_detalhe_cents",
+    )
     .eq("organization_id", orgId)
     .maybeSingle();
   const cfg = data as unknown as {
@@ -46,12 +54,20 @@ async function cfgDaBusca(admin: Awaited<ReturnType<typeof createAdminClient>>, 
     provider_ativo: string;
     grid_size_km: number;
     grid_overlap_pct: number;
+    orcamento_mensal_cents: number | null;
+    preco_busca_cents: number | null;
+    preco_detalhe_cents: number | null;
   } | null;
   return {
     ttl: cfg?.cache_ttl_dias ?? ttlInstalacao(),
     teto: cfg?.limite_por_busca ?? 500,
     // Mesmo default honesto do motor: sem linha de settings, só o OSM roda.
     providerAtivo: cfg?.provider_ativo ?? "osm_overpass",
+    orcamentoMensalCents: cfg?.orcamento_mensal_cents ?? null,
+    preco: {
+      preco_busca_cents: cfg?.preco_busca_cents ?? null,
+      preco_detalhe_cents: cfg?.preco_detalhe_cents ?? null,
+    },
     grade: {
       tamanho: Number(cfg?.grid_size_km ?? 5),
       sobreposicao: Number(cfg?.grid_overlap_pct ?? 10),
@@ -101,7 +117,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const { ttl, teto, providerAtivo, grade: cfgGrade } = await cfgDaBusca(admin, authz.org.orgId);
+  const { ttl, teto, providerAtivo, grade: cfgGrade, orcamentoMensalCents, preco } =
+    await cfgDaBusca(admin, authz.org.orgId);
   // Provider escolhido é o da Configuração → Prospecção (a tela nem manda);
   // quem mandar diferente é recusado na hora, igual o motor recusaria depois.
   if (entrada.provider && entrada.provider !== providerAtivo) {
@@ -162,6 +179,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       .limit(1)
       .maybeSingle();
     if (recente) {
+      // O hit não cria busca nova, então só esta contagem o registra (§21).
+      // Best-effort: falhar a contagem não derruba o dado grátis que devolve.
+      await registrarCacheHit(admin, authz.org.orgId, (recente as unknown as { id: string }).id);
       return ok(
         {
           reutilizada: (recente as unknown as { id: string }).id,
@@ -170,6 +190,16 @@ export async function POST(req: NextRequest): Promise<Response> {
         },
         { requestId },
       );
+    }
+  }
+
+  // Budget guard (§24): em 100% o provider pago não aceita NOVA consulta —
+  // nem a manual. O hit de cache passou antes (dado grátis, não consulta), e a
+  // redução de 90% é da AUTOMAÇÃO (motor), não da busca que o operador pediu.
+  if (custoEfetivo(provider, preco).busca > 0) {
+    const decisao = await orcamentoDoMes(admin, authz.org.orgId, orcamentoMensalCents);
+    if (decisao.estado === "bloqueio") {
+      return fail("rate_limited", MENSAGEM_ORCAMENTO_ATINGIDO, 429, { requestId });
     }
   }
 

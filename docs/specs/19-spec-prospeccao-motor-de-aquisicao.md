@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–12 concluídas · FASE 13 (usage/budget/painel §21) em andamento.
+> **Status:** FASE 1–13 concluídas · FASE 14 (testes de rota/API, B13) em andamento.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -31,7 +31,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
 - [x] **FASE 10** — Campanhas (funil Encontrados → … → Faturamento; não é lista técnica).
 - [x] **FASE 11** — Radar ("quem podemos vender hoje?" com ações).
 - [x] **FASE 12** — Meu Dia (tarefas de prospecção entram em `/app/meu-dia`).
-- [ ] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
+- [x] **FASE 13** — Usage + Budget + custos (`PlacesUsageManager`,
       `DailyProspectingLimits`, painel de consumo; preços em config, não hardcoded).
 - [ ] **FASE 14** — Testes (dedupe, match, cache/TTL, expansion, usage, budget,
       provider, fallback, fila, inbox, score, filtros, permissões).
@@ -372,6 +372,34 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   tudo em "Hoje"; a coluna é `date` — hora não existe, ver gap) e edição não
   redata. Espelho best-effort: o prospect salva primeiro (molde do claim da
   FASE 9). Helper puro `lib/prospeccao/tarefa.ts` — uma regra, não duas.
+- **D21 — usage central e budget guard numa fronteira só (FECHADA na FASE 13):**
+  `lib/prospeccao/uso.ts` É o `PlacesUsageManager` (§6) e o
+  `DailyProspectingLimits` (§20) — os dois nomes do checklist viraram um
+  módulo, porque as duas responsabilidades são a mesma pergunta ("quanto já
+  gastei e o que o teto manda fazer?") e regra escrita em dois arquivos é
+  regra que diverge. O `estadoDoOrcamento(gasto, limite)` é função pura —
+  `null`/`0` = sem teto (mesma convenção de `ai_budgets`), 80% avisa, 90%
+  reduz, 100% bloqueia (§24) — e o MESMO número alimenta motor, POST e
+  painel: o que a tela mostra é o que decide, nunca uma segunda medição
+  (molde `lib/ai/budget/check.ts`). D4 fechada: `custoEfetivo(provider,
+  settings)` em `custos.ts` sobrepõe `preco_busca_cents`/`preco_detalhe_cents`
+  de `prospecting_settings` (null = default neutro) e só para o provider pago
+  — preço gravado não vira cobrança em OSM/mapas. Guardas: o motor (provider
+  pago) falha a busca em 100% com a mensagem LITERAL do §24, em 90% reduz a
+  automação (1 célula/tick, sem expansão — só o termo pedido) e em 80% só o
+  painel avisa; o POST recusa em 100% (429) ANTES do geocode mas DEPOIS do
+  cache — hit de cache é dado grátis e nunca é barrado —, e a redução de 90%
+  não toca busca manual (reduzir é da automação). Leitura de gasto com erro
+  degrada frouxo + `logger.warn` (molde do orçamento de IA): janela de um
+  tick, o próximo recalcula, e o erro não some em silêncio. Painel §21 na aba
+  Config (manager+, `GET /api/v1/prospecting/consumo`): consultas hoje/mês,
+  hits, misses, descobertas, novas, enriquecimentos, estimativa em R$,
+  limite, percentual e alertas — tudo pela régua única. "Cache misses" =
+  buscas criadas no período; o hit não cria busca nova (§7), por isso
+  nasceu `prospecting_cache_hits` (migration `0250` + baseline + MANIFEST).
+  Interpretação registrada: o exemplo do §21 ("2.340 / 10.000 … 23,4%") é
+  centavos sobre centavos (R$ 23,40 / R$ 100 = 23,4%) — o percentual do
+  painel é custo/limite do §24, não contagem de consultas.
 - **FASE 10** — *(FECHADA na FASE 10: migration `0248_campanhas_objetivo`
   (`objetivo text` nas DUAS tabelas de campanha — as três da doutrina:
   migration, baseline create + apêndice idempotente, MANIFEST); rotas novas
@@ -412,8 +440,27 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   nas telas de tarefas/Meu Dia (o nome já está no título, e a tela de tarefas
   não muda nesta fase); resync além de concluir (renomear/cancelar tarefa na
   tela de tarefas não reescreve o passo — fonte única é o drawer).)*
-- **FASE 13** — `PlacesUsageManager`/`DailyProspectingLimits`/budget guard
-  (espelhar cota diária da VA).
+- **FASE 13** — *(FECHADA na FASE 13: migration `0250_prospecting_orcamento`
+  (`orcamento_mensal_cents` + `preco_busca_cents`/`preco_detalhe_cents` em
+  `prospecting_settings`, check >= 0; tabela nova `prospecting_cache_hits`
+  com RLS molde 0204 — as três da doutrina: migration, baseline — colunas no
+  create + apêndice — e MANIFEST); `lib/prospeccao/uso.ts` (estado do
+  orçamento 80/90/100, consumo agregado, teto diário, registro de hit,
+  mensagem literal do §24) com testes puros; `custoEfetivo` em `custos.ts`
+  (D4 fechada) + testes; motor: preço de settings, guarda 100% e redução
+  90%; POST: 429 pós-cache e hit contado; rota `prospecting/consumo`
+  (manager+) e painel "Consumo de Prospecção" na aba Config com os campos de
+  teto/preço. A cota diária da VA (spec 18) foi o molde — contada na
+  aplicação sobre o que já aconteceu, sem trigger. D21 acima.
+  Gaps: §20 é lista de EXEMPLOS — mensagens/novos contatos já têm cota na VA
+  (não duplicar), enriquecimentos não rodam automático (D10), campanhas
+  simultâneas = fila única de buscas (1 por vez, estrutural) e "máximo de
+  empresas descobertas" sem coluna escrita (não inventar); §25 (alertas:
+  consumo elevado, cache baixo, erro de API…) não é checklist desta fase — o
+  único alerta entregue é o do §21/§24; geocode do POST não entra no custo
+  contado (só a busca, como desde a FASE 6); registrar hit é best-effort
+  (falha loga, não derruba o hit); rota de consumo ainda sem teste de rota —
+  B13 é FASE 14.)*
 - **FASE 14** — testes de rota/API (B13).
 - **FASE 15** — N+1, paginação de verdade, mobile, observabilidade (B15).
 

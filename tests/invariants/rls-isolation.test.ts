@@ -371,6 +371,10 @@ beforeAll(() => {
           insert into public.prospecting_settings (organization_id)
             values (v_org);
         end if;
+        if not exists (select 1 from public.prospecting_cache_hits where organization_id = v_org) then
+          insert into public.prospecting_cache_hits (organization_id, search_id)
+            values (v_org, v_search);
+        end if;
 
         -- migration 0221 — políticas comerciais (singleton).
         if not exists (select 1 from public.commercial_policies where organization_id = v_org) then
@@ -530,6 +534,10 @@ export const TABLES = [
   "prospect_search_results",
   "prospecting_campaigns",
   "prospecting_settings",
+  // migration 0250 (spec 19, FASE 13) — hit de cache de busca de prospecção.
+  // Leitura org-scoped; escrita agent+ provada no POST /prospecting/searches
+  // (`registrarCacheHit` em lib/prospeccao/uso.ts, best-effort).
+  "prospecting_cache_hits",
   "commercial_policies",
   "commercial_commission_baixas",
   "commercial_titulo_baixas",

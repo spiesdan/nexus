@@ -17,7 +17,8 @@ export const dynamic = "force-dynamic";
 
 const COLUNAS =
   "provider_ativo, limite_por_busca, limite_diario, grid_size_km, raio_padrao_km, " +
-  "concorrencia, retries, timeout_ms, requisicoes_por_minuto, cache_ttl_dias, updated_at";
+  "concorrencia, retries, timeout_ms, requisicoes_por_minuto, cache_ttl_dias, " +
+  "orcamento_mensal_cents, preco_busca_cents, preco_detalhe_cents, updated_at";
 
 export async function GET(_req: NextRequest): Promise<Response> {
   const requestId = randomUUID();

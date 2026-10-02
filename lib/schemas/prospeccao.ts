@@ -147,6 +147,11 @@ export const settingsPutSchema = z.object({
   timeout_ms: z.number().int().min(2000).max(120000).optional(),
   requisicoes_por_minuto: z.number().int().min(1).max(600).optional(),
   cache_ttl_dias: z.number().int().min(0).max(365).optional(),
+  // FASE 13 (§21/§24/D4): teto mensal e a tabela vigente de preços.
+  // null explícito = sem teto / voltar ao default do arquivo neutro.
+  orcamento_mensal_cents: z.number().int().min(0).nullable().optional(),
+  preco_busca_cents: z.number().int().min(0).nullable().optional(),
+  preco_detalhe_cents: z.number().int().min(0).nullable().optional(),
 });
 
 export interface Prospect {

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "@/lib/logger";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
-import { custoDe } from "@/lib/prospeccao/custos";
+import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { termosDeDescoberta } from "@/lib/prospeccao/expansao";
 import { distanciaKm } from "@/lib/prospeccao/geo";
 import { gerarGrade } from "@/lib/prospeccao/grade";
@@ -22,6 +22,12 @@ import {
 import { bonusDeAderencia, scoreDeProspect } from "@/lib/prospeccao/score";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import type { NegocioDescoberto } from "@/lib/prospeccao/tipos";
+import {
+  MENSAGEM_ORCAMENTO_ATINGIDO,
+  limiteDiarioAtingido,
+  orcamentoDoMes,
+  type DecisaoOrcamento,
+} from "@/lib/prospeccao/uso";
 
 /**
  * O MOTOR — um tick processa N células da busca mais antiga pendente.
@@ -99,19 +105,28 @@ interface LinhaBusca {
 async function lerSettings(admin: SupabaseClient, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
-    .select("limite_diario, requisicoes_por_minuto, provider_ativo")
+    .select(
+      "limite_diario, requisicoes_por_minuto, provider_ativo, " +
+        "orcamento_mensal_cents, preco_busca_cents, preco_detalhe_cents",
+    )
     .eq("organization_id", orgId)
     .maybeSingle();
   const linha = data as unknown as {
     limite_diario: number;
     requisicoes_por_minuto: number;
     provider_ativo: string;
+    orcamento_mensal_cents: number | null;
+    preco_busca_cents: number | null;
+    preco_detalhe_cents: number | null;
   } | null;
   return {
     temLinha: Boolean(linha),
     limite_diario: linha?.limite_diario ?? 2000,
     requisicoes_por_minuto: linha?.requisicoes_por_minuto ?? 60,
     provider_ativo: linha?.provider_ativo ?? "google_places",
+    orcamento_mensal_cents: linha?.orcamento_mensal_cents ?? null,
+    preco_busca_cents: linha?.preco_busca_cents ?? null,
+    preco_detalhe_cents: linha?.preco_detalhe_cents ?? null,
   };
 }
 
@@ -185,9 +200,33 @@ export async function processarTick(
     .eq("organization_id", busca.organization_id)
     .gte("created_at", `${hoje}T00:00:00Z`);
   const gastoHoje = ((hojeRows ?? []) as { requisicoes: number }[]).reduce((s, r) => s + r.requisicoes, 0);
-  if (gastoHoje >= settings.limite_diario) {
+  if (limiteDiarioAtingido(gastoHoje, settings.limite_diario)) {
     return falhar(`Teto diário de ${settings.limite_diario} requisições atingido. Volta amanhã.`);
   }
+
+  // Preço efetivo do tenant (D4): settings por cima do arquivo neutro (OSM = 0
+  // naturalmente, e um preço gravado nunca vira cobrança em provider grátis).
+  const preco = custoEfetivo(busca.provider, settings);
+
+  // Budget guard (§24) — o teto mensal decide ANTES de qualquer chamada paga.
+  // Em 100% a busca falha com a mensagem literal da spec (nunca ultrapassar
+  // silenciosamente); em 90% a AUTOMAÇÃO reduz — uma célula por tick e só o
+  // termo pedido, sem expansão —; em 80% só o painel avisa. Provider grátis
+  // não tem o que bloquear, e preço configurado 0 declara consulta grátis.
+  let decisaoOrcamento: DecisaoOrcamento = {
+    estado: "sem_limite",
+    gasto_cents: 0,
+    limite_cents: null,
+    pct: 0,
+  };
+  if (preco.busca > 0 || preco.detalhe > 0) {
+    decisaoOrcamento = await orcamentoDoMes(admin, busca.organization_id, settings.orcamento_mensal_cents);
+    if (decisaoOrcamento.estado === "bloqueio") {
+      return falhar(MENSAGEM_ORCAMENTO_ATINGIDO);
+    }
+  }
+  const reduzirAutomacao = decisaoOrcamento.estado === "reducao";
+  const celulasDoTick = reduzirAutomacao ? 1 : CELULAS_POR_TICK;
 
   // Google exige chave (tenant cifrada ou instalação); OSM é aberto.
   let chave: string | null = null;
@@ -261,14 +300,11 @@ export async function processarTick(
       })
       .eq("id", busca.id);
 
-  // Preço por provider vem do arquivo neutro de custos (OSM = 0 naturalmente);
-  // a FASE 13 sobrepõe com as configurações do tenant (D4 da spec 19).
-  const preco = custoDe(busca.provider);
   // Ritmo do tenant (§11): pausa entre CHAMADAS, não entre células — com a
   // expansão de categoria ligada, uma célula vira N chamadas e todas ritmadas.
   let primeiraChamada = true;
 
-  for (let n = 0; n < CELULAS_POR_TICK && processadas < total; n++) {
+  for (let n = 0; n < celulasDoTick && processadas < total; n++) {
     const idxCat = Math.floor(processadas / grade.length);
     const idxCel = processadas % grade.length;
     const categoria = categorias[idxCat] ?? "empresas";
@@ -278,7 +314,9 @@ export async function processarTick(
     try {
       // Expansão (§5): default 1 termo = a mesma chamada de antes; ligada
       // (PROSPECCAO_EXPANSAO=true), varre a família da categoria na mesma célula.
-      const termos = termosDeDescoberta(categoria);
+      // Em 90% do teto mensal a expansão sai: sobra o termo pedido (índice 0).
+      const todosTermos = termosDeDescoberta(categoria);
+      const termos = reduzirAutomacao ? todosTermos.slice(0, 1) : todosTermos;
       for (const [indiceTermo, termo] of termos.entries()) {
         if (!primeiraChamada && pausaMs > 0) await new Promise((r) => setTimeout(r, pausaMs));
         primeiraChamada = false;
