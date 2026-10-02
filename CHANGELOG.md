@@ -8,6 +8,52 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.18.0] — 2026-10-02
+
+### Adicionado
+
+- **Prospecção — encontrar, abordar e acompanhar novos clientes do zero** A **Prospecção** entra no produto: você diz o que vende (categorias) e
+  onde (cidade), o sistema busca empresas reais, mostra quem vale a pena
+  abordar e acompanha cada contato até o pedido — sem planilha e sem
+  adivinhação.
+
+  **Como usar:** menu **Prospecção → aba Empresas** (ou "Encontrar
+  empresas"). Escolha cidade, categoria e clique em buscar: os
+  resultados vêm como **cards comerciais sobre o mapa** (a tabela é o
+  modo secundário, para ações em lote). Cada card traz nota, telefone,
+  site, distância e um placar de prioridade; os chips no topo cortam por
+  alta prioridade, novos, já abordados e a sua fila.
+
+  **Fila de prospecção:** dentro da página de cada empresa você assume o
+  prospect, anota a próxima ação e o status comercial (novo, contatado,
+  respondeu, qualificado, oportunidade, perdido, ganho). "Minha fila"
+  agora filtra **no servidor** e o número em cima fala de todo o recorte,
+  com **"Carregar mais"** para descer na lista inteira. Cada prospect
+  abre o **Inbox** com o contexto da empresa já junto — mesma conversa de
+  sempre, só muda o ponto de partida.
+
+  **Campanhas:** a aba **Campanhas** monta campanhas de descoberta por
+  cidade/categoria e mostra o funil completo (encontrados → … →
+  faturamento) de todas as campanhas numa tela só, com pedidos e
+  faturamento contados dos **pedidos reais** do CRM (pedido anterior à
+  campanha não conta). O **Radar** ganhou a seção **"Novos prospects"**
+  com as ações em um clique: abrir o prospect, adicionar à fila e iniciar
+  conversa. O que é de "Meu Dia" entra no seu dia como tarefa, com o
+  nome da empresa e a próxima ação no título.
+
+  **Custo sob controle:** a busca usa o provedor que você escolher na aba
+  Config (o grátis OSM por padrão; Google Places se você colocar a
+  chave). O painel **Consumo de Prospecção** mostra consultas, hits de
+  cache, custo e o teto do mês; atingindo 100% do orçamento a busca é
+  recusada com aviso literal — reduções de 90% seguem deixando você
+  buscar manualmente. Cache de 30 dias por padrão: repetir a mesma busca
+  no período não custa nada.
+
+  **Para a equipe:** quem pode (papéis viewer/agent/manager) enxerga o
+  que o papel permite; tudo que muda dono ou status gera evento de
+  auditoria. Nada de configuração extra para começar — é só abrir a aba
+  e buscar.
+
 ## [1.17.0] — 2026-09-30
 
 ### Adicionado
@@ -2578,7 +2624,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.17.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.8...v1.17.0
 [1.16.8]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.7...v1.16.8
 [1.16.7]: https://github.com/melgarafael/DeskcommCRM/compare/v1.16.6...v1.16.7
