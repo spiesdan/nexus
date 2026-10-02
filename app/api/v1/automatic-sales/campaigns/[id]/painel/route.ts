@@ -7,6 +7,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import { fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
 import { funilDaCampanhaVa, resumoDaCampanha, timelineDaCampanha } from "@/lib/venda-automatica/metricas";
@@ -29,7 +30,14 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  if (error) return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  if (error) {
+    logger.error("[automatic-sales.painel] falha ao ler a campanha", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  }
   if (!campanha) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
 
   // O dia é o da ORGANIZAÇÃO (a mesma regra da janela — ver janela.ts): o cron

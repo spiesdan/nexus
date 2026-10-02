@@ -27,8 +27,9 @@ import { CampanhaWizard } from "./_campanha-wizard";
  * (`automatic_sales_campaigns`). Cada card traz Nome, Objetivo (editável no
  * lugar), Região, Categorias, os KPIs que a spec lista e o funil
  * Encontrados → Selecionados → Contatados → Responderam → Qualificados →
- * Oportunidades → Pedidos + Faturamento — tudo vindo dos painéis de cada
- * tipo, que já calculam do banco real.
+ * Oportunidades → Pedidos + Faturamento — tudo vindo das listas com
+ * `com_funil=1` (FASE 15: era um request por campanha, agora são os dois
+ * requests das listas, cada um calculando todos os funis em lote).
  */
 interface CampanhaDescoberta {
   id: string;
@@ -39,6 +40,7 @@ interface CampanhaDescoberta {
   status: string;
   recorrencia_dias: number | null;
   ultima_execucao_at: string | null;
+  funil?: FunilDaCampanha | null;
 }
 
 interface CampanhaVa {
@@ -49,6 +51,7 @@ interface CampanhaVa {
   cidade: string;
   uf: string | null;
   categorias: string[];
+  funil?: FunilDaCampanha | null;
 }
 
 type CardCampanha =
@@ -187,53 +190,26 @@ export function CampanhasTab({
   const t = useT();
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
   const [vas, setVas] = React.useState<CampanhaVa[] | null>(null);
-  const [funis, setFunis] = React.useState<Record<string, FunilDaCampanha>>({});
   const [erro, setErro] = React.useState(false);
-
-  const carregarPaineis = React.useCallback(async (cards: CardCampanha[]) => {
-    const resultados = await Promise.all(
-      cards.map(async (card) => {
-        try {
-          const rota =
-            card.tipo === "descoberta"
-              ? `/api/v1/prospecting/campaigns/${card.campanha.id}/painel`
-              : `/api/v1/automatic-sales/campaigns/${card.campanha.id}/painel`;
-          const corpo = await apiClient.get<{ data: { funil?: FunilDaCampanha } | null }>(rota);
-          const funil = corpo?.data?.funil;
-          return funil ? ([card.campanha.id, funil] as const) : null;
-        } catch {
-          // Uma campanha sem painel não derruba o resto da aba (não poluir
-          // a tela com N toasts: o card fica com "—" e o resto carrega).
-          return null;
-        }
-      }),
-    );
-    const mapa: Record<string, FunilDaCampanha> = {};
-    for (const par of resultados) if (par) mapa[par[0]] = par[1];
-    setFunis((atual) => ({ ...atual, ...mapa }));
-  }, []);
 
   const recarregar = React.useCallback(async () => {
     try {
+      // FASE 15 (§45): o funil vem NAS listas (`com_funil=1`) — eram 2 + N
+      // requests para desenhar a aba; agora são as 2 de sempre.
       const [resDesc, resVa] = await Promise.all([
-        apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns"),
-        apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns"),
+        apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns?com_funil=1"),
+        apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
       ]);
       const listaDesc = ((resDesc as { data?: unknown } | null)?.data ?? []) as CampanhaDescoberta[];
       const listaVa = ((resVa as { data?: unknown } | null)?.data ?? []) as CampanhaVa[];
       setDescobertas(Array.isArray(listaDesc) ? listaDesc : []);
       setVas(Array.isArray(listaVa) ? listaVa : []);
       setErro(false);
-      const cards: CardCampanha[] = [
-        ...(Array.isArray(listaDesc) ? listaDesc : []).map((campanha) => ({ tipo: "descoberta" as const, campanha })),
-        ...(Array.isArray(listaVa) ? listaVa : []).map((campanha) => ({ tipo: "va" as const, campanha })),
-      ];
-      if (cards.length > 0) await carregarPaineis(cards);
     } catch (e) {
       setErro(true);
       showApiError(e);
     }
-  }, [carregarPaineis]);
+  }, []);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -282,7 +258,7 @@ export function CampanhasTab({
         <ul className="space-y-3">
           {cards.map((card) => {
             const id = card.campanha.id;
-            const funil = funis[id];
+            const funil = card.campanha.funil ?? null;
             const rotaPatch =
               card.tipo === "descoberta"
                 ? `/api/v1/prospecting/campaigns/${id}`

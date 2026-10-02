@@ -13,6 +13,8 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
+import { funisDaVendaAutomatica } from "@/lib/prospeccao/funil-lote";
 import { createClient } from "@/lib/supabase/server";
 import { campanhaVaCreateSchema } from "@/lib/venda-automatica/schemas";
 
@@ -22,11 +24,14 @@ const LISTA =
   "id, nome, objetivo, status, cidade, uf, categorias, limite_diario, janela_inicio, janela_fim, " +
   "oferta_produtos, perfil_abordagem, followup_horas, followup_textos, responsavel_user_id, created_at";
 
-export async function GET(_req: NextRequest): Promise<Response> {
+export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "automatic_sales_campaigns" });
   if (!authz.ok) return authz.response;
 
+  // FASE 15 (§45): `com_funil=1` traz o funil de TODAS as campanhas em 3
+  // queries — a aba Campanhas pede só as duas listas (N+1 morto).
+  const comFunil = req.nextUrl.searchParams.get("com_funil") === "1";
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("automatic_sales_campaigns")
@@ -35,7 +40,34 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return fail("internal_error", "Erro ao listar campanhas.", 500, { requestId });
+  if (error) {
+    logger.error("[automatic-sales.campaigns] falha ao listar campanhas", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao listar campanhas.", 500, { requestId });
+  }
+  const linhas = (data ?? []) as unknown as { id: string; created_at: string }[];
+  if (comFunil && linhas.length > 0) {
+    try {
+      const funis = await funisDaVendaAutomatica(
+        supabase,
+        authz.org.orgId,
+        linhas.map((l) => ({ id: l.id, created_at: l.created_at })),
+      );
+      return ok(
+        linhas.map((l) => ({ ...l, funil: funis[l.id] })),
+        { requestId },
+      );
+    } catch (e) {
+      logger.warn("[automatic-sales.campaigns] funil em lote falhou", {
+        requestId,
+        organization_id: authz.org.orgId,
+        erro: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
   return ok(data ?? [], { requestId });
 }
 
@@ -77,6 +109,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    logger.error("[automatic-sales.campaigns] falha ao criar campanha", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error?.message ?? "sem linha devolvida",
+    });
     return fail("internal_error", "Erro ao criar campanha.", 500, { requestId });
   }
 

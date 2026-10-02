@@ -8,6 +8,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { settingsPutSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,7 +33,14 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
 
-  if (error) return fail("internal_error", "Erro ao ler a configuração.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.settings] falha ao ler a configuração", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao ler a configuração.", 500, { requestId });
+  }
   if (!data) return ok({ configurado: false }, { requestId });
   const linha = data as unknown as Record<string, unknown> & { google_api_key_encrypted: unknown };
   const { google_api_key_encrypted: _, ...resto } = linha;
@@ -78,6 +86,11 @@ export async function PUT(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    logger.error("[prospecting.settings] falha ao salvar a configuração", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error?.message ?? "sem linha devolvida",
+    });
     return fail("internal_error", "Erro ao salvar a configuração.", 500, { requestId });
   }
 

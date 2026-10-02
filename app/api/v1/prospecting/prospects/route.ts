@@ -25,6 +25,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
@@ -61,15 +62,15 @@ export async function GET(req: NextRequest): Promise<Response> {
   const soSemCliente = p.get("so_sem_cliente") === "true";
   const minhaFila = p.get("minha_fila") === "true";
   const limite = Math.min(200, Math.max(1, Number(p.get("limite") ?? 50) || 50));
+  // B3/FASE 15: paginação de verdade — offset estável (score desc, id como
+  // desempate) e `meta.total` contando TODAS as linhas do recorte, não a
+  // janela que coube na resposta.
+  const offset = Math.max(0, Math.min(100000, Number(p.get("offset") ?? 0) || 0));
 
   const supabase = await createClient();
   const admin = createAdminClient();
-  let q = supabase
-    .from("business_prospects")
-    .select(COLUNAS_DO_PROSPECT)
-    .eq("organization_id", authz.org.orgId)
-    .eq("bloqueado", false);
 
+  let idsDaBusca: string[] = [];
   // "Ver empresas" desta busca (B1): ponte busca↔prospect, com a busca
   // precisa existir para este tenant — busca de outro org responde vazio,
   // sem vazar nem confirmar existência.
@@ -90,50 +91,74 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("organization_id", authz.org.orgId)
       .eq("search_id", buscaId)
       .limit(LIMITE_CRUZAMENTO);
-    const idsDaBusca = ((vinculos ?? []) as { prospect_id: string }[]).map((v) => v.prospect_id);
+    idsDaBusca = ((vinculos ?? []) as { prospect_id: string }[]).map((v) => v.prospect_id);
     if (idsDaBusca.length === 0) return ok([], { requestId });
-    q = q.in("id", idsDaBusca);
   }
 
   // "Abrir" do Radar (FASE 11): uuid puro, casa com ou sem os outros filtros
   // — id de outro tenant cai no where organization_id e volta vazio.
-  if (soId) {
-    if (!UUID_RE.test(soId)) {
-      return fail("validation_failed", "id inválido.", 400, { requestId });
+  if (soId && !UUID_RE.test(soId)) {
+    return fail("validation_failed", "id inválido.", 400, { requestId });
+  }
+
+  // Os MESMOS filtros nas duas queries (contagem exata + página) — a
+  // contagem tem que responder pela mesma recorte que a lista.
+  const montar = (colunas: string, opts?: { count?: "exact"; head?: boolean }) => {
+    let q = supabase
+      .from("business_prospects")
+      .select(colunas, opts)
+      .eq("organization_id", authz.org.orgId)
+      .eq("bloqueado", false);
+    if (buscaId) q = q.in("id", idsDaBusca);
+    if (soId) q = q.eq("id", soId);
+    if (categoria) q = q.eq("categoria", categoria);
+    if (cidade) q = q.ilike("cidade", `%${cidade}%`);
+    if (estado) q = q.eq("estado", estado.toUpperCase());
+    if (status !== "") {
+      // Lista por vírgula (Radar): cada item tem que estar no vocabulário;
+      // o que não estiver cai fora (mesmo silêncio do filtro único antigo).
+      const statuses = status
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s !== "" && (STATUS_COMERCIAL as readonly string[]).includes(s));
+      if (statuses.length > 0) q = q.in("status_comercial", statuses);
     }
-    q = q.eq("id", soId);
+    if (origem) q = q.eq("provider", origem);
+    if (comTelefone) q = q.not("telefone_normalizado", "is", null);
+    if (semTelefone) q = q.is("telefone_normalizado", null);
+    if (comWebsite) q = q.not("website", "is", null);
+    if (semWebsite) q = q.is("website", null);
+    if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
+    if (notaMin > 0) q = q.gte("nota", notaMin);
+    if (avalMin > 0) q = q.gte("total_avaliacoes", avalMin);
+    if (soSemCliente) q = q.is("contact_id", null);
+    if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
+    if (busca) {
+      q = q.or(`nome.ilike.%${busca}%,telefone.ilike.%${busca}%,cidade.ilike.%${busca}%,website.ilike.%${busca}%`);
+    }
+    return q;
+  };
+
+  const [contagem, listaRes] = await Promise.all([
+    montar(COLUNAS_DO_PROSPECT, { count: "exact", head: true }),
+    // Ordem estável ANTES do range: score desc com id como desempate — sem
+    // ela o Postgrest devolve páginas em ordem arbitrária e o offset repete
+    // ou pula linha (B3/FASE 15).
+    montar(COLUNAS_DO_PROSPECT)
+      .order("score", { ascending: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + limite - 1),
+  ]);
+  if (contagem.error || listaRes.error) {
+    logger.error("[prospecting.prospects] falha ao listar prospects", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: (contagem.error ?? listaRes.error)?.message ?? "sem erro capturado",
+    });
+    return fail("internal_error", "Erro ao listar prospects.", 500, { requestId });
   }
 
-  if (categoria) q = q.eq("categoria", categoria);
-  if (cidade) q = q.ilike("cidade", `%${cidade}%`);
-  if (estado) q = q.eq("estado", estado.toUpperCase());
-  if (status !== "") {
-    // Lista por vírgula (Radar): cada item tem que estar no vocabulário;
-    // o que não estiver cai fora (mesmo silêncio do filtro único antigo).
-    const statuses = status
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s !== "" && (STATUS_COMERCIAL as readonly string[]).includes(s));
-    if (statuses.length > 0) q = q.in("status_comercial", statuses);
-  }
-  if (origem) q = q.eq("provider", origem);
-  if (comTelefone) q = q.not("telefone_normalizado", "is", null);
-  if (semTelefone) q = q.is("telefone_normalizado", null);
-  if (comWebsite) q = q.not("website", "is", null);
-  if (semWebsite) q = q.is("website", null);
-  if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
-  if (notaMin > 0) q = q.gte("nota", notaMin);
-  if (avalMin > 0) q = q.gte("total_avaliacoes", avalMin);
-  if (soSemCliente) q = q.is("contact_id", null);
-  if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
-  if (busca) {
-    q = q.or(`nome.ilike.%${busca}%,telefone.ilike.%${busca}%,cidade.ilike.%${busca}%,website.ilike.%${busca}%`);
-  }
-
-  const { data, error } = await q.order("score", { ascending: false }).limit(limite);
-  if (error) return fail("internal_error", "Erro ao listar prospects.", 500, { requestId });
-
-  const linhas = (data ?? []) as unknown as {
+  const linhas = (listaRes.data ?? []) as unknown as {
     id: string;
     contact_id: string | null;
     lead_id: string | null;
@@ -212,6 +237,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const cliente = (l: (typeof linhas)[number], contatoId: string | null): boolean =>
     Boolean(l.contact_id) || contatoId !== null;
 
+  const total = contagem.count ?? linhas.length;
   return ok(
     linhas.map((l) => {
       const contatoId = contatoDaLinha(l);
@@ -228,6 +254,9 @@ export async function GET(req: NextRequest): Promise<Response> {
         classificacao: classificarProspect(l.status_comercial, crm),
       };
     }),
-    { requestId },
+    {
+      requestId,
+      meta: { total, limite, offset, has_more: offset + linhas.length < total },
+    },
   );
 }

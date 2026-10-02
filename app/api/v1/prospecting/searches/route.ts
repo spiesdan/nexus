@@ -18,6 +18,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { env } from "@/lib/env";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { custoEfetivo } from "@/lib/prospeccao/custos";
@@ -92,7 +93,14 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return fail("internal_error", "Erro ao listar as buscas.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.searches] falha ao listar as buscas", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao listar as buscas.", 500, { requestId });
+  }
   return ok(data ?? [], { requestId });
 }
 
@@ -265,6 +273,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    logger.error("[prospecting.searches] falha ao criar a busca", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error?.message ?? "sem linha devolvida",
+    });
     return fail("internal_error", "Erro ao criar a busca.", 500, { requestId });
   }
 

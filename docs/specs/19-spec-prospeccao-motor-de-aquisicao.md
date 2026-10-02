@@ -1,6 +1,6 @@
 # Spec 19 — Prospecção: motor de aquisição de novos clientes
 
-> **Status:** FASE 1–14 concluídas · FASE 15 (performance/produção, B15) em andamento.
+> **Status:** FASE 1–15 concluídas.
 > **Prompt do dono:** guardado VERBATIM na seção "Prompt original" abaixo.
 > **Checklist de fases:** seção "Fases" — marcar `[x]` conforme avança.
 
@@ -35,7 +35,7 @@ para todas: perguntar ao código existente antes de escrever código novo.
       `DailyProspectingLimits`, painel de consumo; preços em config, não hardcoded).
 - [x] **FASE 14** — Testes (dedupe, match, cache/TTL, expansion, usage, budget,
       provider, fallback, fila, inbox, score, filtros, permissões).
-- [ ] **FASE 15** — Performance e produção (batch, sem N+1, estados de UI,
+- [x] **FASE 15** — Performance e produção (batch, sem N+1, estados de UI,
       mobile, fallback, observabilidade).
 
 ### Critérios de aceite globais (antes de dizer "concluído")
@@ -108,7 +108,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 |---|---|---|---|
 | B1 | "Ver empresas" quebra: manda `?busca=<uuid da busca>` para um campo de **texto** e a aba é incontrolada (não troca para Empresas) | `_client.tsx:330` + abas sem `value` (`:207-212`) | FASE 6 — fechado (abas controladas + `busca_id` novo filtro da rota) |
 | B2 | Deep-link não aplica: `filtros` lê a URL, mas o 1º fetch roda `buscar(VAZIOS)` | `_empresas.tsx:100-107` vs `:157-160` | FASE 6 — fechado (1º fetch parte dos valores congelados da URL) |
-| B3 | Janela de 50: GET de prospects default `limite=50` e a UI nunca manda `limite`; contagens ("86 oportunidades") saem dessas 50 linhas | `prospects/route.ts:41,69`, `_empresas.tsx:131-155,306-308` | FASE 6 — fechado na janela (UI manda `limite=200` = máximo da API; paginação de verdade fica na FASE 15) |
+| B3 | Janela de 50: GET de prospects default `limite=50` e a UI nunca manda `limite`; contagens ("86 oportunidades") saem dessas 50 linhas | `prospects/route.ts:41,69`, `_empresas.tsx:131-155,306-308` | FASE 6 — fechado na janela (UI manda `limite=200` = máximo da API) · FASE 15 — **fechado de verdade**: rota ganhou `offset` estável (score desc, id como desempate) + `meta {total, limite, offset, has_more}`; a UI pagina com "Carregar mais" (a janela de render de 100 sobe junto, senão as linhas novas ficam escondidas) e "Minha fila" virou corte server-side (`minha_fila` no pedido, `meta.total` já a reflete) |
 | B4 | Chave Google resolvida em 3 lugares (drift de comportamento) | `motor.ts:97`, `searches/route.ts:28`, `executar/route.ts:60` | FASE 2 |
 | B5 | `executar` ignora o registro: `new GooglePlacesProvider` direto e grava `provider: "google_places"` fixo | `executar/route.ts:15,73,98` | FASE 2 |
 | B6 | Fronteira invertida: o motor importa `CUSTO_*` de dentro do provider Google | `motor.ts:21,307` | FASE 2/13 |
@@ -120,7 +120,7 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
 | B12 | Radar **não** lê `business_prospects` (grep vazio em `app/app/radar`); botão "Criar venda automática" só existe em `_empresas.tsx:535` | `app/app/radar/**` | FASE 11 — fechado (seção "Novos prospects" lê a rota de prospects; o botão de VA continua sendo da tela de origem, onde o filtro que o alimenta nasce) |
 | B13 | Testes: 3 unit de lib (`prospeccao-{lib,providers,buscas-normalizacao}`) e 1 e2e (`prospeccao-mapa`, só no full noturno); **nenhum teste de rota/API** de prospecção | `tests/**` | FASE 14 — fechado (`tests/api/prospecting-routes.test.ts`: 34 testes cobrindo searches/settings/consumo/prospects/[id] com RBAC, 429 do orçamento, cache hit, audit e espelho de `proximo_passo`; `lib/prospeccao/conversa.test.ts` += 6 de `abrirConversaDoProspect`) |
 | B14 | Docs divergem: CHANGELOG 1.17.0 diz "Radar → aba Empresas" — é **Prospecção → aba Empresas** | `CHANGELOG.md:22` | FASE 6 — fechado (entrada 1.17.0 corrigida) |
-| B15 | Performance: `mercado` puxa `limit(10000)×3 + 5000` por request; wizard geocoda até 5 cidades em série | `mercado/route.ts:32,53,82,100`, `_campanha-wizard.tsx:106` | FASE 15 |
+| B15 | Performance: `mercado` puxa `limit(10000)×3 + 5000` por request; wizard geocoda até 5 cidades em série | `mercado/route.ts:32,53,82,100`, `_campanha-wizard.tsx:106` | FASE 15 — **fechado, medido**: a 3ª varredura ("vinculados") era derivável das linhas da 1ª e sumiu (contagem por linha via `agregar()`, `10000×3+5000` → `10000+5000` + contacts só se houver telefone); o wizard NÃO era em série (já era `Promise.all` — o texto do gap envelheceu) mas eram 5 requests × 4 queries = 20, hoje 1 request `?cidades=` × 7 (N varreduras + pedidos + contacts compartilhados); modo lote responde 1 linha por cidade pedida, deduplicada nos totais |
 | B16 | `lib/database.types.ts` desatualizado (não conhece as tabelas de prospecção; rotas usam `as unknown as`) | tipos gerados | nota (regenerar quando houver acesso) |
 | B17 | e2e da seção "Novos prospects" do Radar (prometido na FASE 11 como "FASE 14") nunca escrito; a FASE 14 fechou só unit/rota (B13) | `tests/e2e/**` | pendente (não inventa spec sem conseguir rodá-la) |
 
@@ -416,7 +416,10 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   Gaps: wizard de criação NÃO ganhou campo objetivo (edição é no painel;
   sem regra pedindo no wizard, não inventar); status `order` da fila da VA
   nunca é escrito pelo motor (faturamento sai dos `commercial_orders`
-  reais); N+1 do painel (1 request por campanha) fica para a FASE 15.)*
+  reais); N+1 do painel (1 request por campanha) fica para a FASE 15 —
+  fechado lá: `?com_funil=1` nas DUAS listas, funil de toda a família em
+  5 queries (descoberta) e 3 (VA) via `lib/prospeccao/funil-lote.ts`,
+  aba Campanhas com 2 requests no total.)
 - **FASE 11** — *(FECHADA na FASE 11: seção "Novos prospects" no Radar
   (`#radar-prospeccao`, D19) com as 3 ações do §30 — Abrir (deep-link
   `?prospect=` + filtro `id` da rota), Adicionar à fila (PATCH de dono) e
@@ -468,7 +471,49 @@ tabela+mapa+drawer em `_empresas.tsx` (909 linhas), Leaflet em `_mapa.tsx`.
   DB — o orçamento puro já está coberto em `prospeccao-custos.test.ts` e a
   rota 429 em `prospecting-routes.test.ts`; rota de execução única
   (`executar`) segue fora do escopo deste arquivo de teste).
-- **FASE 15** — N+1, paginação de verdade, mobile, observabilidade (B15).
+- **FASE 15** — *(FECHADA na FASE 15 — performance/produção, sem schema
+  novo:)*
+  - **N+1 do painel morto (§45 batch):** `lib/prospeccao/funil-lote.ts`
+    (`funisDaDescoberta` em 5 queries com `in(…)` + agrupamento em JS;
+    `funisDaVendaAutomatica` em 3) + `?com_funil=1` nas listas de
+    `prospecting/campaigns` e `automatic-sales/campaigns`; a aba Campanhas
+    caiu de `2 + N` requests para **2**. `resumoParcialDaFila` saiu de
+    `metricas.ts` como agregação pura compartilhada (a rota individual
+    continua idêntica). Cada query do lote checa `error` e **lança**
+    (supabase não lança: sem isso o `catch` da rota era código morto e o
+    erro virava "zero encontrados" em silêncio) — falha loga
+    `logger.warn` e a lista volta **sem** `funil`, o mesmo silêncio de
+    quando um `/painel` individual derrubava o card.
+  - **B3 fechado:** rota de prospects com `offset` (0..100000) + ordem
+    estável score desc/id asc **antes** do `range` + `meta {total, limite,
+    offset, has_more}` na resposta final (early-returns seguem sem meta).
+    UI: `limite=200`, botão "Carregar mais (N restantes)" com
+    `carregandoMais`, janela de render (100) sobe junto no anexo e volta a
+    100 em busca nova; "Minha fila" saiu do estado local para
+    `filtros.minhaFila` → `?minha_fila=true` (o dono já nascia no authz da
+    rota — o corte cliente cortava só a janela carregada, agora `meta.total`
+    fala pelo recorte inteiro). Headline e barra de stats usam `totalExibido`
+    (só os chips client-side cortam para o total da janela).
+  - **B15 fechado** com as medições na tabela de gaps (3ª varredura fora;
+    wizard 5 requests → 1 com `?cidades=`).
+  - **Observabilidade:** `logger.error` com `requestId` + `organization_id`
+    + `erro` nos **17** caminhos `internal_error` de
+    `app/api/v1/{prospecting,automatic-sales}/**` (antes: resposta 500 sem
+    rastro no log).
+  - **Estados de UI/mobile auditados:** row de contagens e chips com
+    `flex-wrap` (o "Carregar mais" entra no wrap), stats bar quebra por
+    `span`, tabela com `overflow-x-auto`, wizard `grid-cols-1` no mobile,
+    estados de erro (`NexusErrorState` com retry) e skeleton conferidos.
+  - **Testes:** `tests/api/prospecting-routes.test.ts` foi de 34 → **48**
+    (paginação offset/meta/ordem estável, `minha_fila` server-side com
+    meta, funil em lote das DUAS famílias com o fallback que não derruba,
+    mercado modo lote + dedupe + modo simples + 500); fake supabase ganhou
+    `range`, cadeia de `order` estável, `neq` e count exato em `head`.
+  - Gates: typecheck 0, lint 0 erros/353 warnings (baseline), test:unit = só
+    os 4 arquivos de baseline falhando (15 testes, subconjunto dos 18 da
+    baseline; os flakes de carga passaram nesta rodada), build verde. Sem
+    schema (não há migration/baseline/RLS nesta fase). Gaps restantes do
+    módulo: B16 (tipos gerados) e B17 (e2e do Radar).
 
 ---
 

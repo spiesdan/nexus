@@ -16,6 +16,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { contaComoVenda } from "@/lib/comercial/dashboard";
 import { calcularFunil, type FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { StatusComercial } from "@/lib/schemas/prospeccao";
@@ -47,7 +48,14 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .eq("id", id)
     .eq("organization_id", org)
     .maybeSingle();
-  if (error) return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.painel] falha ao ler a campanha", {
+      requestId,
+      organization_id: org,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  }
   if (!campanha) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
 
   const { data: buscas } = await supabase

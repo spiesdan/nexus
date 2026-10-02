@@ -93,7 +93,9 @@ export function CampanhaWizard({
   const chaveCidades = cidades.map((c) => `${c.cidade}/${c.estado ?? ""}`).join("|");
   const estimando = passo === 1 && cidades.length > 0 && estimativas?.chave !== chaveCidades;
 
-  // Estimativa de público: mercado real por cidade (empresas, clientes, potencial).
+  // Estimativa de público: mercado real por cidade (empresas, clientes,
+  // potencial). FASE 15 (B15): as até 5 cidades viajam num pedido só
+  // (`?cidades=…`) — eram 5 requests, uma por cidade.
   // Sem setState no corpo do efeito: a chave identifica o pedido e o loading
   // deriva dela — sem cascata de renders.
   React.useEffect(() => {
@@ -102,20 +104,26 @@ export function CampanhaWizard({
     let vivo = true;
     (async () => {
       try {
-        const partes = await Promise.all(
-          cidades.slice(0, 5).map(async (c) => {
-            const corpo = await apiClient.get<{
-              data: { totais: { empresas: number; clientes_vinculados: number } };
-            }>(`/api/v1/prospecting/mercado?cidade=${encodeURIComponent(c.cidade)}`);
-            const tot = corpo.data.totais;
-            return {
-              rotulo: c.estado ? `${c.cidade}/${c.estado}` : c.cidade,
-              empresas: tot.empresas,
-              clientes: tot.clientes_vinculados,
-              potencial: Math.max(0, tot.empresas - tot.clientes_vinculados),
-            };
-          }),
+        const pedidas = cidades.slice(0, 5);
+        const qs = new URLSearchParams();
+        for (const c of pedidas) qs.append("cidades", c.cidade);
+        const corpo = await apiClient.get<{
+          data: { por_cidade?: { cidade: string; empresas: number; clientes: number }[] };
+        }>(`/api/v1/prospecting/mercado?${qs.toString()}`);
+        const achou = new Map(
+          (corpo.data?.por_cidade ?? []).map((x) => [x.cidade, x] as const),
         );
+        const partes = pedidas.map((c) => {
+          const linha = achou.get(c.cidade);
+          const empresas = linha?.empresas ?? 0;
+          const clientes = linha?.clientes ?? 0;
+          return {
+            rotulo: c.estado ? `${c.cidade}/${c.estado}` : c.cidade,
+            empresas,
+            clientes,
+            potencial: Math.max(0, empresas - clientes),
+          };
+        });
         if (vivo) setEstimativas({ chave, dados: partes });
       } catch {
         if (vivo) setEstimativas({ chave, dados: [] });

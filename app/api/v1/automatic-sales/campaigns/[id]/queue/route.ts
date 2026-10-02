@@ -7,6 +7,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_DA_FILA } from "@/lib/venda-automatica/tipos";
 
@@ -40,6 +41,13 @@ export async function GET(req: NextRequest, { params }: Params): Promise<Respons
   if (status !== null) q = q.eq("status", status);
 
   const { data, error } = await q;
-  if (error) return fail("internal_error", "Erro ao listar a fila.", 500, { requestId });
+  if (error) {
+    logger.error("[automatic-sales.queue] falha ao listar a fila", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao listar a fila.", 500, { requestId });
+  }
   return ok(data ?? [], { requestId });
 }

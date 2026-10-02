@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { validateRequest } from "@/lib/schemas";
 import { campanhaPatchSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
@@ -36,7 +37,14 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  if (error) return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.campaign] falha ao ler a campanha", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+  }
   if (!data) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
   return ok(data, { requestId });
 }
@@ -68,7 +76,14 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     .eq("organization_id", authz.org.orgId)
     .select(COLUNAS)
     .maybeSingle();
-  if (error) return fail("internal_error", "Erro ao salvar o objetivo.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.campaign] falha ao salvar o objetivo", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao salvar o objetivo.", 500, { requestId });
+  }
   if (!data) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
 
   await audit({

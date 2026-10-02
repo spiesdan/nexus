@@ -119,6 +119,7 @@ interface Filtros {
   comWhatsapp: boolean;
   notaMin: string;
   soSemCliente: boolean;
+  minhaFila: boolean;
 }
 
 const VAZIOS: Filtros = {
@@ -132,6 +133,7 @@ const VAZIOS: Filtros = {
   comWhatsapp: false,
   notaMin: "",
   soSemCliente: false,
+  minhaFila: false,
 };
 
 export function EmpresasTab({
@@ -168,12 +170,18 @@ export function EmpresasTab({
       comWebsite: paramsUrl.get("com_website") === "true",
       comWhatsapp: paramsUrl.get("com_whatsapp") === "true",
       soSemCliente: paramsUrl.get("so_sem_cliente") === "true",
+      minhaFila: paramsUrl.get("minha_fila") === "true",
     };
   });
   // B2: o 1º fetch tem que partir da URL, não de VAZIOS — senão deep-link
   // carrega os campos e a lista ignora tudo. Congelado no primeiro render.
   const iniciaisRef = React.useRef({ filtros, buscaId });
   const [lista, setLista] = React.useState<(Prospect & { ja_e_cliente: boolean })[] | null>(null);
+  // B3/FASE 15: paginação de verdade — `total` é o do servidor (meta.total,
+  // todas as linhas do recorte), não o tamanho da janela que coube na resposta.
+  const [total, setTotal] = React.useState(0);
+  const [temMais, setTemMais] = React.useState(false);
+  const [carregandoMais, setCarregandoMais] = React.useState(false);
   const [erro, setErro] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   // §37: cards + mapa são o modo PRINCIPAL; a tabela é o modo secundário
@@ -208,10 +216,9 @@ export function EmpresasTab({
   const [soAlta, setSoAlta] = React.useState(false);
   const [soNovos, setSoNovos] = React.useState(false);
   const [soAbordados, setSoAbordados] = React.useState(false);
-  // §16: "Minha fila" — só os prospects que tenho como dono. Cliente por
-  // enquanto (a janela de 200 cabe na memória); o corte server-side é o
-  // param `minha_fila` da API, pronto para quando a paginação chegar.
-  const [soMinhaFila, setSoMinhaFila] = React.useState(() => paramsUrl.get("minha_fila") === "true");
+  // §16: "Minha fila" virou recorte SERVER-SIDE na FASE 15 — o corte é o
+  // param `minha_fila` da API (o dono sai do authz), junto com a paginação:
+  // cliente cortava só a janela carregada, e a fila de verdade é maior.
   const refsLinhas = React.useRef(new Map<string, HTMLDivElement>());
 
   React.useEffect(() => {
@@ -240,33 +247,56 @@ export function EmpresasTab({
       .catch(() => undefined);
   }, [prospectAbertoId]);
 
-  const buscar = React.useCallback(async (f: Filtros, idBusca: string | null) => {
-    try {
-      const qs = new URLSearchParams();
-      // Janela da API (máx 200) — B3: sem isto a lista só via 50 linhas e as
-      // contagens mentiam; paginação de verdade é FASE 15.
-      qs.set("limite", "200");
-      if (idBusca) qs.set("busca_id", idBusca);
-      if (f.busca.trim()) qs.set("busca", f.busca.trim());
-      if (f.categoria.trim()) qs.set("categoria", f.categoria.trim());
-      if (f.cidade.trim()) qs.set("cidade", f.cidade.trim());
-      if (f.estado.trim()) qs.set("estado", f.estado.trim());
-      if (f.status) qs.set("status", f.status);
-      if (f.comTelefone) qs.set("com_telefone", "true");
-      if (f.comWebsite) qs.set("com_website", "true");
-      if (f.comWhatsapp) qs.set("com_whatsapp", "true");
-      if (f.notaMin) qs.set("nota_min", f.notaMin);
-      if (f.soSemCliente) qs.set("so_sem_cliente", "true");
-      const corpo = await apiClient.get<{ data: unknown }>(`/api/v1/prospecting/prospects?${qs.toString()}`);
-      const dados = (corpo as { data?: unknown } | null)?.data;
-      setLista(Array.isArray(dados) ? dados : []);
-      setSelecionados([]);
-      setErro(false);
-    } catch (e) {
-      setErro(true);
-      showApiError(e);
-    }
-  }, []);
+  const buscar = React.useCallback(
+    async (
+      f: Filtros,
+      idBusca: string | null,
+      opcoes?: { acrescentar?: boolean; offset?: number },
+    ) => {
+      const acrescentar = opcoes?.acrescentar === true;
+      if (acrescentar) setCarregandoMais(true);
+      try {
+        const qs = new URLSearchParams();
+        // Página de 200 (máximo da API); carregar mais desce pelo offset
+        // estável (score desc, id como desempate — B3/FASE 15).
+        qs.set("limite", "200");
+        if (acrescentar) qs.set("offset", String(opcoes?.offset ?? 0));
+        if (idBusca) qs.set("busca_id", idBusca);
+        if (f.busca.trim()) qs.set("busca", f.busca.trim());
+        if (f.categoria.trim()) qs.set("categoria", f.categoria.trim());
+        if (f.cidade.trim()) qs.set("cidade", f.cidade.trim());
+        if (f.estado.trim()) qs.set("estado", f.estado.trim());
+        if (f.status) qs.set("status", f.status);
+        if (f.comTelefone) qs.set("com_telefone", "true");
+        if (f.comWebsite) qs.set("com_website", "true");
+        if (f.comWhatsapp) qs.set("com_whatsapp", "true");
+        if (f.notaMin) qs.set("nota_min", f.notaMin);
+        if (f.soSemCliente) qs.set("so_sem_cliente", "true");
+        if (f.minhaFila) qs.set("minha_fila", "true");
+        const corpo = await apiClient.get<{ data: unknown }>(
+          `/api/v1/prospecting/prospects?${qs.toString()}`,
+        );
+        const dados = (corpo as { data?: unknown } | null)?.data;
+        const meta = (corpo as { meta?: { total?: number; has_more?: boolean } } | null)?.meta;
+        const novos = Array.isArray(dados) ? dados : [];
+        setTotal(typeof meta?.total === "number" ? meta.total : novos.length);
+        setTemMais(meta?.has_more === true);
+        setLista((atual) => (acrescentar && atual ? [...atual, ...novos] : novos));
+        // Anexar sobe a janela de render junto — sem isso as linhas novas ficam
+        // atrás do slice de 100 e o "Carregar mais" parece não fazer nada;
+        // busca nova recorta na janela inicial de novo.
+        setVisiveis((v) => (acrescentar ? v + novos.length : 100));
+        if (!acrescentar) setSelecionados([]);
+        setErro(false);
+      } catch (e) {
+        setErro(true);
+        showApiError(e);
+      } finally {
+        if (acrescentar) setCarregandoMais(false);
+      }
+    },
+    [],
+  );
 
   React.useEffect(() => {
     void buscar(iniciaisRef.current.filtros, iniciaisRef.current.buscaId);
@@ -286,6 +316,13 @@ export function EmpresasTab({
       else void buscar(f, buscaId);
       return f;
     });
+  }
+
+  // B3/FASE 15: próxima página do MESMO recorte — o offset é o nº de linhas
+  // já carregadas (ordem estável no servidor: score desc, id como desempate).
+  function carregarMais() {
+    if (carregandoMais || !temMais) return;
+    void buscar(filtros, buscaId, { acrescentar: true, offset: lista?.length ?? 0 });
   }
 
   const [avancadosAbertos, setAvancadosAbertos] = React.useState(false);
@@ -354,7 +391,6 @@ export function EmpresasTab({
     setSoAlta(false);
     setSoNovos(false);
     setSoAbordados(false);
-    setSoMinhaFila(false);
     setAvancadosAbertos(false);
     void buscar(VAZIOS, null);
   }
@@ -377,7 +413,7 @@ export function EmpresasTab({
     if (filtros.comWebsite) qs.set("com_website", "true");
     if (filtros.comWhatsapp) qs.set("com_whatsapp", "true");
     if (filtros.soSemCliente) qs.set("so_sem_cliente", "true");
-    if (soMinhaFila) qs.set("minha_fila", "true");
+    if (filtros.minhaFila) qs.set("minha_fila", "true");
     if (ordem !== "relevancia") qs.set("ordem", ordem);
     if (selecionadoId) qs.set("empresa", selecionadoId);
     router.replace(`/app/prospeccao${qs.toString() ? `?${qs}` : ""}`, { scroll: false });
@@ -393,7 +429,7 @@ export function EmpresasTab({
     filtros.comWebsite,
     filtros.comWhatsapp,
     filtros.soSemCliente,
-    soMinhaFila,
+    filtros.minhaFila,
     ordem,
     selecionadoId,
     router,
@@ -409,13 +445,15 @@ export function EmpresasTab({
         if (soAlta && !prioridadeAlta(p.score)) return false;
         if (soNovos && p.classificacao !== "novo") return false;
         if (soAbordados && p.classificacao !== "ja_abordado") return false;
-        if (soMinhaFila && p.owner_user_id !== usuarioId) return false;
         return true;
       }),
-    [lista, soAlta, soNovos, soAbordados, soMinhaFila, usuarioId],
+    [lista, soAlta, soNovos, soAbordados],
   );
-  const chipsResultadoAtivos = soAlta || soNovos || soAbordados || soMinhaFila;
-  const temFiltroAtivo = chips.length > 0 || chipsResultadoAtivos;
+  // Chips de RESULTADO = recortes client-side (contam no totalExibido porque
+  // o servidor não os conhece); "minha fila" é filtro do servidor e já vem
+  // no meta.total (FASE 15).
+  const chipsResultadoAtivos = soAlta || soNovos || soAbordados;
+  const temFiltroAtivo = chips.length > 0 || chipsResultadoAtivos || filtros.minhaFila;
 
   const comGeo = React.useMemo(
     () => listaFiltrada.filter((p) => p.latitude !== null && p.longitude !== null),
@@ -482,6 +520,12 @@ export function EmpresasTab({
       ratingMedio: notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null,
     };
   }, [listaFiltrada]);
+
+  // B3/FASE 15: o número da busca vem do servidor (meta.total — TODAS as
+  // linhas do recorte). Os chips de resultado cortam dentro da janela já
+  // carregada (são client-side), então nesse caso o número honesto é o da
+  // tela: o servidor não os conhece.
+  const totalExibido = chipsResultadoAtivos ? analise.total : total;
 
   function selecionar(id: string | null) {
     setSelecionadoId(id);
@@ -796,12 +840,12 @@ export function EmpresasTab({
       {listaFiltrada.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" aria-live="polite">
           <p className="text-sm font-semibold">
-            {analise.total} {t("oportunidades encontradas")}
+            {totalExibido} {t("oportunidades encontradas")}
           </p>
           <div className="flex flex-wrap gap-1.5">
             <Button
               size="sm"
-              variant={chipsResultadoAtivos || filtros.comWhatsapp ? "outline" : "default"}
+              variant={chipsResultadoAtivos || filtros.minhaFila || filtros.comWhatsapp ? "outline" : "default"}
               onClick={limparFiltros}
             >
               {t("Todos")}
@@ -816,9 +860,9 @@ export function EmpresasTab({
             </Button>
             <Button
               size="sm"
-              variant={soMinhaFila ? "default" : "outline"}
-              aria-pressed={soMinhaFila}
-              onClick={() => setSoMinhaFila((v) => !v)}
+              variant={filtros.minhaFila ? "default" : "outline"}
+              aria-pressed={filtros.minhaFila}
+              onClick={() => mudar({ minhaFila: !filtros.minhaFila })}
             >
               {t("Minha fila")}
             </Button>
@@ -853,6 +897,13 @@ export function EmpresasTab({
               {t("Já abordados")}
             </Button>
           </div>
+          {temMais && (
+            <Button size="sm" variant="outline" onClick={carregarMais} disabled={carregandoMais}>
+              {carregandoMais
+                ? t("Carregando…")
+                : `${t("Carregar mais")} (${Math.max(0, total - (lista?.length ?? 0))} ${t("restantes")})`}
+            </Button>
+          )}
         </div>
       )}
 
@@ -867,7 +918,7 @@ export function EmpresasTab({
       ) : visao === "mapa" && listaFiltrada.length > 0 ? (
         <div className="space-y-3">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-live="polite">
-              <span><strong className="text-foreground tabular-nums">{analise.total}</strong> {t("encontradas")}</span>
+              <span><strong className="text-foreground tabular-nums">{totalExibido}</strong> {t("encontradas")}</span>
               <span><strong className="text-foreground tabular-nums">{analise.novas}</strong> {t("novas")}</span>
               <span><strong className="text-foreground tabular-nums">{analise.noCrm}</strong> {t("no CRM")}</span>
               <span><strong className="text-foreground tabular-nums">{analise.clientes}</strong> {t("clientes")}</span>

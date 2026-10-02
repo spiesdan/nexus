@@ -9,6 +9,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +82,14 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     .select("id, status")
     .single();
 
-  if (error || !data) return fail("internal_error", "Erro ao mudar estado.", 500, { requestId });
+  if (error || !data) {
+    logger.error("[prospecting.searches] falha ao mudar estado", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error?.message ?? "sem linha devolvida",
+    });
+    return fail("internal_error", "Erro ao mudar estado.", 500, { requestId });
+  }
 
   await audit({
     organizationId: authz.org.orgId,

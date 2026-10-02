@@ -12,6 +12,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import {
   alertaDoOrcamento,
   consumoDoPeriodo,
@@ -35,7 +36,14 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
 
-  if (error) return fail("internal_error", "Erro ao ler o consumo.", 500, { requestId });
+  if (error) {
+    logger.error("[prospecting.consumo] falha ao ler o consumo", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao ler o consumo.", 500, { requestId });
+  }
 
   const linha = settings as unknown as {
     provider_ativo: string | null;

@@ -20,12 +20,21 @@
  *   cai fora em silêncio (vocabulário do Radar, FASE 11);
  * - fila: PATCH espelha a próxima ação em `commercial_tasks` (FASE 12) e
  *   DELETE cancela a espelhada antes de apagar.
+ *
+ * FASE 15 (B3/N+1/B15): paginação de verdade (offset + meta.total/has_more +
+ * ordem estável score desc/id asc), funil em lote nas duas listas de campanha
+ * (`com_funil=1`, com o fallback que não derruba a lista), mercado em modo
+ * lote (`?cidades` de uma vez no lugar de uma request por cidade) e os
+ * `logger.error` dos 500 das rotas do módulo.
  */
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
+import * as rotaCampanhasVa from "@/app/api/v1/automatic-sales/campaigns/route";
+import * as rotaCampanhas from "@/app/api/v1/prospecting/campaigns/route";
 import * as rotaConsumo from "@/app/api/v1/prospecting/consumo/route";
+import * as rotaMercado from "@/app/api/v1/prospecting/mercado/route";
 import * as rotaProspect from "@/app/api/v1/prospecting/prospects/[id]/route";
 import * as rotaProspects from "@/app/api/v1/prospecting/prospects/route";
 import * as rotaSearches from "@/app/api/v1/prospecting/searches/route";
@@ -72,6 +81,10 @@ const PROSPECT_B = "33333333-3333-4333-8333-444444444444";
 const BUSCA_ID = "55555555-5555-4555-8555-555555555555";
 const BUSCA_OUTRA_ORG = "55555555-5555-4555-8555-999999999999";
 const CONTATO_ID = "66666666-6666-4666-8666-666666666666";
+const PROSPECT_C = "33333333-3333-4333-8333-555555555555";
+const CAMPANHA_ID = "44444444-4444-4444-8444-444444444444";
+const CAMPANHA_VA_ID = "44444444-4444-4444-8444-555555555555";
+const PEDIDO_ID = "77777777-7777-4777-8777-777777777777";
 
 type Row = Record<string, unknown>;
 
@@ -119,6 +132,8 @@ function makeDb(seed: Record<string, Row[]> = {}) {
         if (typeof a === "number" && typeof f.val === "number") return a >= f.val;
         return String(a ?? "") >= String(f.val ?? "");
       }
+      case "neq":
+        return a !== f.val;
       case "is":
         return f.val === null ? a === null || a === undefined : a === f.val;
       case "not_is":
@@ -146,7 +161,10 @@ function makeDb(seed: Record<string, Row[]> = {}) {
     let payload: Row | undefined;
     let querSelect = false;
     let head = false;
-    let ordem: { col: string; asc: boolean } | null = null;
+    // Cadeia de ordenação (PostgREST aceita vários .order; o primeiro é o
+    // primário) — estável na ordem de chamada (B3: score desc, id asc).
+    const ordens: Array<{ col: string; asc: boolean }> = [];
+    let intervalo: { inicio: number; fim: number } | null = null;
     let limite: number | null = null;
 
     const casa = (l: Row) => filtros.every((f) => avaliar(l, f));
@@ -192,19 +210,24 @@ function makeDb(seed: Record<string, Row[]> = {}) {
       }
 
       let lista = linhas.filter(casa);
-      if (ordem) {
-        const { col, asc } = ordem;
-        lista = [...lista].sort((x, y) => {
-          const a = x[col];
-          const b = y[col];
-          let cmp: number;
-          if (typeof a === "number" && typeof b === "number") cmp = a - b;
-          else cmp = String(a ?? "") < String(b ?? "") ? -1 : String(a ?? "") > String(b ?? "") ? 1 : 0;
-          return asc ? cmp : -cmp;
-        });
-      }
-      if (limite !== null) lista = lista.slice(0, limite);
+      // head = contagem exata do recorte (PostgREST ignora range/limit no count).
       if (head) return { data: null, error: null, count: lista.length };
+      if (ordens.length > 0) {
+        // Aplica do último ao primeiro: o sort estável deixa o primeiro
+        // .order() como primário.
+        for (const { col, asc } of [...ordens].reverse()) {
+          lista = [...lista].sort((x, y) => {
+            const a = x[col];
+            const b = y[col];
+            let cmp: number;
+            if (typeof a === "number" && typeof b === "number") cmp = a - b;
+            else cmp = String(a ?? "") < String(b ?? "") ? -1 : String(a ?? "") > String(b ?? "") ? 1 : 0;
+            return asc ? cmp : -cmp;
+          });
+        }
+      }
+      if (intervalo) lista = lista.slice(intervalo.inicio, intervalo.fim + 1);
+      if (limite !== null) lista = lista.slice(0, limite);
       return { data: lista, error: null, count: lista.length };
     }
 
@@ -237,6 +260,10 @@ function makeDb(seed: Record<string, Row[]> = {}) {
         filtros.push({ op: "eq", col, val });
         return b;
       },
+      neq(col: string, val: unknown) {
+        filtros.push({ op: "neq", col, val });
+        return b;
+      },
       gte(col: string, val: unknown) {
         filtros.push({ op: "gte", col, val });
         return b;
@@ -262,7 +289,11 @@ function makeDb(seed: Record<string, Row[]> = {}) {
         return b;
       },
       order(col: string, opts?: { ascending?: boolean }) {
-        ordem = { col, asc: opts?.ascending ?? true };
+        ordens.push({ col, asc: opts?.ascending ?? true });
+        return b;
+      },
+      range(inicio: number, fim: number) {
+        intervalo = { inicio, fim };
         return b;
       },
       limit(n: number) {
@@ -897,5 +928,267 @@ describe("PATCH/DELETE /api/v1/prospecting/prospects/[id] — fila", () => {
     const { req: r, params } = deleteReq(randomUUID());
     const res = await rotaProspect.DELETE(r, { params });
     expect(res.status).toBe(404);
+  });
+});
+
+// --- FASE 15 (B3/N+1/B15): paginação de verdade, funil em lote, mercado lote.
+
+describe("GET /api/v1/prospecting/prospects — paginação (B3, FASE 15)", () => {
+  it("offset devolve a página seguinte; meta.total/has_more falam de TODO o recorte", async () => {
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, score: 90 }),
+        prospecto({ id: PROSPECT_B, score: 50 }),
+        prospecto({ id: PROSPECT_C, score: 70 }),
+      ],
+    });
+    session("viewer", db);
+    const primeira = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?limite=2&offset=0"),
+    );
+    const c0 = await primeira.json();
+    expect(c0.data.map((l: Row) => l.id)).toEqual([PROSPECT_A, PROSPECT_C]);
+    expect(c0.meta).toEqual({ total: 3, limite: 2, offset: 0, has_more: true });
+    const segunda = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?limite=2&offset=2"),
+    );
+    const c1 = await segunda.json();
+    expect(c1.data.map((l: Row) => l.id)).toEqual([PROSPECT_B]);
+    expect(c1.meta).toEqual({ total: 3, limite: 2, offset: 2, has_more: false });
+  });
+
+  it("empate de score desempata por id — ordem estável entre páginas", async () => {
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_B, score: 50 }),
+        prospecto({ id: PROSPECT_A, score: 50 }),
+      ],
+    });
+    session("viewer", db);
+    const primeira = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?limite=1&offset=0"),
+    );
+    expect((await primeira.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+    const segunda = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?limite=1&offset=1"),
+    );
+    expect((await segunda.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_B]);
+  });
+
+  it("minha_fila corta no servidor e o meta.total acompanha o recorte", async () => {
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, owner_user_id: USER_ID }),
+        prospecto({ id: PROSPECT_B, owner_user_id: OUTRO_USER_ID, score: 60 }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?minha_fila=true"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+    expect(corpo.meta).toEqual({ total: 1, limite: 50, offset: 0, has_more: false });
+  });
+
+  it("erro na query → 500 internal_error (com logger, FASE 15)", async () => {
+    const db = makeDb({ business_prospects: [prospecto()] });
+    db.comErroEm("business_prospects");
+    session("viewer", db);
+    const res = await rotaProspects.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/prospects"));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.code).toBe("internal_error");
+  });
+});
+
+describe("GET /api/v1/prospecting/campaigns — funil em lote (N+1, FASE 15)", () => {
+  const CAMPANHA: Row = {
+    id: CAMPANHA_ID,
+    organization_id: ORG_ID,
+    nome: "Centro restaurantes",
+    objetivo: null,
+    categorias: ["restaurantes"],
+    cidades: ["Joinville/SC"],
+    status: "ativa",
+    recorrencia_dias: null,
+    ultima_execucao_at: null,
+    created_at: "2026-09-01T00:00:00.000Z",
+    created_by: USER_ID,
+  };
+
+  it("sem com_funil → linhas sem o campo funil (comportamento de antes)", async () => {
+    session("viewer", makeDb({ prospecting_campaigns: [CAMPANHA] }));
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data).toHaveLength(1);
+    expect(corpo.data[0]).not.toHaveProperty("funil");
+  });
+
+  it("com_funil=1 → cada linha ganha funil com todos os estágios", async () => {
+    session("viewer", makeDb({ prospecting_campaigns: [CAMPANHA] }));
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?com_funil=1"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data[0].funil).toEqual({
+      encontrados: 0,
+      selecionados: 0,
+      contatados: 0,
+      responderam: 0,
+      qualificados: 0,
+      oportunidades: 0,
+      pedidos: 0,
+      faturamento_cents: 0,
+    });
+  });
+
+  it("busca → resultados → prospects da campanha contam no funil", async () => {
+    const db = makeDb({
+      prospecting_campaigns: [CAMPANHA],
+      prospecting_searches: [
+        { id: BUSCA_ID, organization_id: ORG_ID, campaign_id: CAMPANHA_ID, status: "concluida" },
+      ],
+      prospect_search_results: [
+        { organization_id: ORG_ID, search_id: BUSCA_ID, prospect_id: PROSPECT_A },
+        { organization_id: ORG_ID, search_id: BUSCA_ID, prospect_id: PROSPECT_B },
+      ],
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, status_comercial: "novo" }),
+        prospecto({ id: PROSPECT_B, status_comercial: "contatado" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?com_funil=1"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data[0].funil).toMatchObject({ encontrados: 2, pedidos: 0, faturamento_cents: 0 });
+  });
+
+  it("erro no banco DURANTE o funil → lista volta SEM funil (não derruba)", async () => {
+    const db = makeDb({ prospecting_campaigns: [CAMPANHA] });
+    db.comErroEm("prospecting_searches");
+    session("viewer", db);
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?com_funil=1"),
+    );
+    expect(res.status).toBe(200);
+    const corpo = await res.json();
+    expect(corpo.data).toHaveLength(1);
+    expect(corpo.data[0]).not.toHaveProperty("funil");
+  });
+});
+
+describe("GET /api/v1/automatic-sales/campaigns — funil em lote (N+1, FASE 15)", () => {
+  const CAMPANHA_VA: Row = {
+    id: CAMPANHA_VA_ID,
+    organization_id: ORG_ID,
+    nome: "Follow-up compradores",
+    status: "active",
+    cidade: "Joinville",
+    uf: "SC",
+    categorias: ["restaurantes"],
+    limite_diario: 100,
+    janela_inicio: "09:00",
+    janela_fim: "18:00",
+    created_at: "2026-09-01T00:00:00.000Z",
+  };
+
+  it("sem com_funil → sem campo; com com_funil=1 → funil presente", async () => {
+    session("viewer", makeDb({ automatic_sales_campaigns: [CAMPANHA_VA] }));
+    const sem = await rotaCampanhasVa.GET(
+      req("GET", undefined, "http://localhost/api/v1/automatic-sales/campaigns"),
+    );
+    expect((await sem.json()).data[0]).not.toHaveProperty("funil");
+    const com = await rotaCampanhasVa.GET(
+      req("GET", undefined, "http://localhost/api/v1/automatic-sales/campaigns?com_funil=1"),
+    );
+    expect((await com.json()).data[0].funil).toMatchObject({
+      encontrados: 0,
+      oportunidades: 0,
+      pedidos: 0,
+      faturamento_cents: 0,
+    });
+  });
+
+  it("erro na fila → lista volta SEM funil (não derruba)", async () => {
+    const db = makeDb({ automatic_sales_campaigns: [CAMPANHA_VA] });
+    db.comErroEm("automatic_sales_queue");
+    session("viewer", db);
+    const res = await rotaCampanhasVa.GET(
+      req("GET", undefined, "http://localhost/api/v1/automatic-sales/campaigns?com_funil=1"),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data[0]).not.toHaveProperty("funil");
+  });
+});
+
+describe("GET /api/v1/prospecting/mercado — lote ?cidades (B15, FASE 15)", () => {
+  const SEED: Record<string, Row[]> = {
+    business_prospects: [
+      prospecto({
+        id: PROSPECT_A,
+        cidade: "Campinas",
+        estado: "SP",
+        telefone: "1933333333",
+        contact_id: CONTATO_ID,
+      }),
+      prospecto({ id: PROSPECT_B, cidade: "Campinas", estado: "SP" }),
+      prospecto({ id: PROSPECT_C, cidade: "Sorocaba", estado: "SP" }),
+    ],
+    commercial_orders: [
+      {
+        id: PEDIDO_ID,
+        organization_id: ORG_ID,
+        contact_id: CONTATO_ID,
+        status: "pago",
+        total_cents: 1000,
+        created_at: "2026-09-10T00:00:00.000Z",
+      },
+    ],
+  };
+
+  it("duas cidades num request → uma linha por cidade pedida, totais deduplicados", async () => {
+    session("viewer", makeDb(SEED));
+    const url = "http://localhost/api/v1/prospecting/mercado?cidades=Campinas&cidades=Sorocaba";
+    const res = await rotaMercado.GET(req("GET", undefined, url));
+    const { totais, por_cidade, por_categoria } = (await res.json()).data;
+    expect(por_cidade.map((c: Row) => c.cidade)).toEqual(["Campinas", "Sorocaba"]);
+    expect(por_cidade[0]).toMatchObject({ empresas: 2, clientes: 1, penetracao_pct: 50, potencial: 1 });
+    expect(por_cidade[1]).toMatchObject({ empresas: 1, clientes: 0, penetracao_pct: 0, potencial: 1 });
+    expect(totais).toMatchObject({ empresas: 3, clientes_vinculados: 1, prospects: 2 });
+    expect(Array.isArray(por_categoria)).toBe(true);
+  });
+
+  it("linha que casa com DUAS cidades pedidas conta uma vez no total", async () => {
+    session("viewer", makeDb(SEED));
+    const url = "http://localhost/api/v1/prospecting/mercado?cidades=Camp&cidades=Campinas";
+    const res = await rotaMercado.GET(req("GET", undefined, url));
+    const { totais, por_cidade } = (await res.json()).data;
+    expect(por_cidade[0].empresas).toBe(2);
+    expect(por_cidade[1].empresas).toBe(2);
+    expect(totais.empresas).toBe(2);
+  });
+
+  it("modo simples continua agrupando por Cidade/UF", async () => {
+    session("viewer", makeDb(SEED));
+    const url = "http://localhost/api/v1/prospecting/mercado?cidade=Campinas";
+    const res = await rotaMercado.GET(req("GET", undefined, url));
+    const { totais, por_cidade } = (await res.json()).data;
+    expect(por_cidade).toEqual([
+      { cidade: "Campinas/SP", empresas: 2, clientes: 1, penetracao_pct: 50, potencial: 1 },
+    ]);
+    expect(totais.empresas).toBe(2);
+  });
+
+  it("erro na varredura → 500 internal_error (com logger, FASE 15)", async () => {
+    const db = makeDb(SEED);
+    db.comErroEm("business_prospects");
+    session("viewer", db);
+    const res = await rotaMercado.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/mercado"));
+    expect(res.status).toBe(500);
+    expect((await res.json()).error.code).toBe("internal_error");
   });
 });
