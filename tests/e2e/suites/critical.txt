@@ -19,6 +19,7 @@ meu-dia.spec.ts
 navegacao.spec.ts
 password-recovery.spec.ts
 pipelines-gestao.spec.ts
+prospeccao-radar.spec.ts
 queue-assign.spec.ts
 rbac-roles.spec.ts
 recompra-radar.spec.ts

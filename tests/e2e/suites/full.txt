@@ -68,6 +68,7 @@ olhar-telas-do-epico.spec.ts
 password-recovery.spec.ts
 pipelines-gestao.spec.ts
 prospeccao-mapa.spec.ts
+prospeccao-radar.spec.ts
 prova-painel-provedores.spec.ts
 qa-agente-usa-as-maos.spec.ts
 qa-selo-no-funil-usado.spec.ts
