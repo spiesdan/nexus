@@ -1,36 +1,44 @@
-# Avatar do assistente de ajuda: o Strobi
+# Avatar do assistente de ajuda: o bloub
 
-O rosto do ajudante é o **Strobi**, avatar oficial criado no **Avatar Lab**
-([avatars.bible-strong.app](https://avatars.bible-strong.app/)) e renderizado
-pela lib `@bible-strong/avatar-react` a partir de um dado versionado:
+O rosto do ajudante é o **bloub** — a bolota do x.ai recriada em SVG por
+[jeremy-prt/bloub](https://github.com/jeremy-prt/bloub), **licença MIT**
+(`components/assistente/bloub/LICENCA-bLoub.txt`), renderizada por um motor
+próprio que mora versionado no repo:
 
-- `components/assistente/strobi.avatar.json` — a definição exportada no Lab;
-- `components/assistente/AssistenteAvatar.tsx` — cria o componente com
-  `createAvatar(definition)` e dirige as animações (`idle`, `listening`,
-  `happy`) e os olhares (`far-right-glance`, `curious-left`,
-  `upward-side-glance`, `downward-gaze`) conforme mouse, clique e chat;
-- `components/assistente/strobi.test.ts` — quebra no CI se a definição for
-  trocada por uma que não tenha essas chaves.
+- `components/assistente/bloub/` — a engine portada sem framework nem
+  dependência externa (máquina de estados, expressões, silhueta, olhos,
+  anéis e partículas) + a regra de olhar (`gaze.ts`) + o desenho
+  (`BloubBot.tsx`);
+- `components/assistente/AssistenteAvatar.tsx` — dirige o rosto conforme
+  mouse, clique e chat (olhar contínuo, `attentif` com o chat aberto,
+  `wink`/`heureux` no clique);
+- `components/assistente/bloub/bloub.test.ts` e `gaze.test.ts` — quebram no
+  CI se os nomes que o componente usa sumirem da engine.
 
-Nada é baixado do site do Avatar Lab em runtime: funciona offline e no
-self-host, e o `pnpm install` de uma instalação fresca resolve a lib do
-registry público normalmente.
+Nada é baixado em runtime: funciona offline e no self-host.
 
-## Trocar de avatar
+## Por dentro
 
-1. Monte o novo avatar no Avatar Lab.
-2. Exporte o **`.avatar.json`** (a definição, não o projeto demo).
-3. Sobrescreva `components/assistente/strobi.avatar.json` com o arquivo novo.
-4. Rode `pnpm vitest run components/assistente` — se o teste reclamar de
-   chave ausente, ajuste os nomes em `AssistenteAvatar.tsx` (ou escolha outro
-   avatar no Lab que tenha as mesmas animações).
-5. Rebuild/redeploy.
+A engine é uma função **pura do tempo** (`sample(t)`): o componente só
+mantém um relógio de `requestAnimationFrame`, aponta o olhar para o cursor e
+desenha o frame em SVG. Isso significa que a mesma data devolve a mesma
+imagem — o que torna o rosto testável sem DOM.
+
+Com `prefers-reduced-motion` ou ponteiro grosseiro o loop nem nasce: o botão
+renderiza uma imagem fixa (`sample(0)`), sem olhar que segue.
+
+## Trocar de rosto
+
+1. Atualize a engine em `components/assistente/bloub/` a partir do upstream
+   (os arquivos são portados quase literais; `pnpm vitest run
+   components/assistente/bloub` mostra se a portagem ainda fecha).
+2. Se mudarem os nomes de estado/expressão que `AssistenteAvatar.tsx`
+   chama, ajuste lá — o teste da guarda aponta o que faltou.
+3. Rebuild/redeploy.
 
 ## Notas
 
-- A pasta `avatar/` com o projeto demo Vite que o Lab exporta junto NÃO mora
-  neste repo — só a definição `.avatar.json` é necessária.
-- Se a lib recusar a definição em runtime, o botão cai para um SVG estático
-  simples em vez de quebrar a página (ver `onError` no componente).
-- Licença: confira os termos do Avatar Lab antes de publicar o avatar num
-  produto comercial (white-label).
+- O botão e a bolota leem as cores do tema (`--color-bg`/`--color-text`),
+  então o rosto acompanha claro/escuro sozinho.
+- Sem fallback: a fonte é módulo versionado e determinístico, não há estado
+  externo que "recuse" em runtime.

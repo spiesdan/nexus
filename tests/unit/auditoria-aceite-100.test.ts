@@ -110,10 +110,10 @@ describe("itens 10-11 — espaçamento e cores sem literais fora da escala", () 
 
 describe("item 8 — animação só do catálogo (§16: nunca atrase o usuário)", () => {
   it("nenhuma `animate-` fora do catálogo Tailwind nem keyframe arbitrário", () => {
-    // Exceção declarada: o avatar do assistente tem dois keyframes próprios
-    // em `globals.css` (`assistente-pulo` 0.38s, `assistente-pisca` 0.16s) —
-    // curtos, sutis e do produto (o FAB flutuante); a regra existe para
-    // keyframe arbitrário NÃO virar padrão em novas telas.
+    // Exceção declarada: o avatar do assistente tem um keyframe próprio em
+    // `globals.css` (`assistente-pulo` 0.38s) — curto, sutil e do produto (o
+    // FAB flutuante); a regra existe para keyframe arbitrário NÃO virar
+    // padrão em novas telas.
     const comKeyframeProprio = new Set(["components/assistente/AssistenteAvatar.tsx"]);
     const catalogo =
       /^(none|spin|ping|pulse|bounce|fade|slide|zoom|accordion|in|out)(-[a-z]+)*$/;

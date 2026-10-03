@@ -1029,23 +1029,6 @@
   }
 }
 
-/* ---- Assistente de ajuda · o pisca do clique ------------------------------
-   A transição de expressão da lib leva 420ms — devagar demais para ler como
-   "pisca". Este squash vertical de 160ms no rosto inteiro é o que o olho
-   humano registra como piscada; a expressão `eyes-closed` (comandada junto)
-   completa o efeito. Mesma regra do pulo: só com movimento permitido. */
-@keyframes assistente-pisca {
-  0% {
-    scale: 1 1;
-  }
-  45% {
-    scale: 1 0.12;
-  }
-  100% {
-    scale: 1 1;
-  }
-}
-
 /* ─────────────────────────────────────────────────────────────────────────
    Nexus UI · micro-interações e spinner (FASE 2/3 do redesign).
    Pequenas, rápidas, funcionais. Tudo congela em `reduced-motion`.
