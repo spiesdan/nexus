@@ -5,9 +5,13 @@
  * limpeza do teto de orçamento (0159) por nunca ter tido agendador. Quem avisa o
  * cliente que o gasto passou do ponto escolhido é o item `budget_warning` na
  * Central (`agent_inbox_items`), aberto pelo próprio gate. Este arquivo fica de
- * pé porque o alarme POR E-MAIL continua sendo uma peça desejada — e é a dívida
- * D1 de marca (`tests/unit/branding.test.ts`): ele ainda escreve o nosso nome,
- * o que só passa a importar no dia em que ele voltar a ser enviado.
+ * pé porque o alarme POR E-MAIL continua sendo uma peça desejada.
+ *
+ * A dívida D1 de marca está PAGA: o assunto usava o literal do produto, e agora
+ * assina com `orgName`. A troca de `orgName` para a marca resolvida da instalação
+ * (`marcaDaSaida()`) fica por conta de quem religar o alarme — é o único lugar
+ * aqui que precisaria da marca, e passá-la por prop mantém este arquivo sem
+ * `import` de servidor.
  */
 export interface BudgetAlarmEmailOptions {
   pct: number;
@@ -32,7 +36,12 @@ export function buildBudgetAlarmEmail(opts: BudgetAlarmEmailOptions): {
   text: string;
 } {
   const pctStr = `${opts.pct.toFixed(2)}%`;
-  const subject = `Alerta IA: orçamento atingiu ${pctStr} — DeskcommCRM`;
+  // O assunto NÃO leva mais o nome do produto: `opts.orgName` é a marca que o
+  // alarme está sobre, e quando ele vier vazio o assunto fica sem assinatura
+  // nenhuma em vez de mentir sobre quem escreveu. Este arquivo é a dívida D1 de
+  // marca que `tests/unit/branding.test.ts` citava.
+  const assinatura = opts.orgName?.trim() ? ` — ${opts.orgName.trim()}` : "";
+  const subject = `Alerta IA: orçamento atingiu ${pctStr}${assinatura}`;
   const orgLine = opts.orgName
     ? `<p style="margin:0 0 16px;font-size:14px;color:#57534e">Organização: <strong>${escapeHtml(opts.orgName)}</strong></p>`
     : "";
