@@ -82,8 +82,7 @@ export function SidebarContent({
     <>
       <div
         className={cn(
-          "flex h-14 items-center border-b px-4",
-          collapsed ? "justify-center" : "justify-start",
+          "flex h-16 items-center justify-center border-b px-4",
         )}
       >
         {/*
@@ -98,7 +97,7 @@ export function SidebarContent({
           href="/app"
           title={nome}
           onClick={onNavigate}
-          className={cn("flex items-center", collapsed ? "justify-center" : "justify-start")}
+          className="flex items-center justify-center"
         >
           {logo && !collapsed ? (
             // <img> em vez de next/image de propósito: a URL vem de quem hospeda
@@ -106,8 +105,12 @@ export function SidebarContent({
             // build — a imagem pré-buildada rejeitaria o domínio do self-hoster.
             // Altura fixa e largura livre porque a arte enviada tem proporção
             // desconhecida; forçar as duas distorceria o logo de quem configurou.
+            // A altura é `h-10` (40px) desde 2026-10-05: a `h-7` deixava a marca
+            // pequena demais na barra de 4rem, e o dono da instalação lia o
+            // próprio nome como se fosse o logotipo. `mx-auto` centraliza o
+            // desenho quando a arte é mais estreita que a barra.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt={nome} className="h-7 w-auto max-w-[10rem] object-contain" />
+            <img src={logo} alt={nome} className="mx-auto h-10 w-auto max-w-[13rem] object-contain" />
           ) : (
             <span className={cn("font-medium tracking-tight", collapsed && "sr-only")}>{nome}</span>
           )}

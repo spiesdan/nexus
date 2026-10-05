@@ -280,7 +280,7 @@ interface LogoNaTela {
  *
  * ⚠️ Quem prova o download é `naturalWidth`, e NÃO a altura na tela — o contrário
  * do que esta spec afirmou. Os dois `<img>` de marca do produto têm altura fixada
- * por CSS (`h-7` em `components/shell/Sidebar.tsx:82`, `h-10` em
+ * por CSS (`h-10` em `components/shell/Sidebar.tsx:82`, `h-10` em
  * `app/(public)/layout.tsx:54`), e altura fixa mede o mesmo para quem baixou e
  * para quem não baixou. MEDIDO em chromium, dois `<img>` sob `height: 1.75rem`
  * (o `h-7`), um com PNG válido e outro apontando para um endereço morto:
