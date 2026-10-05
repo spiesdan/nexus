@@ -3,7 +3,7 @@
  *
  * ═══ POR QUE ESTA SPEC EXISTE, E POR QUE NÃO BASTA `curl` ═══
  *
- * O produto é distribuído open-source: a experiência de quem instala numa VPS É o
+ * O produto é distribuído como código: a experiência de quem instala numa VPS É o
  * produto. O que se prova aqui é a cadeia inteira que uma pessoa percorre — abrir
  * a tela, escolher um arquivo, ver a barra lateral mudar — e ela tem quatro elos
  * que uma chamada de API não exercita: o `<input type=file>`, o `fetch` do

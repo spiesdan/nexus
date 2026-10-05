@@ -75,7 +75,11 @@ export function Breadcrumb() {
   return (
     <nav
       aria-label={t("Trilha de navegação")}
-      className="mb-4 hidden items-center gap-1 text-xs text-muted-foreground md:flex"
+      // `print:hidden`: a trilha é navegação, não conteúdo. Sem isto ela
+      // saía no papel ("Pedidos > Imprimir") junto com o documento — o
+      // Sidebar e a TopBar já carregam a mesma marca desde o começo
+      // (AppShell.tsx, TopBar.tsx); este era o único bloco do shell sem.
+      className="mb-4 hidden items-center gap-1 text-xs text-muted-foreground md:flex print:hidden"
     >
       {migalhas.map((m, i) => (
         <Fragment key={m.href ?? `${m.label}-${i}`}>

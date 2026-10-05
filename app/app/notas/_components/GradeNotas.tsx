@@ -34,6 +34,7 @@ import { apiClient } from "@/lib/api/client";
 import { ROTULO_DA_NOTA, type NotaFiscal, type StatusDaNota } from "@/lib/schemas/fiscal";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
+  ArrowsClockwise,
   DownloadSimple,
   FileText,
   MagnifyingGlass,
@@ -57,6 +58,17 @@ const VARIANTE_STATUS: Record<
 };
 
 const OBJETIVOS_CANCELAMENTO: StatusDaNota[] = ["pendente", "em_emissao", "erro"];
+
+/**
+ * Modelo fiscal da nota (55 NF-e / 65 NFC-e): os dígitos 21–22 da chave de
+ * acesso são o `mod` do ide — dado do documento, não opção da tela. Sem chave
+ * (pendente, XML de fora) o modelo é desconhecido e fica de fora do filtro.
+ */
+function modeloDaNota(chave: string | null): "55" | "65" | null {
+  if (!chave || !/^\d{44}$/.test(chave)) return null;
+  const mod = chave.slice(20, 22);
+  return mod === "55" || mod === "65" ? mod : null;
+}
 
 /**
  * Aba "Notas" — o Cadastro de NFes (Odivix): KPIs, grade com
@@ -89,6 +101,26 @@ export function GradeNotas({
   const [cartaPara, setCartaPara] = React.useState<NotaFiscal | null>(null);
   const [correcao, setCorrecao] = React.useState("");
   const [registrandoCarta, setRegistrandoCarta] = React.useState(false);
+  const [modeloXml, setModeloXml] = React.useState("");
+  const [progressoXml, setProgressoXml] = React.useState<{ total: number; feitos: number } | null>(null);
+  const [cursor, setCursor] = React.useState<{ ult_nsu: number; max_nsu: number } | null>(null);
+  const [importando, setImportando] = React.useState(false);
+
+  // NSU do histórico (Fase 3): lido no mount, atualizado por cada importação.
+  React.useEffect(() => {
+    let vivo = true;
+    apiClient
+      .get<{ data: { ult_nsu: number; max_nsu: number } | null }>("/api/v1/invoices/importar-sefaz")
+      .then((r) => {
+        if (vivo && r.data) setCursor({ ult_nsu: r.data.ult_nsu, max_nsu: r.data.max_nsu });
+      })
+      .catch(() => {
+        // Sem cursor a tela continua: o botão de importar diz o resto.
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   function noPeriodo(iso: string): boolean {
     if (periodo === "tudo") return true;
@@ -185,22 +217,65 @@ export function GradeNotas({
     URL.revokeObjectURL(a.href);
   }
 
-  /** Exporta XMLs: baixa o XML das autorizadas visíveis, um por vez. */
+  /**
+   * Exporta XMLs (Odivix): baixa o XML das autorizadas visíveis, um por vez,
+   * com a barra de progresso. O filtro de modelo entra aqui — 55/65 vem da
+   * chave; o período já veio na `visiveis`.
+   */
   function exportarXmls() {
-    const alvos = visiveis.filter((n) => n.status === "autorizada");
+    const alvos = visiveis.filter(
+      (n) => n.status === "autorizada" && (modeloXml === "" || modeloDaNota(n.chave_acesso) === modeloXml),
+    );
     if (alvos.length === 0) {
       toast.error(t("Nenhuma nota encontrada"));
       return;
     }
+    setProgressoXml({ total: alvos.length, feitos: 0 });
     alvos.forEach((n, i) => {
       window.setTimeout(() => {
         const a = document.createElement("a");
         a.href = `/api/v1/invoices/${n.id}/xml`;
         a.download = `nfe-${n.serie}-${n.numero ?? n.id}.xml`;
         a.click();
+        setProgressoXml((p) => (p ? { ...p, feitos: p.feitos + 1 } : p));
+        if (i === alvos.length - 1) {
+          toast.success(`${alvos.length} ${textos.notas}`);
+          setProgressoXml(null);
+        }
       }, i * 600);
     });
-    toast.success(`${alvos.length} ${textos.notas}`);
+  }
+
+  /** Importar histórico do SEFAZ: anda com o cursor e mostra o resumo. */
+  async function importarHistorico() {
+    setImportando(true);
+    try {
+      const r = await apiClient.post<{
+        data?: {
+          lidos?: number;
+          importados?: number;
+          jaExistiam?: number;
+          ult_nsu?: number;
+          max_nsu?: number;
+          aviso?: string | null;
+        };
+      }>("/api/v1/invoices/importar-sefaz", {});
+      const d = r.data ?? {};
+      if (typeof d.ult_nsu === "number" && typeof d.max_nsu === "number") {
+        setCursor({ ult_nsu: d.ult_nsu, max_nsu: d.max_nsu });
+      }
+      if (d.aviso) toast.info(d.aviso);
+      toast.success(
+        `${d.importados ?? 0} ${t("importada(s)")} · ${d.jaExistiam ?? 0} ${t("já existiam")} · NSU ${
+          d.ult_nsu ?? 0
+        }/${d.max_nsu ?? 0}`,
+      );
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setImportando(false);
+    }
   }
 
   async function registrarCarta() {
@@ -315,6 +390,35 @@ export function GradeNotas({
               {textos.exportarCsv}
             </Button>
             {podeEmitir && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void importarHistorico()}
+                disabled={importando}
+              >
+                <ArrowsClockwise size={14} />
+                {importando ? t("Importando…") : textos.importarHistorico}
+              </Button>
+            )}
+            {cursor && (
+              <span
+                className="text-xs text-muted-foreground tabular-nums"
+                title={textos.nsuTitulo}
+              >
+                {textos.nsuTitulo} {cursor.ult_nsu}/{cursor.max_nsu}
+              </span>
+            )}
+            <select
+              aria-label={textos.modelo}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+              value={modeloXml}
+              onChange={(e) => setModeloXml(e.target.value)}
+            >
+              <option value="">{textos.modelo}: {textos.todos}</option>
+              <option value="55">{textos.modeloNfe}</option>
+              <option value="65">{textos.modeloNfce}</option>
+            </select>
+            {podeEmitir && (
               <Button size="sm" variant="outline" onClick={exportarXmls}>
                 <FileText size={14} />
                 {textos.exportaXmls}
@@ -359,6 +463,27 @@ export function GradeNotas({
               <option value="erro">{textos.erro}</option>
             </select>
           </div>
+
+          {progressoXml && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {textos.exportaXmls}: {progressoXml.feitos}/{progressoXml.total}
+              </p>
+              <div
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={progressoXml.total}
+                aria-valuenow={progressoXml.feitos}
+                aria-label={textos.exportaXmls}
+                className="h-2 w-full overflow-hidden rounded-full bg-muted"
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${(progressoXml.feitos / Math.max(progressoXml.total, 1)) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {visiveis.length === 0 ? (
             <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
@@ -585,6 +710,15 @@ type DetalheDaNota = {
   chave_acesso?: string | null;
   order_id?: string | null;
   tem_xml: boolean;
+  ibpt: {
+    total_cents: number;
+    origem: string;
+    itens_com_ncm: number;
+    itens_sem_ncm: number;
+    fonte: string | null;
+    versao: string | null;
+    vigencia_inicio: string | null;
+  } | null;
   eventos: {
     id: string;
     tipo: string;
@@ -653,6 +787,28 @@ function DetalheNota({ id, textos }: { id: string; textos: Textos }) {
             <div className="flex items-start justify-between gap-2">
               <span className="shrink-0 text-muted-foreground">{textos.chaveAcesso}</span>
               <span className="font-mono text-xs break-all">{dados.chave_acesso}</span>
+            </div>
+          ) : null}
+          {dados.ibpt ? (
+            <div className="space-y-1 rounded-lg border border-border bg-surface p-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground">{textos.impostoAproximado}</span>
+                <span className="font-medium tabular-nums">{comoMoeda(dados.ibpt.total_cents, "BRL")}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                IBPT
+                {dados.ibpt.vigencia_inicio
+                  ? ` · ${textos.vigencia} ${new Date(
+                      Number(dados.ibpt.vigencia_inicio.slice(0, 4)),
+                      Number(dados.ibpt.vigencia_inicio.slice(5, 7)) - 1,
+                      Number(dados.ibpt.vigencia_inicio.slice(8, 10)),
+                    ).toLocaleDateString(tagIdioma)}`
+                  : ""}
+                {dados.ibpt.fonte ? ` · ${dados.ibpt.fonte}` : ""}
+                {dados.ibpt.itens_sem_ncm > 0
+                  ? ` · ${dados.ibpt.itens_sem_ncm} ${t("item(s) sem NCM")}`
+                  : ""}
+              </p>
             </div>
           ) : null}
         </div>

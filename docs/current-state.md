@@ -79,7 +79,7 @@ sendo aplicada, não acoplamento acidental.
 **Doutrina de migrations está sendo cumprida** — CONFIRMADO: o apêndice idempotente de
 `baseline.sql` cobre até `migration 0092`, que é a última em `supabase/migrations/`. Os
 artefatos de schema andam juntos como a doutrina exige — o kit self-host recebe as
-mudanças. Esse é o invariante mais fácil de quebrar num projeto open-source e ele está de pé.
+mudanças. Esse é o invariante mais fácil de quebrar num produto self-host e ele está de pé.
 
 ---
 

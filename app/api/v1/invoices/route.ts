@@ -74,6 +74,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       userId: authz.user.id,
       requestId,
       orderId: parsed.data.order_id,
+      extras: parsed.data.extras ?? null,
     });
 
     await audit({

@@ -159,8 +159,17 @@ describe("a proposta SEMPRE tem prazo, e a decisão sempre tem data", () => {
 describe("vocabulário fechado", () => {
   it("campo fora da lista é recusado — o que entra aqui vira escrita em contacts", async () => {
     const c = await criarContato("Campo Livre");
-    await expect(propor(c, "cpf", "12345678900")).rejects.toThrow(/campo_check|violates check/i);
+    await expect(propor(c, "rg", "12345678900")).rejects.toThrow(/campo_check|violates check/i);
     await expect(propor(c, "is_platform_admin", "true")).rejects.toThrow(/campo_check|violates check/i);
+  });
+
+  it("cpf e cnpj são vocabulário desde a 0251 — o documento ditado no WhatsApp entra na fila", async () => {
+    // A 0251 alargou o CHECK (spec 17 §4b): o cliente DIZ o documento no
+    // chat, a IA PROPOE e o humano CONFIRMA — sem isso a proposta de CPF
+    // morria no mesmo CHECK que este arquivo vigia.
+    const c = await criarContato("Doc Fiscal");
+    await expect(propor(c, "cpf", "52998224725")).resolves.toBeTruthy();
+    await expect(propor(c, "cnpj", "11222333000181")).resolves.toBeTruthy();
   });
 
   it("status fora da lista é recusado", async () => {

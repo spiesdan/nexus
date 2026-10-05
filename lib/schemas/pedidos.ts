@@ -151,7 +151,15 @@ export interface PedidoComercial {
   contact_id: string | null;
   cliente_nome: string;
   cliente_documento: string | null;
+  /** Quem apertou "criar" (NULL em linha importada/da IA). */
+  created_by: string | null;
   vendedor_user_id: string | null;
+  /**
+   * Nome de `created_by` (ou do vendedor, quando o criador é desconhecido),
+   * anexado pela rota/lista — `lib/comercial/emitente.ts`. Ausente quando não
+   * há service role: a tela cai no badge de origem, nunca no UUID.
+   */
+  emitente_nome?: string | null;
   status: StatusDoPedido;
   origem: string;
   moeda: string;
@@ -181,7 +189,7 @@ export interface Parcela {
 
 /** As colunas que a lista e a rota leem — uma lista, não duas. */
 export const COLUNAS_DO_PEDIDO =
-  "id, numero, contact_id, cliente_nome, cliente_documento, vendedor_user_id, " +
+  "id, numero, contact_id, cliente_nome, cliente_documento, created_by, vendedor_user_id, " +
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
   "condicao_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at";

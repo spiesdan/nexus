@@ -24,6 +24,7 @@ function mockFetchOnce(corpo: unknown, status = 200) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("GooglePlacesProvider", () => {
@@ -159,5 +160,104 @@ describe("OSMOverpassProvider", () => {
   it("getDetails não existe aqui (tudo vem na busca)", async () => {
     const p = new OSMOverpassProvider();
     expect(await p.getDetails("osm:node/1")).toBeNull();
+  });
+
+  /**
+   * Cota do espelho público é a falha real de produção: o 429 chega com
+   * `Retry-After` e a célula só não queima se a espera for longa o bastante.
+   * Relógio fake porque a espera certa é de segundos — dormir de verdade
+   * aqui deixaria a suíte lenta e ainda provaria pouco.
+   */
+  it("429 espera o Retry-After do espelho e insiste até dar certo", async () => {
+    vi.useFakeTimers();
+    let chamadas = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        chamadas++;
+        if (chamadas === 1) {
+          return Promise.resolve({
+            ok: false,
+            status: 429,
+            headers: new Headers({ "Retry-After": "2" }),
+            json: () => Promise.resolve({}),
+            text: () => Promise.resolve("<html>rate limit</html>"),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: () =>
+            Promise.resolve({
+              elements: [{ type: "node", id: 7, lat: -26.17, lon: -50.32, tags: { name: "Oficina Vale" } }],
+            }),
+          text: () => Promise.resolve("{}"),
+        });
+      }),
+    );
+    try {
+      const p = new OSMOverpassProvider();
+      const pendente = p.search({ categoria: "Oficina mecânica", latitude: -26.17, longitude: -50.32, raioMetros: 5000, limite: 20 });
+      await vi.advanceTimersByTimeAsync(60000);
+      const r = await pendente;
+      expect(chamadas).toBe(2);
+      expect(r.negocios).toHaveLength(1);
+      expect(r.requisicoes).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("429 persistente desiste com erro nomeado, sem despejar o HTML do espelho", async () => {
+    vi.useFakeTimers();
+    let chamadas = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        chamadas++;
+        return Promise.resolve({
+          ok: false,
+          status: 429,
+          headers: new Headers({ "Retry-After": "1" }),
+          json: () => Promise.resolve({}),
+          text: () => Promise.resolve("<html>".repeat(80)),
+        });
+      }),
+    );
+    try {
+      const p = new OSMOverpassProvider({ tentativas: 2 });
+      const pendente = p.search({ categoria: "X", latitude: 0, longitude: 0, raioMetros: 1000, limite: 5 });
+      const rejeitada = expect(pendente).rejects.toThrowError(/^overpass_429:/);
+      await vi.advanceTimersByTimeAsync(60000);
+      await rejeitada;
+      expect(chamadas).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("resposta de recusa sem headers não quebra a leitura do Retry-After", async () => {
+    vi.useFakeTimers();
+    let chamadas = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        chamadas++;
+        // Mock sem `headers` nenhum: o backoff tem que cair no default sem
+        // estourar TypeError em cima do erro original.
+        return Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}), text: () => Promise.resolve("busy") });
+      }),
+    );
+    try {
+      const p = new OSMOverpassProvider({ tentativas: 2 });
+      const pendente = p.search({ categoria: "X", latitude: 0, longitude: 0, raioMetros: 1000, limite: 5 });
+      const rejeitada = expect(pendente).rejects.toThrowError("overpass_503");
+      await vi.advanceTimersByTimeAsync(60000);
+      await rejeitada;
+      expect(chamadas).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

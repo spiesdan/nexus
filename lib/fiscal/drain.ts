@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
+import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { destinoAposFalha, eRetentavel } from "./fila";import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped } from "./sped-payload";
@@ -60,7 +61,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   const { data: notaDb } = await admin
     .from("invoices")
-    .select("id, organization_id, order_id, serie, status, provedor, numero")
+    .select("id, organization_id, order_id, serie, status, provedor, numero, extras_fiscais")
     .eq("id", job.invoice_id)
     .maybeSingle();
   const nota = notaDb as unknown as {
@@ -70,6 +71,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     serie: string;
     status: string;
     provedor: string;
+    extras_fiscais: ExtrasFiscais | null;
   } | null;
   // Nota saiu de em_emissao no meio do caminho (cancelada pelo usuário):
   // encerra o job sem tocar em nada — história fiscal não se reescreve.
@@ -153,6 +155,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       },
       senhaCertificado: ctx.senhaCertificado ?? "",
       pedido: { numero: ped.numero, nome: ped.cliente_nome, documento: ped.cliente_documento, frete_cents: ped.frete_cents },
+      extras: nota.extras_fiscais,
       itens: ((itensDb ?? []) as unknown as {
         produto_codigo: string;
         produto_nome: string;

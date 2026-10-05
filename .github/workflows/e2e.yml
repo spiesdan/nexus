@@ -246,6 +246,7 @@ jobs:
         navegacao.spec.ts olhar-telas-do-epico.spec.ts pipelines-gestao.spec.ts
         qa-agente-usa-as-maos.spec.ts qa-selo-no-funil-usado.spec.ts
         qa-telas-descobertas-w4.spec.ts responsividade-nas-rotas.spec.ts
+        imprimir-pedidos-mesma-aba.spec.ts
         retorno-anti-morte.spec.ts troca-de-organizacao-tem-volta.spec.ts
         webhooks.spec.ts
       # Rebalance de 2026-09-27 — o canário de 30min da PARTE_2 estourou nos

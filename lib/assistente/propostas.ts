@@ -174,6 +174,7 @@ async function executarNota(
     userId: ctx.userId,
     requestId: ctx.requestId,
     orderId: payload.order_id,
+    extras: payload.extras ?? null,
   });
   await audit({
     organizationId: ctx.organizationId,

@@ -120,17 +120,21 @@ async function main(): Promise<void> {
     // "faltam 1 vaga". Com teto 25 essas mesmas 21 passam, a recusa nunca acontece
     // e o caso vira um clique que sempre dá certo — verde sem medir nada.
     //
-    // Oito reproduzem a MESMA aritmética no teto novo: 8 + 18 = 26 > 25, recusa
-    // por 1 vaga; desligar uma deixa 7 + 18 = 25, que é o teto exato e passa.
+    // A MESMA aritmética vale a cada subida de teto. "Atender" exige 20 hoje
+    // (19 automáticas + a crítica que o pacote deliberadamente NÃO liga), e com
+    // teto 28 os 8 do seed davam 28 — o teto exato, sem recusa, caso morto.
+    // A nona devolve a margem: 9 + 20 = 29 > 28, recusa por 1 vaga; desligar uma
+    // deixa 8 + 20 = 28, que é o teto exato e passa.
     //
     // As escolhidas ficam FORA do pacote "Atender" de propósito — se alguma
     // estivesse dentro, a união seria menor que a soma e a conta acima não valeria.
-    // Quatro são a família de agenda, que é o assunto do defeito que subiu o teto.
+    // Cinco são da família de agenda, que é o assunto do defeito que subiu o teto.
     "crm_find_free_slots",
     "crm_list_appointments",
     "crm_book_appointment",
     "crm_reschedule_appointment",
     "crm_list_pipelines",
+    "crm_list_event_types",
   ];
 
   // REPÕE TODAS AS VERSÕES DRAFT DESTE AGENTE, não só a de maior número.

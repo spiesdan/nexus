@@ -59,6 +59,26 @@ export type Locale = (typeof LOCALES)[number];
  */
 export const SEM_PREFERENCIA_DE_IDIOMA = "auto";
 
+/**
+ * Texto opcional de Configurações: `null`, `undefined` e `""` (com ou sem
+ * espaço) todos viram `null` — um campo de emitente em branco não é valor,
+ * é ausência.
+ *
+ * Sem isto, o form enviaria `""` e a ação gravaria `""` no banco (o `?? null`
+ * dela não alcança string vazia): o cabecalho do pedido imprimiria uma linha
+ * de rótulo sem valor, que é exatamente o que se quer evitar. `.max()` vem
+ * ANTES do transform, então estourar limite continua sendo erro de validação
+ * e não é engolido.
+ */
+function campoDeTexto(max: number) {
+  return z
+    .string()
+    .max(max)
+    .nullable()
+    .optional()
+    .transform((v) => (v ?? "").trim() || null);
+}
+
 export const profileSchema = z.object({
   full_name: z.string().min(1).max(120).nullable().optional(),
   locale: z.enum([...LOCALES, SEM_PREFERENCIA_DE_IDIOMA]),
@@ -82,6 +102,19 @@ export const tenantSchema = z.object({
     .nullable()
     .optional()
     .or(z.literal("").transform(() => null)),
+  // Dados da emitente no cabecalho do pedido impresso (migration 0255). Os
+  // SETE campos de endereco usam os mesmos nomes de `contacts` para o
+  // formatador unico (`enderecoEmLinha()`) servir aos dois sem adaptador.
+  // Todos nullable: o cabecalho omite a linha inteira quando falta o valor,
+  // nunca imprime rotulo sem valor.
+  phone: campoDeTexto(32),
+  logradouro: campoDeTexto(200),
+  numero_end: campoDeTexto(20),
+  complemento: campoDeTexto(120),
+  bairro: campoDeTexto(120),
+  cidade: campoDeTexto(120),
+  uf: campoDeTexto(2),
+  cep: campoDeTexto(20),
   timezone: z.string().min(1).max(64),
   locale: z.enum(LOCALES),
   media_retention_days: z.coerce.number().int().min(30).max(3650),

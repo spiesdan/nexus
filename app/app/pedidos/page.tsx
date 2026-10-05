@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
+import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
@@ -58,10 +59,13 @@ export default async function PedidosPage({
   if (iniciais.de) q = q.gte("created_at", DIA.test(iniciais.de) ? `${iniciais.de}T00:00:00Z` : iniciais.de);
   if (iniciais.ate) q = q.lt("created_at", DIA.test(iniciais.ate) ? `${iniciais.ate}T23:59:59.999Z` : iniciais.ate);
   const { data } = await q.order("created_at", { ascending: false }).limit(200);
+  const iniciaisComEmitente = await comNomeDoEmitente(
+    (data ?? []) as unknown as Array<{ created_by: string | null; vendedor_user_id: string | null }>,
+  );
 
   return (
     <PedidosClient
-      inicial={(data ?? []) as unknown as PedidoComercial[]}
+      inicial={iniciaisComEmitente as unknown as PedidoComercial[]}
       iniciais={iniciais}
       podeCriar={podeCriar}
       podeExcluir={podeExcluir}

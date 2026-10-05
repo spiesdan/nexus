@@ -155,6 +155,14 @@ beforeAll(() => {
             values (v_org, v_pipe, v_stage, 'RLS invariant lead');
         end if;
 
+        -- migration 0258 — sugestão de ação do motor local (radar). Precisa de
+        -- um lead da própria org (FK em lead_id), então vem logo abaixo.
+        if not exists (select 1 from public.crm_lead_risk_decisions where organization_id = v_org) then
+          insert into public.crm_lead_risk_decisions (lead_id, organization_id, acao, confianca, modelo)
+            select id, v_org, 'aguardar', 0.5, 'laya-serve'
+              from public.crm_leads where organization_id = v_org limit 1;
+        end if;
+
         if not exists (select 1 from public.org_guardrail_layers where organization_id = v_org) then
           insert into public.org_guardrail_layers (organization_id, layer, enabled)
             values (v_org, 'jailbreak', true);
@@ -319,6 +327,16 @@ beforeAll(() => {
         if not exists (select 1 from public.fiscal_entrada_cursor where organization_id = v_org) then
           insert into public.fiscal_entrada_cursor (organization_id)
             values (v_org);
+        end if;
+
+        -- migrations 0253/0254 — cursor de emissas (distribuição DF-e) + tabela IBPT.
+        if not exists (select 1 from public.fiscal_emitidas_cursor where organization_id = v_org) then
+          insert into public.fiscal_emitidas_cursor (organization_id)
+            values (v_org);
+        end if;
+        if not exists (select 1 from public.fiscal_ibpt where organization_id = v_org) then
+          insert into public.fiscal_ibpt (organization_id, codigo, uf, vigencia_inicio)
+            values (v_org, '999', 'SP', date '2026-01-01');
         end if;
         if not exists (select 1 from public.financial_pagaveis where organization_id = v_org) then
           insert into public.financial_pagaveis (organization_id, parcela_n, total_parcelas, valor_original_cents, vencimento)
@@ -526,6 +544,12 @@ export const TABLES = [
   "fiscal_cfop_equivalentes",
   "fiscal_entradas",
   "fiscal_entrada_cursor",
+  // migrations 0253/0254 — cursor da distribuição DF-e (emissas) + alíquotas IBPT.
+  // Mesmo molde das acima: leitura org-scoped sem gate de papel (o `agent` lê a
+  // própria org, a vizinha vira 0); escrita agent+/manager+ provada nas rotas
+  // (`lib/fiscal/drain.ts` roda com service role).
+  "fiscal_emitidas_cursor",
+  "fiscal_ibpt",
   "financial_pagaveis",
   "financial_receivables",
   "financial_payments",
@@ -559,6 +583,11 @@ export const TABLES = [
   "automatic_sales_campaigns",
   "automatic_sales_queue",
   "automatic_sales_events",
+  // migration 0258 — sugestão de ação do motor local (radar). Mesmo molde da
+  // onda acima: leitura org-scoped (a tela lê junto do radar, na rota
+  // at-risk); a ESCRITA é do worker com service role no cron risk-watcher.
+  // Seed em `beforeAll`, logo após o lead da própria org (FK).
+  "crm_lead_risk_decisions",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

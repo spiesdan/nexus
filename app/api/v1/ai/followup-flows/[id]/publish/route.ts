@@ -53,7 +53,7 @@ export async function POST(_req: NextRequest, ctx: RouteCtx): Promise<Response> 
   // A versão anterior recusava UM literal (`conversation_end`) e deixava passar
   // qualquer outro. Só que `trigger_config` é `jsonb` SEM CHECK, e este publish
   // lê a linha CRUA do banco — não passa pelo Zod do PATCH. Então uma linha
-  // escrita por SQL à mão, por um clone open-source, ou por uma versão futura do
+  // escrita por SQL à mão, numa instalação self-host, ou por uma versão futura do
   // produto, publicava `status='active'` e nunca enrollava ninguém: fluxo morto
   // com cara de vivo, que é o desfecho exato que este bloco existe para impedir.
   //

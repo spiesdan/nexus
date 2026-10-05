@@ -31,7 +31,7 @@ conserte com push duplo — apague a ref errada e refaça no `nexus`.
 
 ## Objetivo do projeto
 
-Sistema operacional de vendas open source com agentes de IA nativos, multi-nicho,
+Sistema operacional de vendas com agentes de IA nativos, multi-nicho,
 WhatsApp como canal primário (via WAHA). Multi-tenant com RLS desde o dia 1, LGPD
 nativa. Monetização = self-host em VPS, não assinatura. Posicionamento: [`VISION.md`](VISION.md).
 

@@ -86,6 +86,67 @@ describe("tenantSchema", () => {
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.lost_reasons_extra).toEqual([]);
   });
+
+  it("aceita telefone e endereço (o emitente do PDF)", () => {
+    const r = tenantSchema.safeParse({
+      display_name: "Acme",
+      legal_name: "Acme",
+      timezone: "UTC",
+      locale: "pt-BR",
+      media_retention_days: 90,
+      phone: "(47) 98496-0797",
+      logradouro: "Rua Antônio Liller",
+      numero_end: "585",
+      complemento: "Sala 2",
+      bairro: "Centro",
+      cidade: "Canoinhas",
+      uf: "SC",
+      cep: "89460-000",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.phone).toBe("(47) 98496-0797");
+      expect(r.data.numero_end).toBe("585");
+      expect(r.data.uf).toBe("SC");
+    }
+  });
+
+  it("trima e vira null o que veio em branco — não imprime 'Telefone: '", () => {
+    const r = tenantSchema.safeParse({
+      display_name: "Acme",
+      legal_name: "Acme",
+      timezone: "UTC",
+      locale: "pt-BR",
+      media_retention_days: 90,
+      phone: "   ",
+      logradouro: "  ",
+      numero_end: "",
+      complemento: null,
+      bairro: null,
+      cidade: null,
+      uf: null,
+      cep: null,
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.phone).toBeNull();
+      expect(r.data.logradouro).toBeNull();
+      expect(r.data.numero_end).toBeNull();
+      expect(r.data.complemento).toBeNull();
+    }
+  });
+
+  it("endereço longo demais não passa", () => {
+    const r = tenantSchema.safeParse({
+      display_name: "Acme",
+      legal_name: "Acme",
+      timezone: "UTC",
+      locale: "pt-BR",
+      media_retention_days: 90,
+      logradouro: "R".repeat(201),
+    });
+    expect(r.success).toBe(false);
+  });
 });
 
 describe("notificationPrefsSchema", () => {

@@ -61,6 +61,29 @@ const diasDeRetencao = (nome: string, padrao: number) =>
       return padrao;
     });
 
+/**
+ * Knob de TETO por passada, mesmo contrato do acima: nunca derruba o app.
+ *
+ * O caso é o de um orçamento de inferência local (`LAYA_DECISAO_POR_TICK`),
+ * lido pelo cron de risco. Um valor fora da faixa vira o padrão com aviso —
+ * um zero ou um "abc" não pode nem desligar a sugestão em silêncio nem parar
+ * o observador de travessia, que é quem grava o estado do radar.
+ */
+const contagemComTeto = (nome: string, padrao: number, teto: number) =>
+  z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(teto)
+    .default(padrao)
+    .catch(({ error }) => {
+      console.warn(
+        `[env] ${nome} inválida (${JSON.stringify(process.env[nome])}) — usando o padrão ${padrao}. ` +
+          `Vale inteiro de 1 a ${teto}. (${error.issues[0]?.message ?? "valor recusado"})`,
+      );
+      return padrao;
+    });
+
 const schema = z.object({
   // Node
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -174,6 +197,30 @@ const schema = z.object({
   VERCEL_AI_GATEWAY_URL: z.string().optional().default(""),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   OPENAI_API_KEY: z.string().optional().default(""),
+
+  // Motor de decisão do RADAR — `laya-serve`, rodando na mesma VPS (rede
+  // interna, nunca exposto). As duas são OPCIONAIS e sem elas o recurso fica
+  // desligado: o observador de travessia continua gravando estado, linha na
+  // timeline e proposta de reativação, e só NÃO sugere ação — decisão
+  // atrasada é melhor que decisão segurando o cron inteiro.
+  LAYA_URL: z.string().optional().default(""),
+  LAYA_API_KEY: z.string().optional().default(""),
+  /**
+   * Teto de NEGÓCIOS decididos por passada do cron de risco (15 min).
+   *
+   * O custo é medido, não estimado: 64 estados com uma pergunta custam ~12,5 s
+   * de inferência na VPS (196 ms por linha), e a rota do cron tem orçamento de
+   * 60 s para TODAS as organizações. O padrão de 32 deixa ~6 s de inferência —
+   * folga para o resto do tick e alcance de 128 decisões por hora, que varre
+   * qualquer acervo frio em poucas passadas.
+   */
+  LAYA_DECISAO_POR_TICK: contagemComTeto("LAYA_DECISAO_POR_TICK", 32, 128),
+  /**
+   * Timeout de UMA chamada ao motor, em milissegundos. Estourou = fail-soft:
+   * a passada segue sem sugestão e o próximo tick tenta de novo. Não pode
+   * passar do orçamento da rota (60 s) senão o abort vem de fora, sem log.
+   */
+  LAYA_TIMEOUT_MS: contagemComTeto("LAYA_TIMEOUT_MS", 45_000, 55_000),
 
   // Prospecção (§2 do plano): chave de INSTALAÇÃO (fallback quando o tenant
   // não tem a própria em prospecting_settings). Opcional — sem ela, buscas
@@ -313,7 +360,7 @@ const schema = z.object({
   GOOGLE_CALENDAR_CLIENT_ID: z.string().optional().default(""),
   GOOGLE_CALENDAR_CLIENT_SECRET: z.string().optional().default(""),
 
-  // Nuvemshop — opcional (template genérico open-source). Só exigidas quando
+  // Nuvemshop — opcional (template genérico). Só exigidas quando
   // NUVEMSHOP_ENABLED=true; o runtime já degrada via getConfig()==null.
   NUVEMSHOP_APP_ID: z.string().optional().default(""),
   NUVEMSHOP_CLIENT_ID: z.string().optional().default(""),

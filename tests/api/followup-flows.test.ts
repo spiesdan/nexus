@@ -586,8 +586,8 @@ describe("POST /api/v1/ai/followup-flows/:id/publish", () => {
    * enrollar ninguém — fluxo morto com cara de vivo.
    *
    * O caminho não é teórico: `trigger_config` é `jsonb` sem CHECK e o publish lê
-   * a linha CRUA (não passa pelo Zod do PATCH), então SQL à mão, clone
-   * open-source ou versão futura do produto chegam aqui com qualquer coisa.
+   * a linha CRUA (não passa pelo Zod do PATCH), então SQL à mão, instalação
+   * self-host ou versão futura do produto chegam aqui com qualquer coisa.
    */
   it("kind DESCONHECIDO pelo produto → 422 (a denylist antiga publicaria)", async () => {
     const db = makeDb(

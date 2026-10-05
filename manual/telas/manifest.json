@@ -1,0 +1,135 @@
+[
+  {
+    "indice": 1,
+    "rota": "/app",
+    "titulo": "Dashboard",
+    "arquivo": "01-dashboard.png",
+    "url": "http://127.0.0.1:3009/app"
+  },
+  {
+    "indice": 2,
+    "rota": "/app/meu-dia",
+    "titulo": "Meu Dia",
+    "arquivo": "02-meu-dia.png",
+    "url": "http://127.0.0.1:3009/app/meu-dia"
+  },
+  {
+    "indice": 3,
+    "rota": "/app/radar",
+    "titulo": "Radar",
+    "arquivo": "03-radar.png",
+    "url": "http://127.0.0.1:3009/app/radar"
+  },
+  {
+    "indice": 4,
+    "rota": "/app/inbox",
+    "titulo": "Inbox",
+    "arquivo": "04-inbox.png",
+    "url": "http://127.0.0.1:3009/app/inbox"
+  },
+  {
+    "indice": 5,
+    "rota": "/app/ai/followups",
+    "titulo": "Follow-ups",
+    "arquivo": "05-ai-followups.png",
+    "url": "http://127.0.0.1:3009/app/ai/followups"
+  },
+  {
+    "indice": 6,
+    "rota": "/app/pedidos",
+    "titulo": "Pedidos",
+    "arquivo": "06-pedidos.png",
+    "url": "http://127.0.0.1:3009/app/pedidos"
+  },
+  {
+    "indice": 7,
+    "rota": "/app/contacts",
+    "titulo": "Clientes",
+    "arquivo": "07-contacts.png",
+    "url": "http://127.0.0.1:3009/app/contacts"
+  },
+  {
+    "indice": 8,
+    "rota": "/app/products",
+    "titulo": "Produtos",
+    "arquivo": "08-products.png",
+    "url": "http://127.0.0.1:3009/app/products"
+  },
+  {
+    "indice": 9,
+    "rota": "/app/kanban",
+    "titulo": "Funis",
+    "arquivo": "09-kanban.png",
+    "url": "http://127.0.0.1:3009/app/kanban"
+  },
+  {
+    "indice": 10,
+    "rota": "/app/prospeccao",
+    "titulo": "Prospecção",
+    "arquivo": "10-prospeccao.png",
+    "url": "http://127.0.0.1:3009/app/prospeccao"
+  },
+  {
+    "indice": 11,
+    "rota": "/app/estoque",
+    "titulo": "Estoque",
+    "arquivo": "11-estoque.png",
+    "url": "http://127.0.0.1:3009/app/estoque"
+  },
+  {
+    "indice": 12,
+    "rota": "/app/expedicao",
+    "titulo": "Expedição",
+    "arquivo": "12-expedicao.png",
+    "url": "http://127.0.0.1:3009/app/expedicao"
+  },
+  {
+    "indice": 13,
+    "rota": "/app/financeiro",
+    "titulo": "Contas a Receber",
+    "arquivo": "13-financeiro.png",
+    "url": "http://127.0.0.1:3009/app/financeiro"
+  },
+  {
+    "indice": 14,
+    "rota": "/app/titulos",
+    "titulo": "Títulos",
+    "arquivo": "14-titulos.png",
+    "url": "http://127.0.0.1:3009/app/financeiro?aba=titulos"
+  },
+  {
+    "indice": 15,
+    "rota": "/app/notas",
+    "titulo": "Notas fiscais",
+    "arquivo": "15-notas.png",
+    "url": "http://127.0.0.1:3009/app/notas"
+  },
+  {
+    "indice": 16,
+    "rota": "/app/ai",
+    "titulo": "IA",
+    "arquivo": "16-ai.png",
+    "url": "http://127.0.0.1:3009/app/ai"
+  },
+  {
+    "indice": 17,
+    "rota": "/app/team",
+    "titulo": "Equipe",
+    "arquivo": "17-team.png",
+    "url": "http://127.0.0.1:3009/app/team"
+  },
+  {
+    "indice": 18,
+    "rota": "/app/settings",
+    "titulo": "Configurações",
+    "arquivo": "18-settings.png",
+    "url": "http://127.0.0.1:3009/app/settings"
+  },
+  {
+    "indice": 19,
+    "rota": "/app/settings/tenant",
+    "titulo": "Organização",
+    "arquivo": "19-settings-tenant.png",
+    "url": "http://127.0.0.1:3009/app/settings/tenant"
+  }
+]

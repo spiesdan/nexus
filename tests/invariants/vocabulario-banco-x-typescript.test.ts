@@ -245,6 +245,49 @@ const PARES: Array<{
     arquivo: "hooks/webhooks/useAutomationRules.ts",
     simbolo: "AutomationRunStatus",
   },
+  {
+    tabela: "fiscal_ibpt",
+    coluna: "tipo",
+    // lib/fiscal/ibpt.ts → TipoIbpt.
+    //
+    // Par nascido junto com a tabela (migration 0254), não de divergência
+    // encontrada: produto/serviço são arquivos diferentes do IBPT e quem
+    // importa diz qual está entrando. O par entra no MESMO commit porque a
+    // taxa deste eixo é de pares que nasceram sozinhos e divergiram depois —
+    // e porque a tela de consulta pergunta `tipo` antes de procurar o código.
+    arquivo: "lib/fiscal/ibpt.ts",
+    simbolo: "TipoIbpt",
+  },
+  {
+    tabela: "catalog_products",
+    coluna: "ncm_origem",
+    // lib/schemas/produtos.ts → ORIGENS_DO_NCM.
+    //
+    // Par nascido junto com a coluna (migration 0256), não de divergência
+    // encontrada — mesmo motivo do par acima: a taxa deste eixo é de pares que
+    // nascem sozinhos e divergem depois. Aqui a regra é mais estreita que a das
+    // demais listas: só dois valores, e a diferença entre eles é a única pista
+    // que o fiscal tem de DEPOIS separar o que a máquina escolheu do que a
+    // pessoa digitou. Um terceiro valor que o CHECK recusasse viraria um 23514
+    // no save, e o save é onde a sugestão vira dado — ou seja, exatamente o
+    // caminho que este invariante protege.
+    arquivo: "lib/schemas/produtos.ts",
+    simbolo: "ORIGENS_DO_NCM",
+  },
+  {
+    tabela: "crm_lead_risk_decisions",
+    coluna: "acao",
+    // lib/leads/laya-decisao.ts → AcaoDaDecisao.
+    //
+    // Par nascido junto com a tabela (migration 0258). O vocabulário vive em
+    // TRÊS lugares por construção: o `criteria` do prompt enviado ao motor, o
+    // CHECK do banco e o chip da tela — e o deles é o único que não é TS. Um
+    // quarto valor que o CHECK recusasse seria um 23514 no upsert do worker,
+    // que roda sozinho às 3h e cujo erro ninguém veria; um valor que o CHECK
+    // aceitasse e o tipo não declarasse não apareceria no chip nunca.
+    arquivo: "lib/leads/laya-decisao.ts",
+    simbolo: "AcaoDaDecisao",
+  },
 ];
 
 /** Tira um nível de parênteses externos, se ele envolver a expressão inteira. */

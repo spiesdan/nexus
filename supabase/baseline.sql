@@ -11524,7 +11524,7 @@ alter table public.contact_field_proposals
   drop constraint if exists contact_field_proposals_campo_check;
 alter table public.contact_field_proposals
   add constraint contact_field_proposals_campo_check check (
-    campo = any (array['email', 'name', 'phone_number']::text[])
+    campo = any (array['email', 'name', 'phone_number', 'cpf', 'cnpj']::text[])
   );
 
 alter table public.contact_field_proposals
@@ -19940,6 +19940,66 @@ revoke execute on function public.fn_proximo_numero_compra(uuid) from public, an
 grant execute on function public.fn_proximo_numero_compra(uuid) to authenticated;
 grant execute on function public.fn_proximo_numero_compra(uuid) to service_role;
 
+-- ---------------------------------------------------------------------
+-- 0252_encrypt_decrypt_cpf — a cifra at-rest do CPF que o CHECK exige
+-- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon: cria FUNÇÃO, e a varredura
+-- (logo abaixo) é, de propósito, o último do arquivo — create function
+-- depois dela nasce com anon no ACL e ninguém o cura no mesmo run.
+-- O update.sh reaplica o baseline inteiro: create or replace idempotente,
+-- do mesmo caminho de quem instala fresco (que já recebe pelo corpo).
+-- ---------------------------------------------------------------------
+create or replace function public.encrypt_cpf(p_plaintext text) returns bytea
+  language plpgsql security definer
+  set search_path to 'public', 'private', 'extensions', 'pg_temp'
+as $$
+declare
+  k text := private.fn_oauth_key();
+begin
+  if k is null or length(k) < 32 then
+    raise exception 'CHAVE_DE_CIFRA_AUSENTE — private.app_secrets: nuvemshop_oauth_key (ou GUC app.nuvemshop_oauth_key)';
+  end if;
+  return pgp_sym_encrypt(p_plaintext, k, 'cipher-algo=aes256');
+end;
+$$;
+
+create or replace function public.decrypt_cpf(p_contact_id uuid, p_organization_id uuid) returns text
+  language plpgsql security definer
+  set search_path to 'public', 'private', 'extensions', 'pg_temp'
+as $$
+declare
+  v_cipher bytea;
+begin
+  if auth.uid() is not null
+     and not exists (select 1 from public.fn_user_org_ids() where fn_user_org_ids = p_organization_id)
+     and not public.fn_is_platform_admin() then
+    raise exception 'documento_org_invalida' using errcode = '42501';
+  end if;
+
+  select cpf_encrypted into v_cipher
+    from public.contacts
+   where id = p_contact_id and organization_id = p_organization_id;
+
+  if v_cipher is null then
+    return null;
+  end if;
+
+  return pgp_sym_decrypt(v_cipher, private.fn_oauth_key());
+end;
+$$;
+
+alter function public.encrypt_cpf(text) owner to postgres;
+alter function public.decrypt_cpf(uuid, uuid) owner to postgres;
+
+revoke execute on function public.encrypt_cpf(text) from public, anon;
+revoke execute on function public.decrypt_cpf(uuid, uuid) from public, anon;
+grant execute on function public.encrypt_cpf(text) to authenticated, service_role;
+grant execute on function public.decrypt_cpf(uuid, uuid) to authenticated, service_role;
+
+comment on function public.encrypt_cpf(text) is
+  'Cifra at-rest do CPF (pgp_sym_encrypt/aes256, chave mestra da 0041). Exigida pelo CHECK contacts_cpf_consistency.';
+comment on function public.decrypt_cpf(uuid, uuid) is
+  'Decifra o CPF de UM contato da ORG informada (molde 0209: membresia conferida quando há auth.uid). Service_role (MCP) segue direto.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
@@ -20967,3 +21027,235 @@ grant all on public.prospecting_cache_hits to service_role;
 
 comment on table public.prospecting_cache_hits is
   'Hit de cache de busca (spec 19, secoes 7 e 21): o hit nao cria busca nova, entao o painel de consumo conta o hit aqui.';
+
+-- ---------------------------------------------------------------------
+-- 0251_proposta_documento_fiscal - identificacao do cliente no WhatsApp
+-- SEM drop+add aqui: a regra (tests/unit/baseline-constraint-reconstruida)
+-- e de UM bloco por constraint, com o vocabulario final. O alargamento do
+-- CHECK (cpf, cnpj) foi editado no bloco unico da 0123, la em cima — o
+-- apendice e comentario, nao diario de bordo executavel.
+-- ---------------------------------------------------------------------
+
+-- APENDICE 0253 - HISTORICO DAS NOTAS EMITIDAS (idempotente; fonte: supabase/migrations/20261004080000_0253_historico_emitidas_cursor.sql)
+
+create table if not exists public.fiscal_emitidas_cursor (
+  organization_id uuid primary key references public.organizations(id) on delete cascade,
+  ult_nsu bigint not null default 0,
+  max_nsu bigint not null default 0,
+  atualizado_em timestamptz not null default now()
+);
+
+alter table public.fiscal_emitidas_cursor enable row level security;
+
+drop policy if exists fiscal_emitidas_cursor_select on public.fiscal_emitidas_cursor;
+create policy fiscal_emitidas_cursor_select on public.fiscal_emitidas_cursor
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists fiscal_emitidas_cursor_write on public.fiscal_emitidas_cursor;
+create policy fiscal_emitidas_cursor_write on public.fiscal_emitidas_cursor
+  for all using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+revoke all on public.fiscal_emitidas_cursor from anon;
+grant select, insert, update, delete on public.fiscal_emitidas_cursor to authenticated;
+grant all on public.fiscal_emitidas_cursor to service_role;
+
+comment on table public.fiscal_emitidas_cursor is
+  'Cursor da distribuicao DF-e para as NOTAS EMITIDAS por esta org (ult_nsu/max_nsu). Paralelo ao fiscal_entrada_cursor: a importacao do historico continua de onde parou, sem rebaixar tudo e sem gastar o consumo indevido da SEFAZ.';
+
+-- APENDICE 0254 - TABELA IBPT POR ORGANIZACAO (idempotente; fonte: supabase/migrations/20261004090000_0254_fiscal_ibpt.sql)
+
+create table if not exists public.fiscal_ibpt (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  tipo text not null default 'produto' check (tipo in ('produto', 'servico')),
+  codigo text not null check (codigo ~ '^\d{1,16}$'),
+  ex text not null default '',
+  uf text not null check (char_length(uf) = 2),
+  descricao text,
+  nacional_federal numeric(6,3) not null default 0 check (nacional_federal between 0 and 100),
+  importados_federal numeric(6,3) not null default 0 check (importados_federal between 0 and 100),
+  estadual numeric(6,3) not null default 0 check (estadual between 0 and 100),
+  municipal numeric(6,3) not null default 0 check (municipal between 0 and 100),
+  vigencia_inicio date not null,
+  vigencia_fim date,
+  chave text,
+  versao text,
+  fonte text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint fiscal_ibpt_linha_unica unique (organization_id, tipo, codigo, ex, uf, vigencia_inicio)
+);
+
+create index if not exists fiscal_ibpt_consulta_idx
+  on public.fiscal_ibpt (organization_id, tipo, codigo, uf);
+
+alter table public.fiscal_ibpt enable row level security;
+
+drop policy if exists fiscal_ibpt_select on public.fiscal_ibpt;
+create policy fiscal_ibpt_select on public.fiscal_ibpt
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists fiscal_ibpt_write on public.fiscal_ibpt;
+create policy fiscal_ibpt_write on public.fiscal_ibpt
+  for all using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  );
+
+revoke all on public.fiscal_ibpt from anon;
+grant select, insert, update, delete on public.fiscal_ibpt to authenticated;
+grant all on public.fiscal_ibpt to service_role;
+
+comment on table public.fiscal_ibpt is
+  'Tabela IBPT importada do CSV oficial por esta org (imposto aproximado, paridade Odivix). Linha = (tipo, codigo NCM/NBS, ex, uf) vigente; a consulta pega a vigencia que cobre hoje. Escrita manager+ (importacao), leitura viewer (a mesma que ve notas).';
+
+-- ---------------------------------------------------------------------
+-- 0255_dados_da_empresa - telefone e endereco da emitente no cabecalho
+-- O update.sh reaplica o baseline inteiro: quem ja tem as colunas nao as
+-- recria, entao elas chegam por estes alter idempotentes. Os NOMES espelham
+-- `contacts` de proposito, para o formatador unico de endereco
+-- (enderecoEmLinha()) servir ao contato do pedido E a empresa sem adaptador.
+-- `phone` e texto livre, nao E.164: telefone de empresa e impresso, nao
+-- discado.
+-- ---------------------------------------------------------------------
+alter table public.organizations
+  add column if not exists phone text,
+  add column if not exists logradouro text,
+  add column if not exists numero_end text,
+  add column if not exists complemento text,
+  add column if not exists bairro text,
+  add column if not exists cidade text,
+  add column if not exists uf text,
+  add column if not exists cep text;
+
+comment on column public.organizations.phone is
+  'Telefone da empresa, no cabecalho do pedido impresso. Texto livre (e impresso) - nao E.164.';
+comment on column public.organizations.logradouro is
+  'Endereco da empresa. Os sete campos usam os MESMOS nomes de contacts para reusar enderecoEmLinha() sem adaptador.';
+comment on column public.organizations.numero_end is
+  'Numero do endereco da empresa (espelho de contacts.numero_end).';
+comment on column public.organizations.cidade is
+  'Cidade do endereco da empresa (espelho de contacts.cidade).';
+comment on column public.organizations.uf is
+  'UF do endereco da empresa, 2 letras (espelho de contacts.uf).';
+
+-- ----------------------------------------------------------------------
+-- 0256_ncm_origem - quem escolheu o NCM do produto (sugerido x manual)
+-- A busca automatica pela tabela IBPT (0254) preenche o NCM no formulario e
+-- a pessoa salva; esta coluna REGISTRA quem escolheu, para a revisao de nota
+-- ver o que veio da maquina. NULL = legado (anterior a esta coluna) ou sem
+-- NCM. Nenhuma linha de dado e tocada; a 0216 continua valendo: a emissao
+-- lista quem falta NCM em vez de presumir.
+-- ----------------------------------------------------------------------
+alter table public.catalog_products
+  drop constraint if exists catalog_products_ncm_origem_check;
+
+alter table public.catalog_products
+  add column if not exists ncm_origem text;
+
+alter table public.catalog_products
+  add constraint catalog_products_ncm_origem_check
+  check (ncm_origem is null or ncm_origem in ('sugerido', 'manual'));
+
+comment on column public.catalog_products.ncm_origem is
+  'Quem escolheu o NCM: ''sugerido'' = busca automatica pela tabela IBPT da org, ''manual'' = digitado por pessoa. NULL = legado (anterior a esta coluna) ou sem NCM.';
+
+-- ----------------------------------------------------------------------
+-- 0257_nota_extras_fiscais - transporte, cobranca, adicionais e entrega
+-- Grupos da emissao que nao existem no pedido (transportador, volumes,
+-- forma de pagamento e duplicatas, infCpl/infAdFisco, local de entrega).
+-- jsonb SEM CHECK: o contrato das chaves e o Zod (extrasFiscaisSchema em
+-- lib/schemas/fiscal.ts), que valida antes de gravar. NULL = nota sem
+-- extras. Nenhuma linha de dado e tocada; RLS e grants sao por tabela.
+-- ----------------------------------------------------------------------
+alter table public.invoices
+  add column if not exists extras_fiscais jsonb;
+
+comment on column public.invoices.extras_fiscais is
+  'Grupos da emissao que nao vem do pedido: transporte (modalidade de frete, transportador, volumes), cobranca (forma de pagamento, parcelas, vencimentos), adicionais (infCpl/infAdFisco) e local de entrega. NULL = sem extras. Contrato validado em lib/schemas/fiscal.ts (extrasFiscaisSchema).';
+
+-- ----------------------------------------------------------------------
+-- 0258_decisao_ia_do_radar - a sugestao de acao do motor local, por negocio
+-- O radar (0078) ja diz QUEM esfriou e ha quanto tempo; esta tabela guarda O
+-- QUE FAZER a respeito (reativar, aguardar, encerrar), decidido pelo
+-- checkpoint que roda nesta mesma maquina (laya-serve, rede interna). Uma
+-- linha por negocio (PK em lead_id), regravada a cada nova travessia fria.
+-- Guarda-se a DECISAO, nunca o prompt nem a transcricao: o estado e regerado
+-- a cada passada e corpo de mensagem em dobro no banco e dado que ninguem le.
+-- FORA da publicacao realtime de proposito - e avaliacao, nao estado (o mesmo
+-- motivo da 0075, no sentido inverso): a tela le junto do radar, por request.
+-- Nenhuma linha de dado e tocada; RLS e grants sao por tabela.
+-- ----------------------------------------------------------------------
+create table if not exists public.crm_lead_risk_decisions (
+  lead_id uuid primary key references public.crm_leads(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  acao text not null,
+  confianca real,
+  modelo text,
+  decidido_em timestamptz not null default now()
+);
+
+comment on table public.crm_lead_risk_decisions is
+  'Sugestao de acao do motor de decisao (laya-serve) para um negocio no radar: reativar, aguardar ou encerrar. Uma linha por negocio, regravada a cada nova travessia fria. FORA da publicacao realtime de proposito: a tela le junto do radar, por request.';
+
+alter table public.crm_lead_risk_decisions
+  drop constraint if exists crm_lead_risk_decisions_acao_check;
+alter table public.crm_lead_risk_decisions
+  add constraint crm_lead_risk_decisions_acao_check check (
+    acao = any (array['reativar', 'aguardar', 'encerrar']::text[])
+  );
+
+alter table public.crm_lead_risk_decisions
+  drop constraint if exists crm_lead_risk_decisions_confianca_faixa;
+alter table public.crm_lead_risk_decisions
+  add constraint crm_lead_risk_decisions_confianca_faixa check (
+    confianca is null or (confianca >= 0 and confianca <= 1)
+  );
+
+alter table public.crm_lead_risk_decisions enable row level security;
+
+drop policy if exists tenant_isolation_crm_lead_risk_decisions_all on public.crm_lead_risk_decisions;
+drop policy if exists crm_lead_risk_decisions_select on public.crm_lead_risk_decisions;
+
+create policy crm_lead_risk_decisions_select
+  on public.crm_lead_risk_decisions
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists crm_lead_risk_decisions_write on public.crm_lead_risk_decisions;
+create policy crm_lead_risk_decisions_write
+  on public.crm_lead_risk_decisions
+  for all using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  );
+
+create index if not exists idx_crm_lead_risk_decisions_org
+  on public.crm_lead_risk_decisions (organization_id, decidido_em);
+

@@ -2,17 +2,16 @@
 
 [🇧🇷 Português](README.md) · 🇺🇸 English · [🇪🇸 Español](README.es.md)
 
-# 🛠️ DeskcommCRM — The open-source AI Sales OS for WhatsApp
+# 🛠️ DeskcommCRM — The AI Sales OS for WhatsApp
 
-**AI agents that answer, qualify and sell on WhatsApp — inside an open-source CRM running on your own server.**
-**No subscription, no gated features, your data stays yours. The open alternative to Kommo, Octadesk and Intercom.**
+**AI agents that answer, qualify and sell on WhatsApp — inside a CRM running on your own server.**
+**No subscription, no gated features, your data stays yours. The self-hosted alternative to Kommo, Octadesk and Intercom.**
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-one%20command-orange)](hostgator-setup-kit/)
 [![CI](https://github.com/spiesdan/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/spiesdan/nexus/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [**⚡ Install**](#-install-on-your-vps-the-main-path) · [**🔄 Update**](#-updating) · [**🧭 Vision**](VISION.md) · [**🏗️ Architecture**](ARCHITECTURE.md) · [**🤝 Contributing**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
 
@@ -202,7 +201,7 @@ esperados`, that one is worth keeping.
 
 **Deskcomm** comes from **Desk** + **comm** (commerce): your entire sales operation on a single desk, run by people and AI agents working together.
 
-The project was born as an e-commerce CRM — and the open-source community took it much further: today it runs in **clinics, real-estate agencies, info-product businesses, agencies, stores and service providers** — any business that sells over WhatsApp. The product followed that shift and became a **sales operating system**: AI agents with per-tenant RAG answer customers, qualify leads, move them through the pipeline, trigger automations and know when to hand off to a human — with the whole CRM exposed via **MCP** so agents can truly operate it. The full story is in [`VISION.md`](VISION.md).
+The project was born as an e-commerce CRM — and the community took it much further: today it runs in **clinics, real-estate agencies, info-product businesses, agencies, stores and service providers** — any business that sells over WhatsApp. The product followed that shift and became a **sales operating system**: AI agents with per-tenant RAG answer customers, qualify leads, move them through the pipeline, trigger automations and know when to hand off to a human — with the whole CRM exposed via **MCP** so agents can truly operate it. The full story is in [`VISION.md`](VISION.md).
 
 ### Why it's different
 
@@ -349,7 +348,7 @@ Among the invariants is the **RLS isolation test**: it creates 2 organizations, 
 
 ## 🤝 Contributing
 
-This project is open source for the community. Every contribution is welcome — from doc typo fixes to new features.
+Every contribution is welcome — from doc typo fixes to new features.
 
 1. Read [`CLAUDE.md`](CLAUDE.md) (~5 min) — non-negotiable conventions (multi-tenancy, RLS, audit, privacy).
 2. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) — branch flow, commits.
@@ -417,7 +416,7 @@ For **security vulnerabilities**, **do NOT open a public issue** — use [privat
 
 ## 📜 License
 
-Distributed under the **MIT** license — see [`LICENSE`](LICENSE). You may use, modify and distribute freely, including commercially. The software is provided **"as is", without warranties**.
+DeskcommCRM is a proprietary self-hosted product. Use, copying and distribution follow the product's terms of use.
 
 ---
 
@@ -425,7 +424,7 @@ Distributed under the **MIT** license — see [`LICENSE`](LICENSE). You may use,
 
 This is a **self-hosted** project: each person runs the CRM on their **own infrastructure** (own VPS, Supabase database and AI key). That means:
 
-- **Support is community-based and "as-is".** No SLA — it's open source maintained by goodwill.
+- **Support is by contact and "as-is".** No SLA.
 - **You are responsible for your installation.** Updates are not automatic (you click, or run `update.sh`, when you want), and keeping/backing up your server is on you.
 - **Data protection:** whoever **hosts** the instance is the **controller** of the personal data processed there (customers, conversations, orders), with the legal obligations that follow. The project maintainers are **neither** controllers nor processors of your instance, and have no access to your database, your WhatsApp or your storage.
 - **Telemetry (Sentry):** `install.sh` **asks** during installation and respects your answer; in non-interactive mode, with no `SENTRY_DSN` set, telemetry is **off**. If you accept the community Sentry, what gets sent are **error reports** (stack traces) with national IDs, phone numbers and emails replaced, sensitive headers stripped, and webhook/invite tokens redacted from URLs — **no** performance tracing and **no** session replay, both pinned to 0 on that path. To turn it off at any time: `SENTRY_DSN=off` in `.env`. To send to **your** Sentry (there, with performance and replay): `SENTRY_DSN=<your-dsn>`. What is redacted, and why, lives in [`lib/sentry/scrub.ts`](lib/sentry/scrub.ts); DSN resolution in [`lib/sentry/dsn.ts`](lib/sentry/dsn.ts).

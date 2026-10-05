@@ -458,6 +458,8 @@ export const AUDIT_ACTIONS = [
   "invoice.emitted",
   "invoice.carta_correcao",
   "fiscal.inutilizacao",
+  "fiscal.inutilizacao_retransmitida",
+  "fiscal.historico_importado",
   "fiscal.cfop_equivalente",
   "fiscal_settings.updated",
   // Entradas (migration 0236). NF-e contra o CNPJ: sincronização, manifestação
@@ -503,6 +505,15 @@ export const AUDIT_ACTIONS = [
   "automatic_sales.campaign_updated",
   "automatic_sales.campaign_deleted",
   "automatic_sales.queue_action",
+  // IBPT (migration 0254). Importar a tabela oficial não mexe em nota, mas
+  // muda o número que a tela mostra como imposto aproximado: rastro quem trouxe
+  // qual exercício (chave/versão/fonte ficam nas linhas).
+  "fiscal.ibpt_importado",
+  // NCM sugerido pela tabela IBPT da org (0256). O valor grava em
+  // `catalog_products.ncm_origem`, mas lá grava com a pessoa, o request e a
+  // hora: sem este código o fiscal vê `sugerido` na linha e não vê QUANDO a
+  // máquina escolheu nem quem salvou por cima.
+  "catalog_product.ncm_sugerido",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

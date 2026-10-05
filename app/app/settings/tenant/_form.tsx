@@ -83,6 +83,14 @@ export function TenantForm({ initial }: Props) {
               onChange={(e) => set("cnpj", e.target.value || null)}
             />
           </FormField>
+          <FormField label={t("Telefone")} id="phone">
+            <Input
+              type="tel"
+              value={form.phone ?? ""}
+              onChange={(e) => set("phone", e.target.value || null)}
+              placeholder="(47) 98496-0797"
+            />
+          </FormField>
           <FormField label="DPO email" id="dpo_email">
             <Input
               type="email"
@@ -130,6 +138,62 @@ export function TenantForm({ initial }: Props) {
               onChange={(e) => set("privacy_policy_url", e.target.value || null)}
             />
           </FormField>
+        </div>
+
+        <div className="space-y-4 border-t border-border pt-4">
+          <div>
+            <h2 className="text-sm font-medium text-text">{t("Endereço da empresa")}</h2>
+            <p className="text-xs text-muted-foreground">
+              {t("Impresso no cabeçalho do pedido, ao lado do telefone. Vazio não imprime.")}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label={t("Logradouro")} id="logradouro" className="col-span-2">
+              <Input
+                value={form.logradouro ?? ""}
+                onChange={(e) => set("logradouro", e.target.value || null)}
+                placeholder={t("Rua, avenida…")}
+              />
+            </FormField>
+            <FormField label={t("Número")} id="numero_end">
+              <Input
+                value={form.numero_end ?? ""}
+                onChange={(e) => set("numero_end", e.target.value || null)}
+              />
+            </FormField>
+            <FormField label={t("Complemento")} id="complemento">
+              <Input
+                value={form.complemento ?? ""}
+                onChange={(e) => set("complemento", e.target.value || null)}
+              />
+            </FormField>
+            <FormField label={t("Bairro")} id="bairro">
+              <Input
+                value={form.bairro ?? ""}
+                onChange={(e) => set("bairro", e.target.value || null)}
+              />
+            </FormField>
+            <FormField label={t("CEP")} id="cep">
+              <Input
+                value={form.cep ?? ""}
+                onChange={(e) => set("cep", e.target.value || null)}
+                placeholder="00000-000"
+              />
+            </FormField>
+            <FormField label={t("Cidade")} id="cidade">
+              <Input
+                value={form.cidade ?? ""}
+                onChange={(e) => set("cidade", e.target.value || null)}
+              />
+            </FormField>
+            <FormField label="UF" id="uf">
+              <Input
+                maxLength={2}
+                value={form.uf ?? ""}
+                onChange={(e) => set("uf", e.target.value.toUpperCase())}
+              />
+            </FormField>
+          </div>
         </div>
 
         <FormField

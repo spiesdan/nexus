@@ -13,8 +13,18 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Os campos que a IA pode propor. Fechado, e igual ao CHECK da 0123. */
-export const CAMPOS_PROPONIVEIS = ["email", "name", "phone_number"] as const;
+import { isValidCnpj, normalizarCnpj } from "@/lib/brasil/cnpj";
+import { isValidCpf } from "@/lib/schemas/contacts";
+
+import { hashCpf } from "./cpf";
+
+/**
+ * Os campos que a IA pode propor. Fechado, e igual ao CHECK da 0123 —
+ * alargado para `cpf`/`cnpj` pela 0251 (o documento que o cliente digitou no
+ * WhatsApp entra pela MESMA fila: IA propõe, humano confirma, o
+ * `patchContactHandler` grava com hash+cifra do CPF).
+ */
+export const CAMPOS_PROPONIVEIS = ["email", "name", "phone_number", "cpf", "cnpj"] as const;
 export type CampoProponivel = (typeof CAMPOS_PROPONIVEIS)[number];
 
 export type MotivoSemProposta =
@@ -67,6 +77,14 @@ export function valorAceitavel(campo: CampoProponivel, valor: string): boolean {
     const digitos = v.replace(/\D/g, "");
     return digitos.length >= 8 && digitos.length <= 15;
   }
+  // Documento fiscal: a mesma régua do Zod da tela (`contactCreateSchema`) —
+  // dígito verificador oficial, não só contagem de dígitos. Divergir aqui faria
+  // a proposta nascer para alguém confirmar um CPF que o PATCH recusaria.
+  if (campo === "cpf") return isValidCpf(v);
+  if (campo === "cnpj") {
+    const n = normalizarCnpj(v);
+    return n !== null && isValidCnpj(n);
+  }
   // name: só recusa o que claramente não é nome de gente. A guarda forte é a
   // confirmação humana; ser rígido aqui recusaria nome legítimo, que é pior.
   return v.length >= 2 && !/^\d+$/.test(v);
@@ -77,7 +95,36 @@ function normalizar(campo: CampoProponivel, valor: string): string {
   const v = valor.trim();
   if (campo === "email") return v.toLowerCase();
   if (campo === "phone_number") return `+${v.replace(/\D/g, "")}`;
+  if (campo === "cpf") return v.replace(/\D/g, "");
+  if (campo === "cnpj") return normalizarCnpj(v) ?? v;
   return v;
+}
+
+/**
+ * O CPF que já está na ficha, em claro, para o `valor_anterior` da proposta.
+ *
+ * A ficha guarda `cpf_hash` + `cpf_encrypted`; o par from/to da L-06 quer o
+ * texto. O `decrypt_cpf` dá quando ele existe e o ator pode — aqui é best-effort
+ * de propósito: a proposta nasce do ouvido do atendimento, e perder o `from`
+ * (null) é melhor do que falhar a proposta inteira por causa de um audit.
+ */
+async function lerCpfAnterior(
+  db: SupabaseClient,
+  contactId: string,
+  organizationId: string,
+): Promise<string | null> {
+  try {
+    // A org vai junto: a 0252 escupa o WHERE nela e confere a membresia
+    // quando há JWT de usuário — parâmetro forjado de outra org morre lá.
+    const { data, error } = await db.rpc("decrypt_cpf", {
+      p_contact_id: contactId,
+      p_organization_id: organizationId,
+    });
+    if (error || typeof data !== "string") return null;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -96,7 +143,9 @@ export async function proporDadoDoContato(
 
   const { data: contato, error: erroContato } = await db
     .from("contacts")
-    .select("id,is_anonymized,email,name,phone_number")
+    // `cpf_hash` e `cnpj` vêm junto: sem eles o documento novo casaria com a
+    // ficha em branco e a fila encheria de proposta de CPF já cadastrado.
+    .select("id,is_anonymized,email,name,phone_number,cnpj,cpf_hash")
     .eq("organization_id", organizationId)
     .eq("id", contactId)
     .maybeSingle();
@@ -111,11 +160,24 @@ export async function proporDadoDoContato(
     return { criada: false, motivo: "contato_anonimizado" };
   }
 
-  const atual = ((contato as Record<string, unknown>)[campo] as string | null) ?? null;
-  if (atual !== null && normalizar(campo, atual) === valor) {
-    // Não há decisão a tomar. Sem esta recusa, o cliente repetir o próprio
-    // e-mail encheria a fila de propostas que confirmam o que já é verdade.
-    return { criada: false, motivo: "valor_igual_ao_atual" };
+  // O "atual" do CPF não é texto na ficha — é `cpf_hash`. Comparar texto com
+  // hash diria sempre "diferente" e a fila encheria de proposta de CPF que já
+  // está cadastrado; o CNPJ, por outro lado, é coluna em claro e compara direto.
+  let atual: string | null = null;
+  if (campo === "cpf") {
+    const hashAtual = ((contato as Record<string, unknown>).cpf_hash as string | null) ?? null;
+    if (hashAtual !== null && hashAtual === hashCpf(valor)) {
+      // Não há decisão a tomar — mesma razão do e-mail repetido.
+      return { criada: false, motivo: "valor_igual_ao_atual" };
+    }
+    atual = await lerCpfAnterior(db, contactId, organizationId);
+  } else {
+    atual = ((contato as Record<string, unknown>)[campo] as string | null) ?? null;
+    if (atual !== null && normalizar(campo, atual) === valor) {
+      // Não há decisão a tomar. Sem esta recusa, o cliente repetir o próprio
+      // e-mail encheria a fila de propostas que confirmam o que já é verdade.
+      return { criada: false, motivo: "valor_igual_ao_atual" };
+    }
   }
 
   const expiraEm = new Date(

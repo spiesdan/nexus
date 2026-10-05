@@ -1,10 +1,12 @@
 /**
  * POST /api/v1/invoices/[id]/cancel — cancela uma nota.
  *
- * Pendente/erro cancela direto (nada foi ao fisco). Autorizada exige motivo
- * (regra fiscal: cancelamento após autorização é ato formal) — e sem emissor
- * real não há autorizada a cancelar, então o caminho existe para o dia em que
- * houver. Denegada/cancelada não mudam: história fiscal não se reescreve.
+ * Pendente/erro cancela direto (nada foi ao fisco). Autorizada é ato formal:
+ * o cancelamento é TRANSMITIDO ao SEFAZ (evento 110111, cStat 135) antes de a
+ * nota virar "cancelada" — se a SEFAZ recusar ou o sidecar não estiver
+ * disponível, a nota continua autorizada e o erro volta na resposta. Nada aqui
+ * marca "cancelada" sem protocolo do fisco. Denegada/cancelada não mudam:
+ * história fiscal não se reescreve.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -13,6 +15,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { carregarContextoSped, motivoDeNaoTransmitir, transmitirCancelamento } from "@/lib/fiscal/eventos";
 import { COLUNAS_DA_NOTA } from "@/lib/schemas/fiscal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -41,18 +44,49 @@ export async function POST(
 
   const { data: nota } = await supabase
     .from("invoices")
-    .select("id, status")
+    .select("id, status, chave_acesso, protocolo")
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  const atual = nota as unknown as { id: string; status: string } | null;
+  const atual = nota as unknown as { id: string; status: string; chave_acesso: string | null; protocolo: string | null } | null;
   if (!atual) return fail("not_found", "Nota não encontrada.", 404, { requestId });
 
   if (atual.status === "cancelada" || atual.status === "denegada") {
     return fail("validation_failed", "Nota encerrada não pode ser cancelada.", 422, { requestId });
   }
-  if (atual.status === "autorizada" && !parsed.data.motivo) {
+  const justificativa = parsed.data.motivo?.trim() || null;
+  if (atual.status === "autorizada" && !justificativa) {
     return fail("validation_failed", "Cancelar nota autorizada exige motivo.", 422, { requestId });
+  }
+
+  // Nota autorizada: o fisco decide antes do banco. Transmitir primeiro — se
+  // falhar, a nota segue autorizada e a resposta diz por quê.
+  let protocoloCancelamento: string | null = null;
+  if (atual.status === "autorizada") {
+    if (justificativa && justificativa.length < 15) {
+      return fail("validation_failed", "Justificativa do cancelamento: mínimo de 15 caracteres.", 422, { requestId });
+    }
+    const contexto = await carregarContextoSped(authz.org.orgId);
+    const bloqueio = contexto ? motivoDeNaoTransmitir(contexto) : "Sem configuração fiscal para a organização.";
+    if (bloqueio) {
+      return fail("upstream_unavailable", `Cancelamento não transmitido: ${bloqueio}`, 502, { requestId });
+    }
+    if (!atual.chave_acesso || !atual.protocolo) {
+      return fail("validation_failed", "Nota autorizada sem chave de acesso ou protocolo.", 422, { requestId });
+    }
+    const r = await transmitirCancelamento(contexto!, {
+      chave: atual.chave_acesso,
+      protocolo: atual.protocolo,
+      justificativa: justificativa!,
+    });
+    if (!r.ok) {
+      const detalhe = r.cstat ? `cStat ${r.cstat}: ${r.xmotivo ?? "sem motivo"}` : (r.xmotivo ?? "falha sem motivo");
+      if (r.retentavel) {
+        return fail("upstream_unavailable", `Sidecar fiscal indisponível — cancelamento não transmitido (${detalhe}).`, 502, { requestId });
+      }
+      return fail("validation_failed", `SEFAZ recusou o cancelamento (${detalhe}).`, 422, { requestId });
+    }
+    protocoloCancelamento = r.protocolo;
   }
 
   // Cancela também o job aberto: sem isso o drain emitiria uma nota que o
@@ -68,7 +102,7 @@ export async function POST(
 
   const { data, error } = await supabase
     .from("invoices")
-    .update({ status: "cancelada", erro: parsed.data.motivo ?? null })
+    .update({ status: "cancelada", erro: justificativa })
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .select(COLUNAS_DA_NOTA)
@@ -83,7 +117,8 @@ export async function POST(
     invoice_id: id,
     tipo: "cancelada",
     status: "cancelada",
-    mensagem: parsed.data.motivo ?? null,
+    protocolo: protocoloCancelamento,
+    mensagem: justificativa,
   });
 
   await audit({

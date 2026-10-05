@@ -89,6 +89,14 @@ const codigo = z
   // criando uma segunda linha de "IP15" é duplicata que ninguém vê.
   .transform((v) => v.replace(/\s+/g, " "));
 
+/**
+ * Quem escolheu o NCM do produto (0256) — o vocabulário do CHECK
+ * `catalog_products_ncm_origem_check`, espelhado aqui e coberto por
+ * `tests/invariants/vocabulario-banco-x-typescript.test.ts`.
+ */
+export const ORIGENS_DO_NCM = ["sugerido", "manual"] as const;
+export type OrigemDoNcm = (typeof ORIGENS_DO_NCM)[number];
+
 const nome = z.string().trim().min(2, "o nome precisa de ao menos 2 letras").max(200);
 
 export const produtoCreateSchema = z.object({
@@ -106,6 +114,12 @@ export const produtoCreateSchema = z.object({
   imagem_url: z.string().trim().url().max(2000).optional(),
   /** Fiscal (0216): NCM com 8 dígitos; NULL = vende sem nota até preencher. */
   ncm: z.string().trim().regex(/^\d{8}$/, "NCM tem 8 dígitos").nullable().optional(),
+  /**
+   * 0256 — quem escolheu o NCM. `sugerido` = a busca na tabela IBPT da org
+   * preencheu o campo no formulário e a pessoa salvou; `manual` = digitado.
+   * NULL = sem NCM ou linha anterior à coluna. Espelhado no CHECK do banco.
+   */
+  ncm_origem: z.enum(ORIGENS_DO_NCM).nullable().optional(),
   unidade: z.string().trim().max(10).nullable().optional(),
   cfop: z.string().trim().regex(/^\d{4}$/, "CFOP tem 4 dígitos").nullable().optional(),
   /** Vitrine (0228): destaque manual + preço promocional com validade. */
@@ -141,6 +155,8 @@ export interface Produto {
   origem: string;
   imagem_url: string | null;
   ncm: string | null;
+  /** 0256 — quem escolheu o NCM: `sugerido` (busca na IBPT), `manual` ou NULL. */
+  ncm_origem: OrigemDoNcm | null;
   unidade: string | null;
   cfop: string | null;
   destaque: boolean;
@@ -152,7 +168,7 @@ export interface Produto {
 /** As colunas que a tela e a rota leem — uma lista, não duas. */
 export const COLUNAS_DO_PRODUTO =
   "id, codigo, nome, descricao, marca, categoria, preco_cents, moeda, custo_cents, " +
-  "controla_estoque, quantidade, ativo, origem, imagem_url, ncm, unidade, cfop, " +
+  "controla_estoque, quantidade, ativo, origem, imagem_url, ncm, ncm_origem, unidade, cfop, " +
   "destaque, preco_promocional_cents, promocao_ate, updated_at";
 
 /**

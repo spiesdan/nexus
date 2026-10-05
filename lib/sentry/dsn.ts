@@ -1,7 +1,7 @@
 /**
  * DSN do Sentry com opt-out em runtime — modelo "telemetria de comunidade".
  *
- * Por padrão, erros vão pro Sentry do projeto (DEFAULT_SENTRY_DSN): num open source
+ * Por padrão, erros vão pro Sentry do projeto (DEFAULT_SENTRY_DSN): num produto
  * self-host, é o que dá visibilidade pra corrigir bugs que afetam todo mundo. Quem
  * hospeda controla isso pelo `.env`, SEM rebuild da imagem:
  *

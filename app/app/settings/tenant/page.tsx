@@ -12,6 +12,14 @@ interface OrgRow {
   display_name: string;
   legal_name: string;
   cnpj: string | null;
+  phone: string | null;
+  logradouro: string | null;
+  numero_end: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  cep: string | null;
   timezone: string;
   locale: string;
   media_retention_days: number;
@@ -32,7 +40,7 @@ export default async function TenantSettingsPage() {
   const { data } = await supabase
     .from("organizations")
     .select(
-      "display_name, legal_name, cnpj, timezone, locale, media_retention_days, dpo_email, privacy_policy_url, settings",
+      "display_name, legal_name, cnpj, phone, logradouro, numero_end, complemento, bairro, cidade, uf, cep, timezone, locale, media_retention_days, dpo_email, privacy_policy_url, settings",
     )
     .eq("id", activeOrg.orgId)
     .maybeSingle();
@@ -62,6 +70,14 @@ export default async function TenantSettingsPage() {
             display_name: row.display_name,
             legal_name: row.legal_name,
             cnpj: row.cnpj,
+            phone: row.phone,
+            logradouro: row.logradouro,
+            numero_end: row.numero_end,
+            complemento: row.complemento,
+            bairro: row.bairro,
+            cidade: row.cidade,
+            uf: row.uf,
+            cep: row.cep,
             timezone: row.timezone,
             // Produto em pt-BR apenas: linha antiga com outro idioma cai no
             // padrão em vez de quebrar a tela ou reprovar a validação.

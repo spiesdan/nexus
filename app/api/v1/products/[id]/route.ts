@@ -65,6 +65,21 @@ export async function PATCH(
     requestId,
   });
 
+  // 0256: o NCM sugerido pela busca na tabela IBPT entra pela mesma porta da
+  // edição de qualquer campo, então o `updated` sozinho não distingue o que a
+  // máquina escolheu do que a pessoa digitou — `ncm_origem` na linha diz o
+  // quê, e este código diz o QUANDO e o QUEM.
+  if (parsed.data.ncm_origem === "sugerido") {
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "catalog_product.ncm_sugerido",
+      resourceType: "catalog_products",
+      resourceId: id,
+      requestId,
+    });
+  }
+
   return ok(data, { requestId });
 }
 

@@ -1,3 +1,4 @@
+import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptWebhookSecret } from "@/lib/webhooks/secrets";
 
@@ -26,6 +27,8 @@ export interface EmitenteSped {
   cep: string | null;
   ambiente: string;
   certificado_path: string | null;
+  /** "stub" | "spednfe" — vem do select do carregarContextoSped; opcional para não quebrar quem monta emitente à mão. */
+  provedor?: string;
 }
 
 export interface ItemSped {
@@ -45,6 +48,8 @@ export interface PayloadSped {
   certificado_senha: string;
   pedido: Record<string, unknown>;
   itens: Record<string, unknown>[];
+  /** Grupos da emissão (transporte/cobrança/adicionais/entrega) — null = sem extras. */
+  extras: ExtrasFiscais | null;
 }
 
 export type FaltaSped = { ok: false; falta: string };
@@ -56,6 +61,7 @@ export function montarPayloadSped(
   senhaCertificado: string,
   pedido: { numero: number; nome: string; documento: string | null; frete_cents: number },
   itens: ItemSped[],
+  extras?: ExtrasFiscais | null,
 ): ProntoSped | FaltaSped {
   if (!emitente.emitente_documento) return { ok: false, falta: "CNPJ do emitente (configuração fiscal)" };
   if (!emitente.ie) return { ok: false, falta: "Inscrição Estadual (configuração fiscal)" };
@@ -71,6 +77,13 @@ export function montarPayloadSped(
 
   for (const item of itens) {
     if (!item.ncm) return { ok: false, falta: `NCM do produto "${item.descricao}"` };
+  }
+
+  // O local de entrega é um TLocal: o leiaute exige CNPJ ou CPF no grupo, e
+  // quem vem do pedido é o do destinatário. Sem documento não há como
+  // preencher — nomear em vez de emitir com o grupo pela metade.
+  if (extras?.entrega && !pedido.documento) {
+    return { ok: false, falta: "CPF/CNPJ do destinatário para o local de entrega" };
   }
 
   return {
@@ -111,6 +124,7 @@ export function montarPayloadSped(
         preco_cents: i.preco_cents,
         desconto_pct: i.desconto_pct,
       })),
+      extras: extras ?? null,
     },
   };
 }
