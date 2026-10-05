@@ -8,51 +8,6 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
-## [1.20.0] — 2026-10-05
-
-### Adicionado
-
-- **Manual de uso do DeskcommCRM, com as telas do produto** O manual que faltava: um PDF com as telas do produto (dashboard, meu dia,
-  radar, inbox, follow-ups, pedidos, contatos, produtos, kanban, prospecção,
-  estoque) e o passo a passo do dono do negócio que installou na VPS. Vive em
-  `manual/`, gerado por `scripts/manual-pdf.ts` — quem muda a tela regenerate o
-  manual em vez de descrever uma tela que não existe mais.
-
-- **NF-e com paridade Odivix - emitir, historico por NF-e, IBPT e NCM sugerido** O módulo fiscal ganhou a cadeia inteira que faltava, item a item medido contra
-  o sistema antigo: emissão de NF-e com os **extras da própria nota**
-  (transporte, cobrança com parcelas, adicionais e local de entrega) gravados em
-  `invoices.extras_fiscais`, histórico do que a SEFAZ já autorizou (distribuição
-  DF-e com cursor por organização, para o clique seguinte não rebaixar tudo),
-  importação por XML e por SEFAZ, inutilizações e carta de correção em PDF,
-  tabela de IBPT por organização com importação do CSV oficial e busca de NCM na
-  hora de cadastrar o produto. O cabeçalho do pedido impresso passou a levar
-  telefone e endereço da emitente, tirados da tela de Configurações.
-
-- **O radar passa a dizer o que fazer, não só quem esfriou** O radar de risco já avisava **quem** esfriou; agora guarda **o que fazer** a
-  respeito. A cada travessia fria o motor local (o `laya-serve` que roda na mesma
-  VPS) responde uma decisão por negócio — reativar, aguardar ou encerrar — com a
-  confiança e o modelo que respondeu. A suggestion é avaliação, não estado: fica
-  **fora** da publicação realtime de propósito, porque regravá-la a cada tick
-  publicaria evento sem mudança visível. A tela do radar lê junto, por request.
-  A escrita exige `manager+` (migration 0259): um `agent` falando direto com o
-  PostgREST não encerra o próprio lead.
-
-### Alterado
-
-- **O assistente flutuante ganhou um rosto novo — o bloub** O rostinho do ajudante (o botão redondo que flutua no canto de todas as
-  telas) passou do Strobi para o bloub, a bolota do x.ai recriada em SVG. O
-  que muda é só a cara: ele respira, pisca e segue o seu mouse com os olhos
-  em graus contínuos, dá um `wink` quando você clica e fica atento com o
-  chat aberto. As cores acompanham o tema (claro/escuro) sozinhas.
-
-  **Como usar:** nada de novo para fazer — é só olhar para o cantinho de
-  sempre. Quem preferir menos movimento continua sendo respeitado: com
-  `prefers-reduced-motion` (ou tela de toque), o rosto vira uma imagem fixa.
-
-  Por dentro, a engine do bloub agora é código versionado aqui no repo
-  (licença MIT, sem dependência baixada em runtime) — offline e self-host
-  continuam funcionando sem nada extra.
-
 ## [1.19.0] — 2026-10-03
 
 ### Alterado
@@ -2711,8 +2666,7 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.0...HEAD
-[1.20.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.19.0...v1.20.0
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.19.0...HEAD
 [1.19.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.1...v1.19.0
 [1.18.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.0...v1.18.1
 [1.18.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.17.0...v1.18.0
