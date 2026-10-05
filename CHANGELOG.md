@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.20.2] — 2026-10-05
+
+### Alterado
+
+- **O alerta de orçamento de IA não assina mais com o nome do produto** O e-mail de aviso de orçamento de IA saía com o assunto `Alerta IA: orçamento
+  atingiu X% — DeskcommCRM`. Numa instalação self-host isso é o nome de outra
+  empresa na cara de quem recebeu o aviso.
+
+  O assunto passa a assinar com a organização sobre a qual o alarme disparou
+  (`orgName`) e, quando esse campo vem vazio, sai sem assinatura nenhuma — silencioso
+  é melhor do que mentir sobre quem escreveu.
+
+  Era a última dívida da catraca de marca (`tests/unit/branding.test.ts`), que fica
+  agora zerada: o gate que tranca o conjunto pelo nome passou a esperar o vazio, de
+  modo que a dívida não reapareça trocando de arquivo.
+
 ## [1.20.1] — 2026-10-05
 
 ### Alterado
@@ -2727,7 +2743,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.2...HEAD
+[1.20.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.1...v1.20.2
 [1.20.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.18.1...v1.19.0
