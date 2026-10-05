@@ -28,9 +28,7 @@ const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
  * pra permitir setup parcial (ex: dev sem WAHA quando trabalhando só na UI).
  */
 const required = (name: string) =>
-  isProd
-    ? z.string().min(1, `${name} é obrigatória em produção`)
-    : z.string().default("");
+  isProd ? z.string().min(1, `${name} é obrigatória em produção`) : z.string().default("");
 
 const requiredAlways = (name: string) => z.string().min(1, `${name} é obrigatória`);
 
@@ -215,6 +213,8 @@ const schema = z.object({
    * qualquer acervo frio em poucas passadas.
    */
   LAYA_DECISAO_POR_TICK: contagemComTeto("LAYA_DECISAO_POR_TICK", 32, 128),
+  /** Prospects novos qualificados pelo laya por PASSADA do cron de prospecção. */
+  LAYA_FIT_POR_TICK: contagemComTeto("LAYA_FIT_POR_TICK", 32, 128),
   /**
    * Timeout de UMA chamada ao motor, em milissegundos. Estourou = fail-soft:
    * a passada segue sem sugestão e o próximo tick tenta de novo. Não pode
@@ -372,14 +372,8 @@ const schema = z.object({
     .transform((v) => v === "true"),
 
   // App URLs
-  NEXT_PUBLIC_APP_URL: z
-    .string()
-    .url()
-    .default("http://localhost:3000"),
-  NEXT_PUBLIC_ADMIN_URL: z
-    .string()
-    .url()
-    .default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_ADMIN_URL: z.string().url().default("http://localhost:3000"),
 
   // Marca da instalação (white-label) — ver lib/branding.ts.
   // Sem prefixo NEXT_PUBLIC_ de propósito: essas seriam queimadas no bundle

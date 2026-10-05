@@ -40,8 +40,55 @@ import {
  * meio só perde o tick atual, e `running` velho volta a `queued` sozinho.
  */
 
-const CELULAS_POR_TICK = 3;
+/**
+ * Teto padrão de células por tick. Antes era 3 fixo — subestimava a VPS e
+ * alongava buscas grandes para dezenas de minutos. Cresce controlado por
+ * `PROSPECCAO_CELULAS_POR_TICK` (1..12); o portão de reduzirAutomação (90%
+ * do orçamento) continua forçando 1, e o de orçamento mensal manda antes.
+ */
+const CELULAS_POR_TICK_PADRAO = 6;
+const CELULAS_POR_TICK_MAX = 12;
+/** Quantas células correm EM PARALELO dentro do tick (teto 8). */
+const CONCORRENCIA_PADRAO = 3;
+const CONCORRENCIA_MAX = 8;
 const STUCK_MINUTOS = 30;
+
+function lidoOuDefault(nome: string, padrao: number, teto: number): number {
+  const bruto = Number(process.env[nome]);
+  if (!Number.isFinite(bruto) || bruto < 1) return padrao;
+  return Math.min(Math.floor(bruto), teto);
+}
+
+function celulasPorTick(): number {
+  return lidoOuDefault(
+    "PROSPECCAO_CELULAS_POR_TICK",
+    CELULAS_POR_TICK_PADRAO,
+    CELULAS_POR_TICK_MAX,
+  );
+}
+
+function concorrenciaCelulas(): number {
+  return lidoOuDefault("PROSPECCAO_CONCORRENCIA_CELULAS", CONCORRENCIA_PADRAO, CONCORRENCIA_MAX);
+}
+
+/**
+ * Ritmo GLOBAL entre chamadas ao provider: com as células paralelas, a pausa
+ * entre CHAMADAS continua valendo para TODA a VPS do tenant (§11), não uma
+ * por célula concorrente — senão 3 células × 60 req/min = 180 req/min contra
+ * o OSM público. O relógio agenda slots: quem chega pega o próximo slot livre.
+ */
+class RitmoChamadas {
+  private proximoSlot = 0;
+  constructor(private pausaMs: number) {}
+  async aguardar(): Promise<void> {
+    if (this.pausaMs <= 0) return;
+    const agora = Date.now();
+    const slot = Math.max(agora, this.proximoSlot);
+    this.proximoSlot = slot + this.pausaMs;
+    const espera = slot - agora;
+    if (espera > 0) await new Promise((r) => setTimeout(r, espera));
+  }
+}
 
 export interface TickResult {
   search_id: string | null;
@@ -173,7 +220,11 @@ export async function processarTick(
   const falhar = async (msg: string) => {
     await admin
       .from("prospecting_searches")
-      .update({ status: "failed", ultimo_erro: msg.slice(0, 500), finished_at: new Date().toISOString() })
+      .update({
+        status: "failed",
+        ultimo_erro: msg.slice(0, 500),
+        finished_at: new Date().toISOString(),
+      })
       .eq("id", busca.id);
     res.status = "failed";
     return res;
@@ -188,7 +239,9 @@ export async function processarTick(
   // chave) — não google_places, que falharia nomeando chave inexistente.
   const ativo = settings.temLinha ? settings.provider_ativo : "osm_overpass";
   if (ativo !== busca.provider) {
-    return falhar(`Provider ${busca.provider} desligado nas configurações (Configurações → Prospecção).`);
+    return falhar(
+      `Provider ${busca.provider} desligado nas configurações (Configurações → Prospecção).`,
+    );
   }
 
   // Teto diário (§29 + limites do tenant). OSM não custa, mas o teto também
@@ -199,7 +252,10 @@ export async function processarTick(
     .select("requisicoes")
     .eq("organization_id", busca.organization_id)
     .gte("created_at", `${hoje}T00:00:00Z`);
-  const gastoHoje = ((hojeRows ?? []) as { requisicoes: number }[]).reduce((s, r) => s + r.requisicoes, 0);
+  const gastoHoje = ((hojeRows ?? []) as { requisicoes: number }[]).reduce(
+    (s, r) => s + r.requisicoes,
+    0,
+  );
   if (limiteDiarioAtingido(gastoHoje, settings.limite_diario)) {
     return falhar(`Teto diário de ${settings.limite_diario} requisições atingido. Volta amanhã.`);
   }
@@ -220,13 +276,19 @@ export async function processarTick(
     pct: 0,
   };
   if (preco.busca > 0 || preco.detalhe > 0) {
-    decisaoOrcamento = await orcamentoDoMes(admin, busca.organization_id, settings.orcamento_mensal_cents);
+    decisaoOrcamento = await orcamentoDoMes(
+      admin,
+      busca.organization_id,
+      settings.orcamento_mensal_cents,
+    );
     if (decisaoOrcamento.estado === "bloqueio") {
       return falhar(MENSAGEM_ORCAMENTO_ATINGIDO);
     }
   }
   const reduzirAutomacao = decisaoOrcamento.estado === "reducao";
-  const celulasDoTick = reduzirAutomacao ? 1 : CELULAS_POR_TICK;
+  const celulasDoTick = reduzirAutomacao ? 1 : celulasPorTick();
+  // Orçamento reduzido = modo de proteção: seqüencial, sem paralelismo.
+  const concorrencia = reduzirAutomacao ? 1 : concorrenciaCelulas();
 
   // Google exige chave (tenant cifrada ou instalação); OSM é aberto.
   let chave: string | null = null;
@@ -236,7 +298,9 @@ export async function processarTick(
     }
     chave = (await resolverChaveGoogle(admin, busca.organization_id)).chave;
     if (!chave) {
-      return falhar("Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção.");
+      return falhar(
+        "Sem chave do Google (tenant e instalação). Configure em Configurações → Prospecção.",
+      );
     }
   }
 
@@ -302,65 +366,85 @@ export async function processarTick(
 
   // Ritmo do tenant (§11): pausa entre CHAMADAS, não entre células — com a
   // expansão de categoria ligada, uma célula vira N chamadas e todas ritmadas.
-  let primeiraChamada = true;
+  // Agora é GLOBAL: as células correm em paralelo, mas o espaço entre duas
+  // chamadas ao provider continua o mesmo para todas.
+  const ritmo = new RitmoChamadas(pausaMs);
+  let bloqueadoFornecedor: string | null = null;
 
-  for (let n = 0; n < celulasDoTick && processadas < total; n++) {
-    const idxCat = Math.floor(processadas / grade.length);
-    const idxCel = processadas % grade.length;
-    const categoria = categorias[idxCat] ?? "empresas";
-    const celula = grade[idxCel];
-    if (!celula) break;
+  for (
+    let base = 0;
+    base < celulasDoTick && processadas < total && bloqueadoFornecedor === null;
+    base += concorrencia
+  ) {
+    const alvo = Math.min(concorrencia, celulasDoTick - base, total - processadas);
+    await Promise.all(
+      Array.from({ length: alvo }, async (_, i) => {
+        const pos = processadas + base + i;
+        const idxCat = Math.floor(pos / grade.length);
+        const idxCel = pos % grade.length;
+        const categoria = categorias[idxCat] ?? "empresas";
+        const celula = grade[idxCel];
+        if (!celula) return;
 
-    try {
-      // Expansão (§5): default 1 termo = a mesma chamada de antes; ligada
-      // (PROSPECCAO_EXPANSAO=true), varre a família da categoria na mesma célula.
-      // Em 90% do teto mensal a expansão sai: sobra o termo pedido (índice 0).
-      const todosTermos = termosDeDescoberta(categoria);
-      const termos = reduzirAutomacao ? todosTermos.slice(0, 1) : todosTermos;
-      for (const [indiceTermo, termo] of termos.entries()) {
-        if (!primeiraChamada && pausaMs > 0) await new Promise((r) => setTimeout(r, pausaMs));
-        primeiraChamada = false;
-        const r = await provider.search({
-          categoria: termo.termo,
-          latitude: celula.latitude,
-          longitude: celula.longitude,
-          raioMetros: celula.raioMetros,
-          limite: 60,
-        });
-        requisicoes += r.requisicoes;
-        detalhes += r.detalhes;
-        custo += r.requisicoes * preco.busca + r.detalhes * preco.detalhe;
+        try {
+          // Expansão (§5): default 1 termo = a mesma chamada de antes; ligada
+          // (PROSPECCAO_EXPANSAO=true), varre a família da categoria na mesma célula.
+          // Em 90% do teto mensal a expansão sai: sobra o termo pedido (índice 0).
+          const todosTermos = termosDeDescoberta(categoria);
+          const termos = reduzirAutomacao ? todosTermos.slice(0, 1) : todosTermos;
+          for (const [indiceTermo, termo] of termos.entries()) {
+            await ritmo.aguardar();
+            const r = await provider.search({
+              categoria: termo.termo,
+              latitude: celula.latitude,
+              longitude: celula.longitude,
+              raioMetros: celula.raioMetros,
+              limite: 60,
+            });
+            requisicoes += r.requisicoes;
+            detalhes += r.detalhes;
+            custo += r.requisicoes * preco.busca + r.detalhes * preco.detalhe;
 
-        // Índice 0 é sempre o termo que o operador pediu (§5); os irmãos da
-        // expansão valem aderência parcial no score (§11/§12, D13).
-        const { novas: nn, duplicadas: dd } = await ingerirNegocios(
-          admin,
-          busca,
-          r.negocios,
-          termo.termo,
-          indiceTermo === 0,
-        );
-        novas += nn;
-        duplicadas += dd;
-        encontradas += r.negocios.length;
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      erros++;
-      logger.warn("[prospeccao] célula falhou", { search: busca.id, celula: celula.indice, error: msg });
-      // Bloqueio do fornecedor (§3): não insiste — falha a busca nomeando.
-      if (/google_40[13]|NAO_AUTORIZADO|INVALID|bloque/i.test(msg)) {
-        await gravarProgresso();
-        return falhar(`Fornecedor recusou: ${msg} (tarefa pausada, sem retry cego).`);
-      }
-      await admin
-        .from("prospecting_searches")
-        .update({ ultimo_erro: msg.slice(0, 500) })
-        .eq("id", busca.id);
-    }
-    processadas++;
-    res.celulas++;
+            // Índice 0 é sempre o termo que o operador pediu (§5); os irmãos da
+            // expansão valem aderência parcial no score (§11/§12, D13).
+            const { novas: nn, duplicadas: dd } = await ingerirNegocios(
+              admin,
+              busca,
+              r.negocios,
+              termo.termo,
+              indiceTermo === 0,
+            );
+            novas += nn;
+            duplicadas += dd;
+            encontradas += r.negocios.length;
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          erros++;
+          logger.warn("[prospeccao] célula falhou", {
+            search: busca.id,
+            celula: celula.indice,
+            error: msg,
+          });
+          // Bloqueio do fornecedor (§3): não insiste — falha a busca nomeando.
+          if (/google_40[13]|NAO_AUTORIZADO|INVALID|bloque/i.test(msg)) {
+            bloqueadoFornecedor = msg;
+            return;
+          }
+          await admin
+            .from("prospecting_searches")
+            .update({ ultimo_erro: msg.slice(0, 500) })
+            .eq("id", busca.id);
+        }
+      }),
+    );
+    processadas += alvo;
+    res.celulas += alvo;
     await gravarProgresso();
+  }
+
+  if (bloqueadoFornecedor !== null) {
+    return falhar(`Fornecedor recusou: ${bloqueadoFornecedor} (tarefa pausada, sem retry cego).`);
   }
 
   res.novas = novas - busca.novas;
@@ -379,10 +463,9 @@ export async function processarTick(
 
 async function ingerirNegocios(
   admin: SupabaseClient,
-  busca: Pick<
-    LinhaBusca,
-    "organization_id" | "provider" | "latitude" | "longitude" | "raio_km"
-  > & { id: string | null },
+  busca: Pick<LinhaBusca, "organization_id" | "provider" | "latitude" | "longitude" | "raio_km"> & {
+    id: string | null;
+  },
   negocios: NegocioDescoberto[],
   categoriaBusca: string,
   categoriaPedida: boolean,
@@ -410,15 +493,21 @@ async function ingerirNegocios(
     });
 
   // Busca em lote (3 queries, não 3N): identidade, telefone+domínio.
-  const idsExternos = [...new Set(candidatos.map((c) => c.external_id).filter(Boolean))] as string[];
-  const fones = [...new Set(candidatos.map((c) => c.telefone_normalizado).filter(Boolean))] as string[];
+  const idsExternos = [
+    ...new Set(candidatos.map((c) => c.external_id).filter(Boolean)),
+  ] as string[];
+  const fones = [
+    ...new Set(candidatos.map((c) => c.telefone_normalizado).filter(Boolean)),
+  ] as string[];
   const dominios = [...new Set(candidatos.map((c) => c.dominio).filter(Boolean))] as string[];
 
   const existentes: ProspectExistente[] = [];
   if (idsExternos.length > 0) {
     const { data } = await admin
       .from("business_prospects")
-      .select("id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude")
+      .select(
+        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude",
+      )
       .eq("organization_id", busca.organization_id)
       .eq("provider", busca.provider)
       .in("external_id", idsExternos);
@@ -427,7 +516,9 @@ async function ingerirNegocios(
   if (fones.length > 0 || dominios.length > 0) {
     const q = admin
       .from("business_prospects")
-      .select("id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude")
+      .select(
+        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude",
+      )
       .eq("organization_id", busca.organization_id)
       .limit(2000);
     const conds: string[] = [];
@@ -466,7 +557,12 @@ async function ingerirNegocios(
           longitude: c.longitude,
         });
         if (busca.id !== null) {
-          await vincularResultado(admin, { organization_id: busca.organization_id, id: busca.id }, inserido, true);
+          await vincularResultado(
+            admin,
+            { organization_id: busca.organization_id, id: busca.id },
+            inserido,
+            true,
+          );
         }
       }
     } else if (decisao.comQuem) {
@@ -476,7 +572,12 @@ async function ingerirNegocios(
         .update({ last_verified_at: new Date().toISOString() })
         .eq("id", decisao.comQuem);
       if (busca.id !== null) {
-        await vincularResultado(admin, { organization_id: busca.organization_id, id: busca.id }, decisao.comQuem, false);
+        await vincularResultado(
+          admin,
+          { organization_id: busca.organization_id, id: busca.id },
+          decisao.comQuem,
+          false,
+        );
       }
     }
   }
@@ -546,10 +647,7 @@ async function inserirProspect(
   // Distância ao âncora da busca dentro do raio escolhido (§11): sem âncora
   // (arquivo) ou sem coordenadas, vale zero — nunca inventa geografia.
   const distancia =
-    busca.latitude != null &&
-    busca.longitude != null &&
-    b.latitude != null &&
-    b.longitude != null
+    busca.latitude != null && busca.longitude != null && b.latitude != null && b.longitude != null
       ? distanciaKm(busca.latitude, busca.longitude, b.latitude, b.longitude)
       : null;
   const score = scoreDeProspect({

@@ -21259,3 +21259,10 @@ create policy crm_lead_risk_decisions_write
 create index if not exists idx_crm_lead_risk_decisions_org
   on public.crm_lead_risk_decisions (organization_id, decidido_em);
 
+
+-- 0260_prospeccao_laya_fit (apêndice — ver supabase/migrations/20261005120000_0260_prospeccao_laya_fit.sql)
+alter table public.business_prospects add column if not exists laya_fit text;
+alter table public.business_prospects add column if not exists laya_fit_em timestamptz;
+alter table public.business_prospects drop constraint if exists business_prospects_laya_fit_valido;
+alter table public.business_prospects add constraint business_prospects_laya_fit_valido check (laya_fit is null or laya_fit = any (array['potencial', 'duvidoso', 'sem_potencial']::text[]));
+create index if not exists business_prospects_fit_pendente_idx on public.business_prospects (organization_id, created_at desc) where laya_fit is null and status_comercial = 'novo' and bloqueado = false;

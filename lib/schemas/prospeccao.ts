@@ -26,7 +26,14 @@ export const buscaCreateSchema = z.object({
 
 export type BuscaCreate = z.infer<typeof buscaCreateSchema>;
 
-export const STATUS_BUSCA = ["queued", "running", "paused", "completed", "failed", "cancelled"] as const;
+export const STATUS_BUSCA = [
+  "queued",
+  "running",
+  "paused",
+  "completed",
+  "failed",
+  "cancelled",
+] as const;
 
 /** Rótulos comerciais dos status de busca — o usuário nunca lê "running". */
 export const ROTULO_STATUS_BUSCA: Record<(typeof STATUS_BUSCA)[number], string> = {
@@ -120,7 +127,12 @@ export const campanhaCreateSchema = z.object({
   objetivo: z.string().trim().max(300).nullable().optional(),
   categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10),
   cidades: z
-    .array(z.object({ cidade: z.string().trim().min(2).max(120), estado: z.string().trim().max(10).optional() }))
+    .array(
+      z.object({
+        cidade: z.string().trim().min(2).max(120),
+        estado: z.string().trim().max(10).optional(),
+      }),
+    )
     .min(1)
     .max(50),
   recorrencia_dias: z.number().int().min(7).max(365).nullable().optional(),
@@ -168,6 +180,9 @@ export interface Prospect {
   provider: string;
   status_comercial: StatusComercial;
   score: number;
+  /** Qualificação automática pelo laya local (migration 0260) — null até a primeira passada. */
+  laya_fit?: "potencial" | "duvidoso" | "sem_potencial" | null;
+  laya_fit_em?: string | null;
   contact_id: string | null;
   lead_id: string | null;
   do_not_contact: boolean;
@@ -185,4 +200,5 @@ export interface Prospect {
 export const COLUNAS_DO_PROSPECT =
   "id, nome, categoria, cidade, estado, telefone, email, website, whatsapp_potencial, " +
   "nota, total_avaliacoes, provider, status_comercial, score, contact_id, lead_id, " +
-  "do_not_contact, latitude, longitude, endereco, discovered_at, owner_user_id, proximo_passo";
+  "do_not_contact, latitude, longitude, endereco, discovered_at, owner_user_id, proximo_passo, " +
+  "laya_fit, laya_fit_em";

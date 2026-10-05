@@ -40,16 +40,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
-import { distanciaKm, limitesDosPontos, centroERaioDoBbox, ordemDeVisita, comprimentoDaRota } from "@/lib/prospeccao/geo";
+import {
+  distanciaKm,
+  limitesDosPontos,
+  centroERaioDoBbox,
+  ordemDeVisita,
+  comprimentoDaRota,
+} from "@/lib/prospeccao/geo";
 import { abrirConversaDoProspect } from "@/lib/prospeccao/conversa";
 import { prioridadeAlta } from "@/lib/prospeccao/score";
 import { ROTULO_CLASSIFICACAO, type Classificacao } from "@/lib/prospeccao/classificacao";
 import type { PontoMapa } from "./_mapa";
-import {
-  ROTULO_STATUS_COMERCIAL,
-  STATUS_COMERCIAL,
-  type Prospect,
-} from "@/lib/schemas/prospeccao";
+import { ROTULO_STATUS_COMERCIAL, STATUS_COMERCIAL, type Prospect } from "@/lib/schemas/prospeccao";
 
 /** Origem comercial do prospect — nome cru de provider (google_places) não é linguagem de vendedor (§1 da spec 19). */
 const ROTULO_ORIGEM: Record<string, string> = {
@@ -74,7 +76,36 @@ const CLASSE_COR: Record<Classificacao, string> = {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function BadgeClassificacao({ classe, score, t }: { classe: Classificacao; score: number; t: (s: string) => string }) {
+const FIT_COR: Record<string, string> = {
+  potencial: "bg-emerald-100 text-emerald-800",
+  duvidoso: "bg-yellow-100 text-yellow-900",
+  sem_potencial: "bg-muted text-muted-foreground",
+};
+const FIT_ROTULO: Record<string, string> = {
+  potencial: "Potencial",
+  duvidoso: "Duvidoso",
+  sem_potencial: "Sem potencial (IA)",
+};
+
+/** Selo da qualificação automática pelo laya local (0260) — a primeira triagem. */
+function BadgeFit({ fit, t }: { fit: string | null | undefined; t: (s: string) => string }) {
+  if (!fit || !FIT_COR[fit]) return null;
+  return (
+    <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${FIT_COR[fit]}`}>
+      {t(FIT_ROTULO[fit] as string)}
+    </span>
+  );
+}
+
+function BadgeClassificacao({
+  classe,
+  score,
+  t,
+}: {
+  classe: Classificacao;
+  score: number;
+  t: (s: string) => string;
+}) {
   return (
     <>
       <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${CLASSE_COR[classe]}`}>
@@ -188,8 +219,12 @@ export function EmpresasTab({
   // (ações em lote) — quem entra vê a tela comercial, não a planilha.
   const [visao, setVisao] = React.useState<"tabela" | "mapa">("mapa");
   const [dono, setDono] = React.useState("");
-  const [vendedores, setVendedores] = React.useState<{ user_id: string; full_name: string | null }[]>([]);
-  const [selecionadoId, setSelecionadoId] = React.useState<string | null>(() => paramsUrl.get("empresa"));
+  const [vendedores, setVendedores] = React.useState<
+    { user_id: string; full_name: string | null }[]
+  >([]);
+  const [selecionadoId, setSelecionadoId] = React.useState<string | null>(() =>
+    paramsUrl.get("empresa"),
+  );
   const [modoMapa, setModoMapa] = React.useState<"marcadores" | "densidade">("marcadores");
   const [ordem, setOrdem] = React.useState<string>(() => paramsUrl.get("ordem") ?? "relevancia");
   const [detalheId, setDetalheId] = React.useState<string | null>(null);
@@ -201,7 +236,9 @@ export function EmpresasTab({
     const v = paramsUrl.get("prospect");
     return v && UUID_RE.test(v) ? v : null;
   });
-  const [detalheExtra, setDetalheExtra] = React.useState<(Prospect & { ja_e_cliente: boolean }) | null>(null);
+  const [detalheExtra, setDetalheExtra] = React.useState<
+    (Prospect & { ja_e_cliente: boolean }) | null
+  >(null);
   // Rascunho da próxima ação (§16): ancorado no id aberto — trocar de prospect
   // descarta o rascunho velho sem precisar de effect (react-hooks/set-state-in-effect)
   // e a refetch pós-save não engole o que a pessoa acabou de digitar.
@@ -304,10 +341,7 @@ export function EmpresasTab({
 
   // Texto espera 350ms parada; selects e toggles aplicam na hora — o mesmo
   // vocabulário da tela de pedidos.
-  const buscarDevagar = useDebouncedCallback(
-    (f: Filtros) => void buscar(f, buscaId),
-    350,
-  );
+  const buscarDevagar = useDebouncedCallback((f: Filtros) => void buscar(f, buscaId), 350);
 
   function mudar(patch: Partial<Filtros>, devagar = false) {
     setFiltros((atual) => {
@@ -471,13 +505,21 @@ export function EmpresasTab({
         estado: p.estado,
         telefone: p.telefone,
         website: p.website,
-        status: p.status_comercial === "cliente" || p.ja_e_cliente ? ("cliente" as const) : p.contact_id || p.lead_id ? ("crm" as const) : ("novo" as const),
+        status:
+          p.status_comercial === "cliente" || p.ja_e_cliente
+            ? ("cliente" as const)
+            : p.contact_id || p.lead_id
+              ? ("crm" as const)
+              : ("novo" as const),
         score: p.score,
       })),
     [comGeo],
   );
   const limites = React.useMemo(
-    () => limitesDosPontos(pontos.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude }))),
+    () =>
+      limitesDosPontos(
+        pontos.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude })),
+      ),
     [pontos],
   );
   const centroRaio = React.useMemo(() => (limites ? centroERaioDoBbox(limites) : null), [limites]);
@@ -537,8 +579,16 @@ export function EmpresasTab({
     }
   }
 
-  async function buscarNestaArea(lim: { sul: number; oeste: number; norte: number; leste: number }) {
-    const categorias = [...new Set(listaFiltrada.map((p) => p.categoria).filter(Boolean))].slice(0, 10) as string[];
+  async function buscarNestaArea(lim: {
+    sul: number;
+    oeste: number;
+    norte: number;
+    leste: number;
+  }) {
+    const categorias = [...new Set(listaFiltrada.map((p) => p.categoria).filter(Boolean))].slice(
+      0,
+      10,
+    ) as string[];
     if (categorias.length === 0) {
       toast.error(t("Sem categorias nos resultados para buscar na área."));
       return;
@@ -567,7 +617,11 @@ export function EmpresasTab({
       toast.error(t("Selecione ao menos 2 empresas com localização."));
       return;
     }
-    setRotaIds(ordemDeVisita(pts.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude }))).map((p) => p.id));
+    setRotaIds(
+      ordemDeVisita(
+        pts.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude })),
+      ).map((p) => p.id),
+    );
     setVisao("mapa");
   }
 
@@ -577,14 +631,19 @@ export function EmpresasTab({
       .map((id) => pontos.find((p) => p.id === id))
       .filter((p): p is PontoMapa => !!p);
     if (pts.length === 0) return null;
-    return { pontos: pts, km: comprimentoDaRota(pts.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude }))) };
+    return {
+      pontos: pts,
+      km: comprimentoDaRota(
+        pts.map((p) => ({ id: p.id, latitude: p.latitude, longitude: p.longitude })),
+      ),
+    };
   }, [rotaIds, pontos]);
 
   // O detalhe vivo é o da lista; ?prospect= (FASE 11) cai no extra quando o
   // id não está na janela carregada.
   const detalhe = detalheId
-    ? (lista ?? []).find((p) => p.id === detalheId) ??
-      (detalheExtra && detalheExtra.id === detalheId ? detalheExtra : null)
+    ? ((lista ?? []).find((p) => p.id === detalheId) ??
+      (detalheExtra && detalheExtra.id === detalheId ? detalheExtra : null))
     : null;
 
   function navegarHref(p: { latitude: number | null; longitude: number | null }): string {
@@ -603,9 +662,17 @@ export function EmpresasTab({
         prospect_ids: ids,
         ...(dono.trim() ? { owner_user_id: dono.trim() } : {}),
       });
-      const r = corpo?.data ?? { vinculados: 0, criados: 0, recusados: 0, detalhes: [] as string[] };
-      toast.success(t(`CRM: ${r.criados} criados, ${r.vinculados} vinculados, ${r.recusados} recusados`));
-      if (Array.isArray(r.detalhes) && r.detalhes.length > 0) toast.info(r.detalhes.slice(0, 3).join(" "));
+      const r = corpo?.data ?? {
+        vinculados: 0,
+        criados: 0,
+        recusados: 0,
+        detalhes: [] as string[],
+      };
+      toast.success(
+        t(`CRM: ${r.criados} criados, ${r.vinculados} vinculados, ${r.recusados} recusados`),
+      );
+      if (Array.isArray(r.detalhes) && r.detalhes.length > 0)
+        toast.info(r.detalhes.slice(0, 3).join(" "));
       await buscar(filtros, buscaId);
       // FASE 11: o detalhe de ?prospect= pode ter sido um dos importados —
       // a verdade de "já é cliente" muda na hora.
@@ -655,7 +722,9 @@ export function EmpresasTab({
   // classificação derivada (§10/D13) não ficar velha depois do PATCH.
   async function refetchDetalheExtra(id: string) {
     try {
-      const corpo = await apiClient.get<{ data: unknown }>(`/api/v1/prospecting/prospects?id=${id}&limite=1`);
+      const corpo = await apiClient.get<{ data: unknown }>(
+        `/api/v1/prospecting/prospects?id=${id}&limite=1`,
+      );
       const dados = (corpo as { data?: unknown } | null)?.data;
       const linha = Array.isArray(dados)
         ? ((dados[0] as (Prospect & { ja_e_cliente: boolean }) | undefined) ?? null)
@@ -826,10 +895,18 @@ export function EmpresasTab({
                 {t("Importar arquivo")}
               </Button>
             )}
-            <Button size="sm" variant={visao === "tabela" ? "default" : "outline"} onClick={() => setVisao("tabela")}>
+            <Button
+              size="sm"
+              variant={visao === "tabela" ? "default" : "outline"}
+              onClick={() => setVisao("tabela")}
+            >
               {t("Tabela")}
             </Button>
-            <Button size="sm" variant={visao === "mapa" ? "default" : "outline"} onClick={() => setVisao("mapa")}>
+            <Button
+              size="sm"
+              variant={visao === "mapa" ? "default" : "outline"}
+              onClick={() => setVisao("mapa")}
+            >
               {t("Mapa")}
             </Button>
           </div>
@@ -845,7 +922,11 @@ export function EmpresasTab({
           <div className="flex flex-wrap gap-1.5">
             <Button
               size="sm"
-              variant={chipsResultadoAtivos || filtros.minhaFila || filtros.comWhatsapp ? "outline" : "default"}
+              variant={
+                chipsResultadoAtivos || filtros.minhaFila || filtros.comWhatsapp
+                  ? "outline"
+                  : "default"
+              }
               onClick={limparFiltros}
             >
               {t("Todos")}
@@ -917,16 +998,42 @@ export function EmpresasTab({
         </div>
       ) : visao === "mapa" && listaFiltrada.length > 0 ? (
         <div className="space-y-3">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-live="polite">
-              <span><strong className="text-foreground tabular-nums">{totalExibido}</strong> {t("encontradas")}</span>
-              <span><strong className="text-foreground tabular-nums">{analise.novas}</strong> {t("novas")}</span>
-              <span><strong className="text-foreground tabular-nums">{analise.noCrm}</strong> {t("no CRM")}</span>
-              <span><strong className="text-foreground tabular-nums">{analise.clientes}</strong> {t("clientes")}</span>
-              <span><strong className="text-foreground tabular-nums">{analise.comFone}</strong> {t("com telefone")}</span>
-              <span><strong className="text-foreground tabular-nums">{analise.comSite}</strong> {t("com site")}</span>
-              {analise.ratingMedio != null && (
-                <span>★ <strong className="text-foreground tabular-nums">{analise.ratingMedio.toFixed(1)}</strong> {t("médio")}</span>
-              )}
+          <div
+            className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"
+            aria-live="polite"
+          >
+            <span>
+              <strong className="text-foreground tabular-nums">{totalExibido}</strong>{" "}
+              {t("encontradas")}
+            </span>
+            <span>
+              <strong className="text-foreground tabular-nums">{analise.novas}</strong> {t("novas")}
+            </span>
+            <span>
+              <strong className="text-foreground tabular-nums">{analise.noCrm}</strong>{" "}
+              {t("no CRM")}
+            </span>
+            <span>
+              <strong className="text-foreground tabular-nums">{analise.clientes}</strong>{" "}
+              {t("clientes")}
+            </span>
+            <span>
+              <strong className="text-foreground tabular-nums">{analise.comFone}</strong>{" "}
+              {t("com telefone")}
+            </span>
+            <span>
+              <strong className="text-foreground tabular-nums">{analise.comSite}</strong>{" "}
+              {t("com site")}
+            </span>
+            {analise.ratingMedio != null && (
+              <span>
+                ★{" "}
+                <strong className="text-foreground tabular-nums">
+                  {analise.ratingMedio.toFixed(1)}
+                </strong>{" "}
+                {t("médio")}
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <label className="block text-sm">
@@ -981,96 +1088,113 @@ export function EmpresasTab({
             </Card>
           )}
           <div className="grid gap-3 lg:grid-cols-[35%_65%]">
-            <div className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
+            <div className="max-h-[45vh] space-y-1.5 overflow-y-auto pr-1 lg:max-h-[65vh]">
               {ordenada.slice(0, visiveis).map((p) => (
-                  <div
-                    key={p.id}
-                    ref={(el) => {
-                      if (el) refsLinhas.current.set(p.id, el);
-                      else refsLinhas.current.delete(p.id);
-                    }}
+                <div
+                  key={p.id}
+                  ref={(el) => {
+                    if (el) refsLinhas.current.set(p.id, el);
+                    else refsLinhas.current.delete(p.id);
+                  }}
+                >
+                  <Card
+                    className={`cursor-pointer p-2.5 transition-colors hover:border-primary/40 ${selecionadoId === p.id ? "border-primary ring-1 ring-primary" : ""}`}
+                    onClick={() => selecionar(p.id === selecionadoId ? null : p.id)}
                   >
-                    <Card
-                      className={`cursor-pointer p-2.5 transition-colors hover:border-primary/40 ${selecionadoId === p.id ? "border-primary ring-1 ring-primary" : ""}`}
-                      onClick={() => selecionar(p.id === selecionadoId ? null : p.id)}
-                    >
-                      <p className="truncate text-sm font-medium">{p.nome}</p>
-                      {p.classificacao && (
-                        <p className="mt-0.5 flex flex-wrap items-center gap-1">
-                          <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
-                        </p>
+                    <p className="truncate text-sm font-medium">{p.nome}</p>
+                    {p.classificacao && (
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                        <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                        <BadgeFit fit={p.laya_fit} t={t} />
+                      </p>
+                    )}
+                    {!p.classificacao && p.laya_fit && (
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                        <BadgeFit fit={p.laya_fit} t={t} />
+                      </p>
+                    )}
+                    <p className="truncate text-xs text-muted-foreground">
+                      {[p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                      {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : ""}
+                      {p.ja_e_cliente
+                        ? ` · ${t("Cliente")}`
+                        : p.contact_id || p.lead_id
+                          ? ` · ${t("No CRM")}`
+                          : ""}
+                      {` · ${p.score}`}
+                    </p>
+                    {/* §13: telefone + status na cara do card. */}
+                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      {p.telefone && <span className="tabular-nums">{p.telefone}</span>}
+                      {p.status_comercial !== "novo" && (
+                        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] text-foreground">
+                          {t(ROTULO_STATUS_COMERCIAL[p.status_comercial])}
+                        </span>
                       )}
-                      <p className="truncate text-xs text-muted-foreground">
-                        {[p.categoria, [p.cidade, p.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
-                      </p>
-                      <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                        {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : ""}
-                        {p.ja_e_cliente ? ` · ${t("Cliente")}` : p.contact_id || p.lead_id ? ` · ${t("No CRM")}` : ""}
-                        {` · ${p.score}`}
-                      </p>
-                      {/* §13: telefone + status na cara do card. */}
-                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                        {p.telefone && <span className="tabular-nums">{p.telefone}</span>}
-                        {p.status_comercial !== "novo" && (
-                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] text-foreground">
-                            {t(ROTULO_STATUS_COMERCIAL[p.status_comercial])}
-                          </span>
-                        )}
-                      </p>
-                      {/* §13/§17: Abrir empresa · Iniciar conversa (Inbox) · fila · CRM. */}
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    </p>
+                    {/* §13/§17: Abrir empresa · Iniciar conversa (Inbox) · fila · CRM. */}
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDetalheId(p.id);
+                        }}
+                      >
+                        {t("Abrir")}
+                      </Button>
+                      {podeOperar && p.telefone && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setDetalheId(p.id);
+                            void iniciarConversa(p);
                           }}
                         >
-                          {t("Abrir")}
+                          {t("Iniciar conversa")}
                         </Button>
-                        {podeOperar && p.telefone && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void iniciarConversa(p);
-                            }}
-                          >
-                            {t("Iniciar conversa")}
-                          </Button>
-                        )}
-                        {podeOperar && p.owner_user_id !== usuarioId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void adicionarNaFila(p.id);
-                            }}
-                          >
-                            {t("Na fila")}
-                          </Button>
-                        )}
-                        {podeOperar && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void importar([p.id]);
-                            }}
-                          >
-                            {t("CRM")}
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  </div>
+                      )}
+                      {podeOperar && p.owner_user_id !== usuarioId && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void adicionarNaFila(p.id);
+                          }}
+                        >
+                          {t("Na fila")}
+                        </Button>
+                      )}
+                      {podeOperar && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void importar([p.id]);
+                          }}
+                        >
+                          {t("CRM")}
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                </div>
               ))}
               {ordenada.length > visiveis && (
-                <Button size="sm" variant="outline" onClick={() => setVisiveis((v) => v + 100)} className="w-full">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setVisiveis((v) => v + 100)}
+                  className="w-full"
+                >
                   {t("Mostrar mais")} ({ordenada.length - visiveis} {t("restantes")})
                 </Button>
               )}
@@ -1083,12 +1207,22 @@ export function EmpresasTab({
               onVer={(id) => setDetalheId(id)}
               onAdicionar={(ids) => void importar(ids)}
               onFila={podeOperar ? (id) => void adicionarNaFila(id) : undefined}
-              centro={centroRaio ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude } : null}
+              centro={
+                centroRaio
+                  ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude }
+                  : null
+              }
               raioKm={centroRaio?.raioKm ?? null}
               modo={modoMapa}
               onModo={setModoMapa}
               onArea={(lim) => void buscarNestaArea(lim)}
-              rota={rota?.pontos.map((p) => ({ latitude: p.latitude, longitude: p.longitude, nome: p.nome })) ?? undefined}
+              rota={
+                rota?.pontos.map((p) => ({
+                  latitude: p.latitude,
+                  longitude: p.longitude,
+                  nome: p.nome,
+                })) ?? undefined
+              }
               alturaClasse="h-[65vh]"
             />
           </div>
@@ -1128,103 +1262,125 @@ export function EmpresasTab({
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   {podeOperar && <TableHead />}
                   <TableHead>{t("Empresa")}</TableHead>
-                  <TableHead>{t("Categoria")}</TableHead>
-                  <TableHead>{t("Cidade")}</TableHead>
-                  <TableHead>{t("Telefone")}</TableHead>
-                  <TableHead className="text-right">{t("Avaliação")}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t("Categoria")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("Cidade")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("Telefone")}</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {t("Avaliação")}
+                  </TableHead>
                   <TableHead className="text-right">{t("Score")}</TableHead>
-                  <TableHead>{t("Status CRM")}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t("Status CRM")}</TableHead>
                   <TableHead>{t("Ações")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {ordenada.slice(0, visiveis).map((p) => (
-                    <TableRow key={p.id} className="align-top">
-                      {podeOperar && (
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={selecionados.includes(p.id)}
-                            onChange={() => alternar(p.id)}
-                            aria-label={p.nome}
-                          />
-                        </TableCell>
+                  <TableRow key={p.id} className="align-top">
+                    {podeOperar && (
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selecionados.includes(p.id)}
+                          onChange={() => alternar(p.id)}
+                          aria-label={p.nome}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <p className="font-medium">{p.nome}</p>
+                      {p.classificacao && (
+                        <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                          <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
+                          <BadgeFit fit={p.laya_fit} t={t} />
+                        </p>
                       )}
-                      <TableCell>
-                        <p className="font-medium">{p.nome}</p>
-                        {p.classificacao && (
-                          <p className="mt-0.5 flex flex-wrap items-center gap-1">
-                            <BadgeClassificacao classe={p.classificacao} score={p.score} t={t} />
-                          </p>
-                        )}
-                        {p.website && (
-                          <a
-                            href={p.website.startsWith("http") ? p.website : `https://${p.website}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground underline"
-                          >
-                            {p.website.replace(/^https?:\/\/(www\.)?/, "").slice(0, 30)}
-                          </a>
-                        )}
-                        {p.ja_e_cliente && (
-                          <p className="text-xs font-medium text-green-600">{t("Cliente já cadastrado")}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{p.categoria ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {[p.cidade, p.estado].filter(Boolean).join("/")}
-                      </TableCell>
-                      <TableCell className="tabular-nums">{p.telefone ?? "—"}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-bold tabular-nums">{p.score}</TableCell>
-                      <TableCell>
-                        {podeOperar ? (
-                          <select
-                            className="h-8 rounded-lg border bg-background px-2 text-xs"
-                            value={p.status_comercial}
-                            onChange={(e) => void mudarStatus(p.id, e.target.value)}
-                            aria-label={t("Status comercial")}
-                          >
-                            {STATUS_COMERCIAL.map((s) => (
-                              <option key={s} value={s}>
-                                {ROTULO_STATUS_COMERCIAL[s]}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          ROTULO_STATUS_COMERCIAL[p.status_comercial]
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          <Button size="sm" variant="outline" onClick={() => setDetalheId(p.id)}>
-                            {t("Ver")}
-                          </Button>
-                          {podeOperar && (
-                            <>
-                              {p.telefone && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => void iniciarConversa(p)}
-                                >
-                                  {t("Iniciar conversa")}
-                                </Button>
-                              )}
-                              <Button size="sm" variant="outline" onClick={() => void importar([p.id])}>
-                                {t("CRM")}
+                      {!p.classificacao && p.laya_fit && (
+                        <p className="mt-0.5 flex flex-wrap items-center gap-1">
+                          <BadgeFit fit={p.laya_fit} t={t} />
+                        </p>
+                      )}
+                      {p.website && (
+                        <a
+                          href={p.website.startsWith("http") ? p.website : `https://${p.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground underline"
+                        >
+                          {p.website.replace(/^https?:\/\/(www\.)?/, "").slice(0, 30)}
+                        </a>
+                      )}
+                      {p.ja_e_cliente && (
+                        <p className="text-xs font-medium text-green-600">
+                          {t("Cliente já cadastrado")}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">
+                      {p.categoria ?? "—"}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {[p.cidade, p.estado].filter(Boolean).join("/")}
+                    </TableCell>
+                    <TableCell className="hidden tabular-nums sm:table-cell">
+                      {p.telefone ?? "—"}
+                    </TableCell>
+                    <TableCell className="hidden text-right tabular-nums md:table-cell">
+                      {p.nota !== null ? `★ ${p.nota} (${p.total_avaliacoes})` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-bold tabular-nums">{p.score}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {podeOperar ? (
+                        <select
+                          className="h-8 rounded-lg border bg-background px-2 text-xs"
+                          value={p.status_comercial}
+                          onChange={(e) => void mudarStatus(p.id, e.target.value)}
+                          aria-label={t("Status comercial")}
+                        >
+                          {STATUS_COMERCIAL.map((s) => (
+                            <option key={s} value={s}>
+                              {ROTULO_STATUS_COMERCIAL[s]}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        ROTULO_STATUS_COMERCIAL[p.status_comercial]
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setDetalheId(p.id)}>
+                          {t("Ver")}
+                        </Button>
+                        {podeOperar && (
+                          <>
+                            {p.telefone && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void iniciarConversa(p)}
+                              >
+                                {t("Iniciar conversa")}
                               </Button>
-                              <Button size="sm" variant="ghost" onClick={() => void excluir(p.id, p.nome)}>
-                                {t("Excluir")}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void importar([p.id])}
+                            >
+                              {t("CRM")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => void excluir(p.id, p.nome)}
+                            >
+                              {t("Excluir")}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -1233,7 +1389,12 @@ export function EmpresasTab({
             {t("WhatsApp abre conversa manual — nunca campanha automática sem consentimento.")}
           </p>
           {ordenada.length > visiveis && (
-            <Button size="sm" variant="outline" onClick={() => setVisiveis((v) => v + 200)} className="w-full">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setVisiveis((v) => v + 200)}
+              className="w-full"
+            >
               {t("Mostrar mais")} ({ordenada.length - visiveis} {t("restantes")})
             </Button>
           )}
@@ -1244,16 +1405,26 @@ export function EmpresasTab({
           aberto
           onFechar={() => setDetalheId(null)}
           titulo={detalhe.nome}
-          subtitulo={[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")].filter(Boolean).join(" · ")}
+          subtitulo={[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")]
+            .filter(Boolean)
+            .join(" · ")}
           className="max-w-md"
         >
           <div className="space-y-2 text-sm">
-            {detalhe.nota !== null && <p>★ {detalhe.nota} · {detalhe.total_avaliacoes} {t("avaliações")}</p>}
+            {detalhe.nota !== null && (
+              <p>
+                ★ {detalhe.nota} · {detalhe.total_avaliacoes} {t("avaliações")}
+              </p>
+            )}
             {detalhe.endereco && <p className="text-muted-foreground">{detalhe.endereco}</p>}
             {detalhe.telefone && <p className="tabular-nums">{detalhe.telefone}</p>}
             {detalhe.website && (
               <a
-                href={detalhe.website.startsWith("http") ? detalhe.website : `https://${detalhe.website}`}
+                href={
+                  detalhe.website.startsWith("http")
+                    ? detalhe.website
+                    : `https://${detalhe.website}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block underline underline-offset-4"
@@ -1262,8 +1433,10 @@ export function EmpresasTab({
               </a>
             )}
             <p className="text-muted-foreground">
-              {t("Origem")}: {t(ROTULO_ORIGEM[detalhe.provider] ?? "Cadastro externo")} · {t("Score")} {detalhe.score}
-              {detalhe.latitude !== null && ` · ${detalhe.latitude.toFixed(4)}, ${detalhe.longitude?.toFixed(4)}`}
+              {t("Origem")}: {t(ROTULO_ORIGEM[detalhe.provider] ?? "Cadastro externo")} ·{" "}
+              {t("Score")} {detalhe.score}
+              {detalhe.latitude !== null &&
+                ` · ${detalhe.latitude.toFixed(4)}, ${detalhe.longitude?.toFixed(4)}`}
             </p>
             <p className="text-muted-foreground">
               {t("Status")}: {ROTULO_STATUS_COMERCIAL[detalhe.status_comercial]}
@@ -1279,9 +1452,7 @@ export function EmpresasTab({
             <p className="text-xs text-muted-foreground">
               {detalhe.categoria ?? ""}
               {detalhe.cidade ? ` em ${detalhe.cidade}` : ""} ·{" "}
-              {detalhe.ja_e_cliente
-                ? t("já é cliente")
-                : t("ainda não cadastrado como cliente")}
+              {detalhe.ja_e_cliente ? t("já é cliente") : t("ainda não cadastrado como cliente")}
             </p>
             {!podeOperar && detalhe.proximo_passo && (
               <p className="text-xs text-muted-foreground">
@@ -1340,7 +1511,9 @@ export function EmpresasTab({
                           ? proximoRascunho.texto
                           : (detalhe.proximo_passo ?? "")
                       }
-                      onChange={(e) => setProximoRascunho({ id: detalhe.id, texto: e.target.value })}
+                      onChange={(e) =>
+                        setProximoRascunho({ id: detalhe.id, texto: e.target.value })
+                      }
                       placeholder={t("Ex.: ligar amanhã de manhã")}
                       maxLength={300}
                     />
@@ -1399,7 +1572,11 @@ export function EmpresasTab({
                 >
                   {t("Criar rota")}
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => void excluir(detalhe.id, detalhe.nome)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => void excluir(detalhe.id, detalhe.nome)}
+                >
                   {t("Excluir")}
                 </Button>
                 {detalhe.status_comercial !== "sem_interesse" && (
