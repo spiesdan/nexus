@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarBlank, MagnifyingGlass, Plus, Printer, Receipt, Robot, Storefront } from "@/lib/ui/icons";
+import { CalendarBlank, MagnifyingGlass, Plus, Printer, Receipt, Storefront } from "@/lib/ui/icons";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { paraCSV } from "@/lib/comercial/relatorios";
@@ -517,11 +517,6 @@ export function PedidosClient({
               </Button>
             )}
             <Button variant="outline" asChild className="bg-surface">
-              <Link href="/app/ai">
-                <Robot size={16} /> {t("Criar com IA no WhatsApp")}
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="bg-surface">
               <Link
                 href={
                   selecionados.length > 0
@@ -765,7 +760,9 @@ export function PedidosClient({
               </p>
               <div className="space-y-3">
                 {g.itens.map((p) => {
-                  const emissor = ROTULO_DA_ORIGEM[p.origem] ?? p.origem;
+                  // Quem EMITIU (created_by) antes do badge de origem: o
+                  // rótulo "Vendedor" dizia a procedência, não a pessoa.
+                  const emissor = p.emitente_nome ?? ROTULO_DA_ORIGEM[p.origem] ?? p.origem;
                   const segundaLinha = p.cliente_documento || badgeDaOrigem(p.origem).rotulo;
                   return (
                     <article

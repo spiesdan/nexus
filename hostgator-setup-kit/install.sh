@@ -126,7 +126,7 @@ LOGO
   fi
   printf '\n'
   c_dim "  Agentes de IA que atendem no WhatsApp, dentro do seu CRM."
-  c_dim "  Open-source · roda no seu servidor · os dados são seus."
+  c_dim "  Self-hosted · roda no seu servidor · os dados são seus."
 }
 
 # ── Rede de segurança: nenhuma saída silenciosa ─────────────────────────────

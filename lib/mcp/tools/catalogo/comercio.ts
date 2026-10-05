@@ -40,6 +40,16 @@ export const TOOLS_COMERCIO = declararTools([
     pacotes: ["vender"],
   },
   {
+    name: "commercial_delivery_status",
+    category: "read",
+    rotulo: "Consultar a entrega do pedido",
+    explicacao:
+      "Mostra em que pé está a entrega: se o pedido já embarcou, em qual carga, e se está separado, a caminho, entregue ou devolvido — para responder 'e meu pedido?' com o status real em vez de prometer prazo.",
+    oQueToca: "Entrega dos pedidos (expedição)",
+    risco: "seguro",
+    pacotes: ["vender", "atender"],
+  },
+  {
     name: "crm_list_privacy_requests",
     category: "read",
     rotulo: "Ver pedidos de privacidade",

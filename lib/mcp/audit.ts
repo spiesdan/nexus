@@ -26,6 +26,9 @@ const ARGS_REDACT_KEYS = new Set([
   "token",
   "password",
   "cpf",
+  // Documento fiscal em claro (a tool de busca por CPF/CNPJ recebe os dois
+  // num campo só). Mesma razão do `cpf`: telemetria não é lugar de dado fiscal.
+  "documento",
 ]);
 
 function redactArgs(args: Record<string, unknown>): Record<string, unknown> {

@@ -2,17 +2,16 @@
 
 [🇧🇷 Português](README.md) · [🇺🇸 English](README.en.md) · 🇪🇸 Español
 
-# 🛠️ DeskcommCRM — el Sistema Operativo de Ventas con IA, open source, para WhatsApp
+# 🛠️ DeskcommCRM — el Sistema Operativo de Ventas con IA para WhatsApp
 
-**Agentes de IA que atienden, califican y venden en WhatsApp — dentro de un CRM open source que corre en tu propio servidor.**
-**Sin mensualidad, sin funciones bloqueadas, tus datos siguen siendo tuyos. La alternativa abierta a Kommo, Octadesk e Intercom.**
+**Agentes de IA que atienden, califican y venden en WhatsApp — dentro de un CRM que corre en tu propio servidor.**
+**Sin mensualidad, sin funciones bloqueadas, tus datos siguen siendo tuyos. La alternativa self-hosted a Kommo, Octadesk e Intercom.**
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-1%20comando-orange)](hostgator-setup-kit/)
 [![CI](https://github.com/spiesdan/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/spiesdan/nexus/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [**⚡ Instalar**](#-instalar-en-tu-vps-el-camino-principal) · [**🔄 Actualizar**](#-actualizar) · [**🧭 Visión**](VISION.md) · [**🏗️ Arquitectura**](ARCHITECTURE.md) · [**🤝 Contribuir**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
 
@@ -350,7 +349,7 @@ Entre los invariantes está el **test de aislamiento RLS**: crea 2 organizacione
 
 ## 🤝 Contribuir
 
-Este proyecto es open source para la comunidad. Toda contribución es bienvenida — desde arreglar un typo en la documentación hasta una función nueva.
+Toda contribución es bienvenida — desde arreglar un typo en la documentación hasta una función nueva.
 
 1. Lee [`CLAUDE.md`](CLAUDE.md) (~5 min) — convenciones no negociables (multi-tenancy, RLS, audit, privacidad).
 2. Lee [`CONTRIBUTING.md`](CONTRIBUTING.md) — flujo de branches, commits.
@@ -418,7 +417,7 @@ Para **vulnerabilidades de seguridad**, **NO abras un issue público** — usa e
 
 ## 📜 Licencia
 
-Distribuido bajo la licencia **MIT** — ver [`LICENSE`](LICENSE). Puedes usar, modificar y distribuir libremente, incluso comercialmente. El software se entrega **"tal cual", sin garantías**.
+DeskcommCRM es un producto propietario self-hosted. El uso, la copia y la distribución siguen los términos de uso del producto.
 
 ---
 
@@ -426,7 +425,7 @@ Distribuido bajo la licencia **MIT** — ver [`LICENSE`](LICENSE). Puedes usar, 
 
 Este es un proyecto **self-host**: cada persona corre el CRM en su **propia infraestructura** (VPS, base Supabase y clave de IA propios). Eso implica:
 
-- **El soporte es comunitario y "as-is".** No hay SLA — es open source mantenido por buena voluntad.
+- **El soporte es por contacto y "as-is".** No hay SLA.
 - **Eres responsable de tu instalación.** Las actualizaciones no son automáticas (haces clic, o corres `update.sh`, cuando quieras), y mantener/respaldar tu servidor es cosa tuya.
 - **Protección de datos:** quien **hospeda** la instancia es el **controlador** de los datos personales tratados ahí (clientes, conversaciones, pedidos), con las obligaciones legales que eso implica. Los mantenedores del proyecto **no son** controladores ni operadores de tu instancia, y no tienen acceso a tu base, a tu WhatsApp ni a tu storage.
 - **Telemetría (Sentry):** `install.sh` **pregunta** durante la instalación y respeta tu respuesta; en modo no interactivo, sin `SENTRY_DSN` definido, la telemetría queda **apagada**. Si aceptas el Sentry de la comunidad, lo que se envía son **reportes de error** (stack trace) con documento, teléfono y correo sustituidos, cabeceras sensibles removidas, y token de webhook/invitación redactado de la URL — **sin** rastreo de performance y **sin** replay de sesión, que quedan en 0 en ese camino. Para apagarlo en cualquier momento: `SENTRY_DSN=off` en el `.env`. Para mandarlo a **tu** Sentry (ahí sí con performance y replay): `SENTRY_DSN=<tu-dsn>`. Qué se redacta, y por qué, está en [`lib/sentry/scrub.ts`](lib/sentry/scrub.ts); la resolución del DSN en [`lib/sentry/dsn.ts`](lib/sentry/dsn.ts).

@@ -108,6 +108,23 @@ const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
       "rpc com p_org da org ativa dentro do handler com requireRole('agent')). " +
       "A função confere membership via auth.uid().",
   },
+  {
+    fn: "encrypt_cpf(text)",
+    razao:
+      "PATCH/POST /api/v1/contacts e POST /api/v1/contacts/[id]/proposals/[proposal_id] " +
+      "(accept) chamam com a sessão do usuário: encryptCpfSql (lib/contacts/cpf.ts) dentro " +
+      "de patchContactHandler/createContactHandler (_handler.ts). Só CIFRA texto com a " +
+      "chave de private.app_secrets — não lê linha de tenant nenhum.",
+  },
+  {
+    fn: "decrypt_cpf(uuid,uuid)",
+    razao:
+      "GET /api/v1/contacts/[id] com header X-Decrypt-Purpose chama com a sessão do " +
+      "usuário (createClient em app/api/v1/contacts/[id]/route.ts:45, rpc em _handler.ts:285) " +
+      "e só para papel manager+. A função confere membership via auth.uid() e escopa a " +
+      "org no próprio WHERE (molde 0209). O outro call site (lib/contacts/proposta-de-dado.ts) " +
+      "usa o client de service_role do MCP.",
+  },
 ];
 
 interface Definer {

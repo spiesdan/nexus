@@ -18,6 +18,7 @@ import {
   pedidoCreateSchema,
 } from "@/lib/schemas/pedidos";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
+import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -71,7 +72,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await q.order("created_at", { ascending: false }).limit(200);
 
   if (error) return fail("internal_error", "Erro ao listar os pedidos.", 500, { requestId });
-  return ok(data ?? [], { requestId });
+  // "Emitido por <nome>": a lista da tela refaz aqui a cada filtro, então o
+  // nome nasce NESTA rota — não só no page server, senão o rótulo de origem
+  // voltaria depois da primeira recarga.
+  const linhas = (data ?? []) as unknown as Array<{ created_by: string | null; vendedor_user_id: string | null }>;
+  return ok(await comNomeDoEmitente(linhas), { requestId });
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

@@ -74,20 +74,124 @@ Todas as rotas (exceto `/saude`) exigem `X-Fiscal-Secret`.
       "quantidade": 2, "preco_cents": 5000, "desconto_pct": 10,
       "csosn": "102"
     }
-  ]
+  ],
+  "extras": {
+    "transporte": {
+      "modalidade_frete": "9",
+      "transportador": {
+        "nome": "Transportes X", "documento": "12345678000190",
+        "ie": "123456789", "endereco": "Rua B, 200",
+        "municipio": "São Paulo", "uf": "SP"
+      },
+      "volumes": {
+        "quantidade": 2, "especie": "CAIXAS", "marca": "", "numeracao": "",
+        "peso_liquido_kg": 12.5, "peso_bruto_kg": 13
+      }
+    },
+    "cobranca": {
+      "forma_pagamento": "15", "descricao": "Boleto bancário",
+      "parcelas": 3, "primeiro_vencimento": "2026-10-20", "dias_entre": 30
+    },
+    "adicionais": {
+      "informacoes_complementares": "Pedido 456",
+      "informacoes_fisco": ""
+    },
+    "entrega": {
+      "logradouro": "Av. Central", "numero": "500", "complemento": "Fundos",
+      "bairro": "Centro", "municipio": "São Paulo",
+      "codigo_municipio": "3550308", "uf": "SP", "cep": "01001000"
+    }
+  }
 }
 ```
 
 - CRT 1 usa `csosn` (default `102`); CRT 2/3 exige por item `cst` + `aliquota_pct`
   — sem isso, 422 em vez de alíquota chutada.
+- `pedido.nome` (2+ caracteres) e `pedido.documento` (11 ou 14 dígitos) são
+  obrigatórios: `<dest>` é um `xs:choice` no XSD — sem CPF/CNPJ o XML não fecha.
 - Resposta ok: `{ok, chave, protocolo, numero, serie, xml, cstat, xmotivo}`.
 - Resposta erro: `{ok:false, codigo, mensagem[, recibo]}`. `LOTE_RECEBIDO`
   significa "lote aceito, recibo pendente" — consultar o recibo é fase futura.
+
+#### `extras` (opcional)
+
+Espelha o `extrasFiscaisSchema` de `lib/schemas/fiscal.ts` — mesmo vocabulário,
+mesmos limites. Sem `extras` a nota sai com o que o pedido traz (como sempre).
+
+| Grupo | O que vira no XML |
+|---|---|
+| `transporte` | `<transp>` (`modFrete`, default `9`), `<transp/transporta>` se houver transportador, `<transp/vol>` se houver volumes |
+| `cobranca` | `<pag>` + `<pag/detPag>` (`tPag`, `indPag`, `vPag`) e, com `parcelas > 1`, `<cobr/dup>` |
+| `adicionais` | `<infAdic>` — `infCpl` até 5000, `infAdFisco` até 2000 caracteres |
+| `entrega` | `<entrega>` (TLocal) com o endereço de entrega e o CPF/CNPJ do destinatário |
+
+Pontos de contrato que **não** estão no pedido e por isso são INFERIDO (marcados
+assim no código):
+
+- **Pagamento.** Sem `extras.cobranca`, o sidecar emite `tPag = 99` (outros) +
+  `xPag = "Não informada"` em vez de recusar — o pedido não guarda forma de
+  pagamento ainda, e travar a venda por isso seria pior. Com `parcelas > 1`,
+  `indPag = 1` (a prazo); com 1 parcela, `0` (à vista). Grupo `<card>` /
+  `tpIntegra` **não** é emitido (sem dados de terminal).
+- **Duplicatas.** `vNF` dividido em N parcelas iguais com **o resto da divisão,
+  em centavos, na última** — assim a soma de `vDup` bate exata com `vNF`. É a
+  aritmética que o ERP antigo usava (INFERIDO: não há como conferir sem
+  rodá-lo). `nDup` = 3 dígitos (`001`, `002`…), `dVenc` = 1º vencimento +
+  (i × `dias_entre`), `vPag` = total da nota. **Não** emite `<fat>` (o XSD
+  dispensa e o ERP antigo não emitia).
+- **Sem formas de pagamento por pedido.** `parcelas`, `primeiro_vencimento`,
+  `dias_entre`, `transportadora_nome` e `endereco_entrega` existem **no pedido**
+  e poderiam pré-preencher esses extras — fora do escopo desta etapa, decisão
+  pendente com o dono do produto.
+
+Validações recusadas antes de abrir o certificado (`VALIDACAO`): forma de
+pagamento fora do leiaute, `descricao` faltando com `tPag 99`, `parcelas` fora
+de 1..120, `primeiro_vencimento` que não seja `AAAA-MM-DD` válido, `dias_entre`
+0..365, transportador sem CPF/CNPJ de 11/14, `entrega` sem logradouro/ número/
+bairro/ município/ UF/ código IBGE de 7 dígitos.
+
+### O que acontece na transmissão
+
+1. `make->montaNFe()` e depois `tools->signNFe($xml)` — assina **e** valida
+   contra `schemes/PL_009_V4/nfe_v4.00.xsd`. Fora do leiaute vira
+   `XML_INVALIDO` apontando o campo, antes de qualquer webservice.
+2. Config usa **`schemes`** (plural, não `scheme`) = `PL_009_V4` — é ele que
+   decide qual pasta de XSD o `signNFe` lê. `tpAmb` é **integer** no
+   JSON-schema do sped-nfe.
+3. Envio **síncrono**: 1 nota por lote (`indSinc = 1`), e o protocolo volta na
+   mesma resposta (`cStat 104` + `protNFe`) — é o que o app grava.
+4. A resposta da SEFAZ é **XML (SOAP)**, nunca JSON: o sidecar parseia com
+   `DOMDocument` (o padrão de `ServicoEntrada`). `json_decode` nessa resposta
+   é sempre `null`.
+5. `cstat` de autorização: `100`/`120`/`150` = uso autorizado (a mesma lista
+   que o `Complements::toAuthorize` aceita) → XML protocolado (`nfeProc`).
+   Denegadas (`110`, `205`, `301`…) voltam como erro `SEFAZ_XXX`: o app ainda
+   não tem status `denegada` no fluxo de emissão.
 
 ### POST /cancelar
 
 `{config, certificado_arquivo, certificado_senha, chave, protocolo, justificativa}`
 → `{ok, protocolo_cancelamento}` ou `{ok:false, codigo, mensagem}`.
+
+### POST /carta-correcao
+
+`{config, certificado_arquivo, certificado_senha, chave, correcao, sequencia}`
+→ `{ok, protocolo, sequencia, cstat, xmotivo}` ou `{ok:false, codigo, mensagem}`.
+
+- Evento 110110; `sequencia` 1..20 (a ordem de chegada conta, a SEFAZ recusa a 21ª);
+- `correcao` de 15 a 1000 caracteres; `cstat` 135 = registrado.
+- Mesmo envelope de `/cancelar` (config + certificado no corpo).
+
+### POST /inutilizar
+
+`{config, certificado_arquivo, certificado_senha, serie, numero_inicial, numero_final, justificativa, ano?, modelo?}`
+→ `{ok, protocolo, cstat, xmotivo}` ou `{ok:false, codigo, mensagem}`.
+
+- Evento 110111: número que **nunca** virou nota. `justificativa` 15..255;
+- `ano` com 2 dígitos (default = ano corrente), `modelo` `55`|`65` (default `55`);
+- `cstat` 1002 = inutilização confirmada.
+- A validação de colisão (faixa não pode cruzar nota viva nem outra
+  inutilização) é do app, antes de chamar aqui.
 
 ### POST /danfe
 

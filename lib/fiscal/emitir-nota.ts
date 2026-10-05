@@ -6,6 +6,7 @@ import {
   COLUNAS_DA_NOTA,
   STATUS_FATURAVEL,
   type ConfigFiscalSalva,
+  type ExtrasFiscais,
 } from "@/lib/schemas/fiscal";
 
 /**
@@ -26,6 +27,12 @@ export interface EmitirNotaInput {
   userId: string;
   requestId: string;
   orderId: string;
+  /**
+   * Extras da emissão (0257), já validados pelo `notaCreateSchema`. Gravam
+   * NA NOTA: o drain os lê de lá, então reemitir reusa o que a pessoa
+   * digitou em vez de recomputar do pedido.
+   */
+  extras?: ExtrasFiscais | null;
 }
 
 export interface NotaEmitida {
@@ -38,7 +45,7 @@ export interface NotaEmitida {
 }
 
 export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
-  const { supabase, admin, orgId, userId, requestId, orderId } = input;
+  const { supabase, admin, orgId, userId, requestId, orderId, extras } = input;
 
   const { data: config } = await supabase
     .from("fiscal_settings")
@@ -106,6 +113,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
       status: "em_emissao",
       provedor: escolha,
       erro: null,
+      extras_fiscais: extras ?? null,
       total_cents: ped.total_cents,
       created_by: userId,
     })

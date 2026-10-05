@@ -2,17 +2,16 @@
 
 🇧🇷 Português · [🇺🇸 English](README.en.md) · [🇪🇸 Español](README.es.md)
 
-# 🛠️ DeskcommCRM — o Sistema Operacional de Vendas com IA, open source, pro WhatsApp
+# 🛠️ DeskcommCRM — o Sistema Operacional de Vendas com IA pro WhatsApp
 
-**Agentes de IA que atendem, qualificam e vendem no WhatsApp — dentro de um CRM open source rodando no seu servidor.**
-**Sem mensalidade, sem feature travada, seus dados com você. A alternativa aberta a Kommo, Octadesk e Intercom.**
+**Agentes de IA que atendem, qualificam e vendem no WhatsApp — dentro de um CRM que roda no seu servidor.**
+**Sem mensalidade, sem feature travada, seus dados com você. A alternativa self-hosted a Kommo, Octadesk e Intercom.**
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-1%20comando-orange)](hostgator-setup-kit/)
 [![CI](https://github.com/spiesdan/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/spiesdan/nexus/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [**⚡ Instalar**](#-instalar-na-sua-vps-o-caminho-principal) · [**🔄 Atualizar**](#-atualizar) · [**🧭 Visão**](VISION.md) · [**🏗️ Arquitetura**](ARCHITECTURE.md) · [**🤝 Contribuir**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
 
@@ -380,7 +379,7 @@ Entre os invariantes está o **teste de isolamento RLS**: cria 2 organizações,
 
 ## 🤝 Contribuindo
 
-Esse projeto é open source pra comunidade. Toda contribuição é bem-vinda — desde fix de typo em doc até feature nova.
+Toda contribuição é bem-vinda — desde fix de typo em doc até feature nova.
 
 **Antes de abrir PR:**
 
@@ -454,9 +453,8 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 
 ## 📜 Licença
 
-Distribuído sob a licença **MIT** — veja [`LICENSE`](LICENSE). Você pode usar, modificar
-e distribuir livremente, inclusive comercialmente. O software é fornecido **"como está",
-sem garantias** (ver cláusula de isenção no `LICENSE`).
+DeskcommCRM é um produto proprietário self-hosted. O uso, a cópia e a distribuição
+seguem os termos de uso do produto.
 
 ---
 
@@ -465,10 +463,10 @@ sem garantias** (ver cláusula de isenção no `LICENSE`).
 Este é um projeto **self-host**: cada pessoa roda o CRM na **própria infraestrutura**
 (VPS, banco Supabase e chave de IA próprios). Isso implica:
 
-- **Suporte é comunitário e "as-is".** Dúvidas e bugs entram como
+- **Suporte é por contato e "as-is".** Dúvidas e bugs entram como
   [Issues](https://github.com/melgarafael/DeskcommCRM/issues) ou
   [Discussions](https://github.com/melgarafael/DeskcommCRM/discussions). Não há SLA nem
-  suporte garantido — é open source mantido por boa vontade.
+  suporte garantido.
 - **Você é responsável pela sua instalação.** Atualizações não são automáticas (você clica
   ou roda `update.sh` quando quiser), e manter/backup do seu servidor é com você.
 - **LGPD — atenção:** quem **hospeda** a instância é o **controlador** dos dados pessoais

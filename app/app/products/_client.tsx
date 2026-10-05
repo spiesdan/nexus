@@ -9,11 +9,18 @@ import { EmptyFilterResults } from "@/components/empty";
 import { FilterActions, FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
+import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
 import { comoMoeda } from "@/lib/format/moeda";
-import { precoDeVitrine, precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
+import {
+  precoDeVitrine,
+  precoParaCentavos,
+  type OrigemDoNcm,
+  type Produto,
+} from "@/lib/schemas/produtos";
 
 import { FotosDoProduto } from "./_fotos";
 
@@ -66,9 +73,29 @@ const VAZIO: Rascunho = {
   promocaoAte: "",
 };
 
+/**
+ * O NCM que a busca devolveu, ou `null`.
+ *
+ * Só serve enquanto o campo continua VAZIO: se a pessoa digitar antes da
+ * resposta chegar, o valor dela ganha (a busca nunca sobrescreve o que já
+ * está escrito) — a guarda está em `rascunhoRef`/`rascunhoEdicaoRef`.
+ */
+async function buscarSugestaoDeNcm(nome: string): Promise<CandidatoDeNcm | null> {
+  try {
+    const corpo = await apiClient.get<{ data: { sugestao: CandidatoDeNcm | null } | null }>(
+      `/api/v1/products/ncm-sugestao?nome=${encodeURIComponent(nome)}`,
+    );
+    return corpo?.data?.sugestao ?? null;
+  } catch {
+    // Sem tabela IBPT importada, sem rede, sem permissão: a tela não muda.
+    return null;
+  }
+}
+
 function doRascunho(
   r: Rascunho,
   t: (s: string) => string,
+  origemDoNcm: OrigemDoNcm | null,
 ): Record<string, unknown> | { erro: string } {
   const preco_cents = precoParaCentavos(r.preco);
   if (preco_cents === null) return { erro: t("Preço inválido. Escreva assim: 5.499,00") };
@@ -104,7 +131,9 @@ function doRascunho(
     quantidade: Number(r.quantidade) || 0,
     destaque: r.destaque,
     ...promo,
-    ...(ncm !== "" ? { ncm } : {}),
+    // 0256: a origem do NCM viaja junto (sugerido x manual). Sem NCM não há
+    // origem a dizer — a coluna fica NULL, como numa linha anterior à 0256.
+    ...(ncm !== "" ? { ncm, ncm_origem: origemDoNcm } : {}),
     ...(r.unidade.trim() ? { unidade: r.unidade.trim().toUpperCase().slice(0, 10) } : {}),
   };
 }
@@ -146,6 +175,86 @@ export function ProdutosClient({
   const [resumo, setResumo] = React.useState<ResumoDaImportacao | null>(null);
   const arquivoRef = React.useRef<HTMLInputElement>(null);
 
+  // ── NCM pelo nome (0256) ──────────────────────────────────────────────────
+  const [sugestaoCriar, setSugestaoCriar] = React.useState<CandidatoDeNcm | null>(null);
+  const [origemNcmCriar, setOrigemNcmCriar] = React.useState<OrigemDoNcm | null>(null);
+  const [sugestaoEditar, setSugestaoEditar] = React.useState<CandidatoDeNcm | null>(null);
+  const [origemNcmEditar, setOrigemNcmEditar] = React.useState<OrigemDoNcm | null>(null);
+  const rascunhoRef = React.useRef(rascunho);
+  const rascunhoEdicaoRef = React.useRef(rascunhoEdicao);
+  React.useEffect(() => {
+    rascunhoRef.current = rascunho;
+    rascunhoEdicaoRef.current = rascunhoEdicao;
+  }, [rascunho, rascunhoEdicao]);
+
+  /** Deixa o campo vazio um tempinho, e a busca só escreve se ele SEGUE vazio. */
+  const sugerirNcmNoCriar = useDebouncedCallback((nome: string) => {
+    void buscarSugestaoDeNcm(nome).then((candidato) => {
+      const atual = rascunhoRef.current;
+      if (!candidato || atual.nome.trim() !== nome || atual.ncm.trim() !== "") return;
+      setRascunho({ ...atual, ncm: candidato.ncm });
+      setSugestaoCriar(candidato);
+      setOrigemNcmCriar("sugerido");
+    });
+  }, 500);
+
+  const sugerirNcmNaEdicao = useDebouncedCallback((nome: string) => {
+    void buscarSugestaoDeNcm(nome).then((candidato) => {
+      const atual = rascunhoEdicaoRef.current;
+      if (!candidato || atual.nome.trim() !== nome || atual.ncm.trim() !== "") return;
+      setRascunhoEdicao({ ...atual, ncm: candidato.ncm });
+      setSugestaoEditar(candidato);
+      setOrigemNcmEditar("sugerido");
+    });
+  }, 500);
+
+  function nomeNoCriar(nome: string) {
+    setRascunho({ ...rascunho, nome });
+    if (rascunho.ncm.trim() === "" && nome.trim().length >= 3) sugerirNcmNoCriar(nome.trim());
+  }
+
+  /** Digitou NCM à mão → é `manual`; apagou → volta a poder ser sugerido. */
+  function ncmNoCriar(ncm: string) {
+    setRascunho({ ...rascunho, ncm });
+    const vazio = ncm.trim() === "";
+    setSugestaoCriar(null);
+    setOrigemNcmCriar(vazio ? null : "manual");
+    if (vazio && rascunho.nome.trim().length >= 3) sugerirNcmNoCriar(rascunho.nome.trim());
+  }
+
+  function nomeNaEdicao(nome: string) {
+    setRascunhoEdicao({ ...rascunhoEdicao, nome });
+    if (rascunhoEdicao.ncm.trim() === "" && nome.trim().length >= 3) sugerirNcmNaEdicao(nome.trim());
+  }
+
+  function ncmNaEdicao(ncm: string) {
+    setRascunhoEdicao({ ...rascunhoEdicao, ncm });
+    const vazio = ncm.trim() === "";
+    setSugestaoEditar(null);
+    setOrigemNcmEditar(vazio ? (editando?.ncm_origem ?? null) : "manual");
+    if (vazio && rascunhoEdicao.nome.trim().length >= 3) sugerirNcmNaEdicao(rascunhoEdicao.nome.trim());
+  }
+
+  /** O badge só fica de pé enquanto o valor da busca é o que está no campo. */
+  function badgeDeNcm(
+    sugestao: CandidatoDeNcm | null,
+    valor: string,
+    teste: string,
+  ): React.ReactNode {
+    if (!sugestao || valor.trim() !== sugestao.ncm) return null;
+    return (
+      <span
+        className="mt-1 flex items-start gap-1 text-[11px] leading-4 text-muted-foreground"
+        data-testid={teste}
+      >
+        <span className="rounded-md bg-muted px-1.5 py-0.5 font-medium text-accent">
+          {t("Sugerido")}
+        </span>
+        <span className="min-w-0 break-words">{sugestao.descricao ?? sugestao.ncm}</span>
+      </span>
+    );
+  }
+
   const hoje = new Date().toISOString().slice(0, 10);
   const filtrados = React.useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -159,7 +268,7 @@ export function ProdutosClient({
   }, [inicial, busca, aba, hoje]);
 
   async function salvar() {
-    const corpo = doRascunho(rascunho, t);
+    const corpo = doRascunho(rascunho, t, origemNcmCriar);
     if ("erro" in corpo) {
       toast.error(corpo.erro as string);
       return;
@@ -169,6 +278,8 @@ export function ProdutosClient({
       await apiClient.post("/api/v1/products", corpo);
       toast.success(t("Produto cadastrado"));
       setRascunho(VAZIO);
+      setSugestaoCriar(null);
+      setOrigemNcmCriar(null);
       setCriando(false);
       router.refresh();
     } catch (e) {
@@ -201,12 +312,16 @@ export function ProdutosClient({
           : (p.preco_promocional_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
       promocaoAte: p.promocao_ate ?? "",
     });
+    // A origem do NCM atual viaja na abertura: se a pessoa não mexer no
+    // campo, o PATCH reenvia o mesmo valor em vez de marcar tudo como manual.
+    setOrigemNcmEditar(p.ncm_origem ?? null);
+    setSugestaoEditar(null);
     setEditando(p);
   }
 
   async function salvarEdicao() {
     if (!editando) return;
-    const corpo = doRascunho(rascunhoEdicao, t);
+    const corpo = doRascunho(rascunhoEdicao, t, origemNcmEditar);
     if ("erro" in corpo) {
       toast.error(corpo.erro as string);
       return;
@@ -394,7 +509,7 @@ export function ProdutosClient({
               {t("Nome")}
               <input
                 value={rascunho.nome}
-                onChange={(e) => setRascunho({ ...rascunho, nome: e.target.value })}
+                onChange={(e) => nomeNoCriar(e.target.value)}
                 className="mt-1 h-9 w-full rounded-lg border px-3"
                 data-testid="produto-nome"
               />
@@ -429,10 +544,12 @@ export function ProdutosClient({
               NCM <span className="text-muted-foreground">{t("(opcional — exigido na NF-e)")}</span>
               <input
                 value={rascunho.ncm}
-                onChange={(e) => setRascunho({ ...rascunho, ncm: e.target.value })}
+                onChange={(e) => ncmNoCriar(e.target.value)}
                 placeholder="28289011"
                 className="mt-1 h-9 w-full rounded-lg border px-3"
+                data-testid="produto-ncm"
               />
+              {badgeDeNcm(sugestaoCriar, rascunho.ncm, "ncm-sugerido-criar")}
             </label>
             <label className="text-sm">
               {t("Unidade")}
@@ -573,7 +690,7 @@ export function ProdutosClient({
               {t("Nome")}
               <input
                 value={rascunhoEdicao.nome}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, nome: e.target.value })}
+                onChange={(e) => nomeNaEdicao(e.target.value)}
                 className="mt-1 h-9 w-full rounded-lg border px-3"
                 data-testid="editar-nome"
               />
@@ -628,10 +745,11 @@ export function ProdutosClient({
               {t("NCM (8 dígitos)")}
               <input
                 value={rascunhoEdicao.ncm}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, ncm: e.target.value })}
+                onChange={(e) => ncmNaEdicao(e.target.value)}
                 className="mt-1 h-9 w-full rounded-lg border px-3"
                 data-testid="editar-ncm"
               />
+              {badgeDeNcm(sugestaoEditar, rascunhoEdicao.ncm, "ncm-sugerido-editar")}
             </label>
             <label className="text-sm">
               {t("Quantidade em estoque")}

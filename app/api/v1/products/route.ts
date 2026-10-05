@@ -82,5 +82,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     requestId,
   });
 
+  // 0256: se o NCM veio da busca na tabela IBPT, o rastro do momento é separado
+  // — `created` diz que o produto nasceu; este diz que a máquina escolheu o
+  // código e a pessoa salvou por cima, que é o dado que a revisão de nota lê.
+  if (parsed.data.ncm_origem === "sugerido") {
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "catalog_product.ncm_sugerido",
+      resourceType: "catalog_products",
+      resourceId: (data as unknown as { id: string }).id,
+      requestId,
+    });
+  }
+
   return ok(data, { requestId, status: 201 });
 }

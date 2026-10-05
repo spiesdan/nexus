@@ -2,6 +2,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { emitLeadActivity } from "@/lib/leads/activity-emitter";
 import { registraFalhaDeAtividade } from "@/lib/leads/activity-write-failure";
+import {
+  candidatosSemDecisao,
+  decideAcoesDoRadar,
+  motorDeDecisaoLigado,
+  novoOrcamento,
+  type OrcamentoDaDecisao,
+  type ResultadoDaDecisao,
+} from "@/lib/leads/laya-decisao";
 import { calculaBucketsAtuais, type EstadoCalculado } from "@/lib/leads/risk-seed";
 import { propoeReativacao } from "@/lib/leads/reactivation";
 import type { RiskBucket } from "@/lib/leads/risk-radar";
@@ -38,6 +46,12 @@ export interface ResultadoDaObservacao {
   falhasDeAtividade: number;
   /** Propostas de reativação criadas nesta passada. */
   propostas: number;
+  /**
+   * A sugestão de ação do motor local (0258). Contada à parte porque é a
+   * única peça desta passada que pode falhar sem estragar o resto: ver
+   * `ResultadoDaDecisao`.
+   */
+  sugestoes: ResultadoDaDecisao;
 }
 
 /**
@@ -76,6 +90,7 @@ export async function observaTravessias(
   admin: SupabaseClient,
   organizationId: string,
   now: Date = new Date(),
+  orcamento: OrcamentoDaDecisao = novoOrcamento(),
 ): Promise<ResultadoDaObservacao> {
   const atuais = await calculaBucketsAtuais(admin, organizationId, now);
 
@@ -96,6 +111,13 @@ export async function observaTravessias(
     silenciosas: 0,
     falhasDeAtividade: 0,
     propostas: 0,
+    sugestoes: {
+      decididas: 0,
+      adiadas: 0,
+      semEvidencia: 0,
+      desligada: !motorDeDecisaoLigado(),
+      falhou: false,
+    },
   };
 
   for (const e of atuais) {
@@ -174,6 +196,59 @@ export async function observaTravessias(
         origem: "lib/leads/risk-worker.observaTravessias",
         erro: atividade.error,
       });
+    }
+  }
+
+  // ─── A SUGESTÃO DE AÇÃO (0258) — depois de TODO o estado gravado ─────────
+  //
+  // A inferência roda por último de propósito: o ciclo que a tela acompanha
+  // (estado + timeline + proposta) não pode esperar o motor, e uma falha dele
+  // não pode derrubar o que já foi escrito acima. Daí o fail-soft estar
+  // DENTRO de `decideAcoesDoRadar` e não aqui.
+  //
+  // Dois candidatos, com ordem distinta:
+  //   1. QUEM MUDOU NESTE TICK (esfriou agora) — tem prioridade, é o caso
+  //      que alguém vai ver na próxima abertura da tela.
+  //   2. QUEM ESTÁ FRIO E NUNCA TEVE DECISÃO — o preenchimento do acervo.
+  //      Sem ele, a instalação nova decidiria só o que esfriasse a partir de
+  //      hoje e o acervo já frio apareceria no radar sem sugestão nenhuma.
+  if (motorDeDecisaoLigado()) {
+    const frios = atuais
+      .filter(
+        (e): e is EstadoCalculado & { bucket: "em_risco" | "critico"; contactId: string } =>
+          (e.bucket === "em_risco" || e.bucket === "critico") && e.contactId !== null,
+      )
+      .map((e) => ({
+        leadId: e.leadId,
+        contactId: e.contactId,
+        bucket: e.bucket,
+        esfriouEm: e.since,
+      }));
+
+    if (frios.length > 0) {
+      const mudou = frios.filter((f) => anterior.get(f.leadId) !== f.bucket);
+      const decididasAgora = new Set(mudou.map((m) => m.leadId));
+      const porId = new Map(frios.map((f) => [f.leadId, f]));
+      // Os que acabaram de mudar já entram em `mudou`; aqui fica só o acervo
+      // frio que NUNCA teve decisão (a consulta devolve leads desta lista, não
+      // ids soltos, então o filtro é por id e não por posição).
+      const semDecisao = (await candidatosSemDecisao(admin, organizationId, frios)).filter(
+        (id) => !decididasAgora.has(id),
+      );
+      // O acervo pendente entra MAIS FRIO PRIMEIRO: se o orçamento acabar no
+      // meio, sobra o que está há mais tempo sem resposta — não o que esfriou
+      // junto ontem.
+      const atrasados = semDecisao
+        .map((id) => porId.get(id)!)
+        .sort((a, b) => a.esfriouEm.getTime() - b.esfriouEm.getTime());
+
+      r.sugestoes = await decideAcoesDoRadar(
+        admin,
+        organizationId,
+        [...mudou, ...atrasados],
+        now,
+        orcamento,
+      );
     }
   }
 

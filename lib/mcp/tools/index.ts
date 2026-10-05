@@ -8,7 +8,12 @@
  */
 import type { McpToolDefinition } from "../types";
 import { TOOL_CATALOG, VALID_TOOL_IDS } from "./catalog";
-import { crmSearchContacts, crmGetContact, crmProposeContactField } from "./contacts";
+import {
+  crmSearchContacts,
+  crmGetContact,
+  crmProposeContactField,
+  crmFindContactByDocument,
+} from "./contacts";
 import {
   crmListConversations,
   crmGetConversation,
@@ -44,7 +49,12 @@ import {
   crmGetOrgMemory,
   crmSaveOrgMemory,
 } from "./evolucao";
-import { commercialCreateOrder, crmListContactOrders, crmSearchProducts } from "./comercio";
+import {
+  commercialCreateOrder,
+  commercialDeliveryStatus,
+  crmListContactOrders,
+  crmSearchProducts,
+} from "./comercio";
 import { crmListPrivacyRequests } from "./privacidade";
 import {
   crmArchiveStage,
@@ -94,6 +104,7 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmListAppointments,
   crmSearchContacts,
   crmGetContact,
+  crmFindContactByDocument,
   crmProposeContactField,
   crmListConversations,
   crmGetConversation,
@@ -110,6 +121,7 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmListContactOrders,
   crmSearchProducts,
   commercialCreateOrder,
+  commercialDeliveryStatus,
   crmListPrivacyRequests,
   // read — organizar a operação (W4)
   crmListStages,

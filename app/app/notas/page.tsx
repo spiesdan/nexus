@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import {
   COLUNAS_DA_NOTA,
+  type CartaDeCorrecao,
   type CfopEquivalenteSalvo,
   type InutilizacaoSalva,
   type NotaFiscal,
@@ -74,6 +75,7 @@ export default async function NotasPage({
     { data: config },
     { data: inutilizacoes },
     { data: equivalentes },
+    { data: cartas },
   ] = await Promise.all([
     supabase
       .from("invoices")
@@ -122,6 +124,13 @@ export default async function NotasPage({
       .eq("organization_id", activeOrg.orgId)
       .order("cfop_origem")
       .limit(500),
+    supabase
+      .from("fiscal_events")
+      .select("id, invoice_id, status, protocolo, mensagem, created_at, invoices(serie, numero)")
+      .eq("organization_id", activeOrg.orgId)
+      .eq("tipo", "carta_correcao")
+      .order("created_at", { ascending: false })
+      .limit(200),
   ]);
 
   // Pessoa da grade (Odivix): nome do cliente via pedido de origem. Pedidos
@@ -148,6 +157,27 @@ export default async function NotasPage({
       pessoas[e.id] = e.cliente_nome;
     }
   }
+
+  // Cartas de correção (lista da aba de ações): o texto e a sequência saem
+  // da mensagem `[n/20] ...`, lida na tela com `lerMensagemCarta`.
+  const cartasLista = ((cartas ?? []) as unknown as {
+    id: string;
+    invoice_id: string;
+    status: string | null;
+    protocolo: string | null;
+    mensagem: string | null;
+    created_at: string;
+    invoices: { serie: string; numero: number | null } | null;
+  }[]).map((c) => ({
+    id: c.id,
+    invoice_id: c.invoice_id,
+    serie: c.invoices?.serie ?? "—",
+    numero: c.invoices?.numero ?? null,
+    status: c.status,
+    protocolo: c.protocolo,
+    mensagem: c.mensagem,
+    created_at: c.created_at,
+  }));
 
   const textos = {
     titulo: t("Notas fiscais"),
@@ -249,7 +279,7 @@ export default async function NotasPage({
     dicaMotivo: t("Entre 15 e 255 caracteres"),
     ibpt: t("IBPT (imposto aproximado)"),
     semIbpt: t(
-      "A tabela IBPT ainda não foi importada — o imposto aproximado aparece aqui quando houver.",
+      "Consulte um NCM para ver o imposto aproximado. Sem tabela importada, baixe o CSV oficial do IBPT (http://200.161.144.113/ibpt/) e importe aqui.",
     ),
     sped: t("SPED Fiscal"),
     cfopsEq: t("CFOPs equivalentes"),
@@ -294,6 +324,34 @@ export default async function NotasPage({
     processando: t("Processando"),
     concluido: t("Concluído"),
     cliente: t("Cliente"),
+    modelo: t("Modelo"),
+    modeloNfe: t("NF-e (55)"),
+    modeloNfce: t("NFC-e (65)"),
+    retransmitir: t("Retransmitir"),
+    retransmitidoOk: t("Retransmissão concluída"),
+    inutilizaNota: t("Inutiliza Nota"),
+    numPuladas: t("Numerações puladas por série"),
+    cartasCorrecao: t("Cartas de correção"),
+    nenhumaCarta: t("Nenhuma carta de correção ainda"),
+    sequencia: t("Sequência"),
+    buscarCarta: t("Buscar carta…"),
+    importarHistorico: t("Importar histórico do SEFAZ"),
+    nsuTitulo: t("NSU"),
+    ncm: t("NCM"),
+    ex: t("EX"),
+    consultarIbpt: t("Consultar"),
+    importarIbpt: t("Importar tabela IBPT (CSV)"),
+    importadaOkIbpt: t("Tabela IBPT importada"),
+    semArquivoIbpt: t("Selecione o arquivo CSV do IBPT"),
+    ncmInvalido: t("Informe um código com 4 a 16 dígitos"),
+    nenhumaLinhaIbpt: t("Nenhum item para este código nesta UF"),
+    impostoAproximado: t("Imposto aproximado"),
+    vigencia: t("Vigência"),
+    fonte: t("Fonte"),
+    nacional: t("Nacional"),
+    importado: t("Importado"),
+    estadual: t("Estadual"),
+    municipal: t("Municipal"),
   };
 
   const rotuloAba: Record<string, string> = {
@@ -365,6 +423,8 @@ export default async function NotasPage({
                 config as unknown as Parameters<typeof AcoesFiscais>[0]["configInicial"]
               }
               inutilizacoesIniciais={(inutilizacoes ?? []) as unknown as InutilizacaoSalva[]}
+              cartasIniciais={cartasLista as CartaDeCorrecao[]}
+              podeConfigurar={podeConfigurar}
               textos={textos}
             />
           </TabsContent>

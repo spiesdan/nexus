@@ -284,6 +284,7 @@ export async function getContactHandler(
     } else {
       const { data: dec, error: decErr } = await supabase.rpc("decrypt_cpf", {
         p_contact_id: input.contactId,
+        p_organization_id: contact.organization_id,
       });
       if (decErr) {
         console.warn("[contacts.get] decrypt_cpf RPC unavailable", decErr.message);

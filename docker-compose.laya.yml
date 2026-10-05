@@ -1,0 +1,93 @@
+# ─── Overlay OPT-IN: motor de decisão do Radar (laya-serve) ──────────────────
+#
+# NÃO é um compose de produção: é o segundo `-f` de quem quer o motor ligado.
+# Sem este arquivo o serviço não existe — `docker compose pull` / `up -d` seguem
+# intactos para quem não o quer.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.laya.yml \
+#     --env-file .env up -d laya
+#
+# Por que um overlay e não um serviço no prod: o motor chega a ~3 GB de RAM numa
+# VPS de 8 GB. Subir sozinho quando alguém manda é decidir por todo mundo que a
+# caixa não tem folga; quem liga é quem escreve o `-f` na mão.
+#
+# Texto da conversa sai SÓ por esta rede interna (o serviço não publica porta) e
+# o que se grava no banco é a decisão — ver lib/leads/laya-decisao.ts.
+services:
+  laya:
+    # Imagem local da VPS (retag da spike `layaspike-laya-serve`), não há registry:
+    # `pull_policy: missing` usa o que está no disco e não tenta rede. A troca de
+    # versão do motor é um retag + `up -d laya`, feito por quem mantém a VPS.
+    image: ${LAYA_IMAGE:-laya-serve:1.0.0}
+    pull_policy: ${LAYA_PULL_POLICY:-missing}
+    restart: unless-stopped
+    init: true
+    command: ["python", "-m", "laya.serve"]
+    environment:
+      LAYA_DEVICE: cpu
+      LAYA_PORT: "8000"
+      # Bearer do `chamaOMotor()` — se faltar, o serve aceita qualquer chamador.
+      LAYA_API_KEY: ${LAYA_API_KEY}
+      # Sem evidência de idioma ("Esqueci minha senha") o router cai no default.
+      # O checkpoint em cache é o multilingual (`ml`): default vazio mandaria
+      # baixar o inglês em runtime, na primeira frase curta.
+      LAYA_DEFAULT_MODEL: ${LAYA_DEFAULT_MODEL:-ml}
+      # UM checkpoint residente. Dois no boot estouravam 3g (exit 137 + loop de
+      # reinício); com 1 o boot ficou dentro de 4g. Na prática todo batch é em
+      # português, então não há troca de idioma a pagar por isso.
+      LAYA_MAX_LOADED: "1"
+      # SEM preload. O default (`LAYA_PRELOAD=1`) chama `preload(None)`, que
+      # monta TODOS os checkpoints de uma vez E levanta o cap do `max_loaded`
+      # (`router.preload()` ignora `max_loaded`): eram 4,78 GiB de RSS residente
+      # nesta VPS de 8 GB. Com 0, o boot fica leve e o primeiro batch monta só
+      # o multilingual (~1 checkpoint).
+      LAYA_PRELOAD: "0"
+      # Descarrega o checkpoint depois de 3 min ocioso. O cron do Radar roda a
+      # cada 15 min: paga o load (~15 s, dentro do `LAYA_TIMEOUT_MS=45000`) uma
+      # vez por tick e devolve a memória ao host no intervalo. Sem isto, cada
+      # tick manteria ~GB parado entre execuções.
+      LAYA_IDLE_UNLOAD_SECONDS: "180"
+      OMP_NUM_THREADS: "4"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      # Reusa o cache já baixado pela spike (647 MB): sem ele o primeiro request
+      # baixa o checkpoint de novo, e com HF offline indisponível morreria no meio.
+      - laya-model-cache:/home/laya/.cache/huggingface
+    # Pico MEDIDO do motor com UM checkpoint em fp32 (~1,3 GB de pesos + cópias
+    # do fast path + runtime torch). Os 4,78 GiB de antes eram preload de TODOS
+    # os checkpoints — ver LAYA_PRELOAD. Limite não é reserva: o host só paga o
+    # pico durante o batch, e LAYA_IDLE_UNLOAD_SECONDS devolve no intervalo.
+    mem_limit: 6g
+    # Só a rede interna: nenhuma porta publicada, alcançável de dentro do compose
+    # como `http://laya:8000` (LAYA_URL) e de lugar nenhum de fora.
+    networks: [internal]
+    healthcheck:
+      # `/health` é liveness pública (não pede bearer). Python existe na imagem;
+      # curl/wget não.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=10).status==200 else 1)",
+        ]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      # O checkpoint é montado na primeira chamada (ou no boot, se quente): o
+      # primeiro minuto não é falha, é torch sendo torch.
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  # `external`: é o MESMO volume da spike (o cache de 647 MB que já existe no
+  # disco). Sem `external` o compose reclama que o volume não foi criado por ele;
+  # sem o nome fixo ele criaria `crm_laya-model-cache` vazio e o motor baixaria
+  # o checkpoint de novo.
+  laya-model-cache:
+    name: layaspike_model-cache
+    external: true

@@ -14,7 +14,7 @@ Complementa [`SECURITY.md`](../SECURITY.md), que é política de *reporte*. Este
 o inventário da **superfície de ataque real**: o que fica exposto quando alguém sobe o
 DeskcommCRM numa VPS com IP público.
 
-**Modelo de implantação que muda tudo:** o produto é self-host open-source. O atacante
+**Modelo de implantação que muda tudo:** o produto é self-host. O atacante
 tem o **código-fonte completo** — conhece cada rota, cada nome de env var, cada fallback.
 Segurança por obscuridade vale zero aqui. E o operador é tipicamente uma PME sem equipe
 de segurança: um default inseguro não vai ser corrigido por ele.
@@ -238,7 +238,7 @@ Não avaliado por falta de execução/instância:
 | T6 | Guard de SSRF existe; o E2E que o prova não roda no CI | 🟢 | baixo |
 
 **Conclusão honesta:** os *mecanismos* de segurança deste projeto são acima da média para
-um CRM open-source — HMAC em tempo constante em toda borda, fail-closed nos crons, hash de
+um CRM self-host — HMAC em tempo constante em toda borda, fail-closed nos crons, hash de
 bearer, RLS com helper central, guard de SSRF testado, LGPD implementada de verdade,
 `beforeSend` higienizando PII, e **56 arquivos de invariante de isolamento rodando em CI**.
 

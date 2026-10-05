@@ -61,6 +61,92 @@ export const crmListContactOrders: McpToolDefinition<typeof pedidosInputShape> =
 };
 
 // ---------------------------------------------------------------------------
+// entrega dos pedidos internos (expedição)
+// ---------------------------------------------------------------------------
+
+const entregaInputShape = {
+  contact_id: z.string().uuid().describe("O cliente que pergunta sobre a entrega."),
+  order_numero: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe("Número do pedido (PED-0042 → 42). Sem ele, devolve os pedidos mais recentes do contato."),
+};
+
+export const commercialDeliveryStatus: McpToolDefinition<typeof entregaInputShape> = {
+  name: "commercial_delivery_status",
+  description:
+    "Consulta a situação de ENTREGA dos pedidos internos do contato: se já embarcou, em qual carga, " +
+    "e se está separado (na_carga), a caminho (em_rota), entregue ou devolvido. Use quando o cliente " +
+    "perguntar 'e meu pedido?', 'saiu para entrega?', 'chegou?' — responda com este status em vez de " +
+    "prometer prazo. Pedido sem embarque volta embarcado=false (ainda não saiu).",
+  inputSchema: entregaInputShape,
+  category: "read",
+  requiresRole: "agent",
+  requiresScope: "mcp:read",
+  handler: async (input, ctx) => {
+    let q = ctx.supabase
+      .from("commercial_orders")
+      .select("id, numero, status")
+      .eq("organization_id", ctx.organizationId)
+      .eq("contact_id", input.contact_id);
+    if (input.order_numero !== undefined) q = q.eq("numero", input.order_numero);
+    const { data: pedidos, error } = await q.order("numero", { ascending: false }).limit(20);
+    if (error) throw new Error(`consultar_entrega_falhou: ${error.message}`);
+
+    if (!pedidos || pedidos.length === 0) {
+      return {
+        pedidos: [],
+        aviso: "nenhum pedido interno encontrado para este contato — não prometa entrega sem isto.",
+      };
+    }
+
+    // Segunda query: o embarque. Duas leituras em vez de um embed aninhado
+    // com cast — a lista é de no máximo 20 pedidos.
+    const { data: embarques, error: errEmb } = await ctx.supabase
+      .from("shipment_orders")
+      .select("order_id, sequencia, status, shipments ( numero, status )")
+      .eq("organization_id", ctx.organizationId)
+      .in("order_id", pedidos.map((p) => p.id));
+    if (errEmb) throw new Error(`consultar_carga_falhou: ${errEmb.message}`);
+
+    interface Embarque {
+      order_id: string;
+      sequencia: number;
+      status: string;
+      shipments: Array<{ numero: number; status: string }> | { numero: number; status: string } | null;
+    }
+    const porPedido = new Map<string, Embarque>();
+    for (const e of (embarques ?? []) as unknown as Embarque[]) porPedido.set(e.order_id, e);
+
+    return {
+      pedidos: pedidos.map((p) => {
+        const e = porPedido.get(p.id);
+        const carga = e
+          ? Array.isArray(e.shipments)
+            ? (e.shipments[0] ?? null)
+            : e.shipments
+          : null;
+        return {
+          pedido: `PED-${String(p.numero).padStart(4, "0")}`,
+          pedido_status: p.status,
+          embarcado: !!e && !!carga,
+          ...(e && carga
+            ? {
+                carga_numero: carga.numero,
+                carga_status: carga.status,
+                entrega_status: e.status,
+                ordem_na_rota: e.sequencia,
+              }
+            : {}),
+        };
+      }),
+    };
+  },
+};
+
+// ---------------------------------------------------------------------------
 // buscar no catálogo
 // ---------------------------------------------------------------------------
 

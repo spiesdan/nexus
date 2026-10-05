@@ -67,7 +67,7 @@ como o caminho mais crítico do produto. E `pnpm gov:verify`, o comando único q
 naturalmente usa como critério de pronto, **não** inclui `test:db` nem `test:e2e`: o CI
 pega o que ele deixa passar, mas só depois do push.
 
-**O que puxa este projeto para cima e é incomum num CRM open-source:** doutrina escrita e
+**O que puxa este projeto para cima e é incomum num CRM self-host:** doutrina escrita e
 específica (`CLAUDE.md`), Definition of Done de 13 itens, **56 arquivos de invariantes de
 banco**, gate de install+update do `baseline.sql` num Postgres descartável rodando em CI,
 doutrina de QA visual com ambiente fresco estilo VPS, e uma máquina de governança de
@@ -137,7 +137,7 @@ grave: quem instala não sabe que precisa gerá-los.
 
 ### 4. Adicionar scan de secret no CI 🟡 · custo: ~10 linhas
 
-`gitleaks` como step. Projeto open-source com screenshots de evidência sendo commitados
+`gitleaks` como step. Produto self-host com screenshots de evidência sendo commitados
 tem risco real de vazamento acidental.
 
 ### 5. `format:check` no CI 🟡 · custo: 2 linhas

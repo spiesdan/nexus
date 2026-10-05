@@ -37,6 +37,7 @@ import type { NextRequest } from "next/server";
 import { ok, fail } from "@/lib/api/wrappers";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { motorDeDecisaoLigado, novoOrcamento } from "@/lib/leads/laya-decisao";
 import { venceReativacoes } from "@/lib/leads/reactivation";
 import { observaTravessias } from "@/lib/leads/risk-worker";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -77,16 +78,30 @@ async function handle(req: NextRequest): Promise<Response> {
   let falhas = 0;
   let propostas = 0;
   let vencidas = 0;
+  let sugestoes = 0;
+  let sugestoesAdiadas = 0;
+  let sugestoesSemEvidencia = 0;
+  let motorCaiu = 0;
   const comErro: string[] = [];
+
+  // UM orçamento para a passada INTEIRA, não um por organização. Cada org
+  // chamando o motor com o teto cheio daria ORG_LIMIT x teto inferências num
+  // cron de 60 s — e a última org da lista ficaria sem sugestão enquanto a
+  // primeira levava tudo. A ordem é a mesma de sempre: a que precisa, primeiro.
+  const orcamento = novoOrcamento();
 
   for (const org of orgs) {
     try {
-      const r = await observaTravessias(admin, org);
+      const r = await observaTravessias(admin, org, new Date(), orcamento);
       travessias += r.travessias;
       esfriaram += r.esfriaram;
       reativaram += r.reativaram;
       falhas += r.falhasDeAtividade;
       propostas += r.propostas;
+      sugestoes += r.sugestoes.decididas;
+      sugestoesAdiadas += r.sugestoes.adiadas;
+      sugestoesSemEvidencia += r.sugestoes.semEvidencia;
+      if (r.sugestoes.falhou) motorCaiu += 1;
 
       // O VENCIMENTO RODA NO MESMO TICK, depois da travessia. Se morasse num
       // cron separado, a proposta poderia vencer em silêncio até o outro rodar
@@ -110,6 +125,11 @@ async function handle(req: NextRequest): Promise<Response> {
   if (falhas > 0) {
     logger.warn("[risk-watcher] travessias sem linha na timeline", { falhas, requestId });
   }
+  if (motorCaiu > 0) {
+    // Contado e dito: o modo de falha silencioso aqui seria "nenhuma sugestão
+    // nova" — indistinguível de "nada esfriou", que já é o pecado deste cron.
+    logger.warn("[risk-watcher] motor de decisão indisponível", { organizations: motorCaiu, requestId });
+  }
 
   return ok(
     {
@@ -121,6 +141,13 @@ async function handle(req: NextRequest): Promise<Response> {
       propostas_vencidas: vencidas,
       atividades_falhas: falhas,
       organizations_com_erro: comErro.length,
+      // A sugestão de ação (0258) é a única peça desta passada que pode faltar
+      // sem estragar o resto — por isso tem contagem própria na resposta.
+      motor_de_decisao: motorDeDecisaoLigado(),
+      sugestoes_de_acao: sugestoes,
+      sugestoes_adiadas: sugestoesAdiadas,
+      sugestoes_sem_evidencia: sugestoesSemEvidencia,
+      sugestoes_falhas: motorCaiu,
     },
     { requestId },
   );

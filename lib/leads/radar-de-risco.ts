@@ -16,6 +16,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { logger } from "@/lib/logger";
+import type { AcaoDaDecisao } from "@/lib/leads/laya-decisao";
 import {
   classifyRisk,
   compareRisk,
@@ -51,6 +53,15 @@ export interface AtRiskLead {
   next_followup_at: string | null;
   conversation_id: string | null;
   pipeline_id: string;
+  /**
+   * A sugestão de ação do motor local (0258) — o chip da tela. `null` em DUAS
+   * situações diferentes, e a tela as trata igual de propósito: motor desligado
+   * ou negócio ainda não decidido. Nenhuma das duas é "sem sugestão porque o
+   * motor caiu": isso é assunto do cron, que conta e avisa.
+   */
+  ia_acao: AcaoDaDecisao | null;
+  ia_confianca: number | null;
+  ia_decidido_em: string | null;
 }
 
 /**
@@ -230,6 +241,10 @@ export async function carregaRadarDeRisco(
       next_followup_at: nextFollowupAt,
       conversation_id: conv?.id ?? null,
       pipeline_id: l.pipeline_id,
+      // Preenchidos por `anexaSugestoes` logo abaixo; nulos até lá.
+      ia_acao: null,
+      ia_confianca: null,
+      ia_decidido_em: null,
     });
   }
 
@@ -270,11 +285,59 @@ export async function carregaRadarDeRisco(
     };
   });
 
+  const itens = radar.slice(0, limit);
+  await anexaSugestoes(admin, organizationId, itens);
+
   return {
-    items: radar.slice(0, limit),
+    items: itens,
     counts: { critico: counts.critico, em_risco: counts.em_risco, em_voo: counts.em_voo },
     total: radar.length,
     sem_proximo_passo: semProximoPasso,
     total_sem_proximo_passo: semProximoPasso.length,
   };
+}
+
+/**
+ * O chip de sugestão — lido SOB os itens que vão ser exibidos (um `.in` de
+ * `limit` ids, não de 500), e sem derrubar o radar se falhar: a lista de quem
+ * esfriou é mais importante que a coluna de ação ao lado dela. Falha aqui vira
+ * `ia_acao = null` na tela, que é o mesmo estado de "ainda não decidido".
+ */
+async function anexaSugestoes(
+  admin: SupabaseClient,
+  organizationId: string,
+  itens: AtRiskLead[],
+): Promise<void> {
+  if (itens.length === 0) return;
+  const { data, error } = await admin
+    .from("crm_lead_risk_decisions")
+    .select("lead_id, acao, confianca, decidido_em")
+    .eq("organization_id", organizationId)
+    .in(
+      "lead_id",
+      itens.map((i) => i.id),
+    );
+  if (error) {
+    logger.warn("[radar] sugestões de ação não lidas", { organizationId, erro: error.message });
+    for (const i of itens) {
+      i.ia_acao = null;
+      i.ia_confianca = null;
+      i.ia_decidido_em = null;
+    }
+    return;
+  }
+  const porLead = new Map(
+    (
+      data ?? []
+    ).map((d: { lead_id: string; acao: string; confianca: number | null; decidido_em: string }) => [
+      d.lead_id,
+      d,
+    ]),
+  );
+  for (const i of itens) {
+    const d = porLead.get(i.id);
+    i.ia_acao = (d?.acao as AcaoDaDecisao | undefined) ?? null;
+    i.ia_confianca = d?.confianca ?? null;
+    i.ia_decidido_em = d?.decidido_em ?? null;
+  }
 }

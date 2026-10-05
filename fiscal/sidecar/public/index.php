@@ -10,6 +10,8 @@
  *   POST /emitir   → {ok:true, chave, protocolo, numero, serie, xml, cstat, xmotivo}
  *                     | {ok:false, codigo, mensagem[, recibo]}
  *   POST /cancelar → {ok:true, protocolo_cancelamento} | {ok:false, codigo, mensagem}
+ *   POST /carta-correcao → {ok:true, protocolo, sequencia, cstat, xmotivo} | {ok:false, codigo, mensagem}
+ *   POST /inutilizar → {ok:true, protocolo, cstat, xmotivo} | {ok:false, codigo, mensagem}
  *   POST /danfe    → {ok:true, pdf_base64} | {ok:false, codigo, mensagem}
  *   POST /distribuicao → {ok:true, ultNSU, maxNSU, documentos[]} | {ok:false, codigo, mensagem}
  *   POST /manifestar   → {ok:true, cstat, manifestacao} | {ok:false, codigo, mensagem}
@@ -78,6 +80,20 @@ if ($metodo === 'POST' && $rota === '/cancelar') {
     responder($r['ok'] ? 200 : 422, $r);
 }
 
+if ($metodo === 'POST' && $rota === '/carta-correcao') {
+    $corpo = lerCorpo();
+    $servico = new ServicoNfe($corpo + ['config' => [], 'pedido' => [], 'itens' => []]);
+    $r = $servico->cartaCorrecao($corpo);
+    responder($r['ok'] ? 200 : 422, $r);
+}
+
+if ($metodo === 'POST' && $rota === '/inutilizar') {
+    $corpo = lerCorpo();
+    $servico = new ServicoNfe($corpo + ['config' => [], 'pedido' => [], 'itens' => []]);
+    $r = $servico->inutilizar($corpo);
+    responder($r['ok'] ? 200 : 422, $r);
+}
+
 if ($metodo === 'POST' && $rota === '/danfe') {
     $corpo = lerCorpo();
     $xml = (string)($corpo['xml'] ?? '');
@@ -101,4 +117,4 @@ if ($metodo === 'POST' && $rota === '/manifestar') {
     responder($r['ok'] ? 200 : 422, $r);
 }
 
-responder(404, ['ok' => false, 'codigo' => 'ROTA_DESCONHECIDA', 'mensagem' => 'Use GET /saude, POST /emitir, POST /cancelar, POST /danfe, POST /distribuicao ou POST /manifestar.']);
+    responder(404, ['ok' => false, 'codigo' => 'ROTA_DESCONHECIDA', 'mensagem' => 'Use GET /saude, POST /emitir, POST /cancelar, POST /carta-correcao, POST /inutilizar, POST /danfe, POST /distribuicao ou POST /manifestar.']);

@@ -13,6 +13,13 @@
  * marinho, cartão do cliente em 2 colunas, tabela zebrada) — só os DADOS
  * seguem o modelo deles.
  *
+ * O CABEÇALHO leva o emitente inteiro — nome, CNPJ, telefone e endereço
+ * (migration 0255, gravados em Configurações) — e o LOGO da empresa, que é
+ * a diferença mais visível em relação ao Mercos. O logo chega PRONTO em
+ * `emitente.logo` (base64 + formato), porque quem busca é a rota: se a
+ * imagem não vier, o cabeçalho sai sem ela e o documento continua inteiro —
+ * um download de imagem nunca derruba um PDF de pedido.
+ *
  * O que o nosso modelo NÃO tem não é inventado: "Qtde. volumes" do Mercos é
  * contagem de embalagens deles e não existe em `commercial_order_items`, por
  * isso não aparece. Unidade do item vem de `catalog_products.unidade`
@@ -23,7 +30,7 @@
  * reprova "Deskcomm" em código que alcança o usuário). Este documento não
  * leva marca nenhuma do produto, só os dados do negócio.
  */
-import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 
 import { ROTULO_DO_STATUS, type StatusDoPedido } from "@/lib/schemas/pedidos";
@@ -38,15 +45,27 @@ const styles = StyleSheet.create({
   faixa: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "flex-start",
     borderBottom: `2pt solid ${MARINHO}`,
     paddingBottom: 10,
-    marginBottom: 4,
+    marginBottom: 6,
   },
+  emitenteCol: { flex: 1, paddingRight: 12 },
+  // Só largura + teto de altura, e NUNCA altura fixa: a imagem mantém a
+  // proporção sozinha. Lado a lado com `width` E `height`, um logo quadrado
+  // sairia esticado — e aformatação de imagem é a coisa mais fácil de errar
+  // num documento que vai para o cliente.
+  logo: { width: 150, maxHeight: 56 },
   emitente: { fontSize: 15, fontWeight: "bold", color: MARINHO },
   emitenteDoc: { fontSize: 9, color: CINZA, marginTop: 2 },
-  numero: { fontSize: 17, fontWeight: "bold", color: MARINHO, textAlign: "right" },
-  statusLinha: { fontSize: 9, color: CINZA, marginTop: 2, textAlign: "right" },
+  numeroLinha: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  numero: { fontSize: 17, fontWeight: "bold", color: MARINHO },
+  statusLinha: { fontSize: 9, color: CINZA, textAlign: "right" },
   representada: { fontSize: 9, color: CINZA, marginBottom: 12 },
   cartao: { border: `0.5pt solid ${BORDA}`, borderRadius: 4, marginBottom: 12 },
   cartaoTitulo: {
@@ -111,9 +130,30 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * O logo da empresa, JÁ BAIXADO.
+ *
+ * Chega pronto porque quem busca é a rota, não o render: `<Image src="http…">`
+ * do @react-pdf faz download durante o render e LANÇA se a URL falhar — aí um
+ * bucket fora do ar derrubaria o PDF do pedido inteiro. Aqui a falha acontece
+ * antes, vira `logo: null` e o cabeçalho simplesmente sai sem imagem.
+ *
+ * `data` é base64 PURO (sem `data:image/png;base64,`): é o formato que o
+ * `src={{ data, format }}` do @react-pdf/renderer aceita.
+ */
+export interface PedidoPdfLogo {
+  data: string;
+  format: "png" | "jpeg";
+}
+
 export interface PedidoPdfEmitente {
   nome: string;
   documento: string | null;
+  /** Opcional de propósito: o emitente só com nome+CNPJ continua válido. */
+  telefone?: string | null;
+  /** Em UMA linha, já formatada por `enderecoEmLinha()`. */
+  endereco?: string | null;
+  logo?: PedidoPdfLogo | null;
 }
 
 /** Bloco do cliente — os mesmos campos da impressão do Mercos. */
@@ -189,7 +229,14 @@ function Campo({ rotulo, valor }: { rotulo: string; valor: string | null }) {
   );
 }
 
-export function PedidoPdf({
+/**
+ * UMA PÁGINA do pedido — o corpo inteiro, dentro do `<Page>`.
+ *
+ * Separado do `<Document>` de propósito: é o que permite o mesmo desenho
+ * servir a impressão de UM pedido (a rota `[id]/pdf`) e de UM LOTE (a rota
+ * `?ids=`, um pedido por página), sem copiar o cabeçalho duas vezes.
+ */
+export function PedidoPagina({
   emitente,
   pedido,
 }: {
@@ -205,19 +252,32 @@ export function PedidoPdf({
       ? pedido.endereco_entrega.trim()
       : null;
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
+    <Page size="A4" style={styles.page}>
         <View style={styles.faixa}>
-          <View>
+          <View style={styles.emitenteCol}>
             <Text style={styles.emitente}>{emitente.nome}</Text>
             {emitente.documento && <Text style={styles.emitenteDoc}>CNPJ: {emitente.documento}</Text>}
+            {/* O rótulo só aparece com valor: emitente sem telefone não
+                imprime "Telefone:" vazio no documento do cliente. */}
+            {emitente.telefone?.trim() && (
+              <Text style={styles.emitenteDoc}>Telefone: {emitente.telefone.trim()}</Text>
+            )}
+            {emitente.endereco?.trim() && (
+              <Text style={styles.emitenteDoc}>{emitente.endereco.trim()}</Text>
+            )}
           </View>
-          <View>
-            <Text style={styles.numero}>Pedido Nº {pedido.numero}</Text>
-            <Text style={styles.statusLinha}>
-              {ROTULO_DO_STATUS[pedido.status] ?? pedido.status} · {dataFmt(pedido.created_at)}
-            </Text>
-          </View>
+          {emitente.logo && (
+            <Image
+              src={`data:image/${emitente.logo.format};base64,${emitente.logo.data}`}
+              style={styles.logo}
+            />
+          )}
+        </View>
+        <View style={styles.numeroLinha}>
+          <Text style={styles.numero}>Pedido Nº {pedido.numero}</Text>
+          <Text style={styles.statusLinha}>
+            {ROTULO_DO_STATUS[pedido.status] ?? pedido.status} · {dataFmt(pedido.created_at)}
+          </Text>
         </View>
         <Text style={styles.representada}>
           Representada: {emitente.nome}
@@ -319,7 +379,44 @@ export function PedidoPdf({
           </Text>
           <Text render={({ pageNumber }: { pageNumber: number }) => `Página ${pageNumber}`} />
         </View>
-      </Page>
+    </Page>
+  );
+}
+
+/** Um pedido só: um `<Document>` com uma página. */
+export function PedidoPdf({
+  emitente,
+  pedido,
+}: {
+  emitente: PedidoPdfEmitente;
+  pedido: PedidoPdfDados;
+}) {
+  return (
+    <Document>
+      <PedidoPagina emitente={emitente} pedido={pedido} />
+    </Document>
+  );
+}
+
+/**
+ * Um LOTE num arquivo só — um pedido por página.
+ *
+ * É o que o botão "Imprimir pedidos" da lista entrega: até 50 pedidos
+ * selecionados viram um PDF de até 50 páginas, com o mesmo cabeçalho (logo,
+ * CNPJ, telefone, endereço) em cada uma. Um arquivo em vez de 50 abas.
+ */
+export function PedidosPdf({
+  emitente,
+  pedidos,
+}: {
+  emitente: PedidoPdfEmitente;
+  pedidos: PedidoPdfDados[];
+}) {
+  return (
+    <Document>
+      {pedidos.map((p, i) => (
+        <PedidoPagina key={i} emitente={emitente} pedido={p} />
+      ))}
     </Document>
   );
 }
@@ -329,5 +426,14 @@ export async function renderPedidoPdf(
   pedido: PedidoPdfDados,
 ): Promise<Buffer> {
   const buf = await renderToBuffer(<PedidoPdf emitente={emitente} pedido={pedido} />);
+  return buf as Buffer;
+}
+
+/** Um PDF com todos os pedidos do lote, um por página. */
+export async function renderPedidosPdf(
+  emitente: PedidoPdfEmitente,
+  pedidos: PedidoPdfDados[],
+): Promise<Buffer> {
+  const buf = await renderToBuffer(<PedidosPdf emitente={emitente} pedidos={pedidos} />);
   return buf as Buffer;
 }

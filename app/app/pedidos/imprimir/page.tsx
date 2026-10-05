@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { idsDoLote } from "@/lib/comercial/ids-do-lote";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { createClient } from "@/lib/supabase/server";
@@ -9,13 +10,21 @@ import { ImprimirLoteClient, type ClienteImpresso, type ItemImpresso } from "./_
 
 export const dynamic = "force-dynamic";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const MAXIMO = 50;
-
 /**
- * IMPRESSÃO EM LOTE — os pedidos selecionados na lista, um após o outro,
- * prontos para Ctrl+P. Sem sidebar de propósito (doutrina da dobra): a porta
- * é o botão Imprimir da barra de massa, que passa os ids na URL.
+ * IMPRESSÃO EM LOTE — a porta é o botão Imprimir da barra de massa, que
+ * passa os ids na URL.
+ *
+ * **Com ids, esta página NÃO desenha nada**: ela resolve a sessão e
+ * redireciona no servidor para o PDF (`/api/v1/commercial-orders/pdf`), que
+ * abre no visor do navegador na mesma aba. É por isso que "Pedidos > Imprimir"
+ * não aparece no papel — o breadcrumb vive no HTML desta rota, e este HTML
+ * nunca chega a ser pintado.
+ *
+ * **Sem ids, ela continua renderizando a tela de impressão como sempre**
+ * (estado vazio, sem pedido nenhum selecionado). Fora de propósito: os e2e
+ * `responsividade-nas-rotas` e `auditoria-aceite-11-itens` visitam exatamente
+ * `/app/pedidos/imprimir` sem query, e o shell, o h1 e a ausência de overflow
+ * ali são medidos — apagar a tela derrubaria as duas specs.
  */
 export default async function ImprimirLotePage({
   searchParams,
@@ -27,11 +36,11 @@ export default async function ImprimirLotePage({
   if (!activeOrg) redirect("/app");
   const params = await searchParams;
 
-  const ids = (params.ids ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => UUID.test(s))
-    .slice(0, MAXIMO);
+  const ids = idsDoLote(params.ids);
+
+  if (ids.length > 0) {
+    redirect(`/api/v1/commercial-orders/pdf?ids=${ids.join(",")}`);
+  }
 
   const supabase = await createClient();
   const [{ data: org }, { data: pedidosRaw }, { data: itensRaw }] = await Promise.all([

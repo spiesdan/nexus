@@ -73,6 +73,17 @@ export async function updateTenant(input: TenantInput): Promise<UpdateTenantResu
       display_name: parsed.data.display_name,
       legal_name: parsed.data.legal_name,
       cnpj: parsed.data.cnpj ?? null,
+      // Dados da emitente no cabecalho do pedido impresso (migration 0255).
+      // O schema ja normalizou branco para null, entao `?? null` so cobre o
+      // ausente — nunca imprime rotulo sem valor.
+      phone: parsed.data.phone ?? null,
+      logradouro: parsed.data.logradouro ?? null,
+      numero_end: parsed.data.numero_end ?? null,
+      complemento: parsed.data.complemento ?? null,
+      bairro: parsed.data.bairro ?? null,
+      cidade: parsed.data.cidade ?? null,
+      uf: parsed.data.uf ?? null,
+      cep: parsed.data.cep ?? null,
       timezone: parsed.data.timezone,
       locale: parsed.data.locale,
       media_retention_days: parsed.data.media_retention_days,

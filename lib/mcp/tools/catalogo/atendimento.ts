@@ -29,8 +29,18 @@ export const TOOLS_ATENDIMENTO = declararTools([
     category: "read",
     rotulo: "Ver ficha do cliente",
     explicacao:
-      "Abre a ficha completa de um cliente: dados de contato, histórico e por onde ele chegou até a empresa.",
+      "Abre a ficha completa de um cliente: dados de contato, hist��rico e por onde ele chegou atǸ a empresa.",
     oQueToca: "Cadastro de clientes",
+    risco: "seguro",
+    pacotes: ["atender", "vender"],
+  },
+  {
+    name: "crm_find_contact_by_document",
+    category: "read",
+    rotulo: "Procurar cliente por CPF/CNPJ",
+    explicacao:
+      "Confere se o CPF ou CNPJ que o cliente informou jǭ tem cadastro, para nǜo duplicar ficha nem propor dado que jǭ existe.",
+    oQueToca: "Cadastro de clientes (documento fiscal)",
     risco: "seguro",
     pacotes: ["atender", "vender"],
   },

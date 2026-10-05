@@ -1,6 +1,6 @@
 # Mapa de Jornadas & Testes E2E — Experiência do usuário em VPS fresca
 
-> Fonte da verdade do QA de produto do DeskcommCRM open-source. Cada caso aqui é
+> Fonte da verdade do QA de produto do DeskcommCRM self-hosted. Cada caso aqui é
 > exercitado **pelo frontend real** (Playwright), com contas de teste reais e
 > recursos reais (banco fresco do `baseline.sql`, WAHA local, receiver de webhook
 > real). Curl/API só como diagnóstico, nunca como prova de UX.
@@ -751,7 +751,7 @@ Critério: nenhuma tela quebra, nenhum stack trace, nenhum texto de erro cru.
 
 | ID | Achado | Origem | Severidade |
 |----|--------|--------|-----------|
-| M1 | `supabase/config.toml` trava `major_version = 15`, mas `baseline.sql` exige PG17 (`GRANT MAINTAIN`) — contribuidor open-source não sobe ambiente local | reproduzido | Alta (DX) |
+| M1 | `supabase/config.toml` trava `major_version = 15`, mas `baseline.sql` exige PG17 (`GRANT MAINTAIN`) — quem monta o ambiente local não sobe | reproduzido | Alta (DX) |
 | M2 | Trilha manual do `docs/deploy-selfhost/README.md` não configura o cron do drain → automações mortas em silêncio | explorer webhooks | Alta |
 | M3 | ~~README self-host aponta repo/imagem `deskcommcrm/*`; kit usa `melgarafael/*`~~ **CORRIGIDO 2026-08-13** — era um `git clone` de uma org que não existe (404) em `docs/deploy-selfhost/README.md:26`. Uma consultoria externa leu essa string e concluiu que o compose apontava para uma org desvinculada; o compose sempre apontou para `melgarafael`. | explorer webhooks | — |
 | M4 | `INVITE_TOKEN_SECRET` ausente → fallback `"dev-fallback"` → convite forjável em VPS mal configurada | explorer CRM/time | Alta (segurança) |

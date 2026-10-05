@@ -2734,6 +2734,7 @@ export type Database = {
           marca: string | null;
           moeda: string;
           ncm: string | null;
+          ncm_origem: string | null;
           nome: string;
           organization_id: string;
           origem: string;
@@ -2762,6 +2763,7 @@ export type Database = {
           marca?: string | null;
           moeda?: string;
           ncm?: string | null;
+          ncm_origem?: string | null;
           nome: string;
           organization_id: string;
           origem?: string;
@@ -2790,6 +2792,7 @@ export type Database = {
           marca?: string | null;
           moeda?: string;
           ncm?: string | null;
+          ncm_origem?: string | null;
           nome?: string;
           organization_id?: string;
           origem?: string;
@@ -4322,6 +4325,48 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_lead_reactivations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      crm_lead_risk_decisions: {
+        Row: {
+          acao: string;
+          confianca: number | null;
+          decidido_em: string;
+          lead_id: string;
+          modelo: string | null;
+          organization_id: string;
+        };
+        Insert: {
+          acao: string;
+          confianca?: number | null;
+          decidido_em?: string;
+          lead_id: string;
+          modelo?: string | null;
+          organization_id: string;
+        };
+        Update: {
+          acao?: string;
+          confianca?: number | null;
+          decidido_em?: string;
+          lead_id?: string;
+          modelo?: string | null;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "crm_lead_risk_decisions_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: true;
+            referencedRelation: "crm_leads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "crm_lead_risk_decisions_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -6191,6 +6236,7 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           erro: string | null;
+          extras_fiscais: Json | null;
           id: string;
           numero: number | null;
           order_id: string | null;
@@ -6210,6 +6256,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           erro?: string | null;
+          extras_fiscais?: Json | null;
           id?: string;
           numero?: number | null;
           order_id?: string | null;
@@ -6229,6 +6276,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           erro?: string | null;
+          extras_fiscais?: Json | null;
           id?: string;
           numero?: number | null;
           order_id?: string | null;
@@ -7464,6 +7512,10 @@ export type Database = {
       organizations: {
         Row: {
           ai_budget_cents: number | null;
+          bairro: string | null;
+          cep: string | null;
+          cidade: string | null;
+          complemento: string | null;
           cnpj: string | null;
           created_at: string;
           created_by: string | null;
@@ -7472,9 +7524,12 @@ export type Database = {
           id: string;
           legal_name: string;
           locale: string;
+          logradouro: string | null;
           media_retention_days: number;
+          numero_end: string | null;
           onboarded_at: string | null;
           onboarding_state: NonNullable<Json>;
+          phone: string | null;
           privacy_policy_url: string | null;
           rate_limit_rps: number;
           redacted_at: string | null;
@@ -7485,10 +7540,15 @@ export type Database = {
           suspended_by: string | null;
           suspended_reason: string | null;
           timezone: string;
+          uf: string | null;
           updated_at: string;
         };
         Insert: {
           ai_budget_cents?: number | null;
+          bairro?: string | null;
+          cep?: string | null;
+          cidade?: string | null;
+          complemento?: string | null;
           cnpj?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -7497,9 +7557,12 @@ export type Database = {
           id?: string;
           legal_name: string;
           locale?: string;
+          logradouro?: string | null;
           media_retention_days?: number;
+          numero_end?: string | null;
           onboarded_at?: string | null;
           onboarding_state?: NonNullable<Json>;
+          phone?: string | null;
           privacy_policy_url?: string | null;
           rate_limit_rps?: number;
           redacted_at?: string | null;
@@ -7510,10 +7573,15 @@ export type Database = {
           suspended_by?: string | null;
           suspended_reason?: string | null;
           timezone?: string;
+          uf?: string | null;
           updated_at?: string;
         };
         Update: {
           ai_budget_cents?: number | null;
+          bairro?: string | null;
+          cep?: string | null;
+          cidade?: string | null;
+          complemento?: string | null;
           cnpj?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -7522,9 +7590,12 @@ export type Database = {
           id?: string;
           legal_name?: string;
           locale?: string;
+          logradouro?: string | null;
           media_retention_days?: number;
+          numero_end?: string | null;
           onboarded_at?: string | null;
           onboarding_state?: NonNullable<Json>;
+          phone?: string | null;
           privacy_policy_url?: string | null;
           rate_limit_rps?: number;
           redacted_at?: string | null;
@@ -7535,6 +7606,7 @@ export type Database = {
           suspended_by?: string | null;
           suspended_reason?: string | null;
           timezone?: string;
+          uf?: string | null;
           updated_at?: string;
         };
         Relationships: [];

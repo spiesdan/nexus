@@ -46,6 +46,7 @@ gatilho-de-caso.spec.ts
 gatilho-de-etapa.spec.ts
 historico-de-captacao.spec.ts
 icone-da-marca.spec.ts
+imprimir-pedidos-mesma-aba.spec.ts
 inbox-abas-espelham-o-comando.spec.ts
 inbox-quem-manda.spec.ts
 inbox-responder-citando.spec.ts

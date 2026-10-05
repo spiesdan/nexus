@@ -24,11 +24,48 @@ export const NOMINATIM_PADRAO = "https://nominatim.openstreetmap.org/search";
 /**
  * Espelhos em ordem: o oficial primeiro, o comunitário como reserva.
  * Medido: overpass-api.de pode recusar certos egressos com 406 e o kumi
- * exige User-Agent com sentido — por isso UA em toda chamada e failover só
- * em 406/429/5xx/rede (400 é query ruim e repetiria igual no outro).
+ * exige User-Agent com sentido — por isso UA em toda chamada. Troca de
+ * espelho é só pra 406 e pra queda de rede (problema do egress lá);
+ * 429/5xx esperam e repetem no mesmo, porque trocar de espelho não abre
+ * cota de nenhum dos dois (400 é query ruim e repetiria igual no outro).
  */
 const ESPELHOS_RESERVA = ["https://overpass.kumi.systems/api/interpreter"];
 const UA = "DeskcommCRM-Prospeccao/1.0";
+
+/**
+ * Teto da espera entre tentativas. Passar disso dentro de um tick trava o
+ * drain inteiro sem nenhuma garantia de a janela de cota ter aberto — o
+ * limite do espelho é curto e a próxima tentativa custa zero.
+ */
+const TETO_ESPERA_MS = 30000;
+
+/**
+ * `Retry-After` (segundos) quando o espelho manda quanto esperar.
+ * Header ausente/garbage = 0, e quem decide é o backoff — nunca estoura
+ * (`Response` de teste sem `headers` também não pode quebrar aqui).
+ */
+function retryAfterMs(res: Response): number {
+  try {
+    const bruto = res.headers?.get("Retry-After");
+    if (!bruto) return 0;
+    const segundos = Number(bruto);
+    if (!Number.isFinite(segundos) || segundos <= 0) return 0;
+    return Math.min(segundos * 1000, TETO_ESPERA_MS);
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Espera antes de insistir numa recusa transitória (429/5xx): o que o
+ * servidor pediu (`Retry-After`) ou, sem header, backoff exponencial com
+ * jitter — a maior das duas, porque cota de espelho público não se abre
+ * em 1s só porque a gente perguntou de novo.
+ */
+function esperaAposRecusa(res: Response, tentativa: number): number {
+  const backoff = Math.min(TETO_ESPERA_MS, 5000 * 2 ** (tentativa - 1));
+  return Math.min(Math.max(retryAfterMs(res), backoff) + Math.random() * 2000, TETO_ESPERA_MS);
+}
 
 /**
  * Termo comercial (minúsculo) → seletores Overpass. Lista curta de propósito:
@@ -94,7 +131,10 @@ export class OSMOverpassProvider implements BusinessDiscoveryProvider {
   constructor(opts?: { overpassUrl?: string; timeoutMs?: number; tentativas?: number }) {
     this.overpassUrl = opts?.overpassUrl?.trim() || process.env.OSM_OVERPASS_URL?.trim() || OVERPASS_PADRAO;
     this.timeoutMs = opts?.timeoutMs ?? 60000;
-    this.tentativas = opts?.tentativas ?? 3;
+    // 4 em vez de 3: a janela de cota do espelho público costuma durar mais
+    // que os 15s de duas esperas — a terceira (até 20s) é o que costuma
+    // atravessar o bloqueio sem queimar a célula.
+    this.tentativas = opts?.tentativas ?? 4;
   }
 
   private async chamar<T>(corpo: string, tentativa = 1, espelho = 0): Promise<T> {
@@ -122,15 +162,26 @@ export class OSMOverpassProvider implements BusinessDiscoveryProvider {
       clearTimeout(limite);
     }
     if ((res.status === 429 || res.status >= 500 || res.status === 406) && tentativa < this.tentativas) {
-      // Instância pública pede calma (ou bloqueia o egresso): backoff longo,
-      // e no 406 pula direto para o próximo espelho.
+      // Instância pública pede calma (ou bloqueia o egresso): espera longa —
+      // 429/5xx o próprio espelho diz quanto (`Retry-After`), senão backoff
+      // exponencial; no 406 pula direto pro próximo espelho, que é outro
+      // problema (egress recusado lá, não cota).
       if (res.status === 406 && espelho + 1 < urls.length) {
         return this.chamar<T>(corpo, tentativa, espelho + 1);
       }
-      await dormir(5000 * tentativa + Math.random() * 2000);
+      await dormir(esperaAposRecusa(res, tentativa));
       return this.chamar<T>(corpo, tentativa + 1, espelho);
     }
     if (!res.ok) {
+      if (res.status === 429) {
+        // A página de erro do Overpass é HTML gigante e não diz nada a quem
+        // opera; o que importa é o diagnóstico e a saída.
+        throw new Error(
+          `overpass_429: espelho Overpass recusou por excesso de requisições mesmo após ${this.tentativas} ` +
+            "tentativas com espera (Retry-After/backoff). É o limite do espelho público, não da busca: " +
+            "espere alguns minutos e rode de novo, ou aponte OSM_OVERPASS_URL pra outro espelho.",
+        );
+      }
       const texto = await res.text().catch(() => "");
       throw new Error(`overpass_${res.status}: ${texto.slice(0, 300)}`);
     }

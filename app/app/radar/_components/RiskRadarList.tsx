@@ -4,17 +4,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useAtRiskLeads, type AtRiskLead } from "@/hooks/leads/useAtRiskLeads";
+import type { AcaoDaDecisao } from "@/lib/leads/laya-decisao";
 import type { RiskBucket } from "@/lib/leads/risk-radar";
 import {
   ArrowRight,
   CheckCircle,
   ClockCountdown,
   PaperPlaneTilt,
+  Sparkle,
   Warning,
 } from "@/lib/ui/icons";
 
@@ -25,6 +28,20 @@ const RISK_META: Record<
   critico: { label: "Crítico", variant: "error" },
   em_risco: { label: "Em risco", variant: "warning" },
   em_voo: { label: "Em voo", variant: "info" },
+};
+
+/**
+ * O chip de sugestão (0258) — ação sugerida pelo motor local.
+ *
+ * Cores de PROPOSTA, não de estado: `reativar` (faça agora) ganha o destaque,
+ * `aguardar` some para o neutro e `encerrar` avisa. Elas não podem imitar as
+ * do `RISK_META` ao lado — "encerrar" em vermelho pareceria com "Crítico" e o
+ * operador leria duas vezes a mesma coisa.
+ */
+const SUGESTAO_META: Record<AcaoDaDecisao, { label: string; variant: "default" | "neutral" | "warning" }> = {
+  reativar: { label: "Reativar agora", variant: "default" },
+  aguardar: { label: "Aguardar", variant: "neutral" },
+  encerrar: { label: "Encerrar", variant: "warning" },
 };
 
 function coldFor(hours: number, t: (texto: string) => string): string {
@@ -38,6 +55,19 @@ function followupWhen(iso: string, t: (texto: string) => string): string {
   const hours = Math.round(diffMs / 3_600_000);
   if (hours < 48) return `${t("em")} ${Math.max(1, hours)}h`;
   return `${t("em")} ${Math.round(hours / 24)}d`;
+}
+
+/** Tooltip do chip: QUANDO a sugestão foi decidida e com que confiança. */
+function sugestaoTitulo(lead: AtRiskLead, tag: string, t: (texto: string) => string): string {
+  const quando = lead.ia_decidido_em
+    ? new Date(lead.ia_decidido_em).toLocaleString(tag, {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : "";
+  const confianca =
+    lead.ia_confianca !== null ? ` · ${t("confiança")} ${Math.round(lead.ia_confianca * 100)}%` : "";
+  return `${t("Sugestão da IA")}${quando ? ` — ${quando}` : ""}${confianca}`;
 }
 
 export function RiskRadarList() {
@@ -131,6 +161,7 @@ export function RiskRadarList() {
 
 function RadarRow({ lead }: { lead: AtRiskLead }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const meta = RISK_META[lead.risk as Exclude<RiskBucket, "em_dia">] ?? RISK_META.em_risco;
   const href = lead.conversation_id
     ? `/app/inbox?id=${lead.conversation_id}`
@@ -181,6 +212,18 @@ function RadarRow({ lead }: { lead: AtRiskLead }) {
         <Badge variant={meta.variant} className="mt-0.5 shrink-0">
           {t(meta.label)}
         </Badge>
+        {lead.ia_acao ? (
+          <Badge
+            variant={SUGESTAO_META[lead.ia_acao].variant}
+            className="mt-0.5 shrink-0"
+            data-testid="radar-sugestao"
+            data-acao={lead.ia_acao}
+            title={sugestaoTitulo(lead, tagIdioma, t)}
+          >
+            <Sparkle size={12} aria-hidden />
+            {t("Sugestão:")} {t(SUGESTAO_META[lead.ia_acao].label)}
+          </Badge>
+        ) : null}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{lead.title}</p>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">

@@ -21,7 +21,7 @@ import { entraPorPacote, type ToolBundle, type ToolRisk } from "./pacotes";
  * exista em UM lugar — o mesmo teto que a tela mostra é o que o servidor
  * recusa.
  *
- * ═══ Por que 25, e não mais os 20 de antes ══════════════════════════════════
+ * ═══ Por que 28, e não os 20/25 de antes ════════════════════════════════════
  *
  * O dono do produto abriu "O que o agente pode fazer" na v1.7.0 e leu
  * "20 de 20 capacidades ligadas. Limite atingido." As capacidades de agenda
@@ -39,21 +39,26 @@ import { entraPorPacote, type ToolBundle, type ToolRisk } from "./pacotes";
  *  - o modelo JÁ recebe mais que 20. O turno monta 12 ferramentas nativas
  *    além das do catálogo, então o prompt de um agente cheio sempre teve 32
  *    definições, não 20. O número nunca foi o que a heurística media;
- *  - o catálogo cresceu de 51 para 57. Só `vender` consome 17, e a partir do
- *    default de hoje NENHUM segundo pacote cabia: evoluir exigia 21, reter 22,
- *    escalar 28, atender 30, organizar 32.
+ *  - 2026-08-06 (catálogo 51→57, teto 20→25): a partir do default de então,
+ *    NENHUM segundo pacote cabia em 20 — evoluir exigia 21, reter 22,
+ *    escalar 28, atender 30, organizar 32;
+ *  - 2026-10-04 (catálogo 61→63, tools de documento fiscal e expedição, teto
+ *    25→28): as duas entraram no pacote `vender`, que é o default do
+ *    onboarding — subiu de 19 para 21 — e a partir dele NENHUM segundo pacote
+ *    cabia mais em 25: evoluir exigia 26, reter 27 (escalar 33, atender 35,
+ *    organizar 37). Guarda que pegou: `pacote-reserva-vaga-da-critica`.
  *
- * 25 é o MENOR passo que resolve: dá a um agente cheio as 5 vagas da família de
- * agenda e mantém `vender` inteiro com folga real. Não é número redondo
- * escolhido no olho — subir mais seria apostar contra um argumento que continua
- * de pé só porque ninguém o mediu.
+ * 28 é o MENOR passo que resolve a medição de hoje: cabem evoluir (26) e reter
+ * (27) com o default de 21, e ainda sobra 1 vaga antes de estourar de novo.
+ * Não é número redondo escolhido no olho — subir mais seria apostar contra um
+ * argumento que continua de pé só porque ninguém o mediu.
  *
  * ⚠️ O QUE FALTA, e é honesto dizer: não há instrumento para observar a
  * degradação que a heurística prevê. O lugar de observá-la é
  * `app/api/v1/ai/agents/[id]/tool-usage` e o log de invocação do run, com
  * "ferramenta errada escolhida" como sinal. Quem for subir de novo mede antes.
  */
-export const TETO_TOOLS_POR_AGENTE = 25;
+export const TETO_TOOLS_POR_AGENTE = 28;
 
 /** O mínimo que a regra precisa saber de uma capacidade. */
 export interface CapacidadeSelecionavel {
