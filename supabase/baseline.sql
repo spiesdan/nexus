@@ -348,7 +348,7 @@ begin
 
   v_anon_label := 'Cliente Anonimizado #' || substring(p_contact_id::text from 1 for 8);
 
-  -- Collect media storage paths (we only delete what we own — media_storage_path)
+  -- Collect media storage paths (we only delete what we own â€” media_storage_path)
   select coalesce(array_agg(distinct media_storage_path) filter (where media_storage_path is not null), '{}')
     into v_media_paths
     from messages
@@ -363,9 +363,9 @@ begin
     name = v_anon_label,
     display_name = v_anon_label,
     email = null,
-    -- email_normalized NÃO entra: é GENERATED ALWAYS AS (lower(trim(email)))
-    -- e o Postgres recusa escrita nela — a linha acima já a zera por derivação.
-    -- Com a atribuição, o cascade INTEIRO abortava e nada era anonimizado.
+    -- email_normalized NÃƒO entra: Ã© GENERATED ALWAYS AS (lower(trim(email)))
+    -- e o Postgres recusa escrita nela â€” a linha acima jÃ¡ a zera por derivaÃ§Ã£o.
+    -- Com a atribuiÃ§Ã£o, o cascade INTEIRO abortava e nada era anonimizado.
     phone_number = null,
     cpf_encrypted = null,
     cpf_hash = null,
@@ -406,10 +406,10 @@ begin
   get diagnostics v_count = row_count;
   v_counts := v_counts || jsonb_build_object('messages', v_count);
 
-  -- 4. crm_lead_activities — strip payload, metadata E reason (migration 0071).
-  --    `reason` é texto livre escrito por LLM sobre a conversa do lead: supor que
-  --    nunca conterá um nome é a suposição que falha. `evidence` NÃO é limpa —
-  --    guarda só ids, e as linhas apontadas são redigidas por conta própria.
+  -- 4. crm_lead_activities â€” strip payload, metadata E reason (migration 0071).
+  --    `reason` Ã© texto livre escrito por LLM sobre a conversa do lead: supor que
+  --    nunca conterÃ¡ um nome Ã© a suposiÃ§Ã£o que falha. `evidence` NÃƒO Ã© limpa â€”
+  --    guarda sÃ³ ids, e as linhas apontadas sÃ£o redigidas por conta prÃ³pria.
   update crm_lead_activities set
     payload = '{}'::jsonb,
     metadata = '{}'::jsonb,
@@ -431,7 +431,7 @@ begin
   get diagnostics v_count = row_count;
   v_counts := v_counts || jsonb_build_object('activities', v_count);
 
-  -- 5. crm_leads — strip title/description/custom_fields/source_metadata/tags but PRESERVE pipeline/stage/value
+  -- 5. crm_leads â€” strip title/description/custom_fields/source_metadata/tags but PRESERVE pipeline/stage/value
   update crm_leads set
     title = v_anon_label,
     description = null,
@@ -452,7 +452,7 @@ begin
   get diagnostics v_count = row_count;
   v_counts := v_counts || jsonb_build_object('leads', v_count);
 
-  -- 6. orders — PRESERVE values + status + timestamps. Strip personal fields from payload jsonb
+  -- 6. orders â€” PRESERVE values + status + timestamps. Strip personal fields from payload jsonb
   --    and replace customer_external_id with null (FK-safe; soft de-link). Keep contact_id null.
   update orders set
     payload = (coalesce(payload, '{}'::jsonb))
@@ -699,10 +699,10 @@ begin
       ('Carrinho abandonado',  'carrinho_abandonado',  false, false),
       ('Aguardando pagamento', 'aguardando_pagamento', false, false),
       ('Pago',                 'pago',                 true,  false),
-      ('Em separação',        'em_separacao',         false, false),
+      ('Em separaÃ§Ã£o',        'em_separacao',         false, false),
       ('Enviado',              'enviado',              false, false),
       ('Entregue',             'entregue',             false, false),
-      ('Pós-venda',           'pos_venda',            false, false),
+      ('PÃ³s-venda',           'pos_venda',            false, false),
       ('Cancelado',            'cancelado',            false, true)
     ) as t(stage_name, stage_slug, won, lost)
   loop
@@ -921,14 +921,14 @@ COMMENT ON FUNCTION "public"."retrieve_top_k_chunks"("p_organization_id" "uuid",
 -- `rls_auto_enable()` (event trigger candidato para ligar RLS automaticamente em
 -- toda CREATE TABLE) foi removida em 2026-08-27: nunca existiu um `CREATE EVENT
 -- TRIGGER ... EXECUTE FUNCTION rls_auto_enable()` em lugar nenhum do baseline ou
--- das migrations, então a função nunca foi de fato invocada pelo Postgres — e,
--- sendo do tipo `event_trigger`, também não pode ser chamada manualmente via
--- SQL. Era uma promessa de proteção automática que o código nunca cumpriu; quem
+-- das migrations, entÃ£o a funÃ§Ã£o nunca foi de fato invocada pelo Postgres â€” e,
+-- sendo do tipo `event_trigger`, tambÃ©m nÃ£o pode ser chamada manualmente via
+-- SQL. Era uma promessa de proteÃ§Ã£o automÃ¡tica que o cÃ³digo nunca cumpriu; quem
 -- lesse o baseline podia concluir, errado, que tabela nova nascia com RLS
--- ligada sozinha. A garantia real de isolamento por tabela é comportamental
+-- ligada sozinha. A garantia real de isolamento por tabela Ã© comportamental
 -- (tests/invariants/rls-isolation.test.ts + rls-completude-varredura.test.ts),
--- não um event trigger. Ligar o event trigger de verdade é mudança de
--- comportamento de runtime do banco e mereceria revisão própria — não esta.
+-- nÃ£o um event trigger. Ligar o event trigger de verdade Ã© mudanÃ§a de
+-- comportamento de runtime do banco e mereceria revisÃ£o prÃ³pria â€” nÃ£o esta.
 
 SET default_tablespace = '';
 
@@ -1212,16 +1212,16 @@ CREATE TABLE IF NOT EXISTS "public"."ai_provider_credentials" (
 ALTER TABLE "public"."ai_provider_credentials" OWNER TO "postgres";
 
 
--- POR QUE DROP + CREATE e não CREATE OR REPLACE: o Postgres recusa em `create
--- or replace` uma definição que precise REMOVER coluna existente ("cannot drop
--- columns from view"). Uma instalação que tenha recebido coluna extra de uma
--- migração alheia — a tentativa de atualização de 2026-09-27 deixou `base_url`
--- nesta view — ficaria presa na definição antiga para sempre, e o `update.sh`
--- reportava exatamente isso como aviso a cada atualização. O drop derruba
--- também os ACLs da view, e o par de `grant` do bloco de permissões lá abaixo
--- (ALL para `authenticated` e `service_role`; `anon` nunca recebe) os repõe na
--- MESMA aplicação do arquivo — a ordem do baseline garante. A definição é a de
--- DOZE colunas, a canônica: nenhum segredo por aqui (o que esconde o segredo é
+-- POR QUE DROP + CREATE e nÃ£o CREATE OR REPLACE: o Postgres recusa em `create
+-- or replace` uma definiÃ§Ã£o que precise REMOVER coluna existente ("cannot drop
+-- columns from view"). Uma instalaÃ§Ã£o que tenha recebido coluna extra de uma
+-- migraÃ§Ã£o alheia â€” a tentativa de atualizaÃ§Ã£o de 2026-09-27 deixou `base_url`
+-- nesta view â€” ficaria presa na definiÃ§Ã£o antiga para sempre, e o `update.sh`
+-- reportava exatamente isso como aviso a cada atualizaÃ§Ã£o. O drop derruba
+-- tambÃ©m os ACLs da view, e o par de `grant` do bloco de permissÃµes lÃ¡ abaixo
+-- (ALL para `authenticated` e `service_role`; `anon` nunca recebe) os repÃµe na
+-- MESMA aplicaÃ§Ã£o do arquivo â€” a ordem do baseline garante. A definiÃ§Ã£o Ã© a de
+-- DOZE colunas, a canÃ´nica: nenhum segredo por aqui (o que esconde o segredo Ã©
 -- o GRANT POR COLUNA da 0150 sobre a tabela base), e `security_invoker=true`
 -- permanece, para que a RLS da base continue valendo para quem consulta.
 DROP VIEW IF EXISTS "public"."ai_provider_credentials_safe";
@@ -1861,7 +1861,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_organizations" (
 ALTER TABLE "public"."user_organizations" OWNER TO "postgres";
 
 
-COMMENT ON COLUMN "public"."user_organizations"."role" IS '4 roles canônicos: viewer (1) < agent (2) < manager (3) < admin (4). Hierarquia.';
+COMMENT ON COLUMN "public"."user_organizations"."role" IS '4 roles canÃ´nicos: viewer (1) < agent (2) < manager (3) < admin (4). Hierarquia.';
 
 
 
@@ -4913,7 +4913,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 -- ============================================================================
--- COMPLEMENTO DO BASELINE (não capturado pelo dump --schema public):
+-- COMPLEMENTO DO BASELINE (nÃ£o capturado pelo dump --schema public):
 --   storage buckets + policies (migrations 0014/0017) e realtime publication.
 --   Aplicar DEPOIS do schema public (dependem de public.user_organizations).
 -- ============================================================================
@@ -4996,7 +4996,7 @@ values ('skill-assets', 'skill-assets', false, 5242880)
 on conflict (id) do nothing;
 
 -- Leitura por org (path {org_id}/...) OU plataforma (path platform/...) por qualquer
--- usuário autenticado (assets de plataforma são públicos p/ tenants; conteúdo é curado).
+-- usuÃ¡rio autenticado (assets de plataforma sÃ£o pÃºblicos p/ tenants; conteÃºdo Ã© curado).
 drop policy if exists "skill_assets_read" on storage.objects;
 create policy "skill_assets_read" on storage.objects for select to authenticated
   using (
@@ -5010,7 +5010,7 @@ create policy "skill_assets_read" on storage.objects for select to authenticated
       )
     )
   );
--- Escrita/DELETE de assets é sempre via service role (rota de import) — sem policy de write.
+-- Escrita/DELETE de assets Ã© sempre via service role (rota de import) â€” sem policy de write.
 
 -- ---- realtime: inbox (messages/conversations), kanban (crm_leads) e IA ----
 do $$ begin
@@ -5021,8 +5021,8 @@ end $$;
 do $$
 declare t text;
 begin
-  -- crm_lead_activities (migration 0071): o dossiê assina a timeline filtrada
-  -- por lead_id (§3.5). O board não assina esta tabela — ele escuta crm_leads
+  -- crm_lead_activities (migration 0071): o dossiÃª assina a timeline filtrada
+  -- por lead_id (Â§3.5). O board nÃ£o assina esta tabela â€” ele escuta crm_leads
   -- por pipeline_id, e toda atividade toca o lead via fn_update_last_activity_at.
   foreach t in array array['messages','conversations','crm_leads','ai_agents','ai_agent_runs','ai_knowledge_sources','crm_lead_activities']
   loop
@@ -5035,31 +5035,31 @@ begin
   end loop;
 end $$;
 
--- ---- ai_models: catálogo curado global (migration 0023, §Seed Spec 10 §2.2) ----
--- Também não capturado pelo dump --schema-only. Sem isto, /api/v1/ai/providers/:p/models
--- devolve lista vazia pra todo provedor e o seletor de modelo do agente fica sem opções.
+-- ---- ai_models: catÃ¡logo curado global (migration 0023, Â§Seed Spec 10 Â§2.2) ----
+-- TambÃ©m nÃ£o capturado pelo dump --schema-only. Sem isto, /api/v1/ai/providers/:p/models
+-- devolve lista vazia pra todo provedor e o seletor de modelo do agente fica sem opÃ§Ãµes.
 insert into public.ai_models (provider, model_id, display_name, description, context_window, input_price_per_million_cents, output_price_per_million_cents, supports_tools, is_default_for_provider)
 values
-  ('anthropic', 'claude-opus-4-7',    'Claude Opus 4.7',    'Flagship Anthropic — raciocínio complexo',                  200000,  1500, 7500, true, false),
-  ('anthropic', 'claude-sonnet-4-6',  'Claude Sonnet 4.6',  'Default recomendado — equilíbrio custo/qualidade',           200000,   300, 1500, true, true),
-  ('anthropic', 'claude-haiku-4-5',   'Claude Haiku 4.5',   'Cheap/fast — atendimentos curtos e classificação',           200000,   100,  500, true, false),
+  ('anthropic', 'claude-opus-4-7',    'Claude Opus 4.7',    'Flagship Anthropic â€” raciocÃ­nio complexo',                  200000,  1500, 7500, true, false),
+  ('anthropic', 'claude-sonnet-4-6',  'Claude Sonnet 4.6',  'Default recomendado â€” equilÃ­brio custo/qualidade',           200000,   300, 1500, true, true),
+  ('anthropic', 'claude-haiku-4-5',   'Claude Haiku 4.5',   'Cheap/fast â€” atendimentos curtos e classificaÃ§Ã£o',           200000,   100,  500, true, false),
   ('openai',    'gpt-5',              'GPT-5',              'Flagship OpenAI',                                           400000,   500, 4000, true, false),
   ('openai',    'gpt-5-mini',         'GPT-5 Mini',         'Cheap/fast OpenAI',                                         400000,   150,  600, true, true),
-  ('openai',    'gpt-4o',             'GPT-4o (legacy)',    'Compat — uso legado',                                       128000,   250, 1000, true, false),
+  ('openai',    'gpt-4o',             'GPT-4o (legacy)',    'Compat â€” uso legado',                                       128000,   250, 1000, true, false),
   ('google',    'gemini-2.5-pro',     'Gemini 2.5 Pro',     'Flagship Google',                                          1000000,   125,  500, true, false),
   ('google',    'gemini-2.5-flash',   'Gemini 2.5 Flash',   'Cheap/fast Google',                                        1000000,    30,  120, true, true)
 on conflict (provider, model_id) do nothing;
 
--- ---- WhatsApp: unificação de conversas por contato (migration 0027) ----
--- O dump --schema-only não traz mudanças pós-snapshot. Sem este bloco, clones
+-- ---- WhatsApp: unificaÃ§Ã£o de conversas por contato (migration 0027) ----
+-- O dump --schema-only nÃ£o traz mudanÃ§as pÃ³s-snapshot. Sem este bloco, clones
 -- (install.sh) e clones atualizando (update.sh, que re-aplica baseline.sql)
 -- ficam com o bug: 1 pessoa vira N contatos/conversas (WAHA emite
 -- message+message.any por mensagem; contatos @lid sem unique + check-then-act).
--- Idempotente e AUTO-CURATIVO: em banco novo o dedup é no-op; em clone já bugado
--- ele deduplica o histórico ANTES de criar as constraints. Ver a migration
+-- Idempotente e AUTO-CURATIVO: em banco novo o dedup Ã© no-op; em clone jÃ¡ bugado
+-- ele deduplica o histÃ³rico ANTES de criar as constraints. Ver a migration
 -- 20260706210000_0027_whatsapp_conversation_unification.sql para o detalhe.
 
--- A. Identidade canônica (generated)
+-- A. Identidade canÃ´nica (generated)
 alter table public.contacts
   add column if not exists wa_identity text
   generated always as (
@@ -5113,7 +5113,7 @@ delete from public.conversations d
 using (select id, first_value(id) over (partition by organization_id, contact_id, channel_session_id order by created_at asc, id asc) as canonical_id from public.conversations where is_group = false) canon
 where d.id = canon.id and canon.id <> canon.canonical_id;
 
--- C. Constraints anti-reduplicação
+-- C. Constraints anti-reduplicaÃ§Ã£o
 create unique index if not exists uniq_contacts_org_wa_identity
   on public.contacts (organization_id, wa_identity)
   where wa_identity is not null and is_merged_into is null;
@@ -5121,7 +5121,7 @@ create unique index if not exists uniq_conversations_1to1_per_contact_session
   on public.conversations (organization_id, contact_id, channel_session_id)
   where is_group = false;
 
--- D. Upsert atômico (a aplicação usa via lib/waha/ingest.ts)
+-- D. Upsert atÃ´mico (a aplicaÃ§Ã£o usa via lib/waha/ingest.ts)
 create or replace function public.fn_upsert_wa_contact(
   p_org uuid, p_kind text, p_phone text, p_lid text, p_chat_id text, p_notify text
 ) returns uuid language plpgsql security definer set search_path = public as $$
@@ -5176,8 +5176,8 @@ grant execute on function public.fn_upsert_wa_conversation(uuid, uuid, uuid) to 
 grant execute on function public.fn_mark_conversation_message(uuid, text, text, timestamptz) to service_role;
 
 -- ---- RLS por role em tabelas de config + viewer read-only (migration 0030) ----
--- G2-03: spec 13 §4 — pipelines/stages (config) write manager+; conversations
--- write agent+ (viewer read-only). SELECT permanece org-flat (escopo own é G4).
+-- G2-03: spec 13 Â§4 â€” pipelines/stages (config) write manager+; conversations
+-- write agent+ (viewer read-only). SELECT permanece org-flat (escopo own Ã© G4).
 -- Idempotente: drop if exists + create (auto-curativo no update.sh de clones).
 
 drop policy if exists "tenant_isolation_crm_pipelines_all" on public.crm_pipelines;
@@ -5246,12 +5246,12 @@ create policy "conversations_agent_write" on public.conversations
         and public.fn_role_at_least(organization_id, 'agent'))
   );
 
--- ---- Auditoria de atribuição de conversas + fn_conversation_assign (migration 0031) ----
--- G3-01 (gov-loop): toda mudança de dono de conversa vira evento estruturado
--- (spec 13 §3.1) e as rotas de claim/transfer/release passam a mudar o dono via
--- fn_conversation_assign — UPDATE condicional + INSERT do evento na MESMA
--- transação (spec 04 §9; 0 rows = optimistic lock perdeu → 409). Idempotente:
--- em clone atualizado é no-op; sem dados a corrigir.
+-- ---- Auditoria de atribuiÃ§Ã£o de conversas + fn_conversation_assign (migration 0031) ----
+-- G3-01 (gov-loop): toda mudanÃ§a de dono de conversa vira evento estruturado
+-- (spec 13 Â§3.1) e as rotas de claim/transfer/release passam a mudar o dono via
+-- fn_conversation_assign â€” UPDATE condicional + INSERT do evento na MESMA
+-- transaÃ§Ã£o (spec 04 Â§9; 0 rows = optimistic lock perdeu â†’ 409). Idempotente:
+-- em clone atualizado Ã© no-op; sem dados a corrigir.
 
 create table if not exists public.conversation_assignment_events (
   id              uuid primary key default gen_random_uuid(),
@@ -5339,17 +5339,17 @@ grant execute on function public.fn_conversation_assign(uuid, uuid, uuid, text, 
   to authenticated, service_role;
 
 -- ---- assignee_kind + guard de membership na fn_conversation_assign (migration 0032) ----
--- G3-02 (gov-loop): IA como assignee de 1ª classe (spec 13 §3.2). Coluna
--- conversations.assignee_kind ('user'|'ai') + CHECK de coerência em forma de
--- implicação (kind='user' ⇒ dono humano; kind='ai' ⇒ sem dono; kind null livre
+-- G3-02 (gov-loop): IA como assignee de 1Âª classe (spec 13 Â§3.2). Coluna
+-- conversations.assignee_kind ('user'|'ai') + CHECK de coerÃªncia em forma de
+-- implicaÃ§Ã£o (kind='user' â‡’ dono humano; kind='ai' â‡’ sem dono; kind null livre
 -- pra escritas legadas). Backfill ANTES da constraint (auto-curativo em clones).
--- Forward-fix INB-06a: fn_conversation_assign valida DENTRO da função que o
--- destino é membro ativo agent+ da org (via fn_member_role_in_org, SECURITY
--- DEFINER) e mantém assignee_kind coerente em claim/transfer/release/handoff.
--- fn_member_role_in_org é executável APENAS por authenticated (responde só a
+-- Forward-fix INB-06a: fn_conversation_assign valida DENTRO da funÃ§Ã£o que o
+-- destino Ã© membro ativo agent+ da org (via fn_member_role_in_org, SECURITY
+-- DEFINER) e mantÃ©m assignee_kind coerente em claim/transfer/release/handoff.
+-- fn_member_role_in_org Ã© executÃ¡vel APENAS por authenticated (responde sÃ³ a
 -- membro ativo da org) e service_role (auth.uid() null); anon tem EXECUTE
--- revogado EXPLICITAMENTE — o default privilege do Supabase concede EXECUTE a
--- anon em toda função nova e o JWT anon também tem uid null.
+-- revogado EXPLICITAMENTE â€” o default privilege do Supabase concede EXECUTE a
+-- anon em toda funÃ§Ã£o nova e o JWT anon tambÃ©m tem uid null.
 
 alter table public.conversations
   add column if not exists assignee_kind text
@@ -5403,11 +5403,11 @@ as $$
 $$;
 
 revoke all on function public.fn_member_role_in_org(uuid, uuid) from public;
--- O revoke from public NÃO cobre o grant DIRETO que anon carrega via
--- ALTER DEFAULT PRIVILEGES ... GRANT ALL ON FUNCTIONS TO anon (padrão
--- Supabase). Sem esta linha, o PostgREST expõe a função como RPC pública
+-- O revoke from public NÃƒO cobre o grant DIRETO que anon carrega via
+-- ALTER DEFAULT PRIVILEGES ... GRANT ALL ON FUNCTIONS TO anon (padrÃ£o
+-- Supabase). Sem esta linha, o PostgREST expÃµe a funÃ§Ã£o como RPC pÃºblica
 -- (anon key vai pro browser) e o ramo auth.uid() null responde a request
--- anônimo — enumeração de membership/role de qualquer tenant.
+-- anÃ´nimo â€” enumeraÃ§Ã£o de membership/role de qualquer tenant.
 revoke execute on function public.fn_member_role_in_org(uuid, uuid) from anon;
 grant execute on function public.fn_member_role_in_org(uuid, uuid)
   to authenticated, service_role;
@@ -5475,9 +5475,9 @@ grant execute on function public.fn_conversation_assign(uuid, uuid, uuid, text, 
 
 
 -- ---- conversation tags (migration 0033) ----
--- G3-05 (gov-loop): eixo 7 — tags de conversa (spec 13 §3.3). Mesmo shape de
--- contacts.tags/crm_leads.tags (text[] + GIN). Vocabulário canônico em
--- organizations.settings.canonical_conversation_tags (org-scoped), semeado só
+-- G3-05 (gov-loop): eixo 7 â€” tags de conversa (spec 13 Â§3.3). Mesmo shape de
+-- contacts.tags/crm_leads.tags (text[] + GIN). VocabulÃ¡rio canÃ´nico em
+-- organizations.settings.canonical_conversation_tags (org-scoped), semeado sÃ³
 -- onde ausente. Idempotente/auto-curativo.
 alter table public.conversations
   add column if not exists tags text[] not null default '{}';
@@ -5490,8 +5490,8 @@ update public.organizations
        || jsonb_build_object(
             'canonical_conversation_tags',
             jsonb_build_array(
-              'dúvida', 'reclamação', 'troca', 'devolução',
-              'elogio', 'orçamento', 'pós-venda', 'urgente'
+              'dÃºvida', 'reclamaÃ§Ã£o', 'troca', 'devoluÃ§Ã£o',
+              'elogio', 'orÃ§amento', 'pÃ³s-venda', 'urgente'
             )
           )
  where not (coalesce(settings, '{}'::jsonb) ? 'canonical_conversation_tags');
@@ -5499,11 +5499,11 @@ update public.organizations
 
 -- ---- revoke anon EXECUTE em SECURITY DEFINER de escrita (migration 0034) ----
 -- G4-00 (gov-loop): defesa em profundidade (INB-07). Duas origens de EXECUTE a
--- anon: (A) grant DIRETO do ALTER DEFAULT PRIVILEGES ... TO anon acima (funções
--- criadas depois dele, já sem grant a PUBLIC) → revoke anon; (B) grant via
--- PUBLIC (funções criadas ANTES do ALTER e nunca revogadas de public) → revoke
--- public + re-afirma authenticated/service_role (call sites legítimos). Nenhum
--- fluxo anônimo depende delas. Idempotente/auto-curativo.
+-- anon: (A) grant DIRETO do ALTER DEFAULT PRIVILEGES ... TO anon acima (funÃ§Ãµes
+-- criadas depois dele, jÃ¡ sem grant a PUBLIC) â†’ revoke anon; (B) grant via
+-- PUBLIC (funÃ§Ãµes criadas ANTES do ALTER e nunca revogadas de public) â†’ revoke
+-- public + re-afirma authenticated/service_role (call sites legÃ­timos). Nenhum
+-- fluxo anÃ´nimo depende delas. Idempotente/auto-curativo.
 revoke execute on function public.fn_upsert_wa_contact(uuid, text, text, text, text, text) from anon;
 revoke execute on function public.fn_upsert_wa_conversation(uuid, uuid, uuid) from anon;
 revoke execute on function public.fn_mark_conversation_message(uuid, text, text, timestamptz) from anon;
@@ -5522,15 +5522,15 @@ grant execute on function public.fn_audit_log_row() to service_role;
 
 
 -- ---- visibility_mode: RLS de conversas/mensagens por atendente (migration 0035) ----
--- G4-01 (gov-loop): eixo 5 (spec 13 §3.5 + §4). organizations.settings.visibility_mode
--- ('all'|'own_and_unassigned'|'own', default 'own_and_unassigned' — G1-06a) restringe o
+-- G4-01 (gov-loop): eixo 5 (spec 13 Â§3.5 + Â§4). organizations.settings.visibility_mode
+-- ('all'|'own_and_unassigned'|'own', default 'own_and_unassigned' â€” G1-06a) restringe o
 -- SELECT de conversations/messages APENAS para o role agent; viewer/manager/admin seguem
--- org-wide read. fn_can_view_conversation recebe os campos da ROW (evita lookup/recursão
--- por-row); DEFINER + search_path blindado + revoke anon/public (lição G4-00). A escrita
--- 0030 era FOR ALL, cujo USING também governa SELECT (policies OR-adas) — por isso é
--- re-expressa por-comando (mesmo agent+/org; quem escreve não muda), removendo só o grant
--- implícito de SELECT. messages SELECT herda o escopo da conversa via exists(). Idempotente,
--- auto-curativo. Escrita não restringida; ingestão/outbound via service_role bypassa RLS.
+-- org-wide read. fn_can_view_conversation recebe os campos da ROW (evita lookup/recursÃ£o
+-- por-row); DEFINER + search_path blindado + revoke anon/public (liÃ§Ã£o G4-00). A escrita
+-- 0030 era FOR ALL, cujo USING tambÃ©m governa SELECT (policies OR-adas) â€” por isso Ã©
+-- re-expressa por-comando (mesmo agent+/org; quem escreve nÃ£o muda), removendo sÃ³ o grant
+-- implÃ­cito de SELECT. messages SELECT herda o escopo da conversa via exists(). Idempotente,
+-- auto-curativo. Escrita nÃ£o restringida; ingestÃ£o/outbound via service_role bypassa RLS.
 
 create or replace function public.fn_can_view_conversation(
   p_org uuid,
@@ -5629,11 +5629,11 @@ create policy "messages_delete" on public.messages
 
 -- Forward-fix do G4-01: fn_conversation_assign (0031/0032) passa a SECURITY
 -- DEFINER. Com o SELECT de conversations visibility-aware, o `update ... returning
--- *` re-aplica a policy de SELECT à NOVA linha — numa transferência o dono passa a
--- ser outro atendente, invisível ao autor, e o RETURNING falharia. DEFINER bypassa
--- a RLS na escrita interna; a autorização do caller (antes garantida pela RLS
--- INVOKER) é re-afirmada dentro da função: agent+ ativo da MESMA org (service_role
--- com auth.uid() null é dispensado). Corpo idêntico ao 0032 fora o guard.
+-- *` re-aplica a policy de SELECT Ã  NOVA linha â€” numa transferÃªncia o dono passa a
+-- ser outro atendente, invisÃ­vel ao autor, e o RETURNING falharia. DEFINER bypassa
+-- a RLS na escrita interna; a autorizaÃ§Ã£o do caller (antes garantida pela RLS
+-- INVOKER) Ã© re-afirmada dentro da funÃ§Ã£o: agent+ ativo da MESMA org (service_role
+-- com auth.uid() null Ã© dispensado). Corpo idÃªntico ao 0032 fora o guard.
 create or replace function public.fn_conversation_assign(
   p_organization_id uuid,
   p_conversation_id uuid,
@@ -5703,18 +5703,18 @@ grant execute on function public.fn_conversation_assign(uuid, uuid, uuid, text, 
   to authenticated, service_role;
 
 -- ---- visibility_mode: RLS de crm_leads (kanban) por atendente (migration 0036) ----
--- G4-03 (gov-loop): eixo 5 (spec 13 §4 linha 220). Espelha a G4-01 (conversations,
--- 0035) para crm_leads — "dono" do lead = owner_user_id (não assigned_to). REUSE do
+-- G4-03 (gov-loop): eixo 5 (spec 13 Â§4 linha 220). Espelha a G4-01 (conversations,
+-- 0035) para crm_leads â€” "dono" do lead = owner_user_id (nÃ£o assigned_to). REUSE do
 -- mesmo organizations.settings.visibility_mode ('all'|'own_and_unassigned'|'own',
--- default 'own_and_unassigned' — G1-06a; a matriz diz "mesmo escopo"). Só o role
--- agent é restrito; viewer/manager/admin org-wide read; platform_admin tudo.
--- fn_can_view_lead recebe os campos da ROW (sem lookup/recursão); DEFINER +
--- search_path blindado + revoke anon/public (lição G4-00). A FOR ALL org-flat
--- `tenant_isolation_crm_leads_all` governava SELECT junto (USING OR-ado) — dropada e
+-- default 'own_and_unassigned' â€” G1-06a; a matriz diz "mesmo escopo"). SÃ³ o role
+-- agent Ã© restrito; viewer/manager/admin org-wide read; platform_admin tudo.
+-- fn_can_view_lead recebe os campos da ROW (sem lookup/recursÃ£o); DEFINER +
+-- search_path blindado + revoke anon/public (liÃ§Ã£o G4-00). A FOR ALL org-flat
+-- `tenant_isolation_crm_leads_all` governava SELECT junto (USING OR-ado) â€” dropada e
 -- re-expressa por-comando: SELECT visibility-aware + escrita por-role (agent=own-scope
 -- via a mesma fn, manager+=org-wide, viewer=none via piso 'agent'). Drag-and-drop de
--- lead próprio (UPDATE de stage/position sem mudar owner) passa; lead de outro agent
--- bloqueado; bulk assign (G3-04, ≥manager) intacto. Idempotente, auto-curativo.
+-- lead prÃ³prio (UPDATE de stage/position sem mudar owner) passa; lead de outro agent
+-- bloqueado; bulk assign (G3-04, â‰¥manager) intacto. Idempotente, auto-curativo.
 
 create or replace function public.fn_can_view_lead(
   p_org uuid,
@@ -5786,9 +5786,9 @@ create policy "crm_leads_delete" on public.crm_leads
   );
 
 
--- ---- métricas por responsável: índices + fn_attendant_metrics (migration 0037) ----
--- spec 13 §6. Índices dedicados (won/lost por owner na janela de closed_at;
--- conversas por assignee org-leading) + agregação SECURITY INVOKER (a RLS de
+-- ---- mÃ©tricas por responsÃ¡vel: Ã­ndices + fn_attendant_metrics (migration 0037) ----
+-- spec 13 Â§6. Ãndices dedicados (won/lost por owner na janela de closed_at;
+-- conversas por assignee org-leading) + agregaÃ§Ã£o SECURITY INVOKER (a RLS de
 -- crm_leads/conversations define o escopo por atendente). Idempotente.
 
 create index if not exists idx_crm_leads_org_status_closed_owner
@@ -5909,7 +5909,7 @@ grant execute on function public.fn_attendant_metrics(uuid, timestamptz, timesta
 
 -- ---- webhooks universais + motor de regras (migration 0038) ----
 -- Spec: docs/superpowers/specs/2026-07-17-webhooks-design.md. Idempotente
--- (create if not exists / drop policy if exists) — auto-curativo no update.sh.
+-- (create if not exists / drop policy if exists) â€” auto-curativo no update.sh.
 
 create table if not exists public.webhook_sources (
   id uuid primary key default gen_random_uuid(),
@@ -6019,11 +6019,11 @@ create policy "automation_rule_runs_select" on public.automation_rule_runs
     or public.fn_is_platform_admin()
   );
 
--- ---- disponibilidade/horário por atendente: attendant_availability (migration 0039) ----
--- spec 13 §3.4/§5. Persiste o <AttendantStatusToggle> (spec 04 §8): is_available,
+-- ---- disponibilidade/horÃ¡rio por atendente: attendant_availability (migration 0039) ----
+-- spec 13 Â§3.4/Â§5. Persiste o <AttendantStatusToggle> (spec 04 Â§8): is_available,
 -- capacity (>0), schedule jsonb tz-aware, last_heartbeat_at (AT-08 auto-offline
 -- 15min via worker TS). RLS por-comando (nunca FOR ALL): SELECT org-wide;
--- INSERT/UPDATE/DELETE = própria linha OU manager+. Idempotente.
+-- INSERT/UPDATE/DELETE = prÃ³pria linha OU manager+. Idempotente.
 
 create table if not exists public.attendant_availability (
   id                uuid primary key default gen_random_uuid(),
@@ -6082,12 +6082,12 @@ create policy "attendant_availability_delete" on public.attendant_availability
              or public.fn_role_at_least(organization_id, 'manager')))
   );
 
--- ---- roteamento: disponibilidade/horário por atendente (migration 0039) ----
--- spec 13 §3.4/§5. attendant_availability (1 linha por org×user): toggle
--- online/offline + capacity ajustável + schedule tz-aware + last_heartbeat_at
--- (AT-08). RLS por-comando (nunca FOR ALL): SELECT org-wide; WRITE própria linha
--- OU manager+. settings.routing (§3.5) fica no jsonb organizations.settings,
--- validado por Zod (lib/schemas/routing.ts) — sem coluna nova. Idempotente.
+-- ---- roteamento: disponibilidade/horÃ¡rio por atendente (migration 0039) ----
+-- spec 13 Â§3.4/Â§5. attendant_availability (1 linha por orgÃ—user): toggle
+-- online/offline + capacity ajustÃ¡vel + schedule tz-aware + last_heartbeat_at
+-- (AT-08). RLS por-comando (nunca FOR ALL): SELECT org-wide; WRITE prÃ³pria linha
+-- OU manager+. settings.routing (Â§3.5) fica no jsonb organizations.settings,
+-- validado por Zod (lib/schemas/routing.ts) â€” sem coluna nova. Idempotente.
 
 create table if not exists public.attendant_availability (
   id                uuid primary key default gen_random_uuid(),
@@ -6147,12 +6147,12 @@ create policy "attendant_availability_delete" on public.attendant_availability
   );
 
 
--- ---- roteamento: emissão de conversation.routing_requested (migration 0040) ----
+-- ---- roteamento: emissÃ£o de conversation.routing_requested (migration 0040) ----
 -- AT-03: a ENTRADA de uma conversa na fila emite o evento; o worker (cron TS
--- lib/routing/worker.ts) consome e distribui. Trigger NUNCA faz HTTP — só
+-- lib/routing/worker.ts) consome e distribui. Trigger NUNCA faz HTTP â€” sÃ³
 -- emit_event. ANTI-ECO: AFTER INSERT APENAS + WHEN sem-dono numa fila aberta;
--- não há trigger de UPDATE, então o UPDATE de atribuição do worker NUNCA re-emite
--- (sem isso ⇒ loop infinito). Idempotente (create or replace + drop if exists).
+-- nÃ£o hÃ¡ trigger de UPDATE, entÃ£o o UPDATE de atribuiÃ§Ã£o do worker NUNCA re-emite
+-- (sem isso â‡’ loop infinito). Idempotente (create or replace + drop if exists).
 create or replace function public.fn_emit_conversation_routing() returns trigger
   language plpgsql
   security definer
@@ -6183,18 +6183,18 @@ create trigger trg_conversation_routing_requested
 
 -- ---- cifragem at-rest dos secrets de webhooks (migration 0041) ----
 -- Idempotente e auto-curativo (ver migrations/20260718150000_0041). Chave em
--- private.app_secrets (GUC como override); sem chave, plaintext é descartado com WARNING.
+-- private.app_secrets (GUC como override); sem chave, plaintext Ã© descartado com WARNING.
 -- Forward-fix de raiz: fn_encrypt_oauth/fn_decrypt_oauth fixavam
 -- search_path='public', mas pgcrypto vive no schema `extensions` no Supabase
--- (e faltava no baseline) — pgp_sym_* NUNCA resolvia. Garante a extensão e
--- recria as funções com o search_path correto.
+-- (e faltava no baseline) â€” pgp_sym_* NUNCA resolvia. Garante a extensÃ£o e
+-- recria as funÃ§Ãµes com o search_path correto.
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 
--- Fonte da chave: Supabase cloud NÃO permite ALTER DATABASE/ROLE SET de GUC
--- custom (42501) — GUC-only nunca funcionaria lá. A chave vive em
--- private.app_secrets (schema sem grants; só as SECURITY DEFINER leem);
--- a GUC, quando setada (VPS/psql/testes), tem precedência como override.
+-- Fonte da chave: Supabase cloud NÃƒO permite ALTER DATABASE/ROLE SET de GUC
+-- custom (42501) â€” GUC-only nunca funcionaria lÃ¡. A chave vive em
+-- private.app_secrets (schema sem grants; sÃ³ as SECURITY DEFINER leem);
+-- a GUC, quando setada (VPS/psql/testes), tem precedÃªncia como override.
 create schema if not exists private;
 create table if not exists private.app_secrets (
   name text primary key,
@@ -6257,7 +6257,7 @@ begin
     where table_schema = 'public' and table_name = 'webhook_sources' and column_name = 'secret'
   ) into has_plain;
   if not has_plain then
-    return; -- já migrado
+    return; -- jÃ¡ migrado
   end if;
 
   if k is not null and length(k) >= 32 then
@@ -6267,7 +6267,7 @@ begin
   else
     select count(*) into n_dropped from public.webhook_sources where secret is not null;
     if n_dropped > 0 then
-      raise warning 'webhook_sources: % secret(s) plaintext descartado(s) — GUC app.nuvemshop_oauth_key ausente; re-configure os secrets pela UI', n_dropped;
+      raise warning 'webhook_sources: % secret(s) plaintext descartado(s) â€” GUC app.nuvemshop_oauth_key ausente; re-configure os secrets pela UI', n_dropped;
     end if;
   end if;
 
@@ -6307,7 +6307,7 @@ begin
       where id = r.id;
   end loop;
   if n_dropped > 0 then
-    raise warning 'automation_rules: % secret(s) de call_webhook descartado(s) — GUC app.nuvemshop_oauth_key ausente; re-configure pela UI', n_dropped;
+    raise warning 'automation_rules: % secret(s) de call_webhook descartado(s) â€” GUC app.nuvemshop_oauth_key ausente; re-configure pela UI', n_dropped;
   end if;
 end$$;
 
@@ -6320,11 +6320,11 @@ create or replace function public.fn_emit_event_on_lead_change() returns trigger
     as $$
 begin
   if tg_op = 'INSERT' then
-    -- lead.created é emitido pelo createLeadHandler (entity_kind='crm_lead').
+    -- lead.created Ã© emitido pelo createLeadHandler (entity_kind='crm_lead').
     return new;
   end if;
 
-  -- lead.stage_changed é emitido pelo moveLeadHandler (entity_kind='crm_lead').
+  -- lead.stage_changed Ã© emitido pelo moveLeadHandler (entity_kind='crm_lead').
 
   if new.status is distinct from old.status then
     if new.status = 'won' then
@@ -6347,13 +6347,13 @@ begin
   return new;
 end$$;
 
--- INSERT não emite mais nada — dispara só em UPDATE.
+-- INSERT nÃ£o emite mais nada â€” dispara sÃ³ em UPDATE.
 drop trigger if exists trg_emit_event_on_lead_change on public.crm_leads;
 create trigger trg_emit_event_on_lead_change
   after update on public.crm_leads
   for each row execute function public.fn_emit_event_on_lead_change();
 
--- Backlog morto: duplicatas antigas do trigger nunca terão consumer.
+-- Backlog morto: duplicatas antigas do trigger nunca terÃ£o consumer.
 update public.event_log
   set status = 'done', updated_at = now()
   where status = 'pending'
@@ -6361,15 +6361,15 @@ update public.event_log
     and event_type in ('lead.created', 'lead.stage_changed');
 
 -- ---- RLS por role em crm_lead_activities/crm_lead_links (migration 0042) ----
--- G6-00 (INB-10): timeline/vínculos de lead seguiam org-flat no SELECT — agent em
--- modo 'own' não via o lead (0036) mas lia as activities/links dele por query direta.
+-- G6-00 (INB-10): timeline/vÃ­nculos de lead seguiam org-flat no SELECT â€” agent em
+-- modo 'own' nÃ£o via o lead (0036) mas lia as activities/links dele por query direta.
 -- FIX: SELECT das tabelas-filhas HERDA a visibilidade do lead-pai via a MESMA
--- fn_can_view_lead (0036), por EXISTS no lead_id (NÃO scalar de owner — lição G4-01:
--- scalar devolveria NULL pro lead oculto e own_and_unassigned trataria como fila ⇒
--- vazamento; o EXISTS fecha). WRITE fica org-scope IDÊNTICO ao de hoje (defesa em
--- profundidade, não o vetor: todo escritor real usa service role e bypassa RLS;
--- activities é append-only). crm_lead_links era FOR ALL (USING governa SELECT via OR,
--- a armadilha G4-01) — dropada e re-expressa POR-COMANDO. Idempotente, auto-curativo.
+-- fn_can_view_lead (0036), por EXISTS no lead_id (NÃƒO scalar de owner â€” liÃ§Ã£o G4-01:
+-- scalar devolveria NULL pro lead oculto e own_and_unassigned trataria como fila â‡’
+-- vazamento; o EXISTS fecha). WRITE fica org-scope IDÃŠNTICO ao de hoje (defesa em
+-- profundidade, nÃ£o o vetor: todo escritor real usa service role e bypassa RLS;
+-- activities Ã© append-only). crm_lead_links era FOR ALL (USING governa SELECT via OR,
+-- a armadilha G4-01) â€” dropada e re-expressa POR-COMANDO. Idempotente, auto-curativo.
 
 drop policy if exists "tenant_isolation_crm_lead_activities_select" on public.crm_lead_activities;
 drop policy if exists "tenant_isolation_crm_lead_activities_insert" on public.crm_lead_activities;
@@ -6427,8 +6427,8 @@ create policy "crm_lead_links_delete" on public.crm_lead_links
 
 
 -- ---- user_organizations SELECT org-wide para manager+ (migration 0044) ----
--- G6-06 (INB-14): manager passa a ler todo o roster da org (matriz spec 13 §4:
--- team=org:read a manager). Antes: só admin org-wide, manager caía no self-read
+-- G6-06 (INB-14): manager passa a ler todo o roster da org (matriz spec 13 Â§4:
+-- team=org:read a manager). Antes: sÃ³ admin org-wide, manager caÃ­a no self-read
 -- e GET /api/v1/team devolvia 1 linha. Self-read preservado p/ todos; WRITE
 -- inalterado (insert/update/delete = admin). Idempotente e auto-curativo.
 drop policy if exists "user_orgs_select" on public.user_organizations;
@@ -6441,27 +6441,27 @@ create policy "user_orgs_select" on public.user_organizations
 
 -- ============================================================================
 -- Dumps do Supabase zeram o search_path (set_config('search_path','',false));
--- os apêndices da fusão criam objetos NÃO-qualificados — restaura o público.
+-- os apÃªndices da fusÃ£o criam objetos NÃƒO-qualificados â€” restaura o pÃºblico.
 select pg_catalog.set_config('search_path', 'public, extensions', false);
 
--- APÊNDICE 0050_agent_harness (fusão Vendaval) — idempotente, espelho exato da
+-- APÃŠNDICE 0050_agent_harness (fusÃ£o Vendaval) â€” idempotente, espelho exato da
 -- migration 20260719000000 (kit self-host aplica via install.sh/update.sh).
 -- ============================================================================
 
--- 0050_agent_harness — schema do motor SDR (harness) portado do Vendaval para o
--- banco do CRM (fusão). Mapeamento canônico (lib/agent-engine/PORT-NOTES.md):
---   tenants → organizations · tenant_id → organization_id · leads → contacts ·
---   lead_id → contact_id · channel_session_id → FK real p/ channel_sessions(id).
--- Mortos no porte: tenants/leads (espelhos — o CRM é o mesmo banco agora),
--- event_inbox (o drain lê event_log direto), org_llm_credentials (BYOK do CRM =
+-- 0050_agent_harness â€” schema do motor SDR (harness) portado do Vendaval para o
+-- banco do CRM (fusÃ£o). Mapeamento canÃ´nico (lib/agent-engine/PORT-NOTES.md):
+--   tenants â†’ organizations Â· tenant_id â†’ organization_id Â· leads â†’ contacts Â·
+--   lead_id â†’ contact_id Â· channel_session_id â†’ FK real p/ channel_sessions(id).
+-- Mortos no porte: tenants/leads (espelhos â€” o CRM Ã© o mesmo banco agora),
+-- event_inbox (o drain lÃª event_log direto), org_llm_credentials (BYOK do CRM =
 -- ai_provider_credentials), colunas LGPD/handoff de leads (contacts.consent /
--- is_anonymized / conversations.bot_silenced_until já existem).
+-- is_anonymized / conversations.bot_silenced_until jÃ¡ existem).
 -- Idempotente (if not exists / or replace / do $$); SEM begin/commit; psql puro.
 
 -- ============================================================================
--- Escalação humana do RUNTIME (ex-inbox_items do Vendaval; a UI lê daqui).
--- organization_id NULL = plataforma (ex.: infra) — visível só ao service role.
--- Kind já inclui 'judge_unaligned' (extensão da 0025 do Vendaval, embutida).
+-- EscalaÃ§Ã£o humana do RUNTIME (ex-inbox_items do Vendaval; a UI lÃª daqui).
+-- organization_id NULL = plataforma (ex.: infra) â€” visÃ­vel sÃ³ ao service role.
+-- Kind jÃ¡ inclui 'judge_unaligned' (extensÃ£o da 0025 do Vendaval, embutida).
 -- ============================================================================
 create table if not exists agent_inbox_items (
   id uuid primary key default gen_random_uuid(),
@@ -6481,14 +6481,14 @@ create index if not exists idx_agent_inbox_items_open on agent_inbox_items (orga
   where status = 'open';
 
 -- ============================================================================
--- 0002 — fila durável FOR UPDATE SKIP LOCKED com lane por contact_id.
+-- 0002 â€” fila durÃ¡vel FOR UPDATE SKIP LOCKED com lane por contact_id.
 -- ============================================================================
 create table if not exists job_queue (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid references contacts(id) on delete cascade, -- NULL para watchdog/flywheel (jobs sem contato)
   kind text not null check (kind in ('inbound_turn','followup_turn','watchdog','flywheel')),
-  source_event_id uuid,                -- event_log.id (CRM, mesmo banco) que originou o job — dedup evento→job
+  source_event_id uuid,                -- event_log.id (CRM, mesmo banco) que originou o job â€” dedup eventoâ†’job
   payload jsonb not null default '{}',
   status text not null default 'pending'
     check (status in ('pending','running','done','failed','dead')),
@@ -6496,50 +6496,50 @@ create table if not exists job_queue (
   run_after timestamptz not null default now(),
   attempts smallint not null default 0,
   max_attempts smallint not null default 5,
-  last_error text,                     -- normalizado/truncado no código — nunca conteúdo de mensagem (PII)
+  last_error text,                     -- normalizado/truncado no cÃ³digo â€” nunca conteÃºdo de mensagem (PII)
   locked_by text,
   locked_at timestamptz,
   created_at timestamptz not null default now(),
-  -- jobs de turno TÊM contato; watchdog/flywheel NÃO — o schema força a coerência
+  -- jobs de turno TÃŠM contato; watchdog/flywheel NÃƒO â€” o schema forÃ§a a coerÃªncia
   check ((kind in ('inbound_turn','followup_turn')) = (contact_id is not null))
 );
 
 create index if not exists idx_job_queue_claim on job_queue (status, run_after) where status = 'pending';
 
 -- INVARIANTE (lane): 1 job 'running' por contato por vez; paralelismo entre contatos.
--- É o CINTO — o claim em duas etapas evita chegar aqui; na corrida residual o 23505
--- é capturado e o claim perde só a rodada.
+-- Ã‰ o CINTO â€” o claim em duas etapas evita chegar aqui; na corrida residual o 23505
+-- Ã© capturado e o claim perde sÃ³ a rodada.
 create unique index if not exists uniq_job_queue_one_running_per_contact on job_queue (contact_id)
   where status = 'running' and contact_id is not null;
 
--- DEDUP evento→job: o handoff é at-least-once; evento re-entregue não vira 2º turno.
+-- DEDUP eventoâ†’job: o handoff Ã© at-least-once; evento re-entregue nÃ£o vira 2Âº turno.
 create unique index if not exists uniq_job_queue_source_event on job_queue (organization_id, source_event_id)
   where source_event_id is not null;
 
 -- ============================================================================
--- 0003 — ledger de envio idempotente. Uma linha por mensagem `seq` do turno; `id`
--- É a idempotency_key da tentativa LÓGICA (re-attempt após 'failed' rotaciona o id).
+-- 0003 â€” ledger de envio idempotente. Uma linha por mensagem `seq` do turno; `id`
+-- Ã‰ a idempotency_key da tentativa LÃ“GICA (re-attempt apÃ³s 'failed' rotaciona o id).
 -- ============================================================================
 create table if not exists send_ledger (
-  id uuid primary key default gen_random_uuid(), -- a idempotency_key da tentativa lógica corrente
+  id uuid primary key default gen_random_uuid(), -- a idempotency_key da tentativa lÃ³gica corrente
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid references contacts(id) on delete cascade,
   job_id uuid not null references job_queue(id) on delete cascade,
   seq smallint not null,
-  -- sha256 hex do corpo — PII (o corpo em si) NUNCA entra no ledger nem em log.
+  -- sha256 hex do corpo â€” PII (o corpo em si) NUNCA entra no ledger nem em log.
   body_hash text not null,
-  -- requested: inserido imediatamente antes do envio (crash aqui → retry re-envia a MESMA key)
-  -- accepted:  envio confirmado ('sent') — retry pula
-  -- queued:    aceito e retido (sessão ≠ WORKING / waha_not_configured)
-  -- vetoed:    is_blocked — veto permanente de negócio (irrevogável)
-  -- failed:    'failed' (sem telefone / erro WAHA) — retry = tentativa lógica nova
+  -- requested: inserido imediatamente antes do envio (crash aqui â†’ retry re-envia a MESMA key)
+  -- accepted:  envio confirmado ('sent') â€” retry pula
+  -- queued:    aceito e retido (sessÃ£o â‰  WORKING / waha_not_configured)
+  -- vetoed:    is_blocked â€” veto permanente de negÃ³cio (irrevogÃ¡vel)
+  -- failed:    'failed' (sem telefone / erro WAHA) â€” retry = tentativa lÃ³gica nova
   status text not null default 'requested'
     check (status in ('requested','accepted','queued','vetoed','failed')),
   crm_message_id uuid,                 -- messages.id (mesmo banco; vem na resposta do handler de envio)
-  last_error text,                     -- normalizado/truncado no código — nunca corpo de mensagem (PII)
+  last_error text,                     -- normalizado/truncado no cÃ³digo â€” nunca corpo de mensagem (PII)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  -- 1 linha por mensagem do turno — a base do "intenção exactly-once".
+  -- 1 linha por mensagem do turno â€” a base do "intenÃ§Ã£o exactly-once".
   unique (job_id, seq)
 );
 
@@ -6547,33 +6547,33 @@ create table if not exists send_ledger (
 create index if not exists idx_send_ledger_recent on send_ledger (organization_id, created_at desc);
 
 -- ============================================================================
--- Imutabilidade compartilhada das tabelas *_versions: conteúdo publicado é
--- imutável — mudança = versão nova; rollback = mover o ponteiro. DELETE fica de
--- fora de propósito (o cascade de organizations precisa passar; versão apontada
--- é protegida pelo FK do ponteiro correspondente).
+-- Imutabilidade compartilhada das tabelas *_versions: conteÃºdo publicado Ã©
+-- imutÃ¡vel â€” mudanÃ§a = versÃ£o nova; rollback = mover o ponteiro. DELETE fica de
+-- fora de propÃ³sito (o cascade de organizations precisa passar; versÃ£o apontada
+-- Ã© protegida pelo FK do ponteiro correspondente).
 -- ============================================================================
 create or replace function fn_agent_versions_immutable() returns trigger
 language plpgsql as $fn$
 begin
-  raise exception '% é imutável: mudança = versão nova; rollback = mover o ponteiro (%)',
+  raise exception '% Ã© imutÃ¡vel: mudanÃ§a = versÃ£o nova; rollback = mover o ponteiro (%)',
     tg_table_name, replace(tg_table_name, '_versions', '_pointers');
 end;
 $fn$;
 
 -- ============================================================================
--- 0004 — playbook em camadas versionado + carga por ponteiro. 1 linha por CAMADA
--- (platform|tenant|campaign); o runtime carrega por ponteiro no início de cada
--- run: trocar versão/rollback = mover ponteiro, sem restart. Camada platform é
+-- 0004 â€” playbook em camadas versionado + carga por ponteiro. 1 linha por CAMADA
+-- (platform|tenant|campaign); o runtime carrega por ponteiro no inÃ­cio de cada
+-- run: trocar versÃ£o/rollback = mover ponteiro, sem restart. Camada platform Ã©
 -- global (organization_id NULL); tenant/campaign pertencem a uma org.
 -- ============================================================================
 create table if not exists playbook_versions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid references organizations(id) on delete cascade, -- NULL = plataforma (global)
   layer text not null check (layer in ('platform', 'tenant', 'campaign')),
-  -- Markdown com seções nomeadas (## ...), máx. 200 linhas por camada — validado no insert.
+  -- Markdown com seÃ§Ãµes nomeadas (## ...), mÃ¡x. 200 linhas por camada â€” validado no insert.
   content text not null,
   created_at timestamptz not null default now(),
-  -- platform é global; tenant/campaign SEMPRE têm dono — o schema força a coerência
+  -- platform Ã© global; tenant/campaign SEMPRE tÃªm dono â€” o schema forÃ§a a coerÃªncia
   check ((layer = 'platform') = (organization_id is null))
 );
 
@@ -6582,8 +6582,8 @@ create trigger trg_playbook_versions_immutable
   before update on playbook_versions
   for each row execute function fn_agent_versions_immutable();
 
--- Ponteiro → versão ativa por escopo. SEM cascade no version_id: versão apontada
--- não pode sumir debaixo do ponteiro.
+-- Ponteiro â†’ versÃ£o ativa por escopo. SEM cascade no version_id: versÃ£o apontada
+-- nÃ£o pode sumir debaixo do ponteiro.
 create table if not exists playbook_pointers (
   organization_id uuid references organizations(id) on delete cascade, -- NULL = plataforma (global)
   layer text not null check (layer in ('platform', 'tenant', 'campaign')),
@@ -6592,16 +6592,16 @@ create table if not exists playbook_pointers (
   check ((layer = 'platform') = (organization_id is null))
 );
 
--- Unicidade do escopo (PK não serve: organization_id é NULL na plataforma).
+-- Unicidade do escopo (PK nÃ£o serve: organization_id Ã© NULL na plataforma).
 create unique index if not exists uniq_playbook_pointers_org
   on playbook_pointers (organization_id, layer) where organization_id is not null;
 create unique index if not exists uniq_playbook_pointers_platform
   on playbook_pointers (layer) where organization_id is null;
 
 -- ============================================================================
--- 0005 + 0012 — espelho de saúde da sessão WAHA + circuito de saúde do número.
--- status_changed_at só avança quando o status MUDA (métrica "tempo no estado").
--- Os holds de status e de saúde coexistem — job retido sob QUALQUER hold.
+-- 0005 + 0012 â€” espelho de saÃºde da sessÃ£o WAHA + circuito de saÃºde do nÃºmero.
+-- status_changed_at sÃ³ avanÃ§a quando o status MUDA (mÃ©trica "tempo no estado").
+-- Os holds de status e de saÃºde coexistem â€” job retido sob QUALQUER hold.
 -- ============================================================================
 create table if not exists channel_session_health (
   id uuid primary key default gen_random_uuid(),
@@ -6609,25 +6609,25 @@ create table if not exists channel_session_health (
   channel_session_id uuid not null references channel_sessions(id) on delete cascade,
   status text not null,
   status_changed_at timestamptz not null default now(),
-  -- Status já escalado (agent_inbox_items kind='qr_rescan') no EPISÓDIO corrente —
-  -- dedup do "exatamente 1×". Volta a null quando a sessão volta a WORKING.
+  -- Status jÃ¡ escalado (agent_inbox_items kind='qr_rescan') no EPISÃ“DIO corrente â€”
+  -- dedup do "exatamente 1Ã—". Volta a null quando a sessÃ£o volta a WORKING.
   escalated_status text,
-  -- Circuito de saúde (0012): default false — linhas criadas pelo watchdog NÃO
-  -- nascem health-held; o "nasce em hold" (fail-safe de go-live) é decidido pelo
-  -- tick de saúde quando health_released_at is null, nunca pelo default.
+  -- Circuito de saÃºde (0012): default false â€” linhas criadas pelo watchdog NÃƒO
+  -- nascem health-held; o "nasce em hold" (fail-safe de go-live) Ã© decidido pelo
+  -- tick de saÃºde quando health_released_at is null, nunca pelo default.
   health_hold_active boolean not null default false,
   health_hold_reason text,          -- 'go_live' | 'block_rate' | 'response_rate'
-  health_held_at timestamptz,       -- início do episódio de hold (base do cool-down)
-  -- Liberação explícita inicial (go-live). NULL = número novo, nunca liberado →
+  health_held_at timestamptz,       -- inÃ­cio do episÃ³dio de hold (base do cool-down)
+  -- LiberaÃ§Ã£o explÃ­cita inicial (go-live). NULL = nÃºmero novo, nunca liberado â†’
   -- nasce em hold (fail-safe). Uma vez setado, permanece.
   health_released_at timestamptz,
   updated_at timestamptz not null default now(),
   unique (organization_id, channel_session_id)
 );
 
--- Cursor durável de consumo do event_log do CRM por consumidor do harness (o
--- watchdog é o 1º). Tabela de PLATAFORMA (sem org): RLS habilitada sem policy —
--- só o service role (worker) lê/escreve.
+-- Cursor durÃ¡vel de consumo do event_log do CRM por consumidor do harness (o
+-- watchdog Ã© o 1Âº). Tabela de PLATAFORMA (sem org): RLS habilitada sem policy â€”
+-- sÃ³ o service role (worker) lÃª/escreve.
 create table if not exists watchdog_cursors (
   consumer text primary key,
   last_created_at timestamptz not null default 'epoch',
@@ -6636,43 +6636,43 @@ create table if not exists watchdog_cursors (
 );
 
 -- ============================================================================
--- 0006 — toda chamada de modelo (custo, cache, atribuição); agregado mensal =
--- enforcement do budget. Credenciais BYOK são do CRM (ai_provider_credentials) —
--- org_llm_credentials do Vendaval NÃO foi portada.
+-- 0006 â€” toda chamada de modelo (custo, cache, atribuiÃ§Ã£o); agregado mensal =
+-- enforcement do budget. Credenciais BYOK sÃ£o do CRM (ai_provider_credentials) â€”
+-- org_llm_credentials do Vendaval NÃƒO foi portada.
 -- ============================================================================
 create table if not exists llm_calls (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid references contacts(id) on delete set null,
   job_id uuid references job_queue(id) on delete set null,
-  variant_id uuid,                       -- experiment_variants (flywheel); nasce p/ atribuição
+  variant_id uuid,                       -- experiment_variants (flywheel); nasce p/ atribuiÃ§Ã£o
   purpose text not null default 'agent_turn',  -- 'agent_turn' | 'classifier' | 'compaction' | 'connection_test'
   provider text not null,
   model text not null,
   input_tokens int not null default 0,
   output_tokens int not null default 0,
-  cache_read_tokens int not null default 0,   -- métrica de 1ª classe
+  cache_read_tokens int not null default 0,   -- mÃ©trica de 1Âª classe
   cache_write_tokens int not null default 0,
-  cost_cents numeric,                    -- null = preço desconhecido — nunca inventar 0
+  cost_cents numeric,                    -- null = preÃ§o desconhecido â€” nunca inventar 0
   latency_ms int,
   created_at timestamptz not null default now()
 );
 create index if not exists idx_llm_calls_org_time on llm_calls (organization_id, created_at);
 
 -- ============================================================================
--- 0007 — artefato durável do loop do agente: cada run fecha escrevendo um
--- checkpoint; o run seguinte do MESMO contato abre lendo o mais recente —
--- sessões descartáveis, artefatos duráveis. Conteúdo validado por Zod no handler.
+-- 0007 â€” artefato durÃ¡vel do loop do agente: cada run fecha escrevendo um
+-- checkpoint; o run seguinte do MESMO contato abre lendo o mais recente â€”
+-- sessÃµes descartÃ¡veis, artefatos durÃ¡veis. ConteÃºdo validado por Zod no handler.
 -- ============================================================================
 create table if not exists lead_checkpoints (
   id uuid primary key default gen_random_uuid(),
-  -- ordem de escrita estrita (created_at pode empatar) — abertura lê por seq.
+  -- ordem de escrita estrita (created_at pode empatar) â€” abertura lÃª por seq.
   seq bigint generated always as identity,
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid not null references contacts(id) on delete cascade,
-  job_id uuid references job_queue(id) on delete set null, -- o run É o job
-  commitments jsonb not null default '[]',      -- string[] — compromissos assumidos no turno
-  objections jsonb not null default '[]',       -- string[] — objeções levantadas
+  job_id uuid references job_queue(id) on delete set null, -- o run Ã‰ o job
+  commitments jsonb not null default '[]',      -- string[] â€” compromissos assumidos no turno
+  objections jsonb not null default '[]',       -- string[] â€” objeÃ§Ãµes levantadas
   next_action text,
   rolling_summary text not null default '',
   created_at timestamptz not null default now()
@@ -6681,8 +6681,8 @@ create index if not exists idx_lead_checkpoints_latest
   on lead_checkpoints (organization_id, contact_id, seq desc);
 
 -- ============================================================================
--- 0008 — estado do funil por contato. O modelo MARCA avanços via tool; quem
--- valida a transição é a máquina de estados NO CÓDIGO — o CHECK é backstop.
+-- 0008 â€” estado do funil por contato. O modelo MARCA avanÃ§os via tool; quem
+-- valida a transiÃ§Ã£o Ã© a mÃ¡quina de estados NO CÃ“DIGO â€” o CHECK Ã© backstop.
 -- ============================================================================
 create table if not exists lead_state (
   id uuid primary key default gen_random_uuid(),
@@ -6690,14 +6690,14 @@ create table if not exists lead_state (
   contact_id uuid not null references contacts(id) on delete cascade,
   stage text not null default 'new' check (stage in
     ('new','contacted','qualifying','qualified','negotiating','won','lost')),
-  -- qualificação whitelisted (BANT) — Zod .strict() rejeita outras chaves antes daqui.
+  -- qualificaÃ§Ã£o whitelisted (BANT) â€” Zod .strict() rejeita outras chaves antes daqui.
   qualification jsonb not null default '{}',
   next_action text,
   updated_at timestamptz not null default now(),
   unique (organization_id, contact_id)
 );
 
--- Histórico append-only de transições — auditoria/diffabilidade do funil.
+-- HistÃ³rico append-only de transiÃ§Ãµes â€” auditoria/diffabilidade do funil.
 create table if not exists lead_state_transitions (
   id uuid primary key default gen_random_uuid(),
   seq bigint generated always as identity,
@@ -6713,7 +6713,7 @@ create index if not exists idx_lead_state_transitions_contact
   on lead_state_transitions (organization_id, contact_id, seq desc);
 
 -- ============================================================================
--- 0009 — métricas de 1ª classe persistidas. Labels SÓ com ids/contagens — PII
+-- 0009 â€” mÃ©tricas de 1Âª classe persistidas. Labels SÃ“ com ids/contagens â€” PII
 -- jamais entra. organization_id NULL = plataforma.
 -- ============================================================================
 create table if not exists metrics (
@@ -6728,43 +6728,43 @@ create index if not exists idx_metrics_name_time on metrics (name, created_at de
 create index if not exists idx_metrics_org_name_time on metrics (organization_id, name, created_at desc);
 
 -- ============================================================================
--- 0010 + 0011 + 0012 — knobs anti-ban por número/sessão + ledger de pacing.
--- Coluna NULL = default conservador no código (knobs, nunca constantes). O cap
--- diário ABSOLUTO não mora aqui: fonte única é channel_sessions.daily_message_limit.
+-- 0010 + 0011 + 0012 â€” knobs anti-ban por nÃºmero/sessÃ£o + ledger de pacing.
+-- Coluna NULL = default conservador no cÃ³digo (knobs, nunca constantes). O cap
+-- diÃ¡rio ABSOLUTO nÃ£o mora aqui: fonte Ãºnica Ã© channel_sessions.daily_message_limit.
 -- ============================================================================
 create table if not exists channel_knobs (
   organization_id uuid not null references organizations(id) on delete cascade,
   channel_session_id uuid not null references channel_sessions(id) on delete cascade,
-  throttle_ms integer,                -- intervalo mínimo entre envios do número
-  jitter_max_ms integer,              -- teto do jitter randômico somado ao throttle
+  throttle_ms integer,                -- intervalo mÃ­nimo entre envios do nÃºmero
+  jitter_max_ms integer,              -- teto do jitter randÃ´mico somado ao throttle
   window_start_hour smallint,         -- janela [start, end) na hora local da org
   window_end_hour smallint,
-  allow_sunday boolean,               -- NULL = default do código (hoje: enviar)
-  timezone text,                      -- IANA tz da org (a janela é avaliada nela)
-  -- degraus [{"minAgeDays":N,"cap":M|null}, ...]; CHECK (array NÃO-VAZIO) +
-  -- validação de shape no load — NULL cai no default; `[]` é rejeitado.
+  allow_sunday boolean,               -- NULL = default do cÃ³digo (hoje: enviar)
+  timezone text,                      -- IANA tz da org (a janela Ã© avaliada nela)
+  -- degraus [{"minAgeDays":N,"cap":M|null}, ...]; CHECK (array NÃƒO-VAZIO) +
+  -- validaÃ§Ã£o de shape no load â€” NULL cai no default; `[]` Ã© rejeitado.
   warmup_daily_caps jsonb
     constraint channel_knobs_warmup_caps_is_array
     check (
       warmup_daily_caps is null
       or (jsonb_typeof(warmup_daily_caps) = 'array' and jsonb_array_length(warmup_daily_caps) > 0)
     ),
-  -- knobs de spinning / saúde (0011/0012): CHECK só garante "é objeto"; campo a
-  -- campo é validado no load. NULL ou shape inválido → defaults conservadores.
+  -- knobs de spinning / saÃºde (0011/0012): CHECK sÃ³ garante "Ã© objeto"; campo a
+  -- campo Ã© validado no load. NULL ou shape invÃ¡lido â†’ defaults conservadores.
   spinning_knobs jsonb
     constraint channel_knobs_spinning_is_object
     check (spinning_knobs is null or jsonb_typeof(spinning_knobs) = 'object'),
   health_knobs jsonb
     constraint channel_knobs_health_is_object
     check (health_knobs is null or jsonb_typeof(health_knobs) = 'object'),
-  number_activated_at timestamptz not null default now(), -- idade do número p/ warm-up
+  number_activated_at timestamptz not null default now(), -- idade do nÃºmero p/ warm-up
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (organization_id, channel_session_id)
 );
 
--- Ledger de envios efetivados por número — estado durável do throttle e dos caps
--- diários (na tz da org).
+-- Ledger de envios efetivados por nÃºmero â€” estado durÃ¡vel do throttle e dos caps
+-- diÃ¡rios (na tz da org).
 create table if not exists pacing_ledger (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
@@ -6774,8 +6774,8 @@ create table if not exists pacing_ledger (
 create index if not exists idx_pacing_ledger_session
   on pacing_ledger (organization_id, channel_session_id, sent_at desc);
 
--- 0011 — janela deslizante de copies enviadas (gate anti-template-idêntico):
--- copy NORMALIZADA das últimas outbound por NÚMERO (across contatos).
+-- 0011 â€” janela deslizante de copies enviadas (gate anti-template-idÃªntico):
+-- copy NORMALIZADA das Ãºltimas outbound por NÃšMERO (across contatos).
 create table if not exists outbound_copies (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
@@ -6788,7 +6788,7 @@ create index if not exists idx_outbound_copies_session
   on outbound_copies (organization_id, channel_session_id, sent_at desc);
 
 -- ============================================================================
--- 0013 — cron persistente POR CONTATO. Irmão da fila: a fila processa AGORA, o
+-- 0013 â€” cron persistente POR CONTATO. IrmÃ£o da fila: a fila processa AGORA, o
 -- cron AGENDA e, no disparo, ENFILEIRA um job em job_queue. Sobrevive a restart
 -- porque TODO o estado mora aqui.
 -- ============================================================================
@@ -6797,26 +6797,26 @@ create table if not exists cron_jobs (
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid not null references contacts(id) on delete cascade,
   kind text not null check (kind in ('at','every','cron')),
-  --   'at'   → one-shot: next_run_at guarda o instante; dispara e desabilita.
-  --   'every'→ recorrência fixa: interval_ms é o período (ms).
-  --   'cron' → expressão 5-campos avaliada em tz (IANA).
+  --   'at'   â†’ one-shot: next_run_at guarda o instante; dispara e desabilita.
+  --   'every'â†’ recorrÃªncia fixa: interval_ms Ã© o perÃ­odo (ms).
+  --   'cron' â†’ expressÃ£o 5-campos avaliada em tz (IANA).
   interval_ms bigint check (interval_ms is null or interval_ms > 0),
   cron_expr text,
   tz text not null default 'UTC',
-  -- o que enfileirar quando disparar; coerência kind⇔contato é do CHECK de
-  -- job_queue no enqueue — cron mal-configurado falha PERMANENTE (23514), nunca
+  -- o que enfileirar quando disparar; coerÃªncia kindâ‡”contato Ã© do CHECK de
+  -- job_queue no enqueue â€” cron mal-configurado falha PERMANENTE (23514), nunca
   -- silenciosamente.
   job_kind text not null default 'followup_turn'
     check (job_kind in ('inbound_turn','followup_turn','watchdog','flywheel')),
   payload jsonb not null default '{}',
-  -- próximo disparo — JÁ com o offset de stagger determinístico (anti-rajada).
+  -- prÃ³ximo disparo â€” JÃ com o offset de stagger determinÃ­stico (anti-rajada).
   next_run_at timestamptz not null,
   enabled boolean not null default true,
   -- retry do disparo CORRENTE: transiente incrementa + adia (backoff); esgotar
   -- max_attempts desabilita + agent_inbox_items.
   attempts smallint not null default 0,
   max_attempts smallint not null default 5,
-  last_error text,                        -- normalizado/truncado — nunca PII
+  last_error text,                        -- normalizado/truncado â€” nunca PII
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (kind <> 'every' or interval_ms is not null),
@@ -6826,9 +6826,9 @@ create index if not exists idx_cron_jobs_due on cron_jobs (next_run_at)
   where enabled = true;
 
 -- ============================================================================
--- 0014 — templates de re-entrada versionados + ponteiro. Uma versão guarda N
--- VARIANTES pt-br de spinning; a re-entrada determinística envia a variante
--- DIRETO pela cadeia de guardrails, sem LLM — custo $0.
+-- 0014 â€” templates de re-entrada versionados + ponteiro. Uma versÃ£o guarda N
+-- VARIANTES pt-br de spinning; a re-entrada determinÃ­stica envia a variante
+-- DIRETO pela cadeia de guardrails, sem LLM â€” custo $0.
 -- ============================================================================
 create table if not exists reentry_template_versions (
   id uuid primary key default gen_random_uuid(),
@@ -6849,22 +6849,22 @@ create table if not exists reentry_template_pointers (
 );
 
 -- ============================================================================
--- 0015 + 0016 — memória durável por contato. O ÍNDICE (headlines) é injetado no
--- sufixo do prompt com orçamento fixo; o CORPO vem sob demanda. Hard cap imposto
--- na ESCRITA (recusa nota que estouraria) — sem truncamento silencioso.
+-- 0015 + 0016 â€” memÃ³ria durÃ¡vel por contato. O ÃNDICE (headlines) Ã© injetado no
+-- sufixo do prompt com orÃ§amento fixo; o CORPO vem sob demanda. Hard cap imposto
+-- na ESCRITA (recusa nota que estouraria) â€” sem truncamento silencioso.
 -- Nota de um contato NUNCA aparece em run de outro (query sempre filtra
--- organization_id + contact_id de fonte confiável).
+-- organization_id + contact_id de fonte confiÃ¡vel).
 -- ============================================================================
 create table if not exists lead_notes (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   contact_id uuid not null references contacts(id) on delete cascade,
-  headline text not null check (length(headline) > 0), -- a LINHA do índice
+  headline text not null check (length(headline) > 0), -- a LINHA do Ã­ndice
   body text not null check (length(body) > 0),         -- corpo sob demanda
-  -- 0016: vetor derivado p/ recall híbrido. jsonb (array de floats), não pgvector:
-  -- a DIMENSÃO é do provedor (BYOK agnóstico) e o conjunto por contato é pequeno
-  -- (hard cap) ⇒ cosseno exato em app, sem índice ANN. Populado preguiçosamente;
-  -- notas são write-once ⇒ o embedding cacheado nunca fica stale.
+  -- 0016: vetor derivado p/ recall hÃ­brido. jsonb (array de floats), nÃ£o pgvector:
+  -- a DIMENSÃƒO Ã© do provedor (BYOK agnÃ³stico) e o conjunto por contato Ã© pequeno
+  -- (hard cap) â‡’ cosseno exato em app, sem Ã­ndice ANN. Populado preguiÃ§osamente;
+  -- notas sÃ£o write-once â‡’ o embedding cacheado nunca fica stale.
   embedding jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -6873,18 +6873,18 @@ create index if not exists idx_lead_notes_contact
   on lead_notes (organization_id, contact_id, created_at);
 
 -- ============================================================================
--- 0017 — playbooks SITUACIONAIS como skills versionadas com disclosure
--- progressivo: só name+description (o ÍNDICE) reside no prompt; o body carrega
--- SÓ quando o matcher if-then DETERMINÍSTICO dispara. platform = global
--- (organization_id NULL, ex.: "STOP ambíguo"/compliance).
+-- 0017 â€” playbooks SITUACIONAIS como skills versionadas com disclosure
+-- progressivo: sÃ³ name+description (o ÃNDICE) reside no prompt; o body carrega
+-- SÃ“ quando o matcher if-then DETERMINÃSTICO dispara. platform = global
+-- (organization_id NULL, ex.: "STOP ambÃ­guo"/compliance).
 -- ============================================================================
 create table if not exists skill_versions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid references organizations(id) on delete cascade, -- NULL = plataforma (global)
   name text not null check (length(name) > 0),
   description text not null check (length(description) > 0),
-  body text not null check (length(body) > 0), -- markdown ≤200 linhas; carrega SÓ no match
-  -- { "any_keywords": string[], "probe_keywords"?: string[] } — shape validado no código.
+  body text not null check (length(body) > 0), -- markdown â‰¤200 linhas; carrega SÃ“ no match
+  -- { "any_keywords": string[], "probe_keywords"?: string[] } â€” shape validado no cÃ³digo.
   matcher jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
@@ -6906,14 +6906,14 @@ create unique index if not exists uniq_skill_pointers_platform
   on skill_pointers (name) where organization_id is null;
 
 -- ============================================================================
--- 0018 — tabela de preços/promessas versionada por ponteiro (anti-"vendo por
+-- 0018 â€” tabela de preÃ§os/promessas versionada por ponteiro (anti-"vendo por
 -- R$1"): o gate before_send carrega por ponteiro sob o lock de cada tentativa.
 -- ============================================================================
 create table if not exists promise_table_versions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
-  -- { minPriceCents?, maxDiscountPercent?, maxInstallments? } — shape validado no
-  -- insert. Campo ausente = dimensão não fiscalizada.
+  -- { minPriceCents?, maxDiscountPercent?, maxInstallments? } â€” shape validado no
+  -- insert. Campo ausente = dimensÃ£o nÃ£o fiscalizada.
   values jsonb not null,
   created_at timestamptz not null default now()
 );
@@ -6932,8 +6932,8 @@ create unique index if not exists uniq_promise_table_pointers_org
   on promise_table_pointers (organization_id);
 
 -- ============================================================================
--- 0019 — template de disclosure "assistente virtual" versionado por ponteiro
--- (disclosure by design — CDC hoje / PL 2338 amanhã). Injetado na 1ª mensagem
+-- 0019 â€” template de disclosure "assistente virtual" versionado por ponteiro
+-- (disclosure by design â€” CDC hoje / PL 2338 amanhÃ£). Injetado na 1Âª mensagem
 -- (modo inject) ou exigido do modelo (modo veto).
 -- ============================================================================
 create table if not exists disclosure_template_versions (
@@ -6957,10 +6957,10 @@ create unique index if not exists uniq_disclosure_template_pointers_org
   on disclosure_template_pointers (organization_id);
 
 -- ============================================================================
--- 0021 — trace de auditoria da cadeia before_send por tentativa: array de gates
--- avaliados + gate/código do veto (null = passou). Escrita autônoma (fora da tx
--- serializada) — a auditoria do veto SOBREVIVE ao rollback. PII fora: só
--- gate/verdict/code/detail — o CORPO da mensagem NUNCA entra aqui.
+-- 0021 â€” trace de auditoria da cadeia before_send por tentativa: array de gates
+-- avaliados + gate/cÃ³digo do veto (null = passou). Escrita autÃ´noma (fora da tx
+-- serializada) â€” a auditoria do veto SOBREVIVE ao rollback. PII fora: sÃ³
+-- gate/verdict/code/detail â€” o CORPO da mensagem NUNCA entra aqui.
 -- ============================================================================
 create table if not exists before_send_traces (
   id uuid primary key default gen_random_uuid(),
@@ -6968,7 +6968,7 @@ create table if not exists before_send_traces (
   job_id uuid not null references job_queue(id) on delete cascade, -- RUN = job_queue.id
   contact_id uuid references contacts(id) on delete cascade,
   channel_session_id uuid not null references channel_sessions(id) on delete cascade,
-  -- GateTraceEntry[]: [{ gate, verdict, code?, detail? }, ...] — sem PII.
+  -- GateTraceEntry[]: [{ gate, verdict, code?, detail? }, ...] â€” sem PII.
   trace jsonb not null,
   vetoed_gate text,
   vetoed_code text,
@@ -6978,21 +6978,21 @@ create index if not exists idx_before_send_traces_run
   on before_send_traces (organization_id, job_id, created_at);
 
 -- ============================================================================
--- 0023 — vereditos dos judges em produção, batch offline (NUNCA inline por
--- mensagem). Idempotente/resumível: unique (dataset, trace_id, dimension) +
--- on conflict do nothing. PII fora do DB: só metadata/proveniência anonimizada.
+-- 0023 â€” vereditos dos judges em produÃ§Ã£o, batch offline (NUNCA inline por
+-- mensagem). Idempotente/resumÃ­vel: unique (dataset, trace_id, dimension) +
+-- on conflict do nothing. PII fora do DB: sÃ³ metadata/proveniÃªncia anonimizada.
 -- ============================================================================
 create table if not exists flywheel_judge_verdicts (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
-  dataset text not null,               -- namespace da proveniência (replay)
+  dataset text not null,               -- namespace da proveniÃªncia (replay)
   trace_id text not null,
   dimension text not null,
   verdict text not null check (verdict in ('yes', 'no', 'unknown')),
-  option_order text not null,          -- auditoria da mitigação de position bias
+  option_order text not null,          -- auditoria da mitigaÃ§Ã£o de position bias
   judge_family text not null,
   model text not null,
-  -- ORIGEM do trace: proveniência do dataset (replay) ou playbook_version (live).
+  -- ORIGEM do trace: proveniÃªncia do dataset (replay) ou playbook_version (live).
   provenance jsonb not null default '{}',
   run_id uuid not null,                -- agrupa uma RODADA de batch
   judged_at timestamptz not null default now()
@@ -7005,9 +7005,9 @@ create index if not exists idx_flywheel_judge_verdicts_dataset
   on flywheel_judge_verdicts (dataset, dimension);
 
 -- ============================================================================
--- 0024 — CANDIDATOS de melhoria propostos pelo distiller isolado. NUNCA aplica:
--- aplicar é o merge sob gate humano. Este é o ÚNICO store de escrita do distiller
--- (anti "curator-takeover"). Cada proposta REFERENCIA a evidência que a motivou.
+-- 0024 â€” CANDIDATOS de melhoria propostos pelo distiller isolado. NUNCA aplica:
+-- aplicar Ã© o merge sob gate humano. Este Ã© o ÃšNICO store de escrita do distiller
+-- (anti "curator-takeover"). Cada proposta REFERENCIA a evidÃªncia que a motivou.
 -- ============================================================================
 create table if not exists flywheel_distiller_proposals (
   id uuid primary key default gen_random_uuid(),
@@ -7015,7 +7015,7 @@ create table if not exists flywheel_distiller_proposals (
   run_id uuid not null,
   dataset text not null,
   type text not null check (type in ('playbook_bullet', 'golden_case', 'reentry_trigger')),
-  target text not null,                -- camada de playbook / arquivo golden / família de gatilho
+  target text not null,                -- camada de playbook / arquivo golden / famÃ­lia de gatilho
   content text not null check (length(content) > 0), -- texto proposto, pt-br, sem PII
   evidence jsonb not null,             -- trace_ids + run_ids + taxa/amostra
   proposed_at timestamptz not null default now()
@@ -7026,9 +7026,9 @@ create index if not exists idx_flywheel_distiller_proposals_dataset
   on flywheel_distiller_proposals (dataset, type);
 
 -- ============================================================================
--- 0025 — MANUTENÇÃO do judge: rotaciona casos frescos julgados em produção para
+-- 0025 â€” MANUTENÃ‡ÃƒO do judge: rotaciona casos frescos julgados em produÃ§Ã£o para
 -- um POOL de alinhamento (candidatos a novo lote de labels humanos no drift).
--- A unique é o DEDUP da rotação. (A extensão de kind 'judge_unaligned' já está
+-- A unique Ã© o DEDUP da rotaÃ§Ã£o. (A extensÃ£o de kind 'judge_unaligned' jÃ¡ estÃ¡
 -- embutida no CHECK de agent_inbox_items acima.)
 -- ============================================================================
 create table if not exists judge_alignment_pool (
@@ -7045,14 +7045,14 @@ create index if not exists idx_judge_alignment_pool_dim
   on judge_alignment_pool (organization_id, dimension);
 
 -- ============================================================================
--- 0026 — knobs de re-entrada (timing de follow-up + segmentação) versionados +
--- ponteiro. O 1º alvo concreto do flywheel: timing não é constante nem env —
--- é config versionada por org, otimizável e rollbackável pelo ponteiro.
+-- 0026 â€” knobs de re-entrada (timing de follow-up + segmentaÃ§Ã£o) versionados +
+-- ponteiro. O 1Âº alvo concreto do flywheel: timing nÃ£o Ã© constante nem env â€”
+-- Ã© config versionada por org, otimizÃ¡vel e rollbackÃ¡vel pelo ponteiro.
 -- ============================================================================
 create table if not exists reentry_knob_versions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
-  -- { follow_up_window_hours: number>0, enabled_segments: string[] } — shape
+  -- { follow_up_window_hours: number>0, enabled_segments: string[] } â€” shape
   -- revalidado no insert.
   knobs jsonb not null,
   created_at timestamptz not null default now()
@@ -7070,10 +7070,10 @@ create table if not exists reentry_knob_pointers (
 );
 
 -- ============================================================================
--- RLS — padrão do repo: tenant_isolation_<tabela>_all via fn_user_org_ids() +
+-- RLS â€” padrÃ£o do repo: tenant_isolation_<tabela>_all via fn_user_org_ids() +
 -- revoke de anon. Nas tabelas com organization_id nullable (agent_inbox_items,
 -- playbook_versions/pointers, skill_versions/pointers, metrics) a MESMA policy
--- serve: `null in (...)` nunca é true ⇒ linhas de plataforma são visíveis só ao
+-- serve: `null in (...)` nunca Ã© true â‡’ linhas de plataforma sÃ£o visÃ­veis sÃ³ ao
 -- service role (que bypassa RLS).
 -- ============================================================================
 do $$
@@ -7110,31 +7110,31 @@ begin
 end
 $$;
 
--- watchdog_cursors não tem organization_id (infra de plataforma): RLS habilitada
--- SEM policy ⇒ só o service role acessa.
+-- watchdog_cursors nÃ£o tem organization_id (infra de plataforma): RLS habilitada
+-- SEM policy â‡’ sÃ³ o service role acessa.
 alter table watchdog_cursors enable row level security;
 revoke all on watchdog_cursors from anon;
 
 
--- APÊNDICE 0051_agent_version_immutability (fusão Fase 2B) — espelho exato da migration.
+-- APÃŠNDICE 0051_agent_version_immutability (fusÃ£o Fase 2B) â€” espelho exato da migration.
 
--- 0051_agent_version_immutability — Fase 2B da fusão Vendaval.
+-- 0051_agent_version_immutability â€” Fase 2B da fusÃ£o Vendaval.
 --
--- ai_agent_versions passa a ser a fonte de config que o agent-engine LÊ POR
--- PONTEIRO no início de cada turno (published_version_id). Uma versão publicada
--- precisa ser imutável NO BANCO (não só por convenção de app): editar = criar
--- versão draft nova; rollback = revert (clona + publica). Mesmo princípio do
+-- ai_agent_versions passa a ser a fonte de config que o agent-engine LÃŠ POR
+-- PONTEIRO no inÃ­cio de cada turno (published_version_id). Uma versÃ£o publicada
+-- precisa ser imutÃ¡vel NO BANCO (nÃ£o sÃ³ por convenÃ§Ã£o de app): editar = criar
+-- versÃ£o draft nova; rollback = revert (clona + publica). Mesmo princÃ­pio do
 -- fn_agent_versions_immutable do harness (0050), adaptado ao lifecycle desta
--- tabela — o UPDATE de CONTEÚDO é vetado fora de status='draft'; as transições
--- de lifecycle (draft→published→superseded→archived + timestamps) continuam
--- livres (é o que o RPC fn_publish_ai_agent_version faz).
+-- tabela â€” o UPDATE de CONTEÃšDO Ã© vetado fora de status='draft'; as transiÃ§Ãµes
+-- de lifecycle (draftâ†’publishedâ†’supersededâ†’archived + timestamps) continuam
+-- livres (Ã© o que o RPC fn_publish_ai_agent_version faz).
 -- Idempotente; sem BEGIN/COMMIT; psql puro.
 
 create or replace function fn_ai_agent_version_content_immutable() returns trigger
 language plpgsql as $fn$
 begin
-  -- Conteúdo congelado fora de draft. Campos de lifecycle ficam de fora do
-  -- veto de propósito: status/published_at/superseded_at mudam no publish.
+  -- ConteÃºdo congelado fora de draft. Campos de lifecycle ficam de fora do
+  -- veto de propÃ³sito: status/published_at/superseded_at mudam no publish.
   if old.status <> 'draft' and (
        new.system_prompt          is distinct from old.system_prompt
     or new.provider               is distinct from old.provider
@@ -7154,7 +7154,7 @@ begin
     or new.agent_id               is distinct from old.agent_id
     or new.organization_id        is distinct from old.organization_id
   ) then
-    raise exception 'ai_agent_versions % é imutável (status=%): mudança de conteúdo = versão draft nova; rollback = revert (clona + publica)',
+    raise exception 'ai_agent_versions % Ã© imutÃ¡vel (status=%): mudanÃ§a de conteÃºdo = versÃ£o draft nova; rollback = revert (clona + publica)',
       old.id, old.status;
   end if;
   return new;
@@ -7167,18 +7167,18 @@ create trigger trg_ai_agent_versions_content_immutable
   for each row execute function fn_ai_agent_version_content_immutable();
 
 
--- APÊNDICE 0052_republish_fn_uppercase_fix — re-assenta a fn de publish correta (anti-drift).
+-- APÃŠNDICE 0052_republish_fn_uppercase_fix â€” re-assenta a fn de publish correta (anti-drift).
 
--- 0052_republish_fn_uppercase_fix — forward-fix de DRIFT de função.
+-- 0052_republish_fn_uppercase_fix â€” forward-fix de DRIFT de funÃ§Ã£o.
 --
--- Sintoma (Fase 2B da fusão): publish na tela falhava com channel_session_offline
--- mesmo com a sessão WORKING. Diagnóstico no banco hospedado: a função
+-- Sintoma (Fase 2B da fusÃ£o): publish na tela falhava com channel_session_offline
+-- mesmo com a sessÃ£o WORKING. DiagnÃ³stico no banco hospedado: a funÃ§Ã£o
 -- fn_publish_ai_agent_version deployada continha `v_session.status <> 'working'`
--- (minúsculo) — a versão PRÉ-0026 — apesar de 20260706200000_0026 constar como
--- aplicada em schema_migrations. Ou seja: algo re-aplicou a definição antiga por
+-- (minÃºsculo) â€” a versÃ£o PRÃ‰-0026 â€” apesar de 20260706200000_0026 constar como
+-- aplicada em schema_migrations. Ou seja: algo re-aplicou a definiÃ§Ã£o antiga por
 -- FORA do fluxo de migrations depois da 0026 (drift).
--- Conserto: re-assentar a definição correta da 0026 como migration NOVA (forward-
--- fix; migração aplicada nunca é editada). Idempotente por natureza (or replace).
+-- Conserto: re-assentar a definiÃ§Ã£o correta da 0026 como migration NOVA (forward-
+-- fix; migraÃ§Ã£o aplicada nunca Ã© editada). Idempotente por natureza (or replace).
 
 create or replace function public.fn_publish_ai_agent_version(
   p_org_id uuid,
@@ -7310,7 +7310,7 @@ comment on function public.fn_publish_ai_agent_version(uuid, uuid, uuid) is
   'EPIC-13 S-13.06 (fixed in 0026): compares channel_sessions.status against WORKING (uppercase), matching channel_sessions_status_check. 0024/0025 compared against lowercase working and always raised channel_session_offline.';
 
 -- ============================================================================
--- 0053 — Operação Visível F3: rastro de aplicação de proposta do flywheel
+-- 0053 â€” OperaÃ§Ã£o VisÃ­vel F3: rastro de aplicaÃ§Ã£o de proposta do flywheel
 -- (applied_at/applied_version_id/applied_by; null = pendente). Idempotente.
 -- ============================================================================
 alter table flywheel_distiller_proposals
@@ -7363,7 +7363,7 @@ create table if not exists followup_enrollments (
   started_at timestamptz not null default now(),
   completed_at timestamptz,
   updated_at timestamptz not null default now(),
-  -- estados com relógio TÊM next_eval_at; pausados/terminais NÃO — coerência no schema
+  -- estados com relÃ³gio TÃŠM next_eval_at; pausados/terminais NÃƒO â€” coerÃªncia no schema
   check (
     (status in ('active','waiting_reply') and next_eval_at is not null)
     or (status in ('paused_handoff','completed','cancelled','dead'))
@@ -7396,7 +7396,7 @@ create unique index if not exists idx_followup_events_idem
   on followup_enrollment_events (enrollment_id, idempotency_key)
   where idempotency_key is not null;
 
--- RLS (padrão fn_user_org_ids)
+-- RLS (padrÃ£o fn_user_org_ids)
 alter table followup_flow_versions enable row level security;
 alter table followup_flow_pointers enable row level security;
 alter table followup_enrollments enable row level security;
@@ -7423,7 +7423,7 @@ do $$ begin
     with check (organization_id in (select fn_user_org_ids()));
 exception when duplicate_object then null; end $$;
 
--- Claim atômico do worker (SKIP LOCKED) — service role only
+-- Claim atÃ´mico do worker (SKIP LOCKED) â€” service role only
 create or replace function fn_claim_due_followup_enrollments(p_limit int, p_lease_seconds int)
 returns setof followup_enrollments
 language sql
@@ -7502,10 +7502,10 @@ revoke all on function fn_publish_followup_flow_version(uuid, uuid, jsonb, uuid)
 
 -- ---- agent_inbox_items: kind 'followup_dead' (migration 0057) ----
 
--- A constraint NÃO é reconstruída aqui: o vocabulário desta migration já está
--- contido no bloco único do fim deste apêndice. Reconstruí-la com a lista da
--- época quebrava o update.sh de quem já tem linha com kind mais novo (era o
--- caso deste bloco: 'snooze_expired' e os 4 seguintes ainda não existiam).
+-- A constraint NÃƒO Ã© reconstruÃ­da aqui: o vocabulÃ¡rio desta migration jÃ¡ estÃ¡
+-- contido no bloco Ãºnico do fim deste apÃªndice. ReconstruÃ­-la com a lista da
+-- Ã©poca quebrava o update.sh de quem jÃ¡ tem linha com kind mais novo (era o
+-- caso deste bloco: 'snooze_expired' e os 4 seguintes ainda nÃ£o existiam).
 
 -- ---- agent editor: seletor de fluxo de follow-up (migration 0061) ----
 
@@ -7535,7 +7535,7 @@ begin
     or new.agent_id               is distinct from old.agent_id
     or new.organization_id        is distinct from old.organization_id
   ) then
-    raise exception 'ai_agent_versions % é imutável (status=%): mudança de conteúdo = versão draft nova; rollback = revert (clona + publica)',
+    raise exception 'ai_agent_versions % Ã© imutÃ¡vel (status=%): mudanÃ§a de conteÃºdo = versÃ£o draft nova; rollback = revert (clona + publica)',
       old.id, old.status;
   end if;
   return new;
@@ -7548,8 +7548,8 @@ create trigger trg_ai_agent_versions_content_immutable
   for each row execute function fn_ai_agent_version_content_immutable();
 
 -- ---- followup enrollment: 1 vivo por lead ORG-WIDE + agent_id (migration 0064) ----
--- Dedup ANTES de trocar o índice (self-host-safe: o update.sh re-aplica sem
--- ON_ERROR_STOP, então o dado sujo tem que ser curado antes da constraint).
+-- Dedup ANTES de trocar o Ã­ndice (self-host-safe: o update.sh re-aplica sem
+-- ON_ERROR_STOP, entÃ£o o dado sujo tem que ser curado antes da constraint).
 with ranked as (
   select id,
          row_number() over (
@@ -7647,8 +7647,8 @@ alter table conversations
 create index if not exists idx_conversations_snooze_until
   on conversations (snooze_until) where snooze_until is not null;
 
--- (constraint agent_inbox_items_kind_check: definida uma vez só, no fim deste
---  apêndice — ver "vocabulário completo". 'snooze_expired' está lá.)
+-- (constraint agent_inbox_items_kind_check: definida uma vez sÃ³, no fim deste
+--  apÃªndice â€” ver "vocabulÃ¡rio completo". 'snooze_expired' estÃ¡ lÃ¡.)
 
 -- ---- notas internas de conversa (migration 0063) ----
 create table if not exists conversation_notes (
@@ -7734,14 +7734,14 @@ drop policy if exists tenant_isolation_agent_case_events_insert on agent_case_ev
 create policy tenant_isolation_agent_case_events_insert on agent_case_events
   for insert with check (organization_id in (select fn_user_org_ids()));
 
--- estender CHECKs de job_queue (kind + coerência kind⇔contato) p/ case_reply_turn
+-- estender CHECKs de job_queue (kind + coerÃªncia kindâ‡”contato) p/ case_reply_turn
 -- nomes reais conferidos no banco linkado: job_queue_kind_check (named) e
--- job_queue_check (anônimo, gerado pelo Postgres) para o CHECK de coerência.
+-- job_queue_check (anÃ´nimo, gerado pelo Postgres) para o CHECK de coerÃªncia.
 alter table job_queue drop constraint if exists job_queue_kind_check;
 alter table job_queue add constraint job_queue_kind_check
-  -- 'operator_turn' (migration 0111, spec 16 §3.2) entra NESTE bloco, não num
+  -- 'operator_turn' (migration 0111, spec 16 Â§3.2) entra NESTE bloco, nÃ£o num
   -- novo no fim: reconstruir a mesma constraint em N blocos quebra o update.sh
-  -- de todo clone que já tenha uma linha de vocabulário posterior — os blocos
+  -- de todo clone que jÃ¡ tenha uma linha de vocabulÃ¡rio posterior â€” os blocos
   -- antigos rodam antes e falham em cadeia. Vigiado por
   -- tests/unit/baseline-constraint-reconstruida.test.ts.
   check (kind in ('inbound_turn','followup_turn','watchdog','flywheel','case_reply_turn','operator_turn'));
@@ -7763,13 +7763,13 @@ alter table cron_jobs add constraint cron_jobs_job_kind_check
 
 -- ---- agent_inbox_items: reconcilia kind check followup_dead+snooze_expired (migration 0065) ----
 
--- (constraint agent_inbox_items_kind_check: definida uma vez só, no fim deste
---  apêndice — ver "vocabulário completo". Os dois valores desta migration
---  estão lá.)
--- ---- memória geral da org: org_memory_versions/pointers/entries (migration 0067) ----
--- 0067: Memória Geral da Org (Fase 1 do épico harness — spec 2026-07-23).
--- Doc-mãe versionado (padrão versões-imutáveis+ponteiro do playbook 0004/0050)
--- + entradas de aprendizado individuais (manual | flywheel com aprovação humana).
+-- (constraint agent_inbox_items_kind_check: definida uma vez sÃ³, no fim deste
+--  apÃªndice â€” ver "vocabulÃ¡rio completo". Os dois valores desta migration
+--  estÃ£o lÃ¡.)
+-- ---- memÃ³ria geral da org: org_memory_versions/pointers/entries (migration 0067) ----
+-- 0067: MemÃ³ria Geral da Org (Fase 1 do Ã©pico harness â€” spec 2026-07-23).
+-- Doc-mÃ£e versionado (padrÃ£o versÃµes-imutÃ¡veis+ponteiro do playbook 0004/0050)
+-- + entradas de aprendizado individuais (manual | flywheel com aprovaÃ§Ã£o humana).
 
 create table if not exists org_memory_versions (
   id uuid primary key default gen_random_uuid(),
@@ -7808,7 +7808,7 @@ create table if not exists org_memory_entries (
 create index if not exists idx_org_memory_entries_org_status
   on org_memory_entries (organization_id, status, created_at);
 
--- Flywheel: novo destino de proposta (entry de memória da org).
+-- Flywheel: novo destino de proposta (entry de memÃ³ria da org).
 alter table flywheel_distiller_proposals drop constraint if exists flywheel_distiller_proposals_type_check;
 alter table flywheel_distiller_proposals add constraint flywheel_distiller_proposals_type_check
   check (type in ('playbook_bullet', 'golden_case', 'reentry_trigger', 'org_memory_entry'));
@@ -7830,10 +7830,10 @@ begin
   end loop;
 end $$;
 
--- ---- skills instaláveis: manifest + skill_activations + catálogo (migration 0068) ----
--- 0068: Skills instaláveis + marketplace (Fase 2 do épico harness — spec 2026-07-23).
--- Manifest de arquivos na versão de skill + telemetria de ativação + bucket de
--- assets + leitura do catálogo de plataforma por clientes user-scoped.
+-- ---- skills instalÃ¡veis: manifest + skill_activations + catÃ¡logo (migration 0068) ----
+-- 0068: Skills instalÃ¡veis + marketplace (Fase 2 do Ã©pico harness â€” spec 2026-07-23).
+-- Manifest de arquivos na versÃ£o de skill + telemetria de ativaÃ§Ã£o + bucket de
+-- assets + leitura do catÃ¡logo de plataforma por clientes user-scoped.
 
 alter table skill_versions add column if not exists manifest jsonb not null default '[]'::jsonb;
 alter table skill_versions add column if not exists forked_from_version_id uuid references skill_versions(id) on delete set null;
@@ -7852,8 +7852,8 @@ create index if not exists idx_skill_activations_org_created
 create index if not exists idx_skill_activations_skill
   on skill_activations (organization_id, skill_name, created_at);
 
--- RLS das tabelas org-scoped novas (skill_activations). skill_versions/pointers já
--- estão no loop tenant_isolation do baseline; a leitura de catálogo é policy extra abaixo.
+-- RLS das tabelas org-scoped novas (skill_activations). skill_versions/pointers jÃ¡
+-- estÃ£o no loop tenant_isolation do baseline; a leitura de catÃ¡logo Ã© policy extra abaixo.
 do $$
 declare t text;
 begin
@@ -7870,8 +7870,8 @@ begin
   end loop;
 end $$;
 
--- Catálogo do marketplace: qualquer usuário autenticado LÊ as skills de plataforma
--- (organization_id null). Só SELECT; escrita de plataforma continua service-role.
+-- CatÃ¡logo do marketplace: qualquer usuÃ¡rio autenticado LÃŠ as skills de plataforma
+-- (organization_id null). SÃ³ SELECT; escrita de plataforma continua service-role.
 drop policy if exists catalog_read_skill_versions on skill_versions;
 create policy catalog_read_skill_versions on skill_versions for select
   to authenticated using (organization_id is null);
@@ -7879,15 +7879,15 @@ drop policy if exists catalog_read_skill_pointers on skill_pointers;
 create policy catalog_read_skill_pointers on skill_pointers for select
   to authenticated using (organization_id is null);
 
--- ---- seed de skills de plataforma: catálogo inicial do marketplace (migration 0069) ----
--- 0069: seed de skills de plataforma (organization_id null) — catálogo inicial do
--- marketplace de skills (Fase 2 do épico harness). Duas skills de fábrica, qualidade
--- sobre quantidade: `objecao-preco` (vendas/genérico) e `agendamento` (clínicas/
--- serviços). Visíveis em toda org via a policy catalog_read_* acima.
+-- ---- seed de skills de plataforma: catÃ¡logo inicial do marketplace (migration 0069) ----
+-- 0069: seed de skills de plataforma (organization_id null) â€” catÃ¡logo inicial do
+-- marketplace de skills (Fase 2 do Ã©pico harness). Duas skills de fÃ¡brica, qualidade
+-- sobre quantidade: `objecao-preco` (vendas/genÃ©rico) e `agendamento` (clÃ­nicas/
+-- serviÃ§os). VisÃ­veis em toda org via a policy catalog_read_* acima.
 --
--- Idempotente: cada bloco só insere versão+ponteiro se o ponteiro de plataforma
--- ainda não existir pra aquele nome — evita versão órfã (skill_versions é imutável,
--- sem UPDATE possível) e respeita o unique index uniq_skill_pointers_platform em
+-- Idempotente: cada bloco sÃ³ insere versÃ£o+ponteiro se o ponteiro de plataforma
+-- ainda nÃ£o existir pra aquele nome â€” evita versÃ£o Ã³rfÃ£ (skill_versions Ã© imutÃ¡vel,
+-- sem UPDATE possÃ­vel) e respeita o unique index uniq_skill_pointers_platform em
 -- re-run.
 
 do $seed$
@@ -7901,89 +7901,89 @@ begin
     values (
       null,
       'objecao-preco',
-      'Playbook pra contornar objeção de preço no WhatsApp — diagnostica o motivo real por trás do "caro" antes de reagir, sem ceder desconto não autorizado.',
-      $body$# Playbook: contornar objeção de preço
+      'Playbook pra contornar objeÃ§Ã£o de preÃ§o no WhatsApp â€” diagnostica o motivo real por trÃ¡s do "caro" antes de reagir, sem ceder desconto nÃ£o autorizado.',
+      $body$# Playbook: contornar objeÃ§Ã£o de preÃ§o
 
 ## Quando usar
-O lead reagiu ao preço/valor com resistência — direta ("tá caro") ou indireta (pediu
+O lead reagiu ao preÃ§o/valor com resistÃªncia â€” direta ("tÃ¡ caro") ou indireta (pediu
 desconto, comparou com concorrente, sumiu depois de saber o valor). Objetivo: entender
-a objeção real por trás do "caro" antes de reagir, e nunca ceder desconto que a
-organização não autorizou.
+a objeÃ§Ã£o real por trÃ¡s do "caro" antes de reagir, e nunca ceder desconto que a
+organizaÃ§Ã£o nÃ£o autorizou.
 
-## Diagnóstico primeiro — "caro" quase nunca é sobre o número
-Antes de responder, identifique QUAL objeção está por trás:
+## DiagnÃ³stico primeiro â€” "caro" quase nunca Ã© sobre o nÃºmero
+Antes de responder, identifique QUAL objeÃ§Ã£o estÃ¡ por trÃ¡s:
 
-1. **Orçamento real insuficiente** — "não tenho esse valor agora", "tá fora do meu orçamento"
-2. **Não enxergou o valor ainda** — "por que custa isso?", silêncio após o preço, comparação vaga
-3. **Comparação com concorrente/opção mais barata** — "vi mais barato em [X]", "achei um mais em conta"
-4. **Tática de negociação** — pede desconto de cara, sem ter perguntado nada sobre o produto antes
-5. **Timing** — "vou pensar", "deixa eu ver com [sócio/cônjuge]" disfarçado de objeção de preço
+1. **OrÃ§amento real insuficiente** â€” "nÃ£o tenho esse valor agora", "tÃ¡ fora do meu orÃ§amento"
+2. **NÃ£o enxergou o valor ainda** â€” "por que custa isso?", silÃªncio apÃ³s o preÃ§o, comparaÃ§Ã£o vaga
+3. **ComparaÃ§Ã£o com concorrente/opÃ§Ã£o mais barata** â€” "vi mais barato em [X]", "achei um mais em conta"
+4. **TÃ¡tica de negociaÃ§Ã£o** â€” pede desconto de cara, sem ter perguntado nada sobre o produto antes
+5. **Timing** â€” "vou pensar", "deixa eu ver com [sÃ³cio/cÃ´njuge]" disfarÃ§ado de objeÃ§Ã£o de preÃ§o
 
-Se não der pra diagnosticar pela mensagem, PERGUNTE antes de argumentar: "Só pra eu
-te ajudar melhor — é o valor em si, ou você tava esperando algo diferente do que
+Se nÃ£o der pra diagnosticar pela mensagem, PERGUNTE antes de argumentar: "SÃ³ pra eu
+te ajudar melhor â€” Ã© o valor em si, ou vocÃª tava esperando algo diferente do que
 ofereci?"
 
-## If-then por diagnóstico
+## If-then por diagnÃ³stico
 
-**SE orçamento real insuficiente:**
-- Não insista no preço cheio. Ofereça: parcelamento, plano de entrada, versão
-  reduzida — SÓ o que já estiver documentado como opção legítima na base de
+**SE orÃ§amento real insuficiente:**
+- NÃ£o insista no preÃ§o cheio. OfereÃ§a: parcelamento, plano de entrada, versÃ£o
+  reduzida â€” SÃ“ o que jÃ¡ estiver documentado como opÃ§Ã£o legÃ­tima na base de
   conhecimento do tenant.
-- NUNCA invente parcelamento ou desconto que não está documentado — se não souber a
-  política, faça handoff.
-- Não deprecie o lead por não ter orçamento. Trate como informação, não como recusa.
+- NUNCA invente parcelamento ou desconto que nÃ£o estÃ¡ documentado â€” se nÃ£o souber a
+  polÃ­tica, faÃ§a handoff.
+- NÃ£o deprecie o lead por nÃ£o ter orÃ§amento. Trate como informaÃ§Ã£o, nÃ£o como recusa.
 
-**SE não enxergou valor ainda:**
-- Não repita o preço. Reforce o resultado concreto que o cliente ganha (não a lista
+**SE nÃ£o enxergou valor ainda:**
+- NÃ£o repita o preÃ§o. Reforce o resultado concreto que o cliente ganha (nÃ£o a lista
   de features).
-- Use um número ou prova social real se a base de conhecimento tiver ("cliente X
+- Use um nÃºmero ou prova social real se a base de conhecimento tiver ("cliente X
   reduziu Y em Z semanas").
-- Pergunta de reengajamento: "Faz sentido pra você o que isso resolve, ou ficou
-  alguma dúvida sobre o que está incluso?"
+- Pergunta de reengajamento: "Faz sentido pra vocÃª o que isso resolve, ou ficou
+  alguma dÃºvida sobre o que estÃ¡ incluso?"
 
-**SE comparação com concorrente:**
-- Não ataque o concorrente. Pergunte o que ele viu de diferente ("o que tinha nessa
-  outra opção?") — geralmente revela se é preço mesmo ou outro critério (prazo,
+**SE comparaÃ§Ã£o com concorrente:**
+- NÃ£o ataque o concorrente. Pergunte o que ele viu de diferente ("o que tinha nessa
+  outra opÃ§Ã£o?") â€” geralmente revela se Ã© preÃ§o mesmo ou outro critÃ©rio (prazo,
   suporte, garantia).
 - Destaque o diferencial real do tenant (o que a base de conhecimento tiver de
-  posicionamento), não genérico.
+  posicionamento), nÃ£o genÃ©rico.
 
-**SE tática de negociação (pediu desconto sem contexto):**
-- Não ceda automaticamente. Pergunte o que faria sentido fechar hoje — muitas vezes
-  revela o número real que o lead tem em mente.
-- Desconto SÓ se a organização tiver uma política documentada na base de
-  conhecimento (RAG) pra esse cenário. Sem isso, handoff — decisão de preço fora do
-  script é gate humano.
+**SE tÃ¡tica de negociaÃ§Ã£o (pediu desconto sem contexto):**
+- NÃ£o ceda automaticamente. Pergunte o que faria sentido fechar hoje â€” muitas vezes
+  revela o nÃºmero real que o lead tem em mente.
+- Desconto SÃ“ se a organizaÃ§Ã£o tiver uma polÃ­tica documentada na base de
+  conhecimento (RAG) pra esse cenÃ¡rio. Sem isso, handoff â€” decisÃ£o de preÃ§o fora do
+  script Ã© gate humano.
 
-**SE for timing disfarçado ("vou pensar"):**
-- Não pressione. Pergunte objetivamente o que falta pra decidir ("o que te ajudaria
-  a decidir com mais segurança agora?").
-- Agende um follow-up explícito (data/hora), não deixe em aberto — lead que "vai
+**SE for timing disfarÃ§ado ("vou pensar"):**
+- NÃ£o pressione. Pergunte objetivamente o que falta pra decidir ("o que te ajudaria
+  a decidir com mais seguranÃ§a agora?").
+- Agende um follow-up explÃ­cito (data/hora), nÃ£o deixe em aberto â€” lead que "vai
   pensar" sem follow-up marcado esfria.
 
 ## Regras duras
-- Nunca prometa desconto, brinde ou condição especial que não esteja na base de
+- Nunca prometa desconto, brinde ou condiÃ§Ã£o especial que nÃ£o esteja na base de
   conhecimento do tenant (RAG) ou explicitamente configurada no agente.
-- Nunca minta sobre "promoção que acaba hoje" ou crie urgência falsa.
-- Se o lead ficar hostil, ameaçar cancelar ou pedir falar com humano — handoff
+- Nunca minta sobre "promoÃ§Ã£o que acaba hoje" ou crie urgÃªncia falsa.
+- Se o lead ficar hostil, ameaÃ§ar cancelar ou pedir falar com humano â€” handoff
   imediato, sem insistir mais uma vez.
-- Se depois de 2 trocas de mensagem a objeção não resolver, ofereça handoff
-  explicitamente: "Quer que eu chame alguém do time pra fechar os detalhes com
-  você?"
+- Se depois de 2 trocas de mensagem a objeÃ§Ã£o nÃ£o resolver, ofereÃ§a handoff
+  explicitamente: "Quer que eu chame alguÃ©m do time pra fechar os detalhes com
+  vocÃª?"
 
-## Exemplos de resposta (tom, não copiar literal)
-- "Entendo — antes de eu te passar mais opção, me conta: é o valor em si ou esperava
+## Exemplos de resposta (tom, nÃ£o copiar literal)
+- "Entendo â€” antes de eu te passar mais opÃ§Ã£o, me conta: Ã© o valor em si ou esperava
   algo diferente do que te mostrei?"
-- "Faz sentido. Sobre o valor, hoje temos [opção documentada]. Isso ajudaria a caber
+- "Faz sentido. Sobre o valor, hoje temos [opÃ§Ã£o documentada]. Isso ajudaria a caber
   no seu momento?"
-- "Show, deixa eu confirmar contigo: o que faria sentido fechar hoje pra você?"
+- "Show, deixa eu confirmar contigo: o que faria sentido fechar hoje pra vocÃª?"
 
-## O que NÃO fazer
-- Não despeje a lista de preços de novo sem contexto.
-- Não ignore a objeção e mude de assunto.
-- Não use frases de pressão tipo "só até hoje" sem essa condição existir de verdade.
+## O que NÃƒO fazer
+- NÃ£o despeje a lista de preÃ§os de novo sem contexto.
+- NÃ£o ignore a objeÃ§Ã£o e mude de assunto.
+- NÃ£o use frases de pressÃ£o tipo "sÃ³ atÃ© hoje" sem essa condiÃ§Ã£o existir de verdade.
 $body$,
-      '{"any_keywords": ["caro", "tá caro", "está caro", "muito caro", "desconto", "abaixar o preço", "mais barato", "achei mais barato", "fora do meu orçamento", "não cabe no orçamento", "valor alto", "preço alto"], "probe_keywords": ["quanto custa", "qual o valor", "quanto é", "parcelamento", "condições de pagamento", "forma de pagamento"]}'::jsonb
+      '{"any_keywords": ["caro", "tÃ¡ caro", "estÃ¡ caro", "muito caro", "desconto", "abaixar o preÃ§o", "mais barato", "achei mais barato", "fora do meu orÃ§amento", "nÃ£o cabe no orÃ§amento", "valor alto", "preÃ§o alto"], "probe_keywords": ["quanto custa", "qual o valor", "quanto Ã©", "parcelamento", "condiÃ§Ãµes de pagamento", "forma de pagamento"]}'::jsonb
     )
     returning id into v_id;
 
@@ -8004,85 +8004,85 @@ begin
     values (
       null,
       'agendamento',
-      'Playbook pra marcar/remarcar horário (consulta, visita, sessão) — oferece opções concretas de agenda real, nunca inventa disponibilidade, confirma por escrito antes de fechar.',
-      $body$# Playbook: marcar horário/agendamento
+      'Playbook pra marcar/remarcar horÃ¡rio (consulta, visita, sessÃ£o) â€” oferece opÃ§Ãµes concretas de agenda real, nunca inventa disponibilidade, confirma por escrito antes de fechar.',
+      $body$# Playbook: marcar horÃ¡rio/agendamento
 
 ## Quando usar
-O lead pede pra marcar um horário, consulta, visita, demonstração ou sessão —
-qualquer compromisso com data/hora. Comum em clínicas, imobiliárias (visitas),
-serviços e consultorias.
+O lead pede pra marcar um horÃ¡rio, consulta, visita, demonstraÃ§Ã£o ou sessÃ£o â€”
+qualquer compromisso com data/hora. Comum em clÃ­nicas, imobiliÃ¡rias (visitas),
+serviÃ§os e consultorias.
 
 ## Regra de ouro: nunca invente disponibilidade
-Se o agente não tiver acesso confirmado à agenda real do tenant (integração/consulta
-de disponibilidade), NÃO ofereça horário específico. Diga que vai confirmar e faça
-handoff, ou pergunte a preferência do lead e sinalize que a confirmação virá em
-seguida. Prometer um horário que depois não existe quebra confiança e gera
-reagendamento forçado.
+Se o agente nÃ£o tiver acesso confirmado Ã  agenda real do tenant (integraÃ§Ã£o/consulta
+de disponibilidade), NÃƒO ofereÃ§a horÃ¡rio especÃ­fico. Diga que vai confirmar e faÃ§a
+handoff, ou pergunte a preferÃªncia do lead e sinalize que a confirmaÃ§Ã£o virÃ¡ em
+seguida. Prometer um horÃ¡rio que depois nÃ£o existe quebra confianÃ§a e gera
+reagendamento forÃ§ado.
 
-## Fluxo padrão (if-then)
+## Fluxo padrÃ£o (if-then)
 
-**1. Identifique o serviço/motivo antes de oferecer horário**
-- SE o lead só disse "quero agendar" sem contexto → pergunte o motivo/serviço
-  primeiro. Agendar sem saber o quê gera erro de encaixe (ex.: consulta de 20min
+**1. Identifique o serviÃ§o/motivo antes de oferecer horÃ¡rio**
+- SE o lead sÃ³ disse "quero agendar" sem contexto â†’ pergunte o motivo/serviÃ§o
+  primeiro. Agendar sem saber o quÃª gera erro de encaixe (ex.: consulta de 20min
   marcada num slot de 1h de procedimento).
 
-**2. Ofereça opções fechadas, não uma pergunta aberta**
-- SE tiver acesso à agenda real → ofereça 2-3 horários concretos ("tenho terça 14h
-  ou quarta 10h, qual funciona?"). Pergunta aberta tipo "qual horário você prefere?"
-  gera ida e volta desnecessária e trava a conversa.
-- SE não tiver acesso à agenda → não invente. Diga algo como "vou confirmar a
+**2. OfereÃ§a opÃ§Ãµes fechadas, nÃ£o uma pergunta aberta**
+- SE tiver acesso Ã  agenda real â†’ ofereÃ§a 2-3 horÃ¡rios concretos ("tenho terÃ§a 14h
+  ou quarta 10h, qual funciona?"). Pergunta aberta tipo "qual horÃ¡rio vocÃª prefere?"
+  gera ida e volta desnecessÃ¡ria e trava a conversa.
+- SE nÃ£o tiver acesso Ã  agenda â†’ nÃ£o invente. Diga algo como "vou confirmar a
   disponibilidade e te retorno em instantes" e sinalize handoff/task pra quem tem
   acesso.
 
-**3. Colete os dados obrigatórios antes de confirmar**
-- Nome completo do lead (ou confirme o que já está no CRM).
-- Serviço/motivo específico.
-- Unidade/local, se o tenant tiver mais de uma (clínica com filiais, imobiliária com
-  múltiplos imóveis).
-- Se for reagendamento, o horário anterior a ser substituído.
+**3. Colete os dados obrigatÃ³rios antes de confirmar**
+- Nome completo do lead (ou confirme o que jÃ¡ estÃ¡ no CRM).
+- ServiÃ§o/motivo especÃ­fico.
+- Unidade/local, se o tenant tiver mais de uma (clÃ­nica com filiais, imobiliÃ¡ria com
+  mÃºltiplos imÃ³veis).
+- Se for reagendamento, o horÃ¡rio anterior a ser substituÃ­do.
 
 **4. Confirme por escrito antes de encerrar**
-- SE o lead aceitar um horário → repita de volta por escrito: "Confirmado:
-  [serviço] dia [data] às [hora], em [local]. Confirma pra mim?"
-- Só considere o agendamento fechado depois do "sim"/confirmação explícita do lead —
-  silêncio ou "ok" vago não é confirmação suficiente pra compromissos com custo de
-  no-show alto (ex. consulta médica, visita a imóvel).
+- SE o lead aceitar um horÃ¡rio â†’ repita de volta por escrito: "Confirmado:
+  [serviÃ§o] dia [data] Ã s [hora], em [local]. Confirma pra mim?"
+- SÃ³ considere o agendamento fechado depois do "sim"/confirmaÃ§Ã£o explÃ­cita do lead â€”
+  silÃªncio ou "ok" vago nÃ£o Ã© confirmaÃ§Ã£o suficiente pra compromissos com custo de
+  no-show alto (ex. consulta mÃ©dica, visita a imÃ³vel).
 
 **5. Reagendamento e cancelamento**
-- SE o lead pedir pra remarcar → trate como novo agendamento: pergunte novo horário
-  disponível, e cancele/substitua o anterior explicitamente (não deixe os dois
+- SE o lead pedir pra remarcar â†’ trate como novo agendamento: pergunte novo horÃ¡rio
+  disponÃ­vel, e cancele/substitua o anterior explicitamente (nÃ£o deixe os dois
   marcados).
-- SE o lead pedir pra cancelar → confirme o cancelamento e pergunte se quer remarcar
+- SE o lead pedir pra cancelar â†’ confirme o cancelamento e pergunte se quer remarcar
   pra outra data, sem pressionar.
 
 **6. Risco de no-show**
-- Se o negócio tiver política de confirmação D-1 documentada na base de
-  conhecimento, siga-a (ex.: mensagem de lembrete automática). Se não houver, não
-  invente política — apenas confirme o agendamento normalmente.
+- Se o negÃ³cio tiver polÃ­tica de confirmaÃ§Ã£o D-1 documentada na base de
+  conhecimento, siga-a (ex.: mensagem de lembrete automÃ¡tica). Se nÃ£o houver, nÃ£o
+  invente polÃ­tica â€” apenas confirme o agendamento normalmente.
 
 ## Regras duras
-- Nunca confirme horário sem ter checado disponibilidade real (ou sem sinalizar que
+- Nunca confirme horÃ¡rio sem ter checado disponibilidade real (ou sem sinalizar que
   ainda vai confirmar).
 - Nunca marque dois compromissos conflitantes pro mesmo lead sem avisar.
-- Se o lead pedir um horário fora do funcionamento do negócio (ex. domingo,
-  madrugada) e isso não estiver nas regras do tenant, não confirme — explique a
+- Se o lead pedir um horÃ¡rio fora do funcionamento do negÃ³cio (ex. domingo,
+  madrugada) e isso nÃ£o estiver nas regras do tenant, nÃ£o confirme â€” explique a
   janela real de atendimento.
-- Dado sensível (endereço completo, documento) só é coletado se o fluxo do tenant
-  realmente exigir — não peça informação a mais que o agendamento precisa.
+- Dado sensÃ­vel (endereÃ§o completo, documento) sÃ³ Ã© coletado se o fluxo do tenant
+  realmente exigir â€” nÃ£o peÃ§a informaÃ§Ã£o a mais que o agendamento precisa.
 
-## Exemplos de resposta (tom, não copiar literal)
-- "Pra eu te encaixar certo: é pra qual serviço/motivo?"
-- "Tenho quinta às 15h ou sexta às 9h — qual fica melhor pra você?"
-- "Confirmado: consulta dia 28/07 às 15h, na unidade Centro. Pode confirmar pra
+## Exemplos de resposta (tom, nÃ£o copiar literal)
+- "Pra eu te encaixar certo: Ã© pra qual serviÃ§o/motivo?"
+- "Tenho quinta Ã s 15h ou sexta Ã s 9h â€” qual fica melhor pra vocÃª?"
+- "Confirmado: consulta dia 28/07 Ã s 15h, na unidade Centro. Pode confirmar pra
   mim?"
 
-## O que NÃO fazer
-- Não pergunte "qual horário você prefere?" sem oferecer opções concretas quando
-  você tem a agenda.
-- Não confirme agendamento sem resposta explícita do lead.
-- Não invente disponibilidade que você não checou.
+## O que NÃƒO fazer
+- NÃ£o pergunte "qual horÃ¡rio vocÃª prefere?" sem oferecer opÃ§Ãµes concretas quando
+  vocÃª tem a agenda.
+- NÃ£o confirme agendamento sem resposta explÃ­cita do lead.
+- NÃ£o invente disponibilidade que vocÃª nÃ£o checou.
 $body$,
-      '{"any_keywords": ["agendar", "marcar horário", "marcar consulta", "marcar uma visita", "agenda", "que horas vocês", "horário disponível", "remarcar", "reagendar", "cancelar o horário", "desmarcar"], "probe_keywords": ["que horas", "qual dia", "tem vaga", "disponibilidade"]}'::jsonb
+      '{"any_keywords": ["agendar", "marcar horÃ¡rio", "marcar consulta", "marcar uma visita", "agenda", "que horas vocÃªs", "horÃ¡rio disponÃ­vel", "remarcar", "reagendar", "cancelar o horÃ¡rio", "desmarcar"], "probe_keywords": ["que horas", "qual dia", "tem vaga", "disponibilidade"]}'::jsonb
     )
     returning id into v_id;
 
@@ -8100,12 +8100,12 @@ $seed$;
 -- DE PROPOSITO: sao dado ja gravado nos bancos existentes, e reescrever dado para
 -- acompanhar renumeracao de arquivo criaria divergencia entre clone antigo e novo
 -- sem ganho nenhum. O guard `not exists` casa por `model`, nunca por `notes`.
--- BUG: ai_pricing nascia VAZIA em toda instalação nova. Os seeds existem só na
--- migration 0010, mas a cadeia fresh não sobe (as 10 primeiras são stubs
+-- BUG: ai_pricing nascia VAZIA em toda instalaÃ§Ã£o nova. Os seeds existem sÃ³ na
+-- migration 0010, mas a cadeia fresh nÃ£o sobe (as 10 primeiras sÃ£o stubs
 -- `SELECT 1;`) e quem instala aplica este baseline, que semeia ai_models mas
--- não ai_pricing. Com a tabela vazia, computeCost() devolve 0 sem log e o teto
+-- nÃ£o ai_pricing. Com a tabela vazia, computeCost() devolve 0 sem log e o teto
 -- de ai_budgets nunca dispara. Derivado de ai_models: idempotente e
--- auto-curativo, cobre qualquer modelo futuro do catálogo.
+-- auto-curativo, cobre qualquer modelo futuro do catÃ¡logo.
 insert into public.ai_pricing (model, prompt_cents_per_million_tokens, completion_cents_per_million_tokens, notes)
 select
   m.model_id,
@@ -8121,7 +8121,7 @@ where m.deprecated_at is null
     where p.model = m.model_id and p.superseded_at is null
   );
 
--- Embedding do RAG — não vive em ai_models.
+-- Embedding do RAG â€” nÃ£o vive em ai_models.
 insert into public.ai_pricing (model, embedding_cents_per_million_tokens, notes)
 select 'openai/text-embedding-3-small', 20, 'backfill 0068 (seed original da 0010)'
 where not exists (
@@ -8129,11 +8129,11 @@ where not exists (
   where p.model = 'openai/text-embedding-3-small' and p.superseded_at is null
 );
 -- ---- crm_leads owner_kind/owner_agent_id (migration 0070) ----
--- CRM Vivo · Wave 1 (CORE 1): a IA é dona do NEGÓCIO, não só da conversa.
--- Mesmo padrão da 0032 (conversations.assignee_kind): backfill ANTES da
--- constraint, CHECK de coerência em forma de implicação, drop+add re-aplicável.
--- owner_agent_id aponta para ai_agents (identidade), NUNCA ai_agent_versions —
--- o tooltip "Nome · vN" resolve a versão publicada por join na hora de exibir.
+-- CRM Vivo Â· Wave 1 (CORE 1): a IA Ã© dona do NEGÃ“CIO, nÃ£o sÃ³ da conversa.
+-- Mesmo padrÃ£o da 0032 (conversations.assignee_kind): backfill ANTES da
+-- constraint, CHECK de coerÃªncia em forma de implicaÃ§Ã£o, drop+add re-aplicÃ¡vel.
+-- owner_agent_id aponta para ai_agents (identidade), NUNCA ai_agent_versions â€”
+-- o tooltip "Nome Â· vN" resolve a versÃ£o publicada por join na hora de exibir.
 alter table public.crm_leads
   add column if not exists owner_kind text
   check (owner_kind in ('user','ai'));
@@ -8208,26 +8208,26 @@ begin
 end$$;
 
 
--- ---- crm_lead_activities: barramento único da vida do lead (migration 0071) ----
+-- ---- crm_lead_activities: barramento Ãºnico da vida do lead (migration 0071) ----
 -- Wave 3, bloco 1 do CRM Vivo. actor_kind/actor_agent_id/reason/evidence +
 -- stage_changed_at em crm_leads. Realtime desta tabela entra pelo array do loop
--- de publicação, acima.
+-- de publicaÃ§Ã£o, acima.
 --
 -- FRONTEIRA DIRC: source_module/source_id = O QUE ORIGINOU (um ponteiro);
--- evidence = O QUE SUSTENTA (N referências). evidence nunca repete o source_id.
+-- evidence = O QUE SUSTENTA (N referÃªncias). evidence nunca repete o source_id.
 --
--- Idempotente e AUTO-CURATIVO: o backfill lê actor_kind/reason de metadata (onde
--- o orquestrador de handoff já os grava hoje) ANTES de a constraint existir, e
--- degrada para 'system' a linha marcada como 'ai' sem lastro nenhum — senão o
+-- Idempotente e AUTO-CURATIVO: o backfill lÃª actor_kind/reason de metadata (onde
+-- o orquestrador de handoff jÃ¡ os grava hoje) ANTES de a constraint existir, e
+-- degrada para 'system' a linha marcada como 'ai' sem lastro nenhum â€” senÃ£o o
 -- update.sh de um clone quebraria ao criar a constraint.
 
 -- ---------------------------------------------------------------------------
 -- A. Colunas do barramento
 -- ---------------------------------------------------------------------------
 
--- 'contact' é a PESSOA do outro lado — não 'lead': deste lado da casa lead é o
--- NEGÓCIO (crm_leads), então 'lead' diria "o negócio falou". Também não
--- adotamos 'agent'/'human' de agent_case_events: aqui 'agent' já é papel humano
+-- 'contact' Ã© a PESSOA do outro lado â€” nÃ£o 'lead': deste lado da casa lead Ã© o
+-- NEGÃ“CIO (crm_leads), entÃ£o 'lead' diria "o negÃ³cio falou". TambÃ©m nÃ£o
+-- adotamos 'agent'/'human' de agent_case_events: aqui 'agent' jÃ¡ Ã© papel humano
 -- de RBAC (viewer < agent < manager < admin) e colidiria.
 alter table public.crm_lead_activities
   add column if not exists actor_kind text
@@ -8237,38 +8237,38 @@ alter table public.crm_lead_activities
   add column if not exists actor_agent_id uuid
   references public.ai_agents(id) on delete set null;
 
--- O PORQUÊ em texto legível por humano — é o que a timeline mostra embaixo da
--- linha, e o que torna a decisão da IA discutível em vez de mágica.
+-- O PORQUÃŠ em texto legÃ­vel por humano â€” Ã© o que a timeline mostra embaixo da
+-- linha, e o que torna a decisÃ£o da IA discutÃ­vel em vez de mÃ¡gica.
 alter table public.crm_lead_activities
   add column if not exists reason text;
 
--- O LASTRO: {"run_ids": [...], "trace_ids": [...]} — mesmo formato de
+-- O LASTRO: {"run_ids": [...], "trace_ids": [...]} â€” mesmo formato de
 -- flywheel_distiller_proposals.evidence.
 alter table public.crm_lead_activities
   add column if not exists evidence jsonb;
 
 comment on column public.crm_lead_activities.actor_kind is
-  'Quem agiu: user (humano do time) | ai (agente) | system (o produto) | rule (automação) | contact (a pessoa atendida). NUNCA "lead": lead aqui é o negócio.';
+  'Quem agiu: user (humano do time) | ai (agente) | system (o produto) | rule (automaÃ§Ã£o) | contact (a pessoa atendida). NUNCA "lead": lead aqui Ã© o negÃ³cio.';
 comment on column public.crm_lead_activities.evidence is
-  'O que SUSTENTA a atividade: {"run_ids":[],"trace_ids":[]} (N referências). Não confundir com source_module/source_id, que é O QUE ORIGINOU (um ponteiro). evidence nunca repete o source_id — origem não é prova.';
+  'O que SUSTENTA a atividade: {"run_ids":[],"trace_ids":[]} (N referÃªncias). NÃ£o confundir com source_module/source_id, que Ã© O QUE ORIGINOU (um ponteiro). evidence nunca repete o source_id â€” origem nÃ£o Ã© prova.';
 comment on column public.crm_lead_activities.reason is
-  'Por que esta atividade existe, em texto legível. Sem PII: é exibido na timeline e exportado no LGPD.';
+  'Por que esta atividade existe, em texto legÃ­vel. Sem PII: Ã© exibido na timeline e exportado no LGPD.';
 
 -- ---------------------------------------------------------------------------
--- B. Backfill A PARTIR DO JSONB — antes de qualquer default e antes da
---    constraint (doutrina de migrations §8).
+-- B. Backfill A PARTIR DO JSONB â€” antes de qualquer default e antes da
+--    constraint (doutrina de migrations Â§8).
 --
---    actor_kind e reason JÁ são gravados hoje dentro de metadata
+--    actor_kind e reason JÃ sÃ£o gravados hoje dentro de metadata
 --    (lib/ai/handoff/orchestrator.ts). Backfillar tudo como 'system' apagaria
---    informação que já existe — seria perda de dado disfarçada de migration.
+--    informaÃ§Ã£o que jÃ¡ existe â€” seria perda de dado disfarÃ§ada de migration.
 -- ---------------------------------------------------------------------------
 
 -- ORDEM IMPORTA: o lastro sobe ANTES do ator. Promover para 'ai' e degradar
--- depois funciona na primeira aplicação (a constraint ainda não existe) e
--- QUEBRA no update.sh de um clone, onde ela já existe e recusa a linha no ato.
--- Aqui nenhum estado intermediário inválido chega a existir.
+-- depois funciona na primeira aplicaÃ§Ã£o (a constraint ainda nÃ£o existe) e
+-- QUEBRA no update.sh de um clone, onde ela jÃ¡ existe e recusa a linha no ato.
+-- Aqui nenhum estado intermediÃ¡rio invÃ¡lido chega a existir.
 
--- 1. Lastro que já existe em metadata sobe para a coluna (nunca inventado).
+-- 1. Lastro que jÃ¡ existe em metadata sobe para a coluna (nunca inventado).
 update public.crm_lead_activities
    set evidence = jsonb_strip_nulls(
          jsonb_build_object(
@@ -8279,13 +8279,13 @@ update public.crm_lead_activities
    and (jsonb_typeof(metadata->'run_ids') = 'array'
      or jsonb_typeof(metadata->'trace_ids') = 'array');
 
--- 2. Atores que não são a IA: promoção direta.
+-- 2. Atores que nÃ£o sÃ£o a IA: promoÃ§Ã£o direta.
 update public.crm_lead_activities
    set actor_kind = metadata->>'actor_kind'
  where actor_kind is null
    and metadata->>'actor_kind' in ('user','system','rule','contact');
 
--- 3. 'ai' só quando há execução que sustente a afirmação.
+-- 3. 'ai' sÃ³ quando hÃ¡ execuÃ§Ã£o que sustente a afirmaÃ§Ã£o.
 update public.crm_lead_activities
    set actor_kind = 'ai'
  where actor_kind is null
@@ -8294,8 +8294,8 @@ update public.crm_lead_activities
      or coalesce(jsonb_array_length(evidence->'trace_ids'), 0) > 0);
 
 -- 4. 'ai' sem lastro nenhum vira 'system': o registro continua inteiro (o
---    reason é preservado); o que se recusa a afirmar é a AUTORIA da IA, porque
---    não há execução que a sustente.
+--    reason Ã© preservado); o que se recusa a afirmar Ã© a AUTORIA da IA, porque
+--    nÃ£o hÃ¡ execuÃ§Ã£o que a sustente.
 update public.crm_lead_activities
    set actor_kind = 'system'
  where actor_kind is null
@@ -8306,16 +8306,16 @@ update public.crm_lead_activities
  where reason is null
    and nullif(metadata->>'reason', '') is not null;
 
--- 5. Quem tem autor humano registrado é 'user' — o dado está na coluna, só não
+-- 5. Quem tem autor humano registrado Ã© 'user' â€” o dado estÃ¡ na coluna, sÃ³ nÃ£o
 --    estava nomeado.
 update public.crm_lead_activities
    set actor_kind = 'user'
  where actor_kind is null
    and performed_by_user_id is not null;
 
--- 6. Cura de banco onde a constraint ainda não existia e uma linha 'ai' entrou
---    sem lastro (não alcançável depois que a constraint existe — por isso vem
---    por último e é no-op no caminho feliz).
+-- 6. Cura de banco onde a constraint ainda nÃ£o existia e uma linha 'ai' entrou
+--    sem lastro (nÃ£o alcanÃ§Ã¡vel depois que a constraint existe â€” por isso vem
+--    por Ãºltimo e Ã© no-op no caminho feliz).
 update public.crm_lead_activities
    set actor_kind = 'system'
  where actor_kind = 'ai'
@@ -8323,38 +8323,38 @@ update public.crm_lead_activities
    and coalesce(jsonb_array_length(evidence->'trace_ids'), 0) = 0;
 
 -- ---------------------------------------------------------------------------
--- C. Constraint de lastro (drop+add — re-aplicável)
+-- C. Constraint de lastro (drop+add â€” re-aplicÃ¡vel)
 --
---    A doutrina do CORE 3 ("número sem porquê não é gravado") aplicada uma wave
+--    A doutrina do CORE 3 ("nÃºmero sem porquÃª nÃ£o Ã© gravado") aplicada uma wave
 --    antes: se a IA afirma algo na timeline, existe run_id ou trace_id que
---    sustente. `jsonb_array_length(...) > 0`, NÃO `evidence ? 'run_ids'` — a
---    segunda passa com array VAZIO, e lastro vazio não sustenta nada.
+--    sustente. `jsonb_array_length(...) > 0`, NÃƒO `evidence ? 'run_ids'` â€” a
+--    segunda passa com array VAZIO, e lastro vazio nÃ£o sustenta nada.
 -- ---------------------------------------------------------------------------
 
 alter table public.crm_lead_activities
   drop constraint if exists crm_lead_activities_ai_needs_evidence;
--- A constraint NÃO é recriada aqui, e sim uma vez só mais abaixo, na versão que
--- também aceita `llm_call_ids`. Recriá-la com a lista da época derrubava o
--- update.sh de quem já tem atividade de IA cuja evidência é só `llm_call_ids`.
+-- A constraint NÃƒO Ã© recriada aqui, e sim uma vez sÃ³ mais abaixo, na versÃ£o que
+-- tambÃ©m aceita `llm_call_ids`. RecriÃ¡-la com a lista da Ã©poca derrubava o
+-- update.sh de quem jÃ¡ tem atividade de IA cuja evidÃªncia Ã© sÃ³ `llm_call_ids`.
 
--- Timeline por ator (o dossiê filtra "só o que a IA fez"), parcial porque a
--- maioria das linhas não é de agente.
+-- Timeline por ator (o dossiÃª filtra "sÃ³ o que a IA fez"), parcial porque a
+-- maioria das linhas nÃ£o Ã© de agente.
 create index if not exists idx_lead_activities_org_actor_agent
   on public.crm_lead_activities (organization_id, actor_agent_id, performed_at desc)
   where actor_agent_id is not null;
 
 -- ---------------------------------------------------------------------------
--- D. stage_changed_at — de carona, porque esta wave passa a emitir atividade na
---    mudança de estágio. Sem a coluna, "3d em Negociação" no card continua
---    medindo tempo SEM RESPOSTA (last_activity_at) e mente sobre o estágio.
---    Trigger puro: carimba a coluna, sem HTTP (doutrina — trigger nunca faz rede).
+-- D. stage_changed_at â€” de carona, porque esta wave passa a emitir atividade na
+--    mudanÃ§a de estÃ¡gio. Sem a coluna, "3d em NegociaÃ§Ã£o" no card continua
+--    medindo tempo SEM RESPOSTA (last_activity_at) e mente sobre o estÃ¡gio.
+--    Trigger puro: carimba a coluna, sem HTTP (doutrina â€” trigger nunca faz rede).
 -- ---------------------------------------------------------------------------
 
 alter table public.crm_leads
   add column if not exists stage_changed_at timestamptz;
 
--- Bancos existentes: o melhor palito honesto é a criação do lead — nunca
--- inventar uma data de entrada no estágio que ninguém registrou.
+-- Bancos existentes: o melhor palito honesto Ã© a criaÃ§Ã£o do lead â€” nunca
+-- inventar uma data de entrada no estÃ¡gio que ninguÃ©m registrou.
 update public.crm_leads
    set stage_changed_at = created_at
  where stage_changed_at is null;
@@ -8381,11 +8381,11 @@ create trigger trg_stamp_stage_changed_at
   for each row execute function public.fn_stamp_stage_changed_at();
 
 comment on column public.crm_leads.stage_changed_at is
-  'Quando o lead entrou no estágio atual. Carimbado por trigger. É o relógio de "tempo no estágio" do card — distinto de last_activity_at, que é "tempo sem resposta".';
+  'Quando o lead entrou no estÃ¡gio atual. Carimbado por trigger. Ã‰ o relÃ³gio de "tempo no estÃ¡gio" do card â€” distinto de last_activity_at, que Ã© "tempo sem resposta".';
 
 -- ---- evidence: lastro pode apontar para llm_calls (migration 0072) ----
--- Só AFROUXA a constraint (acrescenta uma terceira forma de lastro), então
--- nenhuma linha existente passa a violá-la e o update.sh de clone não quebra.
+-- SÃ³ AFROUXA a constraint (acrescenta uma terceira forma de lastro), entÃ£o
+-- nenhuma linha existente passa a violÃ¡-la e o update.sh de clone nÃ£o quebra.
 -- Idempotente por drop+add.
 alter table public.crm_lead_activities
   drop constraint if exists crm_lead_activities_ai_needs_evidence;
@@ -8399,37 +8399,37 @@ alter table public.crm_lead_activities
   );
 
 comment on column public.crm_lead_activities.evidence is
-  'O que SUSTENTA a atividade (N referências), cada chave apontando para UMA tabela: run_ids→ai_agent_runs, trace_ids→o trace do turno, llm_call_ids→llm_calls. Não confundir com source_module/source_id, que é O QUE ORIGINOU (um ponteiro). evidence nunca repete o source_id — origem não é prova.';
+  'O que SUSTENTA a atividade (N referÃªncias), cada chave apontando para UMA tabela: run_idsâ†’ai_agent_runs, trace_idsâ†’o trace do turno, llm_call_idsâ†’llm_calls. NÃ£o confundir com source_module/source_id, que Ã© O QUE ORIGINOU (um ponteiro). evidence nunca repete o source_id â€” origem nÃ£o Ã© prova.';
 
--- ---- identidade da próxima ação + caixa para o caso ambíguo (migration 0073) ----
--- Duas mudanças independentes, ambas idempotentes e auto-curativas.
+-- ---- identidade da prÃ³xima aÃ§Ã£o + caixa para o caso ambÃ­guo (migration 0073) ----
+-- Duas mudanÃ§as independentes, ambas idempotentes e auto-curativas.
 --
 -- `next_action_seq` distingue "a mesma proposta" de "a mesma frase": o agente
--- pode reescrever o mesmo texto significando outra coisa, e a autorização
--- humana precisa saber QUAL proposta foi lida. Default 0 para as linhas que já
--- existem — o primeiro reescrever leva a 1, que é o correto: a proposta que
--- estava lá antes desta coluna nunca foi autorizada por ninguém.
+-- pode reescrever o mesmo texto significando outra coisa, e a autorizaÃ§Ã£o
+-- humana precisa saber QUAL proposta foi lida. Default 0 para as linhas que jÃ¡
+-- existem â€” o primeiro reescrever leva a 1, que Ã© o correto: a proposta que
+-- estava lÃ¡ antes desta coluna nunca foi autorizada por ninguÃ©m.
 alter table public.lead_state
   add column if not exists next_action_seq bigint not null default 0;
 
 comment on column public.lead_state.next_action_seq is
-  'Identidade da proposta corrente. Incrementa a CADA escrita de next_action, inclusive quando o texto novo é idêntico ao anterior — é o que distingue "a mesma proposta" de "a mesma frase". A autorização humana carrega este número; a execução o compara. Nunca usar updated_at no lugar: ele se move por outras escritas do estado.';
+  'Identidade da proposta corrente. Incrementa a CADA escrita de next_action, inclusive quando o texto novo Ã© idÃªntico ao anterior â€” Ã© o que distingue "a mesma proposta" de "a mesma frase". A autorizaÃ§Ã£o humana carrega este nÃºmero; a execuÃ§Ã£o o compara. Nunca usar updated_at no lugar: ele se move por outras escritas do estado.';
 
--- Só ACRESCENTA um kind, então nenhuma linha existente passa a violar a
--- constraint e o update.sh de um clone não quebra. Idempotente por drop+add.
--- `followup_dead` está aqui porque a lista é a do BASELINE, não a do banco de
--- dev: os dois divergiram, e o dev está com uma versão ANTERIOR da constraint
+-- SÃ³ ACRESCENTA um kind, entÃ£o nenhuma linha existente passa a violar a
+-- constraint e o update.sh de um clone nÃ£o quebra. Idempotente por drop+add.
+-- `followup_dead` estÃ¡ aqui porque a lista Ã© a do BASELINE, nÃ£o a do banco de
+-- dev: os dois divergiram, e o dev estÃ¡ com uma versÃ£o ANTERIOR da constraint
 -- (sem esse valor) enquanto lib/followup/engine.ts insere exatamente esse kind.
--- Reconstruir a partir do banco apagaria o valor e mataria, em silêncio, o
--- aviso de enrollment morto. A fonte de verdade é o arquivo versionado.
--- (constraint agent_inbox_items_kind_check: definida uma vez só, no fim deste
---  apêndice — ver "vocabulário completo". 'next_action_ambiguous' está lá.)
+-- Reconstruir a partir do banco apagaria o valor e mataria, em silÃªncio, o
+-- aviso de enrollment morto. A fonte de verdade Ã© o arquivo versionado.
+-- (constraint agent_inbox_items_kind_check: definida uma vez sÃ³, no fim deste
+--  apÃªndice â€” ver "vocabulÃ¡rio completo". 'next_action_ambiguous' estÃ¡ lÃ¡.)
 
--- ---- score de probabilidade com evidência, em tabela própria (migrations 0074+0075) ----
--- O baseline salta o passo intermediário de propósito: quem instala do zero não
--- deve ganhar as colunas em `crm_leads` para perdê-las na linha seguinte. Para
--- quem ATUALIZA (update.sh) o bloco continua correto — o `drop column if exists`
--- e a migração de dados abaixo cuidam de um clone que já aplicou a 0074.
+-- ---- score de probabilidade com evidÃªncia, em tabela prÃ³pria (migrations 0074+0075) ----
+-- O baseline salta o passo intermediÃ¡rio de propÃ³sito: quem instala do zero nÃ£o
+-- deve ganhar as colunas em `crm_leads` para perdÃª-las na linha seguinte. Para
+-- quem ATUALIZA (update.sh) o bloco continua correto â€” o `drop column if exists`
+-- e a migraÃ§Ã£o de dados abaixo cuidam de um clone que jÃ¡ aplicou a 0074.
 create table if not exists public.crm_lead_scores (
   lead_id uuid primary key references public.crm_leads(id) on delete cascade,
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -8442,18 +8442,18 @@ create table if not exists public.crm_lead_scores (
   updated_at timestamptz not null default now()
 );
 
--- `primary key (lead_id)` já garante o 1:1 — um lead tem no máximo uma linha de
--- score. FK com `on delete cascade`: score é sobre o negócio, e sem o negócio
--- não significa nada (não é histórico, é estado corrente).
+-- `primary key (lead_id)` jÃ¡ garante o 1:1 â€” um lead tem no mÃ¡ximo uma linha de
+-- score. FK com `on delete cascade`: score Ã© sobre o negÃ³cio, e sem o negÃ³cio
+-- nÃ£o significa nada (nÃ£o Ã© histÃ³rico, Ã© estado corrente).
 
 comment on table public.crm_lead_scores is
-  'Score de probabilidade por lead, FORA de crm_leads de propósito. Ver o cabeçalho da migration 0075: trazer estes campos de volta reintroduz o pulso que mente (board assina crm_leads) e o 409 fantasma (trava otimista do move + trigger de updated_at). Fica FORA da publicação supabase_realtime — recálculo é telemetria e não deve pintar card; quem pinta é a atividade emitida na travessia de faixa.';
+  'Score de probabilidade por lead, FORA de crm_leads de propÃ³sito. Ver o cabeÃ§alho da migration 0075: trazer estes campos de volta reintroduz o pulso que mente (board assina crm_leads) e o 409 fantasma (trava otimista do move + trigger de updated_at). Fica FORA da publicaÃ§Ã£o supabase_realtime â€” recÃ¡lculo Ã© telemetria e nÃ£o deve pintar card; quem pinta Ã© a atividade emitida na travessia de faixa.';
 
--- ---- migra o que existir (clones que já aplicaram a 0074) ----
--- SQL DINÂMICO de propósito: numa instalação NOVA as colunas nunca existiram em
+-- ---- migra o que existir (clones que jÃ¡ aplicaram a 0074) ----
+-- SQL DINÃ‚MICO de propÃ³sito: numa instalaÃ§Ã£o NOVA as colunas nunca existiram em
 -- `crm_leads`, e o Postgres faz o parse do comando ANTES de avaliar qualquer
--- guarda — `where exists (select from information_schema...)` não salva, porque
--- o erro é de parse, não de execução. Só `execute` adia a resolução do nome.
+-- guarda â€” `where exists (select from information_schema...)` nÃ£o salva, porque
+-- o erro Ã© de parse, nÃ£o de execuÃ§Ã£o. SÃ³ `execute` adia a resoluÃ§Ã£o do nome.
 do $$
 begin
   if exists (
@@ -8495,12 +8495,12 @@ alter table public.crm_leads
 alter table public.crm_lead_scores
   drop constraint if exists crm_lead_scores_needs_reason;
 
--- ---- evidência do score: FONTE ÚNICA (migrations 0076+0077) ----
+-- ---- evidÃªncia do score: FONTE ÃšNICA (migrations 0076+0077) ----
 -- ---- limpeza ANTES da constraint ----
--- Hoje são 0 linhas de 2, mas o CHECK nunca exigiu âncora DENTRO do fator: um
--- clone pode ter `factors` sem âncora nenhuma, e essa linha passa hoje e
--- reprovaria depois. Apaga o SCORE — não inventa âncora, porque âncora
--- fabricada aponta para um registro que não sustenta nada e é indistinguível
+-- Hoje sÃ£o 0 linhas de 2, mas o CHECK nunca exigiu Ã¢ncora DENTRO do fator: um
+-- clone pode ter `factors` sem Ã¢ncora nenhuma, e essa linha passa hoje e
+-- reprovaria depois. Apaga o SCORE â€” nÃ£o inventa Ã¢ncora, porque Ã¢ncora
+-- fabricada aponta para um registro que nÃ£o sustenta nada e Ã© indistinguÃ­vel
 -- da verdadeira.
 update public.crm_lead_scores
    set ai_probability = null,
@@ -8524,17 +8524,17 @@ alter table public.crm_lead_scores
     or (
       ai_probability_reason is not null
       and btrim(ai_probability_reason) <> ''
-      -- LEGÍVEL: o que o hover revela.
+      -- LEGÃVEL: o que o hover revela.
       and coalesce(jsonb_array_length(ai_probability_evidence -> 'factors'), 0) > 0
-      -- RASTREÁVEL: para onde o clique leva. `@?` com jsonpath em vez de
-      -- subconsulta, que CHECK não aceita — e é o que permite exigir a âncora
-      -- DENTRO do fator, mantendo a fonte única.
+      -- RASTREÃVEL: para onde o clique leva. `@?` com jsonpath em vez de
+      -- subconsulta, que CHECK nÃ£o aceita â€” e Ã© o que permite exigir a Ã¢ncora
+      -- DENTRO do fator, mantendo a fonte Ãºnica.
       and ai_probability_evidence @? '$.factors[*].ancora'
     )
   );
 
 comment on column public.crm_lead_scores.ai_probability_evidence is
-  'O QUE SUSTENTA o score, em FONTE ÚNICA: `factors` — cada parcela com `pontos` (com sinal), `frase` legível e, quando há ponto no tempo, `ancora` {kind,id}. A constraint exige factors não-vazio E pelo menos um fator com âncora: legível sem rastreável é adjetivo, rastreável sem legível é um id que ninguém entende. NÃO unificar com o formato de crm_lead_activities.evidence (arrays de ids por tabela): a diferença é deliberada e está explicada na migration 0077 — atividade cita FATOS de N tabelas, score cita PARCELAS de um cálculo. Unificar reintroduz as duas listas que já divergiram uma vez (0076), com o banco cobrando uma chave e a tela lendo outra.';
+  'O QUE SUSTENTA o score, em FONTE ÃšNICA: `factors` â€” cada parcela com `pontos` (com sinal), `frase` legÃ­vel e, quando hÃ¡ ponto no tempo, `ancora` {kind,id}. A constraint exige factors nÃ£o-vazio E pelo menos um fator com Ã¢ncora: legÃ­vel sem rastreÃ¡vel Ã© adjetivo, rastreÃ¡vel sem legÃ­vel Ã© um id que ninguÃ©m entende. NÃƒO unificar com o formato de crm_lead_activities.evidence (arrays de ids por tabela): a diferenÃ§a Ã© deliberada e estÃ¡ explicada na migration 0077 â€” atividade cita FATOS de N tabelas, score cita PARCELAS de um cÃ¡lculo. Unificar reintroduz as duas listas que jÃ¡ divergiram uma vez (0076), com o banco cobrando uma chave e a tela lendo outra.';
 
 alter table public.crm_lead_scores
   drop constraint if exists crm_lead_scores_range;
@@ -8566,16 +8566,16 @@ alter table public.crm_lead_scores
   );
 
 comment on column public.crm_lead_scores.ai_probability is
-  'Probabilidade 0-100 por FÓRMULA determinística sobre sinais que já existem — nunca chamada de modelo. Com fórmula, o reason é DERIVADO do cálculo e "número sem porquê" é impossível por construção; com modelo, a frase é gerada ao lado do número e a lei só pareceria cumprida. null = sinal insuficiente, e é estado legítimo: nunca zero.';
+  'Probabilidade 0-100 por FÃ“RMULA determinÃ­stica sobre sinais que jÃ¡ existem â€” nunca chamada de modelo. Com fÃ³rmula, o reason Ã© DERIVADO do cÃ¡lculo e "nÃºmero sem porquÃª" Ã© impossÃ­vel por construÃ§Ã£o; com modelo, a frase Ã© gerada ao lado do nÃºmero e a lei sÃ³ pareceria cumprida. null = sinal insuficiente, e Ã© estado legÃ­timo: nunca zero.';
 
 comment on column public.crm_lead_scores.ai_probability_reason is
-  'O PORQUÊ em português, obrigatório por constraint quando há score. Existe para o humano poder DISCORDAR: sem razão citável o número é opinião sem apelação.';
+  'O PORQUÃŠ em portuguÃªs, obrigatÃ³rio por constraint quando hÃ¡ score. Existe para o humano poder DISCORDAR: sem razÃ£o citÃ¡vel o nÃºmero Ã© opiniÃ£o sem apelaÃ§Ã£o.';
 
 comment on column public.crm_lead_scores.ai_probability_evidence is
-  'O QUE SUSTENTA (N referências): activity_ids→crm_lead_activities, message_ids→messages, checkpoint_ids→lead_checkpoints. A constraint exige pelo menos uma — razão sem referência é adjetivo.';
+  'O QUE SUSTENTA (N referÃªncias): activity_idsâ†’crm_lead_activities, message_idsâ†’messages, checkpoint_idsâ†’lead_checkpoints. A constraint exige pelo menos uma â€” razÃ£o sem referÃªncia Ã© adjetivo.';
 
 comment on column public.crm_lead_scores.ai_probability_band is
-  'Faixa exibida. Persistida porque histerese precisa da faixa anterior; o CHECK de coerência torna divergir do score IMPOSSÍVEL de gravar, não só improvável. Cortes em FAIXA_LIMITES (lib/kanban/score-band.ts), fonte única do CHECK, do emissor e da UI.';
+  'Faixa exibida. Persistida porque histerese precisa da faixa anterior; o CHECK de coerÃªncia torna divergir do score IMPOSSÃVEL de gravar, nÃ£o sÃ³ improvÃ¡vel. Cortes em FAIXA_LIMITES (lib/kanban/score-band.ts), fonte Ãºnica do CHECK, do emissor e da UI.';
 
 -- ---- tenancy ----
 alter table public.crm_lead_scores enable row level security;
@@ -8589,8 +8589,8 @@ create policy tenant_isolation_crm_lead_scores_all on public.crm_lead_scores
 create index if not exists idx_crm_lead_scores_org_band
   on public.crm_lead_scores (organization_id, ai_probability_band);
 
--- FORA da publicação de realtime — é o ponto inteiro desta migration. Remover
--- é defensivo: se um clone tiver a tabela publicada por engano, isto corrige.
+-- FORA da publicaÃ§Ã£o de realtime â€” Ã© o ponto inteiro desta migration. Remover
+-- Ã© defensivo: se um clone tiver a tabela publicada por engano, isto corrige.
 do $$
 begin
   if exists (
@@ -8603,64 +8603,64 @@ begin
   end if;
 end $$;
 
--- ---- estado de risco do negócio (migration 0078) ----
--- 0078 — "esfriando" deixa de ser adjetivo calculado e vira ESTADO do negócio
+-- ---- estado de risco do negÃ³cio (migration 0078) ----
+-- 0078 â€” "esfriando" deixa de ser adjetivo calculado e vira ESTADO do negÃ³cio
 --
--- O QUE ESTAVA ERRADO: `classifyRisk` é função pura recalculada a cada leitura,
--- e os únicos chamadores são rotas de LEITURA. Nenhum worker, nenhum emissor.
--- Consequência medida: "esfriando" não existia até alguém abrir a tela, não
--- tinha tipo de atividade (o vocabulário não sabia dizer "esfriou" nem
--- "voltou"), e — o pior — não era RETIDO: não havia como responder "há quanto
--- tempo está esfriando" nem "quantas vezes já esfriou e voltou".
+-- O QUE ESTAVA ERRADO: `classifyRisk` Ã© funÃ§Ã£o pura recalculada a cada leitura,
+-- e os Ãºnicos chamadores sÃ£o rotas de LEITURA. Nenhum worker, nenhum emissor.
+-- ConsequÃªncia medida: "esfriando" nÃ£o existia atÃ© alguÃ©m abrir a tela, nÃ£o
+-- tinha tipo de atividade (o vocabulÃ¡rio nÃ£o sabia dizer "esfriou" nem
+-- "voltou"), e â€” o pior â€” nÃ£o era RETIDO: nÃ£o havia como responder "hÃ¡ quanto
+-- tempo estÃ¡ esfriando" nem "quantas vezes jÃ¡ esfriou e voltou".
 --
--- A ironia que motivou a wave: o cabeçalho de `lib/leads/risk-radar.ts` declara
--- ser o desilhamento C1 da doutrina do sistema vivo — "uma demanda que esfriou
--- e não tem próximo passo garantido está morrendo sem ninguém ver; o radar a
--- torna visível". Mas tornar visível numa tela que ninguém é obrigado a abrir
--- não é mecanismo anti-morte: é a mesma morte, com testemunha opcional.
+-- A ironia que motivou a wave: o cabeÃ§alho de `lib/leads/risk-radar.ts` declara
+-- ser o desilhamento C1 da doutrina do sistema vivo â€” "uma demanda que esfriou
+-- e nÃ£o tem prÃ³ximo passo garantido estÃ¡ morrendo sem ninguÃ©m ver; o radar a
+-- torna visÃ­vel". Mas tornar visÃ­vel numa tela que ninguÃ©m Ã© obrigado a abrir
+-- nÃ£o Ã© mecanismo anti-morte: Ã© a mesma morte, com testemunha opcional.
 --
--- ⚠️ POR QUE FORA DE `crm_leads` — os dois motivos são os MESMOS da 0075 e
--- valem palavra por palavra aqui; leia aquele cabeçalho antes de "simplificar"
+-- âš ï¸ POR QUE FORA DE `crm_leads` â€” os dois motivos sÃ£o os MESMOS da 0075 e
+-- valem palavra por palavra aqui; leia aquele cabeÃ§alho antes de "simplificar"
 -- isto para dentro do lead:
---   1. o PULSO QUE MENTE — o board assina `crm_leads`; uma varredura de risco
+--   1. o PULSO QUE MENTE â€” o board assina `crm_leads`; uma varredura de risco
 --      em lote faria dezenas de cards piscarem sem novidade nenhuma;
---   2. o 409 FANTASMA — `trg_crm_leads_updated_at` invalida a trava otimista do
---      arrasto em voo, e o usuário recebe "alguém editou este lead" quando
---      ninguém editou.
+--   2. o 409 FANTASMA â€” `trg_crm_leads_updated_at` invalida a trava otimista do
+--      arrasto em voo, e o usuÃ¡rio recebe "alguÃ©m editou este lead" quando
+--      ninguÃ©m editou.
 --
--- ⚠️ MAS ESTA TABELA FICA **DENTRO** DA PUBLICAÇÃO DE REALTIME, ao contrário da
--- `crm_lead_scores`. Isso NÃO contradiz a 0075 — é a mesma regra aplicada:
--- "silêncio para telemetria, pulso para mudança de estado". Score é telemetria
--- (número que se move sozinho o tempo todo); risco é transição discreta e rara
--- que EXIGE ação humana. É por aqui que a borda de aviso aparece sem reload,
--- sem tocar o lead — e é justamente não tocar o lead que preserva 1 e 2.
+-- âš ï¸ MAS ESTA TABELA FICA **DENTRO** DA PUBLICAÃ‡ÃƒO DE REALTIME, ao contrÃ¡rio da
+-- `crm_lead_scores`. Isso NÃƒO contradiz a 0075 â€” Ã© a mesma regra aplicada:
+-- "silÃªncio para telemetria, pulso para mudanÃ§a de estado". Score Ã© telemetria
+-- (nÃºmero que se move sozinho o tempo todo); risco Ã© transiÃ§Ã£o discreta e rara
+-- que EXIGE aÃ§Ã£o humana. Ã‰ por aqui que a borda de aviso aparece sem reload,
+-- sem tocar o lead â€” e Ã© justamente nÃ£o tocar o lead que preserva 1 e 2.
 --
--- A CONTRAPARTIDA, que vive no escritor e não dá para o banco garantir: só
--- escreva quando o BUCKET MUDAR. Um `update` que só refresca `detected_at`
--- publicaria evento de realtime sem mudança de estado, e o board voltaria a
--- piscar à toa — o defeito que esta separação toda existe para impedir.
+-- A CONTRAPARTIDA, que vive no escritor e nÃ£o dÃ¡ para o banco garantir: sÃ³
+-- escreva quando o BUCKET MUDAR. Um `update` que sÃ³ refresca `detected_at`
+-- publicaria evento de realtime sem mudanÃ§a de estado, e o board voltaria a
+-- piscar Ã  toa â€” o defeito que esta separaÃ§Ã£o toda existe para impedir.
 
 create table if not exists public.crm_lead_risk_states (
   lead_id uuid primary key references public.crm_leads(id) on delete cascade,
   organization_id uuid not null references public.organizations(id) on delete cascade,
   bucket text not null,
-  -- QUANDO O NEGÓCIO ENTROU NESTE ESTADO, que não é quando o sistema percebeu.
-  -- A distinção é o que torna o acervo honesto: os 48 negócios já frios no dia
+  -- QUANDO O NEGÃ“CIO ENTROU NESTE ESTADO, que nÃ£o Ã© quando o sistema percebeu.
+  -- A distinÃ§Ã£o Ã© o que torna o acervo honesto: os 48 negÃ³cios jÃ¡ frios no dia
   -- da estreia entram com `since` no passado (o instante em que de fato
-  -- esfriaram) e `detected_at` em now. Sem os dois campos, o histórico diria
-  -- que todos esfriaram no mesmo minuto — e diria isso para sempre.
+  -- esfriaram) e `detected_at` em now. Sem os dois campos, o histÃ³rico diria
+  -- que todos esfriaram no mesmo minuto â€” e diria isso para sempre.
   since timestamptz not null,
   detected_at timestamptz not null default now(),
-  -- A janela do estágio usada na decisão, gravada JUNTO. Sem ela, mudar
+  -- A janela do estÃ¡gio usada na decisÃ£o, gravada JUNTO. Sem ela, mudar
   -- `expected_duration_hours` reescreve retroativamente o significado de todo
-  -- estado já gravado, e ninguém consegue explicar por que aquele negócio
-  -- esfriou "às 24h" se hoje o estágio diz 72h.
+  -- estado jÃ¡ gravado, e ninguÃ©m consegue explicar por que aquele negÃ³cio
+  -- esfriou "Ã s 24h" se hoje o estÃ¡gio diz 72h.
   cold_hours numeric not null,
   updated_at timestamptz not null default now()
 );
 
 comment on table public.crm_lead_risk_states is
-  'Estado de risco por negócio (wave 7 — o ciclo). FORA de crm_leads pelos motivos da 0075 (pulso que mente, 409 fantasma), mas DENTRO da publicação supabase_realtime, ao contrário de crm_lead_scores: risco é mudança de estado, não telemetria. O escritor só grava quando o bucket muda.';
+  'Estado de risco por negÃ³cio (wave 7 â€” o ciclo). FORA de crm_leads pelos motivos da 0075 (pulso que mente, 409 fantasma), mas DENTRO da publicaÃ§Ã£o supabase_realtime, ao contrÃ¡rio de crm_lead_scores: risco Ã© mudanÃ§a de estado, nÃ£o telemetria. O escritor sÃ³ grava quando o bucket muda.';
 
 alter table public.crm_lead_risk_states
   drop constraint if exists crm_lead_risk_states_bucket_check;
@@ -8669,7 +8669,7 @@ alter table public.crm_lead_risk_states
     bucket = any (array['em_dia', 'em_voo', 'em_risco', 'critico']::text[])
   );
 
--- Estado não começa no futuro. Trava o erro de gravar `since = now + janela`
+-- Estado nÃ£o comeÃ§a no futuro. Trava o erro de gravar `since = now + janela`
 -- (o instante em que VAI esfriar) em vez de `last_activity_at + janela`.
 alter table public.crm_lead_risk_states
   drop constraint if exists crm_lead_risk_states_since_no_passado;
@@ -8689,11 +8689,11 @@ create policy tenant_isolation_crm_lead_risk_states_all on public.crm_lead_risk_
   using (organization_id in (select fn_user_org_ids()))
   with check (organization_id in (select fn_user_org_ids()));
 
--- O radar lê "quem está em risco nesta org", nesta ordem.
+-- O radar lÃª "quem estÃ¡ em risco nesta org", nesta ordem.
 create index if not exists idx_crm_lead_risk_states_org_bucket
   on public.crm_lead_risk_states (organization_id, bucket, since);
 
--- DENTRO da publicação — ver o cabeçalho. Idempotente: só adiciona se faltar.
+-- DENTRO da publicaÃ§Ã£o â€” ver o cabeÃ§alho. Idempotente: sÃ³ adiciona se faltar.
 do $$
 begin
   if not exists (
@@ -8706,50 +8706,50 @@ begin
   end if;
 end $$;
 
--- ---- relógio do silêncio só conta interação (migration 0079) ----
--- 0079 — o relógio do silêncio para de ser zerado pela constatação do silêncio
+-- ---- relÃ³gio do silÃªncio sÃ³ conta interaÃ§Ã£o (migration 0079) ----
+-- 0079 â€” o relÃ³gio do silÃªncio para de ser zerado pela constataÃ§Ã£o do silÃªncio
 --
 -- O DEFEITO, medido antes de escrever: `fn_update_last_activity_at` carimba
 -- `crm_leads.last_activity_at` para QUALQUER atividade, sem filtro de tipo. E
--- `last_activity_at` é exatamente o relógio que decide o esfriamento. Então o
--- produtor do estado apagaria o próprio estado ao registrá-lo: o negócio esfria,
--- o sistema registra "esfriou", o trigger zera o relógio, e o negócio volta a
--- "em dia" no mesmo instante. Vinte e quatro horas depois, de novo — uma linha
--- de timeline por janela, para sempre, sem ninguém ter feito nada.
+-- `last_activity_at` Ã© exatamente o relÃ³gio que decide o esfriamento. EntÃ£o o
+-- produtor do estado apagaria o prÃ³prio estado ao registrÃ¡-lo: o negÃ³cio esfria,
+-- o sistema registra "esfriou", o trigger zera o relÃ³gio, e o negÃ³cio volta a
+-- "em dia" no mesmo instante. Vinte e quatro horas depois, de novo â€” uma linha
+-- de timeline por janela, para sempre, sem ninguÃ©m ter feito nada.
 --
--- Provado em transação revertida (lead 08b70b48, o mais frio com relógio
--- não-nulo): 484h de silêncio, bucket CRÍTICO → insere uma atividade → 0h,
+-- Provado em transaÃ§Ã£o revertida (lead 08b70b48, o mais frio com relÃ³gio
+-- nÃ£o-nulo): 484h de silÃªncio, bucket CRÃTICO â†’ insere uma atividade â†’ 0h,
 -- bucket "em dia".
 --
--- A regra geral: CONSTATAR O SILÊNCIO NÃO É QUEBRAR O SILÊNCIO. Toda métrica do
--- tipo "tempo desde o último X" é aniquilada por registrar observação sobre ela,
+-- A regra geral: CONSTATAR O SILÃŠNCIO NÃƒO Ã‰ QUEBRAR O SILÃŠNCIO. Toda mÃ©trica do
+-- tipo "tempo desde o Ãºltimo X" Ã© aniquilada por registrar observaÃ§Ã£o sobre ela,
 -- se o registro contar como X.
 --
--- ⚠️ POR QUE LISTA POSITIVA E NÃO LISTA DE EXCEÇÕES — a assimetria é o ponto
+-- âš ï¸ POR QUE LISTA POSITIVA E NÃƒO LISTA DE EXCEÃ‡Ã•ES â€” a assimetria Ã© o ponto
 -- inteiro, e inverter parece inofensivo:
 --
---   com lista de exceções ("ignore lead_cooled"), um tipo NOVO de observação de
---   sistema, daqui a seis meses, volta a carimbar o relógio. O negócio parece
---   vivo estando morto: morte silenciosa, que é a doença que esta wave existe
+--   com lista de exceÃ§Ãµes ("ignore lead_cooled"), um tipo NOVO de observaÃ§Ã£o de
+--   sistema, daqui a seis meses, volta a carimbar o relÃ³gio. O negÃ³cio parece
+--   vivo estando morto: morte silenciosa, que Ã© a doenÃ§a que esta wave existe
 --   para curar;
 --
---   com lista positiva, um tipo novo de interação REAL fica de fora e o negócio
---   parece frio estando quente: alarme falso, visível, alguém reclama e conserta.
+--   com lista positiva, um tipo novo de interaÃ§Ã£o REAL fica de fora e o negÃ³cio
+--   parece frio estando quente: alarme falso, visÃ­vel, alguÃ©m reclama e conserta.
 --
--- O default para o que ainda não existe tem de ser o erro BARULHENTO.
+-- O default para o que ainda nÃ£o existe tem de ser o erro BARULHENTO.
 --
--- AS ESCOLHAS DE FORA, cada uma com sua razão — revisáveis, mas não por
--- distração:
---   send_vetoed        o envio não chegou ao cliente. Se contasse, um negócio em
---                      que a IA tenta e é barrada em looping pareceria vivo
+-- AS ESCOLHAS DE FORA, cada uma com sua razÃ£o â€” revisÃ¡veis, mas nÃ£o por
+-- distraÃ§Ã£o:
+--   send_vetoed        o envio nÃ£o chegou ao cliente. Se contasse, um negÃ³cio em
+--                      que a IA tenta e Ã© barrada em looping pareceria vivo
 --                      estando travado;
---   handoff_triggered  passar para humano é PROMESSA de atendimento, não
---                      atendimento. Se contasse, o negócio transferido e nunca
+--   handoff_triggered  passar para humano Ã© PROMESSA de atendimento, nÃ£o
+--                      atendimento. Se contasse, o negÃ³cio transferido e nunca
 --                      atendido ficaria mascarado justamente na janela em que
---                      alguém deveria notar;
---   next_action_dismissed  o humano decidiu NÃO agir. O negócio fica sem próximo
---                      passo, que é a definição de risco na doutrina — deveria
---                      esfriar mais rápido, não menos.
+--                      alguÃ©m deveria notar;
+--   next_action_dismissed  o humano decidiu NÃƒO agir. O negÃ³cio fica sem prÃ³ximo
+--                      passo, que Ã© a definiÃ§Ã£o de risco na doutrina â€” deveria
+--                      esfriar mais rÃ¡pido, nÃ£o menos.
 
 create or replace function public.fn_update_last_activity_at()
   returns trigger
@@ -8757,14 +8757,14 @@ create or replace function public.fn_update_last_activity_at()
   set search_path to 'public', 'pg_temp'
 as $function$
 begin
-  -- LISTA POSITIVA: só isto conta como "alguém tocou este negócio". Tipo que
-  -- não está aqui NÃO quebra o silêncio — inclusive tipo que ainda não existe.
-  -- Ver o cabeçalho da 0079 antes de acrescentar linha nesta lista.
+  -- LISTA POSITIVA: sÃ³ isto conta como "alguÃ©m tocou este negÃ³cio". Tipo que
+  -- nÃ£o estÃ¡ aqui NÃƒO quebra o silÃªncio â€” inclusive tipo que ainda nÃ£o existe.
+  -- Ver o cabeÃ§alho da 0079 antes de acrescentar linha nesta lista.
   if new.type not in (
     'ai_turn',              -- a IA falou com o cliente
-    'note',                 -- alguém registrou trabalho no negócio
+    'note',                 -- alguÃ©m registrou trabalho no negÃ³cio
     'lead_edited',          -- humano mexeu nos dados
-    'stage_changed',        -- humano moveu o negócio
+    'stage_changed',        -- humano moveu o negÃ³cio
     'next_action_approved'  -- humano decidiu agir
   ) then
     return new;
@@ -8783,58 +8783,58 @@ begin
 end$function$;
 
 comment on function public.fn_update_last_activity_at() is
-  'Carimba last_activity_at SÓ para tipos que contam como interação (lista positiva — ver migration 0079). Constatar o silêncio não é quebrar o silêncio: sem este filtro, a atividade que registra "este negócio esfriou" zera o próprio relógio que produziu o estado.';
+  'Carimba last_activity_at SÃ“ para tipos que contam como interaÃ§Ã£o (lista positiva â€” ver migration 0079). Constatar o silÃªncio nÃ£o Ã© quebrar o silÃªncio: sem este filtro, a atividade que registra "este negÃ³cio esfriou" zera o prÃ³prio relÃ³gio que produziu o estado.';
 
 -- ---- kind de caixa para o acervo de risco (migration 0080) ----
--- 0080 — o acervo de negócios já frios ganha UM item de caixa, com ação nomeada
+-- 0080 â€” o acervo de negÃ³cios jÃ¡ frios ganha UM item de caixa, com aÃ§Ã£o nomeada
 --
--- POR QUE ISTO EXISTE: quando o estado de risco (0078) começa a ser gravado, os
--- negócios que JÁ estavam frios entram todos de uma vez. Medido no banco de
--- desenvolvimento: 48 críticos e 2 em risco, de 66 abertos.
+-- POR QUE ISTO EXISTE: quando o estado de risco (0078) comeÃ§a a ser gravado, os
+-- negÃ³cios que JÃ estavam frios entram todos de uma vez. Medido no banco de
+-- desenvolvimento: 48 crÃ­ticos e 2 em risco, de 66 abertos.
 --
--- Eles NÃO podem emitir atividade de timeline ("esfriou agora" seria falso: eles
--- esfriaram há dias) e não podem entrar em silêncio, porque aí ficariam
--- absolvidos por decreto de migração — cinquenta demandas abertas que ninguém
--- decidiu abandonar e ninguém vai revisar. O `event_log` sozinho não resolve:
--- é rastro de máquina, e não coloca ninguém para agir.
+-- Eles NÃƒO podem emitir atividade de timeline ("esfriou agora" seria falso: eles
+-- esfriaram hÃ¡ dias) e nÃ£o podem entrar em silÃªncio, porque aÃ­ ficariam
+-- absolvidos por decreto de migraÃ§Ã£o â€” cinquenta demandas abertas que ninguÃ©m
+-- decidiu abandonar e ninguÃ©m vai revisar. O `event_log` sozinho nÃ£o resolve:
+-- Ã© rastro de mÃ¡quina, e nÃ£o coloca ninguÃ©m para agir.
 --
--- Daí UM item agregado (não cinquenta) com dono e AÇÃO NOMEADA. Item de caixa
--- sem ação nomeada é o ruído que a própria doutrina proíbe: "revise os 48 e
--- decida quais encerrar" é trabalho; "48 negócios em risco" é um número.
+-- DaÃ­ UM item agregado (nÃ£o cinquenta) com dono e AÃ‡ÃƒO NOMEADA. Item de caixa
+-- sem aÃ§Ã£o nomeada Ã© o ruÃ­do que a prÃ³pria doutrina proÃ­be: "revise os 48 e
+-- decida quais encerrar" Ã© trabalho; "48 negÃ³cios em risco" Ã© um nÃºmero.
 --
--- ⚠️ O `InboxKind` em `lib/agent-engine/db/repository.ts` é a outra ponta deste
--- CHECK e JÁ FICOU TRÊS VALORES ATRÁS DO BANCO sem nada falhar. Kind novo aqui
--- = kind novo lá, na mesma mudança. Está sendo feito neste commit.
+-- âš ï¸ O `InboxKind` em `lib/agent-engine/db/repository.ts` Ã© a outra ponta deste
+-- CHECK e JÃ FICOU TRÃŠS VALORES ATRÃS DO BANCO sem nada falhar. Kind novo aqui
+-- = kind novo lÃ¡, na mesma mudanÃ§a. EstÃ¡ sendo feito neste commit.
 
--- (constraint agent_inbox_items_kind_check: definida uma vez só, no fim deste
---  apêndice — ver "vocabulário completo". 'risk_backlog_seeded' está lá.)
+-- (constraint agent_inbox_items_kind_check: definida uma vez sÃ³, no fim deste
+--  apÃªndice â€” ver "vocabulÃ¡rio completo". 'risk_backlog_seeded' estÃ¡ lÃ¡.)
 
--- ---- detected_at é carimbo do banco (migration 0081) ----
--- 0081 — `detected_at` deixa de ser dado do cliente e vira CARIMBO do banco
+-- ---- detected_at Ã© carimbo do banco (migration 0081) ----
+-- 0081 â€” `detected_at` deixa de ser dado do cliente e vira CARIMBO do banco
 --
--- O DEFEITO, encontrado rodando o observador de travessia (peça 5) e não por
--- inspeção: `since` deriva de `last_activity_at`, que o trigger carimba com o
--- `now()` do BANCO. `detected_at` vinha do processo Node. Medido nesta máquina:
--- **o banco está 2 segundos à frente**. Um negócio tocado no instante anterior à
+-- O DEFEITO, encontrado rodando o observador de travessia (peÃ§a 5) e nÃ£o por
+-- inspeÃ§Ã£o: `since` deriva de `last_activity_at`, que o trigger carimba com o
+-- `now()` do BANCO. `detected_at` vinha do processo Node. Medido nesta mÃ¡quina:
+-- **o banco estÃ¡ 2 segundos Ã  frente**. Um negÃ³cio tocado no instante anterior Ã 
 -- passada do worker produzia `since > detected_at`, violava
 -- `crm_lead_risk_states_since_no_passado`, e o worker INTEIRO abortava.
 --
--- Omitir a coluna no `upsert` NÃO resolve, e é o detalhe que engana: o default
--- só se aplica no INSERT. No UPDATE — que é o caminho de toda travessia depois
--- da primeira — a coluna mantém o valor ANTIGO, e aí o `since` novo fica maior
--- que um `detected_at` de dias atrás. Pior que o caso do relógio: acontece
--- SEMPRE, não só na janela de dois segundos.
+-- Omitir a coluna no `upsert` NÃƒO resolve, e Ã© o detalhe que engana: o default
+-- sÃ³ se aplica no INSERT. No UPDATE â€” que Ã© o caminho de toda travessia depois
+-- da primeira â€” a coluna mantÃ©m o valor ANTIGO, e aÃ­ o `since` novo fica maior
+-- que um `detected_at` de dias atrÃ¡s. Pior que o caso do relÃ³gio: acontece
+-- SEMPRE, nÃ£o sÃ³ na janela de dois segundos.
 --
--- A constraint estava certa e pegou o que eu não teria visto. O conserto não é
--- afrouxá-la: é tirar do cliente a chance de errar. `detected_at` passa a ser
--- carimbado pelo banco em TODA escrita, como `updated_at` — quem escreve não
+-- A constraint estava certa e pegou o que eu nÃ£o teria visto. O conserto nÃ£o Ã©
+-- afrouxÃ¡-la: Ã© tirar do cliente a chance de errar. `detected_at` passa a ser
+-- carimbado pelo banco em TODA escrita, como `updated_at` â€” quem escreve nÃ£o
 -- decide quando percebeu, o banco decide.
 --
--- ⚠️ A LIÇÃO É MAIOR QUE A COLUNA: `since` e `detected_at` são comparados por um
--- CHECK, então TÊM de vir do mesmo relógio. O relógio do processo continua
--- classificando (`classifyRisk` compara janelas de HORAS, onde segundos não
+-- âš ï¸ A LIÃ‡ÃƒO Ã‰ MAIOR QUE A COLUNA: `since` e `detected_at` sÃ£o comparados por um
+-- CHECK, entÃ£o TÃŠM de vir do mesmo relÃ³gio. O relÃ³gio do processo continua
+-- classificando (`classifyRisk` compara janelas de HORAS, onde segundos nÃ£o
 -- mudam bucket); o CHECK compara INSTANTES, onde mudam. Grandezas diferentes
--- toleram precisões diferentes, e confundir as duas foi exatamente o defeito.
+-- toleram precisÃµes diferentes, e confundir as duas foi exatamente o defeito.
 
 create or replace function public.fn_carimba_detected_at()
   returns trigger
@@ -8848,7 +8848,7 @@ begin
 end$function$;
 
 comment on function public.fn_carimba_detected_at() is
-  'detected_at é quando o BANCO percebeu, nunca quando o processo achou que percebeu. Ver migration 0081: com o valor vindo do cliente, a deriva de relógio violava o CHECK since <= detected_at e derrubava o worker inteiro.';
+  'detected_at Ã© quando o BANCO percebeu, nunca quando o processo achou que percebeu. Ver migration 0081: com o valor vindo do cliente, a deriva de relÃ³gio violava o CHECK since <= detected_at e derrubava o worker inteiro.';
 
 drop trigger if exists trg_crm_lead_risk_states_detected_at on public.crm_lead_risk_states;
 create trigger trg_crm_lead_risk_states_detected_at
@@ -8856,34 +8856,34 @@ create trigger trg_crm_lead_risk_states_detected_at
   for each row
   execute function public.fn_carimba_detected_at();
 
--- ---- proposta de reativação com prazo (migration 0082) ----
--- 0082 — a proposta de reativação, com PRAZO e destino
+-- ---- proposta de reativaÃ§Ã£o com prazo (migration 0082) ----
+-- 0082 â€” a proposta de reativaÃ§Ã£o, com PRAZO e destino
 --
--- O cenário 23 fecha o ciclo da wave 7: o negócio esfria (0078-0081), alguém
--- decide reativá-lo, o agente envia, a atividade fica registrada e o estado
+-- O cenÃ¡rio 23 fecha o ciclo da wave 7: o negÃ³cio esfria (0078-0081), alguÃ©m
+-- decide reativÃ¡-lo, o agente envia, a atividade fica registrada e o estado
 -- volta ao normal.
 --
--- ⚠️ O BLOCO OBRIGATÓRIO, e ele é RECURSIVO: a wave existe para "esfriando"
--- virar DEMANDA, e a demanda que ela cria TAMBÉM PODE MORRER. Proposta de
--- reativação que ninguém decide fica pendente para sempre, e o negócio volta a
--- ser card parado AGORA COM UM BOTÃO EM CIMA — que é pior que antes: card
--- parado sem nada se lê como abandono; com proposta pendente SIMULA ATENÇÃO, e
--- simulação de atendimento ADIA a intervenção humana em vez de provocá-la.
+-- âš ï¸ O BLOCO OBRIGATÃ“RIO, e ele Ã© RECURSIVO: a wave existe para "esfriando"
+-- virar DEMANDA, e a demanda que ela cria TAMBÃ‰M PODE MORRER. Proposta de
+-- reativaÃ§Ã£o que ninguÃ©m decide fica pendente para sempre, e o negÃ³cio volta a
+-- ser card parado AGORA COM UM BOTÃƒO EM CIMA â€” que Ã© pior que antes: card
+-- parado sem nada se lÃª como abandono; com proposta pendente SIMULA ATENÃ‡ÃƒO, e
+-- simulaÃ§Ã£o de atendimento ADIA a intervenÃ§Ã£o humana em vez de provocÃ¡-la.
 --
--- Daí `expires_at` ser NOT NULL: não existe proposta sem prazo nesta tabela, e
--- é o banco que garante. No vencimento ela sai do card e vira item de caixa —
--- demanda sem dono não mora no Kanban.
+-- DaÃ­ `expires_at` ser NOT NULL: nÃ£o existe proposta sem prazo nesta tabela, e
+-- Ã© o banco que garante. No vencimento ela sai do card e vira item de caixa â€”
+-- demanda sem dono nÃ£o mora no Kanban.
 --
--- ⚠️ POR QUE NÃO REUSAR `lead_state.next_action`: ela é por CONTATO (unique
--- organization_id, contact_id) e o risco é por NEGÓCIO — um contato com dois
--- negócios, um esfriando e outro quente, teria uma proposta só para os dois. E
--- é texto livre, sem estado nem prazo. Caberia à força, distorcendo as duas
--- coisas; a decisão é registrada aqui para ninguém "simplificar" depois.
+-- âš ï¸ POR QUE NÃƒO REUSAR `lead_state.next_action`: ela Ã© por CONTATO (unique
+-- organization_id, contact_id) e o risco Ã© por NEGÃ“CIO â€” um contato com dois
+-- negÃ³cios, um esfriando e outro quente, teria uma proposta sÃ³ para os dois. E
+-- Ã© texto livre, sem estado nem prazo. Caberia Ã  forÃ§a, distorcendo as duas
+-- coisas; a decisÃ£o Ã© registrada aqui para ninguÃ©m "simplificar" depois.
 --
--- ⚠️ O ENVIO NÃO NASCE AQUI. Aceitar a proposta dispara o caminho que já existe
--- (`cron_jobs` + o motor de follow-up). Esta tabela guarda a DECISÃO, não a
--- mensagem — criar um segundo caminho de envio seria o mesmo erro de ter duas
--- definições de "esfriando".
+-- âš ï¸ O ENVIO NÃƒO NASCE AQUI. Aceitar a proposta dispara o caminho que jÃ¡ existe
+-- (`cron_jobs` + o motor de follow-up). Esta tabela guarda a DECISÃƒO, nÃ£o a
+-- mensagem â€” criar um segundo caminho de envio seria o mesmo erro de ter duas
+-- definiÃ§Ãµes de "esfriando".
 
 create table if not exists public.crm_lead_reactivations (
   id uuid primary key default gen_random_uuid(),
@@ -8892,13 +8892,13 @@ create table if not exists public.crm_lead_reactivations (
   status text not null default 'pending',
   -- Carimbados pelo BANCO, nunca pelo processo: a 0081 custou um worker
   -- abortando inteiro porque `since` vinha do banco e `detected_at` do Node,
-  -- com 2 segundos de deriva entre eles. Instantes comparados entre si vêm do
-  -- mesmo relógio.
+  -- com 2 segundos de deriva entre eles. Instantes comparados entre si vÃªm do
+  -- mesmo relÃ³gio.
   proposed_at timestamptz not null default now(),
   expires_at timestamptz not null,
-  -- O texto que o agente enviaria. É proposta do AGENTE — texto de máquina —,
-  -- não campo do negócio: vale a mesma regra do `reason` da timeline, e nenhum
-  -- dado do lead entra aqui por cópia.
+  -- O texto que o agente enviaria. Ã‰ proposta do AGENTE â€” texto de mÃ¡quina â€”,
+  -- nÃ£o campo do negÃ³cio: vale a mesma regra do `reason` da timeline, e nenhum
+  -- dado do lead entra aqui por cÃ³pia.
   draft text,
   decided_at timestamptz,
   decided_by_user_id uuid references auth.users(id) on delete set null,
@@ -8906,7 +8906,7 @@ create table if not exists public.crm_lead_reactivations (
 );
 
 comment on table public.crm_lead_reactivations is
-  'Proposta de reativação de negócio esfriado (wave 7, cenário 23). SEMPRE com prazo: proposta que ninguém decide vira card parado com botão em cima, que simula atenção e adia a intervenção humana. No vencimento sai do card e vira item de caixa.';
+  'Proposta de reativaÃ§Ã£o de negÃ³cio esfriado (wave 7, cenÃ¡rio 23). SEMPRE com prazo: proposta que ninguÃ©m decide vira card parado com botÃ£o em cima, que simula atenÃ§Ã£o e adia a intervenÃ§Ã£o humana. No vencimento sai do card e vira item de caixa.';
 
 alter table public.crm_lead_reactivations
   drop constraint if exists crm_lead_reactivations_status_check;
@@ -8915,15 +8915,15 @@ alter table public.crm_lead_reactivations
     status = any (array['pending', 'accepted', 'dismissed', 'expired']::text[])
   );
 
--- Prazo no futuro em relação à proposta. Trava o erro de nascer vencida — que
--- criaria um item de caixa no primeiro tick e ninguém entenderia de onde veio.
+-- Prazo no futuro em relaÃ§Ã£o Ã  proposta. Trava o erro de nascer vencida â€” que
+-- criaria um item de caixa no primeiro tick e ninguÃ©m entenderia de onde veio.
 alter table public.crm_lead_reactivations
   drop constraint if exists crm_lead_reactivations_prazo_no_futuro;
 alter table public.crm_lead_reactivations
   add constraint crm_lead_reactivations_prazo_no_futuro check (expires_at > proposed_at);
 
--- Decisão e decisor andam juntos: status decidido SEM `decided_at` é registro
--- que não sabe dizer quando aconteceu, e a timeline depende dessa resposta.
+-- DecisÃ£o e decisor andam juntos: status decidido SEM `decided_at` Ã© registro
+-- que nÃ£o sabe dizer quando aconteceu, e a timeline depende dessa resposta.
 alter table public.crm_lead_reactivations
   drop constraint if exists crm_lead_reactivations_decisao_datada;
 alter table public.crm_lead_reactivations
@@ -8932,8 +8932,8 @@ alter table public.crm_lead_reactivations
     or (status <> 'pending' and decided_at is not null)
   );
 
--- UMA proposta viva por negócio. Índice parcial: propostas já decididas ficam
--- como histórico e não bloqueiam a próxima — o negócio pode esfriar de novo, e
+-- UMA proposta viva por negÃ³cio. Ãndice parcial: propostas jÃ¡ decididas ficam
+-- como histÃ³rico e nÃ£o bloqueiam a prÃ³xima â€” o negÃ³cio pode esfriar de novo, e
 -- impedir isso deixaria o segundo esfriamento sem proposta nenhuma.
 create unique index if not exists uq_crm_lead_reactivations_uma_viva
   on public.crm_lead_reactivations (lead_id)
@@ -8952,7 +8952,7 @@ create policy tenant_isolation_crm_lead_reactivations_all on public.crm_lead_rea
   using (organization_id in (select fn_user_org_ids()))
   with check (organization_id in (select fn_user_org_ids()));
 
--- `proposed_at` e `updated_at` são do banco, como na 0081.
+-- `proposed_at` e `updated_at` sÃ£o do banco, como na 0081.
 create or replace function public.fn_carimba_reativacao()
   returns trigger
   language plpgsql
@@ -8972,9 +8972,9 @@ create trigger trg_crm_lead_reactivations_carimbo
   for each row
   execute function public.fn_carimba_reativacao();
 
--- DENTRO da publicação de realtime, pela mesma regra da 0078: proposta nascendo
--- ou vencendo é MUDANÇA DE ESTADO que o card precisa mostrar sem reload —
--- não é telemetria.
+-- DENTRO da publicaÃ§Ã£o de realtime, pela mesma regra da 0078: proposta nascendo
+-- ou vencendo Ã© MUDANÃ‡A DE ESTADO que o card precisa mostrar sem reload â€”
+-- nÃ£o Ã© telemetria.
 do $$
 begin
   if not exists (
@@ -8987,61 +8987,61 @@ begin
   end if;
 end $$;
 
--- ---- kind de caixa para reativação vencida (migration 0083) ----
--- 0083 — a proposta de reativação vencida tem PARA ONDE IR
+-- ---- kind de caixa para reativaÃ§Ã£o vencida (migration 0083) ----
+-- 0083 â€” a proposta de reativaÃ§Ã£o vencida tem PARA ONDE IR
 --
 -- Sem este kind, o vencimento seria uma linha de banco e nada mais: a proposta
--- sai do card e desaparece. "Some do card" resolve a simulação de atenção e
--- cria o problema anterior de volta — o negócio parado sem ninguém sabendo.
+-- sai do card e desaparece. "Some do card" resolve a simulaÃ§Ã£o de atenÃ§Ã£o e
+-- cria o problema anterior de volta â€” o negÃ³cio parado sem ninguÃ©m sabendo.
 --
--- A demanda que a wave criou não pode morrer por silêncio, e é EXATAMENTE a
+-- A demanda que a wave criou nÃ£o pode morrer por silÃªncio, e Ã© EXATAMENTE a
 -- mesma forma da promessa cujo prazo depende de terceiro: sem fallback
--- declarado, ela não é quebrada por decisão — ELA EXPIRA SOZINHA E NINGUÉM
--- PERCEBE QUE DECIDIU. O item de caixa é o fallback, e ele tem dono e ação
--- nomeada porque item sem ação é o ruído que a doutrina proíbe.
+-- declarado, ela nÃ£o Ã© quebrada por decisÃ£o â€” ELA EXPIRA SOZINHA E NINGUÃ‰M
+-- PERCEBE QUE DECIDIU. O item de caixa Ã© o fallback, e ele tem dono e aÃ§Ã£o
+-- nomeada porque item sem aÃ§Ã£o Ã© o ruÃ­do que a doutrina proÃ­be.
 --
--- ⚠️ O `InboxKind` em `lib/agent-engine/db/repository.ts` e o
--- `Record<InboxKind, string>` em `lib/ai/agent-inbox-copy.ts` são as outras
--- pontas deste CHECK. Kind novo aqui = kind novo nos dois, no mesmo commit —
--- e agora o invariante `vocabulario-banco-x-typescript` LÊ o arquivo de
--- verdade, então esquecer não passa mais em silêncio.
+-- âš ï¸ O `InboxKind` em `lib/agent-engine/db/repository.ts` e o
+-- `Record<InboxKind, string>` em `lib/ai/agent-inbox-copy.ts` sÃ£o as outras
+-- pontas deste CHECK. Kind novo aqui = kind novo nos dois, no mesmo commit â€”
+-- e agora o invariante `vocabulario-banco-x-typescript` LÃŠ o arquivo de
+-- verdade, entÃ£o esquecer nÃ£o passa mais em silÃªncio.
 
--- (constraint agent_inbox_items_kind_check: definida uma vez só, no fim deste
---  apêndice — ver "vocabulário completo". 'reactivation_expired' está lá.)
+-- (constraint agent_inbox_items_kind_check: definida uma vez sÃ³, no fim deste
+--  apÃªndice â€” ver "vocabulÃ¡rio completo". 'reactivation_expired' estÃ¡ lÃ¡.)
 
 -- ---- agent_stage_hint (migration 0084) ----
--- 0084 — o funil do AGENTE aprende a falar o vocabulário do TENANT
+-- 0084 â€” o funil do AGENTE aprende a falar o vocabulÃ¡rio do TENANT
 --
--- Dois vocabulários que hoje não se conhecem:
+-- Dois vocabulÃ¡rios que hoje nÃ£o se conhecem:
 --
---   AGENTE    `lead_state.stage` — SETE valores fixos: new, contacted,
+--   AGENTE    `lead_state.stage` â€” SETE valores fixos: new, contacted,
 --             qualifying, qualified, negotiating, won, lost;
---   PIPELINE  `crm_stages` — arbitrários por tenant. Medidos neste banco:
---             clínica  → Primeiro contato, Avaliação, Proposta enviada,
---                        Negociação, Tratamento fechado, Perdido
---             e-commerce → Carrinho abandonado, Aguardando pagamento, Pago,
---                        Em separação, Enviado, Entregue, Pós-venda, Cancelado
+--   PIPELINE  `crm_stages` â€” arbitrÃ¡rios por tenant. Medidos neste banco:
+--             clÃ­nica  â†’ Primeiro contato, AvaliaÃ§Ã£o, Proposta enviada,
+--                        NegociaÃ§Ã£o, Tratamento fechado, Perdido
+--             e-commerce â†’ Carrinho abandonado, Aguardando pagamento, Pago,
+--                        Em separaÃ§Ã£o, Enviado, Entregue, PÃ³s-venda, Cancelado
 --
--- Sem ponte, o agente que avança o próprio funil não move o card — e o board
--- mostra um negócio parado num estágio que já não é verdade.
+-- Sem ponte, o agente que avanÃ§a o prÃ³prio funil nÃ£o move o card â€” e o board
+-- mostra um negÃ³cio parado num estÃ¡gio que jÃ¡ nÃ£o Ã© verdade.
 --
--- ⚠️ E A PONTE JÁ EXISTE PELA METADE: `crm_stages` tem `is_won` e `is_lost`.
--- Dois dos sete já estão mapeados, por colunas booleanas. Esta migration NÃO
--- cria um mecanismo novo — GENERALIZA um que existe incompleto. A consequência
--- é o CHECK de coerência abaixo: sem ele, `is_won` e `agent_stage_hint`
+-- âš ï¸ E A PONTE JÃ EXISTE PELA METADE: `crm_stages` tem `is_won` e `is_lost`.
+-- Dois dos sete jÃ¡ estÃ£o mapeados, por colunas booleanas. Esta migration NÃƒO
+-- cria um mecanismo novo â€” GENERALIZA um que existe incompleto. A consequÃªncia
+-- Ã© o CHECK de coerÃªncia abaixo: sem ele, `is_won` e `agent_stage_hint`
 -- passariam a ser DUAS FONTES capazes de dizer coisas diferentes sobre o mesmo
--- estágio, que é a família de defeito que esta entrega inteira encontrou seis
--- vezes ("um lado mudou e o outro não acompanhou").
+-- estÃ¡gio, que Ã© a famÃ­lia de defeito que esta entrega inteira encontrou seis
+-- vezes ("um lado mudou e o outro nÃ£o acompanhou").
 --
--- `null` é estado LEGÍTIMO e comum: "Em separação", "Pós-venda" e "Carrinho
--- abandonado" não têm equivalente no funil do agente, e forçar um mapeamento
--- seria inventar semântica que o tenant não declarou.
+-- `null` Ã© estado LEGÃTIMO e comum: "Em separaÃ§Ã£o", "PÃ³s-venda" e "Carrinho
+-- abandonado" nÃ£o tÃªm equivalente no funil do agente, e forÃ§ar um mapeamento
+-- seria inventar semÃ¢ntica que o tenant nÃ£o declarou.
 
 alter table public.crm_stages
   add column if not exists agent_stage_hint text;
 
 comment on column public.crm_stages.agent_stage_hint is
-  'A que passo do funil do AGENTE este estágio corresponde (lead_state.stage). NULL = não corresponde a nenhum, que é legítimo. Coerente com is_won/is_lost por CHECK — ver migration 0084.';
+  'A que passo do funil do AGENTE este estÃ¡gio corresponde (lead_state.stage). NULL = nÃ£o corresponde a nenhum, que Ã© legÃ­timo. Coerente com is_won/is_lost por CHECK â€” ver migration 0084.';
 
 alter table public.crm_stages
   drop constraint if exists crm_stages_agent_stage_hint_check;
@@ -9053,14 +9053,14 @@ alter table public.crm_stages
     ]::text[])
   );
 
--- ⚠️ A COERÊNCIA COM O QUE JÁ EXISTIA. Um estágio marcado `is_won` que se
+-- âš ï¸ A COERÃŠNCIA COM O QUE JÃ EXISTIA. Um estÃ¡gio marcado `is_won` que se
 -- anuncia como 'qualifying' faria o agente e o board discordarem sobre o mesmo
--- lugar — e cada um estaria "certo" pela sua própria fonte. O CHECK torna a
--- divergência IMPOSSÍVEL em vez de improvável.
+-- lugar â€” e cada um estaria "certo" pela sua prÃ³pria fonte. O CHECK torna a
+-- divergÃªncia IMPOSSÃVEL em vez de improvÃ¡vel.
 --
--- Nos dois sentidos, de propósito: `is_won` sem hint é o estado de hoje (válido,
--- e é como todos os clones começam), mas hint='won' num estágio que não é de
--- ganho seria mentira na direção oposta.
+-- Nos dois sentidos, de propÃ³sito: `is_won` sem hint Ã© o estado de hoje (vÃ¡lido,
+-- e Ã© como todos os clones comeÃ§am), mas hint='won' num estÃ¡gio que nÃ£o Ã© de
+-- ganho seria mentira na direÃ§Ã£o oposta.
 alter table public.crm_stages
   drop constraint if exists crm_stages_hint_coerente_com_won_lost;
 alter table public.crm_stages
@@ -9071,31 +9071,31 @@ alter table public.crm_stages
     and (not is_lost or agent_stage_hint is null or agent_stage_hint = 'lost')
   );
 
--- ⚠️ UM ESTÁGIO POR HINT, POR PIPELINE — e este índice é UNIQUE de propósito.
+-- âš ï¸ UM ESTÃGIO POR HINT, POR PIPELINE â€” e este Ã­ndice Ã© UNIQUE de propÃ³sito.
 --
--- Eu ia tratar a ambiguidade no resolvedor ("dois estágios com o mesmo hint →
--- recuse mover"). O schema já respondeu melhor: `uniq_crm_stages_pipeline_won` e
--- `uniq_crm_stages_pipeline_lost` JÁ EXISTEM, com o mesmo desenho — parcial, e
--- excluindo arquivados. O produto já decidiu que "dois lugares de ganho no mesmo
--- funil" é impossível, não improvável; não havia razão para os outros cinco
+-- Eu ia tratar a ambiguidade no resolvedor ("dois estÃ¡gios com o mesmo hint â†’
+-- recuse mover"). O schema jÃ¡ respondeu melhor: `uniq_crm_stages_pipeline_won` e
+-- `uniq_crm_stages_pipeline_lost` JÃ EXISTEM, com o mesmo desenho â€” parcial, e
+-- excluindo arquivados. O produto jÃ¡ decidiu que "dois lugares de ganho no mesmo
+-- funil" Ã© impossÃ­vel, nÃ£o improvÃ¡vel; nÃ£o havia razÃ£o para os outros cinco
 -- passos serem tratados com menos rigor que os dois.
 --
--- E a diferença é grande: com o UNIQUE, o tenant DESCOBRE o erro ao configurar
--- — o banco recusa na hora, com o estágio na frente dele. Com tratamento no
--- resolvedor, ele descobriria meses depois, quando um negócio não se movesse e
--- ninguém soubesse dizer por quê.
+-- E a diferenÃ§a Ã© grande: com o UNIQUE, o tenant DESCOBRE o erro ao configurar
+-- â€” o banco recusa na hora, com o estÃ¡gio na frente dele. Com tratamento no
+-- resolvedor, ele descobriria meses depois, quando um negÃ³cio nÃ£o se movesse e
+-- ninguÃ©m soubesse dizer por quÃª.
 --
--- `is_archived = false` acompanha o precedente: estágio arquivado é histórico e
--- não disputa o mapeamento com o que está em uso.
+-- `is_archived = false` acompanha o precedente: estÃ¡gio arquivado Ã© histÃ³rico e
+-- nÃ£o disputa o mapeamento com o que estÃ¡ em uso.
 create unique index if not exists uniq_crm_stages_pipeline_hint
   on public.crm_stages (pipeline_id, agent_stage_hint)
   where agent_stage_hint is not null and is_archived = false;
 
--- ---- backfill do que JÁ ESTÁ DECIDIDO, e só dele ----
--- `is_won`/`is_lost` são declaração explícita do tenant sobre aquele estágio;
--- copiá-los para o hint não inventa nada. NENHUM outro estágio é adivinhado:
--- inferir 'qualifying' de um nome como "Avaliação" seria o sistema decidindo
--- semântica por semelhança de palavra, e erraria em português de outro nicho.
+-- ---- backfill do que JÃ ESTÃ DECIDIDO, e sÃ³ dele ----
+-- `is_won`/`is_lost` sÃ£o declaraÃ§Ã£o explÃ­cita do tenant sobre aquele estÃ¡gio;
+-- copiÃ¡-los para o hint nÃ£o inventa nada. NENHUM outro estÃ¡gio Ã© adivinhado:
+-- inferir 'qualifying' de um nome como "AvaliaÃ§Ã£o" seria o sistema decidindo
+-- semÃ¢ntica por semelhanÃ§a de palavra, e erraria em portuguÃªs de outro nicho.
 update public.crm_stages
    set agent_stage_hint = 'won'
  where is_won and agent_stage_hint is null;
@@ -9104,16 +9104,16 @@ update public.crm_stages
    set agent_stage_hint = 'lost'
  where is_lost and agent_stage_hint is null;
 
--- ANALYZE: `ALTER TABLE` deixa o planner sem estatística e ele passa a errar a
--- escolha de índice em consultas de crm_leads (medido no G4-04). Custa
+-- ANALYZE: `ALTER TABLE` deixa o planner sem estatÃ­stica e ele passa a errar a
+-- escolha de Ã­ndice em consultas de crm_leads (medido no G4-04). Custa
 -- milissegundos numa tabela vazia.
 analyze public.crm_leads;
 -- ---- intent router: ai_routers/members/decisions + stickiness (migration 0085) ----
 
--- 0085: Intent Router (Fase 3 do épico harness — spec 2026-07-23).
+-- 0085: Intent Router (Fase 3 do Ã©pico harness â€” spec 2026-07-23).
 -- Um router pluga num channel_session e roteia a conversa para o agente cuja
--- intenção declarada casa com a mensagem. Tabelas EDITÁVEIS (não versão+ponteiro):
--- mutação é auditada por trigger, como ai_agents.
+-- intenÃ§Ã£o declarada casa com a mensagem. Tabelas EDITÃVEIS (nÃ£o versÃ£o+ponteiro):
+-- mutaÃ§Ã£o Ã© auditada por trigger, como ai_agents.
 
 create table if not exists ai_routers (
   id uuid primary key default gen_random_uuid(),
@@ -9132,8 +9132,8 @@ create table if not exists ai_routers (
   updated_at timestamptz not null default now()
 );
 
--- Um router ativo por sessão de canal (dois routers disputando o mesmo número
--- seria ambiguidade de roteamento — o índice parcial impede).
+-- Um router ativo por sessÃ£o de canal (dois routers disputando o mesmo nÃºmero
+-- seria ambiguidade de roteamento â€” o Ã­ndice parcial impede).
 create unique index if not exists uniq_ai_routers_active_session
   on ai_routers (channel_session_id) where is_active;
 
@@ -9154,7 +9154,7 @@ create table if not exists ai_router_members (
 create index if not exists idx_ai_router_members_router
   on ai_router_members (router_id, position);
 
--- Telemetria de decisão (append-only, SEM PII — o texto do lead nunca entra aqui).
+-- Telemetria de decisÃ£o (append-only, SEM PII â€” o texto do lead nunca entra aqui).
 create table if not exists ai_router_decisions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
@@ -9173,12 +9173,12 @@ create index if not exists idx_ai_router_decisions_org_created
 create index if not exists idx_ai_router_decisions_router
   on ai_router_decisions (router_id, created_at);
 
--- Stickiness por conversa: qual agente o router entregou e qual intenção.
+-- Stickiness por conversa: qual agente o router entregou e qual intenÃ§Ã£o.
 alter table conversations add column if not exists active_ai_agent_id uuid references ai_agents(id) on delete set null;
 alter table conversations add column if not exists active_intent text;
 alter table conversations add column if not exists active_agent_set_at timestamptz;
 
--- Triggers: audit de mutação + updated_at (padrão de ai_agents).
+-- Triggers: audit de mutaÃ§Ã£o + updated_at (padrÃ£o de ai_agents).
 drop trigger if exists trg_ai_routers_audit on ai_routers;
 create trigger trg_ai_routers_audit
   after insert or update or delete on ai_routers
@@ -9216,29 +9216,29 @@ end $$;
 
 -- ---- knowledge_searches: telemetria de busca de conhecimento (migration 0086) ----
 
--- 0086 — telemetria de busca de conhecimento (Fase 4 do épico do Harness)
+-- 0086 â€” telemetria de busca de conhecimento (Fase 4 do Ã©pico do Harness)
 --
--- POR QUE UMA TABELA E NÃO `metrics`: a pergunta que o painel precisa responder
--- é "quantas buscas QUASE acertaram", e ela exige o `top_score` da busca ao lado
--- do `threshold` que estava valendo naquele momento. Métrica agregada perde
--- exatamente essa distância, que é o número que vira ação.
+-- POR QUE UMA TABELA E NÃƒO `metrics`: a pergunta que o painel precisa responder
+-- Ã© "quantas buscas QUASE acertaram", e ela exige o `top_score` da busca ao lado
+-- do `threshold` que estava valendo naquele momento. MÃ©trica agregada perde
+-- exatamente essa distÃ¢ncia, que Ã© o nÃºmero que vira aÃ§Ã£o.
 --
--- SEM PII, pelo mesmo contrato de `ai_router_decisions` (0085): não gravamos o
--- texto da pergunta. `hits`/`top_score` respondem à pergunta do painel sem
--- carregar conteúdo de conversa para uma tabela de telemetria de retenção longa.
+-- SEM PII, pelo mesmo contrato de `ai_router_decisions` (0085): nÃ£o gravamos o
+-- texto da pergunta. `hits`/`top_score` respondem Ã  pergunta do painel sem
+-- carregar conteÃºdo de conversa para uma tabela de telemetria de retenÃ§Ã£o longa.
 
 create table if not exists knowledge_searches (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   job_id uuid,
   kb_version_id uuid,
-  -- Quantos chunks passaram do limiar. 0 = o agente perguntou e a base não tinha.
+  -- Quantos chunks passaram do limiar. 0 = o agente perguntou e a base nÃ£o tinha.
   hits int not null default 0,
-  -- Similaridade do MELHOR candidato, mesmo que abaixo do limiar. É o que
-  -- distingue "a base não tem isso" (top_score baixo) de "a base tem e o limiar
+  -- Similaridade do MELHOR candidato, mesmo que abaixo do limiar. Ã‰ o que
+  -- distingue "a base nÃ£o tem isso" (top_score baixo) de "a base tem e o limiar
   -- cortou" (top_score logo abaixo do threshold).
   top_score numeric,
-  -- O limiar vigente na busca. Guardado junto porque ele é configurável por
+  -- O limiar vigente na busca. Guardado junto porque ele Ã© configurÃ¡vel por
   -- agente: comparar `top_score` com o limiar de HOJE mentiria sobre buscas de
   -- ontem.
   threshold numeric not null,
@@ -9256,17 +9256,17 @@ create policy tenant_isolation_knowledge_searches_all on knowledge_searches
   using (organization_id in (select fn_user_org_ids()))
   with check (organization_id in (select fn_user_org_ids()));
 
--- Defesa em profundidade, mesmo contrato da 0085: a policy já devolve zero linha
--- para JWT anônimo (auth.uid() null => fn_user_org_ids() vazio), mas o grant que
--- o Supabase concede por default privilege não tem razão de existir aqui — esta
--- tabela nunca é lida sem sessão. Idempotente: revogar o que não está lá é no-op.
+-- Defesa em profundidade, mesmo contrato da 0085: a policy jÃ¡ devolve zero linha
+-- para JWT anÃ´nimo (auth.uid() null => fn_user_org_ids() vazio), mas o grant que
+-- o Supabase concede por default privilege nÃ£o tem razÃ£o de existir aqui â€” esta
+-- tabela nunca Ã© lida sem sessÃ£o. Idempotente: revogar o que nÃ£o estÃ¡ lÃ¡ Ã© no-op.
 revoke all on public.knowledge_searches from anon;
 
--- ---- atualização self-service pela UI (migration 0089) ----
+-- ---- atualizaÃ§Ã£o self-service pela UI (migration 0089) ----
 --
--- Duas tabelas de INSTÂNCIA (sem organization_id): descrevem o servidor, não o
--- inquilino. Sem policy de RLS de propósito — com RLS habilitada e zero policy,
--- `anon` e `authenticated` não leem nada pelo PostgREST; o acesso passa só pelas
+-- Duas tabelas de INSTÃ‚NCIA (sem organization_id): descrevem o servidor, nÃ£o o
+-- inquilino. Sem policy de RLS de propÃ³sito â€” com RLS habilitada e zero policy,
+-- `anon` e `authenticated` nÃ£o leem nada pelo PostgREST; o acesso passa sÃ³ pelas
 -- rotas /api/v1/system/*, que usam service role e checam is_platform_admin.
 create table if not exists public.system_version (
   id                  smallint primary key default 1 check (id = 1),
@@ -9281,7 +9281,7 @@ create table if not exists public.system_version (
   updated_at          timestamptz not null default now()
 );
 comment on table public.system_version is
-  'Singleton: versão instalada e disponível desta instância. Escrito pelo agente do host.';
+  'Singleton: versÃ£o instalada e disponÃ­vel desta instÃ¢ncia. Escrito pelo agente do host.';
 insert into public.system_version (id) values (1) on conflict (id) do nothing;
 create table if not exists public.system_update_runs (
   id            uuid primary key default gen_random_uuid(),
@@ -9296,16 +9296,16 @@ create table if not exists public.system_update_runs (
   log_tail      text not null default ''
 );
 comment on table public.system_update_runs is
-  'Histórico append de atualizações disparadas pela UI. status/last_step espelham RunStatus/RunStep em lib/system/update-run.ts.';
+  'HistÃ³rico append de atualizaÃ§Ãµes disparadas pela UI. status/last_step espelham RunStatus/RunStep em lib/system/update-run.ts.';
 create index if not exists idx_system_update_runs_dispatched
   on public.system_update_runs (dispatched_at desc);
 alter table public.system_version    enable row level security;
 alter table public.system_update_runs enable row level security;
 
--- ---- índice único parcial: no máximo 1 run "dispatched" por vez (migration 0090) ----
+-- ---- Ã­ndice Ãºnico parcial: no mÃ¡ximo 1 run "dispatched" por vez (migration 0090) ----
 --
--- Dedup defensivo ANTES da constraint (clone com dado inconsistente não pode
--- quebrar o update.sh): mantém só a linha "dispatched" mais recente, marca
+-- Dedup defensivo ANTES da constraint (clone com dado inconsistente nÃ£o pode
+-- quebrar o update.sh): mantÃ©m sÃ³ a linha "dispatched" mais recente, marca
 -- as demais como failed.
 with ranked as (
   select id, row_number() over (order by dispatched_at desc) as rn
@@ -9320,41 +9320,41 @@ create unique index if not exists uniq_system_update_runs_dispatched
   on public.system_update_runs (status)
   where status = 'dispatched';
 
--- ---- acentos nas etapas padrão do funil (migration 0092) ----
--- O seed do funil "Pedidos" criava "Em separacao" e "Pos-venda" sem acento —
--- nomes visíveis no quadro principal, a tela mais usada do CRM. O seed acima já
+-- ---- acentos nas etapas padrÃ£o do funil (migration 0092) ----
+-- O seed do funil "Pedidos" criava "Em separacao" e "Pos-venda" sem acento â€”
+-- nomes visÃ­veis no quadro principal, a tela mais usada do CRM. O seed acima jÃ¡
 -- nasce corrigido; este bloco cura quem instalou antes. Idempotente e seguro:
--- só casa com o nome padrão intacto, então tenant que renomeou a etapa não é
+-- sÃ³ casa com o nome padrÃ£o intacto, entÃ£o tenant que renomeou a etapa nÃ£o Ã©
 -- tocado.
-update public.crm_stages set name = 'Em separação' where name = 'Em separacao';
-update public.crm_stages set name = 'Pós-venda'    where name = 'Pos-venda';
+update public.crm_stages set name = 'Em separaÃ§Ã£o' where name = 'Em separacao';
+update public.crm_stages set name = 'PÃ³s-venda'    where name = 'Pos-venda';
 
 -- ---- channel provider (migration 0087) ----
--- O canal deixa de ser suposto. Até aqui o sistema INTEIRO supunha WAHA (o
--- handler de envio chamava `getAdapter("waha")` com literal; o ctx de produção
--- do `before_send` fixava `provider: 'waha'`), e supor o canal é o que impede o
+-- O canal deixa de ser suposto. AtÃ© aqui o sistema INTEIRO supunha WAHA (o
+-- handler de envio chamava `getAdapter("waha")` com literal; o ctx de produÃ§Ã£o
+-- do `before_send` fixava `provider: 'waha'`), e supor o canal Ã© o que impede o
 -- seam de existir.
 --
--- Tagged union, não flag: `provider` sozinho aceitaria uma sessão `meta_cloud`
--- sem `meta_phone_number_id` e uma `waha` sem `waha_session_name` — as duas
--- irresolvíveis na hora do envio, descobertas em runtime com a mensagem do
--- cliente já aceita. O CHECK move a descoberta para o INSERT.
+-- Tagged union, nÃ£o flag: `provider` sozinho aceitaria uma sessÃ£o `meta_cloud`
+-- sem `meta_phone_number_id` e uma `waha` sem `waha_session_name` â€” as duas
+-- irresolvÃ­veis na hora do envio, descobertas em runtime com a mensagem do
+-- cliente jÃ¡ aceita. O CHECK move a descoberta para o INSERT.
 --
--- `waha_session_name` perde o NOT NULL porque ele É o identificador de um dos
--- ramos da união; obrigatório, `meta_cloud` seria inexprimível. A UNIQUE dele
--- continua valendo (NULLs são distintos no Postgres).
+-- `waha_session_name` perde o NOT NULL porque ele Ã‰ o identificador de um dos
+-- ramos da uniÃ£o; obrigatÃ³rio, `meta_cloud` seria inexprimÃ­vel. A UNIQUE dele
+-- continua valendo (NULLs sÃ£o distintos no Postgres).
 --
--- NÃO cria índice único de (organization_id, phone_number): a trava já existe
--- desde o snapshot — `channel_sessions_phone_per_org_unique ... DEFERRABLE
--- INITIALLY DEFERRED` — e já responde a "um número vive em UM provider", porque
--- não olha o provider. Duplicá-la custaria checagem em toda escrita e colocaria
--- uma trava NÃO-deferível ao lado de uma deferível, quebrando no meio qualquer
--- transação que hoje troca números entre sessões.
+-- NÃƒO cria Ã­ndice Ãºnico de (organization_id, phone_number): a trava jÃ¡ existe
+-- desde o snapshot â€” `channel_sessions_phone_per_org_unique ... DEFERRABLE
+-- INITIALLY DEFERRED` â€” e jÃ¡ responde a "um nÃºmero vive em UM provider", porque
+-- nÃ£o olha o provider. DuplicÃ¡-la custaria checagem em toda escrita e colocaria
+-- uma trava NÃƒO-deferÃ­vel ao lado de uma deferÃ­vel, quebrando no meio qualquer
+-- transaÃ§Ã£o que hoje troca nÃºmeros entre sessÃµes.
 --
 -- Auto-curativo para o `update.sh` de clone: o default preenche as linhas
 -- existentes no mesmo ALTER e `waha_session_name` era NOT NULL antes desta
--- mudança — então TODA linha pré-existente já satisfaz o ramo 'waha' quando o
--- CHECK nasce. Não há dado a deduplicar antes da constraint.
+-- mudanÃ§a â€” entÃ£o TODA linha prÃ©-existente jÃ¡ satisfaz o ramo 'waha' quando o
+-- CHECK nasce. NÃ£o hÃ¡ dado a deduplicar antes da constraint.
 alter table public.channel_sessions
   add column if not exists provider text not null default 'waha',
   add column if not exists meta_phone_number_id text,
@@ -9364,24 +9364,24 @@ alter table public.channel_sessions
 alter table public.channel_sessions alter column waha_session_name drop not null;
 
 -- (constraints channel_sessions_provider_check e channel_sessions_provider_ref_check:
---  definidas uma vez só, no fim deste arquivo, com o vocabulário FINAL — regra de
---  `tests/unit/baseline-constraint-reconstruida.test.ts`. Reconstruí-las aqui com a
---  lista de dois providers faria o `update.sh` de um clone que já tem o terceiro
+--  definidas uma vez sÃ³, no fim deste arquivo, com o vocabulÃ¡rio FINAL â€” regra de
+--  `tests/unit/baseline-constraint-reconstruida.test.ts`. ReconstruÃ­-las aqui com a
+--  lista de dois providers faria o `update.sh` de um clone que jÃ¡ tem o terceiro
 --  falhar ao re-aplicar, e deixaria a tabela sem constraint entre o drop e o add
 --  que funciona.)
 
--- ---- vocabulário do terceiro canal (migration 0131) ----
+-- ---- vocabulÃ¡rio do terceiro canal (migration 0131) ----
 -- Espelho idempotente da 0116. Racional completo no arquivo da migration; o que
--- importa aqui é POR QUE os dois CHECKs são recriados em vez de criados com
--- `exception when duplicate_object`: os blocos acima já os criaram na versão de
--- DOIS providers, e num clone que roda `update.sh` eles JÁ EXISTEM. O
--- `duplicate_object` engoliria a versão nova em silêncio e o banco ficaria
--- recusando a sessão do canal novo com o script tendo passado verde — a
--- falha-em-verde que a doutrina do self-host proíbe.
+-- importa aqui Ã© POR QUE os dois CHECKs sÃ£o recriados em vez de criados com
+-- `exception when duplicate_object`: os blocos acima jÃ¡ os criaram na versÃ£o de
+-- DOIS providers, e num clone que roda `update.sh` eles JÃ EXISTEM. O
+-- `duplicate_object` engoliria a versÃ£o nova em silÃªncio e o banco ficaria
+-- recusando a sessÃ£o do canal novo com o script tendo passado verde â€” a
+-- falha-em-verde que a doutrina do self-host proÃ­be.
 --
 -- Ordem importa: a coluna nasce ANTES do CHECK que a referencia, e nullable,
--- então nenhuma linha existente a viola. Toda linha pré-existente tem provider
--- 'waha' ou 'meta_cloud' e já satisfaz o ramo correspondente — nada a
+-- entÃ£o nenhuma linha existente a viola. Toda linha prÃ©-existente tem provider
+-- 'waha' ou 'meta_cloud' e jÃ¡ satisfaz o ramo correspondente â€” nada a
 -- deduplicar antes das constraints.
 alter table public.channel_sessions
   add column if not exists zernio_account_id text;
@@ -9404,27 +9404,27 @@ alter table public.channel_sessions
   );
 
 comment on column public.channel_sessions.zernio_account_id is
-  'Identificador da conta conectada NO INTERMEDIÁRIO (accountId), não o phone_number_id da Meta. É o que endereça envio e webhook. Espelhado em lib/channels/session-ref.ts.';
+  'Identificador da conta conectada NO INTERMEDIÃRIO (accountId), nÃ£o o phone_number_id da Meta. Ã‰ o que endereÃ§a envio e webhook. Espelhado em lib/channels/session-ref.ts.';
 
 -- ---- o que falta para o terceiro canal ENVIAR (migration 0132) ----
 -- Espelho idempotente da 0117. Racional completo no arquivo da migration.
 --
--- `provider_conversation_id`: os dois canais existentes DERIVAM o destinatário
--- do contato (chatId ou E.164). Este não — quem endereça é um id de 24 hex que
--- o intermediário inventa e devolve pelo webhook. Sem guardá-lo não há como
+-- `provider_conversation_id`: os dois canais existentes DERIVAM o destinatÃ¡rio
+-- do contato (chatId ou E.164). Este nÃ£o â€” quem endereÃ§a Ã© um id de 24 hex que
+-- o intermediÃ¡rio inventa e devolve pelo webhook. Sem guardÃ¡-lo nÃ£o hÃ¡ como
 -- responder dentro da janela de 24h, porque o endpoint que aceita telefone
--- exige template. Nome genérico: é o mesmo conceito para qualquer provider que
--- enderece por thread própria, e carimbar nome de provider numa tabela que hoje
--- não tem nenhum seria dívida gratuita.
+-- exige template. Nome genÃ©rico: Ã© o mesmo conceito para qualquer provider que
+-- enderece por thread prÃ³pria, e carimbar nome de provider numa tabela que hoje
+-- nÃ£o tem nenhum seria dÃ­vida gratuita.
 --
 -- As duas colunas nascem NULLABLE e sem constraint nova: nenhuma linha
--- existente as viola, então não há dado a corrigir antes — o `update.sh` de um
+-- existente as viola, entÃ£o nÃ£o hÃ¡ dado a corrigir antes â€” o `update.sh` de um
 -- clone com dados aplica isto sem tocar em nada.
 alter table public.conversations
   add column if not exists provider_conversation_id text;
 
 comment on column public.conversations.provider_conversation_id is
-  'Id que o PROVIDER dá a esta thread, quando ele endereça por thread própria em vez de por telefone. Chega pelo webhook de mensagem recebida. NULL = provider endereça por telefone (WAHA, oficial) ou ainda não houve primeiro contato.';
+  'Id que o PROVIDER dÃ¡ a esta thread, quando ele endereÃ§a por thread prÃ³pria em vez de por telefone. Chega pelo webhook de mensagem recebida. NULL = provider endereÃ§a por telefone (WAHA, oficial) ou ainda nÃ£o houve primeiro contato.';
 
 create index if not exists idx_conversations_provider_conversation_id
   on public.conversations (organization_id, provider_conversation_id)
@@ -9434,31 +9434,31 @@ alter table public.channel_sessions
   add column if not exists zernio_token_encrypted bytea;
 
 comment on column public.channel_sessions.zernio_token_encrypted is
-  'API key do intermediário, cifrada por fn_encrypt_oauth. Por SESSÃO (não por instalação) — mesma decisão da 0087 para o canal oficial.';
+  'API key do intermediÃ¡rio, cifrada por fn_encrypt_oauth. Por SESSÃƒO (nÃ£o por instalaÃ§Ã£o) â€” mesma decisÃ£o da 0087 para o canal oficial.';
 
 -- ---- carimbo do lookup de telefone (migration 0119) ----
 -- Espelho idempotente da 0119. Racional completo no arquivo da migration.
 --
--- O canal identifica quem escreve por id opaco, e a tradução para telefone é
--- povoada por ATIVIDADE — hoje não sabe, semana que vem talvez. Sem carimbar a
+-- O canal identifica quem escreve por id opaco, e a traduÃ§Ã£o para telefone Ã©
+-- povoada por ATIVIDADE â€” hoje nÃ£o sabe, semana que vem talvez. Sem carimbar a
 -- tentativa, a varredura reprocessaria sempre os mesmos primeiros N e os do fim
 -- da fila nunca seriam perguntados.
 --
--- NULLABLE de propósito: NULL = nunca perguntado; com valor e telefone ainda
--- nulo = o canal não sabia na ocasião. Um `not null default now()` colapsaria
--- os dois e faria contato novo nascer como "já tentado".
+-- NULLABLE de propÃ³sito: NULL = nunca perguntado; com valor e telefone ainda
+-- nulo = o canal nÃ£o sabia na ocasiÃ£o. Um `not null default now()` colapsaria
+-- os dois e faria contato novo nascer como "jÃ¡ tentado".
 alter table public.contacts
   add column if not exists phone_lookup_at timestamptz;
 
 comment on column public.contacts.phone_lookup_at is
-  'Última vez que se PERGUNTOU ao canal o telefone por trás da identidade opaca. NULL = nunca perguntado. Com valor e phone_number ainda null = o canal não sabia na ocasião.';
+  'Ãšltima vez que se PERGUNTOU ao canal o telefone por trÃ¡s da identidade opaca. NULL = nunca perguntado. Com valor e phone_number ainda null = o canal nÃ£o sabia na ocasiÃ£o.';
 
 create index if not exists idx_contacts_phone_lookup_pendente
   on public.contacts (organization_id, phone_lookup_at nulls first)
   where phone_number is null;
 
 comment on column public.channel_sessions.provider is
-  'Canal desta sessão. Vocabulário espelhado em lib/channels/types.ts → ChannelProvider (cobrado por tests/invariants/vocabulario-banco-x-typescript.test.ts).';
+  'Canal desta sessÃ£o. VocabulÃ¡rio espelhado em lib/channels/types.ts â†’ ChannelProvider (cobrado por tests/invariants/vocabulario-banco-x-typescript.test.ts).';
 
 -- ---- meta templates (migration 0088) ----
 -- Espelho idempotente da migration 0088. Racional completo no arquivo da
@@ -9474,12 +9474,12 @@ create table if not exists public.meta_templates (
   category text,
   rejected_reason text,
   quality_score text,
-  -- Payload de `components` como a Meta o devolveu. É a ENTRADA de
+  -- Payload de `components` como a Meta o devolveu. Ã‰ a ENTRADA de
   -- deriveTemplateContract; guardar o derivado seria a segunda fonte da verdade
   -- que esta fase inteira existe para eliminar.
   components jsonb not null,
-  -- sha256 do contrato DERIVADO (não do jsonb cru): muda quando parâmetro muda,
-  -- não muda quando alguém corrige uma vírgula no texto.
+  -- sha256 do contrato DERIVADO (nÃ£o do jsonb cru): muda quando parÃ¢metro muda,
+  -- nÃ£o muda quando alguÃ©m corrige uma vÃ­rgula no texto.
   contract_hash text not null,
   parameter_format text not null default 'POSITIONAL',
   synced_at timestamptz not null default now(),
@@ -9494,21 +9494,21 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 -- COMMENTs ficam no banco: aparecem em `\d+` e no Supabase Studio, onde quem
--- inspeciona a tabela não tem este arquivo à mão.
+-- inspeciona a tabela nÃ£o tem este arquivo Ã  mÃ£o.
 comment on table public.meta_templates is
-  'Espelho local dos templates hospedados na Meta (migration 0088). Derivado, nunca autoritativo: o schema vive na Meta. contract_hash sai de lib/channels/meta/contract-hash.ts e é a âncora da trava por obsolescência.';
+  'Espelho local dos templates hospedados na Meta (migration 0088). Derivado, nunca autoritativo: o schema vive na Meta. contract_hash sai de lib/channels/meta/contract-hash.ts e Ã© a Ã¢ncora da trava por obsolescÃªncia.';
 comment on column public.meta_templates.status is
-  'Vocabulário ABERTO da Meta — deliberadamente SEM CHECK (ela cria estado novo sem avisar; CHECK quebraria o update.sh do clone). Espelhado em lib/channels/meta/template-sync.ts.';
+  'VocabulÃ¡rio ABERTO da Meta â€” deliberadamente SEM CHECK (ela cria estado novo sem avisar; CHECK quebraria o update.sh do clone). Espelhado em lib/channels/meta/template-sync.ts.';
 comment on column public.meta_templates.contract_hash is
-  'SHA-256 do contrato DERIVADO (slots + parameter_format), não do JSON cru. Config de disparo guarda este hash; divergência = config obsoleta.';
+  'SHA-256 do contrato DERIVADO (slots + parameter_format), nÃ£o do JSON cru. Config de disparo guarda este hash; divergÃªncia = config obsoleta.';
 comment on column public.meta_templates.parameter_format is
-  'Valor NORMALIZADO por deriveTemplateContract, não o cru da Meta — por isso TEM CHECK, ao contrário de status.';
+  'Valor NORMALIZADO por deriveTemplateContract, nÃ£o o cru da Meta â€” por isso TEM CHECK, ao contrÃ¡rio de status.';
 
 create unique index if not exists meta_templates_org_waba_name_lang_uniq
   on public.meta_templates (organization_id, waba_id, name, language);
 
--- `name` no fim serve a listagem ordenada da tela sem sort extra (índice dele,
--- superset do meu — combinado em vez de escolhido).
+-- `name` no fim serve a listagem ordenada da tela sem sort extra (Ã­ndice dele,
+-- superset do meu â€” combinado em vez de escolhido).
 create index if not exists meta_templates_org_status_idx
   on public.meta_templates (organization_id, status, name);
 
@@ -9524,7 +9524,7 @@ create policy tenant_isolation_meta_templates_all on public.meta_templates
 -- Espelho idempotente. Racional completo no arquivo da migration: `template` NAO
 -- podia ser gravado como 'text' porque o tipo e a unica coluna que carrega custo
 -- (template e cobrado por entrega), conformidade de janela, e o que o contato viu.
--- Backfill: nenhum por construcao — o conjunto antigo e subconjunto do novo.
+-- Backfill: nenhum por construcao â€” o conjunto antigo e subconjunto do novo.
 
 do $$ begin
   alter table public.messages drop constraint if exists messages_type_check;
@@ -9537,59 +9537,59 @@ do $$ begin
     ]));
 end $$;
 
--- Nome do template disparado. Fica em coluna, não só em `metadata`, porque é o que
--- responde "quanto gastei com o template X?" sem varrer jsonb — e porque `metadata`
--- é vocabulário aberto por desenho, o que tornaria a consulta uma aposta.
+-- Nome do template disparado. Fica em coluna, nÃ£o sÃ³ em `metadata`, porque Ã© o que
+-- responde "quanto gastei com o template X?" sem varrer jsonb â€” e porque `metadata`
+-- Ã© vocabulÃ¡rio aberto por desenho, o que tornaria a consulta uma aposta.
 alter table public.messages
   add column if not exists template_name text,
   add column if not exists template_language text;
 
 comment on column public.messages.template_name is
-  'Nome do template da Meta quando type = template. Null nos demais tipos. Em coluna (não em metadata) porque é a chave de custo e de auditoria de janela.';
+  'Nome do template da Meta quando type = template. Null nos demais tipos. Em coluna (nÃ£o em metadata) porque Ã© a chave de custo e de auditoria de janela.';
 
 create index if not exists messages_template_idx
   on public.messages (organization_id, template_name)
   where template_name is not null;
--- ---- "não consegui comparar" não é "está em dia" (migration 0093) ----
+-- ---- "nÃ£o consegui comparar" nÃ£o Ã© "estÃ¡ em dia" (migration 0093) ----
 --
 -- Sem esta coluna, o agente que falha ao comparar (clone raso sem conseguir
--- completar a história) simplesmente não anuncia versão nova, e a tela lê a
--- ausência como boa notícia — informando "é a mais recente" a uma instalação
+-- completar a histÃ³ria) simplesmente nÃ£o anuncia versÃ£o nova, e a tela lÃª a
+-- ausÃªncia como boa notÃ­cia â€” informando "Ã© a mais recente" a uma instalaÃ§Ã£o
 -- atrasada. Idempotente: `add column if not exists` com default.
 alter table public.system_version
   add column if not exists compare_failed boolean not null default false;
 comment on column public.system_version.compare_failed is
-  'true quando o agente do host não conseguiu comparar a versão instalada com a última publicada (ex.: clone raso sem conseguir completar a história). A tela mostra "não consegui checar", nunca "você está em dia".';
+  'true quando o agente do host nÃ£o conseguiu comparar a versÃ£o instalada com a Ãºltima publicada (ex.: clone raso sem conseguir completar a histÃ³ria). A tela mostra "nÃ£o consegui checar", nunca "vocÃª estÃ¡ em dia".';
 
--- ---- distingue "à frente da publicada" de "nunca houve publicada" (migration 0094) ----
+-- ---- distingue "Ã  frente da publicada" de "nunca houve publicada" (migration 0094) ----
 --
--- Sem esta coluna, um fork sem nenhuma tag `v*` recebia a MESMA combinação
+-- Sem esta coluna, um fork sem nenhuma tag `v*` recebia a MESMA combinaÃ§Ã£o
 -- (off_release=true, latest_version='', compare_failed=false) de uma
--- instalação que já contém a última tag publicada — e a tela afirmava "você
--- está à frente da versão publicada" sem versão publicada nenhuma existir.
+-- instalaÃ§Ã£o que jÃ¡ contÃ©m a Ãºltima tag publicada â€” e a tela afirmava "vocÃª
+-- estÃ¡ Ã  frente da versÃ£o publicada" sem versÃ£o publicada nenhuma existir.
 -- Default `true` preserva o comportamento anterior para agentes antigos.
 alter table public.system_version
   add column if not exists has_known_release boolean not null default true;
 comment on column public.system_version.has_known_release is
-  'false quando o agente do host nunca viu nenhuma tag v* no repositório (fork sem releases). Default true preserva o comportamento anterior para agentes antigos que ainda não enviam este campo.';
+  'false quando o agente do host nunca viu nenhuma tag v* no repositÃ³rio (fork sem releases). Default true preserva o comportamento anterior para agentes antigos que ainda nÃ£o enviam este campo.';
 
--- ---- orçamento de IA conta o runtime real (migration 0095) ----
--- O gatilho de consumo existia só em ai_invocations (workers legados); o
--- agent-engine grava em llm_calls, então o contador ficava zerado e o alarme
+-- ---- orÃ§amento de IA conta o runtime real (migration 0095) ----
+-- O gatilho de consumo existia sÃ³ em ai_invocations (workers legados); o
+-- agent-engine grava em llm_calls, entÃ£o o contador ficava zerado e o alarme
 -- de 80% / pausa em 100% nunca disparavam. Idempotente.
 drop trigger if exists trg_llm_calls_budget on public.llm_calls;
 create trigger trg_llm_calls_budget
   after insert on public.llm_calls
   for each row execute function public.fn_update_budget_consumption();
 
--- ESTE RECOMPUTO NÃO É O QUE VALE, e não dá para consertá-lo aqui. Desde a 0130
--- as linhas de `ai_invocations` são copiadas para `llm_calls`, então somar as
--- duas tabelas inteiras conta a MESMA linha duas vezes; a correção precisa da
--- coluna `legacy_invocation_id`, que só nasce lá embaixo, no bloco da 0130 —
--- referenciá-la aqui derruba o install com `column c2.legacy_invocation_id does
--- not exist` (medido). Quem dá a última palavra é o bloco da migration 0140,
--- depois do backfill: ele ATRIBUI o gasto real do mês, contando cada linha uma
--- vez só, e o valor deste bloco é sobrescrito.
+-- ESTE RECOMPUTO NÃƒO Ã‰ O QUE VALE, e nÃ£o dÃ¡ para consertÃ¡-lo aqui. Desde a 0130
+-- as linhas de `ai_invocations` sÃ£o copiadas para `llm_calls`, entÃ£o somar as
+-- duas tabelas inteiras conta a MESMA linha duas vezes; a correÃ§Ã£o precisa da
+-- coluna `legacy_invocation_id`, que sÃ³ nasce lÃ¡ embaixo, no bloco da 0130 â€”
+-- referenciÃ¡-la aqui derruba o install com `column c2.legacy_invocation_id does
+-- not exist` (medido). Quem dÃ¡ a Ãºltima palavra Ã© o bloco da migration 0140,
+-- depois do backfill: ele ATRIBUI o gasto real do mÃªs, contando cada linha uma
+-- vez sÃ³, e o valor deste bloco Ã© sobrescrito.
 insert into public.ai_budgets (organization_id, current_month_consumed_cents)
 select o.id,
        coalesce((select sum(cost_cents) from public.llm_calls c
@@ -9601,9 +9601,9 @@ on conflict (organization_id) do update
 set current_month_consumed_cents = excluded.current_month_consumed_cents,
     updated_at = now();
 
--- ---- modelo de LLM padrão da organização (migration 0096) ----
--- Sem isto o caminho GENÉRICO do turno (documentado em resolve-turn-agent.ts)
--- fica sem modelo e o turno morre com 'modelo LLM não definido'. Idempotente.
+-- ---- modelo de LLM padrÃ£o da organizaÃ§Ã£o (migration 0096) ----
+-- Sem isto o caminho GENÃ‰RICO do turno (documentado em resolve-turn-agent.ts)
+-- fica sem modelo e o turno morre com 'modelo LLM nÃ£o definido'. Idempotente.
 update public.organizations o
 set settings = jsonb_set(
       coalesce(o.settings, '{}'::jsonb),
@@ -9624,7 +9624,7 @@ set settings = jsonb_set(
     )
 where coalesce(o.settings->'llm'->>'default_model', '') = '';
 
--- Organização nova já nasce configurada: o mesmo seed que cria o funil padrão
+-- OrganizaÃ§Ã£o nova jÃ¡ nasce configurada: o mesmo seed que cria o funil padrÃ£o
 -- passa a semear o modelo.
 CREATE OR REPLACE FUNCTION "public"."fn_seed_org_llm_defaults"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -9666,13 +9666,13 @@ alter table public.ai_agents
     'confidence_threshold', 0.55, 'sentiment_threshold', 0.3,
     'zero_data_retention', false);
 
--- Cura quem está com o padrão antigo INTACTO. Quem já ajustou o valor na mão
--- não é tocado.
+-- Cura quem estÃ¡ com o padrÃ£o antigo INTACTO. Quem jÃ¡ ajustou o valor na mÃ£o
+-- nÃ£o Ã© tocado.
 update public.ai_agents
 set config = jsonb_set(config, '{rag_similarity_threshold}', '0.40'::jsonb)
 where (config->>'rag_similarity_threshold')::numeric = 0.72;
 
--- Default da função de busca, para quem chama sem passar o limiar.
+-- Default da funÃ§Ã£o de busca, para quem chama sem passar o limiar.
 CREATE OR REPLACE FUNCTION "public"."retrieve_top_k_chunks"("p_organization_id" "uuid", "p_kb_version_id" "uuid", "p_embedding" "public"."vector", "p_k" integer DEFAULT 5, "p_threshold" real DEFAULT 0.40) RETURNS TABLE("chunk_id" "uuid", "knowledge_source_id" "uuid", "content" "text", "similarity" real, "metadata" "jsonb")
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public', 'pg_temp'
@@ -9693,43 +9693,43 @@ $$;
 
 -- ---- idioma do contato (migration 0098) ----
 -- O ai-response-worker seleciona contacts.locale e o prompt usa {{contact_locale}},
--- mas a coluna nunca existiu no snapshot: em toda instalação self-host o PostgREST
+-- mas a coluna nunca existiu no snapshot: em toda instalaÃ§Ã£o self-host o PostgREST
 -- respondia "column contacts_1.locale does not exist" e o worker pulava TODA
--- conversa, com o erro escondido num log de nível info.
--- NULL = herda o padrão da organização (o código resolve com fallback pt-BR).
--- Sem CHECK: locale é vocabulário aberto; constraint aqui quebraria o update.sh
+-- conversa, com o erro escondido num log de nÃ­vel info.
+-- NULL = herda o padrÃ£o da organizaÃ§Ã£o (o cÃ³digo resolve com fallback pt-BR).
+-- Sem CHECK: locale Ã© vocabulÃ¡rio aberto; constraint aqui quebraria o update.sh
 -- de clones com valores legados.
 alter table public.contacts
   add column if not exists locale text;
 
 comment on column public.contacts.locale is
-  'Idioma preferido do contato (ex.: pt-BR, es-PY). NULL = herda o padrão da organização; o código resolve com fallback pt-BR.';
+  'Idioma preferido do contato (ex.: pt-BR, es-PY). NULL = herda o padrÃ£o da organizaÃ§Ã£o; o cÃ³digo resolve com fallback pt-BR.';
 -- ---- foto de perfil do contato (migration 0099) ----
 -- O WAHA devolve a foto como URL assinada do CDN do WhatsApp, com validade de
 -- ~9 dias (medido). Guardar a URL crua faria todo avatar quebrar em uma semana,
--- em silêncio. Por isso o arquivo vai para o bucket whatsapp-media e aqui fica
--- só o CAMINHO — mesmo padrão de messages.media_storage_path. É também o que
--- torna a LGPD cumprível: foto é dado pessoal e some na anonimização, o que só
--- se garante sobre arquivo próprio.
+-- em silÃªncio. Por isso o arquivo vai para o bucket whatsapp-media e aqui fica
+-- sÃ³ o CAMINHO â€” mesmo padrÃ£o de messages.media_storage_path. Ã‰ tambÃ©m o que
+-- torna a LGPD cumprÃ­vel: foto Ã© dado pessoal e some na anonimizaÃ§Ã£o, o que sÃ³
+-- se garante sobre arquivo prÃ³prio.
 alter table public.contacts
   add column if not exists avatar_storage_path text,
   add column if not exists avatar_updated_at   timestamptz;
 
 comment on column public.contacts.avatar_storage_path is
-  'Caminho da foto de perfil no bucket whatsapp-media. NULL = sem foto. Guardamos o arquivo, não a URL do WhatsApp, que expira em ~9 dias.';
+  'Caminho da foto de perfil no bucket whatsapp-media. NULL = sem foto. Guardamos o arquivo, nÃ£o a URL do WhatsApp, que expira em ~9 dias.';
 comment on column public.contacts.avatar_updated_at is
-  'Quando a foto foi buscada pela última vez. NULL = nunca tentado. Usado pelo cron de refresh para escolher quem revisitar.';
+  'Quando a foto foi buscada pela Ãºltima vez. NULL = nunca tentado. Usado pelo cron de refresh para escolher quem revisitar.';
 
--- Índice PARCIAL, e não composto liderado por organization_id: a varredura do
--- cron não filtra organização nenhuma (varre a plataforma inteira), então com a
--- coluna líder irrestrita o planner não percorre em ordem de avatar_updated_at e
+-- Ãndice PARCIAL, e nÃ£o composto liderado por organization_id: a varredura do
+-- cron nÃ£o filtra organizaÃ§Ã£o nenhuma (varre a plataforma inteira), entÃ£o com a
+-- coluna lÃ­der irrestrita o planner nÃ£o percorre em ordem de avatar_updated_at e
 -- cai em seq scan + top-N sort. Medido em pg17 com 20.000 contatos, 17.665
--- elegíveis, melhor de 3:  composto 10,272 ms · parcial 0,090 ms (114x), e o
--- parcial ocupa 160 kB porque só indexa quem o cron pode escolher.
--- O predicado de data fica fora do WHERE: now() não é imutável e o Postgres
--- recusa. Não faz falta — os NULL vêm primeiro e o Index Scan para nas 25.
--- O drop é auto-curativo e só dispara em quem tenha a versão composta: em banco
--- novo, e na re-aplicação do update.sh, o bloco é no-op (nada é reconstruído).
+-- elegÃ­veis, melhor de 3:  composto 10,272 ms Â· parcial 0,090 ms (114x), e o
+-- parcial ocupa 160 kB porque sÃ³ indexa quem o cron pode escolher.
+-- O predicado de data fica fora do WHERE: now() nÃ£o Ã© imutÃ¡vel e o Postgres
+-- recusa. NÃ£o faz falta â€” os NULL vÃªm primeiro e o Index Scan para nas 25.
+-- O drop Ã© auto-curativo e sÃ³ dispara em quem tenha a versÃ£o composta: em banco
+-- novo, e na re-aplicaÃ§Ã£o do update.sh, o bloco Ã© no-op (nada Ã© reconstruÃ­do).
 do $$
 begin
   if exists (
@@ -9748,27 +9748,27 @@ create index if not exists idx_contacts_avatar_refresh
   where wa_identity is not null and is_anonymized = false;
 
 
--- ---- autoria da configuração da operação (migration 0101) ----
--- Quem mexeu na CONFIGURAÇÃO, ao lado do estado que mudou.
+-- ---- autoria da configuraÃ§Ã£o da operaÃ§Ã£o (migration 0101) ----
+-- Quem mexeu na CONFIGURAÃ‡ÃƒO, ao lado do estado que mudou.
 --
--- ⚠️ POR QUE EXISTE. Até o agente de IA ganhar mãos sobre a operação (épico IA
--- 360), toda mudança em etapa de funil, entrada automática de contatos e regra
--- automática vinha de uma pessoa `manager+` — quem olhava a tela era, por
--- construção, quem tinha mudado. Uma regra automática ligada pelo assistente
--- muda o comportamento do sistema quando ninguém está olhando: sem esta coluna,
--- a tela mostra "Ativa" e não diz mais nada. O `api_audit_log` registra, mas
--- nenhuma tela de configuração o lê — e log que não aparece é log morto
+-- âš ï¸ POR QUE EXISTE. AtÃ© o agente de IA ganhar mÃ£os sobre a operaÃ§Ã£o (Ã©pico IA
+-- 360), toda mudanÃ§a em etapa de funil, entrada automÃ¡tica de contatos e regra
+-- automÃ¡tica vinha de uma pessoa `manager+` â€” quem olhava a tela era, por
+-- construÃ§Ã£o, quem tinha mudado. Uma regra automÃ¡tica ligada pelo assistente
+-- muda o comportamento do sistema quando ninguÃ©m estÃ¡ olhando: sem esta coluna,
+-- a tela mostra "Ativa" e nÃ£o diz mais nada. O `api_audit_log` registra, mas
+-- nenhuma tela de configuraÃ§Ã£o o lÃª â€” e log que nÃ£o aparece Ã© log morto
 -- (docs/doctrine/sistema-vivo.md, invariante 3).
 --
--- ⚠️ NÃO HÁ COLUNA DE "QUAL AGENTE", E É DELIBERADO: `Actor.id` para `ai_agent`
--- ainda não é chave estável de agente nos três caminhos — `lib/mcp/auth.ts`
--- devolve o id do RUN ou do TOKEN no caminho do cliente MCP externo —, então uma
+-- âš ï¸ NÃƒO HÃ COLUNA DE "QUAL AGENTE", E Ã‰ DELIBERADO: `Actor.id` para `ai_agent`
+-- ainda nÃ£o Ã© chave estÃ¡vel de agente nos trÃªs caminhos â€” `lib/mcp/auth.ts`
+-- devolve o id do RUN ou do TOKEN no caminho do cliente MCP externo â€”, entÃ£o uma
 -- FK para `ai_agents(id)` recusaria a escrita com 23503 justamente ali.
 --
 -- Idempotente e auto-curativo: colunas nullable, sem backfill (linha antiga fica
--- com autoria desconhecida, que é a verdade sobre ela). O CHECK viaja inline no
--- `add column if not exists` — em banco que já tem a coluna o comando inteiro é
--- no-op, que é o que o `update.sh` do clone precisa.
+-- com autoria desconhecida, que Ã© a verdade sobre ela). O CHECK viaja inline no
+-- `add column if not exists` â€” em banco que jÃ¡ tem a coluna o comando inteiro Ã©
+-- no-op, que Ã© o que o `update.sh` do clone precisa.
 
 alter table public.crm_stages
   add column if not exists last_change_actor_kind text
@@ -9792,41 +9792,41 @@ alter table public.automation_rules
   add column if not exists last_change_at timestamptz;
 
 comment on column public.crm_stages.last_change_actor_kind is
-  'Espécie de quem fez a última mudança de configuração desta etapa: user | ai | system. NULL = anterior à 0101.';
+  'EspÃ©cie de quem fez a Ãºltima mudanÃ§a de configuraÃ§Ã£o desta etapa: user | ai | system. NULL = anterior Ã  0101.';
 comment on column public.webhook_sources.last_change_actor_kind is
-  'Espécie de quem fez a última mudança nesta entrada automática de contatos: user | ai | system. NULL = anterior à 0101.';
+  'EspÃ©cie de quem fez a Ãºltima mudanÃ§a nesta entrada automÃ¡tica de contatos: user | ai | system. NULL = anterior Ã  0101.';
 comment on column public.automation_rules.last_change_actor_kind is
-  'Espécie de quem ligou/desligou/editou esta regra por último: user | ai | system. NULL = anterior à 0101.';
+  'EspÃ©cie de quem ligou/desligou/editou esta regra por Ãºltimo: user | ai | system. NULL = anterior Ã  0101.';
 
 
 
 notify pgrst, 'reload schema';
 
 -- ---- uso das capacidades do agente (migration 0103) ----
--- Toda chamada de tool do agente já era auditada em api_audit_log
--- (action='mcp.tool_called') e NENHUMA tela lia — log invisível é log morto
--- (invariante 3 da doutrina do sistema vivo). Esta função é o leitor.
+-- Toda chamada de tool do agente jÃ¡ era auditada em api_audit_log
+-- (action='mcp.tool_called') e NENHUMA tela lia â€” log invisÃ­vel Ã© log morto
+-- (invariante 3 da doutrina do sistema vivo). Esta funÃ§Ã£o Ã© o leitor.
 --
--- Vive no banco porque não há FK entre api_audit_log e ai_agent_runs: amarrar os
+-- Vive no banco porque nÃ£o hÃ¡ FK entre api_audit_log e ai_agent_runs: amarrar os
 -- dois no Node exigiria mandar de volta os ids de ~9.000 runs mensais de um
--- tenant PME num in(...). O elo é api_audit_log.request_id = ai_agent_runs.id (o
--- runtime usa o id do run como requestId do McpContext); request_id é text, daí
+-- tenant PME num in(...). O elo Ã© api_audit_log.request_id = ai_agent_runs.id (o
+-- runtime usa o id do run como requestId do McpContext); request_id Ã© text, daÃ­
 -- o cast.
 --
--- A janela é aplicada nos DOIS lados (r.started_at e a.created_at): os runs saem
+-- A janela Ã© aplicada nos DOIS lados (r.started_at e a.created_at): os runs saem
 -- de ai_agent_runs_agent_idx, e a data no audit deixa o planner cortar por
--- idx_audit_action_time em vez de varrer uma tabela que retém 5 anos. Medido em
+-- idx_audit_action_time em vez de varrer uma tabela que retÃ©m 5 anos. Medido em
 -- pg17 com 708.020 linhas de audit (10,2% tool calls) e 36.000 runs, melhor de
--- 3: sem a janela no audit 345,7 ms · com a janela 224,0 ms · com um índice
--- parcial dedicado 165,0 ms — o índice NÃO foi adotado, porque api_audit_log é
--- append-only de escrita altíssima e 60 ms numa aba não pagam manutenção de
--- índice em todo INSERT.
+-- 3: sem a janela no audit 345,7 ms Â· com a janela 224,0 ms Â· com um Ã­ndice
+-- parcial dedicado 165,0 ms â€” o Ã­ndice NÃƒO foi adotado, porque api_audit_log Ã©
+-- append-only de escrita altÃ­ssima e 60 ms numa aba nÃ£o pagam manutenÃ§Ã£o de
+-- Ã­ndice em todo INSERT.
 --
--- em_teste separa o que veio de execução de teste (is_dry_run): sem isso a tela
+-- em_teste separa o que veio de execuÃ§Ã£o de teste (is_dry_run): sem isso a tela
 -- diria "usada 4 vezes" quando as 4 foram o dono clicando em Testar.
 --
--- security invoker: pelo service role (rota já resolve a org do cookie) a RLS não
--- se aplica; por usuário autenticado, audit_log_select continua exigindo admin.
+-- security invoker: pelo service role (rota jÃ¡ resolve a org do cookie) a RLS nÃ£o
+-- se aplica; por usuÃ¡rio autenticado, audit_log_select continua exigindo admin.
 create or replace function public.fn_agent_tool_usage(
   p_organization_id uuid,
   p_agent_id        uuid,
@@ -9864,39 +9864,39 @@ as $$
 $$;
 
 comment on function public.fn_agent_tool_usage(uuid, uuid, timestamptz) is
-  'Uso das capacidades (tools MCP) de um agente: total, falhas, quantos vieram de execução de teste e a última vez. Elo audit<->run é api_audit_log.request_id = ai_agent_runs.id.';
+  'Uso das capacidades (tools MCP) de um agente: total, falhas, quantos vieram de execuÃ§Ã£o de teste e a Ãºltima vez. Elo audit<->run Ã© api_audit_log.request_id = ai_agent_runs.id.';
 
 grant execute on function public.fn_agent_tool_usage(uuid, uuid, timestamptz)
   to authenticated, service_role;
--- ---- retorno cancelado ≠ retorno disparado (migration 0102) ----------------
+-- ---- retorno cancelado â‰  retorno disparado (migration 0102) ----------------
 -- `cron_jobs.enabled = false` significa DUAS coisas: o one-shot disparou ou
--- alguém desmarcou. Enquanto forem a mesma linha no banco, o agente não sabe, ao
--- retomar, que o humano cancelou o retorno — o invariante 2 da doutrina
--- (continuidade humano→IA) fica pela metade — e a fila mostra "concluída" para
--- um retorno que ninguém executou.
+-- alguÃ©m desmarcou. Enquanto forem a mesma linha no banco, o agente nÃ£o sabe, ao
+-- retomar, que o humano cancelou o retorno â€” o invariante 2 da doutrina
+-- (continuidade humanoâ†’IA) fica pela metade â€” e a fila mostra "concluÃ­da" para
+-- um retorno que ninguÃ©m executou.
 --
--- Sem backfill: as linhas antigas ficam com `cancelled_at` nulo porque essa é a
--- verdade disponível. Não se sabe quais foram canceladas antes desta coluna
--- existir, e chutar seria gravar ficção em histórico.
+-- Sem backfill: as linhas antigas ficam com `cancelled_at` nulo porque essa Ã© a
+-- verdade disponÃ­vel. NÃ£o se sabe quais foram canceladas antes desta coluna
+-- existir, e chutar seria gravar ficÃ§Ã£o em histÃ³rico.
 alter table public.cron_jobs
   add column if not exists cancelled_at  timestamptz,
   add column if not exists cancel_reason text;
 
 comment on column public.cron_jobs.cancelled_at is
-  'Quando o retorno foi desmarcado. NULL = nunca cancelado (disparou ou ainda vai disparar). Distingue cancelado de disparado, que enabled=false sozinho não distingue.';
+  'Quando o retorno foi desmarcado. NULL = nunca cancelado (disparou ou ainda vai disparar). Distingue cancelado de disparado, que enabled=false sozinho nÃ£o distingue.';
 comment on column public.cron_jobs.cancel_reason is
-  'Por que foi desmarcado, em texto curto e sem PII. Mesmo vocabulário de followup_enrollments.cancel_reason.';
+  'Por que foi desmarcado, em texto curto e sem PII. Mesmo vocabulÃ¡rio de followup_enrollments.cancel_reason.';
 
 create index if not exists idx_cron_jobs_retorno_vivo
   on public.cron_jobs (organization_id, contact_id, next_run_at)
   where enabled = true and job_kind = 'followup_turn';
 -- ---- agent_case_events.kind ganha 'agent_noted' (migration 0100) ----
--- O agente conseguia ABRIR um chamado e nada mais: não havia valor honesto no
--- CHECK para "o agente registrou o que aconteceu depois" ('lead_provided' é a
--- informação que o LEAD deu, 'human_replied' é a pessoa). Sem esse registro, o
--- atendente seguinte que abre o chamado começa do zero.
--- Idempotente e auto-curativo: a lista só CRESCE, então nenhuma linha existente
--- viola a constraint nova e não há dado a corrigir antes de criá-la.
+-- O agente conseguia ABRIR um chamado e nada mais: nÃ£o havia valor honesto no
+-- CHECK para "o agente registrou o que aconteceu depois" ('lead_provided' Ã© a
+-- informaÃ§Ã£o que o LEAD deu, 'human_replied' Ã© a pessoa). Sem esse registro, o
+-- atendente seguinte que abre o chamado comeÃ§a do zero.
+-- Idempotente e auto-curativo: a lista sÃ³ CRESCE, entÃ£o nenhuma linha existente
+-- viola a constraint nova e nÃ£o hÃ¡ dado a corrigir antes de criÃ¡-la.
 alter table public.agent_case_events
   drop constraint if exists agent_case_events_kind_check;
 
@@ -9913,16 +9913,16 @@ alter table public.agent_case_events
     'agent_noted'
   ));
 
--- ---- catálogo de modelos atualizado (migration 0104) ----
--- O catálogo curado estava duas gerações atrás e o kit self-host aplica SÓ o
--- baseline: sem este apêndice, quem instala numa VPS continua escolhendo entre
+-- ---- catÃ¡logo de modelos atualizado (migration 0104) ----
+-- O catÃ¡logo curado estava duas geraÃ§Ãµes atrÃ¡s e o kit self-host aplica SÃ“ o
+-- baseline: sem este apÃªndice, quem instala numa VPS continua escolhendo entre
 -- modelos velhos e pagando mais caro por pior. Ids verificados no provedor
--- (GET /v1/models) para Anthropic e OpenAI; os do Google seguem a convenção e
--- NÃO foram verificados — ver o cabeçalho da migration. Idempotente por
+-- (GET /v1/models) para Anthropic e OpenAI; os do Google seguem a convenÃ§Ã£o e
+-- NÃƒO foram verificados â€” ver o cabeÃ§alho da migration. Idempotente por
 -- `on conflict do update`.
 
 -- ---------------------------------------------------------------------------
--- 1. catálogo curado (o que a tela oferece)
+-- 1. catÃ¡logo curado (o que a tela oferece)
 -- ---------------------------------------------------------------------------
 insert into public.ai_models
   (provider, model_id, display_name, description,
@@ -9930,30 +9930,30 @@ insert into public.ai_models
 values
   -- Anthropic
   ('anthropic', 'claude-opus-5',     'Claude Opus 5',
-   'O mais capaz da Anthropic para trabalho agêntico complexo.', 500, 2500, true),
+   'O mais capaz da Anthropic para trabalho agÃªntico complexo.', 500, 2500, true),
   ('anthropic', 'claude-sonnet-5',   'Claude Sonnet 5',
-   'Alto desempenho para atendimento e agentes. Preço de introdução ($2/$10 por milhão) até 31/08/2026; depois volta a $3/$15 — reveja este preço nessa data.',
+   'Alto desempenho para atendimento e agentes. PreÃ§o de introduÃ§Ã£o ($2/$10 por milhÃ£o) atÃ© 31/08/2026; depois volta a $3/$15 â€” reveja este preÃ§o nessa data.',
    200, 1000, true),
   ('anthropic', 'claude-opus-4-8',   'Claude Opus 4.8',
-   'Geração anterior do Opus.', 500, 2500, true),
+   'GeraÃ§Ã£o anterior do Opus.', 500, 2500, true),
   -- OpenAI
   ('openai',    'gpt-5.6-sol',       'GPT-5.6 Sol',
    'O mais capaz da linha 5.6.', 500, 3000, true),
   ('openai',    'gpt-5.6-terra',     'GPT-5.6 Terra',
-   'Equilíbrio de custo e capacidade da linha 5.6.', 200, 1200, true),
+   'EquilÃ­brio de custo e capacidade da linha 5.6.', 200, 1200, true),
   ('openai',    'gpt-5.6-luna',      'GPT-5.6 Luna',
-   'O mais barato da linha 5.6, para classificação e tarefas simples.', 20, 120, true),
+   'O mais barato da linha 5.6, para classificaÃ§Ã£o e tarefas simples.', 20, 120, true),
   ('openai',    'gpt-5.5',           'GPT-5.5',              null, 500, 3000, true),
   ('openai',    'gpt-5.5-pro',       'GPT-5.5 Pro',
-   'Raciocínio estendido; custo alto.', 3000, 18000, true),
+   'RaciocÃ­nio estendido; custo alto.', 3000, 18000, true),
   ('openai',    'gpt-5.4',           'GPT-5.4',              null, 250, 1500, true),
   ('openai',    'gpt-5.4-mini',      'GPT-5.4 Mini',         null, 75, 450, true),
   ('openai',    'gpt-5.4-nano',      'GPT-5.4 Nano',         null, 20, 125, true),
   ('openai',    'gpt-5.4-pro',       'GPT-5.4 Pro',
-   'Raciocínio estendido; custo alto.', 3000, 18000, true),
-  -- Google (ids NÃO verificados — ver cabeçalho)
+   'RaciocÃ­nio estendido; custo alto.', 3000, 18000, true),
+  -- Google (ids NÃƒO verificados â€” ver cabeÃ§alho)
   ('google',    'gemini-3.1-pro-preview', 'Gemini 3.1 Pro (Preview)',
-   'Prévia; preço sobe para $4/$18 por milhão acima de 200 mil tokens de entrada.', 200, 1200, true),
+   'PrÃ©via; preÃ§o sobe para $4/$18 por milhÃ£o acima de 200 mil tokens de entrada.', 200, 1200, true),
   ('google',    'gemini-3.5-flash',  'Gemini 3.5 Flash',     null, 150, 900, true),
   ('google',    'gemini-2.5-flash-lite', 'Gemini 2.5 Flash-Lite',
    'O mais barato da linha Gemini.', 10, 40, true),
@@ -9965,19 +9965,19 @@ on conflict (provider, model_id) do update set
   output_price_per_million_cents = excluded.output_price_per_million_cents,
   supports_tools = excluded.supports_tools;
 
--- Correção de preço nos que JÁ existiam e estavam errados: a saída do
--- gemini-2.5-pro é $10 (não $5) e a do gemini-2.5-flash é $2,50 (não $1,20).
--- Preço errado no catálogo vira orçamento errado na tela do cliente.
+-- CorreÃ§Ã£o de preÃ§o nos que JÃ existiam e estavam errados: a saÃ­da do
+-- gemini-2.5-pro Ã© $10 (nÃ£o $5) e a do gemini-2.5-flash Ã© $2,50 (nÃ£o $1,20).
+-- PreÃ§o errado no catÃ¡logo vira orÃ§amento errado na tela do cliente.
 update public.ai_models set output_price_per_million_cents = 1000
  where provider = 'google' and model_id = 'gemini-2.5-pro';
 update public.ai_models set output_price_per_million_cents = 250
  where provider = 'google' and model_id = 'gemini-2.5-flash';
 
 -- ---------------------------------------------------------------------------
--- 2. padrão por provedor
+-- 2. padrÃ£o por provedor
 --
--- O índice `ai_models_one_default_per_provider` é UNIQUE parcial e IMEDIATO:
--- limpar o padrão anterior tem de vir ANTES de marcar o novo, senão a migration
+-- O Ã­ndice `ai_models_one_default_per_provider` Ã© UNIQUE parcial e IMEDIATO:
+-- limpar o padrÃ£o anterior tem de vir ANTES de marcar o novo, senÃ£o a migration
 -- quebra no meio.
 -- ---------------------------------------------------------------------------
 update public.ai_models set is_default_for_provider = false
@@ -9989,30 +9989,30 @@ update public.ai_models set is_default_for_provider = true
     or (provider = 'google'    and model_id = 'gemini-3.5-flash');
 
 -- ---------------------------------------------------------------------------
--- 3. contabilidade de custo — a MESMA lista, senão o gasto é calculado com
---    preço de outro modelo (ou não é calculado, que é pior: some do orçamento).
+-- 3. contabilidade de custo â€” a MESMA lista, senÃ£o o gasto Ã© calculado com
+--    preÃ§o de outro modelo (ou nÃ£o Ã© calculado, que Ã© pior: some do orÃ§amento).
 -- ---------------------------------------------------------------------------
 insert into public.ai_pricing
   (model, prompt_cents_per_million_tokens, completion_cents_per_million_tokens, notes)
 values
-  ('claude-opus-5',          500,   2500,  'catálogo 0101'),
-  ('claude-sonnet-5',        200,   1000,  'catálogo 0101 — introdução até 31/08/2026; depois 300/1500'),
-  ('claude-opus-4-8',        500,   2500,  'catálogo 0101'),
-  ('gpt-5.6-sol',            500,   3000,  'catálogo 0101'),
-  ('gpt-5.6-terra',          200,   1200,  'catálogo 0101'),
-  ('gpt-5.6-luna',            20,    120,  'catálogo 0101'),
-  ('gpt-5.5',                500,   3000,  'catálogo 0101'),
-  ('gpt-5.5-pro',           3000,  18000,  'catálogo 0101'),
-  ('gpt-5.4',                250,   1500,  'catálogo 0101'),
-  ('gpt-5.4-mini',            75,    450,  'catálogo 0101'),
-  ('gpt-5.4-nano',            20,    125,  'catálogo 0101'),
-  ('gpt-5.4-pro',           3000,  18000,  'catálogo 0101'),
-  ('gemini-3.1-pro-preview', 200,   1200,  'catálogo 0101 — sobe acima de 200k tokens de entrada'),
-  ('gemini-3.5-flash',       150,    900,  'catálogo 0101'),
-  ('gemini-2.5-flash-lite',   10,     40,  'catálogo 0101'),
-  ('gemini-2.0-flash',        10,     40,  'catálogo 0101'),
-  ('gemini-2.5-pro',         125,   1000,  'catálogo 0101 — saída corrigida de 500 para 1000'),
-  ('gemini-2.5-flash',        30,    250,  'catálogo 0101 — saída corrigida de 120 para 250')
+  ('claude-opus-5',          500,   2500,  'catÃ¡logo 0101'),
+  ('claude-sonnet-5',        200,   1000,  'catÃ¡logo 0101 â€” introduÃ§Ã£o atÃ© 31/08/2026; depois 300/1500'),
+  ('claude-opus-4-8',        500,   2500,  'catÃ¡logo 0101'),
+  ('gpt-5.6-sol',            500,   3000,  'catÃ¡logo 0101'),
+  ('gpt-5.6-terra',          200,   1200,  'catÃ¡logo 0101'),
+  ('gpt-5.6-luna',            20,    120,  'catÃ¡logo 0101'),
+  ('gpt-5.5',                500,   3000,  'catÃ¡logo 0101'),
+  ('gpt-5.5-pro',           3000,  18000,  'catÃ¡logo 0101'),
+  ('gpt-5.4',                250,   1500,  'catÃ¡logo 0101'),
+  ('gpt-5.4-mini',            75,    450,  'catÃ¡logo 0101'),
+  ('gpt-5.4-nano',            20,    125,  'catÃ¡logo 0101'),
+  ('gpt-5.4-pro',           3000,  18000,  'catÃ¡logo 0101'),
+  ('gemini-3.1-pro-preview', 200,   1200,  'catÃ¡logo 0101 â€” sobe acima de 200k tokens de entrada'),
+  ('gemini-3.5-flash',       150,    900,  'catÃ¡logo 0101'),
+  ('gemini-2.5-flash-lite',   10,     40,  'catÃ¡logo 0101'),
+  ('gemini-2.0-flash',        10,     40,  'catÃ¡logo 0101'),
+  ('gemini-2.5-pro',         125,   1000,  'catÃ¡logo 0101 â€” saÃ­da corrigida de 500 para 1000'),
+  ('gemini-2.5-flash',        30,    250,  'catÃ¡logo 0101 â€” saÃ­da corrigida de 120 para 250')
 on conflict (model) do update set
   prompt_cents_per_million_tokens = excluded.prompt_cents_per_million_tokens,
   completion_cents_per_million_tokens = excluded.completion_cents_per_million_tokens,
@@ -10020,21 +10020,21 @@ on conflict (model) do update set
   superseded_at = null;
 
 -- ---- agent_inbox_items.kind ganha 'capabilities_missing' (migration 0105capabilities_missing
--- Quando o turno não consegue montar as capacidades configuradas na tela, ele
--- segue sem elas (a conversa do cliente não pode morrer por uma tool extra) —
--- mas o aviso ia só para o log do worker, que numa VPS ninguém abre. Este kind
--- é o que faz o defeito aparecer na Central de avisos. Idempotente: a lista só
+-- Quando o turno nÃ£o consegue montar as capacidades configuradas na tela, ele
+-- segue sem elas (a conversa do cliente nÃ£o pode morrer por uma tool extra) â€”
+-- mas o aviso ia sÃ³ para o log do worker, que numa VPS ninguÃ©m abre. Este kind
+-- Ã© o que faz o defeito aparecer na Central de avisos. Idempotente: a lista sÃ³
 -- cresce, nenhuma linha existente viola a constraint nova.
 --
--- ESTE É O BLOCO ÚNICO desta constraint, e a migration 0139 não acrescenta
--- outro DE PROPÓSITO. A 0129 reconstruiu a constraint na CADEIA DE MIGRATIONS
--- com 15 valores enquanto esta lista já tinha 18, apagando lá (e só lá)
+-- ESTE Ã‰ O BLOCO ÃšNICO desta constraint, e a migration 0139 nÃ£o acrescenta
+-- outro DE PROPÃ“SITO. A 0129 reconstruiu a constraint na CADEIA DE MIGRATIONS
+-- com 15 valores enquanto esta lista jÃ¡ tinha 18, apagando lÃ¡ (e sÃ³ lÃ¡)
 -- 'contact_proposal_expired', 'promise_unfulfilled' e 'other'. Quem instala
--- pelo kit nunca viu o defeito — recebe este arquivo, que está correto —, e é
--- por isso que a 0139 é uma migration SEM apêndice: um segundo bloco aqui seria
--- exatamente o padrão da issue #159 que `baseline-constraint-reconstruida.test.ts`
--- proíbe. Quem acrescentar um `kind` mexe em DOIS lugares: esta lista e a última
--- migration que reconstrói a constraint. `kind-check-migration-x-baseline.test.ts`
+-- pelo kit nunca viu o defeito â€” recebe este arquivo, que estÃ¡ correto â€”, e Ã©
+-- por isso que a 0139 Ã© uma migration SEM apÃªndice: um segundo bloco aqui seria
+-- exatamente o padrÃ£o da issue #159 que `baseline-constraint-reconstruida.test.ts`
+-- proÃ­be. Quem acrescentar um `kind` mexe em DOIS lugares: esta lista e a Ãºltima
+-- migration que reconstrÃ³i a constraint. `kind-check-migration-x-baseline.test.ts`
 -- reprova quando as duas divergem.
 
 alter table public.agent_inbox_items
@@ -10056,63 +10056,63 @@ alter table public.agent_inbox_items
     'reactivation_expired',
     'capabilities_missing',
     -- (migration 0109, issue #129) Mensagem outbound nasce `sending` e, quando o
-    -- envio nunca acontece, fica `sending` para sempre — o self-hoster vê uma
-    -- mensagem eternamente "enviando", sinal de progresso para algo que não vai
+    -- envio nunca acontece, fica `sending` para sempre â€” o self-hoster vÃª uma
+    -- mensagem eternamente "enviando", sinal de progresso para algo que nÃ£o vai
     -- acontecer. O cron `recover-stuck-messages` marca `failed` e usa este kind
     -- para o defeito APARECER na Central de avisos.
     --
-    -- Entra NESTA lista, e não num bloco novo no fim do arquivo: o #159 do @jmpo
+    -- Entra NESTA lista, e nÃ£o num bloco novo no fim do arquivo: o #159 do @jmpo
     -- mostrou que reconstruir a mesma constraint em N blocos quebra o
-    -- `update.sh` de todo clone que já tenha uma linha de vocabulário posterior
-    -- — os blocos antigos rodam antes e falham em cadeia. Um bloco por
+    -- `update.sh` de todo clone que jÃ¡ tenha uma linha de vocabulÃ¡rio posterior
+    -- â€” os blocos antigos rodam antes e falham em cadeia. Um bloco por
     -- constraint, vigiado por tests/unit/baseline-constraint-reconstruida.test.ts.
     'message_send_stuck',
-    -- (migration 0129) O cliente manda foto/áudio e o agente age como se nada
-    -- tivesse chegado. Acontece quando o modelo configurado não enxerga imagem,
-    -- ou quando falta a chave de transcrição — e antes disto a derivação
-    -- devolvia string vazia EM SILÊNCIO: nenhum erro, nenhum log, e o operador
-    -- concluindo que o agente ignorou o cliente de propósito.
+    -- (migration 0129) O cliente manda foto/Ã¡udio e o agente age como se nada
+    -- tivesse chegado. Acontece quando o modelo configurado nÃ£o enxerga imagem,
+    -- ou quando falta a chave de transcriÃ§Ã£o â€” e antes disto a derivaÃ§Ã£o
+    -- devolvia string vazia EM SILÃŠNCIO: nenhum erro, nenhum log, e o operador
+    -- concluindo que o agente ignorou o cliente de propÃ³sito.
     'midia_nao_lida',
     'channel_template_review',
     'channel_number_alert',
-    -- (migration 0111, spec 16 §3.2) O papel Operador declara promessa em aberto:
-    -- o assistente prometeu algo ao cliente e o cumprimento não foi registrado.
-    -- A invariante sagrada da spec é "nenhuma promessa deixa de ser cumprida", e
-    -- uma promessa sem dono precisa aparecer onde o humano olha — não no log do
-    -- worker. Entra NESTA lista pela mesma razão que a de cima.
+    -- (migration 0111, spec 16 Â§3.2) O papel Operador declara promessa em aberto:
+    -- o assistente prometeu algo ao cliente e o cumprimento nÃ£o foi registrado.
+    -- A invariante sagrada da spec Ã© "nenhuma promessa deixa de ser cumprida", e
+    -- uma promessa sem dono precisa aparecer onde o humano olha â€” nÃ£o no log do
+    -- worker. Entra NESTA lista pela mesma razÃ£o que a de cima.
     'promise_unfulfilled',
-    -- (migration 0124, spec 17 §4b) Dado que o assistente ouviu na conversa e
-    -- ninguém confirmou até o prazo. `info`, não `warn`: nada quebrou — uma
-    -- informação não foi aproveitada, e tratar isso como falha ensinaria a
-    -- ignorar os avisos que são falha de verdade. Entra NESTA lista pela mesma
-    -- razão das de cima (bloco único por constraint, #159).
+    -- (migration 0124, spec 17 Â§4b) Dado que o assistente ouviu na conversa e
+    -- ninguÃ©m confirmou atÃ© o prazo. `info`, nÃ£o `warn`: nada quebrou â€” uma
+    -- informaÃ§Ã£o nÃ£o foi aproveitada, e tratar isso como falha ensinaria a
+    -- ignorar os avisos que sÃ£o falha de verdade. Entra NESTA lista pela mesma
+    -- razÃ£o das de cima (bloco Ãºnico por constraint, #159).
     'contact_proposal_expired',
     -- (migration 0159) O gasto passou do aviso que a pessoa definiu e a IA
-    -- CONTINUA respondendo — `warn`, nunca `critical`, e um kind SEPARADO de
+    -- CONTINUA respondendo â€” `warn`, nunca `critical`, e um kind SEPARADO de
     -- `budget_exceeded`: colapsar os dois faria o alerta de "parou" perder o
-    -- significado. É este kind que torna possível a condição do gate "ninguém é
-    -- bloqueado sem ter sido avisado no mês" — sem ele, o salto de 79% para 101%
+    -- significado. Ã‰ este kind que torna possÃ­vel a condiÃ§Ã£o do gate "ninguÃ©m Ã©
+    -- bloqueado sem ter sido avisado no mÃªs" â€” sem ele, o salto de 79% para 101%
     -- entre duas chamadas calaria a IA sem nenhum sinal anterior.
     --
-    -- Entra NESTA lista, e AQUI no fim, por duas razões distintas: bloco único
+    -- Entra NESTA lista, e AQUI no fim, por duas razÃµes distintas: bloco Ãºnico
     -- por constraint (#159), e porque `tests/unit/midia-nao-lida.test.ts` procura
     -- `'midia_nao_lida'` nos primeiros 2000 caracteres a partir do `add
-    -- constraint` — um valor comentado inserido ACIMA dele empurra-o para fora da
-    -- janela e reprova um teste que não tem nada a ver com o kind novo (medido:
+    -- constraint` â€” um valor comentado inserido ACIMA dele empurra-o para fora da
+    -- janela e reprova um teste que nÃ£o tem nada a ver com o kind novo (medido:
     -- offset 1532 -> 2275). Kind novo entra no fim da lista.
     'budget_warning',
-    -- (migration 0181) O material que a pessoa enviou não entrou na base: falta
-    -- chave de embedding, a extração do arquivo falhou, ou nenhum trecho foi
-    -- gravado. Antes disto o worker devolvia `skipped` para o próprio log, o drain
+    -- (migration 0181) O material que a pessoa enviou nÃ£o entrou na base: falta
+    -- chave de embedding, a extraÃ§Ã£o do arquivo falhou, ou nenhum trecho foi
+    -- gravado. Antes disto o worker devolvia `skipped` para o prÃ³prio log, o drain
     -- tratava `skipped` como sucesso, e a linha da fonte seguia dizendo `ready`.
-    -- Irmão direto de `midia_nao_lida`: mesma chave, mesmo silêncio.
+    -- IrmÃ£o direto de `midia_nao_lida`: mesma chave, mesmo silÃªncio.
     'conhecimento_nao_indexado',
-    -- (migration 0237) Digest diário do Radar na Central de avisos: um item por
-    -- org por dia, só quando há o que dizer. A 0237 o acrescentou na migration,
-    -- mas o bloco ÚNICO do baseline ficou pra trás — sem esta linha, quem atualiza
-    -- pelo kit vê o INSERT do digest morrer no 23514 em silêncio (o cron captura e
-    -- loga, e o operador só não recebe o resumo). Entra AQUI, no fim, pela regra do
-    -- bloco único (#159): um kind novo numa lista, nunca um bloco novo.
+    -- (migration 0237) Digest diÃ¡rio do Radar na Central de avisos: um item por
+    -- org por dia, sÃ³ quando hÃ¡ o que dizer. A 0237 o acrescentou na migration,
+    -- mas o bloco ÃšNICO do baseline ficou pra trÃ¡s â€” sem esta linha, quem atualiza
+    -- pelo kit vÃª o INSERT do digest morrer no 23514 em silÃªncio (o cron captura e
+    -- loga, e o operador sÃ³ nÃ£o recebe o resumo). Entra AQUI, no fim, pela regra do
+    -- bloco Ãºnico (#159): um kind novo numa lista, nunca um bloco novo.
     'radar_digest',
     'other'
   ));
@@ -10123,8 +10123,8 @@ notify pgrst, 'reload schema';
 
 -- ---- channel_sessions.archived_at (migration 0106) ----
 -- Arquivar em vez de apagar: conversations/messages referenciam
--- channel_sessions com ON DELETE RESTRICT, então canal com histórico não pode
--- ser removido — some da UI e a linha fica como âncora das FKs.
+-- channel_sessions com ON DELETE RESTRICT, entÃ£o canal com histÃ³rico nÃ£o pode
+-- ser removido â€” some da UI e a linha fica como Ã¢ncora das FKs.
 alter table public.channel_sessions
   add column if not exists archived_at timestamptz;
 
@@ -10136,18 +10136,18 @@ create index if not exists channel_sessions_org_active_idx
 
 notify pgrst, 'reload schema';
 
--- ---- número único só entre canais ATIVOS (migration 0107) ----
--- A trava `channel_sessions_phone_per_org_unique` é do snapshot e não sabe o que
--- é arquivamento: a linha arquivada seguia ocupando o par (org, número), e
--- reparear o MESMO número estourava 23505 na linha nova. O invariante real é "um
--- número vive em UM canal ATIVO" — vira índice parcial `where archived_at is
+-- ---- nÃºmero Ãºnico sÃ³ entre canais ATIVOS (migration 0107) ----
+-- A trava `channel_sessions_phone_per_org_unique` Ã© do snapshot e nÃ£o sabe o que
+-- Ã© arquivamento: a linha arquivada seguia ocupando o par (org, nÃºmero), e
+-- reparear o MESMO nÃºmero estourava 23505 na linha nova. O invariante real Ã© "um
+-- nÃºmero vive em UM canal ATIVO" â€” vira Ã­ndice parcial `where archived_at is
 -- null`, com o MESMO NOME (o invariante do repo cobra o nome dentro da mensagem
 -- de erro). Perde o DEFERRABLE: medido, nenhum caminho escreve
--- channel_sessions.phone_number com violação transitória.
+-- channel_sessions.phone_number com violaÃ§Ã£o transitÃ³ria.
 --
--- Auto-curativo: a constraint antiga é ESTRITAMENTE mais forte que o índice novo
--- (todas as linhas vs. um subconjunto), então nenhum banco que a satisfazia pode
--- violar o índice — não há dado a deduplicar antes de criá-lo.
+-- Auto-curativo: a constraint antiga Ã© ESTRITAMENTE mais forte que o Ã­ndice novo
+-- (todas as linhas vs. um subconjunto), entÃ£o nenhum banco que a satisfazia pode
+-- violar o Ã­ndice â€” nÃ£o hÃ¡ dado a deduplicar antes de criÃ¡-lo.
 do $$
 begin
   if exists (
@@ -10166,28 +10166,28 @@ create unique index if not exists channel_sessions_phone_per_org_unique
 
 -- ---- SECURITY DEFINER exposta a anon/authenticated (migration 0108) ----
 -- Issue #128. O `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON FUNCTIONS TO anon`
--- (e a irmã TO authenticated) lá em cima vale para toda função criada DEPOIS
--- dele — isto é, para TODO apêndice deste arquivo, que sempre nasce no fim — e
--- concede grant DIRETO, que `revoke all ... from public` não remove. Copiar as
--- duas linhas padrão de uma função antiga produz função exposta.
+-- (e a irmÃ£ TO authenticated) lÃ¡ em cima vale para toda funÃ§Ã£o criada DEPOIS
+-- dele â€” isto Ã©, para TODO apÃªndice deste arquivo, que sempre nasce no fim â€” e
+-- concede grant DIRETO, que `revoke all ... from public` nÃ£o remove. Copiar as
+-- duas linhas padrÃ£o de uma funÃ§Ã£o antiga produz funÃ§Ã£o exposta.
 --
 -- Medido com o baseline da main aplicado: das 25 `security definer` de public,
--- 8 tinham EXECUTE para anon — incluindo `fn_publish_ai_agent_version`, que
+-- 8 tinham EXECUTE para anon â€” incluindo `fn_publish_ai_agent_version`, que
 -- ESCREVE e recebe o org por argumento sem checar membership.
 --
 -- REGRA (vigiada por tests/invariants/hardening-definer-varredura.test.ts):
---   anon          → nenhuma definer de public executável, sem exceção;
---   authenticated → definer VOLÁTIL só continua executável com call site de
---                   sessão de usuário (emit_event, fn_conversation_assign,
---                   fn_log_event). As demais só são chamadas pelo client de
---                   service role, e o grant era escrita cross-tenant à toa.
--- Idempotente e auto-curativo: revoke de privilégio ausente é no-op.
+--   anon          â†’ nenhuma definer de public executÃ¡vel, sem exceÃ§Ã£o;
+--   authenticated â†’ definer VOLÃTIL sÃ³ continua executÃ¡vel com call site de
+--                   sessÃ£o de usuÃ¡rio (emit_event, fn_conversation_assign,
+--                   fn_log_event). As demais sÃ³ sÃ£o chamadas pelo client de
+--                   service role, e o grant era escrita cross-tenant Ã  toa.
+-- Idempotente e auto-curativo: revoke de privilÃ©gio ausente Ã© no-op.
 
 -- ---- anon: nenhuma SECURITY DEFINER de public ----
--- Duas origens de EXECUTE, e cada uma pede um revoke diferente — medir o ACL
--- real (`proacl`) foi o que mostrou isso: `{=X/postgres,...}` é grant a PUBLIC,
--- que `revoke ... from anon` NÃO remove. As duas linhas juntas cobrem os dois
--- caminhos, e o re-grant explícito devolve quem de fato precisa.
+-- Duas origens de EXECUTE, e cada uma pede um revoke diferente â€” medir o ACL
+-- real (`proacl`) foi o que mostrou isso: `{=X/postgres,...}` Ã© grant a PUBLIC,
+-- que `revoke ... from anon` NÃƒO remove. As duas linhas juntas cobrem os dois
+-- caminhos, e o re-grant explÃ­cito devolve quem de fato precisa.
 revoke execute on function public.fn_is_platform_admin() from public, anon;
 revoke execute on function public.fn_user_org_ids() from public, anon;
 revoke execute on function public.fn_user_role_in_org(uuid) from public, anon;
@@ -10196,25 +10196,25 @@ revoke execute on function public.fn_role_at_least(uuid, text) from public, anon
 revoke execute on function public.fn_publish_ai_agent_version(uuid, uuid, uuid) from public, anon;
 revoke execute on function public.fn_emit_conversation_routing() from public, anon;
 
--- ---- authenticated: definer volátil sem call site de sessão de usuário ----
+-- ---- authenticated: definer volÃ¡til sem call site de sessÃ£o de usuÃ¡rio ----
 revoke execute on function public.fn_upsert_wa_contact(uuid, text, text, text, text, text) from authenticated;
 revoke execute on function public.fn_upsert_wa_conversation(uuid, uuid, uuid) from authenticated;
 revoke execute on function public.fn_mark_conversation_message(uuid, text, text, timestamptz) from authenticated;
 revoke execute on function public.fn_publish_ai_agent_version(uuid, uuid, uuid) from authenticated;
 revoke execute on function public.activate_kb_version(uuid, uuid) from authenticated;
--- Funções de TRIGGER: ninguém as chama por RPC, e o disparo do trigger não
--- consulta EXECUTE. O grant só existia por herança dos padrões do Postgres.
+-- FunÃ§Ãµes de TRIGGER: ninguÃ©m as chama por RPC, e o disparo do trigger nÃ£o
+-- consulta EXECUTE. O grant sÃ³ existia por heranÃ§a dos padrÃµes do Postgres.
 revoke execute on function public.fn_emit_conversation_routing() from authenticated;
 
--- ---- re-grant explícito: quem precisa continua podendo (probe positivo) ----
+-- ---- re-grant explÃ­cito: quem precisa continua podendo (probe positivo) ----
 grant execute on function public.fn_upsert_wa_contact(uuid, text, text, text, text, text) to service_role;
 grant execute on function public.fn_upsert_wa_conversation(uuid, uuid, uuid) to service_role;
 grant execute on function public.fn_mark_conversation_message(uuid, text, text, timestamptz) to service_role;
 grant execute on function public.fn_publish_ai_agent_version(uuid, uuid, uuid) to service_role;
 grant execute on function public.activate_kb_version(uuid, uuid) to service_role;
 grant execute on function public.fn_emit_conversation_routing() to service_role;
--- Helpers de RLS: as policies são avaliadas com o papel de quem consulta, então
--- `authenticated` PRECISA de EXECUTE — sem isto toda leitura logada quebra.
+-- Helpers de RLS: as policies sÃ£o avaliadas com o papel de quem consulta, entÃ£o
+-- `authenticated` PRECISA de EXECUTE â€” sem isto toda leitura logada quebra.
 grant execute on function public.fn_is_platform_admin() to authenticated, service_role;
 grant execute on function public.fn_user_org_ids() to authenticated, service_role;
 grant execute on function public.fn_user_role_in_org(uuid) to authenticated, service_role;
@@ -10222,30 +10222,30 @@ grant execute on function public.fn_user_role_in(uuid) to authenticated, service
 grant execute on function public.fn_role_at_least(uuid, text) to authenticated, service_role;
 
 -- ---- ai_invocations.agent_id aceita NULL (migration 0114) ----
--- Issue #160 (@jmpo, medindo a própria VPS): o classificador de sentimento roda
--- mesmo sem agente ativo — lê o agente só para o threshold e cai no default —
+-- Issue #160 (@jmpo, medindo a prÃ³pria VPS): o classificador de sentimento roda
+-- mesmo sem agente ativo â€” lÃª o agente sÃ³ para o threshold e cai no default â€”
 -- mas auditava com `agent_id: agent?.id ?? ""` numa coluna `uuid NOT NULL`. O
--- insert é fire-and-forget, então o erro só aparecia como `warn` no log do
--- contêiner: `ai_invocations` ficava VAZIA numa instalação com tráfego real, e
+-- insert Ã© fire-and-forget, entÃ£o o erro sÃ³ aparecia como `warn` no log do
+-- contÃªiner: `ai_invocations` ficava VAZIA numa instalaÃ§Ã£o com trÃ¡fego real, e
 -- as telas de consumo e custo de IA (que leem dela) mostravam zero enquanto o
--- provider era pago. "Sem agente ativo" é o estado normal de quem ainda não
+-- provider era pago. "Sem agente ativo" Ã© o estado normal de quem ainda nÃ£o
 -- publicou o agente.
--- Idempotente: `drop not null` em coluna que já aceita null é no-op.
+-- Idempotente: `drop not null` em coluna que jÃ¡ aceita null Ã© no-op.
 
 alter table public.ai_invocations
   alter column agent_id drop not null;
 
 comment on column public.ai_invocations.agent_id is
-  'Agente que originou a invocação. NULL = invocação de IA sem agente dono '
+  'Agente que originou a invocaÃ§Ã£o. NULL = invocaÃ§Ã£o de IA sem agente dono '
   '(ex.: classificador de sentimento numa org sem agente publicado). O custo '
-  'existe e precisa aparecer nas telas de consumo — ver issue #160.';
+  'existe e precisa aparecer nas telas de consumo â€” ver issue #160.';
 
 
--- ---- Índice de Atrito + DEMANDAS (migrations 0116–0120) ----
--- Spec 17 + doutrina cap. 5. `demandas` é a unidade do PROPÓSITO: contato é
--- quem pede, conversa é por onde se fala, demanda é o que precisa acabar.
--- O índice usa demandas como denominador (0137) e publica o invariante 4 como
--- número (demandas abertas sem próximo passo). Idempotente.
+-- ---- Ãndice de Atrito + DEMANDAS (migrations 0116â€“0120) ----
+-- Spec 17 + doutrina cap. 5. `demandas` Ã© a unidade do PROPÃ“SITO: contato Ã©
+-- quem pede, conversa Ã© por onde se fala, demanda Ã© o que precisa acabar.
+-- O Ã­ndice usa demandas como denominador (0137) e publica o invariante 4 como
+-- nÃºmero (demandas abertas sem prÃ³ximo passo). Idempotente.
 
 create index if not exists idx_conversations_org_silencio
   on public.conversations (organization_id, last_outbound_at)
@@ -10253,8 +10253,8 @@ create index if not exists idx_conversations_org_silencio
 
 /**
  * Jaccard de tokens entre dois textos. Tokens com 3+ caracteres (artigos e
- * preposições curtas só somam ruído), sem acento-folding: reformulação real
- * varia palavra, não acento.
+ * preposiÃ§Ãµes curtas sÃ³ somam ruÃ­do), sem acento-folding: reformulaÃ§Ã£o real
+ * varia palavra, nÃ£o acento.
  */
 create or replace function public.fn_atrito_jaccard(a text, b text)
 returns float8
@@ -10290,15 +10290,15 @@ create table if not exists public.demandas (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
-  -- SOLICITANTE: quem tem o problema (não necessariamente quem escreveu).
+  -- SOLICITANTE: quem tem o problema (nÃ£o necessariamente quem escreveu).
   contact_id uuid not null references public.contacts(id) on delete cascade,
-  -- Vínculo com o negócio, quando houver. Uma demanda de suporte não tem lead,
-  -- e isso é desfecho legítimo — não pendência.
+  -- VÃ­nculo com o negÃ³cio, quando houver. Uma demanda de suporte nÃ£o tem lead,
+  -- e isso Ã© desfecho legÃ­timo â€” nÃ£o pendÃªncia.
   lead_id uuid references public.crm_leads(id) on delete set null,
 
   -- Ponteiro para o caso de escalada que originou a demanda, quando houve.
-  -- Sem ele, as métricas de toque humano (que vivem em `agent_case_events`)
-  -- perderiam a ligação com a demanda ao trocar o denominador do índice.
+  -- Sem ele, as mÃ©tricas de toque humano (que vivem em `agent_case_events`)
+  -- perderiam a ligaÃ§Ã£o com a demanda ao trocar o denominador do Ã­ndice.
   agent_case_id uuid references public.agent_cases(id) on delete set null,
 
   aberta_em timestamptz not null default now(),
@@ -10309,24 +10309,24 @@ create table if not exists public.demandas (
   estado text not null default 'aberta'
     check (estado in ('aberta', 'em_atendimento', 'aguardando_cliente', 'resolvida', 'encerrada')),
 
-  -- DONO NUNCA VAZIO (cap. 5 §5.3). Demanda sem dono é a definição operacional
-  -- de "vai morrer". Se ninguém assumiu, o dono é a automação — e isso é uma
-  -- decisão registrada, não um vazio que ninguém nota.
+  -- DONO NUNCA VAZIO (cap. 5 Â§5.3). Demanda sem dono Ã© a definiÃ§Ã£o operacional
+  -- de "vai morrer". Se ninguÃ©m assumiu, o dono Ã© a automaÃ§Ã£o â€” e isso Ã© uma
+  -- decisÃ£o registrada, nÃ£o um vazio que ninguÃ©m nota.
   dono_kind text not null default 'ia' check (dono_kind in ('ia', 'humano')),
   dono_user_id uuid references auth.users(id) on delete set null,
 
-  -- PRÓXIMO PASSO é CAMPO, não derivação (cap. 5 §5.3): derivado, ele
-  -- desapareceria nos casos em que a derivação falha — que são exatamente os
-  -- casos em que ele importa. É aqui que o invariante 4 vira verificável.
+  -- PRÃ“XIMO PASSO Ã© CAMPO, nÃ£o derivaÃ§Ã£o (cap. 5 Â§5.3): derivado, ele
+  -- desapareceria nos casos em que a derivaÃ§Ã£o falha â€” que sÃ£o exatamente os
+  -- casos em que ele importa. Ã‰ aqui que o invariante 4 vira verificÃ¡vel.
   proximo_passo text,
   proximo_passo_em timestamptz,
   prazo_em timestamptz,
 
-  -- Desfecho ENUMERADO e terminal. Inclui os que não são vitória: o sistema não
-  -- pode ser o único a decidir que uma demanda acabou, senão fecharia por
-  -- conveniência (encerrar por inatividade melhora todo número sem melhorar
-  -- nada). `expirada_sem_resposta` é desfecho legítimo e RUIM — contável e
-  -- vigiado; organização onde ele é zero está mal instrumentada, não saudável.
+  -- Desfecho ENUMERADO e terminal. Inclui os que nÃ£o sÃ£o vitÃ³ria: o sistema nÃ£o
+  -- pode ser o Ãºnico a decidir que uma demanda acabou, senÃ£o fecharia por
+  -- conveniÃªncia (encerrar por inatividade melhora todo nÃºmero sem melhorar
+  -- nada). `expirada_sem_resposta` Ã© desfecho legÃ­timo e RUIM â€” contÃ¡vel e
+  -- vigiado; organizaÃ§Ã£o onde ele Ã© zero estÃ¡ mal instrumentada, nÃ£o saudÃ¡vel.
   desfecho text check (desfecho in (
     'resolvida', 'convertida', 'nao_procede',
     'encerrada_pelo_cliente', 'perdida', 'expirada_sem_resposta'
@@ -10336,19 +10336,19 @@ create table if not exists public.demandas (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  -- Desfecho e fechamento andam juntos: um sem o outro é linha meio-fechada,
+  -- Desfecho e fechamento andam juntos: um sem o outro Ã© linha meio-fechada,
   -- que nenhuma consulta de "abertas" nem de "encerradas" pegaria.
   constraint demandas_desfecho_coerente
     check ((desfecho is null) = (fechada_em is null)),
   -- Dono humano exige QUEM. `dono_kind='humano'` com user nulo seria dono vazio
-  -- com aparência de dono preenchido.
+  -- com aparÃªncia de dono preenchido.
   constraint demandas_dono_humano_tem_user
     check (dono_kind <> 'humano' or dono_user_id is not null)
 );
 
--- Uma demanda atravessa VÁRIOS canais e uma conversa carrega VÁRIAS demandas
--- (cap. 5 §5.4). Resistir a este muitos-para-muitos é a fonte de metade dos
--- problemas de modelagem neste domínio: um-para-um obriga a escolher entre
+-- Uma demanda atravessa VÃRIOS canais e uma conversa carrega VÃRIAS demandas
+-- (cap. 5 Â§5.4). Resistir a este muitos-para-muitos Ã© a fonte de metade dos
+-- problemas de modelagem neste domÃ­nio: um-para-um obriga a escolher entre
 -- perder o problema que muda de canal e perder o segundo problema da conversa.
 create table if not exists public.demanda_conversas (
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -10369,8 +10369,8 @@ create index if not exists idx_demandas_caso
   where agent_case_id is not null;
 create index if not exists idx_demandas_contato
   on public.demandas (organization_id, contact_id);
--- O invariante 4 em forma de índice: demanda aberta SEM próximo passo é o
--- vazamento que a doutrina proíbe, e precisa ser barato de enumerar.
+-- O invariante 4 em forma de Ã­ndice: demanda aberta SEM prÃ³ximo passo Ã© o
+-- vazamento que a doutrina proÃ­be, e precisa ser barato de enumerar.
 create index if not exists idx_demandas_sem_proximo_passo
   on public.demandas (organization_id, aberta_em)
   where fechada_em is null and proximo_passo is null;
@@ -10393,22 +10393,22 @@ create policy tenant_isolation_demanda_conversas_all on public.demanda_conversas
   with check (organization_id in (select * from public.fn_user_org_ids()));
 
 -- ---------------------------------------------------------------------------
--- Passo 2 de 4: derivar o passado por REGRA EXPLÍCITA, nunca por adivinhação.
+-- Passo 2 de 4: derivar o passado por REGRA EXPLÃCITA, nunca por adivinhaÃ§Ã£o.
 --
--- A regra fica escrita porque histórico derivado por regra é honesto e
--- histórico derivado por heurística contamina toda comparação futura — e
--- ninguém vai lembrar disso daqui a seis meses, comparando dois trimestres.
+-- A regra fica escrita porque histÃ³rico derivado por regra Ã© honesto e
+-- histÃ³rico derivado por heurÃ­stica contamina toda comparaÃ§Ã£o futura â€” e
+-- ninguÃ©m vai lembrar disso daqui a seis meses, comparando dois trimestres.
 --
 --   R1. Todo `agent_cases` vira uma demanda (origem 'handoff'). O mapeamento de
---       status é 1:1 e sem interpretação.
+--       status Ã© 1:1 e sem interpretaÃ§Ã£o.
 --   R2. Toda conversa SEM agent_case vira uma demanda (origem 'derivada'),
---       porque houve uma pessoa com um assunto ali. `assunto` fica NULO — não
+--       porque houve uma pessoa com um assunto ali. `assunto` fica NULO â€” nÃ£o
 --       inventamos o que a conversa tratava.
 --
--- Idempotente por `where not exists`: re-aplicar não duplica.
+-- Idempotente por `where not exists`: re-aplicar nÃ£o duplica.
 -- ---------------------------------------------------------------------------
 
--- R1 — a partir dos casos de escalada.
+-- R1 â€” a partir dos casos de escalada.
 insert into public.demandas
   (organization_id, contact_id, lead_id, agent_case_id, aberta_em, origem, assunto,
    estado, dono_kind, desfecho, fechada_em)
@@ -10445,7 +10445,7 @@ select
       and d.aberta_em = c.opened_at
  );
 
--- Vínculo N:N das demandas derivadas de caso.
+-- VÃ­nculo N:N das demandas derivadas de caso.
 insert into public.demanda_conversas (organization_id, demanda_id, conversation_id)
 select d.organization_id, d.id, c.conversation_id
   from public.demandas d
@@ -10456,7 +10456,7 @@ select d.organization_id, d.id, c.conversation_id
       where dc.demanda_id = d.id and dc.conversation_id = c.conversation_id
    );
 
--- R2 — conversas que nunca escalaram também são demandas.
+-- R2 â€” conversas que nunca escalaram tambÃ©m sÃ£o demandas.
 insert into public.demandas
   (organization_id, contact_id, aberta_em, origem, estado, dono_kind, desfecho, fechada_em)
 select
@@ -10494,9 +10494,9 @@ select d.organization_id, d.id, cv.id
    );
 
 comment on table public.demandas is
-  'A unidade do PROPÓSITO (doutrina cap. 5): uma coisa a ser resolvida. '
-  'Contato é quem pede; conversa é por onde se fala; demanda é o que precisa '
-  'acabar. Dono nunca vazio; próximo passo é campo, não derivação.';
+  'A unidade do PROPÃ“SITO (doutrina cap. 5): uma coisa a ser resolvida. '
+  'Contato Ã© quem pede; conversa Ã© por onde se fala; demanda Ã© o que precisa '
+  'acabar. Dono nunca vazio; prÃ³ximo passo Ã© campo, nÃ£o derivaÃ§Ã£o.';
 
 
 drop function if exists public.fn_atrito_metrics(uuid, timestamptz, timestamptz, int, float8, int);
@@ -10513,7 +10513,7 @@ language sql stable
 set search_path = public
 as $$
   with
-  -- DENOMINADOR DEFINITIVO: demandas encerradas na janela. Não mais os casos.
+  -- DENOMINADOR DEFINITIVO: demandas encerradas na janela. NÃ£o mais os casos.
   demandas_j as (
     select d.id, d.agent_case_id, d.aberta_em, d.fechada_em, d.desfecho
       from public.demandas d
@@ -10536,8 +10536,8 @@ as $$
              where dc.demanda_id = d.id) as n
       from demandas_j d
   ),
-  -- Insistência: só existe onde houve caso. O payload declara o denominador
-  -- próprio (`demandas_com_caso`) para o número não ser lido como se fosse
+  -- InsistÃªncia: sÃ³ existe onde houve caso. O payload declara o denominador
+  -- prÃ³prio (`demandas_com_caso`) para o nÃºmero nÃ£o ser lido como se fosse
   -- sobre o total.
   insistencia as (
     select avg(c.followup_attempts)::float8 as media,
@@ -10579,8 +10579,8 @@ as $$
       from public.conversations cv
      where cv.organization_id = p_org and cv.last_outbound_at is not null
   ),
-  -- INVARIANTE 4, agora VERIFICÁVEL: demanda aberta sem próximo passo é o
-  -- vazamento que a doutrina proíbe. Antes da 0119 isto não era enumerável.
+  -- INVARIANTE 4, agora VERIFICÃVEL: demanda aberta sem prÃ³ximo passo Ã© o
+  -- vazamento que a doutrina proÃ­be. Antes da 0119 isto nÃ£o era enumerÃ¡vel.
   sem_proximo_passo as (
     select count(*) as n
       from public.demandas d
@@ -10674,7 +10674,7 @@ as $$
       'abandono_horas', p_abandono_horas,
       'repeticao_min',  p_repeticao_min,
       'espera_horas',   p_espera_horas,
-      -- Marca a régua do denominador: quem comparar dois períodos precisa saber
+      -- Marca a rÃ©gua do denominador: quem comparar dois perÃ­odos precisa saber
       -- se foram medidos sobre casos ou sobre demandas.
       'denominador', 'demandas'
     ),
@@ -10704,8 +10704,8 @@ as $$
       'envios_por_ia',            (select por_ia                from envios),
       'envios_humano_no_sistema', (select por_humano_no_sistema from envios),
       'envios_humano_fora',       (select por_humano_fora       from envios),
-      -- O invariante 4 vira NÚMERO na tela: demanda aberta sem próximo passo é
-      -- vazamento, e vazamento invisível é o que a doutrina inteira combate.
+      -- O invariante 4 vira NÃšMERO na tela: demanda aberta sem prÃ³ximo passo Ã©
+      -- vazamento, e vazamento invisÃ­vel Ã© o que a doutrina inteira combate.
       'demandas_sem_proximo_passo', (select n from sem_proximo_passo)
     ),
     'eficiencia', jsonb_build_object(
@@ -10725,9 +10725,9 @@ grant  execute on function public.fn_atrito_metrics(uuid, timestamptz, timestamp
 
 
 -- ---- demanda nasce no ponto de entrada (migration 0138) ----
--- Sem isto `demandas` só teria o passado derivado: peça que só recebe é ilha
--- pelo invariante 1. Trigger SQL puro, sem I/O externo — a proibição da
--- doutrina é HTTP dentro da transação, e `trg_messages_emit_event` já usa este
+-- Sem isto `demandas` sÃ³ teria o passado derivado: peÃ§a que sÃ³ recebe Ã© ilha
+-- pelo invariante 1. Trigger SQL puro, sem I/O externo â€” a proibiÃ§Ã£o da
+-- doutrina Ã© HTTP dentro da transaÃ§Ã£o, e `trg_messages_emit_event` jÃ¡ usa este
 -- mesmo mecanismo nesta mesma tabela.
 
 create or replace function public.fn_demanda_abre_no_inbound()
@@ -10759,8 +10759,8 @@ begin
     returning id into v_demanda;
   end if;
 
-  -- O vínculo é por conversa: a mesma demanda acumula os canais por onde a
-  -- pessoa falou (cap. 5 §5.4). `on conflict do nothing` porque a chave é o par.
+  -- O vÃ­nculo Ã© por conversa: a mesma demanda acumula os canais por onde a
+  -- pessoa falou (cap. 5 Â§5.4). `on conflict do nothing` porque a chave Ã© o par.
   insert into public.demanda_conversas (organization_id, demanda_id, conversation_id)
   values (new.organization_id, v_demanda, new.conversation_id)
   on conflict do nothing;
@@ -10770,9 +10770,9 @@ end;
 $$;
 
 -- SECURITY DEFINER porque o trigger roda no INSERT do webhook (service role) e
--- também no de sessão; sem definer, a RLS de `demandas` recusaria a escrita em
+-- tambÃ©m no de sessÃ£o; sem definer, a RLS de `demandas` recusaria a escrita em
 -- um dos caminhos e a demanda sumiria justamente na entrada real. O
--- organization_id vem SEMPRE de `new`, nunca de parâmetro — não há superfície
+-- organization_id vem SEMPRE de `new`, nunca de parÃ¢metro â€” nÃ£o hÃ¡ superfÃ­cie
 -- para escolher org alheia.
 revoke all     on function public.fn_demanda_abre_no_inbound() from public;
 revoke execute on function public.fn_demanda_abre_no_inbound() from anon, authenticated;
@@ -10783,8 +10783,8 @@ create trigger trg_demanda_abre_no_inbound
   for each row execute function public.fn_demanda_abre_no_inbound();
 
 -- ---------------------------------------------------------------------------
--- Fechamento. Sem ele a demanda nunca termina e o denominador do índice (que
--- conta FECHADAS) ficaria vazio para sempre — a métrica morreria em silêncio no
+-- Fechamento. Sem ele a demanda nunca termina e o denominador do Ã­ndice (que
+-- conta FECHADAS) ficaria vazio para sempre â€” a mÃ©trica morreria em silÃªncio no
 -- exato momento em que a entidade passou a crescer.
 -- ---------------------------------------------------------------------------
 
@@ -10810,8 +10810,8 @@ begin
        select 1 from public.demanda_conversas dc
         where dc.demanda_id = d.id and dc.conversation_id = new.id
      )
-     -- Só fecha se TODAS as conversas da demanda estiverem encerradas: uma
-     -- demanda que atravessou dois canais não acabou porque um deles fechou.
+     -- SÃ³ fecha se TODAS as conversas da demanda estiverem encerradas: uma
+     -- demanda que atravessou dois canais nÃ£o acabou porque um deles fechou.
      and not exists (
        select 1
          from public.demanda_conversas dc2
@@ -10837,92 +10837,92 @@ create trigger trg_demanda_fecha_com_conversa
 notify pgrst, 'reload schema';
 
 -- ---- lead_checkpoints.declaracao: a fronteira FALAR/OPERAR (migration 0110) ----
--- Spec 16 §5. NULLABLE de propósito: NULL = o modelo não declarou;
--- {"nada_a_declarar":true} = avaliou e não havia nada. Colapsar os dois num
--- default apagaria o esquecimento, que é o que o invariante 4 manda mostrar.
+-- Spec 16 Â§5. NULLABLE de propÃ³sito: NULL = o modelo nÃ£o declarou;
+-- {"nada_a_declarar":true} = avaliou e nÃ£o havia nada. Colapsar os dois num
+-- default apagaria o esquecimento, que Ã© o que o invariante 4 manda mostrar.
 alter table lead_checkpoints
   add column if not exists declaracao jsonb;
 
 comment on column lead_checkpoints.declaracao is
-  'Declaração do turno (spec 16 §5): {intencoes[], promessas[], nada_a_declarar}. '
-  'NULL = o modelo não declarou; {"nada_a_declarar":true} = avaliou e não havia nada. '
-  'Os dois estados são distintos por desenho.';
+  'DeclaraÃ§Ã£o do turno (spec 16 Â§5): {intencoes[], promessas[], nada_a_declarar}. '
+  'NULL = o modelo nÃ£o declarou; {"nada_a_declarar":true} = avaliou e nÃ£o havia nada. '
+  'Os dois estados sÃ£o distintos por desenho.';
 
 notify pgrst, 'reload schema';
 
--- ---- turno do OPERADOR: config por versão (migration 0111) ----
--- Spec 16 §3.2. O papel que mexe no sistema e nunca fala com o lead; disparo
+-- ---- turno do OPERADOR: config por versÃ£o (migration 0111) ----
+-- Spec 16 Â§3.2. O papel que mexe no sistema e nunca fala com o lead; disparo
 -- imposto pelo runtime, por evento.
 --
--- Os DOIS CHECKs de `job_queue` (kind + coerência kind⇔contato) NÃO estão aqui:
--- eles vivem no bloco único lá em cima, já com 'operator_turn'. Reconstruí-los
+-- Os DOIS CHECKs de `job_queue` (kind + coerÃªncia kindâ‡”contato) NÃƒO estÃ£o aqui:
+-- eles vivem no bloco Ãºnico lÃ¡ em cima, jÃ¡ com 'operator_turn'. ReconstruÃ­-los
 -- aqui criaria o segundo bloco que quebra o update.sh do clone.
 alter table ai_agent_versions
   add column if not exists operator_enabled boolean not null default false;
 alter table ai_agent_versions
   add column if not exists operator_model text;
 
--- (migration 0112) Ferramentas do papel Operador — coluna PRÓPRIA, não reuso de
--- `tool_ids`: se os dois papéis lessem a mesma lista, a seção "Operador" da tela
+-- (migration 0112) Ferramentas do papel Operador â€” coluna PRÃ“PRIA, nÃ£o reuso de
+-- `tool_ids`: se os dois papÃ©is lessem a mesma lista, a seÃ§Ã£o "Operador" da tela
 -- estaria configurando o que o Conversador executa. Default vazio: o papel nasce
--- sem mão, e herdar as do Conversador em silêncio daria 20 capacidades a quem
--- não escolheu nenhuma.
+-- sem mÃ£o, e herdar as do Conversador em silÃªncio daria 20 capacidades a quem
+-- nÃ£o escolheu nenhuma.
 alter table ai_agent_versions
   add column if not exists operator_tool_ids text[] not null default '{}'::text[];
 
 comment on column ai_agent_versions.operator_tool_ids is
-  'Spec 16 §6: capacidades do papel Operador, independentes de `tool_ids` (do '
-  'Conversador). Vazio = o papel roda mas não tem mão — estado legítimo: ele '
+  'Spec 16 Â§6: capacidades do papel Operador, independentes de `tool_ids` (do '
+  'Conversador). Vazio = o papel roda mas nÃ£o tem mÃ£o â€” estado legÃ­timo: ele '
   'ainda registra promessa em aberto na Central.';
 
 comment on column ai_agent_versions.operator_enabled is
-  'Spec 16 §3.2: o papel Operador roda após o turno do Conversador. false = o '
-  'registro básico segue por código determinístico (estado, follow-up prometido, '
-  'timeline); o que se perde é o julgamento sobre as capacidades do catálogo.';
+  'Spec 16 Â§3.2: o papel Operador roda apÃ³s o turno do Conversador. false = o '
+  'registro bÃ¡sico segue por cÃ³digo determinÃ­stico (estado, follow-up prometido, '
+  'timeline); o que se perde Ã© o julgamento sobre as capacidades do catÃ¡logo.';
 comment on column ai_agent_versions.operator_model is
   'Modelo do papel Operador. NULL = herda o modelo do agente.';
 
 notify pgrst, 'reload schema';
--- 0115 — duas entidades que não se conseguia apagar.
+-- 0115 â€” duas entidades que nÃ£o se conseguia apagar.
 --
--- Achados ao remover as fixtures de E2E da produção em 2026-08-06. Os dois são
--- da mesma família: uma escrita AUTOMÁTICA (trigger/FK) reagindo ao DELETE e
--- violando uma regra que vale para o estado normal, mas não para a remoção.
+-- Achados ao remover as fixtures de E2E da produÃ§Ã£o em 2026-08-06. Os dois sÃ£o
+-- da mesma famÃ­lia: uma escrita AUTOMÃTICA (trigger/FK) reagindo ao DELETE e
+-- violando uma regra que vale para o estado normal, mas nÃ£o para a remoÃ§Ã£o.
 --
--- ═══ DEFEITO 1 · não era possível apagar uma ORGANIZAÇÃO ═══
+-- â•â•â• DEFEITO 1 Â· nÃ£o era possÃ­vel apagar uma ORGANIZAÃ‡ÃƒO â•â•â•
 --
 --   ERROR: insert or update on table "api_audit_log" violates foreign key
 --          constraint "api_audit_log_organization_id_fkey"
---   DETAIL: Key (organization_id)=(…) is not present in table "organizations".
+--   DETAIL: Key (organization_id)=(â€¦) is not present in table "organizations".
 --
 -- O cascade apaga os filhos, o trigger de audit de cada um insere em
--- `api_audit_log` com o `organization_id` — e a organização já não existe. Só
--- funcionava apagando os filhos à mão ANTES, com o pai vivo.
+-- `api_audit_log` com o `organization_id` â€” e a organizaÃ§Ã£o jÃ¡ nÃ£o existe. SÃ³
+-- funcionava apagando os filhos Ã  mÃ£o ANTES, com o pai vivo.
 --
--- Conserto: no DELETE, o audit é pulado quando a organização já não existe. Não
+-- Conserto: no DELETE, o audit Ã© pulado quando a organizaÃ§Ã£o jÃ¡ nÃ£o existe. NÃ£o
 -- se perde auditoria: a linha que ele escreveria seria apagada pelo cascade da
--- própria organização um instante depois. E a checagem fica SÓ no ramo DELETE —
--- pôr um `exists` no INSERT/UPDATE cobraria um SELECT em todo hot path de
--- escrita para proteger de um caso que não acontece lá.
+-- prÃ³pria organizaÃ§Ã£o um instante depois. E a checagem fica SÃ“ no ramo DELETE â€”
+-- pÃ´r um `exists` no INSERT/UPDATE cobraria um SELECT em todo hot path de
+-- escrita para proteger de um caso que nÃ£o acontece lÃ¡.
 --
--- ═══ DEFEITO 2 · não era possível apagar um AGENTE que já atendeu ═══
+-- â•â•â• DEFEITO 2 Â· nÃ£o era possÃ­vel apagar um AGENTE que jÃ¡ atendeu â•â•â•
 --
 --   ERROR: new row for relation "crm_leads" violates check constraint
 --          "crm_leads_owner_kind_coherence"
 --
--- `crm_leads_owner_agent_id_fkey` é ON DELETE SET NULL; o CHECK exige
+-- `crm_leads_owner_agent_id_fkey` Ã© ON DELETE SET NULL; o CHECK exige
 -- `owner_agent_id not null` quando `owner_kind = 'ai'`. O SET NULL zera um lado
--- e deixa o outro — estado que a constraint proíbe, com razão.
+-- e deixa o outro â€” estado que a constraint proÃ­be, com razÃ£o.
 --
--- Conserto: um BEFORE DELETE em `ai_agents` desfaz a atribuição INTEIRA (os dois
+-- Conserto: um BEFORE DELETE em `ai_agents` desfaz a atribuiÃ§Ã£o INTEIRA (os dois
 -- campos), antes de a FK agir. O lead fica sem dono (`owner_kind is null`, que o
--- CHECK aceita) em vez de ficar num estado meio-atribuído.
+-- CHECK aceita) em vez de ficar num estado meio-atribuÃ­do.
 --
--- Não se enfraquece o CHECK para tolerar `'ai'` sem agente: ele descreve um
--- invariante verdadeiro, e afrouxá-lo para acomodar uma operação rara trocaria
--- um erro barulhento por dados incoerentes em silêncio.
+-- NÃ£o se enfraquece o CHECK para tolerar `'ai'` sem agente: ele descreve um
+-- invariante verdadeiro, e afrouxÃ¡-lo para acomodar uma operaÃ§Ã£o rara trocaria
+-- um erro barulhento por dados incoerentes em silÃªncio.
 
--- ── 1 · o audit não persegue uma organização que está sendo removida ────────
+-- â”€â”€ 1 Â· o audit nÃ£o persegue uma organizaÃ§Ã£o que estÃ¡ sendo removida â”€â”€â”€â”€â”€â”€â”€â”€
 create or replace function public.fn_audit_log_row() returns trigger
     language plpgsql security definer
     set search_path to 'public'
@@ -10941,13 +10941,13 @@ begin
     v_action := tg_table_name || '.deleted';
     v_org    := old.organization_id;
 
-    -- A organização está indo embora (cascade em curso). Registrar a exclusão
-    -- de um filho num tenant que deixa de existir não tem consumidor: a linha
-    -- seria apagada pelo cascade em seguida — e tentar escrevê-la aborta a
-    -- transação inteira, que era o defeito.
+    -- A organizaÃ§Ã£o estÃ¡ indo embora (cascade em curso). Registrar a exclusÃ£o
+    -- de um filho num tenant que deixa de existir nÃ£o tem consumidor: a linha
+    -- seria apagada pelo cascade em seguida â€” e tentar escrevÃª-la aborta a
+    -- transaÃ§Ã£o inteira, que era o defeito.
     --
-    -- SÓ no ramo DELETE: um `exists` no INSERT/UPDATE cobraria um SELECT em
-    -- todo hot path de escrita para cobrir um caso que não ocorre lá.
+    -- SÃ“ no ramo DELETE: um `exists` no INSERT/UPDATE cobraria um SELECT em
+    -- todo hot path de escrita para cobrir um caso que nÃ£o ocorre lÃ¡.
     if v_org is not null and not exists (select 1 from public.organizations where id = v_org) then
       return old;
     end if;
@@ -10969,15 +10969,15 @@ begin
   return coalesce(new, old);
 end $$;
 
--- ── 2 · apagar um agente desfaz a atribuição inteira, não metade dela ───────
+-- â”€â”€ 2 Â· apagar um agente desfaz a atribuiÃ§Ã£o inteira, nÃ£o metade dela â”€â”€â”€â”€â”€â”€â”€
 create or replace function public.fn_liberar_leads_do_agente() returns trigger
     language plpgsql security definer
     set search_path to 'public'
     as $$
 begin
   -- ANTES de a FK aplicar seu SET NULL. Zera os DOIS campos: deixar
-  -- `owner_kind = 'ai'` com o agente nulo é exatamente o estado que
-  -- `crm_leads_owner_kind_coherence` proíbe.
+  -- `owner_kind = 'ai'` com o agente nulo Ã© exatamente o estado que
+  -- `crm_leads_owner_kind_coherence` proÃ­be.
   update public.crm_leads
      set owner_agent_id = null,
          owner_kind     = null
@@ -10985,15 +10985,15 @@ begin
   return old;
 end $$;
 
--- As TRÊS origens de EXECUTE (CLAUDE.md, doutrina de migrations):
---   `public`      — o grant que o Postgres dá a toda função ao criá-la;
---   `anon`        — o ALTER DEFAULT PRIVILEGES do baseline, que alcança toda
---                   função criada depois dele;
---   `authenticated` — idem, e é o que a varredura de hardening cobra.
+-- As TRÃŠS origens de EXECUTE (CLAUDE.md, doutrina de migrations):
+--   `public`      â€” o grant que o Postgres dÃ¡ a toda funÃ§Ã£o ao criÃ¡-la;
+--   `anon`        â€” o ALTER DEFAULT PRIVILEGES do baseline, que alcanÃ§a toda
+--                   funÃ§Ã£o criada depois dele;
+--   `authenticated` â€” idem, e Ã© o que a varredura de hardening cobra.
 --
--- Revogar de todas é seguro AQUI porque o único call site é o TRIGGER, e o
--- Postgres não exige EXECUTE do usuário para invocar função de trigger. Nenhuma
--- sessão chama esta função diretamente.
+-- Revogar de todas Ã© seguro AQUI porque o Ãºnico call site Ã© o TRIGGER, e o
+-- Postgres nÃ£o exige EXECUTE do usuÃ¡rio para invocar funÃ§Ã£o de trigger. Nenhuma
+-- sessÃ£o chama esta funÃ§Ã£o diretamente.
 revoke execute on function public.fn_liberar_leads_do_agente() from public, anon, authenticated;
 grant  execute on function public.fn_liberar_leads_do_agente() to service_role;
 
@@ -11003,20 +11003,20 @@ create trigger trg_liberar_leads_do_agente
   for each row execute function public.fn_liberar_leads_do_agente();
 
 comment on function public.fn_liberar_leads_do_agente() is
-  'Migration 0115: desfaz a atribuição de leads antes de o agente ser apagado. '
+  'Migration 0115: desfaz a atribuiÃ§Ã£o de leads antes de o agente ser apagado. '
   'Sem isto o SET NULL da FK zera owner_agent_id e deixa owner_kind=''ai'', '
-  'violando crm_leads_owner_kind_coherence — e um agente que já atendeu alguém '
-  'não podia ser removido.';
+  'violando crm_leads_owner_kind_coherence â€” e um agente que jÃ¡ atendeu alguÃ©m '
+  'nÃ£o podia ser removido.';
 
 
 -- ---- ai_purpose_bindings: qual modelo cada ponto usa (migration 0126) ----
 -- Onde a escolha de modelo de cada ponto do sistema que usa IA passa a morar.
--- Uma linha por (organização, ponto); ausência de linha = comportamento
--- anterior preservado, então re-aplicar num clone não muda o funcionamento de
--- nada. `provider` sem CHECK de propósito: é vocabulário aberto (os três CHECKs
--- de provider que já existem são o que trava a entrada da OpenRouter, e um
--- quarto repetiria o erro). `base_url` nasce para endpoint compatível com a API
--- da OpenAI — OpenRouter hoje, modelo local depois.
+-- Uma linha por (organizaÃ§Ã£o, ponto); ausÃªncia de linha = comportamento
+-- anterior preservado, entÃ£o re-aplicar num clone nÃ£o muda o funcionamento de
+-- nada. `provider` sem CHECK de propÃ³sito: Ã© vocabulÃ¡rio aberto (os trÃªs CHECKs
+-- de provider que jÃ¡ existem sÃ£o o que trava a entrada da OpenRouter, e um
+-- quarto repetiria o erro). `base_url` nasce para endpoint compatÃ­vel com a API
+-- da OpenAI â€” OpenRouter hoje, modelo local depois.
 create table if not exists public.ai_purpose_bindings (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -11030,10 +11030,10 @@ create table if not exists public.ai_purpose_bindings (
   updated_at timestamptz not null default now()
 );
 
--- Deduplicar ANTES da constraint: um clone que tenha rodado uma versão
--- intermediária desta frente pode ter duas linhas para o mesmo ponto, e aí o
--- update.sh (que roda SEM ON_ERROR_STOP) morreria aqui em silêncio. Fica a
--- mais recente, que é a última escolha do operador.
+-- Deduplicar ANTES da constraint: um clone que tenha rodado uma versÃ£o
+-- intermediÃ¡ria desta frente pode ter duas linhas para o mesmo ponto, e aÃ­ o
+-- update.sh (que roda SEM ON_ERROR_STOP) morreria aqui em silÃªncio. Fica a
+-- mais recente, que Ã© a Ãºltima escolha do operador.
 delete from public.ai_purpose_bindings a
  using public.ai_purpose_bindings b
  where a.organization_id = b.organization_id
@@ -11060,12 +11060,12 @@ create index if not exists ai_purpose_bindings_credential_idx
   on public.ai_purpose_bindings (credential_id) where credential_id is not null;
 
 -- (migration 0141) A FK da credencial nasceu `on delete cascade`, e isso fazia
--- rotacionar uma chave — apagar a antiga, cadastrar a nova — APAGAR a linha
+-- rotacionar uma chave â€” apagar a antiga, cadastrar a nova â€” APAGAR a linha
 -- inteira do binding, levando junto provider, model_id e base_url. A tela
--- passava a dizer "Usando o padrão da organização", frase verdadeira sobre um
--- estado que ninguém escolheu. `set null` desvincula sem apagar: NULL já
--- significa "use a chave da instalação", que é como todo binding nasce.
--- Reescrita incondicional (drop + add) para o clone que já tem o CASCADE.
+-- passava a dizer "Usando o padrÃ£o da organizaÃ§Ã£o", frase verdadeira sobre um
+-- estado que ninguÃ©m escolheu. `set null` desvincula sem apagar: NULL jÃ¡
+-- significa "use a chave da instalaÃ§Ã£o", que Ã© como todo binding nasce.
+-- Reescrita incondicional (drop + add) para o clone que jÃ¡ tem o CASCADE.
 alter table public.ai_purpose_bindings
   drop constraint if exists ai_purpose_bindings_credential_id_fkey;
 alter table public.ai_purpose_bindings
@@ -11086,21 +11086,21 @@ create trigger ai_purpose_bindings_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.ai_purpose_bindings is
-  'Migration 0126: qual provedor/credencial/modelo cada ponto do sistema que usa IA deve usar, por organização. O catálogo dos pontos vive em lib/ai/pontos/registro.ts e o par é vigiado por tests/unit/pontos-de-ia-completude.test.ts.';
+  'Migration 0126: qual provedor/credencial/modelo cada ponto do sistema que usa IA deve usar, por organizaÃ§Ã£o. O catÃ¡logo dos pontos vive em lib/ai/pontos/registro.ts e o par Ã© vigiado por tests/unit/pontos-de-ia-completude.test.ts.';
 
 
 
--- ---- provider vira vocabulário aberto + catálogo sincronizável (migration 0127) ----
--- Os três CHECKs de provider travavam anthropic|openai|google, o que torna
--- impossível cadastrar uma chave da OpenRouter (ou de qualquer provedor novo, ou
--- de um modelo local) — o INSERT viola constraint antes de qualquer código rodar.
--- Vocabulário ABERTO por doutrina: quem recusa provider desconhecido é o registry,
--- com erro tipado, não uma constraint que faria o update.sh do clone quebrar.
+-- ---- provider vira vocabulÃ¡rio aberto + catÃ¡logo sincronizÃ¡vel (migration 0127) ----
+-- Os trÃªs CHECKs de provider travavam anthropic|openai|google, o que torna
+-- impossÃ­vel cadastrar uma chave da OpenRouter (ou de qualquer provedor novo, ou
+-- de um modelo local) â€” o INSERT viola constraint antes de qualquer cÃ³digo rodar.
+-- VocabulÃ¡rio ABERTO por doutrina: quem recusa provider desconhecido Ã© o registry,
+-- com erro tipado, nÃ£o uma constraint que faria o update.sh do clone quebrar.
 alter table public.ai_agent_versions       drop constraint if exists ai_agent_versions_provider_check;
 alter table public.ai_models               drop constraint if exists ai_models_provider_check;
 alter table public.ai_provider_credentials drop constraint if exists ai_provider_credentials_provider_check;
 
--- Aberto não é livre: string vazia seria linha que nenhum registry resolve e
+-- Aberto nÃ£o Ã© livre: string vazia seria linha que nenhum registry resolve e
 -- nenhuma tela exibe.
 do $$
 begin
@@ -11119,8 +11119,8 @@ alter table public.ai_models add column if not exists source text not null defau
 alter table public.ai_models add column if not exists synced_at timestamptz;
 alter table public.ai_models add column if not exists supports_vision boolean not null default false;
 
--- Deduplicar ANTES do índice único (o update.sh roda sem ON_ERROR_STOP: índice
--- que falha é pulado em silêncio e o upsert do sincronizador volta a duplicar).
+-- Deduplicar ANTES do Ã­ndice Ãºnico (o update.sh roda sem ON_ERROR_STOP: Ã­ndice
+-- que falha Ã© pulado em silÃªncio e o upsert do sincronizador volta a duplicar).
 delete from public.ai_models a
  using public.ai_models b
  where a.provider = b.provider
@@ -11137,19 +11137,19 @@ create unique index if not exists ai_models_provider_model_unique on public.ai_m
 create index if not exists ai_models_source_idx on public.ai_models (source) where deprecated_at is null;
 
 comment on column public.ai_models.source is
-  'Migration 0127: ''manual'' ou o nome do sincronizador (ex.: ''openrouter''). O sincronizador só mexe nas linhas da PRÓPRIA origem — apagar o que um humano cadastrou seria perder configuração sem aviso.';
+  'Migration 0127: ''manual'' ou o nome do sincronizador (ex.: ''openrouter''). O sincronizador sÃ³ mexe nas linhas da PRÃ“PRIA origem â€” apagar o que um humano cadastrou seria perder configuraÃ§Ã£o sem aviso.';
 comment on column public.ai_models.synced_at is
-  'Migration 0127: quando a origem confirmou este modelo pela última vez. Modelo que some recebe deprecated_at, nunca DELETE: a linha ainda é referenciada pelo histórico de custo.';
+  'Migration 0127: quando a origem confirmou este modelo pela Ãºltima vez. Modelo que some recebe deprecated_at, nunca DELETE: a linha ainda Ã© referenciada pelo histÃ³rico de custo.';
 
 
 
--- ---- llm_calls registra a FALHA, não só o sucesso (migration 0128) ----
--- A tabela gravava uma linha por chamada de modelo e só quando dava certo: o
+-- ---- llm_calls registra a FALHA, nÃ£o sÃ³ o sucesso (migration 0128) ----
+-- A tabela gravava uma linha por chamada de modelo e sÃ³ quando dava certo: o
 -- INSERT vivia depois do generateText, sem try em volta. Provedor recusando a
--- chave, modelo inexistente, conta sem saldo — a exceção subia e nada ficava
+-- chave, modelo inexistente, conta sem saldo â€” a exceÃ§Ã£o subia e nada ficava
 -- gravado. A tabela que deveria explicar era justamente a que ficava vazia no
--- caso que precisa de explicação, e é a causa direta de "o agente não responde
--- e não aparece erro em lugar nenhum".
+-- caso que precisa de explicaÃ§Ã£o, e Ã© a causa direta de "o agente nÃ£o responde
+-- e nÃ£o aparece erro em lugar nenhum".
 alter table public.llm_calls add column if not exists status text not null default 'ok';
 alter table public.llm_calls add column if not exists error_code text;
 alter table public.llm_calls add column if not exists error_message text;
@@ -11157,7 +11157,7 @@ alter table public.llm_calls add column if not exists http_status int;
 alter table public.llm_calls add column if not exists origem_da_escolha text;
 
 -- Corrigir os dados ANTES da constraint: o update.sh roda sem ON_ERROR_STOP, e
--- um CHECK que falhasse seria pulado em silêncio, deixando o clone sem guarda.
+-- um CHECK que falhasse seria pulado em silÃªncio, deixando o clone sem guarda.
 update public.llm_calls set status = 'ok' where status is null or status not in ('ok', 'erro');
 
 do $$
@@ -11173,7 +11173,7 @@ create index if not exists llm_calls_purpose_idx
   on public.llm_calls (organization_id, purpose, created_at desc);
 
 comment on column public.llm_calls.status is
-  'Migration 0128: ''ok'' | ''erro''. Antes desta migration a tabela só registrava sucesso.';
+  'Migration 0128: ''ok'' | ''erro''. Antes desta migration a tabela sÃ³ registrava sucesso.';
 comment on column public.llm_calls.error_message is
   'Migration 0128: texto do provedor, truncado. NUNCA prompt, resposta ou chave.';
 comment on column public.llm_calls.origem_da_escolha is
@@ -11184,10 +11184,10 @@ comment on column public.llm_calls.origem_da_escolha is
 
 
 
--- ---- uma tabela de telemetria de IA, não duas (migration 0130) ----
--- `agent_id` NÃO existia em llm_calls, e sem ele a unificação jogaria fora a
--- atribuição de custo por agente — junto com o filtro por agente da tela de uso,
--- que é como o operador descobre qual agente está consumindo a conta. Perder uma
+-- ---- uma tabela de telemetria de IA, nÃ£o duas (migration 0130) ----
+-- `agent_id` NÃƒO existia em llm_calls, e sem ele a unificaÃ§Ã£o jogaria fora a
+-- atribuiÃ§Ã£o de custo por agente â€” junto com o filtro por agente da tela de uso,
+-- que Ã© como o operador descobre qual agente estÃ¡ consumindo a conta. Perder uma
 -- capacidade em nome de unificar seria trocar um problema por outro.
 alter table public.llm_calls add column if not exists agent_id uuid
   references public.ai_agents(id) on delete set null;
@@ -11201,12 +11201,12 @@ create unique index if not exists llm_calls_legacy_invocation_unique
 
 comment on column public.llm_calls.legacy_invocation_id is
   'Migration 0130: id da linha de ai_invocations que originou esta. Existe para o backfill ser '
-  'idempotente — o update.sh re-aplica o baseline a cada atualização, e sem esta marca o custo '
-  'histórico cresceria sozinho a cada execução.';
+  'idempotente â€” o update.sh re-aplica o baseline a cada atualizaÃ§Ã£o, e sem esta marca o custo '
+  'histÃ³rico cresceria sozinho a cada execuÃ§Ã£o.';
 
--- O backfill. `on conflict do nothing` sobre o índice único faz a re-execução
--- ser inócua. `purpose` recebe o `invocation_kind` porque é o mesmo eixo com
--- nomes diferentes; o vocabulário de ambos já está no registro de pontos.
+-- O backfill. `on conflict do nothing` sobre o Ã­ndice Ãºnico faz a re-execuÃ§Ã£o
+-- ser inÃ³cua. `purpose` recebe o `invocation_kind` porque Ã© o mesmo eixo com
+-- nomes diferentes; o vocabulÃ¡rio de ambos jÃ¡ estÃ¡ no registro de pontos.
 insert into public.llm_calls (
   organization_id, agent_id, contact_id, job_id, purpose, provider, model,
   input_tokens, output_tokens, cost_cents, latency_ms, created_at,
@@ -11215,11 +11215,11 @@ insert into public.llm_calls (
 select
   i.organization_id,
   i.agent_id,
-  null,                       -- ai_invocations guarda conversation/message, não contato
+  null,                       -- ai_invocations guarda conversation/message, nÃ£o contato
   null,
   i.invocation_kind,
-  -- O provider não era guardado; deriva-se do prefixo do modelo, e quando não
-  -- dá para saber vai 'desconhecido' em vez de um chute que viraria estatística.
+  -- O provider nÃ£o era guardado; deriva-se do prefixo do modelo, e quando nÃ£o
+  -- dÃ¡ para saber vai 'desconhecido' em vez de um chute que viraria estatÃ­stica.
   case
     when i.model like 'anthropic/%' then 'anthropic'
     when i.model like 'openai/%'    then 'openai'
@@ -11245,25 +11245,25 @@ where not exists (
 on conflict do nothing;
 
 comment on table public.ai_invocations is
-  'DEPRECIADA na migration 0130 — a telemetria de IA vive em llm_calls. Mantida como histórico '
-  '(a doutrina do repo é depreciar, não deletar) e porque as linhas antigas são a prova do que foi '
+  'DEPRECIADA na migration 0130 â€” a telemetria de IA vive em llm_calls. Mantida como histÃ³rico '
+  '(a doutrina do repo Ã© depreciar, nÃ£o deletar) e porque as linhas antigas sÃ£o a prova do que foi '
   'gasto. Nada escreve mais aqui; leituras novas usam llm_calls.';
 
--- ---- o orçamento do mês não conta o backfill como gasto novo (migration 0140) ----
+-- ---- o orÃ§amento do mÃªs nÃ£o conta o backfill como gasto novo (migration 0140) ----
 --
--- Este bloco tem de vir DEPOIS do backfill da 0130, e é por isso que ele está
--- aqui e não junto do trigger da 0095. `fn_update_budget_consumption` soma
--- `NEW.cost_cents` sem olhar a data, e o backfill é um INSERT: cada linha
--- migrada — inclusive as de meses passados — era somada ao consumo do mês
--- corrente. Medido em pg17: gasto real do mês 1600, contador em 3000 depois de
--- um `update.sh` e estabilizando em 2600, nunca em 1600. Numa organização sem
--- gasto no mês, o contador saltava de 0 para o histórico inteiro — 200% do
--- limite padrão no caso medido — e a IA do clone podia parar sem nenhuma
+-- Este bloco tem de vir DEPOIS do backfill da 0130, e Ã© por isso que ele estÃ¡
+-- aqui e nÃ£o junto do trigger da 0095. `fn_update_budget_consumption` soma
+-- `NEW.cost_cents` sem olhar a data, e o backfill Ã© um INSERT: cada linha
+-- migrada â€” inclusive as de meses passados â€” era somada ao consumo do mÃªs
+-- corrente. Medido em pg17: gasto real do mÃªs 1600, contador em 3000 depois de
+-- um `update.sh` e estabilizando em 2600, nunca em 1600. Numa organizaÃ§Ã£o sem
+-- gasto no mÃªs, o contador saltava de 0 para o histÃ³rico inteiro â€” 200% do
+-- limite padrÃ£o no caso medido â€” e a IA do clone podia parar sem nenhuma
 -- chamada nova.
 --
--- A correção é dar a ÚLTIMA PALAVRA a um recomputo que ATRIBUI (não incrementa)
--- o gasto real do mês, contando cada linha uma vez só. Vale qualquer que tenha
--- sido o estado deixado pelo trigger, e a re-aplicação chega no mesmo número.
+-- A correÃ§Ã£o Ã© dar a ÃšLTIMA PALAVRA a um recomputo que ATRIBUI (nÃ£o incrementa)
+-- o gasto real do mÃªs, contando cada linha uma vez sÃ³. Vale qualquer que tenha
+-- sido o estado deixado pelo trigger, e a re-aplicaÃ§Ã£o chega no mesmo nÃºmero.
 -- Racional completo em supabase/migrations/20260808050000_0140_*.sql.
 insert into public.ai_budgets (organization_id, current_month_consumed_cents)
 select o.id,
@@ -11281,37 +11281,37 @@ on conflict (organization_id) do update
 set current_month_consumed_cents = excluded.current_month_consumed_cents,
     updated_at = now();
 -- ---- telefone do contato @lid (migration 0122) ----
--- O kit self-host aplica SÓ este arquivo — no install (banco novo, ON_ERROR_STOP)
--- e no update (banco existente, SEM a flag). Tudo abaixo é idempotente e
--- auto-curativo: a dedup por lid roda ANTES do índice único, senão o update.sh
+-- O kit self-host aplica SÃ“ este arquivo â€” no install (banco novo, ON_ERROR_STOP)
+-- e no update (banco existente, SEM a flag). Tudo abaixo Ã© idempotente e
+-- auto-curativo: a dedup por lid roda ANTES do Ã­ndice Ãºnico, senÃ£o o update.sh
 -- de um clone com contatos duplicados quebra no meio.
 --
 -- Racional medido em supabase/migrations/20260807060000_0122_telefone_do_lid.sql.
 -- Em uma linha: 76 de 76 payloads @lid trazem o telefone em
--- `_data.key.remoteJidAlt` e ninguém lia; e gravar esse telefone mudava a
+-- `_data.key.remoteJidAlt` e ninguÃ©m lia; e gravar esse telefone mudava a
 -- `wa_identity` GERADA, quebrava o reencontro pelo `on conflict` e duplicava o
--- contato — por isso a correlação passa a ter coluna própria (`wa_lid`).
+-- contato â€” por isso a correlaÃ§Ã£o passa a ter coluna prÃ³pria (`wa_lid`).
 
--- ---- 1 · wa_lid: a correlação que sobrevive ao telefone ----
--- Gerada, e não escrita à mão, pelo mesmo motivo de `wa_identity`: valor
--- derivado que alguém precisa lembrar de atualizar é valor que diverge. O
--- `nullif` no fim evita que contato sem lid vire string vazia e colida no índice
--- único com todos os outros contatos sem lid.
+-- ---- 1 Â· wa_lid: a correlaÃ§Ã£o que sobrevive ao telefone ----
+-- Gerada, e nÃ£o escrita Ã  mÃ£o, pelo mesmo motivo de `wa_identity`: valor
+-- derivado que alguÃ©m precisa lembrar de atualizar Ã© valor que diverge. O
+-- `nullif` no fim evita que contato sem lid vire string vazia e colida no Ã­ndice
+-- Ãºnico com todos os outros contatos sem lid.
 alter table public.contacts
   add column if not exists wa_lid text
   generated always as (
     nullif(regexp_replace(coalesce(source_metadata->>'waha_lid', ''), '@.*$', ''), '')
   ) stored;
 
--- ---- 2 · deduplicar ANTES da constraint (auto-curativo) ----
--- Um clone pode ter dois contatos com o mesmo lid — nasceram antes da 0027, ou
--- de uma janela em que o upsert ainda fazia check-then-act. Criar o índice único
--- sem tratar isso quebraria o `update.sh` do clone, que é exatamente o que a
--- doutrina de migrations proíbe.
+-- ---- 2 Â· deduplicar ANTES da constraint (auto-curativo) ----
+-- Um clone pode ter dois contatos com o mesmo lid â€” nasceram antes da 0027, ou
+-- de uma janela em que o upsert ainda fazia check-then-act. Criar o Ã­ndice Ãºnico
+-- sem tratar isso quebraria o `update.sh` do clone, que Ã© exatamente o que a
+-- doutrina de migrations proÃ­be.
 --
--- O sobrevivente é o mais ANTIGO (é dele o histórico); os outros são marcados
--- como fundidos e suas referências repontadas — mesma mecânica do bloco B1 da
--- 0027, que já existe no baseline.
+-- O sobrevivente Ã© o mais ANTIGO (Ã© dele o histÃ³rico); os outros sÃ£o marcados
+-- como fundidos e suas referÃªncias repontadas â€” mesma mecÃ¢nica do bloco B1 da
+-- 0027, que jÃ¡ existe no baseline.
 with ranked as (
   select id,
          first_value(id) over (
@@ -11340,17 +11340,17 @@ create unique index if not exists uniq_contacts_org_wa_lid
   on public.contacts (organization_id, wa_lid)
   where wa_lid is not null and is_merged_into is null;
 
--- ---- 3 · o upsert passa a reencontrar por LID, e a completar o que falta ----
--- A versão de 6 parâmetros tinha DOIS buracos, além do telefone:
---   (a) no conflito só mexia em `display_name`, com `coalesce(existente, novo)` —
+-- ---- 3 Â· o upsert passa a reencontrar por LID, e a completar o que falta ----
+-- A versÃ£o de 6 parÃ¢metros tinha DOIS buracos, alÃ©m do telefone:
+--   (a) no conflito sÃ³ mexia em `display_name`, com `coalesce(existente, novo)` â€”
 --       um nome ruim gravado uma vez congelava para sempre e nenhum dado
 --       descoberto depois entrava;
---   (b) casava só por `wa_identity`, então não reencontrava o contato cuja
+--   (b) casava sÃ³ por `wa_identity`, entÃ£o nÃ£o reencontrava o contato cuja
 --       identidade mudou.
 --
--- A regra nova é "completar, nunca sobrescrever": o que já está preenchido
--- vence, o que está vazio é preenchido. Assim um telefone descoberto no 5º
--- webhook entra, e um nome que o atendente corrigiu à mão não é desfeito pelo
+-- A regra nova Ã© "completar, nunca sobrescrever": o que jÃ¡ estÃ¡ preenchido
+-- vence, o que estÃ¡ vazio Ã© preenchido. Assim um telefone descoberto no 5Âº
+-- webhook entra, e um nome que o atendente corrigiu Ã  mÃ£o nÃ£o Ã© desfeito pelo
 -- pushName do WhatsApp.
 create or replace function public.fn_upsert_wa_contact(
   p_org uuid, p_kind text, p_phone text, p_lid text, p_chat_id text, p_notify text
@@ -11361,58 +11361,58 @@ declare
   v_lid text := nullif(regexp_replace(coalesce(p_lid, ''), '@.*$', ''), '');
   v_phone text := nullif(p_phone, '');
 begin
-  -- ⚠️ A ASSINATURA NÃO MUDA, e não é economia de digitação.
+  -- âš ï¸ A ASSINATURA NÃƒO MUDA, e nÃ£o Ã© economia de digitaÃ§Ã£o.
   --
-  -- A primeira versão desta migration acrescentava um 7º parâmetro
+  -- A primeira versÃ£o desta migration acrescentava um 7Âº parÃ¢metro
   -- (`p_phone_alt`) para o telefone vindo de `_data.key.remoteJidAlt`. Isso
-  -- criava uma função nova aos olhos do Postgres, obrigava a dropar a de 6 e
-  -- forçava a edição de DOIS invariantes de hardening que citam a assinatura —
-  -- que o hook do repo (com razão) congela.
+  -- criava uma funÃ§Ã£o nova aos olhos do Postgres, obrigava a dropar a de 6 e
+  -- forÃ§ava a ediÃ§Ã£o de DOIS invariantes de hardening que citam a assinatura â€”
+  -- que o hook do repo (com razÃ£o) congela.
   --
-  -- Quem sabe QUAL telefone usar é o chamador: `lib/waha/ingest.ts` já resolve o
-  -- chatId e agora também lê o `remoteJidAlt`. Ele manda um telefone só, em
-  -- `p_phone`. Menos superfície, mesma capacidade, e os grants existentes
-  -- continuam valendo — a catraca levou ao desenho menor.
+  -- Quem sabe QUAL telefone usar Ã© o chamador: `lib/waha/ingest.ts` jÃ¡ resolve o
+  -- chatId e agora tambÃ©m lÃª o `remoteJidAlt`. Ele manda um telefone sÃ³, em
+  -- `p_phone`. Menos superfÃ­cie, mesma capacidade, e os grants existentes
+  -- continuam valendo â€” a catraca levou ao desenho menor.
 
-  -- 1 · pela correlação do WhatsApp, que NÃO depende do telefone.
-  --     `wa_identity` é gerada com o telefone na frente do lid: um contato @lid
-  --     que ganha número passa a valer `phone:+Y` e o `on conflict` antigo
-  --     deixava de reencontrá-lo — nascia um contato por mensagem.
+  -- 1 Â· pela correlaÃ§Ã£o do WhatsApp, que NÃƒO depende do telefone.
+  --     `wa_identity` Ã© gerada com o telefone na frente do lid: um contato @lid
+  --     que ganha nÃºmero passa a valer `phone:+Y` e o `on conflict` antigo
+  --     deixava de reencontrÃ¡-lo â€” nascia um contato por mensagem.
   if v_lid is not null then
     select id into v_id from public.contacts
      where organization_id = p_org and wa_lid = v_lid and is_merged_into is null
      limit 1;
   end if;
 
-  -- 2 · pelo telefone — é aqui que a pessoa que já existia por número (import,
-  --     formulário, pedido) deixa de virar um segundo contato ao escrever no
-  --     WhatsApp. Sem este passo, descobrir o telefone criaria o gêmeo em vez de
-  --     evitá-lo.
+  -- 2 Â· pelo telefone â€” Ã© aqui que a pessoa que jÃ¡ existia por nÃºmero (import,
+  --     formulÃ¡rio, pedido) deixa de virar um segundo contato ao escrever no
+  --     WhatsApp. Sem este passo, descobrir o telefone criaria o gÃªmeo em vez de
+  --     evitÃ¡-lo.
   if v_id is null and v_phone is not null then
     select id into v_id from public.contacts
      where organization_id = p_org and phone_number = v_phone and is_merged_into is null
      limit 1;
   end if;
 
-  -- 3 · COMPLETA o que falta, nunca sobrescreve.
-  --     A versão anterior só mexia em `display_name` no conflito, com
+  -- 3 Â· COMPLETA o que falta, nunca sobrescreve.
+  --     A versÃ£o anterior sÃ³ mexia em `display_name` no conflito, com
   --     `coalesce(existente, novo)`: um nome ruim gravado uma vez congelava para
   --     sempre, e telefone ou lid descobertos depois NUNCA entravam.
-  -- O telefone descoberto só sobe para a coluna ÚNICA se ainda não for de outro
+  -- O telefone descoberto sÃ³ sobe para a coluna ÃšNICA se ainda nÃ£o for de outro
   -- contato vivo da org. Sem esta guarda o caso "contato @lid sem telefone + a
-  -- mesma pessoa já cadastrada por número" (import, pedido, formulário) estoura
-  -- `uniq_contacts_org_phone`; `lib/waha/ingest.ts:343` transforma a exceção em
-  -- `return null` e `:459` descarta a mensagem com o webhook respondendo 200 — a
+  -- mesma pessoa jÃ¡ cadastrada por nÃºmero" (import, pedido, formulÃ¡rio) estoura
+  -- `uniq_contacts_org_phone`; `lib/waha/ingest.ts:343` transforma a exceÃ§Ã£o em
+  -- `return null` e `:459` descarta a mensagem com o webhook respondendo 200 â€” a
   -- mensagem do cliente some, e some de novo a cada mensagem seguinte daquele
-  -- contato. Medido na triagem; não acontece na `main`, é regressão desta
-  -- migration. A etapa 2 (busca por telefone) não protege: ela só roda quando a
-  -- etapa 1 NÃO achou.
+  -- contato. Medido na triagem; nÃ£o acontece na `main`, Ã© regressÃ£o desta
+  -- migration. A etapa 2 (busca por telefone) nÃ£o protege: ela sÃ³ roda quando a
+  -- etapa 1 NÃƒO achou.
   --
-  -- Fundir os dois contatos seria o desfecho semanticamente certo — é a mesma
-  -- pessoa, e o `remoteJidAlt` é justamente quem afirma isso. Mas fusão é
-  -- IRREVERSÍVEL, e a regra do tempo da doutrina proíbe consumar irreversível no
-  -- tempo da máquina, dentro de um webhook. Aqui o dado não se perde: vai para
-  -- `source_metadata.telefone_em_conflito`, que não é único, e a decisão de
+  -- Fundir os dois contatos seria o desfecho semanticamente certo â€” Ã© a mesma
+  -- pessoa, e o `remoteJidAlt` Ã© justamente quem afirma isso. Mas fusÃ£o Ã©
+  -- IRREVERSÃVEL, e a regra do tempo da doutrina proÃ­be consumar irreversÃ­vel no
+  -- tempo da mÃ¡quina, dentro de um webhook. Aqui o dado nÃ£o se perde: vai para
+  -- `source_metadata.telefone_em_conflito`, que nÃ£o Ã© Ãºnico, e a decisÃ£o de
   -- fundir fica para quem opera.
   if v_id is not null and v_phone is not null and exists (
     select 1 from public.contacts
@@ -11447,35 +11447,35 @@ begin
   return v_id;
 end; $$;
 
--- Os grants da assinatura de 6 já existem desde a 0027 e continuam valendo — por
--- isso não há `drop function` aqui, e por isso os invariantes de hardening não
+-- Os grants da assinatura de 6 jÃ¡ existem desde a 0027 e continuam valendo â€” por
+-- isso nÃ£o hÃ¡ `drop function` aqui, e por isso os invariantes de hardening nÃ£o
 -- precisaram ser tocados.
 
--- ---- 4 · o rótulo técnico legado sai ----
--- Medido na produção: 3 linhas com `Contato 543134@lid` e `Contato 900928` —
--- duas formas, porque duas versões do código antigo os escreveram. Nenhum código
--- vivo produz isso hoje (o produtor morreu no commit c890b403); é resíduo, e o
--- passo seguinte da spec 17 vai LER o nome do contato para o título do card, o
--- que faria o resíduo vazar para o kanban.
+-- ---- 4 Â· o rÃ³tulo tÃ©cnico legado sai ----
+-- Medido na produÃ§Ã£o: 3 linhas com `Contato 543134@lid` e `Contato 900928` â€”
+-- duas formas, porque duas versÃµes do cÃ³digo antigo os escreveram. Nenhum cÃ³digo
+-- vivo produz isso hoje (o produtor morreu no commit c890b403); Ã© resÃ­duo, e o
+-- passo seguinte da spec 17 vai LER o nome do contato para o tÃ­tulo do card, o
+-- que faria o resÃ­duo vazar para o kanban.
 --
--- ⚠️ `and is_anonymized = false` NÃO é zelo: `Contato Anonimizado #<id>` também
--- começa com "Contato " e é gravado deliberadamente pela rota de LGPD. Sem esta
--- guarda, o backfill REVERTERIA anonimizações — violação direta da regra L-04,
--- cuja exceção é "Nenhuma".
+-- âš ï¸ `and is_anonymized = false` NÃƒO Ã© zelo: `Contato Anonimizado #<id>` tambÃ©m
+-- comeÃ§a com "Contato " e Ã© gravado deliberadamente pela rota de LGPD. Sem esta
+-- guarda, o backfill REVERTERIA anonimizaÃ§Ãµes â€” violaÃ§Ã£o direta da regra L-04,
+-- cuja exceÃ§Ã£o Ã© "Nenhuma".
 --
--- Vira NULL, e não um rótulo novo: quem decide o que mostrar quando não há nome
--- é a tela. Gravar texto de exibição no banco foi o que criou este problema.
+-- Vira NULL, e nÃ£o um rÃ³tulo novo: quem decide o que mostrar quando nÃ£o hÃ¡ nome
+-- Ã© a tela. Gravar texto de exibiÃ§Ã£o no banco foi o que criou este problema.
 update public.contacts
    set display_name = null, updated_at = now()
  where display_name ~ '^Contato [0-9]+(@lid)?$'
    and is_anonymized = false;
 
 
--- ---- fila de confirmação de dado do contato (migration 0123) ----
--- O Operador PROPÕE, um humano CONFIRMA — o dado que o cliente diz na conversa
--- não é gravado direto (spec 17 §4b). Forma copiada de `crm_lead_reactivations`,
--- que já é uma fila de proposta com prazo, decisão datada e idempotência por
--- índice parcial; a chave aqui é o CONTATO + campo, porque a proposta é sobre a
+-- ---- fila de confirmaÃ§Ã£o de dado do contato (migration 0123) ----
+-- O Operador PROPÃ•E, um humano CONFIRMA â€” o dado que o cliente diz na conversa
+-- nÃ£o Ã© gravado direto (spec 17 Â§4b). Forma copiada de `crm_lead_reactivations`,
+-- que jÃ¡ Ã© uma fila de proposta com prazo, decisÃ£o datada e idempotÃªncia por
+-- Ã­ndice parcial; a chave aqui Ã© o CONTATO + campo, porque a proposta Ã© sobre a
 -- pessoa. Racional completo na migration.
 --
 -- Idempotente e auto-curativo: `create table if not exists`, constraints com
@@ -11486,18 +11486,18 @@ create table if not exists public.contact_field_proposals (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   contact_id uuid not null references public.contacts(id) on delete cascade,
 
-  -- QUAL campo. Vocabulário FECHADO por CHECK: o que entra aqui vira escrita em
+  -- QUAL campo. VocabulÃ¡rio FECHADO por CHECK: o que entra aqui vira escrita em
   -- `contacts`, e campo livre deixaria a IA propor qualquer coluna.
   campo text not null,
 
-  -- O valor proposto e o que existia quando a proposta nasceu. O segundo é o
-  -- `from` que a regra L-06 exige — e existe ANTES da confirmação justamente
-  -- para que a decisão seja tomada com os dois lados à vista.
+  -- O valor proposto e o que existia quando a proposta nasceu. O segundo Ã© o
+  -- `from` que a regra L-06 exige â€” e existe ANTES da confirmaÃ§Ã£o justamente
+  -- para que a decisÃ£o seja tomada com os dois lados Ã  vista.
   valor_proposto text not null,
   valor_anterior text,
 
   -- DE ONDE veio, para quem decide poder conferir em vez de acreditar.
-  -- `trecho` é o que a pessoa escreveu; sem ele a confirmação é um ato de fé.
+  -- `trecho` Ã© o que a pessoa escreveu; sem ele a confirmaÃ§Ã£o Ã© um ato de fÃ©.
   conversation_id uuid references public.conversations(id) on delete set null,
   message_id uuid references public.messages(id) on delete set null,
   trecho text,
@@ -11505,20 +11505,20 @@ create table if not exists public.contact_field_proposals (
 
   status text not null default 'pending',
 
-  -- Carimbados pelo BANCO, nunca pelo processo — mesma razão da 0081: instantes
-  -- comparados entre si vêm do mesmo relógio.
+  -- Carimbados pelo BANCO, nunca pelo processo â€” mesma razÃ£o da 0081: instantes
+  -- comparados entre si vÃªm do mesmo relÃ³gio.
   proposed_at timestamptz not null default now(),
   expires_at timestamptz not null,
   decided_at timestamptz,
   decided_by_user_id uuid references auth.users(id) on delete set null,
-  -- Por que foi recusada. É o LAÇO DE RETORNO (invariante 7): proposta que o
-  -- humano rejeita diz onde a IA erra, e sem o motivo o sinal é só um número.
+  -- Por que foi recusada. Ã‰ o LAÃ‡O DE RETORNO (invariante 7): proposta que o
+  -- humano rejeita diz onde a IA erra, e sem o motivo o sinal Ã© sÃ³ um nÃºmero.
   motivo_recusa text,
   updated_at timestamptz not null default now()
 );
 
 comment on table public.contact_field_proposals is
-  'Dado do contato que a IA ouviu na conversa e propôs — aguardando confirmação humana (spec 17 §4b). SEMPRE com prazo: proposta que ninguém decide vira badge permanente, que simula atenção e adia a decisão. No vencimento sai da tela e vira item de caixa.';
+  'Dado do contato que a IA ouviu na conversa e propÃ´s â€” aguardando confirmaÃ§Ã£o humana (spec 17 Â§4b). SEMPRE com prazo: proposta que ninguÃ©m decide vira badge permanente, que simula atenÃ§Ã£o e adia a decisÃ£o. No vencimento sai da tela e vira item de caixa.';
 
 alter table public.contact_field_proposals
   drop constraint if exists contact_field_proposals_campo_check;
@@ -11535,14 +11535,14 @@ alter table public.contact_field_proposals
   );
 
 -- Prazo no futuro: proposta que nasce vencida vira item de caixa no primeiro
--- tick e ninguém entende de onde veio.
+-- tick e ninguÃ©m entende de onde veio.
 alter table public.contact_field_proposals
   drop constraint if exists contact_field_proposals_prazo_no_futuro;
 alter table public.contact_field_proposals
   add constraint contact_field_proposals_prazo_no_futuro check (expires_at > proposed_at);
 
--- Decisão e decisor andam juntos. Status decidido sem `decided_at` é registro
--- que não sabe dizer quando aconteceu — e é essa a pergunta que a auditoria faz.
+-- DecisÃ£o e decisor andam juntos. Status decidido sem `decided_at` Ã© registro
+-- que nÃ£o sabe dizer quando aconteceu â€” e Ã© essa a pergunta que a auditoria faz.
 alter table public.contact_field_proposals
   drop constraint if exists contact_field_proposals_decisao_datada;
 alter table public.contact_field_proposals
@@ -11551,17 +11551,17 @@ alter table public.contact_field_proposals
     or (status <> 'pending' and decided_at is not null)
   );
 
--- ⚠️ ESTE ÍNDICE É A IDEMPOTÊNCIA — não é otimização.
+-- âš ï¸ ESTE ÃNDICE Ã‰ A IDEMPOTÃŠNCIA â€” nÃ£o Ã© otimizaÃ§Ã£o.
 --
 -- A IA vai ouvir o mesmo e-mail em dez mensagens seguidas. Sem ele, dez
--- propostas idênticas viram dez linhas e a tela do humano vira uma coluna de
--- repetições. `where not exists` no código NÃO substitui: é check-then-act, e
--- dois turnos concorrentes passam pela janela — o mesmo defeito que a 0027 veio
+-- propostas idÃªnticas viram dez linhas e a tela do humano vira uma coluna de
+-- repetiÃ§Ãµes. `where not exists` no cÃ³digo NÃƒO substitui: Ã© check-then-act, e
+-- dois turnos concorrentes passam pela janela â€” o mesmo defeito que a 0027 veio
 -- matar nos contatos.
 --
--- PARCIAL: propostas decididas ficam como histórico e não bloqueiam a próxima. O
+-- PARCIAL: propostas decididas ficam como histÃ³rico e nÃ£o bloqueiam a prÃ³xima. O
 -- cliente pode corrigir o e-mail que ele mesmo deu errado, e impedir isso
--- deixaria a correção sem caminho.
+-- deixaria a correÃ§Ã£o sem caminho.
 create unique index if not exists uq_contact_field_proposals_uma_viva
   on public.contact_field_proposals (organization_id, contact_id, campo)
   where status = 'pending';
@@ -11581,7 +11581,7 @@ create policy tenant_isolation_contact_field_proposals_all on public.contact_fie
 
 revoke all on public.contact_field_proposals from anon;
 
--- `proposed_at` e `updated_at` vêm do banco.
+-- `proposed_at` e `updated_at` vÃªm do banco.
 create or replace function public.fn_carimba_proposta_de_dado()
   returns trigger
   language plpgsql
@@ -11606,19 +11606,19 @@ create trigger trg_contact_field_proposals_carimbo
 -- ---- LGPD: anonimizar o contato apaga as propostas dele ----
 --
 -- Sem isto, anonimizar um contato deixaria o e-mail dele VIVO dentro de uma
--- proposta pendente — PII sobrevivendo ao direito de esquecimento numa tabela
--- que ninguém lembraria de olhar.
+-- proposta pendente â€” PII sobrevivendo ao direito de esquecimento numa tabela
+-- que ninguÃ©m lembraria de olhar.
 --
--- ⚠️ TRIGGER NO ESTADO, não chamada dentro do cascade — e a escolha importa.
--- Há mais de um caminho que anonimiza: `fn_lgpd_cascade_redact_contact` (o
--- cascade completo) e `/api/v1/lgpd/anonymize` (a rota direta), e amanhã pode
--- haver um DBA fazendo à mão. Pendurar a limpeza em UM deles deixaria os outros
+-- âš ï¸ TRIGGER NO ESTADO, nÃ£o chamada dentro do cascade â€” e a escolha importa.
+-- HÃ¡ mais de um caminho que anonimiza: `fn_lgpd_cascade_redact_contact` (o
+-- cascade completo) e `/api/v1/lgpd/anonymize` (a rota direta), e amanhÃ£ pode
+-- haver um DBA fazendo Ã  mÃ£o. Pendurar a limpeza em UM deles deixaria os outros
 -- vazando; pendurar no FATO (`is_anonymized` virou true) cobre todos, inclusive
--- os que ainda não existem. É também a diferença entre editar uma função de 180
--- linhas vinda de dump — com o risco que isso traz — e acrescentar 10.
+-- os que ainda nÃ£o existem. Ã‰ tambÃ©m a diferenÃ§a entre editar uma funÃ§Ã£o de 180
+-- linhas vinda de dump â€” com o risco que isso traz â€” e acrescentar 10.
 --
--- As propostas são APAGADAS, não redigidas: diferente da timeline, aqui não há
--- histórico a preservar (proposta não decidida nunca virou fato) e o conteúdo é
+-- As propostas sÃ£o APAGADAS, nÃ£o redigidas: diferente da timeline, aqui nÃ£o hÃ¡
+-- histÃ³rico a preservar (proposta nÃ£o decidida nunca virou fato) e o conteÃºdo Ã©
 -- integralmente dado pessoal.
 create or replace function public.fn_apaga_propostas_de_contato_anonimizado()
   returns trigger
@@ -11644,39 +11644,39 @@ create trigger trg_contacts_anonimizado_limpa_propostas
 
 
 -- ---- escopo de funil do agente (migration 0125) ----
--- O agente só ESCREVE nos funis marcados; vazio = NENHUM (falha fechada).
--- Medido: uma organização com 4 funis e 5 agentes de negócios diferentes, todos
--- alcançando todos. A coluna vive na VERSÃO para a permissão subir junto com o
--- resto quando alguém publica — escopo fora do ciclo rascunho→publicar muda o
--- alcance do agente sem ninguém ter publicado nada.
+-- O agente sÃ³ ESCREVE nos funis marcados; vazio = NENHUM (falha fechada).
+-- Medido: uma organizaÃ§Ã£o com 4 funis e 5 agentes de negÃ³cios diferentes, todos
+-- alcanÃ§ando todos. A coluna vive na VERSÃƒO para a permissÃ£o subir junto com o
+-- resto quando alguÃ©m publica â€” escopo fora do ciclo rascunhoâ†’publicar muda o
+-- alcance do agente sem ninguÃ©m ter publicado nada.
 --
 -- Traz junto o conserto do trigger de imutabilidade, que parava no `followup` e
--- ignorava as NOVE colunas posteriores: sem isso, um escopo de PERMISSÃO seria
--- editável numa versão publicada sem virar versão nova — a própria ausência de
--- escopo, com aparência de controle. Racional completo na migration.
+-- ignorava as NOVE colunas posteriores: sem isso, um escopo de PERMISSÃƒO seria
+-- editÃ¡vel numa versÃ£o publicada sem virar versÃ£o nova â€” a prÃ³pria ausÃªncia de
+-- escopo, com aparÃªncia de controle. Racional completo na migration.
 
 alter table public.ai_agent_versions
   add column if not exists pipeline_ids uuid[] not null default '{}'::uuid[];
 
 comment on column public.ai_agent_versions.pipeline_ids is
-  'Funis em que ESTE agente pode escrever (mover, editar, encerrar, taguear). Vazio = NENHUM: falha fechada. Escopo de ESCRITA; leitura não é filtrada por aqui (declarado na spec 17 §5).';
+  'Funis em que ESTE agente pode escrever (mover, editar, encerrar, taguear). Vazio = NENHUM: falha fechada. Escopo de ESCRITA; leitura nÃ£o Ã© filtrada por aqui (declarado na spec 17 Â§5).';
 
--- ---- backfill: o que JÁ funcionava continua funcionando ----
+-- ---- backfill: o que JÃ funcionava continua funcionando ----
 --
 -- "Agente novo nasce fechado" e "agente existente vira fechado retroativamente"
--- são coisas MUITO diferentes. Sem este bloco, no dia do deploy todo agente em
--- produção pararia de mexer em card — de uma vez, e em silêncio.
+-- sÃ£o coisas MUITO diferentes. Sem este bloco, no dia do deploy todo agente em
+-- produÃ§Ã£o pararia de mexer em card â€” de uma vez, e em silÃªncio.
 --
--- O escopo inicial é DERIVADO do que cada agente realmente fez: os funis onde
--- ele já registrou atividade. Isso respeita o que funcionava E fecha os funis
--- que ele nunca tocou, que é o objetivo.
+-- O escopo inicial Ã© DERIVADO do que cada agente realmente fez: os funis onde
+-- ele jÃ¡ registrou atividade. Isso respeita o que funcionava E fecha os funis
+-- que ele nunca tocou, que Ã© o objetivo.
 --
--- Medido antes de escrever: na produção deste projeto, apenas 1 dos 8 agentes
--- tem histórico (o SDR, no funil "Pedidos"). Os outros 7 nascem fechados sem
+-- Medido antes de escrever: na produÃ§Ã£o deste projeto, apenas 1 dos 8 agentes
+-- tem histÃ³rico (o SDR, no funil "Pedidos"). Os outros 7 nascem fechados sem
 -- quebrar nada, porque nunca moveram card nenhum.
 --
--- Só para versões PUBLICADAS/rascunho que ainda estão vazias — re-aplicar não
--- reabre escopo que alguém tenha fechado à mão depois.
+-- SÃ³ para versÃµes PUBLICADAS/rascunho que ainda estÃ£o vazias â€” re-aplicar nÃ£o
+-- reabre escopo que alguÃ©m tenha fechado Ã  mÃ£o depois.
 update public.ai_agent_versions v
    set pipeline_ids = sub.funis
   from (
@@ -11690,18 +11690,18 @@ update public.ai_agent_versions v
  where v.agent_id = sub.agent_id
    and v.pipeline_ids = '{}'::uuid[];
 
--- ---- o trigger de imutabilidade para de ignorar metade da configuração ----
+-- ---- o trigger de imutabilidade para de ignorar metade da configuraÃ§Ã£o ----
 --
--- ⚠️ CONSERTO OBRIGATÓRIO NO MESMO ARQUIVO, e não uma limpeza de brinde.
+-- âš ï¸ CONSERTO OBRIGATÃ“RIO NO MESMO ARQUIVO, e nÃ£o uma limpeza de brinde.
 --
--- `fn_ai_agent_version_content_immutable` parava no campo `followup` e não
--- conhecia NENHUMA das nove colunas acrescentadas depois dele. Numa versão já
--- PUBLICADA era possível trocar o modelo do Operador, as ferramentas dele, o
--- corte de mensagens — sem virar versão nova e sem deixar trilha.
+-- `fn_ai_agent_version_content_immutable` parava no campo `followup` e nÃ£o
+-- conhecia NENHUMA das nove colunas acrescentadas depois dele. Numa versÃ£o jÃ¡
+-- PUBLICADA era possÃ­vel trocar o modelo do Operador, as ferramentas dele, o
+-- corte de mensagens â€” sem virar versÃ£o nova e sem deixar trilha.
 --
--- Acrescentar `pipeline_ids` sem consertar isso seria pior que não acrescentar:
--- um escopo de PERMISSÃO editável em produção sem publicar nada é a própria
--- ausência de escopo, com aparência de controle.
+-- Acrescentar `pipeline_ids` sem consertar isso seria pior que nÃ£o acrescentar:
+-- um escopo de PERMISSÃƒO editÃ¡vel em produÃ§Ã£o sem publicar nada Ã© a prÃ³pria
+-- ausÃªncia de escopo, com aparÃªncia de controle.
 create or replace function fn_ai_agent_version_content_immutable() returns trigger
 language plpgsql as $fn$
 begin
@@ -11721,7 +11721,7 @@ begin
     or new.handoff_keywords       is distinct from old.handoff_keywords
     or new.handoff_tool_enabled   is distinct from old.handoff_tool_enabled
     or new.followup               is distinct from old.followup
-    -- ↓ as nove que o trigger nunca cobriu, mais a desta migration
+    -- â†“ as nove que o trigger nunca cobriu, mais a desta migration
     or new.multimodal_input       is distinct from old.multimodal_input
     or new.video_frames_enabled   is distinct from old.video_frames_enabled
     or new.split_messages         is distinct from old.split_messages
@@ -11735,7 +11735,7 @@ begin
     or new.agent_id               is distinct from old.agent_id
     or new.organization_id        is distinct from old.organization_id
   ) then
-    raise exception 'ai_agent_versions % é imutável (status=%): mudança de conteúdo = versão draft nova; rollback = revert (clona + publica)',
+    raise exception 'ai_agent_versions % Ã© imutÃ¡vel (status=%): mudanÃ§a de conteÃºdo = versÃ£o draft nova; rollback = revert (clona + publica)',
       old.id, old.status;
   end if;
   return new;
@@ -11749,29 +11749,29 @@ create trigger trg_ai_agent_versions_content_immutable
 
 notify pgrst, 'reload schema';
 
--- ---- camadas de segurança por organização (migration 0142) ----
+-- ---- camadas de seguranÃ§a por organizaÃ§Ã£o (migration 0142) ----
 --
--- As duas verificações que consultam um modelo (e por isso custam por mensagem)
--- passam a ser escolha da organização, na tela do agente, em vez de variável de
--- ambiente do worker — que é por PROCESSO e só alcançável por quem edita o .env
--- da VPS e reinicia o contêiner.
+-- As duas verificaÃ§Ãµes que consultam um modelo (e por isso custam por mensagem)
+-- passam a ser escolha da organizaÃ§Ã£o, na tela do agente, em vez de variÃ¡vel de
+-- ambiente do worker â€” que Ã© por PROCESSO e sÃ³ alcanÃ§Ã¡vel por quem edita o .env
+-- da VPS e reinicia o contÃªiner.
 --
--- AUSÊNCIA DE LINHA NÃO É "DESLIGADO": sem linha, vale o ambiente. É o que
--- mantém intacta a instalação que já decidiu isso no .env — aplicar este bloco
--- não muda o comportamento de ninguém, só cria a porta.
+-- AUSÃŠNCIA DE LINHA NÃƒO Ã‰ "DESLIGADO": sem linha, vale o ambiente. Ã‰ o que
+-- mantÃ©m intacta a instalaÃ§Ã£o que jÃ¡ decidiu isso no .env â€” aplicar este bloco
+-- nÃ£o muda o comportamento de ninguÃ©m, sÃ³ cria a porta.
 --
--- `layer` sem CHECK, de propósito (vocabulário ABERTO, CLAUDE.md): um clone com
--- valor que este build não conhece quebraria o update.sh. O vocabulário vive no
+-- `layer` sem CHECK, de propÃ³sito (vocabulÃ¡rio ABERTO, CLAUDE.md): um clone com
+-- valor que este build nÃ£o conhece quebraria o update.sh. O vocabulÃ¡rio vive no
 -- TypeScript.
 --
 -- Idempotente e auto-curativo: `create table if not exists` + `drop policy if
 -- exists` antes do `create policy`.
 --
--- TABELA NOVA NASCE CONCEDIDA, e não só função: o `ALTER DEFAULT PRIVILEGES ...
+-- TABELA NOVA NASCE CONCEDIDA, e nÃ£o sÃ³ funÃ§Ã£o: o `ALTER DEFAULT PRIVILEGES ...
 -- GRANT ALL ON TABLES TO anon/authenticated` deste mesmo baseline vale para toda
--- tabela criada depois dele. A primeira versão deste bloco dizia "nenhuma função
--- nova, então não há grant a revogar" — leitura errada da doutrina, que fala de
--- FUNÇÃO. O efeito medido está no cabeçalho da migration 0142.
+-- tabela criada depois dele. A primeira versÃ£o deste bloco dizia "nenhuma funÃ§Ã£o
+-- nova, entÃ£o nÃ£o hÃ¡ grant a revogar" â€” leitura errada da doutrina, que fala de
+-- FUNÃ‡ÃƒO. O efeito medido estÃ¡ no cabeÃ§alho da migration 0142.
 
 create table if not exists public.org_guardrail_layers (
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -11785,14 +11785,14 @@ alter table public.org_guardrail_layers enable row level security;
 
 -- ---- escrita de guardrail exige admin (migration 0143) ----
 --
--- Leitura org-flat, escrita com gate de PAPEL no banco (forma canônica do repo:
+-- Leitura org-flat, escrita com gate de PAPEL no banco (forma canÃ´nica do repo:
 -- ver `crm_stages_select` / `crm_stages_manager_write` acima). O `admin` da rota
--- não é fronteira — com a anon key e o próprio JWT, um `viewer` desligava a camada
--- anti-jailbreak da organização pelo PostgREST, sem auditoria. Medido: UPDATE 1 +
+-- nÃ£o Ã© fronteira â€” com a anon key e o prÃ³prio JWT, um `viewer` desligava a camada
+-- anti-jailbreak da organizaÃ§Ã£o pelo PostgREST, sem auditoria. Medido: UPDATE 1 +
 -- INSERT 1 num pg17 do zero.
 --
 -- Auto-curativo: derruba a policy da 0142 por nome antes de criar as duas novas,
--- então o `update.sh` de um clone que parou na 0142 fica correto sem passo manual.
+-- entÃ£o o `update.sh` de um clone que parou na 0142 fica correto sem passo manual.
 drop policy if exists tenant_isolation_org_guardrail_layers_all on public.org_guardrail_layers;
 drop policy if exists org_guardrail_layers_select on public.org_guardrail_layers;
 drop policy if exists org_guardrail_layers_admin_write on public.org_guardrail_layers;
@@ -11819,16 +11819,16 @@ revoke all on public.org_guardrail_layers from anon;
 
 -- ---- plano de tempo do follow-up (migration 0144) ----
 --
--- O modo "Adaptativo (min–max)" do nó de espera existia na tela e não existia no
--- motor: o fluxo esperava SEMPRE o máximo. Esta coluna guarda o plano decidido
+-- O modo "Adaptativo (minâ€“max)" do nÃ³ de espera existia na tela e nÃ£o existia no
+-- motor: o fluxo esperava SEMPRE o mÃ¡ximo. Esta coluna guarda o plano decidido
 -- uma vez no acionamento, para todas as esperas adaptativas de uma vez.
 --
--- Sem CHECK e sem NOT NULL de propósito: `null` é "ainda não planejado" e também
--- o estado de todo enrollment anterior — os dois caem no comportamento antigo, e
--- não há dado a corrigir antes de criar a coluna. Um CHECK de shape sobre jsonb
--- quebraria o `update.sh` de um clone que já tivesse gravado algo aqui; quem
--- valida é `lib/followup/timing-plan.ts`, que degrada para o máximo diante de
--- plano ilegível em vez de derrubar o tick.
+-- Sem CHECK e sem NOT NULL de propÃ³sito: `null` Ã© "ainda nÃ£o planejado" e tambÃ©m
+-- o estado de todo enrollment anterior â€” os dois caem no comportamento antigo, e
+-- nÃ£o hÃ¡ dado a corrigir antes de criar a coluna. Um CHECK de shape sobre jsonb
+-- quebraria o `update.sh` de um clone que jÃ¡ tivesse gravado algo aqui; quem
+-- valida Ã© `lib/followup/timing-plan.ts`, que degrada para o mÃ¡ximo diante de
+-- plano ilegÃ­vel em vez de derrubar o tick.
 
 alter table followup_enrollments
   add column if not exists timing_plan jsonb;
@@ -11838,30 +11838,30 @@ comment on column followup_enrollments.timing_plan is
 
 notify pgrst, 'reload schema';
 
--- ---- o tick do follow-up para de servir uma organização de cada vez (migration 0146) ----
+-- ---- o tick do follow-up para de servir uma organizaÃ§Ã£o de cada vez (migration 0146) ----
 --
 -- O claim levava os 20 vencidos MAIS ANTIGOS globalmente. Quem acumulou fila
--- tem, por construção, os mais antigos — então uma organização atrasada ocupa o
--- lote inteiro. Medido em pg17 descartável, teto 20: com 25 vencidos na grande e
+-- tem, por construÃ§Ã£o, os mais antigos â€” entÃ£o uma organizaÃ§Ã£o atrasada ocupa o
+-- lote inteiro. Medido em pg17 descartÃ¡vel, teto 20: com 25 vencidos na grande e
 -- 1 na pequena, o tick 1 leva 20 da grande e ZERO da pequena; com 300 na grande,
--- a pequena só é atendida no TICK 16 (≈16 min, com o cron de minuto em minuto).
--- Não é inanição eterna — o lease empurra o ponteiro e ela entra em teto(K/20)
--- ticks — mas o atraso não tem limite superior e cresce com a fila do vizinho.
+-- a pequena sÃ³ Ã© atendida no TICK 16 (â‰ˆ16 min, com o cron de minuto em minuto).
+-- NÃ£o Ã© inaniÃ§Ã£o eterna â€” o lease empurra o ponteiro e ela entra em teto(K/20)
+-- ticks â€” mas o atraso nÃ£o tem limite superior e cresce com a fila do vizinho.
 --
--- Passa a ser rodízio: o mais antigo de CADA organização, depois o segundo de
--- cada. Com UMA organização o resultado é idêntico ao de antes (os 20 mais
--- antigos, na mesma ordem), então a instalação de operador único não muda.
+-- Passa a ser rodÃ­zio: o mais antigo de CADA organizaÃ§Ã£o, depois o segundo de
+-- cada. Com UMA organizaÃ§Ã£o o resultado Ã© idÃªntico ao de antes (os 20 mais
+-- antigos, na mesma ordem), entÃ£o a instalaÃ§Ã£o de operador Ãºnico nÃ£o muda.
 --
--- O `limit p_limit` dentro do lateral faz o custo depender do número de
--- organizações com fila, não do tamanho da fila. E `for update skip locked` vira
--- CTE própria porque o Postgres não o aceita junto de window function.
+-- O `limit p_limit` dentro do lateral faz o custo depender do nÃºmero de
+-- organizaÃ§Ãµes com fila, nÃ£o do tamanho da fila. E `for update skip locked` vira
+-- CTE prÃ³pria porque o Postgres nÃ£o o aceita junto de window function.
 --
--- Só isso NÃO preserva "dois workers nunca pegam a mesma linha": as duas conexões
+-- SÃ³ isso NÃƒO preserva "dois workers nunca pegam a mesma linha": as duas conexÃµes
 -- materializam a MESMA lista de candidatos antes de qualquer lock existir, e a
 -- segunda, ao esperar o lock da primeira, reavalia apenas o WHERE do UPDATE
--- (READ COMMITTED). Medido: interseção de 5 em 5 no invariante de concorrência.
--- Por isso a condição de lease está REPETIDA no WHERE do UPDATE — é ela que faz
--- a segunda conexão enxergar o lease recém-gravado e desistir da linha.
+-- (READ COMMITTED). Medido: interseÃ§Ã£o de 5 em 5 no invariante de concorrÃªncia.
+-- Por isso a condiÃ§Ã£o de lease estÃ¡ REPETIDA no WHERE do UPDATE â€” Ã© ela que faz
+-- a segunda conexÃ£o enxergar o lease recÃ©m-gravado e desistir da linha.
 
 create index if not exists idx_followup_enrollments_due_por_org
   on followup_enrollments (organization_id, next_eval_at)
@@ -11874,8 +11874,8 @@ security definer
 set search_path = public
 as $$
   with orgs as (
-    -- Sem a condição de claim aqui de propósito: o lateral abaixo a aplica, e uma
-    -- organização cujos vencidos estão todos com lease apenas devolve zero linhas.
+    -- Sem a condiÃ§Ã£o de claim aqui de propÃ³sito: o lateral abaixo a aplica, e uma
+    -- organizaÃ§Ã£o cujos vencidos estÃ£o todos com lease apenas devolve zero linhas.
     select distinct organization_id
       from followup_enrollments
      where status in ('active','waiting_reply')
@@ -11898,8 +11898,8 @@ as $$
       ) f
   ),
   escolhidos as (
-    -- O rodízio: posição 1 de todas as organizações, depois a 2 de todas, etc.
-    -- Empate na mesma posição vai para quem esperou mais.
+    -- O rodÃ­zio: posiÃ§Ã£o 1 de todas as organizaÃ§Ãµes, depois a 2 de todas, etc.
+    -- Empate na mesma posiÃ§Ã£o vai para quem esperou mais.
     select id from fila order by posicao_na_org, next_eval_at limit p_limit
   ),
   travados as (
@@ -11911,37 +11911,37 @@ as $$
      set claimed_until = now() + make_interval(secs => p_lease_seconds),
          updated_at = now()
    where e.id in (select id from travados)
-     -- A condição de lease É REPETIDA AQUI, e não é redundante com a CTE `fila`.
-     -- Sem ela, duas conexões simultâneas reclamam as MESMAS linhas: a segunda
+     -- A condiÃ§Ã£o de lease Ã‰ REPETIDA AQUI, e nÃ£o Ã© redundante com a CTE `fila`.
+     -- Sem ela, duas conexÃµes simultÃ¢neas reclamam as MESMAS linhas: a segunda
      -- espera o lock da primeira, e quando ele sai o Postgres (READ COMMITTED)
-     -- reavalia só o WHERE do UPDATE — que não olhava `claimed_until` — e grava
-     -- por cima. O `skip locked` da CTE não salva: as duas materializam a mesma
-     -- lista antes de qualquer lock existir. Medido: interseção de 5 em 5 no
-     -- invariante de concorrência (followup-schema.test.ts).
+     -- reavalia sÃ³ o WHERE do UPDATE â€” que nÃ£o olhava `claimed_until` â€” e grava
+     -- por cima. O `skip locked` da CTE nÃ£o salva: as duas materializam a mesma
+     -- lista antes de qualquer lock existir. Medido: interseÃ§Ã£o de 5 em 5 no
+     -- invariante de concorrÃªncia (followup-schema.test.ts).
      and (e.claimed_until is null or e.claimed_until < now())
   returning e.*;
 $$;
 
 revoke execute on function fn_claim_due_followup_enrollments(int, int) from public, anon, authenticated;
--- ---- o dossiê do follow-up: tempo escolhido pela IA + pausa manual (migration 0145) ----
+-- ---- o dossiÃª do follow-up: tempo escolhido pela IA + pausa manual (migration 0145) ----
 --
--- Ver o cabeçalho de `supabase/migrations/20260810120000_0145_dossie_do_followup.sql`
--- para o porquê de cada peça. Aqui vale a nota de re-aplicação: tudo é
--- auto-curativo. O CHECK só ACRESCENTA um valor ao conjunto aceito e o predicado
--- novo do índice cobre as mesmas linhas do antigo (nenhum banco tem
--- `paused_manual` antes desta migration) — nada a deduplicar antes.
+-- Ver o cabeÃ§alho de `supabase/migrations/20260810120000_0145_dossie_do_followup.sql`
+-- para o porquÃª de cada peÃ§a. Aqui vale a nota de re-aplicaÃ§Ã£o: tudo Ã©
+-- auto-curativo. O CHECK sÃ³ ACRESCENTA um valor ao conjunto aceito e o predicado
+-- novo do Ã­ndice cobre as mesmas linhas do antigo (nenhum banco tem
+-- `paused_manual` antes desta migration) â€” nada a deduplicar antes.
 
--- A coluna `timing_plan` NÃO é recriada aqui: ela pertence ao apêndice da
--- migration 0144 (acima). Duas criações da mesma coluna são idempotentes, mas os
--- dois `comment on column` competem e o último vence — duplicação com dois donos
--- e nenhuma fonte da verdade. Resolvido na integração: 0144 cria e descreve; 0145
+-- A coluna `timing_plan` NÃƒO Ã© recriada aqui: ela pertence ao apÃªndice da
+-- migration 0144 (acima). Duas criaÃ§Ãµes da mesma coluna sÃ£o idempotentes, mas os
+-- dois `comment on column` competem e o Ãºltimo vence â€” duplicaÃ§Ã£o com dois donos
+-- e nenhuma fonte da verdade. Resolvido na integraÃ§Ã£o: 0144 cria e descreve; 0145
 -- consome.
 
--- Os dois CHECKs saem pelo CATÁLOGO, não pelo nome: num clone que passou por
--- dump/restore o nome gerado pode não ser o deste repo, e dropar por nome fixo
--- falharia em silêncio — o `add constraint` tropeçaria no duplicado, o
+-- Os dois CHECKs saem pelo CATÃLOGO, nÃ£o pelo nome: num clone que passou por
+-- dump/restore o nome gerado pode nÃ£o ser o deste repo, e dropar por nome fixo
+-- falharia em silÃªncio â€” o `add constraint` tropeÃ§aria no duplicado, o
 -- `exception when duplicate_object` engoliria, e o banco ficaria com o CHECK
--- ANTIGO recusando `paused_manual` num INSERT que a aplicação considera válido.
+-- ANTIGO recusando `paused_manual` num INSERT que a aplicaÃ§Ã£o considera vÃ¡lido.
 do $$
 declare
   c record;
@@ -11976,21 +11976,21 @@ do $$ begin
     );
 exception when duplicate_object then null; end $$;
 
--- ⚠️ AS COLUNAS SÃO (organization_id, contact_id), NÃO (pointer_id, contact_id).
+-- âš ï¸ AS COLUNAS SÃƒO (organization_id, contact_id), NÃƒO (pointer_id, contact_id).
 --
--- A DDL original da tabela (bem acima neste arquivo) cria este índice por
--- `pointer_id`; o apêndice da migration 0062 o DERRUBA e recria por
--- `organization_id`, e é essa a definição em vigor: **um follow-up vivo por lead
--- na organização inteira**, não um por fluxo. É o guard anti-empilhamento — sem
--- ele o mesmo contato entra em N sequências ao mesmo tempo e leva N mensagens,
--- que é o bug de spam que a doutrina anti-banimento existe para impedir. O
+-- A DDL original da tabela (bem acima neste arquivo) cria este Ã­ndice por
+-- `pointer_id`; o apÃªndice da migration 0062 o DERRUBA e recria por
+-- `organization_id`, e Ã© essa a definiÃ§Ã£o em vigor: **um follow-up vivo por lead
+-- na organizaÃ§Ã£o inteira**, nÃ£o um por fluxo. Ã‰ o guard anti-empilhamento â€” sem
+-- ele o mesmo contato entra em N sequÃªncias ao mesmo tempo e leva N mensagens,
+-- que Ã© o bug de spam que a doutrina anti-banimento existe para impedir. O
 -- `silence-sweep.ts` e o produtor do gatilho de etapa dependem dele: os dois
--- tratam o `23505` como skip silencioso, e é ele que garante que não há laço.
+-- tratam o `23505` como skip silencioso, e Ã© ele que garante que nÃ£o hÃ¡ laÃ§o.
 --
 -- Quem precisa MEXER no predicado (como aqui, para incluir `paused_manual`) tem
--- de copiar a definição EM VIGOR, não a da DDL original — recriar a partir da
+-- de copiar a definiÃ§Ã£o EM VIGOR, nÃ£o a da DDL original â€” recriar a partir da
 -- linha errada reverte a garantia sem conflito de merge e sem sintoma imediato.
--- Corrigido na integração; ver a nota no MANIFEST da 0145.
+-- Corrigido na integraÃ§Ã£o; ver a nota no MANIFEST da 0145.
 drop index if exists idx_followup_enrollments_one_live;
 create unique index if not exists idx_followup_enrollments_one_live
   on public.followup_enrollments (organization_id, contact_id)
@@ -12001,42 +12001,42 @@ create index if not exists idx_followup_events_enrollment_tempo
 
 notify pgrst, 'reload schema';
 
--- ⚠️ ESTE BLOCO FICA ACIMA DA VARREDURA DE ANON DE PROPÓSITO, e a posição é
--- parte do conserto. O corpo do baseline traz um `alter default privileges …
--- grant all on functions to anon`, então TODA função nova nasce alcançável
--- pela chave anônima — que vai para o browser. O bloco de varredura no fim do
--- arquivo cura isso, mas só para o que veio ANTES dele: um apêndice colocado
+-- âš ï¸ ESTE BLOCO FICA ACIMA DA VARREDURA DE ANON DE PROPÃ“SITO, e a posiÃ§Ã£o Ã©
+-- parte do conserto. O corpo do baseline traz um `alter default privileges â€¦
+-- grant all on functions to anon`, entÃ£o TODA funÃ§Ã£o nova nasce alcanÃ§Ã¡vel
+-- pela chave anÃ´nima â€” que vai para o browser. O bloco de varredura no fim do
+-- arquivo cura isso, mas sÃ³ para o que veio ANTES dele: um apÃªndice colocado
 -- depois fica exposto COM os `revoke` escritos e parecendo corretos. Defesa
--- certa na ordem errada é exposição com gate verde.
+-- certa na ordem errada Ã© exposiÃ§Ã£o com gate verde.
 -- Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
 
--- ---- relógio do banco para o agendamento do follow-up (migration 0147) ----
--- Quem AGENDA gravava `next_eval_at` com o relógio do PROCESSO; quem RECLAMA
--- compara com `now()` do POSTGRES. Medido: o banco fica 17–34 ms atrás, então o
--- "agora" do processo ainda é FUTURO para o claim — o tick seguinte não reclama
--- e o enrollment espera o tick DEPOIS (até 60 s, cron de minuto em minuto).
--- Corrigir por margem seria número mágico que envelhece; a correção é os dois
--- lados usarem o mesmo relógio.
+-- ---- relÃ³gio do banco para o agendamento do follow-up (migration 0147) ----
+-- Quem AGENDA gravava `next_eval_at` com o relÃ³gio do PROCESSO; quem RECLAMA
+-- compara com `now()` do POSTGRES. Medido: o banco fica 17â€“34 ms atrÃ¡s, entÃ£o o
+-- "agora" do processo ainda Ã© FUTURO para o claim â€” o tick seguinte nÃ£o reclama
+-- e o enrollment espera o tick DEPOIS (atÃ© 60 s, cron de minuto em minuto).
+-- Corrigir por margem seria nÃºmero mÃ¡gico que envelhece; a correÃ§Ã£o Ã© os dois
+-- lados usarem o mesmo relÃ³gio.
 --
--- ADITIVO E RETROCOMPATÍVEL: `default` só age na AUSÊNCIA da coluna, então todo
--- insert que já passa `next_eval_at` explicitamente continua idêntico. Nada a
--- corrigir nos dados antes — não há constraint nova.
+-- ADITIVO E RETROCOMPATÃVEL: `default` sÃ³ age na AUSÃŠNCIA da coluna, entÃ£o todo
+-- insert que jÃ¡ passa `next_eval_at` explicitamente continua idÃªntico. Nada a
+-- corrigir nos dados antes â€” nÃ£o hÃ¡ constraint nova.
 --
--- O QUE O DEFAULT CUSTA, decidido e não descoberto depois: hoje inserir um
+-- O QUE O DEFAULT CUSTA, decidido e nÃ£o descoberto depois: hoje inserir um
 -- enrollment ativo SEM `next_eval_at` falha ALTO (o CHECK recusa); com o
 -- default, esquecer o campo passa a ser SILENCIOSO e significa "vencido agora".
--- Troca de falha barulhenta por plausível — aceita porque os dois produtores de
+-- Troca de falha barulhenta por plausÃ­vel â€” aceita porque os dois produtores de
 -- nascimento significam "agora", quem quiser outro instante continua passando
--- valor explícito, e a regra está escrita no `comment on column` abaixo.
+-- valor explÃ­cito, e a regra estÃ¡ escrita no `comment on column` abaixo.
 alter table public.followup_enrollments
   alter column next_eval_at set default now();
 
 comment on column public.followup_enrollments.next_eval_at is
-  'Quando este enrollment vence. DEFAULT now() do BANCO (migration 0147): quem agenda "para agora" deve OMITIR a coluna, porque o claim compara com now() do Postgres e o relógio do processo fica milissegundos à frente — o suficiente para o enrollment perder um tick inteiro (60s). Agendamento para o FUTURO continua passando valor explícito.';
+  'Quando este enrollment vence. DEFAULT now() do BANCO (migration 0147): quem agenda "para agora" deve OMITIR a coluna, porque o claim compara com now() do Postgres e o relÃ³gio do processo fica milissegundos Ã  frente â€” o suficiente para o enrollment perder um tick inteiro (60s). Agendamento para o FUTURO continua passando valor explÃ­cito.';
 
--- Para o caso em que `default` não alcança: UPDATE. O supabase-js grava VALOR,
--- nunca EXPRESSÃO, e o PostgREST só expõe tabela e função — sem isto o worker
--- agendaria com o relógio do próprio processo.
+-- Para o caso em que `default` nÃ£o alcanÃ§a: UPDATE. O supabase-js grava VALOR,
+-- nunca EXPRESSÃƒO, e o PostgREST sÃ³ expÃµe tabela e funÃ§Ã£o â€” sem isto o worker
+-- agendaria com o relÃ³gio do prÃ³prio processo.
 create or replace function public.fn_agora()
 returns timestamptz
 language sql
@@ -12047,25 +12047,25 @@ as $fn$
 $fn$;
 
 comment on function public.fn_agora() is
-  'O relógio do BANCO, para quem precisa gravar um instante que será comparado com now() (migration 0147).';
+  'O relÃ³gio do BANCO, para quem precisa gravar um instante que serÃ¡ comparado com now() (migration 0147).';
 
 -- AS DUAS ORIGENS DE EXECUTE (CLAUDE.md, doutrina de migrations, item 9): o
 -- grant direto a anon do `alter default privileges` do baseline, que
--- `revoke from public` não remove; e o grant a PUBLIC que o Postgres dá na
--- criação, que `revoke from anon` não remove.
+-- `revoke from public` nÃ£o remove; e o grant a PUBLIC que o Postgres dÃ¡ na
+-- criaÃ§Ã£o, que `revoke from anon` nÃ£o remove.
 revoke all     on function public.fn_agora() from public;
 revoke execute on function public.fn_agora() from anon, authenticated;
 grant  execute on function public.fn_agora() to service_role;
 
 -- ---- o caso anuncia abertura e fechamento no barramento (migration 0148) ----
 --
--- `agent_cases` é a entidade de escalação e não emitia nada no `event_log`, então
--- nenhum consumidor podia reagir a um caso. TRIGGER e não emissor em código porque
--- o FECHAMENTO tem cinco escritores: caçar emissor deixa a garantia dependendo de
--- alguém lembrar, e o próximo caminho nasce mudo. SQL puro, sem I/O externo — a
--- proibição da doutrina é HTTP dentro da transação, e `fn_emit_conversation_routing`
--- já usa este mesmo mecanismo. Idempotente: `create or replace` + `drop trigger if
--- exists`, então o `update.sh` de um clone re-aplica sem efeito duplo.
+-- `agent_cases` Ã© a entidade de escalaÃ§Ã£o e nÃ£o emitia nada no `event_log`, entÃ£o
+-- nenhum consumidor podia reagir a um caso. TRIGGER e nÃ£o emissor em cÃ³digo porque
+-- o FECHAMENTO tem cinco escritores: caÃ§ar emissor deixa a garantia dependendo de
+-- alguÃ©m lembrar, e o prÃ³ximo caminho nasce mudo. SQL puro, sem I/O externo â€” a
+-- proibiÃ§Ã£o da doutrina Ã© HTTP dentro da transaÃ§Ã£o, e `fn_emit_conversation_routing`
+-- jÃ¡ usa este mesmo mecanismo. Idempotente: `create or replace` + `drop trigger if
+-- exists`, entÃ£o o `update.sh` de um clone re-aplica sem efeito duplo.
 create or replace function public.fn_emit_agent_case_event()
 returns trigger
 language plpgsql
@@ -12079,9 +12079,9 @@ begin
   v_tipo := case when tg_op = 'INSERT' then 'ai.case_opened' else 'ai.case_closed' end;
 
   -- O contato viaja no PAYLOAD porque ele sempre existe por schema
-  -- (`agent_cases.conversation_id` é not null e `conversations.contact_id` é
+  -- (`agent_cases.conversation_id` Ã© not null e `conversations.contact_id` Ã©
   -- not null) e porque poupa o consumidor de uma ida ao banco. O consumidor
-  -- mantém o fallback de buscar, para não confiar em convenção.
+  -- mantÃ©m o fallback de buscar, para nÃ£o confiar em convenÃ§Ã£o.
   select c.contact_id into v_contact_id
     from public.conversations c
    where c.id = new.conversation_id;
@@ -12100,23 +12100,23 @@ begin
       'status',          new.status
     ),
     '{}'::jsonb,
-    new.organization_id   -- SEMPRE de `new`, nunca de parâmetro: é o filtro de tenant
+    new.organization_id   -- SEMPRE de `new`, nunca de parÃ¢metro: Ã© o filtro de tenant
   );
-  return null;            -- AFTER trigger: o retorno é ignorado
+  return null;            -- AFTER trigger: o retorno Ã© ignorado
 end;
 $$;
 
 alter function public.fn_emit_agent_case_event() owner to postgres;
 
--- ⚠️ AS DUAS ORIGENS DE EXECUTE (doutrina de migrations, item 9). Tratar só uma
--- deixa a função exposta com o gate verde: (A) o grant a PUBLIC que o Postgres
--- dá a qualquer função ao criá-la, que `revoke from anon` não remove; (B) o
--- `alter default privileges ... to anon` do baseline, que vale para toda função
--- criada depois dele e que `revoke from public` não remove.
+-- âš ï¸ AS DUAS ORIGENS DE EXECUTE (doutrina de migrations, item 9). Tratar sÃ³ uma
+-- deixa a funÃ§Ã£o exposta com o gate verde: (A) o grant a PUBLIC que o Postgres
+-- dÃ¡ a qualquer funÃ§Ã£o ao criÃ¡-la, que `revoke from anon` nÃ£o remove; (B) o
+-- `alter default privileges ... to anon` do baseline, que vale para toda funÃ§Ã£o
+-- criada depois dele e que `revoke from public` nÃ£o remove.
 revoke all     on function public.fn_emit_agent_case_event() from public;
 revoke execute on function public.fn_emit_agent_case_event() from anon, authenticated;
 
--- ABERTURA: só os dois status que o código considera aberto
+-- ABERTURA: sÃ³ os dois status que o cÃ³digo considera aberto
 -- (`OPEN_STATUSES` em lib/agent-engine/agent/human-cases.ts:75).
 drop trigger if exists trg_agent_case_opened on public.agent_cases;
 create trigger trg_agent_case_opened
@@ -12125,9 +12125,9 @@ create trigger trg_agent_case_opened
   when (new.status in ('awaiting_human','awaiting_lead'))
   execute function public.fn_emit_agent_case_event();
 
--- FECHAMENTO: os três status terminais. `escalated` entra porque o caso deixou
--- de esperar o cliente — seguir cobrando quem já foi passado adiante é o mesmo
--- defeito de cobrar quem já foi resolvido.
+-- FECHAMENTO: os trÃªs status terminais. `escalated` entra porque o caso deixou
+-- de esperar o cliente â€” seguir cobrando quem jÃ¡ foi passado adiante Ã© o mesmo
+-- defeito de cobrar quem jÃ¡ foi resolvido.
 drop trigger if exists trg_agent_case_closed on public.agent_cases;
 create trigger trg_agent_case_closed
   after update of status on public.agent_cases
@@ -12140,28 +12140,28 @@ notify pgrst, 'reload schema';
 
 
 
--- ---- definer valida a organização de quem chamou (migration 0149) ----
+-- ---- definer valida a organizaÃ§Ã£o de quem chamou (migration 0149) ----
 --
--- Relatório de segurança da comunidade, auditando a tag v1.0.0. A metade sobre
--- ACL ("definer executáveis por anon") já estava fechada pela 0108/0116 — 0 de
--- 31 hoje. Mas ACL e MEMBERSHIP são defeitos independentes: `emit_event` e
+-- RelatÃ³rio de seguranÃ§a da comunidade, auditando a tag v1.0.0. A metade sobre
+-- ACL ("definer executÃ¡veis por anon") jÃ¡ estava fechada pela 0108/0116 â€” 0 de
+-- 31 hoje. Mas ACL e MEMBERSHIP sÃ£o defeitos independentes: `emit_event` e
 -- `retrieve_top_k_chunks` continuavam usando o `p_organization_id` do ARGUMENTO
--- como único filtro de tenant, e ambas são (corretamente) executáveis por
+-- como Ãºnico filtro de tenant, e ambas sÃ£o (corretamente) executÃ¡veis por
 -- `authenticated`.
 --
--- Medido num pg17 com este baseline, usuário papel `viewer` membro só da org A,
+-- Medido num pg17 com este baseline, usuÃ¡rio papel `viewer` membro sÃ³ da org A,
 -- rodando como role `authenticated` com o `sub` dele em request.jwt.claims:
 --
 --   INSERT direto em event_log da org B  -> permission denied   (a RLS vale)
 --   SELECT direto em ai_chunks da org B  -> 0 linhas            (a RLS vale)
---   emit_event(..., org => B)            -> GRAVOU na org B     ← furo
---   retrieve_top_k_chunks(B, kbv)        -> devolveu o conteúdo ← furo
+--   emit_event(..., org => B)            -> GRAVOU na org B     â† furo
+--   retrieve_top_k_chunks(B, kbv)        -> devolveu o conteÃºdo â† furo
 --
 -- Depois deste bloco, os dois furos devolvem `caller_not_authorized_for_org`, e
--- os dois controles positivos seguem verdes: emitir na PRÓPRIA org funciona, e
+-- os dois controles positivos seguem verdes: emitir na PRÃ“PRIA org funciona, e
 -- o worker com `service_role` (sem JWT, auth.uid() null) funciona.
 --
--- `fn_log_event` delega a `emit_event` e herda o guard — não ganha cópia da regra.
+-- `fn_log_event` delega a `emit_event` e herda o guard â€” nÃ£o ganha cÃ³pia da regra.
 create or replace function public.emit_event(
   p_event_type text,
   p_entity_kind text,
@@ -12206,10 +12206,10 @@ begin
   return v_event_id;
 end $$;
 
--- Os nomes de parâmetro e das colunas de retorno abaixo são os que estão no
+-- Os nomes de parÃ¢metro e das colunas de retorno abaixo sÃ£o os que estÃ£o no
 -- banco (`p_embedding`, `p_threshold` default 0.40, coluna `knowledge_source_id`):
 -- `create or replace` recusa renomear qualquer um dos dois, e um clone que
--- receba nomes diferentes ganharia uma SOBRECARGA nova, deixando a versão sem
+-- receba nomes diferentes ganharia uma SOBRECARGA nova, deixando a versÃ£o sem
 -- guard viva. O `do $$` no fim deste bloco avisa se isso acontecer.
 create or replace function public.retrieve_top_k_chunks(
   p_organization_id uuid,
@@ -12274,40 +12274,40 @@ notify pgrst, 'reload schema';
 
 
 
--- ---- RBAC na configuração de IA e canais (migration 0150) ----
+-- ---- RBAC na configuraÃ§Ã£o de IA e canais (migration 0150) ----
 --
--- Segundo achado do relatório de segurança da comunidade, e o mais consistente
+-- Segundo achado do relatÃ³rio de seguranÃ§a da comunidade, e o mais consistente
 -- dele. Medido no baseline da main: das 82 policies `ALL` de `public`, **71**
--- não citam `fn_role_at_least` — só tenancy, via `fn_user_org_ids()`, que
--- devolve organizações e nada mais. `authenticated` tem
+-- nÃ£o citam `fn_role_at_least` â€” sÃ³ tenancy, via `fn_user_org_ids()`, que
+-- devolve organizaÃ§Ãµes e nada mais. `authenticated` tem
 -- SELECT/INSERT/UPDATE/DELETE nessas tabelas.
 --
--- Isso importa porque o `requireRole()` das rotas Next NÃO é a única porta: o
--- PostgREST do Supabase é exposto ao browser por construção (a `anon key` e a
--- URL vão no bundle), e um usuário logado fala com ele DIRETO, com o próprio
+-- Isso importa porque o `requireRole()` das rotas Next NÃƒO Ã© a Ãºnica porta: o
+-- PostgREST do Supabase Ã© exposto ao browser por construÃ§Ã£o (a `anon key` e a
+-- URL vÃ£o no bundle), e um usuÃ¡rio logado fala com ele DIRETO, com o prÃ³prio
 -- JWT. Provado num pg17 com este baseline, membro papel `viewer`, rodando como
 -- role `authenticated` com o `sub` dele: derrubou `channel_sessions` (o canal de
 -- WhatsApp), reescreveu `ai_agents.system_prompt` (o texto que o bot fala com
 -- cliente real), subiu `ai_budgets.monthly_limit_cents` de 5.000 para
 -- 99.999.999 e DELETOU a linha de `ai_provider_credentials` (mata a IA da org).
--- Controle no mesmo probe: o viewer NÃO alcança a organização vizinha — a
--- tenancy vale, o que falta é o papel.
+-- Controle no mesmo probe: o viewer NÃƒO alcanÃ§a a organizaÃ§Ã£o vizinha â€” a
+-- tenancy vale, o que falta Ã© o papel.
 --
--- ESCOPO DELIBERADO: só as tabelas de CONFIGURAÇÃO de IA e canais, onde o dano
--- é inequívoco e onde a rota Next já exige `admin` hoje (channel-sessions
--- route.ts:61, ai/agents route.ts:67, ai/budget route.ts:46) — a policy passa a
--- espelhar a API, em vez de ficar três níveis mais frouxa que ela. As outras ~63
--- ficam para depois, de propósito: `job_queue`, `llm_calls`, `send_ledger`,
--- `metrics` e afins são escritas pelo motor, e apertá-las no mesmo fôlego
--- trocaria um furo de segurança por uma parada de produção. O gate que impede a
+-- ESCOPO DELIBERADO: sÃ³ as tabelas de CONFIGURAÃ‡ÃƒO de IA e canais, onde o dano
+-- Ã© inequÃ­voco e onde a rota Next jÃ¡ exige `admin` hoje (channel-sessions
+-- route.ts:61, ai/agents route.ts:67, ai/budget route.ts:46) â€” a policy passa a
+-- espelhar a API, em vez de ficar trÃªs nÃ­veis mais frouxa que ela. As outras ~63
+-- ficam para depois, de propÃ³sito: `job_queue`, `llm_calls`, `send_ledger`,
+-- `metrics` e afins sÃ£o escritas pelo motor, e apertÃ¡-las no mesmo fÃ´lego
+-- trocaria um furo de seguranÃ§a por uma parada de produÃ§Ã£o. O gate que impede a
 -- lista de crescer vem em `tests/invariants/rbac-config-ia-canais.test.ts`.
 --
--- FORMA: cada tabela vira PAR — SELECT só-tenancy (todo membro continua LENDO,
--- inclusive o viewer, senão a tela quebra) + escrita com `fn_role_at_least`.
+-- FORMA: cada tabela vira PAR â€” SELECT sÃ³-tenancy (todo membro continua LENDO,
+-- inclusive o viewer, senÃ£o a tela quebra) + escrita com `fn_role_at_least`.
 -- Onde a policy atual tem `or fn_is_platform_admin()`, o par PRESERVA os dois
 -- lados: sem isso o super-admin de plataforma perde acesso e o suporte cega.
 --
--- O worker não entra nesta conta: usa `service_role`, que é `bypassrls`.
+-- O worker nÃ£o entra nesta conta: usa `service_role`, que Ã© `bypassrls`.
 
 -- ---- canais ----
 drop policy if exists channel_sessions_tenant_isolation_all on public.channel_sessions;
@@ -12351,7 +12351,7 @@ create policy tenant_isolation_ai_agents_write on public.ai_agents
     or public.fn_is_platform_admin()
   );
 
--- ---- versões de agente ----
+-- ---- versÃµes de agente ----
 drop policy if exists tenant_isolation_ai_agent_versions_all on public.ai_agent_versions;
 
 drop policy if exists tenant_isolation_ai_agent_versions_select on public.ai_agent_versions;
@@ -12368,7 +12368,7 @@ create policy tenant_isolation_ai_agent_versions_write on public.ai_agent_versio
       and public.fn_role_at_least(organization_id, 'admin')
   );
 
--- ---- orçamento de IA ----
+-- ---- orÃ§amento de IA ----
 drop policy if exists tenant_isolation_ai_budgets_all on public.ai_budgets;
 
 drop policy if exists tenant_isolation_ai_budgets_select on public.ai_budgets;
@@ -12438,19 +12438,19 @@ create policy tenant_isolation_ai_purpose_bindings_write on public.ai_purpose_bi
       and public.fn_role_at_least(organization_id, 'admin')
   );
 
--- ---- credenciais de provedor de IA: remover a superfície, não negociá-la ----
+-- ---- credenciais de provedor de IA: remover a superfÃ­cie, nÃ£o negociÃ¡-la ----
 --
--- Aqui a policy não é o remédio suficiente. NENHUM caminho de browser precisa
--- desta tabela: o servidor lê as colunas cifradas com `service_role`
--- (lib/ai/credentials.ts, lib/ai/gateway-binding.ts) e a TELA já consome a view
--- `ai_provider_credentials_safe`, que existe justamente para não expor
--- `api_key_encrypted`/`iv`/`tag`. Então o SELECT de `authenticated` sai inteiro
+-- Aqui a policy nÃ£o Ã© o remÃ©dio suficiente. NENHUM caminho de browser precisa
+-- desta tabela: o servidor lÃª as colunas cifradas com `service_role`
+-- (lib/ai/credentials.ts, lib/ai/gateway-binding.ts) e a TELA jÃ¡ consome a view
+-- `ai_provider_credentials_safe`, que existe justamente para nÃ£o expor
+-- `api_key_encrypted`/`iv`/`tag`. EntÃ£o o SELECT de `authenticated` sai inteiro
 -- em vez de continuar ali sob a promessa de que o ciphertext basta.
 --
--- (O ciphertext DE FATO protege a chave — é AES com iv+tag, e um viewer leria
--- bytes inúteis. O que ele não protege é o resto: `provider`, `label`,
+-- (O ciphertext DE FATO protege a chave â€” Ã© AES com iv+tag, e um viewer leria
+-- bytes inÃºteis. O que ele nÃ£o protege Ã© o resto: `provider`, `label`,
 -- `api_key_last4`, `validation_error`. E, sobretudo, a linha continuava
--- DELETÁVEL, que é o dano real.)
+-- DELETÃVEL, que Ã© o dano real.)
 drop policy if exists tenant_isolation_ai_provider_credentials_select on public.ai_provider_credentials;
 drop policy if exists tenant_isolation_ai_provider_credentials_modify on public.ai_provider_credentials;
 
@@ -12464,18 +12464,18 @@ create policy tenant_isolation_ai_provider_credentials_write on public.ai_provid
       and public.fn_role_at_least(organization_id, 'admin')
   );
 
--- O SELECT sai por COLUNA, não pela tabela inteira, e a razão é a view:
--- `ai_provider_credentials_safe` é `security_invoker=true` — de propósito, para
--- que a RLS da tabela base valha para o usuário que a consulta. Revogar o SELECT
--- da tabela inteira quebraria a view (o invoker não tem privilégio para ler a
--- base) e, com ela, a tela de provedores. Torná-la `security_invoker=false` para
+-- O SELECT sai por COLUNA, nÃ£o pela tabela inteira, e a razÃ£o Ã© a view:
+-- `ai_provider_credentials_safe` Ã© `security_invoker=true` â€” de propÃ³sito, para
+-- que a RLS da tabela base valha para o usuÃ¡rio que a consulta. Revogar o SELECT
+-- da tabela inteira quebraria a view (o invoker nÃ£o tem privilÃ©gio para ler a
+-- base) e, com ela, a tela de provedores. TornÃ¡-la `security_invoker=false` para
 -- contornar isso seria trocar um furo pequeno por um grande: a RLS pararia de se
--- aplicar e a view passaria a devolver linha de qualquer organização.
+-- aplicar e a view passaria a devolver linha de qualquer organizaÃ§Ã£o.
 --
--- Com grant por coluna, as três colunas do segredo ficam inalcançáveis pelo
--- PostgREST e a view — que só lê as outras doze — continua funcionando. Medido
+-- Com grant por coluna, as trÃªs colunas do segredo ficam inalcanÃ§Ã¡veis pelo
+-- PostgREST e a view â€” que sÃ³ lÃª as outras doze â€” continua funcionando. Medido
 -- por controle positivo em tests/invariants/rbac-config-ia-canais.test.ts: a
--- primeira versão desta migration revogava a tabela toda, e foi esse controle
+-- primeira versÃ£o desta migration revogava a tabela toda, e foi esse controle
 -- que reprovou.
 revoke select on public.ai_provider_credentials from authenticated, anon;
 grant select (
@@ -12484,23 +12484,23 @@ grant select (
 ) on public.ai_provider_credentials to authenticated;
 grant select on public.ai_provider_credentials_safe to authenticated;
 
--- O PostgREST guarda o schema em cache; sem isto as policies novas só valem no
--- próximo reload dele.
+-- O PostgREST guarda o schema em cache; sem isto as policies novas sÃ³ valem no
+-- prÃ³ximo reload dele.
 notify pgrst, 'reload schema';
 
 
--- ---- credenciais de IA voltam a ser LIDAS por quem não é admin (migration 0207) ----
--- A 0150 (bloco acima) deixou `..._write` como ÚNICA policy da tabela. `FOR ALL`
--- cobre o SELECT, então a leitura passou a exigir admin — e a view
--- `ai_provider_credentials_safe` é `security_invoker=true`, então um `manager`
--- passava na autorização da aplicação e era filtrado para ZERO LINHAS na base.
--- A tela respondia 200 com `[]`, e a pessoa concluía que não havia credencial.
+-- ---- credenciais de IA voltam a ser LIDAS por quem nÃ£o Ã© admin (migration 0207) ----
+-- A 0150 (bloco acima) deixou `..._write` como ÃšNICA policy da tabela. `FOR ALL`
+-- cobre o SELECT, entÃ£o a leitura passou a exigir admin â€” e a view
+-- `ai_provider_credentials_safe` Ã© `security_invoker=true`, entÃ£o um `manager`
+-- passava na autorizaÃ§Ã£o da aplicaÃ§Ã£o e era filtrado para ZERO LINHAS na base.
+-- A tela respondia 200 com `[]`, e a pessoa concluÃ­a que nÃ£o havia credencial.
 --
--- O par que o cabeçalho da 0150 promete: escrita de admin, leitura por tenancy.
--- O segredo segue protegido pelo GRANT POR COLUNA logo acima — é ele, e não a
+-- O par que o cabeÃ§alho da 0150 promete: escrita de admin, leitura por tenancy.
+-- O segredo segue protegido pelo GRANT POR COLUNA logo acima â€” Ã© ele, e nÃ£o a
 -- RLS, que esconde `api_key_encrypted/iv/tag`. (issue #292)
 --
--- Este bloco vem DEPOIS do da 0150 de propósito: lá em cima há um
+-- Este bloco vem DEPOIS do da 0150 de propÃ³sito: lÃ¡ em cima hÃ¡ um
 -- `drop policy if exists ..._select`, e inverter a ordem apagaria este conserto.
 drop policy if exists tenant_isolation_ai_provider_credentials_select on public.ai_provider_credentials;
 create policy tenant_isolation_ai_provider_credentials_select on public.ai_provider_credentials
@@ -12512,21 +12512,21 @@ notify pgrst, 'reload schema';
 
 -- ---- o quadro de clientes montado no onboarding (migration 0156) ----
 -- O gatilho `trg_seed_default_pipeline_for_org` semeia um funil de e-commerce em
--- TODA organização, e o passo do onboarding troca esse quadro por um do ramo do
--- negócio. A troca é DELETE + INSERT das etapas, e o cliente JS não tem
--- transação: pelo cliente, um DELETE que passa e um INSERT que falha deixariam o
--- funil sem coluna nenhuma. Aqui os dois vivem na mesma transação da função.
+-- TODA organizaÃ§Ã£o, e o passo do onboarding troca esse quadro por um do ramo do
+-- negÃ³cio. A troca Ã© DELETE + INSERT das etapas, e o cliente JS nÃ£o tem
+-- transaÃ§Ã£o: pelo cliente, um DELETE que passa e um INSERT que falha deixariam o
+-- funil sem coluna nenhuma. Aqui os dois vivem na mesma transaÃ§Ã£o da funÃ§Ã£o.
 --
--- As duas recusas, e a segunda é a silenciosa: `crm_leads_stage_id_fkey` é
--- RESTRICT (o DELETE falharia), mas `webhook_sources.default_stage_id` é
--- **CASCADE** — trocar as colunas apagaria a fonte de webhook inteira sem erro
--- nenhum. Ver o cabeçalho da 0156 para a medição que motivou o passo.
+-- As duas recusas, e a segunda Ã© a silenciosa: `crm_leads_stage_id_fkey` Ã©
+-- RESTRICT (o DELETE falharia), mas `webhook_sources.default_stage_id` Ã©
+-- **CASCADE** â€” trocar as colunas apagaria a fonte de webhook inteira sem erro
+-- nenhum. Ver o cabeÃ§alho da 0156 para a mediÃ§Ã£o que motivou o passo.
 --
--- ⚠️ ESTE BLOCO FICA ACIMA DA VARREDURA DE `anon`, e não é arbitrário: o
--- `ALTER DEFAULT PRIVILEGES` do corpo do baseline faz toda função nova nascer
--- com EXECUTE para `anon`, e quem cura isso é a varredura — que só alcança o
--- que veio ANTES dela. É o que `tests/unit/varredura-anon-e-o-ultimo-bloco`
--- cobra, e foi ele que pegou este apêndice no lugar errado.
+-- âš ï¸ ESTE BLOCO FICA ACIMA DA VARREDURA DE `anon`, e nÃ£o Ã© arbitrÃ¡rio: o
+-- `ALTER DEFAULT PRIVILEGES` do corpo do baseline faz toda funÃ§Ã£o nova nascer
+-- com EXECUTE para `anon`, e quem cura isso Ã© a varredura â€” que sÃ³ alcanÃ§a o
+-- que veio ANTES dela. Ã‰ o que `tests/unit/varredura-anon-e-o-ultimo-bloco`
+-- cobra, e foi ele que pegou este apÃªndice no lugar errado.
 
 create or replace function public.fn_aplicar_quadro_do_onboarding(
   p_organization_id uuid,
@@ -12544,8 +12544,8 @@ declare
   v_fontes bigint;
   v_criadas bigint;
 begin
-  -- O funil é DESTA organização? A função roda como `postgres` e passa por cima
-  -- da RLS; o filtro de tenant é responsabilidade dela.
+  -- O funil Ã© DESTA organizaÃ§Ã£o? A funÃ§Ã£o roda como `postgres` e passa por cima
+  -- da RLS; o filtro de tenant Ã© responsabilidade dela.
   perform 1 from public.crm_pipelines
    where id = p_pipeline_id and organization_id = p_organization_id;
   if not found then
@@ -12598,61 +12598,61 @@ begin
   return jsonb_build_object('ok', true, 'etapas', v_criadas);
 end$$;
 
--- TRÊS origens de EXECUTE, e medi as três antes de escrever esta lista — com o
+-- TRÃŠS origens de EXECUTE, e medi as trÃªs antes de escrever esta lista â€” com o
 -- revoke de `public, anon` apenas, `has_function_privilege` ainda respondia
 -- `authenticated, service_role`:
 --
---   (A) o grant que o Postgres dá a PUBLIC ao criar qualquer função;
+--   (A) o grant que o Postgres dÃ¡ a PUBLIC ao criar qualquer funÃ§Ã£o;
 --   (B) `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON FUNCTIONS TO anon` (baseline);
---   (C) a irmã dela, `... TO authenticated` (baseline, linha seguinte).
+--   (C) a irmÃ£ dela, `... TO authenticated` (baseline, linha seguinte).
 --
--- Nenhum dos revokes remove os outros dois. E aqui (C) é a perigosa, não (B):
--- esta função é SECURITY DEFINER, roda como `postgres` por cima da RLS e recebe
--- `p_organization_id` como ARGUMENTO. Executável por `authenticated`, qualquer
--- usuário logado de qualquer tenant poderia reescrever o funil de OUTRA
--- organização passando o id dela — exatamente a classe de furo que a 0149
--- fechou. O invariante `hardening-definer-varredura` reprova definer volátil
--- alcançável por `authenticated` fora da allowlist, e esta não entra nela.
+-- Nenhum dos revokes remove os outros dois. E aqui (C) Ã© a perigosa, nÃ£o (B):
+-- esta funÃ§Ã£o Ã© SECURITY DEFINER, roda como `postgres` por cima da RLS e recebe
+-- `p_organization_id` como ARGUMENTO. ExecutÃ¡vel por `authenticated`, qualquer
+-- usuÃ¡rio logado de qualquer tenant poderia reescrever o funil de OUTRA
+-- organizaÃ§Ã£o passando o id dela â€” exatamente a classe de furo que a 0149
+-- fechou. O invariante `hardening-definer-varredura` reprova definer volÃ¡til
+-- alcanÃ§Ã¡vel por `authenticated` fora da allowlist, e esta nÃ£o entra nela.
 revoke execute on function public.fn_aplicar_quadro_do_onboarding(uuid, uuid, text, text, jsonb)
   from public, anon, authenticated;
--- Só o service role: o único chamador é a Server Action do onboarding, que já
--- resolveu a organização do cookie de sessão. Quem não precisa não recebe.
+-- SÃ³ o service role: o Ãºnico chamador Ã© a Server Action do onboarding, que jÃ¡
+-- resolveu a organizaÃ§Ã£o do cookie de sessÃ£o. Quem nÃ£o precisa nÃ£o recebe.
 grant execute on function public.fn_aplicar_quadro_do_onboarding(uuid, uuid, text, text, jsonb)
   to service_role;
 
--- ---- marca por organização (migration 0157) ----
+-- ---- marca por organizaÃ§Ã£o (migration 0157) ----
 --
--- A MARCA DO CLIENTE FINAL SE GRAVA EM UMA INSTRUÇÃO SÓ.
+-- A MARCA DO CLIENTE FINAL SE GRAVA EM UMA INSTRUÃ‡ÃƒO SÃ“.
 --
--- `organizations.settings` tem três donos com gates diferentes (updateTenant =
--- admin, PATCH de atendimento = manager, régua de atrito = manager) e os três
+-- `organizations.settings` tem trÃªs donos com gates diferentes (updateTenant =
+-- admin, PATCH de atendimento = manager, rÃ©gua de atrito = manager) e os trÃªs
 -- fazem read-modify-write do jsonb INTEIRO, em round-trips HTTP separados. A
--- perda é medida, não deduzida: `visibility_mode` volta de 'own' para 'all' sem
--- erro em lugar nenhum — e essa chave é lida DIRETO pela RLS, dentro de
+-- perda Ã© medida, nÃ£o deduzida: `visibility_mode` volta de 'own' para 'all' sem
+-- erro em lugar nenhum â€” e essa chave Ã© lida DIRETO pela RLS, dentro de
 -- `fn_can_view_conversation`/`fn_can_view_lead`. Um write de COR reverteria, em
--- silêncio, uma decisão de exposição de dado de cliente. Um quarto escritor com
--- o mesmo padrão é inaceitável, então esta escrita passa por função.
+-- silÃªncio, uma decisÃ£o de exposiÃ§Ã£o de dado de cliente. Um quarto escritor com
+-- o mesmo padrÃ£o Ã© inaceitÃ¡vel, entÃ£o esta escrita passa por funÃ§Ã£o.
 --
--- Devolve `integer` (linhas afetadas) porque a única policy de escrita de
--- `organizations` é `orgs_write_platform_admin`: pelo client de sessão o UPDATE
--- de um admin de TENANT casa 0 linhas e o PostgREST responde 204 — a tela diz
--- "salvo" e nada foi gravado (issue #144). O `row_count` é o que permite ao
+-- Devolve `integer` (linhas afetadas) porque a Ãºnica policy de escrita de
+-- `organizations` Ã© `orgs_write_platform_admin`: pelo client de sessÃ£o o UPDATE
+-- de um admin de TENANT casa 0 linhas e o PostgREST responde 204 â€” a tela diz
+-- "salvo" e nada foi gravado (issue #144). O `row_count` Ã© o que permite ao
 -- chamador distinguir os dois casos.
 --
--- A autorização é REPETIDA aqui (o gate da Server Action usa o snapshot de
--- membership de `loadAuthUser`, não o banco): é o que faz a regra valer para
--- qualquer chamador futuro e o que impede escalação se o EXECUTE escapar um dia.
+-- A autorizaÃ§Ã£o Ã© REPETIDA aqui (o gate da Server Action usa o snapshot de
+-- membership de `loadAuthUser`, nÃ£o o banco): Ã© o que faz a regra valer para
+-- qualquer chamador futuro e o que impede escalaÃ§Ã£o se o EXECUTE escapar um dia.
 --
 -- Idempotente e auto-curativo: `create or replace function`, revoke/grant
--- declarativos, e nenhuma constraint nova sobre dado existente — não há o que
--- deduplicar antes. Termina com `notify pgrst` próprio, como os blocos
--- vizinhos — o PostgREST guarda o schema em cache e não veria a função nova.
+-- declarativos, e nenhuma constraint nova sobre dado existente â€” nÃ£o hÃ¡ o que
+-- deduplicar antes. Termina com `notify pgrst` prÃ³prio, como os blocos
+-- vizinhos â€” o PostgREST guarda o schema em cache e nÃ£o veria a funÃ§Ã£o nova.
 --
--- ⚠️ E entra ANTES do bloco da VARREDURA anon, que é de propósito o último do
--- arquivo: ela mede o privilégio EFETIVO de `authenticated`/`service_role` antes
--- de revogar e o devolve depois, então os revokes acima só sobrevivem porque
--- rodam ANTES dela. Colar no fim do arquivo — o movimento natural de quem
--- adiciona migration — desarmaria a cura para tudo que viesse depois. Vigiado
+-- âš ï¸ E entra ANTES do bloco da VARREDURA anon, que Ã© de propÃ³sito o Ãºltimo do
+-- arquivo: ela mede o privilÃ©gio EFETIVO de `authenticated`/`service_role` antes
+-- de revogar e o devolve depois, entÃ£o os revokes acima sÃ³ sobrevivem porque
+-- rodam ANTES dela. Colar no fim do arquivo â€” o movimento natural de quem
+-- adiciona migration â€” desarmaria a cura para tudo que viesse depois. Vigiado
 -- por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
 create or replace function public.fn_definir_marca_da_organizacao(
   p_org   uuid,
@@ -12674,9 +12674,9 @@ begin
       using errcode = '22023';
   end if;
 
-  -- "Apague a marca" chega por DUAS formas — SQL NULL e o jsonb `'null'` — e as
-  -- duas significam a mesma coisa. NÃO MEDIDO qual delas o PostgREST produz para
-  -- `{"p_marca": null}`; tratar só uma deixaria a limpeza levantando 22023 num
+  -- "Apague a marca" chega por DUAS formas â€” SQL NULL e o jsonb `'null'` â€” e as
+  -- duas significam a mesma coisa. NÃƒO MEDIDO qual delas o PostgREST produz para
+  -- `{"p_marca": null}`; tratar sÃ³ uma deixaria a limpeza levantando 22023 num
   -- dos dois transportes.
   v_limpar := p_marca is null or jsonb_typeof(p_marca) = 'null';
 
@@ -12685,19 +12685,19 @@ begin
       using errcode = '22023';
   end if;
 
-  -- MESMA regex do CHECK `platform_branding_accent_hex` — que é a forma que
+  -- MESMA regex do CHECK `platform_branding_accent_hex` â€” que Ã© a forma que
   -- `normalizarHex` emite. Aceitar `#FFF` criaria duas grafias da mesma cor e a
-  -- pergunta "mudou?" passaria a mentir. Dentro de jsonb não cabe CHECK de
-  -- coluna, então a regra é da função.
+  -- pergunta "mudou?" passaria a mentir. Dentro de jsonb nÃ£o cabe CHECK de
+  -- coluna, entÃ£o a regra Ã© da funÃ§Ã£o.
   v_hex := nullif(p_marca ->> 'accent_hex', '');
   if v_hex is not null and v_hex !~ '^#[0-9a-f]{6}$' then
     raise exception 'marca_da_organizacao_accent_hex_invalido'
       using errcode = '22023';
   end if;
 
-  -- Papel insuficiente falha ALTO (42501) em vez de devolver 0: 0 já significa
-  -- "a organização não existe", e colapsar os dois deixaria o chamador sem saber
-  -- se o problema é papel ou id.
+  -- Papel insuficiente falha ALTO (42501) em vez de devolver 0: 0 jÃ¡ significa
+  -- "a organizaÃ§Ã£o nÃ£o existe", e colapsar os dois deixaria o chamador sem saber
+  -- se o problema Ã© papel ou id.
   if not exists (
        select 1 from public.user_organizations uo
         where uo.user_id = p_actor
@@ -12729,18 +12729,18 @@ end;
 $$;
 
 comment on function public.fn_definir_marca_da_organizacao(uuid, uuid, jsonb) is
-  'Grava organizations.settings.branding com merge ATÔMICO (jsonb_set), sem tocar nas demais chaves do jsonb (llm, routing, visibility_mode, atrito, ai_dispatch_mode, canonical_conversation_tags, lost_reasons_extra, plan). Devolve linhas afetadas: 0 = a organização não existe. Papel insuficiente levanta 42501. Chamador: app/actions/settings/updateMarcaDaOrganizacao.ts.';
+  'Grava organizations.settings.branding com merge ATÃ”MICO (jsonb_set), sem tocar nas demais chaves do jsonb (llm, routing, visibility_mode, atrito, ai_dispatch_mode, canonical_conversation_tags, lost_reasons_extra, plan). Devolve linhas afetadas: 0 = a organizaÃ§Ã£o nÃ£o existe. Papel insuficiente levanta 42501. Chamador: app/actions/settings/updateMarcaDaOrganizacao.ts.';
 
--- OS DOIS REVOKES (CLAUDE.md, item 9) — origens DISTINTAS de EXECUTE, e tratar
--- só uma deixa a função exposta com o gate verde:
---   (A) `from public`  — o grant que o Postgres dá a PUBLIC ao criar qualquer
---       função; `revoke ... from anon` não o remove.
---   (B) `from anon`    — o grant DIRETO do `ALTER DEFAULT PRIVILEGES ... GRANT
+-- OS DOIS REVOKES (CLAUDE.md, item 9) â€” origens DISTINTAS de EXECUTE, e tratar
+-- sÃ³ uma deixa a funÃ§Ã£o exposta com o gate verde:
+--   (A) `from public`  â€” o grant que o Postgres dÃ¡ a PUBLIC ao criar qualquer
+--       funÃ§Ã£o; `revoke ... from anon` nÃ£o o remove.
+--   (B) `from anon`    â€” o grant DIRETO do `ALTER DEFAULT PRIVILEGES ... GRANT
 --       ALL ON FUNCTIONS TO anon` (linha ~3972 deste arquivo), que vale para
---       toda função criada DEPOIS dele — isto é, para todo apêndice, que por
---       construção nasce no fim. `revoke ... from public` não o remove.
--- `from authenticated` pelo motivo de (B) e mais um: esta função é VOLÁTIL.
--- Definer volátil alcançável por qualquer usuário logado é escrita cross-tenant.
+--       toda funÃ§Ã£o criada DEPOIS dele â€” isto Ã©, para todo apÃªndice, que por
+--       construÃ§Ã£o nasce no fim. `revoke ... from public` nÃ£o o remove.
+-- `from authenticated` pelo motivo de (B) e mais um: esta funÃ§Ã£o Ã© VOLÃTIL.
+-- Definer volÃ¡til alcanÃ§Ã¡vel por qualquer usuÃ¡rio logado Ã© escrita cross-tenant.
 revoke execute on function public.fn_definir_marca_da_organizacao(uuid, uuid, jsonb)
   from public, anon, authenticated;
 grant  execute on function public.fn_definir_marca_da_organizacao(uuid, uuid, jsonb)
@@ -12749,34 +12749,34 @@ grant  execute on function public.fn_definir_marca_da_organizacao(uuid, uuid, js
 notify pgrst, 'reload schema';
 
 
--- ---- logo da marca: as FUNÇÕES (migration 0158) ----
+-- ---- logo da marca: as FUNÃ‡Ã•ES (migration 0158) ----
 --
--- O LOGO SAI DA CAIXA DE TEXTO E VIRA ARQUIVO — a metade que cria função.
+-- O LOGO SAI DA CAIXA DE TEXTO E VIRA ARQUIVO â€” a metade que cria funÃ§Ã£o.
 --
--- ⚠️ POR QUE A 0158 ENTRA NO APÊNDICE EM DOIS PEDAÇOS, E NÃO EM UM.
+-- âš ï¸ POR QUE A 0158 ENTRA NO APÃŠNDICE EM DOIS PEDAÃ‡OS, E NÃƒO EM UM.
 --
--- `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proíbe `create function` e
+-- `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proÃ­be `create function` e
 -- `grant ... to anon` DEPOIS do bloco da VARREDURA anon (logo abaixo). Mas
--- `platform_branding` — a tabela que ganha a coluna `logo_path` — é criada no
--- bloco da 0155, que vem DEPOIS da varredura, no fim do arquivo. Um bloco único
+-- `platform_branding` â€” a tabela que ganha a coluna `logo_path` â€” Ã© criada no
+-- bloco da 0155, que vem DEPOIS da varredura, no fim do arquivo. Um bloco Ãºnico
 -- quebraria uma das duas coisas: colado aqui, o `alter table
 -- public.platform_branding` rodaria sobre tabela inexistente e o `install.sh`
--- (que usa `ON_ERROR_STOP=1`) abortaria a instalação inteira; colado no fim, as
--- duas funções abaixo nasceriam com EXECUTE para `anon` em todo clone que
--- ATUALIZA, que é o buraco que a varredura existe para fechar.
+-- (que usa `ON_ERROR_STOP=1`) abortaria a instalaÃ§Ã£o inteira; colado no fim, as
+-- duas funÃ§Ãµes abaixo nasceriam com EXECUTE para `anon` em todo clone que
+-- ATUALIZA, que Ã© o buraco que a varredura existe para fechar.
 --
--- Então: FUNÇÕES aqui (antes da varredura), BUCKET e COLUNA no fim do arquivo
--- (depois da 0155). Os dois blocos são idempotentes e independentes na ordem —
--- nenhuma das funções abaixo lê `platform_branding`.
+-- EntÃ£o: FUNÃ‡Ã•ES aqui (antes da varredura), BUCKET e COLUNA no fim do arquivo
+-- (depois da 0155). Os dois blocos sÃ£o idempotentes e independentes na ordem â€”
+-- nenhuma das funÃ§Ãµes abaixo lÃª `platform_branding`.
 --
--- ─── Por que uma função PRÓPRIA para o logo ─────────────────────────────────
+-- â”€â”€â”€ Por que uma funÃ§Ã£o PRÃ“PRIA para o logo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
 -- `fn_definir_marca_da_organizacao` (0157) faz `jsonb_set(settings, '{branding}',
--- p_marca)` — substitui o objeto INTEIRO. Gravar o logo por ela faria "salvar o
--- nome" apagar o logo, em silêncio, com a tela dizendo "salvo". Duas escritas
--- independentes precisam de duas funções que façam merge cada uma no seu campo.
+-- p_marca)` â€” substitui o objeto INTEIRO. Gravar o logo por ela faria "salvar o
+-- nome" apagar o logo, em silÃªncio, com a tela dizendo "salvo". Duas escritas
+-- independentes precisam de duas funÃ§Ãµes que faÃ§am merge cada uma no seu campo.
 --
--- ─── E por que a 0157 é RECRIADA aqui (forward-fix) ─────────────────────────
+-- â”€â”€â”€ E por que a 0157 Ã© RECRIADA aqui (forward-fix) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
 -- Pelo mesmo motivo, de volta: ela precisa PRESERVAR `logo_path` ao substituir o
 -- objeto. Sem isso, a ordem natural de quem configura a marca ("sobe o logo,
@@ -12805,12 +12805,12 @@ begin
 
   v_path := nullif(btrim(coalesce(p_path, '')), '');
 
-  -- O PREFIXO ASSEVERADO DENTRO DO BANCO — o gate que sobrevive ao segundo
-  -- chamador. A rota monta o caminho a partir da organização resolvida do
-  -- cookie, mas "a rota monta certo" é promessa de UM chamador. Sem esta linha,
-  -- um caminho de outro escopo (o `platform/...` que qualquer pessoa lê no HTML
-  -- da tela de login) entraria como logo da organização — e o delete-on-replace
-  -- da rota, rodando como `service_role`, apagaria o logo da instalação inteira
+  -- O PREFIXO ASSEVERADO DENTRO DO BANCO â€” o gate que sobrevive ao segundo
+  -- chamador. A rota monta o caminho a partir da organizaÃ§Ã£o resolvida do
+  -- cookie, mas "a rota monta certo" Ã© promessa de UM chamador. Sem esta linha,
+  -- um caminho de outro escopo (o `platform/...` que qualquer pessoa lÃª no HTML
+  -- da tela de login) entraria como logo da organizaÃ§Ã£o â€” e o delete-on-replace
+  -- da rota, rodando como `service_role`, apagaria o logo da instalaÃ§Ã£o inteira
   -- na troca seguinte.
   if v_path is not null
      and v_path !~ ('^' || p_org::text || '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$')
@@ -12836,9 +12836,9 @@ begin
       using errcode = '42501';
   end if;
 
-  -- Merge no CAMPO. `jsonb_set` direto em '{branding,logo_path}' NÃO serviria:
-  -- com `branding` ausente, `create_missing` só cria a ÚLTIMA chave e o caminho
-  -- intermediário faltando devolve o jsonb original intocado — silenciosamente.
+  -- Merge no CAMPO. `jsonb_set` direto em '{branding,logo_path}' NÃƒO serviria:
+  -- com `branding` ausente, `create_missing` sÃ³ cria a ÃšLTIMA chave e o caminho
+  -- intermediÃ¡rio faltando devolve o jsonb original intocado â€” silenciosamente.
   update public.organizations o
      set settings = case
            when v_path is null
@@ -12858,13 +12858,13 @@ end;
 $$;
 
 comment on function public.fn_definir_logo_da_organizacao(uuid, uuid, text) is
-  'Grava (ou apaga) organizations.settings.branding.logo_path com merge no CAMPO — não toca em app_name, accent_hex nem nas demais chaves de settings. Assevera que o caminho começa pelo proprio organization_id: caminho de outro escopo levanta 22023. Papel insuficiente levanta 42501. Devolve linhas afetadas: 0 = a organização não existe. Chamador: app/api/v1/marca/logo/route.ts.';
+  'Grava (ou apaga) organizations.settings.branding.logo_path com merge no CAMPO â€” nÃ£o toca em app_name, accent_hex nem nas demais chaves de settings. Assevera que o caminho comeÃ§a pelo proprio organization_id: caminho de outro escopo levanta 22023. Papel insuficiente levanta 42501. Devolve linhas afetadas: 0 = a organizaÃ§Ã£o nÃ£o existe. Chamador: app/api/v1/marca/logo/route.ts.';
 
--- ── O FORWARD-FIX DA 0157 ───────────────────────────────────────────────────
+-- â”€â”€ O FORWARD-FIX DA 0157 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
--- As três linhas de `logo_path` no `case` abaixo são a razão de a 0157 aparecer
--- de novo. Sem elas, salvar nome/cor pela tela apaga o logo da organização, em
--- silêncio. Vigiado por `tests/invariants/marca-logo.test.ts`.
+-- As trÃªs linhas de `logo_path` no `case` abaixo sÃ£o a razÃ£o de a 0157 aparecer
+-- de novo. Sem elas, salvar nome/cor pela tela apaga o logo da organizaÃ§Ã£o, em
+-- silÃªncio. Vigiado por `tests/invariants/marca-logo.test.ts`.
 
 create or replace function public.fn_definir_marca_da_organizacao(
   p_org   uuid,
@@ -12918,18 +12918,18 @@ begin
 
   update public.organizations o
      set settings = case
-           -- "Limpar" com logo gravado NÃO apaga o logo: o campo tem controle
-           -- próprio na tela, e limpar nome+cor responde a OUTRA pergunta.
+           -- "Limpar" com logo gravado NÃƒO apaga o logo: o campo tem controle
+           -- prÃ³prio na tela, e limpar nome+cor responde a OUTRA pergunta.
            when v_limpar and coalesce(o.settings #>> '{branding,logo_path}', '') = ''
              then coalesce(o.settings, '{}'::jsonb) - 'branding'
            when v_limpar
              then jsonb_set(
                     coalesce(o.settings, '{}'::jsonb), '{branding}',
                     jsonb_build_object('logo_path', o.settings #> '{branding,logo_path}'), true)
-           -- `p_marca || preservado`: o lado DIREITO vence em `||`, então o
-           -- `logo_path` gravado sobrevive à substituição do objeto.
-           -- `jsonb_strip_nulls` SÓ no fragmento preservado — nunca em `p_marca`,
-           -- cujo `app_name: null` é um valor com significado.
+           -- `p_marca || preservado`: o lado DIREITO vence em `||`, entÃ£o o
+           -- `logo_path` gravado sobrevive Ã  substituiÃ§Ã£o do objeto.
+           -- `jsonb_strip_nulls` SÃ“ no fragmento preservado â€” nunca em `p_marca`,
+           -- cujo `app_name: null` Ã© um valor com significado.
            else jsonb_set(
                     coalesce(o.settings, '{}'::jsonb), '{branding}',
                     p_marca || jsonb_strip_nulls(
@@ -12943,17 +12943,17 @@ end;
 $$;
 
 comment on function public.fn_definir_marca_da_organizacao(uuid, uuid, jsonb) is
-  'Grava organizations.settings.branding com merge ATÔMICO (jsonb_set), sem tocar nas demais chaves do jsonb (llm, routing, visibility_mode, atrito, ai_dispatch_mode, canonical_conversation_tags, lost_reasons_extra, plan) e PRESERVANDO branding.logo_path, que tem escritor próprio (fn_definir_logo_da_organizacao, migration 0158). Devolve linhas afetadas: 0 = a organização não existe. Papel insuficiente levanta 42501. Chamador: app/actions/settings/updateMarcaDaOrganizacao.ts.';
+  'Grava organizations.settings.branding com merge ATÃ”MICO (jsonb_set), sem tocar nas demais chaves do jsonb (llm, routing, visibility_mode, atrito, ai_dispatch_mode, canonical_conversation_tags, lost_reasons_extra, plan) e PRESERVANDO branding.logo_path, que tem escritor prÃ³prio (fn_definir_logo_da_organizacao, migration 0158). Devolve linhas afetadas: 0 = a organizaÃ§Ã£o nÃ£o existe. Papel insuficiente levanta 42501. Chamador: app/actions/settings/updateMarcaDaOrganizacao.ts.';
 
--- OS DOIS REVOKES EM CADA FUNÇÃO (CLAUDE.md, item 9) — origens DISTINTAS de
--- EXECUTE, e tratar uma só deixa a função exposta com o gate verde:
---   (A) `from public`  — o grant que o Postgres dá a PUBLIC ao criar qualquer
---       função; `revoke ... from anon` não o remove.
---   (B) `from anon`    — o grant DIRETO do `ALTER DEFAULT PRIVILEGES ... GRANT
+-- OS DOIS REVOKES EM CADA FUNÃ‡ÃƒO (CLAUDE.md, item 9) â€” origens DISTINTAS de
+-- EXECUTE, e tratar uma sÃ³ deixa a funÃ§Ã£o exposta com o gate verde:
+--   (A) `from public`  â€” o grant que o Postgres dÃ¡ a PUBLIC ao criar qualquer
+--       funÃ§Ã£o; `revoke ... from anon` nÃ£o o remove.
+--   (B) `from anon`    â€” o grant DIRETO do `ALTER DEFAULT PRIVILEGES ... GRANT
 --       ALL ON FUNCTIONS TO anon` (linha ~3972 deste arquivo), que vale para
---       toda função criada DEPOIS dele — isto é, para todo apêndice.
--- `from authenticated` pelo motivo de (B) e mais um: as duas são VOLÁTEIS.
--- Definer volátil alcançável por qualquer usuário logado é escrita cross-tenant.
+--       toda funÃ§Ã£o criada DEPOIS dele â€” isto Ã©, para todo apÃªndice.
+-- `from authenticated` pelo motivo de (B) e mais um: as duas sÃ£o VOLÃTEIS.
+-- Definer volÃ¡til alcanÃ§Ã¡vel por qualquer usuÃ¡rio logado Ã© escrita cross-tenant.
 revoke execute on function public.fn_definir_logo_da_organizacao(uuid, uuid, text)
   from public, anon, authenticated;
 grant  execute on function public.fn_definir_logo_da_organizacao(uuid, uuid, text)
@@ -12967,48 +12967,48 @@ grant  execute on function public.fn_definir_marca_da_organizacao(uuid, uuid, js
 notify pgrst, 'reload schema';
 
 
--- ---- gasto de IA do mês: uma régua só (migration 0159) ----
+-- ---- gasto de IA do mÃªs: uma rÃ©gua sÃ³ (migration 0159) ----
 --
--- O NÚMERO EXIBIDO PASSA A SER O NÚMERO QUE DECIDE.
+-- O NÃšMERO EXIBIDO PASSA A SER O NÃšMERO QUE DECIDE.
 --
--- Antes desta função havia duas contagens de gasto no produto e elas divergiam:
+-- Antes desta funÃ§Ã£o havia duas contagens de gasto no produto e elas divergiam:
 --
 --   * a query inline de `assertBudget` (`lib/agent-engine/edge/llm/run-model-call.ts`),
---     que soma `llm_calls` do mês corrente — é ela que barrava a chamada;
---   * `ai_budgets.current_month_consumed_cents`, que é o que a TELA mostra — um
+--     que soma `llm_calls` do mÃªs corrente â€” Ã© ela que barrava a chamada;
+--   * `ai_budgets.current_month_consumed_cents`, que Ã© o que a TELA mostra â€” um
 --     contador materializado pelo gatilho `fn_update_budget_consumption`, que soma
 --     `NEW.cost_cents` SEM olhar a data e nunca zera (o `runBudgetReset` jamais foi
---     agendado). O único recomputo em produção é o apêndice da 0140, que só roda
---     no `install.sh`/`update.sh` — numa instalação que não atualiza há três meses,
---     o card compara três meses de gasto contra um teto MENSAL.
+--     agendado). O Ãºnico recomputo em produÃ§Ã£o Ã© o apÃªndice da 0140, que sÃ³ roda
+--     no `install.sh`/`update.sh` â€” numa instalaÃ§Ã£o que nÃ£o atualiza hÃ¡ trÃªs meses,
+--     o card compara trÃªs meses de gasto contra um teto MENSAL.
 --
--- Armar uma proteção contra um número que não é o número que decide é pedir para
--- a pessoa proteger-se de uma mentira. Uma régua só, e ela é esta.
+-- Armar uma proteÃ§Ã£o contra um nÃºmero que nÃ£o Ã© o nÃºmero que decide Ã© pedir para
+-- a pessoa proteger-se de uma mentira. Uma rÃ©gua sÃ³, e ela Ã© esta.
 --
--- `security invoker`, NÃO `definer`: a função recebe a organização por argumento
--- e não valida membership. Uma definer alcançável por `authenticated` seria
--- leitura de gasto cross-tenant. Quem a chama já tem o `organization_id` de fonte
--- confiável — o `pg.Pool` do engine (dono do schema) e o admin client via
+-- `security invoker`, NÃƒO `definer`: a funÃ§Ã£o recebe a organizaÃ§Ã£o por argumento
+-- e nÃ£o valida membership. Uma definer alcanÃ§Ã¡vel por `authenticated` seria
+-- leitura de gasto cross-tenant. Quem a chama jÃ¡ tem o `organization_id` de fonte
+-- confiÃ¡vel â€” o `pg.Pool` do engine (dono do schema) e o admin client via
 -- PostgREST (`service_role`).
 --
--- ⚠️ E POR SER INVOKER ELA DEPENDE INTEIRAMENTE DOS PRÓPRIOS REVOKES: o bloco
--- `VARREDURA anon` logo abaixo percorre só `p.prosecdef`, então ele NÃO cura
--- função invoker. São duas origens distintas de EXECUTE (CLAUDE.md, item 9):
---   (A) o grant que o Postgres dá a PUBLIC ao criar qualquer função — que
---       `revoke ... from anon` não remove;
+-- âš ï¸ E POR SER INVOKER ELA DEPENDE INTEIRAMENTE DOS PRÃ“PRIOS REVOKES: o bloco
+-- `VARREDURA anon` logo abaixo percorre sÃ³ `p.prosecdef`, entÃ£o ele NÃƒO cura
+-- funÃ§Ã£o invoker. SÃ£o duas origens distintas de EXECUTE (CLAUDE.md, item 9):
+--   (A) o grant que o Postgres dÃ¡ a PUBLIC ao criar qualquer funÃ§Ã£o â€” que
+--       `revoke ... from anon` nÃ£o remove;
 --   (B) o grant DIRETO a anon do `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON
 --       FUNCTIONS TO anon` do corpo deste arquivo (linha ~3972), que vale para
---       toda função criada depois dele (isto é, para todo apêndice) — que
---       `revoke ... from public` não remove.
--- Tratar só uma deixa a função servida como RPC pela anon key, que vai ao browser.
--- `authenticated` sai pelo motivo de (B) e mais um: é ele que carrega o JWT de
--- qualquer pessoa logada, e a organização vem por argumento.
+--       toda funÃ§Ã£o criada depois dele (isto Ã©, para todo apÃªndice) â€” que
+--       `revoke ... from public` nÃ£o remove.
+-- Tratar sÃ³ uma deixa a funÃ§Ã£o servida como RPC pela anon key, que vai ao browser.
+-- `authenticated` sai pelo motivo de (B) e mais um: Ã© ele que carrega o JWT de
+-- qualquer pessoa logada, e a organizaÃ§Ã£o vem por argumento.
 --
--- ⚠️ E ENTRA ANTES DO BLOCO DA VARREDURA anon, que é de propósito o último do
--- arquivo. `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proíbe QUALQUER
--- `create function` ancorado em início de linha depois dele, e o regex não
--- distingue definer de invoker. É a mesma dança em dois blocos que a 0158 teve de
--- fazer: a função aqui, o resto da migration no fim do arquivo.
+-- âš ï¸ E ENTRA ANTES DO BLOCO DA VARREDURA anon, que Ã© de propÃ³sito o Ãºltimo do
+-- arquivo. `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proÃ­be QUALQUER
+-- `create function` ancorado em inÃ­cio de linha depois dele, e o regex nÃ£o
+-- distingue definer de invoker. Ã‰ a mesma danÃ§a em dois blocos que a 0158 teve de
+-- fazer: a funÃ§Ã£o aqui, o resto da migration no fim do arquivo.
 create or replace function public.fn_gasto_de_ia_do_mes(p_org uuid)
 returns numeric
   language sql
@@ -13023,7 +13023,7 @@ as $$
 $$;
 
 comment on function public.fn_gasto_de_ia_do_mes(uuid) is
-  'Gasto de IA da organização no mês corrente, em centavos de DÓLAR (llm_calls.cost_cents vem de pricing.ts, que calcula em USD). É a ÚNICA definição de gasto do produto: o gate a chama dentro de SQL_ORCAMENTO (lib/agent-engine/edge/llm/orcamento.ts), a tela a chama por RPC e o painel de saúde por tenant a chama. O dashboard de plataforma (app/api/v1/admin/dashboard/kpis) AINDA lê ai_budgets.current_month_consumed_cents, um contador acumulado que nada zera, e por isso pode divergir — a divergência está declarada naquele arquivo e o alerta de lá nunca é critical. Query inline de sum(cost_cents) em outro lugar é uma segunda régua, e a segunda régua sempre diverge — vigiado por tests/unit/orcamento-uma-regua-de-gasto.test.ts. security invoker: recebe a organização por argumento e não valida membership, então definer aqui seria leitura cross-tenant.';
+  'Gasto de IA da organizaÃ§Ã£o no mÃªs corrente, em centavos de DÃ“LAR (llm_calls.cost_cents vem de pricing.ts, que calcula em USD). Ã‰ a ÃšNICA definiÃ§Ã£o de gasto do produto: o gate a chama dentro de SQL_ORCAMENTO (lib/agent-engine/edge/llm/orcamento.ts), a tela a chama por RPC e o painel de saÃºde por tenant a chama. O dashboard de plataforma (app/api/v1/admin/dashboard/kpis) AINDA lÃª ai_budgets.current_month_consumed_cents, um contador acumulado que nada zera, e por isso pode divergir â€” a divergÃªncia estÃ¡ declarada naquele arquivo e o alerta de lÃ¡ nunca Ã© critical. Query inline de sum(cost_cents) em outro lugar Ã© uma segunda rÃ©gua, e a segunda rÃ©gua sempre diverge â€” vigiado por tests/unit/orcamento-uma-regua-de-gasto.test.ts. security invoker: recebe a organizaÃ§Ã£o por argumento e nÃ£o valida membership, entÃ£o definer aqui seria leitura cross-tenant.';
 
 revoke execute on function public.fn_gasto_de_ia_do_mes(uuid)
   from public, anon, authenticated;
@@ -13054,7 +13054,7 @@ end; $$;
 comment on function public.fn_mark_conversation_message is
   'Atualiza agregados da conversa: inbound incrementa unread; outbound zera (respondido).';
 
--- Corrige contadores stale: inbound desde a última resposta do atendente/IA.
+-- Corrige contadores stale: inbound desde a Ãºltima resposta do atendente/IA.
 update public.conversations c
 set unread_count_for_assignee = coalesce((
   select count(*)::integer
@@ -13073,16 +13073,16 @@ where unread_count_for_assignee <> coalesce((
 
 notify pgrst, 'reload schema';
 
--- ---- contato: última atividade carimbada por mensagem (migration 0162) ----
+-- ---- contato: Ãºltima atividade carimbada por mensagem (migration 0162) ----
 -- ============================================================================
--- 0162 — Mensagem de conversa carimba `contacts.last_activity_at`.
+-- 0162 â€” Mensagem de conversa carimba `contacts.last_activity_at`.
 --
--- A lista /app/contacts mostra "Última atividade" de `contacts.last_activity_at`,
--- denormalizado hoje só pelo trigger de `crm_lead_activities`. Mensagens de
+-- A lista /app/contacts mostra "Ãšltima atividade" de `contacts.last_activity_at`,
+-- denormalizado hoje sÃ³ pelo trigger de `crm_lead_activities`. Mensagens de
 -- WhatsApp/Meta/Zernio passam por `fn_mark_conversation_message` e atualizam
--- `conversations.last_message_at` — mas o contato ficava parado (— ou data velha).
+-- `conversations.last_message_at` â€” mas o contato ficava parado (â€” ou data velha).
 --
--- O relógio do LEAD continua na lista positiva da 0079; aqui só o contato.
+-- O relÃ³gio do LEAD continua na lista positiva da 0079; aqui sÃ³ o contato.
 -- ============================================================================
 
 create or replace function public.fn_mark_conversation_message(
@@ -13111,7 +13111,7 @@ end; $$;
 comment on function public.fn_mark_conversation_message is
   'Atualiza agregados da conversa (inbound incrementa unread; outbound zera) e carimba contacts.last_activity_at.';
 
--- Contatos que já conversaram mas nunca tiveram atividade de lead.
+-- Contatos que jÃ¡ conversaram mas nunca tiveram atividade de lead.
 update public.contacts c
    set last_activity_at = sub.max_at
   from (
@@ -13125,10 +13125,10 @@ update public.contacts c
 
 notify pgrst, 'reload schema';
 
--- ---- atribuição de anúncio: de qual campanha um contato do WhatsApp veio (migration 0164) ----
+-- ---- atribuiÃ§Ã£o de anÃºncio: de qual campanha um contato do WhatsApp veio (migration 0164) ----
 --
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon, pelo mesmo motivo das funções
--- acima: `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proíbe `create
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon, pelo mesmo motivo das funÃ§Ãµes
+-- acima: `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` proÃ­be `create
 -- function` depois dele.
 create or replace function public.fn_estampar_atribuicao_de_anuncio(
   p_contact uuid,
@@ -13151,7 +13151,7 @@ end;
 $$;
 
 comment on function public.fn_estampar_atribuicao_de_anuncio(uuid, text, jsonb) is
-  'Grava de qual anúncio (Meta Ads / Google Ads) um contato veio — só na primeira vez. `source_metadata = source_metadata || p_metadata` faz merge, nunca sobrescreve o que fn_upsert_wa_contact já gravou (waha_lid, waha_chat_id, notify_name). A guarda `source_metadata->>''ad_platform'' is null` é o primeiro-toque: clicar em outro anúncio meses depois, numa conversa já aberta, não reescreve de onde a pessoa veio originalmente — o UPDATE casa zero linhas, silenciosamente. security definer + revoke de anon/authenticated: só o backend (admin client no ingest de canal) chama isto.';
+  'Grava de qual anÃºncio (Meta Ads / Google Ads) um contato veio â€” sÃ³ na primeira vez. `source_metadata = source_metadata || p_metadata` faz merge, nunca sobrescreve o que fn_upsert_wa_contact jÃ¡ gravou (waha_lid, waha_chat_id, notify_name). A guarda `source_metadata->>''ad_platform'' is null` Ã© o primeiro-toque: clicar em outro anÃºncio meses depois, numa conversa jÃ¡ aberta, nÃ£o reescreve de onde a pessoa veio originalmente â€” o UPDATE casa zero linhas, silenciosamente. security definer + revoke de anon/authenticated: sÃ³ o backend (admin client no ingest de canal) chama isto.';
 
 revoke execute on function public.fn_estampar_atribuicao_de_anuncio(uuid, text, jsonb) from public, anon, authenticated;
 grant  execute on function public.fn_estampar_atribuicao_de_anuncio(uuid, text, jsonb) to service_role;
@@ -13161,54 +13161,54 @@ notify pgrst, 'reload schema';
 
 -- ---- poda da fila e expurgo do audit (migration 0167) ----
 --
--- Nada no produto apagava job terminal (`grep -rn "from job_queue" … | grep -i
--- delete` devolvia zero linhas), e a retenção de 5 anos do `api_audit_log`
--- existia só no COMMENT e na documentação — sem expurgo e sem o "cold storage
+-- Nada no produto apagava job terminal (`grep -rn "from job_queue" â€¦ | grep -i
+-- delete` devolvia zero linhas), e a retenÃ§Ã£o de 5 anos do `api_audit_log`
+-- existia sÃ³ no COMMENT e na documentaÃ§Ã£o â€” sem expurgo e sem o "cold storage
 -- S3" que seis documentos prometiam. As duas tabelas cresciam desde a
--- instalação, e são as candidatas naturais a estourar os 500 MB do plano free
--- do Supabase antes de qualquer tabela de negócio.
+-- instalaÃ§Ã£o, e sÃ£o as candidatas naturais a estourar os 500 MB do plano free
+-- do Supabase antes de qualquer tabela de negÃ³cio.
 --
--- O QUE TEM DONO NÃO SAI. `pending` (trabalho que ainda vai sair) e `running`
--- (com worker agora; o reaper o devolve se o worker morrer) NUNCA são tocados —
--- terminais são só `done`, `failed` e `dead`. E `dead` com AVISO ABERTO na
--- Central também tem dono: um humano que ainda não olhou. O `not exists` fica
--- ANTES do `limit` de propósito — filtrar depois faria um lote inteiro de jobs
--- protegidos devolver 0, o laço do cron pararia achando que acabou, e a poda
+-- O QUE TEM DONO NÃƒO SAI. `pending` (trabalho que ainda vai sair) e `running`
+-- (com worker agora; o reaper o devolve se o worker morrer) NUNCA sÃ£o tocados â€”
+-- terminais sÃ£o sÃ³ `done`, `failed` e `dead`. E `dead` com AVISO ABERTO na
+-- Central tambÃ©m tem dono: um humano que ainda nÃ£o olhou. O `not exists` fica
+-- ANTES do `limit` de propÃ³sito â€” filtrar depois faria um lote inteiro de jobs
+-- protegidos devolver 0, o laÃ§o do cron pararia achando que acabou, e a poda
 -- morreria de fome com backlog na frente.
 --
 -- CASCATA DECLARADA: apagar um job leva junto `send_ledger` e
--- `before_send_traces` daquele run (FK `on delete cascade`) — as duas também
--- crescem sem poda, então isso é parte do conserto. `llm_calls`,
--- `lead_checkpoints` e `lead_state_transitions` são `set null`: o histórico
--- fica, só perde o ponteiro. Os dois consumidores de `send_ledger` sem janela
--- (`countPriorAcceptedSends` → disclosure de IA e gate LGPD de 1º toque) falham
+-- `before_send_traces` daquele run (FK `on delete cascade`) â€” as duas tambÃ©m
+-- crescem sem poda, entÃ£o isso Ã© parte do conserto. `llm_calls`,
+-- `lead_checkpoints` e `lead_state_transitions` sÃ£o `set null`: o histÃ³rico
+-- fica, sÃ³ perde o ponteiro. Os dois consumidores de `send_ledger` sem janela
+-- (`countPriorAcceptedSends` â†’ disclosure de IA e gate LGPD de 1Âº toque) falham
 -- FECHADO quando a linha some: disclosure a mais e veto a mais, nunca a menos.
 --
--- POR QUE `security definer` NO EXPURGO DO AUDIT, E POR QUE NÃO É UMA PORTA: a
--- tabela é append-only NO SCHEMA (o baseline não concede DELETE/UPDATE a
--- ninguém, nem a service_role), então o expurgo não sai pelo admin client. A
--- função (a) não tem seletor de linha — nenhum parâmetro de org, ator, ação ou
--- id, e o único predicado é `created_at < now() - N dias`, ou seja ela só sabe
+-- POR QUE `security definer` NO EXPURGO DO AUDIT, E POR QUE NÃƒO Ã‰ UMA PORTA: a
+-- tabela Ã© append-only NO SCHEMA (o baseline nÃ£o concede DELETE/UPDATE a
+-- ninguÃ©m, nem a service_role), entÃ£o o expurgo nÃ£o sai pelo admin client. A
+-- funÃ§Ã£o (a) nÃ£o tem seletor de linha â€” nenhum parÃ¢metro de org, ator, aÃ§Ã£o ou
+-- id, e o Ãºnico predicado Ã© `created_at < now() - N dias`, ou seja ela sÃ³ sabe
 -- apagar pela ponta mais velha; (b) carrega o PISO de 90 dias dentro do corpo,
--- então nem quem tem a service key remove rastro recente; (c) é revogada das
--- duas origens de EXECUTE e concedida só a service_role; (d) não amplia o raio
--- de quem já tem a chave (service_role já tem TRUNCATE nesta tabela) — dá forma
--- estreita e auditável a um poder que já existia; (e) registra a própria erosão,
--- porque o cron grava `retention.sweep_run` com a contagem, e essa linha é nova
--- demais para a chamada seguinte alcançar.
+-- entÃ£o nem quem tem a service key remove rastro recente; (c) Ã© revogada das
+-- duas origens de EXECUTE e concedida sÃ³ a service_role; (d) nÃ£o amplia o raio
+-- de quem jÃ¡ tem a chave (service_role jÃ¡ tem TRUNCATE nesta tabela) â€” dÃ¡ forma
+-- estreita e auditÃ¡vel a um poder que jÃ¡ existia; (e) registra a prÃ³pria erosÃ£o,
+-- porque o cron grava `retention.sweep_run` com a contagem, e essa linha Ã© nova
+-- demais para a chamada seguinte alcanÃ§ar.
 --
 -- Idempotente e auto-curativo: `create or replace`, `create index if not
--- exists`, `revoke` (no-op quando o privilégio já não existe). Sem constraint
--- nova ⇒ sem dado a deduplicar antes.
+-- exists`, `revoke` (no-op quando o privilÃ©gio jÃ¡ nÃ£o existe). Sem constraint
+-- nova â‡’ sem dado a deduplicar antes.
 
 create index if not exists idx_job_queue_poda
   on public.job_queue (created_at)
   where status in ('done', 'failed', 'dead');
 
--- Nome próprio da poda de propósito: `create index if not exists` casa por NOME,
--- e um nome genérico (`idx_audit_created_at`) poderia já existir num clone com
--- outra definição e virar no-op silencioso. Nenhum dos cinco índices que a
--- tabela já tem começa por `created_at`.
+-- Nome prÃ³prio da poda de propÃ³sito: `create index if not exists` casa por NOME,
+-- e um nome genÃ©rico (`idx_audit_created_at`) poderia jÃ¡ existir num clone com
+-- outra definiÃ§Ã£o e virar no-op silencioso. Nenhum dos cinco Ã­ndices que a
+-- tabela jÃ¡ tem comeÃ§a por `created_at`.
 create index if not exists idx_audit_expurgo_created_at
   on public.api_audit_log (created_at);
 
@@ -13226,7 +13226,7 @@ set search_path = public, pg_temp
 as $$
 declare
   -- Piso de 7 dias: abaixo disso a cascata em `send_ledger` mexeria no horizonte
-  -- em que "1º outbound" ainda diz algo sobre um lead vivo.
+  -- em que "1Âº outbound" ainda diz algo sobre um lead vivo.
   v_dias int := greatest(coalesce(p_retencao_dias, 90), 7);
   v_limite int := least(greatest(coalesce(p_limite, 1000), 1), 10000);
   v_apagados int;
@@ -13295,46 +13295,46 @@ grant  execute on function public.fn_expurgar_auditoria_vencida(int, int)
   to service_role;
 
 comment on table public.api_audit_log is
-  'L-10: append-only (sem GRANT de UPDATE/DELETE a ninguém). Retenção default 5 anos, '
+  'L-10: append-only (sem GRANT de UPDATE/DELETE a ninguÃ©m). RetenÃ§Ã£o default 5 anos, '
   'expurgada por public.fn_expurgar_auditoria_vencida (piso de 90 dias) a partir do cron '
-  'app/api/v1/cron/data-retention. Não há camada cold/S3.';
+  'app/api/v1/cron/data-retention. NÃ£o hÃ¡ camada cold/S3.';
 
 notify pgrst, 'reload schema';
--- ---- quem manda na conversa: "Assumir" cala o automático (migration 0173) ----
+-- ---- quem manda na conversa: "Assumir" cala o automÃ¡tico (migration 0173) ----
 --
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon, que é de propósito o último do
--- arquivo: `fn_conversation_assign` é recriada aqui e função criada depois da
--- varredura nasce com EXECUTE para anon sem ninguém curar. Os revokes explícitos
--- no fim deste bloco já fecham as duas origens, mas a ordem é a rede que pega o
--- próximo que esquecer. Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon, que Ã© de propÃ³sito o Ãºltimo do
+-- arquivo: `fn_conversation_assign` Ã© recriada aqui e funÃ§Ã£o criada depois da
+-- varredura nasce com EXECUTE para anon sem ninguÃ©m curar. Os revokes explÃ­citos
+-- no fim deste bloco jÃ¡ fecham as duas origens, mas a ordem Ã© a rede que pega o
+-- prÃ³ximo que esquecer. Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
 --
--- Medido no HEAD 927dfa51: `lib/agent-engine/` NUNCA lê `assignee_kind` nem
--- `assigned_to_user_id` (grep → rc=1), e `fn_conversation_assign` nunca tocou
--- `bot_silenced_until`. Um atendente clicava "Assumir" e o automático continuava
--- respondendo o MESMO cliente; ele só calava 5 minutos deslizantes quando a pessoa
--- ENVIAVA (`extendBotSilence`). Dois atores atendendo a mesma pessoa é o defeito, e
--- qualquer selo de "você está no comando" em cima disso seria mentira.
+-- Medido no HEAD 927dfa51: `lib/agent-engine/` NUNCA lÃª `assignee_kind` nem
+-- `assigned_to_user_id` (grep â†’ rc=1), e `fn_conversation_assign` nunca tocou
+-- `bot_silenced_until`. Um atendente clicava "Assumir" e o automÃ¡tico continuava
+-- respondendo o MESMO cliente; ele sÃ³ calava 5 minutos deslizantes quando a pessoa
+-- ENVIAVA (`extendBotSilence`). Dois atores atendendo a mesma pessoa Ã© o defeito, e
+-- qualquer selo de "vocÃª estÃ¡ no comando" em cima disso seria mentira.
 --
--- O conserto entra na função de atribuição e não no motor porque
--- `bot_silenced_until` é o gate que o motor JÁ lê — nenhuma linha do motor muda. A
+-- O conserto entra na funÃ§Ã£o de atribuiÃ§Ã£o e nÃ£o no motor porque
+-- `bot_silenced_until` Ã© o gate que o motor JÃ lÃª â€” nenhuma linha do motor muda. A
 -- alternativa (ensinar o motor a ler `assignee_kind`) foi medida e REPROVADA:
--- `Fechar` não solta o dono, de propósito, então o fim NORMAL de um atendimento
--- deixaria `assignee_kind='user'` pendurado e o automático mudo para sempre naquele
--- contato — e aquele gate é por CONTATO, então calaria conversa NOVA de outro número.
+-- `Fechar` nÃ£o solta o dono, de propÃ³sito, entÃ£o o fim NORMAL de um atendimento
+-- deixaria `assignee_kind='user'` pendurado e o automÃ¡tico mudo para sempre naquele
+-- contato â€” e aquele gate Ã© por CONTATO, entÃ£o calaria conversa NOVA de outro nÃºmero.
 --
--- O braço do rodízio é o que impede a regressão silenciosa:
---   * `p_reason='routing'` → NÃO MEXE. Distribuir não é assumir.
+-- O braÃ§o do rodÃ­zio Ã© o que impede a regressÃ£o silenciosa:
+--   * `p_reason='routing'` â†’ NÃƒO MEXE. Distribuir nÃ£o Ã© assumir.
 --     `trg_conversation_routing_requested` dispara em TODA conversa nova e o worker
---     roda 1×/min: sem a ressalva, uma org em `round_robin` ficaria com o automático
+--     roda 1Ã—/min: sem a ressalva, uma org em `round_robin` ficaria com o automÃ¡tico
 --     calado na primeira mensagem da vida de cada cliente.
---   * destino humano (claim/transfer) → 'infinity'.  * destino nulo (release) → null.
+--   * destino humano (claim/transfer) â†’ 'infinity'.  * destino nulo (release) â†’ null.
 --
--- Assinatura IDÊNTICA de 6 args de propósito: parâmetro novo criaria OVERLOAD (o
--- `create or replace` não substitui assinatura diferente) e as cinco chamadas por
+-- Assinatura IDÃŠNTICA de 6 args de propÃ³sito: parÃ¢metro novo criaria OVERLOAD (o
+-- `create or replace` nÃ£o substitui assinatura diferente) e as cinco chamadas por
 -- nome passariam a falhar com `is not unique`. Idempotente; sem dados a corrigir.
 --
--- A limpeza do silêncio ao FECHAR mora na rota (`close/route.ts`): fechar não passa
--- por aqui, e sem ela o silêncio vazaria para o próximo episódio — a ingestão reusa
+-- A limpeza do silÃªncio ao FECHAR mora na rota (`close/route.ts`): fechar nÃ£o passa
+-- por aqui, e sem ela o silÃªncio vazaria para o prÃ³ximo episÃ³dio â€” a ingestÃ£o reusa
 -- a MESMA linha de conversa (`on conflict do update`).
 
 create or replace function public.fn_conversation_assign(
@@ -13387,16 +13387,16 @@ begin
          status = case when p_to_user_id is null then 'open' else 'claimed' end,
          status_changed_at = now(),
          unread_count_for_assignee = 0,
-         -- A trava só é solta por quem a pôs. `last_handoff_at` é o discriminador
-         -- que já existe: uma ESCALAÇÃO o carimba (`performHumanHandoff` e
-         -- `triggerHandoff`), um humano ASSUMINDO não. Sem esta condição, o
-         -- release apagaria o silêncio de uma conversa que a IA escalou — e o
+         -- A trava sÃ³ Ã© solta por quem a pÃ´s. `last_handoff_at` Ã© o discriminador
+         -- que jÃ¡ existe: uma ESCALAÃ‡ÃƒO o carimba (`performHumanHandoff` e
+         -- `triggerHandoff`), um humano ASSUMINDO nÃ£o. Sem esta condiÃ§Ã£o, o
+         -- release apagaria o silÃªncio de uma conversa que a IA escalou â€” e o
          -- caminho legado (`triggerHandoff`, usado pelo MCP, pelo handler de
-         -- sentimento, pelo worker e pelo teto de gasto) NÃO grava
-         -- `contacts.force_human`, então ali o silêncio é a ÚNICA trava. Medido:
-         -- `grep -n force_human lib/ai/handoff/orchestrator.ts` → rc=1.
-         -- Soltar de propósito é o botão "Devolver ao automático"
-         -- (`devolverAtendimentoAoAgente`), que limpa as três travas de uma vez.
+         -- sentimento, pelo worker e pelo teto de gasto) NÃƒO grava
+         -- `contacts.force_human`, entÃ£o ali o silÃªncio Ã© a ÃšNICA trava. Medido:
+         -- `grep -n force_human lib/ai/handoff/orchestrator.ts` â†’ rc=1.
+         -- Soltar de propÃ³sito Ã© o botÃ£o "Devolver ao automÃ¡tico"
+         -- (`devolverAtendimentoAoAgente`), que limpa as trÃªs travas de uma vez.
          bot_silenced_until = case
            when p_reason = 'routing'  then bot_silenced_until
            when p_to_user_id is null  then (case when last_handoff_at is null
@@ -13417,34 +13417,34 @@ begin
 end;
 $$;
 
--- As DUAS origens de EXECUTE (doutrina, item 9): `revoke from public` não remove o
+-- As DUAS origens de EXECUTE (doutrina, item 9): `revoke from public` nÃ£o remove o
 -- grant direto que `anon` carrega via ALTER DEFAULT PRIVILEGES, e `revoke from anon`
--- não remove o grant a PUBLIC dado na criação. Re-asseridas: é SECURITY DEFINER que
+-- nÃ£o remove o grant a PUBLIC dado na criaÃ§Ã£o. Re-asseridas: Ã© SECURITY DEFINER que
 -- reatribui conversa.
 revoke all     on function public.fn_conversation_assign(uuid, uuid, uuid, text, uuid, boolean) from public;
 revoke execute on function public.fn_conversation_assign(uuid, uuid, uuid, text, uuid, boolean) from anon;
 grant  execute on function public.fn_conversation_assign(uuid, uuid, uuid, text, uuid, boolean)
   to authenticated, service_role;
 
--- ---- o histórico de atribuição herda o escopo da conversa (migration 0173) ----
--- Medido: org em `visibility_mode='own'`, agent que não é dono → `select` em
+-- ---- o histÃ³rico de atribuiÃ§Ã£o herda o escopo da conversa (migration 0173) ----
+-- Medido: org em `visibility_mode='own'`, agent que nÃ£o Ã© dono â†’ `select` em
 -- `conversations` devolve 0 linhas e `select` em `conversation_assignment_events` da
 -- MESMA conversa devolve 1. A policy era membership de org pura enquanto
 -- `conversations_select` passa por `fn_can_view_conversation`. A tabela vive no
--- schema `public`, então isso é alcançável pelo PostgREST com a anon key + o JWT do
--- usuário — não depende de existir rota nossa.
+-- schema `public`, entÃ£o isso Ã© alcanÃ§Ã¡vel pelo PostgREST com a anon key + o JWT do
+-- usuÃ¡rio â€” nÃ£o depende de existir rota nossa.
 --
--- Molde do `messages_select`: o `exists` sobre `conversations` já aplica a RLS de
--- `conversations`, então o escopo é HERDADO em vez de reescrito — duas cópias da
--- mesma regra divergem na primeira mudança de uma delas.
+-- Molde do `messages_select`: o `exists` sobre `conversations` jÃ¡ aplica a RLS de
+-- `conversations`, entÃ£o o escopo Ã© HERDADO em vez de reescrito â€” duas cÃ³pias da
+-- mesma regra divergem na primeira mudanÃ§a de uma delas.
 drop policy if exists cae_select on public.conversation_assignment_events;
 create policy cae_select on public.conversation_assignment_events
   for select using (
     public.fn_is_platform_admin()
     or (
       -- O filtro de org fica, mesmo com o `exists` ao lado. Os dois predicados
-      -- respondem perguntas DIFERENTES: o `exists` diz "você enxerga esta
-      -- conversa?", e este diz "esta LINHA é da sua organização?". A policy de
+      -- respondem perguntas DIFERENTES: o `exists` diz "vocÃª enxerga esta
+      -- conversa?", e este diz "esta LINHA Ã© da sua organizaÃ§Ã£o?". A policy de
       -- INSERT (intocada) permite gravar uma linha com o `organization_id` de um
       -- tenant e o `conversation_id` de outro; sem esta metade, quem enxerga a
       -- conversa apontada leria a linha do tenant vizinho.
@@ -13457,22 +13457,22 @@ create policy cae_select on public.conversation_assignment_events
     )
   );
 
--- ---- LGPD alcança o histórico de captação: função + trigger (migration 0174) ----
+-- ---- LGPD alcanÃ§a o histÃ³rico de captaÃ§Ã£o: funÃ§Ã£o + trigger (migration 0174) ----
 --
--- A PRIMEIRA metade da 0174. Está aqui, e não no fim do arquivo, porque cria
--- FUNÇÃO — e o bloco da VARREDURA anon (logo abaixo) proíbe qualquer
--- `create function` depois dele: a função nasceria com EXECUTE para `anon` em
+-- A PRIMEIRA metade da 0174. EstÃ¡ aqui, e nÃ£o no fim do arquivo, porque cria
+-- FUNÃ‡ÃƒO â€” e o bloco da VARREDURA anon (logo abaixo) proÃ­be qualquer
+-- `create function` depois dele: a funÃ§Ã£o nasceria com EXECUTE para `anon` em
 -- quem ATUALIZA, sem nada mais adiante para tirar. A tabela vai no bloco do
--- fim, e a ordem entre os dois não importa: o corpo de uma plpgsql só resolve
--- os nomes na execução, e o trigger é de UPDATE (nada dispara durante o
+-- fim, e a ordem entre os dois nÃ£o importa: o corpo de uma plpgsql sÃ³ resolve
+-- os nomes na execuÃ§Ã£o, e o trigger Ã© de UPDATE (nada dispara durante o
 -- baseline).
 --
--- `fn_lgpd_cascade_redact_contact` tem 180 linhas; acrescentar um 9º passo
--- exigiria reescrevê-la inteira aqui, e a partir daí existiriam duas cópias —
--- a do dump e a do apêndice — que divergem no primeiro conserto que alguém
--- fizer na de cima. O gancho é a transição `is_anonymized false → true` na
--- própria `contacts`, que é o último fato da anonimização e roda na MESMA
--- transação do cascade. E alcança mais que o 9º passo alcançaria: qualquer
+-- `fn_lgpd_cascade_redact_contact` tem 180 linhas; acrescentar um 9Âº passo
+-- exigiria reescrevÃª-la inteira aqui, e a partir daÃ­ existiriam duas cÃ³pias â€”
+-- a do dump e a do apÃªndice â€” que divergem no primeiro conserto que alguÃ©m
+-- fizer na de cima. O gancho Ã© a transiÃ§Ã£o `is_anonymized false â†’ true` na
+-- prÃ³pria `contacts`, que Ã© o Ãºltimo fato da anonimizaÃ§Ã£o e roda na MESMA
+-- transaÃ§Ã£o do cascade. E alcanÃ§a mais que o 9Âº passo alcanÃ§aria: qualquer
 -- caminho que anonimize um contato passa por este UPDATE.
 create or replace function public.fn_redigir_captacoes_do_contato_anonimizado()
 returns trigger
@@ -13500,20 +13500,20 @@ grant execute on function public.fn_redigir_captacoes_do_contato_anonimizado() t
 
 notify pgrst, 'reload schema';
 
--- ---- nono dígito canônico (migration 0198) ----
--- 0198 — celular BR canônico COM o nono dígito
+-- ---- nono dÃ­gito canÃ´nico (migration 0198) ----
+-- 0198 â€” celular BR canÃ´nico COM o nono dÃ­gito
 --
--- +553284793302 e +5532984793302 são a MESMA pessoa. O CRM passa a GRAVAR e
--- MOSTRAR a forma com o 9; o WhatsApp/WAHA continuam podendo endereçar sem ele
+-- +553284793302 e +5532984793302 sÃ£o a MESMA pessoa. O CRM passa a GRAVAR e
+-- MOSTRAR a forma com o 9; o WhatsApp/WAHA continuam podendo endereÃ§ar sem ele
 -- (check-exists tenta as duas grafias).
 --
--- A busca por variantes já existia em TypeScript. Sem a RPC e sem o backfill,
+-- A busca por variantes jÃ¡ existia em TypeScript. Sem a RPC e sem o backfill,
 -- o webhook que chega sem o 9 ainda nascia um segundo contato.
 --
 -- Idempotente: create or replace + updates que na segunda passada casam zero
 -- linhas. Sem constraint nova.
 
--- 1 · a RPC reencontra pelas duas grafias e GRAVA a canônica.
+-- 1 Â· a RPC reencontra pelas duas grafias e GRAVA a canÃ´nica.
 create or replace function public.fn_upsert_wa_contact(
   p_org uuid, p_kind text, p_phone text, p_lid text, p_chat_id text, p_notify text
 ) returns uuid language plpgsql security definer set search_path = public as $$
@@ -13525,8 +13525,8 @@ declare
   v_digits text;
   v_alt text;
 begin
-  -- Celular BR de 12 dígitos (local 6–9) ganha o nono. A grafia sem o 9 fica
-  -- em v_alt só para a BUSCA — não se escreve mais.
+  -- Celular BR de 12 dÃ­gitos (local 6â€“9) ganha o nono. A grafia sem o 9 fica
+  -- em v_alt sÃ³ para a BUSCA â€” nÃ£o se escreve mais.
   if v_phone is not null then
     v_digits := regexp_replace(v_phone, '\D', '', 'g');
     if v_digits ~ '^55[1-9][0-9][6-9][0-9]{7}$' then
@@ -13563,8 +13563,8 @@ begin
 
   if v_id is not null then
     update public.contacts set
-      -- Promove 12→13 quando é a MESMA pessoa e o canônico está livre.
-      -- Outro número (pessoa diferente) continua intocável.
+      -- Promove 12â†’13 quando Ã© a MESMA pessoa e o canÃ´nico estÃ¡ livre.
+      -- Outro nÃºmero (pessoa diferente) continua intocÃ¡vel.
       phone_number = case
         when v_phone is not null and (phone_number is null or phone_number = v_alt) then v_phone
         else phone_number
@@ -13603,8 +13603,8 @@ begin
   end;
 end; $$;
 
--- 2 · pares 12+13: funde o de 12 no de 13 (canônico). Conversas 1:1 no mesmo
--- canal são fundidas ANTES de remarcarmos o contact_id, senão
+-- 2 Â· pares 12+13: funde o de 12 no de 13 (canÃ´nico). Conversas 1:1 no mesmo
+-- canal sÃ£o fundidas ANTES de remarcarmos o contact_id, senÃ£o
 -- uniq_conversations_1to1_per_contact_session estoura.
 
 with pares as (
@@ -13956,7 +13956,7 @@ delete from public.conversations d
  using conv_pares cp
  where d.id = cp.loser_conv;
 
--- Marca os de 12 dígitos como fundidos no irmão de 13.
+-- Marca os de 12 dÃ­gitos como fundidos no irmÃ£o de 13.
 with pares as (
   select sem.id as loser_id, com.id as winner_id
     from public.contacts sem
@@ -13978,7 +13978,7 @@ update public.contacts c
   from pares p
  where c.id = p.loser_id;
 
--- lead_state é unique (org, contact): apaga o perdedor se o vencedor já tem linha.
+-- lead_state Ã© unique (org, contact): apaga o perdedor se o vencedor jÃ¡ tem linha.
 delete from public.lead_state l
  using public.contacts c
  where l.contact_id = c.id and c.is_merged_into is not null
@@ -14022,9 +14022,9 @@ update public.followup_enrollments t set contact_id = c.is_merged_into from publ
 update public.demandas            t set contact_id = c.is_merged_into from public.contacts c where t.contact_id = c.id and c.is_merged_into is not null;
 update public.contact_field_proposals t set contact_id = c.is_merged_into from public.contacts c where t.contact_id = c.id and c.is_merged_into is not null;
 
--- 3 · quem só tinha a grafia de 12 dígitos ganha o nono. Pula se o canônico
--- já pertence a outro contato vivo (o passo 2 deveria ter fundido; isto é o
--- piso de segurança para o unique).
+-- 3 Â· quem sÃ³ tinha a grafia de 12 dÃ­gitos ganha o nono. Pula se o canÃ´nico
+-- jÃ¡ pertence a outro contato vivo (o passo 2 deveria ter fundido; isto Ã© o
+-- piso de seguranÃ§a para o unique).
 update public.contacts
    set phone_number = '+55'
      || substring(regexp_replace(phone_number, '\D', '', 'g') from 3 for 2)
@@ -14045,33 +14045,33 @@ update public.contacts
           || substring(regexp_replace(contacts.phone_number, '\D', '', 'g') from 5)
    );
 
--- ---- agenda: o cascade que o vínculo polimórfico não tem — função (migration 0177) ----
+-- ---- agenda: o cascade que o vÃ­nculo polimÃ³rfico nÃ£o tem â€” funÃ§Ã£o (migration 0177) ----
 --
--- A PRIMEIRA metade da 0177. Está aqui, e não no fim do arquivo, porque cria
--- FUNÇÃO — e o bloco da VARREDURA anon (logo abaixo) proíbe qualquer
--- `create function` depois dele: a função nasceria com EXECUTE para `anon` em
+-- A PRIMEIRA metade da 0177. EstÃ¡ aqui, e nÃ£o no fim do arquivo, porque cria
+-- FUNÃ‡ÃƒO â€” e o bloco da VARREDURA anon (logo abaixo) proÃ­be qualquer
+-- `create function` depois dele: a funÃ§Ã£o nasceria com EXECUTE para `anon` em
 -- quem ATUALIZA, sem nada mais adiante para tirar. A tabela, o trigger e a RLS
--- vão no bloco do fim, e a ordem entre os dois não importa: o corpo de uma
--- plpgsql só resolve nomes na execução, e o trigger é de DELETE (nada dispara
+-- vÃ£o no bloco do fim, e a ordem entre os dois nÃ£o importa: o corpo de uma
+-- plpgsql sÃ³ resolve nomes na execuÃ§Ã£o, e o trigger Ã© de DELETE (nada dispara
 -- durante o baseline).
 --
 -- O agendamento se liga ao lead por `crm_lead_links` (target_kind='appointment',
--- valor que o CHECK daquela tabela já aceitava antes desta migration), e
--- `target_id` é polimórfico: não pode ter FK, logo não tem ON DELETE. Apagar um
--- agendamento deixaria o vínculo apontando para o nada. O caminho normal é que
--- agendamento não se apague — se cancele —, mas isso é prosa, e prosa não é
+-- valor que o CHECK daquela tabela jÃ¡ aceitava antes desta migration), e
+-- `target_id` Ã© polimÃ³rfico: nÃ£o pode ter FK, logo nÃ£o tem ON DELETE. Apagar um
+-- agendamento deixaria o vÃ­nculo apontando para o nada. O caminho normal Ã© que
+-- agendamento nÃ£o se apague â€” se cancele â€”, mas isso Ã© prosa, e prosa nÃ£o Ã©
 -- guarda.
--- ────────────────────────────────────────────────────────────────────────────
--- 8 · o cascade que o polimórfico não tem
--- ────────────────────────────────────────────────────────────────────────────
--- O vínculo com o lead vai por `crm_lead_links` (target_kind='appointment'), e
--- `target_id` é polimórfico: não pode ter FK, logo não tem ON DELETE. Apagar
--- um agendamento deixaria o vínculo apontando para o nada.
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 8 Â· o cascade que o polimÃ³rfico nÃ£o tem
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- O vÃ­nculo com o lead vai por `crm_lead_links` (target_kind='appointment'), e
+-- `target_id` Ã© polimÃ³rfico: nÃ£o pode ter FK, logo nÃ£o tem ON DELETE. Apagar
+-- um agendamento deixaria o vÃ­nculo apontando para o nada.
 --
--- O caminho NORMAL é que agendamento não se apague: cancela-se (`status`
--- 'cancelled'), porque o cancelamento é informação de negócio e a aba
--- Histórico existe para mostrá-lo. Mas "ninguém deveria apagar" é prosa, e
--- prosa não é guarda. Este trigger é o mecanismo.
+-- O caminho NORMAL Ã© que agendamento nÃ£o se apague: cancela-se (`status`
+-- 'cancelled'), porque o cancelamento Ã© informaÃ§Ã£o de negÃ³cio e a aba
+-- HistÃ³rico existe para mostrÃ¡-lo. Mas "ninguÃ©m deveria apagar" Ã© prosa, e
+-- prosa nÃ£o Ã© guarda. Este trigger Ã© o mecanismo.
 create or replace function public.fn_limpar_vinculos_do_agendamento()
 returns trigger
 language plpgsql
@@ -14087,30 +14087,30 @@ begin
 end;
 $$;
 
--- Função de trigger não exige EXECUTE de quem dispara o DELETE, então revogar
--- das três origens não a quebra — e mantém a função fora da lista de exceções
--- do invariante de hardening, que é congelada.
+-- FunÃ§Ã£o de trigger nÃ£o exige EXECUTE de quem dispara o DELETE, entÃ£o revogar
+-- das trÃªs origens nÃ£o a quebra â€” e mantÃ©m a funÃ§Ã£o fora da lista de exceÃ§Ãµes
+-- do invariante de hardening, que Ã© congelada.
 revoke execute on function public.fn_limpar_vinculos_do_agendamento() from public, anon, authenticated;
 grant  execute on function public.fn_limpar_vinculos_do_agendamento() to service_role;
 
--- ---- LGPD alcança a agenda: função (migration 0184) ----
+-- ---- LGPD alcanÃ§a a agenda: funÃ§Ã£o (migration 0184) ----
 --
--- A PRIMEIRA metade da 0184. Está aqui, e não no fim, porque cria FUNÇÃO — e a
--- VARREDURA anon (logo abaixo) proíbe `create function` depois dela: a função
+-- A PRIMEIRA metade da 0184. EstÃ¡ aqui, e nÃ£o no fim, porque cria FUNÃ‡ÃƒO â€” e a
+-- VARREDURA anon (logo abaixo) proÃ­be `create function` depois dela: a funÃ§Ã£o
 -- nasceria com EXECUTE para `anon` em quem ATUALIZA, sem nada adiante para tirar.
--- O trigger vai no bloco do fim; a ordem não importa, porque o corpo de uma
--- plpgsql só resolve nomes na execução e nada dispara UPDATE durante o baseline.
+-- O trigger vai no bloco do fim; a ordem nÃ£o importa, porque o corpo de uma
+-- plpgsql sÃ³ resolve nomes na execuÃ§Ã£o e nada dispara UPDATE durante o baseline.
 --
--- `fn_lgpd_cascade_redact_contact` percorre uma lista escrita à mão e
--- `calendar_appointments` não estava nela — e a tabela guarda `title`,
--- `description`, `notes` (numa clínica, queixa clínica), `location_details` e
--- `cancellation_reason`. A função reportava sucesso, a rota reportava sucesso, o
--- SLA de D+15 era marcado como cumprido, e a queixa continuava legível.
+-- `fn_lgpd_cascade_redact_contact` percorre uma lista escrita Ã  mÃ£o e
+-- `calendar_appointments` nÃ£o estava nela â€” e a tabela guarda `title`,
+-- `description`, `notes` (numa clÃ­nica, queixa clÃ­nica), `location_details` e
+-- `cancellation_reason`. A funÃ§Ã£o reportava sucesso, a rota reportava sucesso, o
+-- SLA de D+15 era marcado como cumprido, e a queixa continuava legÃ­vel.
 --
--- Trigger e não passo dentro da função: ela vem do dump com ~180 linhas, e um
--- passo novo exigiria carregar uma CÓPIA inteira dela aqui — duas cópias que
--- divergem no primeiro conserto. E o trigger escuta a COLUNA, não o chamador,
--- então alcança qualquer caminho de anonimização.
+-- Trigger e nÃ£o passo dentro da funÃ§Ã£o: ela vem do dump com ~180 linhas, e um
+-- passo novo exigiria carregar uma CÃ“PIA inteira dela aqui â€” duas cÃ³pias que
+-- divergem no primeiro conserto. E o trigger escuta a COLUNA, nÃ£o o chamador,
+-- entÃ£o alcanÃ§a qualquer caminho de anonimizaÃ§Ã£o.
 create or replace function public.fn_redigir_agenda_do_contato_anonimizado()
 returns trigger
 language plpgsql
@@ -14131,25 +14131,25 @@ begin
 end;
 $$;
 
--- Função de trigger não exige EXECUTE de quem dispara o UPDATE, então revogar
--- das três origens não a quebra — e a mantém fora da lista de exceções do
--- invariante de hardening, que é congelada.
+-- FunÃ§Ã£o de trigger nÃ£o exige EXECUTE de quem dispara o UPDATE, entÃ£o revogar
+-- das trÃªs origens nÃ£o a quebra â€” e a mantÃ©m fora da lista de exceÃ§Ãµes do
+-- invariante de hardening, que Ã© congelada.
 revoke execute on function public.fn_redigir_agenda_do_contato_anonimizado() from public, anon, authenticated;
 grant  execute on function public.fn_redigir_agenda_do_contato_anonimizado() to service_role;
 
--- ---- a agenda nasce com o que marcar: funções (migration 0185) ----
+-- ---- a agenda nasce com o que marcar: funÃ§Ãµes (migration 0185) ----
 --
--- A PRIMEIRA metade da 0185, aqui porque cria FUNÇÃO e a VARREDURA anon (logo
--- abaixo) proíbe `create function` depois dela.
+-- A PRIMEIRA metade da 0185, aqui porque cria FUNÃ‡ÃƒO e a VARREDURA anon (logo
+-- abaixo) proÃ­be `create function` depois dela.
 --
 -- Zero INSERT em `calendar_event_types` em todo o repo, medido com controle
--- positivo. Instalação fresca abria a Agenda numa semana em branco, sem nada
--- para clicar e sem mensagem — e grade vazia é indistinguível de "ninguém marcou
--- hoje". É o P0 da doutrina de QA Visual.
+-- positivo. InstalaÃ§Ã£o fresca abria a Agenda numa semana em branco, sem nada
+-- para clicar e sem mensagem â€” e grade vazia Ã© indistinguÃ­vel de "ninguÃ©m marcou
+-- hoje". Ã‰ o P0 da doutrina de QA Visual.
 --
--- NEUTRO de propósito: o nicho não é persistido em lugar nenhum (a inferência
--- roda em memória no passo do funil e morre lá), e o trigger dispara no INSERT
--- da organização, antes de existir qualquer texto para inferir. Este é o PISO;
+-- NEUTRO de propÃ³sito: o nicho nÃ£o Ã© persistido em lugar nenhum (a inferÃªncia
+-- roda em memÃ³ria no passo do funil e morre lÃ¡), e o trigger dispara no INSERT
+-- da organizaÃ§Ã£o, antes de existir qualquer texto para inferir. Este Ã© o PISO;
 -- o enriquecimento por nicho vive onde o nicho existe, no passo do onboarding.
 create or replace function public.fn_semear_tipos_de_agendamento(p_organization_id uuid)
 returns integer
@@ -14163,7 +14163,7 @@ begin
   for r in
     select * from (values
       ('Consulta',    'consulta',    'consulta', 30, 1000::numeric),
-      ('Reunião',     'reuniao',     'reuniao',  30, 2000::numeric),
+      ('ReuniÃ£o',     'reuniao',     'reuniao',  30, 2000::numeric),
       ('Atendimento', 'atendimento', 'outro',    30, 3000::numeric)
     ) as t(nome, slug, categoria, duracao, posicao)
   loop
@@ -14193,28 +14193,28 @@ begin
 end;
 $$;
 
--- Função de trigger não exige EXECUTE de quem dispara o INSERT, e a de seed é
--- chamada por ela e pelo backfill — nenhum dos dois passa pelo PostgREST.
+-- FunÃ§Ã£o de trigger nÃ£o exige EXECUTE de quem dispara o INSERT, e a de seed Ã©
+-- chamada por ela e pelo backfill â€” nenhum dos dois passa pelo PostgREST.
 revoke execute on function public.fn_semear_tipos_de_agendamento(uuid) from public, anon, authenticated;
 revoke execute on function public.fn_semear_tipos_de_agendamento_na_org_nova() from public, anon, authenticated;
 grant  execute on function public.fn_semear_tipos_de_agendamento(uuid) to service_role;
 grant  execute on function public.fn_semear_tipos_de_agendamento_na_org_nova() to service_role;
 
--- ---- o espelho do Google é cache com prazo: função (migration 0187) ----
+-- ---- o espelho do Google Ã© cache com prazo: funÃ§Ã£o (migration 0187) ----
 --
--- A PRIMEIRA metade da 0187, aqui porque cria FUNÇÃO e a VARREDURA anon proíbe
+-- A PRIMEIRA metade da 0187, aqui porque cria FUNÃ‡ÃƒO e a VARREDURA anon proÃ­be
 -- `create function` depois dela.
 --
--- `calendar_external_events` ficou fora da cascata de LGPD (0184) por não ter
--- `contact_id`. A decisão foi declarar ESPELHO — a fonte da verdade é a agenda do
--- Google do próprio cliente. Mas essa declaração só é honesta com três
--- propriedades, e faltava a terceira: PRAZO. Sem ele, "espelho" é um nome mais
--- simpático para arquivo permanente de compromissos de terceiros.
+-- `calendar_external_events` ficou fora da cascata de LGPD (0184) por nÃ£o ter
+-- `contact_id`. A decisÃ£o foi declarar ESPELHO â€” a fonte da verdade Ã© a agenda do
+-- Google do prÃ³prio cliente. Mas essa declaraÃ§Ã£o sÃ³ Ã© honesta com trÃªs
+-- propriedades, e faltava a terceira: PRAZO. Sem ele, "espelho" Ã© um nome mais
+-- simpÃ¡tico para arquivo permanente de compromissos de terceiros.
 --
--- Corta por `ends_at`, nunca por `created_at`: compromisso futuro não envelhece,
--- e apagá-lo faria a agenda marcar em cima de hora ocupada. Piso de 7 dias e não
--- 90 como o da auditoria — auditoria é rastro que precisa sobreviver a um
--- incidente; isto é cache que o sync repõe.
+-- Corta por `ends_at`, nunca por `created_at`: compromisso futuro nÃ£o envelhece,
+-- e apagÃ¡-lo faria a agenda marcar em cima de hora ocupada. Piso de 7 dias e nÃ£o
+-- 90 como o da auditoria â€” auditoria Ã© rastro que precisa sobreviver a um
+-- incidente; isto Ã© cache que o sync repÃµe.
 create or replace function public.fn_expurgar_espelho_da_agenda(
   p_retencao_dias int default null,
   p_limite int default null
@@ -14224,8 +14224,8 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  -- 90 dias de passado visível; piso de 7 porque isto é cache reconstruível pelo
-  -- sync, e não rastro que precise sobreviver a um incidente.
+  -- 90 dias de passado visÃ­vel; piso de 7 porque isto Ã© cache reconstruÃ­vel pelo
+  -- sync, e nÃ£o rastro que precise sobreviver a um incidente.
   v_dias int := greatest(coalesce(p_retencao_dias, 90), 7);
   v_limite int := least(greatest(coalesce(p_limite, 1000), 1), 10000);
   v_apagadas int;
@@ -14233,8 +14233,8 @@ begin
   with vencidos as (
     select e.id
       from public.calendar_external_events e
-     -- `ends_at` e não `created_at`: um compromisso futuro não envelhece, e
-     -- apagá-lo faria a agenda marcar em cima de hora ocupada.
+     -- `ends_at` e nÃ£o `created_at`: um compromisso futuro nÃ£o envelhece, e
+     -- apagÃ¡-lo faria a agenda marcar em cima de hora ocupada.
      where e.ends_at < now() - make_interval(days => v_dias)
      order by e.ends_at
      limit v_limite
@@ -14251,25 +14251,25 @@ revoke execute on function public.fn_expurgar_espelho_da_agenda(int, int) from p
 grant  execute on function public.fn_expurgar_espelho_da_agenda(int, int) to service_role;
 
 -- ---- mensagem editada e mensagem apagada (migration 0153) ----
--- O cliente edita ou apaga no aplicativo e o CRM seguia mostrando a versão
--- velha — sem erro em lugar nenhum. Combinar preço ou endereço a partir de um
--- texto que o cliente já corrigiu gera um erro que ninguém rastreia depois.
--- Duas colunas e não um estado: editada continua valendo (o texto novo conta),
--- apagada deixou de valer (o texto não pode mais aparecer). Timestamp e não
--- booleano porque a pergunta seguinte é "quando?". A linha apagada NÃO some: a
--- remoção levaria junto o contexto das vizinhas e o histórico de quem atendeu.
+-- O cliente edita ou apaga no aplicativo e o CRM seguia mostrando a versÃ£o
+-- velha â€” sem erro em lugar nenhum. Combinar preÃ§o ou endereÃ§o a partir de um
+-- texto que o cliente jÃ¡ corrigiu gera um erro que ninguÃ©m rastreia depois.
+-- Duas colunas e nÃ£o um estado: editada continua valendo (o texto novo conta),
+-- apagada deixou de valer (o texto nÃ£o pode mais aparecer). Timestamp e nÃ£o
+-- booleano porque a pergunta seguinte Ã© "quando?". A linha apagada NÃƒO some: a
+-- remoÃ§Ã£o levaria junto o contexto das vizinhas e o histÃ³rico de quem atendeu.
 alter table public.messages add column if not exists edited_at timestamptz;
 alter table public.messages add column if not exists revoked_at timestamptz;
 
--- ---- definição sabe de qual conexão é (migration 0154) ----
--- `meta_templates` nasceu para um canal só: a única marca de origem é
--- `waba_id`, o id da conta na plataforma da Meta. Um segundo canal não tem onde
--- entrar sem mentir sobre o que aquele campo significa — e o endpoint, que
--- resolve a sessão por `metaSessionForOrg`, devolvia lista VAZIA numa
--- instalação que só tem o canal intermediado. A conexão, e não um `provider`:
--- dois números do mesmo provider têm definições diferentes. `set null` no
--- delete porque apagar a conexão não pode apagar o registro do que a
--- plataforma aprovou — ela continua existindo lá.
+-- ---- definiÃ§Ã£o sabe de qual conexÃ£o Ã© (migration 0154) ----
+-- `meta_templates` nasceu para um canal sÃ³: a Ãºnica marca de origem Ã©
+-- `waba_id`, o id da conta na plataforma da Meta. Um segundo canal nÃ£o tem onde
+-- entrar sem mentir sobre o que aquele campo significa â€” e o endpoint, que
+-- resolve a sessÃ£o por `metaSessionForOrg`, devolvia lista VAZIA numa
+-- instalaÃ§Ã£o que sÃ³ tem o canal intermediado. A conexÃ£o, e nÃ£o um `provider`:
+-- dois nÃºmeros do mesmo provider tÃªm definiÃ§Ãµes diferentes. `set null` no
+-- delete porque apagar a conexÃ£o nÃ£o pode apagar o registro do que a
+-- plataforma aprovou â€” ela continua existindo lÃ¡.
 alter table public.meta_templates
   add column if not exists channel_session_id uuid
     references public.channel_sessions(id) on delete set null;
@@ -14278,18 +14278,18 @@ create index if not exists meta_templates_sessao_idx
   where channel_session_id is not null;
 
 -- ---- o arquivo do webhook aceita os canais novos (migration 0151) ----
--- `webhook_events_log` guarda o corpo CRU do que o provedor mandou — é o único
--- lugar onde ele fica. O CHECK do dump conhecia três provedores e nenhum dos
--- canais do seam, então a rota genérica de canal não tinha como gravar sem
--- mentir sobre a origem ('generic' para um canal que se sabe qual é).
+-- `webhook_events_log` guarda o corpo CRU do que o provedor mandou â€” Ã© o Ãºnico
+-- lugar onde ele fica. O CHECK do dump conhecia trÃªs provedores e nenhum dos
+-- canais do seam, entÃ£o a rota genÃ©rica de canal nÃ£o tinha como gravar sem
+-- mentir sobre a origem ('generic' para um canal que se sabe qual Ã©).
 --
--- Este é o BLOCO ÚNICO desta constraint (regra da issue #159): canal novo edita
--- ESTA lista, e não acrescenta um segundo bloco — dois blocos fazem o
+-- Este Ã© o BLOCO ÃšNICO desta constraint (regra da issue #159): canal novo edita
+-- ESTA lista, e nÃ£o acrescenta um segundo bloco â€” dois blocos fazem o
 -- `update.sh` de um clone com dados falhar no primeiro e deixar a tabela sem
 -- constraint entre o `drop` e o `add` que funciona.
 --
--- Alargamento puro: um CHECK que aceita MAIS valores não pode ser violado por
--- linha que já passava pelo antigo, então não precisa de backfill antes.
+-- Alargamento puro: um CHECK que aceita MAIS valores nÃ£o pode ser violado por
+-- linha que jÃ¡ passava pelo antigo, entÃ£o nÃ£o precisa de backfill antes.
 alter table public.webhook_events_log
   drop constraint if exists webhook_events_log_provider_check;
 alter table public.webhook_events_log
@@ -14297,58 +14297,58 @@ alter table public.webhook_events_log
     'waha', 'nuvemshop', 'generic', 'meta_cloud', 'zernio'
   ));
 
--- ---- a marca da instalação sai do .env e vai para o banco (migration 0155) ----
+-- ---- a marca da instalaÃ§Ã£o sai do .env e vai para o banco (migration 0155) ----
 --
--- Nome, logo e cor viviam só em `APP_NAME`/`APP_LOGO_URL`/`APP_ACCENT_HEX`:
+-- Nome, logo e cor viviam sÃ³ em `APP_NAME`/`APP_LOGO_URL`/`APP_ACCENT_HEX`:
 -- trocar qualquer um exigia SSH na VPS e reiniciar a stack. Para quem compra
--- hospedagem e instala sozinho, isso é o mesmo que não ser configurável.
+-- hospedagem e instala sozinho, isso Ã© o mesmo que nÃ£o ser configurÃ¡vel.
 --
--- O `.env` CONTINUA sendo escrito, e não é redundância: o `agent.sh` do kit, em
--- falha de update, reverte só o `APP_IMAGE` — não o schema, não o `git
+-- O `.env` CONTINUA sendo escrito, e nÃ£o Ã© redundÃ¢ncia: o `agent.sh` do kit, em
+-- falha de update, reverte sÃ³ o `APP_IMAGE` â€” nÃ£o o schema, nÃ£o o `git
 -- checkout`. E o `update.sh` aplica ESTE arquivo ANTES de puxar a imagem. Ou
--- seja, o rollback põe código antigo sobre banco novo por construção, e código
--- antigo não conhece esta tabela. Com o `.env` intacto a marca degrada para o
--- valor da instalação em vez de sumir no meio de um rollback.
+-- seja, o rollback pÃµe cÃ³digo antigo sobre banco novo por construÃ§Ã£o, e cÃ³digo
+-- antigo nÃ£o conhece esta tabela. Com o `.env` intacto a marca degrada para o
+-- valor da instalaÃ§Ã£o em vez de sumir no meio de um rollback.
 --
--- ── RLS LIGADA COM ZERO POLICIES + REVOKE EXPLÍCITO ─────────────────────────
+-- â”€â”€ RLS LIGADA COM ZERO POLICIES + REVOKE EXPLÃCITO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
 -- As duas coisas, e nenhuma substitui a outra:
 --
---   (1) `enable row level security` sem NENHUMA policy é a forma explícita de
---       dizer "o PostgREST nunca serve isto". A tabela é lida e escrita só
---       server-side, pelo admin client (`service_role`, que é `bypassrls`).
+--   (1) `enable row level security` sem NENHUMA policy Ã© a forma explÃ­cita de
+--       dizer "o PostgREST nunca serve isto". A tabela Ã© lida e escrita sÃ³
+--       server-side, pelo admin client (`service_role`, que Ã© `bypassrls`).
 --
---   (2) O `revoke` abaixo é O ANÁLOGO, PARA TABELA, DA REGRA DE `security
---       definer` DO ITEM 9 DO CLAUDE.md — e isso não está documentado em lugar
---       nenhum hoje, e é o furo que a próxima tabela de apêndice repetiria.
+--   (2) O `revoke` abaixo Ã© O ANÃLOGO, PARA TABELA, DA REGRA DE `security
+--       definer` DO ITEM 9 DO CLAUDE.md â€” e isso nÃ£o estÃ¡ documentado em lugar
+--       nenhum hoje, e Ã© o furo que a prÃ³xima tabela de apÃªndice repetiria.
 --       Este mesmo arquivo traz `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON
 --       TABLES TO anon` (linha ~3972) e `... TO authenticated` (~3973), e eles
---       valem para TODA tabela criada DEPOIS deles — isto é, para todo apêndice
+--       valem para TODA tabela criada DEPOIS deles â€” isto Ã©, para todo apÃªndice
 --       novo. TABELA NOVA NASCE CONCEDIDA. Foi exatamente assim que nasceu a
 --       vulnerabilidade que a 0143 consertou em `org_guardrail_layers` (medido:
---       um `viewer` desligava a camada anti-jailbreak pelo PostgREST — UPDATE 1
---       + INSERT 1), depois de a 0142 ter escrito "nenhuma função nova, então
---       não há grant a revogar": leitura de uma doutrina que fala de FUNÇÃO.
+--       um `viewer` desligava a camada anti-jailbreak pelo PostgREST â€” UPDATE 1
+--       + INSERT 1), depois de a 0142 ter escrito "nenhuma funÃ§Ã£o nova, entÃ£o
+--       nÃ£o hÃ¡ grant a revogar": leitura de uma doutrina que fala de FUNÃ‡ÃƒO.
 --
---       Aqui revoga-se de `authenticated` também (a 0143 revogou só de `anon`),
---       porque nenhuma tela lê esta tabela pelo client de sessão — quem lê é o
---       `app/layout.tsx`, no servidor. O privilégio é a camada que sobra no dia
---       em que alguém acrescentar "só uma policy de leitura".
+--       Aqui revoga-se de `authenticated` tambÃ©m (a 0143 revogou sÃ³ de `anon`),
+--       porque nenhuma tela lÃª esta tabela pelo client de sessÃ£o â€” quem lÃª Ã© o
+--       `app/layout.tsx`, no servidor. O privilÃ©gio Ã© a camada que sobra no dia
+--       em que alguÃ©m acrescentar "sÃ³ uma policy de leitura".
 --
--- ⚠️ `accent_hex` tem CHECK de REGEX, não de conjunto: ela NÃO entra na lista
+-- âš ï¸ `accent_hex` tem CHECK de REGEX, nÃ£o de conjunto: ela NÃƒO entra na lista
 -- `PARES` de `tests/invariants/vocabulario-banco-x-typescript.test.ts`, cujo
--- extrator só reconhece `= ANY (ARRAY[...])`. A doutrina "coluna nova com CHECK
--- → uma linha ali" vale para CHECK de CONJUNTO.
+-- extrator sÃ³ reconhece `= ANY (ARRAY[...])`. A doutrina "coluna nova com CHECK
+-- â†’ uma linha ali" vale para CHECK de CONJUNTO.
 --
 -- Sem `event_log`: nenhum dos 12 handlers de `lib/event-log/register-handlers.ts`
 -- cobriria um tipo `platform_branding.*`, e o drain deixa evento sem handler
--- intocado — a linha nasceria `pending` para sempre em todo clone (anti-pattern
--- nº 3). O registro é `audit()`, com consumidor real.
+-- intocado â€” a linha nasceria `pending` para sempre em todo clone (anti-pattern
+-- nÂº 3). O registro Ã© `audit()`, com consumidor real.
 --
 -- Idempotente e auto-curativo: `create table if not exists` + `drop trigger if
--- exists` antes do `create trigger`; grants e revokes são declarativos e podem
+-- exists` antes do `create trigger`; grants e revokes sÃ£o declarativos e podem
 -- ser reaplicados. Nenhuma constraint nova sobre dado existente (a tabela nasce
--- vazia), então não há o que deduplicar antes.
+-- vazia), entÃ£o nÃ£o hÃ¡ o que deduplicar antes.
 
 create table if not exists public.platform_branding (
   id                  smallint primary key default 1,
@@ -14357,9 +14357,9 @@ create table if not exists public.platform_branding (
   accent_hex          text,
   show_powered_by     boolean     not null default true,
   seeded_from_env     boolean     not null default false,
-  -- Estado, não configuração: é o que torna a falha OBSERVÁVEL (invariante 6 da
+  -- Estado, nÃ£o configuraÃ§Ã£o: Ã© o que torna a falha OBSERVÃVEL (invariante 6 da
   -- doutrina Sistema Vivo). Sem estas duas, o degrade ("o produto ficou com a
-  -- cor dele") é indistinguível de "a feature nunca foi instalada".
+  -- cor dele") Ã© indistinguÃ­vel de "a feature nunca foi instalada".
   fallback_at         timestamptz,
   fallback_reason     text,
   updated_at          timestamptz not null default now(),
@@ -14369,20 +14369,20 @@ create table if not exists public.platform_branding (
 );
 
 comment on table public.platform_branding is
-  'Marca da INSTALAÇÃO (login, e-mail, 500) — linha única id=1. Semeada do .env na primeira leitura; para NOME e LOGO o .env continua sendo a rede de segurança de rollback (o agent.sh reverte a imagem, não o banco). Para COR não há rede: APP_ACCENT_HEX nasceu junto com esta tabela e o install.sh não o grava — nenhuma versão que desconheça platform_branding pinta accent. Lida/escrita só server-side (service_role). Ver lib/branding/instalacao.ts.';
+  'Marca da INSTALAÃ‡ÃƒO (login, e-mail, 500) â€” linha Ãºnica id=1. Semeada do .env na primeira leitura; para NOME e LOGO o .env continua sendo a rede de seguranÃ§a de rollback (o agent.sh reverte a imagem, nÃ£o o banco). Para COR nÃ£o hÃ¡ rede: APP_ACCENT_HEX nasceu junto com esta tabela e o install.sh nÃ£o o grava â€” nenhuma versÃ£o que desconheÃ§a platform_branding pinta accent. Lida/escrita sÃ³ server-side (service_role). Ver lib/branding/instalacao.ts.';
 
 comment on column public.platform_branding.seeded_from_env is
-  'true = os valores vieram do .env e ninguém os editou pela tela. A escrita humana zera isto, e é o que impede a semeadura de reescrever o que uma pessoa apagou de propósito.';
+  'true = os valores vieram do .env e ninguÃ©m os editou pela tela. A escrita humana zera isto, e Ã© o que impede a semeadura de reescrever o que uma pessoa apagou de propÃ³sito.';
 
 comment on column public.platform_branding.fallback_at is
   'Quando a cor configurada foi RECUSADA e o produto caiu na cor dele. NULL = nenhuma recusa em vigor.';
 
 comment on column public.platform_branding.fallback_reason is
-  'Códigos de recusa (FORMA, nunca o hex da marca). Escrito e limpo por lib/branding/instalacao.ts.';
+  'CÃ³digos de recusa (FORMA, nunca o hex da marca). Escrito e limpo por lib/branding/instalacao.ts.';
 
 alter table public.platform_branding enable row level security;
 
--- ZERO POLICIES, DE PROPÓSITO — ver o bloco acima.
+-- ZERO POLICIES, DE PROPÃ“SITO â€” ver o bloco acima.
 
 revoke all on public.platform_branding from anon, authenticated;
 grant select, insert, update on public.platform_branding to service_role;
@@ -14397,46 +14397,46 @@ notify pgrst, 'reload schema';
 
 -- ---- logo da marca: BUCKET e COLUNA (migration 0158) ----
 --
--- A segunda metade da 0158. As funções estão ANTES do bloco da VARREDURA anon,
--- e a razão de a migration entrar em dois pedaços está escrita lá: este pedaço
--- depende de `platform_branding`, criada no bloco da 0155, que é o último do
--- arquivo — e aquele pedaço cria função, o que a varredura proíbe depois dela.
+-- A segunda metade da 0158. As funÃ§Ãµes estÃ£o ANTES do bloco da VARREDURA anon,
+-- e a razÃ£o de a migration entrar em dois pedaÃ§os estÃ¡ escrita lÃ¡: este pedaÃ§o
+-- depende de `platform_branding`, criada no bloco da 0155, que Ã© o Ãºltimo do
+-- arquivo â€” e aquele pedaÃ§o cria funÃ§Ã£o, o que a varredura proÃ­be depois dela.
 --
--- ─── Por que o bucket é PÚBLICO — o primeiro do repositório ─────────────────
+-- â”€â”€â”€ Por que o bucket Ã© PÃšBLICO â€” o primeiro do repositÃ³rio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
--- Os quatro que já existiam (`ai-policy`, `lgpd-exports`, `skill-assets`,
--- `whatsapp-media`) nascem `public = false`. Este não, e a razão é medida: o logo
--- é renderizado num `<img>` da tela de LOGIN (`app/(public)/layout.tsx`), servida
--- a quem NÃO tem sessão. URL assinada exige um segredo por requisição e VENCE — a
--- marca da instalação sumiria da fachada no dia do vencimento, sem ninguém tocar
--- em nada, e "o logo sumiu" não apontaria para a causa.
+-- Os quatro que jÃ¡ existiam (`ai-policy`, `lgpd-exports`, `skill-assets`,
+-- `whatsapp-media`) nascem `public = false`. Este nÃ£o, e a razÃ£o Ã© medida: o logo
+-- Ã© renderizado num `<img>` da tela de LOGIN (`app/(public)/layout.tsx`), servida
+-- a quem NÃƒO tem sessÃ£o. URL assinada exige um segredo por requisiÃ§Ã£o e VENCE â€” a
+-- marca da instalaÃ§Ã£o sumiria da fachada no dia do vencimento, sem ninguÃ©m tocar
+-- em nada, e "o logo sumiu" nÃ£o apontaria para a causa.
 --
--- O que mantém a exceção contida, e o que `tests/invariants/marca-logo.test.ts`
+-- O que mantÃ©m a exceÃ§Ã£o contida, e o que `tests/invariants/marca-logo.test.ts`
 -- mede:
---   * bucket EXCLUSIVO de logo — nada de conversa, export ou base de conhecimento
---     mora aqui, então "público" não vaza histórico de cliente nenhum;
+--   * bucket EXCLUSIVO de logo â€” nada de conversa, export ou base de conhecimento
+--     mora aqui, entÃ£o "pÃºblico" nÃ£o vaza histÃ³rico de cliente nenhum;
 --   * ZERO policy em `storage.objects` para ele. `public = true` no Supabase abre
---     a LEITURA pelo endpoint `/object/public/...`; não abre INSERT nem DELETE,
---     que continuam só pelo `service_role`, pela rota, depois dos gates;
---   * caminho não-enumerável (`<prefixo>/<uuid v4>.<png|jpg>`);
---   * `allowed_mime_types` é BACKSTOP, não a defesa — o Storage compara com o
---     header que QUEM SOBE escolheu. Quem decide é o farejador de bytes em
+--     a LEITURA pelo endpoint `/object/public/...`; nÃ£o abre INSERT nem DELETE,
+--     que continuam sÃ³ pelo `service_role`, pela rota, depois dos gates;
+--   * caminho nÃ£o-enumerÃ¡vel (`<prefixo>/<uuid v4>.<png|jpg>`);
+--   * `allowed_mime_types` Ã© BACKSTOP, nÃ£o a defesa â€” o Storage compara com o
+--     header que QUEM SOBE escolheu. Quem decide Ã© o farejador de bytes em
 --     `lib/branding/logo-arquivo.ts`.
 --
 -- Registrado em `docs/threat-model.md` ao lado da linha de `whatsapp-media`.
 --
--- ─── Por que 512 KB ────────────────────────────────────────────────────────
+-- â”€â”€â”€ Por que 512 KB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 --
 -- `next.config.ts` roda com `images.unoptimized` e os dois renders do logo usam
--- `<img>` cru (a URL é de quem hospeda; `next/image` exige allowlist fechada em
--- BUILD e a imagem é pré-buildada). O arquivo vai INTEIRO para o navegador em
--- toda página. E a cota do Supabase é do CLIENTE — 1 GB no plano gratuito,
--- compartilhado com `whatsapp-media`, que não tem poda.
+-- `<img>` cru (a URL Ã© de quem hospeda; `next/image` exige allowlist fechada em
+-- BUILD e a imagem Ã© prÃ©-buildada). O arquivo vai INTEIRO para o navegador em
+-- toda pÃ¡gina. E a cota do Supabase Ã© do CLIENTE â€” 1 GB no plano gratuito,
+-- compartilhado com `whatsapp-media`, que nÃ£o tem poda.
 --
 -- Idempotente e auto-curativo: `on conflict do update` no bucket (o `update.sh`
--- de um clone precisa CONVERGIR, não só criar), `add column if not exists`, e o
--- BACKFILL vem antes da constraint — o `update.sh` roda SEM `ON_ERROR_STOP`, e
--- uma constraint que estourasse deixaria a coluna sem validação em silêncio.
+-- de um clone precisa CONVERGIR, nÃ£o sÃ³ criar), `add column if not exists`, e o
+-- BACKFILL vem antes da constraint â€” o `update.sh` roda SEM `ON_ERROR_STOP`, e
+-- uma constraint que estourasse deixaria a coluna sem validaÃ§Ã£o em silÃªncio.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('brand-logos', 'brand-logos', true, 524288, array['image/png', 'image/jpeg'])
@@ -14449,15 +14449,15 @@ alter table public.platform_branding
   add column if not exists logo_path text;
 
 comment on column public.platform_branding.logo_path is
-  'Caminho do arquivo de logo em storage/brand-logos, sempre platform/<uuid>.<png|jpg>. Caminho e NÃO url: a url é função determinística do caminho + host do projeto (DIRC-C), e gravá-la amarraria a marca ao host de hoje. Vence logo_url, que continua como rede de rollback do .env. Escrito por app/api/v1/marca/logo/route.ts.';
+  'Caminho do arquivo de logo em storage/brand-logos, sempre platform/<uuid>.<png|jpg>. Caminho e NÃƒO url: a url Ã© funÃ§Ã£o determinÃ­stica do caminho + host do projeto (DIRC-C), e gravÃ¡-la amarraria a marca ao host de hoje. Vence logo_url, que continua como rede de rollback do .env. Escrito por app/api/v1/marca/logo/route.ts.';
 
 update public.platform_branding
    set logo_path = null
  where logo_path is not null
    and logo_path !~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$';
 
--- `drop if exists` + `add`, e não `add ... if not exists` (que o Postgres não tem
--- para constraint): é o que torna a REGRA idempotente, e não só a criação.
+-- `drop if exists` + `add`, e nÃ£o `add ... if not exists` (que o Postgres nÃ£o tem
+-- para constraint): Ã© o que torna a REGRA idempotente, e nÃ£o sÃ³ a criaÃ§Ã£o.
 alter table public.platform_branding
   drop constraint if exists platform_branding_logo_path;
 alter table public.platform_branding
@@ -14466,9 +14466,9 @@ alter table public.platform_branding
     or logo_path ~ '^platform/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg)$'
   );
 
--- ⚠️ CHECK de REGEX, não de conjunto: fica FORA da lista `PARES` de
--- `tests/invariants/vocabulario-banco-x-typescript.test.ts`, cujo extrator só
--- reconhece `= ANY (ARRAY[...])` e estoura sobre regex. Mesma razão de
+-- âš ï¸ CHECK de REGEX, nÃ£o de conjunto: fica FORA da lista `PARES` de
+-- `tests/invariants/vocabulario-banco-x-typescript.test.ts`, cujo extrator sÃ³
+-- reconhece `= ANY (ARRAY[...])` e estoura sobre regex. Mesma razÃ£o de
 -- `platform_branding_accent_hex`.
 
 notify pgrst, 'reload schema';
@@ -14476,44 +14476,44 @@ notify pgrst, 'reload schema';
 
 -- ---- o teto de IA que vincula (migration 0159) ----
 --
--- ⚠️ ESTE BLOCO EXISTE EM DOIS ARQUIVOS, PALAVRA POR PALAVRA:
+-- âš ï¸ ESTE BLOCO EXISTE EM DOIS ARQUIVOS, PALAVRA POR PALAVRA:
 -- `supabase/migrations/20260814210000_0159_o_teto_que_vincula.sql` (o que o
 -- Supabase CLI aplica) e o FIM de `supabase/baseline.sql` (o que o kit self-host
 -- aplica, no `install.sh` e no `update.sh`).
 -- `tests/unit/migracao-nao-arma-ninguem.test.ts` compara os dois textos: divergir
 -- significa que o self-hoster recebe um SQL diferente do que a migration afirma,
--- e é justamente o par que ninguém confere lendo só um dos dois.
+-- e Ã© justamente o par que ninguÃ©m confere lendo sÃ³ um dos dois.
 
--- (1) DDL. Idempotente; re-aplicar é no-op. A linha que já existe recebe 'off'
---     pelo próprio ALTER — não há UPDATE nenhum aqui, e é essa ausência que
---     torna impossível esta migration armar alguém.
+-- (1) DDL. Idempotente; re-aplicar Ã© no-op. A linha que jÃ¡ existe recebe 'off'
+--     pelo prÃ³prio ALTER â€” nÃ£o hÃ¡ UPDATE nenhum aqui, e Ã© essa ausÃªncia que
+--     torna impossÃ­vel esta migration armar alguÃ©m.
 alter table public.ai_budgets
   add column if not exists enforcement_mode text not null default 'off';
 alter table public.ai_budgets
   add column if not exists enforcement_effective_at timestamptz;
 
 comment on column public.ai_budgets.enforcement_mode is
-  'A INTENÇÃO, declarada por um admin — nunca inferida do valor do teto. off = só acompanhar (a IA nunca para por gasto); avisar = abre budget_warning ao passar do limiar e SEGUE; bloquear = recusa a chamada quando o gasto atinge o teto. Nasce off por DEFAULT do ALTER, e é por isso que ligar o teto no gate não estrangula quem herdou o DEFAULT 5000 de monthly_limit_cents. Escrito só por PATCH /api/v1/ai/budget (admin, auditado); lido por lib/agent-engine/edge/llm/credentials.ts.';
+  'A INTENÃ‡ÃƒO, declarada por um admin â€” nunca inferida do valor do teto. off = sÃ³ acompanhar (a IA nunca para por gasto); avisar = abre budget_warning ao passar do limiar e SEGUE; bloquear = recusa a chamada quando o gasto atinge o teto. Nasce off por DEFAULT do ALTER, e Ã© por isso que ligar o teto no gate nÃ£o estrangula quem herdou o DEFAULT 5000 de monthly_limit_cents. Escrito sÃ³ por PATCH /api/v1/ai/budget (admin, auditado); lido por lib/agent-engine/edge/llm/credentials.ts.';
 
 comment on column public.ai_budgets.enforcement_effective_at is
-  'Carência: a partir de quando bloquear passa a valer de fato (now()+72h ao armar pela tela). Nasce NULL, e null <= now() é null — nunca verdadeiro —, então modo bloquear sem esta data ainda não bloqueia. Existe para que armar a proteção não seja um interruptor que corta o WhatsApp do negócio no mesmo instante, sem ninguém ver o aviso antes.';
+  'CarÃªncia: a partir de quando bloquear passa a valer de fato (now()+72h ao armar pela tela). Nasce NULL, e null <= now() Ã© null â€” nunca verdadeiro â€”, entÃ£o modo bloquear sem esta data ainda nÃ£o bloqueia. Existe para que armar a proteÃ§Ã£o nÃ£o seja um interruptor que corta o WhatsApp do negÃ³cio no mesmo instante, sem ninguÃ©m ver o aviso antes.';
 
--- (2) DADOS — RESGATE B->A.
+-- (2) DADOS â€” RESGATE B->A.
 --
 -- >>> RESGATE B->A: INICIO <<<
 --
--- O ÚNICO bloco desta migration que escreve 'bloquear', e o único que escreve
--- `monthly_limit_cents`. Ele preserva o comportamento de HOJE para a única
--- população que hoje PODE ser bloqueada: quem tem
--- `organizations.settings.llm.monthly_budget_cents` com um número vigente.
+-- O ÃšNICO bloco desta migration que escreve 'bloquear', e o Ãºnico que escreve
+-- `monthly_limit_cents`. Ele preserva o comportamento de HOJE para a Ãºnica
+-- populaÃ§Ã£o que hoje PODE ser bloqueada: quem tem
+-- `organizations.settings.llm.monthly_budget_cents` com um nÃºmero vigente.
 --
--- Sem carência (`now()`, não `now()+72h`): essa organização JÁ está capada nesse
--- número, e dar 72h de folga AFROUXARIA o que ela apertou de propósito.
+-- Sem carÃªncia (`now()`, nÃ£o `now()+72h`): essa organizaÃ§Ã£o JÃ estÃ¡ capada nesse
+-- nÃºmero, e dar 72h de folga AFROUXARIA o que ela apertou de propÃ³sito.
 --
 -- Garante a linha ANTES do update, porque nenhum gatilho de `organizations`
--- semeia `ai_budgets` — os produtores são o gatilho de `llm_calls`, os dois
--- backfills do baseline e o PATCH. Sem o insert, uma organização com teto vigente
--- e sem linha perderia o bloqueio no instante em que a chave jsonb saísse em (3).
+-- semeia `ai_budgets` â€” os produtores sÃ£o o gatilho de `llm_calls`, os dois
+-- backfills do baseline e o PATCH. Sem o insert, uma organizaÃ§Ã£o com teto vigente
+-- e sem linha perderia o bloqueio no instante em que a chave jsonb saÃ­sse em (3).
 insert into public.ai_budgets (organization_id)
 select o.id from public.organizations o
  where jsonb_typeof(o.settings->'llm'->'monthly_budget_cents') = 'number'
@@ -14532,52 +14532,52 @@ update public.ai_budgets b
    and (o.settings->'llm'->>'monthly_budget_cents')::numeric >= 100
    and (o.settings->'llm'->>'monthly_budget_cents')::numeric <= 2147483647;
 --
--- As três condições, e cada uma existe para não derrubar o `update.sh` de um
--- clone ou para não apertar quem ninguém apertou:
+-- As trÃªs condiÃ§Ãµes, e cada uma existe para nÃ£o derrubar o `update.sh` de um
+-- clone ou para nÃ£o apertar quem ninguÃ©m apertou:
 --
---   * `jsonb_typeof = 'number'` e NÃO `is not null`: o jsonb `'null'` e um valor
+--   * `jsonb_typeof = 'number'` e NÃƒO `is not null`: o jsonb `'null'` e um valor
 --     com forma errada (string) caem fora. `('"700"'::jsonb->>...)::numeric`
 --     funcionaria, mas `'abc'` levantaria 22P02 dentro do `update.sh` de um clone,
---     e a doutrina proíbe migration que quebra. Espelha exatamente o `.catch(null)`
---     do Zod em `credentials.ts`: valor com forma errada JÁ é `null` (ilimitado)
---     hoje, então não resgatar é PRESERVAR.
+--     e a doutrina proÃ­be migration que quebra. Espelha exatamente o `.catch(null)`
+--     do Zod em `credentials.ts`: valor com forma errada JÃ Ã© `null` (ilimitado)
+--     hoje, entÃ£o nÃ£o resgatar Ã© PRESERVAR.
 --   * `>= 100` deixa fora o `0` (artefato de `scripts/smoke-llm.ts`, que grava '0'
---     e NÃO restaura) e o implausível. Um `0` ali bloqueia 100% das chamadas com
---     gasto zero — a inversão perfeita —, e trazê-lo DESARMADO conserta. É a única
---     vez que esta migration muda comportamento, e é na direção que AFROUXA.
---   * `<= 2147483647` porque `monthly_limit_cents` é `integer`. Medido em pg17:
+--     e NÃƒO restaura) e o implausÃ­vel. Um `0` ali bloqueia 100% das chamadas com
+--     gasto zero â€” a inversÃ£o perfeita â€”, e trazÃª-lo DESARMADO conserta. Ã‰ a Ãºnica
+--     vez que esta migration muda comportamento, e Ã© na direÃ§Ã£o que AFROUXA.
+--   * `<= 2147483647` porque `monthly_limit_cents` Ã© `integer`. Medido em pg17:
 --     `('{"a":1e20}'::jsonb->>'a')::numeric::integer` levanta `22003 integer out of
---     range`, e `jsonb_typeof` daquilo é 'number'. É jsonb LIVRE, editável por
+--     range`, e `jsonb_typeof` daquilo Ã© 'number'. Ã‰ jsonb LIVRE, editÃ¡vel por
 --     qualquer acesso privilegiado ao banco; sem este corte, uma linha assim
---     abortaria o statement dentro de um `update.sh` sem `ON_ERROR_STOP` — erro
---     engolido, resgate não feito, exit 0. Fora do intervalo não é orçamento, é
---     erro de unidade, e erro de unidade não pode calar a IA nem quebrar o kit.
+--     abortaria o statement dentro de um `update.sh` sem `ON_ERROR_STOP` â€” erro
+--     engolido, resgate nÃ£o feito, exit 0. Fora do intervalo nÃ£o Ã© orÃ§amento, Ã©
+--     erro de unidade, e erro de unidade nÃ£o pode calar a IA nem quebrar o kit.
 --
 -- >>> RESGATE B->A: FIM <<<
 
--- (3) A duplicata some, para não haver duas verdades. Uma instrução, sem
---     read-modify-write de aplicação — o padrão que a 0157 curou depois de medir
---     perda real de chave irmã em `organizations.settings` (`visibility_mode`
---     voltando de 'own' para 'all' em silêncio, e ele é lido DIRETO pela RLS).
+-- (3) A duplicata some, para nÃ£o haver duas verdades. Uma instruÃ§Ã£o, sem
+--     read-modify-write de aplicaÃ§Ã£o â€” o padrÃ£o que a 0157 curou depois de medir
+--     perda real de chave irmÃ£ em `organizations.settings` (`visibility_mode`
+--     voltando de 'own' para 'all' em silÃªncio, e ele Ã© lido DIRETO pela RLS).
 update public.organizations
    set settings = jsonb_set(settings, '{llm}', (settings->'llm') - 'monthly_budget_cents')
  where jsonb_typeof(settings->'llm') = 'object'
    and settings->'llm' ? 'monthly_budget_cents';
--- Idempotência: a segunda passada casa 0 linhas (a chave já saiu), o que também
--- torna (2) idempotente sem precisar de guarda de catálogo.
+-- IdempotÃªncia: a segunda passada casa 0 linhas (a chave jÃ¡ saiu), o que tambÃ©m
+-- torna (2) idempotente sem precisar de guarda de catÃ¡logo.
 
--- (4) SANEAMENTO. `is_throttled` só teve escritor no cron morto
+-- (4) SANEAMENTO. `is_throttled` sÃ³ teve escritor no cron morto
 --     (`workers/ai-budget-checker.cron.ts`, sem rota e sem linha no
---     `docker/scheduler/entrypoint.sh`), então qualquer `true` é estado preso.
---     `is_disabled` NÃO é tocado: significaria "um admin desligou", e limpá-lo
---     religaria IA que alguém desligou de propósito.
+--     `docker/scheduler/entrypoint.sh`), entÃ£o qualquer `true` Ã© estado preso.
+--     `is_disabled` NÃƒO Ã© tocado: significaria "um admin desligou", e limpÃ¡-lo
+--     religaria IA que alguÃ©m desligou de propÃ³sito.
 update public.ai_budgets set is_throttled = false where is_throttled;
 
--- (5) CONSTRAINT — depois dos dados, sempre (doutrina de migrations, item 8). O
+-- (5) CONSTRAINT â€” depois dos dados, sempre (doutrina de migrations, item 8). O
 --     `update.sh` roda SEM `ON_ERROR_STOP` e engoliria um 23514, deixando a
---     coluna sem validação em silêncio. `drop if exists` + `add`, e não
---     `add ... if not exists` (que o Postgres não tem para constraint): é o que
---     torna a REGRA idempotente, e não só a criação.
+--     coluna sem validaÃ§Ã£o em silÃªncio. `drop if exists` + `add`, e nÃ£o
+--     `add ... if not exists` (que o Postgres nÃ£o tem para constraint): Ã© o que
+--     torna a REGRA idempotente, e nÃ£o sÃ³ a criaÃ§Ã£o.
 alter table public.ai_budgets
   drop constraint if exists ai_budgets_enforcement_mode_check;
 alter table public.ai_budgets
@@ -14589,34 +14589,34 @@ alter table public.ai_budgets
 alter table public.ai_budgets
   add constraint ai_budgets_bloquear_precisa_de_teto
   check (enforcement_mode <> 'bloquear' or monthly_limit_cents >= 100);
--- Os dados já satisfazem: 'bloquear' só foi escrito em (2), onde o jsonb era
--- >= 100. O CHECK é o backstop de "armado sem valor útil" tentando renascer pela
--- porta da frente — a régua da vez é o 422 da rota, não ele.
+-- Os dados jÃ¡ satisfazem: 'bloquear' sÃ³ foi escrito em (2), onde o jsonb era
+-- >= 100. O CHECK Ã© o backstop de "armado sem valor Ãºtil" tentando renascer pela
+-- porta da frente â€” a rÃ©gua da vez Ã© o 422 da rota, nÃ£o ele.
 --
--- ⚠️ SÓ `ai_budgets_bloquear_precisa_de_teto` é CHECK cross-coluna / de domínio,
+-- âš ï¸ SÃ“ `ai_budgets_bloquear_precisa_de_teto` Ã© CHECK cross-coluna / de domÃ­nio,
 -- e por isso fica FORA da lista `PARES` de
--- `tests/invariants/vocabulario-banco-x-typescript.test.ts` — mesma classificação
+-- `tests/invariants/vocabulario-banco-x-typescript.test.ts` â€” mesma classificaÃ§Ã£o
 -- que os CHECKs de regex da 0155/0157/0158.
 --
--- `ai_budgets_enforcement_mode_check` É de vocabulário: um conjunto fechado com
+-- `ai_budgets_enforcement_mode_check` Ã‰ de vocabulÃ¡rio: um conjunto fechado com
 -- par em TypeScript (`ModoDeOrcamento`, em
--- `lib/agent-engine/edge/llm/orcamento.ts`), lido no caminho quente. Ele ESTÁ em
--- `PARES`. Classificá-lo como domínio — o que este comentário e o MANIFEST
--- fizeram — deixava a coluna fora do único gate que pega a classe: um valor novo
--- entra num lado só, passa em typecheck/lint/unit, e aparece como 23514 em
--- produção.
+-- `lib/agent-engine/edge/llm/orcamento.ts`), lido no caminho quente. Ele ESTÃ em
+-- `PARES`. ClassificÃ¡-lo como domÃ­nio â€” o que este comentÃ¡rio e o MANIFEST
+-- fizeram â€” deixava a coluna fora do Ãºnico gate que pega a classe: um valor novo
+-- entra num lado sÃ³, passa em typecheck/lint/unit, e aparece como 23514 em
+-- produÃ§Ã£o.
 
--- (6) INFORMAÇÃO, nunca alarme. Item `info` para as organizações cujo
---     `is_disabled` foi posto à mão (HIPÓTESE: conjunto vazio — nenhum escritor
+-- (6) INFORMAÃ‡ÃƒO, nunca alarme. Item `info` para as organizaÃ§Ãµes cujo
+--     `is_disabled` foi posto Ã  mÃ£o (HIPÃ“TESE: conjunto vazio â€” nenhum escritor
 --     vivo jamais rodou): a flag para de agir quando o guard legado de
---     `workers/ai-response-worker.ts` é repontado para a regra canônica. Mudança
---     real, declarada, não escondida — e `info` porque nada quebrou.
+--     `workers/ai-response-worker.ts` Ã© repontado para a regra canÃ´nica. MudanÃ§a
+--     real, declarada, nÃ£o escondida â€” e `info` porque nada quebrou.
 insert into public.agent_inbox_items (organization_id, kind, severity, title, body, ref_kind, ref_id)
 select b.organization_id, 'budget_warning', 'info',
        'A pausa antiga de IA por gasto foi desligada',
-       'Esta organização estava marcada como desabilitada por gasto num mecanismo '
+       'Esta organizaÃ§Ã£o estava marcada como desabilitada por gasto num mecanismo '
        'que nunca teve como ser reativado. Para voltar a parar a IA no limite, use '
-       'Uso de IA › Orçamento e escolha "Parar a IA ao chegar no limite".',
+       'Uso de IA â€º OrÃ§amento e escolha "Parar a IA ao chegar no limite".',
        'ai_budget', b.organization_id
   from public.ai_budgets b
  where b.is_disabled
@@ -14629,63 +14629,63 @@ select b.organization_id, 'budget_warning', 'info',
 notify pgrst, 'reload schema';
 
 
--- ---- ai_budgets só se escreve pela rota (migration 0160) ----
+-- ---- ai_budgets sÃ³ se escreve pela rota (migration 0160) ----
 --
--- A 0159 pôs em `ai_budgets` os dois campos que decidem se (e quando) a IA para
--- de responder. Toda a regra que os protege — escada `off → avisar → bloquear`,
--- carência de 72h, piso de US$ 1,00 e linha em `api_audit_log` — mora na rota
+-- A 0159 pÃ´s em `ai_budgets` os dois campos que decidem se (e quando) a IA para
+-- de responder. Toda a regra que os protege â€” escada `off â†’ avisar â†’ bloquear`,
+-- carÃªncia de 72h, piso de US$ 1,00 e linha em `api_audit_log` â€” mora na rota
 -- `PATCH /api/v1/ai/budget`, que usa service role. Mas o corpo deste dump traz
 -- `GRANT ALL ON TABLE public.ai_budgets TO anon` e `TO authenticated`, e a 0159
 -- termina com `notify pgrst, 'reload schema'`: as colunas novas passaram a ser
 -- SERVIDAS pelo PostgREST para a chave anon, que vai ao browser. Um PATCH direto
 -- na REST do Supabase, com o JWT de um admin do tenant, armava a parada sem
--- escada, sem carência, sem piso e sem auditoria — o comentário da coluna dizia
--- "escrito só por PATCH /api/v1/ai/budget" e era verdade sobre o CÓDIGO, falso
+-- escada, sem carÃªncia, sem piso e sem auditoria â€” o comentÃ¡rio da coluna dizia
+-- "escrito sÃ³ por PATCH /api/v1/ai/budget" e era verdade sobre o CÃ“DIGO, falso
 -- sobre o SCHEMA.
 --
--- Medido antes de revogar: TODO escritor de `ai_budgets` no repositório usa
--- service role (a rota, `lib/ai/budget/check.ts`, os painéis de admin, os
+-- Medido antes de revogar: TODO escritor de `ai_budgets` no repositÃ³rio usa
+-- service role (a rota, `lib/ai/budget/check.ts`, os painÃ©is de admin, os
 -- workers e `scripts/qa-wave-11.ts`). Nenhum caminho de produto escreve esta
--- tabela com o JWT do usuário.
+-- tabela com o JWT do usuÃ¡rio.
 --
--- SELECT fica: ler o próprio orçamento pelo PostgREST continua escopado pela
--- policy de SELECT da 0150. `revoke` é idempotente por natureza — este bloco
--- pode ser re-aplicado à vontade pelo `update.sh`.
+-- SELECT fica: ler o prÃ³prio orÃ§amento pelo PostgREST continua escopado pela
+-- policy de SELECT da 0150. `revoke` Ã© idempotente por natureza â€” este bloco
+-- pode ser re-aplicado Ã  vontade pelo `update.sh`.
 revoke insert, update, delete on table public.ai_budgets from authenticated, anon;
 
 -- ---- o arquivo do webhook pode perder o corpo (migration 0163) ----
 --
 -- `webhook_events_log` guarda o payload cru de todo webhook e NUNCA era podado.
--- Medido numa instalação real em 20/08/2026: o banco inteiro em 545 MB, dos
--- quais 468 MB (86%) eram esta tabela — contra 3,2 MB de `messages`. Nenhuma
+-- Medido numa instalaÃ§Ã£o real em 20/08/2026: o banco inteiro em 545 MB, dos
+-- quais 468 MB (86%) eram esta tabela â€” contra 3,2 MB de `messages`. Nenhuma
 -- linha com mais de 30 dias: as 56.291 eram de 20 dias. Cresce ~23 MB/dia, e o
--- teto do plano gratuito do Supabase é 500 MB, que é onde a maioria dos clones
+-- teto do plano gratuito do Supabase Ã© 500 MB, que Ã© onde a maioria dos clones
 -- vive.
 --
--- ESVAZIAR o corpo, e não apagar a linha: as três colunas pesadas são ~97% do
--- peso, e a linha sem elas custa ~200 B. Assim o índice forense inteiro
--- (provider, tipo, id externo, horário, assinatura, desfecho) sobrevive por
--- ~11 MB — e é ele que responde as perguntas de depois do incidente.
+-- ESVAZIAR o corpo, e nÃ£o apagar a linha: as trÃªs colunas pesadas sÃ£o ~97% do
+-- peso, e a linha sem elas custa ~200 B. Assim o Ã­ndice forense inteiro
+-- (provider, tipo, id externo, horÃ¡rio, assinatura, desfecho) sobrevive por
+-- ~11 MB â€” e Ã© ele que responde as perguntas de depois do incidente.
 --
--- `raw_body` precisa aceitar NULL para que "descartado" não se confunda com
--- "corpo vazio", que é caso real (webhook de ping). Medido antes de afrouxar:
--- nenhum leitor consulta essa coluna no repositório inteiro.
+-- `raw_body` precisa aceitar NULL para que "descartado" nÃ£o se confunda com
+-- "corpo vazio", que Ã© caso real (webhook de ping). Medido antes de afrouxar:
+-- nenhum leitor consulta essa coluna no repositÃ³rio inteiro.
 --
--- `archived_at` já existia na tabela e não tinha NENHUM dono (0 linhas com
--- valor em 56.350) — promessa de esqueleto, anti-pattern nº 3. Ganha dono aqui
+-- `archived_at` jÃ¡ existia na tabela e nÃ£o tinha NENHUM dono (0 linhas com
+-- valor em 56.350) â€” promessa de esqueleto, anti-pattern nÂº 3. Ganha dono aqui
 -- em vez de nascer uma coluna nova com o mesmo significado.
 alter table public.webhook_events_log
   alter column raw_body drop not null;
 
 comment on column public.webhook_events_log.raw_body is
-  'Corpo cru como o provedor mandou. NULL = existiu e foi descartado pela retenção; `archived_at` diz quando.';
+  'Corpo cru como o provedor mandou. NULL = existiu e foi descartado pela retenÃ§Ã£o; `archived_at` diz quando.';
 
 comment on column public.webhook_events_log.archived_at is
-  'Quando as colunas pesadas (raw_body, payload_parsed, headers) foram descartadas pela retenção. NULL = a linha ainda tem o corpo.';
+  'Quando as colunas pesadas (raw_body, payload_parsed, headers) foram descartadas pela retenÃ§Ã£o. NULL = a linha ainda tem o corpo.';
 
--- PARCIAL: a varredura procura "velha e ainda com corpo", e o índice encolhe
--- sozinho conforme a poda avança — o oposto de um índice sobre a tabela toda,
--- na única tabela que este bloco existe para impedir que cresça.
+-- PARCIAL: a varredura procura "velha e ainda com corpo", e o Ã­ndice encolhe
+-- sozinho conforme a poda avanÃ§a â€” o oposto de um Ã­ndice sobre a tabela toda,
+-- na Ãºnica tabela que este bloco existe para impedir que cresÃ§a.
 create index if not exists webhook_events_log_a_esvaziar_idx
   on public.webhook_events_log (received_at)
   where archived_at is null;
@@ -14693,32 +14693,32 @@ create index if not exists webhook_events_log_a_esvaziar_idx
 notify pgrst, 'reload schema';
 
 
--- ---- índice do cap global do claim da fila (migration 0166) ----
+-- ---- Ã­ndice do cap global do claim da fila (migration 0166) ----
 --
--- O QUÊ: um índice parcial em `job_queue (status) where status = 'running'`.
+-- O QUÃŠ: um Ã­ndice parcial em `job_queue (status) where status = 'running'`.
 --
--- POR QUÊ: `claimJobs` (lib/agent-engine/queue/queue.ts) abre TODA rodada com
--- `select count(*) from job_queue where status = 'running'` — o cap global de
--- concorrência — e nenhum dos quatro índices da tabela serve esse predicado. O
--- parcial das lanes (`uniq_job_queue_one_running_per_contact`) chega perto e não
--- vale: o predicado dele é mais ESTREITO (exclui `contact_id is null`, que é
--- todo `watchdog`/`flywheel`), então o planejador não pode responder por ele.
+-- POR QUÃŠ: `claimJobs` (lib/agent-engine/queue/queue.ts) abre TODA rodada com
+-- `select count(*) from job_queue where status = 'running'` â€” o cap global de
+-- concorrÃªncia â€” e nenhum dos quatro Ã­ndices da tabela serve esse predicado. O
+-- parcial das lanes (`uniq_job_queue_one_running_per_contact`) chega perto e nÃ£o
+-- vale: o predicado dele Ã© mais ESTREITO (exclui `contact_id is null`, que Ã©
+-- todo `watchdog`/`flywheel`), entÃ£o o planejador nÃ£o pode responder por ele.
 -- Medido em pg17 com este baseline, 50.000 linhas `done` + 4 `running`:
--- Seq Scan / 715 buffers → Index Only Scan / 3 buffers. E o custo NÃO depende de
--- linha viva: com as 50.004 apagadas na mesma transação o Seq Scan ainda lê os
--- mesmos 715 buffers, porque ele visita página e não tupla. Fila é escrita o
+-- Seq Scan / 715 buffers â†’ Index Only Scan / 3 buffers. E o custo NÃƒO depende de
+-- linha viva: com as 50.004 apagadas na mesma transaÃ§Ã£o o Seq Scan ainda lÃª os
+-- mesmos 715 buffers, porque ele visita pÃ¡gina e nÃ£o tupla. Fila Ã© escrita o
 -- tempo todo e nada no produto a poda.
 --
--- O bloco `do $$` existe porque `create index if not exists` casa por NOME e não
--- por definição — medido em pg17, um homônimo com outra definição vira `NOTICE:
+-- O bloco `do $$` existe porque `create index if not exists` casa por NOME e nÃ£o
+-- por definiÃ§Ã£o â€” medido em pg17, um homÃ´nimo com outra definiÃ§Ã£o vira `NOTICE:
 -- ... already exists, skipping`, que nem chega ao filtro `ERROR|FATAL` do
--- `update.sh`. Homônimo NOSSO em `job_queue` é derrubado e recriado; homônimo em
--- outro objeto NÃO é apagado (não é nosso) — a atualização grita com a razão, o
--- que é o comportamento certo num script que roda sem `ON_ERROR_STOP`.
+-- `update.sh`. HomÃ´nimo NOSSO em `job_queue` Ã© derrubado e recriado; homÃ´nimo em
+-- outro objeto NÃƒO Ã© apagado (nÃ£o Ã© nosso) â€” a atualizaÃ§Ã£o grita com a razÃ£o, o
+-- que Ã© o comportamento certo num script que roda sem `ON_ERROR_STOP`.
 --
--- O `comment on index` é o DELATOR: índice ausente levanta `relation ... does
--- not exist`, texto que NÃO casa com nenhum termo da lista benigna do
--- `update.sh` e portanto aparece ao operador — enquanto `already exists` seria
+-- O `comment on index` Ã© o DELATOR: Ã­ndice ausente levanta `relation ... does
+-- not exist`, texto que NÃƒO casa com nenhum termo da lista benigna do
+-- `update.sh` e portanto aparece ao operador â€” enquanto `already exists` seria
 -- engolido. Aditivo e idempotente: sem constraint, sem backfill, sem dado tocado.
 do $$
 declare
@@ -14743,11 +14743,11 @@ begin
 
   if v_relkind not in ('i', 'I') or v_tabela is distinct from 'job_queue' then
     raise exception
-      'o nome idx_job_queue_running já está tomado em public (relkind=%, tabela=%). '
-      'Nome de índice é único por SCHEMA, então o create index if not exists desta '
-      'atualização vira no-op silencioso e o claim da fila continua varrendo a tabela '
-      'inteira a cada rodada. Não apago o objeto porque ele não é nosso: renomeie-o e '
-      'rode a atualização de novo.', v_relkind, coalesce(v_tabela, '(nenhuma)');
+      'o nome idx_job_queue_running jÃ¡ estÃ¡ tomado em public (relkind=%, tabela=%). '
+      'Nome de Ã­ndice Ã© Ãºnico por SCHEMA, entÃ£o o create index if not exists desta '
+      'atualizaÃ§Ã£o vira no-op silencioso e o claim da fila continua varrendo a tabela '
+      'inteira a cada rodada. NÃ£o apago o objeto porque ele nÃ£o Ã© nosso: renomeie-o e '
+      'rode a atualizaÃ§Ã£o de novo.', v_relkind, coalesce(v_tabela, '(nenhuma)');
   end if;
 
   if v_def !~ 'USING btree \(status\)' or v_def !~ 'WHERE \(status = ''running''' then
@@ -14761,52 +14761,52 @@ create index if not exists idx_job_queue_running
 
 comment on index idx_job_queue_running is
   'Cap global do claim: select count(*) from job_queue where status = ''running'' '
-  '(lib/agent-engine/queue/queue.ts). Sem ele o claim faz Seq Scan a cada rodada — '
+  '(lib/agent-engine/queue/queue.ts). Sem ele o claim faz Seq Scan a cada rodada â€” '
   '715 buffers com 50 mil linhas, e o mesmo custo com zero linha viva, porque Seq '
-  'Scan visita página e não tupla. Este COMMENT é o delator do bloco: índice ausente '
-  'vira "relation does not exist", que NÃO casa com o filtro benigno do update.sh e '
+  'Scan visita pÃ¡gina e nÃ£o tupla. Este COMMENT Ã© o delator do bloco: Ã­ndice ausente '
+  'vira "relation does not exist", que NÃƒO casa com o filtro benigno do update.sh e '
   'chega ao operador; "already exists" seria engolido.';
 
--- ---- identificador de canal único entre os ATIVOS (migration 0165) ----
+-- ---- identificador de canal Ãºnico entre os ATIVOS (migration 0165) ----
 --
--- O QUÊ: dois índices únicos PARCIAIS — um em `meta_phone_number_id`, outro em
--- `zernio_account_id` —, ambos com `where archived_at is null`, precedidos da
--- deduplicação dos dados que os violariam.
+-- O QUÃŠ: dois Ã­ndices Ãºnicos PARCIAIS â€” um em `meta_phone_number_id`, outro em
+-- `zernio_account_id` â€”, ambos com `where archived_at is null`, precedidos da
+-- deduplicaÃ§Ã£o dos dados que os violariam.
 --
--- POR QUÊ: `waha_session_name` e `webhook_path_token` são UNIQUE desde o
+-- POR QUÃŠ: `waha_session_name` e `webhook_path_token` sÃ£o UNIQUE desde o
 -- snapshot; os dois identificadores que chegaram depois (0087 e 0131) nasceram
--- sem trava, e é por eles que o código resolve credencial de envio e a
--- ORGANIZAÇÃO dona de uma mensagem que acabou de entrar. Com duas linhas
--- casando, o PostgREST devolve `data: null` com `PGRST116` (não "a primeira
--- linha"), e o `error` era descartado nos três sítios: os dois resolvedores
--- caíam no fallback do `.env` — a mensagem saía pela conta de OUTRA instalação
--- — e a ingestão do canal oficial descartava a mensagem recebida para as DUAS
--- organizações, respondendo 200 (issue #236). A colisão é atingível por
--- CONFIGURAÇÃO LEGÍTIMA (agência, migração de conta entre organizações), não só
+-- sem trava, e Ã© por eles que o cÃ³digo resolve credencial de envio e a
+-- ORGANIZAÃ‡ÃƒO dona de uma mensagem que acabou de entrar. Com duas linhas
+-- casando, o PostgREST devolve `data: null` com `PGRST116` (nÃ£o "a primeira
+-- linha"), e o `error` era descartado nos trÃªs sÃ­tios: os dois resolvedores
+-- caÃ­am no fallback do `.env` â€” a mensagem saÃ­a pela conta de OUTRA instalaÃ§Ã£o
+-- â€” e a ingestÃ£o do canal oficial descartava a mensagem recebida para as DUAS
+-- organizaÃ§Ãµes, respondendo 200 (issue #236). A colisÃ£o Ã© atingÃ­vel por
+-- CONFIGURAÃ‡ÃƒO LEGÃTIMA (agÃªncia, migraÃ§Ã£o de conta entre organizaÃ§Ãµes), nÃ£o sÃ³
 -- por abuso.
 --
--- PARCIAL, e não total, pelo precedente da 0107: canal arquivado é canal
--- excluído pelo usuário e a linha só sobrevive como âncora das FKs RESTRICT.
--- Trava total impediria reconectar o mesmo número depois de excluí-lo. O recorte
--- é o MESMO que as consultas de `lib/channels/` passam a usar.
+-- PARCIAL, e nÃ£o total, pelo precedente da 0107: canal arquivado Ã© canal
+-- excluÃ­do pelo usuÃ¡rio e a linha sÃ³ sobrevive como Ã¢ncora das FKs RESTRICT.
+-- Trava total impediria reconectar o mesmo nÃºmero depois de excluÃ­-lo. O recorte
+-- Ã© o MESMO que as consultas de `lib/channels/` passam a usar.
 --
 -- AUTO-CURATIVO: o `update.sh` de um clone roda SEM `ON_ERROR_STOP` e engoliria
--- o 23505 da criação do índice, deixando o clone sem trava e sem aviso. Por isso
--- a deduplicação vem ANTES. Ela NÃO apaga nem arquiva a linha perdedora — apagar
--- sessão de canal de um cliente é destrutivo, arquivar faria o canal sumir da
--- tela sem ninguém pedir: ela RENOMEIA o identificador da perdedora para
--- `<original>-conflito-<id da sessão>`. A linha continua visível, e como o
--- identificador novo não existe no provider, a varredura de saúde
--- (`app/api/v1/cron/channel-health`) grava `FAILED`/`STOPPED` na próxima passada
--- e ABRE aviso na Central (os três estados estão em `STATUS_QUE_AVISAM`), que é
--- o operador sendo avisado em vez de descobrir pelo cliente que não recebeu.
--- Fica com o identificador a sessão ativa MAIS RECENTE: criá-la exigiu provar
--- posse da conta na tela de conexão, então é a intenção mais recente.
+-- o 23505 da criaÃ§Ã£o do Ã­ndice, deixando o clone sem trava e sem aviso. Por isso
+-- a deduplicaÃ§Ã£o vem ANTES. Ela NÃƒO apaga nem arquiva a linha perdedora â€” apagar
+-- sessÃ£o de canal de um cliente Ã© destrutivo, arquivar faria o canal sumir da
+-- tela sem ninguÃ©m pedir: ela RENOMEIA o identificador da perdedora para
+-- `<original>-conflito-<id da sessÃ£o>`. A linha continua visÃ­vel, e como o
+-- identificador novo nÃ£o existe no provider, a varredura de saÃºde
+-- (`app/api/v1/cron/channel-health`) grava `FAILED`/`STOPPED` na prÃ³xima passada
+-- e ABRE aviso na Central (os trÃªs estados estÃ£o em `STATUS_QUE_AVISAM`), que Ã©
+-- o operador sendo avisado em vez de descobrir pelo cliente que nÃ£o recebeu.
+-- Fica com o identificador a sessÃ£o ativa MAIS RECENTE: criÃ¡-la exigiu provar
+-- posse da conta na tela de conexÃ£o, entÃ£o Ã© a intenÃ§Ã£o mais recente.
 --
--- IDEMPOTENTE: o sufixo carrega o `id` da sessão (único), então depois da
--- primeira passada não sobra duplicata e a segunda casa zero linhas — não há
--- como sufixar duas vezes. Os nomes dos índices são novos neste arquivo, então
--- o `if not exists` (que casa por NOME) não vira no-op em cima de um homônimo.
+-- IDEMPOTENTE: o sufixo carrega o `id` da sessÃ£o (Ãºnico), entÃ£o depois da
+-- primeira passada nÃ£o sobra duplicata e a segunda casa zero linhas â€” nÃ£o hÃ¡
+-- como sufixar duas vezes. Os nomes dos Ã­ndices sÃ£o novos neste arquivo, entÃ£o
+-- o `if not exists` (que casa por NOME) nÃ£o vira no-op em cima de um homÃ´nimo.
 
 with ativos as (
   select id,
@@ -14848,9 +14848,9 @@ create unique index if not exists channel_sessions_zernio_account_id_ativo_uniqu
   on public.channel_sessions (zernio_account_id)
   where archived_at is null and zernio_account_id is not null;
 
--- ---- superfície do pointer de follow-up (migration 0196) ----
--- IA vs automação CRM: um motor, duas listas. Default 'followup' deixa toda
--- linha já existente na superfície de IA. CHECK de conjunto (PARES).
+-- ---- superfÃ­cie do pointer de follow-up (migration 0196) ----
+-- IA vs automaÃ§Ã£o CRM: um motor, duas listas. Default 'followup' deixa toda
+-- linha jÃ¡ existente na superfÃ­cie de IA. CHECK de conjunto (PARES).
 alter table public.followup_flow_pointers
   add column if not exists surface text not null default 'followup';
 
@@ -14862,11 +14862,11 @@ alter table public.followup_flow_pointers
   check (surface in ('followup', 'crm_automation'));
 
 comment on column public.followup_flow_pointers.surface is
-  'Onde o fluxo aparece: followup = /app/ai/followups; crm_automation = CRM Automação. '
-  'Vocabulário cobrado por tests/invariants/vocabulario-banco-x-typescript.test.ts.';
+  'Onde o fluxo aparece: followup = /app/ai/followups; crm_automation = CRM AutomaÃ§Ã£o. '
+  'VocabulÃ¡rio cobrado por tests/invariants/vocabulario-banco-x-typescript.test.ts.';
 
--- ---- inscrição Web Push (migrations 0197 e 0199) ----
--- Bandeja do sistema com a aba fechada. A policy abaixo já é a da 0199 (o
+-- ---- inscriÃ§Ã£o Web Push (migrations 0197 e 0199) ----
+-- Bandeja do sistema com a aba fechada. A policy abaixo jÃ¡ Ã© a da 0199 (o
 -- forward-fix de RBAC): quem atualiza recebe as duas de uma vez, e quem
 -- instala do zero nunca chega a existir sem o `fn_role_at_least`.
 create table if not exists public.push_subscriptions (
@@ -14903,22 +14903,22 @@ revoke all on public.push_subscriptions from anon, public;
 grant select, insert, update, delete on public.push_subscriptions to authenticated;
 
 comment on table public.push_subscriptions is
-  'Inscrição Web Push por navegador. Envio é service role; a sessão só vê a própria linha.';
+  'InscriÃ§Ã£o Web Push por navegador. Envio Ã© service role; a sessÃ£o sÃ³ vÃª a prÃ³pria linha.';
 
 -- ---- a mensagem que responde outra (migration 0168) ----
--- O canal intermediado aceita citação (`replyTo` no envio, com o `wamid` da
+-- O canal intermediado aceita citaÃ§Ã£o (`replyTo` no envio, com o `wamid` da
 -- citada) e o WhatsApp mostra a resposta pendurada na original. Sem guardar
--- QUEM foi citado, o CRM manda a citação para o cliente e não a mostra de volta
--- na própria tela: o atendente vê frases soltas onde o cliente vê um fio.
+-- QUEM foi citado, o CRM manda a citaÃ§Ã£o para o cliente e nÃ£o a mostra de volta
+-- na prÃ³pria tela: o atendente vÃª frases soltas onde o cliente vÃª um fio.
 --
--- FK e não o wamid solto: a pergunta da tela é "qual mensagem NOSSA foi
--- citada?", e a resposta é uma linha desta tabela — inclusive quando ela ainda
--- não tem `external_id` (a nossa, enquanto está `queued`). O id que o provider
+-- FK e nÃ£o o wamid solto: a pergunta da tela Ã© "qual mensagem NOSSA foi
+-- citada?", e a resposta Ã© uma linha desta tabela â€” inclusive quando ela ainda
+-- nÃ£o tem `external_id` (a nossa, enquanto estÃ¡ `queued`). O id que o provider
 -- recebe sai da linha apontada, no envio.
 --
--- `set null` no delete: apagar a citada não pode levar junto a resposta, que é
--- conteúdo próprio. Perder o fio é aceitável; perder a resposta é apagar
--- histórico por causa de um ponteiro.
+-- `set null` no delete: apagar a citada nÃ£o pode levar junto a resposta, que Ã©
+-- conteÃºdo prÃ³prio. Perder o fio Ã© aceitÃ¡vel; perder a resposta Ã© apagar
+-- histÃ³rico por causa de um ponteiro.
 alter table public.messages
   add column if not exists reply_to_message_id uuid
     references public.messages(id) on delete set null;
@@ -14928,30 +14928,30 @@ create index if not exists messages_reply_to_idx
 
 notify pgrst, 'reload schema';
 
--- ---- histórico DURÁVEL de leads captados: tabela (migration 0174) ----
+-- ---- histÃ³rico DURÃVEL de leads captados: tabela (migration 0174) ----
 --
--- A SEGUNDA metade da 0174. A função e o trigger de LGPD estão ANTES do bloco
--- da VARREDURA anon, e a razão está escrita lá.
+-- A SEGUNDA metade da 0174. A funÃ§Ã£o e o trigger de LGPD estÃ£o ANTES do bloco
+-- da VARREDURA anon, e a razÃ£o estÃ¡ escrita lÃ¡.
 --
--- Quem publica uma landing page precisa responder depois: "chegou alguém?",
--- "com que dados?" e "de onde?". A única coisa que existia era o ARQUIVO
--- FORENSE (`webhook_events_log`), que é DESCARTÁVEL por desenho: o cron
+-- Quem publica uma landing page precisa responder depois: "chegou alguÃ©m?",
+-- "com que dados?" e "de onde?". A Ãºnica coisa que existia era o ARQUIVO
+-- FORENSE (`webhook_events_log`), que Ã© DESCARTÃVEL por desenho: o cron
 -- `webhook-log-retention` zera `raw_body`/`payload_parsed`/`headers` em D+7 e
--- apaga a linha em D+90 (migration 0163). Foi a decisão certa — ele era 468 MB
--- de um banco de 545 MB numa instalação real — mas transforma qualquer
--- histórico construído sobre ele numa tela que MENTE a partir do sétimo dia.
+-- apaga a linha em D+90 (migration 0163). Foi a decisÃ£o certa â€” ele era 468 MB
+-- de um banco de 545 MB numa instalaÃ§Ã£o real â€” mas transforma qualquer
+-- histÃ³rico construÃ­do sobre ele numa tela que MENTE a partir do sÃ©timo dia.
 --
--- O que esta tabela guarda e o arquivo não guardava: o IP em coluna tipada (lá
--- ele só existia solto dentro de `headers`, que é podado); o DESFECHO (o
--- arquivo registra "chegou um POST" e não sabe se virou lead, se caiu na
--- deduplicação, ou se foi RECUSADO — que é justamente o caso em que a pessoa
--- não vê nada hoje); e o nome da fonte NO MOMENTO da captação.
+-- O que esta tabela guarda e o arquivo nÃ£o guardava: o IP em coluna tipada (lÃ¡
+-- ele sÃ³ existia solto dentro de `headers`, que Ã© podado); o DESFECHO (o
+-- arquivo registra "chegou um POST" e nÃ£o sabe se virou lead, se caiu na
+-- deduplicaÃ§Ã£o, ou se foi RECUSADO â€” que Ã© justamente o caso em que a pessoa
+-- nÃ£o vÃª nada hoje); e o nome da fonte NO MOMENTO da captaÃ§Ã£o.
 --
--- RLS exige `manager`: `fields` carrega o formulário como a pessoa preencheu, e
--- a policy de `webhook_events_log` é org-flat sem gate de papel — qualquer
--- `viewer` lê aquela PII pelo PostgREST, mesmo com a rota HTTP exigindo
--- manager. Não repetir o buraco. Sem policy de escrita: só o service role
--- escreve (a rota pública de captação), e ele bypassa RLS.
+-- RLS exige `manager`: `fields` carrega o formulÃ¡rio como a pessoa preencheu, e
+-- a policy de `webhook_events_log` Ã© org-flat sem gate de papel â€” qualquer
+-- `viewer` lÃª aquela PII pelo PostgREST, mesmo com a rota HTTP exigindo
+-- manager. NÃ£o repetir o buraco. Sem policy de escrita: sÃ³ o service role
+-- escreve (a rota pÃºblica de captaÃ§Ã£o), e ele bypassa RLS.
 create table if not exists public.webhook_lead_captures (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -14986,14 +14986,14 @@ create index if not exists webhook_lead_captures_poda_idx
   on public.webhook_lead_captures (received_at);
 
 comment on table public.webhook_lead_captures is
-  'Histórico DURÁVEL de leads captados por formulário/webhook: o que chegou, quando, de onde (IP, página, UTM) e no que deu. '
-  'Distinto de webhook_events_log, que é arquivo forense e é PODADO (corpo em D+7, linha em D+90).';
+  'HistÃ³rico DURÃVEL de leads captados por formulÃ¡rio/webhook: o que chegou, quando, de onde (IP, pÃ¡gina, UTM) e no que deu. '
+  'Distinto de webhook_events_log, que Ã© arquivo forense e Ã© PODADO (corpo em D+7, linha em D+90).';
 comment on column public.webhook_lead_captures.remote_ip is
-  'IP de origem do POST, lido de x-forwarded-for/x-real-ip. Informativo — forjável, nada no produto decide com base nele. NULL = não havia proxy à frente.';
+  'IP de origem do POST, lido de x-forwarded-for/x-real-ip. Informativo â€” forjÃ¡vel, nada no produto decide com base nele. NULL = nÃ£o havia proxy Ã  frente.';
 comment on column public.webhook_lead_captures.outcome is
-  'criado = virou lead novo; duplicado = mesmo external_id já capturado antes (retry da ferramenta); recusado = não entrou (reject_reason diz por quê).';
+  'criado = virou lead novo; duplicado = mesmo external_id jÃ¡ capturado antes (retry da ferramenta); recusado = nÃ£o entrou (reject_reason diz por quÃª).';
 comment on column public.webhook_lead_captures.source_name is
-  'Nome da fonte NO MOMENTO da captação. Cópia deliberada: a fonte pode ser renomeada ou excluída, e o histórico responde de onde o contato veio.';
+  'Nome da fonte NO MOMENTO da captaÃ§Ã£o. CÃ³pia deliberada: a fonte pode ser renomeada ou excluÃ­da, e o histÃ³rico responde de onde o contato veio.';
 
 alter table public.webhook_lead_captures enable row level security;
 
@@ -15005,7 +15005,7 @@ create policy "webhook_lead_captures_manager_read" on public.webhook_lead_captur
         and public.fn_role_at_least(organization_id, 'manager'))
   );
 
--- O trigger vive aqui (e não com a função, no bloco de cima) porque só faz
+-- O trigger vive aqui (e nÃ£o com a funÃ§Ã£o, no bloco de cima) porque sÃ³ faz
 -- sentido depois que a tabela existe.
 drop trigger if exists trg_redigir_captacoes_ao_anonimizar on public.contacts;
 create trigger trg_redigir_captacoes_ao_anonimizar
@@ -15015,21 +15015,21 @@ create trigger trg_redigir_captacoes_ao_anonimizar
   execute function public.fn_redigir_captacoes_do_contato_anonimizado();
 
 
--- ---- a automação precisa poder dizer "ainda não" (migration 0175) ----
+-- ---- a automaÃ§Ã£o precisa poder dizer "ainda nÃ£o" (migration 0175) ----
 --
 -- `automation_rule_runs.status` aceitava success/partial/failed. Faltava o
--- quarto estado que o motor JÁ produz: quando uma ação de envio pede adiamento
--- (fora da janela do número, cap diário), `runAutomationForEvent` devolve
--- `retry` e sai SEM GRAVAR LINHA NENHUMA — e a aba Atividade não mostra nada
--- enquanto isso. Para quem montou a regra, "não apareceu nada" e "não rodou"
--- são a mesma tela.
+-- quarto estado que o motor JÃ produz: quando uma aÃ§Ã£o de envio pede adiamento
+-- (fora da janela do nÃºmero, cap diÃ¡rio), `runAutomationForEvent` devolve
+-- `retry` e sai SEM GRAVAR LINHA NENHUMA â€” e a aba Atividade nÃ£o mostra nada
+-- enquanto isso. Para quem montou a regra, "nÃ£o apareceu nada" e "nÃ£o rodou"
+-- sÃ£o a mesma tela.
 --
--- Valor novo em vez de reusar `partial`: `partial` é "algumas ações falharam" e
--- a tela pinta de amarelo com esse texto; adiamento não é falha nenhuma.
+-- Valor novo em vez de reusar `partial`: `partial` Ã© "algumas aÃ§Ãµes falharam" e
+-- a tela pinta de amarelo com esse texto; adiamento nÃ£o Ã© falha nenhuma.
 --
--- CHECK reconstruído em UM bloco só (lição do #159, a mesma de
+-- CHECK reconstruÃ­do em UM bloco sÃ³ (liÃ§Ã£o do #159, a mesma de
 -- `agent_inbox_items_kind_check`): N blocos quebram o `update.sh` de um clone
--- com vocabulário posterior. Aditiva — só alarga o conjunto, nada a corrigir
+-- com vocabulÃ¡rio posterior. Aditiva â€” sÃ³ alarga o conjunto, nada a corrigir
 -- antes.
 alter table public.automation_rule_runs
   drop constraint if exists automation_rule_runs_status_check;
@@ -15043,55 +15043,55 @@ alter table public.automation_rule_runs
   ));
 
 comment on column public.automation_rule_runs.status is
-  'success = todas as ações funcionaram; partial = algumas falharam; failed = todas falharam; '
-  'adiado = nada chegou ao cliente e ainda pode chegar — a regra espera a janela de envio do '
-  'número, ou a mensagem ficou na fila do canal.';
+  'success = todas as aÃ§Ãµes funcionaram; partial = algumas falharam; failed = todas falharam; '
+  'adiado = nada chegou ao cliente e ainda pode chegar â€” a regra espera a janela de envio do '
+  'nÃºmero, ou a mensagem ficou na fila do canal.';
 
 notify pgrst, 'reload schema';
 
--- ---- agenda: o compromisso marcado — tabelas, cor do membro, RLS (migration 0177) ----
+-- ---- agenda: o compromisso marcado â€” tabelas, cor do membro, RLS (migration 0177) ----
 --
--- A SEGUNDA metade da 0177. A função de limpeza do vínculo está ANTES do bloco
--- da VARREDURA anon, e a razão está escrita lá.
+-- A SEGUNDA metade da 0177. A funÃ§Ã£o de limpeza do vÃ­nculo estÃ¡ ANTES do bloco
+-- da VARREDURA anon, e a razÃ£o estÃ¡ escrita lÃ¡.
 --
--- O produto sabia agendar um RETORNO — o sistema volta a falar com o lead
--- daqui a X, em `cron_jobs` (kind='at', job_kind='followup_turn') — e não sabia
--- guardar o oposto: DUAS PESSOAS COMBINARAM ESTAR JUNTAS ÀS 14h DE QUINTA.
--- Retorno é decisão interna, não ocupa agenda de ninguém e o cliente não sabe;
+-- O produto sabia agendar um RETORNO â€” o sistema volta a falar com o lead
+-- daqui a X, em `cron_jobs` (kind='at', job_kind='followup_turn') â€” e nÃ£o sabia
+-- guardar o oposto: DUAS PESSOAS COMBINARAM ESTAR JUNTAS Ã€S 14h DE QUINTA.
+-- Retorno Ã© decisÃ£o interna, nÃ£o ocupa agenda de ninguÃ©m e o cliente nÃ£o sabe;
 -- compromisso tem hora, tem dono, ocupa a agenda de um atendente e foi
--- combinado com o cliente. Ficam separados, e a aresta entre eles é o índice
--- `calendar_appointments_org_vivos_idx`: quem tem consulta marcada não é lead
--- parado e não pode ser cobrado com "ainda tem interesse?".
+-- combinado com o cliente. Ficam separados, e a aresta entre eles Ã© o Ã­ndice
+-- `calendar_appointments_org_vivos_idx`: quem tem consulta marcada nÃ£o Ã© lead
+-- parado e nÃ£o pode ser cobrado com "ainda tem interesse?".
 --
--- NENHUMA tabela de jornada semanal: ela já existe em
+-- NENHUMA tabela de jornada semanal: ela jÃ¡ existe em
 -- `attendant_availability.schedule`, lida pelo roteamento de conversa e com
--- tela própria. A agenda lê aquela coluna com OUTRA régua (`windows` vazio ali
--- é 24/7; aqui é "não publicou horário" ⇒ zero slots) e não escreve outra.
--- A única tabela nova de disponibilidade é a de EXCEÇÃO por data, que é
--- informação que o jsonb não sabe dar.
+-- tela prÃ³pria. A agenda lÃª aquela coluna com OUTRA rÃ©gua (`windows` vazio ali
+-- Ã© 24/7; aqui Ã© "nÃ£o publicou horÃ¡rio" â‡’ zero slots) e nÃ£o escreve outra.
+-- A Ãºnica tabela nova de disponibilidade Ã© a de EXCEÃ‡ÃƒO por data, que Ã©
+-- informaÃ§Ã£o que o jsonb nÃ£o sabe dar.
 --
--- Sem constraint de sobreposição de horário: exigiria `btree_gist`, que não
--- existe neste baseline nem no prelude do harness de teste — quebraria o
+-- Sem constraint de sobreposiÃ§Ã£o de horÃ¡rio: exigiria `btree_gist`, que nÃ£o
+-- existe neste baseline nem no prelude do harness de teste â€” quebraria o
 -- install de todo clone.
 --
--- `calendar_connections` é a única com gate de papel, porque guarda token
--- OAuth: lê o DONO da conexão ou `manager`+. Os tokens são `bytea` cifrado por
--- `fn_encrypt_oauth`, cuja decifragem só `service_role` executa.
+-- `calendar_connections` Ã© a Ãºnica com gate de papel, porque guarda token
+-- OAuth: lÃª o DONO da conexÃ£o ou `manager`+. Os tokens sÃ£o `bytea` cifrado por
+-- `fn_encrypt_oauth`, cuja decifragem sÃ³ `service_role` executa.
 --
 -- Aditiva e idempotente: seis tabelas novas e uma coluna nova e nullable numa
 -- tabela existente. Nenhuma linha atual passa a violar nada.
--- ────────────────────────────────────────────────────────────────────────────
--- 1 · o molde: que tipos de compromisso esta organização marca
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 1 Â· o molde: que tipos de compromisso esta organizaÃ§Ã£o marca
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 create table if not exists public.calendar_event_types (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
   name text not null,
-  -- Identificador legível e estável. NÃO é para URL pública (auto-agendamento
+  -- Identificador legÃ­vel e estÃ¡vel. NÃƒO Ã© para URL pÃºblica (auto-agendamento
   -- ficou fora do escopo): serve para (a) impedir dois "Consulta" iguais na
-  -- mesma organização e (b) dar à IA um handle que ela não alucina, ao
-  -- contrário de um uuid. Renomear o tipo não muda o slug.
+  -- mesma organizaÃ§Ã£o e (b) dar Ã  IA um handle que ela nÃ£o alucina, ao
+  -- contrÃ¡rio de um uuid. Renomear o tipo nÃ£o muda o slug.
   slug text not null,
   description text,
 
@@ -15100,8 +15100,8 @@ create table if not exists public.calendar_event_types (
   buffer_before_minutes int not null default 0,
   buffer_after_minutes int not null default 0,
   minimum_notice_minutes int not null default 120,
-  -- null = a grade anda de duração em duração. Preenchido, permite oferecer
-  -- 09:00/09:15/09:30 para um serviço de 30min.
+  -- null = a grade anda de duraÃ§Ã£o em duraÃ§Ã£o. Preenchido, permite oferecer
+  -- 09:00/09:15/09:30 para um serviÃ§o de 30min.
   slot_interval_minutes int,
   booking_window_days int not null default 60,
 
@@ -15111,33 +15111,33 @@ create table if not exists public.calendar_event_types (
   requires_confirmation boolean not null default false,
   is_active boolean not null default true,
 
-  -- ─── o lembrete, e por que ele é COLUNA e não detalhe de implementação ───
-  -- Em canal oficial (meta_cloud, zernio) texto livre fora da janela de 24h é
-  -- recusado — e o lembrete cai exatamente aí: a pessoa marca na terça, o
-  -- lembrete sai na quinta, e ela não mandou mensagem desde então, que é o
-  -- normal de quem já marcou. Medido em lib/channels/capabilities.ts:
-  -- `freeformOutsideWindow` é true só para `waha`; meta_cloud e zernio exigem
-  -- template, e o gate de envio (guardrails/before-send.ts) só abre a porta
+  -- â”€â”€â”€ o lembrete, e por que ele Ã© COLUNA e nÃ£o detalhe de implementaÃ§Ã£o â”€â”€â”€
+  -- Em canal oficial (meta_cloud, zernio) texto livre fora da janela de 24h Ã©
+  -- recusado â€” e o lembrete cai exatamente aÃ­: a pessoa marca na terÃ§a, o
+  -- lembrete sai na quinta, e ela nÃ£o mandou mensagem desde entÃ£o, que Ã© o
+  -- normal de quem jÃ¡ marcou. Medido em lib/channels/capabilities.ts:
+  -- `freeformOutsideWindow` Ã© true sÃ³ para `waha`; meta_cloud e zernio exigem
+  -- template, e o gate de envio (guardrails/before-send.ts) sÃ³ abre a porta
   -- para `isTemplate === true`.
   --
-  -- ⚠️ O que torna isto grave não é a recusa, é a FORMA dela: a API responde
+  -- âš ï¸ O que torna isto grave nÃ£o Ã© a recusa, Ã© a FORMA dela: a API responde
   -- 200 com wamid e a Meta recusa a ENTREGA depois, pelo webhook (131047,
-  -- re-engagement). Quem lê o 200 como "enviado" acha que funcionou. Sem esta
-  -- coluna, num canal oficial, o lembrete NÃO SAI e o sistema ACHA QUE SAIU —
-  -- o cliente falta à consulta e não há erro nenhum para investigar.
+  -- re-engagement). Quem lÃª o 200 como "enviado" acha que funcionou. Sem esta
+  -- coluna, num canal oficial, o lembrete NÃƒO SAI e o sistema ACHA QUE SAIU â€”
+  -- o cliente falta Ã  consulta e nÃ£o hÃ¡ erro nenhum para investigar.
   --
-  -- O mecanismo de mandar template já existe (`sendTemplateForSession`). O que
-  -- não existia é o DADO que diz qual template este tipo de compromisso usa.
+  -- O mecanismo de mandar template jÃ¡ existe (`sendTemplateForSession`). O que
+  -- nÃ£o existia Ã© o DADO que diz qual template este tipo de compromisso usa.
   reminder_enabled boolean not null default true,
-  -- 1440 = 24h antes. É quanto tempo ANTES do compromisso o lembrete sai.
+  -- 1440 = 24h antes. Ã‰ quanto tempo ANTES do compromisso o lembrete sai.
   reminder_minutes_before int not null default 1440,
-  -- NULL = texto livre, que basta em WAHA. Preenchido, é o nome do template
-  -- aprovado no provedor oficial. Cadastro e escolha de template são tela de
-  -- outra wave; o que não podia era a coluna faltar.
+  -- NULL = texto livre, que basta em WAHA. Preenchido, Ã© o nome do template
+  -- aprovado no provedor oficial. Cadastro e escolha de template sÃ£o tela de
+  -- outra wave; o que nÃ£o podia era a coluna faltar.
   reminder_template_name text,
 
-  -- `numeric`, NUNCA `int`: a lista é arrastável e o repo usa fractional
-  -- indexing (CLAUDE.md § Modelagem, mesma razão de crm_leads.position_in_stage).
+  -- `numeric`, NUNCA `int`: a lista Ã© arrastÃ¡vel e o repo usa fractional
+  -- indexing (CLAUDE.md Â§ Modelagem, mesma razÃ£o de crm_leads.position_in_stage).
   position numeric not null default 1000,
   default_owner_user_id uuid references auth.users(id) on delete set null,
 
@@ -15151,8 +15151,8 @@ create table if not exists public.calendar_event_types (
   constraint calendar_event_types_location_kind_check check (location_kind in (
     'in_person','phone','whatsapp','video_link','google_meet'
   )),
-  -- Mesma forma de crm_stages_color_format, e a mesma tolerância a maiúscula.
-  -- (platform_branding.accent_hex exige minúscula; é cor de MARCA, outra régua.)
+  -- Mesma forma de crm_stages_color_format, e a mesma tolerÃ¢ncia a maiÃºscula.
+  -- (platform_branding.accent_hex exige minÃºscula; Ã© cor de MARCA, outra rÃ©gua.)
   constraint calendar_event_types_color_format
     check (color is null or color ~ '^#[0-9a-fA-F]{6}$'),
   constraint calendar_event_types_duracao_sensata
@@ -15173,28 +15173,28 @@ create index if not exists calendar_event_types_org_ativos_idx
   where is_active;
 
 comment on table public.calendar_event_types is
-  'O MOLDE de um compromisso: quanto dura, com que folga, com que antecedência mínima se marca. Distinto de calendar_appointments, que é o compromisso marcado — mudar o molde não reescreve o que já foi combinado.';
+  'O MOLDE de um compromisso: quanto dura, com que folga, com que antecedÃªncia mÃ­nima se marca. Distinto de calendar_appointments, que Ã© o compromisso marcado â€” mudar o molde nÃ£o reescreve o que jÃ¡ foi combinado.';
 comment on column public.calendar_event_types.slug is
-  'Handle estável e legível dentro da organização. Não é URL pública: serve para a IA referenciar o tipo sem inventar uuid, e para impedir dois tipos com o mesmo nome.';
+  'Handle estÃ¡vel e legÃ­vel dentro da organizaÃ§Ã£o. NÃ£o Ã© URL pÃºblica: serve para a IA referenciar o tipo sem inventar uuid, e para impedir dois tipos com o mesmo nome.';
 comment on column public.calendar_event_types.minimum_notice_minutes is
-  'Antecedência mínima para marcar. 120 = ninguém marca para daqui a meia hora. É o que impede a agenda de aceitar um encaixe que o atendente não tem como cumprir.';
+  'AntecedÃªncia mÃ­nima para marcar. 120 = ninguÃ©m marca para daqui a meia hora. Ã‰ o que impede a agenda de aceitar um encaixe que o atendente nÃ£o tem como cumprir.';
 comment on column public.calendar_event_types.slot_interval_minutes is
-  'De quanto em quanto tempo a grade oferece horário. NULL = de duração em duração.';
+  'De quanto em quanto tempo a grade oferece horÃ¡rio. NULL = de duraÃ§Ã£o em duraÃ§Ã£o.';
 comment on column public.calendar_event_types.reminder_template_name is
-  'Nome do template aprovado no provedor, para o lembrete. NULL = texto livre, que basta em WAHA. Em canal oficial (meta_cloud, zernio) texto livre fora da janela de 24h é aceito com 200 e tem a ENTREGA recusada depois pelo webhook — sem template, o lembrete não sai e o sistema acha que saiu.';
+  'Nome do template aprovado no provedor, para o lembrete. NULL = texto livre, que basta em WAHA. Em canal oficial (meta_cloud, zernio) texto livre fora da janela de 24h Ã© aceito com 200 e tem a ENTREGA recusada depois pelo webhook â€” sem template, o lembrete nÃ£o sai e o sistema acha que saiu.';
 comment on column public.calendar_event_types.reminder_minutes_before is
   'Quantos minutos ANTES do compromisso o lembrete sai. 1440 = 24h.';
 comment on column public.calendar_event_types.category is
-  'consulta/procedimento/retorno = clínica; visita/vistoria = imobiliária; reuniao/call = serviços e agência; orcamento = obra e serviço; demonstracao = loja e software; outro = qualquer. Espelha os nichos de lib/onboarding/pacotes-de-funil.ts.';
+  'consulta/procedimento/retorno = clÃ­nica; visita/vistoria = imobiliÃ¡ria; reuniao/call = serviÃ§os e agÃªncia; orcamento = obra e serviÃ§o; demonstracao = loja e software; outro = qualquer. Espelha os nichos de lib/onboarding/pacotes-de-funil.ts.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 2 · o compromisso marcado
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 2 Â· o compromisso marcado
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 create table if not exists public.calendar_appointments (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
-  -- `set null`: apagar o molde não pode apagar o histórico do que já aconteceu.
+  -- `set null`: apagar o molde nÃ£o pode apagar o histÃ³rico do que jÃ¡ aconteceu.
   event_type_id uuid references public.calendar_event_types(id) on delete set null,
 
   title text not null,
@@ -15202,23 +15202,23 @@ create table if not exists public.calendar_appointments (
 
   starts_at timestamptz not null,
   ends_at timestamptz not null,
-  -- O fuso em que a pessoa MARCOU. Guardado porque "quinta às 14h" é o que foi
-  -- combinado; o instante UTC sozinho não sabe dizer isso depois de uma virada
-  -- de horário de verão. Sem CHECK: a validação de fuso é do Intl, e o repo já
-  -- tem o lugar dela — `fusoValido` em lib/tempo/fusos.ts, aplicado no Zod.
+  -- O fuso em que a pessoa MARCOU. Guardado porque "quinta Ã s 14h" Ã© o que foi
+  -- combinado; o instante UTC sozinho nÃ£o sabe dizer isso depois de uma virada
+  -- de horÃ¡rio de verÃ£o. Sem CHECK: a validaÃ§Ã£o de fuso Ã© do Intl, e o repo jÃ¡
+  -- tem o lugar dela â€” `fusoValido` em lib/tempo/fusos.ts, aplicado no Zod.
   time_zone text not null default 'America/Sao_Paulo',
 
   status text not null default 'confirmed',
 
-  -- O ATENDENTE dono. `set null` e não cascade: o compromisso aconteceu mesmo
+  -- O ATENDENTE dono. `set null` e nÃ£o cascade: o compromisso aconteceu mesmo
   -- que a pessoa saia da empresa depois.
   owner_user_id uuid references auth.users(id) on delete set null,
 
   -- QUEM VAI SER ATENDIDO. `restrict` acompanha conversations.contact_id e
-  -- messages.contact_id — as duas únicas FKs RESTRICT do schema, e existem
-  -- pela mesma razão: apagar um contato não pode apagar o histórico dele. Na
-  -- prática a LGPD deste produto anonimiza em vez de apagar (CLAUDE.md § LGPD),
-  -- então o RESTRICT nunca é o caminho normal — é o cinto.
+  -- messages.contact_id â€” as duas Ãºnicas FKs RESTRICT do schema, e existem
+  -- pela mesma razÃ£o: apagar um contato nÃ£o pode apagar o histÃ³rico dele. Na
+  -- prÃ¡tica a LGPD deste produto anonimiza em vez de apagar (CLAUDE.md Â§ LGPD),
+  -- entÃ£o o RESTRICT nunca Ã© o caminho normal â€” Ã© o cinto.
   contact_id uuid references public.contacts(id) on delete restrict,
   conversation_id uuid references public.conversations(id) on delete set null,
 
@@ -15229,27 +15229,27 @@ create table if not exists public.calendar_appointments (
 
   cancellation_reason text,
   cancelled_at timestamptz,
-  -- A cadeia de remarcações. `set null` porque a remarcação sobrevive ao
-  -- sumiço do compromisso original.
+  -- A cadeia de remarcaÃ§Ãµes. `set null` porque a remarcaÃ§Ã£o sobrevive ao
+  -- sumiÃ§o do compromisso original.
   rescheduled_from_id uuid references public.calendar_appointments(id) on delete set null,
 
-  -- QUEM MARCOU. O par `created_by_*` espelha `created_by_user_id`, que já
+  -- QUEM MARCOU. O par `created_by_*` espelha `created_by_user_id`, que jÃ¡
   -- existe em crm_leads e crm_lead_links.
-  -- ⚠️ Os VALORES seguem crm_lead_activities.actor_kind ('user','ai','system',
-  -- 'rule','contact') e não o par 'human'/'agent' que a outra tabela usa,
-  -- porque é na timeline do lead que esta autoria vai ser RENDERIZADA: gravar
-  -- 'human' aqui e 'user' lá faria a tela mostrar duas palavras para a mesma
-  -- pessoa. 'sync' é o único acréscimo, e não é ator do produto: significa que
-  -- a linha nasceu de um evento que já existia na agenda externa.
+  -- âš ï¸ Os VALORES seguem crm_lead_activities.actor_kind ('user','ai','system',
+  -- 'rule','contact') e nÃ£o o par 'human'/'agent' que a outra tabela usa,
+  -- porque Ã© na timeline do lead que esta autoria vai ser RENDERIZADA: gravar
+  -- 'human' aqui e 'user' lÃ¡ faria a tela mostrar duas palavras para a mesma
+  -- pessoa. 'sync' Ã© o Ãºnico acrÃ©scimo, e nÃ£o Ã© ator do produto: significa que
+  -- a linha nasceu de um evento que jÃ¡ existia na agenda externa.
   created_by_kind text not null default 'user',
   created_by_user_id uuid references auth.users(id) on delete set null,
   created_by_agent_id uuid references public.ai_agents(id) on delete set null,
   source text not null default 'ui',
 
-  -- Lembrete: idempotência do lado do dado. Quem DISPARA é a fila
+  -- Lembrete: idempotÃªncia do lado do dado. Quem DISPARA Ã© a fila
   -- (`cron_jobs` kind='at' agenda; `job_queue` executa), e o envio passa pela
-  -- MESMA cadeia de saída do produto — janela horária, espaçamento, opt-out.
-  -- Nenhum caminho novo de saída: esta base já pagou por uma automação com
+  -- MESMA cadeia de saÃ­da do produto â€” janela horÃ¡ria, espaÃ§amento, opt-out.
+  -- Nenhum caminho novo de saÃ­da: esta base jÃ¡ pagou por uma automaÃ§Ã£o com
   -- janela paralela.
   reminder_sent_at timestamptz,
 
@@ -15278,9 +15278,9 @@ create table if not exists public.calendar_appointments (
     'ui','mcp','google_sync','public_page'
   )),
   constraint calendar_appointments_periodo_valido check (ends_at > starts_at),
-  -- Regra de negócio em constraint SEPARADA da de vocabulário, de propósito:
+  -- Regra de negÃ³cio em constraint SEPARADA da de vocabulÃ¡rio, de propÃ³sito:
   -- duas constraints casando `col in (...)` na mesma coluna fazem o extrator
-  -- do invariante de vocabulário se recusar a escolher. É a mesma convivência
+  -- do invariante de vocabulÃ¡rio se recusar a escolher. Ã‰ a mesma convivÃªncia
   -- de crm_leads.status com crm_leads_closed_at_consistency.
   constraint calendar_appointments_cancelamento_coerente check (
     (status <> 'cancelled' and cancelled_at is null)
@@ -15288,19 +15288,19 @@ create table if not exists public.calendar_appointments (
   )
 );
 
--- A grade: "o que há entre terça e domingo".
+-- A grade: "o que hÃ¡ entre terÃ§a e domingo".
 create index if not exists calendar_appointments_org_periodo_idx
   on public.calendar_appointments (organization_id, starts_at);
--- O filtro por pessoa, que é o requisito explícito da tela.
+-- O filtro por pessoa, que Ã© o requisito explÃ­cito da tela.
 create index if not exists calendar_appointments_org_dono_idx
   on public.calendar_appointments (organization_id, owner_user_id, starts_at)
   where owner_user_id is not null;
 -- A ARESTA COM O FOLLOW-UP (e com o Radar de Risco): "este lead tem consulta
--- marcada?". Quem tem compromisso vivo no futuro NÃO é lead parado, e cobrar
--- "ainda tem interesse?" de quem marcou para amanhã é o tipo de erro que faz
+-- marcada?". Quem tem compromisso vivo no futuro NÃƒO Ã© lead parado, e cobrar
+-- "ainda tem interesse?" de quem marcou para amanhÃ£ Ã© o tipo de erro que faz
 -- desinstalar o produto. Parcial nos dois estados vivos porque cancelado e
--- realizado não seguram ninguém. A consulta canônica, já que o vínculo com o
--- lead é polimórfico:
+-- realizado nÃ£o seguram ninguÃ©m. A consulta canÃ´nica, jÃ¡ que o vÃ­nculo com o
+-- lead Ã© polimÃ³rfico:
 --   select 1 from crm_lead_links l join calendar_appointments a on a.id = l.target_id
 --    where l.lead_id = $1 and l.target_kind = 'appointment'
 --      and a.organization_id = $2 and a.status in ('pending','confirmed')
@@ -15311,51 +15311,51 @@ create index if not exists calendar_appointments_org_vivos_idx
 create index if not exists calendar_appointments_contato_idx
   on public.calendar_appointments (contact_id, starts_at desc)
   where contact_id is not null;
--- Idempotência do sync: o mesmo evento do Google não vira dois agendamentos.
--- O parceiro disto no código é a captura de `23505` no INSERT (CLAUDE.md
--- § Idempotência), não um SELECT-antes-de-inserir.
+-- IdempotÃªncia do sync: o mesmo evento do Google nÃ£o vira dois agendamentos.
+-- O parceiro disto no cÃ³digo Ã© a captura de `23505` no INSERT (CLAUDE.md
+-- Â§ IdempotÃªncia), nÃ£o um SELECT-antes-de-inserir.
 create unique index if not exists calendar_appointments_google_evento_key
   on public.calendar_appointments (organization_id, google_connection_id, google_event_id)
   where google_event_id is not null;
 
 comment on table public.calendar_appointments is
-  'O compromisso COMBINADO: hora marcada, com alguém, ocupando a agenda de um atendente. Distinto do RETORNO agendado (cron_jobs kind=at, job_kind=followup_turn), que é decisão interna do sistema, não ocupa agenda de ninguém e o cliente não sabe.';
+  'O compromisso COMBINADO: hora marcada, com alguÃ©m, ocupando a agenda de um atendente. Distinto do RETORNO agendado (cron_jobs kind=at, job_kind=followup_turn), que Ã© decisÃ£o interna do sistema, nÃ£o ocupa agenda de ninguÃ©m e o cliente nÃ£o sabe.';
 comment on column public.calendar_appointments.time_zone is
-  'O fuso em que foi marcado. "Quinta às 14h" é o que se combinou — o instante UTC sozinho não reconstrói isso depois de uma virada de horário de verão.';
+  'O fuso em que foi marcado. "Quinta Ã s 14h" Ã© o que se combinou â€” o instante UTC sozinho nÃ£o reconstrÃ³i isso depois de uma virada de horÃ¡rio de verÃ£o.';
 comment on column public.calendar_appointments.created_by_kind is
-  'user = pessoa da equipe pela tela; ai = agente de IA; system = o próprio produto; contact = o cliente (auto-agendamento, quando existir); sync = a linha nasceu de evento que já estava na agenda externa. Valores alinhados a crm_lead_activities.actor_kind, que é onde esta autoria aparece na tela.';
+  'user = pessoa da equipe pela tela; ai = agente de IA; system = o prÃ³prio produto; contact = o cliente (auto-agendamento, quando existir); sync = a linha nasceu de evento que jÃ¡ estava na agenda externa. Valores alinhados a crm_lead_activities.actor_kind, que Ã© onde esta autoria aparece na tela.';
 comment on column public.calendar_appointments.reminder_sent_at is
-  'Carimbo de que o lembrete SAIU — idempotência do lado do dado, para remarcação ou reprocesso não avisarem duas vezes. Quem agenda o disparo é cron_jobs (kind=at); quem envia é a cadeia de saída do produto, com janela, espaçamento e opt-out.';
+  'Carimbo de que o lembrete SAIU â€” idempotÃªncia do lado do dado, para remarcaÃ§Ã£o ou reprocesso nÃ£o avisarem duas vezes. Quem agenda o disparo Ã© cron_jobs (kind=at); quem envia Ã© a cadeia de saÃ­da do produto, com janela, espaÃ§amento e opt-out.';
 comment on column public.calendar_appointments.google_sequence is
-  'O `sequence` do evento no Google. Ele exige que uma atualização venha com sequence >= o que está lá; guardar o nosso evita sobrescrever uma edição feita do lado de lá.';
+  'O `sequence` do evento no Google. Ele exige que uma atualizaÃ§Ã£o venha com sequence >= o que estÃ¡ lÃ¡; guardar o nosso evita sobrescrever uma ediÃ§Ã£o feita do lado de lÃ¡.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 3 · a exceção por data — a ÚNICA tabela nova de disponibilidade
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 3 Â· a exceÃ§Ã£o por data â€” a ÃšNICA tabela nova de disponibilidade
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- `attendant_availability.schedule` sabe dizer "atendo de segunda a sexta, das
--- 9h às 18h". Não sabe dizer "no dia 12 eu não atendo" nem "neste sábado, das
--- 9h ao meio-dia, atendo". Isso é informação NOVA — inflar o jsonb com ela é
--- que seria o lock-in do anti-pattern nº 6.
+-- 9h Ã s 18h". NÃ£o sabe dizer "no dia 12 eu nÃ£o atendo" nem "neste sÃ¡bado, das
+-- 9h ao meio-dia, atendo". Isso Ã© informaÃ§Ã£o NOVA â€” inflar o jsonb com ela Ã©
+-- que seria o lock-in do anti-pattern nÂº 6.
 create table if not exists public.calendar_availability_exceptions (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
 
   exception_date date not null,
-  -- true = este pedaço do dia NÃO tem atendimento (o caso comum: feriado,
-  -- férias, congresso). false = tem atendimento AQUI mesmo que a jornada
-  -- semanal diga que não (o sábado excepcional).
+  -- true = este pedaÃ§o do dia NÃƒO tem atendimento (o caso comum: feriado,
+  -- fÃ©rias, congresso). false = tem atendimento AQUI mesmo que a jornada
+  -- semanal diga que nÃ£o (o sÃ¡bado excepcional).
   is_unavailable boolean not null default true,
 
   -- Minutos desde 00:00, NO MESMO FUSO da jornada da pessoa
-  -- (`attendant_availability.schedule.timezone`). Minutos inteiros e não
+  -- (`attendant_availability.schedule.timezone`). Minutos inteiros e nÃ£o
   -- `time`: elimina a classe inteira de bug de fuso que um `time` carrega.
   --
-  -- ⚠️ NOT NULL com default, e não nullable, e a razão é uma armadilha de
-  -- Postgres: numa UNIQUE, NULL não colide com NULL. Com `start_minute`
+  -- âš ï¸ NOT NULL com default, e nÃ£o nullable, e a razÃ£o Ã© uma armadilha de
+  -- Postgres: numa UNIQUE, NULL nÃ£o colide com NULL. Com `start_minute`
   -- nullable, dois "dia 12 bloqueado o dia todo" para a mesma pessoa passariam
-  -- os dois, em silêncio, e a tela mostraria a exceção duplicada. Dia inteiro
-  -- é (0, 1440) — que é a mesma coisa e colide como deve.
+  -- os dois, em silÃªncio, e a tela mostraria a exceÃ§Ã£o duplicada. Dia inteiro
+  -- Ã© (0, 1440) â€” que Ã© a mesma coisa e colide como deve.
   start_minute int not null default 0,
   end_minute int not null default 1440,
   reason text,
@@ -15373,27 +15373,27 @@ create index if not exists calendar_exceptions_org_dia_idx
   on public.calendar_availability_exceptions (organization_id, exception_date);
 
 comment on table public.calendar_availability_exceptions is
-  'O que a jornada semanal não sabe dizer: "neste dia não atendo" e "neste sábado atendo". A jornada continua morando em attendant_availability.schedule — esta tabela não a duplica, a excepciona.';
+  'O que a jornada semanal nÃ£o sabe dizer: "neste dia nÃ£o atendo" e "neste sÃ¡bado atendo". A jornada continua morando em attendant_availability.schedule â€” esta tabela nÃ£o a duplica, a excepciona.';
 comment on column public.calendar_availability_exceptions.start_minute is
-  'Minutos desde 00:00 no fuso da JORNADA da pessoa (attendant_availability.schedule.timezone), não em UTC. Dia inteiro = 0..1440.';
+  'Minutos desde 00:00 no fuso da JORNADA da pessoa (attendant_availability.schedule.timezone), nÃ£o em UTC. Dia inteiro = 0..1440.';
 comment on column public.calendar_availability_exceptions.is_unavailable is
   'true = bloqueia esta faixa; false = ABRE esta faixa mesmo fora da jornada semanal.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 4 · a agenda conectada (BYO) — uma por PESSOA, não por organização
--- ────────────────────────────────────────────────────────────────────────────
--- `tenant_integrations` foi desenhada para OAuth com refresh e serviria — não
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 4 Â· a agenda conectada (BYO) â€” uma por PESSOA, nÃ£o por organizaÃ§Ã£o
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- `tenant_integrations` foi desenhada para OAuth com refresh e serviria â€” nÃ£o
 -- fosse a cardinalidade: ela tem UNIQUE (organization_id, provider), uma
--- conexão por organização. A agenda do Google é de cada atendente. Mudar
+-- conexÃ£o por organizaÃ§Ã£o. A agenda do Google Ã© de cada atendente. Mudar
 -- aquela unique reescreveria o contrato de uma tabela viva para servir outro
 -- caso.
 --
--- O que É reusado dela, porque é mecanismo e não modelo: a cifra
+-- O que Ã‰ reusado dela, porque Ã© mecanismo e nÃ£o modelo: a cifra
 -- (`fn_encrypt_oauth`/`fn_decrypt_oauth`, pgp_sym AES-256 com a chave em
--- `private.fn_oauth_key()`, EXECUTE só para service_role), os nomes das
--- colunas de token, e o vocabulário de `status` — os SETE valores de
--- `tenant_integrations_status_check`, incluindo `rate_limited`, que é
--- justamente o estado que uma API de calendário mais produz.
+-- `private.fn_oauth_key()`, EXECUTE sÃ³ para service_role), os nomes das
+-- colunas de token, e o vocabulÃ¡rio de `status` â€” os SETE valores de
+-- `tenant_integrations_status_check`, incluindo `rate_limited`, que Ã©
+-- justamente o estado que uma API de calendÃ¡rio mais produz.
 create table if not exists public.calendar_connections (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -15403,8 +15403,8 @@ create table if not exists public.calendar_connections (
   account_email text not null,
 
   -- `bytea`, como as nove colunas cifradas do repo. Passe o valor CRU de
-  -- fn_encrypt_oauth (com o `\x`); tirar o prefixo é regra de quem guarda
-  -- cifrado dentro de jsonb, e aqui não é o caso.
+  -- fn_encrypt_oauth (com o `\x`); tirar o prefixo Ã© regra de quem guarda
+  -- cifrado dentro de jsonb, e aqui nÃ£o Ã© o caso.
   oauth_access_token_encrypted bytea,
   oauth_refresh_token_encrypted bytea,
   token_expires_at timestamptz,
@@ -15413,8 +15413,8 @@ create table if not exists public.calendar_connections (
   status text not null default 'connecting',
   last_sync_at timestamptz,
   last_sync_error text,
-  -- Sync incremental da CONTA. O do calendário individual mora na tabela de
-  -- baixo, porque o Google versiona por calendário.
+  -- Sync incremental da CONTA. O do calendÃ¡rio individual mora na tabela de
+  -- baixo, porque o Google versiona por calendÃ¡rio.
   sync_token text,
 
   created_at timestamptz not null default now(),
@@ -15428,8 +15428,8 @@ create table if not exists public.calendar_connections (
 
 create unique index if not exists calendar_connections_conta_key
   on public.calendar_connections (organization_id, user_id, provider, account_email);
--- A varredura do worker de renovação: quem está para vencer. Parcial porque
--- conexão desconectada não se renova.
+-- A varredura do worker de renovaÃ§Ã£o: quem estÃ¡ para vencer. Parcial porque
+-- conexÃ£o desconectada nÃ£o se renova.
 create index if not exists calendar_connections_renovacao_idx
   on public.calendar_connections (token_expires_at)
   where status in ('healthy','rate_limited') and token_expires_at is not null;
@@ -15437,17 +15437,17 @@ create index if not exists calendar_connections_org_pessoa_idx
   on public.calendar_connections (organization_id, user_id);
 
 comment on table public.calendar_connections is
-  'A conta de agenda externa que UMA PESSOA conectou. Uma por atendente, e por isso não cabe em tenant_integrations, que é uma por organização e por provedor.';
+  'A conta de agenda externa que UMA PESSOA conectou. Uma por atendente, e por isso nÃ£o cabe em tenant_integrations, que Ã© uma por organizaÃ§Ã£o e por provedor.';
 comment on column public.calendar_connections.status is
-  'connecting = o OAuth começou e ainda não voltou; healthy = renovando e sincronizando; token_expired = o refresh falhou com invalid_grant e SÓ a pessoa resolve, reconectando; scope_missing = conectou sem a permissão de calendário; rate_limited = o Google recusou por volume e vale tentar depois; disconnected = a pessoa desligou; error = falha que não se encaixa nas anteriores. Vocabulário idêntico ao de tenant_integrations.status — mesma pergunta, mesma palavra.';
+  'connecting = o OAuth comeÃ§ou e ainda nÃ£o voltou; healthy = renovando e sincronizando; token_expired = o refresh falhou com invalid_grant e SÃ“ a pessoa resolve, reconectando; scope_missing = conectou sem a permissÃ£o de calendÃ¡rio; rate_limited = o Google recusou por volume e vale tentar depois; disconnected = a pessoa desligou; error = falha que nÃ£o se encaixa nas anteriores. VocabulÃ¡rio idÃªntico ao de tenant_integrations.status â€” mesma pergunta, mesma palavra.';
 comment on column public.calendar_connections.oauth_access_token_encrypted is
-  'Cifrado por public.fn_encrypt_oauth (pgp_sym AES-256). NUNCA em claro. A chave vive em private.fn_oauth_key() e só service_role executa a decifragem.';
+  'Cifrado por public.fn_encrypt_oauth (pgp_sym AES-256). NUNCA em claro. A chave vive em private.fn_oauth_key() e sÃ³ service_role executa a decifragem.';
 comment on column public.calendar_connections.token_expires_at is
-  'Quando o access_token vence (~1h no Google). É o que o worker de renovação varre. Sem esse worker a integração morre em uma hora — e é por isso que o índice calendar_connections_renovacao_idx existe desde o primeiro dia, e não depois.';
+  'Quando o access_token vence (~1h no Google). Ã‰ o que o worker de renovaÃ§Ã£o varre. Sem esse worker a integraÃ§Ã£o morre em uma hora â€” e Ã© por isso que o Ã­ndice calendar_connections_renovacao_idx existe desde o primeiro dia, e nÃ£o depois.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 5 · quais agendas daquela conta contam
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 5 Â· quais agendas daquela conta contam
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 create table if not exists public.calendar_connection_calendars (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -15456,9 +15456,9 @@ create table if not exists public.calendar_connection_calendars (
   external_calendar_id text not null,
   name text not null,
   is_primary boolean not null default false,
-  -- O que este produto pergunta a cada agenda de fora: "você ocupa o horário
-  -- desta pessoa?" e "você recebe o que eu marcar?". São perguntas diferentes:
-  -- a agenda de aniversários ocupa nada e recebe nada; a pessoal ocupa e não
+  -- O que este produto pergunta a cada agenda de fora: "vocÃª ocupa o horÃ¡rio
+  -- desta pessoa?" e "vocÃª recebe o que eu marcar?". SÃ£o perguntas diferentes:
+  -- a agenda de aniversÃ¡rios ocupa nada e recebe nada; a pessoal ocupa e nÃ£o
   -- recebe; a de trabalho faz as duas.
   counts_for_conflicts boolean not null default true,
   is_destination boolean not null default false,
@@ -15470,18 +15470,18 @@ create table if not exists public.calendar_connection_calendars (
 
 create unique index if not exists calendar_connection_calendars_key
   on public.calendar_connection_calendars (organization_id, connection_id, external_calendar_id);
--- Só UM destino por conexão: se dois calendários recebessem, o mesmo
+-- SÃ³ UM destino por conexÃ£o: se dois calendÃ¡rios recebessem, o mesmo
 -- compromisso apareceria duas vezes na agenda da pessoa.
 create unique index if not exists calendar_connection_calendars_um_destino_key
   on public.calendar_connection_calendars (connection_id)
   where is_destination;
 
 comment on table public.calendar_connection_calendars is
-  'As agendas dentro de uma conta conectada, e o que cada uma faz por nós: ocupar horário (counts_for_conflicts) e/ou receber o que marcamos (is_destination). São perguntas independentes.';
+  'As agendas dentro de uma conta conectada, e o que cada uma faz por nÃ³s: ocupar horÃ¡rio (counts_for_conflicts) e/ou receber o que marcamos (is_destination). SÃ£o perguntas independentes.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 6 · o que veio de fora e ocupa a hora
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 6 Â· o que veio de fora e ocupa a hora
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 create table if not exists public.calendar_external_events (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -15494,8 +15494,8 @@ create table if not exists public.calendar_external_events (
   ends_at timestamptz not null,
   is_all_day boolean not null default false,
   status text not null default 'confirmed',
-  -- O vocabulário é do próprio Google: `opaque` ocupa o horário, `transparent`
-  -- não. Um evento marcado como livre lá não pode bloquear horário aqui.
+  -- O vocabulÃ¡rio Ã© do prÃ³prio Google: `opaque` ocupa o horÃ¡rio, `transparent`
+  -- nÃ£o. Um evento marcado como livre lÃ¡ nÃ£o pode bloquear horÃ¡rio aqui.
   transparency text not null default 'opaque',
   external_updated_at timestamptz,
 
@@ -15514,23 +15514,23 @@ create table if not exists public.calendar_external_events (
 create unique index if not exists calendar_external_events_key
   on public.calendar_external_events (organization_id, connection_id, external_calendar_id, external_event_id);
 -- A pergunta do motor de slots: "o que ocupa esta janela?". Parcial, porque
--- evento cancelado ou marcado como livre não ocupa nada e só engordaria o
--- índice.
+-- evento cancelado ou marcado como livre nÃ£o ocupa nada e sÃ³ engordaria o
+-- Ã­ndice.
 create index if not exists calendar_external_events_ocupam_idx
   on public.calendar_external_events (organization_id, external_calendar_id, starts_at)
   where status <> 'cancelled' and transparency = 'opaque';
 
 comment on table public.calendar_external_events is
-  'Espelho, somente-leitura, do que já existe na agenda conectada. Ocupa horário e aparece na grade, mas não é compromisso NOSSO: não tem lead, não tem estado de atendimento e nunca é reescrito por nós.';
+  'Espelho, somente-leitura, do que jÃ¡ existe na agenda conectada. Ocupa horÃ¡rio e aparece na grade, mas nÃ£o Ã© compromisso NOSSO: nÃ£o tem lead, nÃ£o tem estado de atendimento e nunca Ã© reescrito por nÃ³s.';
 comment on column public.calendar_external_events.transparency is
-  'opaque = ocupa o horário; transparent = a pessoa marcou como livre lá, e não bloqueia nada aqui. É o vocabulário do próprio Google.';
+  'opaque = ocupa o horÃ¡rio; transparent = a pessoa marcou como livre lÃ¡, e nÃ£o bloqueia nada aqui. Ã‰ o vocabulÃ¡rio do prÃ³prio Google.';
 
--- ────────────────────────────────────────────────────────────────────────────
--- 7 · a cor da pessoa, na tabela de membros
--- ────────────────────────────────────────────────────────────────────────────
--- A cor é DA PESSOA NAQUELA ORGANIZAÇÃO, e por isso mora em user_organizations
--- e não em auth.users: quem trabalha em duas organizações pode ser verde numa
--- e azul na outra, e a cor de uma não vaza para a outra.
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 7 Â· a cor da pessoa, na tabela de membros
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- A cor Ã© DA PESSOA NAQUELA ORGANIZAÃ‡ÃƒO, e por isso mora em user_organizations
+-- e nÃ£o em auth.users: quem trabalha em duas organizaÃ§Ãµes pode ser verde numa
+-- e azul na outra, e a cor de uma nÃ£o vaza para a outra.
 alter table public.user_organizations
   add column if not exists calendar_color text;
 
@@ -15541,7 +15541,7 @@ alter table public.user_organizations
   check (calendar_color is null or calendar_color ~ '^#[0-9a-fA-F]{6}$');
 
 comment on column public.user_organizations.calendar_color is
-  'Cor desta pessoa na grade da Agenda, nesta organização. NULL = a tela deriva uma cor estável do user_id, para ninguém nascer sem cor. ⚠️ A policy de SELECT desta tabela é self-OU-manager+: um `agent` NÃO lê a linha dos colegas pelo PostgREST. A tela recebe as cores pela rota que já monta o roster com service role (GET /api/v1/team), não por leitura direta.';
+  'Cor desta pessoa na grade da Agenda, nesta organizaÃ§Ã£o. NULL = a tela deriva uma cor estÃ¡vel do user_id, para ninguÃ©m nascer sem cor. âš ï¸ A policy de SELECT desta tabela Ã© self-OU-manager+: um `agent` NÃƒO lÃª a linha dos colegas pelo PostgREST. A tela recebe as cores pela rota que jÃ¡ monta o roster com service role (GET /api/v1/team), nÃ£o por leitura direta.';
 
 drop trigger if exists trg_limpar_vinculos_do_agendamento on public.calendar_appointments;
 create trigger trg_limpar_vinculos_do_agendamento
@@ -15549,9 +15549,9 @@ create trigger trg_limpar_vinculos_do_agendamento
   for each row
   execute function public.fn_limpar_vinculos_do_agendamento();
 
--- ────────────────────────────────────────────────────────────────────────────
--- 9 · updated_at
--- ────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 9 Â· updated_at
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 do $$
 declare t text;
 begin
@@ -15568,50 +15568,50 @@ begin
 end
 $$;
 
--- ────────────────────────────────────────────────────────────────────────────
--- 10 · tenancy E PAPEL
--- ────────────────────────────────────────────────────────────────────────────
--- A primeira versão deste bloco dava `for all` só-tenancy às cinco tabelas de
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- 10 Â· tenancy E PAPEL
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- A primeira versÃ£o deste bloco dava `for all` sÃ³-tenancy Ã s cinco tabelas de
 -- agenda, e o invariante `rbac-config-ia-canais` reprovou as cinco. Ele estava
--- certo, e não é allowlist: `DIVIDA_RBAC_CONHECIDA` é uma CATRACA — a lista
--- congelada das tabelas que JÁ nasceram só-tenancy antes da migration 0150. O
--- teste se chama "a dívida de RBAC não cresce", e pôr tabela nova ali é
+-- certo, e nÃ£o Ã© allowlist: `DIVIDA_RBAC_CONHECIDA` Ã© uma CATRACA â€” a lista
+-- congelada das tabelas que JÃ nasceram sÃ³-tenancy antes da migration 0150. O
+-- teste se chama "a dÃ­vida de RBAC nÃ£o cresce", e pÃ´r tabela nova ali Ã©
 -- exatamente o movimento que ele existe para impedir.
 --
--- A razão de fundo (migration 0150): `requireRole()` na rota Next NÃO é a única
--- porta. O PostgREST é exposto ao browser por construção — URL e anon key vão no
--- bundle — e um usuário logado fala com ele direto, com o próprio JWT. Uma
--- policy `for all` só-tenancy significa que o papel mais fraco do tenant escreve
--- tudo o que a organização tem.
+-- A razÃ£o de fundo (migration 0150): `requireRole()` na rota Next NÃƒO Ã© a Ãºnica
+-- porta. O PostgREST Ã© exposto ao browser por construÃ§Ã£o â€” URL e anon key vÃ£o no
+-- bundle â€” e um usuÃ¡rio logado fala com ele direto, com o prÃ³prio JWT. Uma
+-- policy `for all` sÃ³-tenancy significa que o papel mais fraco do tenant escreve
+-- tudo o que a organizaÃ§Ã£o tem.
 --
--- Por tabela, e cada uma tem uma razão diferente:
+-- Por tabela, e cada uma tem uma razÃ£o diferente:
 --
---   event_types            lê membro · escreve manager+   é CONFIGURAÇÃO do
---     negócio: quanto dura uma consulta, que folga tem, quando se pode marcar.
---     O atendente usa; quem define é quem responde pelo negócio.
+--   event_types            lÃª membro Â· escreve manager+   Ã© CONFIGURAÃ‡ÃƒO do
+--     negÃ³cio: quanto dura uma consulta, que folga tem, quando se pode marcar.
+--     O atendente usa; quem define Ã© quem responde pelo negÃ³cio.
 --
---   appointments           lê membro · escreve agent+     é a OPERAÇÃO do dia.
---     Marcar, remarcar e cancelar é o trabalho do atendente. O `viewer` vê a
---     agenda e não mexe nela.
+--   appointments           lÃª membro Â· escreve agent+     Ã© a OPERAÃ‡ÃƒO do dia.
+--     Marcar, remarcar e cancelar Ã© o trabalho do atendente. O `viewer` vÃª a
+--     agenda e nÃ£o mexe nela.
 --
---   availability_exceptions lê membro · escreve o DONO ou manager+
---     "No dia 12 eu não atendo" é da pessoa. Ela mesma escreve a sua, sem
---     depender de ninguém; manager+ escreve a dos outros porque escala é
+--   availability_exceptions lÃª membro Â· escreve o DONO ou manager+
+--     "No dia 12 eu nÃ£o atendo" Ã© da pessoa. Ela mesma escreve a sua, sem
+--     depender de ninguÃ©m; manager+ escreve a dos outros porque escala Ã©
 --     trabalho de quem coordena.
 --
---   connection_calendars   acompanha a conexão · escreve ninguém
---     Ele é filho de `calendar_connections` e herda o escopo dela, como
---     `crm_lead_links` herda o do lead. Quem escreve é o callback do OAuth.
+--   connection_calendars   acompanha a conexÃ£o Â· escreve ninguÃ©m
+--     Ele Ã© filho de `calendar_connections` e herda o escopo dela, como
+--     `crm_lead_links` herda o do lead. Quem escreve Ã© o callback do OAuth.
 --
---   external_events        lê membro · escreve NINGUÉM além de service_role
---     Vem do sync e é espelho. Escrita humana aqui só teria um caso de uso:
+--   external_events        lÃª membro Â· escreve NINGUÃ‰M alÃ©m de service_role
+--     Vem do sync e Ã© espelho. Escrita humana aqui sÃ³ teria um caso de uso:
 --     corromper a fonte de conflito, fazendo a agenda marcar em cima de
---     compromisso real. Ausência de policy de escrita é a decisão.
+--     compromisso real. AusÃªncia de policy de escrita Ã© a decisÃ£o.
 --
--- Nenhuma leva `for all` só-tenancy, e por isso nenhuma precisa entrar na
+-- Nenhuma leva `for all` sÃ³-tenancy, e por isso nenhuma precisa entrar na
 -- catraca.
 
--- ─── os tipos de agendamento: configuração do negócio ─────────────────────
+-- â”€â”€â”€ os tipos de agendamento: configuraÃ§Ã£o do negÃ³cio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_event_types enable row level security;
 drop policy if exists tenant_isolation_calendar_event_types_all on public.calendar_event_types;
 drop policy if exists calendar_event_types_select on public.calendar_event_types;
@@ -15633,7 +15633,7 @@ create policy calendar_event_types_write on public.calendar_event_types
   );
 revoke all on public.calendar_event_types from anon;
 
--- ─── os compromissos: a operação do dia ───────────────────────────────────
+-- â”€â”€â”€ os compromissos: a operaÃ§Ã£o do dia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_appointments enable row level security;
 drop policy if exists tenant_isolation_calendar_appointments_all on public.calendar_appointments;
 drop policy if exists calendar_appointments_select on public.calendar_appointments;
@@ -15655,7 +15655,7 @@ create policy calendar_appointments_write on public.calendar_appointments
   );
 revoke all on public.calendar_appointments from anon;
 
--- ─── as exceções: a agenda é de quem a vive ───────────────────────────────
+-- â”€â”€â”€ as exceÃ§Ãµes: a agenda Ã© de quem a vive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_availability_exceptions enable row level security;
 drop policy if exists tenant_isolation_calendar_availability_exceptions_all on public.calendar_availability_exceptions;
 drop policy if exists calendar_availability_exceptions_select on public.calendar_availability_exceptions;
@@ -15677,7 +15677,7 @@ create policy calendar_availability_exceptions_write on public.calendar_availabi
   );
 revoke all on public.calendar_availability_exceptions from anon;
 
--- ─── os calendários da conexão: herdam o escopo do pai ────────────────────
+-- â”€â”€â”€ os calendÃ¡rios da conexÃ£o: herdam o escopo do pai â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_connection_calendars enable row level security;
 drop policy if exists tenant_isolation_calendar_connection_calendars_all on public.calendar_connection_calendars;
 drop policy if exists calendar_connection_calendars_select on public.calendar_connection_calendars;
@@ -15694,7 +15694,7 @@ create policy calendar_connection_calendars_select on public.calendar_connection
   );
 revoke all on public.calendar_connection_calendars from anon;
 
--- ─── o espelho do Google: leitura de todos, escrita de ninguém ────────────
+-- â”€â”€â”€ o espelho do Google: leitura de todos, escrita de ninguÃ©m â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_external_events enable row level security;
 drop policy if exists tenant_isolation_calendar_external_events_all on public.calendar_external_events;
 drop policy if exists calendar_external_events_select on public.calendar_external_events;
@@ -15715,50 +15715,50 @@ create policy calendar_connections_dono_ou_manager_read on public.calendar_conne
         and (user_id = auth.uid() or public.fn_role_at_least(organization_id, 'manager')))
   );
 
--- Escrita não tem policy: quem conecta e desconecta é o callback do OAuth e o
--- worker de renovação, ambos com service role, e ambos filtram organization_id
--- de fonte confiável. Uma policy de escrita aqui só abriria caminho para
+-- Escrita nÃ£o tem policy: quem conecta e desconecta Ã© o callback do OAuth e o
+-- worker de renovaÃ§Ã£o, ambos com service role, e ambos filtram organization_id
+-- de fonte confiÃ¡vel. Uma policy de escrita aqui sÃ³ abriria caminho para
 -- gravar token pelo PostgREST.
 revoke all on public.calendar_connections from anon;
 
 notify pgrst, 'reload schema';
 
--- ---- dois cliques não marcam duas vezes (migration 0182) ----
+-- ---- dois cliques nÃ£o marcam duas vezes (migration 0182) ----
 --
--- Entre a validação do motor de slots e o INSERT há uma janela em que o banco
--- não repete a pergunta: dois POSTs simultâneos para o mesmo horário passam OS
--- DOIS na checagem e criam dois agendamentos. É o duplo clique, e é a corrida
+-- Entre a validaÃ§Ã£o do motor de slots e o INSERT hÃ¡ uma janela em que o banco
+-- nÃ£o repete a pergunta: dois POSTs simultÃ¢neos para o mesmo horÃ¡rio passam OS
+-- DOIS na checagem e criam dois agendamentos. Ã‰ o duplo clique, e Ã© a corrida
 -- entre duas pessoas marcando o mesmo slot.
 --
--- Não é a constraint de sobreposição que a 0177 recusou, e a distinção importa:
--- `exclude using gist` proibiria SOBREPOSIÇÃO (14h-15h contra 14h30-15h30, que é
--- o encaixe legítimo) e exigiria `btree_gist`, ausente deste baseline. Índice
--- único parcial é btree PURO e proíbe só a COINCIDÊNCIA EXATA de instante para o
+-- NÃ£o Ã© a constraint de sobreposiÃ§Ã£o que a 0177 recusou, e a distinÃ§Ã£o importa:
+-- `exclude using gist` proibiria SOBREPOSIÃ‡ÃƒO (14h-15h contra 14h30-15h30, que Ã©
+-- o encaixe legÃ­timo) e exigiria `btree_gist`, ausente deste baseline. Ãndice
+-- Ãºnico parcial Ã© btree PURO e proÃ­be sÃ³ a COINCIDÃŠNCIA EXATA de instante para o
 -- mesmo dono.
 --
--- ⚠️ `owner_user_id is not null` NÃO conserta buraco nenhum, e a primeira versão
--- deste comentário dizia que sim. Medido num pg17 descartável: com a condição e
--- sem ela, duas linhas com dono NULL no mesmo instante entram IGUAL — `NULL`
--- nunca colide com `NULL` numa UNIQUE, esteja a linha dentro ou fora do índice.
--- A condição fica porque mantém fora do índice o que nunca colidiria e porque
--- DECLARA o alcance da guarda (ela é sobre a agenda de uma PESSOA), não porque
--- proteja. Comentário que promete guarda inexistente é pior que nenhum: quem lê
+-- âš ï¸ `owner_user_id is not null` NÃƒO conserta buraco nenhum, e a primeira versÃ£o
+-- deste comentÃ¡rio dizia que sim. Medido num pg17 descartÃ¡vel: com a condiÃ§Ã£o e
+-- sem ela, duas linhas com dono NULL no mesmo instante entram IGUAL â€” `NULL`
+-- nunca colide com `NULL` numa UNIQUE, esteja a linha dentro ou fora do Ã­ndice.
+-- A condiÃ§Ã£o fica porque mantÃ©m fora do Ã­ndice o que nunca colidiria e porque
+-- DECLARA o alcance da guarda (ela Ã© sobre a agenda de uma PESSOA), nÃ£o porque
+-- proteja. ComentÃ¡rio que promete guarda inexistente Ã© pior que nenhum: quem lÃª
 -- para de procurar.
 --
--- Custo declarado: proíbe dois compromissos do mesmo atendente no MESMO
--- instante, que numa clínica às vezes é o encaixe deliberado. A troca é
--- consciente, e a contrapartida é a rota devolver 409 dizendo QUAL compromisso
--- está ali — senão troca-se uma corrida rara por uma parede diária.
+-- Custo declarado: proÃ­be dois compromissos do mesmo atendente no MESMO
+-- instante, que numa clÃ­nica Ã s vezes Ã© o encaixe deliberado. A troca Ã©
+-- consciente, e a contrapartida Ã© a rota devolver 409 dizendo QUAL compromisso
+-- estÃ¡ ali â€” senÃ£o troca-se uma corrida rara por uma parede diÃ¡ria.
 --
 -- Deduplica ANTES da constraint, e deslocando em vez de apagar: cancelar a
 -- duplicata destruiria um compromisso combinado com uma pessoa real, e isso uma
--- migration não faz. Nenhum clone tem linha nesta tabela hoje (nasceu na 0177 e
--- a rota que grava não existe); o bloco é para o clone que vier a ter.
--- ─── 1 · deduplicar deslocando, sem perder nenhum compromisso ──────────────
--- Empurra a 2ª, 3ª… ocorrência em 1 segundo cada, levando `ends_at` junto para
--- a duração não mudar. Em laço porque um deslocamento pode cair em cima de
--- outro instante já ocupado; 10 passadas cobrem qualquer caso real e o teto
--- impede laço infinito num dado patológico.
+-- migration nÃ£o faz. Nenhum clone tem linha nesta tabela hoje (nasceu na 0177 e
+-- a rota que grava nÃ£o existe); o bloco Ã© para o clone que vier a ter.
+-- â”€â”€â”€ 1 Â· deduplicar deslocando, sem perder nenhum compromisso â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Empurra a 2Âª, 3Âªâ€¦ ocorrÃªncia em 1 segundo cada, levando `ends_at` junto para
+-- a duraÃ§Ã£o nÃ£o mudar. Em laÃ§o porque um deslocamento pode cair em cima de
+-- outro instante jÃ¡ ocupado; 10 passadas cobrem qualquer caso real e o teto
+-- impede laÃ§o infinito num dado patolÃ³gico.
 do $$
 declare
   mexidas integer;
@@ -15789,35 +15789,35 @@ begin
 end
 $$;
 
--- ─── 2 · a guarda ─────────────────────────────────────────────────────────
+-- â”€â”€â”€ 2 Â· a guarda â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 create unique index if not exists calendar_appointments_sem_duplicata_idx
   on public.calendar_appointments (organization_id, owner_user_id, starts_at)
   where status in ('pending', 'confirmed') and owner_user_id is not null;
 
 comment on index public.calendar_appointments_sem_duplicata_idx is
-  'Fecha a janela entre a validação do motor de slots e o INSERT: dois POSTs simultâneos para o mesmo instante e o mesmo atendente não viram dois compromissos. Parcial em (pending, confirmed) porque cancelado e realizado não ocupam ninguém, e em owner_user_id não nulo porque NULL não colide com NULL numa UNIQUE — e porque agendamento sem atendente não ocupa agenda. Quem captura o 23505 é a rota, que devolve 409 dizendo qual compromisso está ali.';
+  'Fecha a janela entre a validaÃ§Ã£o do motor de slots e o INSERT: dois POSTs simultÃ¢neos para o mesmo instante e o mesmo atendente nÃ£o viram dois compromissos. Parcial em (pending, confirmed) porque cancelado e realizado nÃ£o ocupam ninguÃ©m, e em owner_user_id nÃ£o nulo porque NULL nÃ£o colide com NULL numa UNIQUE â€” e porque agendamento sem atendente nÃ£o ocupa agenda. Quem captura o 23505 Ã© a rota, que devolve 409 dizendo qual compromisso estÃ¡ ali.';
 
 notify pgrst, 'reload schema';
 
--- ---- a grade da agenda não se move sozinha (migration 0183) ----
+-- ---- a grade da agenda nÃ£o se move sozinha (migration 0183) ----
 --
--- `calendar_appointments` não estava na publicação: o `.channel()` sobe, o
+-- `calendar_appointments` nÃ£o estava na publicaÃ§Ã£o: o `.channel()` sobe, o
 -- `subscribe` devolve SUBSCRIBED, nenhum erro em lugar nenhum, e nenhum evento
--- chega nunca. Duas pessoas com a agenda aberta não veem o que a outra marcou.
--- Agravante de diagnóstico: nesta base o canal já morre calado por outro motivo
--- quando o token não chega ao socket, então quem investigar vai para o `setAuth`
--- e não para a publicação — dois defeitos com o MESMO sintoma.
+-- chega nunca. Duas pessoas com a agenda aberta nÃ£o veem o que a outra marcou.
+-- Agravante de diagnÃ³stico: nesta base o canal jÃ¡ morre calado por outro motivo
+-- quando o token nÃ£o chega ao socket, entÃ£o quem investigar vai para o `setAuth`
+-- e nÃ£o para a publicaÃ§Ã£o â€” dois defeitos com o MESMO sintoma.
 --
--- SÓ ela entra, e a doutrina julga tabela a tabela: `calendar_external_events` é
+-- SÃ“ ela entra, e a doutrina julga tabela a tabela: `calendar_external_events` Ã©
 -- espelho reescrito em lote pelo sync (200 eventos = 200 pulsos: o "pulso que
--- mente" da 0075 em forma de calendário); `calendar_connections` guarda token; as
--- de configuração mudam com quem já está na tela.
+-- mente" da 0075 em forma de calendÃ¡rio); `calendar_connections` guarda token; as
+-- de configuraÃ§Ã£o mudam com quem jÃ¡ estÃ¡ na tela.
 --
--- ⚠️ NÃO resolve o DELETE: `replica identity` tem zero ocorrência neste schema,
--- então o payload de DELETE traz só o `id` e um canal com `filter` por
--- `owner_user_id` não o recebe — o card apagado fica na tela até o F5. Não ligo
--- `replica identity full` aqui porque hoje não há assinante nenhum, e o custo em
--- WAL seria para servir um consumidor que não existe.
+-- âš ï¸ NÃƒO resolve o DELETE: `replica identity` tem zero ocorrÃªncia neste schema,
+-- entÃ£o o payload de DELETE traz sÃ³ o `id` e um canal com `filter` por
+-- `owner_user_id` nÃ£o o recebe â€” o card apagado fica na tela atÃ© o F5. NÃ£o ligo
+-- `replica identity full` aqui porque hoje nÃ£o hÃ¡ assinante nenhum, e o custo em
+-- WAL seria para servir um consumidor que nÃ£o existe.
 do $$
 begin
   if not exists (
@@ -15837,24 +15837,24 @@ begin
 end $$;
 
 comment on table public.calendar_appointments is
-  'O compromisso COMBINADO: hora marcada, com alguém, ocupando a agenda de um atendente. Distinto do RETORNO agendado (cron_jobs kind=at, job_kind=followup_turn), que é decisão interna do sistema, não ocupa agenda de ninguém e o cliente não sabe. ESTÁ na publicação supabase_realtime (migration 0183) porque marcar e cancelar é mudança de estado, não telemetria — mas o DELETE só traz o id, então um canal com filter por owner_user_id não o recebe.';
+  'O compromisso COMBINADO: hora marcada, com alguÃ©m, ocupando a agenda de um atendente. Distinto do RETORNO agendado (cron_jobs kind=at, job_kind=followup_turn), que Ã© decisÃ£o interna do sistema, nÃ£o ocupa agenda de ninguÃ©m e o cliente nÃ£o sabe. ESTÃ na publicaÃ§Ã£o supabase_realtime (migration 0183) porque marcar e cancelar Ã© mudanÃ§a de estado, nÃ£o telemetria â€” mas o DELETE sÃ³ traz o id, entÃ£o um canal com filter por owner_user_id nÃ£o o recebe.';
 
 notify pgrst, 'reload schema';
 
--- ---- LGPD alcança a agenda: trigger (migration 0184) ----
+-- ---- LGPD alcanÃ§a a agenda: trigger (migration 0184) ----
 --
--- A SEGUNDA metade da 0184. A função está ANTES do bloco da VARREDURA anon, e a
--- razão está escrita lá.
+-- A SEGUNDA metade da 0184. A funÃ§Ã£o estÃ¡ ANTES do bloco da VARREDURA anon, e a
+-- razÃ£o estÃ¡ escrita lÃ¡.
 --
 -- Redige o texto livre e PRESERVA `starts_at`, `ends_at`, `status` e
--- `owner_user_id`: a clínica precisa responder "quantos atendimentos houve em
--- março" depois de anonimizar. O QUE aconteceu e QUANDO fica; COM QUEM e SOBRE O
--- QUÊ sai.
+-- `owner_user_id`: a clÃ­nica precisa responder "quantos atendimentos houve em
+-- marÃ§o" depois de anonimizar. O QUE aconteceu e QUANDO fica; COM QUEM e SOBRE O
+-- QUÃŠ sai.
 --
--- `calendar_external_events` fica de fora e NÃO por esquecimento: ela não tem
--- `contact_id`, e o único vínculo com a pessoa é o `title` copiado do Google.
--- Alcançá-la exige uma decisão de produto — declarar que é espelho de terceiro,
--- ou apagar a janela da conexão.
+-- `calendar_external_events` fica de fora e NÃƒO por esquecimento: ela nÃ£o tem
+-- `contact_id`, e o Ãºnico vÃ­nculo com a pessoa Ã© o `title` copiado do Google.
+-- AlcanÃ§Ã¡-la exige uma decisÃ£o de produto â€” declarar que Ã© espelho de terceiro,
+-- ou apagar a janela da conexÃ£o.
 drop trigger if exists trg_redigir_agenda_ao_anonimizar on public.contacts;
 create trigger trg_redigir_agenda_ao_anonimizar
   after update of is_anonymized on public.contacts
@@ -15863,31 +15863,31 @@ create trigger trg_redigir_agenda_ao_anonimizar
   execute function public.fn_redigir_agenda_do_contato_anonimizado();
 
 comment on column public.calendar_appointments.notes is
-  'Anotação livre do atendimento — numa clínica, queixa clínica. É dado pessoal: o trigger trg_redigir_agenda_ao_anonimizar (migration 0184) a apaga quando o contato é anonimizado, junto com title, description, location_details, meeting_url e cancellation_reason. Horário, status e dono são PRESERVADOS: o que aconteceu e quando é registro de operação.';
+  'AnotaÃ§Ã£o livre do atendimento â€” numa clÃ­nica, queixa clÃ­nica. Ã‰ dado pessoal: o trigger trg_redigir_agenda_ao_anonimizar (migration 0184) a apaga quando o contato Ã© anonimizado, junto com title, description, location_details, meeting_url e cancellation_reason. HorÃ¡rio, status e dono sÃ£o PRESERVADOS: o que aconteceu e quando Ã© registro de operaÃ§Ã£o.';
 
 notify pgrst, 'reload schema';
 
 -- ---- a agenda nasce com o que marcar: trigger e backfill (migration 0185) ----
 --
--- A SEGUNDA metade da 0185. As funções estão ANTES do bloco da VARREDURA anon.
+-- A SEGUNDA metade da 0185. As funÃ§Ãµes estÃ£o ANTES do bloco da VARREDURA anon.
 --
--- TRIGGER e BACKFILL, e não um só: o baseline nunca semeia organização que ainda
--- não existe (só faz backfill das de hoje), e o único mecanismo que alcança
--- organização FUTURA é trigger em `organizations`. Só backfill deixaria a
--- segunda organização do dono vazia; só trigger deixaria sem nada todo clone que
--- já instalou.
+-- TRIGGER e BACKFILL, e nÃ£o um sÃ³: o baseline nunca semeia organizaÃ§Ã£o que ainda
+-- nÃ£o existe (sÃ³ faz backfill das de hoje), e o Ãºnico mecanismo que alcanÃ§a
+-- organizaÃ§Ã£o FUTURA Ã© trigger em `organizations`. SÃ³ backfill deixaria a
+-- segunda organizaÃ§Ã£o do dono vazia; sÃ³ trigger deixaria sem nada todo clone que
+-- jÃ¡ instalou.
 --
 -- `on conflict do nothing` e nunca `do update`: o `update.sh` re-aplica este
--- arquivo a cada atualização, e `do update` sobrescreveria em silêncio o tipo
--- que o dono já editou. É a diferença entre semear e mandar.
+-- arquivo a cada atualizaÃ§Ã£o, e `do update` sobrescreveria em silÃªncio o tipo
+-- que o dono jÃ¡ editou. Ã‰ a diferenÃ§a entre semear e mandar.
 drop trigger if exists trg_semear_tipos_de_agendamento on public.organizations;
 create trigger trg_semear_tipos_de_agendamento
   after insert on public.organizations
   for each row
   execute function public.fn_semear_tipos_de_agendamento_na_org_nova();
 
--- Backfill: os clones que JÁ instalaram. Guardado por `not exists` para o
--- `update.sh` poder re-aplicar sem duplicar e sem tocar em quem já editou.
+-- Backfill: os clones que JÃ instalaram. Guardado por `not exists` para o
+-- `update.sh` poder re-aplicar sem duplicar e sem tocar em quem jÃ¡ editou.
 do $$
 declare o record;
 begin
@@ -15903,31 +15903,31 @@ end
 $$;
 
 comment on function public.fn_semear_tipos_de_agendamento(uuid) is
-  'O PISO da agenda: três tipos neutros (Consulta, Reunião, Atendimento) para que instalação fresca tenha o que marcar. Não é o teto — o enriquecimento por nicho vive no passo do funil do onboarding, onde o nicho existe. `on conflict do nothing` para nunca sobrescrever o que o dono editou.';
+  'O PISO da agenda: trÃªs tipos neutros (Consulta, ReuniÃ£o, Atendimento) para que instalaÃ§Ã£o fresca tenha o que marcar. NÃ£o Ã© o teto â€” o enriquecimento por nicho vive no passo do funil do onboarding, onde o nicho existe. `on conflict do nothing` para nunca sobrescrever o que o dono editou.';
 
 notify pgrst, 'reload schema';
 
--- ---- a cor da pessoa é uma trilha, e a do tipo não existe (migration 0186) ----
+-- ---- a cor da pessoa Ã© uma trilha, e a do tipo nÃ£o existe (migration 0186) ----
 --
 -- A 0177 criou duas colunas de cor guardando hex. As duas estavam erradas, e o
--- argumento é do @VPS: hex guardado é "um segundo lugar para a mesma verdade, e
+-- argumento Ã© do @VPS: hex guardado Ã© "um segundo lugar para a mesma verdade, e
 -- o tema escuro fica de fora". Medido: as cores vivem em `--agenda-pessoa-1..8`
--- no globals.css, em TRÊS blocos de tema, e a mesma trilha tem hex diferente em
+-- no globals.css, em TRÃŠS blocos de tema, e a mesma trilha tem hex diferente em
 -- cada um.
 --
--- `calendar_color` VIRA TRILHA e a escolha manual FICA: a derivação a partir do
--- `user_id` é estável mas COLIDE (oito trilhas, mais de oito pessoas), e quem
+-- `calendar_color` VIRA TRILHA e a escolha manual FICA: a derivaÃ§Ã£o a partir do
+-- `user_id` Ã© estÃ¡vel mas COLIDE (oito trilhas, mais de oito pessoas), e quem
 -- administra vai querer desempatar. NULL = use a derivada.
 --
--- `calendar_event_types.color` SAI: há UM pixel por compromisso na grade, e duas
--- colorações competindo pelo mesmo lugar significam que uma delas mente. O pedido
--- é cor POR PESSOA. Se voltar um dia, volta como trilha, com alternador.
+-- `calendar_event_types.color` SAI: hÃ¡ UM pixel por compromisso na grade, e duas
+-- coloraÃ§Ãµes competindo pelo mesmo lugar significam que uma delas mente. O pedido
+-- Ã© cor POR PESSOA. Se voltar um dia, volta como trilha, com alternador.
 --
--- ⚠️ DROP COLUMN é destrutivo. O que autoriza: as colunas nasceram na 0177 hoje,
--- o seed da 0185 não preenche nenhuma, e a varredura por consumidor devolveu zero
--- com controle positivo. Não há dado de cliente a perder porque não há caminho
+-- âš ï¸ DROP COLUMN Ã© destrutivo. O que autoriza: as colunas nasceram na 0177 hoje,
+-- o seed da 0185 nÃ£o preenche nenhuma, e a varredura por consumidor devolveu zero
+-- com controle positivo. NÃ£o hÃ¡ dado de cliente a perder porque nÃ£o hÃ¡ caminho
 -- que grave.
--- ─── 1 · a cor da pessoa vira trilha ──────────────────────────────────────
+-- â”€â”€â”€ 1 Â· a cor da pessoa vira trilha â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.user_organizations
   add column if not exists calendar_trilha smallint;
 
@@ -15938,14 +15938,14 @@ alter table public.user_organizations
   check (calendar_trilha is null or calendar_trilha between 1 and 8);
 
 comment on column public.user_organizations.calendar_trilha is
-  'A trilha de cor desta pessoa na grade da Agenda, nesta organização (1..8). NULL = use a derivada de trilhaPadraoDoMembro(user_id), que é estável mas colide para alguns pares — esta coluna existe para quem administra desempatar. A COR de cada trilha vive em app/globals.css (--agenda-pessoa-N) e muda com o tema; guardar hex aqui seria um segundo lugar para a mesma verdade, sem tema escuro. ⚠️ A policy de SELECT desta tabela é self-OU-manager+: um `agent` não lê a linha dos colegas pelo PostgREST, então as trilhas chegam à tela pela rota que monta o roster com service role.';
+  'A trilha de cor desta pessoa na grade da Agenda, nesta organizaÃ§Ã£o (1..8). NULL = use a derivada de trilhaPadraoDoMembro(user_id), que Ã© estÃ¡vel mas colide para alguns pares â€” esta coluna existe para quem administra desempatar. A COR de cada trilha vive em app/globals.css (--agenda-pessoa-N) e muda com o tema; guardar hex aqui seria um segundo lugar para a mesma verdade, sem tema escuro. âš ï¸ A policy de SELECT desta tabela Ã© self-OU-manager+: um `agent` nÃ£o lÃª a linha dos colegas pelo PostgREST, entÃ£o as trilhas chegam Ã  tela pela rota que monta o roster com service role.';
 
 alter table public.user_organizations
   drop constraint if exists user_organizations_calendar_color_format;
 alter table public.user_organizations
   drop column if exists calendar_color;
 
--- ─── 2 · a cor do tipo de agendamento sai ─────────────────────────────────
+-- â”€â”€â”€ 2 Â· a cor do tipo de agendamento sai â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 alter table public.calendar_event_types
   drop constraint if exists calendar_event_types_color_format;
 alter table public.calendar_event_types
@@ -15953,43 +15953,43 @@ alter table public.calendar_event_types
 
 notify pgrst, 'reload schema';
 
--- ---- o espelho do Google é cache com prazo (migration 0187) ----
+-- ---- o espelho do Google Ã© cache com prazo (migration 0187) ----
 --
--- A SEGUNDA metade da 0187. A função está ANTES do bloco da VARREDURA anon.
+-- A SEGUNDA metade da 0187. A funÃ§Ã£o estÃ¡ ANTES do bloco da VARREDURA anon.
 comment on table public.calendar_external_events is
-  'ESPELHO, somente-leitura, do que já existe na agenda conectada. Ocupa horário e aparece na grade, mas NÃO é compromisso nosso: não tem lead, não tem estado de atendimento e nunca é reescrito por nós. É CACHE — reconstruível pelo sync, apagado em cascata quando a conexão sai, e com prazo (fn_expurgar_espelho_da_agenda, migration 0187). Fica FORA da cascata de LGPD por não ter contact_id: o único vínculo com a pessoa é o title copiado do Google, e a fonte da verdade daquele dado é a agenda do próprio cliente, onde o titular exerce o direito com o controlador de lá. A mira de verdade só nasce com o escritor do sync, que terá o ical_uid para ligar — decisão de QUANDO, não de SE.';
+  'ESPELHO, somente-leitura, do que jÃ¡ existe na agenda conectada. Ocupa horÃ¡rio e aparece na grade, mas NÃƒO Ã© compromisso nosso: nÃ£o tem lead, nÃ£o tem estado de atendimento e nunca Ã© reescrito por nÃ³s. Ã‰ CACHE â€” reconstruÃ­vel pelo sync, apagado em cascata quando a conexÃ£o sai, e com prazo (fn_expurgar_espelho_da_agenda, migration 0187). Fica FORA da cascata de LGPD por nÃ£o ter contact_id: o Ãºnico vÃ­nculo com a pessoa Ã© o title copiado do Google, e a fonte da verdade daquele dado Ã© a agenda do prÃ³prio cliente, onde o titular exerce o direito com o controlador de lÃ¡. A mira de verdade sÃ³ nasce com o escritor do sync, que terÃ¡ o ical_uid para ligar â€” decisÃ£o de QUANDO, nÃ£o de SE.';
 
 create index if not exists calendar_external_events_poda_idx
   on public.calendar_external_events (ends_at);
 
 notify pgrst, 'reload schema';
 
--- ---- o espelho não se limpa sozinho (migration 0189) ----
+-- ---- o espelho nÃ£o se limpa sozinho (migration 0189) ----
 --
--- A 0187 deu prazo ao espelho e o comentário passou a dizer "cache com prazo".
--- Está certo e é insuficiente: quem ler aquilo conclui que ele se limpa sozinho.
+-- A 0187 deu prazo ao espelho e o comentÃ¡rio passou a dizer "cache com prazo".
+-- EstÃ¡ certo e Ã© insuficiente: quem ler aquilo conclui que ele se limpa sozinho.
 --
--- O caso que a poda NÃO alcança: evento com `ends_at` no FUTURO, de conexão
--- VIVA, apagado no Google. Nunca envelhece — o corte é `ends_at < now() - N`, e
--- futuro não vence. Fica aqui para sempre, ocupando horário que na agenda do
--- cliente já está livre, e fazendo a agenda RECUSAR hora que existe. Quem limpa
--- é a RECONCILIAÇÃO do sync, que é de outra frente e não existe hoje.
+-- O caso que a poda NÃƒO alcanÃ§a: evento com `ends_at` no FUTURO, de conexÃ£o
+-- VIVA, apagado no Google. Nunca envelhece â€” o corte Ã© `ends_at < now() - N`, e
+-- futuro nÃ£o vence. Fica aqui para sempre, ocupando horÃ¡rio que na agenda do
+-- cliente jÃ¡ estÃ¡ livre, e fazendo a agenda RECUSAR hora que existe. Quem limpa
+-- Ã© a RECONCILIAÃ‡ÃƒO do sync, que Ã© de outra frente e nÃ£o existe hoje.
 --
--- Merece migration e não linha de doc porque `comment on table` é o que se lê no
--- `\d+` e é a única declaração que viaja com o schema para todo clone. Ressalva
+-- Merece migration e nÃ£o linha de doc porque `comment on table` Ã© o que se lÃª no
+-- `\d+` e Ã© a Ãºnica declaraÃ§Ã£o que viaja com o schema para todo clone. Ressalva
 -- que fica no briefing morre com a entrega.
 comment on table public.calendar_external_events is
-  'ESPELHO, somente-leitura, do que já existe na agenda conectada. Ocupa horário e aparece na grade, mas NÃO é compromisso nosso: não tem lead, não tem estado de atendimento e nunca é reescrito por nós. '
-  'É CACHE — reconstruível pelo sync, apagado em cascata quando a conexão sai, e com prazo para o PASSADO (fn_expurgar_espelho_da_agenda, migration 0187). '
-  '⚠️ O PRAZO NÃO LIMPA O FANTASMA: evento com ends_at no FUTURO, de conexão viva, apagado lá no Google, nunca envelhece e fica aqui para sempre — ocupando um horário que na agenda do cliente já está livre, e fazendo a agenda RECUSAR hora que existe. Quem limpa isso é a RECONCILIAÇÃO do sync (remover o que não veio na resposta da janela), que é da frente do Google e não existe hoje. '
-  'Fica FORA da cascata de LGPD por não ter contact_id: o único vínculo com a pessoa é o title copiado do Google, e a fonte da verdade daquele dado é a agenda do próprio cliente, onde o titular exerce o direito com o controlador de lá. A mira de verdade só nasce com o escritor do sync, que terá o ical_uid para ligar — decisão de QUANDO, não de SE.';
+  'ESPELHO, somente-leitura, do que jÃ¡ existe na agenda conectada. Ocupa horÃ¡rio e aparece na grade, mas NÃƒO Ã© compromisso nosso: nÃ£o tem lead, nÃ£o tem estado de atendimento e nunca Ã© reescrito por nÃ³s. '
+  'Ã‰ CACHE â€” reconstruÃ­vel pelo sync, apagado em cascata quando a conexÃ£o sai, e com prazo para o PASSADO (fn_expurgar_espelho_da_agenda, migration 0187). '
+  'âš ï¸ O PRAZO NÃƒO LIMPA O FANTASMA: evento com ends_at no FUTURO, de conexÃ£o viva, apagado lÃ¡ no Google, nunca envelhece e fica aqui para sempre â€” ocupando um horÃ¡rio que na agenda do cliente jÃ¡ estÃ¡ livre, e fazendo a agenda RECUSAR hora que existe. Quem limpa isso Ã© a RECONCILIAÃ‡ÃƒO do sync (remover o que nÃ£o veio na resposta da janela), que Ã© da frente do Google e nÃ£o existe hoje. '
+  'Fica FORA da cascata de LGPD por nÃ£o ter contact_id: o Ãºnico vÃ­nculo com a pessoa Ã© o title copiado do Google, e a fonte da verdade daquele dado Ã© a agenda do prÃ³prio cliente, onde o titular exerce o direito com o controlador de lÃ¡. A mira de verdade sÃ³ nasce com o escritor do sync, que terÃ¡ o ical_uid para ligar â€” decisÃ£o de QUANDO, nÃ£o de SE.';
 
 notify pgrst, 'reload schema';
 -- ---- a volta do Google precisa de identidade (migration 0188) ----
 -- `calendar_appointments.google_ical_uid` existe desde a 0177 e diz qual evento
--- do Google é nosso. A linha de VOLTA não tinha equivalente, e sem chave entre
--- os dois o mesmo compromisso movido no Google passa a bloquear DOIS horários —
--- o novo, pela linha externa, e o antigo, pelo agendamento — sem nada que os
+-- do Google Ã© nosso. A linha de VOLTA nÃ£o tinha equivalente, e sem chave entre
+-- os dois o mesmo compromisso movido no Google passa a bloquear DOIS horÃ¡rios â€”
+-- o novo, pela linha externa, e o antigo, pelo agendamento â€” sem nada que os
 -- ligue para desfazer. Aditiva e idempotente.
 alter table public.calendar_external_events
   add column if not exists ical_uid text;
@@ -16006,28 +16006,28 @@ create table if not exists public.calendar_oauth_nonces (
   nonce text primary key,
   organization_id uuid not null references public.organizations(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  -- O prazo do próprio `state`. Depois dele a linha não serve para mais nada:
-  -- um `state` vencido já é recusado pela assinatura, antes de chegar aqui.
+  -- O prazo do prÃ³prio `state`. Depois dele a linha nÃ£o serve para mais nada:
+  -- um `state` vencido jÃ¡ Ã© recusado pela assinatura, antes de chegar aqui.
   expira_em timestamptz not null,
   usado_em timestamptz not null default now()
 );
 
 comment on table public.calendar_oauth_nonces is
-  'Nonces de state do OAuth do Google já usados. A chave primária é o próprio nonce: a segunda tentativa viola a unicidade, e é assim que o replay é recusado.';
+  'Nonces de state do OAuth do Google jÃ¡ usados. A chave primÃ¡ria Ã© o prÃ³prio nonce: a segunda tentativa viola a unicidade, e Ã© assim que o replay Ã© recusado.';
 
 create index if not exists calendar_oauth_nonces_expiracao_idx
   on public.calendar_oauth_nonces (expira_em);
 
 alter table public.calendar_oauth_nonces enable row level security;
 
--- Sem policy nenhuma, e é deliberado: quem escreve é o callback do OAuth, com
--- service role, e ninguém precisa LER isto pela API. Policy aqui só abriria
--- caminho para enumerar tentativas de conexão pelo PostgREST.
+-- Sem policy nenhuma, e Ã© deliberado: quem escreve Ã© o callback do OAuth, com
+-- service role, e ninguÃ©m precisa LER isto pela API. Policy aqui sÃ³ abriria
+-- caminho para enumerar tentativas de conexÃ£o pelo PostgREST.
 revoke all on public.calendar_oauth_nonces from anon, authenticated;
 
--- Negação ESCRITA (migration 0192). RLS ligada sem policy já nega tudo, mas no
--- catálogo negação deliberada e negação esquecida são indistinguíveis — e é
--- disso que o invariante de completude reclama, com razão. Não abre nada.
+-- NegaÃ§Ã£o ESCRITA (migration 0192). RLS ligada sem policy jÃ¡ nega tudo, mas no
+-- catÃ¡logo negaÃ§Ã£o deliberada e negaÃ§Ã£o esquecida sÃ£o indistinguÃ­veis â€” e Ã©
+-- disso que o invariante de completude reclama, com razÃ£o. NÃ£o abre nada.
 drop policy if exists tenant_isolation_calendar_oauth_nonces_all on public.calendar_oauth_nonces;
 drop policy if exists calendar_oauth_nonces_ninguem_le on public.calendar_oauth_nonces;
 create policy calendar_oauth_nonces_ninguem_le
@@ -16035,25 +16035,25 @@ create policy calendar_oauth_nonces_ninguem_le
   for select
   using (false);
 
--- A quarta poda do `data-retention`. Assinatura idêntica às três irmãs
--- (`p_retencao_dias`, `p_limite`) para o mesmo laço de lotes servir sem caso
--- especial — e os NOMES são o contrato: o PostgREST resolve sobrecarga pelo
--- nome do argumento, e é assim que o cron manda (o laço `drenar` de
+-- A quarta poda do `data-retention`. Assinatura idÃªntica Ã s trÃªs irmÃ£s
+-- (`p_retencao_dias`, `p_limite`) para o mesmo laÃ§o de lotes servir sem caso
+-- especial â€” e os NOMES sÃ£o o contrato: o PostgREST resolve sobrecarga pelo
+-- nome do argumento, e Ã© assim que o cron manda (o laÃ§o `drenar` de
 -- `app/api/v1/cron/data-retention/route.ts:122`). Nascida na 0190 como
--- (`p_dias`, `p_lote`), esta poda não achava sobrecarga nenhuma: `PGRST202`
--- todo dia — medido em produção, `retention.sweep_run` com `falhou=true`
--- diário de 2026-09-23 a 2026-09-27 —, `calendar_oauth_nonces` crescendo para
--- sempre, e a varredura inteira reportada como falha mesmo com as três podas
--- anteriores já tendo rodado.
+-- (`p_dias`, `p_lote`), esta poda nÃ£o achava sobrecarga nenhuma: `PGRST202`
+-- todo dia â€” medido em produÃ§Ã£o, `retention.sweep_run` com `falhou=true`
+-- diÃ¡rio de 2026-09-23 a 2026-09-27 â€”, `calendar_oauth_nonces` crescendo para
+-- sempre, e a varredura inteira reportada como falha mesmo com as trÃªs podas
+-- anteriores jÃ¡ tendo rodado.
 --
--- O drop abaixo é o que faz a ATUALIZAÇÃO receber o conserto: `create or
--- replace` NÃO troca nome de parâmetro de entrada — o Postgres recusa com
+-- O drop abaixo Ã© o que faz a ATUALIZAÃ‡ÃƒO receber o conserto: `create or
+-- replace` NÃƒO troca nome de parÃ¢metro de entrada â€” o Postgres recusa com
 -- "cannot change name of input parameter", porque o nome faz parte da
--- identidade da função para quem chama por nome. Sem ele, a instalação que já
+-- identidade da funÃ§Ã£o para quem chama por nome. Sem ele, a instalaÃ§Ã£o que jÃ¡
 -- existe (e que reaplica este arquivo inteiro pelo `update.sh`) ficaria com a
--- função antiga. A assinatura `(int, int)` não muda, e o drop leva os ACLs
+-- funÃ§Ã£o antiga. A assinatura `(int, int)` nÃ£o muda, e o drop leva os ACLs
 -- junto: por isso o `revoke`/`grant` da 0192 se reaplica logo abaixo. O mesmo
--- conserto, em forma de migration, é a 0244.
+-- conserto, em forma de migration, Ã© a 0244.
 drop function if exists public.fn_expurgar_nonces_de_oauth(int, int);
 
 create or replace function public.fn_expurgar_nonces_de_oauth(
@@ -16068,8 +16068,8 @@ as $$
 declare
   v_removidas int;
 begin
-  -- Piso no CORPO, como as irmãs: um chamador que passe 0 não apaga nonce que
-  -- ainda protege. O prazo do state é de 10 minutos, então um dia já é folga
+  -- Piso no CORPO, como as irmÃ£s: um chamador que passe 0 nÃ£o apaga nonce que
+  -- ainda protege. O prazo do state Ã© de 10 minutos, entÃ£o um dia jÃ¡ Ã© folga
   -- de duas ordens de grandeza.
   if p_retencao_dias is null or p_retencao_dias < 1 then
     p_retencao_dias := 1;
@@ -16080,7 +16080,7 @@ begin
       from public.calendar_oauth_nonces
      where expira_em < now() - make_interval(days => p_retencao_dias)
      -- 500 era o default DECLARADO na 0190; agora mora no corpo, como nas
-     -- irmãs, e o efeito de quem omite o argumento é o mesmo.
+     -- irmÃ£s, e o efeito de quem omite o argumento Ã© o mesmo.
      limit greatest(coalesce(p_limite, 500), 1)
   )
   delete from public.calendar_oauth_nonces n
@@ -16091,18 +16091,18 @@ begin
   return v_removidas;
 end$$;
 
--- Função nova em `public` nasce EXPOSTA — as DUAS origens de EXECUTE.
--- `authenticated` entra aqui pela migration 0192: as duas irmãs de assinatura
--- idêntica já o revogavam, e o grant vem do `ALTER DEFAULT PRIVILEGES` do
--- corpo deste arquivo — omissão que aparece como linha AUSENTE, não errada.
--- O `drop function` logo acima, da 0244, derrubou a função COM os ACLs dela:
--- este par é o que repõe o estado que a 0192 deixou, e não redundância com ela.
+-- FunÃ§Ã£o nova em `public` nasce EXPOSTA â€” as DUAS origens de EXECUTE.
+-- `authenticated` entra aqui pela migration 0192: as duas irmÃ£s de assinatura
+-- idÃªntica jÃ¡ o revogavam, e o grant vem do `ALTER DEFAULT PRIVILEGES` do
+-- corpo deste arquivo â€” omissÃ£o que aparece como linha AUSENTE, nÃ£o errada.
+-- O `drop function` logo acima, da 0244, derrubou a funÃ§Ã£o COM os ACLs dela:
+-- este par Ã© o que repÃµe o estado que a 0192 deixou, e nÃ£o redundÃ¢ncia com ela.
 revoke execute on function public.fn_expurgar_nonces_de_oauth(int, int) from public, anon, authenticated;
 grant execute on function public.fn_expurgar_nonces_de_oauth(int, int) to service_role;
 -- ---- playbook `agendamento` v2: cita as ferramentas de agenda (migration 0191) ----
 do $pub$
 declare
-  -- md5 do corpo abaixo. Conferido logo após o insert — ver item 2 do cabeçalho.
+  -- md5 do corpo abaixo. Conferido logo apÃ³s o insert â€” ver item 2 do cabeÃ§alho.
   v_md5 constant text := 'c2022f05f5b5d9451e727cf0f4187f8a';
   v_id  uuid;
 begin
@@ -16116,106 +16116,106 @@ begin
     values (
       null,
       'agendamento',
-      'Playbook pra marcar/remarcar horário (consulta, visita, sessão) — consulta a agenda real pelas ferramentas quando elas existem, nunca inventa disponibilidade, e confirma por escrito antes de fechar.',
-      $body$# Playbook: marcar horário/agendamento
+      'Playbook pra marcar/remarcar horÃ¡rio (consulta, visita, sessÃ£o) â€” consulta a agenda real pelas ferramentas quando elas existem, nunca inventa disponibilidade, e confirma por escrito antes de fechar.',
+      $body$# Playbook: marcar horÃ¡rio/agendamento
 
 ## Quando usar
-O lead pede pra marcar um horário, consulta, visita, demonstração ou sessão —
-qualquer compromisso com data/hora. Comum em clínicas, imobiliárias (visitas),
-serviços e consultorias.
+O lead pede pra marcar um horÃ¡rio, consulta, visita, demonstraÃ§Ã£o ou sessÃ£o â€”
+qualquer compromisso com data/hora. Comum em clÃ­nicas, imobiliÃ¡rias (visitas),
+serviÃ§os e consultorias.
 
-## Regra de ouro: consulte a agenda, não adivinhe
-Você tem acesso à agenda **se, e somente se**, a ferramenta `crm_find_free_slots`
-estiver disponível para você. Não julgue isso por intuição — chame e leia a resposta.
-- Voltou com horários → ofereça 2 ou 3 deles, concretos.
-- Voltou `publicou_horarios: false` → o atendente ainda não publicou os horários de
-  trabalho dele. Isso NÃO é "está lotado" e NÃO é "não tem vaga": não invente horário,
-  não diga que a agenda está cheia, e avise que alguém da equipe confirma.
-- Voltou com `motivo` → leia a `mensagem` e faça o que ela manda. Ela foi escrita para
+## Regra de ouro: consulte a agenda, nÃ£o adivinhe
+VocÃª tem acesso Ã  agenda **se, e somente se**, a ferramenta `crm_find_free_slots`
+estiver disponÃ­vel para vocÃª. NÃ£o julgue isso por intuiÃ§Ã£o â€” chame e leia a resposta.
+- Voltou com horÃ¡rios â†’ ofereÃ§a 2 ou 3 deles, concretos.
+- Voltou `publicou_horarios: false` â†’ o atendente ainda nÃ£o publicou os horÃ¡rios de
+  trabalho dele. Isso NÃƒO Ã© "estÃ¡ lotado" e NÃƒO Ã© "nÃ£o tem vaga": nÃ£o invente horÃ¡rio,
+  nÃ£o diga que a agenda estÃ¡ cheia, e avise que alguÃ©m da equipe confirma.
+- Voltou com `motivo` â†’ leia a `mensagem` e faÃ§a o que ela manda. Ela foi escrita para
   o cliente ouvir.
-- Voltou `fuso_suposto: true` → o fuso da agenda veio do padrão e ninguém confirmou.
-  Ofereça pedindo confirmação — "consigo terça às 14h; confere se esse horário bate aí
-  pra você?" — em vez de afirmar.
-- Você não tem essa ferramenta → aí sim: não ofereça horário nenhum, diga que vai
+- Voltou `fuso_suposto: true` â†’ o fuso da agenda veio do padrÃ£o e ninguÃ©m confirmou.
+  OfereÃ§a pedindo confirmaÃ§Ã£o â€” "consigo terÃ§a Ã s 14h; confere se esse horÃ¡rio bate aÃ­
+  pra vocÃª?" â€” em vez de afirmar.
+- VocÃª nÃ£o tem essa ferramenta â†’ aÃ­ sim: nÃ£o ofereÃ§a horÃ¡rio nenhum, diga que vai
   confirmar a disponibilidade e sinalize handoff para quem tem acesso.
-Prometer um horário que depois não existe quebra confiança e gera reagendamento
-forçado. Inventar é pior do que demorar um instante a mais para responder.
+Prometer um horÃ¡rio que depois nÃ£o existe quebra confianÃ§a e gera reagendamento
+forÃ§ado. Inventar Ã© pior do que demorar um instante a mais para responder.
 
-## Fluxo padrão (if-then)
+## Fluxo padrÃ£o (if-then)
 
-**1. Identifique o serviço/motivo antes de oferecer horário**
-- SE o lead só disse "quero agendar" sem contexto → pergunte o motivo/serviço
-  primeiro. Agendar sem saber o quê gera erro de encaixe (ex.: consulta de 20min
+**1. Identifique o serviÃ§o/motivo antes de oferecer horÃ¡rio**
+- SE o lead sÃ³ disse "quero agendar" sem contexto â†’ pergunte o motivo/serviÃ§o
+  primeiro. Agendar sem saber o quÃª gera erro de encaixe (ex.: consulta de 20min
   marcada num slot de 1h de procedimento).
 
-**2. Ofereça opções fechadas, não uma pergunta aberta**
-- SE `crm_find_free_slots` respondeu com horários → ofereça 2-3 concretos ("tenho terça
-  14h ou quarta 10h, qual funciona?"). Pergunta aberta tipo "qual horário você prefere?"
-  gera ida e volta desnecessária e trava a conversa.
-- SE você não tem a ferramenta → não invente. Diga algo como "vou confirmar a
+**2. OfereÃ§a opÃ§Ãµes fechadas, nÃ£o uma pergunta aberta**
+- SE `crm_find_free_slots` respondeu com horÃ¡rios â†’ ofereÃ§a 2-3 concretos ("tenho terÃ§a
+  14h ou quarta 10h, qual funciona?"). Pergunta aberta tipo "qual horÃ¡rio vocÃª prefere?"
+  gera ida e volta desnecessÃ¡ria e trava a conversa.
+- SE vocÃª nÃ£o tem a ferramenta â†’ nÃ£o invente. Diga algo como "vou confirmar a
   disponibilidade e te retorno em instantes" e sinalize handoff/task pra quem tem
   acesso.
 
-**3. Colete os dados obrigatórios antes de confirmar**
-- Nome completo do lead (ou confirme o que já está no CRM).
-- Serviço/motivo específico.
-- Unidade/local, se o tenant tiver mais de uma (clínica com filiais, imobiliária com
-  múltiplos imóveis).
-- Se for reagendamento, o horário anterior a ser substituído.
+**3. Colete os dados obrigatÃ³rios antes de confirmar**
+- Nome completo do lead (ou confirme o que jÃ¡ estÃ¡ no CRM).
+- ServiÃ§o/motivo especÃ­fico.
+- Unidade/local, se o tenant tiver mais de uma (clÃ­nica com filiais, imobiliÃ¡ria com
+  mÃºltiplos imÃ³veis).
+- Se for reagendamento, o horÃ¡rio anterior a ser substituÃ­do.
 
 **4. Confirme por escrito antes de encerrar**
-- SE o lead aceitar um horário → repita de volta por escrito: "Confirmado:
-  [serviço] dia [data] às [hora], em [local]. Confirma pra mim?"
-- Só considere o agendamento fechado depois do "sim"/confirmação explícita do lead —
-  silêncio ou "ok" vago não é confirmação suficiente pra compromissos com custo de
-  no-show alto (ex. consulta médica, visita a imóvel).
+- SE o lead aceitar um horÃ¡rio â†’ repita de volta por escrito: "Confirmado:
+  [serviÃ§o] dia [data] Ã s [hora], em [local]. Confirma pra mim?"
+- SÃ³ considere o agendamento fechado depois do "sim"/confirmaÃ§Ã£o explÃ­cita do lead â€”
+  silÃªncio ou "ok" vago nÃ£o Ã© confirmaÃ§Ã£o suficiente pra compromissos com custo de
+  no-show alto (ex. consulta mÃ©dica, visita a imÃ³vel).
 
 **5. Reagendamento e cancelamento**
-- SE o lead pedir pra remarcar E você tem `crm_reschedule_appointment` → use ela.
-  NÃO cancele e marque de novo: é o MESMO compromisso mudando de hora. O histórico
-  continua um só e o lembrete é refeito sozinho para o horário novo.
-- SE o lead pedir pra remarcar e você NÃO tem essa ferramenta → então cancelar e marcar
-  de novo é o único caminho, e ele tem um custo que você precisa administrar: o cliente
-  pode receber dois avisos seguidos e contraditórios ("desmarcado" e depois "marcado").
-  Antes de fazer, diga a ele em uma frase o que vai acontecer — "vou desmarcar o horário
-  antigo e já marcar o novo, você pode receber dois avisos" — e nunca deixe os dois
-  compromissos de pé ao mesmo tempo.
-- SE o lead pedir pra cancelar → use `crm_cancel_appointment` se você a tiver, informe o
+- SE o lead pedir pra remarcar E vocÃª tem `crm_reschedule_appointment` â†’ use ela.
+  NÃƒO cancele e marque de novo: Ã© o MESMO compromisso mudando de hora. O histÃ³rico
+  continua um sÃ³ e o lembrete Ã© refeito sozinho para o horÃ¡rio novo.
+- SE o lead pedir pra remarcar e vocÃª NÃƒO tem essa ferramenta â†’ entÃ£o cancelar e marcar
+  de novo Ã© o Ãºnico caminho, e ele tem um custo que vocÃª precisa administrar: o cliente
+  pode receber dois avisos seguidos e contraditÃ³rios ("desmarcado" e depois "marcado").
+  Antes de fazer, diga a ele em uma frase o que vai acontecer â€” "vou desmarcar o horÃ¡rio
+  antigo e jÃ¡ marcar o novo, vocÃª pode receber dois avisos" â€” e nunca deixe os dois
+  compromissos de pÃ© ao mesmo tempo.
+- SE o lead pedir pra cancelar â†’ use `crm_cancel_appointment` se vocÃª a tiver, informe o
   motivo, e pergunte se quer remarcar pra outra data, sem pressionar. Cancelar libera
-  aquele horário para outra pessoa e não dá para desfazer: confirme antes.
+  aquele horÃ¡rio para outra pessoa e nÃ£o dÃ¡ para desfazer: confirme antes.
 
 **6. Risco de no-show**
-- Se o negócio tiver política de confirmação D-1 documentada na base de
-  conhecimento, siga-a (ex.: mensagem de lembrete automática). Se não houver, não
-  invente política — apenas confirme o agendamento normalmente.
+- Se o negÃ³cio tiver polÃ­tica de confirmaÃ§Ã£o D-1 documentada na base de
+  conhecimento, siga-a (ex.: mensagem de lembrete automÃ¡tica). Se nÃ£o houver, nÃ£o
+  invente polÃ­tica â€” apenas confirme o agendamento normalmente.
 
 ## Regras duras
-- Nunca confirme horário sem ter checado disponibilidade real (ou sem sinalizar que
+- Nunca confirme horÃ¡rio sem ter checado disponibilidade real (ou sem sinalizar que
   ainda vai confirmar).
 - Nunca marque dois compromissos conflitantes pro mesmo lead sem avisar.
-- Se o lead pedir um horário fora do funcionamento do negócio (ex. domingo,
-  madrugada) e isso não estiver nas regras do tenant, não confirme — explique a
+- Se o lead pedir um horÃ¡rio fora do funcionamento do negÃ³cio (ex. domingo,
+  madrugada) e isso nÃ£o estiver nas regras do tenant, nÃ£o confirme â€” explique a
   janela real de atendimento.
-- Dado sensível (endereço completo, documento) só é coletado se o fluxo do tenant
-  realmente exigir — não peça informação a mais que o agendamento precisa.
-- Marcar consulta e agendar retorno são coisas DIFERENTES. `crm_book_appointment` é para
-  hora combinada COM o cliente, que ele reservou e vai comparecer — alguém espera por ele.
-  `crm_schedule_followup` é decisão interna nossa de voltar a falar: o cliente não fica
-  sabendo e nada é reservado na agenda de ninguém. Se ele ESCOLHEU um horário para ser
-  atendido, é a primeira.
+- Dado sensÃ­vel (endereÃ§o completo, documento) sÃ³ Ã© coletado se o fluxo do tenant
+  realmente exigir â€” nÃ£o peÃ§a informaÃ§Ã£o a mais que o agendamento precisa.
+- Marcar consulta e agendar retorno sÃ£o coisas DIFERENTES. `crm_book_appointment` Ã© para
+  hora combinada COM o cliente, que ele reservou e vai comparecer â€” alguÃ©m espera por ele.
+  `crm_schedule_followup` Ã© decisÃ£o interna nossa de voltar a falar: o cliente nÃ£o fica
+  sabendo e nada Ã© reservado na agenda de ninguÃ©m. Se ele ESCOLHEU um horÃ¡rio para ser
+  atendido, Ã© a primeira.
 
-## Exemplos de resposta (tom, não copiar literal)
-- "Pra eu te encaixar certo: é pra qual serviço/motivo?"
-- "Tenho quinta às 15h ou sexta às 9h — qual fica melhor pra você?"
-- "Confirmado: consulta dia 28/07 às 15h, na unidade Centro. Pode confirmar pra
+## Exemplos de resposta (tom, nÃ£o copiar literal)
+- "Pra eu te encaixar certo: Ã© pra qual serviÃ§o/motivo?"
+- "Tenho quinta Ã s 15h ou sexta Ã s 9h â€” qual fica melhor pra vocÃª?"
+- "Confirmado: consulta dia 28/07 Ã s 15h, na unidade Centro. Pode confirmar pra
   mim?"
 
-## O que NÃO fazer
-- Não pergunte "qual horário você prefere?" sem oferecer opções concretas quando
-  você tem a agenda.
-- Não confirme agendamento sem resposta explícita do lead.
-- Não invente disponibilidade que você não checou.$body$,
-      '{"any_keywords": ["agendar", "marcar horário", "marcar consulta", "marcar uma visita", "agenda", "que horas vocês", "horário disponível", "remarcar", "reagendar", "cancelar o horário", "desmarcar"], "probe_keywords": ["que horas", "qual dia", "tem vaga", "disponibilidade"]}'::jsonb
+## O que NÃƒO fazer
+- NÃ£o pergunte "qual horÃ¡rio vocÃª prefere?" sem oferecer opÃ§Ãµes concretas quando
+  vocÃª tem a agenda.
+- NÃ£o confirme agendamento sem resposta explÃ­cita do lead.
+- NÃ£o invente disponibilidade que vocÃª nÃ£o checou.$body$,
+      '{"any_keywords": ["agendar", "marcar horÃ¡rio", "marcar consulta", "marcar uma visita", "agenda", "que horas vocÃªs", "horÃ¡rio disponÃ­vel", "remarcar", "reagendar", "cancelar o horÃ¡rio", "desmarcar"], "probe_keywords": ["que horas", "qual dia", "tem vaga", "disponibilidade"]}'::jsonb
     )
     returning id into v_id;
 
@@ -16239,31 +16239,31 @@ end
 $pub$;
 
 
--- ---- ⚠️ RESTAURADA AO FIM (2026-08-27) ----
+-- ---- âš ï¸ RESTAURADA AO FIM (2026-08-27) ----
 --
--- Este bloco diz de si mesmo que é o ÚLTIMO do arquivo, e havia 24 apêndices
--- depois dele. A cura deixou de alcançar tudo que veio no meio, e o gate
--- `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` só reprova quando um
--- desses blocos CRIA FUNÇÃO — o que levou 24 blocos para acontecer, com
+-- Este bloco diz de si mesmo que Ã© o ÃšLTIMO do arquivo, e havia 24 apÃªndices
+-- depois dele. A cura deixou de alcanÃ§ar tudo que veio no meio, e o gate
+-- `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts` sÃ³ reprova quando um
+-- desses blocos CRIA FUNÃ‡ÃƒO â€” o que levou 24 blocos para acontecer, com
 -- `fn_expurgar_nonces_de_oauth` (commit 75383e5a).
 --
 -- Movido em vez de remendado: mover o bloco novo para cima resolveria a
--- INSTÂNCIA e deixaria a armadilha armada para o próximo. Mover a varredura
--- para o fim resolve a CLASSE e restaura o que o texto dela já prometia.
+-- INSTÃ‚NCIA e deixaria a armadilha armada para o prÃ³ximo. Mover a varredura
+-- para o fim resolve a CLASSE e restaura o que o texto dela jÃ¡ prometia.
 --
--- Seguro porque a varredura preserva o que encontra: ela lê
+-- Seguro porque a varredura preserva o que encontra: ela lÃª
 -- `has_function_privilege` de `authenticated` e `service_role` ANTES do
--- revoke e regrava os dois. Rodar mais tarde só faz alcançar mais funções.
+-- revoke e regrava os dois. Rodar mais tarde sÃ³ faz alcanÃ§ar mais funÃ§Ãµes.
 
--- ---- FK e fuso da conexão do Google (migration 0193) ----
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon, que é de propósito o último do arquivo.
--- Este bloco não cria função, então a varredura não o cura nem precisa curar — mas pôr
--- apêndice DEPOIS dela recria a erosão que a 0192 acabou de consertar.
+-- ---- FK e fuso da conexÃ£o do Google (migration 0193) ----
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon, que Ã© de propÃ³sito o Ãºltimo do arquivo.
+-- Este bloco nÃ£o cria funÃ§Ã£o, entÃ£o a varredura nÃ£o o cura nem precisa curar â€” mas pÃ´r
+-- apÃªndice DEPOIS dela recria a erosÃ£o que a 0192 acabou de consertar.
 alter table public.calendar_appointments
   add column if not exists google_connection_id uuid;
 
--- Backfill ANTES da constraint: a coluna é nova e nada escreve nela hoje, mas um clone
--- adiantado poderia ter linha com ponteiro morto — e constraint criada sobre dado que a
+-- Backfill ANTES da constraint: a coluna Ã© nova e nada escreve nela hoje, mas um clone
+-- adiantado poderia ter linha com ponteiro morto â€” e constraint criada sobre dado que a
 -- viola quebra o `update.sh` do clone, que roda SEM ON_ERROR_STOP e falharia no meio.
 update public.calendar_appointments a
    set google_connection_id = null
@@ -16286,32 +16286,32 @@ end
 $fk$;
 
 comment on column public.calendar_appointments.google_connection_id is
-  'Conexão do Google que espelha este compromisso. `set null`: conexão revogada não apaga compromisso — ele é do CRM, não da integração.';
+  'ConexÃ£o do Google que espelha este compromisso. `set null`: conexÃ£o revogada nÃ£o apaga compromisso â€” ele Ã© do CRM, nÃ£o da integraÃ§Ã£o.';
 
 alter table public.calendar_connection_calendars
   add column if not exists time_zone text;
 
 comment on column public.calendar_connection_calendars.time_zone is
-  'Fuso IANA do calendário, como o Google devolve (`timeZone`). NULL = ainda não sincronizado; quem lê deve tratar NULL como "não sei", nunca como UTC — foi o `?? UTC` que fez evento de dia inteiro vazar a noite anterior.';
+  'Fuso IANA do calendÃ¡rio, como o Google devolve (`timeZone`). NULL = ainda nÃ£o sincronizado; quem lÃª deve tratar NULL como "nÃ£o sei", nunca como UTC â€” foi o `?? UTC` que fez evento de dia inteiro vazar a noite anterior.';
 
 -- ---- lembrete nasce desligado (migration 0194) ----
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon, pelo mesmo motivo da 0193.
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon, pelo mesmo motivo da 0193.
 alter table public.calendar_event_types
   alter column reminder_enabled set default false;
 
--- As linhas JÁ criadas também voltam: com zero leitores e zero disparador, nada depende do
--- valor atual, então este é o único momento em que corrigir o histórico não regride
--- comportamento de ninguém. Depois do disparador, isto seria apagar a escolha de um operador.
+-- As linhas JÃ criadas tambÃ©m voltam: com zero leitores e zero disparador, nada depende do
+-- valor atual, entÃ£o este Ã© o Ãºnico momento em que corrigir o histÃ³rico nÃ£o regride
+-- comportamento de ninguÃ©m. Depois do disparador, isto seria apagar a escolha de um operador.
 update public.calendar_event_types
    set reminder_enabled = false
  where reminder_enabled is true;
 
 comment on column public.calendar_event_types.reminder_enabled is
-  'Lembrete automático deste tipo. Nasce DESLIGADO de propósito: enviar mensagem é irreversível, e um default ligado inscreveria o histórico inteiro sem ninguém ter escolhido. Ligar por padrão é decisão do dono do produto, a ser tomada quando o disparador existir.';
+  'Lembrete automÃ¡tico deste tipo. Nasce DESLIGADO de propÃ³sito: enviar mensagem Ã© irreversÃ­vel, e um default ligado inscreveria o histÃ³rico inteiro sem ninguÃ©m ter escolhido. Ligar por padrÃ£o Ã© decisÃ£o do dono do produto, a ser tomada quando o disparador existir.';
 
 -- ---- tipo semeado adota dono no primeiro membro (migration 0195) ----
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon: aqui é OBRIGATÓRIO, não preferência —
--- este bloco CRIA FUNÇÃO, e função nova em `public` nasce exposta a `anon` pelo
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon: aqui Ã© OBRIGATÃ“RIO, nÃ£o preferÃªncia â€”
+-- este bloco CRIA FUNÃ‡ÃƒO, e funÃ§Ã£o nova em `public` nasce exposta a `anon` pelo
 -- ALTER DEFAULT PRIVILEGES. Depois da varredura, ela ficaria sem a cura.
 create or replace function public.fn_adotar_tipos_de_agendamento_sem_dono()
 returns trigger
@@ -16320,16 +16320,16 @@ security definer
 set search_path = public
 as $fn$
 begin
-  -- Só o primeiro membro ATIVO da organização.
+  -- SÃ³ o primeiro membro ATIVO da organizaÃ§Ã£o.
   --
-  -- ⚠️ As duas condições nasceram de um caso que a predição pegou antes do commit: sem
-  -- `new.revoked_at is null`, uma linha que JÁ nasce revogada adota os tipos e o dono padrão
-  -- da agenda vira alguém que nunca esteve lá. E contar TODOS em vez de só os ativos criaria
-  -- o furo simétrico: numa org com um ex-membro, o primeiro membro de verdade veria contagem
-  -- 2 e não adotaria nada — a org ficaria órfã para sempre.
+  -- âš ï¸ As duas condiÃ§Ãµes nasceram de um caso que a prediÃ§Ã£o pegou antes do commit: sem
+  -- `new.revoked_at is null`, uma linha que JÃ nasce revogada adota os tipos e o dono padrÃ£o
+  -- da agenda vira alguÃ©m que nunca esteve lÃ¡. E contar TODOS em vez de sÃ³ os ativos criaria
+  -- o furo simÃ©trico: numa org com um ex-membro, o primeiro membro de verdade veria contagem
+  -- 2 e nÃ£o adotaria nada â€” a org ficaria Ã³rfÃ£ para sempre.
   --
-  -- `= 1` e não `> 0`: neste ponto a linha nova já está na tabela, então o primeiro ativo
-  -- vê contagem 1.
+  -- `= 1` e nÃ£o `> 0`: neste ponto a linha nova jÃ¡ estÃ¡ na tabela, entÃ£o o primeiro ativo
+  -- vÃª contagem 1.
   if new.revoked_at is null
      and (select count(*) from public.user_organizations u
            where u.organization_id = new.organization_id
@@ -16351,13 +16351,13 @@ create trigger trg_adotar_tipos_de_agendamento_sem_dono
   after insert on public.user_organizations
   for each row execute function public.fn_adotar_tipos_de_agendamento_sem_dono();
 
--- Backfill: organizações que JÁ nasceram com os tipos órfãos e já têm membro. Adota o
--- membro ATIVO mais antigo — o mesmo que o trigger teria escolhido se existisse na época.
+-- Backfill: organizaÃ§Ãµes que JÃ nasceram com os tipos Ã³rfÃ£os e jÃ¡ tÃªm membro. Adota o
+-- membro ATIVO mais antigo â€” o mesmo que o trigger teria escolhido se existisse na Ã©poca.
 --
--- ⚠️ `revoked_at is null` nas DUAS metades, e não é detalhe: `user_organizations` guarda o
--- ex-membro em vez de apagá-lo. Sem o filtro, o backfill adotaria como dono padrão da agenda
--- alguém que já saiu da empresa — e o `exists` sem filtro faria pior, deixando o tipo órfão
--- numa org que só tem ex-membros parecer "já resolvido" por ter alguém na tabela.
+-- âš ï¸ `revoked_at is null` nas DUAS metades, e nÃ£o Ã© detalhe: `user_organizations` guarda o
+-- ex-membro em vez de apagÃ¡-lo. Sem o filtro, o backfill adotaria como dono padrÃ£o da agenda
+-- alguÃ©m que jÃ¡ saiu da empresa â€” e o `exists` sem filtro faria pior, deixando o tipo Ã³rfÃ£o
+-- numa org que sÃ³ tem ex-membros parecer "jÃ¡ resolvido" por ter alguÃ©m na tabela.
 update public.calendar_event_types t
    set default_owner_user_id = (
          select u.user_id from public.user_organizations u
@@ -16369,30 +16369,30 @@ update public.calendar_event_types t
    and exists (select 1 from public.user_organizations u
                 where u.organization_id = t.organization_id and u.revoked_at is null);
 
--- ---- o acervo é da organização; o agente escolhe o que lê (migration 0181) ----
+-- ---- o acervo Ã© da organizaÃ§Ã£o; o agente escolhe o que lÃª (migration 0181) ----
 --
 -- A base de conhecimento PERTENCIA a um agente (`ai_knowledge_sources.agent_id`
--- NOT NULL, FK CASCADE) e o acervo do agente era UMA versão monolítica. Daí
--- saíam, em cadeia: material impossível de compartilhar; UM documento por
--- categoria por agente (índice único `(agent_id, source_type) WHERE is_active`,
--- e todo arquivo enviado virava `policy`, então o SEGUNDO PDF colidia);
--- pipelines competindo pelo mesmo ponteiro (a ingestão de conversas ativava a
--- versão dela e DESATIVAVA a de FAQ do mesmo agente, e vice-versa); e apagar o
+-- NOT NULL, FK CASCADE) e o acervo do agente era UMA versÃ£o monolÃ­tica. DaÃ­
+-- saÃ­am, em cadeia: material impossÃ­vel de compartilhar; UM documento por
+-- categoria por agente (Ã­ndice Ãºnico `(agent_id, source_type) WHERE is_active`,
+-- e todo arquivo enviado virava `policy`, entÃ£o o SEGUNDO PDF colidia);
+-- pipelines competindo pelo mesmo ponteiro (a ingestÃ£o de conversas ativava a
+-- versÃ£o dela e DESATIVAVA a de FAQ do mesmo agente, e vice-versa); e apagar o
 -- agente apagava a base junto.
 --
--- Agora a fonte é da ORGANIZAÇÃO. `agent_id` fica como histórico (nullable, ON
--- DELETE SET NULL). Quem lê o quê é `ai_agent_versions.knowledge_source_ids`,
--- molde exato de `pipeline_ids` (0125) e pela mesma razão: escopo fora do ciclo
--- rascunho→publicar muda o alcance do agente sem ninguém publicar nada. Coluna
--- `uuid[]` na versão e não junção, porque o runtime lê a config em UMA query
--- sem cache — junção custaria uma query a mais por turno atendido.
+-- Agora a fonte Ã© da ORGANIZAÃ‡ÃƒO. `agent_id` fica como histÃ³rico (nullable, ON
+-- DELETE SET NULL). Quem lÃª o quÃª Ã© `ai_agent_versions.knowledge_source_ids`,
+-- molde exato de `pipeline_ids` (0125) e pela mesma razÃ£o: escopo fora do ciclo
+-- rascunhoâ†’publicar muda o alcance do agente sem ninguÃ©m publicar nada. Coluna
+-- `uuid[]` na versÃ£o e nÃ£o junÃ§Ã£o, porque o runtime lÃª a config em UMA query
+-- sem cache â€” junÃ§Ã£o custaria uma query a mais por turno atendido.
 --
--- O ponteiro de índice vira POR FONTE (`ai_knowledge_sources.active_kb_version_id`).
--- As versões legadas continuam válidas sem serem quebradas: a busca casa
--- `(kb_version_id, knowledge_source_id)`, então uma versão compartilhada devolve
+-- O ponteiro de Ã­ndice vira POR FONTE (`ai_knowledge_sources.active_kb_version_id`).
+-- As versÃµes legadas continuam vÃ¡lidas sem serem quebradas: a busca casa
+-- `(kb_version_id, knowledge_source_id)`, entÃ£o uma versÃ£o compartilhada devolve
 -- para cada fonte exatamente os chunks daquela fonte.
 --
--- Racional completo no cabeçalho da migration. Idempotente e auto-curativo.
+-- Racional completo no cabeÃ§alho da migration. Idempotente e auto-curativo.
 
 drop index if exists public.ai_knowledge_sources_unique_per_agent;
 
@@ -16406,19 +16406,19 @@ alter table public.ai_knowledge_sources
   foreign key (agent_id) references public.ai_agents(id) on delete set null;
 
 comment on column public.ai_knowledge_sources.agent_id is
-  'HISTÓRICO: o agente a partir do qual a fonte foi criada. NÃO é dono — desde a 0181 quem lê o quê é `ai_agent_versions.knowledge_source_ids`. Nullable e ON DELETE SET NULL de propósito.';
+  'HISTÃ“RICO: o agente a partir do qual a fonte foi criada. NÃƒO Ã© dono â€” desde a 0181 quem lÃª o quÃª Ã© `ai_agent_versions.knowledge_source_ids`. Nullable e ON DELETE SET NULL de propÃ³sito.';
 
--- A VERSÃO DE ÍNDICE TAMBÉM DEIXA DE PERTENCER A UM AGENTE.
+-- A VERSÃƒO DE ÃNDICE TAMBÃ‰M DEIXA DE PERTENCER A UM AGENTE.
 --
--- `agent_id` era NOT NULL aqui, e um material da organização (sem agente
--- nenhum) não tinha como ser indexado: `createKnowledgeVersion` batia em
--- "null value in column agent_id violates not-null constraint" — medido na
+-- `agent_id` era NOT NULL aqui, e um material da organizaÃ§Ã£o (sem agente
+-- nenhum) nÃ£o tinha como ser indexado: `createKnowledgeVersion` batia em
+-- "null value in column agent_id violates not-null constraint" â€” medido na
 -- prova de tela, com o material parado em `indexando` para sempre.
 --
--- E o CASCADE sai junto, por uma razão pior: os chunks apontam para a VERSÃO
--- (`ai_chunks.kb_version_id ... on delete cascade`), então apagar o agente
--- levava a versão, e a versão levava os trechos — o material da EMPRESA sumia
--- porque alguém apagou um assistente. `SET NULL`: a versão pertence à fonte.
+-- E o CASCADE sai junto, por uma razÃ£o pior: os chunks apontam para a VERSÃƒO
+-- (`ai_chunks.kb_version_id ... on delete cascade`), entÃ£o apagar o agente
+-- levava a versÃ£o, e a versÃ£o levava os trechos â€” o material da EMPRESA sumia
+-- porque alguÃ©m apagou um assistente. `SET NULL`: a versÃ£o pertence Ã  fonte.
 alter table public.ai_knowledge_versions
   alter column agent_id drop not null;
 
@@ -16429,10 +16429,10 @@ alter table public.ai_knowledge_versions
   foreign key (agent_id) references public.ai_agents(id) on delete set null;
 
 comment on column public.ai_knowledge_versions.agent_id is
-  'HISTÓRICO: o agente a partir do qual esta indexação foi disparada. Nullable desde a 0181 — a versão pertence à FONTE, e o acervo é da organização.';
+  'HISTÃ“RICO: o agente a partir do qual esta indexaÃ§Ã£o foi disparada. Nullable desde a 0181 â€” a versÃ£o pertence Ã  FONTE, e o acervo Ã© da organizaÃ§Ã£o.';
 
--- Vocabulário ABERTO (precedente da 0127): o CHECK tinha 6 valores com dois
--- pares de sinônimos e nenhum valor para "documento avulso".
+-- VocabulÃ¡rio ABERTO (precedente da 0127): o CHECK tinha 6 valores com dois
+-- pares de sinÃ´nimos e nenhum valor para "documento avulso".
 alter table public.ai_knowledge_sources
   drop constraint if exists ai_knowledge_sources_source_type_check;
 
@@ -16447,16 +16447,16 @@ update public.ai_knowledge_sources
  where source_type in ('policy', 'conversation', 'nuvemshop_catalog', 'catalog');
 
 comment on column public.ai_knowledge_sources.source_type is
-  'Vocabulário ABERTO (sem CHECK, precedente da 0127). A lista que a tela oferece vive em lib/ai/rag/tipos-de-fonte.ts: faq | documento | conversas | catalogo.';
+  'VocabulÃ¡rio ABERTO (sem CHECK, precedente da 0127). A lista que a tela oferece vive em lib/ai/rag/tipos-de-fonte.ts: faq | documento | conversas | catalogo.';
 
--- Nome vira identidade: batizar o que está sem nome e desempatar homônimos
--- ANTES do índice único, senão o `update.sh` do clone morre aqui.
+-- Nome vira identidade: batizar o que estÃ¡ sem nome e desempatar homÃ´nimos
+-- ANTES do Ã­ndice Ãºnico, senÃ£o o `update.sh` do clone morre aqui.
 update public.ai_knowledge_sources
    set name = case source_type
          when 'faq'       then 'Perguntas frequentes'
          when 'documento' then 'Documento'
          when 'conversas' then 'Conversas anteriores'
-         when 'catalogo'  then 'Catálogo de produtos'
+         when 'catalogo'  then 'CatÃ¡logo de produtos'
          else 'Material'
        end || ' ' || left(id::text, 8)
  where coalesce(btrim(name), '') = '';
@@ -16481,7 +16481,7 @@ create unique index if not exists ai_knowledge_sources_nome_unico_por_org
   where is_active;
 
 -- Arquivar desliga de verdade: nenhuma linha do repo jamais escreveu
--- `is_active = false`, e com o índice único antigo isso deixava o "slot"
+-- `is_active = false`, e com o Ã­ndice Ãºnico antigo isso deixava o "slot"
 -- ocupado por uma fonte arquivada para sempre.
 update public.ai_knowledge_sources
    set is_active = false
@@ -16493,8 +16493,8 @@ alter table public.ai_knowledge_sources
   add constraint ai_knowledge_sources_arquivada_nao_e_ativa
   check (not is_active or status <> 'archived');
 
--- Os dois estados que o produto JÁ produz e a tela não sabia mostrar.
--- Reconstruído em UM bloco só (lição do #159). Aditivo.
+-- Os dois estados que o produto JÃ produz e a tela nÃ£o sabia mostrar.
+-- ReconstruÃ­do em UM bloco sÃ³ (liÃ§Ã£o do #159). Aditivo.
 alter table public.ai_knowledge_sources
   drop constraint if exists ai_knowledge_sources_last_index_status_check;
 alter table public.ai_knowledge_sources
@@ -16514,12 +16514,12 @@ alter table public.ai_knowledge_versions
   add column if not exists embedding_dims integer;
 
 comment on column public.ai_knowledge_versions.knowledge_source_id is
-  'A fonte que esta versão indexa. NULL nas versões anteriores à 0181, que continham chunks de várias fontes — e continuam válidas: a busca casa (kb_version_id, knowledge_source_id) por fonte.';
+  'A fonte que esta versÃ£o indexa. NULL nas versÃµes anteriores Ã  0181, que continham chunks de vÃ¡rias fontes â€” e continuam vÃ¡lidas: a busca casa (kb_version_id, knowledge_source_id) por fonte.';
 comment on column public.ai_knowledge_versions.embedding_model is
-  'Modelo com que os vetores desta versão foram calculados. NULL = anterior à 0181. A busca recusa a fonte cuja versão foi indexada com outro modelo — recall quebrado em silêncio é pior que fonte de fora.';
+  'Modelo com que os vetores desta versÃ£o foram calculados. NULL = anterior Ã  0181. A busca recusa a fonte cuja versÃ£o foi indexada com outro modelo â€” recall quebrado em silÃªncio Ã© pior que fonte de fora.';
 
 -- Ponteiros pendurados saem ANTES das FKs. Um `active_kb_version_id` apontando
--- para versão apagada é hoje indistinguível de "base vazia": zero chunk, zero erro.
+-- para versÃ£o apagada Ã© hoje indistinguÃ­vel de "base vazia": zero chunk, zero erro.
 update public.ai_agents a
    set active_kb_version_id = null
  where a.active_kb_version_id is not null
@@ -16552,7 +16552,7 @@ alter table public.ai_knowledge_versions
   add constraint ai_knowledge_versions_knowledge_source_id_fkey
   foreign key (knowledge_source_id) references public.ai_knowledge_sources(id) on delete cascade;
 
--- Cada fonte herda a versão ATIVA do agente dela, mas SÓ se aquela versão
+-- Cada fonte herda a versÃ£o ATIVA do agente dela, mas SÃ“ se aquela versÃ£o
 -- realmente contiver chunks daquela fonte.
 update public.ai_knowledge_sources s
    set active_kb_version_id = v.id
@@ -16580,7 +16580,7 @@ alter table public.ai_agent_versions
   add column if not exists knowledge_source_ids uuid[] not null default '{}'::uuid[];
 
 comment on column public.ai_agent_versions.knowledge_source_ids is
-  'Materiais que ESTE agente consulta. Vazio = NENHUM (falha fechada): ele conversa normalmente e a ferramenta de busca some do turno. Molde e racional de `pipeline_ids` (0125): escopo mora na versão publicada.';
+  'Materiais que ESTE agente consulta. Vazio = NENHUM (falha fechada): ele conversa normalmente e a ferramenta de busca some do turno. Molde e racional de `pipeline_ids` (0125): escopo mora na versÃ£o publicada.';
 
 update public.ai_agent_versions v
    set knowledge_source_ids = sub.fontes
@@ -16593,8 +16593,8 @@ update public.ai_agent_versions v
  where v.agent_id = sub.agent_id
    and v.knowledge_source_ids = '{}'::uuid[];
 
--- CONSERTO OBRIGATÓRIO no mesmo bloco: escopo de leitura editável numa versão
--- PUBLICADA sem virar versão nova é a própria ausência de escopo, com aparência
+-- CONSERTO OBRIGATÃ“RIO no mesmo bloco: escopo de leitura editÃ¡vel numa versÃ£o
+-- PUBLICADA sem virar versÃ£o nova Ã© a prÃ³pria ausÃªncia de escopo, com aparÃªncia
 -- de controle.
 create or replace function fn_ai_agent_version_content_immutable() returns trigger
 language plpgsql as $fn$
@@ -16629,7 +16629,7 @@ begin
     or new.agent_id               is distinct from old.agent_id
     or new.organization_id        is distinct from old.organization_id
   ) then
-    raise exception 'ai_agent_versions % é imutável (status=%): mudança de conteúdo = versão draft nova; rollback = revert (clona + publica)',
+    raise exception 'ai_agent_versions % Ã© imutÃ¡vel (status=%): mudanÃ§a de conteÃºdo = versÃ£o draft nova; rollback = revert (clona + publica)',
       old.id, old.status;
   end if;
   return new;
@@ -16641,13 +16641,13 @@ create trigger trg_ai_agent_versions_content_immutable
   before update on public.ai_agent_versions
   for each row execute function fn_ai_agent_version_content_immutable();
 
--- A busca que aceita VÁRIAS fontes. A antiga (`retrieve_top_k_chunks`) continua
+-- A busca que aceita VÃRIAS fontes. A antiga (`retrieve_top_k_chunks`) continua
 -- existindo: o worker legado e a capacidade MCP a chamam.
 --
--- Preserva as duas decisões de que o chamador depende: quem corta pelo limiar é
--- o TypeScript (o caller passa o piso −1, para enxergar o melhor candidato
--- REPROVADO), e o gate de membership só morde quando há `auth.uid()` — o engine
--- roda com role `bypassrls` e para ele o isolamento é o `organization_id = $1`.
+-- Preserva as duas decisÃµes de que o chamador depende: quem corta pelo limiar Ã©
+-- o TypeScript (o caller passa o piso âˆ’1, para enxergar o melhor candidato
+-- REPROVADO), e o gate de membership sÃ³ morde quando hÃ¡ `auth.uid()` â€” o engine
+-- roda com role `bypassrls` e para ele o isolamento Ã© o `organization_id = $1`.
 create or replace function public.fn_buscar_trechos_das_fontes(
   p_organization_id uuid,
   p_source_ids uuid[],
@@ -16703,14 +16703,14 @@ begin
 end $$;
 
 comment on function public.fn_buscar_trechos_das_fontes(uuid, uuid[], public.vector, integer, real, text) is
-  'Top-K por similaridade de cosseno sobre os materiais que o agente pode ler (0181). SECURITY DEFINER + filtro programático de organização — quem chama valida o tenant.';
+  'Top-K por similaridade de cosseno sobre os materiais que o agente pode ler (0181). SECURITY DEFINER + filtro programÃ¡tico de organizaÃ§Ã£o â€” quem chama valida o tenant.';
 
 revoke execute on function public.fn_buscar_trechos_das_fontes(uuid, uuid[], public.vector, integer, real, text) from public, anon;
 grant  execute on function public.fn_buscar_trechos_das_fontes(uuid, uuid[], public.vector, integer, real, text) to authenticated, service_role;
 
--- `ai_models` não tinha NENHUM modelo de embedding, e é por isso que o painel de
--- provedores não conseguia oferecer chave para `embedding_indexar` e
--- `embedding_consultar`: não havia o que listar.
+-- `ai_models` nÃ£o tinha NENHUM modelo de embedding, e Ã© por isso que o painel de
+-- provedores nÃ£o conseguia oferecer chave para `embedding_indexar` e
+-- `embedding_consultar`: nÃ£o havia o que listar.
 alter table public.ai_models
   add column if not exists supports_embedding boolean not null default false;
 alter table public.ai_models
@@ -16730,9 +16730,9 @@ on conflict (provider, model_id) do update set
   supports_tools     = excluded.supports_tools;
 
 -- RBAC nas quatro tabelas de RAG (formato da 0150). Elas ficaram de fora do
--- aperto e ainda estão como o relatório de segurança da comunidade descreveu:
--- policy `ALL` só-tenancy mais `GRANT ALL ... TO anon`. Um membro papel `viewer`
--- DELETA a base de conhecimento da própria organização falando direto com o
+-- aperto e ainda estÃ£o como o relatÃ³rio de seguranÃ§a da comunidade descreveu:
+-- policy `ALL` sÃ³-tenancy mais `GRANT ALL ... TO anon`. Um membro papel `viewer`
+-- DELETA a base de conhecimento da prÃ³pria organizaÃ§Ã£o falando direto com o
 -- PostgREST, com o JWT dele.
 drop policy if exists tenant_isolation_ai_knowledge_sources_all on public.ai_knowledge_sources;
 
@@ -16823,20 +16823,20 @@ create trigger trg_ai_knowledge_sources_audit
 notify pgrst, 'reload schema';
 
 -- ---------------------------------------------------------------------------
--- 12. A telemetria de busca aprende QUEM perguntou e SOBRE O QUÊ
+-- 12. A telemetria de busca aprende QUEM perguntou e SOBRE O QUÃŠ
 -- ---------------------------------------------------------------------------
 --
--- `knowledge_searches` registrava organização, job, versão de índice, número de
--- acertos, melhor nota e limiar. Faltava o que a torna acionável: QUAL
--- assistente perguntou e em QUAIS materiais. Sem isso, "o recall está ruim" não
--- tem como virar "o recall está ruim NAQUELE material", que é o conserto.
+-- `knowledge_searches` registrava organizaÃ§Ã£o, job, versÃ£o de Ã­ndice, nÃºmero de
+-- acertos, melhor nota e limiar. Faltava o que a torna acionÃ¡vel: QUAL
+-- assistente perguntou e em QUAIS materiais. Sem isso, "o recall estÃ¡ ruim" nÃ£o
+-- tem como virar "o recall estÃ¡ ruim NAQUELE material", que Ã© o conserto.
 --
 -- `kb_version_id` passa a aceitar NULL porque a busca deixou de ser sobre UMA
--- versão: ela é sobre um conjunto de materiais, cada um com o índice dele.
+-- versÃ£o: ela Ã© sobre um conjunto de materiais, cada um com o Ã­ndice dele.
 --
--- A decisão declarada no cabeçalho da 0086 continua valendo: esta tabela NÃO
--- guarda o texto da pergunta. Acrescentar ids é compatível com ela; acrescentar
--- a pergunta seria PII contra a decisão.
+-- A decisÃ£o declarada no cabeÃ§alho da 0086 continua valendo: esta tabela NÃƒO
+-- guarda o texto da pergunta. Acrescentar ids Ã© compatÃ­vel com ela; acrescentar
+-- a pergunta seria PII contra a decisÃ£o.
 
 alter table public.knowledge_searches
   alter column kb_version_id drop not null;
@@ -16848,45 +16848,45 @@ alter table public.knowledge_searches
   add column if not exists knowledge_source_ids uuid[] not null default '{}'::uuid[];
 
 comment on column public.knowledge_searches.knowledge_source_ids is
-  'Materiais consultados nesta busca. Vazio nas linhas anteriores à 0181, quando a busca era sobre uma única versão de índice.';
+  'Materiais consultados nesta busca. Vazio nas linhas anteriores Ã  0181, quando a busca era sobre uma Ãºnica versÃ£o de Ã­ndice.';
 
 notify pgrst, 'reload schema';
 
--- ---- o que ainda não foi ao Google (migration 0200) ----
+-- ---- o que ainda nÃ£o foi ao Google (migration 0200) ----
 -- O worker `agenda-google-push` pedia os pendentes com
 -- `.or("google_synced_at.is.null,updated_at.gt.google_synced_at")`, e o PostgREST
 -- trata o lado DIREITO de `gt.` como VALOR LITERAL: ele tentava converter a
 -- string "google_synced_at" em `timestamptz` e recusava a consulta INTEIRA. Em
--- produção isso é um `warn` a cada 5 minutos desde o deploy da v1.7.0 e ZERO
--- compromissos empurrados — a ida ao Google nunca aconteceu em instalação
--- nenhuma. A coluna derivada é o que dá ao PostgREST um filtro que ele sabe
+-- produÃ§Ã£o isso Ã© um `warn` a cada 5 minutos desde o deploy da v1.7.0 e ZERO
+-- compromissos empurrados â€” a ida ao Google nunca aconteceu em instalaÃ§Ã£o
+-- nenhuma. A coluna derivada Ã© o que dÃ¡ ao PostgREST um filtro que ele sabe
 -- fazer (`.eq("needs_google_push", true)`).
 --
--- ⚠️ O TRIGGER NÃO É ENFEITE — sem ele o conserto troca "nunca empurra" por
+-- âš ï¸ O TRIGGER NÃƒO Ã‰ ENFEITE â€” sem ele o conserto troca "nunca empurra" por
 -- "empurra para sempre". `updated_at` vem do `now()` do POSTGRES (trigger) e
 -- `google_synced_at` vinha do `new Date()` do NODE, calculado antes de a
--- requisição sair: o do Node é sempre ANTERIOR, então `updated_at >
--- google_synced_at` continuava verdadeiro logo depois de uma sincronização
--- bem-sucedida e a linha voltava à fila na rodada seguinte, para sempre. O
--- trigger faz o carimbo sair do MESMO relógio dos dois lados. Ele não carimba
--- quando o valor novo é NULL: zerar a coluna é como se força re-sincronização de
--- propósito.
+-- requisiÃ§Ã£o sair: o do Node Ã© sempre ANTERIOR, entÃ£o `updated_at >
+-- google_synced_at` continuava verdadeiro logo depois de uma sincronizaÃ§Ã£o
+-- bem-sucedida e a linha voltava Ã  fila na rodada seguinte, para sempre. O
+-- trigger faz o carimbo sair do MESMO relÃ³gio dos dois lados. Ele nÃ£o carimba
+-- quando o valor novo Ã© NULL: zerar a coluna Ã© como se forÃ§a re-sincronizaÃ§Ã£o de
+-- propÃ³sito.
 --
--- Aditiva e idempotente: `add column if not exists` sobre coluna GERADA é no-op
--- quando ela já existe, `create or replace function` e `drop trigger if exists`
--- fazem o resto. Não há dado a curar — o valor é derivado das duas colunas que
--- já estão lá e nasce correto para o histórico inteiro.
+-- Aditiva e idempotente: `add column if not exists` sobre coluna GERADA Ã© no-op
+-- quando ela jÃ¡ existe, `create or replace function` e `drop trigger if exists`
+-- fazem o resto. NÃ£o hÃ¡ dado a curar â€” o valor Ã© derivado das duas colunas que
+-- jÃ¡ estÃ£o lÃ¡ e nasce correto para o histÃ³rico inteiro.
 --
--- ⚠️ CRIA FUNÇÃO, então entra ANTES da varredura de `anon` logo abaixo: função
+-- âš ï¸ CRIA FUNÃ‡ÃƒO, entÃ£o entra ANTES da varredura de `anon` logo abaixo: funÃ§Ã£o
 -- nova em `public` nasce exposta pelo ALTER DEFAULT PRIVILEGES, e depois da
--- varredura ela ficaria sem a cura. Os `revoke` explícitos abaixo já a fecham
--- nas duas origens; a varredura é a rede, não a trava.
+-- varredura ela ficaria sem a cura. Os `revoke` explÃ­citos abaixo jÃ¡ a fecham
+-- nas duas origens; a varredura Ã© a rede, nÃ£o a trava.
 alter table public.calendar_appointments
   add column if not exists needs_google_push boolean
   generated always as (google_synced_at is null or updated_at > google_synced_at) stored;
 
 comment on column public.calendar_appointments.needs_google_push is
-  'Derivada: a linha ainda não foi ao Google, ou mudou depois da última ida. Existe porque o PostgREST não compara coluna com coluna — o filtro do worker de push é `.eq("needs_google_push", true)`.';
+  'Derivada: a linha ainda nÃ£o foi ao Google, ou mudou depois da Ãºltima ida. Existe porque o PostgREST nÃ£o compara coluna com coluna â€” o filtro do worker de push Ã© `.eq("needs_google_push", true)`.';
 
 create or replace function public.fn_carimbar_ida_ao_google()
 returns trigger
@@ -16894,8 +16894,8 @@ language plpgsql
 set search_path = public, pg_temp
 as $fn$
 begin
-  -- `now()` e não `new.updated_at`: os dois são o instante de início da
-  -- transação, então o valor é o mesmo — e usar `now()` remove a dependência de
+  -- `now()` e nÃ£o `new.updated_at`: os dois sÃ£o o instante de inÃ­cio da
+  -- transaÃ§Ã£o, entÃ£o o valor Ã© o mesmo â€” e usar `now()` remove a dependÃªncia de
   -- ORDEM entre este trigger e o de `updated_at`.
   if new.google_synced_at is not null
      and (tg_op = 'INSERT' or new.google_synced_at is distinct from old.google_synced_at) then
@@ -16918,23 +16918,23 @@ create index if not exists calendar_appointments_pendente_no_google_idx
   where needs_google_push and owner_user_id is not null;
 
 -- ---- credencial do Google pela tela (migration 0201) ----
--- Conectar o Google exigia SSH na VPS e editar o `.env`. O produto é self-host
--- para quem NÃO programa: nomear variáveis de ambiente para essa pessoa é o
--- mesmo que dizer que a funcionalidade não existe.
+-- Conectar o Google exigia SSH na VPS e editar o `.env`. O produto Ã© self-host
+-- para quem NÃƒO programa: nomear variÃ¡veis de ambiente para essa pessoa Ã© o
+-- mesmo que dizer que a funcionalidade nÃ£o existe.
 --
--- Singleton de INSTALAÇÃO, clone do molde de `platform_branding` (0155): o
--- `redirect_uri` sai de `NEXT_PUBLIC_APP_URL` e o app OAuth é registrado no
--- console do Google pelo dono da instalação — a credencial pareia 1:1 com ela.
+-- Singleton de INSTALAÃ‡ÃƒO, clone do molde de `platform_branding` (0155): o
+-- `redirect_uri` sai de `NEXT_PUBLIC_APP_URL` e o app OAuth Ã© registrado no
+-- console do Google pelo dono da instalaÃ§Ã£o â€” a credencial pareia 1:1 com ela.
 --
--- ⚠️ RLS LIGADA COM ZERO POLICIES é o desenho, não descuido. A anon key vai para
+-- âš ï¸ RLS LIGADA COM ZERO POLICIES Ã© o desenho, nÃ£o descuido. A anon key vai para
 -- o browser; tabela servida pelo PostgREST e "protegida por policy" depende de a
--- policy estar certa, esta simplesmente não é servida. O `client_secret` permite
--- trocar códigos e refresh tokens em nome da instalação — ou seja, ler a agenda
+-- policy estar certa, esta simplesmente nÃ£o Ã© servida. O `client_secret` permite
+-- trocar cÃ³digos e refresh tokens em nome da instalaÃ§Ã£o â€” ou seja, ler a agenda
 -- de todos os atendentes que conectaram.
 --
--- Não cria função: usa `fn_encrypt_oauth`/`fn_decrypt_oauth` da 0041, a mesma
--- cifra que o callback do Google já usa para os tokens. Entra antes da varredura
--- de `anon` pela regra do arquivo, não por necessidade.
+-- NÃ£o cria funÃ§Ã£o: usa `fn_encrypt_oauth`/`fn_decrypt_oauth` da 0041, a mesma
+-- cifra que o callback do Google jÃ¡ usa para os tokens. Entra antes da varredura
+-- de `anon` pela regra do arquivo, nÃ£o por necessidade.
 --
 -- Aditiva e idempotente: `create table if not exists`, `revoke`/`grant` que
 -- reafirmam, `drop trigger if exists` antes de recriar. Sem dado a curar.
@@ -16948,7 +16948,7 @@ create table if not exists public.platform_google_oauth (
 );
 
 comment on table public.platform_google_oauth is
-  'O app OAuth do Google DESTA INSTALAÇÃO (singleton). Server-side only: RLS ligada sem policies e grants revogados de anon/authenticated — o PostgREST não a serve. O segredo nunca volta ao browser; a tela devolve apenas se existe.';
+  'O app OAuth do Google DESTA INSTALAÃ‡ÃƒO (singleton). Server-side only: RLS ligada sem policies e grants revogados de anon/authenticated â€” o PostgREST nÃ£o a serve. O segredo nunca volta ao browser; a tela devolve apenas se existe.';
 comment on column public.platform_google_oauth.client_secret_encrypted is
   'Cifrado por fn_encrypt_oauth (pgp_sym_encrypt/aes256), a mesma cifra dos tokens em calendar_connections. Nunca gravar em claro: sem a chave mestra o save recusa.';
 
@@ -16965,20 +16965,20 @@ create trigger trg_platform_google_oauth_updated_at
 -- ---- desnormaliza assigned_to_user_name em conversations (migration 0202) ----
 --
 -- GET /api/v1/conversations resolvia o nome do atendente via N chamadas ao
--- GoTrue Admin API (uma por atendente único da página, medido em
--- lib/users/nome-do-atendente.ts: ~1,2s para 50 atendentes). Toda atribuição
+-- GoTrue Admin API (uma por atendente Ãºnico da pÃ¡gina, medido em
+-- lib/users/nome-do-atendente.ts: ~1,2s para 50 atendentes). Toda atribuiÃ§Ã£o
 -- de conversa passa por fn_conversation_assign (claim/release/transfer e o
--- roteamento automático) — grava o nome ali, uma vez, no mesmo UPDATE que
--- grava o id, em vez de replicar a resolução em 4 call sites TS.
+-- roteamento automÃ¡tico) â€” grava o nome ali, uma vez, no mesmo UPDATE que
+-- grava o id, em vez de replicar a resoluÃ§Ã£o em 4 call sites TS.
 
 alter table public.conversations
   add column if not exists assigned_to_user_name text;
 
 comment on column public.conversations.assigned_to_user_name is
-  'Cópia do nome de quem atende (auth.users.raw_user_meta_data->>''full_name''), escrita por fn_conversation_assign no mesmo UPDATE que grava assigned_to_user_id, e zerada junto quando a atribuição é removida. Existe para evitar 1 chamada HTTP ao GoTrue Admin API por atendente único na listagem do Inbox — ver lib/users/nome-do-atendente.ts. NULL quando a conversa não está atribuída, ou quando o atendente não tem full_name em user_metadata.';
+  'CÃ³pia do nome de quem atende (auth.users.raw_user_meta_data->>''full_name''), escrita por fn_conversation_assign no mesmo UPDATE que grava assigned_to_user_id, e zerada junto quando a atribuiÃ§Ã£o Ã© removida. Existe para evitar 1 chamada HTTP ao GoTrue Admin API por atendente Ãºnico na listagem do Inbox â€” ver lib/users/nome-do-atendente.ts. NULL quando a conversa nÃ£o estÃ¡ atribuÃ­da, ou quando o atendente nÃ£o tem full_name em user_metadata.';
 
--- Backfill: só linhas já atribuídas, e só quando o nome ainda não está
--- presente — não sobrescreve dado que uma reaplicação já preencheu.
+-- Backfill: sÃ³ linhas jÃ¡ atribuÃ­das, e sÃ³ quando o nome ainda nÃ£o estÃ¡
+-- presente â€” nÃ£o sobrescreve dado que uma reaplicaÃ§Ã£o jÃ¡ preencheu.
 update public.conversations c
    set assigned_to_user_name = u.raw_user_meta_data ->> 'full_name'
   from auth.users u
@@ -17030,11 +17030,11 @@ begin
 
   update public.conversations
      set assigned_to_user_id = p_to_user_id,
-         -- Desnormalizado JUNTO com o dono, na mesma transação: nunca existe
+         -- Desnormalizado JUNTO com o dono, na mesma transaÃ§Ã£o: nunca existe
          -- uma janela em que id e nome discordam. NULL junto com o id quando
-         -- a atribuição é removida (release) — nunca sobra um nome órfão de
-         -- dono nenhum. Lido de auth.users porque quem chama esta função
-         -- (RPC) não necessariamente tem acesso ao Admin API — a definer
+         -- a atribuiÃ§Ã£o Ã© removida (release) â€” nunca sobra um nome Ã³rfÃ£o de
+         -- dono nenhum. Lido de auth.users porque quem chama esta funÃ§Ã£o
+         -- (RPC) nÃ£o necessariamente tem acesso ao Admin API â€” a definer
          -- resolve por dentro.
          assigned_to_user_name = case
            when p_to_user_id is null then null
@@ -17075,45 +17075,45 @@ grant  execute on function public.fn_conversation_assign(uuid, uuid, uuid, text,
 -- ## O defeito, medido na VPS do dono em 2026-08-30
 --
 -- As abas da Inbox descreviam QUEM MANDA lendo `conversations.status` cru. O
--- motor de IA nunca lê essa coluna. Na base real:
+-- motor de IA nunca lÃª essa coluna. Na base real:
 --
 --     aba "IA"   (?status=ai_handling)              ->  2 conversas
 --     aba "Fila" (sem dono + status open|pending)   -> 83 conversas
 --     o motor realmente atenderia                   -> 49 conversas
 --
--- `ai_handling` só é escrito por UM caminho em produção (a volta pelo botão
--- "Devolver ao automático"), então a aba da IA ficava quase vazia enquanto o robô
--- atendia quase tudo, e a Fila chamava de "aguardando atendente" o que o robô
+-- `ai_handling` sÃ³ Ã© escrito por UM caminho em produÃ§Ã£o (a volta pelo botÃ£o
+-- "Devolver ao automÃ¡tico"), entÃ£o a aba da IA ficava quase vazia enquanto o robÃ´
+-- atendia quase tudo, e a Fila chamava de "aguardando atendente" o que o robÃ´
 -- estava atendendo naquele instante.
 --
 -- ## Por que a regra desce para o banco
 --
 -- O filtro precisa de `contacts.force_human` e `contacts.is_blocked`, que moram em
--- OUTRA tabela — reescrevê-lo no construtor de query seria a regra em duas
--- encarnações, que é exatamente o defeito que o worker legado acabou de pagar
--- (comparava `new Date('infinity')`, que é NaN, e a guarda nunca disparava).
+-- OUTRA tabela â€” reescrevÃª-lo no construtor de query seria a regra em duas
+-- encarnaÃ§Ãµes, que Ã© exatamente o defeito que o worker legado acabou de pagar
+-- (comparava `new Date('infinity')`, que Ã© NaN, e a guarda nunca disparava).
 --
--- Como campo calculado, o predicado vira UM só: a lista, os contadores, o painel
--- do gerente e o "você é o Nº da fila" que o cliente ouve pelo WhatsApp passam a
--- perguntar a mesma coisa ao mesmo lugar, e o cursor de paginação continua
--- intacto (filtrar em memória o quebraria).
+-- Como campo calculado, o predicado vira UM sÃ³: a lista, os contadores, o painel
+-- do gerente e o "vocÃª Ã© o NÂº da fila" que o cliente ouve pelo WhatsApp passam a
+-- perguntar a mesma coisa ao mesmo lugar, e o cursor de paginaÃ§Ã£o continua
+-- intacto (filtrar em memÃ³ria o quebraria).
 --
 -- ## O que impede TS e SQL de divergirem
 --
--- `tests/invariants/comando-da-conversa-espelha-o-ts.test.ts` — produto cartesiano
--- do espaço de entrada inteiro (o domínio de `status` é lido de `pg_constraint`,
--- não digitado), comparado caso a caso com `comandoDaConversa()` de
--- `lib/inbox/comando-da-conversa.ts`. Status novo no CHECK que o corpus não cubra
--- REPROVA, em vez de sair da conta em silêncio.
+-- `tests/invariants/comando-da-conversa-espelha-o-ts.test.ts` â€” produto cartesiano
+-- do espaÃ§o de entrada inteiro (o domÃ­nio de `status` Ã© lido de `pg_constraint`,
+-- nÃ£o digitado), comparado caso a caso com `comandoDaConversa()` de
+-- `lib/inbox/comando-da-conversa.ts`. Status novo no CHECK que o corpus nÃ£o cubra
+-- REPROVA, em vez de sair da conta em silÃªncio.
 --
--- ## Duas funções, e a separação tem motivo
+-- ## Duas funÃ§Ãµes, e a separaÃ§Ã£o tem motivo
 --
--- `fn_comando_da_conversa` é a REGRA: `immutable`, sem tocar em tabela, com
--- `p_agora` como parâmetro — é o que o teste de espelho consegue chamar com um
--- relógio fixo, e sem isso o gate teria dois relógios e falharia de vez em quando
--- sozinho. `comando_da_conversa(conversations)` é a EXPOSIÇÃO: resolve o contato e
--- carimba `now()`; a assinatura de um argumento do tipo da tabela é o que faz o
--- PostgREST publicá-la como campo calculado (medido no PostgREST 14.10: aparece em
+-- `fn_comando_da_conversa` Ã© a REGRA: `immutable`, sem tocar em tabela, com
+-- `p_agora` como parÃ¢metro â€” Ã© o que o teste de espelho consegue chamar com um
+-- relÃ³gio fixo, e sem isso o gate teria dois relÃ³gios e falharia de vez em quando
+-- sozinho. `comando_da_conversa(conversations)` Ã© a EXPOSIÃ‡ÃƒO: resolve o contato e
+-- carimba `now()`; a assinatura de um argumento do tipo da tabela Ã© o que faz o
+-- PostgREST publicÃ¡-la como campo calculado (medido no PostgREST 14.10: aparece em
 -- `?select=` e FILTRA em `?comando_da_conversa=in.(...)`).
 create or replace function public.fn_comando_da_conversa(
   p_status                text,
@@ -17128,9 +17128,9 @@ immutable
 set search_path = public
 as $fn_comando$
   select case
-    -- A ordem é a mesma de `comandoDaConversa`, e ela é o contrato: dono primeiro
+    -- A ordem Ã© a mesma de `comandoDaConversa`, e ela Ã© o contrato: dono primeiro
     -- (a aba "Fechadas" precisa continuar dizendo QUEM atendeu), encerrada depois,
-    -- e só então as travas.
+    -- e sÃ³ entÃ£o as travas.
     when p_assigned_to_user_id is not null then 'humano'
     when p_status in ('closed', 'archived', 'resolved') then 'encerrada'
     when p_force_human is true
@@ -17141,7 +17141,7 @@ as $fn_comando$
 $fn_comando$;
 
 comment on function public.fn_comando_da_conversa(text, uuid, timestamptz, boolean, boolean, timestamptz)
-  is 'Quem manda na conversa. Espelho SQL de comandoDaConversa() (lib/inbox/comando-da-conversa.ts); as duas são casadas por tests/invariants/comando-da-conversa-espelha-o-ts.test.ts.';
+  is 'Quem manda na conversa. Espelho SQL de comandoDaConversa() (lib/inbox/comando-da-conversa.ts); as duas sÃ£o casadas por tests/invariants/comando-da-conversa-espelha-o-ts.test.ts.';
 
 create or replace function public.comando_da_conversa(c public.conversations)
 returns text
@@ -17153,9 +17153,9 @@ as $comando$
     c.status,
     c.assigned_to_user_id,
     c.bot_silenced_until,
-    -- `coalesce` porque `contact_id` é anulável no schema: contato ausente não pode
-    -- virar `null` e derrubar a linha inteira para fora de todo filtro — o efeito
-    -- seria uma conversa invisível em TODAS as abas.
+    -- `coalesce` porque `contact_id` Ã© anulÃ¡vel no schema: contato ausente nÃ£o pode
+    -- virar `null` e derrubar a linha inteira para fora de todo filtro â€” o efeito
+    -- seria uma conversa invisÃ­vel em TODAS as abas.
     coalesce((select ct.force_human from public.contacts ct where ct.id = c.contact_id), false),
     coalesce((select ct.is_blocked  from public.contacts ct where ct.id = c.contact_id), false),
     now()
@@ -17163,31 +17163,31 @@ as $comando$
 $comando$;
 
 comment on function public.comando_da_conversa(public.conversations)
-  is 'Campo calculado exposto pelo PostgREST: ?select=comando_da_conversa e ?comando_da_conversa=in.(...). Resolve o contato e carimba now(); a regra em si é fn_comando_da_conversa.';
+  is 'Campo calculado exposto pelo PostgREST: ?select=comando_da_conversa e ?comando_da_conversa=in.(...). Resolve o contato e carimba now(); a regra em si Ã© fn_comando_da_conversa.';
 
--- Doutrina de migrations, regra 9: função nova em `public` nasce EXPOSTA, e são
--- DUAS origens de EXECUTE. A varredura auto-curativa no fim deste arquivo NÃO
--- alcança estas duas — o laço dela percorre só `p.prosecdef` (security definer), e
--- estas são invoker de propósito (o campo calculado tem de respeitar a RLS de quem
--- pergunta). Então a revogação é explícita aqui.
+-- Doutrina de migrations, regra 9: funÃ§Ã£o nova em `public` nasce EXPOSTA, e sÃ£o
+-- DUAS origens de EXECUTE. A varredura auto-curativa no fim deste arquivo NÃƒO
+-- alcanÃ§a estas duas â€” o laÃ§o dela percorre sÃ³ `p.prosecdef` (security definer), e
+-- estas sÃ£o invoker de propÃ³sito (o campo calculado tem de respeitar a RLS de quem
+-- pergunta). EntÃ£o a revogaÃ§Ã£o Ã© explÃ­cita aqui.
 revoke execute on function public.fn_comando_da_conversa(text, uuid, timestamptz, boolean, boolean, timestamptz) from public, anon;
 revoke execute on function public.comando_da_conversa(public.conversations) from public, anon;
 grant  execute on function public.fn_comando_da_conversa(text, uuid, timestamptz, boolean, boolean, timestamptz) to authenticated, service_role;
 grant  execute on function public.comando_da_conversa(public.conversations) to authenticated, service_role;
 
 -- Sem isto o campo existe no banco e o PostgREST segue servindo o schema velho:
--- `?comando_da_conversa=...` volta 400 e a Inbox inteira fica vazia até alguém
--- reiniciar o serviço à mão — que é justamente o passo manual que a doutrina de
--- packaging proíbe pedir a quem opera uma VPS.
+-- `?comando_da_conversa=...` volta 400 e a Inbox inteira fica vazia atÃ© alguÃ©m
+-- reiniciar o serviÃ§o Ã  mÃ£o â€” que Ã© justamente o passo manual que a doutrina de
+-- packaging proÃ­be pedir a quem opera uma VPS.
 notify pgrst, 'reload schema';
 
--- ---- o catálogo de produtos da loja (migration 0204) ----
+-- ---- o catÃ¡logo de produtos da loja (migration 0204) ----
 create table if not exists public.catalog_products (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
-  -- O código do dono da loja (SKU, código interno). É por ele que a importação
-  -- de planilha reconhece "isto é o mesmo produto, atualize" em vez de duplicar.
+  -- O cÃ³digo do dono da loja (SKU, cÃ³digo interno). Ã‰ por ele que a importaÃ§Ã£o
+  -- de planilha reconhece "isto Ã© o mesmo produto, atualize" em vez de duplicar.
   codigo text not null,
   nome text not null,
   descricao text,
@@ -17195,27 +17195,27 @@ create table if not exists public.catalog_products (
   marca text,
   categoria text,
 
-  -- `_cents` + `moeda`, a regra do CLAUDE.md. `nuvemshop_products` não tem
-  -- moeda e é a exceção errada, não o padrão: `orders` e `crm_leads` têm.
+  -- `_cents` + `moeda`, a regra do CLAUDE.md. `nuvemshop_products` nÃ£o tem
+  -- moeda e Ã© a exceÃ§Ã£o errada, nÃ£o o padrÃ£o: `orders` e `crm_leads` tÃªm.
   preco_cents bigint not null,
   moeda text not null default 'BRL',
   -- O que a loja pagou. Existe para a regra de desconto do agente ter piso: sem
-  -- custo, "pode dar 10%" é um número que ninguém sabe se cabe. Opcional porque
-  -- muita loja não quer essa informação no sistema.
+  -- custo, "pode dar 10%" Ã© um nÃºmero que ninguÃ©m sabe se cabe. Opcional porque
+  -- muita loja nÃ£o quer essa informaÃ§Ã£o no sistema.
   custo_cents bigint,
 
-  -- ⚠️ `controla_estoque` NÃO é firula, é o conserto de uma armadilha medida na
-  -- tool antiga: ela filtra `available_qty > 0` por default, então uma loja que
-  -- não conta estoque (decant de perfume, item sob encomenda) teria o catálogo
-  -- INTEIRO invisível para o agente. Com este campo, quem não controla estoque
+  -- âš ï¸ `controla_estoque` NÃƒO Ã© firula, Ã© o conserto de uma armadilha medida na
+  -- tool antiga: ela filtra `available_qty > 0` por default, entÃ£o uma loja que
+  -- nÃ£o conta estoque (decant de perfume, item sob encomenda) teria o catÃ¡logo
+  -- INTEIRO invisÃ­vel para o agente. Com este campo, quem nÃ£o controla estoque
   -- continua aparecendo.
   controla_estoque boolean not null default true,
   quantidade integer not null default 0,
 
   ativo boolean not null default true,
-  -- 'manual' | 'planilha' | 'nuvemshop'. Vocabulário ABERTO de propósito (sem
+  -- 'manual' | 'planilha' | 'nuvemshop'. VocabulÃ¡rio ABERTO de propÃ³sito (sem
   -- CHECK): um clone com origem legada quebraria o `update.sh`, e a doutrina de
-  -- migrations proíbe. Quem escreve usa a constante de `lib/catalogo/tipos.ts`.
+  -- migrations proÃ­be. Quem escreve usa a constante de `lib/catalogo/tipos.ts`.
   origem text not null default 'manual',
 
   imagem_url text,
@@ -17229,7 +17229,7 @@ create table if not exists public.catalog_products (
   constraint catalog_products_moeda_iso check (moeda ~ '^[A-Z]{3}$')
 );
 
--- O código é a identidade dentro da organização: é ele que a planilha reusa.
+-- O cÃ³digo Ã© a identidade dentro da organizaÃ§Ã£o: Ã© ele que a planilha reusa.
 create unique index if not exists catalog_products_org_codigo_key
   on public.catalog_products (organization_id, codigo);
 
@@ -17237,21 +17237,21 @@ create unique index if not exists catalog_products_org_codigo_key
 create index if not exists catalog_products_org_ativos_idx
   on public.catalog_products (organization_id, ativo, nome);
 
--- ⚠️ O ÍNDICE QUE FAZ A BUSCA DO AGENTE FUNCIONAR.
+-- âš ï¸ O ÃNDICE QUE FAZ A BUSCA DO AGENTE FUNCIONAR.
 --
--- O cliente escreve "ifone 15 pro 256", e o catálogo diz "iPhone 15 Pro 256GB".
--- Medido em 20 mil títulos: `ilike '%ifone 15%'` devolve ZERO linhas, e a
--- similaridade da frase inteira não separa 128GB de 256GB — que é exatamente
--- onde o preço erra. A busca é por TOKEN (ver `lib/catalogo/busca.ts`), e o
+-- O cliente escreve "ifone 15 pro 256", e o catÃ¡logo diz "iPhone 15 Pro 256GB".
+-- Medido em 20 mil tÃ­tulos: `ilike '%ifone 15%'` devolve ZERO linhas, e a
+-- similaridade da frase inteira nÃ£o separa 128GB de 256GB â€” que Ã© exatamente
+-- onde o preÃ§o erra. A busca Ã© por TOKEN (ver `lib/catalogo/busca.ts`), e o
 -- trigrama serve a parte difusa dela.
 create index if not exists catalog_products_nome_trgm
   on public.catalog_products using gin (nome public.gin_trgm_ops);
 
 alter table public.catalog_products enable row level security;
 
--- Leitura para a organização; ESCRITA só de `manager` para cima. É o molde da
--- 0177 (`calendar_event_types`), e é o que a tabela da Nuvemshop não tem: preço
--- de venda não se altera com papel de leitura.
+-- Leitura para a organizaÃ§Ã£o; ESCRITA sÃ³ de `manager` para cima. Ã‰ o molde da
+-- 0177 (`calendar_event_types`), e Ã© o que a tabela da Nuvemshop nÃ£o tem: preÃ§o
+-- de venda nÃ£o se altera com papel de leitura.
 drop policy if exists catalog_products_select on public.catalog_products;
 create policy catalog_products_select on public.catalog_products
   for select using (
@@ -17271,9 +17271,9 @@ create policy catalog_products_write on public.catalog_products
         and public.fn_role_at_least(organization_id, 'manager'))
   );
 
--- `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES TO anon` do baseline alcança
--- TODA tabela criada depois dele — inclusive esta. Sem o revoke, o catálogo
--- inteiro fica legível pela anon key, que vai para o browser.
+-- `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES TO anon` do baseline alcanÃ§a
+-- TODA tabela criada depois dele â€” inclusive esta. Sem o revoke, o catÃ¡logo
+-- inteiro fica legÃ­vel pela anon key, que vai para o browser.
 revoke all on public.catalog_products from anon;
 grant select, insert, update, delete on public.catalog_products to authenticated;
 grant all on public.catalog_products to service_role;
@@ -17284,55 +17284,55 @@ create trigger trg_catalog_products_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.catalog_products is
-  'O catálogo que a LOJA possui — uma linha por item vendável, com o preço que o agente de IA responde. Distinto de nuvemshop_products, que é ESPELHO de uma loja remota: aqui a loja é a fonte da verdade.';
+  'O catÃ¡logo que a LOJA possui â€” uma linha por item vendÃ¡vel, com o preÃ§o que o agente de IA responde. Distinto de nuvemshop_products, que Ã© ESPELHO de uma loja remota: aqui a loja Ã© a fonte da verdade.';
 comment on column public.catalog_products.codigo is
-  'Código interno do dono (SKU). É a identidade que a importação de planilha reusa para atualizar em vez de duplicar.';
+  'CÃ³digo interno do dono (SKU). Ã‰ a identidade que a importaÃ§Ã£o de planilha reusa para atualizar em vez de duplicar.';
 comment on column public.catalog_products.custo_cents is
-  'O que a loja pagou. Existe para a regra de desconto do agente ter piso — sem custo, um teto de desconto é um número que ninguém sabe se cabe.';
+  'O que a loja pagou. Existe para a regra de desconto do agente ter piso â€” sem custo, um teto de desconto Ã© um nÃºmero que ninguÃ©m sabe se cabe.';
 comment on column public.catalog_products.controla_estoque is
-  'false = item que não se conta (decant, sob encomenda). A busca do agente não o esconde por quantidade zero.';
+  'false = item que nÃ£o se conta (decant, sob encomenda). A busca do agente nÃ£o o esconde por quantidade zero.';
 
--- APÊNDICE 0208 — PEDIDOS COMERCIAIS (idempotente; fonte: supabase/migrations/20260904120000_0208_pedidos_comerciais.sql)
+-- APÃŠNDICE 0208 â€” PEDIDOS COMERCIAIS (idempotente; fonte: supabase/migrations/20260904120000_0208_pedidos_comerciais.sql)
 -- ============================================================================
 
 -- ============================================================================
--- 0208 — PEDIDOS COMERCIAIS (o coração do sistema de gestão, ATT.txt Fase 2)
+-- 0208 â€” PEDIDOS COMERCIAIS (o coraÃ§Ã£o do sistema de gestÃ£o, ATT.txt Fase 2)
 --
--- ─── Por que tabelas NOVAS, e não a `orders` existente
+-- â”€â”€â”€ Por que tabelas NOVAS, e nÃ£o a `orders` existente
 --
--- A mesma razão da 0204 (catálogo): `orders` é ESPELHO da Nuvemshop —
+-- A mesma razÃ£o da 0204 (catÃ¡logo): `orders` Ã© ESPELHO da Nuvemshop â€”
 -- `external_id`, `external_provider`, `payload` e `updated_at_remote` significam
 -- "o que o sistema remoto disse, e quando". Pedido digitado pelo vendedor, pela
 -- IA ou pelo portal B2B teria de inventar os quatro, e um sync futuro da
 -- Nuvemshop (upsert por external_id + delete do que sumiu) apagaria pedido
--- interno com um `where` esquecido. Ela fica onde está, como espelho. O que
+-- interno com um `where` esquecido. Ela fica onde estÃ¡, como espelho. O que
 -- faltava era a tabela dos pedidos que a LOJA possui.
 --
--- ─── Desenho
+-- â”€â”€â”€ Desenho
 --
--- `commercial_orders`: um pedido interno — número sequencial por tenant
--- (PED-0001), cliente (contato + snapshot para histórico), vendedor, status do
+-- `commercial_orders`: um pedido interno â€” nÃºmero sequencial por tenant
+-- (PED-0001), cliente (contato + snapshot para histÃ³rico), vendedor, status do
 -- ciclo comercial, origem (o badge da tela: ia/vendedor/whatsapp/b2b), totais
--- em `_cents` + moeda (regra do CLAUDE.md), condição de pagamento, frete.
+-- em `_cents` + moeda (regra do CLAUDE.md), condiÃ§Ã£o de pagamento, frete.
 --
--- `commercial_order_items`: um item — produto (FK anulável + snapshot, porque
--- apagar produto do catálogo não pode apagar o que foi vendido), quantidade,
--- preço unitário, desconto %, subtotal.
+-- `commercial_order_items`: um item â€” produto (FK anulÃ¡vel + snapshot, porque
+-- apagar produto do catÃ¡logo nÃ£o pode apagar o que foi vendido), quantidade,
+-- preÃ§o unitÃ¡rio, desconto %, subtotal.
 --
--- `commercial_order_counters`: o próximo número por tenant. Existe porque
+-- `commercial_order_counters`: o prÃ³ximo nÃºmero por tenant. Existe porque
 -- `MAX(numero)+1` na rota tem janela de corrida (dois vendedores finalizando
--- juntos geram o mesmo número, e um deles toma 409 fantasma). O avanço é
--- atômico: `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
+-- juntos geram o mesmo nÃºmero, e um deles toma 409 fantasma). O avanÃ§o Ã©
+-- atÃ´mico: `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
 --
--- ─── Status: vocabulário FECHADO (CHECK). Origem: ABERTO (sem CHECK)
+-- â”€â”€â”€ Status: vocabulÃ¡rio FECHADO (CHECK). Origem: ABERTO (sem CHECK)
 --
--- Status é máquina de estados do produto (rascunho → ... → entregue, com
--- cancelado fora da linha) — um clone com status legado NÃO deve passar pelo
--- `update.sh` quebrando. Origem é rótulo de exibição (o badge): mesma doutrina
+-- Status Ã© mÃ¡quina de estados do produto (rascunho â†’ ... â†’ entregue, com
+-- cancelado fora da linha) â€” um clone com status legado NÃƒO deve passar pelo
+-- `update.sh` quebrando. Origem Ã© rÃ³tulo de exibiÃ§Ã£o (o badge): mesma doutrina
 -- da 0204 (`origem` do produto), sem CHECK.
 -- ============================================================================
 
--- ─── Contadores (primeiro: orders referencia ao avançar) ────────────────────
+-- â”€â”€â”€ Contadores (primeiro: orders referencia ao avanÃ§ar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.commercial_order_counters (
   organization_id uuid primary key references public.organizations(id) on delete cascade,
@@ -17368,28 +17368,28 @@ revoke all on public.commercial_order_counters from anon;
 grant select, insert, update, delete on public.commercial_order_counters to authenticated;
 grant all on public.commercial_order_counters to service_role;
 
--- ─── Pedidos ────────────────────────────────────────────────────────────────
+-- â”€â”€â”€ Pedidos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.commercial_orders (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
 
-  -- Numeração sequencial por tenant (PED-0001 na tela). É o `ultimo_numero`
-  -- avançado atomicamente em `commercial_order_counters`, nunca MAX()+1.
+  -- NumeraÃ§Ã£o sequencial por tenant (PED-0001 na tela). Ã‰ o `ultimo_numero`
+  -- avanÃ§ado atomicamente em `commercial_order_counters`, nunca MAX()+1.
   numero integer not null,
 
-  -- Cliente: contato vivo + snapshot para o histórico (o contato pode mudar de
-  -- nome/telefone; o pedido impresso não pode).
+  -- Cliente: contato vivo + snapshot para o histÃ³rico (o contato pode mudar de
+  -- nome/telefone; o pedido impresso nÃ£o pode).
   contact_id uuid references public.contacts(id) on delete set null,
   cliente_nome text not null,
   cliente_documento text,
 
-  -- Vendedor responsável (assignee humano). NULL = sem dono (fila, ou IA).
+  -- Vendedor responsÃ¡vel (assignee humano). NULL = sem dono (fila, ou IA).
   vendedor_user_id uuid references auth.users(id) on delete set null,
 
   status text not null default 'rascunho',
 
-  -- O badge da tela. Vocabulário ABERTO de propósito (sem CHECK): mesma
+  -- O badge da tela. VocabulÃ¡rio ABERTO de propÃ³sito (sem CHECK): mesma
   -- doutrina da 0204.
   origem text not null default 'vendedor',
 
@@ -17417,15 +17417,15 @@ create table if not exists public.commercial_orders (
   constraint commercial_orders_total_nao_negativo check (total_cents >= 0)
 );
 
--- O número é a identidade dentro da organização.
+-- O nÃºmero Ã© a identidade dentro da organizaÃ§Ã£o.
 create unique index if not exists commercial_orders_org_numero_key
   on public.commercial_orders (organization_id, numero);
 
--- A lista da tela: por status e recência.
+-- A lista da tela: por status e recÃªncia.
 create index if not exists commercial_orders_org_status_idx
   on public.commercial_orders (organization_id, status, created_at desc);
 
--- Pedidos do cliente (ficha 360°).
+-- Pedidos do cliente (ficha 360Â°).
 create index if not exists commercial_orders_org_contact_idx
   on public.commercial_orders (organization_id, contact_id);
 
@@ -17441,7 +17441,7 @@ create policy commercial_orders_select on public.commercial_orders
     (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
   );
 
--- Escrita de `agent` para cima: vendedor e IA criam pedido; viewer não.
+-- Escrita de `agent` para cima: vendedor e IA criam pedido; viewer nÃ£o.
 drop policy if exists commercial_orders_write on public.commercial_orders;
 create policy commercial_orders_write on public.commercial_orders
   using (
@@ -17464,15 +17464,15 @@ create trigger trg_commercial_orders_updated_at
   before update on public.commercial_orders
   for each row execute function public.fn_set_updated_at();
 
--- ─── Itens ──────────────────────────────────────────────────────────────────
+-- â”€â”€â”€ Itens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.commercial_order_items (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   order_id uuid not null references public.commercial_orders(id) on delete cascade,
 
-  -- Produto vivo (anulável: apagar do catálogo preserva o histórico via
-  -- snapshot abaixo) + snapshot imutável do que foi vendido.
+  -- Produto vivo (anulÃ¡vel: apagar do catÃ¡logo preserva o histÃ³rico via
+  -- snapshot abaixo) + snapshot imutÃ¡vel do que foi vendido.
   product_id uuid references public.catalog_products(id) on delete set null,
   produto_codigo text not null,
   produto_nome text not null,
@@ -17521,34 +17521,34 @@ grant select, insert, update, delete on public.commercial_order_items to authent
 grant all on public.commercial_order_items to service_role;
 
 comment on table public.commercial_orders is
-  'Os pedidos que a LOJA possui — número sequencial por tenant, ciclo rascunho→entregue, origem (badge ia/vendedor/whatsapp/b2b). Distinto de orders, que é ESPELHO da Nuvemshop.';
+  'Os pedidos que a LOJA possui â€” nÃºmero sequencial por tenant, ciclo rascunhoâ†’entregue, origem (badge ia/vendedor/whatsapp/b2b). Distinto de orders, que Ã© ESPELHO da Nuvemshop.';
 comment on column public.commercial_orders.numero is
-  'Sequencial por organização (PED-0001 na tela). Avançado atomicamente via commercial_order_counters, nunca MAX()+1.';
+  'Sequencial por organizaÃ§Ã£o (PED-0001 na tela). AvanÃ§ado atomicamente via commercial_order_counters, nunca MAX()+1.';
 comment on column public.commercial_orders.origem is
-  'O badge da tela: ia | vendedor | whatsapp | b2b. Vocabulário ABERTO (sem CHECK), mesma doutrina da origem do produto (0204).';
+  'O badge da tela: ia | vendedor | whatsapp | b2b. VocabulÃ¡rio ABERTO (sem CHECK), mesma doutrina da origem do produto (0204).';
 comment on table public.commercial_order_items is
-  'Itens do pedido comercial, com snapshot de produto (código/nome/preço da venda) para o histórico sobreviver à edição do catálogo.';
+  'Itens do pedido comercial, com snapshot de produto (cÃ³digo/nome/preÃ§o da venda) para o histÃ³rico sobreviver Ã  ediÃ§Ã£o do catÃ¡logo.';
 
--- APÊNDICE 0209 — PRÓXIMO NÚMERO DO PEDIDO (idempotente; fonte: supabase/migrations/20260904130000_0209_proximo_numero_do_pedido.sql)
+-- APÃŠNDICE 0209 â€” PRÃ“XIMO NÃšMERO DO PEDIDO (idempotente; fonte: supabase/migrations/20260904130000_0209_proximo_numero_do_pedido.sql)
 
 -- ============================================================================
--- 0209 — O PRÓXIMO NÚMERO DO PEDIDO (contador atômico)
+-- 0209 â€” O PRÃ“XIMO NÃšMERO DO PEDIDO (contador atÃ´mico)
 --
 -- `MAX(numero)+1` na rota tem janela de corrida: dois vendedores finalizando
 -- juntos leem o mesmo MAX, um deles toma 409 fantasma. A tabela
--- `commercial_order_counters` (0208) existe para isto, e esta função é o único
--- escritor dela: `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` é atômico
--- no Postgres, então dois avanços concorrentes saem com números diferentes.
+-- `commercial_order_counters` (0208) existe para isto, e esta funÃ§Ã£o Ã© o Ãºnico
+-- escritor dela: `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` Ã© atÃ´mico
+-- no Postgres, entÃ£o dois avanÃ§os concorrentes saem com nÃºmeros diferentes.
 --
--- SECURITY DEFINER de propósito: o contador não pertence a nenhum papel, e a
--- rota chama com o JWT do usuário. A função NÃO confia no parâmetro sozinho —
--- a primeira coisa que ela faz é conferir que quem chama é membro da org
--- (`fn_user_org_ids`), senão levanta exceção. Parâmetro forjado de outra org
--- morre aqui, não na RLS.
+-- SECURITY DEFINER de propÃ³sito: o contador nÃ£o pertence a nenhum papel, e a
+-- rota chama com o JWT do usuÃ¡rio. A funÃ§Ã£o NÃƒO confia no parÃ¢metro sozinho â€”
+-- a primeira coisa que ela faz Ã© conferir que quem chama Ã© membro da org
+-- (`fn_user_org_ids`), senÃ£o levanta exceÃ§Ã£o. ParÃ¢metro forjado de outra org
+-- morre aqui, nÃ£o na RLS.
 --
 -- Grants (item 6 da doutrina de Migrations): revoke das DUAS origens de
--- EXECUTE (`public` e `anon`) e grant só para `authenticated`. Sem o revoke, a
--- função fica chamável pela anon key como RPC.
+-- EXECUTE (`public` e `anon`) e grant sÃ³ para `authenticated`. Sem o revoke, a
+-- funÃ§Ã£o fica chamÃ¡vel pela anon key como RPC.
 -- ============================================================================
 
 create or replace function public.fn_proximo_numero_pedido(p_org uuid)
@@ -17582,26 +17582,26 @@ grant execute on function public.fn_proximo_numero_pedido(uuid) to authenticated
 grant execute on function public.fn_proximo_numero_pedido(uuid) to service_role;
 
 comment on function public.fn_proximo_numero_pedido(uuid) is
-  'Avança atomicamente o contador de pedidos da org e devolve o próximo número (PED-0001 na tela). Único escritor de commercial_order_counters; confere membership antes de avançar.';
+  'AvanÃ§a atomicamente o contador de pedidos da org e devolve o prÃ³ximo nÃºmero (PED-0001 na tela). Ãšnico escritor de commercial_order_counters; confere membership antes de avanÃ§ar.';
 
 
--- APÊNDICE 0210 — CATEGORIAS E TABELAS DE PREÇO (idempotente; fonte: supabase/migrations/20260904140000_0210_categorias_e_tabelas_de_preco.sql)
+-- APÃŠNDICE 0210 â€” CATEGORIAS E TABELAS DE PREÃ‡O (idempotente; fonte: supabase/migrations/20260904140000_0210_categorias_e_tabelas_de_preco.sql)
 
 -- ============================================================================
--- 0210 — CATEGORIAS E TABELAS DE PREÇO (ATT.txt Fase 1)
+-- 0210 â€” CATEGORIAS E TABELAS DE PREÃ‡O (ATT.txt Fase 1)
 --
--- O `categoria text` livre de `catalog_products` (0204) não sustenta tabela de
--- preço por grupo nem árvore de categorias: texto livre duplica ("Bebidas" vs
--- "bebidas") e não tem pai. Entram duas tabelas próprias, e a coluna antiga
--- FICA — migração de dado em `update.sh` de cliente é o custo que a doutrina
--- manda não pagar sem necessidade; a tela passa a escrever `categoria_id`, e
--- `categoria` vira legado legível.
+-- O `categoria text` livre de `catalog_products` (0204) nÃ£o sustenta tabela de
+-- preÃ§o por grupo nem Ã¡rvore de categorias: texto livre duplica ("Bebidas" vs
+-- "bebidas") e nÃ£o tem pai. Entram duas tabelas prÃ³prias, e a coluna antiga
+-- FICA â€” migraÃ§Ã£o de dado em `update.sh` de cliente Ã© o custo que a doutrina
+-- manda nÃ£o pagar sem necessidade; a tela passa a escrever `categoria_id`, e
+-- `categoria` vira legado legÃ­vel.
 --
--- `product_categories`: árvore por `parent_id` auto-FK (NULL = raiz).
+-- `product_categories`: Ã¡rvore por `parent_id` auto-FK (NULL = raiz).
 -- `price_tables`: uma tabela (atacado, varejo, cliente X) com desconto
---   padrão; `price_table_items` sobrescreve o preço por produto.
--- Regra de preço efetivo (aplicada na rota, não em trigger): item da tabela
---   > desconto da tabela sobre o base > preço base do produto.
+--   padrÃ£o; `price_table_items` sobrescreve o preÃ§o por produto.
+-- Regra de preÃ§o efetivo (aplicada na rota, nÃ£o em trigger): item da tabela
+--   > desconto da tabela sobre o base > preÃ§o base do produto.
 -- ============================================================================
 
 create table if not exists public.product_categories (
@@ -17614,9 +17614,9 @@ create table if not exists public.product_categories (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint product_categories_nome_obrigatorio check (char_length(trim(nome)) > 0),
-  -- Sem CHECK anti-ciclo no banco: ciclo A→B→A se detecta na escrita da rota
+  -- Sem CHECK anti-ciclo no banco: ciclo Aâ†’Bâ†’A se detecta na escrita da rota
   -- (sobe a cadeia de pais com limite de profundidade); CHECK recursivo em
-  -- trigger é o tipo de mágica que quebra `update.sh` sem mensagem útil.
+  -- trigger Ã© o tipo de mÃ¡gica que quebra `update.sh` sem mensagem Ãºtil.
   constraint product_categories_sem_auto_pai check (parent_id is null or parent_id <> id)
 );
 
@@ -17656,16 +17656,16 @@ create trigger trg_product_categories_updated_at
   before update on public.product_categories
   for each row execute function public.fn_set_updated_at();
 
--- ─── Tabelas de preço ───────────────────────────────────────────────────────
+-- â”€â”€â”€ Tabelas de preÃ§o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.price_tables (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   nome text not null,
-  -- Desconto padrão aplicado sobre o preço base quando não há item específico.
+  -- Desconto padrÃ£o aplicado sobre o preÃ§o base quando nÃ£o hÃ¡ item especÃ­fico.
   desconto_pct numeric(5, 2) not null default 0,
-  -- Só uma padrão por org: é ela que o pedido usa quando o cliente não tem
-  -- tabela própria (decisão futura; hoje a rota usa a base + itens).
+  -- SÃ³ uma padrÃ£o por org: Ã© ela que o pedido usa quando o cliente nÃ£o tem
+  -- tabela prÃ³pria (decisÃ£o futura; hoje a rota usa a base + itens).
   padrao boolean not null default false,
   ativo boolean not null default true,
   created_at timestamptz not null default now(),
@@ -17677,7 +17677,7 @@ create table if not exists public.price_tables (
 create unique index if not exists price_tables_org_nome_key
   on public.price_tables (organization_id, nome);
 
--- Uma padrão só: índice único parcial (NULLs não colidem, então o filtro).
+-- Uma padrÃ£o sÃ³: Ã­ndice Ãºnico parcial (NULLs nÃ£o colidem, entÃ£o o filtro).
 create unique index if not exists price_tables_org_padrao_unica
   on public.price_tables (organization_id)
   where padrao is true;
@@ -17717,7 +17717,7 @@ create table if not exists public.price_table_items (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   price_table_id uuid not null references public.price_tables(id) on delete cascade,
   product_id uuid not null references public.catalog_products(id) on delete cascade,
-  -- Preço final nesta tabela. NULL = vale o desconto padrão da tabela.
+  -- PreÃ§o final nesta tabela. NULL = vale o desconto padrÃ£o da tabela.
   preco_cents bigint,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -17761,7 +17761,7 @@ create trigger trg_price_table_items_updated_at
   for each row execute function public.fn_set_updated_at();
 
 -- O produto ganha a FK para a categoria (a coluna texto `categoria` fica como
--- legado legível — ver cabeçalho).
+-- legado legÃ­vel â€” ver cabeÃ§alho).
 alter table public.catalog_products
   add column if not exists categoria_id uuid references public.product_categories(id) on delete set null;
 
@@ -17769,25 +17769,25 @@ create index if not exists catalog_products_categoria_idx
   on public.catalog_products (organization_id, categoria_id);
 
 comment on table public.product_categories is
-  'Árvore de categorias do catálogo (parent_id NULL = raiz). Substitui o texto livre catalog_products.categoria, que fica como legado.';
+  'Ãrvore de categorias do catÃ¡logo (parent_id NULL = raiz). Substitui o texto livre catalog_products.categoria, que fica como legado.';
 comment on table public.price_tables is
-  'Tabelas de preço (atacado, varejo, cliente X). Preço efetivo: item da tabela > desconto da tabela sobre a base > preço base.';
+  'Tabelas de preÃ§o (atacado, varejo, cliente X). PreÃ§o efetivo: item da tabela > desconto da tabela sobre a base > preÃ§o base.';
 comment on table public.price_table_items is
-  'Sobrescrita de preço por produto dentro de uma tabela. preco NULL = vale o desconto padrão da tabela.';
+  'Sobrescrita de preÃ§o por produto dentro de uma tabela. preco NULL = vale o desconto padrÃ£o da tabela.';
 
 
--- APÊNDICE 0211 — CRÉDITO DO CLIENTE (idempotente; fonte: supabase/migrations/20260904150000_0211_credito_do_cliente.sql)
+-- APÃŠNDICE 0211 â€” CRÃ‰DITO DO CLIENTE (idempotente; fonte: supabase/migrations/20260904150000_0211_credito_do_cliente.sql)
 
 -- ============================================================================
--- 0211 — CRÉDITO DO CLIENTE (ATT.txt Fase 1, ficha 360° Financeiro)
+-- 0211 â€” CRÃ‰DITO DO CLIENTE (ATT.txt Fase 1, ficha 360Â° Financeiro)
 --
--- O bloqueio de pedido por limite de crédito (regra Fase 2) precisa de ONDE
--- guardar o limite. Duas colunas anuláveis em `contacts`: NULL = sem limite
--- definido (não bloqueia nada) — cliente novo não nasce bloqueado por um
--- default, e a ausência de análise de crédito é um estado visível, não zero.
+-- O bloqueio de pedido por limite de crÃ©dito (regra Fase 2) precisa de ONDE
+-- guardar o limite. Duas colunas anulÃ¡veis em `contacts`: NULL = sem limite
+-- definido (nÃ£o bloqueia nada) â€” cliente novo nÃ£o nasce bloqueado por um
+-- default, e a ausÃªncia de anÃ¡lise de crÃ©dito Ã© um estado visÃ­vel, nÃ£o zero.
 --
--- Sem tabela nova de propósito: limite e condição são atributos do cliente,
--- não entidade com ciclo próprio (DIRC letra C — derivável não se cria).
+-- Sem tabela nova de propÃ³sito: limite e condiÃ§Ã£o sÃ£o atributos do cliente,
+-- nÃ£o entidade com ciclo prÃ³prio (DIRC letra C â€” derivÃ¡vel nÃ£o se cria).
 -- RLS/policies inalteradas: mesmas da tabela.
 -- ============================================================================
 
@@ -17803,37 +17803,37 @@ alter table public.contacts
   check (limite_credito_cents is null or limite_credito_cents >= 0);
 
 comment on column public.contacts.limite_credito_cents is
-  'Teto de crédito em centavos. NULL = sem limite definido (não bloqueia). Soma dos pedidos em aberto + novo pedido acima disto barra a venda, salvo override de gerente.';
+  'Teto de crÃ©dito em centavos. NULL = sem limite definido (nÃ£o bloqueia). Soma dos pedidos em aberto + novo pedido acima disto barra a venda, salvo override de gerente.';
 comment on column public.contacts.condicao_pagamento is
-  'Condição padrão do cliente (ex.: 30/60/90 dias). Sugestão no pedido, não trava.';
+  'CondiÃ§Ã£o padrÃ£o do cliente (ex.: 30/60/90 dias). SugestÃ£o no pedido, nÃ£o trava.';
 
 
--- APÊNDICE 0212 — EXPEDIÇÃO E ROMANEIO (idempotente; fonte: supabase/migrations/20260904160000_0212_expedicao_e_romaneio.sql)
+-- APÃŠNDICE 0212 â€” EXPEDIÃ‡ÃƒO E ROMANEIO (idempotente; fonte: supabase/migrations/20260904160000_0212_expedicao_e_romaneio.sql)
 
 -- ============================================================================
--- 0212 — EXPEDIÇÃO E ROMANEIO (ATT.txt Fase 3, transporte próprio)
+-- 0212 â€” EXPEDIÃ‡ÃƒO E ROMANEIO (ATT.txt Fase 3, transporte prÃ³prio)
 --
--- `shipments`: uma carga — veículo (placa/tipo/motorista em linha, sem tabela
---   de frota: frota é entidade com ciclo próprio e hoje ninguém a pede),
---   status do ciclo (montando → em_rota → concluída; cancelada fora da linha).
--- `shipment_orders`: um pedido dentro da carga — sequência de entrega
---   (a rota) + status por pedido (na_carga → em_rota → entregue/devolvido).
+-- `shipments`: uma carga â€” veÃ­culo (placa/tipo/motorista em linha, sem tabela
+--   de frota: frota Ã© entidade com ciclo prÃ³prio e hoje ninguÃ©m a pede),
+--   status do ciclo (montando â†’ em_rota â†’ concluÃ­da; cancelada fora da linha).
+-- `shipment_orders`: um pedido dentro da carga â€” sequÃªncia de entrega
+--   (a rota) + status por pedido (na_carga â†’ em_rota â†’ entregue/devolvido).
 --
--- `commercial_orders.endereco_entrega`: o endereço onde ESTE pedido desce.
---   Coluna anulável no pedido (não no contato): o mesmo cliente recebe em
---   endereços diferentes por pedido, e o romaneio imprime o do pedido.
+-- `commercial_orders.endereco_entrega`: o endereÃ§o onde ESTE pedido desce.
+--   Coluna anulÃ¡vel no pedido (nÃ£o no contato): o mesmo cliente recebe em
+--   endereÃ§os diferentes por pedido, e o romaneio imprime o do pedido.
 --   Sem ela o romaneio seria lista de nomes sem onde ir.
 --
--- Integração com o ciclo do pedido: confirmar entrega avança o pedido para
--- `entregue` (a rota faz, não trigger — trigger escondendo transição de
--- status é o tipo de mágica que ninguém acha depurando).
+-- IntegraÃ§Ã£o com o ciclo do pedido: confirmar entrega avanÃ§a o pedido para
+-- `entregue` (a rota faz, nÃ£o trigger â€” trigger escondendo transiÃ§Ã£o de
+-- status Ã© o tipo de mÃ¡gica que ninguÃ©m acha depurando).
 -- ============================================================================
 
 alter table public.commercial_orders
   add column if not exists endereco_entrega text;
 
 comment on column public.commercial_orders.endereco_entrega is
-  'Onde ESTE pedido desce. Por pedido, não por cliente: o mesmo cliente recebe em endereços diferentes. O romaneio imprime este.';
+  'Onde ESTE pedido desce. Por pedido, nÃ£o por cliente: o mesmo cliente recebe em endereÃ§os diferentes. O romaneio imprime este.';
 
 create table if not exists public.shipments (
   id uuid primary key default gen_random_uuid(),
@@ -17857,8 +17857,8 @@ create table if not exists public.shipments (
   )
 );
 
--- O número da carga é sequencial por tenant, como o do pedido. Reusa a
--- mecânica atômica (contador próprio): MAX()+1 na rota teria a mesma janela
+-- O nÃºmero da carga Ã© sequencial por tenant, como o do pedido. Reusa a
+-- mecÃ¢nica atÃ´mica (contador prÃ³prio): MAX()+1 na rota teria a mesma janela
 -- de corrida da 0208.
 create table if not exists public.commercial_shipment_counters (
   organization_id uuid primary key references public.organizations(id) on delete cascade,
@@ -17964,7 +17964,7 @@ create table if not exists public.shipment_orders (
   shipment_id uuid not null references public.shipments(id) on delete cascade,
   order_id uuid not null references public.commercial_orders(id) on delete restrict,
 
-  -- A ordem de entrega (a rota). Base 1, sem buraco obrigatório.
+  -- A ordem de entrega (a rota). Base 1, sem buraco obrigatÃ³rio.
   sequencia integer not null default 1,
 
   status text not null default 'na_carga',
@@ -17979,8 +17979,8 @@ create table if not exists public.shipment_orders (
 );
 
 -- Um pedido, uma carga por vez: sem isto o mesmo pedido entra em dois
--- romaneios e é entregue duas vezes (ou nenhuma, cada motorista achando que
--- é do outro).
+-- romaneios e Ã© entregue duas vezes (ou nenhuma, cada motorista achando que
+-- Ã© do outro).
 create unique index if not exists shipment_orders_order_unico
   on public.shipment_orders (order_id);
 
@@ -18018,67 +18018,67 @@ create trigger trg_shipment_orders_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.shipments is
-  'Cargas do transporte próprio: veículo + motorista + rota de entregas. O romaneio imprime os pedidos em ordem de sequência.';
+  'Cargas do transporte prÃ³prio: veÃ­culo + motorista + rota de entregas. O romaneio imprime os pedidos em ordem de sequÃªncia.';
 comment on table public.shipment_orders is
-  'Pedidos dentro da carga, com sequência de entrega e status próprio. Um pedido por vez (unique em order_id): sem isto o mesmo pedido entra em dois romaneios.';
+  'Pedidos dentro da carga, com sequÃªncia de entrega e status prÃ³prio. Um pedido por vez (unique em order_id): sem isto o mesmo pedido entra em dois romaneios.';
 comment on function public.fn_proximo_numero_carga(uuid) is
-  'Avança atomicamente o contador de cargas da org. Mesmo molde da fn_proximo_numero_pedido (0209).';
+  'AvanÃ§a atomicamente o contador de cargas da org. Mesmo molde da fn_proximo_numero_pedido (0209).';
 
 
--- APÊNDICE 0214 — EMBARQUE CERTO (idempotente; fonte: supabase/migrations/20260904180000_0214_embarque_certo.sql)
+-- APÃŠNDICE 0214 â€” EMBARQUE CERTO (idempotente; fonte: supabase/migrations/20260904180000_0214_embarque_certo.sql)
 
 -- ============================================================================
--- 0214 — EMBARQUE CERTO: quem já foi sai da fila, e devolvido pode voltar
+-- 0214 â€” EMBARQUE CERTO: quem jÃ¡ foi sai da fila, e devolvido pode voltar
 --
 -- Dois defeitos da 0212, achados no uso:
 --
 -- 1. O pedido embarcado CONTINUAVA na lista de "aguardando embarque": o
---    status não mudava, e a tela filtrava por status. Efeito: o expedidor
+--    status nÃ£o mudava, e a tela filtrava por status. Efeito: o expedidor
 --    embarcava o mesmo pedido duas vezes (a segunda morria no unique com
---    mensagem técnica) ou, pior, duvidava da lista inteira.
+--    mensagem tÃ©cnica) ou, pior, duvidava da lista inteira.
 --
 -- 2. O `unique(order_id)` TOTAL impedia reembarque para sempre: pedido
---    devolvido não podia entrar em outra carga, porque a linha histórica
---    (devolvido) ainda ocupava a unicidade. Histórico e trava eram a mesma
---    coisa — e não podiam ser.
+--    devolvido nÃ£o podia entrar em outra carga, porque a linha histÃ³rica
+--    (devolvido) ainda ocupava a unicidade. HistÃ³rico e trava eram a mesma
+--    coisa â€” e nÃ£o podiam ser.
 --
 -- O conserto separa as duas coisas:
--- - a TRAVA vira índice parcial: só uma linha ATIVA (na_carga/em_rota) por
---   pedido. Entregue/devolvido é história, e história não trava reembarque;
--- - a ROTA avança o pedido para `expedido` ao embarcar (e a tela de
---   expedição passa a listar só aprovado/faturado — o texto do ATT.txt,
---   não o conjunto largo da 0212 que incluía em_analise).
+-- - a TRAVA vira Ã­ndice parcial: sÃ³ uma linha ATIVA (na_carga/em_rota) por
+--   pedido. Entregue/devolvido Ã© histÃ³ria, e histÃ³ria nÃ£o trava reembarque;
+-- - a ROTA avanÃ§a o pedido para `expedido` ao embarcar (e a tela de
+--   expediÃ§Ã£o passa a listar sÃ³ aprovado/faturado â€” o texto do ATT.txt,
+--   nÃ£o o conjunto largo da 0212 que incluÃ­a em_analise).
 -- ============================================================================
 
 drop index if exists public.shipment_orders_order_unico;
 
--- Uma carga ativa por vez; história (entregue/devolvido) não trava reembarque.
+-- Uma carga ativa por vez; histÃ³ria (entregue/devolvido) nÃ£o trava reembarque.
 create unique index if not exists shipment_orders_order_ativo_unico
   on public.shipment_orders (order_id)
   where status in ('na_carga', 'em_rota');
 
 comment on index public.shipment_orders_order_ativo_unico is
-  'Um pedido, uma carga ATIVA por vez. Entregue/devolvido é história e não ocupa a trava — devolvido pode embarcar de novo.';
+  'Um pedido, uma carga ATIVA por vez. Entregue/devolvido Ã© histÃ³ria e nÃ£o ocupa a trava â€” devolvido pode embarcar de novo.';
 
 
--- APÊNDICE 0213 — FISCAL (idempotente; fonte: supabase/migrations/20260904170000_0213_fiscal_notas.sql)
+-- APÃŠNDICE 0213 â€” FISCAL (idempotente; fonte: supabase/migrations/20260904170000_0213_fiscal_notas.sql)
 
 -- ============================================================================
--- 0213 — FISCAL: CONFIG + NOTAS (ATT.txt Fase 3, Grupo 6)
+-- 0213 â€” FISCAL: CONFIG + NOTAS (ATT.txt Fase 3, Grupo 6)
 --
 -- `fiscal_settings`: UMA linha por org (singleton por unique em
---   organization_id) — série, natureza de operação, CFOP padrão, documento do
---   emitente. Sem ela, emitir é impossível e a rota diz isso (422 nomeando a
---   tela), em vez de presumir série 1.
+--   organization_id) â€” sÃ©rie, natureza de operaÃ§Ã£o, CFOP padrÃ£o, documento do
+--   emitente. Sem ela, emitir Ã© impossÃ­vel e a rota diz isso (422 nomeando a
+--   tela), em vez de presumir sÃ©rie 1.
 --
--- `invoices`: a nota. `numero` ANULÁVEL de propósito: quem numera é a SEFAZ
---   na autorização, não o app na criação — pendente nasce sem número, e o
---   unique parcial (serie, numero) só vale quando há número. Criar pendente
---   com número inventado seria prometer documento que não existe.
+-- `invoices`: a nota. `numero` ANULÃVEL de propÃ³sito: quem numera Ã© a SEFAZ
+--   na autorizaÃ§Ã£o, nÃ£o o app na criaÃ§Ã£o â€” pendente nasce sem nÃºmero, e o
+--   unique parcial (serie, numero) sÃ³ vale quando hÃ¡ nÃºmero. Criar pendente
+--   com nÃºmero inventado seria prometer documento que nÃ£o existe.
 --
--- Status (CHECK fechado): pendente → autorizada | denegada | erro;
---   cancelada só de autorizada (com motivo) ou pendente. XML e chave chegam
---   na autorização; o stub (lib/fiscal/provedor.ts) nunca os inventa.
+-- Status (CHECK fechado): pendente â†’ autorizada | denegada | erro;
+--   cancelada sÃ³ de autorizada (com motivo) ou pendente. XML e chave chegam
+--   na autorizaÃ§Ã£o; o stub (lib/fiscal/provedor.ts) nunca os inventa.
 -- ============================================================================
 
 create table if not exists public.fiscal_settings (
@@ -18100,8 +18100,8 @@ create policy fiscal_settings_select on public.fiscal_settings
     (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
   );
 
--- Config fiscal é `manager` para cima: série e CFOP errados geram nota
--- inválida para a empresa inteira.
+-- Config fiscal Ã© `manager` para cima: sÃ©rie e CFOP errados geram nota
+-- invÃ¡lida para a empresa inteira.
 drop policy if exists fiscal_settings_write on public.fiscal_settings;
 create policy fiscal_settings_write on public.fiscal_settings
   using (
@@ -18130,7 +18130,7 @@ create table if not exists public.invoices (
   order_id uuid references public.commercial_orders(id) on delete set null,
 
   serie text not null,
-  -- NULL até a autorização: quem numera é a SEFAZ, não o app.
+  -- NULL atÃ© a autorizaÃ§Ã£o: quem numera Ã© a SEFAZ, nÃ£o o app.
   numero integer,
   chave_acesso text,
   xml text,
@@ -18197,30 +18197,30 @@ create trigger trg_invoices_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.fiscal_settings is
-  'Config fiscal da org (singleton): série, natureza, CFOP, documento do emitente. Sem ela, emitir é 422 nomeando a tela.';
+  'Config fiscal da org (singleton): sÃ©rie, natureza, CFOP, documento do emitente. Sem ela, emitir Ã© 422 nomeando a tela.';
 comment on table public.invoices is
-  'Notas fiscais. numero NULL até a autorização (quem numera é a SEFAZ). O provedor stub nunca autoriza: pendente é o estado honesto sem emissor.';
+  'Notas fiscais. numero NULL atÃ© a autorizaÃ§Ã£o (quem numera Ã© a SEFAZ). O provedor stub nunca autoriza: pendente Ã© o estado honesto sem emissor.';
 comment on column public.invoices.numero is
-  'NULL até a autorização. Criar pendente COM número inventado seria prometer documento que não existe.';
+  'NULL atÃ© a autorizaÃ§Ã£o. Criar pendente COM nÃºmero inventado seria prometer documento que nÃ£o existe.';
 
 
--- APÊNDICE 0215 — FISCAL EMITENTE COMPLETO (idempotente; fonte: supabase/migrations/20260904190000_0215_fiscal_emitente_completo.sql)
+-- APÃŠNDICE 0215 â€” FISCAL EMITENTE COMPLETO (idempotente; fonte: supabase/migrations/20260904190000_0215_fiscal_emitente_completo.sql)
 
 -- ============================================================================
--- 0215 — FISCAL PARA VALER: emitente completo + ambiente + certificado
+-- 0215 â€” FISCAL PARA VALER: emitente completo + ambiente + certificado
 --
--- A 0213 nasceu mínima (série/natureza/CFOP) porque o único provedor era o
+-- A 0213 nasceu mÃ­nima (sÃ©rie/natureza/CFOP) porque o Ãºnico provedor era o
 -- stub. O emissor real (sped-nfe via sidecar, `fiscal/sidecar/`) precisa de
--- MAIS: IE, regime tributário (CRT), endereço completo do emitente, ambiente
--- (homologação/produção) e ONDE está o certificado A1 + sua senha cifrada.
+-- MAIS: IE, regime tributÃ¡rio (CRT), endereÃ§o completo do emitente, ambiente
+-- (homologaÃ§Ã£o/produÃ§Ã£o) e ONDE estÃ¡ o certificado A1 + sua senha cifrada.
 --
 -- A senha usa a MESMA infra de cifra do resto do repo (`fn_encrypt_oauth` /
 -- `fn_decrypt_oauth`, precedente Meta/Zernio em `lib/webhooks/secrets.ts`):
--- RPCs com GRANT só para service_role, chamadas com admin client. Nenhuma
--- função nova, nenhuma chave nova — e plaintext de senha nunca toca o banco.
+-- RPCs com GRANT sÃ³ para service_role, chamadas com admin client. Nenhuma
+-- funÃ§Ã£o nova, nenhuma chave nova â€” e plaintext de senha nunca toca o banco.
 --
--- `ambiente` CHECK fechado: só homologação ou produção. Produção sem
--- certificado é 422 na rota (não existe "emitir de verdade sem identidade").
+-- `ambiente` CHECK fechado: sÃ³ homologaÃ§Ã£o ou produÃ§Ã£o. ProduÃ§Ã£o sem
+-- certificado Ã© 422 na rota (nÃ£o existe "emitir de verdade sem identidade").
 -- ============================================================================
 
 alter table public.fiscal_settings
@@ -18264,27 +18264,27 @@ alter table public.invoices
   add column if not exists sefaz_xmotivo text;
 
 comment on column public.fiscal_settings.ambiente is
-  'homologacao (default, seguro) ou producao. Produção sem certificado é 422 na rota.';
+  'homologacao (default, seguro) ou producao. ProduÃ§Ã£o sem certificado Ã© 422 na rota.';
 comment on column public.fiscal_settings.provedor is
   'stub (default, honesto sem emissor) ou spednfe (sidecar PHP em fiscal/sidecar/).';
 comment on column public.fiscal_settings.certificado_path is
-  'Caminho do .pfx A1 DENTRO do volume do sidecar (ex.: /certs/empresa.pfx). Nunca URL pública.';
+  'Caminho do .pfx A1 DENTRO do volume do sidecar (ex.: /certs/empresa.pfx). Nunca URL pÃºblica.';
 comment on column public.fiscal_settings.certificado_senha_encrypted is
   'Senha do .pfx cifrada (mesma infra fn_encrypt_oauth). Plaintext nunca toca o banco.';
 
 
--- APÊNDICE 0216 — NCM NO PRODUTO (idempotente; fonte: supabase/migrations/20260904200000_0216_ncm_no_produto.sql)
+-- APÃŠNDICE 0216 â€” NCM NO PRODUTO (idempotente; fonte: supabase/migrations/20260904200000_0216_ncm_no_produto.sql)
 
 -- ============================================================================
--- 0216 — NCM E UNIDADE NO PRODUTO (base fiscal do item)
+-- 0216 â€” NCM E UNIDADE NO PRODUTO (base fiscal do item)
 --
--- A NF-e exige NCM por item: sem ele, o sidecar sped-nfe não tem o que
--- mandar, e a emissão morre em 422 nomeando o produto. Colunas anuláveis —
--- produto sem NCM vende normal no balcão/WhatsApp; só não vira nota até
--- alguém preencher (a rota de emissão lista quais faltam).
+-- A NF-e exige NCM por item: sem ele, o sidecar sped-nfe nÃ£o tem o que
+-- mandar, e a emissÃ£o morre em 422 nomeando o produto. Colunas anulÃ¡veis â€”
+-- produto sem NCM vende normal no balcÃ£o/WhatsApp; sÃ³ nÃ£o vira nota atÃ©
+-- alguÃ©m preencher (a rota de emissÃ£o lista quais faltam).
 --
--- `unidade` (UN, CX, KG…) e `cfop` específico do produto seguem a mesma
--- regra: NULL = vale o padrão (unidade UN, CFOP da config fiscal).
+-- `unidade` (UN, CX, KGâ€¦) e `cfop` especÃ­fico do produto seguem a mesma
+-- regra: NULL = vale o padrÃ£o (unidade UN, CFOP da config fiscal).
 -- ============================================================================
 
 alter table public.catalog_products
@@ -18300,34 +18300,34 @@ alter table public.catalog_products
   check (ncm is null or ncm ~ '^\d{8}$');
 
 comment on column public.catalog_products.ncm is
-  'NCM com 8 dígitos, sem ponto. NULL = vende sem nota até preencher; a emissão lista os produtos sem NCM em vez de presumir.';
+  'NCM com 8 dÃ­gitos, sem ponto. NULL = vende sem nota atÃ© preencher; a emissÃ£o lista os produtos sem NCM em vez de presumir.';
 comment on column public.catalog_products.unidade is
   'Unidade comercial (UN, CX, KG). NULL = UN.';
 comment on column public.catalog_products.cfop is
-  'CFOP específico do produto. NULL = o CFOP padrão da config fiscal.';
+  'CFOP especÃ­fico do produto. NULL = o CFOP padrÃ£o da config fiscal.';
 
--- Código IBGE do município do emitente (7 dígitos): a NF-e exige cMunFG, e
--- nome de município não vira código sozinho. NULL = a emissão pede.
+-- CÃ³digo IBGE do municÃ­pio do emitente (7 dÃ­gitos): a NF-e exige cMunFG, e
+-- nome de municÃ­pio nÃ£o vira cÃ³digo sozinho. NULL = a emissÃ£o pede.
 alter table public.fiscal_settings
   add column if not exists codigo_municipio text;
 
 comment on column public.fiscal_settings.codigo_municipio is
-  'IBGE com 7 dígitos (ex.: 3550308 São Paulo). Exigido na emissão; sem ele, 422 nomeando o campo.';
+  'IBGE com 7 dÃ­gitos (ex.: 3550308 SÃ£o Paulo). Exigido na emissÃ£o; sem ele, 422 nomeando o campo.';
 
 
--- APÊNDICE 0217 — CONTADOR PARA SERVICE ROLE (idempotente; fonte: supabase/migrations/20260904210000_0217_contador_para_service_role.sql)
+-- APÃŠNDICE 0217 â€” CONTADOR PARA SERVICE ROLE (idempotente; fonte: supabase/migrations/20260904210000_0217_contador_para_service_role.sql)
 
 -- ============================================================================
--- 0217 — SIDECAR INTERNO TAMBÉM NUMERA (service_role no contador)
+-- 0217 â€” SIDECAR INTERNO TAMBÃ‰M NUMERA (service_role no contador)
 --
 -- A `fn_proximo_numero_pedido` (0209) confere membership via `auth.uid()`.
--- Chamada com service_role (tool de IA, worker), `auth.uid()` é NULL e a
--- função recusava — mesmo a org sendo a do contexto confiável.
+-- Chamada com service_role (tool de IA, worker), `auth.uid()` Ã© NULL e a
+-- funÃ§Ã£o recusava â€” mesmo a org sendo a do contexto confiÃ¡vel.
 --
 -- Service role BYPASSA toda RLS por desenho: exigir membership dele seria
 -- mais restritivo que o resto do banco, sem ganhar nada (quem tem a service
--- key já lê/escreve tudo). O firewall continua valendo para `authenticated`:
--- usuário forjando outra org morre no 42501 como antes.
+-- key jÃ¡ lÃª/escreve tudo). O firewall continua valendo para `authenticated`:
+-- usuÃ¡rio forjando outra org morre no 42501 como antes.
 -- ============================================================================
 
 create or replace function public.fn_proximo_numero_pedido(p_org uuid)
@@ -18361,7 +18361,7 @@ revoke execute on function public.fn_proximo_numero_pedido(uuid) from public, an
 grant execute on function public.fn_proximo_numero_pedido(uuid) to authenticated;
 grant execute on function public.fn_proximo_numero_pedido(uuid) to service_role;
 
--- Mesma razão para a irmã das cargas.
+-- Mesma razÃ£o para a irmÃ£ das cargas.
 create or replace function public.fn_proximo_numero_carga(p_org uuid)
 returns integer
   language plpgsql security definer
@@ -18394,20 +18394,20 @@ grant execute on function public.fn_proximo_numero_carga(uuid) to authenticated;
 grant execute on function public.fn_proximo_numero_carga(uuid) to service_role;
 
 
--- APÊNDICE 0218 — COMPROVANTE DE ENTREGA (idempotente; fonte: supabase/migrations/20260904220000_0218_comprovante_de_entrega.sql)
+-- APÃŠNDICE 0218 â€” COMPROVANTE DE ENTREGA (idempotente; fonte: supabase/migrations/20260904220000_0218_comprovante_de_entrega.sql)
 
 -- ============================================================================
--- 0218 — COMPROVANTE DE ENTREGA (ATT.txt F3, controle de entrega)
+-- 0218 â€” COMPROVANTE DE ENTREGA (ATT.txt F3, controle de entrega)
 --
--- `shipment_proofs`: a foto/assinatura da entrega — um registro por pedido
--- (unique em order_id: a última prova vale; reentrega sobrescreve via
--- upsert, e a história de QUEM entregou QUANDO está no audit log).
+-- `shipment_proofs`: a foto/assinatura da entrega â€” um registro por pedido
+-- (unique em order_id: a Ãºltima prova vale; reentrega sobrescreve via
+-- upsert, e a histÃ³ria de QUEM entregou QUANDO estÃ¡ no audit log).
 --
 -- Bucket `delivery-proofs` PRIVADO, mesmo molde do `whatsapp-media` (0055):
 -- sem policies em storage.objects para anon/authenticated; upload e signed
--- URL só via service role nos endpoints. Teto 10 MB (foto de celular) e só
--- imagem — o Storage compara o header que QUEM SOBE escolhe, então a rota
--- fareja os bytes mágicos antes de aceitar (JPEG/PNG/WebP).
+-- URL sÃ³ via service role nos endpoints. Teto 10 MB (foto de celular) e sÃ³
+-- imagem â€” o Storage compara o header que QUEM SOBE escolhe, entÃ£o a rota
+-- fareja os bytes mÃ¡gicos antes de aceitar (JPEG/PNG/WebP).
 -- ============================================================================
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -18434,7 +18434,7 @@ create table if not exists public.shipment_proofs (
 );
 
 -- Um comprovante por pedido: reentrega com foto nova substitui (upsert), e
--- QUEM/QUANDO fica no audit log, não em N linhas.
+-- QUEM/QUANDO fica no audit log, nÃ£o em N linhas.
 create unique index if not exists shipment_proofs_order_unico
   on public.shipment_proofs (order_id);
 
@@ -18470,22 +18470,22 @@ comment on table public.shipment_proofs is
   'Comprovantes de entrega (foto/assinatura): um por pedido, caminho no bucket delivery-proofs. Reentrega sobrescreve via upsert.';
 
 
--- APÊNDICE 0219 — FOTOS DO PRODUTO (idempotente; fonte: supabase/migrations/20260904230000_0219_fotos_do_produto.sql)
+-- APÃŠNDICE 0219 â€” FOTOS DO PRODUTO (idempotente; fonte: supabase/migrations/20260904230000_0219_fotos_do_produto.sql)
 
 -- ============================================================================
--- 0219 — FOTOS DO PRODUTO (ATT.txt F1: upload múltiplo, máx 5)
+-- 0219 â€” FOTOS DO PRODUTO (ATT.txt F1: upload mÃºltiplo, mÃ¡x 5)
 --
--- `product_images`: uma linha por foto (produto + caminho + posição). A capa
--- é a de menor posição — sem coluna `is_cover` para não sincronizar (duas
--- fontes para "qual é a capa" divergem; ORDER BY não diverge).
+-- `product_images`: uma linha por foto (produto + caminho + posiÃ§Ã£o). A capa
+-- Ã© a de menor posiÃ§Ã£o â€” sem coluna `is_cover` para nÃ£o sincronizar (duas
+-- fontes para "qual Ã© a capa" divergem; ORDER BY nÃ£o diverge).
 --
--- Bucket `product-images` PÚBLICO, molde do `brand-logos` (0158): foto de
--- produto aparece em tela sem sessão (catálogo, portal futuro), e URL
--- assinada VENCE — a foto sumiria sozinha. Contenções iguais: ZERO policy em
--- storage.objects (público abre LEITURA, não escrita), caminho não-enumerável
+-- Bucket `product-images` PÃšBLICO, molde do `brand-logos` (0158): foto de
+-- produto aparece em tela sem sessÃ£o (catÃ¡logo, portal futuro), e URL
+-- assinada VENCE â€” a foto sumiria sozinha. ContenÃ§Ãµes iguais: ZERO policy em
+-- storage.objects (pÃºblico abre LEITURA, nÃ£o escrita), caminho nÃ£o-enumerÃ¡vel
 -- `<org>/<uuid>.ext`, MIME como backstop (a rota fareja os bytes).
--- Teto 2 MB por foto: thumbnail de catálogo não precisa de mais, e a cota do
--- Supabase é do cliente.
+-- Teto 2 MB por foto: thumbnail de catÃ¡logo nÃ£o precisa de mais, e a cota do
+-- Supabase Ã© do cliente.
 -- ============================================================================
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -18521,7 +18521,7 @@ create policy product_images_select on public.product_images
     (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
   );
 
--- Foto de produto é catálogo: escrita manager+, como preço.
+-- Foto de produto Ã© catÃ¡logo: escrita manager+, como preÃ§o.
 drop policy if exists product_images_write on public.product_images;
 create policy product_images_write on public.product_images
   using (
@@ -18540,29 +18540,29 @@ grant select, insert, update, delete on public.product_images to authenticated;
 grant all on public.product_images to service_role;
 
 comment on table public.product_images is
-  'Fotos do produto (máx 5, contado na rota): capa = menor posição. Bucket público product-images; caminho não-enumerável.';
+  'Fotos do produto (mÃ¡x 5, contado na rota): capa = menor posiÃ§Ã£o. Bucket pÃºblico product-images; caminho nÃ£o-enumerÃ¡vel.';
 
 
--- APÊNDICE 0220 — PROSPECÇÃO (idempotente; fonte: supabase/migrations/20260905120000_0220_prospeccao.sql)
+-- APÃŠNDICE 0220 â€” PROSPECÃ‡ÃƒO (idempotente; fonte: supabase/migrations/20260905120000_0220_prospeccao.sql)
 
 -- ============================================================================
--- 0220 — PROSPECÇÃO DE EMPRESAS (descoberta por região + categoria)
+-- 0220 â€” PROSPECÃ‡ÃƒO DE EMPRESAS (descoberta por regiÃ£o + categoria)
 --
--- `prospecting_searches`: uma busca = um job. Parâmetros, grade de células
---   (total/next/processed = checkpoint: continuar da 188, nunca recomeçar),
---   status queued/running/paused/completed/failed/cancelled, estatísticas
+-- `prospecting_searches`: uma busca = um job. ParÃ¢metros, grade de cÃ©lulas
+--   (total/next/processed = checkpoint: continuar da 188, nunca recomeÃ§ar),
+--   status queued/running/paused/completed/failed/cancelled, estatÃ­sticas
 --   (encontradas/novas/duplicadas/erros), custo (requests/details/cents) e
---   hash dos parâmetros para cache (TTL configurável, sem reconsultar tudo).
--- `business_prospects`: a empresa descoberta, normalizada. Deduplicação em
---   camadas (ver lib/prospeccao/dedup.ts): unique SÓ em (provider,
---   external_id) — telefone e domínio viram ÍNDICE, nunca unique (matriz e
+--   hash dos parÃ¢metros para cache (TTL configurÃ¡vel, sem reconsultar tudo).
+-- `business_prospects`: a empresa descoberta, normalizada. DeduplicaÃ§Ã£o em
+--   camadas (ver lib/prospeccao/dedup.ts): unique SÃ“ em (provider,
+--   external_id) â€” telefone e domÃ­nio viram ÃNDICE, nunca unique (matriz e
 --   franquia compartilham os dois; unique fundiria lojas distintas).
--- `prospect_search_results`: N:N busca↔prospect com primeira_vez (de onde
+-- `prospect_search_results`: N:N buscaâ†”prospect com primeira_vez (de onde
 --   sai "novas nesta busca" sem comparar coletas).
--- `prospecting_campaigns`: multi-cidades + recorrência (dias; o agendador é
---   fase futura — a coluna guarda a intenção, não finge agendar).
+-- `prospecting_campaigns`: multi-cidades + recorrÃªncia (dias; o agendador Ã©
+--   fase futura â€” a coluna guarda a intenÃ§Ã£o, nÃ£o finge agendar).
 -- `prospecting_settings`: singleton por org. A chave do Google vai CIFRADA
---   (mesma infra fn_encrypt_oauth); o GET nunca a devolve (só `tem_chave`).
+--   (mesma infra fn_encrypt_oauth); o GET nunca a devolve (sÃ³ `tem_chave`).
 --
 -- RLS molde 0204: leitura org, escrita agent+ (settings manager+).
 -- ============================================================================
@@ -18648,7 +18648,7 @@ create trigger trg_prospecting_searches_updated_at
   before update on public.prospecting_searches
   for each row execute function public.fn_set_updated_at();
 
--- ─── Prospects ──────────────────────────────────────────────────────────────
+-- â”€â”€â”€ Prospects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.business_prospects (
   id uuid primary key default gen_random_uuid(),
@@ -18688,14 +18688,14 @@ create table if not exists public.business_prospects (
   status_comercial text not null default 'novo',
   score integer not null default 0,
 
-  -- Vínculo CRM (não duplica cliente: ver §17 do plano).
+  -- VÃ­nculo CRM (nÃ£o duplica cliente: ver Â§17 do plano).
   contact_id uuid references public.contacts(id) on delete set null,
   lead_id uuid references public.crm_leads(id) on delete set null,
 
-  -- Sugestão de duplicata (revisão humana, nunca merge automático).
+  -- SugestÃ£o de duplicata (revisÃ£o humana, nunca merge automÃ¡tico).
   candidato_duplicado_de uuid references public.business_prospects(id) on delete set null,
 
-  -- LGPD/governança (§26): origem, verificação, não-contatar, bloqueio.
+  -- LGPD/governanÃ§a (Â§26): origem, verificaÃ§Ã£o, nÃ£o-contatar, bloqueio.
   source text,
   source_url text,
   discovered_at timestamptz not null default now(),
@@ -18718,13 +18718,13 @@ create table if not exists public.business_prospects (
   constraint business_prospects_nota_faixa check (nota is null or (nota >= 0 and nota <= 5))
 );
 
--- Deduplicação nível 1 (§8): provider + id externo é identidade.
+-- DeduplicaÃ§Ã£o nÃ­vel 1 (Â§8): provider + id externo Ã© identidade.
 create unique index if not exists business_prospects_provider_id_key
   on public.business_prospects (organization_id, provider, external_id)
   where external_id is not null;
 
--- Níveis 2–5 viram ÍNDICE (não unique): matriz/franquia compartilha telefone
--- e domínio entre lojas distintas — unique fundiria o que não deve.
+-- NÃ­veis 2â€“5 viram ÃNDICE (nÃ£o unique): matriz/franquia compartilha telefone
+-- e domÃ­nio entre lojas distintas â€” unique fundiria o que nÃ£o deve.
 create index if not exists business_prospects_org_fone_idx
   on public.business_prospects (organization_id, telefone_normalizado)
   where telefone_normalizado is not null;
@@ -18768,7 +18768,7 @@ create trigger trg_business_prospects_updated_at
   before update on public.business_prospects
   for each row execute function public.fn_set_updated_at();
 
--- ─── N:N busca↔prospect ─────────────────────────────────────────────────────
+-- â”€â”€â”€ N:N buscaâ†”prospect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.prospect_search_results (
   search_id uuid not null references public.prospecting_searches(id) on delete cascade,
@@ -18807,7 +18807,7 @@ revoke all on public.prospect_search_results from anon;
 grant select, insert, update, delete on public.prospect_search_results to authenticated;
 grant all on public.prospect_search_results to service_role;
 
--- ─── Campanhas ──────────────────────────────────────────────────────────────
+-- â”€â”€â”€ Campanhas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.prospecting_campaigns (
   id uuid primary key default gen_random_uuid(),
@@ -18815,7 +18815,7 @@ create table if not exists public.prospecting_campaigns (
   nome text not null,
   objetivo text,
   categorias text[] not null default '{}',
-  -- [{cidade, estado}] — JSON porque cidade não é entidade (sem ciclo próprio).
+  -- [{cidade, estado}] â€” JSON porque cidade nÃ£o Ã© entidade (sem ciclo prÃ³prio).
   cidades jsonb not null default '[]',
   status text not null default 'rascunho',
   recorrencia_dias integer,
@@ -18864,7 +18864,7 @@ alter table public.prospecting_searches
   add constraint prospecting_searches_campaign_fk
   foreign key (campaign_id) references public.prospecting_campaigns(id) on delete set null;
 
--- ─── Settings (singleton por org) ───────────────────────────────────────────
+-- â”€â”€â”€ Settings (singleton por org) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 create table if not exists public.prospecting_settings (
   organization_id uuid primary key references public.organizations(id) on delete cascade,
@@ -18898,7 +18898,7 @@ create policy prospecting_settings_select on public.prospecting_settings
     (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
   );
 
--- Config é `manager` para cima: chave de API e teto de custo.
+-- Config Ã© `manager` para cima: chave de API e teto de custo.
 drop policy if exists prospecting_settings_write on public.prospecting_settings;
 create policy prospecting_settings_write on public.prospecting_settings
   using (
@@ -18922,37 +18922,37 @@ create trigger trg_prospecting_settings_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.prospecting_settings is
-  'Config da prospecção (singleton): provider, limites, grade, ritmo. Chave cifrada; GET devolve só tem_chave.';
+  'Config da prospecÃ§Ã£o (singleton): provider, limites, grade, ritmo. Chave cifrada; GET devolve sÃ³ tem_chave.';
 
 comment on table public.prospecting_searches is
   'Uma busca = um job com checkpoint (total/next/processed). Cache por search_hash; custo em requests/details/cents.';
 comment on table public.business_prospects is
-  'Empresas descobertas e normalizadas. Dedup: unique só em (provider, external_id); telefone/domínio são índice (matriz compartilha). Score é heurística documentada.';
+  'Empresas descobertas e normalizadas. Dedup: unique sÃ³ em (provider, external_id); telefone/domÃ­nio sÃ£o Ã­ndice (matriz compartilha). Score Ã© heurÃ­stica documentada.';
 comment on table public.prospecting_campaigns is
-  'Multi-cidades + categorias. recorrencia_dias guarda a intenção; o agendador é fase futura.';
+  'Multi-cidades + categorias. recorrencia_dias guarda a intenÃ§Ã£o; o agendador Ã© fase futura.';
 
 
--- APÊNDICE 0221 — POLITICAS COMERCIAIS (idempotente; fonte: supabase/migrations/20260905220000_0221_politicas_comerciais.sql)
+-- APÃŠNDICE 0221 â€” POLITICAS COMERCIAIS (idempotente; fonte: supabase/migrations/20260905220000_0221_politicas_comerciais.sql)
 
 -- ============================================================================
--- 0221 — POLÍTICAS COMERCIAIS (workflow de aprovação e travas da venda)
+-- 0221 â€” POLÃTICAS COMERCIAIS (workflow de aprovaÃ§Ã£o e travas da venda)
 --
--- Singleton por org: teto de desconto do vendedor, permissão de estoque
--- negativo e comissão padrão. Sem ela, defaults seguros valem (5%, sem
--- negativo): loja nova não nasce liberando tudo por ausência de config.
--- RLS: leitura org, escrita manager+ (política comercial é decisão de dono).
+-- Singleton por org: teto de desconto do vendedor, permissÃ£o de estoque
+-- negativo e comissÃ£o padrÃ£o. Sem ela, defaults seguros valem (5%, sem
+-- negativo): loja nova nÃ£o nasce liberando tudo por ausÃªncia de config.
+-- RLS: leitura org, escrita manager+ (polÃ­tica comercial Ã© decisÃ£o de dono).
 -- ============================================================================
 
 create table if not exists public.commercial_policies (
   organization_id uuid primary key references public.organizations(id) on delete cascade,
-  -- Desconto (item ou geral) até aqui: vendedor aprova sozinho. Acima: o
-  -- pedido cai em `em_analise` sozinho (a rota força) e só gerente aprova.
+  -- Desconto (item ou geral) atÃ© aqui: vendedor aprova sozinho. Acima: o
+  -- pedido cai em `em_analise` sozinho (a rota forÃ§a) e sÃ³ gerente aprova.
   desconto_max_vendedor_pct numeric(5, 2) not null default 5,
   -- Estoque pode negativar? false = bloqueia (com override de gerente);
   -- true = vende mesmo sem saldo (vale para sob-encomenda global).
   permite_estoque_negativo boolean not null default false,
-  -- Comissão padrão da operação (% sobre o total). NULL = sem comissão
-  -- configurada (a tela não mostra estimativa em vez de chutar).
+  -- ComissÃ£o padrÃ£o da operaÃ§Ã£o (% sobre o total). NULL = sem comissÃ£o
+  -- configurada (a tela nÃ£o mostra estimativa em vez de chutar).
   comissao_padrao_pct numeric(5, 2),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -18995,24 +18995,24 @@ create trigger trg_commercial_policies_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.commercial_policies is
-  'Trava comercial da org: teto de desconto sem aprovação, estoque negativo e comissão. Sem linha, valem os defaults seguros da DDL.';
+  'Trava comercial da org: teto de desconto sem aprovaÃ§Ã£o, estoque negativo e comissÃ£o. Sem linha, valem os defaults seguros da DDL.';
 
 
--- APÊNDICE 0222 — PEDIDO COMPLETO (idempotente; fonte: supabase/migrations/20260905230000_0222_pedido_completo.sql)
+-- APÃŠNDICE 0222 â€” PEDIDO COMPLETO (idempotente; fonte: supabase/migrations/20260905230000_0222_pedido_completo.sql)
 
 -- ============================================================================
--- 0222 — PEDIDO COMPLETO (observações separadas, entrega, desconto %, parcelas)
+-- 0222 â€” PEDIDO COMPLETO (observaÃ§Ãµes separadas, entrega, desconto %, parcelas)
 --
--- - `obs_interna`: o que a equipe lê e o cliente nunca vê. `observacoes`
---   segue existindo como a do CLIENTE (imprime no PDF) — separar sem migrar
---   dado: o que já foi escrito era visível, e escondê-lo retroativamente
---   mudaria documento já entregue.
--- - Entrega: transportadora, modalidade e previsão (o romaneio imprime).
+-- - `obs_interna`: o que a equipe lÃª e o cliente nunca vÃª. `observacoes`
+--   segue existindo como a do CLIENTE (imprime no PDF) â€” separar sem migrar
+--   dado: o que jÃ¡ foi escrito era visÃ­vel, e escondÃª-lo retroativamente
+--   mudaria documento jÃ¡ entregue.
+-- - Entrega: transportadora, modalidade e previsÃ£o (o romaneio imprime).
 -- - `desconto_pct`: desconto GERAL em % (alternativo a desconto_cents em R$;
---   valem juntos, somando — a rota calcula). Por item continua desconto_pct.
--- - `parcelas`: espelho calculado da condição (30/60/90 → 3 linhas com
---   vencimento). JSON porque parcela não tem ciclo próprio: recalcular é
---   barato, e entidade sem comportamento é tabela à toa (DIRC-C).
+--   valem juntos, somando â€” a rota calcula). Por item continua desconto_pct.
+-- - `parcelas`: espelho calculado da condiÃ§Ã£o (30/60/90 â†’ 3 linhas com
+--   vencimento). JSON porque parcela nÃ£o tem ciclo prÃ³prio: recalcular Ã©
+--   barato, e entidade sem comportamento Ã© tabela Ã  toa (DIRC-C).
 -- ============================================================================
 
 alter table public.commercial_orders
@@ -19038,19 +19038,19 @@ alter table public.commercial_orders
   check (desconto_pct is null or (desconto_pct >= 0 and desconto_pct <= 100));
 
 comment on column public.commercial_orders.obs_interna is
-  'Só a equipe lê. observacoes (legado) é a do cliente e imprime no PDF.';
+  'SÃ³ a equipe lÃª. observacoes (legado) Ã© a do cliente e imprime no PDF.';
 comment on column public.commercial_orders.parcelas is
-  'Espelho calculado [{n, valor_cents, vencimento}]: derivado da condição, recalculado a cada gravação — sem ciclo próprio.';
+  'Espelho calculado [{n, valor_cents, vencimento}]: derivado da condiÃ§Ã£o, recalculado a cada gravaÃ§Ã£o â€” sem ciclo prÃ³prio.';
 
 
--- APÊNDICE 0223 — TABELA NO PEDIDO (idempotente; fonte: supabase/migrations/20260905230001_0223_tabela_no_pedido.sql)
+-- APÃŠNDICE 0223 â€” TABELA NO PEDIDO (idempotente; fonte: supabase/migrations/20260905230001_0223_tabela_no_pedido.sql)
 
 -- ============================================================================
--- 0223 — TABELA USADA NO PEDIDO (filtro e auditoria da lista refeita)
+-- 0223 â€” TABELA USADA NO PEDIDO (filtro e auditoria da lista refeita)
 --
--- O POST aceitava `price_table_id` mas não persistia: o preço aplicado
--- ficava sem rastro de QUAL tabela o gerou, e a lista não filtrava por
--- tabela. FK anulável com `set null` (apagar tabela não apaga venda).
+-- O POST aceitava `price_table_id` mas nÃ£o persistia: o preÃ§o aplicado
+-- ficava sem rastro de QUAL tabela o gerou, e a lista nÃ£o filtrava por
+-- tabela. FK anulÃ¡vel com `set null` (apagar tabela nÃ£o apaga venda).
 -- ============================================================================
 
 alter table public.commercial_orders
@@ -19060,20 +19060,20 @@ create index if not exists commercial_orders_tabela_idx
   on public.commercial_orders (organization_id, price_table_id);
 
 comment on column public.commercial_orders.price_table_id is
-  'Tabela que gerou os preços (NULL = preço base/negociado). Auditoria do preço, não só do valor.';
+  'Tabela que gerou os preÃ§os (NULL = preÃ§o base/negociado). Auditoria do preÃ§o, nÃ£o sÃ³ do valor.';
 
 
--- APÊNDICE 0224 — CNPJ NO CONTATO (idempotente; fonte: supabase/migrations/20260905230002_0224_cnpj_no_contato.sql)
+-- APÃŠNDICE 0224 â€” CNPJ NO CONTATO (idempotente; fonte: supabase/migrations/20260905230002_0224_cnpj_no_contato.sql)
 
 -- ============================================================================
--- 0224 — CNPJ NO CONTATO (autocompletar empresa pela Receita/BrasilAPI)
+-- 0224 â€” CNPJ NO CONTATO (autocompletar empresa pela Receita/BrasilAPI)
 --
--- `cnpj` em DÍGITOS, texto puro: CNPJ é dado público (não é segredo como o
--- CPF, que vai cifrado + hash). Unique parcial por org — o mesmo CNPJ não
--- vira dois clientes, e é por ele que a importação de prospects acha quem já
--- existe. Endereço da empresa vai em `source_metadata` (sem coluna nova:
--- endereço de ENTREGA mora no pedido, e endereço fiscal não tem ciclo
--- próprio que justifique entidade).
+-- `cnpj` em DÃGITOS, texto puro: CNPJ Ã© dado pÃºblico (nÃ£o Ã© segredo como o
+-- CPF, que vai cifrado + hash). Unique parcial por org â€” o mesmo CNPJ nÃ£o
+-- vira dois clientes, e Ã© por ele que a importaÃ§Ã£o de prospects acha quem jÃ¡
+-- existe. EndereÃ§o da empresa vai em `source_metadata` (sem coluna nova:
+-- endereÃ§o de ENTREGA mora no pedido, e endereÃ§o fiscal nÃ£o tem ciclo
+-- prÃ³prio que justifique entidade).
 -- ============================================================================
 
 alter table public.contacts
@@ -19091,16 +19091,16 @@ create unique index if not exists contacts_org_cnpj_key
   where cnpj is not null;
 
 comment on column public.contacts.cnpj is
-  'CNPJ com 14 dígitos, dado público. Unique por org: mesma empresa, um contato. Preenchido via BrasilAPI no cadastro.';
+  'CNPJ com 14 dÃ­gitos, dado pÃºblico. Unique por org: mesma empresa, um contato. Preenchido via BrasilAPI no cadastro.';
 
--- APÊNDICE 0225 — METAS COMERCIAIS (idempotente; fonte: supabase/migrations/20260906080000_0225_metas_comerciais.sql)
+-- APÃŠNDICE 0225 â€” METAS COMERCIAIS (idempotente; fonte: supabase/migrations/20260906080000_0225_metas_comerciais.sql)
 
 -- ============================================================================
--- 0225 — METAS COMERCIAIS (o denominador do dashboard)
+-- 0225 â€” METAS COMERCIAIS (o denominador do dashboard)
 --
--- `commercial_goals`: uma linha por (org, mês, vendedor). `vendedor_user_id`
--- NULL = meta DA LOJA; preenchido = meta individual. NULL não colide em
--- unique do Postgres, então são DOIS índices parciais (loja e vendedor).
+-- `commercial_goals`: uma linha por (org, mÃªs, vendedor). `vendedor_user_id`
+-- NULL = meta DA LOJA; preenchido = meta individual. NULL nÃ£o colide em
+-- unique do Postgres, entÃ£o sÃ£o DOIS Ã­ndices parciais (loja e vendedor).
 -- RLS molde 0204: leitura org, escrita manager+.
 -- ============================================================================
 
@@ -19156,14 +19156,14 @@ grant select, insert, update, delete on public.commercial_goals to authenticated
 grant all on public.commercial_goals to service_role;
 
 comment on table public.commercial_goals is
-  'Meta mensal em centavos por (org, mês). vendedor_user_id NULL = meta da loja; preenchido = meta individual do vendedor.';
+  'Meta mensal em centavos por (org, mÃªs). vendedor_user_id NULL = meta da loja; preenchido = meta individual do vendedor.';
 comment on column public.commercial_goals.ano_mes is
-  'Mês de vigência em YYYY-MM. Sem dia: meta é mensal por definição.';
+  'MÃªs de vigÃªncia em YYYY-MM. Sem dia: meta Ã© mensal por definiÃ§Ã£o.';
 
--- APÊNDICE 0226 — COMISSÕES (idempotente; fonte: supabase/migrations/20260906140000_0226_comissoes.sql)
+-- APÃŠNDICE 0226 â€” COMISSÃ•ES (idempotente; fonte: supabase/migrations/20260906140000_0226_comissoes.sql)
 
 -- ============================================================================
--- 0226 — COMISSÕES (o que o vendedor leva por pedido)
+-- 0226 â€” COMISSÃ•ES (o que o vendedor leva por pedido)
 --
 -- `catalog_products.comissao_pct` (NULL = sem regra) + a tabela
 -- `commercial_commission_baixas` (um pedido, uma baixa). RLS molde 0204:
@@ -19185,7 +19185,7 @@ begin
 end $$;
 
 comment on column public.catalog_products.comissao_pct is
-  'Comissão do vendedor em % sobre o item. NULL = produto sem regra (não é 0).';
+  'ComissÃ£o do vendedor em % sobre o item. NULL = produto sem regra (nÃ£o Ã© 0).';
 
 create table if not exists public.commercial_commission_baixas (
   id uuid primary key default gen_random_uuid(),
@@ -19231,12 +19231,12 @@ grant select, insert, update, delete on public.commercial_commission_baixas to a
 grant all on public.commercial_commission_baixas to service_role;
 
 comment on table public.commercial_commission_baixas is
-  'Baixa de comissão paga por pedido (o "Dar Baixa" do relatório). Um pedido, uma baixa.';
+  'Baixa de comissÃ£o paga por pedido (o "Dar Baixa" do relatÃ³rio). Um pedido, uma baixa.';
 
--- APÊNDICE 0227 — BAIXA DE TÍTULOS (idempotente; fonte: supabase/migrations/20260906150000_0227_baixa_de_titulos.sql)
+-- APÃŠNDICE 0227 â€” BAIXA DE TÃTULOS (idempotente; fonte: supabase/migrations/20260906150000_0227_baixa_de_titulos.sql)
 
 -- ============================================================================
--- 0227 — BAIXA DE TÍTULOS (o "pago" das contas a receber)
+-- 0227 â€” BAIXA DE TÃTULOS (o "pago" das contas a receber)
 --
 -- `commercial_titulo_baixas`: uma linha por parcela paga. RLS molde 0204:
 -- leitura org, escrita manager+.
@@ -19286,12 +19286,12 @@ grant select, insert, update, delete on public.commercial_titulo_baixas to authe
 grant all on public.commercial_titulo_baixas to service_role;
 
 comment on table public.commercial_titulo_baixas is
-  'Baixa de parcela recebida (o "pago" dos Títulos). Uma parcela, uma baixa.';
+  'Baixa de parcela recebida (o "pago" dos TÃ­tulos). Uma parcela, uma baixa.';
 
--- APÊNDICE 0228 — VITRINE (idempotente; fonte: supabase/migrations/20260906160000_0228_vitrine.sql)
+-- APÃŠNDICE 0228 â€” VITRINE (idempotente; fonte: supabase/migrations/20260906160000_0228_vitrine.sql)
 
 -- ============================================================================
--- 0228 — VITRINE (destaques e promoções do catálogo)
+-- 0228 â€” VITRINE (destaques e promoÃ§Ãµes do catÃ¡logo)
 -- ============================================================================
 
 alter table public.catalog_products
@@ -19319,18 +19319,18 @@ create index if not exists catalog_products_destaque_idx
   where destaque is true;
 
 comment on column public.catalog_products.destaque is
-  'Vai para a aba Destaques do catálogo (curadoria manual da loja).';
+  'Vai para a aba Destaques do catÃ¡logo (curadoria manual da loja).';
 
 comment on column public.catalog_products.preco_promocional_cents is
-  'Preço da promoção. Vale com promocao_ate nula (indeterminada) ou futura.';
+  'PreÃ§o da promoÃ§Ã£o. Vale com promocao_ate nula (indeterminada) ou futura.';
 
 comment on column public.catalog_products.promocao_ate is
-  'Último dia da promoção (YYYY-MM-DD, vale o dia inteiro). NULL = indeterminada.';
+  'Ãšltimo dia da promoÃ§Ã£o (YYYY-MM-DD, vale o dia inteiro). NULL = indeterminada.';
 
--- APÊNDICE 0229 — TAREFAS E ATIVIDADES (idempotente; fonte: supabase/migrations/20260906170000_0229_tarefas_e_atividades.sql)
+-- APÃŠNDICE 0229 â€” TAREFAS E ATIVIDADES (idempotente; fonte: supabase/migrations/20260906170000_0229_tarefas_e_atividades.sql)
 
 -- ============================================================================
--- 0229 — TAREFAS E ATIVIDADES (a rotina do vendedor externo)
+-- 0229 â€” TAREFAS E ATIVIDADES (a rotina do vendedor externo)
 -- ============================================================================
 
 create table if not exists public.commercial_tasks (
@@ -19433,12 +19433,12 @@ grant select, insert, update, delete on public.commercial_activities to authenti
 grant all on public.commercial_activities to service_role;
 
 comment on table public.commercial_tasks is
-  'Tarefas do vendedor externo (visita, ligação, retorno) com check-in de lugar + hora.';
+  'Tarefas do vendedor externo (visita, ligaÃ§Ã£o, retorno) com check-in de lugar + hora.';
 
 comment on table public.commercial_activities is
-  'Atividades realizadas (o que aconteceu no contato) — base do relatório de atendimentos.';
+  'Atividades realizadas (o que aconteceu no contato) â€” base do relatÃ³rio de atendimentos.';
 
--- APÊNDICE 0230 — ENDEREÇO E FISCAL NO CONTATO (idempotente; fonte: supabase/migrations/20260906180000_0230_endereco_no_contato.sql)
+-- APÃŠNDICE 0230 â€” ENDEREÃ‡O E FISCAL NO CONTATO (idempotente; fonte: supabase/migrations/20260906180000_0230_endereco_no_contato.sql)
 
 alter table public.contacts
   add column if not exists tipo_pessoa text check (tipo_pessoa in ('F', 'J'));
@@ -19477,12 +19477,12 @@ create index if not exists contacts_org_cidade_idx
   on public.contacts (organization_id, cidade);
 
 comment on column public.contacts.tipo_pessoa is
-  'F = pessoa física, J = jurídica. Define o card do cadastro (CPF x CNPJ+IE).';
+  'F = pessoa fÃ­sica, J = jurÃ­dica. Define o card do cadastro (CPF x CNPJ+IE).';
 
 comment on column public.contacts.fantasia is
-  'Nome fantasia (PJ). Razão social vai em name/display_name.';
+  'Nome fantasia (PJ). RazÃ£o social vai em name/display_name.';
 
--- APÊNDICE 0231 — ROTEIRIZADOR DE ENTREGAS (idempotente; fonte: supabase/migrations/20260906210000_0231_roteirizador_de_entregas.sql)
+-- APÃŠNDICE 0231 â€” ROTEIRIZADOR DE ENTREGAS (idempotente; fonte: supabase/migrations/20260906210000_0231_roteirizador_de_entregas.sql)
 
 alter table public.contacts
   add column if not exists latitude double precision;
@@ -19637,12 +19637,12 @@ begin
   end if;
 end $$;
 
--- APÊNDICE 0232 — ÍNDICE DA ORDEM CRONOLÓGICA DOS PEDIDOS (idempotente; fonte: supabase/migrations/20260907010000_0232_indice_pedidos_cronologico.sql)
+-- APÃŠNDICE 0232 â€” ÃNDICE DA ORDEM CRONOLÃ“GICA DOS PEDIDOS (idempotente; fonte: supabase/migrations/20260907010000_0232_indice_pedidos_cronologico.sql)
 
 create index if not exists commercial_orders_org_created_idx
   on public.commercial_orders (organization_id, created_at);
 
--- APÊNDICE 0233 — RECEBÍVEIS FINANCEIROS (idempotente; fonte: supabase/migrations/20260908010000_0233_recebiveis_financeiros.sql)
+-- APÃŠNDICE 0233 â€” RECEBÃVEIS FINANCEIROS (idempotente; fonte: supabase/migrations/20260908010000_0233_recebiveis_financeiros.sql)
 
 create table if not exists public.financial_receivables (
   id uuid primary key default gen_random_uuid(),
@@ -19747,7 +19747,7 @@ revoke all on public.financial_payments from anon;
 grant select, insert, update, delete on public.financial_payments to authenticated;
 grant all on public.financial_payments to service_role;
 
--- APÊNDICE 0234 — FILA FISCAL E EVENTOS (idempotente; fonte: supabase/migrations/20260908020000_0234_fila_fiscal_e_eventos.sql)
+-- APÃŠNDICE 0234 â€” FILA FISCAL E EVENTOS (idempotente; fonte: supabase/migrations/20260908020000_0234_fila_fiscal_e_eventos.sql)
 
 alter table public.invoices drop constraint if exists invoices_status_valido;
 
@@ -19827,16 +19827,16 @@ grant select on public.fiscal_events to authenticated;
 grant all on public.fiscal_events to service_role;
 
 -- ---------------------------------------------------------------------------
--- 0238 — ANONIMIZAR UM CONTATO DEIXAVA PROSPECÇÃO, NOTA DE ENTRADA E CONTA A
---    PAGAR LEGÍVEIS (apêndice idempotente — mesma carga da migration 0238)
+-- 0238 â€” ANONIMIZAR UM CONTATO DEIXAVA PROSPECÃ‡ÃƒO, NOTA DE ENTRADA E CONTA A
+--    PAGAR LEGÃVEIS (apÃªndice idempotente â€” mesma carga da migration 0238)
 --
--- Três tabelas chegadas em setembro ficaram fora da lista de tabelas da
--- `fn_lgpd_cascade_redact_contact`. Mesma razão da 0184: função vem do dump com
--- ~180 linhas, e carregar uma CÓPIA dela no apêndice criaria duas fontes que
--- divergem. O conserto é trigger `after update of is_anonymized on contacts`,
--- na MESMA transação do cascade, como a 0174 e a 0184. O apêndice entra ANTES
--- da varredura anon (0116) porque cria função — o bloco da varredura é, de
--- propósito, o último do arquivo.
+-- TrÃªs tabelas chegadas em setembro ficaram fora da lista de tabelas da
+-- `fn_lgpd_cascade_redact_contact`. Mesma razÃ£o da 0184: funÃ§Ã£o vem do dump com
+-- ~180 linhas, e carregar uma CÃ“PIA dela no apÃªndice criaria duas fontes que
+-- divergem. O conserto Ã© trigger `after update of is_anonymized on contacts`,
+-- na MESMA transaÃ§Ã£o do cascade, como a 0174 e a 0184. O apÃªndice entra ANTES
+-- da varredura anon (0116) porque cria funÃ§Ã£o â€” o bloco da varredura Ã©, de
+-- propÃ³sito, o Ãºltimo do arquivo.
 -- ---------------------------------------------------------------------------
 create or replace function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado()
 returns trigger
@@ -19886,9 +19886,9 @@ begin
 end;
 $$;
 
--- Função de trigger não exige EXECUTE de quem dispara o UPDATE, então revogar
--- das três origens não a quebra — e a mantém fora da lista de exceções do
--- invariante de hardening, que é congelada.
+-- FunÃ§Ã£o de trigger nÃ£o exige EXECUTE de quem dispara o UPDATE, entÃ£o revogar
+-- das trÃªs origens nÃ£o a quebra â€” e a mantÃ©m fora da lista de exceÃ§Ãµes do
+-- invariante de hardening, que Ã© congelada.
 revoke execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() from public, anon, authenticated;
 grant  execute on function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado() to service_role;
 
@@ -19899,18 +19899,18 @@ create trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar
   when (new.is_anonymized is true and old.is_anonymized is distinct from true)
   execute function public.fn_redigir_prospeccao_e_fiscal_do_contato_anonimizado();
 
--- Os `comment on column` das três tabelas vivem NO FIM do arquivo, junto ao
--- apêndice 0236 que as cria: num INSTALL, este bloco roda antes delas
+-- Os `comment on column` das trÃªs tabelas vivem NO FIM do arquivo, junto ao
+-- apÃªndice 0236 que as cria: num INSTALL, este bloco roda antes delas
 -- existirem (psql:<stdin>:N: ERROR: relation "public.fiscal_entradas" does
--- not exist — medido no modo INSTALL do CI).
+-- not exist â€” medido no modo INSTALL do CI).
 
 notify pgrst, 'reload schema';
 
--- Função do apêndice 0243 ANTES da varredura de propósito: o teste
--- `varredura-anon-e-o-ultimo-bloco` proíbe `create function` depois dela
--- (o ALTER DEFAULT PRIVILEGES faria a função nascer com EXECUTE para anon
--- em quem atualiza). Os grants abaixo já negam anon explicitamente; a
--- posição garante a cura mesmo assim.
+-- FunÃ§Ã£o do apÃªndice 0243 ANTES da varredura de propÃ³sito: o teste
+-- `varredura-anon-e-o-ultimo-bloco` proÃ­be `create function` depois dela
+-- (o ALTER DEFAULT PRIVILEGES faria a funÃ§Ã£o nascer com EXECUTE para anon
+-- em quem atualiza). Os grants abaixo jÃ¡ negam anon explicitamente; a
+-- posiÃ§Ã£o garante a cura mesmo assim.
 create or replace function public.fn_proximo_numero_compra(p_org uuid)
 returns integer
   language plpgsql security definer
@@ -19941,12 +19941,12 @@ grant execute on function public.fn_proximo_numero_compra(uuid) to authenticated
 grant execute on function public.fn_proximo_numero_compra(uuid) to service_role;
 
 -- ---------------------------------------------------------------------
--- 0252_encrypt_decrypt_cpf — a cifra at-rest do CPF que o CHECK exige
--- ⚠️ ENTRA ANTES DO BLOCO DA VARREDURA anon: cria FUNÇÃO, e a varredura
--- (logo abaixo) é, de propósito, o último do arquivo — create function
--- depois dela nasce com anon no ACL e ninguém o cura no mesmo run.
+-- 0252_encrypt_decrypt_cpf â€” a cifra at-rest do CPF que o CHECK exige
+-- âš ï¸ ENTRA ANTES DO BLOCO DA VARREDURA anon: cria FUNÃ‡ÃƒO, e a varredura
+-- (logo abaixo) Ã©, de propÃ³sito, o Ãºltimo do arquivo â€” create function
+-- depois dela nasce com anon no ACL e ninguÃ©m o cura no mesmo run.
 -- O update.sh reaplica o baseline inteiro: create or replace idempotente,
--- do mesmo caminho de quem instala fresco (que já recebe pelo corpo).
+-- do mesmo caminho de quem instala fresco (que jÃ¡ recebe pelo corpo).
 -- ---------------------------------------------------------------------
 create or replace function public.encrypt_cpf(p_plaintext text) returns bytea
   language plpgsql security definer
@@ -19956,7 +19956,7 @@ declare
   k text := private.fn_oauth_key();
 begin
   if k is null or length(k) < 32 then
-    raise exception 'CHAVE_DE_CIFRA_AUSENTE — private.app_secrets: nuvemshop_oauth_key (ou GUC app.nuvemshop_oauth_key)';
+    raise exception 'CHAVE_DE_CIFRA_AUSENTE â€” private.app_secrets: nuvemshop_oauth_key (ou GUC app.nuvemshop_oauth_key)';
   end if;
   return pgp_sym_encrypt(p_plaintext, k, 'cipher-algo=aes256');
 end;
@@ -19998,33 +19998,33 @@ grant execute on function public.decrypt_cpf(uuid, uuid) to authenticated, servi
 comment on function public.encrypt_cpf(text) is
   'Cifra at-rest do CPF (pgp_sym_encrypt/aes256, chave mestra da 0041). Exigida pelo CHECK contacts_cpf_consistency.';
 comment on function public.decrypt_cpf(uuid, uuid) is
-  'Decifra o CPF de UM contato da ORG informada (molde 0209: membresia conferida quando há auth.uid). Service_role (MCP) segue direto.';
+  'Decifra o CPF de UM contato da ORG informada (molde 0209: membresia conferida quando hÃ¡ auth.uid). Service_role (MCP) segue direto.';
 
--- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
+-- ---- VARREDURA anon: funÃ§Ã£o nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
--- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
--- dele — quem o empurrar para o meio desarma a cura para tudo que vier depois.
+-- âš ï¸ ESTE BLOCO Ã‰, DE PROPÃ“SITO, O ÃšLTIMO DO ARQUIVO. ApÃªndice novo entra ANTES
+-- dele â€” quem o empurrar para o meio desarma a cura para tudo que vier depois.
 -- Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
 --
--- A 0108 revogou anon numa LISTA de 8 funções, medida num banco instalado do
+-- A 0108 revogou anon numa LISTA de 8 funÃ§Ãµes, medida num banco instalado do
 -- ZERO. Quem ATUALIZA tem outro estado: o `ALTER DEFAULT PRIVILEGES ... GRANT
 -- ALL ON FUNCTIONS TO anon` do corpo deste arquivo grava uma entrada em
--- `pg_default_acl` que fica no catálogo PARA SEMPRE, e a partir daí toda função
--- criada em `public` nasce com EXECUTE para anon — inclusive as deste apêndice.
+-- `pg_default_acl` que fica no catÃ¡logo PARA SEMPRE, e a partir daÃ­ toda funÃ§Ã£o
+-- criada em `public` nasce com EXECUTE para anon â€” inclusive as deste apÃªndice.
 --
 -- Medido numa VPS real (2026-08-07), comparando com o que um install fresco
 -- produz: 6 definer expostas a anon e 5 a authenticated, entre elas
--- `fn_decrypt_oauth` — alcançável pela anon key, que vai para o browser.
+-- `fn_decrypt_oauth` â€” alcanÃ§Ã¡vel pela anon key, que vai para o browser.
 --
--- Lista conserta o estoque e reabre no próximo `create function`. Esta varredura
--- é auto-curativa e roda DEPOIS de tudo que cria função, então cura no mesmo run
--- em que o defeito nasceria. Desfazer o ALTER DEFAULT PRIVILEGES não serve: ele
--- vem do `pg_dump` do Supabase e é reescrito a cada re-aplicação.
+-- Lista conserta o estoque e reabre no prÃ³ximo `create function`. Esta varredura
+-- Ã© auto-curativa e roda DEPOIS de tudo que cria funÃ§Ã£o, entÃ£o cura no mesmo run
+-- em que o defeito nasceria. Desfazer o ALTER DEFAULT PRIVILEGES nÃ£o serve: ele
+-- vem do `pg_dump` do Supabase e Ã© reescrito a cada re-aplicaÃ§Ã£o.
 --
--- As duas origens de EXECUTE (a mesma lição da 0108): grant DIRETO a anon, que
--- `revoke from public` não remove; e grant a PUBLIC, do qual anon HERDA, que
--- `revoke from anon` não remove. O privilégio EFETIVO de authenticated e
--- service_role é medido ANTES e devolvido depois — tira anon sem tirar leitura.
+-- As duas origens de EXECUTE (a mesma liÃ§Ã£o da 0108): grant DIRETO a anon, que
+-- `revoke from public` nÃ£o remove; e grant a PUBLIC, do qual anon HERDA, que
+-- `revoke from anon` nÃ£o remove. O privilÃ©gio EFETIVO de authenticated e
+-- service_role Ã© medido ANTES e devolvido depois â€” tira anon sem tirar leitura.
 do $$
 declare
   f record;
@@ -20058,10 +20058,10 @@ begin
   end loop;
 end $$;
 
--- regra 2 (authenticated): as 5 que o update abriu e o install não abre. Aqui não
--- cabe varredura — `authenticated` PRECISA de EXECUTE nos helpers de RLS e em
--- `retrieve_top_k_chunks` (num install fresco ele tem). É julgamento por função,
--- e o alvo de cada linha é o valor que um install fresco produz, medido.
+-- regra 2 (authenticated): as 5 que o update abriu e o install nÃ£o abre. Aqui nÃ£o
+-- cabe varredura â€” `authenticated` PRECISA de EXECUTE nos helpers de RLS e em
+-- `retrieve_top_k_chunks` (num install fresco ele tem). Ã‰ julgamento por funÃ§Ã£o,
+-- e o alvo de cada linha Ã© o valor que um install fresco produz, medido.
 revoke execute on function public.fn_audit_log_row() from authenticated;
 revoke execute on function public.fn_decrypt_oauth(bytea) from authenticated;
 revoke execute on function public.fn_encrypt_oauth(text) from authenticated;
@@ -20074,17 +20074,17 @@ grant execute on function public.fn_encrypt_oauth(text) to service_role;
 grant execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) to service_role;
 grant execute on function public.fn_update_budget_consumption() to service_role;
 
--- ---- versão de acervo conta por MATERIAL, não por agente (migration 0205) ----
+-- ---- versÃ£o de acervo conta por MATERIAL, nÃ£o por agente (migration 0205) ----
 --
--- O índice `ai_kbv_version_unique` era `(agent_id, version_number)`, mas desde a
--- 0181 o número é contado por `knowledge_source_id`. Toda fonte nova nasce com
--- `version_number = 1`, então a SEGUNDA fonte do mesmo agente colidia com a
--- primeira e nunca indexava — a tela dizia "pronto" e `chunks_count` ficava 0.
--- Determinístico, não corrida. Medido em produção: 5 materiais, 1 indexou.
+-- O Ã­ndice `ai_kbv_version_unique` era `(agent_id, version_number)`, mas desde a
+-- 0181 o nÃºmero Ã© contado por `knowledge_source_id`. Toda fonte nova nasce com
+-- `version_number = 1`, entÃ£o a SEGUNDA fonte do mesmo agente colidia com a
+-- primeira e nunca indexava â€” a tela dizia "pronto" e `chunks_count` ficava 0.
+-- DeterminÃ­stico, nÃ£o corrida. Medido em produÃ§Ã£o: 5 materiais, 1 indexou.
 --
--- Dois índices parciais porque há dois regimes: versões anteriores à 0181 têm
+-- Dois Ã­ndices parciais porque hÃ¡ dois regimes: versÃµes anteriores Ã  0181 tÃªm
 -- `knowledge_source_id` NULL e guardam o invariante antigo (por agente); sem o
--- segundo índice elas ficariam sem restrição, já que NULL não colide com NULL.
+-- segundo Ã­ndice elas ficariam sem restriÃ§Ã£o, jÃ¡ que NULL nÃ£o colide com NULL.
 delete from public.ai_knowledge_versions v
  where v.knowledge_source_id is not null
    and exists (
@@ -20110,7 +20110,7 @@ create unique index if not exists ai_kbv_version_por_agente_legado
 
 -- ============================================================================
 
--- APÊNDICE 0235 — FISCAL: CC-E, INUTILIZAÇÃO E CFOP EQUIVALENTE (idempotente; fonte: supabase/migrations/20260908030000_0235_fiscal_cce_inutilizacao_cfop.sql)
+-- APÃŠNDICE 0235 â€” FISCAL: CC-E, INUTILIZAÃ‡ÃƒO E CFOP EQUIVALENTE (idempotente; fonte: supabase/migrations/20260908030000_0235_fiscal_cce_inutilizacao_cfop.sql)
 
 alter table public.fiscal_events drop constraint if exists fiscal_events_tipo_check;
 
@@ -20200,34 +20200,34 @@ grant select, insert, update, delete on public.fiscal_cfop_equivalentes to authe
 grant all on public.fiscal_cfop_equivalentes to service_role;
 
 -- ============================================================================
--- APÊNDICE 0236 — NOTAS DE ENTRADA + CONTAS A PAGAR (idempotente)
+-- APÃŠNDICE 0236 â€” NOTAS DE ENTRADA + CONTAS A PAGAR (idempotente)
 -- ============================================================================
 
 -- ============================================================================
--- 0236 — NOTAS DE ENTRADA (NF-e emitida contra o CNPJ) + CONTAS A PAGAR
+-- 0236 â€” NOTAS DE ENTRADA (NF-e emitida contra o CNPJ) + CONTAS A PAGAR
 --
 -- `fiscal_entradas`: uma linha por NF-e de fornecedor puxada da SEFAZ
--- (distribuição de DF-e, modelo 55). `chave` é a identidade: o mesmo XML
+-- (distribuiÃ§Ã£o de DF-e, modelo 55). `chave` Ã© a identidade: o mesmo XML
 -- nunca vira duas linhas (unique por org), nem com duplo clique nem com
--- retry da sincronização. O XML completo só chega DEPOIS da manifestação
--- do destinatário (regra da SEFAZ, não nossa) — por isso `xml`/`itens_json`
--- nascem nulos e o status anda: nova → manifestada → importada (ou
--- ignorada, quando a nota não é da operação: desfazimento honesto).
+-- retry da sincronizaÃ§Ã£o. O XML completo sÃ³ chega DEPOIS da manifestaÃ§Ã£o
+-- do destinatÃ¡rio (regra da SEFAZ, nÃ£o nossa) â€” por isso `xml`/`itens_json`
+-- nascem nulos e o status anda: nova â†’ manifestada â†’ importada (ou
+-- ignorada, quando a nota nÃ£o Ã© da operaÃ§Ã£o: desfazimento honesto).
 --
--- `fiscal_entrada_cursor`: o `ultNSU` por organização. A próxima
--- sincronização continua daqui — sem ele, cada clique baixaria tudo de
+-- `fiscal_entrada_cursor`: o `ultNSU` por organizaÃ§Ã£o. A prÃ³xima
+-- sincronizaÃ§Ã£o continua daqui â€” sem ele, cada clique baixaria tudo de
 -- novo e a SEFAZ bloquearia o CNPJ por consumo indevido (cStat 656).
 --
 -- `financial_pagaveis`: a conta a pagar por parcela da nota (espelho das
--- `financial_receivables` da 0233, sem pedido próprio). `contact_id` é
+-- `financial_receivables` da 0233, sem pedido prÃ³prio). `contact_id` Ã©
 -- NULLABLE com snapshot (`fornecedor_nome/cnpj` na linha): criar contato
--- exige telefone e o fornecedor pode não ter — o financeiro não pode
+-- exige telefone e o fornecedor pode nÃ£o ter â€” o financeiro nÃ£o pode
 -- depender disso. Sem duplicata na nota, nasce 1 parcela com vencimento
--- na emissão (à vista implícito).
+-- na emissÃ£o (Ã  vista implÃ­cito).
 --
 -- RLS molde 0204/0233: leitura org; escrita das entradas+cursor agent+
--- (operacional); escrita do pagável manager+ (dinheiro é decisão
--- gerencial — mesmo piso das recebíveis).
+-- (operacional); escrita do pagÃ¡vel manager+ (dinheiro Ã© decisÃ£o
+-- gerencial â€” mesmo piso das recebÃ­veis).
 -- ============================================================================
 
 create table if not exists public.fiscal_entradas (
@@ -20258,7 +20258,7 @@ create table if not exists public.fiscal_entradas (
 );
 
 -- A mesma chave nunca vira duas entradas, nem com duplo clique nem com
--- retry: a sincronização faz upsert por esta trava.
+-- retry: a sincronizaÃ§Ã£o faz upsert por esta trava.
 create unique index if not exists fiscal_entradas_org_chave_key
   on public.fiscal_entradas (organization_id, chave);
 
@@ -20293,8 +20293,8 @@ create table if not exists public.financial_pagaveis (
   updated_at timestamptz not null default now()
 );
 
--- Idempotência da geração: a mesma (nota, parcela) nunca vira dois
--- pagáveis. Manual (entrada_id nulo) fica sem a trava, com auditoria.
+-- IdempotÃªncia da geraÃ§Ã£o: a mesma (nota, parcela) nunca vira dois
+-- pagÃ¡veis. Manual (entrada_id nulo) fica sem a trava, com auditoria.
 create unique index if not exists financial_pagaveis_entrada_parcela_key
   on public.financial_pagaveis (organization_id, entrada_id, parcela_n)
   where entrada_id is not null;
@@ -20370,8 +20370,8 @@ create policy financial_pagaveis_write on public.financial_pagaveis
   );
 
 -- `ALTER DEFAULT PRIVILEGES ... GRANT ALL ON TABLES TO anon` do baseline
--- alcança TODA tabela criada depois dele — sem o revoke, os XMLs dos
--- fornecedores ficam legíveis pela anon key, que vai para o browser.
+-- alcanÃ§a TODA tabela criada depois dele â€” sem o revoke, os XMLs dos
+-- fornecedores ficam legÃ­veis pela anon key, que vai para o browser.
 revoke all on public.fiscal_entradas from anon;
 grant select, insert, update, delete on public.fiscal_entradas to authenticated;
 grant all on public.fiscal_entradas to service_role;
@@ -20395,23 +20395,23 @@ create trigger trg_financial_pagaveis_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.fiscal_entradas is
-  'NF-e de entrada (fornecedor emitiu contra o CNPJ): resumo vira linha, XML completo só depois da manifestação. Chave única por org.';
+  'NF-e de entrada (fornecedor emitiu contra o CNPJ): resumo vira linha, XML completo sÃ³ depois da manifestaÃ§Ã£o. Chave Ãºnica por org.';
 comment on table public.fiscal_entrada_cursor is
-  'Cursor da distribuição DF-e por org (ultNSU). Sem ele, cada sincronização baixaria tudo de novo.';
+  'Cursor da distribuiÃ§Ã£o DF-e por org (ultNSU). Sem ele, cada sincronizaÃ§Ã£o baixaria tudo de novo.';
 comment on table public.financial_pagaveis is
-  'Conta a pagar por parcela da nota de entrada. Sem duplicata, 1 parcela com vencimento na emissão.';
+  'Conta a pagar por parcela da nota de entrada. Sem duplicata, 1 parcela com vencimento na emissÃ£o.';
 
--- Os `comment on column` da 0238 vivem AQUI, junto às tabelas que o apêndice
--- 0236 criou — num INSTALL elas ainda não existiam quando o bloco da função
+-- Os `comment on column` da 0238 vivem AQUI, junto Ã s tabelas que o apÃªndice
+-- 0236 criou â€” num INSTALL elas ainda nÃ£o existiam quando o bloco da funÃ§Ã£o
 -- rodou, antes da varredura anon.
 comment on column public.business_prospects.email is
-  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com telefone, endereço, website, domínio e URLs. provider/external_id são PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
+  'Dado pessoal: o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato Ã© anonimizado, junto com telefone, endereÃ§o, website, domÃ­nio e URLs. provider/external_id sÃ£o PRESERVADOS: tiram-los faria o prospecto ser redescoberto.';
 comment on column public.fiscal_entradas.emitente_cnpj is
-  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato é anonimizado (coluna NOT NULL). emitente_nome e emitente_ie também saem; chave, XML e valores são PRESERVADOS — o XML é documento fiscal legal.';
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o troca pelo sentinela 00000000000000 quando o contato Ã© anonimizado (coluna NOT NULL). emitente_nome e emitente_ie tambÃ©m saem; chave, XML e valores sÃ£o PRESERVADOS â€” o XML Ã© documento fiscal legal.';
 comment on column public.financial_pagaveis.fornecedor_nome is
-  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato é anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores são PRESERVADOS — o financeiro é registro de operação.';
+  'Dado do fornecedor (contraparte): o trigger trg_redigir_prospeccao_e_fiscal_ao_anonimizar (migration 0238) o apaga quando o contato Ã© anonimizado, junto com fornecedor_cnpj e observacoes. Parcela, vencimento e valores sÃ£o PRESERVADOS â€” o financeiro Ã© registro de operaÃ§Ã£o.';
 
--- APÊNDICE 0240 - SEPARAÇÃO DA CARGA (idempotente; fonte:
+-- APÃŠNDICE 0240 - SEPARAÃ‡ÃƒO DA CARGA (idempotente; fonte:
 -- supabase/migrations/20260925010000_0240_separacao_da_carga.sql)
 alter table public.shipment_orders
   add column if not exists separado_em timestamptz;
@@ -20420,12 +20420,12 @@ alter table public.shipment_orders
   add column if not exists separado_por uuid references auth.users(id) on delete set null;
 
 comment on column public.shipment_orders.separado_em is
-  'Quando o item foi separado e conferido (NULL = pendente). A carga só sai de montando com tudo separado.';
+  'Quando o item foi separado e conferido (NULL = pendente). A carga sÃ³ sai de montando com tudo separado.';
 
 comment on column public.shipment_orders.separado_por is
   'Quem separou e conferiu o item.';
 
--- APÊNDICE 0241 - POLÍTICA DE EXECUÇÃO AUTÔNOMA (idempotente; fonte:
+-- APÃŠNDICE 0241 - POLÃTICA DE EXECUÃ‡ÃƒO AUTÃ”NOMA (idempotente; fonte:
 -- supabase/migrations/20260925020000_0241_politica_execucao_autonoma.sql)
 create table if not exists public.ai_execution_policies (
   organization_id uuid primary key references public.organizations(id) on delete cascade,
@@ -20467,9 +20467,9 @@ create trigger trg_ai_execution_policies_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.ai_execution_policies is
-  'Política de execução autônoma da org (NEXUS §35): teto de nível, follow-up executável e fluxo padrão. Sem linha, nada executa.';
+  'PolÃ­tica de execuÃ§Ã£o autÃ´noma da org (NEXUS Â§35): teto de nÃ­vel, follow-up executÃ¡vel e fluxo padrÃ£o. Sem linha, nada executa.';
 
--- APÊNDICE 0242 - MOVIMENTAÇÕES DE ESTOQUE (idempotente; fonte:
+-- APÃŠNDICE 0242 - MOVIMENTAÃ‡Ã•ES DE ESTOQUE (idempotente; fonte:
 -- supabase/migrations/20260925030000_0242_movimentos_de_estoque.sql)
 alter table public.catalog_products
   add column if not exists estoque_minimo integer not null default 0;
@@ -20530,11 +20530,11 @@ create index if not exists inventory_movements_produto_idx
   on public.inventory_movements (organization_id, product_id, created_at desc);
 
 comment on table public.inventory_movements is
-  'Razão do estoque (NEXUS §46): cada linha diz quem/quando/quanto/porquê. O saldo em catalog_products.quantidade é cache atualizado pelos mesmos escritores.';
+  'RazÃ£o do estoque (NEXUS Â§46): cada linha diz quem/quando/quanto/porquÃª. O saldo em catalog_products.quantidade Ã© cache atualizado pelos mesmos escritores.';
 comment on column public.catalog_products.estoque_minimo is
-  'Ponto de atenção (NEXUS §46): abaixo disto o produto entra na sugestão de compra.';
+  'Ponto de atenÃ§Ã£o (NEXUS Â§46): abaixo disto o produto entra na sugestÃ£o de compra.';
 
--- APÊNDICE 0243 - COMPRAS (idempotente; fonte:
+-- APÃŠNDICE 0243 - COMPRAS (idempotente; fonte:
 -- supabase/migrations/20260925040000_0243_compras_fornecedores_e_pedidos.sql)
 create table if not exists public.suppliers (
   id uuid primary key default gen_random_uuid(),
@@ -20595,9 +20595,9 @@ begin
   end if;
 end $$;
 
--- A função fn_proximo_numero_compra vive ACIMA da varredura anon (ver nota
--- lá): aqui no apêndice ficam só tabelas, policies, grants de tabela,
--- triggers e comentários — nada de `create function` depois da varredura.
+-- A funÃ§Ã£o fn_proximo_numero_compra vive ACIMA da varredura anon (ver nota
+-- lÃ¡): aqui no apÃªndice ficam sÃ³ tabelas, policies, grants de tabela,
+-- triggers e comentÃ¡rios â€” nada de `create function` depois da varredura.
 
 alter table public.suppliers enable row level security;
 alter table public.purchase_orders enable row level security;
@@ -20707,16 +20707,16 @@ create trigger trg_purchase_orders_updated_at
   for each row execute function public.fn_set_updated_at();
 
 comment on table public.suppliers is
-  'Fornecedores da org (NEXUS §47).';
+  'Fornecedores da org (NEXUS Â§47).';
 comment on table public.purchase_orders is
-  'Pedidos de compra (NEXUS §47): rascunho → enviado → recebido/cancelado. Receber vira entrada no razão.';
+  'Pedidos de compra (NEXUS Â§47): rascunho â†’ enviado â†’ recebido/cancelado. Receber vira entrada no razÃ£o.';
 
--- APÊNDICE 0245 — ÍNDICE DA FILA DO INBOX (idempotente; fonte: supabase/migrations/20260929090000_0245_indice_fila_inbox_last_inbound.sql)
+-- APÃŠNDICE 0245 â€” ÃNDICE DA FILA DO INBOX (idempotente; fonte: supabase/migrations/20260929090000_0245_indice_fila_inbox_last_inbound.sql)
 
 create index if not exists idx_conversations_org_last_inbound
   on public.conversations (organization_id, last_inbound_at asc nulls last, id);
 
--- APÊNDICE 0246 - VENDA AUTOMÁTICA DIÁRIA (idempotente; fonte: supabase/migrations/20260930120000_0246_venda_automatica.sql)
+-- APÃŠNDICE 0246 - VENDA AUTOMÃTICA DIÃRIA (idempotente; fonte: supabase/migrations/20260930120000_0246_venda_automatica.sql)
 
 create table if not exists public.automatic_sales_campaigns (
   id uuid primary key default gen_random_uuid(),
@@ -20727,23 +20727,23 @@ create table if not exists public.automatic_sales_campaigns (
   status text not null default 'active'
     check (status in ('active', 'paused', 'completed')),
 
-  -- Uma campanha = uma cidade por vez (§17); uf só rotula.
+  -- Uma campanha = uma cidade por vez (Â§17); uf sÃ³ rotula.
   cidade text not null,
   uf text,
   categorias text[] not null default '{}',
 
-  -- Cota de NOVOS contatos por dia (§6): follow-ups não entram na conta.
+  -- Cota de NOVOS contatos por dia (Â§6): follow-ups nÃ£o entram na conta.
   limite_diario integer not null
     check (limite_diario >= 1 and limite_diario <= 500),
   janela_inicio time not null default '09:00',
   janela_fim time not null default '17:30',
 
-  -- Oferta: ids de catalog_products (§7 — a IA só enxerga o catálogo real).
-  -- Sem FK por ser array; a aplicação valida pertencimento à org.
+  -- Oferta: ids de catalog_products (Â§7 â€” a IA sÃ³ enxerga o catÃ¡logo real).
+  -- Sem FK por ser array; a aplicaÃ§Ã£o valida pertencimento Ã  org.
   oferta_produtos uuid[] not null default '{}',
   perfil_abordagem text,
 
-  -- Escalonamento de follow-up (§14): 24h → 48h → encerra (2= padrão do spec).
+  -- Escalonamento de follow-up (Â§14): 24h â†’ 48h â†’ encerra (2= padrÃ£o do spec).
   followup_horas smallint[] not null default '{24,48}',
   followup_textos text[] not null default '{}',
 
@@ -20766,14 +20766,14 @@ create table if not exists public.automatic_sales_queue (
   -- O dia da cota a que a linha pertence (data no fuso da org, gravada pelo worker).
   dia date not null,
 
-  -- §5: a jornada, em minúsculas (vocabulário da casa).
+  -- Â§5: a jornada, em minÃºsculas (vocabulÃ¡rio da casa).
   status text not null default 'discovered'
     check (status in (
       'discovered', 'qualified', 'queued', 'contacting', 'contacted',
       'responded', 'qualified_lead', 'opportunity', 'order',
       'no_response', 'not_interested', 'invalid_contact', 'failed'
     )),
-  -- §11: classificação de interesse estruturada no banco.
+  -- Â§11: classificaÃ§Ã£o de interesse estruturada no banco.
   interest_level text
     check (interest_level is null or interest_level in ('alto', 'medio', 'baixo', 'recusou')),
 
@@ -20783,8 +20783,8 @@ create table if not exists public.automatic_sales_queue (
   ultima_mensagem_at timestamptz,
   rejection_reason text,
 
-  -- Snapshot mínimo da empresa para a fila exibir sem join (o prospect pode
-  -- sumir); NÃO é cópia de cadastro — nome/categoria/cidade/telefone.
+  -- Snapshot mÃ­nimo da empresa para a fila exibir sem join (o prospect pode
+  -- sumir); NÃƒO Ã© cÃ³pia de cadastro â€” nome/categoria/cidade/telefone.
   snapshot jsonb not null default '{}',
 
   created_at timestamptz not null default now(),
@@ -20797,7 +20797,7 @@ create table if not exists public.automatic_sales_events (
   campaign_id uuid not null references public.automatic_sales_campaigns(id) on delete cascade,
   queue_id uuid references public.automatic_sales_queue(id) on delete cascade,
 
-  -- Vocabulário livre validado na aplicação (§22); payload carrega o detalhe.
+  -- VocabulÃ¡rio livre validado na aplicaÃ§Ã£o (Â§22); payload carrega o detalhe.
   event_type text not null,
   payload jsonb not null default '{}',
   created_at timestamptz not null default now()
@@ -20808,8 +20808,8 @@ create unique index if not exists uq_automatic_sales_queue_campanha_prospect
   on public.automatic_sales_queue (campaign_id, prospect_id)
   where prospect_id is not null;
 
--- §15: nunca duas campanhas EM ANDAMENTO para o mesmo contato. Parcial de
--- propósito — um contato encerrado (no_response/not_interested/…) não proíbe
+-- Â§15: nunca duas campanhas EM ANDAMENTO para o mesmo contato. Parcial de
+-- propÃ³sito â€” um contato encerrado (no_response/not_interested/â€¦) nÃ£o proÃ­be
 -- uma futura abordagem de outra campanha.
 create unique index if not exists uq_automatic_sales_queue_contato_ativo
   on public.automatic_sales_queue (organization_id, contact_id)
@@ -20817,13 +20817,13 @@ create unique index if not exists uq_automatic_sales_queue_contato_ativo
     and status in ('queued', 'contacting', 'contacted', 'responded',
                    'qualified_lead', 'opportunity');
 
--- Cota do dia e painéis (§6/§16).
+-- Cota do dia e painÃ©is (Â§6/Â§16).
 create index if not exists idx_automatic_sales_queue_campanha_dia
   on public.automatic_sales_queue (campaign_id, dia, status);
 create index if not exists idx_automatic_sales_queue_org_dia
   on public.automatic_sales_queue (organization_id, dia, status);
 
--- Follow-ups vencendo (§14) — só os que aguardam resposta.
+-- Follow-ups vencendo (Â§14) â€” sÃ³ os que aguardam resposta.
 create index if not exists idx_automatic_sales_queue_followup
   on public.automatic_sales_queue (proximo_followup_at)
   where proximo_followup_at is not null and status = 'contacted';
@@ -20913,14 +20913,14 @@ grant all on public.automatic_sales_queue to service_role;
 grant all on public.automatic_sales_events to service_role;
 
 comment on table public.automatic_sales_campaigns is
-  'Campanhas de Venda Automática: cidade + categorias + cota diária + janela + oferta do catálogo (spec 18).';
+  'Campanhas de Venda AutomÃ¡tica: cidade + categorias + cota diÃ¡ria + janela + oferta do catÃ¡logo (spec 18).';
 comment on table public.automatic_sales_queue is
-  'Fila diária da Venda Automática: uma linha por prospect da campanha, com jornada, interesse e follow-up (spec 18).';
+  'Fila diÃ¡ria da Venda AutomÃ¡tica: uma linha por prospect da campanha, com jornada, interesse e follow-up (spec 18).';
 comment on table public.automatic_sales_events is
-  'Timeline imutável da Venda Automática: descoberta → seleção → envio → resposta → conversão (spec 18 §22).';
+  'Timeline imutÃ¡vel da Venda AutomÃ¡tica: descoberta â†’ seleÃ§Ã£o â†’ envio â†’ resposta â†’ conversÃ£o (spec 18 Â§22).';
 
 -- ---------------------------------------------------------------------
--- 0247_prospeccao_fila — FASE 8 da spec 19 (item 16, FILA DE PROSPECÇÃO)
+-- 0247_prospeccao_fila â€” FASE 8 da spec 19 (item 16, FILA DE PROSPECÃ‡ÃƒO)
 -- O update.sh reaplica o baseline inteiro: quem ja tem a tabela nao a
 -- recria, entao as colunas chegam por este alter idempotente. Quem instala
 -- fresco ja nasce com elas no create table acima.
@@ -21032,7 +21032,7 @@ comment on table public.prospecting_cache_hits is
 -- 0251_proposta_documento_fiscal - identificacao do cliente no WhatsApp
 -- SEM drop+add aqui: a regra (tests/unit/baseline-constraint-reconstruida)
 -- e de UM bloco por constraint, com o vocabulario final. O alargamento do
--- CHECK (cpf, cnpj) foi editado no bloco unico da 0123, la em cima — o
+-- CHECK (cpf, cnpj) foi editado no bloco unico da 0123, la em cima â€” o
 -- apendice e comentario, nao diario de bordo executavel.
 -- ---------------------------------------------------------------------
 
@@ -21234,11 +21234,26 @@ alter table public.crm_lead_risk_decisions
 alter table public.crm_lead_risk_decisions enable row level security;
 
 drop policy if exists tenant_isolation_crm_lead_risk_decisions_all on public.crm_lead_risk_decisions;
-create policy tenant_isolation_crm_lead_risk_decisions_all
+drop policy if exists crm_lead_risk_decisions_select on public.crm_lead_risk_decisions;
+create policy crm_lead_risk_decisions_select
   on public.crm_lead_risk_decisions
-  for all
-  using (organization_id in (select fn_user_org_ids()))
-  with check (organization_id in (select fn_user_org_ids()));
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists crm_lead_risk_decisions_write on public.crm_lead_risk_decisions;
+create policy crm_lead_risk_decisions_write
+  on public.crm_lead_risk_decisions
+  for all using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'manager'))
+  );
 
 create index if not exists idx_crm_lead_risk_decisions_org
   on public.crm_lead_risk_decisions (organization_id, decidido_em);
