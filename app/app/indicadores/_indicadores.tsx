@@ -20,7 +20,14 @@ import {
 } from "recharts";
 
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
 import { apiClient } from "@/lib/api/client";
@@ -619,39 +626,41 @@ export function IndicadoresClient({
             {t("Ver comissões")}
           </Link>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("Vendedor")}</TableHead>
-              <TableHead className="text-right">{t("Pedidos")}</TableHead>
-              <TableHead className="text-right">{t("Ticket médio")}</TableHead>
-              <TableHead className="text-right">{t("Total")}</TableHead>
-              <TableHead className="text-right">{t("Meta")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {dados.ranking.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.nome}</TableCell>
-                <TableCell className="text-right tabular-nums">{r.qtd}</TableCell>
-                <TableCell className="text-right tabular-nums">{brl(r.ticket)}</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">
-                  {brl(r.total)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {r.meta != null ? `${brl(r.meta)} (${(r.pctMeta ?? 0).toFixed(0)}%)` : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-            {dados.ranking.length === 0 && (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  {t("Sem vendas no período.")}
-                </TableCell>
+                <TableHead>{t("Vendedor")}</TableHead>
+                <TableHead className="text-right">{t("Pedidos")}</TableHead>
+                <TableHead className="text-right">{t("Ticket médio")}</TableHead>
+                <TableHead className="text-right">{t("Total")}</TableHead>
+                <TableHead className="text-right">{t("Meta")}</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {dados.ranking.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-medium">{r.nome}</TableCell>
+                  <TableCell className="text-right tabular-nums">{r.qtd}</TableCell>
+                  <TableCell className="text-right tabular-nums">{brl(r.ticket)}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">
+                    {brl(r.total)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {r.meta != null ? `${brl(r.meta)} (${(r.pctMeta ?? 0).toFixed(0)}%)` : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {dados.ranking.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    {t("Sem vendas no período.")}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       {dados.cortado && (
