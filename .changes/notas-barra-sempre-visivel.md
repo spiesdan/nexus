@@ -1,5 +1,5 @@
 ---
-impacto: correcao
+impacto: nada_mudou
 secao: corrigido
 titulo: A barra de ferramentas das notas fiscais aparece mesmo sem nota
 ---

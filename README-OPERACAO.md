@@ -196,7 +196,7 @@ Medido em 06/10/2026.
 | Guard na VPS          | verde em todas as 5 checagens                                                     |
 | Remotes do repo local | **apenas `nexus`**                                                                |
 | Branches locais       | **nenhuma** (tudo em `main`)                                                      |
-| Banco (Supabase)      | project ref **fora do repo (é público) — está no `.env` da VPS**             |
+| Banco (Supabase)      | project ref **fora do repo (é público) — está no `.env` da VPS**                  |
 | Tabelas fiscais       | existem (10) e estão **vazias**                                                   |
 | Provedor fiscal       | **`stub`** — sem sidecar, sem `FISCAL_SIDECAR_URL/SECRET`                         |
 
@@ -318,7 +318,7 @@ enxergá-lo → **domínio inteiro 404 com container `healthy`**.
 
 | Item               | Valor                                                                                      |
 | ------------------ | ------------------------------------------------------------------------------------------ |
-| Host               | **IP fora do repo (é público) — peça ao dono ou veja em `~/.ssh/config`**    |
+| Host               | **IP fora do repo (é público) — peça ao dono ou veja em `~/.ssh/config`**                  |
 | Usuário            | `root`                                                                                     |
 | Alias SSH          | **`vps`** (já configurado nesta máquina)                                                   |
 | Caminho do projeto | `/var/www/crm`                                                                             |
@@ -555,9 +555,9 @@ Crie `.changes/<slug-do-que-mudou>.md` com front-matter YAML:
 
 ```markdown
 ---
-impacto: capacidade_nova # ou: correcao, quebra, manutencao...
-secao: adicionado # adicionado | corrigido | alterado | removido
-titulo: O healthcheck confere se a versão está bem fixada
+impacto: nada_mudou
+secao: corrigido
+titulo: A barra de ferramentas das notas fiscais aparece mesmo sem nota
 ---
 
 Texto em PT-BR explicando o que mudou, por quê e — quando fizer sentido —
@@ -566,6 +566,34 @@ o que foi medido e em quando.
 
 - Um fragmento **por mudança**. O release os consome e apaga.
 - O `CHANGELOG.md` é **gerado** a partir deles — não edite à mão.
+
+**O vocabulário é fechado — o CI reprova qualquer outra coisa** (`CONFIRMADO`
+em `lib/release/fragmento.ts:26-30` e coberto por
+`tests/unit/fragmentos-de-release.test.ts`):
+
+| Chave     | Valores aceitos                                       | O que significa                                                   |
+| --------- | ----------------------------------------------------- | ----------------------------------------------------------------- |
+| `impacto` | **`nada_mudou`**                                      | **patch** — não muda capacidade nem exige ação (correções de bug) |
+|           | **`capacidade_nova`**                                 | **minor** — ganho de capacidade                                   |
+|           | **`exige_acao`**                                      | **major** — quebra ou exige ação do operador                      |
+| `secao`   | **`adicionado`** \| **`alterado`** \| **`corrigido`** | em que seção do CHANGELOG entra                                   |
+
+Regras adicionais que também são cobradas pelo teste:
+
+- **`exige_acao` exige um bloco `## Requer atenção`** — sem ele o fragmento é
+  recusado (o operador precisa saber o que fazer).
+- **Bloco `## Requer atenção` só pode existir com `impacto: exige_acao`** —
+  com os outros dois é recusado.
+- Prosa do corpo é **verbatim em pt-BR e nunca é refluída** (o release a
+  copia como está).
+- Nome do arquivo em **kebab-case**.
+
+> **Armadilha real:** um `impacto: correcao` inventado faz o `verify` do CI
+> falhar com `Invalid option: expected one of "nada_mudou"|"capacidade_nova"|
+"exige_acao"` — e isso **só aparece no CI**, porque o `pnpm gov:verify` local
+> não roda esse teste contra os fragmentos novos com a mesma pressão. Quando
+> criar um fragmento, rode `pnpm exec vitest run tests/unit/fragmentos-de-release.test.ts`
+> antes do push.
 
 ### 10.2 Passo 2 — disparar o workflow
 
