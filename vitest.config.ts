@@ -30,6 +30,7 @@ export default defineConfig({
       "tests/e2e/**",
       "tests/invariants/**",
       "tests/journeys/**",
+      "tests/fiscal/**",
     ],
   },
   resolve: { alias: { "@": path.resolve(__dirname, ".") } },

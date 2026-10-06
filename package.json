@@ -24,6 +24,7 @@
     "test:e2e:full": "tsx scripts/test-e2e-suite.ts full",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
+    "test:e2e:fiscal": "playwright test --config playwright.fiscal.config.ts",
     "e2e:build": "bash scripts/e2e-build.sh",
     "e2e:env": "bash scripts/gerar-env-e2e.sh",
     "test:journeys": "playwright test -c tests/journeys/playwright.config.ts",

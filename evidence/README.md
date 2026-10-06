@@ -67,3 +67,8 @@ conserto das abas colidindo em coluna estreita (PR do branch
   relatório antes de precisar dele;
 - `SELFCHECK=1` — infla um card por CSS e **exige** que o gate reprove. Gate que só foi
   visto passando é carimbo, não gate.
+
+## 06/10 — SPED Bloco H editável e barra de notas
+
+- `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).
+- `evidence/notas-barra/1-barra-notas-ainda-vazia.png` — barra de ações da tela de Notas visível mesmo sem notas (PR #32).
