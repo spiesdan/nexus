@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.21.1] — 2026-10-06
+
+### Corrigido
+
+- **A barra de ferramentas das notas fiscais aparece mesmo sem nota** A barra de ferramentas da tela de NF-e (Emitir nota, Exportar CSV, Importar
+  histórico do SEFAZ, NSU, modelo, Exporta XMLs, busca e filtros de período e
+  status) ficava dentro do ramo que só renderizava quando existia ao menos uma
+  nota fiscal.
+
+  Medido em produção em 06/10/2026: as tabelas fiscais estavam todas com zero
+  linhas, então a tela caía no estado vazio e escondia a barra inteira — os
+  botões eram invisíveis não por permissão nem por versão, mas porque não havia
+  nota nenhuma para exportar ou filtrar. Quem olhava a tela não tinha como
+  saber que as ferramentas existiam.
+
+  A barra agora renderiza sempre. O condicional passou a decidir só o corpo:
+  sem nota (estado vazio), sem resultado de filtro, ou a tabela.
+
 ## [1.21.0] — 2026-10-06
 
 ### Adicionado
@@ -2759,7 +2777,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.1...HEAD
+[1.21.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.2...v1.21.0
 [1.20.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.1...v1.20.2
 [1.20.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.0...v1.20.1
