@@ -105,7 +105,10 @@ describe("sped-arquivo (Gera Arquivo)", () => {
 
   it("um cliente com duas notas vira um 0150 só", () => {
     const saida = gerarEfd(entradaBase());
-    const participantes = saida.arquivo.trim().split("\r\n").filter((l) => l.startsWith("|0150|"));
+    const participantes = saida.arquivo
+      .trim()
+      .split("\r\n")
+      .filter((l) => l.startsWith("|0150|"));
     expect(participantes.length).toBe(1);
   });
 
@@ -115,6 +118,20 @@ describe("sped-arquivo (Gera Arquivo)", () => {
     expect(saida.arquivo).toContain("|C001|1|");
     const linhas = saida.arquivo.trim().split("\r\n");
     expect(linhas[linhas.length - 1]).toBe(`|9999|${linhas.length}|`);
+  });
+
+  it("Bloco H conta entradas como positivo e saídas como negativo", () => {
+    const saida = gerarEfd({
+      ...entradaBase(),
+      entradas: [{ codigo: "P1", descricao: "Produto Um", unidade: "UN", quantidade: 10 }],
+    });
+    const linhas = saida.arquivo.trim().split("\r\n");
+    expect(linhas.some((l) => l.startsWith("|H001|"))).toBe(true);
+    expect(linhas.some((l) => l.startsWith("|H010|"))).toBe(true);
+    // P1 entram no bloco H com o saldo = 10 (entrada) − 2 (saídas da entradaBase)
+    const h010 = linhas.find((l) => l.startsWith("|H010|") && l.includes("|P1|"));
+    expect(h010).toBeDefined();
+    expect(h010).toContain("|8|");
   });
 
   it("avisa o que o contador precisa completar no PVA", () => {
