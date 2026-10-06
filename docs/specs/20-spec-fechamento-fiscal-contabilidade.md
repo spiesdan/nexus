@@ -63,3 +63,13 @@ o pacote mínimo a entregar e o que construir.
   produto se o pacote deve ir "cru" ou só espelho do que já vai hoje.
 - DEFIS/PGDAS-D não devem ser "inventados" no CRM; manter como pendente até ter
   provedor fiscal confirmado.
+
+## 6. Requisitos operacionais explícitos (bill, 06/10)
+
+1. **O arquivo gerado tem que ser editável antes da entrega.** Hoje sai
+   fechado; na prática a operação trabalha sem estoque apurado, então o
+   artefato (EFD/Bloco H) precisa permitir correção manual de estoque/valores
+   antes de virar o pacote da contabilidade.
+2. **Notas de entrada (compras) somam positivamente no estoque.** O saldo do
+   Bloco H/inventário usado no SPED deve incluir as entradas como + (estoque
+   inicial + entradas − saídas), não só as saídas de vendas.
