@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import { expect, test } from "@playwright/test";
 
-import { lerCreds, loginComoDono, type CredsE2E } from "./helpers/login-admin";
+import { lerCreds, loginComoDono, type CredsE2E } from "../e2e/helpers/login-admin";
 
 /**
  * SPED Fiscal (app/app/notas → aba SPED Fiscal):
@@ -12,9 +12,9 @@ import { lerCreds, loginComoDono, type CredsE2E } from "./helpers/login-admin";
  */
 
 const EVIDENCIA = path.join(process.cwd(), "evidence", "sped-bloco-h");
-let creds: CredsE2E = lerCreds();
+const creds: CredsE2E = lerCreds();
 
-async function saudavel(page: any) {
+async function saudavel(page: import("@playwright/test").Page) {
   await expect(page.getByText("Algo deu errado")).toHaveCount(0);
   await expect(page.locator("body")).toContainText(/Notas|nota/i);
 }

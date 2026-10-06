@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import { expect, test } from "@playwright/test";
 
-import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { lerCreds, loginComoAdmin } from "../e2e/helpers/login-admin";
 
 /**
  * Evidência da PR #32: a barra de ferramentas de Notas deve aparecer
