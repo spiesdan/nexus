@@ -136,37 +136,39 @@ export function MetricsClient({ canCompare, currentUserId }: Props) {
               {t("Sem atividade no período (ganhos/perdidos, conversas ou respostas).")}
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("Atendente")}</TableHead>
-                  <TableHead className="text-right">{t("Ganhos")}</TableHead>
-                  <TableHead className="text-right">{t("Perdidos")}</TableHead>
-                  <TableHead className="text-right">{t("Conversas")}</TableHead>
-                  <TableHead className="text-right">{t("1ª resposta (média)")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {metrics.attendants.map((a) => (
-                  <TableRow key={a.user_id}>
-                    <TableCell className="font-medium">
-                      {attendantLabel(a, t)}
-                      {a.user_id === currentUserId ? (
-                        <span className="text-muted-foreground"> {t("(você)")}</span>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{a.won}</TableCell>
-                    <TableCell className="text-right tabular-nums">{a.lost}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {a.conversations_handled}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatDuration(a.avg_first_response_seconds)}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("Atendente")}</TableHead>
+                    <TableHead className="text-right">{t("Ganhos")}</TableHead>
+                    <TableHead className="text-right">{t("Perdidos")}</TableHead>
+                    <TableHead className="text-right">{t("Conversas")}</TableHead>
+                    <TableHead className="text-right">{t("1ª resposta (média)")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {metrics.attendants.map((a) => (
+                    <TableRow key={a.user_id}>
+                      <TableCell className="font-medium">
+                        {attendantLabel(a, t)}
+                        {a.user_id === currentUserId ? (
+                          <span className="text-muted-foreground"> {t("(você)")}</span>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{a.won}</TableCell>
+                      <TableCell className="text-right tabular-nums">{a.lost}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {a.conversations_handled}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatDuration(a.avg_first_response_seconds)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

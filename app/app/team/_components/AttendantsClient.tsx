@@ -12,20 +12,10 @@ import {
   type AttendantAvailability,
 } from "@/hooks/team/useAttendants";
 import { isHeartbeatStale } from "@/lib/routing/eligibility";
-import {
-  ROUTING_MODES,
-  type RoutingConfig,
-  type ScheduleWindow,
-} from "@/lib/schemas/routing";
+import { ROUTING_MODES, type RoutingConfig, type ScheduleWindow } from "@/lib/schemas/routing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -125,7 +115,9 @@ function ScheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("Horário de")} {attendant.name}</DialogTitle>
+          <DialogTitle>
+            {t("Horário de")} {attendant.name}
+          </DialogTitle>
           <DialogDescription>
             {t(
               "Sem janelas, o roteamento aceita conversa a qualquer hora — mas a Agenda não oferece NENHUM horário para marcar. Adicione janelas para publicar seus horários de atendimento.",
@@ -165,9 +157,7 @@ function ScheduleDialog({
                 <Select
                   value={String(w.dow)}
                   onValueChange={(v) =>
-                    setWindows((ws) =>
-                      ws.map((x, j) => (j === i ? { ...x, dow: Number(v) } : x)),
-                    )
+                    setWindows((ws) => ws.map((x, j) => (j === i ? { ...x, dow: Number(v) } : x)))
                   }
                 >
                   <SelectTrigger className="w-[90px]" aria-label="Dia da semana">
@@ -215,9 +205,7 @@ function ScheduleDialog({
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                setWindows((ws) => [...ws, { dow: 1, start: "08:00", end: "18:00" }])
-              }
+              onClick={() => setWindows((ws) => [...ws, { dow: 1, start: "08:00", end: "18:00" }])}
             >
               <Plus size={16} className="mr-1" /> Adicionar janela
             </Button>
@@ -262,7 +250,9 @@ function RoutingCard({ canManage }: { canManage: boolean }) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-sm text-destructive">{t("Erro ao carregar a configuração de roteamento.")}</p>
+          <p className="text-sm text-destructive">
+            {t("Erro ao carregar a configuração de roteamento.")}
+          </p>
         </CardContent>
       </Card>
     );
@@ -407,93 +397,99 @@ export function AttendantsClient({ canManage }: Props) {
           <p className="p-4 text-sm text-destructive">Erro ao carregar atendentes.</p>
         ) : attendants.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">
-            {t("Nenhum atendente na organização. Convide membros com papel de atendente ou superior.")}
+            {t(
+              "Nenhum atendente na organização. Convide membros com papel de atendente ou superior.",
+            )}
           </p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Atendente</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Carga</TableHead>
-                <TableHead>Capacidade</TableHead>
-                <TableHead>{t("Horário")}</TableHead>
-                {canManage ? <TableHead className="w-[120px]">{t("Disponível")}</TableHead> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {attendants.map((a) => {
-                const capacity = a.availability?.capacity ?? 5;
-                const load = a.availability?.current_load ?? 0;
-                const windows = a.availability?.schedule?.windows ?? [];
-                return (
-                  <TableRow key={a.userId}>
-                    <TableCell>
-                      <div className="font-medium">{a.name}</div>
-                      {a.email ? (
-                        <div className="text-xs text-muted-foreground">{a.email}</div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge attendant={a} now={now} />
-                    </TableCell>
-                    <TableCell>
-                      <span className={load >= capacity ? "font-medium text-destructive" : ""}>
-                        {load}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {canManage ? (
-                        <Input
-                          type="number"
-                          min={1}
-                          max={1000}
-                          defaultValue={capacity}
-                          className="h-8 w-20"
-                          aria-label={`Capacidade de ${a.name}`}
-                          onBlur={(e) => {
-                            const next = Number(e.target.value);
-                            if (Number.isInteger(next) && next >= 1 && next !== capacity) {
-                              patch.mutate({ userId: a.userId, patch: { capacity: next } });
-                            }
-                          }}
-                        />
-                      ) : (
-                        capacity
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <span>{summarizeSchedule(windows, t)}</span>
-                        {canManage ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            aria-label={`Editar horário de ${a.name}`}
-                            onClick={() => setScheduleFor(a)}
-                          >
-                            <Clock size={16} />
-                          </Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    {canManage ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Atendente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Carga</TableHead>
+                  <TableHead>Capacidade</TableHead>
+                  <TableHead>{t("Horário")}</TableHead>
+                  {canManage ? (
+                    <TableHead className="w-[120px]">{t("Disponível")}</TableHead>
+                  ) : null}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {attendants.map((a) => {
+                  const capacity = a.availability?.capacity ?? 5;
+                  const load = a.availability?.current_load ?? 0;
+                  const windows = a.availability?.schedule?.windows ?? [];
+                  return (
+                    <TableRow key={a.userId}>
                       <TableCell>
-                        <Switch
-                          checked={!!a.availability?.is_available}
-                          aria-label={`Disponibilidade de ${a.name}`}
-                          onCheckedChange={(v) =>
-                            patch.mutate({ userId: a.userId, patch: { is_available: v } })
-                          }
-                        />
+                        <div className="font-medium">{a.name}</div>
+                        {a.email ? (
+                          <div className="text-xs text-muted-foreground">{a.email}</div>
+                        ) : null}
                       </TableCell>
-                    ) : null}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <TableCell>
+                        <StatusBadge attendant={a} now={now} />
+                      </TableCell>
+                      <TableCell>
+                        <span className={load >= capacity ? "font-medium text-destructive" : ""}>
+                          {load}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {canManage ? (
+                          <Input
+                            type="number"
+                            min={1}
+                            max={1000}
+                            defaultValue={capacity}
+                            className="h-8 w-20"
+                            aria-label={`Capacidade de ${a.name}`}
+                            onBlur={(e) => {
+                              const next = Number(e.target.value);
+                              if (Number.isInteger(next) && next >= 1 && next !== capacity) {
+                                patch.mutate({ userId: a.userId, patch: { capacity: next } });
+                              }
+                            }}
+                          />
+                        ) : (
+                          capacity
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span>{summarizeSchedule(windows, t)}</span>
+                          {canManage ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              aria-label={`Editar horário de ${a.name}`}
+                              onClick={() => setScheduleFor(a)}
+                            >
+                              <Clock size={16} />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                      {canManage ? (
+                        <TableCell>
+                          <Switch
+                            checked={!!a.availability?.is_available}
+                            aria-label={`Disponibilidade de ${a.name}`}
+                            onCheckedChange={(v) =>
+                              patch.mutate({ userId: a.userId, patch: { is_available: v } })
+                            }
+                          />
+                        </TableCell>
+                      ) : null}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </div>
 

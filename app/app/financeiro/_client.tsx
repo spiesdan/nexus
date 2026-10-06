@@ -216,7 +216,9 @@ export function FinanceiroClient({
     <div className="space-y-6 p-6">
       <NexusPageHeader
         title={t("Financeiro")}
-        subtitle={t("Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação.")}
+        subtitle={t(
+          "Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação.",
+        )}
       />
 
       {kpis === null ? (
@@ -227,10 +229,7 @@ export function FinanceiroClient({
         </div>
       ) : (
         <NexusKpiGrid>
-          <NexusKpi
-            label={t("A receber")}
-            value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")}
-          />
+          <NexusKpi label={t("A receber")} value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")} />
           <NexusKpi
             label={t("Vencido")}
             value={comoMoeda(kpis.vencido_cents ?? 0, "BRL")}
@@ -388,83 +387,85 @@ export function FinanceiroClient({
               ) : undefined
             }
             table={
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("Vencimento")}</TableHead>
-                    <TableHead>{t("Cliente")}</TableHead>
-                    <TableHead>{t("Parcela")}</TableHead>
-                    <TableHead className="text-right">{t("Valor")}</TableHead>
-                    <TableHead className="text-right">{t("Saldo")}</TableHead>
-                    <TableHead>{t("Status")}</TableHead>
-                    <TableHead>
-                      <span className="sr-only">{t("Ações")}</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(linhas ?? []).map((l) => (
-                    <React.Fragment key={l.id}>
-                      <TableRow className="align-top">
-                        <TableCell className="whitespace-nowrap tabular-nums">
-                          {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
-                          {l.dias_atraso > 0 && (
-                            <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">{l.contato_nome ?? "—"}</span>
-                          {l.contato_cidade && (
-                            <span className="block text-xs text-muted-foreground">
-                              {l.contato_cidade}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap tabular-nums">
-                          {l.parcela_n}/{l.total_parcelas}
-                          {l.pedido_numero != null && (
-                            <span className="block text-xs text-muted-foreground">
-                              #{l.pedido_numero}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap tabular-nums">
-                          {comoMoeda(l.valor_original_cents, "BRL")}
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap tabular-nums">
-                          {comoMoeda(l.saldo_cents, "BRL")}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={VARIANTE_SITUACAO[l.situacao]}>{l.situacao}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setExpandido(expandido === l.id ? null : l.id)}
-                          >
-                            {expandido === l.id ? t("Fechar") : t("Detalhe")}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                      {expandido === l.id && (
-                        <TableRow className="bg-muted/30 align-top">
-                          <TableCell colSpan={7}>
-                            <DetalheRecebivel
-                              id={l.id}
-                              podeRegistrar={podeRegistrar}
-                              aoMudar={() => {
-                                void carregar(pagina, { busca: buscaAplicada, status, de, ate });
-                                void carregarKpis();
-                              }}
-                            />
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Vencimento")}</TableHead>
+                      <TableHead>{t("Cliente")}</TableHead>
+                      <TableHead>{t("Parcela")}</TableHead>
+                      <TableHead className="text-right">{t("Valor")}</TableHead>
+                      <TableHead className="text-right">{t("Saldo")}</TableHead>
+                      <TableHead>{t("Status")}</TableHead>
+                      <TableHead>
+                        <span className="sr-only">{t("Ações")}</span>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(linhas ?? []).map((l) => (
+                      <React.Fragment key={l.id}>
+                        <TableRow className="align-top">
+                          <TableCell className="whitespace-nowrap tabular-nums">
+                            {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()}
+                            {l.dias_atraso > 0 && (
+                              <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium">{l.contato_nome ?? "—"}</span>
+                            {l.contato_cidade && (
+                              <span className="block text-xs text-muted-foreground">
+                                {l.contato_cidade}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap tabular-nums">
+                            {l.parcela_n}/{l.total_parcelas}
+                            {l.pedido_numero != null && (
+                              <span className="block text-xs text-muted-foreground">
+                                #{l.pedido_numero}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right whitespace-nowrap tabular-nums">
+                            {comoMoeda(l.valor_original_cents, "BRL")}
+                          </TableCell>
+                          <TableCell className="text-right whitespace-nowrap tabular-nums">
+                            {comoMoeda(l.saldo_cents, "BRL")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={VARIANTE_SITUACAO[l.situacao]}>{l.situacao}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setExpandido(expandido === l.id ? null : l.id)}
+                            >
+                              {expandido === l.id ? t("Fechar") : t("Detalhe")}
+                            </Button>
                           </TableCell>
                         </TableRow>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </TableBody>
-              </Table>
+                        {expandido === l.id && (
+                          <TableRow className="bg-muted/30 align-top">
+                            <TableCell colSpan={7}>
+                              <DetalheRecebivel
+                                id={l.id}
+                                podeRegistrar={podeRegistrar}
+                                aoMudar={() => {
+                                  void carregar(pagina, { busca: buscaAplicada, status, de, ate });
+                                  void carregarKpis();
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             }
           />
         </TabsContent>
@@ -604,9 +605,7 @@ function AbaPagar() {
   });
 
   const somaPorStatus = (fn: (p: Pagavel) => boolean) =>
-    (pagaveis ?? [])
-      .filter(fn)
-      .reduce((acc, p) => acc + p.valor_original_cents, 0);
+    (pagaveis ?? []).filter(fn).reduce((acc, p) => acc + p.valor_original_cents, 0);
   const emAbertoCents = somaPorStatus((p) => {
     const s = situacaoDoPagavel(p, hoje);
     return s === "aberto" || s === "parcial" || s === "vencido";
@@ -668,7 +667,9 @@ function AbaPagar() {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          {t("Baixa e cancelamento de pagável são fase futura: o status nasce na importação da nota fiscal.")}
+          {t(
+            "Baixa e cancelamento de pagável são fase futura: o status nasce na importação da nota fiscal.",
+          )}
         </p>
       </Card>
 
@@ -708,7 +709,9 @@ function AbaPagar() {
                 return (
                   <TableRow key={p.id} className="align-top">
                     <TableCell>
-                      <span className="font-medium">{p.fornecedor_nome ?? t("Sem fornecedor")}</span>
+                      <span className="font-medium">
+                        {p.fornecedor_nome ?? t("Sem fornecedor")}
+                      </span>
                       {p.fornecedor_cnpj && (
                         <span className="block text-xs text-muted-foreground">
                           {p.fornecedor_cnpj}
@@ -795,7 +798,9 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
       </NexusKpiGrid>
 
       <p className="text-xs text-muted-foreground">
-        {t("A baixa e a negociação do título vivem em Títulos; aqui é o painel do que está atrasado.")}
+        {t(
+          "A baixa e a negociação do título vivem em Títulos; aqui é o painel do que está atrasado.",
+        )}
       </p>
 
       <NexusDataTable<Recebivel>
@@ -827,7 +832,9 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
                   <TableCell>
                     <span className="font-medium">{l.contato_nome ?? "—"}</span>
                     {l.contato_cidade && (
-                      <span className="block text-xs text-muted-foreground">{l.contato_cidade}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {l.contato_cidade}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap tabular-nums">
@@ -839,7 +846,9 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
                   <TableCell className="whitespace-nowrap tabular-nums">
                     {l.parcela_n}/{l.total_parcelas}
                     {l.pedido_numero != null && (
-                      <span className="block text-xs text-muted-foreground">#{l.pedido_numero}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        #{l.pedido_numero}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap tabular-nums">
@@ -891,9 +900,7 @@ function AbaFluxo() {
     );
   }
 
-  const comMovimento = fluxo.dias.filter(
-    (d) => d.receber_cents !== 0 || d.pagar_cents !== 0,
-  );
+  const comMovimento = fluxo.dias.filter((d) => d.receber_cents !== 0 || d.pagar_cents !== 0);
   const liquidoVencido = fluxo.vencido_receber_cents - fluxo.vencido_pagar_cents;
   const posicaoFinal = fluxo.dias.at(-1)?.acumulado_cents ?? liquidoVencido;
 
@@ -901,10 +908,7 @@ function AbaFluxo() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <div className="w-44">
-          <Select
-            value={String(dias)}
-            onValueChange={(v) => setDias(Number(v))}
-          >
+          <Select value={String(dias)} onValueChange={(v) => setDias(Number(v))}>
             <SelectTrigger aria-label={t("Horizonte (dias)")}>
               <SelectValue />
             </SelectTrigger>
@@ -986,7 +990,7 @@ function AbaFluxo() {
                     {comoMoeda(d.liquido_cents, "BRL")}
                   </TableCell>
                   <TableCell
-                    className={`text-right whitespace-nowrap tabular-nums font-medium ${
+                    className={`text-right font-medium whitespace-nowrap tabular-nums ${
                       d.acumulado_cents < 0 ? "text-error-fg" : ""
                     }`}
                   >
@@ -999,7 +1003,9 @@ function AbaFluxo() {
         }
       />
       <p className="text-xs text-muted-foreground">
-        {t("Dias sem vencimento não aparecem. A posição acumulada já parte do líquido vencido de hoje.")}
+        {t(
+          "Dias sem vencimento não aparecem. A posição acumulada já parte do líquido vencido de hoje.",
+        )}
       </p>
     </div>
   );

@@ -273,65 +273,67 @@ export function ComissoesClient({
           </div>
         )}
         table={
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead>{t("Data")}</TableHead>
-                <TableHead>{t("Pedido")}</TableHead>
-                <TableHead>{t("Cliente")}</TableHead>
-                <TableHead>{t("Vendedor")}</TableHead>
-                <TableHead className="text-right">{t("Total")}</TableHead>
-                <TableHead className="text-right">{t("Comissão")}</TableHead>
-                <TableHead>{t("Situação")}</TableHead>
-                {podeDarBaixa && <TableHead>{t("Ação")}</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {linhas.map((l) => (
-                <TableRow key={l.order_id}>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(l.data_emissao).toLocaleDateString(tagIdioma)}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/app/pedidos/${l.order_id}`}
-                      className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                      {numeroDoPedido(l.numero)}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{l.cliente_nome}</TableCell>
-                  <TableCell>{nomeVendedor(l.vendedor_user_id)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {comoMoeda(l.total_cents, "BRL")}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {comoMoeda(l.comissao_cents, "BRL")}
-                  </TableCell>
-                  <TableCell>
-                    {l.baixado_em ? (
-                      <Badge variant="success">{t("Baixada")}</Badge>
-                    ) : (
-                      <Badge variant="warning">{t("A pagar")}</Badge>
-                    )}
-                  </TableCell>
-                  {podeDarBaixa && (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{t("Data")}</TableHead>
+                  <TableHead>{t("Pedido")}</TableHead>
+                  <TableHead>{t("Cliente")}</TableHead>
+                  <TableHead>{t("Vendedor")}</TableHead>
+                  <TableHead className="text-right">{t("Total")}</TableHead>
+                  <TableHead className="text-right">{t("Comissão")}</TableHead>
+                  <TableHead>{t("Situação")}</TableHead>
+                  {podeDarBaixa && <TableHead>{t("Ação")}</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {linhas.map((l) => (
+                  <TableRow key={l.order_id}>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(l.data_emissao).toLocaleDateString(tagIdioma)}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/app/pedidos/${l.order_id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {numeroDoPedido(l.numero)}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{l.cliente_nome}</TableCell>
+                    <TableCell>{nomeVendedor(l.vendedor_user_id)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {comoMoeda(l.total_cents, "BRL")}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {comoMoeda(l.comissao_cents, "BRL")}
+                    </TableCell>
                     <TableCell>
                       {l.baixado_em ? (
-                        <Button size="sm" variant="outline" onClick={() => void estornar(l)}>
-                          {t("Estornar")}
-                        </Button>
+                        <Badge variant="success">{t("Baixada")}</Badge>
                       ) : (
-                        <Button size="sm" variant="outline" onClick={() => void darBaixa(l)}>
-                          {t("Dar baixa")}
-                        </Button>
+                        <Badge variant="warning">{t("A pagar")}</Badge>
                       )}
                     </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    {podeDarBaixa && (
+                      <TableCell>
+                        {l.baixado_em ? (
+                          <Button size="sm" variant="outline" onClick={() => void estornar(l)}>
+                            {t("Estornar")}
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => void darBaixa(l)}>
+                            {t("Dar baixa")}
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         }
       />
     </div>

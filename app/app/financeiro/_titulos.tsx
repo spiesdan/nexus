@@ -231,7 +231,9 @@ export function AbaTitulos({
             icon={Receipt}
             headline={t("Nenhum título no filtro.")}
             subcopy={
-              situacao || busca ? undefined : t("Os títulos nascem das parcelas dos pedidos faturados.")
+              situacao || busca
+                ? undefined
+                : t("Os títulos nascem das parcelas dos pedidos faturados.")
             }
             primary={
               situacao || busca
@@ -283,60 +285,62 @@ export function AbaTitulos({
           </div>
         )}
         table={
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead>{t("Vencimento")}</TableHead>
-                <TableHead>{t("Cliente")}</TableHead>
-                <TableHead>{t("Pedido")}</TableHead>
-                <TableHead>{t("Parcela")}</TableHead>
-                <TableHead className="text-right">{t("Valor")}</TableHead>
-                <TableHead>{t("Situação")}</TableHead>
-                {podeDarBaixa && <TableHead>{t("Ação")}</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {linhas.map((l, i) => (
-                <TableRow key={`${l.order_id}-${l.parcela}-${i}`}>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString(tagIdioma)}
-                    {l.avista && <span className="ml-1 text-xs">{t("(à vista)")}</span>}
-                  </TableCell>
-                  <TableCell>{l.cliente_nome}</TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/app/pedidos/${l.order_id}`}
-                      className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                      {numeroDoPedido(l.numero)}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {l.parcela}/{l.de}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {comoMoeda(l.valor_cents, "BRL")}
-                  </TableCell>
-                  <TableCell>
-                    <SituacaoTitulo l={l} t={t} />
-                  </TableCell>
-                  {podeDarBaixa && (
-                    <TableCell>
-                      {l.baixado_em ? (
-                        <Button size="sm" variant="outline" onClick={() => void estornar(l)}>
-                          {t("Estornar")}
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" onClick={() => void darBaixa(l)}>
-                          {t("Dar baixa")}
-                        </Button>
-                      )}
-                    </TableCell>
-                  )}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{t("Vencimento")}</TableHead>
+                  <TableHead>{t("Cliente")}</TableHead>
+                  <TableHead>{t("Pedido")}</TableHead>
+                  <TableHead>{t("Parcela")}</TableHead>
+                  <TableHead className="text-right">{t("Valor")}</TableHead>
+                  <TableHead>{t("Situação")}</TableHead>
+                  {podeDarBaixa && <TableHead>{t("Ação")}</TableHead>}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {linhas.map((l, i) => (
+                  <TableRow key={`${l.order_id}-${l.parcela}-${i}`}>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString(tagIdioma)}
+                      {l.avista && <span className="ml-1 text-xs">{t("(à vista)")}</span>}
+                    </TableCell>
+                    <TableCell>{l.cliente_nome}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/app/pedidos/${l.order_id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {numeroDoPedido(l.numero)}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {l.parcela}/{l.de}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {comoMoeda(l.valor_cents, "BRL")}
+                    </TableCell>
+                    <TableCell>
+                      <SituacaoTitulo l={l} t={t} />
+                    </TableCell>
+                    {podeDarBaixa && (
+                      <TableCell>
+                        {l.baixado_em ? (
+                          <Button size="sm" variant="outline" onClick={() => void estornar(l)}>
+                            {t("Estornar")}
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => void darBaixa(l)}>
+                            {t("Dar baixa")}
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         }
       />
       <p className="text-xs text-muted-foreground">

@@ -58,10 +58,7 @@ const STATUS_VARIANT: Record<
   pending_review: "outline",
 };
 
-const SLA_VARIANT: Record<
-  SlaBucket,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+const SLA_VARIANT: Record<SlaBucket, "default" | "secondary" | "destructive" | "outline"> = {
   overdue: "destructive",
   critical: "destructive",
   warning: "outline",
@@ -225,108 +222,110 @@ export function RequestsTable() {
 
       {/* Table */}
       <Card className="hover-raise overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[90px]">ID</TableHead>
-              <TableHead>{t("Tipo")}</TableHead>
-              <TableHead>{t("Sujeito")}</TableHead>
-              <TableHead>{t("Recebido")}</TableHead>
-              <TableHead>{t("Vence")}</TableHead>
-              <TableHead>SLA</TableHead>
-              <TableHead>{t("Status")}</TableHead>
-              <TableHead className="w-[60px]" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {q.isLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : q.isError ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
-                  <div className="flex flex-col items-center gap-2 py-8 text-sm text-muted-foreground">
-                    <Warning size={24} weight="fill" className="text-error" aria-hidden />
-                    <p>{t("Erro ao carregar solicitações.")}</p>
-                    <Button size="sm" variant="outline" onClick={() => q.refetch()}>
-                      {t("Tentar novamente")}
-                    </Button>
-                  </div>
-                </TableCell>
+                <TableHead className="w-[90px]">ID</TableHead>
+                <TableHead>{t("Tipo")}</TableHead>
+                <TableHead>{t("Sujeito")}</TableHead>
+                <TableHead>{t("Recebido")}</TableHead>
+                <TableHead>{t("Vence")}</TableHead>
+                <TableHead>SLA</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead className="w-[60px]" />
               </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center">
-                  <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
-                    <Warning size={32} weight="thin" aria-hidden />
-                    <p className="font-medium">{t("Nenhuma solicitação LGPD")}</p>
-                    <p className="text-xs">
-                      {t("Solicitações de dados e anonimizações aparecerão aqui.")}
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((r) => {
-                const due = fmtDistance(r.due_at, t);
-                const subject = r.external_customer_id
-                  ? r.external_customer_id.slice(0, 16)
-                  : r.contact_id
-                    ? `ctt:${r.contact_id.slice(0, 8)}`
-                    : "—";
-
-                return (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {r.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="whitespace-nowrap text-xs">
-                        {t(TYPE_LABELS[r.request_type] ?? r.request_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[140px] truncate font-mono text-xs">
-                      {subject}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      {fmtRelative(r.received_at, t)}
-                    </TableCell>
-                    <TableCell
-                      className={`whitespace-nowrap text-xs font-medium ${due.urgent ? "text-error-fg" : "text-muted-foreground"}`}
-                    >
-                      {due.label}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={SLA_VARIANT[r.sla_bucket]} className="text-xs">
-                        {t(SLA_LABELS[r.sla_bucket])}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={STATUS_VARIANT[r.status]}
-                        className="whitespace-nowrap text-xs"
-                      >
-                        {t(STATUS_LABELS[r.status] ?? r.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
-                        <Link href={`/app/lgpd/requests/${r.id}`}>{t("Ver")}</Link>
-                      </Button>
-                    </TableCell>
+            </TableHeader>
+            <TableBody>
+              {q.isLoading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 8 }).map((__, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
                   </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+                ))
+              ) : q.isError ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center">
+                    <div className="flex flex-col items-center gap-2 py-8 text-sm text-muted-foreground">
+                      <Warning size={24} weight="fill" className="text-error" aria-hidden />
+                      <p>{t("Erro ao carregar solicitações.")}</p>
+                      <Button size="sm" variant="outline" onClick={() => q.refetch()}>
+                        {t("Tentar novamente")}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center">
+                    <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
+                      <Warning size={32} weight="thin" aria-hidden />
+                      <p className="font-medium">{t("Nenhuma solicitação LGPD")}</p>
+                      <p className="text-xs">
+                        {t("Solicitações de dados e anonimizações aparecerão aqui.")}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((r) => {
+                  const due = fmtDistance(r.due_at, t);
+                  const subject = r.external_customer_id
+                    ? r.external_customer_id.slice(0, 16)
+                    : r.contact_id
+                      ? `ctt:${r.contact_id.slice(0, 8)}`
+                      : "—";
+
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {r.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                          {t(TYPE_LABELS[r.request_type] ?? r.request_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[140px] truncate font-mono text-xs">
+                        {subject}
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                        {fmtRelative(r.received_at, t)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-xs font-medium whitespace-nowrap ${due.urgent ? "text-error-fg" : "text-muted-foreground"}`}
+                      >
+                        {due.label}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={SLA_VARIANT[r.sla_bucket]} className="text-xs">
+                          {t(SLA_LABELS[r.sla_bucket])}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={STATUS_VARIANT[r.status]}
+                          className="text-xs whitespace-nowrap"
+                        >
+                          {t(STATUS_LABELS[r.status] ?? r.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                          <Link href={`/app/lgpd/requests/${r.id}`}>{t("Ver")}</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       {/* Pagination */}

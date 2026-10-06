@@ -92,10 +92,7 @@ const ROTULO_TIPO: Record<Movimento["tipo"], string> = {
   ajuste: "Ajuste",
 };
 
-const VARIANTE_TIPO: Record<
-  Movimento["tipo"],
-  React.ComponentProps<typeof Badge>["variant"]
-> = {
+const VARIANTE_TIPO: Record<Movimento["tipo"], React.ComponentProps<typeof Badge>["variant"]> = {
   entrada: "success",
   saida: "info",
   ajuste: "neutral",
@@ -200,34 +197,34 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
   };
 
   const tabela = (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Código</TableHead>
-          <TableHead>Produto</TableHead>
-          <TableHead className="text-right">Saldo</TableHead>
-          <TableHead className="w-0" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {produtos.map((p) => (
-          <TableRow key={p.id}>
-            <TableCell className="text-text-muted">{p.codigo || "—"}</TableCell>
-            <TableCell className="font-medium">{p.nome}</TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-              {p.quantidade}
-            </TableCell>
-            <TableCell className="text-right">
-              {podeEscrever ? (
-                <Button variant="ghost" size="sm" onClick={() => abrirMovimento(p.id)}>
-                  Movimento
-                </Button>
-              ) : null}
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Código</TableHead>
+            <TableHead>Produto</TableHead>
+            <TableHead className="text-right">Saldo</TableHead>
+            <TableHead className="w-0" />
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {produtos.map((p) => (
+            <TableRow key={p.id}>
+              <TableCell className="text-text-muted">{p.codigo || "—"}</TableCell>
+              <TableCell className="font-medium">{p.nome}</TableCell>
+              <TableCell className="text-right font-medium tabular-nums">{p.quantidade}</TableCell>
+              <TableCell className="text-right">
+                {podeEscrever ? (
+                  <Button variant="ghost" size="sm" onClick={() => abrirMovimento(p.id)}>
+                    Movimento
+                  </Button>
+                ) : null}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 
   return (
@@ -314,9 +311,7 @@ function AbaMovimentos({ podeEscrever }: { podeEscrever: boolean }) {
   const carregar = React.useCallback(async (t: string) => {
     try {
       const qs = t ? `?tipo=${t}` : "";
-      const corpo = await apiClient.get<{ data: Movimento[] }>(
-        `/api/v1/inventory/movements${qs}`,
-      );
+      const corpo = await apiClient.get<{ data: Movimento[] }>(`/api/v1/inventory/movements${qs}`);
       setMovimentos(corpo.data ?? []);
       setErro("");
       setEstado((corpo.data ?? []).length === 0 ? "empty" : "ready");
@@ -485,9 +480,7 @@ function AbaSugestoes() {
 
   const carregar = React.useCallback(async () => {
     try {
-      const corpo = await apiClient.get<{ data: RespostaSugestoes }>(
-        "/api/v1/inventory/sugestoes",
-      );
+      const corpo = await apiClient.get<{ data: RespostaSugestoes }>("/api/v1/inventory/sugestoes");
       setResposta(corpo.data);
       setErro("");
       setEstado((corpo.data?.sugestoes ?? []).length === 0 ? "empty" : "ready");
@@ -528,19 +521,13 @@ function AbaSugestoes() {
             <TableCell className="text-right tabular-nums">
               {s.cobertura_dias != null ? `${s.cobertura_dias} d` : "—"}
             </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-              {s.qtd_sugerida}
-            </TableCell>
+            <TableCell className="text-right font-medium tabular-nums">{s.qtd_sugerida}</TableCell>
             <TableCell className="text-right">
-              {s.valor_sugerido_cents != null
-                ? comoMoeda(s.valor_sugerido_cents, "BRL")
-                : "—"}
+              {s.valor_sugerido_cents != null ? comoMoeda(s.valor_sugerido_cents, "BRL") : "—"}
             </TableCell>
             <TableCell className="text-right">
               <Button variant="ghost" size="sm" asChild>
-                <Link
-                  href={`/app/compras?novo=1&produto=${s.product_id}&qtd=${s.qtd_sugerida}`}
-                >
+                <Link href={`/app/compras?novo=1&produto=${s.product_id}&qtd=${s.qtd_sugerida}`}>
                   Criar compra
                 </Link>
               </Button>
@@ -554,8 +541,8 @@ function AbaSugestoes() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-text-muted">
-        Sugestão por cobertura: recompor até o alvo de {resposta?.alvo_dias ?? 14} dias,
-        medido sobre as saídas dos últimos {resposta?.janela_dias ?? 30} dias.
+        Sugestão por cobertura: recompor até o alvo de {resposta?.alvo_dias ?? 14} dias, medido
+        sobre as saídas dos últimos {resposta?.janela_dias ?? 30} dias.
         {resposta?.amostra_parcial
           ? " Amostra parcial: há mais itens do que a análise lê por vez."
           : ""}
@@ -581,8 +568,8 @@ function AbaSugestoes() {
             <div>
               <p className="font-medium">{s.nome}</p>
               <p className="text-sm text-text-muted">
-                Cobertura {s.cobertura_dias != null ? `${s.cobertura_dias} d` : "—"} ·
-                sugerido {s.qtd_sugerida}
+                Cobertura {s.cobertura_dias != null ? `${s.cobertura_dias} d` : "—"} · sugerido{" "}
+                {s.qtd_sugerida}
               </p>
             </div>
             <Button variant="ghost" size="sm" asChild>
@@ -620,7 +607,9 @@ function DialogNovoMovimento({
   const produtoSel = produtos.find((p) => p.id === produtoId) ?? null;
   const qtdNumerica = Number(quantidade.replace(",", "."));
   const saidaAcimaDoSaldo =
-    tipo === "saida" && produtoSel != null && Number.isInteger(qtdNumerica) &&
+    tipo === "saida" &&
+    produtoSel != null &&
+    Number.isInteger(qtdNumerica) &&
     qtdNumerica > produtoSel.quantidade;
 
   async function submeter() {
@@ -666,7 +655,10 @@ function DialogNovoMovimento({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Produto *</Label>
-            <Select value={produtoId || "nada"} onValueChange={(v) => setProdutoId(v === "nada" ? "" : v)}>
+            <Select
+              value={produtoId || "nada"}
+              onValueChange={(v) => setProdutoId(v === "nada" ? "" : v)}
+            >
               <SelectTrigger aria-label="Produto">
                 <SelectValue placeholder="Produto com controle de estoque" />
               </SelectTrigger>
@@ -700,7 +692,9 @@ function DialogNovoMovimento({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="mov-qtd">{tipo === "ajuste" ? "Delta (com sinal) *" : "Quantidade *"}</Label>
+            <Label htmlFor="mov-qtd">
+              {tipo === "ajuste" ? "Delta (com sinal) *" : "Quantidade *"}
+            </Label>
             <Input
               id="mov-qtd"
               inputMode="numeric"

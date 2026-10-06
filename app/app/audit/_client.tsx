@@ -101,65 +101,67 @@ export function AuditClient() {
       </Card>
 
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("Quando")}</TableHead>
-              <TableHead>{t("Ator")}</TableHead>
-              <TableHead>{t("Ação")}</TableHead>
-              <TableHead>{t("Recurso")}</TableHead>
-              <TableHead>Request ID</TableHead>
-              <TableHead>Metadata</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {q.isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 6 }).map((__, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : rows.length === 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
-                  {t("Nenhum log no período.")}
-                </TableCell>
+                <TableHead>{t("Quando")}</TableHead>
+                <TableHead>{t("Ator")}</TableHead>
+                <TableHead>{t("Ação")}</TableHead>
+                <TableHead>{t("Recurso")}</TableHead>
+                <TableHead>Request ID</TableHead>
+                <TableHead>Metadata</TableHead>
               </TableRow>
-            ) : (
-              rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="whitespace-nowrap text-xs">
-                    {fmtDate(r.created_at, tagDoIdioma)}
-                  </TableCell>
-                  <TableCell className="text-xs font-mono">
-                    {r.acting_as_platform_admin
-                      ? "platform_admin"
-                      : r.actor_user_id
-                        ? r.actor_user_id.slice(0, 8)
-                        : r.actor_api_token_id
-                          ? `token:${r.actor_api_token_id.slice(0, 8)}`
-                          : "system"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{r.action}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {r.resource_type ?? "—"}
-                    {r.resource_id ? `:${r.resource_id.slice(0, 8)}` : ""}
-                  </TableCell>
-                  <TableCell className="font-mono text-[10px] text-muted-foreground">
-                    {r.request_id ? r.request_id.slice(0, 8) : "—"}
-                  </TableCell>
-                  <TableCell className="font-mono text-[10px] text-muted-foreground">
-                    {truncJson(r.metadata)}
+            </TableHeader>
+            <TableBody>
+              {q.isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 6 }).map((__, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
+                    {t("Nenhum log no período.")}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                rows.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {fmtDate(r.created_at, tagDoIdioma)}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {r.acting_as_platform_admin
+                        ? "platform_admin"
+                        : r.actor_user_id
+                          ? r.actor_user_id.slice(0, 8)
+                          : r.actor_api_token_id
+                            ? `token:${r.actor_api_token_id.slice(0, 8)}`
+                            : "system"}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{r.action}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {r.resource_type ?? "—"}
+                      {r.resource_id ? `:${r.resource_id.slice(0, 8)}` : ""}
+                    </TableCell>
+                    <TableCell className="font-mono text-[10px] text-muted-foreground">
+                      {r.request_id ? r.request_id.slice(0, 8) : "—"}
+                    </TableCell>
+                    <TableCell className="font-mono text-[10px] text-muted-foreground">
+                      {truncJson(r.metadata)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       {q.hasNextPage && (

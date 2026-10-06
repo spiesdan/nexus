@@ -186,51 +186,53 @@ export function FaturamentoClient({
           </div>
         )}
         table={
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead>{t("Emissão")}</TableHead>
-                <TableHead>{t("Pedido")}</TableHead>
-                <TableHead>{t("NF")}</TableHead>
-                <TableHead>{t("Cliente")}</TableHead>
-                <TableHead>{t("Vendedor")}</TableHead>
-                <TableHead className="text-right">{t("Total")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {linhas.map((l) => (
-                <TableRow key={l.order_id}>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(l.data_emissao).toLocaleDateString(tagIdioma)}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/app/pedidos/${l.order_id}`}
-                      className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                      {numeroDoPedido(l.numero)}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="tabular-nums">
-                    {l.nf_numero != null ? (
-                      `${l.nf_serie ?? ""} ${l.nf_numero}`
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{l.cliente_nome}</TableCell>
-                  <TableCell>
-                    {l.vendedor_user_id
-                      ? (nomesVendedores[l.vendedor_user_id] ?? l.vendedor_user_id.slice(0, 8))
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {comoMoeda(l.total_cents, "BRL")}
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{t("Emissão")}</TableHead>
+                  <TableHead>{t("Pedido")}</TableHead>
+                  <TableHead>{t("NF")}</TableHead>
+                  <TableHead>{t("Cliente")}</TableHead>
+                  <TableHead>{t("Vendedor")}</TableHead>
+                  <TableHead className="text-right">{t("Total")}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {linhas.map((l) => (
+                  <TableRow key={l.order_id}>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(l.data_emissao).toLocaleDateString(tagIdioma)}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/app/pedidos/${l.order_id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {numeroDoPedido(l.numero)}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {l.nf_numero != null ? (
+                        `${l.nf_serie ?? ""} ${l.nf_numero}`
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{l.cliente_nome}</TableCell>
+                    <TableCell>
+                      {l.vendedor_user_id
+                        ? (nomesVendedores[l.vendedor_user_id] ?? l.vendedor_user_id.slice(0, 8))
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {comoMoeda(l.total_cents, "BRL")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         }
       />
     </div>

@@ -218,53 +218,57 @@ export function CarteiraClient({
           ) : undefined
         }
         table={
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead>{t("Cliente")}</TableHead>
-                <TableHead>{t("Telefone")}</TableHead>
-                <TableHead>{t("Situação")}</TableHead>
-                <TableHead>{t("Última compra")}</TableHead>
-                <TableHead className="text-right">{t("Dias parado")}</TableHead>
-                <TableHead className="text-right">{t("Total histórico")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visiveis.slice(0, 500).map((l) => (
-                <TableRow key={l.contact_id}>
-                  <TableCell>
-                    <Link
-                      href={`/app/contacts/${l.contact_id}`}
-                      className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                      {l.nome}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{l.fone ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={VARIANTE[l.situacao]}>
-                      {l.situacao === "ativo"
-                        ? t("Ativos")
-                        : l.situacao === "inativo_recente"
-                          ? t("Inativos recentes")
-                          : l.situacao === "inativo_antigo"
-                            ? t("Inativos antigos")
-                            : t("Prospects")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {l.ultima_compra
-                      ? new Date(`${l.ultima_compra}T12:00:00Z`).toLocaleDateString(tagIdioma)
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{l.dias_parado ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {comoMoeda(l.total_historico, "BRL")}
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{t("Cliente")}</TableHead>
+                  <TableHead>{t("Telefone")}</TableHead>
+                  <TableHead>{t("Situação")}</TableHead>
+                  <TableHead>{t("Última compra")}</TableHead>
+                  <TableHead className="text-right">{t("Dias parado")}</TableHead>
+                  <TableHead className="text-right">{t("Total histórico")}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {visiveis.slice(0, 500).map((l) => (
+                  <TableRow key={l.contact_id}>
+                    <TableCell>
+                      <Link
+                        href={`/app/contacts/${l.contact_id}`}
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {l.nome}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{l.fone ?? "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant={VARIANTE[l.situacao]}>
+                        {l.situacao === "ativo"
+                          ? t("Ativos")
+                          : l.situacao === "inativo_recente"
+                            ? t("Inativos recentes")
+                            : l.situacao === "inativo_antigo"
+                              ? t("Inativos antigos")
+                              : t("Prospects")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {l.ultima_compra
+                        ? new Date(`${l.ultima_compra}T12:00:00Z`).toLocaleDateString(tagIdioma)
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {l.dias_parado ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {comoMoeda(l.total_historico, "BRL")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         }
       />
     </div>
