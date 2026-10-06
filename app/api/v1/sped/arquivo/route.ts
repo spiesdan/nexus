@@ -33,7 +33,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const inicio = new Date(Date.UTC(ano, mes - 1, 1)).toISOString();
   const fim = new Date(Date.UTC(ano, mes, 1)).toISOString();
 
-  const [{ data: config }, { data: equivs }, { data: notasDb }] = await Promise.all([
+  const [{ data: config }, { data: equivs }, { data: notasDb }, { data: entradasDb }] = await Promise.all([
     supabase
       .from("fiscal_settings")
       .select("serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, municipio, codigo_municipio, uf, ambiente")
@@ -51,6 +51,14 @@ export async function GET(req: NextRequest): Promise<Response> {
       .gte("created_at", inicio)
       .lt("created_at", fim)
       .order("numero", { ascending: true })
+      .limit(500),
+    supabase
+      .from("fiscal_entradas")
+      .select("dh_emi, itens_json")
+      .eq("organization_id", authz.org.orgId)
+      .gte("dh_emi", inicio)
+      .lt("dh_emi", fim)
+      .neq("status", "ignorada")
       .limit(500),
   ]);
 
@@ -174,6 +182,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     };
   });
 
+  const entradasItens = ((entradasDb ?? []) as unknown as { itens_json: unknown }[]).flatMap((e) => {
+    const its = Array.isArray(e.itens_json) ? e.itens_json : [];
+    return its as unknown as { codigo: string; descricao: string; unidade: string | null; quantidade: number }[];
+  });
+
   const saida = gerarEfd({
     emitente: {
       nome: "Emitente",
@@ -188,6 +201,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     cfopPadrao: cfg.cfop_padrao,
     equivalentes,
     notas: notasEfd,
+    entradas: entradasItens,
   });
 
   // O 0000 pede a razão social: busca o nome fantasia? Não há — a config não

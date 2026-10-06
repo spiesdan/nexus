@@ -76,6 +76,7 @@ export function SpedFiscal({
   const [jobs, setJobs] = React.useState<JobFiscal[] | null>(null);
   const [spedAno, setSpedAno] = React.useState(String(new Date().getFullYear()));
   const [spedMes, setSpedMes] = React.useState(String(new Date().getMonth() + 1));
+  const [arquivoEditavel, setArquivoEditavel] = React.useState<string>("");
   const [spedResumo, setSpedResumo] = React.useState<SpedResumo | null>(null);
   const [gerandoSped, setGerandoSped] = React.useState(false);
 
@@ -135,6 +136,7 @@ export function SpedFiscal({
         `/api/v1/sped/arquivo?ano=${encodeURIComponent(spedAno)}&mes=${encodeURIComponent(spedMes)}`,
       );
       setSpedResumo(r.data);
+      setArquivoEditavel(r.data.arquivo ?? "");
     } catch (e) {
       showApiError(e);
     } finally {
@@ -144,7 +146,7 @@ export function SpedFiscal({
 
   function baixarSped() {
     if (!spedResumo) return;
-    const blob = new Blob([spedResumo.arquivo], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([arquivoEditavel], { type: "text/plain;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = spedResumo.nomes.sugestao;
@@ -316,6 +318,13 @@ export function SpedFiscal({
                   ))}
                 </ul>
               </div>
+              <textarea
+                aria-label={t("Arquivo SPED para revisão e correção")}
+                className="max-h-72 w-full rounded-lg border border-border bg-background p-3 font-mono text-xs"
+                rows={12}
+                value={arquivoEditavel}
+                onChange={(e) => setArquivoEditavel(e.target.value)}
+              />
               <Button size="sm" variant="outline" onClick={baixarSped}>
                 <DownloadSimple size={14} />
                 {textos.baixarArquivo}

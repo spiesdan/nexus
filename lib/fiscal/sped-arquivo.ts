@@ -55,6 +55,8 @@ export interface GerarEfdEntrada {
   cfopPadrao: string;
   equivalentes: Record<string, string>; // origem -> destino
   notas: NotaEfd[];
+  /** Itens das notas de ENTRADA do período (compras) — somam ao estoque (Bloco H). */
+  entradas?: { codigo: string; descricao: string; unidade: string | null; quantidade: number }[];
 }
 
 export interface GerarEfdSaida {
@@ -165,6 +167,40 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   }
   bloco0.push(["0990", ""]);
 
+  const blocosH: Registro[] = [];
+  // Bloco H (inventário): saldo por item = entradas (compras, +) − saídas (notas, −).
+  {
+    const saldo = new Map<string, { descricao: string; unidade: string; qtd: number }>();
+    for (const n of notas) {
+      for (const i of n.itens) {
+        const s = saldo.get(i.codigo) ?? { descricao: i.descricao.slice(0, 60), unidade: (i.unidade ?? "UN").slice(0, 6), qtd: 0 };
+        s.qtd -= i.quantidade; // saída: negativo
+        if (!saldo.has(i.codigo)) saldo.set(i.codigo, s);
+      }
+    }
+    for (const e of entrada.entradas ?? []) {
+      const s = saldo.get(e.codigo) ?? { descricao: e.descricao.slice(0, 60), unidade: (e.unidade ?? "UN").slice(0, 6), qtd: 0 };
+      s.qtd += e.quantidade; // compra: positivo
+      if (!saldo.has(e.codigo)) saldo.set(e.codigo, s);
+    }
+    const temH = saldo.size > 0;
+    blocosH.push(["H001", temH ? "0" : "1"]);
+    if (temH) {
+      blocosH.push(["H005", fim, formatoEfd(0), "01"]);
+      let qtdItens = 0;
+      for (const [codigo, s] of [...saldo.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+        qtdItens += 1;
+        blocosH.push([
+          "H010", codigo.slice(0, 60), s.unidade, quantidadeEfd(s.qtd),
+          formatoEfd(0), formatoEfd(0), "0", "", "", "01",
+        ]);
+      }
+      blocosH.push(["H990", String(qtdItens + 2)]);
+    } else {
+      blocosH.push(["H990", "2"]);
+    }
+  }
+
   blocoC.push(["C001", temMovimento ? "0" : "1"]);
 
   // C190 agrega por CFOP (CST sai vazio no rascunho — ver pendencias).
@@ -219,7 +255,7 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   bloco0[bloco0.length - 1] = ["0990", String(bloco0.length)];
 
   const conta: Record<string, number> = {};
-  for (const r of [...bloco0, ...blocoC]) {
+  for (const r of [...bloco0, ...blocoC, ...blocosH]) {
     const reg = r[0];
     if (reg === undefined) continue;
     conta[reg] = (conta[reg] ?? 0) + 1;
@@ -239,14 +275,15 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   // 9990 conta as linhas do bloco 9 incluindo ele mesmo; 9999 conta o arquivo todo.
   const qtd9 = bloco9.length + 1;
   bloco9.push(["9990", String(qtd9)]);
-  const totalLinhas = bloco0.length + blocoC.length + bloco9.length + 1;
+  const totalLinhas = bloco0.length + blocoC.length + blocosH.length + bloco9.length + 1;
   const linhas: string[] = [];
-  for (const r of [...bloco0, ...blocoC, ...bloco9]) linhas.push(`|${r.join("|")}|`);
+  for (const r of [...bloco0, ...blocoC, ...blocosH, ...bloco9]) linhas.push(`|${r.join("|")}|`);
   linhas.push(`|9999|${totalLinhas}|`);
 
   const pendencias = [
     "CST/CSOSN por item (C170) e apuração de ICMS/IPI/PIS/COFINS saem zerados — complete no PVA com o contador",
     "Conferir COD_VER (019) com a versão vigente no PVA antes de transmitir",
+    "Bloco H (inventário) sai com saldo = entradas (compras, +) − saídas (notas); edite o arquivo se o controle de estoque for mantido à parte",
   ];
   if (emitente.crt === "1") {
     pendencias.unshift("Emitente no Simples (CRT 1): o PVA espera CSOSN no campo CST_ICMS do C170");
