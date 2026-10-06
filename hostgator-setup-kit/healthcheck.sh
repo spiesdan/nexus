@@ -46,9 +46,9 @@ fi
 
 # ── Âncora de versão: a tag no .env, o HEAD e as branches ─────────────────────
 #
-# Medido numa VPS real em 2026-10-06: às 22:15 o .env saiu de `:1.20.2` para
-# `ghcr.io/spiesdan/deskcommcrm:main` e às 00:48 o container foi recriado — o
-# site trocou sozinho, de madrugada, sem ninguém pedir. `:main` é tag MÓVEL:
+# Medido numa VPS real em 2026-10-06: às 22:15 a tag das imagens no .env saiu de
+# `1.20.2` para `main` e às 00:48 o container foi recriado — o
+# site trocou sozinho, de madrugada, sem ninguém pedir. `main` é tag MÓVEL:
 # é reconstruída a cada merge que entra no repositório, então quem aponta pra
 # ela instala o topo da main sobre o banco da versão instalada.
 #
