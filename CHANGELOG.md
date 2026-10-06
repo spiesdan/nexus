@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.21.0] — 2026-10-06
+
+### Adicionado
+
+- **O healthcheck confere se a versão está bem fixada** O diagnóstico ganhou uma seção "Âncora de versão (drift)", com cinco checagens:
+  a tag da imagem no `.env` (recusando canais móveis como `main`, `latest` e
+  `stable`), se as três imagens estão na mesma tag, se há branch local no
+  repositório, se há mais de um remote e se o HEAD está solto numa tag publicada.
+
+  Medido numa VPS real em 06/10/2026: o `.env` saiu de `:1.20.2` para `:main` às
+  22h15 e o site foi trocado sozinho às 00h48, sem ninguém pedir — `:main` é
+  reconstruída a cada merge, então quem aponta para ela instala o topo do
+  repositório sobre o banco da versão instalada. Na mesma noite o repositório
+  ficou com quatro branches locais (uma 239 commits atrás da remota) e dois
+  remotes para a mesma URL, e nada disso aparecia em lugar nenhum.
+
 ## [1.20.2] — 2026-10-05
 
 ### Alterado
@@ -2743,7 +2759,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.0...HEAD
+[1.21.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.2...v1.21.0
 [1.20.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.1...v1.20.2
 [1.20.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.19.0...v1.20.0
