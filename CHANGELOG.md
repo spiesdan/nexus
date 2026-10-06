@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.22.0] — 2026-10-06
+
+### Adicionado
+
+- **SPED com Bloco H (estoque por entradas e saídas) e arquivo editável** O arquivo EDF ICMS/IPI mensal (SPED Fiscal) agora inclui o Bloco H
+  (inventário): por produto, o saldo = entradas das notas de compra (positivas)
+  menos saídas das notas autorizadas. O arquivo gerado passou a aparecer em uma
+  caixa de texto editável na tela de SPED, para ajustes manuais antes do
+  download.
+
 ## [1.21.1] — 2026-10-06
 
 ### Corrigido
@@ -2777,7 +2787,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.2...v1.21.0
 [1.20.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.20.1...v1.20.2
