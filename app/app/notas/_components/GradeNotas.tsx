@@ -102,7 +102,9 @@ export function GradeNotas({
   const [correcao, setCorrecao] = React.useState("");
   const [registrandoCarta, setRegistrandoCarta] = React.useState(false);
   const [modeloXml, setModeloXml] = React.useState("");
-  const [progressoXml, setProgressoXml] = React.useState<{ total: number; feitos: number } | null>(null);
+  const [progressoXml, setProgressoXml] = React.useState<{ total: number; feitos: number } | null>(
+    null,
+  );
   const [cursor, setCursor] = React.useState<{ ult_nsu: number; max_nsu: number } | null>(null);
   const [importando, setImportando] = React.useState(false);
 
@@ -224,7 +226,9 @@ export function GradeNotas({
    */
   function exportarXmls() {
     const alvos = visiveis.filter(
-      (n) => n.status === "autorizada" && (modeloXml === "" || modeloDaNota(n.chave_acesso) === modeloXml),
+      (n) =>
+        n.status === "autorizada" &&
+        (modeloXml === "" || modeloDaNota(n.chave_acesso) === modeloXml),
     );
     if (alvos.length === 0) {
       toast.error(t("Nenhuma nota encontrada"));
@@ -368,299 +372,301 @@ export function GradeNotas({
         <Badge variant="neutral">{visiveis.length}</Badge>
       </h2>
 
-      {inicial.length === 0 ? (
-        <EmptyState
-          icon={Receipt}
-          headline="Nenhuma nota ainda"
-          subcopy="As notas nascem dos pedidos que já foram faturados."
-        />
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center gap-2">
-            {podeEmitir && (
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/app/notas?aba=emitir">
-                  <Plus size={14} />
-                  {textos.emitir}
-                </Link>
-              </Button>
-            )}
-            <Button size="sm" variant="outline" onClick={exportarCsv}>
-              <DownloadSimple size={14} />
-              {textos.exportarCsv}
+      <>
+        <div className="flex flex-wrap items-center gap-2">
+          {podeEmitir && (
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/app/notas?aba=emitir">
+                <Plus size={14} />
+                {textos.emitir}
+              </Link>
             </Button>
-            {podeEmitir && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => void importarHistorico()}
-                disabled={importando}
-              >
-                <ArrowsClockwise size={14} />
-                {importando ? t("Importando…") : textos.importarHistorico}
-              </Button>
-            )}
-            {cursor && (
-              <span
-                className="text-xs text-muted-foreground tabular-nums"
-                title={textos.nsuTitulo}
-              >
-                {textos.nsuTitulo} {cursor.ult_nsu}/{cursor.max_nsu}
-              </span>
-            )}
-            <select
-              aria-label={textos.modelo}
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-              value={modeloXml}
-              onChange={(e) => setModeloXml(e.target.value)}
-            >
-              <option value="">{textos.modelo}: {textos.todos}</option>
-              <option value="55">{textos.modeloNfe}</option>
-              <option value="65">{textos.modeloNfce}</option>
-            </select>
-            {podeEmitir && (
-              <Button size="sm" variant="outline" onClick={exportarXmls}>
-                <FileText size={14} />
-                {textos.exportaXmls}
-              </Button>
-            )}
-            <div className="relative min-w-52 flex-1">
-              <MagnifyingGlass
-                size={16}
-                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                aria-label={textos.buscarNota}
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder={textos.buscarNota}
-                className="pl-9"
-              />
-            </div>
-            <select
-              aria-label={textos.data}
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
-            >
-              <option value="ano">{textos.esteAno}</option>
-              <option value="mes">{textos.esteMes}</option>
-              <option value="30">{textos.ultimos30}</option>
-              <option value="tudo">{textos.tudo}</option>
-            </select>
-            <select
-              aria-label={textos.status}
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-            >
-              <option value="">{textos.todos}</option>
-              <option value="pendente">{textos.pendente}</option>
-              <option value="em_emissao">{textos.emitindo}</option>
-              <option value="autorizada">{textos.autorizada}</option>
-              <option value="denegada">{textos.denegada}</option>
-              <option value="cancelada">{textos.cancelada}</option>
-              <option value="erro">{textos.erro}</option>
-            </select>
-          </div>
-
-          {progressoXml && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground tabular-nums">
-                {textos.exportaXmls}: {progressoXml.feitos}/{progressoXml.total}
-              </p>
-              <div
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={progressoXml.total}
-                aria-valuenow={progressoXml.feitos}
-                aria-label={textos.exportaXmls}
-                className="h-2 w-full overflow-hidden rounded-full bg-muted"
-              >
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${(progressoXml.feitos / Math.max(progressoXml.total, 1)) * 100}%` }}
-                />
-              </div>
-            </div>
           )}
+          <Button size="sm" variant="outline" onClick={exportarCsv}>
+            <DownloadSimple size={14} />
+            {textos.exportarCsv}
+          </Button>
+          {podeEmitir && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void importarHistorico()}
+              disabled={importando}
+            >
+              <ArrowsClockwise size={14} />
+              {importando ? t("Importando…") : textos.importarHistorico}
+            </Button>
+          )}
+          {cursor && (
+            <span className="text-xs text-muted-foreground tabular-nums" title={textos.nsuTitulo}>
+              {textos.nsuTitulo} {cursor.ult_nsu}/{cursor.max_nsu}
+            </span>
+          )}
+          <select
+            aria-label={textos.modelo}
+            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+            value={modeloXml}
+            onChange={(e) => setModeloXml(e.target.value)}
+          >
+            <option value="">
+              {textos.modelo}: {textos.todos}
+            </option>
+            <option value="55">{textos.modeloNfe}</option>
+            <option value="65">{textos.modeloNfce}</option>
+          </select>
+          {podeEmitir && (
+            <Button size="sm" variant="outline" onClick={exportarXmls}>
+              <FileText size={14} />
+              {textos.exportaXmls}
+            </Button>
+          )}
+          <div className="relative min-w-52 flex-1">
+            <MagnifyingGlass
+              size={16}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              aria-label={textos.buscarNota}
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder={textos.buscarNota}
+              className="pl-9"
+            />
+          </div>
+          <select
+            aria-label={textos.data}
+            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+          >
+            <option value="ano">{textos.esteAno}</option>
+            <option value="mes">{textos.esteMes}</option>
+            <option value="30">{textos.ultimos30}</option>
+            <option value="tudo">{textos.tudo}</option>
+          </select>
+          <select
+            aria-label={textos.status}
+            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+          >
+            <option value="">{textos.todos}</option>
+            <option value="pendente">{textos.pendente}</option>
+            <option value="em_emissao">{textos.emitindo}</option>
+            <option value="autorizada">{textos.autorizada}</option>
+            <option value="denegada">{textos.denegada}</option>
+            <option value="cancelada">{textos.cancelada}</option>
+            <option value="erro">{textos.erro}</option>
+          </select>
+        </div>
 
-          {visiveis.length === 0 ? (
-            <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
-          ) : (
-            <>
-              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead>{textos.status}</TableHead>
-                      <TableHead>{textos.protocolo}</TableHead>
-                      <TableHead>{textos.operacao}</TableHead>
-                      <TableHead>{textos.data}</TableHead>
-                      <TableHead className="text-right">{textos.numNota}</TableHead>
-                      <TableHead>{textos.serie}</TableHead>
-                      <TableHead>{textos.pessoa}</TableHead>
-                      <TableHead className="text-right">{textos.valorTotal}</TableHead>
-                      <TableHead>{textos.ambiente}</TableHead>
-                      <TableHead>
-                        <span className="sr-only">{textos.acoes}</span>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {visiveis.map((n) => (
-                      <React.Fragment key={n.id}>
-                        <TableRow>
-                          <TableCell>
-                            <Badge variant={VARIANTE_STATUS[n.status]}>
-                              {ROTULO_DA_NOTA[n.status] ?? n.status}
-                            </Badge>
-                            {n.erro && (
-                              <span className="block text-xs text-error-fg">{n.erro}</span>
+        {progressoXml && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {textos.exportaXmls}: {progressoXml.feitos}/{progressoXml.total}
+            </p>
+            <div
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={progressoXml.total}
+              aria-valuenow={progressoXml.feitos}
+              aria-label={textos.exportaXmls}
+              className="h-2 w-full overflow-hidden rounded-full bg-muted"
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{
+                  width: `${(progressoXml.feitos / Math.max(progressoXml.total, 1)) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {inicial.length === 0 ? (
+          <EmptyState
+            icon={Receipt}
+            headline="Nenhuma nota ainda"
+            subcopy="As notas nascem dos pedidos que já foram faturados."
+          />
+        ) : visiveis.length === 0 ? (
+          <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
+        ) : (
+          <>
+            <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead>{textos.status}</TableHead>
+                    <TableHead>{textos.protocolo}</TableHead>
+                    <TableHead>{textos.operacao}</TableHead>
+                    <TableHead>{textos.data}</TableHead>
+                    <TableHead className="text-right">{textos.numNota}</TableHead>
+                    <TableHead>{textos.serie}</TableHead>
+                    <TableHead>{textos.pessoa}</TableHead>
+                    <TableHead className="text-right">{textos.valorTotal}</TableHead>
+                    <TableHead>{textos.ambiente}</TableHead>
+                    <TableHead>
+                      <span className="sr-only">{textos.acoes}</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visiveis.map((n) => (
+                    <React.Fragment key={n.id}>
+                      <TableRow>
+                        <TableCell>
+                          <Badge variant={VARIANTE_STATUS[n.status]}>
+                            {ROTULO_DA_NOTA[n.status] ?? n.status}
+                          </Badge>
+                          {n.erro && <span className="block text-xs text-error-fg">{n.erro}</span>}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs whitespace-nowrap">
+                          {n.protocolo ?? "—"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {operacaoPadrao === "" ? "—" : operacaoPadrao}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {new Date(n.created_at).toLocaleDateString(tagIdioma)}
+                        </TableCell>
+                        <TableCell className="text-right font-medium whitespace-nowrap text-text tabular-nums">
+                          {n.numero === null ? textos.semNumero : n.numero}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{n.serie}</TableCell>
+                        <TableCell className="max-w-64 truncate">
+                          {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
+                          {comoMoeda(n.total_cents, "BRL")}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {ambientePadrao === "producao" ? textos.producao : textos.homologacao}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title={textos.detalhe}
+                              aria-label={textos.detalhe}
+                              onClick={() => setExpandida(expandida === n.id ? null : n.id)}
+                              aria-expanded={expandida === n.id}
+                            >
+                              <MagnifyingGlass size={14} />
+                            </Button>
+                            {n.status === "autorizada" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title={textos.verDanfe}
+                                  aria-label={textos.verDanfe}
+                                  asChild
+                                >
+                                  <a
+                                    href={`/api/v1/invoices/${n.id}/danfe`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Printer size={14} />
+                                  </a>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title={textos.baixarXml}
+                                  aria-label={textos.baixarXml}
+                                  asChild
+                                >
+                                  <a
+                                    href={`/api/v1/invoices/${n.id}/xml`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <DownloadSimple size={14} />
+                                  </a>
+                                </Button>
+                                {podeEmitir && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    title={textos.cartaCorrecao}
+                                    aria-label={textos.cartaCorrecao}
+                                    onClick={() => {
+                                      setCartaPara(n);
+                                      setCorrecao("");
+                                    }}
+                                  >
+                                    <FileText size={14} />
+                                  </Button>
+                                )}
+                              </>
                             )}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs whitespace-nowrap">
-                            {n.protocolo ?? "—"}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-muted-foreground">
-                            {operacaoPadrao === "" ? "—" : operacaoPadrao}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-muted-foreground">
-                            {new Date(n.created_at).toLocaleDateString(tagIdioma)}
-                          </TableCell>
-                          <TableCell className="text-right font-medium whitespace-nowrap text-text tabular-nums">
-                            {n.numero === null ? textos.semNumero : n.numero}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{n.serie}</TableCell>
-                          <TableCell className="max-w-64 truncate">
-                            {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
-                          </TableCell>
-                          <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
-                            {comoMoeda(n.total_cents, "BRL")}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap text-muted-foreground">
-                            {ambientePadrao === "producao" ? textos.producao : textos.homologacao}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-end gap-1">
+                            {podeEmitir && n.status === "erro" && (
                               <Button
                                 size="sm"
-                                variant="ghost"
-                                title={textos.detalhe}
-                                aria-label={textos.detalhe}
-                                onClick={() => setExpandida(expandida === n.id ? null : n.id)}
-                                aria-expanded={expandida === n.id}
+                                variant="outline"
+                                onClick={() => void reemitir(n.id)}
                               >
-                                <MagnifyingGlass size={14} />
+                                {textos.reemitir}
                               </Button>
-                              {n.status === "autorizada" && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    title={textos.verDanfe}
-                                    aria-label={textos.verDanfe}
-                                    asChild
-                                  >
-                                    <a
-                                      href={`/api/v1/invoices/${n.id}/danfe`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Printer size={14} />
-                                    </a>
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    title={textos.baixarXml}
-                                    aria-label={textos.baixarXml}
-                                    asChild
-                                  >
-                                    <a
-                                      href={`/api/v1/invoices/${n.id}/xml`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <DownloadSimple size={14} />
-                                    </a>
-                                  </Button>
-                                  {podeEmitir && (
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      title={textos.cartaCorrecao}
-                                      aria-label={textos.cartaCorrecao}
-                                      onClick={() => {
-                                        setCartaPara(n);
-                                        setCorrecao("");
-                                      }}
-                                    >
-                                      <FileText size={14} />
-                                    </Button>
-                                  )}
-                                </>
-                              )}
-                              {podeEmitir && n.status === "erro" && (
+                            )}
+                            {podeEmitir &&
+                              (OBJETIVOS_CANCELAMENTO.includes(n.status) ||
+                                n.status === "autorizada") && (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => void reemitir(n.id)}
+                                  onClick={() => confirmaCancelamento(n)}
                                 >
-                                  {textos.reemitir}
+                                  {textos.cancelar}
                                 </Button>
                               )}
-                              {podeEmitir &&
-                                (OBJETIVOS_CANCELAMENTO.includes(n.status) ||
-                                  n.status === "autorizada") && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => confirmaCancelamento(n)}
-                                  >
-                                    {textos.cancelar}
-                                  </Button>
-                                )}
-                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {expandida === n.id && (
+                        <TableRow className="bg-muted/30">
+                          <TableCell colSpan={10} className="p-3">
+                            <DetalheNota id={n.id} textos={textos} />
                           </TableCell>
                         </TableRow>
-                        {expandida === n.id && (
-                          <TableRow className="bg-muted/30">
-                            <TableCell colSpan={10} className="p-3">
-                              <DetalheNota id={n.id} textos={textos} />
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-                <Table>
-                  <TableBody>
-                    <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
-                      <TableCell colSpan={7}>
-                        {visiveis.length} {textos.notas}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap tabular-nums">
-                        {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
-                      </TableCell>
-                      <TableCell colSpan={2} />
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {textos.filtrandoPor}: {partesFiltro.join(" · ")}
-              </p>
-            </>
-          )}
-        </>
-      )}
+                      )}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+              <Table>
+                <TableBody>
+                  <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
+                    <TableCell colSpan={7}>
+                      {visiveis.length} {textos.notas}
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap tabular-nums">
+                      {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
+                    </TableCell>
+                    <TableCell colSpan={2} />
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {textos.filtrandoPor}: {partesFiltro.join(" · ")}
+            </p>
+          </>
+        )}
+      </>
 
       {cartaPara && (
-        <Dialog open onOpenChange={(o) => { if (!o) setCartaPara(null); }}>
+        <Dialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setCartaPara(null);
+          }}
+        >
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-base font-medium text-text">
@@ -793,7 +799,9 @@ function DetalheNota({ id, textos }: { id: string; textos: Textos }) {
             <div className="space-y-1 rounded-lg border border-border bg-surface p-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">{textos.impostoAproximado}</span>
-                <span className="font-medium tabular-nums">{comoMoeda(dados.ibpt.total_cents, "BRL")}</span>
+                <span className="font-medium tabular-nums">
+                  {comoMoeda(dados.ibpt.total_cents, "BRL")}
+                </span>
               </div>
               <p className="text-xs text-muted-foreground">
                 IBPT
