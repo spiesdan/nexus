@@ -112,9 +112,21 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   const temMovimento = notas.length > 0;
 
   bloco0.push([
-    "0000", "019", "0", ini, fim,
-    emitente.nome.slice(0, 60), soDigitos(emitente.cnpj), "", emitente.uf,
-    soDigitos(emitente.ie), emitente.codigo_municipio, "", "", "A", "1",
+    "0000",
+    "019",
+    "0",
+    ini,
+    fim,
+    emitente.nome.slice(0, 60),
+    soDigitos(emitente.cnpj),
+    "",
+    emitente.uf,
+    soDigitos(emitente.ie),
+    emitente.codigo_municipio,
+    "",
+    "",
+    "A",
+    "1",
   ]);
   bloco0.push(["0001", temMovimento ? "0" : "1"]);
 
@@ -136,9 +148,19 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
     if (visto.has(chave)) continue;
     visto.add(chave);
     bloco0.push([
-      "0150", codParte.get(chave) ?? "", n.cliente_nome.slice(0, 60), "1058",
-      doc.length === 14 ? doc : "", doc.length === 11 ? doc : "",
-      "", "", "", "", "", "", "",
+      "0150",
+      codParte.get(chave) ?? "",
+      n.cliente_nome.slice(0, 60),
+      "1058",
+      doc.length === 14 ? doc : "",
+      doc.length === 11 ? doc : "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
     ]);
   }
 
@@ -161,8 +183,18 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   for (const un of [...unidades].sort()) bloco0.push(["0190", un, un]);
   for (const [codigo, p] of [...produtos.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
     bloco0.push([
-      "0200", codigo.slice(0, 60), p.descricao, "", "", p.unidade, "00",
-      p.ncm, "", p.ncm.length >= 2 ? p.ncm.slice(0, 2) : "", "", "",
+      "0200",
+      codigo.slice(0, 60),
+      p.descricao,
+      "",
+      "",
+      p.unidade,
+      "00",
+      p.ncm,
+      "",
+      p.ncm.length >= 2 ? p.ncm.slice(0, 2) : "",
+      "",
+      "",
     ]);
   }
   bloco0.push(["0990", ""]);
@@ -173,13 +205,21 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
     const saldo = new Map<string, { descricao: string; unidade: string; qtd: number }>();
     for (const n of notas) {
       for (const i of n.itens) {
-        const s = saldo.get(i.codigo) ?? { descricao: i.descricao.slice(0, 60), unidade: (i.unidade ?? "UN").slice(0, 6), qtd: 0 };
+        const s = saldo.get(i.codigo) ?? {
+          descricao: i.descricao.slice(0, 60),
+          unidade: (i.unidade ?? "UN").slice(0, 6),
+          qtd: 0,
+        };
         s.qtd -= i.quantidade; // saída: negativo
         if (!saldo.has(i.codigo)) saldo.set(i.codigo, s);
       }
     }
     for (const e of entrada.entradas ?? []) {
-      const s = saldo.get(e.codigo) ?? { descricao: e.descricao.slice(0, 60), unidade: (e.unidade ?? "UN").slice(0, 6), qtd: 0 };
+      const s = saldo.get(e.codigo) ?? {
+        descricao: e.descricao.slice(0, 60),
+        unidade: (e.unidade ?? "UN").slice(0, 6),
+        qtd: 0,
+      };
       s.qtd += e.quantidade; // compra: positivo
       if (!saldo.has(e.codigo)) saldo.set(e.codigo, s);
     }
@@ -191,8 +231,16 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
       for (const [codigo, s] of [...saldo.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
         qtdItens += 1;
         blocosH.push([
-          "H010", codigo.slice(0, 60), s.unidade, quantidadeEfd(s.qtd),
-          formatoEfd(0), formatoEfd(0), "0", "", "", "01",
+          "H010",
+          codigo.slice(0, 60),
+          s.unidade,
+          quantidadeEfd(s.qtd),
+          formatoEfd(0),
+          formatoEfd(0),
+          "0",
+          "",
+          "",
+          "01",
         ]);
       }
       blocosH.push(["H990", String(qtdItens + 2)]);
@@ -208,19 +256,43 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
   let totalItens = 0;
 
   for (const n of notas) {
-    const parte = codParte.get(
-      soDigitos(n.cliente_documento) === ""
-        ? `nome:${n.cliente_nome}`
-        : `doc:${soDigitos(n.cliente_documento)}`,
-    ) ?? "";
+    const parte =
+      codParte.get(
+        soDigitos(n.cliente_documento) === ""
+          ? `nome:${n.cliente_nome}`
+          : `doc:${soDigitos(n.cliente_documento)}`,
+      ) ?? "";
     const mercadoria = n.itens.reduce((a, i) => a + Math.round(i.quantidade * i.preco_cents), 0);
     blocoC.push([
-      "C100", "1", "0", parte, "55", "00", n.serie, String(n.numero),
-      soDigitos(n.chave), dataEfd(n.emissao), dataEfd(n.emissao),
-      formatoEfd(n.total_cents), "2", formatoEfd(n.desconto_cents), formatoEfd(0),
-      formatoEfd(mercadoria), n.frete_cents > 0 ? "0" : "9", formatoEfd(n.frete_cents),
-      formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0),
-      formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0),
+      "C100",
+      "1",
+      "0",
+      parte,
+      "55",
+      "00",
+      n.serie,
+      String(n.numero),
+      soDigitos(n.chave),
+      dataEfd(n.emissao),
+      dataEfd(n.emissao),
+      formatoEfd(n.total_cents),
+      "2",
+      formatoEfd(n.desconto_cents),
+      formatoEfd(0),
+      formatoEfd(mercadoria),
+      n.frete_cents > 0 ? "0" : "9",
+      formatoEfd(n.frete_cents),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
     ]);
     let seq = 0;
     for (const i of n.itens) {
@@ -231,20 +303,60 @@ export function gerarEfd(entrada: GerarEfdEntrada): GerarEfdSaida {
       const vlItem = Math.round(i.quantidade * i.preco_cents);
       agrega190.set(cfop, (agrega190.get(cfop) ?? 0) + vlItem - i.desconto_cents);
       blocoC.push([
-        "C170", String(seq), i.codigo.slice(0, 60), "", quantidadeEfd(i.quantidade),
-        (i.unidade ?? "UN").slice(0, 6), formatoEfd(vlItem), formatoEfd(i.desconto_cents),
-        "0", "", cfop, "", formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0),
-        formatoEfd(0), formatoEfd(0), "0", "", "", formatoEfd(0), formatoEfd(0),
-        formatoEfd(0), "", formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0),
-        formatoEfd(0), "", formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0),
-        formatoEfd(0), "",
+        "C170",
+        String(seq),
+        i.codigo.slice(0, 60),
+        "",
+        quantidadeEfd(i.quantidade),
+        (i.unidade ?? "UN").slice(0, 6),
+        formatoEfd(vlItem),
+        formatoEfd(i.desconto_cents),
+        "0",
+        "",
+        cfop,
+        "",
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        "0",
+        "",
+        "",
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        "",
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        "",
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        formatoEfd(0),
+        "",
       ]);
     }
   }
   for (const [cfop, valor] of [...agrega190.entries()].sort()) {
     blocoC.push([
-      "C190", "", cfop, formatoEfd(0), formatoEfd(valor), formatoEfd(0),
-      formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0), formatoEfd(0), "",
+      "C190",
+      "",
+      cfop,
+      formatoEfd(0),
+      formatoEfd(valor),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      formatoEfd(0),
+      "",
     ]);
   }
   blocoC.push(["C990", ""]);

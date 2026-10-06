@@ -25,7 +25,14 @@ export async function GET(req: NextRequest): Promise<Response> {
   const agora = new Date();
   const ano = Number(req.nextUrl.searchParams.get("ano") ?? agora.getUTCFullYear());
   const mes = Number(req.nextUrl.searchParams.get("mes") ?? agora.getUTCMonth() + 1);
-  if (!Number.isInteger(ano) || ano < 2000 || ano > 2100 || !Number.isInteger(mes) || mes < 1 || mes > 12) {
+  if (
+    !Number.isInteger(ano) ||
+    ano < 2000 ||
+    ano > 2100 ||
+    !Number.isInteger(mes) ||
+    mes < 1 ||
+    mes > 12
+  ) {
     return fail("validation_failed", "Período inválido.", 422, { requestId });
   }
 
@@ -33,34 +40,37 @@ export async function GET(req: NextRequest): Promise<Response> {
   const inicio = new Date(Date.UTC(ano, mes - 1, 1)).toISOString();
   const fim = new Date(Date.UTC(ano, mes, 1)).toISOString();
 
-  const [{ data: config }, { data: equivs }, { data: notasDb }, { data: entradasDb }] = await Promise.all([
-    supabase
-      .from("fiscal_settings")
-      .select("serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, municipio, codigo_municipio, uf, ambiente")
-      .eq("organization_id", authz.org.orgId)
-      .maybeSingle(),
-    supabase
-      .from("fiscal_cfop_equivalentes")
-      .select("cfop_origem, cfop_destino")
-      .eq("organization_id", authz.org.orgId),
-    supabase
-      .from("invoices")
-      .select("id, order_id, serie, numero, chave_acesso, total_cents, created_at")
-      .eq("organization_id", authz.org.orgId)
-      .eq("status", "autorizada")
-      .gte("created_at", inicio)
-      .lt("created_at", fim)
-      .order("numero", { ascending: true })
-      .limit(500),
-    supabase
-      .from("fiscal_entradas")
-      .select("dh_emi, itens_json")
-      .eq("organization_id", authz.org.orgId)
-      .gte("dh_emi", inicio)
-      .lt("dh_emi", fim)
-      .neq("status", "ignorada")
-      .limit(500),
-  ]);
+  const [{ data: config }, { data: equivs }, { data: notasDb }, { data: entradasDb }] =
+    await Promise.all([
+      supabase
+        .from("fiscal_settings")
+        .select(
+          "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, municipio, codigo_municipio, uf, ambiente",
+        )
+        .eq("organization_id", authz.org.orgId)
+        .maybeSingle(),
+      supabase
+        .from("fiscal_cfop_equivalentes")
+        .select("cfop_origem, cfop_destino")
+        .eq("organization_id", authz.org.orgId),
+      supabase
+        .from("invoices")
+        .select("id, order_id, serie, numero, chave_acesso, total_cents, created_at")
+        .eq("organization_id", authz.org.orgId)
+        .eq("status", "autorizada")
+        .gte("created_at", inicio)
+        .lt("created_at", fim)
+        .order("numero", { ascending: true })
+        .limit(500),
+      supabase
+        .from("fiscal_entradas")
+        .select("dh_emi, itens_json")
+        .eq("organization_id", authz.org.orgId)
+        .gte("dh_emi", inicio)
+        .lt("dh_emi", fim)
+        .neq("status", "ignorada")
+        .limit(500),
+    ]);
 
   const cfg = config as unknown as {
     natureza_operacao: string;
@@ -73,33 +83,49 @@ export async function GET(req: NextRequest): Promise<Response> {
     ambiente: string;
   } | null;
   if (!cfg?.emitente_documento || !cfg?.ie || !cfg?.uf || !cfg?.codigo_municipio) {
-    return fail("validation_failed", "Configuração fiscal incompleta para o SPED (CNPJ, IE, UF e IBGE).", 422, { requestId });
+    return fail(
+      "validation_failed",
+      "Configuração fiscal incompleta para o SPED (CNPJ, IE, UF e IBGE).",
+      422,
+      { requestId },
+    );
   }
 
   const equivalentes: Record<string, string> = Object.fromEntries(
-    ((equivs ?? []) as unknown as { cfop_origem: string; cfop_destino: string }[]).map((e) => [e.cfop_origem, e.cfop_destino]),
+    ((equivs ?? []) as unknown as { cfop_origem: string; cfop_destino: string }[]).map((e) => [
+      e.cfop_origem,
+      e.cfop_destino,
+    ]),
   );
 
-  const notas = ((notasDb ?? []) as unknown as {
-    id: string;
-    order_id: string | null;
-    serie: string;
-    numero: number | null;
-    chave_acesso: string | null;
-    total_cents: number;
-    created_at: string;
-  }[]).filter((n) => n.numero !== null && n.chave_acesso);
+  const notas = (
+    (notasDb ?? []) as unknown as {
+      id: string;
+      order_id: string | null;
+      serie: string;
+      numero: number | null;
+      chave_acesso: string | null;
+      total_cents: number;
+      created_at: string;
+    }[]
+  ).filter((n) => n.numero !== null && n.chave_acesso);
 
   const idsPedidos = [...new Set(notas.map((n) => n.order_id).filter((v): v is string => !!v))];
-  let pedidos: Record<string, { cliente_nome: string; cliente_documento: string | null; frete_cents: number }> = {};
-  const itensPorPedido: Record<string, {
-    produto_codigo: string;
-    produto_nome: string;
-    quantidade: number;
-    preco_unit_cents: number;
-    desconto_pct: number;
-    product_id: string | null;
-  }[]> = {};
+  let pedidos: Record<
+    string,
+    { cliente_nome: string; cliente_documento: string | null; frete_cents: number }
+  > = {};
+  const itensPorPedido: Record<
+    string,
+    {
+      produto_codigo: string;
+      produto_nome: string;
+      quantidade: number;
+      preco_unit_cents: number;
+      desconto_pct: number;
+      product_id: string | null;
+    }[]
+  > = {};
   if (idsPedidos.length > 0) {
     const [{ data: peds }, { data: itensDb }] = await Promise.all([
       supabase
@@ -109,15 +135,28 @@ export async function GET(req: NextRequest): Promise<Response> {
         .in("id", idsPedidos),
       supabase
         .from("commercial_order_items")
-        .select("order_id, produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id")
+        .select(
+          "order_id, produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
+        )
         .eq("organization_id", authz.org.orgId)
         .in("order_id", idsPedidos)
         .order("posicao"),
     ]);
     pedidos = Object.fromEntries(
-      ((peds ?? []) as unknown as { id: string; cliente_nome: string; cliente_documento: string | null; frete_cents: number }[]).map((p) => [
+      (
+        (peds ?? []) as unknown as {
+          id: string;
+          cliente_nome: string;
+          cliente_documento: string | null;
+          frete_cents: number;
+        }[]
+      ).map((p) => [
         p.id,
-        { cliente_nome: p.cliente_nome, cliente_documento: p.cliente_documento, frete_cents: p.frete_cents },
+        {
+          cliente_nome: p.cliente_nome,
+          cliente_documento: p.cliente_documento,
+          frete_cents: p.frete_cents,
+        },
       ]),
     );
     for (const it of (itensDb ?? []) as unknown as {
@@ -141,7 +180,8 @@ export async function GET(req: NextRequest): Promise<Response> {
         .filter((v): v is string => !!v),
     ),
   ];
-  let fiscais: Record<string, { ncm: string | null; cfop: string | null; unidade: string | null }> = {};
+  let fiscais: Record<string, { ncm: string | null; cfop: string | null; unidade: string | null }> =
+    {};
   if (idsProd.length > 0) {
     const { data: prods } = await supabase
       .from("catalog_products")
@@ -149,10 +189,14 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("organization_id", authz.org.orgId)
       .in("id", idsProd);
     fiscais = Object.fromEntries(
-      ((prods ?? []) as unknown as { id: string; ncm: string | null; cfop: string | null; unidade: string | null }[]).map((p) => [
-        p.id,
-        { ncm: p.ncm, cfop: p.cfop, unidade: p.unidade },
-      ]),
+      (
+        (prods ?? []) as unknown as {
+          id: string;
+          ncm: string | null;
+          cfop: string | null;
+          unidade: string | null;
+        }[]
+      ).map((p) => [p.id, { ncm: p.ncm, cfop: p.cfop, unidade: p.unidade }]),
     );
   }
 
@@ -166,7 +210,9 @@ export async function GET(req: NextRequest): Promise<Response> {
       unidade: i.product_id ? (fiscais[i.product_id]?.unidade ?? null) : null,
       quantidade: Number(i.quantidade),
       preco_cents: i.preco_unit_cents,
-      desconto_cents: Math.round((Number(i.quantidade) * i.preco_unit_cents * Number(i.desconto_pct)) / 100),
+      desconto_cents: Math.round(
+        (Number(i.quantidade) * i.preco_unit_cents * Number(i.desconto_pct)) / 100,
+      ),
     }));
     return {
       serie: n.serie,
@@ -182,10 +228,17 @@ export async function GET(req: NextRequest): Promise<Response> {
     };
   });
 
-  const entradasItens = ((entradasDb ?? []) as unknown as { itens_json: unknown }[]).flatMap((e) => {
-    const its = Array.isArray(e.itens_json) ? e.itens_json : [];
-    return its as unknown as { codigo: string; descricao: string; unidade: string | null; quantidade: number }[];
-  });
+  const entradasItens = ((entradasDb ?? []) as unknown as { itens_json: unknown }[]).flatMap(
+    (e) => {
+      const its = Array.isArray(e.itens_json) ? e.itens_json : [];
+      return its as unknown as {
+        codigo: string;
+        descricao: string;
+        unidade: string | null;
+        quantidade: number;
+      }[];
+    },
+  );
 
   const saida = gerarEfd({
     emitente: {
@@ -207,7 +260,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   // O 0000 pede a razão social: busca o nome fantasia? Não há — a config não
   // guarda razão social, então o arquivo sai com o CNPJ como identificação e
   // a pendência diz para completar. Melhor que inventar nome.
-  saida.pendencias.unshift("Razão social do emitente no 0000: complete no PVA (a config ainda não guarda)");
+  saida.pendencias.unshift(
+    "Razão social do emitente no 0000: complete no PVA (a config ainda não guarda)",
+  );
 
   return ok(
     {

@@ -105,7 +105,10 @@ describe("sped-arquivo (Gera Arquivo)", () => {
 
   it("um cliente com duas notas vira um 0150 só", () => {
     const saida = gerarEfd(entradaBase());
-    const participantes = saida.arquivo.trim().split("\r\n").filter((l) => l.startsWith("|0150|"));
+    const participantes = saida.arquivo
+      .trim()
+      .split("\r\n")
+      .filter((l) => l.startsWith("|0150|"));
     expect(participantes.length).toBe(1);
   });
 
