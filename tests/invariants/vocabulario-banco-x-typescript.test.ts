@@ -288,6 +288,15 @@ const PARES: Array<{
     arquivo: "lib/leads/laya-decisao.ts",
     simbolo: "AcaoDaDecisao",
   },
+  {
+    tabela: "business_prospects",
+    coluna: "laya_fit",
+    // lib/prospeccao/laya-fit.ts → LayaFit. Par nascido junto com a 0260:
+    // a qualificação é uma PERGUNTA ao motor local, e a resposta só volta
+    // como este enum — o mesmo vocabulário dos três lugares.
+    arquivo: "lib/prospeccao/laya-fit.ts",
+    simbolo: "LayaFit",
+  },
 ];
 
 /** Tira um nível de parênteses externos, se ele envolver a expressão inteira. */
