@@ -51,9 +51,14 @@ export function FotosDoProduto({
     try {
       const form = new FormData();
       form.append("file", arquivo);
-      const res = await fetch(`/api/v1/products/${productId}/images`, { method: "POST", body: form });
+      const res = await fetch(`/api/v1/products/${productId}/images`, {
+        method: "POST",
+        body: form,
+      });
       if (!res.ok) {
-        const corpo = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const corpo = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         toast.error(corpo?.error?.message ?? t("Não consegui enviar a foto."));
         return;
       }
