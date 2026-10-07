@@ -9,7 +9,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
 
-interface Foto {
+export interface Foto {
   id: string;
   url: string;
   posicao: number;
@@ -24,12 +24,19 @@ interface Foto {
 export function FotosDoProduto({
   productId,
   podeEditar,
+  fotosIniciais,
 }: {
   productId: string;
   podeEditar: boolean;
+  /**
+   * Fotos vindas do LOTE (`/api/v1/products/images?ids=`). Quando presentes,
+   * este componente NÃO busca sozinho — era uma requisição por produto na
+   * lista, e com 640 produtos eram 640 (medido: 600 requests = 104 s).
+   */
+  fotosIniciais?: Foto[];
 }) {
   const t = useT();
-  const [fotos, setFotos] = React.useState<Foto[] | null>(null);
+  const [fotos, setFotos] = React.useState<Foto[] | null>(fotosIniciais ?? null);
   const [ampliada, setAmpliada] = React.useState<number | null>(null);
 
   const recarregar = React.useCallback(async () => {
@@ -42,9 +49,10 @@ export function FotosDoProduto({
   }, [productId]);
 
   React.useEffect(() => {
+    if (fotosIniciais !== undefined) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar();
-  }, [recarregar]);
+  }, [recarregar, fotosIniciais]);
 
   async function enviar(arquivo: File | undefined) {
     if (!arquivo) return;

@@ -6,7 +6,12 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults } from "@/components/empty";
-import { FilterActions, FilterBar, FilterPrimary, FilterSearch } from "@/components/filters/FilterBar";
+import {
+  FilterActions,
+  FilterBar,
+  FilterPrimary,
+  FilterSearch,
+} from "@/components/filters/FilterBar";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
@@ -22,7 +27,7 @@ import {
   type Produto,
 } from "@/lib/schemas/produtos";
 
-import { FotosDoProduto } from "./_fotos";
+import { FotosDoProduto, type Foto } from "./_fotos";
 
 interface Textos {
   titulo: string;
@@ -224,7 +229,8 @@ export function ProdutosClient({
 
   function nomeNaEdicao(nome: string) {
     setRascunhoEdicao({ ...rascunhoEdicao, nome });
-    if (rascunhoEdicao.ncm.trim() === "" && nome.trim().length >= 3) sugerirNcmNaEdicao(nome.trim());
+    if (rascunhoEdicao.ncm.trim() === "" && nome.trim().length >= 3)
+      sugerirNcmNaEdicao(nome.trim());
   }
 
   function ncmNaEdicao(ncm: string) {
@@ -232,7 +238,8 @@ export function ProdutosClient({
     const vazio = ncm.trim() === "";
     setSugestaoEditar(null);
     setOrigemNcmEditar(vazio ? (editando?.ncm_origem ?? null) : "manual");
-    if (vazio && rascunhoEdicao.nome.trim().length >= 3) sugerirNcmNaEdicao(rascunhoEdicao.nome.trim());
+    if (vazio && rascunhoEdicao.nome.trim().length >= 3)
+      sugerirNcmNaEdicao(rascunhoEdicao.nome.trim());
   }
 
   /** O badge só fica de pé enquanto o valor da busca é o que está no campo. */
@@ -267,6 +274,40 @@ export function ProdutosClient({
     );
   }, [inicial, busca, aba, hoje]);
 
+  // Fotos de TODA a lista em UMA requisição. Sem isto cada linha buscava a sua
+  // (`GET /api/v1/products/{id}/images`) e a tela disparava uma requisição por
+  // produto — medido na VPS: 600 requests levaram 104 s, e a rajada derrubava
+  // o GoTrue, o que voltava como 401 no console mesmo com sessão válida.
+  const [fotosPorProduto, setFotosPorProduto] = React.useState<Record<string, Foto[]>>({});
+
+  React.useEffect(() => {
+    const ids = filtrados.map((p) => p.id);
+    if (ids.length === 0) return;
+    let cancelado = false;
+    const fatias: string[][] = [];
+    for (let i = 0; i < ids.length; i += 500) fatias.push(ids.slice(i, i + 500));
+
+    void (async () => {
+      const juntado: Record<string, Foto[]> = {};
+      for (const fatia of fatias) {
+        try {
+          const r = await apiClient.get<{ data: Record<string, Foto[]> }>(
+            `/api/v1/products/images?ids=${fatia.join(",")}`,
+          );
+          Object.assign(juntado, r.data ?? {});
+        } catch {
+          // Sem lote, cada linha volta a buscar a si mesma (estado inicial).
+          return;
+        }
+      }
+      if (!cancelado) setFotosPorProduto(juntado);
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [filtrados]);
+
   async function salvar() {
     const corpo = doRascunho(rascunho, t, origemNcmCriar);
     if ("erro" in corpo) {
@@ -299,7 +340,10 @@ export function ProdutosClient({
       marca: p.marca ?? "",
       categoria: p.categoria ?? "",
       preco: (p.preco_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
-      custo: p.custo_cents == null ? "" : (p.custo_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+      custo:
+        p.custo_cents == null
+          ? ""
+          : (p.custo_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
       quantidade: String(p.quantidade),
       controla_estoque: p.controla_estoque,
       ncm: p.ncm ?? "",
@@ -350,8 +394,7 @@ export function ProdutosClient({
       form.append("file", arquivo);
       const res = await fetch("/api/v1/products/import", { method: "POST", body: form });
       const json = (await res.json()) as
-        | { data: ResumoDaImportacao }
-        | { error?: { message?: string } };
+        { data: ResumoDaImportacao } | { error?: { message?: string } };
       if (!res.ok || !("data" in json)) {
         const msg = "error" in json ? json.error?.message : undefined;
         toast.error(msg ?? t("Não consegui ler essa planilha."));
@@ -569,7 +612,9 @@ export function ProdutosClient({
                 className="mt-1 h-9 w-full rounded-lg border px-3"
               />
               <span className="mt-1 block text-xs text-muted-foreground">
-                {t("Serve para o atendente saber até onde pode negociar. Não aparece para o cliente.")}
+                {t(
+                  "Serve para o atendente saber até onde pode negociar. Não aparece para o cliente.",
+                )}
               </span>
             </label>
           </div>
@@ -610,9 +655,14 @@ export function ProdutosClient({
 
       {filtrados.length === 0 ? (
         busca.trim() ? (
-          <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: () => setBusca("") }} />
+          <EmptyFilterResults
+            primary={{ label: t("Limpar filtros"), onClick: () => setBusca("") }}
+          />
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center" data-testid="produtos-vazio">
+          <div
+            className="rounded-lg border border-dashed p-8 text-center"
+            data-testid="produtos-vazio"
+          >
             <p className="font-medium">{textos.vazio}</p>
             <p className="mt-1 text-sm text-muted-foreground">{textos.vazioDica}</p>
           </div>
@@ -622,59 +672,76 @@ export function ProdutosClient({
           {filtrados.map((p) => {
             const vitrine = precoDeVitrine(p, hoje);
             return (
-            <li key={p.id} className="flex items-center gap-4 p-3" data-testid={`produto-${p.codigo}`}>
-              <FotosDoProduto productId={p.id} podeEditar={podeEditar} />
-              <div className="min-w-0 flex-1">
-                <p className={`truncate font-medium ${p.ativo ? "" : "text-muted-foreground line-through"}`}>
-                  {p.destaque && <span aria-label={t("Destaque")}>★ </span>}
-                  {p.nome}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {p.codigo}
-                  {p.marca ? ` · ${p.marca}` : ""}
-                  {p.controla_estoque
-                    ? ` · ${p.quantidade} ${t("em estoque")}`
-                    : ` · ${t("sem controle de estoque")}`}
+              <li
+                key={p.id}
+                className="flex items-center gap-4 p-3"
+                data-testid={`produto-${p.codigo}`}
+              >
+                <FotosDoProduto
+                  productId={p.id}
+                  podeEditar={podeEditar}
+                  fotosIniciais={fotosPorProduto[p.id] ?? []}
+                />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`truncate font-medium ${p.ativo ? "" : "text-muted-foreground line-through"}`}
+                  >
+                    {p.destaque && <span aria-label={t("Destaque")}>★ </span>}
+                    {p.nome}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.codigo}
+                    {p.marca ? ` · ${p.marca}` : ""}
+                    {p.controla_estoque
+                      ? ` · ${p.quantidade} ${t("em estoque")}`
+                      : ` · ${t("sem controle de estoque")}`}
+                    {vitrine.emPromocao && (
+                      <span className="ml-1 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800">
+                        {t("Promoção")}
+                        {p.promocao_ate
+                          ? ` até ${p.promocao_ate.split("-").reverse().join("/")}`
+                          : ""}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <span className="shrink-0 font-medium tabular-nums">
                   {vitrine.emPromocao && (
-                    <span className="ml-1 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800">
-                      {t("Promoção")}
-                      {p.promocao_ate ? ` até ${p.promocao_ate.split("-").reverse().join("/")}` : ""}
+                    <span className="mr-2 text-sm font-normal text-muted-foreground line-through">
+                      {comoMoeda(p.preco_cents, p.moeda)}
                     </span>
                   )}
-                </p>
-              </div>
-              <span className="shrink-0 tabular-nums font-medium">
-                {vitrine.emPromocao && (
-                  <span className="mr-2 text-sm font-normal text-muted-foreground line-through">
-                    {comoMoeda(p.preco_cents, p.moeda)}
-                  </span>
-                )}
-                {comoMoeda(vitrine.cents, p.moeda)}
-              </span>
-              {podeEditar ? (
-                <>
-                  <Button variant="ghost" size="sm" onClick={() => abrirEdicao(p)} data-testid={`editar-${p.codigo}`}>
-                    {t("Editar")}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void alternarDestaque(p)}
-                    data-testid={`destaque-${p.codigo}`}
-                  >
-                    {t(p.destaque ? "Tirar destaque" : "Destacar")}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void alternarAtivo(p)}
-                    data-testid={`alternar-${p.codigo}`}
-                  >
-                    {t(p.ativo ? "Desativar" : "Reativar")}
-                  </Button>
-                </>
-              ) : null}
-            </li>
+                  {comoMoeda(vitrine.cents, p.moeda)}
+                </span>
+                {podeEditar ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => abrirEdicao(p)}
+                      data-testid={`editar-${p.codigo}`}
+                    >
+                      {t("Editar")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void alternarDestaque(p)}
+                      data-testid={`destaque-${p.codigo}`}
+                    >
+                      {t(p.destaque ? "Tirar destaque" : "Destacar")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void alternarAtivo(p)}
+                      data-testid={`alternar-${p.codigo}`}
+                    >
+                      {t(p.ativo ? "Desativar" : "Reativar")}
+                    </Button>
+                  </>
+                ) : null}
+              </li>
             );
           })}
         </ul>
@@ -717,7 +784,9 @@ export function ProdutosClient({
               {t("Categoria")}
               <input
                 value={rascunhoEdicao.categoria}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, categoria: e.target.value })}
+                onChange={(e) =>
+                  setRascunhoEdicao({ ...rascunhoEdicao, categoria: e.target.value })
+                }
                 className="mt-1 h-9 w-full rounded-lg border px-3"
                 data-testid="editar-categoria"
               />
@@ -755,7 +824,9 @@ export function ProdutosClient({
               {t("Quantidade em estoque")}
               <input
                 value={rascunhoEdicao.quantidade}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, quantidade: e.target.value })}
+                onChange={(e) =>
+                  setRascunhoEdicao({ ...rascunhoEdicao, quantidade: e.target.value })
+                }
                 className="mt-1 h-9 w-32 rounded-lg border px-3"
                 data-testid="editar-quantidade"
               />
@@ -773,7 +844,9 @@ export function ProdutosClient({
             <input
               type="checkbox"
               checked={rascunhoEdicao.emPromocao}
-              onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, emPromocao: e.target.checked })}
+              onChange={(e) =>
+                setRascunhoEdicao({ ...rascunhoEdicao, emPromocao: e.target.checked })
+              }
             />
             {t("Em promoção")}
           </label>
@@ -783,7 +856,9 @@ export function ProdutosClient({
                 {t("Preço promocional (R$)")}
                 <input
                   value={rascunhoEdicao.precoPromocional}
-                  onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, precoPromocional: e.target.value })}
+                  onChange={(e) =>
+                    setRascunhoEdicao({ ...rascunhoEdicao, precoPromocional: e.target.value })
+                  }
                   className="mt-1 h-9 w-full rounded-lg border px-3"
                   data-testid="editar-preco-promocional"
                 />
@@ -793,7 +868,9 @@ export function ProdutosClient({
                 <input
                   type="date"
                   value={rascunhoEdicao.promocaoAte}
-                  onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, promocaoAte: e.target.value })}
+                  onChange={(e) =>
+                    setRascunhoEdicao({ ...rascunhoEdicao, promocaoAte: e.target.value })
+                  }
                   className="mt-1 h-9 w-full rounded-lg border bg-background px-3"
                   data-testid="editar-promocao-ate"
                 />
@@ -804,12 +881,18 @@ export function ProdutosClient({
             <input
               type="checkbox"
               checked={rascunhoEdicao.controla_estoque}
-              onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, controla_estoque: e.target.checked })}
+              onChange={(e) =>
+                setRascunhoEdicao({ ...rascunhoEdicao, controla_estoque: e.target.checked })
+              }
             />
             {t("Controlar estoque deste produto")}
           </label>
           <div className="mt-4 flex gap-2">
-            <Button onClick={() => void salvarEdicao()} disabled={salvandoEdicao} data-testid="salvar-edicao">
+            <Button
+              onClick={() => void salvarEdicao()}
+              disabled={salvandoEdicao}
+              data-testid="salvar-edicao"
+            >
               {t(salvandoEdicao ? "Salvando…" : "Salvar alterações")}
             </Button>
             <Button variant="outline" onClick={() => setEditando(null)}>
