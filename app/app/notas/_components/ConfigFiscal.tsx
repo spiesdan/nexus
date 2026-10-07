@@ -97,7 +97,7 @@ export function ConfigFiscal({
       )}
 
       <fieldset className="space-y-3">
-        <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {textos.emitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -130,17 +130,25 @@ export function ConfigFiscal({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {textos.enderecoEmitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="logradouro">{textos.logradouro}</Label>
-            <Input id="logradouro" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} />
+            <Input
+              id="logradouro"
+              value={logradouro}
+              onChange={(e) => setLogradouro(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="numero-end">{textos.numeroEnd}</Label>
-            <Input id="numero-end" value={numeroEnd} onChange={(e) => setNumeroEnd(e.target.value)} />
+            <Input
+              id="numero-end"
+              value={numeroEnd}
+              onChange={(e) => setNumeroEnd(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="bairro">{textos.bairro}</Label>
@@ -148,11 +156,20 @@ export function ConfigFiscal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="municipio">{textos.municipio}</Label>
-            <Input id="municipio" value={municipio} onChange={(e) => setMunicipio(e.target.value)} />
+            <Input
+              id="municipio"
+              value={municipio}
+              onChange={(e) => setMunicipio(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="codmun">{textos.codMun}</Label>
-            <Input id="codmun" value={codMun} onChange={(e) => setCodMun(e.target.value)} placeholder="3550308" />
+            <Input
+              id="codmun"
+              value={codMun}
+              onChange={(e) => setCodMun(e.target.value)}
+              placeholder="3550308"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -168,7 +185,7 @@ export function ConfigFiscal({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {textos.emissaoSefaz}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -208,7 +225,7 @@ export function ConfigFiscal({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {textos.certificado}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -224,7 +241,7 @@ export function ConfigFiscal({
                 {t("Selecionar arquivo")}
               </Button>
               {certPath && (
-                <span className="text-xs text-muted-foreground truncate" title={certPath}>
+                <span className="truncate text-xs text-muted-foreground" title={certPath}>
                   {certPath}
                 </span>
               )}
