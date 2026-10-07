@@ -246,7 +246,14 @@ services:
       app:
         condition: service_healthy
     logging: *default-logging
-    networks: [internal]
+    networks:
+      internal:
+        # O app chama o Supabase self-host pelo mesmo nome de dominio publico
+        # (NEXT_PUBLIC_SUPABASE_URL). Sem este alias, o container resolveria o
+        # dominio pela internet e bateria no edge — onde o DNS pode estar
+        # suspenso — em vez de talking com o Caddy da propria rede.
+        aliases:
+          - crm.billhigiene.tech
 
 volumes:
   waha-data:

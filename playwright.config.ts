@@ -158,6 +158,11 @@ export default defineConfig({
   reporter: (process.env.CI ? [["list"], ["github"]] : [["list"]]) as ReporterDescription[],
   use: {
     baseURL: BASE_URL,
+    // `E2E_PROXY` existe para rodar contra uma instalação alcançada por um
+    // proxy CONNECT (túnel até a VPS, DNS público suspenso): sem ele o Chromium
+    // resolveria o domínio na internet e o teste inteiro morreria em
+    // ERR_SSL_PROTOCOL_ERROR — verde falso em CI, vermelho falso fora dele.
+    ...(process.env.E2E_PROXY ? { proxy: { server: process.env.E2E_PROXY } } : {}),
     // ⚠️ Era `on-first-retry`, e com `retries: 0` logo acima isso significa
     // **trace nunca gravado**. As duas linhas estão certas isoladamente e
     // erradas juntas: uma diz "só no retry", a outra diz "não há retry".

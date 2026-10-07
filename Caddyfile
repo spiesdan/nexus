@@ -39,6 +39,14 @@
 			}
 		}
 
+		# O Supabase self-host (PostgREST/Auth/Storage/Realtime) no MESMO dominio.
+		# O browser precisa de uma origem https alcancavel: apontar para o nome
+		# interno do container gera  em pagina https (mixed content) e a
+		# tela cai em "Algo deu errado".
+		handle_path /supabase/* {
+			reverse_proxy supabase_kong_selfhost:8000
+		}
+
 		# Todo o resto do app.
 		reverse_proxy app:3000
 	}
