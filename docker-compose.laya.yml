@@ -57,7 +57,7 @@ services:
     # do fast path + runtime torch). Os 4,78 GiB de antes eram preload de TODOS
     # os checkpoints — ver LAYA_PRELOAD. Limite não é reserva: o host só paga o
     # pico durante o batch, e LAYA_IDLE_UNLOAD_SECONDS devolve no intervalo.
-    mem_limit: 6g
+    mem_limit: 2g
     # Só a rede interna: nenhuma porta publicada, alcançável de dentro do compose
     # como `http://laya:8000` (LAYA_URL) e de lugar nenhum de fora.
     networks: [internal]
