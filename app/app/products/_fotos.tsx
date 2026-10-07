@@ -101,10 +101,11 @@ export function FotosDoProduto({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={fotos[0]!.url}
+          src={fotos[0]!.url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?width=96&quality=70&resize=cover"}
           alt=""
           className="h-10 w-10 rounded-lg border object-cover"
           loading="lazy"
+          sizes="40px"
         />
       </button>
       {fotos.length > 1 && (
