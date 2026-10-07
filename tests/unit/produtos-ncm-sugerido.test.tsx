@@ -81,9 +81,7 @@ function produto(over: Partial<Produto> = {}): Produto {
 }
 
 function montar(inicial: Produto[] = [], podeEditar = true) {
-  return render(
-    <ProdutosClient inicial={inicial} podeEditar={podeEditar} textos={TEXTOS} />,
-  );
+  return render(<ProdutosClient inicial={inicial} podeEditar={podeEditar} textos={TEXTOS} />);
 }
 
 /**
@@ -137,7 +135,10 @@ describe("NCM pelo nome no formulário de produto", () => {
   it("não sobrescreve o NCM digitado à mão — a origem vira manual", async () => {
     let chega: (v: unknown) => void = () => {};
     vi.mocked(apiClient.get).mockImplementationOnce(
-      () => new Promise((resolve) => { chega = resolve; }) as never,
+      () =>
+        new Promise((resolve) => {
+          chega = resolve;
+        }) as never,
     );
 
     montar();
@@ -175,8 +176,14 @@ describe("NCM pelo nome no formulário de produto", () => {
     fireEvent.click(screen.getByTestId("salvar-edicao"));
     await waitFor(() => expect(vi.mocked(apiClient.patch)).toHaveBeenCalled());
 
-    // Nada a sugerir: o campo já tinha NCM, então a rota nem é consultada.
-    expect(vi.mocked(apiClient.get)).not.toHaveBeenCalled();
+    // Nada a sugerir: o campo já tinha NCM, então a rota de SUGESTÃO não é
+    // consultada. A asserção é sobre ESSA rota, não sobre "nenhum GET": a tela
+    // agora busca as fotos da lista em lote no mount (`/products/images?ids=`),
+    // que não tem nada a ver com NCM —Um "não chamou GET nenhum" aqui
+    // reprovaria essa otimização sem motivo.
+    expect(
+      vi.mocked(apiClient.get).mock.calls.filter((c) => String(c[0]).includes("ncm-sugestao")),
+    ).toHaveLength(0);
 
     const patch = vi.mocked(apiClient.patch).mock.calls[0]![1] as Record<string, unknown>;
     expect(patch).toMatchObject({ ncm: "73181500", ncm_origem: null });
