@@ -51,9 +51,14 @@ export function FotosDoProduto({
     try {
       const form = new FormData();
       form.append("file", arquivo);
-      const res = await fetch(`/api/v1/products/${productId}/images`, { method: "POST", body: form });
+      const res = await fetch(`/api/v1/products/${productId}/images`, {
+        method: "POST",
+        body: form,
+      });
       if (!res.ok) {
-        const corpo = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const corpo = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         toast.error(corpo?.error?.message ?? t("Não consegui enviar a foto."));
         return;
       }
@@ -101,7 +106,7 @@ export function FotosDoProduto({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={fotos[0]!.url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?width=96&quality=70&resize=cover"}
+          src={fotos[0]!.url}
           alt=""
           className="h-10 w-10 rounded-lg border object-cover"
           loading="lazy"

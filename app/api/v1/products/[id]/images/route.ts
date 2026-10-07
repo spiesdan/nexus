@@ -7,11 +7,13 @@
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { detectarTipoImagem, mimeDaImagem } from "@/lib/comercial/imagem";
+import { detectarTipoImagem } from "@/lib/comercial/imagem";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -61,11 +63,15 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
   if (error) return fail("internal_error", "Erro ao ler as fotos.", 500, { requestId });
   return ok(
-    ((data ?? []) as unknown as { id: string; storage_path: string; posicao: number }[]).map((f) => ({
-      id: f.id,
-      url: urlPublica(f.storage_path),
-      posicao: f.posicao,
-    })),
+    ((data ?? []) as unknown as { id: string; storage_path: string; posicao: number }[]).map(
+      (f) => ({
+        id: f.id,
+        url: f.storage_path.startsWith("local:")
+          ? `/api/v1/products/${id}/images/${f.id}`
+          : urlPublica(f.storage_path),
+        posicao: f.posicao,
+      }),
+    ),
     { requestId },
   );
 }
@@ -87,7 +93,9 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     .eq("product_id", id)
     .eq("organization_id", authz.org.orgId);
   if ((count ?? 0) >= MAX_FOTOS) {
-    return fail("validation_failed", `Máximo de ${MAX_FOTOS} fotos por produto.`, 422, { requestId });
+    return fail("validation_failed", `Máximo de ${MAX_FOTOS} fotos por produto.`, 422, {
+      requestId,
+    });
   }
 
   const form = await req.formData().catch(() => null);
@@ -106,19 +114,22 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
 
   const admin = createAdminClient();
   const caminho = `${authz.org.orgId}/${id}/${randomUUID()}.${ext}`;
-  const { error: erroUpload } = await admin.storage
-    .from("product-images")
-    .upload(caminho, bytes, { contentType: mimeDaImagem(ext), upsert: false });
-  if (erroUpload) {
-    return fail("internal_error", "Erro ao guardar a foto.", 500, { requestId });
+  const photosRoot = process.env.PRODUCT_IMAGES_DIR ?? "/data/product-images";
+  const localPath = path.join(photosRoot, caminho);
+  try {
+    await mkdir(path.dirname(localPath), { recursive: true });
+    await writeFile(localPath, bytes);
+  } catch {
+    return fail("internal_error", "Erro ao guardar a foto no servidor.", 500, { requestId });
   }
+  const storagePath = `local:${caminho}`;
 
   const { data, error } = await admin
     .from("product_images")
     .insert({
       organization_id: authz.org.orgId,
       product_id: id,
-      storage_path: caminho,
+      storage_path: storagePath,
       posicao: count ?? 0,
       created_by: authz.user.id,
     })
@@ -126,7 +137,6 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     .single();
 
   if (error || !data) {
-    await admin.storage.from("product-images").remove([caminho]);
     return fail("internal_error", "Erro ao registrar a foto.", 500, { requestId });
   }
 
@@ -140,5 +150,8 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
   });
 
   const foto = data as unknown as { id: string; storage_path: string; posicao: number };
-  return ok({ id: foto.id, url: urlPublica(foto.storage_path), posicao: foto.posicao }, { requestId, status: 201 });
+  return ok(
+    { id: foto.id, url: urlPublica(foto.storage_path), posicao: foto.posicao },
+    { requestId, status: 201 },
+  );
 }

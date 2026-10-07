@@ -53,6 +53,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 40s
+    volumes:
+      - /var/www/crm/storage/product-images:/data/product-images
     logging: *default-logging
     networks: [internal]
 
