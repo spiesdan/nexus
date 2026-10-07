@@ -291,8 +291,9 @@ export function ProdutosClient({
       const juntado: Record<string, Foto[]> = {};
       for (const fatia of fatias) {
         try {
-          const r = await apiClient.get<{ data: Record<string, Foto[]> }>(
-            `/api/v1/products/images?ids=${fatia.join(",")}`,
+          const r = await apiClient.post<{ data: Record<string, Foto[]> }>(
+            "/api/v1/products/images",
+            { ids: fatia },
           );
           Object.assign(juntado, r.data ?? {});
         } catch {

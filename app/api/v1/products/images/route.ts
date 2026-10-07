@@ -1,20 +1,26 @@
 /**
- * GET /api/v1/products/images?ids=a,b,c — fotos de VÁRIOS produtos em UMA ida.
+ * POST /api/v1/products/images — fotos de VÁRIOS produtos em UMA ida.
  *
  * Existe porque a tela de catálogo renderiza `FotosDoProduto` por linha e cada
  * um fazia `GET /api/v1/products/{id}/images`. Com 640 produtos eram 640
  * requisições — medido na VPS: 600 requests levaram 104 s (≈1 s cada, porque
- * cada uma revalida a sessão no GoTrue). Além de a página demorar minutos, a
- * rajada derrubava o GoTrue (`dial error (timeout)` / `context deadline
- * exceeded` no `auth`), o que voltava como **401** no console —Auth que estava
- * válido, infraestrutura que não aguentou.
+ * cada uma revalida a sessão no GoTrue). A rajada derrubava o GoTrue (dial
+ * error/timeout), o que voltava como **401** no console, com a sessão válida.
  *
- * Aqui a lista inteira cabe numa requisição. Leitura `viewer`, igual à rota
- * individual — este não é um atalho que abre o que ela esconde: os ids são
- * filtrados pela MESMA `produtoDaOrg` e o que não é da organização não volta.
+ * **POR QUE POST E NÃO GET:** a primeira versão mandava os ids em
+ * `?ids=a,b,c…`. Com 500 ids a URL passa de 18 KB, e o limite de header do
+ * HTTP/2 estoura: o browser recebia `ERR_HTTP2_PROTOCOL_ERROR` e a conexão
+ * morria — derrubando junto as requisições vizinhas (`/conversations/counts`,
+ * `/ai/inbox`, os prefetches de RSC). No corpo da requisição não existe limite
+ * de URL, e o problema some.
+ *
+ * Leitura `viewer`, igual à rota individual: os ids são filtrados pelo MESMO
+ * `organization_id` do chamador — este não é atalho que abre o que a rota
+ * individual esconde.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
+import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
@@ -23,33 +29,32 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-/** Teto de ids por requisição: acima disso a URL estoura e o ganho some. */
+/** Teto de ids por requisição: acima disso a resposta não ajuda ninguém. */
 const MAX_IDS = 500;
+
+const corpoSchema = z.object({
+  ids: z.array(z.string().uuid()).max(MAX_IDS),
+});
 
 function urlPublica(caminho: string): string {
   return `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${caminho}`;
 }
 
-export async function GET(req: NextRequest): Promise<Response> {
+export async function POST(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "product_images" });
   if (!authz.ok) return authz.response;
 
-  const bruto = req.nextUrl.searchParams.get("ids") ?? "";
-  const ids = [
-    ...new Set(
-      bruto
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ),
-  ];
-  if (ids.length === 0) return ok({}, { requestId });
-  if (ids.length > MAX_IDS) {
-    return fail("validation_failed", `No máximo ${MAX_IDS} produtos por requisição.`, 422, {
+  const bruto = await req.json().catch(() => null);
+  const parse = corpoSchema.safeParse(bruto);
+  if (!parse.success) {
+    return fail("validation_failed", `Envie { ids: [...] } com até ${MAX_IDS} ids.`, 422, {
       requestId,
     });
   }
+
+  const ids = [...new Set(parse.data.ids)];
+  if (ids.length === 0) return ok({}, { requestId });
 
   const supabase = await createClient();
   const { data, error } = await supabase
