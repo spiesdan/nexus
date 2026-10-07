@@ -213,13 +213,32 @@ export function ConfigFiscal({
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="cert-path">{textos.certPath}</Label>
-            <Input
-              id="cert-path"
-              value={certPath}
-              onChange={(e) => setCertPath(e.target.value)}
-              placeholder="/certs/empresa.pfx"
-            />
+            <Label htmlFor="cert-file">{textos.certPath}</Label>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => document.getElementById("cert-file-input")?.click()}
+              >
+                {t("Selecionar arquivo")}
+              </Button>
+              {certPath && (
+                <span className="text-xs text-muted-foreground truncate" title={certPath}>
+                  {certPath}
+                </span>
+              )}
+              <input
+                id="cert-file-input"
+                type="file"
+                accept=".pfx"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setCertPath(f.name);
+                }}
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cert-senha">{textos.certSenha}</Label>
