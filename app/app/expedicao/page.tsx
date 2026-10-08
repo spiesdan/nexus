@@ -57,6 +57,12 @@ export default async function ExpedicaoPage() {
         vazias: t("Nenhuma carga ainda"),
         embarcaveis: t("Aguardando embarque"),
         nenhumEmbarcavel: t("Nenhum pedido aprovado aguardando embarque."),
+        buscarPedido: t("Buscar por número, cliente, cidade ou CNPJ"),
+        buscaSemResultado: t("Nenhum pedido encontrado com esse termo."),
+        selecionados: t("Na carga"),
+        // O i18n deste projeto traduz frase inteira e não interpola — por isso
+        // `{a}`/`{de}` são trocados à mão em `_client.tsx`, e não por `t()`.
+        mostrando: t("{a} de {de} pedidos"),
         placa: t("Placa"),
         veiculo: t("Veículo"),
         motorista: t("Motorista"),
