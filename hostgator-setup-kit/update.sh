@@ -276,6 +276,10 @@ fi
 # external, but could not be found" — e este script roda sozinho pelo agent.sh,
 # então ninguém está lendo a tela para decifrar isso. Mesma função do install.sh.
 garantir_rede_do_proxy
+# ANTES do `up -d`: o bind mount já entra no container na subida, e um diretório
+# sem dono do app faz o upload de foto falhar com 500 (o app roda como uid 1001,
+# o Docker cria o diretório como root). Ver `garantir_dir_de_fotos`.
+garantir_dir_de_fotos
 dc up -d
 
 # O Caddyfile entra no container por bind mount de UM ARQUIVO, e bind mount de

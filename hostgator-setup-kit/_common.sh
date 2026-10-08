@@ -420,7 +420,71 @@ url_do_schema() {
 # psql efêmero via container (não exige psql no host). Usa a conexão de schema:
 # os chamadores mexem em `auth.mfa_factors` e `private.app_secrets`, fora do
 # alcance de uma role de app com grants só em `public`.
-psql_run() { docker run --rm -i postgres:17-alpine psql "$(url_do_schema)" -v ON_ERROR_STOP=1 "$@"; }
+#
+# NUM INSTALAÇÃO SELF-HOST O HOSTNAME DA URL É O NOME DO CONTAINER DO BANCO.
+# O `docker run --rm` sem `--network` sobe na rede `bridge` padrão, onde esse
+# nome não existe: medido na VPS, `psql: error: could not translate host name
+# "supabase_db_selfhost" to address`. Todo chamador que trata o erro como
+# opcional pagava por isso em silêncio — foi o que produziu o aviso "não consegui
+# semear a chave de cifra no banco" mesmo com a chave CORRETA no banco (verificada:
+# valor do `.env` idêntico ao de `private.app_secrets`).
+#
+# Por isso: quando existe um container com esse nome, entramos nele. O `psql`
+# do próprio Postgres já está lá, e a URL resolve porque o container está na
+# rede onde o DNS do Docker registra o próprio nome. Sem esse container (Supabase
+# Cloud, host público), cai no `docker run` de sempre — que é o caminho certo
+# lá, onde o hostname é público.
+psql_run() {
+  local url host
+  url="$(url_do_schema)"
+  # Host = depois do ÚLTIMO `@` da authority (a senha pode conter `@`; o `.*`
+  # é guloso de propósito), até a primeira `:`, `/` ou `?`.
+  host="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://.*@##; s#[:/?].*$##')"
+  if [ -n "$host" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$host"; then
+    docker exec -i "$host" psql "$url" -v ON_ERROR_STOP=1 "$@"
+    return
+  fi
+  docker run --rm -i postgres:17-alpine psql "$url" -v ON_ERROR_STOP=1 "$@"
+}
+
+# Fotos de produto novas são gravadas em DISCO, dentro do app, e o diretório
+# entra no container por bind mount (ver o serviço `app` do docker-compose.prod.yml).
+# O app roda como `nextjs` (uid 1001, do Dockerfile) e o Docker cria o diretório
+# do bind mount como `root:root 755` — então o primeiro upload morre com
+# "Erro ao guardar a foto no servidor" (500), e morre para SEMPRE: nenhuma
+# atualização conserta, porque o dono do diretório não muda sozinho.
+# Medido na VPS: `touch /data/product-images/.x` → "Permission denied".
+#
+# O caminho tem que ser o MESMO do compose; por isso a fonte da verdade é a
+# linha do compose, lida daqui — duplicar o literal em dois arquivos é como os
+# dois divergiriam sem ninguém ver.
+garantir_dir_de_fotos() {
+  local dir uid_gid
+  dir="$(dir_de_fotos_do_compose)" || return 0
+  [ -n "$dir" ] || return 0
+
+  mkdir -p "$dir" || { c_ylw "⚠ não consegui criar $dir — fotos novas não vão poder ser enviadas."; return 0; }
+
+  # `nodejs` é uid 1001 no Dockerfile. Se o host já tiver o diretório com outro
+  # dono (instalação antiga, restauração de backup), o chown é o que conserta —
+  # e só nesse caso, para não mexer num diretório que já está certo.
+  uid_gid="$(stat -c '%u:%g' "$dir" 2>/dev/null || stat -f '%u:%g' "$dir" 2>/dev/null || echo "")"
+  if [ -n "$uid_gid" ] && [ "$uid_gid" != "1001:1001" ]; then
+    chown -R 1001:1001 "$dir" 2>/dev/null \
+      && c_grn "✓ pasta de fotos liberada para o usuário do app ($uid_gid → 1001:1001)" \
+      || c_ylw "⚠ não consegui ajustar o dono de $dir (está $uid_gid, o app usa 1001) — fotos novas vão falhar com erro 500."
+  else
+    c_grn "✓ pasta de fotos pronta para o app gravar"
+  fi
+}
+
+# Lê o caminho do host no volume do serviço `app` do compose. Não usa `grep`
+# solto: o compose tem mais de um volume, e o único que importa é o que termina
+# em `/data/product-images`.
+dir_de_fotos_do_compose() {
+  [ -f "$COMPOSE" ] || return 0
+  sed -n 's#^[[:space:]]*-[[:space:]]*\([^:]*\):/data/product-images.*#\1#p' "$COMPOSE" | head -1
+}
 
 # ── As três imagens que NÓS publicamos ───────────────────────────────────────
 # O namespace é constante e literal de propósito: ele está gravado no .env de
