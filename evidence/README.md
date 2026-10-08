@@ -80,6 +80,35 @@ conserto das abas colidindo em coluna estreita (PR do branch
   para o defeito. O spec mede os cinco `<img>` renderizados na tela e falha se
   algum deles não carregar.
 
+## 08/10 — A foto do produto na PRIMEIRA pintura, sem depender de JavaScript
+
+- `evidence/fotos-no-html-inicial.png` — a linha do produto semeado, com a foto
+  verde já pintada, capturada contra o site público **depois** da 1.25.11
+  (PR #72). A captura é da LINHA, não do topo da lista: a primeira versão
+  registrava o topo, onde o produto semeado não está, e outra version registrava
+  o Inbox — duas telas que documentam o defeito sem serem ele.
+
+  O sintoma do dono era "aparece os produtos sem foto e só depois a página já
+  carregada é que carrega as imagens". Isso é uma afirmação sobre **quando** a
+  foto aparece, então o spec `tests/fiscal/fotos-no-html-inicial.spec.ts` mede
+  três momentos e exige os três:
+
+  1. o **HTML cru** do servidor (`page.request.get`, sem rodar JavaScript)
+     já traz o mapa de fotos com a URL preenchida e a foto responde 200;
+  2. a rota de lote `/api/v1/products/images` fica **bloqueada** durante a
+     render — se a coluna ainda dependesse dela, o produto apareceria sem foto
+     para sempre, e o defeito estaria de volta na tela;
+  3. o `<img>` na tela tem `naturalWidth > 0`, ou seja, os pixels chegaram —
+     `visible` sozinho prova só que existe uma caixa na tela.
+
+  E o próprio spec já errou três vezes medindo a coisa errada, o que é a razão
+  de ele estar documentado aqui e não só na sua própria linha: procurava um
+  `<img>` de produto **qualquer** na página e achava o do logo, dando verde com
+  o mapa inteiro vazio; aceitou só URL absoluta e reprovou com a forma correta
+  em uso (foto em disco vira rota da API, não URL do bucket); e o padrão de
+  extração não casava com o `\"` escapado do payload do RSC. Verde com o mapa
+  vazio é pior que vermelho: parece prova e não é.
+
 ## 06/10 — SPED Bloco H editável e barra de notas
 
 - `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).
