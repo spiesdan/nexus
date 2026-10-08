@@ -16,6 +16,7 @@ import {
   DIRETORIO_DE_CERTIFICADOS_NO_APP,
   DIRETORIO_DE_CERTIFICADOS_NO_HOST,
   NOME_DO_CERTIFICADO,
+  diretorioDoCertificado,
   parecePkcs12,
   TAMANHO_MAXIMO_DO_CERTIFICADO,
   decidirCertificado,
@@ -43,20 +44,26 @@ describe("reconhecimento de PKCS#12", () => {
 });
 
 describe("decisão do certificado", () => {
+  const ORG = "4bc721ce-157a-41b9-97ae-ba633650859c";
   const pfx = (over: Partial<Parameters<typeof decidirCertificado>[0]> = {}) =>
-    decidirCertificado({
-      size: 2048,
-      cabecalho: CABECALHO_PKCS12,
-      nomeOriginal: "empresa.pfx",
-      ...over,
-    });
+    decidirCertificado(
+      {
+        size: 2048,
+        cabecalho: CABECALHO_PKCS12,
+        nomeOriginal: "empresa.pfx",
+        ...over,
+      },
+      ORG,
+    );
 
   it("aceita um PKCS#12 dentro do tamanho", () => {
     const r = pfx();
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.tamanho).toBe(2048);
-      expect(r.caminhoNoHost).toBe(`${DIRETORIO_DE_CERTIFICADOS_NO_APP}/${NOME_DO_CERTIFICADO}`);
+      expect(r.caminhoNoHost).toBe(
+        `${DIRETORIO_DE_CERTIFICADOS_NO_APP}/${ORG}/${NOME_DO_CERTIFICADO}`,
+      );
     }
   });
 
@@ -104,8 +111,48 @@ describe("decisão do certificado", () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.caminhoNoHost).not.toContain("..");
-      expect(r.caminhoNoHost).toBe(`${DIRETORIO_DE_CERTIFICADOS_NO_APP}/${NOME_DO_CERTIFICADO}`);
+      expect(r.caminhoNoHost).toBe(
+        `${DIRETORIO_DE_CERTIFICADOS_NO_APP}/${ORG}/${NOME_DO_CERTIFICADO}`,
+      );
     }
+  });
+});
+
+describe("uma organização não enxerga o certificado da outra", () => {
+  // Medido: `fiscal_settings` tem DUAS linhas nesta instalação — a real
+  // (`4bc721ce…`) e a de teste do e2e (`16f950b8…`), que a cada rodada de
+  // teste nasce ou reaparece. Com um arquivo único, a segunda que enviasse
+  // certificado SOBRESCREVERIA o da primeira, e o sidecar da primeira passaria
+  // a assinar com o certificado da outra. Não é teoria de multi-inquilino: é o
+  // que a contagem de linhas mostrou.
+  const REAL = "4bc721ce-157a-41b9-97ae-ba633650859c";
+  const TESTE = "16f950b8-c113-43c6-8e84-166a21af7ee9";
+  const arq = { size: 2048, cabecalho: CABECALHO_PKCS12, nomeOriginal: "empresa.pfx" };
+
+  it("cada organização tem o seu caminho", () => {
+    const a = decidirCertificado(arq, REAL);
+    const b = decidirCertificado(arq, TESTE);
+    expect(a.ok && b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(a.caminhoNoHost).not.toBe(b.caminhoNoHost);
+      expect(a.caminhoNoHost).toContain(REAL);
+      expect(b.caminhoNoHost).toContain(TESTE);
+    }
+  });
+
+  it("recusa organização que não é UUID — nada de caminho forjado", () => {
+    // `requireRole` já entrega um UUID validado, mas a função é pública e
+    // testável: uma função que monta caminho a partir de string tem de validar
+    // a string, mesmo que hoje o chamador valide.
+    for (const id of ["../outra", "abc", "", "a/b", REAL + "/../.."]) {
+      const r = decidirCertificado(arq, id);
+      expect(r.ok, `aceitou organização malformada: "${id}"`).toBe(false);
+    }
+  });
+
+  it("o diretório derivado nunca escapa da base", () => {
+    expect(diretorioDoCertificado("../..")).toBeNull();
+    expect(diretorioDoCertificado(REAL, "/tmp")).toBe(`/tmp/${REAL}`);
   });
 });
 
@@ -114,11 +161,10 @@ describe("onde o certificado fica", () => {
     // O bucket público transformaria a credencial que assina nota fiscal num
     // arquivo com URL adivinhável. Esta é a regra que o seletor de arquivo
     // antigo contradizia.
-    const r = decidirCertificado({
-      size: 2048,
-      cabecalho: CABECALHO_PKCS12,
-      nomeOriginal: "empresa.pfx",
-    });
+    const r = decidirCertificado(
+      { size: 2048, cabecalho: CABECALHO_PKCS12, nomeOriginal: "empresa.pfx" },
+      "4bc721ce-157a-41b9-97ae-ba633650859c",
+    );
     if (r.ok) {
       expect(r.caminhoNoHost).not.toMatch(/storage|render\/image|public/);
     }

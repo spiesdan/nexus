@@ -86,13 +86,21 @@ export function ConfigFiscal({
         credentials: "include",
         body: corpo,
       });
+      const payload = (await resposta.json().catch(() => null)) as {
+        data?: { certificado_path?: string };
+        error?: { message?: string };
+      } | null;
       if (!resposta.ok) {
-        const erro = (await resposta.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        throw new Error(erro?.error?.message || `Falha no envio (${resposta.status}).`);
+        throw new Error(payload?.error?.message || `Falha no envio (${resposta.status}).`);
       }
-      setCertPath(arquivo.name);
+      // O caminho que a tela mostra é o que o SERVIDOR gravou, não o nome do
+      // arquivo que estava no computador de quem enviou. Os dois são diferentes
+      // de propósito: o servidor grava com nome fixo, para que o sidecar tenha
+      // um caminho estável e um nome vindo do cliente não vire caminho em disco.
+      // Mostrar `arquivo.name` aqui era a tela discordindo do servidor sobre o
+      // próprio estado — a mesma classe de defeito que o `certificado_path`
+      // inventado.
+      setCertPath(payload?.data?.certificado_path ?? "");
       setCertEnviado(true);
       toast.success(t("Certificado enviado"));
     } catch (e) {
