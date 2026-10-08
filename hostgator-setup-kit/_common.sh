@@ -447,6 +447,33 @@ psql_run() {
   docker run --rm -i postgres:17-alpine psql "$url" -v ON_ERROR_STOP=1 "$@"
 }
 
+# ── pg_dump com o mesmo cuidado do psql_run ──────────────────────────────────
+#
+# O `backup.sh` fazia `docker run --rm postgres:17-alpine pg_dump …` SEM
+# `--network`. Num self-host, o hostname da connection string é o NOME DO
+# CONTAINER do banco, e o container efêmero nasce na rede `bridge` padrão, onde
+# esse nome não existe. Resultado medido nesta VPS:
+#
+#   pg_dump: error: could not translate host name "supabase_db_selfhost"
+#
+# E — o que é o ponto — o `| gzip > arquivo` **ainda escrevia um arquivo
+# válido de 20 bytes**. Um gzip vazio. O script imprimia "✓ banco: 20" e
+# seguia, e a atualização seguia achando que tinha backup.
+#
+# Cinco backups consecutivos de 08/10 medidos com 20 bytes: `zcat` não devolve
+# uma linha. Era exatamente a "falha silenciosa de backup" que o cabeçalho do
+# próprio `backup.sh` diz ser a pior das falhas — acontecendo.
+pg_dump_run() {
+  local url host
+  url="$(url_do_schema)"
+  host="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://.*@##; s#[:/?].*$##')"
+  if [ -n "$host" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$host"; then
+    docker exec -i "$host" pg_dump "$url" --no-owner --no-privileges "$@"
+    return
+  fi
+  docker run --rm -i postgres:17-alpine pg_dump "$url" --no-owner --no-privileges "$@"
+}
+
 # Fotos de produto novas são gravadas em DISCO, dentro do app, e o diretório
 # entra no container por bind mount (ver o serviço `app` do docker-compose.prod.yml).
 # O app roda como `nextjs` (uid 1001, do Dockerfile) e o Docker cria o diretório
