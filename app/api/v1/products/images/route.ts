@@ -90,10 +90,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   );
 
   for (const f of linhas) {
-    // `local:` é o prefixo do volume da VPS; o resto é bucket público.
-    const url = f.storage_path.startsWith("local:")
-      ? `/api/v1/products/${f.product_id}/images/${f.id}`
-      : urlDeExibicaoDaFoto(f.storage_path);
+    // A distinção entre foto em disco e foto no bucket mora em
+    // `urlDeExibicaoDaFoto` — aqui ela seria a terceira cópia da mesma regra.
+    const url = urlDeExibicaoDaFoto(f.storage_path, { productId: f.product_id, fotoId: f.id });
     porProduto[f.product_id]?.push({ id: f.id, url, posicao: f.posicao });
   }
 

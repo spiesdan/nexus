@@ -22,6 +22,8 @@ import { env } from "@/lib/env";
 
 export const BUCKET_DE_FOTOS = "product-images";
 
+export const PREFIXO_DE_FOTO_LOCAL = "local:";
+
 /**
  * A URL do arquivo, sem transformation nenhuma. É a que serve para
  * download, para a ampliação e para `local:` (que sai pela API do app).
@@ -37,7 +39,25 @@ export function urlPublicaDaFoto(caminho: string): string {
  * Só desvia para o redimensionador quando o operador pede explicitamente — o
  * default é o arquivo original, que é o que funciona em toda instalação.
  */
-export function urlDeExibicaoDaFoto(caminho: string): string {
+export function urlDeExibicaoDaFoto(
+  caminho: string,
+  alvo?: { productId: string; fotoId: string },
+): string {
+  // Foto em ARQUIVO do servidor, não no bucket. O upload do produto grava em
+  // disco (`storage_path` com prefixo `local:`) e o bucket público não conhece
+  // esse caminho: servi-la por lá dava **400**, e o `<img>` ficava quebrado
+  // sem erro no log — a mesma falha silenciosa das outras duas vezes.
+  //
+  // A rota `GET /api/v1/products/{id}/images/{fotoId}` existe para isso e
+  // exige o ID DA FOTO, não o `storage_path` — daí o par de ids.
+  if (caminho.startsWith(PREFIXO_DE_FOTO_LOCAL)) {
+    if (!alvo) {
+      // Sem o par de ids não há rota local possível. Devolver o caminho cru
+      // seria pior: o `<img>` pediria o bucket e receberia 400 sem explicação.
+      throw new Error("foto local precisa de productId e fotoId para montar a URL");
+    }
+    return `/api/v1/products/${alvo.productId}/images/${alvo.fotoId}`;
+  }
   if (env.SUPABASE_IMAGE_TRANSFORM !== "on") return urlPublicaDaFoto(caminho);
   return (
     urlPublicaDaFoto(caminho).replace(
@@ -46,3 +66,5 @@ export function urlDeExibicaoDaFoto(caminho: string): string {
     ) + "?width=96&quality=70&resize=cover"
   );
 }
+
+/** Marca de foto guardada em disco pelo app, e não no bucket do Storage. */

@@ -62,9 +62,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     ((data ?? []) as unknown as { id: string; storage_path: string; posicao: number }[]).map(
       (f) => ({
         id: f.id,
-        url: f.storage_path.startsWith("local:")
-          ? `/api/v1/products/${id}/images/${f.id}`
-          : urlDeExibicaoDaFoto(f.storage_path),
+        url: urlDeExibicaoDaFoto(f.storage_path, { productId: id, fotoId: f.id }),
         posicao: f.posicao,
       }),
     ),
@@ -150,7 +148,11 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     // `urlDeExibicaoDaFoto` e não `urlPublicaDaFoto`: quem acabou de enviar
     // quer VER a foto agora, e é este `url` que o `FotosDoProduto` coloca no
     // `<img>`. A URL crua continua existindo para download e ampliação.
-    { id: foto.id, url: urlDeExibicaoDaFoto(foto.storage_path), posicao: foto.posicao },
+    {
+      id: foto.id,
+      url: urlDeExibicaoDaFoto(foto.storage_path, { productId: id, fotoId: foto.id }),
+      posicao: foto.posicao,
+    },
     { requestId, status: 201 },
   );
 }
