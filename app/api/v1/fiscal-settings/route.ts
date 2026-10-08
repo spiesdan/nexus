@@ -6,12 +6,16 @@
  * inválida para a empresa inteira.
  */
 import { randomUUID } from "node:crypto";
+import { stat } from "node:fs/promises";
+import path from "node:path";
+
 import { type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { configFiscalSchema } from "@/lib/schemas/fiscal";
+import { DIRETORIO_DE_CERTIFICADOS_NO_APP, NOME_DO_CERTIFICADO } from "@/lib/fiscal/certificado";
+import { configFiscalSchema, type ConfigFiscalSalva } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptWebhookSecret } from "@/lib/webhooks/secrets";
@@ -36,7 +40,43 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .maybeSingle();
 
   if (error) return fail("internal_error", "Erro ao ler a configuração.", 500, { requestId });
-  return ok(data ?? null, { requestId });
+
+  // `data` vem sem tipo do PostgREST quando a tabela é lida com uma lista de
+  // colunas em `const` — daí o cast explícito, o mesmo que as outras rotas
+  // desta pasta fazem.
+  const config = (data ?? null) as ConfigFiscalSalva | null;
+  // `certificado_presente` responde "o arquivo EXISTE", e não "o campo tem
+  // texto". São coisas diferentes, e a diferença é o defeito inteiro: a
+  // instalação ficou com `certificado_path = "PATRICIA CNPJ (1).pfx"` gravado e
+  // nenhum `.pfx` na máquina — a tela mostrava um certificado configurado que
+  // não existia, e nada avisava.
+  //
+  // Sem este campo, a tela volta a ser um espelho do texto e a mentira volta
+  // junto.
+  const certificadoPresente = config?.certificado_path
+    ? await certificadoExisteNoServidor(config.certificado_path)
+    : false;
+
+  return ok(config ? { ...config, certificado_presente: certificadoPresente } : null, {
+    requestId,
+  });
+}
+
+/**
+ * O arquivo indicado está no disco?
+ *
+ * Só um `stat` com o NOME FIXO, sem concatenar o que veio do banco: um
+ * `certificado_path` forjado apontaria para qualquer arquivo do contêiner.
+ */
+async function certificadoExisteNoServidor(nome: string): Promise<boolean> {
+  if (nome !== NOME_DO_CERTIFICADO) return false;
+  try {
+    const st = await stat(path.join(DIRETORIO_DE_CERTIFICADOS_NO_APP, NOME_DO_CERTIFICADO));
+    return st.isFile() && st.size > 0;
+  } catch {
+    // Sem diretório montado é o estado normal de quem não enviou certificado.
+    return false;
+  }
 }
 
 export async function PUT(req: NextRequest): Promise<Response> {

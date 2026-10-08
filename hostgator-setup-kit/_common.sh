@@ -486,6 +486,37 @@ dir_de_fotos_do_compose() {
   sed -n 's#^[[:space:]]*-[[:space:]]*\([^:]*\):/data/product-images.*#\1#p' "$COMPOSE" | head -1
 }
 
+# ── Certificado A1 ──────────────────────────────────────────────────────────
+# Mesma forma do diretório de fotos, pelo mesmo motivo: o caminho vem do
+# compose (fonte única) e o dono precisa ser o uid do app, senão o upload do
+# certificado — que antes nem existia — falha com 500 na hora de gravar.
+#
+# O que é DIFERENTE, e não é detalhe: o modo é 700 e o arquivo 600. A pasta de
+# fotos é 755 de propósito (o servidor precisa servir), e aqui o conteúdo é a
+# credencial que assina nota fiscal.
+dir_de_certificados_do_compose() {
+  [ -f "$COMPOSE" ] || return 0
+  sed -n 's#^[[:space:]]*-[[:space:]]*\([^:]*\):/fiscal-certs.*#\1#p' "$COMPOSE" | head -1
+}
+
+garantir_dir_de_certificados() {
+  local dir uid_gid
+  dir="$(dir_de_certificados_do_compose)" || return 0
+  [ -n "$dir" ] || return 0
+
+  mkdir -p "$dir" || { c_ylw "⚠ não consegui criar $dir — o certificado A1 não vai poder ser enviado."; return 0; }
+  chmod 700 "$dir" 2>/dev/null || true
+
+  uid_gid="$(stat -c '%u:%g' "$dir" 2>/dev/null || stat -f '%u:%g' "$dir" 2>/dev/null || echo "")"
+  if [ -n "$uid_gid" ] && [ "$uid_gid" != "1001:1001" ]; then
+    chown -R 1001:1001 "$dir" 2>/dev/null \
+      && c_grn "✓ pasta de certificados liberada para o usuário do app ($uid_gid → 1001:1001)" \
+      || c_ylw "⚠ não consegui ajustar o dono de $dir (está $uid_gid, o app usa 1001) — enviar o certificado vai falhar com erro 500."
+  else
+    c_grn "✓ pasta de certificados pronta para o app gravar"
+  fi
+}
+
 # ── As três imagens que NÓS publicamos ───────────────────────────────────────
 # O namespace é constante e literal de propósito: ele está gravado no .env de
 # toda instalação viva, e derivá-lo de variável faria o kit antigo (que já está

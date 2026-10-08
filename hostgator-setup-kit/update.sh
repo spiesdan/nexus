@@ -280,6 +280,10 @@ garantir_rede_do_proxy
 # sem dono do app faz o upload de foto falhar com 500 (o app roda como uid 1001,
 # o Docker cria o diretório como root). Ver `garantir_dir_de_fotos`.
 garantir_dir_de_fotos
+
+# Certificado A1: mesmo motivo da pasta de fotos — o Docker cria o
+# diretório como root e o app (uid 1001) precisa escrever nele.
+garantir_dir_de_certificados
 dc up -d
 
 # O Caddyfile entra no container por bind mount de UM ARQUIVO, e bind mount de

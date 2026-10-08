@@ -1316,6 +1316,10 @@ garantir_rede_do_proxy
 # `garantir_dir_de_fotos`.
 garantir_dir_de_fotos
 
+# Certificado A1: mesmo motivo da pasta de fotos — o Docker cria o
+# diretório como root e o app (uid 1001) precisa escrever nele.
+garantir_dir_de_certificados
+
 # ── Telemetria: perguntar, não presumir ─────────────────────────────────────
 # Issue #100. Antes, quem não definisse SENTRY_DSN mandava relatório de erro pro
 # Sentry da comunidade sem ter decidido nada — e só ficava sabendo na mensagem

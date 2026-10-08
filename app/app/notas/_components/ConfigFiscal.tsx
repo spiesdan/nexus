@@ -50,6 +50,57 @@ export function ConfigFiscal({
   const [certPath, setCertPath] = React.useState(configInicial?.certificado_path ?? "");
   const [certSenha, setCertSenha] = React.useState("");
   const [salvandoConfig, setSalvandoConfig] = React.useState(false);
+  const [enviandoCert, setEnviandoCert] = React.useState(false);
+  /**
+   * O certificado está NO SERVIDOR?
+   *
+   * Não vem de `certificado_path`: aquele campo é um texto, e foi exatamente
+   * ele que mentiu — carregava o nome de um arquivo que ninguém tinha. A
+   * verdade é o arquivo existir em disco, e quem responde isso é o servidor
+   * (`certificado_presente` no GET). Ver a rota.
+   */
+  const [certEnviado, setCertEnviado] = React.useState(
+    configInicial?.certificado_presente ?? false,
+  );
+
+  /**
+   * O certificado é ENVIADO, não só nomeado.
+   *
+   * Antes disto o seletor de arquivo fazia `setCertPath(f.name)`: pegava o
+   * `.pfx` do computador de quem configurou, guardava o NOME, e o arquivo nunca
+   * saía do navegador. A tela ficava com cara de configurada — nome, senha,
+   * ambiente — apontando para um arquivo que não existia em lugar nenhum. Foi o
+   * que aconteceu na instalação real: `certificado_path` gravado e zero `.pfx`
+   * na VPS.
+   *
+   * Por isso o caminho agora é **resultado do envio**, e não algo que a pessoa
+   * escreve: o campo de texto virou leitura do que o servidor já gravou.
+   */
+  async function enviarCertificado(arquivo: File) {
+    setEnviandoCert(true);
+    try {
+      const corpo = new FormData();
+      corpo.append("arquivo", arquivo);
+      const resposta = await fetch("/api/v1/fiscal-settings/certificado", {
+        method: "POST",
+        credentials: "include",
+        body: corpo,
+      });
+      if (!resposta.ok) {
+        const erro = (await resposta.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        throw new Error(erro?.error?.message || `Falha no envio (${resposta.status}).`);
+      }
+      setCertPath(arquivo.name);
+      setCertEnviado(true);
+      toast.success(t("Certificado enviado"));
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setEnviandoCert(false);
+    }
+  }
 
   async function salvarConfig() {
     setSalvandoConfig(true);
@@ -70,7 +121,12 @@ export function ConfigFiscal({
         cep: cep.trim() === "" ? null : cep.trim(),
         ambiente,
         provedor,
-        certificado_path: certPath.trim() === "" ? null : certPath.trim(),
+        // `certificado_path` NÃO é enviado aqui, de propósito. Ele é do
+        // servidor: a rota de upload grava o arquivo e o caminho, juntos. Este
+        // formulário já aceitou texto livre nesse campo, e foi assim que a
+        // instalação ficou com `certificado_path` apontando para um `.pfx`
+        // inexistente — configuração que parecia pronta e não servia para nada.
+        // Quem muda o caminho agora é o envio do arquivo, e só ele.
         ...(certSenha !== "" ? { certificado_senha: certSenha } : {}),
       });
       toast.success(t("Configuração salva"));
@@ -232,31 +288,51 @@ export function ConfigFiscal({
           <div className="space-y-1.5">
             <Label htmlFor="cert-path">{textos.certPath}</Label>
             <div className="flex items-center gap-2">
+              {/*
+                O caminho é LEITURA, não edição. O campo acceptava texto livre e
+                gravava o que a pessoa escrevesse — a origem do
+                `certificado_path` apontando para arquivo inexistente. Quem
+                decide o caminho agora é o envio, no servidor.
+              */}
               <Input
                 id="cert-path"
-                value={certPath}
-                onChange={(e) => setCertPath(e.target.value)}
-                placeholder="/certs/empresa.pfx"
+                value={certEnviado ? certPath : ""}
+                readOnly
+                placeholder={t("Nenhum certificado no servidor")}
+                data-testid="fiscal-cert-path"
               />
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
+                disabled={enviandoCert}
                 onClick={() => document.getElementById("cert-file-input")?.click()}
               >
-                {t("Escolher arquivo")}
+                {enviandoCert ? t("Enviando…") : t("Enviar certificado")}
               </Button>
               <input
                 id="cert-file-input"
                 type="file"
-                accept=".pfx"
+                accept=".pfx,.p12"
                 className="hidden"
+                data-testid="fiscal-cert-file"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) setCertPath(f.name);
+                  if (f) void enviarCertificado(f);
+                  // Limpa para reenviar o MESMO arquivo depois de corrigir a
+                  // senha — sem isso, `change` não dispara e o botão parece
+                  // quebrado na segunda tentativa.
+                  e.target.value = "";
                 }}
               />
             </div>
+            <p className="text-xs text-muted-foreground" data-testid="fiscal-cert-situacao">
+              {certEnviado
+                ? t("Certificado gravado no servidor.")
+                : t(
+                    "O certificado não está no servidor. Envie o arquivo .pfx — sem ele a nota não é transmitida.",
+                  )}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cert-senha">{textos.certSenha}</Label>
