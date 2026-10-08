@@ -11,6 +11,7 @@ import {
   type TabelaDePreco,
 } from "@/lib/schemas/precos";
 import { createClient } from "@/lib/supabase/server";
+import { fotosDosProdutos } from "@/lib/comercial/fotos-dos-produtos";
 
 import { CatalogoClient } from "./_catalogo";
 
@@ -70,9 +71,18 @@ export default async function ProdutosPage({
       .limit(100),
   ]);
 
+  // As fotos entram JUNTAS com os produtos, no HTML inicial. Buscá-las depois,
+  // no client, fazia a coluna aparecer vazia e só preencher segundos mais
+  // tarde — o piscar que o dono descreveu ("aparece os produtos sem foto e
+  // depois carrega as imagens"). Aqui é o mesmo lote, feito antes da página
+  // existir, e sem uma requisição a mais.
+  const idsDosProdutos = ((produtos ?? []) as unknown as { id: string }[]).map((p) => p.id);
+  const fotosPorProduto = await fotosDosProdutos(activeOrg.orgId, idsDosProdutos);
+
   return (
     <CatalogoClient
       produtos={(produtos ?? []) as unknown as Produto[]}
+      fotosPorProduto={fotosPorProduto}
       categorias={(categorias ?? []) as unknown as Categoria[]}
       tabelas={(tabelas ?? []) as unknown as TabelaDePreco[]}
       podeEditar={podeEditar}

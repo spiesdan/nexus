@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/hooks/i18n/useT";
 import type { Produto } from "@/lib/schemas/produtos";
 import type { Categoria, TabelaDePreco } from "@/lib/schemas/precos";
+import type { FotoDoProduto } from "@/lib/comercial/fotos-dos-produtos";
 
 import { ProdutosClient } from "./_client";
 import { CategoriasClient } from "./_categorias";
@@ -19,6 +20,7 @@ import { TabelasClient } from "./_tabelas";
  */
 export function CatalogoClient({
   produtos,
+  fotosPorProduto,
   categorias,
   tabelas,
   podeEditar,
@@ -26,6 +28,8 @@ export function CatalogoClient({
   buscaInicial,
 }: {
   produtos: Produto[];
+  /** Fotos prontas, montadas no servidor: chegam no HTML inicial. */
+  fotosPorProduto: Record<string, FotoDoProduto[]>;
   categorias: Categoria[];
   tabelas: TabelaDePreco[];
   podeEditar: boolean;
@@ -50,6 +54,7 @@ export function CatalogoClient({
         <TabsContent value="produtos" className="mt-4">
           <ProdutosClient
             inicial={produtos}
+            fotosIniciais={fotosPorProduto}
             podeEditar={podeEditar}
             textos={textosProdutos}
             esconderCabecalho
