@@ -29,7 +29,29 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { collectExportData } from "@/lib/lgpd/export-collector";
 import { findLgpdRequest } from "@/lib/lgpd/repository";
-import { renderLgpdPdf } from "@/lib/lgpd/pdf-renderer";
+/**
+ * O renderizador de PDF entra AQUI, por import dinâmico, e não no topo do
+ * arquivo.
+ *
+ * Por quê: `@react-pdf/renderer` carrega o `@react-pdf/textkit`, que importa
+ * `@react-pdf/hyphenate/en-us` — um subpath que o pacote declara por wildcard,
+ * mas que o `tsx` (worker) não resolve. Medido na VPS: o worker caía com
+ *
+ *   Package subpath './en-us' is not defined by "exports" in …/hyphenate/package.json
+ *
+ * E o estrago era muito maior do que o PDF: este arquivo entra em
+ * `lib/event-log/register-handlers`, que registra TODOS os handlers do
+ * event-log. Um único import que falha derrubava o registro inteiro — e com ele
+ * o bot do inbox, os follow-ups e as automações. Um gerador de documento não
+ * pode ser capaz de desligar o agente que atende o cliente.
+ *
+ * Com o import aqui dentro, o PDF só é carregado quando alguém de fato pede uma
+ * exportação LGPD, e se ele falhar o erro fica onde ele é: naquela exportação.
+ */
+async function carregarRenderizadorLgpd() {
+  const { renderLgpdPdf } = await import("@/lib/lgpd/pdf-renderer");
+  return renderLgpdPdf;
+}
 import { signPdfPades, isPadesConfigured } from "@/lib/lgpd/pades-signer";
 import {
   EmailNotConfigured,
@@ -151,6 +173,7 @@ export async function processLgpdExport(event: EventRow): Promise<HandlerResult>
 
     // 4. Render PDF (with warning banner when unsigned).
     const padesConfigured = isPadesConfigured();
+    const renderLgpdPdf = await carregarRenderizadorLgpd();
     const pdfBuffer = await renderLgpdPdf(data, { unsignedWarning: !padesConfigured });
 
     // 5. Sign (stubbed when key missing).
@@ -162,12 +185,10 @@ export async function processLgpdExport(event: EventRow): Promise<HandlerResult>
 
     const jsonBytes = Buffer.from(JSON.stringify(data, null, 2), "utf-8");
 
-    const { error: jsonUploadErr } = await admin.storage
-      .from(BUCKET)
-      .upload(jsonPath, jsonBytes, {
-        contentType: "application/json",
-        upsert: true,
-      });
+    const { error: jsonUploadErr } = await admin.storage.from(BUCKET).upload(jsonPath, jsonBytes, {
+      contentType: "application/json",
+      upsert: true,
+    });
     if (jsonUploadErr) {
       throw new Error(`json_upload_failed: ${jsonUploadErr.message}`);
     }
@@ -195,12 +216,13 @@ export async function processLgpdExport(event: EventRow): Promise<HandlerResult>
 
     // 8. Resolve delivery email.
     const deliveryFromPayload = (req.request_payload as Record<string, unknown>)?.delivery as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     const deliveryEmail =
       (typeof deliveryFromPayload?.address === "string"
         ? (deliveryFromPayload.address as string)
-        : null) ?? data.contact?.email ?? null;
+        : null) ??
+      data.contact?.email ??
+      null;
 
     if (!deliveryEmail) {
       // Mark as pending_review — operator must contact manually.
@@ -338,33 +360,39 @@ export async function processLgpdExport(event: EventRow): Promise<HandlerResult>
       .eq("id", requestId);
 
     // 11. Domain events.
-    await admin.rpc("emit_event" as never, {
-      p_event_type: "lgpd.export_generated",
-      p_entity_kind: "lgpd_request",
-      p_entity_id: requestId,
-      p_payload: {
-        request_id: requestId,
-        sha256: signResult.sha256,
-        signed_pades: signResult.signed_pades,
-        warning: signResult.warning ?? null,
-      },
-      p_metadata: { source: "lgpd-export-worker" },
-      p_organization_id: orgId,
-    } as never);
+    await admin.rpc(
+      "emit_event" as never,
+      {
+        p_event_type: "lgpd.export_generated",
+        p_entity_kind: "lgpd_request",
+        p_entity_id: requestId,
+        p_payload: {
+          request_id: requestId,
+          sha256: signResult.sha256,
+          signed_pades: signResult.signed_pades,
+          warning: signResult.warning ?? null,
+        },
+        p_metadata: { source: "lgpd-export-worker" },
+        p_organization_id: orgId,
+      } as never,
+    );
 
-    await admin.rpc("emit_event" as never, {
-      p_event_type: "lgpd.export_delivered",
-      p_entity_kind: "lgpd_request",
-      p_entity_id: requestId,
-      p_payload: {
-        request_id: requestId,
-        delivered_to_hash: deliveredHash,
-        message_id: messageId,
-        expires_at: expiresAt.toISOString(),
-      },
-      p_metadata: { source: "lgpd-export-worker" },
-      p_organization_id: orgId,
-    } as never);
+    await admin.rpc(
+      "emit_event" as never,
+      {
+        p_event_type: "lgpd.export_delivered",
+        p_entity_kind: "lgpd_request",
+        p_entity_id: requestId,
+        p_payload: {
+          request_id: requestId,
+          delivered_to_hash: deliveredHash,
+          message_id: messageId,
+          expires_at: expiresAt.toISOString(),
+        },
+        p_metadata: { source: "lgpd-export-worker" },
+        p_organization_id: orgId,
+      } as never,
+    );
 
     // 12. Audit (sanitized — no plaintext email anywhere).
     await audit({
