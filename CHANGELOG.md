@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.6] — 2026-10-08
+
+### Corrigido
+
+- **O assistente do inbox volta a responder mensagens** O assistente automático estava ligado, mas não processava nada desde o dia em
+  que a instalação foi mudada para a própria máquina. A tela continuava mostrando
+  o robô como ativo e nenhuma mensagem era respondida.
+
+  O motivo era um gerador de documentos: o trecho do sistema que monta o arquivo
+  de dados do titular era carregado junto com o registro dos processadores
+  automáticos, e esse arquivo não abria nesse ambiente. Quando o registro inteiro
+  caía, caíam juntos o assistente do inbox, os retornos programados e as
+  automações. As conversas que estavam em processamento ficaram travadas.
+
+  Agora o documento só é carregado quando alguém pede a exportação, e o registro
+  dos processadores sobe de pé — o assistente do inbox, os retornos e as
+  automações voltam a processar. As conversas presas foram liberadas.
+
 ## [1.25.5] — 2026-10-08
 
 ### Corrigido
@@ -2892,7 +2910,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.6...HEAD
+[1.25.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...v1.25.6
 [1.25.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.4...v1.25.5
 [1.25.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.3...v1.25.4
 [1.25.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.2...v1.25.3
