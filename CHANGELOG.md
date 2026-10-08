@@ -8,6 +8,15 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.2] — 2026-10-08
+
+### Corrigido
+
+- **Lote de fotos dos produtos deixa de devolver erro 500** A tela de catálogo pede as fotos de toda a lista em uma única chamada. Com
+  centenas de produtos, essa chamada ultrapassava o limite de tamanho de URL do
+  serviço de dados e a tela recebia erro 500. Agora a consulta é feita em partes,
+  e um teste novo garante que nenhuma delas fique grande demais.
+
 ## [1.25.1] — 2026-10-08
 
 ### Corrigido
@@ -2840,7 +2849,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.2...HEAD
+[1.25.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.1...v1.25.2
 [1.25.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.23.0...v1.24.0
