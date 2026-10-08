@@ -1311,6 +1311,10 @@ fi
 # precisa da mesma garantia antes do `dc up -d` dele. Também aplica o default
 # 'traefik', então a variável está pronta para o .env logo abaixo.
 garantir_rede_do_proxy
+# A pasta de fotos entra por bind mount e o Docker a cria como root:root 755 —
+# o app roda como uid 1001 e o primeiro upload morre com 500. Ver
+# `garantir_dir_de_fotos`.
+garantir_dir_de_fotos
 
 # ── Telemetria: perguntar, não presumir ─────────────────────────────────────
 # Issue #100. Antes, quem não definisse SENTRY_DSN mandava relatório de erro pro

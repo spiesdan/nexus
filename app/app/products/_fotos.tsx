@@ -29,7 +29,7 @@ export function FotosDoProduto({
   productId: string;
   podeEditar: boolean;
   /**
-   * Fotos vindas do LOTE (`/api/v1/products/images?ids=`). Quando presentes,
+   * Fotos vindas do LOTE (`POST /api/v1/products/images`). Quando presentes,
    * este componente NÃO busca sozinho — era uma requisição por produto na
    * lista, e com 640 produtos eram 640 (medido: 600 requests = 104 s).
    */
@@ -47,6 +47,20 @@ export function FotosDoProduto({
       showApiError(e);
     }
   }, [productId]);
+
+  // O lote chega DEPOIS da montagem. `useState(fotosIniciais)` congela o valor
+  // do primeiro render, e a linha da lista tem `key={p.id}` — ou seja, o
+  // componente não remonta quando `fotosIniciais` muda. Resultado medido: o
+  // lote devolvia 3 produtos com foto e a tela renderizava ZERO <img>.
+  //
+  // Aqui o lote tem a precedência sobre o estado local, mas não o apaga: quem
+  // acabou de enviar ou apagar uma foto vê a mudança na hora, sem esperar o
+  // próximo lote (que só volta a rodar quando a lista muda).
+  React.useEffect(() => {
+    if (fotosIniciais === undefined) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFotos(fotosIniciais);
+  }, [fotosIniciais]);
 
   React.useEffect(() => {
     if (fotosIniciais !== undefined) return;
@@ -114,7 +128,12 @@ export function FotosDoProduto({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={fotos[0]!.url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?width=96&quality=70&resize=cover"}
+          src={
+            fotos[0]!.url.replace(
+              "/storage/v1/object/public/",
+              "/storage/v1/render/image/public/",
+            ) + "?width=96&quality=70&resize=cover"
+          }
           alt=""
           className="h-10 w-10 rounded-lg border object-cover"
           loading="lazy"

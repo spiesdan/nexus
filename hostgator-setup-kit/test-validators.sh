@@ -2428,6 +2428,97 @@ echo "isolamento: a suíte não escreve no crontab da máquina"
 # primeira asserção é o CONTROLE POSITIVO: o dublê tem de ter recebido as linhas
 # do kit. Só quando existe uma escrita capturada é que "o real não mudou"
 # significa alguma coisa.
+echo "psql_run: onde o banco é um CONTAINER, ele tem de ser alcançado de dentro"
+# O aviso "não consegui semear a chave de cifra no banco" que a instalação
+# self-host imprimia a cada update era o `psql_run` subindo um container efêmero
+# na rede `bridge` — onde o hostname do banco (`supabase_db_selfhost`) não
+# existe. Medido: `could not translate host name ... to address`. O efeito era
+# maior que o aviso: TODO chamador trata o erro como opcional e pagava em
+# silêncio, inclusive a higienização de `event_log` e o `reset-mfa.sh`.
+#
+# Aqui a rede não importa: o que se trava é a DECISÃO. Se existe container com
+# o nome do host, entra nele; senão, sobe o efêmero — que é o caminho certo no
+# Supabase Cloud, onde o hostname é público e não é container nenhum.
+# Fica DENTRO de $SUITE_TMP, que o trap da linha 43 já remove: um `trap EXIT`
+# novo aqui derrubaria o que limpa o resto da suíte.
+TMP_PSQL_RUN="$SUITE_TMP/psql-run"
+mkdir -p "$TMP_PSQL_RUN"
+cat >"$TMP_PSQL_RUN/docker" <<'DUBLÊ'
+#!/bin/sh
+# `docker ps` responde a lista de containers; o resto só precisa registrar qual
+# caminho o psql_run escolheu.
+# O nome da variável é ASCII de propósito: bash só aceita [A-Za-z0-9_] em nome
+# de variável: um acento aqui vira "command not found" no lugar do dublê.
+if [ "$1" = "ps" ]; then
+  # Nomes separados por espaço; o `docker ps` real devolve um por linha.
+  for nome in $LISTA_CONTAINERS; do printf '%s\n' "$nome"; done
+  exit 0
+fi
+printf 'psql_run %s\n' "$*"
+DUBLÊ
+chmod +x "$TMP_PSQL_RUN/docker"
+
+# Carrega SÓ as duas funções do kit. `url_do_schema` vem junto porque `psql_run`
+# depende dela, e ela lê as variáveis no momento do uso (ver o comentário dela
+# sobre o `_common.sh` ser sourced antes do `load_env`).
+# A suíte começa com `cd "$(dirname "${BASH_SOURCE[0]}")"` (linha 11), então o
+# caminho relativo daqui é dentro de hostgator-setup-kit/ mesmo.
+eval "$(sed -n '/^url_do_schema()/,/^}/p' ./_common.sh)"
+eval "$(sed -n '/^psql_run() {/,/^}/p' ./_common.sh)"
+
+caminho_psql_run() {
+  # $1 = URL, $2 = nomes de containers que "existem", separados por espaço.
+  # Imprime "exec" ou "run" — qual caminho o psql_run escolheu.
+  # Espaço e não quebra de linha: um literal multi-linha dentro de `$( ... )`
+  # chega ao dublê com o quoting já perdido, e o teste vira ruído.
+  LISTA_CONTAINERS="$2" \
+  SUPABASE_DB_ADMIN_URL="" SUPABASE_DB_URL="$1" \
+  PATH="$TMP_PSQL_RUN:$PATH" \
+    bash -c "$(declare -f url_do_schema psql_run); psql_run -c 'select 1' 2>/dev/null | head -1" \
+    | sed -E 's#^psql_run ##; s# .*##'
+}
+
+selfhost_nomeado='postgresql://postgres:senha@supabase_db_selfhost:5432/postgres'
+cloud='postgresql://postgres.senha:xyz@db.abc.supabase.co:5432/postgres'
+
+saida="$(caminho_psql_run "$selfhost_nomeado" 'supabase_db_selfhost supabase_kong_selfhost')"
+if [ "$saida" = "exec" ]; then
+  printf '  ✓ banco em container (self-host) → psql roda DE DENTRO dele\n'
+else
+  printf '  ✗ banco em container e o psql_run subiu um efêmero — volta o "could not translate host name"\n'
+  fail=1
+fi
+
+saida="$(caminho_psql_run "$cloud" 'supabase_db_selfhost')"
+if [ "$saida" = "run" ]; then
+  printf '  ✓ Supabase Cloud (host público, sem container) → efêmero, como sempre\n'
+else
+  printf '  ✗ host público foi procurado como container e o psql_run ficou pelo caminho do self-host\n'
+  fail=1
+fi
+
+# O nome vem do ÚLTIMO `@` da authority: senha com `@` é legal em URL de banco
+# e, se o sed parar no primeiro, o host sai errado e o self-host volta a falhar
+# em silêncio — que é justamente o defeito que estes casos fecham.
+saida="$(caminho_psql_run 'postgresql://postgres:p@ss:x@supabase_db_selfhost:5432/postgres' 'supabase_db_selfhost')"
+if [ "$saida" = "exec" ]; then
+  printf '  ✓ senha com "@" não engana a extração do host\n'
+else
+  printf '  ✗ senha com "@" fez o host sair errado — o self-host volta a falhar em silêncio\n'
+  fail=1
+fi
+
+# Um hostname que parece container mas não existe não pode ser executado: o
+# `docker exec` nele devolveria "No such container" e o chamador perderia o
+# caminho que funcionava (o efêmero, que alcança host público).
+saida="$(caminho_psql_run 'postgresql://postgres:senha@localhost:5432/postgres' 'supabase_db_selfhost')"
+if [ "$saida" = "run" ]; then
+  printf '  ✓ host sem container correspondente → efêmero\n'
+else
+  printf '  ✗ tentou docker exec em host que não é container\n'
+  fail=1
+fi
+
 crontab -l >"$CRONTAB_REAL_DEPOIS" 2>/dev/null || : >"$CRONTAB_REAL_DEPOIS"
 if [ ! -s "$CRONTAB_SANDBOX" ] || ! grep -q '# deskcomm:' "$CRONTAB_SANDBOX"; then
   printf '  ✗ nada foi escrito no crontab de mentira — o teste não mediu isolamento nenhum\n'
