@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.16] — 2026-10-08
+
+### Corrigido
+
+- **Os pedidos passam a ter vendedor, e o nome aparece na tela** Um pedido criado na tela não ficava com o nome de quem criou. Com isso, o filtro
+  por vendedor não filtrava nada e o nome não aparecia no PDF do pedido, mesmo que
+  o sistema tivesse o campo pronto.
+
+  Medido antes da correção: dos 10.769 pedidos da instalação, nenhum tinha
+  vendedor registrado.
+
+  Agora:
+
+  - pedido feito na mão fica com o nome de quem criou;
+  - pedido que entra pelo WhatsApp, pela IA ou pelo portal B2B continua sem dono,
+    porque não foi uma pessoa que vendeu;
+  - o filtro por vendedor mostra o nome da pessoa, e não um código interno;
+  - o nome passa a sair no PDF do pedido.
+
+  Pedidos que já existiam continuam como estão — este recurso vale para os novos.
+  Para o histórico, é preciso atribuir o vendedor a partir de quem criou cada um.
+
 ## [1.25.15] — 2026-10-08
 
 ### Corrigido
@@ -3047,7 +3069,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.15...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...HEAD
+[1.25.16]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.15...v1.25.16
 [1.25.15]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.14...v1.25.15
 [1.25.14]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.13...v1.25.14
 [1.25.13]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.12...v1.25.13
