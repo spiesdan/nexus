@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.3] — 2026-10-08
+
+### Corrigido
+
+- **As fotos dos produtos aparecem na tela do catálogo** As imagens que já estavam cadastradas sumiam da lista de produtos: a tela
+  carregava os dados, mas não mostrava nenhuma foto. Ao enviar uma foto nova,
+  também aparecia um erro — a pasta onde as imagens são guardadas ficava
+  pertencente a outro usuário do sistema e o aplicativo não conseguia escrever
+  nela.
+
+  Agora as fotos aparecem como devem, e o envio de novas fotos funciona.
+
 ## [1.25.2] — 2026-10-08
 
 ### Corrigido
@@ -2849,7 +2861,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.3...HEAD
+[1.25.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.2...v1.25.3
 [1.25.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.1...v1.25.2
 [1.25.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.24.0...v1.25.0
