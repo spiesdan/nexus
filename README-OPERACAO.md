@@ -652,6 +652,40 @@ O que ele faz, nesta ordem (`CONFIRMADO` — as `step` reais do script):
 Além disso ele faz **backup automático antes** e roda o `healthcheck.sh`
 (depois) — a seção **"Âncora de versão"** entra aí.
 
+### O backup precisa ter conteúdo — como conferir
+
+Medido em 08/10/2026 nesta VPS: **cinco backups consecutivos de 20 bytes**, que é
+o tamanho de um gzip **vazio**. `zcat` não devolvia uma linha sequer. O
+`backup.sh` imprimia `✓ banco: 20` mesmo assim.
+
+A causa era o `docker run --rm postgres:17-alpine pg_dump` **sem `--network`**: em
+self-host o hostname da connection string é o nome do container do banco, e o
+container efêmero nasce na rede `bridge`, onde esse nome não existe. O `pg_dump`
+morria com `could not translate host name "supabase_db_selfhost"` — e como o
+`| gzip > arquivo` continua escrevendo mesmo com o `pg_dump` morto, saía um
+arquivo válido e vazio.
+
+Corrigido em `pg_dump_run` (`_common.sh`), que usa o mesmo caminho do `psql_run`:
+`docker exec` no container do banco quando o hostname é o nome de um container.
+**E** o `backup.sh` passou a recusar dump vazio (piso de 4 KiB), apagando o
+arquivo e saindo com erro — para que uma falha futura do `pg_dump` não volte a
+virar "✓ banco: 20".
+
+Confira você mesmo, depois de qualquer atualização:
+
+```bash
+ssh vps 'ls -lS /var/www/crm/backups/db-*.sql.gz | head -3'
+# o MAIOR tem de ser o mais recente, e nenhum pode ter 20 bytes
+
+ssh vps 'zcat "$(ls -t /var/www/crm/backups/db-*.sql.gz | head -1)" | head -5'
+# tem de aparecer o cabeçalho do dump (-- PostgreSQL database dump)
+```
+
+Saiu `could not translate host name`? O `pg_dump` está no caminho errado de rede.
+Saiu arquivo de 20 bytes? O dump morreu e o script recusou — **não há backup
+desta atualização**, e vale rodar o `backup.sh` de novo antes de mexer em
+qualquer coisa.
+
 Flags:
 
 | Flag            | Efeito                                                                                                    |

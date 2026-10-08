@@ -2253,18 +2253,47 @@ echo "DDL: nenhum script do kit manda a string do APP para o Postgres"
 # `--exclude` para não casar as próprias frases deste arquivo — que fala do
 # defeito para explicá-lo, e ficaria eternamente vermelho por citar o que vigia.
 sobrando="$(grep -nE --exclude='test-validators.sh' '(psql|pg_dump) "\$SUPABASE_DB_URL"' ./*.sh 2>/dev/null || true)"
+# Conta as DUAS formas de chegar ao Postgres pela conexão do schema: a chamada
+# literal e o `pg_dump_run`. A contagem anterior era só da literal, e quando o
+# `backup.sh` passou a usar o helper o guard acusou cegueira — o que é
+# verdade em espírito e falso no código: o backup continuava convertendo, só
+# via função. Baixar o piso de 10 para 9 seria o remendo fácil e o errado (número
+# mágico que volta a mentir na próxima conversão).
+#
+# E o `pg_dump` VOLTOU a ser problema, não do schema: o `docker run` solto do
+# `backup.sh` não resolvia o hostname do banco em self-host, e o `| gzip >`
+# escrevia um gzip VAZIO de 20 bytes como se fosse backup. Ver `pg_dump_run`.
+#
+# A varredura é EXCLUINDO o `_common.sh` de propósito, e não por conveniência: é
+# lá que mora o `pg_dump_run`, cujo fallback para container efêmero é o
+# comportamento CORRETO no Supabase Cloud (host público, onde não há container
+# para entrar). Caçar o defeito dentro da função que o corrige reprovaria por
+# causa do conserto.
+#
+# Fora do `_common.sh`, nenhum script do kit pode trazer `docker run … pg_dump`:
+# quem fala com o Postgres passa pelo helper, que escolhe o caminho certo.
+dump_efemero_sem_rede="$(grep -nE --exclude='test-validators.sh' --exclude='_common.sh' 'docker run[^|]*postgres:17-alpine pg_dump' ./*.sh 2>/dev/null || true)"
 convertidos="$(grep -hoE --exclude='test-validators.sh' '(psql|pg_dump) "\$\(url_do_schema\)"' ./*.sh 2>/dev/null | grep -c . || true)"
+via_helper="$(grep -hoE --exclude='test-validators.sh' '^[[:space:]]*pg_dump_run\b' ./*.sh 2>/dev/null | grep -c . || true)"
+total_convertidos=$((convertidos + via_helper))
 if [ -n "$sobrando" ]; then
   printf '  ✗ script do kit ainda manda a string do app para o Postgres:\n'
   printf '%s\n' "$sobrando" | sed 's/^/       /'
   fail=1
-elif [ "${convertidos:-0}" -lt 10 ]; then
+elif [ -n "$dump_efemero_sem_rede" ]; then
+  # Sem `--network`, o container efêmero não resolve o nome do banco em
+  # self-host: o dump falha, o `gzip >` escreve 20 bytes, e o script diz "✓".
+  printf '  ✗ pg_dump em container efêmero SEM --network (gera backup vazio e verde):\n'
+  printf '%s\n' "$dump_efemero_sem_rede" | sed 's/^/       /'
+  fail=1
+elif [ "${total_convertidos:-0}" -lt 10 ]; then
   # Vacuidade: uma varredura que não achasse NADA devolveria a mesma lista vazia
   # de infratores. O número é piso, não igualdade — sítio novo não deve reprovar.
-  printf '  ✗ a varredura só achou %s sítio(s) convertido(s) — ela está cega, não limpa\n' "${convertidos:-0}"
+  printf '  ✗ a varredura só achou %s sítio(s) convertido(s) — ela está cega, não limpa\n' "${total_convertidos:-0}"
   fail=1
 else
-  printf '  ✓ %s sítio(s) pela conexão do schema, nenhum pela do app\n' "$convertidos"
+  printf '  ✓ %s sítio(s) pela conexão do schema (%s literal(is) + %s via pg_dump_run), nenhum pela do app\n' \
+    "$total_convertidos" "$convertidos" "$via_helper"
 fi
 
 echo "integração: update.sh quando a rede do proxy sumiu"
@@ -2517,6 +2546,66 @@ if [ "$saida" = "run" ]; then
 else
   printf '  ✗ tentou docker exec em host que não é container\n'
   fail=1
+fi
+
+# ── pg_dump_run: o mesmo caminho, pelo motivo MUITO mais caro ────────────────
+#
+# O `psql_run` já entrava no container do banco. O `backup.sh` NÃO usava o
+# `psql_run` — fazia o próprio `docker run --rm postgres:17-alpine pg_dump`,
+# sem `--network`. Medido nesta VPS:
+#
+#   pg_dump: error: could not translate host name "supabase_db_selfhost"
+#
+# e, como o `| gzip > arquivo` continua mesmo com o pg_dump morto, o resultado
+# era um gzip de 20 BYTES — arquivo válido, vazio. Cinco backups consecutivos
+# assim, todos impressos como "✓ banco: 20".
+#
+# O dublê é o mesmo do psql_run, com `pg_dump` no lugar de `psql`.
+TMP_PG_DUMP_RUN="$SUITE_TMP/pg-dump-run"
+mkdir -p "$TMP_PG_DUMP_RUN"
+cat >"$TMP_PG_DUMP_RUN/docker" <<'DUBLÊ'
+#!/bin/sh
+if [ "$1" = "ps" ]; then
+  for nome in $LISTA_CONTAINERS; do printf '%s\n' "$nome"; done
+  exit 0
+fi
+printf 'pg_dump_run %s\n' "$*"
+DUBLÊ
+chmod +x "$TMP_PG_DUMP_RUN/docker"
+
+eval "$(sed -n '/^pg_dump_run() {/,/^}/p' ./_common.sh)"
+
+caminho_pg_dump_run() {
+  LISTA_CONTAINERS="$2" \
+  SUPABASE_DB_ADMIN_URL="" SUPABASE_DB_URL="$1" \
+  PATH="$TMP_PG_DUMP_RUN:$PATH" \
+    bash -c "$(declare -f url_do_schema pg_dump_run); pg_dump_run 2>/dev/null | head -1" \
+    | sed -E 's#^pg_dump_run ##; s# .*##'
+}
+
+saida="$(caminho_pg_dump_run "$selfhost_nomeado" 'supabase_db_selfhost supabase_kong_selfhost')"
+if [ "$saida" = "exec" ]; then
+  printf '  ✓ backup: banco em container → pg_dump roda DE DENTRO dele\n'
+else
+  printf '  ✗ backup subiu container efêmero sem rede — volta o backup de 20 bytes\n'
+  fail=1
+fi
+
+saida="$(caminho_pg_dump_run "$cloud" 'supabase_db_selfhost')"
+if [ "$saida" = "run" ]; then
+  printf '  ✓ backup: Supabase Cloud (host público) → efêmero, como sempre\n'
+else
+  printf '  ✗ backup: host público foi procurado como container\n'
+  fail=1
+fi
+
+# E o `backup.sh` precisa recusar um dump vazio em vez de arquivá-lo. Sem esta
+# checagem, qualquer falha futura do pg_dump volta a produzir "✓ banco: 20".
+if ! grep -q 'bytes_dump.*-lt 4096' ./_common.sh ./*.sh 2>/dev/null; then
+  printf '  ✗ backup.sh não recusa dump vazio — um pg_dump morto vira "✓ banco: 20" de novo\n'
+  fail=1
+else
+  printf '  ✓ backup.sh recusa dump vazio (piso de 4 KiB) em vez de arquivar o arquivo\n'
 fi
 
 crontab -l >"$CRONTAB_REAL_DEPOIS" 2>/dev/null || : >"$CRONTAB_REAL_DEPOIS"
