@@ -25,15 +25,24 @@ export function FotosDoProduto({
   productId,
   podeEditar,
   fotosIniciais,
+  aoMudar,
 }: {
   productId: string;
   podeEditar: boolean;
   /**
-   * Fotos vindas do LOTE (`POST /api/v1/products/images`). Quando presentes,
-   * este componente NÃO busca sozinho — era uma requisição por produto na
-   * lista, e com 640 produtos eram 640 (medido: 600 requests = 104 s).
+   * Fotos que chegam PRONTAS no HTML inicial, montadas pelo servidor
+   * (`fotosDosProdutos`). Quando presentes, este componente não busca sozinho
+   * — nem por produto (eram 640 requisições na lista; medido: 104 s) nem em
+   * lote depois que a página já estava na tela (a coluna ficava vazia e só
+   * preenchia segundos depois).
    */
   fotosIniciais?: Foto[];
+  /**
+   * Avisa o pai depois de enviar/apagar, para o MAPA INTEIRO da lista ficar
+   * certo — não só esta linha. Sem isto, enviar uma foto atualizava a célula e
+   * voltar para a aba de produtos mostrava o vazio de novo.
+   */
+  aoMudar?: (productId: string) => void | Promise<void>;
 }) {
   const t = useT();
   const [fotos, setFotos] = React.useState<Foto[] | null>(fotosIniciais ?? null);
@@ -43,10 +52,13 @@ export function FotosDoProduto({
     try {
       const corpo = await apiClient.get<{ data: Foto[] }>(`/api/v1/products/${productId}/images`);
       setFotos(Array.isArray(corpo?.data) ? corpo.data : []);
+      // O pai é dono do mapa; avisar aqui evita o Next ler duas vezes a mesma
+      // linha depois de um upload.
+      if (aoMudar) void aoMudar(productId);
     } catch (e) {
       showApiError(e);
     }
-  }, [productId]);
+  }, [productId, aoMudar]);
 
   // O lote chega DEPOIS da montagem. `useState(fotosIniciais)` congela o valor
   // do primeiro render, e a linha da lista tem `key={p.id}` — ou seja, o

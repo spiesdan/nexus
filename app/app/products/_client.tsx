@@ -145,6 +145,7 @@ function doRascunho(
 
 export function ProdutosClient({
   inicial,
+  fotosIniciais = {},
   podeEditar,
   textos,
   /**
@@ -161,6 +162,11 @@ export function ProdutosClient({
   buscaInicial,
 }: {
   inicial: Produto[];
+  /**
+   * Fotos prontas, montadas pelo servidor e chegam no HTML inicial. Sem isto a
+   * coluna aparecia vazia e preenchia depois — ver o bloco `fotosPorProduto`.
+   */
+  fotosIniciais?: Record<string, Foto[]>;
   podeEditar: boolean;
   textos: Textos;
   esconderCabecalho?: boolean;
@@ -274,40 +280,29 @@ export function ProdutosClient({
     );
   }, [inicial, busca, aba, hoje]);
 
-  // Fotos de TODA a lista em UMA requisição. Sem isto cada linha buscava a sua
-  // (`GET /api/v1/products/{id}/images`) e a tela disparava uma requisição por
-  // produto — medido na VPS: 600 requests levaram 104 s, e a rajada derrubava
-  // o GoTrue, o que voltava como 401 no console mesmo com sessão válida.
-  const [fotosPorProduto, setFotosPorProduto] = React.useState<Record<string, Foto[]>>({});
+  // As fotos JÁ CHEGAM no HTML inicial, montadas pelo servidor
+  // (`fotosDosProdutos`, em `page.tsx`). Aqui não há mais nenhuma requisição.
+  //
+  // Antes este bloco buscava o lote num efeito, DEPOIS da página desenhada: a
+  // lista aparecia inteira sem foto e as imagens preenchiam segundos depois —
+  // o piscar que o dono descreveu ("aparece os produtos sem foto e depois de
+  // alguns segundos carrega as imagens"). Buscar no servidor não custou uma
+  // requisição a mais: a página já ia ao banco pelos produtos.
+  const [fotosPorProduto, setFotosPorProduto] =
+    React.useState<Record<string, Foto[]>>(fotosIniciais);
 
-  React.useEffect(() => {
-    const ids = filtrados.map((p) => p.id);
-    if (ids.length === 0) return;
-    let cancelado = false;
-    const fatias: string[][] = [];
-    for (let i = 0; i < ids.length; i += 500) fatias.push(ids.slice(i, i + 500));
-
-    void (async () => {
-      const juntado: Record<string, Foto[]> = {};
-      for (const fatia of fatias) {
-        try {
-          const r = await apiClient.post<{ data: Record<string, Foto[]> }>(
-            "/api/v1/products/images",
-            { ids: fatia },
-          );
-          Object.assign(juntado, r.data ?? {});
-        } catch {
-          // Sem lote, cada linha volta a buscar a si mesma (estado inicial).
-          return;
-        }
-      }
-      if (!cancelado) setFotosPorProduto(juntado);
-    })();
-
-    return () => {
-      cancelado = true;
-    };
-  }, [filtrados]);
+  // Só quem EDITA precisa recarregar: enviar ou apagar foto. Buscar e apagar
+  // devolvem o registro novo ao componente, que manda de volta para o mapa
+  // inteiro — assim a linha atualiza na hora sem esperar a próxima navegação.
+  const recarregarFotos = React.useCallback(async (productId: string) => {
+    try {
+      const r = await apiClient.get<{ data: Foto[] }>(`/api/v1/products/${productId}/images`);
+      setFotosPorProduto((atual) => ({ ...atual, [productId]: r.data ?? [] }));
+    } catch {
+      // Sem a nova lista, a foto continua como está. Não é motivo para
+      // apagar o que já aparece na tela.
+    }
+  }, []);
 
   async function salvar() {
     const corpo = doRascunho(rascunho, t, origemNcmCriar);
@@ -682,6 +677,7 @@ export function ProdutosClient({
                   productId={p.id}
                   podeEditar={podeEditar}
                   fotosIniciais={fotosPorProduto[p.id] ?? []}
+                  aoMudar={recarregarFotos}
                 />
                 <div className="min-w-0 flex-1">
                   <p
