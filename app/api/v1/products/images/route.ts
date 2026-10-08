@@ -57,23 +57,43 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (ids.length === 0) return ok({}, { requestId });
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("product_images")
-    .select("id, product_id, storage_path, posicao")
-    .eq("organization_id", authz.org.orgId)
-    .in("product_id", ids)
-    .order("posicao");
-
-  if (error) return fail("internal_error", "Erro ao ler as fotos.", 500, { requestId });
-
   const porProduto: Record<string, { id: string; url: string; posicao: number }[]> = {};
   for (const id of ids) porProduto[id] = [];
-  for (const f of (data ?? []) as unknown as {
-    id: string;
-    product_id: string;
-    storage_path: string;
-    posicao: number;
-  }[]) {
+
+  // O PostgREST transforma `in.(...)` na QUERY STRING. Medido na VPS: 500
+  // ids viram uma URL de 19 KB e ele responde `414 URI too long` — que esta
+  // rota devolvia como 500. Por isso o filtro vai em fatias de 100 (≈3,8 KB
+  // cada), em paralelo. O teto do lote continua 500 ids por REQUISIÇÃO; o que
+  // mudou foi o tamanho de cada consulta ao banco.
+  const FATIA = 100;
+  const fatias: string[][] = [];
+  for (let i = 0; i < ids.length; i += FATIA) fatias.push(ids.slice(i, i + FATIA));
+
+  const respostas = await Promise.all(
+    fatias.map((fatia) =>
+      supabase
+        .from("product_images")
+        .select("id, product_id, storage_path, posicao")
+        .eq("organization_id", authz.org.orgId)
+        .in("product_id", fatia)
+        .order("posicao"),
+    ),
+  );
+
+  const erro = respostas.find((r) => r.error)?.error;
+  if (erro) return fail("internal_error", "Erro ao ler as fotos.", 500, { requestId });
+
+  const linhas = respostas.flatMap(
+    (r) =>
+      (r.data ?? []) as unknown as {
+        id: string;
+        product_id: string;
+        storage_path: string;
+        posicao: number;
+      }[],
+  );
+
+  for (const f of linhas) {
     // `local:` é o prefixo do volume da VPS; o resto é bucket público.
     const url = f.storage_path.startsWith("local:")
       ? `/api/v1/products/${f.product_id}/images/${f.id}`
