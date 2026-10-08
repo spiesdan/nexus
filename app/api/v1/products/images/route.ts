@@ -24,7 +24,7 @@ import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { env } from "@/lib/env";
+import { urlDeExibicaoDaFoto } from "@/lib/storage/foto";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +35,6 @@ const MAX_IDS = 500;
 const corpoSchema = z.object({
   ids: z.array(z.string().uuid()).max(MAX_IDS),
 });
-
-function urlPublica(caminho: string): string {
-  return `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${caminho}`;
-}
 
 export async function POST(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
@@ -97,7 +93,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // `local:` é o prefixo do volume da VPS; o resto é bucket público.
     const url = f.storage_path.startsWith("local:")
       ? `/api/v1/products/${f.product_id}/images/${f.id}`
-      : urlPublica(f.storage_path);
+      : urlDeExibicaoDaFoto(f.storage_path);
     porProduto[f.product_id]?.push({ id: f.id, url, posicao: f.posicao });
   }
 

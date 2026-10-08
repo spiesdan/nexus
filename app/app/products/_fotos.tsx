@@ -126,14 +126,13 @@ export function FotosDoProduto({
         title={t("Ampliar foto")}
         className="rounded-lg transition hover:opacity-80 focus-visible:outline-2 focus-visible:outline-primary"
       >
+        {/* A URL vem pronta da rota: quem decide o caminho é o servidor, porque só
+            ele sabe se a instalação tem o redimensionador de imagem. Ver
+            `lib/storage/foto.ts` — no self-host esse caminho não existe e o
+            `<img>` recebia 404 (coluna vazia, API toda em 200). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={
-            fotos[0]!.url.replace(
-              "/storage/v1/object/public/",
-              "/storage/v1/render/image/public/",
-            ) + "?width=96&quality=70&resize=cover"
-          }
+          src={fotos[0]!.url}
           alt=""
           className="h-10 w-10 rounded-lg border object-cover"
           loading="lazy"
