@@ -14,7 +14,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { detectarTipoImagem } from "@/lib/comercial/imagem";
-import { env } from "@/lib/env";
+import { urlDeExibicaoDaFoto, urlPublicaDaFoto } from "@/lib/storage/foto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -24,10 +24,6 @@ type Params = { params: Promise<{ id: string }> };
 
 const MAX_FOTOS = 5;
 const MAX_BYTES = 2 * 1024 * 1024;
-
-function urlPublica(caminho: string): string {
-  return `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${caminho}`;
-}
 
 async function produtoDaOrg(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -68,7 +64,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
         id: f.id,
         url: f.storage_path.startsWith("local:")
           ? `/api/v1/products/${id}/images/${f.id}`
-          : urlPublica(f.storage_path),
+          : urlDeExibicaoDaFoto(f.storage_path),
         posicao: f.posicao,
       }),
     ),
@@ -151,7 +147,10 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
 
   const foto = data as unknown as { id: string; storage_path: string; posicao: number };
   return ok(
-    { id: foto.id, url: urlPublica(foto.storage_path), posicao: foto.posicao },
+    // `urlDeExibicaoDaFoto` e não `urlPublicaDaFoto`: quem acabou de enviar
+    // quer VER a foto agora, e é este `url` que o `FotosDoProduto` coloca no
+    // `<img>`. A URL crua continua existindo para download e ampliação.
+    { id: foto.id, url: urlDeExibicaoDaFoto(foto.storage_path), posicao: foto.posicao },
     { requestId, status: 201 },
   );
 }

@@ -97,6 +97,26 @@ const schema = z.object({
   INTERNAL_CRON_SECRET: z.string().optional().default(""),
 
   /**
+   * Transformação de imagem do Storage: `on` liga, qualquer outra coisa (e o
+   * padrão) deixa DESLIGADA.
+   *
+   * Por que o padrão é desligado, e não ligado: o caminho
+   * `/storage/v1/render/image/public/…` só existe no Supabase **Cloud**. Na
+   * instalação self-host o serviço depende do imgproxy, e o CLI do Supabase
+   * entrega o stack com `IMAGE_TRANSFORMATION_ENABLED=false` — medido na VPS:
+   * a rota responde `404 … Route GET:/render/image/public/… not found`.
+   *
+   * Ou seja: com a transformação ligada, as fotos dos produtos davam 404 no
+   * `<img>` e a tela mostrava "sem foto" — com a API respondendo 200, que é o
+   * pior tipo de falha, a que não aparece em nenhum log de erro.
+   *
+   * Desligar entrega o arquivo original (35 KB num produto real, medido). Uma
+   * miniatura de 40 px paga isso de bom grado; e no Cloud, quem quiser
+   * transformar de novo liga com `SUPABASE_IMAGE_TRANSFORM=on`.
+   */
+  SUPABASE_IMAGE_TRANSFORM: z.enum(["on", "off"]).optional().default("off"),
+
+  /**
    * Retenção do arquivo do corpo cru dos webhooks (`webhook_events_log`).
    *
    * O default de 7 dias não é gosto: numa instalação real esse arquivo era 86%
