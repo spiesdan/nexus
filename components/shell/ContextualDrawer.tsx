@@ -1,7 +1,13 @@
 "use client";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 /**
  * Drawer contextual do shell (§17): o painel de contexto (detalhe, dossiê,

@@ -48,18 +48,32 @@ function slug(texto: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function NavHub({ group, isPlatformAdmin, role, title, subtitle, locale = IDIOMA_PADRAO }: NavHubProps) {
+export function NavHub({
+  group,
+  isPlatformAdmin,
+  role,
+  title,
+  subtitle,
+  locale = IDIOMA_PADRAO,
+}: NavHubProps) {
   const secoes = hubSections(group, isPlatformAdmin, role);
 
   return (
     <div className="flex h-full flex-col gap-8 p-6">
-      <NexusPageHeader title={traduzir(title, locale)} subtitle={subtitle ? traduzir(subtitle, locale) : undefined} />
+      <NexusPageHeader
+        title={traduzir(title, locale)}
+        subtitle={subtitle ? traduzir(subtitle, locale) : undefined}
+      />
 
       {secoes.map(({ section, items }) => (
-        <section key={section} aria-labelledby={`hub-${group}-${slug(section)}`} className="space-y-3">
+        <section
+          key={section}
+          aria-labelledby={`hub-${group}-${slug(section)}`}
+          className="space-y-3"
+        >
           <h2
             id={`hub-${group}-${slug(section)}`}
-            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+            className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
           >
             {traduzir(section, locale)}
           </h2>
@@ -67,14 +81,18 @@ export function NavHub({ group, isPlatformAdmin, role, title, subtitle, locale =
             {items.map((item) => {
               const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href} className="block">
+                <Link key={item.href} href={item.href} prefetch={false} className="block">
                   <Card className="hover-raise flex h-full gap-3 p-4 transition-colors hover:border-border-strong">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft">
                       <Icon size={20} weight="regular" aria-hidden className="text-accent" />
                     </span>
                     <div>
-                      <h3 className="text-sm font-medium text-text">{traduzir(item.label, locale)}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{traduzir(item.description, locale)}</p>
+                      <h3 className="text-sm font-medium text-text">
+                        {traduzir(item.label, locale)}
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {traduzir(item.description, locale)}
+                      </p>
                     </div>
                   </Card>
                 </Link>

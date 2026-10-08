@@ -80,11 +80,7 @@ export function SidebarContent({
 
   return (
     <>
-      <div
-        className={cn(
-          "flex h-16 items-center justify-center border-b px-4",
-        )}
-      >
+      <div className={cn("flex h-16 items-center justify-center border-b px-4")}>
         {/*
           O logo é a PORTA do Dashboard (/app) — a Home de quem entra no app.
           Antes ele não era link nenhum e o Dashboard, quando existisse, não teria
@@ -95,6 +91,7 @@ export function SidebarContent({
         */}
         <Link
           href="/app"
+          prefetch={false}
           title={nome}
           onClick={onNavigate}
           className="flex items-center justify-center"
@@ -110,7 +107,11 @@ export function SidebarContent({
             // próprio nome como se fosse o logotipo. `mx-auto` centraliza o
             // desenho quando a arte é mais estreita que a barra.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt={nome} className="mx-auto h-10 w-auto max-w-[13rem] object-contain" />
+            <img
+              src={logo}
+              alt={nome}
+              className="mx-auto h-10 w-auto max-w-[13rem] object-contain"
+            />
           ) : (
             <span className={cn("font-medium tracking-tight", collapsed && "sr-only")}>{nome}</span>
           )}
@@ -166,7 +167,7 @@ export function SidebarContent({
               ) : (
                 <h2
                   id={tituloId}
-                  className="px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+                  className="px-3 pt-1 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase"
                 >
                   {t(group.label)}
                 </h2>
@@ -190,6 +191,7 @@ export function SidebarContent({
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        prefetch={false}
                         title={collapsed ? t(item.label) : undefined}
                         aria-current={isActive ? "page" : undefined}
                         onClick={onNavigate}
@@ -206,7 +208,7 @@ export function SidebarContent({
                           // (highlight) nomeia o item sem pintar o grupo.
                           "row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                           isActive
-                            ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                            ? "bg-surface-elevated text-foreground before:absolute before:top-1/2 before:left-0.5 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
                             : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
                           collapsed && "justify-center px-2",
                         )}
@@ -226,13 +228,14 @@ export function SidebarContent({
                   <li>
                     <Link
                       href={group.hub.href}
+                      prefetch={false}
                       title={collapsed ? t(group.hub.label) : undefined}
                       aria-current={pathname === group.hub.href ? "page" : undefined}
                       onClick={onNavigate}
                       className={cn(
                         "row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
                         pathname === group.hub.href
-                          ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                          ? "bg-surface-elevated text-foreground before:absolute before:top-1/2 before:left-0.5 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
                           : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
                         collapsed && "justify-center px-2",
                       )}
@@ -251,13 +254,14 @@ export function SidebarContent({
         {rodape && (
           <Link
             href={rodape.href}
+            prefetch={false}
             title={collapsed ? t(rodape.label) : undefined}
             aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
             onClick={onNavigate}
             className={cn(
               "row-hover interactive relative mb-1 flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium",
               pathname.startsWith(rodape.href)
-                ? "bg-surface-elevated text-foreground before:absolute before:left-0.5 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
+                ? "bg-surface-elevated text-foreground before:absolute before:top-1/2 before:left-0.5 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-accent"
                 : "text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground",
               collapsed && "justify-center px-2",
             )}
@@ -271,10 +275,7 @@ export function SidebarContent({
         {showCollapseControl && (
           <button
             type="button"
-            onClick={
-              onToggle ??
-              (() => startTransition(() => toggleSidebar(collapsed)))
-            }
+            onClick={onToggle ?? (() => startTransition(() => toggleSidebar(collapsed)))}
             disabled={isPending}
             className={cn(
               "row-hover interactive flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground hover:text-foreground",
