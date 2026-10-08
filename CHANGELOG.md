@@ -8,6 +8,21 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.14] — 2026-10-08
+
+### Corrigido
+
+- **A busca de pedidos para montar a carga não aparecia na tela** A busca para achar o pedido que vai embarcar foi anunciada na versão anterior,
+  mas o campo não apareceu na tela: a versão subia, os pedidos apareciam na fila e
+  não havia onde digitar.
+
+  O motivo foi uma entrega incompleta — a parte que faz a comparação do texto
+  havia sido publicada, e a ligação dela com a tela não.
+
+  A busca funciona por número do pedido, nome do cliente, cidade e CNPJ, com ou
+  sem acento. Os pedidos já marcados continuam sempre visíveis, mesmo com a
+  busca apertada.
+
 ## [1.25.13] — 2026-10-08
 
 ### Adicionado
@@ -3017,7 +3032,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.13...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.14...HEAD
+[1.25.14]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.13...v1.25.14
 [1.25.13]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.12...v1.25.13
 [1.25.12]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.11...v1.25.12
 [1.25.11]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.10...v1.25.11
