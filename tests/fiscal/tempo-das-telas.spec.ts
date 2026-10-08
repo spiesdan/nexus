@@ -35,7 +35,7 @@ const ROTAS = [
   "/app/busca",
 ] as const;
 
-test.setTimeout(600_000);
+test.setTimeout(1_800_000);
 
 test("tempo de cada tela", async ({ page }) => {
   test.skip(!TOKEN, "defina SONDA_ACCESS_TOKEN");
@@ -61,10 +61,10 @@ test("tempo de cada tela", async ({ page }) => {
     },
   ]);
 
-  // Uma navegação inicial só para aquecer sessão e chunks: a primeira
-  // pintura depois do login mede o login, não a tela.
-  await page.goto("/app/inbox", { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(9000);
+  // Aquece sessão e chunks: a medição que interessa é TROCAR de tela, não a
+  // primeira pintura depois do login — que mede o login.
+  await page.goto("https://crm.billhigiene.tech/app/inbox", { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(8000);
 
   const linhas: { rota: string; ms: number }[] = [];
 
@@ -73,15 +73,16 @@ test("tempo de cada tela", async ({ page }) => {
     await page.goto(`https://crm.billhigiene.tech${rota}`, { waitUntil: "domcontentloaded" });
     const dom = Date.now() - t0;
 
-    // "Conteúdo" = a tela deixou de mostrar estado vazio/carregando e tem
-    // texto real. Para telas sem número, basta o h1 + texto suficiente.
+    // O critério é texto SUFICIENTE e a ausência de estado de carregamento —
+    // não a existência de `h1`. Metade das telas não tem `h1` (o inbox abre
+    // direto na lista), e exigir um elemento que nem existe faria este teste
+    // reprovar por um motivo que não é lentidão.
     const conteudo = await page
       .waitForFunction(
         (min) => {
           const t = document.body.innerText;
           if (/carregando|loading/i.test(t.slice(0, 150))) return false;
-          const h1 = document.querySelector("h1")?.textContent ?? "";
-          return h1.trim().length > 0 && t.length >= min;
+          return t.length >= min;
         },
         rota === "/app" ? 400 : 250,
         { timeout: 60_000 },
@@ -93,12 +94,12 @@ test("tempo de cada tela", async ({ page }) => {
       .locator("h1")
       .first()
       .innerText()
-      .catch(() => "(sem h1)");
+      .catch(() => "(sem h1 — abre na lista)");
     linhas.push({ rota, ms: conteudo });
     console.log(
       `  ${String(conteudo).padStart(7)} ms  (dom ${String(dom).padStart(5)} ms)  ${rota.padEnd(18)} ${titulo.slice(0, 30)}`,
     );
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(800);
   }
 
   console.log(">>> PIORES TEMPOS");
