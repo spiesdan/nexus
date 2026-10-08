@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.12] — 2026-10-08
+
+### Corrigido
+
+- **Importar notas da SEFAZ deixa de aparecer como falha do sistema** Ao pedir para importar notas da SEFAZ, aparecia um erro vermelho na tela.
+
+  A instalação não transmite notas para a SEFAZ — as notas são emitidas apenas
+  dentro do sistema — e a mensagem estava certa: não havia o que importar. O que
+  estava errado era o aviso: uma situação de configuração da instalação era
+  mostrada com a cor de algo que quebrou, e o motivo ficava escondido.
+
+  Agora a situação é mostrada na cor de aviso, com a explicação de que a SEFAZ não
+  está configurada. Falhas reais da SEFAZ continuam aparecendo em vermelho, para
+  não se confundirem com a configuração.
+
+  Esta distinção vale também para as outras duas operações fiscais que passavam
+  pelo mesmo caminho: exportar os XMLs e cancelar uma nota.
+
 ## [1.25.11] — 2026-10-08
 
 ### Corrigido
@@ -2982,7 +3000,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.11...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.12...HEAD
+[1.25.12]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.11...v1.25.12
 [1.25.11]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.10...v1.25.11
 [1.25.10]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.9...v1.25.10
 [1.25.9]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.8...v1.25.9
