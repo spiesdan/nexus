@@ -12,9 +12,15 @@
  * página existir.
  *
  * Regras que NÃO são negociáveis aqui:
- *  - o filtro é o MESMO `organization_id` de quem pede. A rota individual já
- *    filtra por ele; este caminho não pode ser um atalho que abre o que ela
- *    esconde;
+ *  - o filtro é o MESMO `organization_id` de quem pede, e vem de
+ *    `resolveActiveOrg` — a sessão já foi validada antes de chegar aqui. Por
+ *    isso a consulta usa o ADMIN client: num Server Component o cliente do
+ *    usuário não enxerga `product_images` (medido: a rota `/images`, que roda
+ *    como Route Handler com o mesmo cookie, devolve as fotos; a mesma consulta
+ *    numa Server Component devolvia lista vazia em TODAS as linhas — o mapa
+ *    vinha completo, com `[], [], []`). O `organization_id` continua no filtro
+ *    justamente porque o admin ignora RLS: sem ele, este caminho seria um
+ *    atalho que abre o que a rota individual esconde;
  *  - as ids vão em FATIAS de 100. Com 500 ids a URL do PostgREST passa de 19 KB
  *    e ele responde `414 URI too long` (medido na VPS) — foi um 500 na tela
  *    exatamente por causa disso;
@@ -22,7 +28,7 @@
  *    fotos são enfeite. Uma foto que não carrega é melhor do que um catálogo
  *    em branco.
  */
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { urlDeExibicaoDaFoto } from "@/lib/storage/foto";
 
 /** Acima disto a URL do PostgREST estoura — ver o comentário acima. */
@@ -49,7 +55,7 @@ export async function fotosDosProdutos(
   if (produtoIds.length === 0) return {};
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const mapa: Record<string, FotoDoProduto[]> = {};
     for (const id of produtoIds) mapa[id] = [];
 
