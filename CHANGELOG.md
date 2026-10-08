@@ -8,6 +8,31 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.17] — 2026-10-08
+
+### Corrigido
+
+- **O certificado digital passa a ser enviado de verdade** Na tela de configuração fiscal havia um botão para escolher o certificado
+  digital. Escolhido o arquivo, o sistema anotava o nome dele e mostrava tudo como
+  configurado — mas o arquivo em si nunca era enviado: saía do computador de quem
+  configurou e não chegava ao servidor.
+
+  Na medição, a instalação tinha o nome de um certificado gravado e nenhum arquivo
+  de certificado em toda a máquina. Nada avisava.
+
+  Agora o arquivo é enviado e fica gravado no servidor, e a tela passa a dizer a
+  verdade: mostra "certificado gravado" só quando o arquivo existe, e avisa
+  quando não existe. O caminho do certificado também deixou de ser um campo em
+  que se escreve — quem define é o envio do arquivo.
+
+  O certificado é guardado em uma pasta protegida do servidor, fora do
+  armazenamento público, e os arquivos aceitos são verificados no servidor: um
+  arquivo com outro formato, mesmo que renomeado para `.pfx`, é recusado com
+  explicação.
+
+  Isso deixa a emissão de nota pronta para o próximo passo, que é configurar o
+  serviço que fala com a SEFAZ.
+
 ## [1.25.16] — 2026-10-08
 
 ### Corrigido
@@ -3069,7 +3094,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...HEAD
+[1.25.17]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...v1.25.17
 [1.25.16]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.15...v1.25.16
 [1.25.15]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.14...v1.25.15
 [1.25.14]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.13...v1.25.14
