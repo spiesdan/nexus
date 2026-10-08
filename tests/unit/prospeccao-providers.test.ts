@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MapsBrowserProvider } from "@/lib/prospeccao/providers/browser";
 import { GooglePlacesProvider } from "@/lib/prospeccao/providers/google-places";
-import { OSMOverpassProvider, seletoresPara } from "@/lib/prospeccao/providers/osm";
+import {
+  ESPELHOS_RESERVA,
+  OSMOverpassProvider,
+  seletoresPara,
+} from "@/lib/prospeccao/providers/osm";
 import { criarProvider, METADADOS_PROVIDERS } from "@/lib/prospeccao/providers/registro";
 
 /**
@@ -49,7 +53,13 @@ describe("GooglePlacesProvider", () => {
       ],
     });
     const p = new GooglePlacesProvider("chave");
-    const r = await p.search({ categoria: "Oficina mecânica", latitude: -26.17, longitude: -50.32, raioMetros: 5000, limite: 20 });
+    const r = await p.search({
+      categoria: "Oficina mecânica",
+      latitude: -26.17,
+      longitude: -50.32,
+      raioMetros: 5000,
+      limite: 20,
+    });
     expect(r.negocios).toHaveLength(1);
     expect(r.negocios[0]).toMatchObject({
       idExterno: "place-1",
@@ -91,9 +101,9 @@ describe("GooglePlacesProvider", () => {
 describe("MapsBrowserProvider", () => {
   it("desligado por padrão, e recusar é erro nomeado", async () => {
     const p = new MapsBrowserProvider();
-    await expect(p.search({ categoria: "x", latitude: 0, longitude: 0, raioMetros: 1, limite: 1 })).rejects.toThrowError(
-      "nao_implementado",
-    );
+    await expect(
+      p.search({ categoria: "x", latitude: 0, longitude: 0, raioMetros: 1, limite: 1 }),
+    ).rejects.toThrowError("nao_implementado");
   });
 });
 
@@ -145,7 +155,13 @@ describe("OSMOverpassProvider", () => {
       ],
     });
     const p = new OSMOverpassProvider();
-    const r = await p.search({ categoria: "Oficina mecânica", latitude: -26.17, longitude: -50.32, raioMetros: 5000, limite: 20 });
+    const r = await p.search({
+      categoria: "Oficina mecânica",
+      latitude: -26.17,
+      longitude: -50.32,
+      raioMetros: 5000,
+      limite: 20,
+    });
     // Sem nome não entra (não há o que deduplicar nem mostrar).
     expect(r.negocios).toHaveLength(1);
     expect(r.negocios[0]).toMatchObject({
@@ -190,7 +206,9 @@ describe("OSMOverpassProvider", () => {
           headers: new Headers(),
           json: () =>
             Promise.resolve({
-              elements: [{ type: "node", id: 7, lat: -26.17, lon: -50.32, tags: { name: "Oficina Vale" } }],
+              elements: [
+                { type: "node", id: 7, lat: -26.17, lon: -50.32, tags: { name: "Oficina Vale" } },
+              ],
             }),
           text: () => Promise.resolve("{}"),
         });
@@ -198,7 +216,13 @@ describe("OSMOverpassProvider", () => {
     );
     try {
       const p = new OSMOverpassProvider();
-      const pendente = p.search({ categoria: "Oficina mecânica", latitude: -26.17, longitude: -50.32, raioMetros: 5000, limite: 20 });
+      const pendente = p.search({
+        categoria: "Oficina mecânica",
+        latitude: -26.17,
+        longitude: -50.32,
+        raioMetros: 5000,
+        limite: 20,
+      });
       await vi.advanceTimersByTimeAsync(60000);
       const r = await pendente;
       expect(chamadas).toBe(2);
@@ -227,7 +251,13 @@ describe("OSMOverpassProvider", () => {
     );
     try {
       const p = new OSMOverpassProvider({ tentativas: 2 });
-      const pendente = p.search({ categoria: "X", latitude: 0, longitude: 0, raioMetros: 1000, limite: 5 });
+      const pendente = p.search({
+        categoria: "X",
+        latitude: 0,
+        longitude: 0,
+        raioMetros: 1000,
+        limite: 5,
+      });
       const rejeitada = expect(pendente).rejects.toThrowError(/^overpass_429:/);
       await vi.advanceTimersByTimeAsync(60000);
       await rejeitada;
@@ -246,18 +276,100 @@ describe("OSMOverpassProvider", () => {
         chamadas++;
         // Mock sem `headers` nenhum: o backoff tem que cair no default sem
         // estourar TypeError em cima do erro original.
-        return Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}), text: () => Promise.resolve("busy") });
+        return Promise.resolve({
+          ok: false,
+          status: 503,
+          json: () => Promise.resolve({}),
+          text: () => Promise.resolve("busy"),
+        });
       }),
     );
     try {
       const p = new OSMOverpassProvider({ tentativas: 2 });
-      const pendente = p.search({ categoria: "X", latitude: 0, longitude: 0, raioMetros: 1000, limite: 5 });
+      const pendente = p.search({
+        categoria: "X",
+        latitude: 0,
+        longitude: 0,
+        raioMetros: 1000,
+        limite: 5,
+      });
       const rejeitada = expect(pendente).rejects.toThrowError("overpass_503");
       await vi.advanceTimersByTimeAsync(60000);
       await rejeitada;
-      expect(chamadas).toBe(2);
+      // QUATRO chamadas, e não duas — a mudança é o ponto deste teste.
+      //
+      // Antes, um 503 repetia no MESMO espelho até as tentativas acabarem. Medido
+      // em 08/10/2026, daqui da VPS: o oficial devolvia 406, o reserva kumi
+      // devolvia 500, e um terceiro espelho respondia 200 com dados válidos —
+      // e nunca era alcançado, porque a repetição acontecia antes da troca.
+      // A prospecção morria em "Progresso 0% · Encontradas 0" sem erro visível.
+      //
+      // Agora 5xx percorre os espelhos: 2 tentativas no oficial, depois 2 no
+      // reserva. São 3 espelhos na lista, o terceiro não é alcançado porque
+      // `tentativas` já acabou — e o `fetch` de todo mock devolve 503, então o
+      // último também falha e a promise rejeita.
+      expect(chamadas).toBe(4);
     } finally {
       vi.useRealTimers();
     }
   });
+});
+
+/**
+ * A lista de espelhos do Overpass é uma MEDIÇÃO, e ela envelhece.
+ *
+ * Em 08/10/2026 a prospecção parou nesta instalação: o oficial devolvia 406 para
+ * o egress da VPS, o reserva devolvia 500, e a busca ficava presa em
+ * "Progresso 0% · Encontradas 0" — sem erro na tela, porque o painel só conta
+ * erro de busca, não de infraestrutura.
+ *
+ * Este teste não valida a rede (unitário não sai da máquina). Ele trava a
+ * PROPRIEDADE que faltava: havendo um espelho que responde, a busca tem de
+ * alcançá-lo. É a propriedade que o comportamento antigo quebrava — repetia no
+ * mesmo espelho até desistir, sem nunca tentar o próximo.
+ */
+it("um 5xx em um espelho leva ao espelho seguinte, em vez de insistir no mesmo", async () => {
+  const vistas: string[] = [];
+  const statusPorUrl: Record<string, number> = {};
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation((url: string) => {
+      vistas.push(String(url));
+      // O oficial está com 5xx, o reserva responde bem — a situação real
+      // medida, que o comportamento antigo não resolvia.
+      const status = statusPorUrl[String(url)] ?? 500;
+      return Promise.resolve({
+        ok: status === 200,
+        status,
+        headers: new Headers(),
+        json: () => Promise.resolve({ elements: [] }),
+        text: () => Promise.resolve(""),
+      });
+    }),
+  );
+  // O espelho oficial é o que o provider usa por padrão; os reservas saem da
+  // lista real. Todos os reservas respondem bem, para o teste não depender de
+  // qual espelho ocupa a segunda vaga.
+  const oficial = "https://overpass-api.de/api/interpreter";
+  statusPorUrl[oficial] = 500;
+  for (const u of ESPELHOS_RESERVA) statusPorUrl[u] = 200;
+
+  try {
+    const p = new OSMOverpassProvider({ tentativas: 2 });
+    const r = await p.search({
+      categoria: "X",
+      latitude: 0,
+      longitude: 0,
+      raioMetros: 1000,
+      limite: 5,
+    });
+    expect(r).toBeTruthy();
+    expect(
+      vistas.length,
+      `a busca não saiu do espelho quebrado (foi a ${vistas.length}x)`,
+    ).toBeGreaterThan(1);
+    expect(new Set(vistas).size, "só um espelho foi tentado").toBeGreaterThan(1);
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
