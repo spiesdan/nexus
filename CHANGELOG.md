@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.19] — 2026-10-08
+
+### Corrigido
+
+- **O certificado passou a ficar guardado por empresa** Depois de passar a ser enviado de verdade, o certificado era gravado num único
+  arquivo compartilhado por toda a instalação. Em uma instalação com mais de uma
+  empresa cadastrada — e esta tem — uma segunda empresa que enviasse certificado
+  sobrescreveria o da primeira, e a primeira passaria a assinar com o certificado
+  errado.
+
+  Agora cada empresa tem a sua pasta, e o caminho é montado a partir da sessão de
+  quem enviou, nunca a partir de um valor vindo do banco.
+
+  A tela também passou a mostrar o caminho que o servidor gravou, em vez do nome
+  do arquivo que estava no computador de quem enviou — são nomes diferentes de
+  propósito, e a tela não pode discordar do servidor sobre o próprio estado.
+
 ## [1.25.18] — 2026-10-08
 
 ### Corrigido
@@ -3119,7 +3136,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...HEAD
+[1.25.19]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...v1.25.19
 [1.25.18]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...v1.25.18
 [1.25.17]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...v1.25.17
 [1.25.16]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.15...v1.25.16
