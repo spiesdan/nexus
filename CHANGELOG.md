@@ -8,6 +8,17 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.1] — 2026-10-08
+
+### Corrigido
+
+- **Fotos da lista de produtos não quebram mais a página no navegador** A tela de catálogo buscava as fotos de cada produto em uma requisição
+  separada. Com centenas de produtos, a rajada derrubava o serviço de
+  autenticação e o navegador recebia 401 mesmo com a sessão válida. Agora a
+  lista inteira vem em uma única chamada, e os identificadores vão no corpo da
+  requisição — mandá-los na URL passava de 18 KB e quebrava a conexão HTTP/2,
+  levando junto as outras chamadas da tela.
+
 ## [1.25.0] — 2026-10-07
 
 ### Adicionado
@@ -2829,7 +2840,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.1...HEAD
+[1.25.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.0...v1.25.1
 [1.25.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.22.0...v1.23.0
