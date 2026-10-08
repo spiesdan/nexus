@@ -37,7 +37,6 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import {
   decidirCertificado,
-  DIRETORIO_DE_CERTIFICADOS_NO_APP,
   DIRETORIO_DE_CERTIFICADOS_NO_HOST,
   NOME_DO_CERTIFICADO,
 } from "@/lib/fiscal/certificado";
@@ -60,11 +59,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const bytes = new Uint8Array(await arquivo.arrayBuffer());
-  const destino = decidirCertificado({
-    size: bytes.byteLength,
-    cabecalho: bytes.subarray(0, BYTES_PARA_RECONHECER),
-    nomeOriginal: arquivo.name,
-  });
+  const destino = decidirCertificado(
+    {
+      size: bytes.byteLength,
+      cabecalho: bytes.subarray(0, BYTES_PARA_RECONHECER),
+      nomeOriginal: arquivo.name,
+    },
+    // Por organização: `fiscal_settings` tem mais de uma linha nesta
+    // instalação (a real e a de teste do e2e), e um arquivo único faria a
+    // segunda sobrescrever o certificado da primeira.
+    authz.org.orgId,
+  );
   if (!destino.ok) {
     return fail("validation_failed", destino.motivo, destino.status, { requestId });
   }
@@ -73,10 +78,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   // precisa LER o `.pfx`, e ele roda como o mesmo usuário do app — por isso
   // leitura em vez de `0o400`, que quebraria o sidecar sem ganho nenhum (quem
   // entra como root lê os dois).
-  const diretorio = DIRETORIO_DE_CERTIFICADOS_NO_APP;
+  const diretorio = path.dirname(destino.caminhoNoHost);
   try {
     await mkdir(diretorio, { recursive: true, mode: 0o700 });
-    const caminho = path.join(diretorio, NOME_DO_CERTIFICADO);
+    const caminho = destino.caminhoNoHost;
     await writeFile(caminho, bytes, { mode: 0o600 });
     await chmod(caminho, 0o600);
   } catch (e) {

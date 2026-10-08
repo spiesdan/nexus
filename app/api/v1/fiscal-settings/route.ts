@@ -14,7 +14,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { DIRETORIO_DE_CERTIFICADOS_NO_APP, NOME_DO_CERTIFICADO } from "@/lib/fiscal/certificado";
+import { diretorioDoCertificado, NOME_DO_CERTIFICADO } from "@/lib/fiscal/certificado";
 import { configFiscalSchema, type ConfigFiscalSalva } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -53,9 +53,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
   //
   // Sem este campo, a tela volta a ser um espelho do texto e a mentira volta
   // junto.
-  const certificadoPresente = config?.certificado_path
-    ? await certificadoExisteNoServidor(config.certificado_path)
-    : false;
+  const certificadoPresente = await certificadoExisteNoServidor(authz.org.orgId);
 
   return ok(config ? { ...config, certificado_presente: certificadoPresente } : null, {
     requestId,
@@ -63,18 +61,21 @@ export async function GET(_req: NextRequest): Promise<Response> {
 }
 
 /**
- * O arquivo indicado está no disco?
+ * O certificado DESTA organização está no disco?
  *
- * Só um `stat` com o NOME FIXO, sem concatenar o que veio do banco: um
- * `certificado_path` forjado apontaria para qualquer arquivo do contêiner.
+ * O caminho é montado aqui, a partir do `organization_id` da sessão — nunca a
+ * partir do `certificado_path` do banco. Um `certificado_path` forjado apontaria
+ * para qualquer arquivo do contêiner, e com o caminho por organização um id
+ * forjado apontaria para o certificado de outra organização.
  */
-async function certificadoExisteNoServidor(nome: string): Promise<boolean> {
-  if (nome !== NOME_DO_CERTIFICADO) return false;
+async function certificadoExisteNoServidor(organizationId: string): Promise<boolean> {
+  const diretorio = diretorioDoCertificado(organizationId);
+  if (!diretorio) return false;
   try {
-    const st = await stat(path.join(DIRETORIO_DE_CERTIFICADOS_NO_APP, NOME_DO_CERTIFICADO));
+    const st = await stat(path.join(diretorio, NOME_DO_CERTIFICADO));
     return st.isFile() && st.size > 0;
   } catch {
-    // Sem diretório montado é o estado normal de quem não enviou certificado.
+    // Sem diretório é o estado normal de quem não enviou certificado.
     return false;
   }
 }

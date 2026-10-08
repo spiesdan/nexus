@@ -50,13 +50,38 @@ export const DIRETORIO_DE_CERTIFICADOS_NO_HOST = "/srv/fiscal/certs";
 export const DIRETORIO_DE_CERTIFICADOS_NO_APP = "/fiscal-certs";
 
 /**
- * Nome fixo do certificado dentro do diretório.
+ * Nome fixo do certificado dentro do diretório da organização.
  *
  * Fixo por três motivos: o cliente manda nome próprio (entrada não confiável),
  * dois certificados com o mesmo nome sobrescreveriam um ao outro em silêncio,
  * e o sidecar precisa de um caminho estável para ler.
  */
 export const NOME_DO_CERTIFICADO = "certificado.pfx";
+
+/** UUID canônico. Aceitar só isto impede que um id-PA atravessando vire caminho. */
+const UUID_CANONICO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * O diretório de UMA organização.
+ *
+ * ─── Por que por organização, e não um arquivo só ────────────────────────────
+ *
+ * Medido nesta instalação: `fiscal_settings` tem **duas** linhas — a organização
+ * real (`4bc721ce…`) e a organização de teste do e2e (`16f950b8…`). Com um
+ * arquivo único em `/srv/fiscal/certs/certificado.pfx`, a segunda organização
+ * que enviasse certificado **sobrescreveria o da primeira** — e o sidecar da
+ * primeira passaria a assinar com o certificado da outra.
+ *
+ * Não é teoria de multi-inquilino: é a instalação real, com o e2e criando
+ * organização a cada rodada. E o custo de isolar é uma pasta a mais.
+ */
+export function diretorioDoCertificado(
+  organizationId: string,
+  base = DIRETORIO_DE_CERTIFICADOS_NO_APP,
+): string | null {
+  if (!UUID_CANONICO.test(organizationId)) return null;
+  return `${base}/${organizationId}`;
+}
 
 /**
  * Teto do arquivo, medido contra certificado A1 real.
@@ -111,8 +136,17 @@ export type ResultadoDoCertificado =
  */
 export function decidirCertificado(
   arquivo: CertidoRecebido,
-  diretorio = DIRETORIO_DE_CERTIFICADOS_NO_APP,
+  organizationId: string,
+  base = DIRETORIO_DE_CERTIFICADOS_NO_APP,
 ): ResultadoDoCertificado {
+  const diretorio = diretorioDoCertificado(organizationId, base);
+  if (!diretorio) {
+    // Só acontece com organização malformada, o que `requireRole` já impede.
+    // A checagem fica de novo porque `decidirCertificado` é pública e
+    // testável: uma função que constrói caminho a partir de string precisa
+    // validar a string, mesmo que hoje o chamador já valide.
+    return { ok: false, status: 422, motivo: "Organização inválida para o certificado." };
+  }
   if (arquivo.size === 0) {
     return { ok: false, status: 422, motivo: "O certificado enviado está vazio." };
   }

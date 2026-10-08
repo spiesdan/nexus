@@ -85,7 +85,12 @@ test("enviar o certificado A1 grava o arquivo no servidor", async ({ page }) => 
 
   // 2. A tela precisa DIZER que não há certificado. Antes da correção ela
   //    mostrava o nome gravado, como se houvesse arquivo.
-  await page.goto("/app/notas");
+  //
+  // `?aba=config`: a configuração fiscal é uma ABA da tela de Notas, não a
+  // página inteira. A primeira versão deste spec foi para `/app/notas` e
+  // reprovou com "o campo do certificado não apareceu" — que parecia o
+  // componente quebrado quando era o spec na aba errada.
+  await page.goto("/app/notas?aba=config");
   const campo = page.getByTestId("fiscal-cert-path");
   await expect(campo, "o campo do certificado não apareceu na config fiscal").toBeVisible({
     timeout: 30_000,
@@ -113,7 +118,7 @@ test("enviar o certificado A1 grava o arquivo no servidor", async ({ page }) => 
 
   // 5. E a tela, na próxima carga, continua dizendo que existe — porque agora
   //    ela pergunta ao servidor, e não lê o texto que ela mesma gravou.
-  await page.reload();
+  await page.goto("/app/notas?aba=config");
   await expect(page.getByTestId("fiscal-cert-situacao")).toContainText(/gravado no servidor/i);
   await page.screenshot({ path: EVIDENCIA });
   console.log("evidência:", path.relative(process.cwd(), EVIDENCIA));
