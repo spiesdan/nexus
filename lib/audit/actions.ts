@@ -462,6 +462,16 @@ export const AUDIT_ACTIONS = [
   "fiscal.historico_importado",
   "fiscal.cfop_equivalente",
   "fiscal_settings.updated",
+  /**
+   * O certificado A1 foi ENVIADO.
+   *
+   * Ação separada de `fiscal_settings.updated` porque não é configuração: é a
+   * chegada de uma credencial que assina nota fiscal. Quem troca o par
+   * certificado/senha troca quem assina pela empresa, e isso precisa aparecer
+   * no rastro com o mesmo peso de uma troca de senha — não diluído num
+   * "atualizou a config" que também pega série e CFOP.
+   */
+  "fiscal.certificado_enviado",
   // Entradas (migration 0236). NF-e contra o CNPJ: sincronização, manifestação
   // e importação (estoque + contas a pagar) com rastro de quem e quando.
   "fiscal_entrada.sincronizada",

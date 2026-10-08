@@ -55,6 +55,14 @@ services:
       start_period: 40s
     volumes:
       - /var/www/crm/storage/product-images:/data/product-images
+      # Certificado A1 (PKCS#12). Fora do Storage de propósito: o bucket
+      # público transformaria a credencial que assina nota fiscal num arquivo
+      # com URL adivinhável. Montado em `/fiscal-certs`, gravado pelo
+      # `POST /api/v1/fiscal-settings/certificado` e lido pelo sidecar sped-nfe.
+      #
+      # Sem este mount a rota de upload devolve 500 — e a resposta DIZ que o
+      # diretório falta, em vez de falhar calada como fazia antes.
+      - /srv/fiscal/certs:/fiscal-certs
     logging: *default-logging
     networks: [internal]
 
