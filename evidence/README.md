@@ -109,6 +109,38 @@ conserto das abas colidindo em coluna estreita (PR do branch
   extração não casava com o `\"` escapado do payload do RSC. Verde com o mapa
   vazio é pior que vermelho: parece prova e não é.
 
+## 08/10 — Busca dos pedidos para montar a carga
+
+- `evidence/expedicao-busca-carga.png` — tela de **Nova carga** com a busca
+  apertada em "joinville", o contador em "1 de 18 pedidos", e o pedido
+  **PED-0018, já marcado, ainda visível no bloco "Na carga (1)"** enquanto a
+  lista de baixo mostra só o Joinville. É a prova do ponto que mais importa
+  nesta funcionalidade: o que já foi escolhido não desaparece quando a busca
+  aperta.
+
+  Capturada contra o site público depois da 1.25.14. O spec
+  `tests/fiscal/expedicao-busca-carga.spec.ts` semeia três pedidos
+  (`Sonda São Paulo`/`Curitiba`/`Joinville`) e mede número, cidade sem acento,
+  nome, termo inexistente, e a permanência do marcado — e **remove os pedidos
+  que semeou**, porque cada rodada deixada para trás suja a fila da expedição
+  da instalação real e faz a rodada seguinte medir uma lista que já estava
+  suja.
+
+  Duas coisas nesta entrega transformeram o teste em必要的, e ambas já
+  aconteceu aqui:
+
+  - **A entrega anterior entrou pela metade.** O PR #76 levou os 4 arquivos novos
+    e não a ligação com a tela: em produção a versão subia para 1.25.13, os
+    pedidos apareciam na fila, e **não havia campo nenhum**. Um teste que só
+    exercitasse `filtrarEmbarcaveis` unitariamente ficaria verde com a tela
+    desconectada da função — que era o estado. Por isso este spec exige o
+    elemento na TELA.
+  - **O spec esperava a coisa errada.** Ele usava `check()` para marcar, e o
+    `check()` verifica que a caixa ficou marcada — mas o pedido sai da lista de
+    baixo ao ser marcado, por desenho. O `check()` ficava esperando um elemento
+    que já tinha saído do DOM e travava até o fim do teste, com uma falha que
+    parecia defeito do produto.
+
 ## 06/10 — SPED Bloco H editável e barra de notas
 
 - `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).

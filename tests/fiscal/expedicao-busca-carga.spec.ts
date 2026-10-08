@@ -133,9 +133,20 @@ test("na nova carga, a busca acha o pedido por número, cliente e cidade", async
   expect(restantes, "busca sem resultado mostrou pedidos").toBe(0);
 
   // 8. O PONTO: marcar, filtrar, e o marcado continua visível.
+  //
+  // `click()`, e não `check()`: ao marcar, o pedido SAI da lista de baixo e
+  // entra no bloco "Na carga" — por desenho, para não aparecer duas vezes. O
+  // `check()` verifica que a caixa ficou marcada e fica esperando um elemento
+  // que já saiu do DOM, travando até o fim do teste. A primeira versão deste
+  // spec falhou aqui, e a falha parecia defeito do produto quando era o teste
+  // esperando a coisa errada.
   await busca.fill("");
   await page.getByTestId(`carga-pedido-${nSP}`).waitFor({ state: "visible" });
-  await page.getByTestId(`carga-pedido-${nSP}`).check();
+  await page.getByTestId(`carga-pedido-${nSP}`).click();
+  expect(
+    await page.getByTestId(`carga-pedido-${nSP}`).count(),
+    "o marcado continua na lista de baixo, duplicado",
+  ).toBe(0);
   await expect(
     page.getByTestId("carga-selecionados"),
     "o bloco de selecionados não apareceu",
@@ -160,4 +171,30 @@ test("na nova carga, a busca acha o pedido por número, cliente e cidade", async
 
   await page.screenshot({ path: EVIDENCIA });
   console.log("evidência:", path.relative(process.cwd(), EVIDENCIA));
+
+  // 9. Limpa o que semeou. Sem isto cada rodada deixa três pedidos `aprovado`
+  //    na fila da expedição da instalação real, e a próxima rodada passa a
+  //    medir uma lista que já estava suja — foi o que fez "joinville" devolver
+  //    3 linhas em vez de 1, vira do teste e não da busca.
+  const limpeza = await page.evaluate(
+    async (numeros: number[]) => {
+      const apagados: number[] = [];
+      for (const n of numeros) {
+        const lista = await (
+          await fetch("/api/v1/commercial-orders?busca=Sonda", { credentials: "include" })
+        ).json();
+        const itens = (lista.data?.items ?? lista.data ?? []) as { id: string; numero: number }[];
+        const alvo = itens.find((p) => p.numero === n);
+        if (!alvo) continue;
+        const r = await fetch(`/api/v1/commercial-orders/${alvo.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (r.ok || r.status === 404) apagados.push(n);
+      }
+      return apagados;
+    },
+    [nSP, nCur, nJoin],
+  );
+  console.log("limpos:", limpeza.join(", ") || "(nenhum)");
 });
