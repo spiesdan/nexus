@@ -26,18 +26,51 @@ export interface PedidoIntel {
 
 export const FUSO_PADRAO = "America/Sao_Paulo";
 
-/** "2026-09-05" no fuso dado. Invalidez cai no padrão, nunca explode. */
-export function diaNoFuso(iso: string, fuso: string): string {
+/**
+ * Formatadores de data POR FUSO, memos.
+ *
+ * `Intl.DateTimeFormat` é caro de construir — muito mais que `.format()`. E esta
+ * função roda uma vez por LINHA DE PEDIDO, em oito pontos do cálculo dos
+ * indicadores. Na org que motivou a mudança (medido na VPS): 6.131 pedidos na
+ * janela de 14 meses, e o dashboard passou de **~10 s** para o mesmo número de
+ * linhas — o suficiente para o container estourar `mem_limit` (evento `oom`,
+ * `die 137`), reiniciar, e o usuário ver a tela "demorar alguns segundos".
+ *
+ * Medido isoladamente em Node, 6.131 chamadas: 274 ms sem memo contra 5 ms com
+ * memo — **55x**. O custo é uma entrada por fuso usado, e a memória é liberada
+ * junto com o processo.
+ *
+ * O `Map` não tem teto de tamanho de propósito: a chave é o fuso, e uma org
+ * tem poucos. Um cache com limite aqui trocaria memory leak por resultado
+ * errado — `Intl` devolve a mesma string para o mesmo par (fuso, opções), então
+ * reutilizar é seguro por construção.
+ */
+const formatadoresDeData = new Map<string, Intl.DateTimeFormat>();
+
+function formatadorDoFuso(fuso: string): Intl.DateTimeFormat | null {
+  const guardado = formatadoresDeData.get(fuso);
+  if (guardado) return guardado;
   try {
-    const partes = new Intl.DateTimeFormat("en-CA", {
+    const criado = new Intl.DateTimeFormat("en-CA", {
       timeZone: fuso,
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(new Date(iso));
-    if (/^\d{4}-\d{2}-\d{2}$/.test(partes)) return partes;
+    });
+    formatadoresDeData.set(fuso, criado);
+    return criado;
   } catch {
-    // fuso desconhecido — cai no padrão abaixo.
+    // Fuso desconhecido — o chamador cai no corte de `iso`, nunca explode.
+    return null;
+  }
+}
+
+/** "2026-09-05" no fuso dado. Invalidez cai no padrão, nunca explode. */
+export function diaNoFuso(iso: string, fuso: string): string {
+  const fmt = formatadorDoFuso(fuso);
+  if (fmt) {
+    const partes = fmt.format(new Date(iso));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(partes)) return partes;
   }
   return iso.slice(0, 10);
 }
@@ -47,9 +80,18 @@ export function diasNoMes(anoMes: string): number {
   return new Date(Date.UTC(ano, mes, 0)).getUTCDate();
 }
 
-/** Minutos a somar ao UTC para chegar ao horário de parede no fuso. */
-function offsetDoFusoMinutos(instanteMs: number, fuso: string): number {
-  const fmt = new Intl.DateTimeFormat("en-US", {
+const formatadoresDePartes = new Map<string, Intl.DateTimeFormat>();
+
+/**
+ * O formatador com `formatToParts` do `offsetDoFusoMinutos`, memoizado pelo mesmo
+ * motivo do de dia. Separado porque as OPCÕES são diferentes: um `Map` só por
+ * fuso devolveria aqui o formatador de 3 campos, e `partes["hour"]` sairia
+ * `undefined` — o bug silencioso que faz o cálculo de dia virar NaN.
+ */
+function formatadorDePartesDoFuso(fuso: string): Intl.DateTimeFormat {
+  const guardado = formatadoresDePartes.get(fuso);
+  if (guardado) return guardado;
+  const criado = new Intl.DateTimeFormat("en-US", {
     timeZone: fuso,
     hour12: false,
     year: "numeric",
@@ -59,7 +101,18 @@ function offsetDoFusoMinutos(instanteMs: number, fuso: string): number {
     minute: "2-digit",
     second: "2-digit",
   });
-  const partes = Object.fromEntries(fmt.formatToParts(new Date(instanteMs)).map((p) => [p.type, p.value]));
+  formatadoresDePartes.set(fuso, criado);
+  return criado;
+}
+
+/** Minutos a somar ao UTC para chegar ao horário de parede no fuso. */
+function offsetDoFusoMinutos(instanteMs: number, fuso: string): number {
+  // Mesmo motivo de `formatadorDoFuso`: construir um `Intl` por chamada é o
+  // que faz este arquivo custar segundos na org grande.
+  const fmt = formatadorDePartesDoFuso(fuso);
+  const partes = Object.fromEntries(
+    fmt.formatToParts(new Date(instanteMs)).map((p) => [p.type, p.value]),
+  );
   const comoUtc = Date.UTC(
     Number(partes["year"]),
     Number(partes["month"]) - 1,
@@ -168,11 +221,7 @@ export interface FatiaCanal {
 }
 
 /** Vendas por canal no mês. Origem fora do vocabulário vira "outros". */
-export function vendasPorCanal(
-  pedidos: PedidoIntel[],
-  anoMes: string,
-  fuso: string,
-): FatiaCanal[] {
+export function vendasPorCanal(pedidos: PedidoIntel[], anoMes: string, fuso: string): FatiaCanal[] {
   const mapa = new Map<string, { qtd: number; total: number; clientes: Set<string> }>();
   const conhecidos = new Set<string>(ORIGENS_DO_PEDIDO as readonly string[]);
   for (const p of pedidos) {
@@ -221,7 +270,10 @@ export function serieDiariaPorCanal(
     const dia = diaNoFuso(p.created_at, fuso);
     if (!dia.startsWith(anoMes)) continue;
     const canal = conhecidos.has(p.origem) ? p.origem : "outros";
-    const serie = mapa.get(canal) ?? { total: new Array(dias).fill(0), qtd: new Array(dias).fill(0) };
+    const serie = mapa.get(canal) ?? {
+      total: new Array(dias).fill(0),
+      qtd: new Array(dias).fill(0),
+    };
     const idx = Number(dia.slice(8, 10)) - 1;
     serie.total[idx]! += p.total_cents;
     serie.qtd[idx]! += 1;
@@ -251,13 +303,21 @@ export function vendasPorVendedor(
   fuso: string,
 ): LinhaVendedor[] {
   const dias = diasNoMes(anoMes);
-  const mapa = new Map<string, { total: number; qtd: number; clientes: Set<string>; dias: number[] }>();
+  const mapa = new Map<
+    string,
+    { total: number; qtd: number; clientes: Set<string>; dias: number[] }
+  >();
   for (const p of pedidos) {
     if (!contaComoVenda(p.status)) continue;
     const dia = diaNoFuso(p.created_at, fuso);
     if (!dia.startsWith(anoMes)) continue;
     const id = p.vendedor_user_id ?? "sem_vendedor";
-    const atual = mapa.get(id) ?? { total: 0, qtd: 0, clientes: new Set<string>(), dias: new Array(dias).fill(0) };
+    const atual = mapa.get(id) ?? {
+      total: 0,
+      qtd: 0,
+      clientes: new Set<string>(),
+      dias: new Array(dias).fill(0),
+    };
     atual.total += p.total_cents;
     atual.qtd += 1;
     if (p.contact_id) atual.clientes.add(p.contact_id);
@@ -294,7 +354,12 @@ export function totaisDoMes(pedidos: PedidoIntel[], anoMes: string, fuso: string
     qtd += 1;
     if (p.contact_id) clientes.add(p.contact_id);
   }
-  return { total_cents: total, qtd, ticket_medio_cents: qtd === 0 ? 0 : Math.round(total / qtd), clientes: clientes.size };
+  return {
+    total_cents: total,
+    qtd,
+    ticket_medio_cents: qtd === 0 ? 0 : Math.round(total / qtd),
+    clientes: clientes.size,
+  };
 }
 
 /**
@@ -343,7 +408,11 @@ export function totaisMensais(
     slot.total += p.total_cents;
     slot.qtd += 1;
   }
-  return meses.map((mes) => ({ mes, total_cents: mapa.get(mes)?.total ?? 0, qtd: mapa.get(mes)?.qtd ?? 0 }));
+  return meses.map((mes) => ({
+    mes,
+    total_cents: mapa.get(mes)?.total ?? 0,
+    qtd: mapa.get(mes)?.qtd ?? 0,
+  }));
 }
 
 export interface AlertaComercial {
@@ -374,27 +443,47 @@ export function alertasComerciais(args: {
         destino: "/app/pedidos",
       });
     } else {
-      alertas.push({ tipo: "ok", texto: "Meta projetada para ser atingida", destino: "/app/pedidos" });
+      alertas.push({
+        tipo: "ok",
+        texto: "Meta projetada para ser atingida",
+        destino: "/app/pedidos",
+      });
     }
   }
   if (args.ritmoNecessario !== null && args.ritmoDiario < args.ritmoNecessario) {
-    alertas.push({ tipo: "atencao", texto: "Ritmo abaixo do necessário para a meta", destino: "/app/pedidos" });
+    alertas.push({
+      tipo: "atencao",
+      texto: "Ritmo abaixo do necessário para a meta",
+      destino: "/app/pedidos",
+    });
   }
   for (const c of args.crescimentoCanais) {
     if (c.variacao_pct !== null && c.variacao_pct >= 20) {
-      alertas.push({ tipo: "ok", texto: `${c.canal} cresceu ${c.variacao_pct}%`, destino: "/app/pedidos" });
+      alertas.push({
+        tipo: "ok",
+        texto: `${c.canal} cresceu ${c.variacao_pct}%`,
+        destino: "/app/pedidos",
+      });
     }
   }
   for (const v of args.ritmoVendedores) {
     if (v.abaixoDoRitmo) {
-      alertas.push({ tipo: "atencao", texto: `${v.nome} abaixo do ritmo esperado`, destino: "/app/pedidos" });
+      alertas.push({
+        tipo: "atencao",
+        texto: `${v.nome} abaixo do ritmo esperado`,
+        destino: "/app/pedidos",
+      });
     }
   }
   const d = args.ultimosDias;
   if (d.length >= 5 && d.slice(-5).every((v, i, arr) => i === 0 || v <= arr[i - 1]!)) {
     const zerados = d.slice(-5).filter((v) => v === 0).length;
     if (zerados >= 3) {
-      alertas.push({ tipo: "atencao", texto: "Queda de vendas nos últimos dias", destino: "/app/pedidos" });
+      alertas.push({
+        tipo: "atencao",
+        texto: "Queda de vendas nos últimos dias",
+        destino: "/app/pedidos",
+      });
     }
   }
   return alertas;
