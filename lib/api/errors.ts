@@ -82,6 +82,22 @@ export const ApiErrorCodes = {
   // 500 / upstream
   internal_error: "internal_error",
   upstream_unavailable: "upstream_unavailable",
+  /**
+   * A TRANSMISSÃO FISCAL NÃO ESTÁ CONFIGURADA — e isso não é queda de serviço.
+   *
+   * Medido em 08/10/2026 na instalação real: `Nota fiscal › Importar` respondia
+   * `502 upstream_unavailable` com a org em `provedor = stub`, e o console
+   * mostrava só "502". O motivo estava certo na resposta — "nada é transmitido
+   * à SEFAZ" — e mesmo assim a tela pintou VERMELHO, que é o tom de "algo
+   * quebrou".
+   *
+   * O código é separado de `upstream_unavailable` por isso, e não por estilo: o
+   * mesmo `upstream_unavailable` cobre a SEFAZ caindo de verdade, que É vermelho
+   * e é o que o operador precisa ver. Colocar as duas coisas no mesmo código
+   * obriga a escolher um tom para as duas, e quem escolhe errado aprende a
+   * ignorar vermelho — que é o que o `ApiErrorToast` já registra para a agenda.
+   */
+  fiscal_nao_configurado: "fiscal_nao_configurado",
   unavailable: "unavailable", // 503: dependência de config ausente (ex.: pool do engine sem SUPABASE_DB_URL)
   waha_error: "waha_error",
   ai_provider_error: "ai_provider_error",

@@ -15,7 +15,11 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { carregarContextoSped, motivoDeNaoTransmitir, transmitirCancelamento } from "@/lib/fiscal/eventos";
+import {
+  carregarContextoSped,
+  motivoDeNaoTransmitir,
+  transmitirCancelamento,
+} from "@/lib/fiscal/eventos";
 import { COLUNAS_DA_NOTA } from "@/lib/schemas/fiscal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -48,7 +52,12 @@ export async function POST(
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  const atual = nota as unknown as { id: string; status: string; chave_acesso: string | null; protocolo: string | null } | null;
+  const atual = nota as unknown as {
+    id: string;
+    status: string;
+    chave_acesso: string | null;
+    protocolo: string | null;
+  } | null;
   if (!atual) return fail("not_found", "Nota não encontrada.", 404, { requestId });
 
   if (atual.status === "cancelada" || atual.status === "denegada") {
@@ -64,15 +73,29 @@ export async function POST(
   let protocoloCancelamento: string | null = null;
   if (atual.status === "autorizada") {
     if (justificativa && justificativa.length < 15) {
-      return fail("validation_failed", "Justificativa do cancelamento: mínimo de 15 caracteres.", 422, { requestId });
+      return fail(
+        "validation_failed",
+        "Justificativa do cancelamento: mínimo de 15 caracteres.",
+        422,
+        { requestId },
+      );
     }
     const contexto = await carregarContextoSped(authz.org.orgId);
-    const bloqueio = contexto ? motivoDeNaoTransmitir(contexto) : "Sem configuração fiscal para a organização.";
+    const bloqueio = contexto
+      ? motivoDeNaoTransmitir(contexto)
+      : "Sem configuração fiscal para a organização.";
     if (bloqueio) {
-      return fail("upstream_unavailable", `Cancelamento não transmitido: ${bloqueio}`, 502, { requestId });
+      // Configuração ausente é estado esperado — ver o mesmo portão em
+      // `importar-sefaz/route.ts`. O 502 abaixo, logo depois, é o sidecar
+      // caindo de verdade, e esse continua `upstream_unavailable`.
+      return fail("fiscal_nao_configurado", `Cancelamento não transmitido: ${bloqueio}`, 502, {
+        requestId,
+      });
     }
     if (!atual.chave_acesso || !atual.protocolo) {
-      return fail("validation_failed", "Nota autorizada sem chave de acesso ou protocolo.", 422, { requestId });
+      return fail("validation_failed", "Nota autorizada sem chave de acesso ou protocolo.", 422, {
+        requestId,
+      });
     }
     const r = await transmitirCancelamento(contexto!, {
       chave: atual.chave_acesso,
@@ -80,11 +103,20 @@ export async function POST(
       justificativa: justificativa!,
     });
     if (!r.ok) {
-      const detalhe = r.cstat ? `cStat ${r.cstat}: ${r.xmotivo ?? "sem motivo"}` : (r.xmotivo ?? "falha sem motivo");
+      const detalhe = r.cstat
+        ? `cStat ${r.cstat}: ${r.xmotivo ?? "sem motivo"}`
+        : (r.xmotivo ?? "falha sem motivo");
       if (r.retentavel) {
-        return fail("upstream_unavailable", `Sidecar fiscal indisponível — cancelamento não transmitido (${detalhe}).`, 502, { requestId });
+        return fail(
+          "upstream_unavailable",
+          `Sidecar fiscal indisponível — cancelamento não transmitido (${detalhe}).`,
+          502,
+          { requestId },
+        );
       }
-      return fail("validation_failed", `SEFAZ recusou o cancelamento (${detalhe}).`, 422, { requestId });
+      return fail("validation_failed", `SEFAZ recusou o cancelamento (${detalhe}).`, 422, {
+        requestId,
+      });
     }
     protocoloCancelamento = r.protocolo;
   }
@@ -95,7 +127,11 @@ export async function POST(
   const admin = createAdminClient();
   await admin
     .from("fiscal_jobs")
-    .update({ status: "concluido", ultimo_erro: "nota cancelada", updated_at: new Date().toISOString() })
+    .update({
+      status: "concluido",
+      ultimo_erro: "nota cancelada",
+      updated_at: new Date().toISOString(),
+    })
     .eq("organization_id", authz.org.orgId)
     .eq("invoice_id", id)
     .in("status", ["pendente", "processando"]);
