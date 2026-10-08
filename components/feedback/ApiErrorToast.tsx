@@ -24,7 +24,14 @@ type Variant = "error" | "warning" | "info";
  * código em vez de contra o comportamento é a mesma classe de defeito do
  * vocabulário duplicado, do lado da tradução.
  */
-const COPY: Record<string, { variant: Variant; msg?: string }> = {
+/**
+ * Tom e frase por código de erro.
+ *
+ * Exportado porque é a decisão que a pessoa na tela sofre — vermelho ou
+ * âmbar, mensagem genérica ou o texto da rota — e um arquivo de teste que não
+ * consegue lê-la só consegue affirmar o que o código já diz.
+ */
+export const COPY: Record<string, { variant: Variant; msg?: string }> = {
   body_malformed: {
     variant: "error",
     msg: "Requisição inválida. Recarregue e tente de novo.",
@@ -102,6 +109,22 @@ const COPY: Record<string, { variant: Variant; msg?: string }> = {
   // pergunta não tinha alvo. Para quem usa, isto é "escolha uma semana", não
   // "algo quebrou" — daí `info` e não `error`.
   agenda_listagem_sem_recorte: { variant: "info" },
+
+  // ---- Fiscal ----
+  //
+  // Configuração ausente NÃO é queda de serviço. A instalação real respondia
+  // `upstream_unavailable` a "Importar" da SEFAZ porque o provedor é `stub`:
+  // as notas nascem locais e nunca chegam à SEFAZ, então não há o que importar.
+  // A resposta dizia isso — e a tela pintava vermelho, que é o tom de "algo
+  // quebrou".
+  //
+  // SEM `msg`, de propósito: entrada sem `msg` declara só o tom e deixa passar
+  // o texto da rota, que é o que sabe o que falta (`Provedor fiscal é o stub:
+  // nada é transmitido à SEFAZ (configure o sidecar).`). Escrever uma frase
+  // aqui TROCARIA esse texto — `toastFor` usa `entry.msg ?? err.message` e a
+  // descrição leva só o requestId — e o operador perderia a informação que
+  // precisa. É o mesmo combinado das entradas da agenda acima.
+  fiscal_nao_configurado: { variant: "warning" },
 };
 
 /**

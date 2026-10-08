@@ -38,7 +38,11 @@ export async function GET(): Promise<Response> {
     .select("ult_nsu, max_nsu, atualizado_em")
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  const cursor = (data ?? null) as { ult_nsu: number; max_nsu: number; atualizado_em: string } | null;
+  const cursor = (data ?? null) as {
+    ult_nsu: number;
+    max_nsu: number;
+    atualizado_em: string;
+  } | null;
   return ok(
     {
       ult_nsu: Number(cursor?.ult_nsu ?? 0),
@@ -56,15 +60,26 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const parsed = corpoSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return fail("validation_failed", "Parâmetros inválidos (limite de 1 a 200).", 422, { requestId });
+    return fail("validation_failed", "Parâmetros inválidos (limite de 1 a 200).", 422, {
+      requestId,
+    });
   }
 
   // Mesmo portão das transmissões: sem sidecar/certificado não há de onde
   // baixar — o 502 nomeia o que falta em vez de fingir progresso.
   const contexto = await carregarContextoSped(authz.org.orgId);
-  const bloqueio = contexto ? motivoDeNaoTransmitir(contexto) : "Sem configuração fiscal para a organização.";
+  const bloqueio = contexto
+    ? motivoDeNaoTransmitir(contexto)
+    : "Sem configuração fiscal para a organização.";
   if (bloqueio) {
-    return fail("upstream_unavailable", `Importação não executada: ${bloqueio}`, 502, { requestId });
+    // `fiscal_nao_configurado`, e não `upstream_unavailable`: o portão diz que
+    // falta configuração (o provedor é `stub`, não há sidecar), que é um estado
+    // esperado da instalação. `upstream_unavailable` continua reservado para a
+    // SEFAZ/sidecar cair DE VERDADE, abaixo — que é vermelho e é o que o
+    // operador precisa ver. Juntar os dois obriga a escolher um tom para os dois.
+    return fail("fiscal_nao_configurado", `Importação não executada: ${bloqueio}`, 502, {
+      requestId,
+    });
   }
 
   const resumo = await importarHistoricoEmitidas(authz.org.orgId, {
@@ -73,7 +88,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     userId: authz.user.id,
   });
   if (!resumo.ok) {
-    return fail("upstream_unavailable", resumo.erro ?? "SEFAZ/sidecar indisponível.", 502, { requestId });
+    return fail("upstream_unavailable", resumo.erro ?? "SEFAZ/sidecar indisponível.", 502, {
+      requestId,
+    });
   }
 
   await audit({

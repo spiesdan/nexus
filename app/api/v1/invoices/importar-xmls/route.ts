@@ -16,7 +16,12 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { carregarContextoSped, motivoDeNaoTransmitir } from "@/lib/fiscal/eventos";
-import { lerProcNfe, registrarEmitidas, type Candidata, type ResumoImportacao } from "@/lib/fiscal/historico";
+import {
+  lerProcNfe,
+  registrarEmitidas,
+  type Candidata,
+  type ResumoImportacao,
+} from "@/lib/fiscal/historico";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -52,21 +57,38 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!authz.ok) return authz.response;
 
   const form = await req.formData().catch(() => null);
-  if (!form) return fail("validation_failed", "Envie um formulário multipart com os XMLs (campo 'arquivos').", 422, { requestId });
+  if (!form)
+    return fail(
+      "validation_failed",
+      "Envie um formulário multipart com os XMLs (campo 'arquivos').",
+      422,
+      { requestId },
+    );
 
-  const arquivos = form.getAll("arquivos").filter((v): v is File => typeof File !== "undefined" && v instanceof File);
+  const arquivos = form
+    .getAll("arquivos")
+    .filter((v): v is File => typeof File !== "undefined" && v instanceof File);
   if (arquivos.length === 0) {
     return fail("validation_failed", "Nenhum arquivo no campo 'arquivos'.", 422, { requestId });
   }
   if (arquivos.length > MAX_ARQUIVOS) {
-    return fail("validation_failed", `Máximo de ${MAX_ARQUIVOS} arquivos por envio.`, 422, { requestId });
+    return fail("validation_failed", `Máximo de ${MAX_ARQUIVOS} arquivos por envio.`, 422, {
+      requestId,
+    });
   }
 
   // O CNPJ do emitente é a régua de quem é "nossa" emissão: sem config
   // fiscal não há o que comparar, e o 502 nomeia o que falta.
   const contexto = await carregarContextoSped(authz.org.orgId);
-  const bloqueio = contexto ? motivoDeNaoTransmitir(contexto) : "Sem configuração fiscal para a organização.";
-  if (bloqueio) return fail("upstream_unavailable", `Importação não executada: ${bloqueio}`, 502, { requestId });
+  const bloqueio = contexto
+    ? motivoDeNaoTransmitir(contexto)
+    : "Sem configuração fiscal para a organização.";
+  // Configuração ausente é estado esperado, não queda de serviço — ver o mesmo
+  // portão em `importar-sefaz/route.ts`.
+  if (bloqueio)
+    return fail("fiscal_nao_configurado", `Importação não executada: ${bloqueio}`, 502, {
+      requestId,
+    });
   const cnpj = digitos(contexto!.emitente.emitente_documento);
 
   const resumo: ResumoImportacao = {
