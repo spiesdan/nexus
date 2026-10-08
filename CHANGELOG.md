@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.8] — 2026-10-08
+
+### Corrigido
+
+- **As fotos dos produtos aparecem junto com a lista, sem piscar** A lista de produtos aparecia primeiro sem nenhuma foto, e as imagens só
+  apareciam alguns segundos depois, quando a página já estava aberta. Parecia que
+  o sistema estava quebrado, mesmo estando certo.
+
+  Agora as fotos são preparadas junto com os produtos, antes de a página ser
+  desenhada. A lista aparece completa de primeira, e o trabalho foi tirado do
+  navegador — o que também deixa a tela mais leve de carregar.
+
+- **Aba Radar deixa de dar erro ao listar clientes inativos** A aba Radar mostrava um erro ao abrir a lista de clientes que pararam de
+  comprar, mesmo com o sistema funcionando normalmente.
+
+  O motivo era o tamanho da pergunta: a lista de clientes ia inteira em um único
+  pedido ao banco de dados. Quando passava de certo tamanho, o banco recusava por
+  limite de tamanho e a tela recebia um erro genérico, sem dizer o que era.
+
+  A lista agora é dividida em partes menores, e cada parte é buscada por conta
+  própria.
+
 ## [1.25.7] — 2026-10-08
 
 ### Corrigido
@@ -2922,7 +2944,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.7...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.8...HEAD
+[1.25.8]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.7...v1.25.8
 [1.25.7]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.6...v1.25.7
 [1.25.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...v1.25.6
 [1.25.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.4...v1.25.5
