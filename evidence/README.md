@@ -68,6 +68,18 @@ conserto das abas colidindo em coluna estreita (PR do branch
 - `SELFCHECK=1` — infla um card por CSS e **exige** que o gate reprove. Gate que só foi
   visto passando é carimbo, não gate.
 
+## 08/10 — Fotos do catálogo voltando a aparecer
+
+- `evidence/fotos-produto-carregam.png` — coluna de fotos do catálogo com as
+  imagens visíveis, capturada contra o site público **depois** da 1.25.3
+  (PR #53). A captura é a ponta de uma cadeia que o spec
+  `tests/fiscal/fotos-carregam.spec.ts` mede inteira, porque cada ponta já
+  mentiu verde sozinha antes: semeei a foto, o *upload* respondia 200, o lote
+  respondia 200, a URL respondia 200 com `image/png` — e a tela renderizava
+  **zero** `<img>`. Foto nenhuma aparecia, e nenhuma dessas respostas apontava
+  para o defeito. O spec mede os cinco `<img>` renderizados na tela e falha se
+  algum deles não carregar.
+
 ## 06/10 — SPED Bloco H editável e barra de notas
 
 - `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).
