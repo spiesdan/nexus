@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.5] — 2026-10-08
+
+### Corrigido
+
+- **O painel inicial deixa de levar vários segundos para abrir** O painel inicial demorava vários segundos para mostrar os números, e em alguns
+  momentos voltava vazio porque o aplicativo era reiniciado no meio do
+  carregamento.
+
+  A causa era a forma como as datas eram convertidas para o calendário: a cada
+  linha de pedido o sistema criava um novo conversor, em vez de reaproveitar o
+  mesmo. Com muitos pedidos isso consumia o espaço de memória do aplicativo e o
+  servidor era reiniciado enquanto a página ainda carregava.
+
+  Os números agora são calculados reaproveitando o conversor, e o painel abre
+  com os valores.
+
 ## [1.25.4] — 2026-10-08
 
 ### Corrigido
@@ -2876,7 +2892,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.4...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...HEAD
+[1.25.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.4...v1.25.5
 [1.25.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.3...v1.25.4
 [1.25.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.2...v1.25.3
 [1.25.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.1...v1.25.2
