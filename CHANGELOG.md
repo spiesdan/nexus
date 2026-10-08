@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.7] — 2026-10-08
+
+### Corrigido
+
+- **As telas abrem mais rápido ao navegar pelo menu** Navegar pelo menu lateral demorava alguns segundos para a tela ficar pronta.
+  Ao clicar em um destino, o sistema baixava antecipadamente o conteúdo de todas
+  as telas do menu, mesmo as que ninguém ia abrir — mais de trinta arquivos e uma
+  espera de quase quatro segundos.
+
+  Agora cada tela é carregada quando é pedida, e a navegação corresponde ao tempo
+  real de abrir a tela.
+
 ## [1.25.6] — 2026-10-08
 
 ### Corrigido
@@ -2910,7 +2922,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.6...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.7...HEAD
+[1.25.7]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.6...v1.25.7
 [1.25.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...v1.25.6
 [1.25.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.4...v1.25.5
 [1.25.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.3...v1.25.4
