@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.9] — 2026-10-08
+
+### Corrigido
+
+- **A busca de empresas volta a encontrar resultados** A busca de empresas ficava parada em "Progresso 0%", sem encontrar nada e sem
+  mostrar erro, mesmo com o resto do sistema funcionando.
+
+  O serviço público de mapas que responde a essas buscas estava indisponível, e o
+  sistema insistia no mesmo serviço em vez de tentar os outros. Agora ele passa
+  para o próximo serviço quando um deixa de responder, e foi incluído um serviço
+  reserva que está no ar.
+
 ## [1.25.8] — 2026-10-08
 
 ### Corrigido
@@ -2944,7 +2956,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.8...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.9...HEAD
+[1.25.9]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.8...v1.25.9
 [1.25.8]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.7...v1.25.8
 [1.25.7]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.6...v1.25.7
 [1.25.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.5...v1.25.6
