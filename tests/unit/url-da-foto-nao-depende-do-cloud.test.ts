@@ -55,3 +55,36 @@ describe("urlDeExibicaoDaFoto", () => {
     expect(url).toContain("/product-images/org//produto/foto.jpg");
   });
 });
+
+/**
+ * Foto em DISCO não é foto do bucket. Medido na org real: o upload do produto
+ * grava em `storage_path` com prefixo `local:`, o bucket público não conhece
+ * esse caminho e respondia **400** — com a lista de produtos inteira
+ * aparecendo e nenhum erro no log.
+ *
+ * A rota que serve esse arquivo exige o ID DA FOTO (não o `storage_path`),
+ * então a URL só pode ser montada com o par de ids. Sem ele, a função recusa
+ * em vez de devolver um caminho que o browser não consegue abrir.
+ */
+describe("foto local", () => {
+  it("vira a rota da API, com o id da foto — não o caminho em disco", () => {
+    const url = urlDeExibicaoDaFoto("local:16f950/abc/prod/8e49bcd2.jpg", {
+      productId: "prod-1",
+      fotoId: "8e49bcd2",
+    });
+    expect(url).toBe("/api/v1/products/prod-1/images/8e49bcd2");
+    expect(url).not.toContain("storage/v1");
+    expect(url).not.toContain("16f950");
+  });
+
+  it("sem os ids, recusa em vez de devolver caminho que o browser nao abre", () => {
+    expect(() => urlDeExibicaoDaFoto("local:org/prod/foto.jpg")).toThrowError(
+      /precisa de productId e fotoId/,
+    );
+  });
+
+  it("foto do bucket continua indo para o storage, sem passar pela API", () => {
+    const url = urlDeExibicaoDaFoto("org/prod/foto.jpg");
+    expect(url).toContain("/storage/v1/object/public/product-images/org/prod/foto.jpg");
+  });
+});

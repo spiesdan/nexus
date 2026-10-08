@@ -88,7 +88,7 @@ export async function fotosDosProdutos(
       }[]) {
         mapa[f.product_id]?.push({
           id: f.id,
-          url: urlDeExibicaoDaFoto(f.storage_path),
+          url: urlDeExibicaoDaFoto(f.storage_path, { productId: f.product_id, fotoId: f.id }),
           posicao: f.posicao,
         });
       }
