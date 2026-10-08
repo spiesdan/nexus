@@ -20,9 +20,7 @@ import { NAV_DESTINATIONS, NAV_GROUPS, canSee } from "@/lib/navigation/registry"
 const DESTINO_POR_HREF = new Map(NAV_DESTINATIONS.map((d) => [d.href, d]));
 // O rótulo do crumb de um hub é o do GRUPO ("Inteligência"), não o do link
 // do hub ("Ver tudo em IA") — o link é ação de rodapé, não é lugar.
-const GRUPO_POR_HUB = new Map(
-  NAV_GROUPS.filter((g) => g.hub).map((g) => [g.hub!.href, g.label]),
-);
+const GRUPO_POR_HUB = new Map(NAV_GROUPS.filter((g) => g.hub).map((g) => [g.hub!.href, g.label]));
 
 const EH_ID =
   /^(?:\d+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{24,})$/i;

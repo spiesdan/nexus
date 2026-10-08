@@ -57,6 +57,7 @@ export function MobileDock() {
         {podeCriarPedido && (
           <Link
             href={NOVO_PEDIDO.href}
+            prefetch={false}
             aria-label={t("Criar pedido")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-xs transition-transform active:scale-95"
           >
@@ -85,6 +86,7 @@ function ItemDock({
   return (
     <Link
       href={destino.href}
+      prefetch={false}
       aria-current={ativo ? "page" : undefined}
       className={cn(
         "flex min-h-[44px] min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg px-2",

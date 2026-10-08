@@ -34,9 +34,7 @@ import { cn } from "@/lib/utils";
 
 const ROTULO_GRUPO = new Map(NAV_GROUPS.map((g) => [g.id, g.label]));
 
-type Linha =
-  | { tipo: "tela"; destino: NavDestination }
-  | { tipo: "entidade"; item: ItemDeBusca };
+type Linha = { tipo: "tela"; destino: NavDestination } | { tipo: "entidade"; item: ItemDeBusca };
 
 /** Um bloco de render: telas sem rótulo; cada seção de entidade com o seu. */
 interface Bloco {
@@ -194,7 +192,7 @@ function Resultados({ aoEscolher }: { aoEscolher: () => void }) {
               aria-label={bloco.rotulo ? t(bloco.rotulo) : undefined}
             >
               {bloco.rotulo ? (
-                <p className="px-3 pb-1 pt-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <p className="px-3 pt-2 pb-1 text-[11px] tracking-wider text-muted-foreground uppercase">
                   {t(bloco.rotulo)}
                 </p>
               ) : null}
@@ -276,7 +274,7 @@ function TelaLinha({
       <div className="min-w-0">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-medium">{t(destino.label)}</span>
-          <span className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
+          <span className="truncate text-[11px] tracking-wider text-muted-foreground uppercase">
             {rotuloGrupo}
           </span>
         </div>
