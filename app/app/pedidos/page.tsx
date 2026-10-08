@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,7 +26,13 @@ export const dynamic = "force-dynamic";
 export default async function PedidosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; origem?: string; vendedor?: string; de?: string; ate?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    origem?: string;
+    vendedor?: string;
+    de?: string;
+    ate?: string;
+  }>;
 }) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
@@ -41,7 +48,9 @@ export default async function PedidosPage({
   const dataValida = (v: string | undefined) => (v && (DIA.test(v) || INSTANTE.test(v)) ? v : "");
 
   const iniciais: FiltrosIniciais = {
-    status: (STATUS_DO_PEDIDO as readonly string[]).includes(params.status ?? "") ? (params.status as string) : "",
+    status: (STATUS_DO_PEDIDO as readonly string[]).includes(params.status ?? "")
+      ? (params.status as string)
+      : "",
     origem: params.origem?.trim() ?? "",
     vendedor: params.vendedor?.trim() ?? "",
     de: dataValida(params.de),
@@ -56,17 +65,42 @@ export default async function PedidosPage({
   if (iniciais.status) q = q.eq("status", iniciais.status);
   if (iniciais.origem) q = q.eq("origem", iniciais.origem);
   if (iniciais.vendedor) q = q.eq("vendedor_user_id", iniciais.vendedor);
-  if (iniciais.de) q = q.gte("created_at", DIA.test(iniciais.de) ? `${iniciais.de}T00:00:00Z` : iniciais.de);
-  if (iniciais.ate) q = q.lt("created_at", DIA.test(iniciais.ate) ? `${iniciais.ate}T23:59:59.999Z` : iniciais.ate);
+  if (iniciais.de)
+    q = q.gte("created_at", DIA.test(iniciais.de) ? `${iniciais.de}T00:00:00Z` : iniciais.de);
+  if (iniciais.ate)
+    q = q.lt("created_at", DIA.test(iniciais.ate) ? `${iniciais.ate}T23:59:59.999Z` : iniciais.ate);
   const { data } = await q.order("created_at", { ascending: false }).limit(200);
   const iniciaisComEmitente = await comNomeDoEmitente(
-    (data ?? []) as unknown as Array<{ created_by: string | null; vendedor_user_id: string | null }>,
+    (data ?? []) as unknown as Array<{
+      created_by: string | null;
+      vendedor_user_id: string | null;
+    }>,
   );
+
+  /**
+   * O NOME do vendedor do drill-down, resolvido AQUI e não na tela.
+   *
+   * A tela mostrava `Vendedor: a1b2c3d4` — os 8 primeiros do UUID, que é o que
+   * o dashboard manda na URL (`?vendedor=<id>`) e o único identificador que ela
+   * tinha.
+   *
+   * Resolver na tela a partir dos pedidos carregados não funciona: a lista JÁ
+   * vem filtrada por esse vendedor, e um dia em que o filtro acha zero pedidos
+   * (janela sem venda, filtro de status, pedido excluído) o rótulo perde a
+   * única fonte que teria. Fica `a1b2c3d4` de novo, sem nenhum erro. Por isso a
+   * busca do nome é independente da lista, e só roda quando há `?vendedor=`.
+   */
+  let vendedorNome = "";
+  if (iniciais.vendedor) {
+    const nomes = await nomesDosAtendentes([iniciais.vendedor]);
+    vendedorNome = nomes.get(iniciais.vendedor) ?? "";
+  }
 
   return (
     <PedidosClient
       inicial={iniciaisComEmitente as unknown as PedidoComercial[]}
       iniciais={iniciais}
+      vendedorNome={vendedorNome}
       podeCriar={podeCriar}
       podeExcluir={podeExcluir}
       meuId={user.id}
@@ -74,7 +108,9 @@ export default async function PedidosPage({
         titulo: t("Pedidos"),
         subtitulo: t("Os pedidos da loja, do rascunho à entrega."),
         vazio: t("Nenhum pedido ainda"),
-        vazioDica: t("Crie o primeiro pedido no botão acima — ele pode nascer daqui, do WhatsApp, da IA ou do portal B2B."),
+        vazioDica: t(
+          "Crie o primeiro pedido no botão acima — ele pode nascer daqui, do WhatsApp, da IA ou do portal B2B.",
+        ),
         novo: t("Novo pedido"),
         relatorios: t("Relatórios"),
         todosStatus: t("Todos os status"),

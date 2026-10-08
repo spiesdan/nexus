@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { cabeNoCredito, situacaoDeCredito } from "@/lib/comercial/credito";
+import { vendedorDoPedido } from "@/lib/comercial/vendedor-do-pedido";
 import {
   calcularParcelas,
   COLUNAS_DO_PEDIDO,
@@ -58,10 +59,12 @@ export async function criarPedidoComercial(
     .maybeSingle();
   const politica: PoliticaEfetiva = {
     desconto_max_vendedor_pct: Number(
-      (polDb as unknown as { desconto_max_vendedor_pct: number } | null)?.desconto_max_vendedor_pct ?? 5,
+      (polDb as unknown as { desconto_max_vendedor_pct: number } | null)
+        ?.desconto_max_vendedor_pct ?? 5,
     ),
     permite_estoque_negativo:
-      (polDb as unknown as { permite_estoque_negativo: boolean } | null)?.permite_estoque_negativo ?? false,
+      (polDb as unknown as { permite_estoque_negativo: boolean } | null)
+        ?.permite_estoque_negativo ?? false,
   };
 
   // Tabela de preço (se pedida): desconto + overrides por produto.
@@ -83,19 +86,34 @@ export async function criarPedidoComercial(
     ]);
     const t = tab as unknown as { desconto_pct: number; ativo: boolean } | null;
     if (!t || !t.ativo) {
-      return { ok: false, code: "validation_failed", message: "Tabela de preço inválida ou inativa." };
+      return {
+        ok: false,
+        code: "validation_failed",
+        message: "Tabela de preço inválida ou inativa.",
+      };
     }
     descontoTabelaPct = Number(t.desconto_pct);
-    for (const i of ((itensTab ?? []) as unknown as { product_id: string; preco_cents: number | null }[])) {
+    for (const i of (itensTab ?? []) as unknown as {
+      product_id: string;
+      preco_cents: number | null;
+    }[]) {
       precoNaTabela.set(i.product_id, i.preco_cents);
     }
   }
 
   // Produtos dos itens, numa query só — snapshot, estoque e base de preço.
-  const idsProdutos = [...new Set(entrada.itens.map((i) => i.product_id).filter(Boolean))] as string[];
+  const idsProdutos = [
+    ...new Set(entrada.itens.map((i) => i.product_id).filter(Boolean)),
+  ] as string[];
   const produtos = new Map<
     string,
-    { codigo: string; nome: string; controla_estoque: boolean; quantidade: number; preco_cents: number }
+    {
+      codigo: string;
+      nome: string;
+      controla_estoque: boolean;
+      quantidade: number;
+      preco_cents: number;
+    }
   >();
   if (idsProdutos.length > 0) {
     const { data, error } = await supabase
@@ -107,7 +125,13 @@ export async function criarPedidoComercial(
     for (const p of data ?? []) {
       produtos.set(
         p.id,
-        p as { codigo: string; nome: string; controla_estoque: boolean; quantidade: number; preco_cents: number },
+        p as {
+          codigo: string;
+          nome: string;
+          controla_estoque: boolean;
+          quantidade: number;
+          preco_cents: number;
+        },
       );
     }
   }
@@ -163,7 +187,9 @@ export async function criarPedidoComercial(
         ok: false,
         code: "validation_failed",
         message: `Estoque insuficiente para "${prod.nome}".`,
-        details: { itens: [`item ${pos + 1}: disponível ${prod.quantidade}, pedido ${item.quantidade}`] },
+        details: {
+          itens: [`item ${pos + 1}: disponível ${prod.quantidade}, pedido ${item.quantidade}`],
+        },
       };
     }
     descontoMaxItem = Math.max(descontoMaxItem, item.desconto_pct);
@@ -181,7 +207,8 @@ export async function criarPedidoComercial(
   const subtotal = itensMontados.reduce((s, i) => s + i.subtotal_cents, 0);
   // Desconto geral: R$ + % (somam). % vira cents aqui, no servidor.
   const descontoPctGeral = entrada.desconto_pct ?? 0;
-  const descontoGeralCents = entrada.desconto_cents + Math.round((subtotal * descontoPctGeral) / 100);
+  const descontoGeralCents =
+    entrada.desconto_cents + Math.round((subtotal * descontoPctGeral) / 100);
   if (descontoGeralCents > subtotal) {
     return { ok: false, code: "validation_failed", message: "Desconto maior que o subtotal." };
   }
@@ -202,7 +229,11 @@ export async function criarPedidoComercial(
   }
 
   // Crédito: rascunho nunca barra; compromisso acima do limite sim.
-  if (statusFinal !== "rascunho" && entrada.contact_id && !(entrada.ignorar_credito && ctx.podeIgnorar)) {
+  if (
+    statusFinal !== "rascunho" &&
+    entrada.contact_id &&
+    !(entrada.ignorar_credito && ctx.podeIgnorar)
+  ) {
     const situacao = await situacaoDeCredito(supabase, ctx.orgId, entrada.contact_id);
     if (!cabeNoCredito(situacao, total)) {
       return {
@@ -235,7 +266,7 @@ export async function criarPedidoComercial(
       contact_id: entrada.contact_id ?? null,
       cliente_nome: entrada.cliente_nome,
       cliente_documento: entrada.cliente_documento ?? null,
-      vendedor_user_id: entrada.vendedor_user_id ?? null,
+      vendedor_user_id: vendedorDoPedido(entrada, ctx.userId),
       status: statusFinal,
       origem: entrada.origem,
       moeda: entrada.moeda,

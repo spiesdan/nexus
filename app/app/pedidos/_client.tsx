@@ -147,11 +147,15 @@ const FINALIZADOS: StatusDoPedido[] = ["entregue", "cancelado"];
 
 function TimelineDoPedido({ id }: { id: string }) {
   const tagIdioma = useTagDeIdioma();
-  const [linhas, setLinhas] = React.useState<{ acao: string; por: string; em: string }[] | null>(null);
+  const [linhas, setLinhas] = React.useState<{ acao: string; por: string; em: string }[] | null>(
+    null,
+  );
   React.useEffect(() => {
     let vivo = true;
     apiClient
-      .get<{ data: { acao: string; por: string; em: string }[] }>(`/api/v1/commercial-orders/${id}/timeline`)
+      .get<{ data: { acao: string; por: string; em: string }[] }>(
+        `/api/v1/commercial-orders/${id}/timeline`,
+      )
       .then((l) => {
         if (vivo) setLinhas(l.data ?? []);
       })
@@ -179,6 +183,7 @@ function TimelineDoPedido({ id }: { id: string }) {
 }
 
 export function PedidosClient({
+  vendedorNome = "",
   inicial,
   iniciais,
   podeCriar,
@@ -188,6 +193,15 @@ export function PedidosClient({
 }: {
   inicial: PedidoComercial[];
   iniciais: FiltrosIniciais;
+  /**
+   * Nome de quem o drill-down `?vendedor=<id>` está apontando.
+   *
+   * Vem do servidor e NÃO é derivado dos pedidos carregados: a lista já chega
+   * filtrada por esse vendedor, e quando o filtro acha zero pedidos não há
+   * linha de onde tirar o nome — que é quando o rótulo voltaria a ser
+   * `a1b2c3d4`. Ver o comentário em `page.tsx`.
+   */
+  vendedorNome?: string;
   podeCriar: boolean;
   podeExcluir: boolean;
   meuId: string;
@@ -209,22 +223,41 @@ export function PedidosClient({
     [iniciais],
   );
   const [filtros, setFiltros] = React.useState<Filtros>(filtrosIniciais);
+  /**
+   * Como chamar o vendedor nos rótulos.
+   *
+   * Nome quando o servidor resolveu; os 8 primeiros do UUID só quando não
+   * resolveu (usuário fora da equipe, ou filtro guardado antigo). Não há
+   * terceira opção de despejar o UUID inteiro — 36 caracteres num rótulo de
+   * filtro não é informação para quem opera.
+   */
+  const rotuloDoVendedor = React.useMemo(
+    () => vendedorNome || filtros.vendedorId.slice(0, 8),
+    [vendedorNome, filtros.vendedorId],
+  );
   const [carregando, setCarregando] = React.useState(false);
   const [visao, setVisao] = React.useState<"tabela" | "quadro" | "cartoes">("cartoes");
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const [expandido, setExpandido] = React.useState<string | null>(null);
   const [filtrosSalvos, setFiltrosSalvos] = React.useState<Record<string, Filtros>>(() => {
     try {
-      const cru = typeof window === "undefined" ? null : window.localStorage.getItem("pedidos-filtros-salvos");
+      const cru =
+        typeof window === "undefined"
+          ? null
+          : window.localStorage.getItem("pedidos-filtros-salvos");
       if (!cru) return {};
       const parsed = JSON.parse(cru) as Record<string, Partial<Filtros>>;
       // Salvos antigos não têm de/ate/vendedorId — completa com o vazio.
-      return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, { ...FILTROS_VAZIOS, ...v }]));
+      return Object.fromEntries(
+        Object.entries(parsed).map(([k, v]) => [k, { ...FILTROS_VAZIOS, ...v }]),
+      );
     } catch {
       return {};
     }
   });
-  const [avancadosAbertos, setAvancadosAbertos] = React.useState(() => temAvancado(filtrosIniciais));
+  const [avancadosAbertos, setAvancadosAbertos] = React.useState(() =>
+    temAvancado(filtrosIniciais),
+  );
 
   function gravarSalvos(prox: Record<string, Filtros>) {
     setFiltrosSalvos(prox);
@@ -288,7 +321,11 @@ export function PedidosClient({
 
   const chips: ActiveChip[] = [];
   if (filtros.busca.trim()) {
-    chips.push({ key: "busca", label: filtros.busca.trim(), onRemove: () => mudar({ busca: "" }, true) });
+    chips.push({
+      key: "busca",
+      label: filtros.busca.trim(),
+      onRemove: () => mudar({ busca: "" }, true),
+    });
   }
   if (filtros.status) {
     chips.push({
@@ -331,7 +368,7 @@ export function PedidosClient({
   if (filtros.vendedorId) {
     chips.push({
       key: "vendedor",
-      label: `Vendedor: ${filtros.vendedorId.slice(0, 8)}`,
+      label: `${t("Vendedor")}: ${rotuloDoVendedor}`,
       onRemove: () => mudar({ vendedorId: "" }),
     });
   }
@@ -385,7 +422,10 @@ export function PedidosClient({
 
   async function avancarEmMassa() {
     const alvos = pedidos.filter(
-      (p) => selecionados.includes(p.id) && PROXIMO_STATUS[p.status as StatusDoPedido] && !(FINALIZADOS as string[]).includes(p.status),
+      (p) =>
+        selecionados.includes(p.id) &&
+        PROXIMO_STATUS[p.status as StatusDoPedido] &&
+        !(FINALIZADOS as string[]).includes(p.status),
     );
     let ok = 0;
     for (const p of alvos) {
@@ -493,7 +533,12 @@ export function PedidosClient({
       else if (chave === ontemChave) rotulo = "Ontem";
       else
         rotulo = d
-          .toLocaleDateString(tagIdioma, { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
+          .toLocaleDateString(tagIdioma, {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
           .toUpperCase();
       const g = grupos.get(chave) ?? { chave, rotulo, itens: [] };
       g.itens.push(p);
@@ -594,9 +639,7 @@ export function PedidosClient({
           <option value="">{t("Todos os vendedores")}</option>
           <option value="meus">{textos.meus}</option>
           {filtros.vendedorId && !filtros.meus && (
-            <option value={filtros.vendedorId}>
-              {t("Vendedor")} {filtros.vendedorId.slice(0, 8)}
-            </option>
+            <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
           )}
         </select>
         <span>{t("via")}</span>
@@ -692,13 +735,25 @@ export function PedidosClient({
             }}
           />
           <div className="ml-auto flex gap-2">
-            <Button size="sm" variant={visao === "cartoes" ? "default" : "outline"} onClick={() => setVisao("cartoes")}>
+            <Button
+              size="sm"
+              variant={visao === "cartoes" ? "default" : "outline"}
+              onClick={() => setVisao("cartoes")}
+            >
               {textos.cartoes}
             </Button>
-            <Button size="sm" variant={visao === "tabela" ? "default" : "outline"} onClick={() => setVisao("tabela")}>
+            <Button
+              size="sm"
+              variant={visao === "tabela" ? "default" : "outline"}
+              onClick={() => setVisao("tabela")}
+            >
               {textos.tabela}
             </Button>
-            <Button size="sm" variant={visao === "quadro" ? "default" : "outline"} onClick={() => setVisao("quadro")}>
+            <Button
+              size="sm"
+              variant={visao === "quadro" ? "default" : "outline"}
+              onClick={() => setVisao("quadro")}
+            >
               {textos.quadro}
             </Button>
           </div>
@@ -755,7 +810,7 @@ export function PedidosClient({
         <div className="space-y-5">
           {porDia.map((g) => (
             <section key={g.chave} aria-label={g.rotulo}>
-              <p className="mb-2 text-[13px] font-normal uppercase tracking-wide text-text-subtle">
+              <p className="mb-2 text-[13px] font-normal tracking-wide text-text-subtle uppercase">
                 {g.rotulo.toUpperCase()}
               </p>
               <div className="space-y-3">
@@ -803,7 +858,9 @@ export function PedidosClient({
                           <span className="truncate font-medium uppercase">{p.cliente_nome}</span>
                         </span>
                         {segundaLinha && (
-                          <span className="block truncate pl-5 text-muted-foreground">{segundaLinha}</span>
+                          <span className="block truncate pl-5 text-muted-foreground">
+                            {segundaLinha}
+                          </span>
                         )}
                         <span className="flex items-center gap-1.5 text-muted-foreground">
                           <CalendarBlank size={13} className="shrink-0 text-text-subtle" />
@@ -820,7 +877,8 @@ export function PedidosClient({
             </section>
           ))}
         </div>
-      ) : visao === "quadro" ? (        <div className="flex gap-3 overflow-x-auto pb-2">
+      ) : visao === "quadro" ? (
+        <div className="flex gap-3 overflow-x-auto pb-2">
           {STATUS_DO_PEDIDO.map((s) => (
             <div key={s} className="w-64 shrink-0 rounded-lg border bg-muted/30 p-2">
               <p className="mb-2 px-1 text-sm font-medium text-text">
@@ -831,13 +889,17 @@ export function PedidosClient({
                   <Card key={p.id} className="p-3">
                     <p className="text-sm font-medium">{numeroDoPedido(p.numero)}</p>
                     <p className="truncate text-sm">{p.cliente_nome}</p>
-                    <p className="text-sm font-semibold tabular-nums">{comoMoeda(p.total_cents, p.moeda)}</p>
+                    <p className="text-sm font-semibold tabular-nums">
+                      {comoMoeda(p.total_cents, p.moeda)}
+                    </p>
                     {podeCriar && PROXIMO_STATUS[p.status as StatusDoPedido] && (
                       <Button
                         size="sm"
                         variant="outline"
                         className="mt-2"
-                        onClick={() => void mudarStatus(p.id, PROXIMO_STATUS[p.status as StatusDoPedido]!)}
+                        onClick={() =>
+                          void mudarStatus(p.id, PROXIMO_STATUS[p.status as StatusDoPedido]!)
+                        }
                       >
                         {textos.avancar} →
                       </Button>
