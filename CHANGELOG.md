@@ -8,6 +8,31 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.18] — 2026-10-08
+
+### Corrigido
+
+- **O backup do banco passava a ser salvo vazio, sem avisar** O backup diário do banco falhava e escrevia mesmo assim um arquivo — vazio. A
+  pasta de backups mostrava arquivos de 20 bytes, que é um arquivo comprimido sem
+  nenhum conteúdo dentro, e a tela confirmava "banco: 20" como se estivesse tudo
+  certo.
+
+  Na medição, cinco backups seguidos estavam vazios. Nenhum deles serviria para
+  restaurar nada, e nada indicava o problema.
+
+  O motivo era o mesmo que já affects as consultas ao banco nesta instalação: o
+  nome do banco só existe dentro da rede de contêineres, e o backup subia um
+  contêiner temporário fora dessa rede. A conexão falhava e o erro ficava perdido
+  no meio do comando.
+
+  Agora o backup usa o mesmo caminho que as demais consultas — dentro do contêiner
+  do banco, quando o banco é um contêiner — e, antes de dar o backup por bom,
+  confere que o arquivo tem conteúdo. Um arquivo vazio é recusado com erro claro e
+  não é guardado, para não dar a impressão de que existe uma cópia.
+
+  Foi acrescentado também um aviso no capítulo de operação do manual sobre como
+  confirmar que o backup tem conteúdo.
+
 ## [1.25.17] — 2026-10-08
 
 ### Corrigido
@@ -3094,7 +3119,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...HEAD
+[1.25.18]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...v1.25.18
 [1.25.17]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...v1.25.17
 [1.25.16]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.15...v1.25.16
 [1.25.15]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.14...v1.25.15
