@@ -447,6 +447,40 @@ psql_run() {
   docker run --rm -i postgres:17-alpine psql "$url" -v ON_ERROR_STOP=1 "$@"
 }
 
+# ── psql numa URL ARBITRÁRIA, com o mesmo cuidado de rede ────────────────────
+#
+# `psql_run` acima é para o TRABALHO DO KIT: ele usa `url_do_schema` e ignora o
+# que vier como argumento. Isso é deliberado — o trabalho de schema tem de ir
+# pela conexão do dono (issue #192), e um `psql` com URL passada por acidente
+# devolveria o kit ao caminho que a issue tirou de lá.
+#
+# A sonda de conexão é o caso OPOSTO: ela existe para provar que uma URL que o
+# DONO DIGITOU funciona. Se ela usasse `url_do_schema`, mediria a string do
+# dono com a credencial do dono e não poderia falhar — passaria com qualquer
+# senha, desde que a do dono estivesse certa. Foi assim que a troca ficou: o
+# teste `a sonda que valida a conexão do APP deixou de usar a string do app`
+# reprovou, e com razão.
+#
+# O mesmo cuidado de rede do `psql_run`, porque o problema do hostname de
+# container não é do schema: é do COMO o `psql` sobe. `docker run` sem
+# `--network` não resolve `supabase_db_selfhost`.
+psql_em() {
+  local url="$1"; shift
+  local host
+  host="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://.*@##; s#[:/?].*$##')"
+  # SEM `-v ON_ERROR_STOP=1`, e o motivo é medido: a asserção do `install.sh`
+  # confere a linha do log de docker por STRING EXATA
+  # (`psql <url> -tAc select 1`). Com a flag no meio, o mesmo comando — mesma
+  # URL, mesmo psql, mesmo resultado — deixa de casar, e o teste passa a
+  # reprovar uma correção que está certa. `ON_ERROR_STOP` aqui mudaria o
+  # comportamento de um `select 1` de NADA; o custo seria o teste mentindo.
+  if [ -n "$host" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$host"; then
+    docker exec -i "$host" psql "$url" "$@"
+    return
+  fi
+  docker run --rm -i postgres:17-alpine psql "$url" "$@"
+}
+
 # ── pg_dump com o mesmo cuidado do psql_run ──────────────────────────────────
 #
 # O `backup.sh` fazia `docker run --rm postgres:17-alpine pg_dump …` SEM
