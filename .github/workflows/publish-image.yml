@@ -260,41 +260,47 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
-      - name: Build e push (fiscal sidecar — cache local)
+      # ─────────────────────────────────────────────────────────────────────
+      # O sidecar fiscal: contexto E Dockerfile próprios.
+      #
+      # `file:` na `build-push-action` é relativo ao WORKSPACE (o checkout), e
+      # não ao `context:`. Por isso o caminho inteiro: com `file: Dockerfile` a
+      # action pegava o Dockerfile da RAIZ do repositório e o aplicava ao
+      # contexto do sidecar — build de Node num projeto PHP.
+      #
+      # O sintoma era enganoso de propósito, e por isso custou seis commits:
+      # a falha dizia `/pnpm-lock.yaml: not found`, que parece ser de cache. O
+      # log inteiro estava escrito desde a primeira tentativa:
+      #
+      #   #9  [deps 1/5] FROM docker.io/library/node:22-alpine
+      #   #10 [deps 3/5] RUN corepack enable && corepack prepare pnpm@9.15.9
+      #   #11 [deps 4/5] COPY package.json pnpm-lock.yaml ./
+      #   #11 ERROR: failed to calculate checksum: "/pnpm-lock.yaml": not found
+      #
+      # `node:22-alpine`, `corepack`, `pnpm`: é o `Dockerfile` do APP. O sidecar
+      # é PHP (`php:8.3-cli-alpine`), não tem `package.json` nem `pnpm-lock.yaml`
+      # e não deve ter nenhum dos dois. Nenhuma das cinco tentativas de cache
+      # ia resolver — nenhuma podia: o arquivo que faltava estava sendo pedido
+      # pelo Dockerfile errado.
+      #
+      # Cache: nenhum campo. O `type=gha` exigiria o lock (que o PHP não tem) e
+      # `type=local` idem. O custo é zero: o build leva ~90 s e muda quando o
+      # `sped-nfe` muda, e um cache `local` morreria com o runner de qualquer
+      # jeito.
+      #
+      # E o `.dockerignore` que vale é o do diretório de CONTEXTO — o que
+      # exclui `*.pfx`, `*.p12` e `.env`. Com a raiz como contexto, o build
+      # enviaria o certificado A1 da instalação para o daemon.
+      - name: Build e push (fiscal sidecar — PHP, contexto e Dockerfile próprios)
         if: matrix.grupo == 'fiscal'
         uses: docker/build-push-action@v7
         with:
           context: fiscal/sidecar
-          file: Dockerfile
+          file: fiscal/sidecar/Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # NENHUM campo de cache, e este e o ponto.
-          #
-          # O Buildx procura `pnpm-lock.yaml` na raiz do contexto sempre que ha
-          # cache configurado — de QUALQUER tipo. Medido, um por um:
-          #
-          #   type=gha    -> "/pnpm-lock.yaml": not found
-          #   type=local  -> "/pnpm-lock.yaml": not found
-          #
-          # O sidecar e PHP. Nao tem esse arquivo nem `package.json`, e nao deve
-          # ter nenhum dos dois: um lock falso seria um arquivo que nao locka
-          # nada, num repositorio onde a ferramenta le locks para saber o que
-          # pode reusar.
-          #
-          # E a tentativa de declarar "sem cache" NA MATRIZ nao resolve, porque
-          # sem o campo a action herda o `gha` do proprio action.yml. Sem campo
-          # NENHUM, o Buildx nao procura lock nenhum: e a unica configuracao que
-          # resolve, e ela e a ausencia de configuracao.
-          #
-          # O custo e nao reaproveitar camadas entre runs — irrelevante aqui: o
-          # build do sidecar leva ~90 s e muda quando o `sped-nfe` muda.
-          # O contexto é o PRÓPRIO diretório, e não a raiz: o Dockerfile faz
-          # `COPY composer.json ./`, e — o motivo que pesa — é o
-          # `fiscal/sidecar/.dockerignore` que exclui `*.pfx`, `*.p12` e `.env`.
-          # O `.dockerignore` que vale é o do diretório de CONTEXTO, e com a raiz
-          # o build enviaria o certificado A1 da instalação para o daemon.
 
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
   # aconteceu: `next@16.3.1` passou a resolver `@swc/helpers` por ESM, o file
