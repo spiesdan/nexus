@@ -102,19 +102,32 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
 
   // O certificado real entra por upload: um `.pfx` de mentira basta, porque
   // o objetivo da jornada é chegar ao estado honesto de "sem emissor".
-  await page.locator("#cert-file-input").setInputFiles({
-    name: "e2e.pfx",
-    mimeType: "application/x-pkcs12",
-    // PKCS#12 mínimo: DER vazio. O guard de assinatura é do lado da SEFAZ e
-    // esta jornada nunca chega lá.
-    buffer: Buffer.from("0", "utf8"),
-  });
+  //
+  // O botão "Enviar certificado" dispara `input.click()`, que abre o seletor de
+  // arquivo do sistema — e o Playwright captura esse popup com `filechooser`.
+  // É o caminho que a PESSOA percorre, e por isso é o que o teste usa.
+  //
+  // A alternativa (falar direto com o `#cert-file-input`, que tem
+  // `className="hidden"`) parece mais curta e não funciona: `setInputFiles`
+  // espera o elemento ser VISÍVEL e o input nunca é, e o `force: true` que
+  // resolveria não existe no tipo dessa chamada. Medido: 300 s de timeout em
+  // `waiting for locator('#cert-file-input')`.
+  //
+  // A ordem que importa no `filechooser`: o evento precisa estar ARMADO antes do
+  // clique. Registrar o listener depois do `click()` é a ordem que faz o teste
+  // passar sem nunca enviar arquivo nenhum.
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByRole("button", { name: "Enviar certificado" }).click(),
+  ]);
+  await chooser.setFiles(pfxDeTeste());
   await expect(
-    page
-      .locator("[data-sonner-toast]")
-      .filter({ hasText: /certificado/i })
-      .first(),
+    page.locator("[data-sonner-toast]").filter({ hasText: "Certificado enviado" }).first(),
   ).toBeVisible({ timeout: 30_000 });
+  // O campo de leitura passa a mostrar o caminho que o SERVIDOR gravou — e o
+  // nome tem nome fixo, não o do arquivo que o teste escolheu. Ver
+  // `ConfigFiscal.tsx`: nome vindo do cliente viraria caminho em disco.
+  await expect(page.locator("#cert-path")).not.toHaveValue("");
   await page.locator("#cert-senha").fill("segredo-e2e");
   await page.getByRole("button", { name: "Salvar configuração" }).click();
   await expect(
