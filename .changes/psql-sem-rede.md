@@ -19,5 +19,16 @@ banco é um container, e sobem um programa temporário só quando o endereço é
 público (Supabase na nuvem). Os dois caminhos já existiam e já eram testados; o
 que faltava era os scripts usarem.
 
-**Para quem já instalou:** rode `bash hostgator-setup-kit/update.sh` uma vez.
-Não há passo manual, e nada se perde — o script faz backup antes.
+## Requer atenção
+
+**Rode a atualização uma vez:** `bash hostgator-setup-kit/update.sh`
+
+Sem passo manual, e nada se perde — o script faz backup do banco antes de mexer
+em qualquer coisa.
+
+O aviso "Apareceram avisos no banco que NÃO são os esperados" que apareceu nas
+atualizações anteriores some depois disso, e o schema passa a ser aplicado de
+verdade.
+
+Se você usa `restore.sh`, ele também foi corrigido — antes ele falhava justamente
+quando o banco já estava quebrado.
