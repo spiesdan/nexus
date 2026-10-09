@@ -260,7 +260,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
-      - name: Build e push (fiscal sidecar — sem cache)
+      - name: Build e push (fiscal sidecar — cache local)
         if: matrix.grupo == 'fiscal'
         uses: docker/build-push-action@v7
         with:
@@ -270,10 +270,23 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # NENHUM campo de cache, de propósito: `type=gha` faz o Buildx exigir
-          # o lock na raiz do contexto e o sidecar é PHP. Deixar o campo de fora
-          # é o "sem cache" verdadeiro — nenhuma expressão para o parser errar.
+          # Cache `local`, e não `gha`. O `type=gha` faz o Buildx procurar o
+          # arquivo de lock na RAIZ do contexto e derrubar o build inteiro se não
+          # achar:
           #
+          #   failed to compute cache key: "/pnpm-lock.yaml": not found
+          #   failed to compute cache key: "/package.json": not found
+          #
+          # O sidecar é PHP. Não tem `pnpm-lock.yaml` nem `package.json`, e não
+          # deveria ter nenhum dos dois. `local` usa o diretório que a própria
+          # action declara, não um lock do contexto — que é o que resolve sem
+          # inventar arquivo no repositório.
+          #
+          # E DEIXAR O CAMPO DE FORA não é "sem cache": sem `cache-from`, a
+          # action herda o `gha` padrão e volta a procurar o lock. Foi o que
+          # aconteceu na tentativa anterior — sem o campo, veio `/package.json`.
+          cache-from: type=local,src=/tmp/.buildx-cache/fiscal
+          cache-to: type=local,dest=/tmp/.buildx-cache/fiscal,mode=max
           # O contexto é o PRÓPRIO diretório, e não a raiz: o Dockerfile faz
           # `COPY composer.json ./`, e — o motivo que pesa — é o
           # `fiscal/sidecar/.dockerignore` que exclui `*.pfx`, `*.p12` e `.env`.
