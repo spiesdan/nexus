@@ -177,14 +177,35 @@ fi
 # `.env` como recomendamos, este passo passava a falhar em silêncio a cada
 # atualização — e é o update.sh que entrega migration nova ao clone (issue #192).
 step "Atualizando o banco de dados"
+# `baseline_para_o_banco` monta o comando que roda o `baseline.sql`, e o
+# `PSQL_RUNNER` escolhe COMO rodar. Os dois sãoescolhidos aqui porque o passo 4 é o
+# ÚNICO do script que fala com o banco de verdade — e ele usava `docker run`
+# cru, ignorando o `psql_run` que existe exatamente para isto.
+#
+# Medido nesta VPS em 09/10/2026, na atualização para a v1.25.23:
+#
+#   ⚠ Apareceram avisos no banco que NÃO são os esperados:
+#     psql: error: could not translate host name "supabase_db_selfhost"
+#
+# O `docker run --rm` sem `--network` sobe na rede `bridge`, onde o nome do
+# CONTAINER do banco não existe. O mesmo erro do `pg_dump` que produzia backup
+# de 20 bytes — e aqui a consequência é pior: o schema NÃO É APLICADO e o
+# script avisa, para quem não lê aviso.
+#
+# `psql_run` já resolvia isso (entra no container do banco quando o hostname da
+# URL é o nome dele) e está em `_common.sh` desde o conserto do backup. O que
+# faltava era ESTE chamador usá-lo.
 if [ -f supabase/baseline.sql ]; then
   # Extensões que o schema exige (idempotente; iguais ao install.sh).
-  docker run --rm postgres:17-alpine psql "$(url_do_schema)" -c \
+  psql_run -c \
     "create extension if not exists vector with schema public; create extension if not exists citext with schema public; create extension if not exists pg_trgm with schema public;" \
     >/dev/null 2>&1 || true
 
-  raw="$(docker run --rm -i -v "$PROJECT_DIR/supabase/baseline.sql:/b.sql:ro" \
-        postgres:17-alpine psql "$(url_do_schema)" -f /b.sql 2>&1 || true)"
+  # O arquivo vai por `-f -` (stdin) em vez de bind mount: `psql_run` decide se
+  # o comando roda dentro do container do banco ou num container efêmero, e só
+  # no segundo caso um bind mount teria sentido. Ler do stdin funciona nos dois
+  # — e é o caminho que o próprio `_common.sh` já usa.
+  raw="$(cat "$PROJECT_DIR/supabase/baseline.sql" | psql_run -f - 2>&1 || true)"
 
   # Erros benignos ao re-aplicar sobre uma base existente:
   benign='already exists|multiple primary keys|multiple default values|is already a member|already a partition'
@@ -254,6 +275,28 @@ export SCHEDULER_IMAGE="${IMG_SCHEDULER}:${VERSAO_ALVO}"
 export FISCAL_IMAGE="${IMG_FISCAL}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
+# O segredo do sidecar tem de existir ANTES do `dc pull`, e não só antes do
+# `up -d` mais abaixo.
+#
+# Medido nesta VPS em 09/10/2026, na atualização para a v1.25.23:
+#
+#   error while interpolating services.fiscal.environment.FISCAL_SIDECAR_SECRET:
+#     required variable FISCAL_SIDECAR_SECRET is missing a value
+#
+# E depois, como efeito colateral que escondia o primeiro erro:
+#
+#   ⚠ Não consegui puxar a imagem do APP na versão 1.25.23.
+#
+# A segunda mensagem é o `dc pull` engolindo uma falha de INTERPOLAÇÃO do
+# compose e a traduzindo por "a imagem não existe no registro" — que é a causa
+# que todo mundo assume quando lê isso. A imagem estava publicada; o que
+# faltava era uma variável no `.env`.
+#
+# O `docker compose` interpola o arquivo inteiro para QUALQUER subcomando, e
+# `pull` conta. A ordem que vale é: segredo antes da primeira chamada, não
+# antes do `up`.
+garantir_segredo_do_sidecar
+
 # `dc pull` falha se alguma das imagens ainda não existir no registro — o
 # que acontece numa instalação atualizando para a primeira versão publicada
 # depois desta mudança, ou se um run de publicação quebrou. Nesse caso o compose
@@ -289,9 +332,10 @@ garantir_dir_de_fotos
 # diretório como root e o app (uid 1001) precisa escrever nele.
 garantir_dir_de_certificados
 
-# O segredo do sidecar fiscal tem de existir ANTES do `up -d`: o
-# compose usa `:?` e, sem ele no .env, o serviço não sobe.
-garantir_segredo_do_sidecar
+# `garantir_segredo_do_sidecar` já rodou antes do `dc pull`, que interpola o
+# compose tanto quanto este `up -d`. Repetir aqui seria inofensivo — a função
+# sai cedo quando o valor existe — e é removido para que haja UM lugar só onde
+# a ordem importa.
 dc up -d
 
 # O Caddyfile entra no container por bind mount de UM ARQUIVO, e bind mount de

@@ -65,6 +65,31 @@ c_dim() { paint 2  "$*"; }
 die()   { c_red "✖ $*"; exit 1; }
 step()  { printf '\n'; paint 1 "▶ $*"; }
 
+# `psql` numa URL ARBITRÁRIA — a que a pessoa digitou — alcançando o banco
+# certo na rede certa. Gêmea da de `_common.sh` (que fica para depois do clone);
+# as duas precisam porque este script roda standalone, ANTES do `source`.
+#
+# Duas coisas que a versão crua (`docker run --rm postgres:17-alpine psql …`)
+# errava, e ambas medidas:
+#
+#  1. Num Supabase PRÓPRIO o hostname da connection string é o NOME DO
+#     CONTAINER do banco. O `docker run` sem `--network` nasce na rede `bridge`,
+#     onde esse nome não existe: `could not translate host name
+#     "supabase_db_selfhost"`. No `update.sh` isso fazia o schema NÃO ser
+#     aplicado, com um aviso que ninguém lê.
+#  2. `ON_ERROR_STOP` não entra: aqui o objetivo é a sonda `select 1`, e o
+#     `test-validators.sh` casa a linha do log por string exata.
+psql_em() {
+  local url="$1"; shift
+  local host
+  host="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://.*@##; s#[:/?].*$##')"
+  if [ -n "$host" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx -- "$host"; then
+    docker exec -i "$host" psql "$url" "$@"
+    return
+  fi
+  docker run --rm -i postgres:17-alpine psql "$url" "$@"
+}
+
 # A resposta é sim? Aceita o que gente digita de verdade: s, S, sim, SIM, y,
 # yes, com espaço em volta. Cada prompt comparava a resposta com uma string
 # exata, então "S" e "sim" — a resposta certa, com a tecla errada — caíam no
@@ -322,7 +347,10 @@ v_db_url() {
       fi;;
   esac
   local out
-  if out="$(docker run --rm postgres:17-alpine psql "$1" -tAc 'select 1' 2>&1)"; then
+  # `psql_em` e NÃO `psql_run`: esta sonda mede a URL que o DONO DIGITOU, e o
+  # `psql_run` troca o argumento pela conexão do dono — medindo outra coisa,
+  # que passa com qualquer senha. Ver `psql_em` mais acima, neste arquivo.
+  if out="$(psql_em "$1" -tAc 'select 1' 2>&1)"; then
     return 0
   fi
   echo "Não consegui conectar no banco. O Postgres respondeu:"
@@ -1677,7 +1705,7 @@ if [ -f supabase/baseline.sql ]; then
   # (pg_trgm) mas NÃO cria as extensões. Supabase não as habilita no schema public por
   # padrão — criamos aqui, senão o schema quebra no meio (ex.: "type public.vector does
   # not exist"). Idempotente (if not exists).
-  docker run --rm postgres:17-alpine psql "$(url_do_schema)" -v ON_ERROR_STOP=1 -c \
+  psql_run -v ON_ERROR_STOP=1 -c \
     "create extension if not exists vector with schema public; create extension if not exists citext with schema public; create extension if not exists pg_trgm with schema public;" \
     >/dev/null 2>&1 \
     && c_grn "✓ extensões (vector, citext, pg_trgm) habilitadas no public" \
@@ -1694,7 +1722,7 @@ if [ -f supabase/baseline.sql ]; then
   # dentro da substituição e, com `set -e` + `pipefail`, derruba o instalador sem
   # imprimir nada (o 2>/dev/null já tinha engolido a causa). Preferimos seguir e
   # deixar o erro aparecer no ponto em que dá para explicá-lo.
-  has_schema="$(docker run --rm postgres:17-alpine psql "$(url_do_schema)" -tAc \
+  has_schema="$(psql_run -tAc \
     "select 1 from information_schema.tables where table_schema='public' and table_name='organizations' limit 1" 2>/dev/null | tr -d '[:space:]' || true)"
 
   if [ "$has_schema" = "1" ]; then
@@ -1725,7 +1753,7 @@ if [ -f supabase/baseline.sql ]; then
   fi
 
   # Verificação real, não wishful thinking: o app precisa das tabelas core.
-  n_tables="$(docker run --rm postgres:17-alpine psql "$(url_do_schema)" -tAc \
+  n_tables="$(psql_run -tAc \
     "select count(*) from information_schema.tables where table_schema='public'" 2>/dev/null | tr -d '[:space:]')"
   if [ "${n_tables:-0}" -ge 30 ]; then
     c_grn "✓ verificação: ${n_tables} tabelas no schema public"
@@ -1764,7 +1792,7 @@ curl -fsS -X POST "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users" \
 # 2) Resolve o id direto do auth.users e cria org + membership + platform_admin.
 #    Resolver o uid DENTRO do SQL evita parsing frágil de JSON e funciona tanto para
 #    usuário recém-criado quanto para um que já existia (re-execução).
-docker run --rm -i postgres:17-alpine psql "$(url_do_schema)" -v ON_ERROR_STOP=1 <<SQL \
+psql_run -v ON_ERROR_STOP=1 -f - <<SQL \
   && c_grn "✓ dono criado e promovido a super-admin" \
   || die "Não consegui promover o admin. Confira a service_role key, a URL e a connection string do Supabase.
      Este passo lê auth.users e escreve em public: num Supabase próprio ele precisa do dono do

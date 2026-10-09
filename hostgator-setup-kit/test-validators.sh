@@ -2273,9 +2273,33 @@ sobrando="$(grep -nE --exclude='test-validators.sh' '(psql|pg_dump) "\$SUPABASE_
 # Fora do `_common.sh`, nenhum script do kit pode trazer `docker run … pg_dump`:
 # quem fala com o Postgres passa pelo helper, que escolhe o caminho certo.
 dump_efemero_sem_rede="$(grep -nE --exclude='test-validators.sh' --exclude='_common.sh' 'docker run[^|]*postgres:17-alpine pg_dump' ./*.sh 2>/dev/null || true)"
+# NENHUM script fora do `_common.sh` pode chamar `psql`/`pg_dump` cru. Antes
+# deste conserto, `update.sh` e `restore.sh` usavam `docker run` direto — e é
+# exatamente aí que o hostname do banco não resolve num self-host (medido nesta
+# VPS: o schema não era aplicado, e o `restore.sh` falhava com um erro de DNS
+# justamente quando alguém precisava restaurar).
+#
+# A forma canônica virou o HELPER, que escolhe entre entrar no container do
+# banco e subir um efêmero. `psql_em <url>` é a exceção legítima: ele existe
+# para a sonda da connection string que a PESSOA digitou, que tem de medir a
+# URL dela e não a do schema — está excluído da contagem de propósito.
+# Filtra LINHA DE COMANDO, não menção: o corpo do próprio `psql_em` faz
+# `docker run` DE PROPÓSITO (é o caminho do Supabase Cloud), e um comentário
+# que descreve o defeito cita a mesma string. Sem o filtro, a varredura
+# reprovaria o conserto por conter a palavra do problema.
+# `supabase-provision.sh` fica de fora, e não por esquecimento: ele provisiona
+# projeto no SUPABASE CLOUD, sondando `aws-N-<region>.pooler.supabase.com` —
+# host PÚBLICO, onde não há container para entrar e o efêmero é o caminho
+# certo. O mesmo motivo que já tira o `_common.sh` da varredura do `pg_dump`.
+psql_cru="$(grep -nE --exclude='test-validators.sh' --exclude='_common.sh' \
+  --exclude='supabase-provision.sh' \
+  '^[[:space:]]*[^#[:space:]].*docker run[^|]*postgres:17-alpine psql' ./*.sh 2>/dev/null \
+  | grep -vE ':[0-9]+:[[:space:]]*#' || true)"
 convertidos="$(grep -hoE --exclude='test-validators.sh' '(psql|pg_dump) "\$\(url_do_schema\)"' ./*.sh 2>/dev/null | grep -c . || true)"
 via_helper="$(grep -hoE --exclude='test-validators.sh' '^[[:space:]]*pg_dump_run\b' ./*.sh 2>/dev/null | grep -c . || true)"
-total_convertidos=$((convertidos + via_helper))
+# `psql_run` e `psql_em` contam como convertidos: a chamada agora é pelo helper.
+via_psql_run="$(grep -hoE --exclude='test-validators.sh' '^[[:space:]]*psql_run\b' ./*.sh 2>/dev/null | grep -c . || true)"
+total_convertidos=$((convertidos + via_helper + via_psql_run))
 if [ -n "$sobrando" ]; then
   printf '  ✗ script do kit ainda manda a string do app para o Postgres:\n'
   printf '%s\n' "$sobrando" | sed 's/^/       /'
@@ -2285,6 +2309,12 @@ elif [ -n "$dump_efemero_sem_rede" ]; then
   # self-host: o dump falha, o `gzip >` escreve 20 bytes, e o script diz "✓".
   printf '  ✗ pg_dump em container efêmero SEM --network (gera backup vazio e verde):\n'
   printf '%s\n' "$dump_efemero_sem_rede" | sed 's/^/       /'
+  fail=1
+elif [ -n "$psql_cru" ]; then
+  # Mesmo defeito do `pg_dump` cru, do outro lado: num self-host o hostname da
+  # URL é o nome do container do banco, e o efêmero sem `--network` não resolve.
+  printf '  ✗ psql em container efêmero SEM --network (o hostname do banco não resolve):\n'
+  printf '%s\n' "$psql_cru" | sed 's/^/       /'
   fail=1
 elif [ "${total_convertidos:-0}" -lt 10 ]; then
   # Vacuidade: uma varredura que não achasse NADA devolveria a mesma lista vazia
