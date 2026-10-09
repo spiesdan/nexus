@@ -178,6 +178,67 @@ services:
     logging: *default-logging
     networks: [internal]
 
+  fiscal:
+    # Sidecar de NF-e (PHP + sped-nfe). É o ÚNICO serviço que fala com a SEFAZ:
+    # o app monta o payload e grava o retorno.
+    #
+    # ─── Por que passou a ser serviço do compose, e não um container solto ─────
+    #
+    # O `fiscal/sidecar/README.md` dizia "deploy manual, fora do compose" desde
+    # que foi escrito — e nenhum deploy manual aconteceu: o serviço NUNCA foi
+    # executado. Um `docker run` que ninguém repete depois de um reboot é um
+    # serviço que não existe; estar no compose é o que faz ele voltar.
+    #
+    # Sem `ports`: o sidecar escuta só na rede interna, e o Caddy não tem rota
+    # para ele. Quem chama pode emitir nota em nome da empresa — o acesso é pelo
+    # header `X-Fiscal-Secret`, e a segunda barreira é a rede.
+    build:
+      context: ./fiscal/sidecar
+      dockerfile: Dockerfile
+    # Imagem PUBLICADA, como os outros serviços que nós construímos. O `build:`
+    # fica ao lado como escape (instalação sem registry), mas quem manda é a
+    # `image:` — é ela que o `dc pull` do `update.sh` traz, e sem ela este
+    # serviço seria construído uma vez na VPS e nunca mais atualizado. É
+    # exatamente o defeito do `worker`, que a doutrina de packaging registrou.
+    image: ${FISCAL_IMAGE:-ghcr.io/spiesdan/deskcomm-fiscal-sidecar:stable}
+    # `always` como os outros: sem isto, um sidecar rodando a mesma tag não
+    # receberia a imagem nova até alguém remover o container — e o sintoma seria
+    # "a nota falha com um erro de leiaute" que ninguém liga à versão.
+    pull_policy: ${FISCAL_PULL_POLICY:-always}
+    restart: unless-stopped
+    # O mesmo uid do app, e NÃO root.
+    #
+    # `php:8.3-cli` não declara `USER`, então o container sobe como uid 0 — e
+    # root lê o certificado `600` de outro dono sem problema nenhum, que é
+    # exatamente o que esconde o defeito: a configuração parece certa e só falha
+    # no dia em que alguém corrigir o `chmod` do arquivo para o dono certo.
+    #
+    # O certificado é gravado pelo app como `1001:1001 600` e o binário do PHP é
+    # `755 root:root`. Rodando como `1001:1001` o sidecar LÊ o certificado pelo
+    # direito do DONO — a mesma identidade que o escreveu — e nenhum serviço que
+    # fala com a internet da sua empresa roda como root.
+    #
+    # Medido na VPS: `php -v` como uid 1001 funciona (binário 755, legível).
+    user: "1001:1001"
+    environment:
+      # Gerado pelo `garantir_segredo_do_sidecar` do kit e persistido no `.env`.
+      # Ausente, o serviço sobe e recusa TODO POST com 401 — melhor que um
+      # segredo previsível, e o `/saude` continua respondendo ao healthcheck.
+      FISCAL_SIDECAR_SECRET: ${FISCAL_SIDECAR_SECRET:?defina FISCAL_SIDECAR_SECRET no .env}
+    volumes:
+      # SÓ LEITURA de propósito: o sidecar lê o certificado, nunca escreve nele.
+      # Um `:ro` é a diferença entre "o sidecar pode trocar o certificado da
+      # empresa" e "não pode".
+      - /srv/fiscal/certs:/certs:ro
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/saude') ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging: *default-logging
+    networks: [internal]
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped

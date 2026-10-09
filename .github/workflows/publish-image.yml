@@ -9,7 +9,7 @@ name: Publicar imagem Docker (GHCR)
 # Serviço build-only é pulado por `docker compose pull` e imune a `up -d` sem
 # `--build` — ele era construído na VPS de cada cliente, no install, e NENHUM
 # update.sh jamais o reconstruiu. O runtime do agente de IA congelava no código
-# do dia da instalação. Doutrina: docs/doctrine/packaging.md, invariante 1.
+# do dia da instalacao. Doutrina: docs/doctrine/packaging.md, invariante 1.
 
 on:
   push:
@@ -110,13 +110,39 @@ jobs:
         include:
           - name: deskcommcrm
             dockerfile: Dockerfile
+            context: .
+            grupo: node
             title: DeskcommCRM
           - name: deskcomm-worker
             dockerfile: Dockerfile.worker
+            context: .
+            grupo: node
             title: DeskcommCRM worker
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
+            context: .
+            grupo: node
             title: DeskcommCRM scheduler
+          # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
+          # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
+          # VPS do cliente e nunca atualizado é serviço quebrado sem aviso — foi o
+          # defeito que a doutrina de packaging registrou, e repetir aqui seria
+          # construí-lo de novo.
+          - name: deskcomm-fiscal-sidecar
+            dockerfile: Dockerfile
+            # O contexto é o PRÓPRIO diretório do sidecar, e não a raiz do
+            # repositório. Motivo medido, não estética: o `Dockerfile` faz
+            # `COPY composer.json ./` e, com a raiz como contexto, o build morre
+            # em `"/src": not found`.
+            #
+            # E o outro motivo é o que mais importa: `fiscal/sidecar/.dockerignore`
+            # exclui `*.pfx`, `*.p12` e `.env`. Com a raiz como contexto ele NÃO
+            # valeria, e o build enviaria o certificado A1 da instalacao para o daemon.
+            # O `.dockerignore` que vale é o do diretório de CONTEXTO — foi por
+            # isso que o contexto virou explícito em vez de um default.
+            context: fiscal/sidecar
+            grupo: fiscal
+            title: DeskcommCRM fiscal sidecar
 
     steps:
       - uses: actions/checkout@v7
@@ -195,29 +221,86 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build e push (imagem genérica — sem segredos)
+      # ─────────────────────────────────────────────────────────────────────
+      # O build em DOIS passos, e não em um com cache condicional.
+      #
+      # Quatro tentativas expresses antes desta, e nenhuma chegou a construir
+      # imagem — cada uma morreu em validação ou em erro de sintaxe do Buildx:
+      #
+      #   1. `type=gha` para o sidecar → Buildx procura `pnpm-lock.yaml` na raiz
+      #      do contexto e falha. Ele é PHP: não tem, e não deve ter.
+      #   2. `cond && '' || format(...)` → devolve STRING VAZIA, e vazio o Buildx
+      #      lê como "cache por padrão" (aí pediu `package.json`).
+      #   3. `fromJSON(cond && '[]' || format('[...]'))` → `format` dentro de
+      #      `fromJSON` é template INVÁLIDO: `A sequence was not expected`.
+      #   4. `fromJSON(matrix.cache_from)` → o `fromJSON` não aceita uma
+      #      referência de matriz nesse ponto; mesmo erro de validação.
+      #
+      # A lição não é sobre cache: é que **`with:` não interpola
+      # condicionalmente**, e nenhum desses erros aparece local — o YAML é
+      # válido, o workflow só quebra quando o Actions avalia a expressão. Dois
+      # passos com `if:` não têm expressão para errar.
+      #
+      # O lado bom do split: o nome do job passa a dizer o que ele é, em vez de
+      # exibir um array de cache no rótulo.
+      - name: Build e push (Node — com cache)
+        if: matrix.grupo == 'node'
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          # Só amd64: o deploy é x86 (Hostinger). O passo arm64/QEMU saiu
-          # porque custava 5–10x o tempo de build para uma arquitetura sem
-          # nenhum destino. Se a Oracle Ampere voltar, reverter este hunk.
           platforms: linux/amd64
-          # PR de fork não tem permissão de escrita no GHCR, e publicar imagem
-          # de código não revisado seria pior que não gatear. Em PR: constrói
-          # (que é o gate) e descarta.
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             APP_VERSION=${{ steps.ver.outputs.value }}
-          # Cache por imagem: as três têm camadas diferentes e um escopo único
+          # Escopo por imagem: as três têm camadas diferentes, e um escopo único
           # faria uma sobrescrever o cache da outra a cada run.
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
-          # Sem build-args de segredo: a imagem é genérica (NEXT_PUBLIC_* viram
-          # placeholder; valores reais entram em runtime no VPS do usuário).
+
+      # ─────────────────────────────────────────────────────────────────────
+      # O sidecar fiscal: contexto E Dockerfile próprios.
+      #
+      # `file:` na `build-push-action` é relativo ao WORKSPACE (o checkout), e
+      # não ao `context:`. Por isso o caminho inteiro: com `file: Dockerfile` a
+      # action pegava o Dockerfile da RAIZ do repositório e o aplicava ao
+      # contexto do sidecar — build de Node num projeto PHP.
+      #
+      # O sintoma era enganoso de propósito, e por isso custou seis commits:
+      # a falha dizia `/pnpm-lock.yaml: not found`, que parece ser de cache. O
+      # log inteiro estava escrito desde a primeira tentativa:
+      #
+      #   #9  [deps 1/5] FROM docker.io/library/node:22-alpine
+      #   #10 [deps 3/5] RUN corepack enable && corepack prepare pnpm@9.15.9
+      #   #11 [deps 4/5] COPY package.json pnpm-lock.yaml ./
+      #   #11 ERROR: failed to calculate checksum: "/pnpm-lock.yaml": not found
+      #
+      # `node:22-alpine`, `corepack`, `pnpm`: é o `Dockerfile` do APP. O sidecar
+      # é PHP (`php:8.3-cli-alpine`), não tem `package.json` nem `pnpm-lock.yaml`
+      # e não deve ter nenhum dos dois. Nenhuma das cinco tentativas de cache
+      # ia resolver — nenhuma podia: o arquivo que faltava estava sendo pedido
+      # pelo Dockerfile errado.
+      #
+      # Cache: nenhum campo. O `type=gha` exigiria o lock (que o PHP não tem) e
+      # `type=local` idem. O custo é zero: o build leva ~90 s e muda quando o
+      # `sped-nfe` muda, e um cache `local` morreria com o runner de qualquer
+      # jeito.
+      #
+      # E o `.dockerignore` que vale é o do diretório de CONTEXTO — o que
+      # exclui `*.pfx`, `*.p12` e `.env`. Com a raiz como contexto, o build
+      # enviaria o certificado A1 da instalação para o daemon.
+      - name: Build e push (fiscal sidecar — PHP, contexto e Dockerfile próprios)
+        if: matrix.grupo == 'fiscal'
+        uses: docker/build-push-action@v7
+        with:
+          context: fiscal/sidecar
+          file: fiscal/sidecar/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
   # aconteceu: `next@16.3.1` passou a resolver `@swc/helpers` por ESM, o file

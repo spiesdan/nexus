@@ -80,7 +80,10 @@ function imgNs(): string {
 
 /** Os três repositórios de imagem, na ordem em que `_common.sh` os declara. */
 function reposDoKit(): string[] {
-  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER"].map((chave) => {
+  // `IMG_FISCAL` (o sidecar que fala com a SEFAZ) entra na lista pelo motivo do
+  // resto: imagem nossa precisa ser construída e pinada pelo CI, senão o
+  // `update.sh` não a traz e o serviço fica numa versão que ninguém atualiza.
+  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL"].map((chave) => {
     const m = COMUM.match(new RegExp(`^${chave}="\\$\\{IMG_NS\\}/([^"]+)"$`, "m"));
     if (!m?.[1]) {
       throw new Error(
@@ -157,9 +160,11 @@ describe("o kit aponta para o que o CI realmente publica", () => {
     );
   });
 
-  it("as três imagens do kit são exatamente as três que o workflow constrói", () => {
+  it("as imagens do kit são exatamente as que o workflow constrói", () => {
     const naMatriz = [...PUBLICA.matchAll(/^\s{10}- name: (\S+)$/gm)].map((m) => m[1]);
-    expect(naMatriz.length, "a matriz de publish-image.yml não tem mais três imagens").toBe(3);
+    expect(naMatriz.length, "a matriz de publish-image.yml e o kit divergiram de novo").toBe(
+      reposDoKit().length,
+    );
     expect([...naMatriz].sort()).toEqual([...reposDoKit()].sort());
   });
 });

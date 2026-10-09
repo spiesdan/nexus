@@ -19,6 +19,7 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
 
 import { buscarNaSefaz, type ContextoEntrada, type DocumentoSefaz } from "./entrada";
 import { carregarContextoSped } from "./sped-payload";
@@ -116,7 +117,10 @@ function vazio(): ResumoImportacao {
   };
 }
 
-async function carregarCursor(admin: ReturnType<typeof createAdminClient>, orgId: string): Promise<{ ult: number; max: number }> {
+async function carregarCursor(
+  admin: ReturnType<typeof createAdminClient>,
+  orgId: string,
+): Promise<{ ult: number; max: number }> {
   const ler = async (): Promise<{ ult: number; max: number } | null> => {
     const { data } = await admin
       .from("fiscal_emitidas_cursor")
@@ -132,14 +136,30 @@ async function carregarCursor(admin: ReturnType<typeof createAdminClient>, orgId
   // cursor dela — releia antes de assumir zero.
   await admin
     .from("fiscal_emitidas_cursor")
-    .upsert({ organization_id: orgId, ult_nsu: 0, max_nsu: 0 }, { onConflict: "organization_id", ignoreDuplicates: true });
+    .upsert(
+      { organization_id: orgId, ult_nsu: 0, max_nsu: 0 },
+      { onConflict: "organization_id", ignoreDuplicates: true },
+    );
   return (await ler()) ?? { ult: 0, max: 0 };
 }
 
-async function gravarCursor(admin: ReturnType<typeof createAdminClient>, orgId: string, ult: number, max: number): Promise<void> {
+async function gravarCursor(
+  admin: ReturnType<typeof createAdminClient>,
+  orgId: string,
+  ult: number,
+  max: number,
+): Promise<void> {
   await admin
     .from("fiscal_emitidas_cursor")
-    .upsert({ organization_id: orgId, ult_nsu: ult, max_nsu: max, atualizado_em: new Date().toISOString() }, { onConflict: "organization_id" });
+    .upsert(
+      {
+        organization_id: orgId,
+        ult_nsu: ult,
+        max_nsu: max,
+        atualizado_em: new Date().toISOString(),
+      },
+      { onConflict: "organization_id" },
+    );
 }
 
 /**
@@ -147,7 +167,10 @@ async function gravarCursor(admin: ReturnType<typeof createAdminClient>, orgId: 
  * filtra as emitidas com XML completo e grava o que faltar. Retomável: o
  * cursor avança rodada a rodada.
  */
-export async function importarHistoricoEmitidas(orgId: string, opcoes: OpcoesImportacao = {}): Promise<ResumoImportacao> {
+export async function importarHistoricoEmitidas(
+  orgId: string,
+  opcoes: OpcoesImportacao = {},
+): Promise<ResumoImportacao> {
   const resumo = vazio();
   const limite = Math.max(1, Math.min(opcoes.limite ?? 50, 200));
   const rodadas = Math.max(1, Math.min(opcoes.rodadas ?? 4, 20));
@@ -159,8 +182,10 @@ export async function importarHistoricoEmitidas(orgId: string, opcoes: OpcoesImp
   const cnpj = digitos(contexto.emitente.emitente_documento);
   const senha = contexto.senhaCertificado;
   const certificado = contexto.emitente.certificado_path;
-  if (!cnpj) return { ...resumo, ok: false, erro: "CNPJ do emitente ausente (configuração fiscal)." };
-  if (!certificado || !senha) return { ...resumo, ok: false, erro: "Certificado A1 ausente (caminho e senha)." };
+  if (!cnpj)
+    return { ...resumo, ok: false, erro: "CNPJ do emitente ausente (configuração fiscal)." };
+  if (!certificado || !senha)
+    return { ...resumo, ok: false, erro: "Certificado A1 ausente (caminho e senha)." };
 
   const ctx: ContextoEntrada = {
     ambiente: contexto.emitente.ambiente,
@@ -169,6 +194,7 @@ export async function importarHistoricoEmitidas(orgId: string, opcoes: OpcoesImp
     ie: digitos(contexto.emitente.ie),
     uf: (contexto.emitente.uf ?? "").toUpperCase(),
     certificadoPath: certificado,
+    caminhoDoCertificado: caminhoDoCertificadoNoSidecar(contexto.orgId),
     senhaCertificado: senha,
   };
 
@@ -286,8 +312,13 @@ export async function registrarEmitidas(
       .select("id, chave_acesso, status")
       .eq("organization_id", orgId)
       .in("chave_acesso", chaves);
-    for (const linha of (data ?? []) as unknown as { id: string; chave_acesso: string | null; status: string }[]) {
-      if (linha.chave_acesso) existentes.set(linha.chave_acesso, { id: linha.id, status: linha.status });
+    for (const linha of (data ?? []) as unknown as {
+      id: string;
+      chave_acesso: string | null;
+      status: string;
+    }[]) {
+      if (linha.chave_acesso)
+        existentes.set(linha.chave_acesso, { id: linha.id, status: linha.status });
     }
   }
 
@@ -296,7 +327,10 @@ export async function registrarEmitidas(
   for (const chave of canceladas) {
     const linha = existentes.get(chave);
     if (linha && linha.status === "autorizada") {
-      await admin.from("invoices").update({ status: "cancelada", updated_at: new Date().toISOString() }).eq("id", linha.id);
+      await admin
+        .from("invoices")
+        .update({ status: "cancelada", updated_at: new Date().toISOString() })
+        .eq("id", linha.id);
       resumo.cancelamentos += 1;
     }
   }

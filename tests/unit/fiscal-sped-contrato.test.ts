@@ -40,35 +40,54 @@ const ITEM: ItemSped = {
 
 const PEDIDO = { numero: 1, nome: "Mercado", documento: null, frete_cents: 0 };
 
+/**
+ * O caminho do certificado é DERIVADO da organização, não lido do emitente.
+ *
+ * O sidecar valida que `certificado_arquivo` está dentro de `/certs/`, e o
+ * `certificado_path` guardado no banco é só o NOME do arquivo (é o que a tela
+ * mostra). Com o certificado por organização, o nome não basta: o arquivo está
+ * em `/certs/{organization_id}/certificado.pfx`.
+ *
+ * `montarPayloadSped` recebe a organização por isso — o segundo caminho de
+ * `/certs/...` que o teste cobria vinha do `certificado_path` do emitente, e foi
+ * justamente esse caminho que o sidecar recusaria.
+ */
+const ORG = "4bc721ce-157a-41b9-97ae-ba633650859c";
+const CERT_DO_SIDECAR = `/certs/${ORG}/certificado.pfx`;
+
 describe("montarPayloadSped", () => {
   it("monta quando está tudo presente", () => {
-    const r = montarPayloadSped(EMITENTE, "senha", PEDIDO, [ITEM]);
+    const r = montarPayloadSped(EMITENTE, "senha", ORG, PEDIDO, [ITEM]);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.payload.certificado_arquivo).toBe("/certs/empresa.pfx");
+      expect(r.payload.certificado_arquivo).toBe(CERT_DO_SIDECAR);
       expect((r.payload.itens[0] as { unidade: string }).unidade).toBe("UN");
     }
   });
 
   it("nomeia o NCM ausente em vez de presumir", () => {
-    const r = montarPayloadSped(EMITENTE, "senha", PEDIDO, [{ ...ITEM, ncm: null }]);
+    const r = montarPayloadSped(EMITENTE, "senha", ORG, PEDIDO, [{ ...ITEM, ncm: null }]);
     expect(r).toEqual({ ok: false, falta: 'NCM do produto "Água Sanitária"' });
   });
 
   it("nomeia cada ausência na ordem de dependência", () => {
-    expect(montarPayloadSped({ ...EMITENTE, emitente_documento: null }, "s", PEDIDO, [ITEM])).toEqual({
+    expect(
+      montarPayloadSped({ ...EMITENTE, emitente_documento: null }, "s", ORG, PEDIDO, [ITEM]),
+    ).toEqual({
       ok: false,
       falta: "CNPJ do emitente (configuração fiscal)",
     });
-    expect(montarPayloadSped({ ...EMITENTE, codigo_municipio: null }, "s", PEDIDO, [ITEM])).toEqual({
+    expect(
+      montarPayloadSped({ ...EMITENTE, codigo_municipio: null }, "s", ORG, PEDIDO, [ITEM]),
+    ).toEqual({
       ok: false,
       falta: "Código IBGE do município (configuração fiscal)",
     });
-    expect(montarPayloadSped(EMITENTE, "", PEDIDO, [ITEM])).toEqual({
+    expect(montarPayloadSped(EMITENTE, "", ORG, PEDIDO, [ITEM])).toEqual({
       ok: false,
       falta: "Senha do certificado",
     });
-    expect(montarPayloadSped(EMITENTE, "s", PEDIDO, [])).toEqual({
+    expect(montarPayloadSped(EMITENTE, "s", ORG, PEDIDO, [])).toEqual({
       ok: false,
       falta: "Ao menos 1 item",
     });
@@ -84,7 +103,7 @@ describe("montarPayloadSped", () => {
       uf: "SP",
       cep: "01001000",
     };
-    const semDocumento = montarPayloadSped(EMITENTE, "senha", PEDIDO, [ITEM], { entrega });
+    const semDocumento = montarPayloadSped(EMITENTE, "senha", ORG, PEDIDO, [ITEM], { entrega });
     expect(semDocumento).toEqual({
       ok: false,
       falta: "CPF/CNPJ do destinatário para o local de entrega",
@@ -93,6 +112,7 @@ describe("montarPayloadSped", () => {
     const comDocumento = montarPayloadSped(
       EMITENTE,
       "senha",
+      ORG,
       { ...PEDIDO, documento: "12987654000100" },
       [ITEM],
       { entrega },
@@ -104,7 +124,7 @@ describe("montarPayloadSped", () => {
   });
 
   it("sem extras deixa extras null — o sidecar usa o padrão", () => {
-    const r = montarPayloadSped(EMITENTE, "senha", PEDIDO, [ITEM]);
+    const r = montarPayloadSped(EMITENTE, "senha", ORG, PEDIDO, [ITEM]);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.payload.extras).toBeNull();
   });
@@ -168,8 +188,22 @@ describe("extrasFiscaisSchema", () => {
       { transporte: { transportador: { nome: "Transportes X", documento: "123456789012" } } },
       "transporte.transportador.documento",
     );
-    recusa({ entrega: { logradouro: "Rua A", bairro: "Centro", municipio: "SP", uf: "SP", cep: "01001000" } }, "entrega.numero");
-    recusa({ adicionais: { informacoes_complementares: "x".repeat(5001) } }, "adicionais.informacoes_complementares");
+    recusa(
+      {
+        entrega: {
+          logradouro: "Rua A",
+          bairro: "Centro",
+          municipio: "SP",
+          uf: "SP",
+          cep: "01001000",
+        },
+      },
+      "entrega.numero",
+    );
+    recusa(
+      { adicionais: { informacoes_complementares: "x".repeat(5001) } },
+      "adicionais.informacoes_complementares",
+    );
     recusa({ transporte: { volumes: { quantidade: 0 } } }, "transporte.volumes.quantidade");
   });
 
@@ -197,9 +231,15 @@ describe("extrasFiscaisSchema", () => {
   });
 
   it("tPag 99 exige descrição — mas cartão não pede tpIntegra", () => {
-    recusa({ cobranca: { forma_pagamento: "99", parcelas: 1, dias_entre: 0 } }, "cobranca.descricao");
+    recusa(
+      { cobranca: { forma_pagamento: "99", parcelas: 1, dias_entre: 0 } },
+      "cobranca.descricao",
+    );
     // descrição vazia não é "sem descrição": min(2) recusa antes do Zod chegar no superRefine
-    recusa({ cobranca: { forma_pagamento: "03", descricao: "", parcelas: 1, dias_entre: 0 } }, "cobranca.descricao");
+    recusa(
+      { cobranca: { forma_pagamento: "03", descricao: "", parcelas: 1, dias_entre: 0 } },
+      "cobranca.descricao",
+    );
     const r = extrasFiscaisSchema.safeParse({
       cobranca: { forma_pagamento: "03", parcelas: 1, dias_entre: 0 },
     });

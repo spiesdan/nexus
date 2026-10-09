@@ -686,6 +686,32 @@ Saiu arquivo de 20 bytes? O dump morreu e o script recusou — **não há backup
 desta atualização**, e vale rodar o `backup.sh` de novo antes de mexer em
 qualquer coisa.
 
+### ⚠️ Nunca apague `backups/` na mão
+
+Em 09/10/2026 eu escrevi um `rm -f /var/www/crm/backups/*` no fim de um comando
+de **diagnóstico** — não tinha nada a ver com a investigação. Apagou todos os
+backups da VPS num `docker pull` de rotina.
+
+Aconteceu justamente por o backup ser "só um diretório com `.gz`": parece
+descartável, e um `rm` no fim de um comando longo passa despercebido. O
+`backup.sh` refez tudo em segundos (`bash hostgator-setup-kit/backup.sh`, 6,0 MB,
+273 tabelas), mas só porque os dados estavam no banco — **backup não é backup de
+backup**. Se o `rm` tivesse vindo antes de uma migração que corrompesse o banco,
+não haveria o que restaurar.
+
+Se precisar liberar espaço, o caminho é o que o próprio script faz: ele mantém
+os últimos 14 (`Limpando backups antigos (mantém 14)`). Para limpar à mão:
+
+```bash
+# NUNCA com rm em cascata. Listar primeiro, apagar um a um:
+ls -ltS /var/www/crm/backups/db-*.sql.gz | head
+rm /var/www/crm/backups/db-20260901-030000.sql.gz    # um arquivo, nome exato
+```
+
+E confira depois: o `update.sh` chama `backup.sh` antes de **qualquer** mudança no
+banco. Se a etapa "Backup de segurança" aparecer com ⚠, pare e investigue — a
+atualização continua, sem backup novo.
+
 Flags:
 
 | Flag            | Efeito                                                                                                    |

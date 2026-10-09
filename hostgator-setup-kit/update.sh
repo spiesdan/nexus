@@ -248,9 +248,13 @@ VERSAO_ALVO="${TARGET_TAG#v}"
 export APP_IMAGE="${IMG_APP}:${VERSAO_ALVO}"
 export WORKER_IMAGE="${IMG_WORKER}:${VERSAO_ALVO}"
 export SCHEDULER_IMAGE="${IMG_SCHEDULER}:${VERSAO_ALVO}"
+# O sidecar fiscal na MESMA versão: o app monta o payload e o sidecar monta
+# o XML, e os dois em versões diferentes é o XML de um leiaute com o
+# interpretador de outro.
+export FISCAL_IMAGE="${IMG_FISCAL}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
-# `dc pull` falha se alguma das três imagens ainda não existir no registro — o
+# `dc pull` falha se alguma das imagens ainda não existir no registro — o
 # que acontece numa instalação atualizando para a primeira versão publicada
 # depois desta mudança, ou se um run de publicação quebrou. Nesse caso o compose
 # ainda tem `build:` ao lado do `image:` do worker e do scheduler, então o
@@ -284,6 +288,10 @@ garantir_dir_de_fotos
 # Certificado A1: mesmo motivo da pasta de fotos — o Docker cria o
 # diretório como root e o app (uid 1001) precisa escrever nele.
 garantir_dir_de_certificados
+
+# O segredo do sidecar fiscal tem de existir ANTES do `up -d`: o
+# compose usa `:?` e, sem ele no .env, o serviço não sobe.
+garantir_segredo_do_sidecar
 dc up -d
 
 # O Caddyfile entra no container por bind mount de UM ARQUIVO, e bind mount de

@@ -1,3 +1,4 @@
+import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptWebhookSecret } from "@/lib/webhooks/secrets";
@@ -59,11 +60,23 @@ export type ProntoSped = { ok: true; payload: PayloadSped };
 export function montarPayloadSped(
   emitente: EmitenteSped,
   senhaCertificado: string,
+  /**
+   * De qual organização é este pedido.
+   *
+   * Existe só para o certificado: o sidecar valida que `certificado_arquivo`
+   * está dentro de `/certs/`, e o `certificado_path` do banco é o NOME do
+   * arquivo. Como o certificado é por organização, o caminho completo só pode
+   * ser montado com o id. Passar o `ContextoSped` inteiro aqui seria mais
+   * simples e acoplaria esta função (que é pura e testável sem banco) a uma
+   * consulta.
+   */
+  organizationId: string,
   pedido: { numero: number; nome: string; documento: string | null; frete_cents: number },
   itens: ItemSped[],
   extras?: ExtrasFiscais | null,
 ): ProntoSped | FaltaSped {
-  if (!emitente.emitente_documento) return { ok: false, falta: "CNPJ do emitente (configuração fiscal)" };
+  if (!emitente.emitente_documento)
+    return { ok: false, falta: "CNPJ do emitente (configuração fiscal)" };
   if (!emitente.ie) return { ok: false, falta: "Inscrição Estadual (configuração fiscal)" };
   if (!emitente.uf) return { ok: false, falta: "UF do emitente (configuração fiscal)" };
   if (!emitente.codigo_municipio) {
@@ -73,6 +86,16 @@ export function montarPayloadSped(
     return { ok: false, falta: "Certificado A1: coloque o .pfx em /certs e registre o caminho" };
   }
   if (!senhaCertificado) return { ok: false, falta: "Senha do certificado" };
+  // O path do certificado é montado AQUI, a partir da organização, e não lido
+  // do banco: o sidecar exige o caminho completo dentro de `/certs/` e o
+  // `certificado_path` gravado é só o nome. `null` só acontece com organização
+  // malformada, que `carregarContextoSped` já impede — mas o payload declara
+  // `certificado_arquivo: string`, então a recusa é nomeada em vez de virar um
+  // `null` no meio do envelope para o sidecar recusar com mensagem genérica.
+  const caminhoCertificado = caminhoDoCertificadoNoSidecar(organizationId);
+  if (!caminhoCertificado) {
+    return { ok: false, falta: "Organização inválida para montar o caminho do certificado" };
+  }
   if (itens.length === 0) return { ok: false, falta: "Ao menos 1 item" };
 
   for (const item of itens) {
@@ -106,7 +129,7 @@ export function montarPayloadSped(
         uf: emitente.uf,
         cep: emitente.cep,
       },
-      certificado_arquivo: emitente.certificado_path,
+      certificado_arquivo: caminhoCertificado,
       certificado_senha: senhaCertificado,
       pedido: {
         numero_nota: pedido.numero,
@@ -132,6 +155,16 @@ export function montarPayloadSped(
 export interface ContextoSped {
   emitente: EmitenteSped;
   senhaCertificado: string | null;
+  /**
+   * De qual organização é este contexto.
+   *
+   * Existe pelo certificado: o `certificado_path` do banco é só o NOME do
+   * arquivo, e o sidecar exige o caminho completo dentro de `/certs/`. Como o
+   * certificado é por organização, o caminho só pode ser montado com o
+   * `organization_id` — que vem do contexto, e não do campo que o navegador
+   * um dia gravou.
+   */
+  orgId: string;
 }
 
 /** Lê config + senha (decifrada) com admin client. Fonte confiável: org do JWT. */
@@ -155,5 +188,5 @@ export async function carregarContextoSped(orgId: string): Promise<ContextoSped 
     senha = await decryptWebhookSecret(admin, cfg.certificado_senha_encrypted);
   }
   const { certificado_senha_encrypted: _, ...emitente } = cfg;
-  return { emitente: emitente as unknown as EmitenteSped, senhaCertificado: senha };
+  return { emitente: emitente as unknown as EmitenteSped, senhaCertificado: senha, orgId };
 }

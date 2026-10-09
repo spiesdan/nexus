@@ -2623,5 +2623,93 @@ else
 fi
 
 echo
+# ── O sidecar fiscal não pode ficar de fora do compose ───────────────────────
+#
+# O `fiscal/sidecar/README.md` dizia "deploy manual, fora do compose" desde que
+# foi escrito, e nenhum deploy manual aconteceu: o serviço NUNCA foi executado.
+# Um `docker run` que ninguém repete depois de um reboot é um serviço que não
+# existe — e é exatamente o que deixou a emissão de NF-e desligada.
+#
+# A guarda é de CLASSE: as três condições abaixo são o que torna o sidecar
+# utilizável. Falhar qualquer uma significa nota fiscal parada sem erro nenhum.
+# Extrai o bloco do serviço `fiscal` do compose.
+#
+# A primeira versao usou `awk '/^  fiscal:/,/^  [a-z-]+:$/'`, e isso era um
+# instrumento que nao media nada: `  fiscal:` casa com o PROPRIO fim do
+# intervalo, entao a "faixa" tinha uma linha — a do cabecalho. As quatro guardas
+# passavam porque nenhuma tinha o que olhar, inclusive a de `:ro`.
+#
+# Verde que nao mede nada e pior que vermelho: parece prova e nao e.
+bloco_do_fiscal() {
+  awk '
+    /^  fiscal:[[:space:]]*$/ { dentro = 1; next }
+    dentro && /^  [a-zA-Z0-9_-]+:[[:space:]]*$/ { dentro = 0 }
+    dentro { print }
+  ' "$1"
+}
+
+FISCAL_NO_COMPOSE=0
+BLOCO_FISCAL="$(bloco_do_fiscal ../docker-compose.prod.yml)"
+
+# Guarda do proprio instrumento: um bloco de uma linha só faria TODAS as guardas
+# abaixo passarem por falta de material, e o "verde" seria mentira.
+linhas_do_bloco="$(printf '%s\n' "$BLOCO_FISCAL" | wc -l | tr -d ' ')"
+if [ "${linhas_do_bloco:-0}" -lt 10 ]; then
+  printf '  ✗ o extrator do bloco fiscal devolveu %s linha(s) — as guardas abaixo passariam sem olhar nada\n' "$linhas_do_bloco"
+  FISCAL_NO_COMPOSE=1
+fi
+
+if [ -f ../docker-compose.prod.yml ]; then
+  # 1. O servico existe e tem `restart: unless-stopped` (sem isso, morre no boot).
+  grep -qE '^  fiscal:[[:space:]]*$' ../docker-compose.prod.yml || FISCAL_NO_COMPOSE=1
+  printf '%s\n' "$BLOCO_FISCAL" | grep -qE '^[[:space:]]+restart:[[:space:]]+unless-stopped' || FISCAL_NO_COMPOSE=1
+  # 2. O certificado entra SÓ LEITURA. Um `:ro` a menos e o sidecar podendo
+  #    trocar o certificado da empresa.
+  printf '%s\n' "$BLOCO_FISCAL" | grep -qE '/srv/fiscal/certs:/certs:ro' || FISCAL_NO_COMPOSE=1
+  # 3. Sem `ports`: o sidecar emitem nota em nome da empresa e nao pode ser
+  #    alcancado de fora.
+  printf '%s\n' "$BLOCO_FISCAL" | grep -qE '^[[:space:]]+ports:' && FISCAL_NO_COMPOSE=1
+  # 4. NAO e root. `php:8.3-cli` nao declara `USER`, entao o container sobe como
+  #    uid 0 — e root le o certificado `600` de outro dono sem problema, que e o
+  #    que ESCONDE o defeito: a configuracao parece certa e so quebra no dia em
+  #    que alguem corrigir o dono do arquivo. E um servico que fala com a
+  #    internet da empresa rodando como root e recuo de seguranca.
+  printf '%s\n' "$BLOCO_FISCAL" | grep -qE '^[[:space:]]+user:[[:space:]]+"?1001:1001"?' || FISCAL_NO_COMPOSE=1
+fi
+
+if [ "$FISCAL_NO_COMPOSE" -ne 0 ]; then
+  printf '  ✗ sidecar fiscal fora do compose (ou sem restart/:ro/sem porta fechada)\n'
+  printf '     A emissão de NF-e depende dele — e "deploy manual" foi o que deixou\n'
+  printf '     o serviço nunca executado.\n'
+  fail=1
+else
+  printf '  ✓ sidecar fiscal no compose, certificado :ro, sem porta exposta\n'
+fi
+
+# O segredo é GERADO, nunca inventado — e gerar duas vezes tem de devolver o
+# mesmo valor: um segredo novo num lado só derruba toda a emissão em 401 sem
+# erro visível.
+if ! grep -qE 'openssl rand -hex 32' ./_common.sh; then
+  printf '  ✗ _common.sh não gera o segredo do sidecar com entropia de verdade\n'
+  fail=1
+elif ! grep -qE 'if grep -qE .\^FISCAL_SIDECAR_SECRET=\.\+' ./_common.sh; then
+  printf '  ✗ garantir_segredo_do_sidecar não é idempotente — pode trocar o segredo\n'
+  printf '     de um lado só e derrubar a emissão inteira em 401.\n'
+  fail=1
+else
+  printf '  ✓ segredo do sidecar gerado por entropia e idempotente\n'
+fi
+
+# E o app precisa do caminho do certificado no formato que o sidecar valida
+# (`/certs/...`). Mandar só o nome faria TODO POST recusado com "deve estar
+# dentro de /certs/", e a tela mostraria só "nota não transmitida".
+if ! grep -qE 'certificado_arquivo: caminhoCertificado' ../lib/fiscal/sped-payload.ts; then
+  printf '  ✗ sped-payload manda o certificado_path cru — o sidecar exige /certs/...\n'
+  fail=1
+else
+  printf '  ✓ o payload manda o caminho do certificado no formato que o sidecar valida\n'
+fi
+
+
 if [ "$fail" = 0 ]; then echo "todos os validadores passaram"; else echo "FALHOU"; fi
 exit "$fail"
