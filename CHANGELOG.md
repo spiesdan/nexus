@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.20] — 2026-10-09
+
+### Corrigido
+
+- **A tela parou de negar o certificado que estava no servidor** Depois de o certificado passar a ser enviado de verdade, a tela continuava
+  avisando que não havia certificado — mesmo com o arquivo gravado no servidor e
+  o envio confirmado.
+
+  O motivo era a tela e a consulta usarem cada uma a sua conferência, e só a
+  consulta ter sido atualizada. A tela de Notas lê a configuração direto do banco,
+  sem passar pela rota, e por isso recebia a resposta incompleta.
+
+  A conferência agora é feita em um único lugar, usado pelas duas. Um teste
+  verifica que ela está nesse lugar único, porque duas cópias de uma regra é como
+  elas divergem sem ninguém perceber — foi o que aconteceu aqui, e o que já tinha
+  acontecido antes com o caminho do certificado, escrito à mão em três arquivos.
+
+  Cada empresa tem a sua pasta: em uma instalação com mais de uma empresa
+  cadastrada, uma não sobrescreve o certificado da outra.
+
 ## [1.25.19] — 2026-10-08
 
 ### Corrigido
@@ -3136,7 +3156,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.20...HEAD
+[1.25.20]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...v1.25.20
 [1.25.19]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...v1.25.19
 [1.25.18]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...v1.25.18
 [1.25.17]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.16...v1.25.17
