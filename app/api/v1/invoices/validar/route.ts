@@ -29,7 +29,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   const supabase = await createClient();
   const { data: pedido } = await supabase
     .from("commercial_orders")
-    .select("id, numero, cliente_nome, cliente_documento, total_cents, frete_cents, status, contact_id")
+    .select(
+      "id, numero, cliente_nome, cliente_documento, total_cents, frete_cents, status, contact_id",
+    )
     .eq("id", parsed.data.order_id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
@@ -45,7 +47,19 @@ export async function POST(req: NextRequest): Promise<Response> {
   } | null;
   if (!ped) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
   if (ped.status !== "faturado") {
-    return ok({ ok: false, pendencias: [{ campo: "status", mensagem: `Pedido está "${ped.status}" — só faturado vira nota.`, onde: `/app/pedidos/${ped.id}` }] }, { requestId });
+    return ok(
+      {
+        ok: false,
+        pendencias: [
+          {
+            campo: "status",
+            mensagem: `Pedido está "${ped.status}" — só faturado vira nota.`,
+            onde: `/app/pedidos/${ped.id}`,
+          },
+        ],
+      },
+      { requestId },
+    );
   }
 
   const pendencias: { campo: string; mensagem: string; onde: string }[] = [];
@@ -56,16 +70,35 @@ export async function POST(req: NextRequest): Promise<Response> {
       .eq("id", ped.contact_id)
       .maybeSingle();
     const c = (contato ?? {}) as Record<string, string | null>;
-    for (const [campo, rotulo] of [["logradouro", "endereço"], ["numero_end", "número"], ["bairro", "bairro"], ["cidade", "município"], ["uf", "UF"], ["cep", "CEP"]] as const) {
+    for (const [campo, rotulo] of [
+      ["logradouro", "endereço"],
+      ["numero_end", "número"],
+      ["bairro", "bairro"],
+      ["cidade", "município"],
+      ["uf", "UF"],
+      ["cep", "CEP"],
+    ] as const) {
       if (!c[campo]) {
-        pendencias.push({ campo: `cliente.${campo}`, mensagem: `Cliente sem ${rotulo}`, onde: `/app/contacts/${ped.contact_id}` });
+        pendencias.push({
+          campo: `cliente.${campo}`,
+          mensagem: `Cliente sem ${rotulo}`,
+          onde: `/app/contacts/${ped.contact_id}`,
+        });
       }
     }
   }
 
   const ctx = await carregarContextoSped(authz.org.orgId);
   if (!ctx) {
-    return ok({ ok: false, pendencias: [{ campo: "emitente", mensagem: "Configuração fiscal incompleta.", onde: "/app/notas" }] }, { requestId });
+    return ok(
+      {
+        ok: false,
+        pendencias: [
+          { campo: "emitente", mensagem: "Configuração fiscal incompleta.", onde: "/app/notas" },
+        ],
+      },
+      { requestId },
+    );
   }
   const { data: itensDb } = await supabase
     .from("commercial_order_items")
@@ -73,15 +106,25 @@ export async function POST(req: NextRequest): Promise<Response> {
     .eq("order_id", ped.id)
     .eq("organization_id", authz.org.orgId)
     .order("posicao");
-  const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[]).map((i) => i.product_id).filter(Boolean) as string[];
-  const fiscais: Record<string, { ncm: string | null; cfop: string | null; unidade: string | null }> = {};
+  const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
+    .map((i) => i.product_id)
+    .filter(Boolean) as string[];
+  const fiscais: Record<
+    string,
+    { ncm: string | null; cfop: string | null; unidade: string | null }
+  > = {};
   if (idsProd.length > 0) {
     const { data: prods } = await supabase
       .from("catalog_products")
       .select("id, ncm, cfop, unidade")
       .eq("organization_id", authz.org.orgId)
       .in("id", idsProd);
-    for (const p of ((prods ?? []) as unknown as { id: string; ncm: string | null; cfop: string | null; unidade: string | null }[])) {
+    for (const p of (prods ?? []) as unknown as {
+      id: string;
+      ncm: string | null;
+      cfop: string | null;
+      unidade: string | null;
+    }[]) {
       fiscais[p.id] = p;
     }
   }
@@ -105,15 +148,25 @@ export async function POST(req: NextRequest): Promise<Response> {
       certificado_path: em.certificado_path ?? null,
     },
     ctx.senhaCertificado ?? "",
-    { numero: ped.numero, nome: ped.cliente_nome, documento: ped.cliente_documento, frete_cents: ped.frete_cents },
-    ((itensDb ?? []) as unknown as {
-      produto_codigo: string;
-      produto_nome: string;
-      quantidade: number;
-      preco_unit_cents: number;
-      desconto_pct: number;
-      product_id: string | null;
-    }[]).map((i) => ({
+    // Só para o caminho do certificado: o sidecar exige o caminho completo
+    // dentro de `/certs/`, e o nome gravado no banco não basta.
+    ctx.orgId,
+    {
+      numero: ped.numero,
+      nome: ped.cliente_nome,
+      documento: ped.cliente_documento,
+      frete_cents: ped.frete_cents,
+    },
+    (
+      (itensDb ?? []) as unknown as {
+        produto_codigo: string;
+        produto_nome: string;
+        quantidade: number;
+        preco_unit_cents: number;
+        desconto_pct: number;
+        product_id: string | null;
+      }[]
+    ).map((i) => ({
       codigo: i.produto_codigo,
       descricao: i.produto_nome,
       ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,

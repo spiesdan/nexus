@@ -53,6 +53,16 @@ export interface ContextoEntrada {
   uf: string;
   certificadoPath: string;
   senhaCertificado: string;
+  /**
+   * O certificado COMO O SIDECAR VÊ (`/certs/{orgId}/certificado.pfx`).
+   *
+   * `certificadoPath` é o nome que o app guarda — o suficiente para a tela, que
+   * só precisa mostrar o que existe, e insuficiente para o sidecar, que valida
+   * que o caminho está dentro de `/certs/` antes de abrir o certificado. Vem do
+   * contexto (`caminhoDoCertificadoNoSidecar`), e o nome fica como reserva para
+   * um contexto que não traga o caminho completo.
+   */
+  caminhoDoCertificado?: string | null;
 }
 
 function baseESegredo(): { base: string; segredo: string } | { erro: string } {
@@ -93,24 +103,28 @@ function envelope(ctx: ContextoEntrada): Record<string, unknown> {
       ie: ctx.ie,
       uf: ctx.uf,
     },
-    certificado_arquivo: ctx.certificadoPath,
+    certificado_arquivo: ctx.caminhoDoCertificado ?? ctx.certificadoPath,
     certificado_senha: ctx.senhaCertificado,
   };
 }
 
 /** Uma rodada de distribuição a partir do cursor (até ~150 docs). */
-export async function buscarNaSefaz(ctx: ContextoEntrada, ultNsu: number): Promise<ResultadoDistribuicao> {
-  const corpo = (await chamarSidecar<{
-    ok: boolean;
-    ultNSU?: number;
-    maxNSU?: number;
-    cstat?: string;
-    xmotivo?: string;
-    aviso?: string | null;
-    documentos?: DocumentoSefaz[];
-    codigo?: string;
-    mensagem?: string;
-  }>("/distribuicao", { ...envelope(ctx), ult_nsu: ultNsu })) ?? null;
+export async function buscarNaSefaz(
+  ctx: ContextoEntrada,
+  ultNsu: number,
+): Promise<ResultadoDistribuicao> {
+  const corpo =
+    (await chamarSidecar<{
+      ok: boolean;
+      ultNSU?: number;
+      maxNSU?: number;
+      cstat?: string;
+      xmotivo?: string;
+      aviso?: string | null;
+      documentos?: DocumentoSefaz[];
+      codigo?: string;
+      mensagem?: string;
+    }>("/distribuicao", { ...envelope(ctx), ult_nsu: ultNsu })) ?? null;
   if (!corpo) {
     return {
       ok: false,
@@ -151,17 +165,25 @@ export async function manifestarNaSefaz(
   evento: string,
   justificativa?: string,
 ): Promise<ResultadoManifestacao> {
-  const corpo = (await chamarSidecar<{
-    ok: boolean;
-    cstat?: string;
-    xmotivo?: string;
-    protocolo?: string;
-    manifestacao?: string;
-    codigo?: string;
-    mensagem?: string;
-  }>("/manifestar", { ...envelope(ctx), chave, evento, justificativa: justificativa ?? "" })) ?? null;
+  const corpo =
+    (await chamarSidecar<{
+      ok: boolean;
+      cstat?: string;
+      xmotivo?: string;
+      protocolo?: string;
+      manifestacao?: string;
+      codigo?: string;
+      mensagem?: string;
+    }>("/manifestar", { ...envelope(ctx), chave, evento, justificativa: justificativa ?? "" })) ??
+    null;
   if (!corpo) {
-    return { ok: false, erro: "Sidecar fiscal inalcançável ou fora do contrato.", manifestacao: null, cstat: null, protocolo: null };
+    return {
+      ok: false,
+      erro: "Sidecar fiscal inalcançável ou fora do contrato.",
+      manifestacao: null,
+      cstat: null,
+      protocolo: null,
+    };
   }
   if (!corpo.ok) {
     return {

@@ -117,6 +117,14 @@ jobs:
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
             title: DeskcommCRM scheduler
+          # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
+          # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
+          # VPS do cliente e nunca atualizado é serviço quebrado sem aviso — foi o
+          # defeito que a doutrina de packaging registrou, e repetir aqui seria
+          # construí-lo de novo.
+          - name: deskcomm-fiscal-sidecar
+            dockerfile: fiscal/sidecar/Dockerfile
+            title: DeskcommCRM fiscal sidecar
 
     steps:
       - uses: actions/checkout@v7

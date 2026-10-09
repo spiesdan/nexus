@@ -77,14 +77,20 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
-  it("o parser enxerga os 7 serviços de produção", () => {
+  it("o parser enxerga os 8 serviços de produção", () => {
     // Guarda do próprio instrumento: se o parser parar de enxergar os serviços,
     // todos os testes abaixo passariam vazios — verde por não ter medido nada.
+    //
+    // `fiscal` entrou como o oitavo: o sidecar que fala com a SEFAZ. Ele era
+    // "deploy manual, fora do compose" desde que foi escrito, e nunca foi
+    // executado — serviço fora do compose é serviço que não volta depois de um
+    // reboot. Esta lista é o que impede o próximo serviço de ser criado do lado
+    // de fora sem ninguém ver.
     expect([...servicos.keys()].sort()).toEqual(
-      ["app", "caddy", "redis", "scheduler", "srh", "waha", "worker"].sort(),
+      ["app", "caddy", "fiscal", "redis", "scheduler", "srh", "waha", "worker"].sort(),
     );
   });
 
@@ -162,7 +168,10 @@ describe("packaging — o artefato que o cliente instala", () => {
 
       const defaultDaPolitica = politica!.replace(/^\$\{[A-Z_]+:-(.+)\}$/, "$1");
       const imagem = bloco.match(/^\s{4}image:\s*(\S+)/m)?.[1] ?? "";
-      const tagDaImagem = imagem.replace(/^\$\{[A-Z_]+:-(.+)\}$/, "$1").split(":").pop();
+      const tagDaImagem = imagem
+        .replace(/^\$\{[A-Z_]+:-(.+)\}$/, "$1")
+        .split(":")
+        .pop();
       const tagEhMovel = ["latest", "main", "stable"].includes(tagDaImagem ?? "");
       avaliados += 1;
 
@@ -226,9 +235,7 @@ describe("packaging — o artefato que o cliente instala", () => {
     for (const imagem of ["deskcommcrm", "deskcomm-worker", "deskcomm-scheduler"]) {
       expect(wf, `publish-image.yml não publica '${imagem}'`).toContain(`name: ${imagem}`);
     }
-    expect(wf, "publish-image.yml não passa APP_VERSION como build-arg").toContain(
-      "APP_VERSION=",
-    );
+    expect(wf, "publish-image.yml não passa APP_VERSION como build-arg").toContain("APP_VERSION=");
     // A sonda prende o EFEITO (o canal `stable` passa a existir), não a forma.
     // Ela já mudou uma vez: `stable` saiu da lista de tags da matriz — onde cada
     // imagem o movia sozinha — para o job `promover-stable`, que só roda com as

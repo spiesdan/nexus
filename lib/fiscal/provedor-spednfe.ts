@@ -12,6 +12,8 @@ import { montarPayloadSped, type EmitenteSped, type ItemSped } from "./sped-payl
 
 export interface EntradaSpedNfe {
   emitente: EmitenteSped;
+  /** Só para montar o caminho do certificado no formato que o sidecar exige. */
+  organizationId: string;
   senhaCertificado: string;
   pedido: { numero: number; nome: string; documento: string | null; frete_cents: number };
   itens: ItemSped[];
@@ -20,7 +22,14 @@ export interface EntradaSpedNfe {
 }
 
 export async function emitirViaSpedNfe(entrada: EntradaSpedNfe): Promise<ResultadoDeEmissao> {
-  const montado = montarPayloadSped(entrada.emitente, entrada.senhaCertificado, entrada.pedido, entrada.itens, entrada.extras);
+  const montado = montarPayloadSped(
+    entrada.emitente,
+    entrada.senhaCertificado,
+    entrada.organizationId,
+    entrada.pedido,
+    entrada.itens,
+    entrada.extras,
+  );
   if (!montado.ok) {
     return { status: "erro", erro: `Falta ${montado.falta}.`, numero: null, chave_acesso: null, xml: null };
   }

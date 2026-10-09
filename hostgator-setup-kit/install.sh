@@ -1320,6 +1320,10 @@ garantir_dir_de_fotos
 # diretório como root e o app (uid 1001) precisa escrever nele.
 garantir_dir_de_certificados
 
+# O segredo do sidecar fiscal tem de existir ANTES do `up -d`: o
+# compose usa `:?` e, sem ele no .env, o serviço não sobe.
+garantir_segredo_do_sidecar
+
 # ── Telemetria: perguntar, não presumir ─────────────────────────────────────
 # Issue #100. Antes, quem não definisse SENTRY_DSN mandava relatório de erro pro
 # Sentry da comunidade sem ter decidido nada — e só ficava sabendo na mensagem

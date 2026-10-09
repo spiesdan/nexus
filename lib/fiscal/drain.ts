@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
-import { destinoAposFalha, eRetentavel } from "./fila";import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
+import { destinoAposFalha, eRetentavel } from "./fila";
+import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped } from "./sped-payload";
 
@@ -34,7 +35,12 @@ async function evento(
   orgId: string,
   invoiceId: string,
   tipo: string,
-  extra: { status?: string | null; protocolo?: string | null; mensagem?: string | null; xml?: string | null },
+  extra: {
+    status?: string | null;
+    protocolo?: string | null;
+    mensagem?: string | null;
+    xml?: string | null;
+  },
 ): Promise<void> {
   await admin.from("fiscal_events").insert({
     organization_id: orgId,
@@ -76,7 +82,10 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   // Nota saiu de em_emissao no meio do caminho (cancelada pelo usuário):
   // encerra o job sem tocar em nada — história fiscal não se reescreve.
   if (!nota || nota.status !== "em_emissao") {
-    await admin.from("fiscal_jobs").update({ status: "concluido", updated_at: new Date().toISOString() }).eq("id", job.id);
+    await admin
+      .from("fiscal_jobs")
+      .update({ status: "concluido", updated_at: new Date().toISOString() })
+      .eq("id", job.id);
     return { saidas: "ignorado", motivo: "nota fora de emissão" };
   }
 
@@ -111,31 +120,52 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     await evento(admin, nota.organization_id, nota.id, "enviada", { status: "em_emissao" });
     const ctx = await carregarContextoSped(nota.organization_id);
     if (!ctx) {
-      await finalizar(admin, job, nota, "erro", "Configuração fiscal sumiu no meio da emissão.", null);
+      await finalizar(
+        admin,
+        job,
+        nota,
+        "erro",
+        "Configuração fiscal sumiu no meio da emissão.",
+        null,
+      );
       return { saidas: "concluido", destino: "erro" };
     }
     const { data: itensDb } = await admin
       .from("commercial_order_items")
-      .select("produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id")
+      .select(
+        "produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
+      )
       .eq("order_id", ped.id)
       .eq("organization_id", nota.organization_id)
       .order("posicao");
     const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
       .map((i) => i.product_id)
       .filter(Boolean) as string[];
-    const fiscais: Record<string, { ncm: string | null; cfop: string | null; unidade: string | null }> = {};
+    const fiscais: Record<
+      string,
+      { ncm: string | null; cfop: string | null; unidade: string | null }
+    > = {};
     if (idsProd.length > 0) {
       const { data: prods } = await admin
         .from("catalog_products")
         .select("id, ncm, cfop, unidade")
         .eq("organization_id", nota.organization_id)
         .in("id", idsProd);
-      for (const p of ((prods ?? []) as unknown as { id: string; ncm: string | null; cfop: string | null; unidade: string | null }[])) {
+      for (const p of (prods ?? []) as unknown as {
+        id: string;
+        ncm: string | null;
+        cfop: string | null;
+        unidade: string | null;
+      }[]) {
         fiscais[p.id] = p;
       }
     }
     const em = ctx.emitente as unknown as Record<string, string | null>;
     resultado = await emitirViaSpedNfe({
+      // Só para montar o caminho do certificado no formato que o sidecar exige
+      // (`/certs/{orgId}/certificado.pfx`). O `certificado_path` do banco é o
+      // nome do arquivo, e o sidecar recusa caminho fora de `/certs/`.
+      organizationId: nota.organization_id,
       emitente: {
         serie: cfg?.serie ?? nota.serie,
         natureza_operacao: (em.natureza_operacao as string) ?? "",
@@ -154,16 +184,23 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         certificado_path: em.certificado_path ?? null,
       },
       senhaCertificado: ctx.senhaCertificado ?? "",
-      pedido: { numero: ped.numero, nome: ped.cliente_nome, documento: ped.cliente_documento, frete_cents: ped.frete_cents },
+      pedido: {
+        numero: ped.numero,
+        nome: ped.cliente_nome,
+        documento: ped.cliente_documento,
+        frete_cents: ped.frete_cents,
+      },
       extras: nota.extras_fiscais,
-      itens: ((itensDb ?? []) as unknown as {
-        produto_codigo: string;
-        produto_nome: string;
-        quantidade: number;
-        preco_unit_cents: number;
-        desconto_pct: number;
-        product_id: string | null;
-      }[]).map((i) => ({
+      itens: (
+        (itensDb ?? []) as unknown as {
+          produto_codigo: string;
+          produto_nome: string;
+          quantidade: number;
+          preco_unit_cents: number;
+          desconto_pct: number;
+          product_id: string | null;
+        }[]
+      ).map((i) => ({
         codigo: i.produto_codigo,
         descricao: i.produto_nome,
         ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,
@@ -188,8 +225,14 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .from("invoices")
       .update({ status: "pendente", erro: FALTA_EMISSOR, updated_at: new Date().toISOString() })
       .eq("id", nota.id);
-    await evento(admin, nota.organization_id, nota.id, "erro", { status: "pendente", mensagem: FALTA_EMISSOR });
-    await admin.from("fiscal_jobs").update({ status: "concluido", updated_at: new Date().toISOString() }).eq("id", job.id);
+    await evento(admin, nota.organization_id, nota.id, "erro", {
+      status: "pendente",
+      mensagem: FALTA_EMISSOR,
+    });
+    await admin
+      .from("fiscal_jobs")
+      .update({ status: "concluido", updated_at: new Date().toISOString() })
+      .eq("id", job.id);
     return { saidas: "concluido", destino: "pendente" };
   }
 
@@ -200,7 +243,14 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   // Erro ou denegada: denegada é terminal fiscal; erro decide retry/dead.
   if (resultado.status === "denegada") {
-    await finalizar(admin, job, nota, "denegada", resultado.erro ?? resultado.sefaz_xmotivo ?? "Denegada.", resultado);
+    await finalizar(
+      admin,
+      job,
+      nota,
+      "denegada",
+      resultado.erro ?? resultado.sefaz_xmotivo ?? "Denegada.",
+      resultado,
+    );
     return { saidas: "concluido", destino: "denegada" };
   }
   const msg = resultado.erro ?? "Erro sem motivo.";
@@ -219,10 +269,19 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     .from("invoices")
     .update({ erro: msg, updated_at: new Date().toISOString() })
     .eq("id", nota.id);
-  await evento(admin, nota.organization_id, nota.id, "retry", { status: "em_emissao", mensagem: `Tentativa ${tentativa}: ${msg}` });
+  await evento(admin, nota.organization_id, nota.id, "retry", {
+    status: "em_emissao",
+    mensagem: `Tentativa ${tentativa}: ${msg}`,
+  });
   await admin
     .from("fiscal_jobs")
-    .update({ status: "pendente", tentativas: tentativa, proxima_tentativa: proxima, ultimo_erro: msg.slice(0, 500), updated_at: new Date().toISOString() })
+    .update({
+      status: "pendente",
+      tentativas: tentativa,
+      proxima_tentativa: proxima,
+      ultimo_erro: msg.slice(0, 500),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", job.id);
   return { saidas: "reagendado", destino: "em_emissao" };
 }
@@ -249,12 +308,18 @@ async function finalizar(
       updated_at: new Date().toISOString(),
     })
     .eq("id", nota.id);
-  await evento(admin, nota.organization_id, nota.id, status === "denegada" ? "rejeitada" : status === "autorizada" ? "autorizada" : "erro", {
-    status,
-    protocolo: resultado?.protocolo ?? null,
-    mensagem,
-    xml: resultado?.xml ?? null,
-  });
+  await evento(
+    admin,
+    nota.organization_id,
+    nota.id,
+    status === "denegada" ? "rejeitada" : status === "autorizada" ? "autorizada" : "erro",
+    {
+      status,
+      protocolo: resultado?.protocolo ?? null,
+      mensagem,
+      xml: resultado?.xml ?? null,
+    },
+  );
   await admin
     .from("fiscal_jobs")
     .update({

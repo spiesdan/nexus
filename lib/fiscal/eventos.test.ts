@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { lerMensagemCarta, motivoDeNaoTransmitir, montarMensagemCarta } from "./eventos";
 import type { ContextoSped } from "./sped-payload";
 
-function contexto(emitente: Partial<ContextoSped["emitente"]> = {}, senha: string | null = "senha"): ContextoSped {
+function contexto(
+  emitente: Partial<ContextoSped["emitente"]> = {},
+  senha: string | null = "senha",
+): ContextoSped {
   return {
     emitente: {
       serie: "1",
@@ -24,6 +27,7 @@ function contexto(emitente: Partial<ContextoSped["emitente"]> = {}, senha: strin
       provedor: "spednfe",
       ...emitente,
     },
+    orgId: "4bc721ce-157a-41b9-97ae-ba633650859c",
     senhaCertificado: senha,
   };
 }

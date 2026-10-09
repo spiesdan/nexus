@@ -11,6 +11,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
 import { manifestarNaSefaz, type ContextoEntrada } from "@/lib/fiscal/entrada";
 import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
@@ -40,7 +41,12 @@ export async function POST(
     });
   }
   if (parsed.data.evento === "210240" && (parsed.data.justificativa ?? "").trim().length < 15) {
-    return fail("validation_failed", "Operação não realizada exige justificativa (15+ letras).", 422, { requestId });
+    return fail(
+      "validation_failed",
+      "Operação não realizada exige justificativa (15+ letras).",
+      422,
+      { requestId },
+    );
   }
 
   const supabase = await createClient();
@@ -53,10 +59,20 @@ export async function POST(
   const entrada = linha as unknown as EntradaFiscal | null;
   if (!entrada) return fail("not_found", "Entrada não encontrada.", 404, { requestId });
   if (entrada.status === "importada") {
-    return fail("invalid_state_transition", "Entrada já importada — manifestação não muda mais nada.", 409, { requestId });
+    return fail(
+      "invalid_state_transition",
+      "Entrada já importada — manifestação não muda mais nada.",
+      409,
+      { requestId },
+    );
   }
   if (entrada.status === "ignorada") {
-    return fail("invalid_state_transition", "Entrada ignorada — reative antes de manifestar.", 409, { requestId });
+    return fail(
+      "invalid_state_transition",
+      "Entrada ignorada — reative antes de manifestar.",
+      409,
+      { requestId },
+    );
   }
 
   const { data: cfgRaw } = await supabase
@@ -64,12 +80,21 @@ export async function POST(
     .select("provedor")
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
-  if (resolverProvedor({ provedor: (cfgRaw as unknown as { provedor?: string | null } | null)?.provedor ?? null }) !== "spednfe") {
+  if (
+    resolverProvedor({
+      provedor: (cfgRaw as unknown as { provedor?: string | null } | null)?.provedor ?? null,
+    }) !== "spednfe"
+  ) {
     return fail("validation_failed", "Sem emissor fiscal com certificado.", 422, { requestId });
   }
   const ctx = await carregarContextoSped(authz.org.orgId);
   if (!ctx || !ctx.emitente.uf || !ctx.emitente.certificado_path || !ctx.senhaCertificado) {
-    return fail("validation_failed", "Faltam UF, certificado (.pfx) ou senha na configuração fiscal.", 422, { requestId });
+    return fail(
+      "validation_failed",
+      "Faltam UF, certificado (.pfx) ou senha na configuração fiscal.",
+      422,
+      { requestId },
+    );
   }
   const ctxEntrada: ContextoEntrada = {
     ambiente: ctx.emitente.ambiente,
@@ -78,12 +103,25 @@ export async function POST(
     ie: ctx.emitente.ie ?? "",
     uf: ctx.emitente.uf,
     certificadoPath: ctx.emitente.certificado_path,
+    // O sidecar valida que o caminho esta dentro de `/certs/`, e o
+    // `certificado_path` do banco e so o NOME. Sem este campo o caminho
+    // montado aqui seria recusado com "deve estar dentro de /certs/" e a
+    // // nota apareceria como "nao transmitida", sem dizer que o caminho
+    // esta errado.
+    caminhoDoCertificado: caminhoDoCertificadoNoSidecar(ctx.orgId),
     senhaCertificado: ctx.senhaCertificado,
   };
 
-  const resultado = await manifestarNaSefaz(ctxEntrada, entrada.chave, parsed.data.evento, parsed.data.justificativa);
+  const resultado = await manifestarNaSefaz(
+    ctxEntrada,
+    entrada.chave,
+    parsed.data.evento,
+    parsed.data.justificativa,
+  );
   if (!resultado.ok) {
-    return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, { requestId });
+    return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, {
+      requestId,
+    });
   }
 
   await supabase
@@ -105,5 +143,8 @@ export async function POST(
     requestId,
   });
 
-  return ok({ manifestacao: resultado.manifestacao, protocolo: resultado.protocolo }, { requestId });
+  return ok(
+    { manifestacao: resultado.manifestacao, protocolo: resultado.protocolo },
+    { requestId },
+  );
 }

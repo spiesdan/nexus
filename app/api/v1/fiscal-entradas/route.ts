@@ -13,13 +13,11 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
 import { buscarNaSefaz, type ContextoEntrada, type DocumentoSefaz } from "@/lib/fiscal/entrada";
 import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
-import {
-  COLUNAS_DA_ENTRADA,
-  STATUS_DA_ENTRADA,
-} from "@/lib/schemas/fiscal-entrada";
+import { COLUNAS_DA_ENTRADA, STATUS_DA_ENTRADA } from "@/lib/schemas/fiscal-entrada";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +38,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     q = q.eq("status", status);
   }
 
-  const { data, error } = await q.order("dh_emi", { ascending: false, nullsFirst: false }).limit(200);
+  const { data, error } = await q
+    .order("dh_emi", { ascending: false, nullsFirst: false })
+    .limit(200);
   if (error) return fail("internal_error", "Erro ao listar as entradas.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }
@@ -73,7 +73,13 @@ export async function POST(_req: NextRequest): Promise<Response> {
 
   const ctx = await carregarContextoSped(authz.org.orgId);
   const cnpj = soDigitos(ctx?.emitente.emitente_documento ?? null);
-  if (!ctx || cnpj === "" || !ctx.emitente.uf || !ctx.emitente.certificado_path || !ctx.senhaCertificado) {
+  if (
+    !ctx ||
+    cnpj === "" ||
+    !ctx.emitente.uf ||
+    !ctx.emitente.certificado_path ||
+    !ctx.senhaCertificado
+  ) {
     return fail(
       "validation_failed",
       "Faltam CNPJ, UF, certificado (.pfx) ou senha na configuração fiscal.",
@@ -88,6 +94,12 @@ export async function POST(_req: NextRequest): Promise<Response> {
     ie: ctx.emitente.ie ?? "",
     uf: ctx.emitente.uf,
     certificadoPath: ctx.emitente.certificado_path,
+    // O sidecar valida que o caminho esta dentro de `/certs/`, e o
+    // `certificado_path` do banco e so o NOME. Sem este campo o caminho
+    // montado aqui seria recusado com "deve estar dentro de /certs/" e a
+    // // nota apareceria como "nao transmitida", sem dizer que o caminho
+    // esta errado.
+    caminhoDoCertificado: caminhoDoCertificadoNoSidecar(ctx.orgId),
     senhaCertificado: ctx.senhaCertificado,
   };
 
@@ -100,7 +112,9 @@ export async function POST(_req: NextRequest): Promise<Response> {
 
   const resultado = await buscarNaSefaz(entrada, Number(de));
   if (!resultado.ok) {
-    return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, { requestId });
+    return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, {
+      requestId,
+    });
   }
 
   let novas = 0;
@@ -116,12 +130,17 @@ export async function POST(_req: NextRequest): Promise<Response> {
       .eq("organization_id", authz.org.orgId)
       .in("chave", chaves);
     const mapa = new Map(
-      ((existentes ?? []) as unknown as { chave: string; xml: string | null }[]).map((e) => [e.chave, e]),
+      ((existentes ?? []) as unknown as { chave: string; xml: string | null }[]).map((e) => [
+        e.chave,
+        e,
+      ]),
     );
     for (const d of candidatas) {
       const atual = mapa.get(d.chave);
       if (!atual) {
-        const { error } = await supabase.from("fiscal_entradas").insert(linhaDe(d, authz.org.orgId, authz.user.id));
+        const { error } = await supabase
+          .from("fiscal_entradas")
+          .insert(linhaDe(d, authz.org.orgId, authz.user.id));
         if (!error) novas++;
       } else if (!atual.xml && d.tipo === "completa" && d.xml) {
         // O resumo virou XML completo (manifestou entre uma sincronização e
@@ -145,10 +164,16 @@ export async function POST(_req: NextRequest): Promise<Response> {
     }
   }
 
-  await supabase.from("fiscal_entrada_cursor").upsert(
-    { organization_id: authz.org.orgId, ult_nsu: resultado.ultNSU, atualizado_em: new Date().toISOString() },
-    { onConflict: "organization_id" },
-  );
+  await supabase
+    .from("fiscal_entrada_cursor")
+    .upsert(
+      {
+        organization_id: authz.org.orgId,
+        ult_nsu: resultado.ultNSU,
+        atualizado_em: new Date().toISOString(),
+      },
+      { onConflict: "organization_id" },
+    );
 
   await audit({
     organizationId: authz.org.orgId,
@@ -172,7 +197,11 @@ export async function POST(_req: NextRequest): Promise<Response> {
   );
 }
 
-function linhaDe(d: DocumentoSefaz, organizationId: string, userId: string): Record<string, unknown> {
+function linhaDe(
+  d: DocumentoSefaz,
+  organizationId: string,
+  userId: string,
+): Record<string, unknown> {
   return {
     organization_id: organizationId,
     chave: d.chave,

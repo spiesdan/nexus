@@ -212,3 +212,29 @@ export async function certificadoPresenteNoServidor(
     return false;
   }
 }
+
+/** `/certs` é o ponto de montagem DENTRO do sidecar (o `VOLUME` do Dockerfile). */
+export const DIRETORIO_DE_CERTIFICADOS_NO_SIDECAR = "/certs";
+
+/**
+ * O caminho do certificado COMO O SIDECAR VÊ.
+ *
+ * ─── Por que é separado do `certificado_path` do banco ───────────────────────
+ *
+ * O sidecar valida o caminho antes de abrir o certificado
+ * (`ServicoNfe::validar`): `certificado_arquivo` tem de estar **dentro de
+ * `/certs/`**. O `certificado_path` que o app guarda é só o nome do arquivo —
+ * e a tela de configuração precisa dele assim, para mostrar o que existe.
+ *
+ * Com o certificado por organização, o nome sozinho deixa de bastar: o arquivo
+ * está em `/certs/{organization_id}/certificado.pfx`. Mandar `certificado.pfx`
+ * faria o sidecar recusar com "deve estar dentro de /certs/", e o erro apareceria
+ * como "nota não transmitida", sem dizer que o caminho está errado.
+ *
+ * Uma função só, chamada pelos dois envelopes (`sped-payload` e `entrada`),
+ * porque dois jeitos de montar o mesmo caminho é como eles divergem.
+ */
+export function caminhoDoCertificadoNoSidecar(organizationId: string): string | null {
+  const diretorio = diretorioDoCertificado(organizationId, DIRETORIO_DE_CERTIFICADOS_NO_SIDECAR);
+  return diretorio ? `${diretorio}/${NOME_DO_CERTIFICADO}` : null;
+}

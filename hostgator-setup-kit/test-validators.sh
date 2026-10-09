@@ -2623,5 +2623,59 @@ else
 fi
 
 echo
+# ── O sidecar fiscal não pode ficar de fora do compose ───────────────────────
+#
+# O `fiscal/sidecar/README.md` dizia "deploy manual, fora do compose" desde que
+# foi escrito, e nenhum deploy manual aconteceu: o serviço NUNCA foi executado.
+# Um `docker run` que ninguém repete depois de um reboot é um serviço que não
+# existe — e é exatamente o que deixou a emissão de NF-e desligada.
+#
+# A guarda é de CLASSE: as três condições abaixo são o que torna o sidecar
+# utilizável. Falhar qualquer uma significa nota fiscal parada sem erro nenhum.
+FISCAL_NO_COMPOSE=0
+if [ -f ./docker-compose.prod.yml ]; then
+  # 1. O serviço existe e tem `restart: unless-stopped` (sem isso, morre no boot).
+  grep -qE '^  fiscal:' ./docker-compose.prod.yml || FISCAL_NO_COMPOSE=1
+  # 2. O certificado entra SÓ LEITURA. Um `:ro` a menos é o sidecar podendo
+  #    trocar o certificado da empresa.
+  grep -qE '/srv/fiscal/certs:/certs:ro' ./docker-compose.prod.yml || FISCAL_NO_COMPOSE=1
+  # 3. Sem `ports`: o sidecar emitem nota em nome da empresa e não pode ser
+  #    alcançado de fora. `expose` ou rede interna serve.
+  awk '/^  fiscal:/,/^  [a-z-]+:$/' ./docker-compose.prod.yml | grep -qE '^\s+ports:' && FISCAL_NO_COMPOSE=1
+fi
+if [ "$FISCAL_NO_COMPOSE" -ne 0 ]; then
+  printf '  ✗ sidecar fiscal fora do compose (ou sem restart/:ro/sem porta fechada)\n'
+  printf '     A emissão de NF-e depende dele — e "deploy manual" foi o que deixou\n'
+  printf '     o serviço nunca executado.\n'
+  fail=1
+else
+  printf '  ✓ sidecar fiscal no compose, certificado :ro, sem porta exposta\n'
+fi
+
+# O segredo é GERADO, nunca inventado — e gerar duas vezes tem de devolver o
+# mesmo valor: um segredo novo num lado só derruba toda a emissão em 401 sem
+# erro visível.
+if ! grep -qE 'openssl rand -hex 32' ./_common.sh; then
+  printf '  ✗ _common.sh não gera o segredo do sidecar com entropia de verdade\n'
+  fail=1
+elif ! grep -qE 'if grep -qE .\^FISCAL_SIDECAR_SECRET=\.\+' ./_common.sh; then
+  printf '  ✗ garantir_segredo_do_sidecar não é idempotente — pode trocar o segredo\n'
+  printf '     de um lado só e derrubar a emissão inteira em 401.\n'
+  fail=1
+else
+  printf '  ✓ segredo do sidecar gerado por entropia e idempotente\n'
+fi
+
+# E o app precisa do caminho do certificado no formato que o sidecar valida
+# (`/certs/...`). Mandar só o nome faria TODO POST recusado com "deve estar
+# dentro de /certs/", e a tela mostraria só "nota não transmitida".
+if ! grep -qE 'certificado_arquivo: caminhoCertificado' ../lib/fiscal/sped-payload.ts; then
+  printf '  ✗ sped-payload manda o certificado_path cru — o sidecar exige /certs/...\n'
+  fail=1
+else
+  printf '  ✓ o payload manda o caminho do certificado no formato que o sidecar valida\n'
+fi
+
+
 if [ "$fail" = 0 ]; then echo "todos os validadores passaram"; else echo "FALHOU"; fi
 exit "$fail"

@@ -544,6 +544,49 @@ garantir_dir_de_certificados() {
   fi
 }
 
+# ── Segredo do sidecar fiscal ────────────────────────────────────────────────
+# O app (worker e scheduler) e o sidecar precisam do MESMO segredo, e ele não
+# pode ser previsível: quem o tem pode emitir nota em nome da empresa.
+#
+# Gerado com `openssl rand -hex 32` e gravado no `.env` — nunca impresso, nunca
+# em log. `garantir_` e não `trocar_`: rodar duas vezes tem de devolver o mesmo
+# segredo, porque um segredo novo derrubaria as duas pontas ao mesmo tempo (o
+# app com o antigo, o sidecar com o novo) sem erro nenhum — todo POST viraria
+# 401 e a tela mostraria só "nota não transmitida".
+#
+# A URL é `http://fiscal:8080`: nome do serviço na rede interna do compose.
+garantir_segredo_do_sidecar() {
+  local segredo env_de
+
+  # `enter_project` (linha 385) deixa `PROJECT_DIR` no diretório do projeto, e
+  # o `.env` mora nele — é o mesmo arquivo que `load_env` lê. Não há uma
+  # variável `ENV_FILE` no kit, e inventar uma aqui seria uma fonte a mais para
+  # divergir.
+  env_de="${PROJECT_DIR:-.}/.env"
+  [ -f "$env_de" ] || { c_ylw "⚠ não achei o .env — defina FISCAL_SIDECAR_SECRET e FISCAL_SIDECAR_URL à mão."; return 0; }
+
+  if grep -qE '^FISCAL_SIDECAR_SECRET=.+' "$env_de" 2>/dev/null; then
+    return 0
+  fi
+
+  segredo="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  if [ -z "$segredo" ]; then
+    c_ylw "⚠ não consegui gerar o segredo do sidecar — defina FISCAL_SIDECAR_SECRET no .env à mão."
+    return 0
+  fi
+
+  {
+    echo ""
+    echo "# Sidecar fiscal (fiscal/sidecar). Gerado por garantir_segredo_do_sidecar."
+    echo "# NÃO edite à mão: app e sidecar precisam do mesmo valor, e trocar um só"
+    echo "# derruba a emissão inteira sem erro visível."
+    echo "FISCAL_SIDECAR_SECRET=$segredo"
+    echo "FISCAL_SIDECAR_URL=http://fiscal:8080"
+  } >> "$env_de"
+
+  c_grn "✓ segredo do sidecar fiscal gerado e gravado no .env"
+}
+
 # ── As três imagens que NÓS publicamos ───────────────────────────────────────
 # O namespace é constante e literal de propósito: ele está gravado no .env de
 # toda instalação viva, e derivá-lo de variável faria o kit antigo (que já está
@@ -559,6 +602,11 @@ IMG_NS="ghcr.io/spiesdan"
 IMG_APP="${IMG_NS}/deskcommcrm"
 IMG_WORKER="${IMG_NS}/deskcomm-worker"
 IMG_SCHEDULER="${IMG_NS}/deskcomm-scheduler"
+# O sidecar fiscal entra na lista pelo mesmo motivo do worker/scheduler: uma
+# imagem nossa que o `update.sh` tem de pinar na MESMA versão dos outras.
+# Sem isto ele seguiria um canal móvel e a versão da nota poderia ser
+# diferente da versão do app que a montou.
+IMG_FISCAL="${IMG_NS}/deskcomm-fiscal-sidecar"
 
 # A última versão publicada (ex.: "1.2.1"), ou vazio se não deu para saber.
 #
@@ -658,7 +706,7 @@ pin_incompleto() {  # pin_incompleto [caminho do .env]
   app_tag="$(tag_da_imagem "$app_ref")"
   case "$app_tag" in latest|main|stable|"") return 0 ;; esac
 
-  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler"; do
+  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler" "FISCAL_IMAGE:fiscal"; do
     chave="${par%%:*}"; svc="${par##*:}"
     img="$(valor_do_env "$envfile" "$chave")"
     if [ -z "$img" ]; then
@@ -738,6 +786,7 @@ gravar_imagens() {
   set_env_var "$envfile" WORKER_IMAGE          "${IMG_WORKER}:${versao}"
   set_env_var "$envfile" WORKER_PULL_POLICY    "$politica"
   set_env_var "$envfile" SCHEDULER_IMAGE       "${IMG_SCHEDULER}:${versao}"
+  set_env_var "$envfile" FISCAL_IMAGE          "${IMG_FISCAL}:${versao}"
   set_env_var "$envfile" SCHEDULER_PULL_POLICY "$politica"
 }
 
