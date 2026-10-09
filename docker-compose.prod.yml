@@ -206,6 +206,20 @@ services:
     # "a nota falha com um erro de leiaute" que ninguém liga à versão.
     pull_policy: ${FISCAL_PULL_POLICY:-always}
     restart: unless-stopped
+    # O mesmo uid do app, e NÃO root.
+    #
+    # `php:8.3-cli` não declara `USER`, então o container sobe como uid 0 — e
+    # root lê o certificado `600` de outro dono sem problema nenhum, que é
+    # exatamente o que esconde o defeito: a configuração parece certa e só falha
+    # no dia em que alguém corrigir o `chmod` do arquivo para o dono certo.
+    #
+    # O certificado é gravado pelo app como `1001:1001 600` e o binário do PHP é
+    # `755 root:root`. Rodando como `1001:1001` o sidecar LÊ o certificado pelo
+    # direito do DONO — a mesma identidade que o escreveu — e nenhum serviço que
+    # fala com a internet da sua empresa roda como root.
+    #
+    # Medido na VPS: `php -v` como uid 1001 funciona (binário 755, legível).
+    user: "1001:1001"
     environment:
       # Gerado pelo `garantir_segredo_do_sidecar` do kit e persistido no `.env`.
       # Ausente, o serviço sobe e recusa TODO POST com 401 — melhor que um
