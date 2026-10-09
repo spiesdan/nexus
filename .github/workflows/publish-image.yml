@@ -111,20 +111,17 @@ jobs:
           - name: deskcommcrm
             dockerfile: Dockerfile
             context: .
-            cache_from: '["type=gha,scope=deskcommcrm"]'
-            cache_to: '["type=gha,mode=max,scope=deskcommcrm"]'
+            grupo: node
             title: DeskcommCRM
           - name: deskcomm-worker
             dockerfile: Dockerfile.worker
             context: .
-            cache_from: '["type=gha,scope=deskcomm-worker"]'
-            cache_to: '["type=gha,mode=max,scope=deskcomm-worker"]'
+            grupo: node
             title: DeskcommCRM worker
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
             context: .
-            cache_from: '["type=gha,scope=deskcomm-scheduler"]'
-            cache_to: '["type=gha,mode=max,scope=deskcomm-scheduler"]'
+            grupo: node
             title: DeskcommCRM scheduler
           # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
           # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
@@ -144,11 +141,7 @@ jobs:
             # O `.dockerignore` que vale é o do diretório de CONTEXTO — foi por
             # isso que o contexto virou explícito em vez de um default.
             context: fiscal/sidecar
-            # PHP: sem `pnpm-lock.yaml`, e o cache do Buildx exige o arquivo —
-            # então aqui o cache é de verdade vazio, e não "vazio" escrito de um
-            # jeito que a ferramenta leia como presente.
-            cache_from: '[]'
-            cache_to: '[]'
+            grupo: fiscal
             title: DeskcommCRM fiscal sidecar
 
     steps:
@@ -228,52 +221,64 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build e push (imagem genérica — sem segredos)
+      # ─────────────────────────────────────────────────────────────────────
+      # O build em DOIS passos, e não em um com cache condicional.
+      #
+      # Quatro tentativas expresses antes desta, e nenhuma chegou a construir
+      # imagem — cada uma morreu em validação ou em erro de sintaxe do Buildx:
+      #
+      #   1. `type=gha` para o sidecar → Buildx procura `pnpm-lock.yaml` na raiz
+      #      do contexto e falha. Ele é PHP: não tem, e não deve ter.
+      #   2. `cond && '' || format(...)` → devolve STRING VAZIA, e vazio o Buildx
+      #      lê como "cache por padrão" (aí pediu `package.json`).
+      #   3. `fromJSON(cond && '[]' || format('[...]'))` → `format` dentro de
+      #      `fromJSON` é template INVÁLIDO: `A sequence was not expected`.
+      #   4. `fromJSON(matrix.cache_from)` → o `fromJSON` não aceita uma
+      #      referência de matriz nesse ponto; mesmo erro de validação.
+      #
+      # A lição não é sobre cache: é que **`with:` não interpola
+      # condicionalmente**, e nenhum desses erros aparece local — o YAML é
+      # válido, o workflow só quebra quando o Actions avalia a expressão. Dois
+      # passos com `if:` não têm expressão para errar.
+      #
+      # O lado bom do split: o nome do job passa a dizer o que ele é, em vez de
+      # exibir um array de cache no rótulo.
+      - name: Build e push (Node — com cache)
+        if: matrix.grupo == 'node'
         uses: docker/build-push-action@v7
         with:
-          context: ${{ matrix.context }}
+          context: .
           file: ${{ matrix.dockerfile }}
-          # Só amd64: o deploy é x86 (Hostinger). O passo arm64/QEMU saiu
-          # porque custava 5–10x o tempo de build para uma arquitetura sem
-          # nenhum destino. Se a Oracle Ampere voltar, reverter este hunk.
           platforms: linux/amd64
-          # PR de fork não tem permissão de escrita no GHCR, e publicar imagem
-          # de código não revisado seria pior que não gatear. Em PR: constrói
-          # (que é o gate) e descarta.
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             APP_VERSION=${{ steps.ver.outputs.value }}
-          # Cache por imagem: as quatro têm camadas diferentes e um escopo
-          # único faria uma sobrescrever o cache da outra a cada run.
+          # Escopo por imagem: as três têm camadas diferentes, e um escopo único
+          # faria uma sobrescrever o cache da outra a cada run.
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+      - name: Build e push (fiscal sidecar — sem cache)
+        if: matrix.grupo == 'fiscal'
+        uses: docker/build-push-action@v7
+        with:
+          context: fiscal/sidecar
+          file: Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # NENHUM campo de cache, de propósito: `type=gha` faz o Buildx exigir
+          # o lock na raiz do contexto e o sidecar é PHP. Deixar o campo de fora
+          # é o "sem cache" verdadeiro — nenhuma expressão para o parser errar.
           #
-          # O Buildx resolve o `type=gha` pelo ARQUIVO de lock que existe na
-          # raiz do contexto, e falha o build inteiro se ele não achar:
-          # `failed to compute cache key: "/pnpm-lock.yaml": not found`. O
-          # sidecar é PHP e não tem `pnpm-lock.yaml` — daí `cache` vir por
-          # entrada da matriz, e o sidecar declarar `none`.
-          #
-          # A alternativa seria pôr um `pnpm-lock.yaml` falso no diretório do
-          # sidecar para satisfazer a ferramenta, e isso é pior: um arquivo de
-          # lock que não locka nada, num repositório onde a ferramenta le eles.
-          # O cache vem PRONTO da matriz, como JSON. Três formas foram tentadas
-          # e duas pareceriam certainas sem nunca buildar:
-          #
-          #   1. `type=gha` para o sidecar → Buildx pede `pnpm-lock.yaml` na raiz
-          #      do contexto. Ele é PHP; não tem, e não deve ter.
-          #   2. `cond && '' || format(...)` → devolve STRING VAZIA, e vazio o
-          #      Buildx lê como cache por padrão (aí pediu `package.json`).
-          #   3. `fromJSON(cond && '[]' || format('[...]'))` → o `format` dentro
-          #      do `fromJSON` é TEMPLATE INVÁVIDO e o workflow nem valida.
-          #
-          # O que funciona é o valor literal na matriz: o YAML monta o array, e
-          # `[]` é de verdade "nenhum cache". Nada é decidido dentro da
-          # expressão — a decisão fica legível em quem escreve a matriz.
-          cache-from: ${{ fromJSON(matrix.cache_from) }}
-          cache-to: ${{ fromJSON(matrix.cache_to) }}
-          # Sem build-args de segredo: a imagem é genérica (NEXT_PUBLIC_* viram
-          # placeholder; valores reais entram em runtime no VPS do usuário).
+          # O contexto é o PRÓPRIO diretório, e não a raiz: o Dockerfile faz
+          # `COPY composer.json ./`, e — o motivo que pesa — é o
+          # `fiscal/sidecar/.dockerignore` que exclui `*.pfx`, `*.p12` e `.env`.
+          # O `.dockerignore` que vale é o do diretório de CONTEXTO, e com a raiz
+          # o build enviaria o certificado A1 da instalação para o daemon.
 
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
   # aconteceu: `next@16.3.1` passou a resolver `@swc/helpers` por ESM, o file
