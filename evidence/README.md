@@ -141,6 +141,41 @@ conserto das abas colidindo em coluna estreita (PR do branch
     que já tinha saído do DOM e travava até o fim do teste, com uma falha que
     parecia defeito do produto.
 
+## 09/10 — O certificado A1 sendo enviado de verdade
+
+- `evidence/fiscal-certificado-enviado.png` — a seção **CERTIFICADO** da aba
+  Configuração fiscal, com o campo mostrando `certificado.pfx`, o botão
+  "Enviar certificado" e a linha **"Certificado gravado no servidor."**
+  Capturada contra o site público depois da 1.25.20.
+
+  O spec `tests/fiscal/certificado-a1-envio.spec.ts` gera um PKCS#12 de verdade
+  com `openssl` (autossinado — o teste não toca em certificado da empresa),
+  envia pela tela e percorre os três momentos: a tela **dizendo que não há
+  certificado**, o envio, e a tela **dizendo que está gravado** na recarga. O
+  que não é foto é `certificado_presente` vindo do servidor.
+
+  A evidência já foi gravada duas vezes de forma inútil antes de servir: a
+  primeira pegou o **esqueleto de carregamento** (o screenshot disparou antes do
+  render — passou por prova e não provava nada), e a segunda pegou o **topo da
+  página**, que documenta "Configuração fiscal" e o aviso de homologação, e não
+  o certificado. Agora espera o texto, espera o valor do campo e rola até ele.
+
+  ## O que a tela fazia antes
+
+  O botão "Escolher arquivo" fazia `setCertPath(f.name)`: pegava o `.pfx` do
+  computador de quem configurava, guardava o **nome**, e o arquivo nunca era
+  lido, nunca saía do navegador e nunca chegava no servidor. Medido na
+  instalação depois que alguém "configurou":
+
+  ```
+  /srv/fiscal/certs .......... NÃO EXISTE
+  *.pfx / *.p12 no disco ..... nenhum
+  *.pfx em volume docker ..... nenhum
+  fiscal_settings.certificado_path = "PATRICIA CNPJ (1).pfx"
+  ```
+
+  Configuração fiscal com cara de pronta e nenhum certificado na máquina.
+
 ## 06/10 — SPED Bloco H editável e barra de notas
 
 - `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).

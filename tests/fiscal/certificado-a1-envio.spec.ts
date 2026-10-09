@@ -119,7 +119,19 @@ test("enviar o certificado A1 grava o arquivo no servidor", async ({ page }) => 
   // 5. E a tela, na próxima carga, continua dizendo que existe — porque agora
   //    ela pergunta ao servidor, e não lê o texto que ela mesma gravou.
   await page.goto("/app/notas?aba=config");
-  await expect(page.getByTestId("fiscal-cert-situacao")).toContainText(/gravado no servidor/i);
+  const situacaoDepois = page.getByTestId("fiscal-cert-situacao");
+  await expect(situacaoDepois).toContainText(/gravado no servidor/i);
+  // Espera o TEXTO, e não o elemento: sem esta espera o screenshot sai no
+  // esqueleto de carregamento — a primeira versão desta evidência registrava
+  // três retângulos vazios e documentava o carregamento, não o certificado.
+  // Passava por prova e não provava nada.
+  await expect(page.getByTestId("fiscal-cert-path")).toHaveValue("certificado.pfx");
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+  // Rolar até o campo: a captura do topo da página documenta "Configuração
+  // fiscal" e o aviso de homologação, e não o certificado — que é o que a
+  // evidência existe para mostrar.
+  await situacaoDepois.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
   await page.screenshot({ path: EVIDENCIA });
   console.log("evidência:", path.relative(process.cwd(), EVIDENCIA));
 
