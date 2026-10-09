@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.23] — 2026-10-09
+
+### Corrigido
+
+- **Dois testes que pararam de descrever a tela** A verificação automática falhou em dois passos depois da tela mudar, e a causa
+  não era defeito: eram os testes que descreviam a versão antiga das telas.
+
+  O caminho do certificado passou a ser somente leitura, porque quem escreve o
+  caminho é o servidor e não a pessoa. O teste ainda tentou digitá-lo e ficou
+  esperando.
+
+  O botão de criar carga mostra entre parênteses quantos pedidos estão marcados.
+  O teste exigia o nome sem esse número, que só aparece quando nada está
+  marcado — ou seja, quando o botão não faz nada.
+
+  Nada mudou para quem usa o sistema.
+
 ## [1.25.22] — 2026-10-09
 
 ### Adicionado
@@ -3204,7 +3221,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.22...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.23...HEAD
+[1.25.23]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.22...v1.25.23
 [1.25.22]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.21...v1.25.22
 [1.25.21]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.20...v1.25.21
 [1.25.20]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...v1.25.20
