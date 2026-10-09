@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.21] — 2026-10-09
+
+### Corrigido
+
+- **A evidência do certificado passou a mostrar o certificado** A verificação do envio do certificado digital passava, mas a imagem gravada
+  registrava a tela ainda carregando, e depois o topo da página — que mostra o
+  título e o aviso de teste, e não o certificado.
+
+  A imagem agora é tirada depois de a tela confirmar o texto e o valor do campo, e
+  com a rolagem até a seção do certificado. É a prova de que o arquivo foi
+  gravado, e não de que a página abriu.
+
 ## [1.25.20] — 2026-10-09
 
 ### Corrigido
@@ -3156,7 +3168,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.20...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.21...HEAD
+[1.25.21]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.20...v1.25.21
 [1.25.20]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...v1.25.20
 [1.25.19]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...v1.25.19
 [1.25.18]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.17...v1.25.18
