@@ -111,14 +111,17 @@ jobs:
           - name: deskcommcrm
             dockerfile: Dockerfile
             context: .
+            cache: gha
             title: DeskcommCRM
           - name: deskcomm-worker
             dockerfile: Dockerfile.worker
             context: .
+            cache: gha
             title: DeskcommCRM worker
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
             context: .
+            cache: gha
             title: DeskcommCRM scheduler
           # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
           # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
@@ -138,6 +141,8 @@ jobs:
             # O `.dockerignore` que vale é o do diretório de CONTEXTO — foi por
             # isso que o contexto virou explícito em vez de um default.
             context: fiscal/sidecar
+            # PHP: sem `pnpm-lock.yaml`, e o cache do Buildx exige o arquivo.
+            cache: none
             title: DeskcommCRM fiscal sidecar
 
     steps:
@@ -234,10 +239,20 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             APP_VERSION=${{ steps.ver.outputs.value }}
-          # Cache por imagem: as três têm camadas diferentes e um escopo único
-          # faria uma sobrescrever o cache da outra a cada run.
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          # Cache por imagem: as quatro têm camadas diferentes e um escopo
+          # único faria uma sobrescrever o cache da outra a cada run.
+          #
+          # O Buildx resolve o `type=gha` pelo ARQUIVO de lock que existe na
+          # raiz do contexto, e falha o build inteiro se ele não achar:
+          # `failed to compute cache key: "/pnpm-lock.yaml": not found`. O
+          # sidecar é PHP e não tem `pnpm-lock.yaml` — daí `cache` vir por
+          # entrada da matriz, e o sidecar declarar `none`.
+          #
+          # A alternativa seria pôr um `pnpm-lock.yaml` falso no diretório do
+          # sidecar para satisfazer a ferramenta, e isso é pior: um arquivo de
+          # lock que não locka nada, num repositório onde a ferramenta le eles.
+          cache-from: ${{ matrix.cache == 'none' && '' || format('type=gha,scope={0}', matrix.name) }}
+          cache-to: ${{ matrix.cache == 'none' && '' || format('type=gha,mode=max,scope={0}', matrix.name) }}
           # Sem build-args de segredo: a imagem é genérica (NEXT_PUBLIC_* viram
           # placeholder; valores reais entram em runtime no VPS do usuário).
 
