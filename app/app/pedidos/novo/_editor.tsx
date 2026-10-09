@@ -27,6 +27,7 @@ import { CustomerSelector, type ContatoOpcao } from "./_cliente";
 import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "./_produtos";
 import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
+import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
 import { haQuantoTempo, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
@@ -38,6 +39,11 @@ interface TextosBase {
   buscarCliente: string;
   clienteAvulso: string;
   condicao: string;
+  formaPagamento: string;
+  prazoLivre: string;
+  prazoPrecisaNf: string;
+  exigeNf: string;
+  exigeNfOpcao: string;
   observacoes: string;
   obsInterna: string;
   endereco: string;
@@ -94,6 +100,11 @@ export function OrderEditor({
   const [clienteNome, setClienteNome] = React.useState("");
   const [linhas, setLinhas] = React.useState<LinhaDoPedido[]>([]);
   const [condicao, setCondicao] = React.useState("");
+  // 0261: o prazo estruturado e a marcação de NF. São dois campos e não um,
+  // porque respondem a perguntas diferentes — "quando vence" (que depende da
+  // emissão da nota) e "precisa de nota" (que não depende de nada).
+  const [formaPagamento, setFormaPagamento] = React.useState<FormaDePagamento | "">("");
+  const [exigeNf, setExigeNf] = React.useState(false);
   const [observacoes, setObservacoes] = React.useState("");
   const [obsInterna, setObsInterna] = React.useState("");
   const [endereco, setEndereco] = React.useState("");
@@ -248,6 +259,8 @@ export function OrderEditor({
       clienteNome,
       linhas,
       condicao,
+      formaPagamento,
+      exigeNf,
       observacoes,
       obsInterna,
       endereco,
@@ -275,12 +288,19 @@ export function OrderEditor({
         clienteNome: string;
         linhas: LinhaDoPedido[];
         condicao: string;
+        formaPagamento?: FormaDePagamento | "";
+        exigeNf?: boolean;
         observacoes: string;
       };
       setContatoId(s.contatoId);
       setClienteNome(s.clienteNome);
       setLinhas(s.linhas);
       setCondicao(s.condicao ?? "");
+      // Rascunho salvo antes da 0261 não tem os dois campos. `|| ""` e `?? false`
+      // em vez de acesso direto: um rascunho de ontem não pode fazer a tela
+      // quebrar em `undefined`.
+      setFormaPagamento(s.formaPagamento ?? "");
+      setExigeNf(s.exigeNf ?? false);
       setObservacoes(s.observacoes ?? "");
       nexusToast.info(textos.rascunhoRestaurado);
     }
@@ -436,6 +456,11 @@ export function OrderEditor({
         ...(tabelaId ? { price_table_id: tabelaId } : {}),
         frete_cents: freteCents,
         ...(condicao.trim() ? { condicao_pagamento: condicao.trim() } : {}),
+        // 0261: sempre enviados, mesmo falsos/nulos. Sem isto, um pedido sem NF
+        // e um pedido onde ninguém marcou seriam a mesma linha no banco, e a
+        // rotina do Meu Dia não teria como distinguir.
+        exige_nf: exigeNf,
+        forma_pagamento: formaPagamento === "" ? null : formaPagamento,
         ...(observacoes.trim() ? { observacoes: observacoes.trim() } : {}),
         ...(obsInterna.trim() ? { obs_interna: obsInterna.trim() } : {}),
         ...(endereco.trim() ? { endereco_entrega: endereco.trim() } : {}),
@@ -626,6 +651,56 @@ export function OrderEditor({
               placeholder="30/60/90 dias"
             />
           </div>
+          {/* ─── FORMA DE PAGAMENTO + NF ──────────────────────────────────────
+           *
+           * A caixa de NF fica ao lado do prazo, e não numa tela separada, por
+           * um motivo concreto: quem marca "é com nota" está decidindo quando o
+           * dinheiro entra. São a mesma decisão.
+           *
+           * E o aviso de prazo dependente da nota é o que impede o erro que o
+           * campo sozinho permitiria: marcar 30 dias e ver uma data de
+           * vencimento que ainda não existe. A tela diz que a data nasce com a
+           * emissão — que é verdade, e é o que `vencimentoDoRecebimento`
+           * devolve para `aguardando_nf`.
+           */}
+          <div className="space-y-1.5">
+            <Label htmlFor="forma-pagamento">{textos.formaPagamento}</Label>
+            <select
+              id="forma-pagamento"
+              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+              value={formaPagamento}
+              onChange={(e) => setFormaPagamento(e.target.value as FormaDePagamento | "")}
+            >
+              <option value="">{textos.prazoLivre}</option>
+              {(Object.keys(FORMA_DE_PAGAMENTO_LABEL) as FormaDePagamento[]).map((f) => (
+                <option key={f} value={f}>
+                  {FORMA_DE_PAGAMENTO_LABEL[f]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium text-foreground">{textos.exigeNf}</span>
+            <label
+              htmlFor="exige-nf"
+              className="flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-background px-3 text-sm"
+            >
+              <input
+                id="exige-nf"
+                type="checkbox"
+                checked={exigeNf}
+                onChange={(e) => setExigeNf(e.target.checked)}
+                className="h-4 w-4 rounded border-border accent-primary"
+              />
+              <span>{textos.exigeNfOpcao}</span>
+            </label>
+            {formaPagamento !== "" && formaPagamento !== "a_vista" && !exigeNf && (
+              // O aviso some quando a pessoa marca a NF — e é por isso que ele
+              // é condicional: aqui ele diz "falta escolher se é com nota",
+              // que é a única coisa que falta escolher.
+              <p className="text-xs text-muted-foreground">{textos.prazoPrecisaNf}</p>
+            )}
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="desconto">{`${textos.desconto} (R$)`}</Label>
             <Input
@@ -710,6 +785,26 @@ export function OrderEditor({
               <p className="mt-1">
                 <span className="text-muted-foreground">{textos.condicao}: </span>
                 <strong>{condicao.trim()}</strong>
+              </p>
+            )}
+            {/* O resumo confirma as DUAS escolhas logo depois de feitas, e o
+                prazo mostra quando a contagem começa. Sem esta linha o operador
+                marca 45 dias e vê um vencimento que o cálculo não produz — os
+                dois campos existem, e é aqui que eles se encontram. */}
+            {(formaPagamento !== "" || exigeNf) && (
+              <p className="mt-1">
+                <span className="text-muted-foreground">{textos.formaPagamento}: </span>
+                <strong>
+                  {formaPagamento === ""
+                    ? textos.prazoLivre
+                    : FORMA_DE_PAGAMENTO_LABEL[formaPagamento]}
+                </strong>
+                {exigeNf ? (
+                  <>
+                    {" · "}
+                    <strong>{textos.exigeNfOpcao}</strong>
+                  </>
+                ) : null}
               </p>
             )}
             {(transportadora.trim() || endereco.trim()) && (

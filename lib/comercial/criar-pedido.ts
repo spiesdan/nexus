@@ -276,6 +276,12 @@ export async function criarPedidoComercial(
       frete_cents: entrada.frete_cents,
       total_cents: total,
       condicao_pagamento: entrada.condicao_pagamento ?? null,
+      // 0261: a marcação de NF e o prazo estruturado. `exige_nf` recebe
+      // `false` quando ausente, e não `null` — a coluna é `not null` e o
+      // default é `false` de propósito (ver a migration): "não pediu" é um
+      // fato, e `null` seria indistinguível de "ninguém perguntou".
+      exige_nf: entrada.exige_nf ?? false,
+      forma_pagamento: entrada.forma_pagamento ?? null,
       price_table_id: entrada.price_table_id ?? null,
       observacoes: entrada.observacoes ?? null,
       obs_interna: entrada.obs_interna ?? null,
