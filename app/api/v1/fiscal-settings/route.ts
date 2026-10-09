@@ -105,14 +105,40 @@ export async function PUT(req: NextRequest): Promise<Response> {
   // servidor" com o `.pfx` a dois centimetros dali, e a emissao para -- sem
   // erro, sem log, e sem nada que aponte para um PUT de configuracao.
   //
-  // Por que omitir em vez de ler antes: `upsert` com `onConflict:
-  // organization_id` reescreve a linha com o que o corpo MENCIONA. Uma coluna
-  // ausente do corpo mantem o valor; uma coluna presente como `null` vira
-  // `null`. Omitir e a correcao minima e nao custa uma leitura extra.
+  // A PRIMEIRA correcao tirou a coluna do corpo, achando que `upsert` com
+  // `onConflict` so reescreve o que o corpo menciona. NAO E ASSIM: o PostgREST
+  // emite um INSERT com as colunas enviadas e o ON CONFLICT faz DO UPDATE SET
+  // de TODAS as colunas da tabela -- as ausentes vao com o DEFAULT da coluna,
+  // e `certificado_path` tem default vazio. O resultado foi o mesmo defeito com
+  // um codigo diferente, e a e2e continuou reprovando.
+  //
+  // Por isso a leitura antes. Uma query extra nesta rota, que roda quando
+  // alguem salva a configuracao, e o preco de nao apagar o certificado.
   //
   // Nenhum caminho do produto manda `null` de proposito para apagar o
   // certificado; apagar e o que o botao de remover faz, e ele nao e este.
-  const { certificado_path: _caminhoNaoEditado, ...restoSemCaminho } = resto;
+  const { certificado_path: _ignoradoNoPut, ...restoSemCaminho } = resto;
+
+  // A LEITURA USA O MESMO CLIENTE QUE GRAVOU.
+  //
+  // `POST /fiscal-settings/certificado` grava com `createAdminClient()` --
+  // service role, que bypassa RLS -- porque o `fiscal_settings` tem politica
+  // restrita. Ler com o cliente da sessao (RLS ligado) pode devolver vazio
+  // para um papel que nao tem `select` na tabela, e o resultado e o MESMO
+  // defeito: o `upsert` seguinte grava `null` por cima do caminho gravado.
+  //
+  // Medido em 09/10/2026: com a leitura em `supabase` (sessao), o
+  // `certificado_path` continuava vazio depois do PUT, e a e2e reprovava no mesmo
+  // ponto -- agora por um motivo diferente do original, e igualmente invisivel.
+  const admin = createAdminClient();
+  const { data: antes, error: erroAntes } = await admin
+    .from("fiscal_settings")
+    .select("certificado_path")
+    .eq("organization_id", authz.org.orgId)
+    .maybeSingle();
+  if (erroAntes) {
+    return fail("internal_error", "Erro ao ler a configuracao atual.", 500, { requestId });
+  }
 
   const { data, error } = await supabase
     .from("fiscal_settings")
@@ -120,6 +146,10 @@ export async function PUT(req: NextRequest): Promise<Response> {
       {
         organization_id: authz.org.orgId,
         ...restoSemCaminho,
+        // Reaposta o que JA ESTAVA GRAVADO. `?? null` cobre a instalacao que
+        // nunca teve certificado -- nesse caso e `null` de verdade, e gravar
+        // `null` e o comportamento certo.
+        certificado_path: antes?.certificado_path ?? null,
         ...(senhaCifrada !== undefined ? { certificado_senha_encrypted: senhaCifrada } : {}),
       },
       { onConflict: "organization_id" },
