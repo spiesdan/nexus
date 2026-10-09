@@ -102,7 +102,16 @@ describe("a tag nasce no CI, e nunca do GITHUB_TOKEN", () => {
     // O ramo que RECUSA precisa existir: zero removidos não é corte.
     expect(t).toMatch(/removidos[^\n]*-eq 0/);
     // E a condição que a guarda antiga NÃO tinha: só o App da release corta.
-    expect(t).toMatch(/deskcomm-release\[bot\]/);
+    //
+    // O nome vem de `${APP_SLUG}` (o token do App) e não de um literal no
+    // arquivo. Medido em 09/10/2026: o literal era `deskcomm-release[bot]`,
+    // nome do App do repositório ANTIGO ao rename, e a tag da v1.25.22 não
+    // saiu porque a guarda recusou o bot CERTO. Literal de nome de bot envelhece
+    // com o repositório; o slug do token não.
+    expect(t).toMatch(/APP_SLUG/);
+    expect(t, "a guarda ainda compara com um nome de bot escrito à mão").not.toMatch(
+      /deskcomm-release\[bot\]/,
+    );
   });
 
   it("a tag só é criada em push na main, nunca num dispatch de branch qualquer", () => {

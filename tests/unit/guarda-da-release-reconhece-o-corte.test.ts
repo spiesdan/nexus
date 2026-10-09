@@ -46,7 +46,20 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
  */
 
 const RAIZ = process.cwd();
-const BOT = "deskcomm-release[bot]";
+/**
+ * O slug do App da release NESTE repositório.
+ *
+ * Não é mais `deskcomm`: o repositório era `spiesdan/DeskcommCRM` e virou
+ * `spiesdan/nexus`, e o App foi recriado junto. O nome ficou escrito no
+ * workflow (`deskcomm-release[bot]`) enquanto o App real passou a
+ * `nexus-release-spiesdan[bot]` — e a tag da v1.25.22 não saiu por causa
+ * disso, com a guarda reportando o bot CORRETO como assinatura inválida.
+ *
+ * Aqui o valor é o slug que o `create-github-app-token` devolve, que é a mesma
+ * fonte que o workflow agora lê.
+ */
+const SLUG_DO_APP = "nexus-release-spiesdan";
+const BOT = `${SLUG_DO_APP}[bot]`;
 
 /** O bloco `run:` do passo que decide se este push foi um corte. */
 function bashDaGuarda(): string {
@@ -143,7 +156,11 @@ function decisaoPara(sha: string): string {
     const saida = execFileSync("bash", ["-c", script], {
       cwd: repo,
       encoding: "utf8",
-      env: { ...process.env, GITHUB_OUTPUT: saidaDoGithub },
+      // `APP_SLUG` é o que a guarda compara. Sem ele aqui o bash roda com
+      // `set -u` e morre em `${APP_SLUG}: unbound variable` — o teste passaria
+      // a medir o shell quebrado, e não a regra que ele existe para medir.
+      // É o mesmo slug que `create-github-app-token` devolve no CI.
+      env: { ...process.env, GITHUB_OUTPUT: saidaDoGithub, APP_SLUG: SLUG_DO_APP },
       stdio: ["ignore", "pipe", "pipe"],
     });
     const escrito = readFileSync(saidaDoGithub, "utf8");
