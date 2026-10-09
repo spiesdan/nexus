@@ -8,42 +8,6 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
-## [1.25.22] — 2026-10-09
-
-### Adicionado
-
-- **O serviço que conversa com a SEFAZ entra no conjunto de serviços** O serviço que emite a nota fiscal na SEFAZ nunca foi executado nesta instalação.
-  Ele era mantido fora do conjunto de serviços, com a instrução de subir à mão — e
-  essa subida nunca aconteceu.
-
-  Agora ele é um serviço do conjunto, como os outros: sobe junto, volta sozinho
-  depois de reinício da máquina, e é Health-checkado. O certificado é montado
-  **somente para leitura**, e o serviço não tem porta exposta — ele só responde
-  na rede interna e exige uma senha.
-
-  O caminho do certificado também foi corrigido. O serviço exigia o caminho
-  completo do arquivo e o sistema mandava só o nome; o resultado seria a nota ser
-  recusada sem dizer que o caminho estava errado.
-
-  A emissão continua desligada por enquanto: ainda falta a Inscrição Estadual do
-  emitente e a troca do provedor para o emissor oficial. A tela mostra o que falta.
-
-### Corrigido
-
-- **A Agenda não abre mais com aviso de erro** Ao abrir a Agenda, aparecia um aviso vermelho dizendo que a disponibilidade do
-  responsável ainda não estava configurada.
-
-  A informação estava certa e o aviso, errado: quem-configura é um estado normal,
-  não uma falha. Quem abriu a Agenda no primeiro dia de uso viu um aviso vermelho
-  antes de qualquer pedido.
-
-  Agora a Agenda mostra essa situação na cor de aviso, com a explicação de onde
-  configurar. O mesmo vale para os outros dois casos de aviso que jáexistiam
-  prontos no sistema, mas que nunca eram usados.
-
-  Para encontrar isso foi preciso abrir a tela em produção: a suíte de testes
-  passava sem perceber.
-
 ## [1.25.21] — 2026-10-09
 
 ### Corrigido
@@ -3204,8 +3168,7 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.22...HEAD
-[1.25.22]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.21...v1.25.22
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.21...HEAD
 [1.25.21]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.20...v1.25.21
 [1.25.20]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.19...v1.25.20
 [1.25.19]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.18...v1.25.19
