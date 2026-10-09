@@ -80,6 +80,11 @@ function pedido(over: Partial<PedidoComercial> = {}): PedidoComercial {
     numero: 18558,
     contact_id: "22222222-2222-2222-2222-222222222222",
     cliente_nome: "SCHUHMANN",
+    // 0261: o fixture tem que refletir o que o banco devolve — e o banco
+    // sempre devolve os dois (default `false`, `null`). Um fixture que os
+    // omite mente sobre o contrato, e o `tsc` é quem pega.
+    exige_nf: false,
+    forma_pagamento: null,
     cliente_documento: "11.111.111/0001-11",
     created_by: "33333333-3333-3333-3333-333333333333",
     vendedor_user_id: null,

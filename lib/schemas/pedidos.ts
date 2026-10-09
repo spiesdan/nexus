@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { FormaDePagamentoSchema, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
+
 /**
  * O CONTRATO DOS PEDIDOS COMERCIAIS — um só, lido pela tela E pela rota.
  *
@@ -91,6 +93,21 @@ export const pedidoCreateSchema = z.object({
   price_table_id: z.string().uuid().nullable().optional(),
   frete_cents: z.number().int().min(0).default(0),
   condicao_pagamento: z.string().trim().max(200).optional(),
+  /**
+   * Este pedido é COM NOTA FISCAL (0261).
+   *
+   * Campo próprio, e não mais só `observacoes`: o texto livre era a única
+   * fonte, e é exatamente a fonte que o pedido original manda eliminar. A
+   * rotina do Meu Dia lê ESTE campo, e continua lendo o texto para os pedidos
+   * marcados antes de ele existir.
+   */
+  exige_nf: z.boolean().optional(),
+  /**
+   * O prazo que o sistema entende (0261). `null` = prazo livre, que é o
+   * default de tudo que já existe. Aceita `a_vista` para simetria com a tela,
+   * embora à vista não tenha prazo a calcular.
+   */
+  forma_pagamento: FormaDePagamentoSchema,
   observacoes: z.string().trim().max(2000).optional(),
   /** Interna (equipe); nunca imprime. */
   obs_interna: z.string().trim().max(2000).optional(),
@@ -98,7 +115,12 @@ export const pedidoCreateSchema = z.object({
   endereco_entrega: z.string().trim().max(500).optional(),
   transportadora_nome: z.string().trim().max(120).optional(),
   modalidade_frete: z.enum(MODALIDADES_FRETE).default("retirada"),
-  previsao_entrega: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "data YYYY-MM-DD").nullable().optional(),
+  previsao_entrega: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "data YYYY-MM-DD")
+    .nullable()
+    .optional(),
   /**
    * Override de estoque insuficiente. Só vale para `manager` para cima — a
    * rota recusa com 422 se um papel menor mandar `true`. Falha fechada: pedir
@@ -120,12 +142,21 @@ export const pedidoPatchSchema = z.object({
   /** Troca o cliente: a rota regrava o snapshot (nome/documento) junto. */
   contact_id: z.string().uuid().nullable().optional(),
   condicao_pagamento: z.string().trim().max(200).nullable().optional(),
+  /** Marcar/desmarcar NF depois de criado (0261). */
+  exige_nf: z.boolean().optional(),
+  /** Trocar o prazo estruturado (0261). */
+  forma_pagamento: FormaDePagamentoSchema.optional(),
   observacoes: z.string().trim().max(2000).nullable().optional(),
   obs_interna: z.string().trim().max(2000).nullable().optional(),
   endereco_entrega: z.string().trim().max(500).nullable().optional(),
   transportadora_nome: z.string().trim().max(120).nullable().optional(),
   modalidade_frete: z.enum(MODALIDADES_FRETE).optional(),
-  previsao_entrega: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "data YYYY-MM-DD").nullable().optional(),
+  previsao_entrega: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "data YYYY-MM-DD")
+    .nullable()
+    .optional(),
 });
 
 export type PedidoCreate = z.infer<typeof pedidoCreateSchema>;
@@ -169,6 +200,10 @@ export interface PedidoComercial {
   frete_cents: number;
   total_cents: number;
   condicao_pagamento: string | null;
+  /** 0261: o pedido declara que é COM NF. */
+  exige_nf: boolean;
+  /** 0261: o prazo estruturado. `null` = prazo livre. */
+  forma_pagamento: FormaDePagamento | null;
   price_table_id: string | null;
   observacoes: string | null;
   obs_interna: string | null;
@@ -191,7 +226,7 @@ export interface Parcela {
 export const COLUNAS_DO_PEDIDO =
   "id, numero, contact_id, cliente_nome, cliente_documento, created_by, vendedor_user_id, " +
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
-  "condicao_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
+  "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at";
 
 /**
@@ -199,7 +234,10 @@ export const COLUNAS_DO_PEDIDO =
  * Padrão reconhecido vira linhas com vencimento; resto vira [] (à vista
  * implícito) — nunca adivinha dia de "combinar depois".
  */
-export function calcularParcelas(totalCents: number, condicao: string | null | undefined): Parcela[] {
+export function calcularParcelas(
+  totalCents: number,
+  condicao: string | null | undefined,
+): Parcela[] {
   if (!condicao) return [];
   const nums = [...condicao.matchAll(/(\d+)\s*(?:dias?)?/gi)].map((m) => Number(m[1]));
   const prazos = nums.filter((n) => n >= 0 && n <= 720);

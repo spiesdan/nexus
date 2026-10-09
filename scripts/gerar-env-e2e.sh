@@ -89,6 +89,26 @@ esac
 # reprovam assim mesmo com token_hash válido — o defeito independe de PKCE.
 E2E_PORT="${E2E_PORT:-3001}"
 
+# Onde o certificado A1 é gravado NESTA execução.
+#
+# O padrão do app é "/fiscal-certs", que é a MONTAGEM do contêiner — o compose
+# monta "/srv/fiscal/certs" ali. A suíte roda `next start` FORA do contêiner,
+# então esse caminho não existe e o `mkdir` pede privilégio de root.
+#
+# Antes desta linha, `jornada-fiscal` recebia 500 em TODA execução, com
+# "Não consegui gravar o certificado em /fiscal-certs. Verifique se o diretório
+# existe no servidor." — mensagem verdadeira e inútil: o diretório que faltava
+# era o do contêiner, não o do servidor.
+#
+# Production não é afetada: o compose não define `FISCAL_CERTS_DIR`, e sem a
+# variável o app usa o caminho de antes.
+#
+# ⚠️ Este comentário fica AQUI, fora do heredoc: dentro de `cat > .env.e2e
+# <<EOF` um crase em prosa EXECUTA, e foi o que aconteceu na primeira versão
+# deste bloco — o shell tentou rodar "/fiscal-certs" e "jornada-fiscal" como
+# comando, e o e2e morreu antes de rodar uma spec.
+TMPDIR_FISCAL_CERTS="$(mktemp -d "${TMPDIR:-/tmp}/nexus-fiscal-certs.XXXXXX")"
+
 cat > .env.e2e <<EOF
 # ── Ambiente do E2E — LOCAL, nunca a nuvem ──────────────────────────────────
 # GERADO por 'pnpm e2e:env'. Não versionado (.gitignore cobre '.env*').
@@ -118,6 +138,7 @@ CPF_ENCRYPTION_KEY=$CHAVE_CPF
 WAHA_BYO_ENCRYPTION_KEY=$CHAVE_WAHA
 AI_CRED_AES_KEY=$CHAVE_AI
 WAHA_API_BASE_URL=http://127.0.0.1:3999
+FISCAL_CERTS_DIR=$TMPDIR_FISCAL_CERTS
 WAHA_API_KEY=e2e-placeholder-nao-e-segredo
 WAHA_WEBHOOK_BASE_URL=http://127.0.0.1:3001
 UPSTASH_REDIS_REST_URL=http://127.0.0.1:3998

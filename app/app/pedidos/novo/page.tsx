@@ -25,8 +25,7 @@ export default async function NovoPedidoPage() {
 
   const pode = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
   if (!pode) redirect("/app/pedidos");
-  const verMargem =
-    user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
+  const verMargem = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
   const [{ data: produtos }, { data: contatos }, { data: tabelas }, { data: policies }] =
@@ -71,12 +70,11 @@ export default async function NovoPedidoPage() {
           email: string | null;
         }[]
       }
-      tabelas={
-        (tabelas ?? []) as unknown as { id: string; nome: string; desconto_pct: number }[]
-      }
+      tabelas={(tabelas ?? []) as unknown as { id: string; nome: string; desconto_pct: number }[]}
       verMargem={verMargem}
       comissaoPct={
-        (policies as unknown as { comissao_padrao_pct: number | null } | null)?.comissao_padrao_pct ?? null
+        (policies as unknown as { comissao_padrao_pct: number | null } | null)
+          ?.comissao_padrao_pct ?? null
       }
       textos={{
         titulo: t("Novo pedido"),
@@ -85,6 +83,14 @@ export default async function NovoPedidoPage() {
         buscarCliente: t("Buscar cliente por nome, telefone ou e-mail…"),
         clienteAvulso: t("ou digite o nome para cliente avulso"),
         condicao: t("Condição de pagamento"),
+        // 0261 — prazo estruturado e a marcação de NF.
+        formaPagamento: t("Forma de pagamento"),
+        prazoLivre: t("Prazo livre / não informado"),
+        prazoPrecisaNf: t(
+          "O prazo começa a contar quando a nota for emitida. Marque “é com NF” para o sistema acompanhar a emissão.",
+        ),
+        exigeNf: t("Nota fiscal"),
+        exigeNfOpcao: t("Este pedido é com NF"),
         observacoes: t("Observações"),
         obsInterna: t("Observação interna (equipe)"),
         endereco: t("Endereço de entrega"),

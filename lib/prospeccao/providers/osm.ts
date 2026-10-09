@@ -133,7 +133,34 @@ const MAPA_CATEGORIAS: { casa: RegExp; seletores: string[] }[] = [
     seletores: ['["amenity"="school"]', '["leisure"="fitness_centre"]'],
   },
   { casa: /banco/i, seletores: ['["amenity"="bank"]'] },
-  { casa: /posto|combustivel/i, seletores: ['["amenity"="fuel"]'] },
+  // Combustíveis. O `casa` é o mesmo para as três porque o OSM mapeia as três
+  // para a MESMA tag — `amenity=fuel` cobre posto de gasolina, diesel e GNV,
+  // e o provider de texto (google-places) é quem separa pela descrição. Era
+  // exatamente este o primeiro sintoma: a categoria não existia na lista da
+  // tela, e este mapa nunca era alcançado.
+  { casa: /posto|combustivel|gnv/i, seletores: ['["amenity"="fuel"]'] },
+  // `shop=tyres` é onde o OSM guarda posto de serviços completo. Junto com `fuel` cobre
+  // o posto de serviços completo, que é o que o cliente final é.
+  { casa: /lubrific/i, seletores: ['["shop"="tyres"]', '["amenity"="fuel"]'] },
+  // ─── A ORDEM DESTA LISTA É PRECEDÊNCIA, E AQUI ESTÁ O CASO QUE PROVA ─────
+  //
+  // `seletoresPara` devolve o PRIMEIRO `casa` que casa. "marmoraria" casa em
+  // dois lugares deste arquivo: no bloco de marmoraria/pedreira (que dá
+  // `craft=stonemason` + `shop=building_materials`) e em
+  // `material.constru|construcao|…`, que dá `shop=doityourself` +
+  // `shop=hardware` + `craft=carpenter`.
+  //
+  // Com a marmoraria DEPOIS, quem cadastra uma marmoraria recebe os seletores
+  // de material de construção — que não acham marmoraria nenhuma. O sintoma é
+  // "a categoria aparece na tela e a busca volta vazia", e é indistinguível
+  // de "não tem marmoraria na minha cidade". Foi o que aconteceu.
+  //
+  // Por isso o bloco de pedra ANTES do de construção, e o teste que fixa esta
+  // ordem é `tests/unit/prospeccao-segmentos-faltando.test.ts`.
+  {
+    casa: /marmorari|marmorit|marmore|pedreira|\bpedra\b|azulej|granito|calcario/i,
+    seletores: ['["craft"="stonemason"]', '["shop"="building_materials"]'],
+  },
   {
     casa: /material.constru|construcao|madeireira|vidracaria|tinta/i,
     seletores: ['["shop"="doityourself"]', '["shop"="hardware"]', '["craft"="carpenter"]'],
