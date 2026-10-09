@@ -683,14 +683,14 @@ export function OrderEditor({
             <span className="text-sm font-medium text-foreground">{textos.exigeNf}</span>
             <label
               htmlFor="exige-nf"
-              className="flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-background px-3 text-sm"
+              className="flex h-10 cursor-pointer items-center gap-2.5 rounded-md border border-border bg-background px-3 text-sm"
             >
               <input
                 id="exige-nf"
                 type="checkbox"
                 checked={exigeNf}
                 onChange={(e) => setExigeNf(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
+                className="h-4 w-4 rounded-sm border-border accent-primary"
               />
               <span>{textos.exigeNfOpcao}</span>
             </label>
