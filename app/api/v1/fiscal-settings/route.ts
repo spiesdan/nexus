@@ -6,15 +6,13 @@
  * inválida para a empresa inteira.
  */
 import { randomUUID } from "node:crypto";
-import { stat } from "node:fs/promises";
-import path from "node:path";
 
 import { type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { diretorioDoCertificado, NOME_DO_CERTIFICADO } from "@/lib/fiscal/certificado";
+import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
 import { configFiscalSchema, type ConfigFiscalSalva } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -53,31 +51,11 @@ export async function GET(_req: NextRequest): Promise<Response> {
   //
   // Sem este campo, a tela volta a ser um espelho do texto e a mentira volta
   // junto.
-  const certificadoPresente = await certificadoExisteNoServidor(authz.org.orgId);
+  const certificadoPresente = await certificadoPresenteNoServidor(authz.org.orgId);
 
   return ok(config ? { ...config, certificado_presente: certificadoPresente } : null, {
     requestId,
   });
-}
-
-/**
- * O certificado DESTA organização está no disco?
- *
- * O caminho é montado aqui, a partir do `organization_id` da sessão — nunca a
- * partir do `certificado_path` do banco. Um `certificado_path` forjado apontaria
- * para qualquer arquivo do contêiner, e com o caminho por organização um id
- * forjado apontaria para o certificado de outra organização.
- */
-async function certificadoExisteNoServidor(organizationId: string): Promise<boolean> {
-  const diretorio = diretorioDoCertificado(organizationId);
-  if (!diretorio) return false;
-  try {
-    const st = await stat(path.join(diretorio, NOME_DO_CERTIFICADO));
-    return st.isFile() && st.size > 0;
-  } catch {
-    // Sem diretório é o estado normal de quem não enviou certificado.
-    return false;
-  }
 }
 
 export async function PUT(req: NextRequest): Promise<Response> {

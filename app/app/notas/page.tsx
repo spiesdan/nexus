@@ -6,6 +6,7 @@ import { traduzir } from "@/lib/i18n/dicionario";
 import {
   COLUNAS_DA_NOTA,
   type CartaDeCorrecao,
+  type ConfigFiscalSalva,
   type CfopEquivalenteSalvo,
   type InutilizacaoSalva,
   type NotaFiscal,
@@ -18,6 +19,7 @@ import {
 } from "@/lib/schemas/fiscal-entrada";
 import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
+import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
@@ -160,15 +162,17 @@ export default async function NotasPage({
 
   // Cartas de correção (lista da aba de ações): o texto e a sequência saem
   // da mensagem `[n/20] ...`, lida na tela com `lerMensagemCarta`.
-  const cartasLista = ((cartas ?? []) as unknown as {
-    id: string;
-    invoice_id: string;
-    status: string | null;
-    protocolo: string | null;
-    mensagem: string | null;
-    created_at: string;
-    invoices: { serie: string; numero: number | null } | null;
-  }[]).map((c) => ({
+  const cartasLista = (
+    (cartas ?? []) as unknown as {
+      id: string;
+      invoice_id: string;
+      status: string | null;
+      protocolo: string | null;
+      mensagem: string | null;
+      created_at: string;
+      invoices: { serie: string; numero: number | null } | null;
+    }[]
+  ).map((c) => ({
     id: c.id,
     invoice_id: c.invoice_id,
     serie: c.invoices?.serie ?? "—",
@@ -443,9 +447,19 @@ export default async function NotasPage({
         {podeConfigurar && (
           <TabsContent value="config" className="mt-4">
             <ConfigFiscal
-              configInicial={
-                config as unknown as Parameters<typeof ConfigFiscal>[0]["configInicial"]
-              }
+              configInicial={{
+                ...(config as unknown as ConfigFiscalSalva),
+                // `certificado_presente` não vem do SELECT: a verdade é o
+                // arquivo existir em disco, e quem responde isso é a MESMA
+                // função que a API usa (`certificadoPresenteNoServidor`).
+                //
+                // A tela lia só o texto do `certificado_path` e por isso
+                // mostrava "certificado configurado" com o arquivo ausente —
+                // o defeito inteiro. E a correção na API sozinha não chegava
+                // aqui: esta página lê o banco direto, não passa pela rota.
+                // Uma função, duas pontas que chamam.
+                certificado_presente: await certificadoPresenteNoServidor(activeOrg.orgId),
+              }}
               textos={textos}
             />
           </TabsContent>
