@@ -360,6 +360,16 @@ beforeAll(() => {
             values (v_org, v_shi, v_ord, 'rls/' || v_tag || '/prova.jpg');
         end if;
 
+        -- migration 0261 — alertas operacionais (NF pendente, fora da carga,
+        -- vencimento). A prova cross-org abaixo e o que a varredura de
+        -- completude exige: tabela nova tem que vir com comportamento medido,
+        -- nao so com RLS ligado.
+        if not exists (select 1 from public.operational_alerts where organization_id = v_org) then
+          insert into public.operational_alerts
+            (organization_id, chave, origem_tipo, titulo)
+          values (v_org, 'rls/' || v_tag, 'nf_pendente', 'alerta de prova');
+        end if;
+
         -- migration 0219 — foto do produto.
         if not exists (select 1 from public.product_images where organization_id = v_org) then
           insert into public.product_images (organization_id, product_id, storage_path)
@@ -553,6 +563,7 @@ export const TABLES = [
   "financial_pagaveis",
   "financial_receivables",
   "financial_payments",
+  "operational_alerts",
   "prospecting_searches",
   "business_prospects",
   "prospect_search_results",
