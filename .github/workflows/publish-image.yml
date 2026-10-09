@@ -9,7 +9,7 @@ name: Publicar imagem Docker (GHCR)
 # Serviço build-only é pulado por `docker compose pull` e imune a `up -d` sem
 # `--build` — ele era construído na VPS de cada cliente, no install, e NENHUM
 # update.sh jamais o reconstruiu. O runtime do agente de IA congelava no código
-# do dia da instalação. Doutrina: docs/doctrine/packaging.md, invariante 1.
+# do dia da instalacao. Doutrina: docs/doctrine/packaging.md, invariante 1.
 
 on:
   push:
@@ -110,12 +110,15 @@ jobs:
         include:
           - name: deskcommcrm
             dockerfile: Dockerfile
+            context: .
             title: DeskcommCRM
           - name: deskcomm-worker
             dockerfile: Dockerfile.worker
+            context: .
             title: DeskcommCRM worker
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
+            context: .
             title: DeskcommCRM scheduler
           # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
           # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
@@ -123,7 +126,18 @@ jobs:
           # defeito que a doutrina de packaging registrou, e repetir aqui seria
           # construí-lo de novo.
           - name: deskcomm-fiscal-sidecar
-            dockerfile: fiscal/sidecar/Dockerfile
+            dockerfile: Dockerfile
+            # O contexto é o PRÓPRIO diretório do sidecar, e não a raiz do
+            # repositório. Motivo medido, não estética: o `Dockerfile` faz
+            # `COPY composer.json ./` e, com a raiz como contexto, o build morre
+            # em `"/src": not found`.
+            #
+            # E o outro motivo é o que mais importa: `fiscal/sidecar/.dockerignore`
+            # exclui `*.pfx`, `*.p12` e `.env`. Com a raiz como contexto ele NÃO
+            # valeria, e o build enviaria o certificado A1 da instalacao para o daemon.
+            # O `.dockerignore` que vale é o do diretório de CONTEXTO — foi por
+            # isso que o contexto virou explícito em vez de um default.
+            context: fiscal/sidecar
             title: DeskcommCRM fiscal sidecar
 
     steps:
@@ -206,7 +220,7 @@ jobs:
       - name: Build e push (imagem genérica — sem segredos)
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           # Só amd64: o deploy é x86 (Hostinger). O passo arm64/QEMU saiu
           # porque custava 5–10x o tempo de build para uma arquitetura sem

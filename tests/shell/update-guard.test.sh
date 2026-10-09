@@ -392,18 +392,32 @@ pin_caso() {  # pin_caso <descrição> <conteúdo do .env> <esperado>
   r="$(cd "$PROJ" && pin_incompleto .env.pin || true)"
   check "$d" test "$r" = "$esperado"
 }
-pin_caso "app pinado + worker/scheduler AUSENTES → acusa os dois" \
-  "APP_IMAGE=${NS}/deskcommcrm:1.3.0" "worker scheduler"
+# `fiscal` (o sidecar da SEFAZ) entra na lista porque `pin_incompleto` passou a
+# vigiar a chave dele — e o teste que não acompanha reprova, que é o que
+# aconteceu. Do lado bom, é a prova de que a guarda é real: uma função que
+# ninguém exercita não protege nada.
+pin_caso "app pinado + worker/scheduler/fiscal AUSENTES → acusa os três" \
+  "APP_IMAGE=${NS}/deskcommcrm:1.3.0" "worker scheduler fiscal"
 pin_caso "app pinado + worker em canal móvel → acusa" \
   "APP_IMAGE=${NS}/deskcommcrm:1.3.0
 WORKER_IMAGE=${NS}/deskcomm-worker:stable
-SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:1.3.0" "worker"
-pin_caso "as três na mesma versão → silêncio" \
+SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:1.3.0
+FISCAL_IMAGE=${NS}/deskcomm-fiscal-sidecar:1.3.0" "worker"
+pin_caso "sidecar em canal móvel → acusa (o app monta o payload, o sidecar monta o XML)" \
   "APP_IMAGE=${NS}/deskcommcrm:1.3.0
 WORKER_IMAGE=${NS}/deskcomm-worker:1.3.0
-SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:1.3.0" ""
+SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:1.3.0
+FISCAL_IMAGE=${NS}/deskcomm-fiscal-sidecar:stable" "fiscal"
+pin_caso "as quatro na mesma versão → silêncio" \
+  "APP_IMAGE=${NS}/deskcommcrm:1.3.0
+WORKER_IMAGE=${NS}/deskcomm-worker:1.3.0
+SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:1.3.0
+FISCAL_IMAGE=${NS}/deskcomm-fiscal-sidecar:1.3.0" ""
 pin_caso "app num canal deliberado (:latest) → não é 'metade', silêncio" \
-  "APP_IMAGE=${NS}/deskcommcrm:latest" ""
+  "APP_IMAGE=${NS}/deskcommcrm:latest
+WORKER_IMAGE=${NS}/deskcomm-worker:latest
+SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:latest
+FISCAL_IMAGE=${NS}/deskcomm-fiscal-sidecar:latest" ""
 # As aspas SIMPLES são o objeto deste caso — o `install.sh` grava assim. Elas
 # ficam literais porque estão DENTRO da string de aspas duplas; trocá-las por
 # duplas FECHA a string, e o conteúdo sai sem aspa nenhuma. Medido: nessa forma
@@ -412,7 +426,8 @@ pin_caso "app num canal deliberado (:latest) → não é 'metade', silêncio" \
 pin_caso "valores entre aspas, como o install grava → silêncio" \
   "APP_IMAGE='${NS}/deskcommcrm:1.3.0'
 WORKER_IMAGE='${NS}/deskcomm-worker:1.3.0'
-SCHEDULER_IMAGE='${NS}/deskcomm-scheduler:1.3.0'" ""
+SCHEDULER_IMAGE='${NS}/deskcomm-scheduler:1.3.0'
+FISCAL_IMAGE='${NS}/deskcomm-fiscal-sidecar:1.3.0'" ""
 rm -f "$PROJ/.env.pin"
 
 

@@ -1,9 +1,20 @@
 FROM php:8.3-cli
 
 # ext-soap exige libxml dev no build; o resto vem no core ou via docker-php-ext-install.
+#
+# `libonig-dev` é o que o `mbstring` linka, e ele NÃO vem na imagem. Sem esta
+# linha o build morre em `Package 'oniguruma', required by 'virtual:world', not
+# found` — que é como este Dockerfile quebrado apareceu pela primeira vez: ele
+# NUNCA foi construído, então o nome do pacote nunca teve chance de ser conferido.
+# Medido nesta máquina: `php:8.3-cli` é Debian 13 (trixie) e `libonig-dev` está
+# disponível (`6.9.9-1+b1`).
 RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
+    libonig-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libwebp-dev \
     unzip \
   && docker-php-ext-install -j$(nproc) soap mbstring dom xml zip gd \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
