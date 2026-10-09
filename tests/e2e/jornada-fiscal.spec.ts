@@ -27,6 +27,23 @@ test.setTimeout(300_000);
  * emissor + certificado da SEFAZ — o stub nunca gera XML (`tem_xml` false é
  * justamente por isso, e é por isso que "Ver DANFE" não aparece).
  */
+/**
+ * Um `.pfx` mínimo, com o cabeçalho PKCS#12 verdadeiro.
+ *
+ * A rota valida o container antes de gravar (é o que impede subir um PDF
+ * renomeado), e um byte solto não passa. O DER de um PKCS#12 é
+ * `30 82 <len:2> 02 01 00` — SEQUENCE, comprimento, INTEGER version. O resto
+ * não importa aqui: a assinatura é conferida contra a SEFAZ, e esta jornada
+ * para no estado honesto de "sem emissor" muito antes disso.
+ */
+function pfxDeTeste(): { name: string; mimeType: string; buffer: Buffer } {
+  return {
+    name: "e2e.pfx",
+    mimeType: "application/x-pkcs12",
+    buffer: Buffer.from([0x30, 0x82, 0x00, 0x05, 0x02, 0x01, 0x00, 0x00, 0x00]),
+  };
+}
+
 test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado honesto sem emissor", async ({
   page,
 }) => {
@@ -74,14 +91,34 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   await page.locator("#bairro").fill("Centro");
   await page.locator("#municipio").fill("Sao Paulo");
   await page.locator("#cep").fill("01001000");
-  await page.locator("#cert-path").fill("/certs/e2e.pfx");
-  await page.locator("#cert-senha").fill("segredo-e2e");
-  await page.getByRole("button", { name: "Salvar configuração" }).click();
+  // `#cert-path` é LEITURA desde que o certificado passou a subir por upload
+  // (o caminho quem decide é o servidor, não quem digita). O teste ainda
+  // tentava preenchê-lo e tomava 300 s de timeout em `element is not
+  // editable` — ver `ConfigFiscal.tsx`.
+  await expect(
+    page.locator("#cert-path"),
+    "o caminho do certificado é leitura, e nasce vazio sem upload",
+  ).toHaveValue("");
+
+  // O certificado real entra por upload: um `.pfx` de mentira basta, porque
+  // o objetivo da jornada é chegar ao estado honesto de "sem emissor".
+  await page.locator("#cert-file-input").setInputFiles({
+    name: "e2e.pfx",
+    mimeType: "application/x-pkcs12",
+    // PKCS#12 mínimo: DER vazio. O guard de assinatura é do lado da SEFAZ e
+    // esta jornada nunca chega lá.
+    buffer: Buffer.from("0", "utf8"),
+  });
   await expect(
     page
       .locator("[data-sonner-toast]")
-      .filter({ hasText: "Configuração salva" })
+      .filter({ hasText: /certificado/i })
       .first(),
+  ).toBeVisible({ timeout: 30_000 });
+  await page.locator("#cert-senha").fill("segredo-e2e");
+  await page.getByRole("button", { name: "Salvar configuração" }).click();
+  await expect(
+    page.locator("[data-sonner-toast]").filter({ hasText: "Configuração salva" }).first(),
   ).toBeVisible({ timeout: 20_000 });
 
   // 3. Emitir: escolher o pedido faturado e enfileirar (nasce `em_emissao`).
@@ -117,7 +154,10 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   //    tick e o banco compartilhado pode ter fila de outras specs.
   const env = carregarEnvLocal();
   const secret = env.INTERNAL_CRON_SECRET || env.INTERNAL_SECRET;
-  expect(secret, "fiscal-drain exige INTERNAL_CRON_SECRET ou INTERNAL_SECRET no .env.local").toBeTruthy();
+  expect(
+    secret,
+    "fiscal-drain exige INTERNAL_CRON_SECRET ou INTERNAL_SECRET no .env.local",
+  ).toBeTruthy();
   let aterrissou = false;
   for (let i = 0; i < 5 && !aterrissou; i++) {
     const tick = await page.request.post("/api/v1/cron/fiscal-drain", {
@@ -131,10 +171,7 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
     aterrissou = (await linha.getByText("Pendente", { exact: true }).count()) > 0;
     if (!aterrissou) await page.waitForTimeout(1_000);
   }
-  expect(
-    aterrissou,
-    "o drain devolveu a nota para pendente com o motivo do stub",
-  ).toBe(true);
+  expect(aterrissou, "o drain devolveu a nota para pendente com o motivo do stub").toBe(true);
 
   // 6. Detalhe honesto: "Retorno da SEFAZ" mostra o motivo (FALTA_EMISSOR) e
   //    o DANFE não existe sem XML autorizado.

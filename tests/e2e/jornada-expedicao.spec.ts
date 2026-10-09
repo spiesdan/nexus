@@ -49,7 +49,12 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   await page.locator("#veiculo").fill("HR");
   await page.locator("#motorista").fill(`Motorista ${carimbo}`);
   await page.locator("label").filter({ hasText: numero }).getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Criar carga", exact: true }).click();
+  // SEM `exact: true`, e isso não é tolerância — é a forma do rótulo.
+  // O botão mostra o que está marcado: `Criar carga (1)`, `Criar carga (3)`.
+  // Com `exact`, o teste só passaria no instante em que a seleção estivesse
+  // vazia, que é o estado em que o botão não faz nada. Medido no CI em
+  // 09/10/2026: 300 s de timeout esperando um nome que nunca aparece exato.
+  await page.getByRole("button", { name: /^Criar carga/ }).click();
 
   const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Carga criada" }).first();
   await expect(toast).toBeVisible({ timeout: 20_000 });
