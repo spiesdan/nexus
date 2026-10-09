@@ -69,7 +69,15 @@ jobs:
           VERSAO: ${{ steps.corte.outputs.versao }}
         run: |
           set -euo pipefail
-          git config user.name  'deskcomm-release[bot]'
+          # O nome do autor sai do `app-slug` do token, e não de um literal.
+          # Medido em 09/10/2026: neste repositório o App é
+          # `nexus-release-spiesdan[bot]`, e o literal `deskcomm-release[bot]`
+          # era o nome do App no repositório ANTIGO (`spiesdan/DeskcommCRM`),
+          # antes do rename. O commit saía autorado por um nome que não
+          # existe — e a guarda da tag, que confere o autor, reprovava a
+          # release legítima. Um nome que não existe é pior que nenhum: o
+          # `git config` aceita qualquer string sem reclamar.
+          git config user.name  '${{ steps.token.outputs.app-slug }}[bot]'
           git config user.email '${{ steps.token.outputs.app-slug }}[bot]@users.noreply.github.com'
           git checkout -b "release/${VERSAO}"
           git add CHANGELOG.md .changes
@@ -114,6 +122,14 @@ jobs:
 
       - name: Este push foi um corte de release?
         id: pendente
+        env:
+          # A guarda da tag confere o AUTOR do commit contra o nome do App. O
+          # nome certo vem do token (`create-github-app-token` já o devolve em
+          # `app-slug`), e não de um literal no arquivo: o App deste repositório
+          # chama-se `nexus-release-spiesdan[bot]` desde o rename de
+          # `spiesdan/DeskcommCRM` para `spiesdan/nexus`, e o literal antigo
+          # reprovava a release legítima sem ninguém entender por quê.
+          APP_SLUG: ${{ steps.token.outputs.app-slug }}
         run: |
           set -euo pipefail
 
@@ -154,8 +170,9 @@ jobs:
           # "vive em secrets", e isso é FALSO.
           #
           # `%an` é o NOME DO AUTOR: campo de texto que qualquer um define.
-          # `git -c user.name='deskcomm-release[bot]' commit` devolve exatamente
-          # a string que a comparação abaixo procura. Medido.
+          # `git -c user.name='<slug>[bot]' commit` devolve exatamente a string
+          # que a comparação abaixo procura, com `${APP_SLUG}` vindo do token.
+          # Medido.
           #
           # Nem adianta trocar por conferência criptográfica: os cinco cortes
           # reais desta main têm `%G? = N` — não há assinatura para conferir.
@@ -218,7 +235,7 @@ jobs:
             echo "::notice::O CHANGELOG anuncia ${versao} sem tag, mas este push não apagou fragmento nenhum."
             echo "::notice::Tag não criada. Uma release sai do workflow 'release' (Run workflow), nunca de um merge comum."
             echo "cortar=nao" >> "$GITHUB_OUTPUT"
-          elif [ "${assinante}" != "deskcomm-release[bot]" ]; then
+          elif [ "${assinante}" != "${APP_SLUG}[bot]" ]; then
             # Alto, e não `notice`: alguém apagou fragmento de `.changes/` num
             # commit que não veio do workflow de release. Ou é forja, ou é
             # engano — e o silêncio é exatamente o que fez a #472 passar dias
@@ -246,7 +263,7 @@ jobs:
           VERSAO: ${{ steps.pendente.outputs.versao }}
         run: |
           set -euo pipefail
-          git config user.name  'deskcomm-release[bot]'
+          git config user.name  '${{ steps.token.outputs.app-slug }}[bot]'
           git config user.email '${{ steps.token.outputs.app-slug }}[bot]@users.noreply.github.com'
           # Tag ANOTADA: guarda autor e data, e é o que `git describe
           # --exact-match` do agent.sh espera encontrar na VPS.
