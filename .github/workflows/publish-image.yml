@@ -111,17 +111,20 @@ jobs:
           - name: deskcommcrm
             dockerfile: Dockerfile
             context: .
-            cache: gha
+            cache_from: '["type=gha,scope=deskcommcrm"]'
+            cache_to: '["type=gha,mode=max,scope=deskcommcrm"]'
             title: DeskcommCRM
           - name: deskcomm-worker
             dockerfile: Dockerfile.worker
             context: .
-            cache: gha
+            cache_from: '["type=gha,scope=deskcomm-worker"]'
+            cache_to: '["type=gha,mode=max,scope=deskcomm-worker"]'
             title: DeskcommCRM worker
           - name: deskcomm-scheduler
             dockerfile: Dockerfile.scheduler
             context: .
-            cache: gha
+            cache_from: '["type=gha,scope=deskcomm-scheduler"]'
+            cache_to: '["type=gha,mode=max,scope=deskcomm-scheduler"]'
             title: DeskcommCRM scheduler
           # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
           # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
@@ -141,8 +144,11 @@ jobs:
             # O `.dockerignore` que vale é o do diretório de CONTEXTO — foi por
             # isso que o contexto virou explícito em vez de um default.
             context: fiscal/sidecar
-            # PHP: sem `pnpm-lock.yaml`, e o cache do Buildx exige o arquivo.
-            cache: none
+            # PHP: sem `pnpm-lock.yaml`, e o cache do Buildx exige o arquivo —
+            # então aqui o cache é de verdade vazio, e não "vazio" escrito de um
+            # jeito que a ferramenta leia como presente.
+            cache_from: '[]'
+            cache_to: '[]'
             title: DeskcommCRM fiscal sidecar
 
     steps:
@@ -251,13 +257,21 @@ jobs:
           # A alternativa seria pôr um `pnpm-lock.yaml` falso no diretório do
           # sidecar para satisfazer a ferramenta, e isso é pior: um arquivo de
           # lock que não locka nada, num repositório onde a ferramenta le eles.
-          # `fromJSON` e não `cond ? a : b`: a versão com `&&`/`||` devolve
-          # STRING VAZIA no lugar de "nenhum cache", e o Buildx interpreta a
-          # vazia como cache por padrão — aí ele volta a pedir `package.json`
-          # na raiz do contexto. Virou `[""]` na vez seguinte. Um array de JSON
-          # é o que o `cache-from` espera, e vazio de verdade é `[]`.
-          cache-from: ${{ fromJSON(matrix.cache == 'none' && '[]' || format('["type=gha,scope={0}"]', matrix.name)) }}
-          cache-to: ${{ fromJSON(matrix.cache == 'none' && '[]' || format('["type=gha,mode=max,scope={0}"]', matrix.name)) }}
+          # O cache vem PRONTO da matriz, como JSON. Três formas foram tentadas
+          # e duas pareceriam certainas sem nunca buildar:
+          #
+          #   1. `type=gha` para o sidecar → Buildx pede `pnpm-lock.yaml` na raiz
+          #      do contexto. Ele é PHP; não tem, e não deve ter.
+          #   2. `cond && '' || format(...)` → devolve STRING VAZIA, e vazio o
+          #      Buildx lê como cache por padrão (aí pediu `package.json`).
+          #   3. `fromJSON(cond && '[]' || format('[...]'))` → o `format` dentro
+          #      do `fromJSON` é TEMPLATE INVÁVIDO e o workflow nem valida.
+          #
+          # O que funciona é o valor literal na matriz: o YAML monta o array, e
+          # `[]` é de verdade "nenhum cache". Nada é decidido dentro da
+          # expressão — a decisão fica legível em quem escreve a matriz.
+          cache-from: ${{ fromJSON(matrix.cache_from) }}
+          cache-to: ${{ fromJSON(matrix.cache_to) }}
           # Sem build-args de segredo: a imagem é genérica (NEXT_PUBLIC_* viram
           # placeholder; valores reais entram em runtime no VPS do usuário).
 
