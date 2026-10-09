@@ -92,12 +92,34 @@ export async function PUT(req: NextRequest): Promise<Response> {
     senhaCifrada = enc;
   }
 
+  // `certificado_path` NAO e sobrescrito por este PUT.
+  //
+  // Medido em 09/10/2026 pela e2e `jornada-fiscal`: o certificado e enviado por
+  // upload -- `POST /fiscal-settings/certificado` grava `certificado_path` e
+  // escreve o `.pfx` -- e DEPOIS a configuracao e salva por este PUT. O schema
+  // tipa `certificado_path` como `.nullable()`, `resto` entra no `upsert` com
+  // `null`, e o caminho GRAVADO some.
+  //
+  // O resultado e o pior tipo de defeito: o arquivo continua no disco e o banco
+  // passa a dizer que nao ha certificado. A tela mostra "Nenhum certificado no
+  // servidor" com o `.pfx` a dois centimetros dali, e a emissao para -- sem
+  // erro, sem log, e sem nada que aponte para um PUT de configuracao.
+  //
+  // Por que omitir em vez de ler antes: `upsert` com `onConflict:
+  // organization_id` reescreve a linha com o que o corpo MENCIONA. Uma coluna
+  // ausente do corpo mantem o valor; uma coluna presente como `null` vira
+  // `null`. Omitir e a correcao minima e nao custa uma leitura extra.
+  //
+  // Nenhum caminho do produto manda `null` de proposito para apagar o
+  // certificado; apagar e o que o botao de remover faz, e ele nao e este.
+  const { certificado_path: _caminhoNaoEditado, ...restoSemCaminho } = resto;
+
   const { data, error } = await supabase
     .from("fiscal_settings")
     .upsert(
       {
         organization_id: authz.org.orgId,
-        ...resto,
+        ...restoSemCaminho,
         ...(senhaCifrada !== undefined ? { certificado_senha_encrypted: senhaCifrada } : {}),
       },
       { onConflict: "organization_id" },
