@@ -251,8 +251,13 @@ jobs:
           # A alternativa seria pôr um `pnpm-lock.yaml` falso no diretório do
           # sidecar para satisfazer a ferramenta, e isso é pior: um arquivo de
           # lock que não locka nada, num repositório onde a ferramenta le eles.
-          cache-from: ${{ matrix.cache == 'none' && '' || format('type=gha,scope={0}', matrix.name) }}
-          cache-to: ${{ matrix.cache == 'none' && '' || format('type=gha,mode=max,scope={0}', matrix.name) }}
+          # `fromJSON` e não `cond ? a : b`: a versão com `&&`/`||` devolve
+          # STRING VAZIA no lugar de "nenhum cache", e o Buildx interpreta a
+          # vazia como cache por padrão — aí ele volta a pedir `package.json`
+          # na raiz do contexto. Virou `[""]` na vez seguinte. Um array de JSON
+          # é o que o `cache-from` espera, e vazio de verdade é `[]`.
+          cache-from: ${{ fromJSON(matrix.cache == 'none' && '[]' || format('["type=gha,scope={0}"]', matrix.name)) }}
+          cache-to: ${{ fromJSON(matrix.cache == 'none' && '[]' || format('["type=gha,mode=max,scope={0}"]', matrix.name)) }}
           # Sem build-args de segredo: a imagem é genérica (NEXT_PUBLIC_* viram
           # placeholder; valores reais entram em runtime no VPS do usuário).
 
