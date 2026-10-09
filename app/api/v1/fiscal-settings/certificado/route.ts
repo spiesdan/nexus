@@ -98,10 +98,26 @@ export async function POST(req: NextRequest): Promise<Response> {
   // O `certificado_path` passa a ser o que o sidecar realmente vai ler. Antes
   // ele era o nome que o navegador mandou, que não apontava para nada.
   const admin = createAdminClient();
-  const { error: erroGravacao } = await admin
-    .from("fiscal_settings")
-    .update({ certificado_path: NOME_DO_CERTIFICADO })
-    .eq("organization_id", authz.org.orgId);
+  // `upsert`, e nao `update`. A linha de `fiscal_settings` pode nao existir
+  // ainda — quem a cria e o PUT de configuracao, e o upload do certificado PODE
+  // vir antes (e vem: a pessoa sobe o certificado ao abrir a tela pela primeira
+  // vez, sem ter salvo nada).
+  //
+  // Medido em 09/10/2026: `update` numa linha inexistente nao da erro, nao avisa
+  // e nao cria — devolve `{ error: null }` com zero linhas afetadas. O upload
+  // respondia **200** dizendo que gravou, o `.pfx` estava no disco, e o banco nao
+  // sabia de nada. Depois o PUT criava a linha com `certificado_path` vazio e a
+  // emissao parava.
+  //
+  // O sintoma completo era o pior possivel: a pessoa via "Certificado enviado"
+  // na tela e "Nenhum certificado no servidor" no mesmo lugar, sem erro nenhum.
+  const { error: erroGravacao } = await admin.from("fiscal_settings").upsert(
+    {
+      organization_id: authz.org.orgId,
+      certificado_path: NOME_DO_CERTIFICADO,
+    },
+    { onConflict: "organization_id" },
+  );
   if (erroGravacao) {
     return fail("internal_error", "Certificado gravado, mas não consegui salvar o caminho.", 500, {
       requestId,
