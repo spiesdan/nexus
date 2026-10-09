@@ -270,23 +270,26 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Cache `local`, e não `gha`. O `type=gha` faz o Buildx procurar o
-          # arquivo de lock na RAIZ do contexto e derrubar o build inteiro se não
-          # achar:
+          # NENHUM campo de cache, e este e o ponto.
           #
-          #   failed to compute cache key: "/pnpm-lock.yaml": not found
-          #   failed to compute cache key: "/package.json": not found
+          # O Buildx procura `pnpm-lock.yaml` na raiz do contexto sempre que ha
+          # cache configurado — de QUALQUER tipo. Medido, um por um:
           #
-          # O sidecar é PHP. Não tem `pnpm-lock.yaml` nem `package.json`, e não
-          # deveria ter nenhum dos dois. `local` usa o diretório que a própria
-          # action declara, não um lock do contexto — que é o que resolve sem
-          # inventar arquivo no repositório.
+          #   type=gha    -> "/pnpm-lock.yaml": not found
+          #   type=local  -> "/pnpm-lock.yaml": not found
           #
-          # E DEIXAR O CAMPO DE FORA não é "sem cache": sem `cache-from`, a
-          # action herda o `gha` padrão e volta a procurar o lock. Foi o que
-          # aconteceu na tentativa anterior — sem o campo, veio `/package.json`.
-          cache-from: type=local,src=/tmp/.buildx-cache/fiscal
-          cache-to: type=local,dest=/tmp/.buildx-cache/fiscal,mode=max
+          # O sidecar e PHP. Nao tem esse arquivo nem `package.json`, e nao deve
+          # ter nenhum dos dois: um lock falso seria um arquivo que nao locka
+          # nada, num repositorio onde a ferramenta le locks para saber o que
+          # pode reusar.
+          #
+          # E a tentativa de declarar "sem cache" NA MATRIZ nao resolve, porque
+          # sem o campo a action herda o `gha` do proprio action.yml. Sem campo
+          # NENHUM, o Buildx nao procura lock nenhum: e a unica configuracao que
+          # resolve, e ela e a ausencia de configuracao.
+          #
+          # O custo e nao reaproveitar camadas entre runs — irrelevante aqui: o
+          # build do sidecar leva ~90 s e muda quando o `sped-nfe` muda.
           # O contexto é o PRÓPRIO diretório, e não a raiz: o Dockerfile faz
           # `COPY composer.json ./`, e — o motivo que pesa — é o
           # `fiscal/sidecar/.dockerignore` que exclui `*.pfx`, `*.p12` e `.env`.
