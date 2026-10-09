@@ -49,8 +49,23 @@ import path from "node:path";
 /** Onde o certificado é gravado, no host. Vem do compose — fonte única. */
 export const DIRETORIO_DE_CERTIFICADOS_NO_HOST = "/srv/fiscal/certs";
 
-/** O mesmo lugar visto de dentro do contêiner do app. */
-export const DIRETORIO_DE_CERTIFICADOS_NO_APP = "/fiscal-certs";
+/**
+ * O mesmo lugar visto de dentro do contêiner do app.
+ *
+ * `/fiscal-certs` é um caminho de RAZ do sistema, e ele só existe porque o
+ * compose monta `/srv/fiscal/certs` ali. Fora do contêiner — `pnpm dev` na
+ * máquina de quem desenvolve, e o Playwright local — o caminho não existe e o
+ * `mkdir` precisa de privilégio de root.
+ *
+ * `FISCAL_CERTS_DIR` existe para esses dois casos e **não** para mudar produção:
+ * o compose não define a variável, e sem ela o valor é exatamente o de antes.
+ * A e2e `jornada-fiscal` subia o app fora do contêiner e recebia 500 em toda
+ * execução, com a mensagem "Verifique se o diretório existe no servidor" — que
+ * é verdade e não ajuda: o diretório que falta é o do contêiner, não o do
+ * servidor.
+ */
+export const DIRETORIO_DE_CERTIFICADOS_NO_APP =
+  process.env.FISCAL_CERTS_DIR?.trim() || "/fiscal-certs";
 
 /**
  * Nome fixo do certificado dentro do diretório da organização.

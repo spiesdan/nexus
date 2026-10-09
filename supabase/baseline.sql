@@ -21266,3 +21266,67 @@ alter table public.business_prospects add column if not exists laya_fit_em times
 alter table public.business_prospects drop constraint if exists business_prospects_laya_fit_valido;
 alter table public.business_prospects add constraint business_prospects_laya_fit_valido check (laya_fit is null or laya_fit = any (array['potencial', 'duvidoso', 'sem_potencial']::text[]));
 create index if not exists business_prospects_fit_pendente_idx on public.business_prospects (organization_id, created_at desc) where laya_fit is null and status_comercial = 'novo' and bloqueado = false;
+
+
+-- 0261_fiscal_agendado_e_alertas (apêndice — ver supabase/migrations/20261009140000_0261_fiscal_agendado_e_alertas.sql)
+--
+-- Por que isto é um apêndice e não uma chamada à pasta de migrations: o
+-- install.sh roda o baseline.sql em instalação NOVA e o update.sh reaplica em
+-- instalação existente. Um apêndice idempotente é o que chega nas duas. Ver a
+-- doutrina de Migrations em CLAUDE.md.
+
+-- Pedido declara que é COM NF, e a forma de pagamento é estruturada.
+alter table public.commercial_orders add column if not exists exige_nf boolean not null default false;
+alter table public.commercial_orders add column if not exists forma_pagamento text;
+alter table public.commercial_orders drop constraint if exists commercial_orders_forma_pagamento_valida;
+alter table public.commercial_orders add constraint commercial_orders_forma_pagamento_valida check (forma_pagamento is null or forma_pagamento = any (array['a_vista', 'agendado_30', 'agendado_45']::text[]));
+
+-- Recebível de prazo sem NF emitida: `vencimento` NULL marcado como dependente.
+alter table public.financial_receivables add column if not exists vencimento_depende_de_nf boolean not null default false;
+alter table public.financial_receivables drop constraint if exists financial_receivables_forma_pagamento_valida;
+alter table public.financial_receivables add constraint financial_receivables_forma_pagamento_valida check (forma_pagamento is null or forma_pagamento = any (array['a_vista', 'agendado_30', 'agendado_45', 'outro']::text[]));
+alter table public.financial_receivables drop constraint if exists financial_receivables_vencimento_ou_dependencia;
+alter table public.financial_receivables add constraint financial_receivables_vencimento_ou_dependencia check (vencimento is not null or vencimento_depende_de_nf);
+
+-- Onde um aviso de rotina mora. Ver a migration para o desenho da chave.
+create table if not exists public.operational_alerts (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  chave text not null,
+  origem_tipo text not null check (origem_tipo = any (array['nf_pendente', 'fora_da_carga', 'vencimento_proximo', 'vencimento_vencido']::text[])),
+  origem_id uuid,
+  titulo text not null,
+  descricao text,
+  acao_recomendada text,
+  href text,
+  prioridade text not null default 'normal' check (prioridade = any (array['baixa', 'normal', 'alta', 'critica']::text[])),
+  status text not null default 'aberto' check (status = any (array['aberto', 'resolvido', 'cancelado']::text[])),
+  repeticoes integer not null default 0,
+  resolvido_em timestamptz,
+  resolvido_por uuid references auth.users(id) on delete set null,
+  motivo_resolucao text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint operational_alerts_chave_nao_vazia check (length(chave) > 0)
+);
+create unique index if not exists operational_alerts_chave_aberta_key on public.operational_alerts (organization_id, chave) where status = 'aberto';
+create index if not exists operational_alerts_org_abertos_idx on public.operational_alerts (organization_id, status, prioridade, created_at desc);
+create index if not exists operational_alerts_origem_idx on public.operational_alerts (organization_id, origem_tipo, origem_id);
+create index if not exists operational_alerts_recentes_idx on public.operational_alerts (organization_id, updated_at desc) where status = 'aberto';
+
+alter table public.operational_alerts enable row level security;
+drop policy if exists operational_alerts_select on public.operational_alerts;
+create policy operational_alerts_select on public.operational_alerts for select using ((organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin());
+drop policy if exists operational_alerts_insert on public.operational_alerts;
+create policy operational_alerts_insert on public.operational_alerts for insert with check ((organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin());
+drop policy if exists operational_alerts_update on public.operational_alerts;
+create policy operational_alerts_update on public.operational_alerts for update using ((organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()) with check ((organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin());
+drop policy if exists operational_alerts_delete on public.operational_alerts;
+create policy operational_alerts_delete on public.operational_alerts for delete using ((organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin());
+
+-- Os dois índices parciais que as rotinas varrem.
+create index if not exists commercial_orders_exige_nf_idx on public.commercial_orders (organization_id, created_at desc) where exige_nf = true;
+
+-- Semeia `exige_nf` a partir do que já estava escrito na observação. Idempotente:
+-- a segunda execução só encontra pedidos que JÁ estão marcados.
+update public.commercial_orders set exige_nf = true where exige_nf = false and status <> 'cancelado' and observacoes is not null and observacoes ~* '(^|[^a-z0-9])nf([^a-z0-9]|$)';

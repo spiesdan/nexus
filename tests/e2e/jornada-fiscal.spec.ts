@@ -95,10 +95,14 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   // (o caminho quem decide é o servidor, não quem digita). O teste ainda
   // tentava preenchê-lo e tomava 300 s de timeout em `element is not
   // editable` — ver `ConfigFiscal.tsx`.
-  await expect(
-    page.locator("#cert-path"),
-    "o caminho do certificado é leitura, e nasce vazio sem upload",
-  ).toHaveValue("");
+  // NÃO se afirma que nasce vazio. O campo mostra o que o SERVIDOR gravou, e o
+  // diretório de certificados é o mesmo entre execuções — a primeira execução
+  // desta spec grava, e a segunda já encontra o arquivo lá. Um teste que exige
+  // "vazio" passa na primeira e reprova na segunda, e a segunda é a que roda em
+  // todo PR.
+  //
+  // O que se afirma é o que o operador não consegue fazer: DIGITAR no campo.
+  await expect(page.locator("#cert-path")).toHaveAttribute("readonly", "");
 
   // O certificado real entra por upload: um `.pfx` de mentira basta, porque
   // o objetivo da jornada é chegar ao estado honesto de "sem emissor".
