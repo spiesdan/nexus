@@ -156,8 +156,7 @@ describe("uma organização não enxerga o certificado da outra", () => {
   });
 });
 
-describe("onde o certificado fica", () => {
-  it("NUNCA no Storage público", () => {
+describe("onde o certificado fica", () => {  it("NUNCA no Storage público", () => {
     // O bucket público transformaria a credencial que assina nota fiscal num
     // arquivo com URL adivinhável. Esta é a regra que o seletor de arquivo
     // antigo contradizia.
@@ -177,5 +176,35 @@ describe("onde o certificado fica", () => {
     expect(DIRETORIO_DE_CERTIFICADOS_NO_HOST).toBe("/srv/fiscal/certs");
     expect(DIRETORIO_DE_CERTIFICADOS_NO_APP).toBe("/fiscal-certs");
     expect(NOME_DO_CERTIFICADO).toBe("certificado.pfx");
+  });
+});
+
+describe("a tela e a API usam a MESMA checagem", () => {
+  // A tela de Notas lê a config direto do banco, na página de servidor — não
+  // passa pela rota. Quando a checagem do certificado vivia só na API, o
+  // `certificado_presente` chegava `undefined` na tela e ela voltava a dizer
+  // "não está no servidor" COM o arquivo no disco. O E2E pegou: o envio
+  // confirmava `true` pela API e a tela, recarregada, negava.
+  //
+  // Duas cópias de uma regra é como elas divergem sem ninguém ver. Este teste
+  // não deixa a função ser duplicada: ela mora em `lib/fiscal/certificado.ts`,
+  // e as duas pontas importam.
+  it("a função exportada é a que as duas pontas usam", async () => {
+    const { certificadoPresenteNoServidor } = await import("@/lib/fiscal/certificado");
+    expect(typeof certificadoPresenteNoServidor).toBe("function");
+
+    // Sem diretório no caminho dado, a resposta tem de ser `false` e NÃO
+    // exceção: a página de Notas quebraria inteira se esta função lançasse.
+    const ausente = await certificadoPresenteNoServidor(
+      "4bc721ce-157a-41b9-97ae-ba633650859c",
+      "/tmp/dir-que-nao-existe-crm",
+    );
+    expect(ausente).toBe(false);
+  });
+
+  it("devolve false para organização malformada, sem tocar o disco", async () => {
+    const { certificadoPresenteNoServidor } = await import("@/lib/fiscal/certificado");
+    expect(await certificadoPresenteNoServidor("../..")).toBe(false);
+    expect(await certificadoPresenteNoServidor("")).toBe(false);
   });
 });

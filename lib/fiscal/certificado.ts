@@ -1,3 +1,6 @@
+import { stat } from "node:fs/promises";
+import path from "node:path";
+
 /**
  * O CERTIFICADO A1 — onde ele fica e como ele chega lá.
  *
@@ -174,4 +177,38 @@ export function decidirCertificado(
     tamanho: arquivo.size,
     caminhoNoHost: `${diretorio}/${NOME_DO_CERTIFICADO}`,
   };
+}
+
+/**
+ * O certificado DESTA organização está no disco?
+ *
+ * ─── Por que esta função mora AQUI, e não em cada rota ───────────────────────
+ *
+ * Porque a tela de Notas lê a config fiscal direto do banco, na página de
+ * servidor — NÃO pela API. A primeira versão desta checagem vivia só na API, e
+ * o `certificado_presente` chegava `undefined` na tela: com o arquivo no disco,
+ * a tela continuava dizendo "não está no servidor".
+ *
+ * Duas cópias de uma regra é como as duas divergem sem ninguém ver — foi
+ * exatamente o que aconteceu com `certificado_path`, escrito à mão em três
+ * arquivos e divergindo. A regra mora num lugar e as duas pontas chamam.
+ *
+ * O caminho vem do `organization_id` da sessão, nunca do `certificado_path` do
+ * banco: um valor forjado ali apontaria para o certificado de outra
+ * organização.
+ */
+export async function certificadoPresenteNoServidor(
+  organizationId: string,
+  base = DIRETORIO_DE_CERTIFICADOS_NO_APP,
+): Promise<boolean> {
+  const diretorio = diretorioDoCertificado(organizationId, base);
+  if (!diretorio) return false;
+  try {
+    const st = await stat(path.join(diretorio, NOME_DO_CERTIFICADO));
+    return st.isFile() && st.size > 0;
+  } catch {
+    // Sem diretório é o estado normal de quem não enviou certificado — não é
+    // erro, e transformar isso em exceção faria a tela de Notas quebrar.
+    return false;
+  }
 }
