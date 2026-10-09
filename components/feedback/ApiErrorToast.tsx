@@ -109,6 +109,10 @@ export const COPY: Record<string, { variant: Variant; msg?: string }> = {
   // pergunta não tinha alvo. Para quem usa, isto é "escolha uma semana", não
   // "algo quebrou" — daí `info` e não `error`.
   agenda_listagem_sem_recorte: { variant: "info" },
+  // "A disponibilidade deste responsável ainda não foi configurada" — medido em
+  // produção como 422 VERMELHO ao abrir a Agenda. Falta configurar é aviso, e a
+  // frase vem da rota (ela diz o que fazer: "Configure em Equipe → Atendimento").
+  agenda_jornada_nao_configurada: { variant: "warning" },
 
   // ---- Fiscal ----
   //

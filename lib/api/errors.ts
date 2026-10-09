@@ -44,6 +44,21 @@ export const ApiErrorCodes = {
   agenda_disponibilidade_invalida: "agenda_disponibilidade_invalida",
   agenda_ja_cancelado: "agenda_ja_cancelado",
   agenda_listagem_sem_recorte: "agenda_listagem_sem_recorte",
+  /**
+   * A jornada do responsável não está configurada (ou está errada).
+   *
+   * Medido em produção em 09/10/2026: `GET /api/v1/agenda/horarios-livres`
+   * devolvia `validation_failed` para este caso, e a Agenda abria com toast
+   * VERMELHO em `422` — "A disponibilidade deste responsável ainda não foi
+   * configurada. Configure em Equipe → Atendimento."
+   *
+   * Quem abre a Agenda no primeiro dia de uso tem, por definição, ninguém com
+   * disponibilidade cadastrada. A primeira tela do sistema Replyia em vermelho.
+   *
+   * Os irmãos (`agenda_tipo_desativado`, `agenda_sem_responsavel`) já existiam
+   * com tom de aviso e a rota não os emitia; este faltava no registro.
+   */
+  agenda_jornada_nao_configurada: "agenda_jornada_nao_configurada",
 
   // 409 — conflito
   idempotency_conflict: "idempotency_conflict",

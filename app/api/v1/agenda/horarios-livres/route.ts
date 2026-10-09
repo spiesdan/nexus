@@ -107,9 +107,30 @@ export async function GET(req: NextRequest): Promise<Response> {
     // `motivoParaCliente` — dois campos para a escolha ser explícita.
     const status: Record<CodigoDeRecusaDaConsulta, { codigo: string; http: number }> = {
       tipo_desconhecido: { codigo: "not_found", http: 404 },
-      tipo_desativado: { codigo: "validation_failed", http: 422 },
-      sem_responsavel: { codigo: "validation_failed", http: 422 },
-      jornada_mal_configurada: { codigo: "validation_failed", http: 422 },
+      // ─── Códigos próprios, e não `validation_failed` para os três ──────────
+      //
+      // Medido em produção em 09/10/2026: abrir `/app/agenda` disparava
+      //   422 /api/v1/agenda/horarios-livres
+      //   "A disponibilidade deste responsável ainda não foi configurada."
+      // e a tela pintava VERMELHO, como se algo tivesse quebrado.
+      //
+      // A causa é um desencontro, não um erro de Pintura: `agenda_tipo_desativado`,
+      // `agenda_sem_responsavel` e `agenda_fora_da_jornada` EXISTEM no registro
+      // de códigos e já têm tom de aviso no `ApiErrorToast` — e esta rota nunca
+      // os emitia, devolvendo `validation_failed` para os três casos. O tom
+      // certo estava escrito e desligado.
+      //
+      // Por que importa mais do que parece: quem abre a Agenda no primeiro dia
+      // de uso tem, por definição, ninguém com disponibilidade cadastrada. A
+      // primeira tela que a pessoa vê do sistema inteiro Replyia com erro
+      // vermelho, e vermelho ensina a ignorar vermelho.
+      //
+      // `jornada_mal_configurada` ganhou código próprio pelo mesmo motivo: é
+      // "falta configurar", e não "você pediu errado" — que é o que
+      // `validation_failed` significa para quem lê.
+      tipo_desativado: { codigo: "agenda_tipo_desativado", http: 422 },
+      sem_responsavel: { codigo: "agenda_sem_responsavel", http: 422 },
+      jornada_mal_configurada: { codigo: "agenda_jornada_nao_configurada", http: 422 },
       erro_interno: { codigo: "internal_error", http: 500 },
     };
     const { codigo, http } = status[consulta.codigo];
@@ -141,4 +162,3 @@ export async function GET(req: NextRequest): Promise<Response> {
     { requestId },
   );
 }
-
