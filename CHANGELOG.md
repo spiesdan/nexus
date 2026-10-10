@@ -8,6 +8,25 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.29] — 2026-10-10
+
+### Corrigido
+
+- **Importar da SEFAZ mostra o erro nomeado em vez de "sidecar inalcançável"** Três defeitos pequenos que juntos quebravam o botão Importar sem dizer o porquê:
+
+  **O sidecar montava o config com a chave errada.** A biblioteca fiscal exige
+  `schemes` no plural; o código mandava `scheme` no singular e a validação
+  derrubava tudo antes de falar com a SEFAZ.
+
+  **Exceção fora do try virava página de erro.** Quando a montagem falhava, o
+  PHP devolvia HTML em vez de resposta, e o aplicativo traduzia isso como
+  "sidecar inalcançável" — apontando para rede quando o problema era
+  configuração. Agora a falha volta nomeada com o motivo.
+
+  **A UF faltante não era pedida.** A biblioteca exige a sigla do estado, e a
+  tela só pedia CNPJ e certificado. Agora a verificação pede os três de uma vez,
+  em português, antes de chamar a SEFAZ.
+
 ## [1.25.28] — 2026-10-10
 
 ### Corrigido
@@ -3324,7 +3343,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...HEAD
+[1.25.29]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...v1.25.29
 [1.25.28]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.27...v1.25.28
 [1.25.27]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.26...v1.25.27
 [1.25.26]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.25...v1.25.26
