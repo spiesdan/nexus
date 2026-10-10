@@ -153,8 +153,8 @@ export function agruparDoDia(op: {
   linha.hoje.sort(porHora);
   linha.amanha.sort(porHora);
   linha.atrasado.sort((a, b) => {
-    const da = a.kind === "tarefa" ? (a.data ?? "") : chaveDeData(a.quando);
-    const db = b.kind === "tarefa" ? (b.data ?? "") : chaveDeData(b.quando);
+    const da = a.kind === "tarefa" ? a.data ?? "" : chaveDeData(a.quando);
+    const db = b.kind === "tarefa" ? b.data ?? "" : chaveDeData(b.quando);
     return da < db ? -1 : da > db ? 1 : 0;
   });
   return linha;
