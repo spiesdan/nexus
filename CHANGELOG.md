@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.28] — 2026-10-10
+
+### Corrigido
+
+- **Importar notas da SEFAZ não exige mais provedor de emissão** O botão "Importar" respondia com erro em instalações que tinham certificado
+  válido só porque o provedor fiscal não era o de emissão. Baixar notas da SEFAZ
+  não é emitir: a consulta autentica pelo certificado e filtra pelo CNPJ, e
+  nada além disso entra na chamada.
+
+  Agora a verificação prévia pede só o que o download usa — CNPJ, certificado e
+  senha — e diz exatamente qual dos três falta. Quem já tinha o certificado
+  instalado passa a importar sem mexer em mais nada.
+
 ## [1.25.27] — 2026-10-10
 
 ### Corrigido
@@ -3311,7 +3324,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.27...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...HEAD
+[1.25.28]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.27...v1.25.28
 [1.25.27]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.26...v1.25.27
 [1.25.26]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.25...v1.25.26
 [1.25.25]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.24...v1.25.25
