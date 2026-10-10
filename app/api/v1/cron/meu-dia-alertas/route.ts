@@ -60,7 +60,6 @@ export const dynamic = "force-dynamic";
 /** Teto por organização e por varredura. Ver a nota do cabeçalho. */
 const SCAN_LIMIT = 300;
 
-
 export async function GET(req: NextRequest): Promise<Response> {
   return rodar(req);
 }
@@ -104,17 +103,51 @@ async function rodar(req: NextRequest): Promise<Response> {
 
   for (const org of (orgaos ?? []) as { id: string }[]) {
     try {
-      // Uma organização que derruba NÃO pode derrubar as outras: um tick que
-      // para no primeiro erro deixa a instalação inteira sem aviso, e a próxima
-      // org da lista seria a única que ficaria sem conferência.
-      const nf = await varrerNfPendente(admin, org.id, hoje);
-      const carga = await varrerForaDaCarga(admin, org.id);
-      const venc = await varrerVencimentos(admin, org.id, hoje);
+      // ─── Cada varredura é isolada ─────────────────────────────────────────
+      //
+      // Uma organização que derruba NÃO derruba as outras: um tick que para no
+      // primeiro erro deixa a instalação inteira sem aviso.
+      //
+      // E — o que só apareceu depois das duas colunas que não existem — uma
+      // ORIGEM que derruba NÃO derruba as outras da MESMA organização. O erro de
+      // `financial_receivables.cliente_nome` derrubou a varredura de vencimento e
+      // a de NF junto, porque as três rodavam dentro de um único `try`. A de NF
+      // não consulta recebíveis e não tem por que sumir por causa dela.
+      //
+      // `tryPorOrigem` transforma "o tick inteiro falhou" em "esta origem
+      // falhou, e as outras duas responderam" — e o resumo mostra exatamente
+      // isso, para que a falha não seja um número que parece sucesso.
+      const nf = await tryPorOrigem(admin, org.id, "nf_pendente", () =>
+        varrerNfPendente(admin, org.id, hoje),
+      );
+      const carga = await tryPorOrigem(admin, org.id, "fora_da_carga", () =>
+        varrerForaDaCarga(admin, org.id),
+      );
+      const venc = await tryPorOrigem(admin, org.id, "vencimento", () =>
+        varrerVencimentos(admin, org.id, hoje),
+      );
 
       const candidatos: AlertaParaSubir[] = [...nf, ...carga, ...venc];
       resumo.porOrigem.nf_pendente += nf.length;
       resumo.porOrigem.fora_da_carga += carga.length;
       resumo.porOrigem.vencimento += venc.length;
+
+      // ─── Por que a falha parcial NÃO resolve alerta de outra origem ─────────
+      //
+      // Duas garantias, e as duas estão no motor e não aqui:
+      //
+      //   1. `reconciliarAlertas` com lista vazia devolve sem tocar em nada.
+      //   2. Quando a lista NÃO está vazia, ele só lê os abertos cuja
+      //      `origem_tipo` está na lista (`.in("origem_tipo", ...)`).
+      //
+      // Então a varredura de NF falhando não resolve nenhum alerta de NF: a
+      // origem nem entra no `.in`. Sem a segunda garantia, uma origem que falhou
+      // seria tratada como "acabou" pela reconciliação das outras — e um erro de
+      // leitura viraria "não há mais pendências", que é a pior mentira possível
+      // para quem abre o Meu Dia.
+      //
+      // Por isso não há `continue` aqui: seria código morto fingindo proteger
+      // algo que o motor já protege.
 
       // Uma chamada só: `reconciliar` resolve o que não está na lista e
       // reaffirma o que está. Duas chamadas (uma por origem) dariam o mesmo
@@ -451,6 +484,32 @@ async function enriquecerComNome(
       (r.order_id ? nomePorPedido.get(r.order_id) : null) ??
       null,
   }));
+}
+
+/**
+ * Uma varredura que falha não derruba as outras.
+ *
+ * Devolve lista vazia no erro — e é por isso que o chamador precisa do `continue`
+ * de "nenhuma respondeu": lista vazia de sucesso e lista vazia de falha são a
+ * mesma coisa, e só o log as distingue. Confundir as duas resolveria todos os
+ * alertas da organização.
+ */
+async function tryPorOrigem<T>(
+  admin: ReturnType<typeof createAdminClient>,
+  organizationId: string,
+  origem: string,
+  fn: () => Promise<T[]>,
+): Promise<T[]> {
+  try {
+    return await fn();
+  } catch (e) {
+    logger.error("[meu-dia-alertas] origem falhou", {
+      organizationId,
+      origem,
+      error: e instanceof Error ? e.message : String(e),
+    });
+    return [];
+  }
 }
 
 function somarDiasLocal(iso: string, dias: number): string {

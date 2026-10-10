@@ -180,3 +180,33 @@ conserto das abas colidindo em coluna estreita (PR do branch
 
 - `evidence/sped-bloco-h/sped-arquivo-editavel.png` — arquivo EDF ICMS/IPI com Bloco H gerado e textarea editável (spec 20 / PR #36).
 - `evidence/notas-barra/1-barra-notas-ainda-vazia.png` — barra de ações da tela de Notas visível mesmo sem notas (PR #32).
+
+## 09/10 — Alertas operacionais no Meu Dia
+
+- `evidence/meu-dia-alertas.png` — o **Meu Dia** com o bloco **"Nota fiscal
+  pendente (1)"**: um pedido que foi criado com a caixa **"Este pedido é com NF"**
+  marcada, e que ainda não tem nota emitida. A linha mostra o pedido, o cliente,
+  a ação recomendada e um link para abrir o registro.
+
+- `evidence/meu-dia-alertas-resolvido.png` — a **mesma tela depois de resolver** o
+  alerta pelo PATCH. É a segunda imagem que existe por um motivo: a primeira
+  prova que o aviso aparece, e sem a segunda ninguém prova que ele sai — e um
+  aviso que não sai é um aviso que ninguém lê.
+
+**O que estas duas imagens não provam.** Que o estado fiscal está certo. A regra
+que decide se o pedido está pendente é `estadoFiscal` em
+`lib/meu-dia/nf-pendente.ts`, com 22 testes de unidade — e o caso mais importante
+deles é o que a imagem **não** mostra: quando a instalação não tem provedor que
+confirme emissão (provedor `stub`), o estado vira `nao_verificavel` e a tela diz
+isso em vez de afirmar que a nota não saiu. Um alerta que promete uma confirmação
+falsa treina o operador a ignorar o Meu Dia inteiro.
+
+**Reprodutível.** `pnpm exec playwright test --config=playwright.config.ts
+meu-dia-alertas` regenera as duas. O código que as produz continua no
+repositório, que é o que distingue evidência reprodutível de histórica
+(a distinção está no topo deste arquivo).
+
+**Vermelho nesta wave:** nada. A conciliação do fechamento de carga
+(`lib/comercial/conciliacao-carga.ts`, 17 testes) e a regra de pedido fora da
+carga (`lib/meu-dia/fora-da-carga.ts`, 17 testes) não têm imagem porque não têm
+tela — são regras de decisão, e o lugar delas é o teste de unidade.
