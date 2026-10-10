@@ -1,0 +1,83 @@
+/**
+ * APK DE DEBUG — compila o shell e entrega o arquivo para baixar.
+ *
+ * ─── Por que workflow separado ──────────────────────────────────────────────
+ *
+ * O `publish-image.yml` publica containers; o APK não é container. E o build
+ * Android precisa de JDK + SDK + 8-15 minutos — pendurar isso no `verify` ou
+ * no `e2e` puniria todo PR que não toca em mobile.
+ *
+ * Roda em: `workflow_dispatch` (botão), e em PR que toque em `mobile/`,
+ * `lib/offline/`, `capacitor.config.ts` ou neste arquivo.
+ *
+ * ─── Debug, e não release ───────────────────────────────────────────────────
+ *
+ * Assinado com a chave de debug do próprio Gradle — instala por sideload sem
+ * store e sem keystore. A release assinada (keystore próprio, `build.gradle`
+ * com `signingConfigs`) entra quando o app for para a mão de vendedores de
+ * verdade; antes disso, gerenciar segredo de assinatura é burocracia sem uso.
+ */
+name: "APK do app offline (debug)";
+
+on:
+  workflow_dispatch: null
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "lib/offline/**"
+      - "capacitor.config.ts"
+      - "app/app/_components/SincronizadorOffline.tsx"
+      - ".github/workflows/apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  apk-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: E2E do shell (navegador)
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test -c playwright.mobile.config.ts --reporter=line
+
+      - name: Testes de unidade do offline
+        run: pnpm exec vitest run tests/unit/offline-outbox-sync.test.ts tests/unit/pedido-chave-sincronizacao.test.ts
+
+      - name: Build do shell
+        run: pnpm mobile:build
+
+      - name: Sincronizar Capacitor
+        run: pnpm exec cap sync android
+
+      - name: Compilar APK de debug
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: bill-higiene-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

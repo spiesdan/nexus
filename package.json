@@ -39,12 +39,19 @@
     "gov:verify": "pnpm typecheck && pnpm lint && pnpm lint:channels && pnpm lint:role-rank && pnpm test:unit",
     "worker": "tsx --env-file=.env --env-file=.env.local workers/agent-worker/main.ts",
     "dev:crons": "tsx --env-file=.env --env-file=.env.local scripts/dev-crons.ts",
-    "flywheel:judge": "tsx --env-file=.env --env-file=.env.local scripts/flywheel-judge-live.ts"
+    "flywheel:judge": "tsx --env-file=.env --env-file=.env.local scripts/flywheel-judge-live.ts",
+    "mobile:build": "vite build -c mobile/vite.config.ts",
+    "mobile:dev": "vite -c mobile/vite.config.ts --port 5173"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.16",
     "@ai-sdk/google": "^4.0.18",
     "@ai-sdk/openai": "^4.0.47",
+    "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/network": "^8.0.1",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hello-pangea/dnd": "^18.0.1",
@@ -80,6 +87,7 @@
     "fflate": "^0.8.3",
     "gpt-tokenizer": "^4.0.0",
     "import-in-the-middle": "^3.3.3",
+    "jeep-sqlite": "^2.8.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.34.0",
     "next": "^16.3.3",
@@ -95,6 +103,7 @@
     "require-in-the-middle": "^8.0.1",
     "resend": "^6.24.0",
     "sonner": "^2.0.8",
+    "sql.js": "^1.11.0",
     "tailwind-merge": "^3.6.0",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"
