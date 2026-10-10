@@ -54,6 +54,11 @@ import {
   type PedidoElegivel,
 } from "@/lib/meu-dia/fora-da-carga";
 import { alertasDeVencimento, type RecebivelParaConferir } from "@/lib/meu-dia/vencimento";
+import {
+  fraseDasPendencias,
+  pendenciasFiscais,
+  type ConfigFiscalParaProntidao,
+} from "@/lib/fiscal/prontidao";
 import { reconciliarAlertas, type AlertaParaSubir } from "@/lib/alertas/reconciliar";
 
 export const dynamic = "force-dynamic";
@@ -214,7 +219,10 @@ async function varrerNfPendente(
 
   const { data: config, error: erroConfig } = await admin
     .from("fiscal_settings")
-    .select("provedor")
+    .select(
+      "provedor, emitente_documento, ie, uf, codigo_municipio, municipio, cep, " +
+        "logradouro, numero_end, bairro, certificado_path",
+    )
     .eq("organization_id", organizationId)
     .maybeSingle();
   if (erroConfig) {
@@ -223,6 +231,19 @@ async function varrerNfPendente(
   const confiavel = integracaoConfiavel(
     (config as unknown as { provedor?: string | null } | null)?.provedor,
   );
+
+  // ─── O QUE FALTA, E NÃO SÓ "O PROVEDOR" ────────────────────────────────────
+  //
+  // A frase antiga dizia "configure o provedor fiscal". Medido em produção em
+  // 10/10/2026, org `4bc721ce…`, o bloqueio real eram CINCO campos — e o CNPJ do
+  // emitente era o primeiro deles.
+  //
+  // Quem seguisse aquela frase configurava o provedor, emissionava e recebia
+  // "Falta CNPJ do emitente", com o alerta igual. O custo não é a mensagem errada:
+  // é a pessoa achar que resolveu.
+  const cfgParaProntidao = config as unknown as ConfigFiscalParaProntidao | null;
+  const pendencias = pendenciasFiscais(cfgParaProntidao);
+  const fraseDoBloqueio = fraseDasPendencias(pendencias);
 
   const porPedido = new Map<string, NotaParaConferir[]>();
   for (const n of (notas ?? []) as unknown as (NotaParaConferir & { created_at: string })[]) {
@@ -249,7 +270,12 @@ async function varrerNfPendente(
       acaoRecomendada:
         estado === "pendente"
           ? "Emitir a nota em Notas Fiscais, ou corrigir a marcação se o pedido não precisa de nota."
-          : "A instalação não tem provedor que confirme a emissão. Configure o provedor fiscal, ou confirme a nota fora do sistema.",
+          : // `nao_verificavel` tem DUAS causas muito diferentes, e a frase
+            // precisa distinguir: a instalação está mal configurada (o caso
+            // comum), ou o provedor é um stub e não há o que conferir.
+            pendencias.length > 0
+            ? fraseDoBloqueio
+            : "A emissão não pode ser conferida nesta instalação. Confirme a nota fora do sistema.",
       href: `/app/pedidos/${p.id}`,
       // `nao_verificavel` é aviso e `pendente` é erro: o primeiro não é falha de
       // ninguém, e o operador precisa ver os dois com pesos diferentes.
