@@ -426,6 +426,7 @@ export const AUDIT_ACTIONS = [
   // completo: dar baixa em um pedido de cada vez é `financial_payment.created`,
   // que já existe — duplicar aqui seria um segundo nome para o mesmo fato.
   "shipment.conciliado",
+  "operational_alert.updated",
   "shipment_order.status",
   "shipment_order.removed",
   // Separação (migration 0240). Conferência antes da rota: quem separou
