@@ -8,6 +8,39 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.25] — 2026-10-10
+
+### Adicionado
+
+- **O Meu Dia passa a avisar sobre nota pendente, carga incompleta e vencimento** O Meu Dia ganhou três avisos que antes só existiam na cabeça de quem atendia:
+
+  **Nota fiscal pendente** — pedidos marcados como "é com NF" que ainda não têm nota
+  emitida. Quando a instalação não tem provedor que confirme emissão, o aviso diz
+  isso em vez de afirmar que a nota não saiu.
+
+  **Pedido fora da carga** — quando uma carga atende uma cidade e fica outro pedido
+  da mesma cidade de fora, aparece no dia seguinte. É um aviso, não uma cobrança: a
+  cidade em comum é sinal, não prova.
+
+  **Vencimento** — aviso preventivo no 30º dia do prazo de 45 dias, e o aviso
+  normal perto do vencimento. Pedido sem nota emitida continua sem data — o valor
+  nasce quando a nota é emitida, nunca antes.
+
+  Quem paga e o que fica pendente aparece nos três lugares ao mesmo tempo, e um só
+  registro: resolver em um resolve nos outros.
+
+### Corrigido
+
+- **A IA de prospecção parou de continuar atendendo** A IA de prospecção mandava a primeira mensagem e depois seguia atendendo como se
+  fosse o atendente humano. Agora, assim que o cliente responde mostrando interesse,
+  a IA se cala e a conversa vai para a equipe.
+
+  O sistema continua de pé para o resto do atendimento, e o CRM guarda o que
+  mandou, quando, por qual canal, para quem e o que respondeu — nada se perde.
+
+  Quem não teve interesse não vê mudança: a IA não se cala por uma resposta de
+  "boa tarde", e recusa explícita ("não tenho interesse") não conta como interesse.
+
 ## [1.25.24] — 2026-10-09
 
 ### Corrigido
@@ -3243,7 +3276,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.24...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.25...HEAD
+[1.25.25]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.24...v1.25.25
 [1.25.24]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.23...v1.25.24
 [1.25.23]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.22...v1.25.23
 [1.25.22]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.21...v1.25.22
