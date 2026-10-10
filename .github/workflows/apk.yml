@@ -51,7 +51,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
+      # Sem `android-actions/setup-android`: o runner ubuntu já traz o SDK
+      # (`/usr/local/lib/android/sdk`) e a v3 da action quebra tentando
+      # instalar o pacote obsoleto `tools` ("Failed to find package 'tools'",
+      # medido em 10/10/2026). Basta apontar as variáveis.
+      - name: SDK do Android (pré-instalado no runner)
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          sdkmanager --list_installed | tail -5
 
       - name: Dependências
         run: pnpm install --frozen-lockfile
