@@ -46,10 +46,12 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Java 21, e não 17: o Capacitor 8 compila com 
+      # (medido em 10/10/2026:  com o 17).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       # Sem `android-actions/setup-android`: o runner ubuntu já traz o SDK
       # (`/usr/local/lib/android/sdk`) e a v3 da action quebra tentando
