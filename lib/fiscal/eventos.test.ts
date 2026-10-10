@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { lerMensagemCarta, motivoDeNaoTransmitir, montarMensagemCarta } from "./eventos";
+import {
+  lerMensagemCarta,
+  motivoDeNaoBaixar,
+  motivoDeNaoTransmitir,
+  montarMensagemCarta,
+} from "./eventos";
 import type { ContextoSped } from "./sped-payload";
 
 function contexto(
@@ -101,5 +106,42 @@ describe("motivoDeNaoTransmitir — o portão honesto", () => {
     expect(motivoDeNaoTransmitir(contexto({ emitente_documento: null }))).toMatch(/CNPJ/);
     expect(motivoDeNaoTransmitir(contexto({ ie: null }))).toMatch(/Inscrição/);
     expect(motivoDeNaoTransmitir(contexto({ uf: null }))).toMatch(/UF/);
+  });
+
+  describe("motivoDeNaoBaixar — baixar não é transmitir", () => {
+    it("stub com certificado e CNPJ baixa: provedor não entra na chamada", () => {
+      // O caso que o portão antigo barrava: a instalação real tinha
+      // certificado + senha, provedor `stub`, e o botão respondia 502
+      // mandando "configurar o sidecar" — que já estava no ar.
+      expect(motivoDeNaoBaixar(contexto({ provedor: "stub" }))).toBeNull();
+    });
+
+    it("sem CNPJ não há de quem trazer — e a mensagem diz isso", () => {
+      const motivo = motivoDeNaoBaixar(contexto({ emitente_documento: null }));
+      expect(motivo).toMatch(/CNPJ/);
+      // E NÃO aponta para o provedor: foi esse o erro do 502 antigo.
+      expect(motivo).not.toMatch(/provedor|sidecar/i);
+    });
+
+    it("CNPJ malformado é o mesmo que ausente", () => {
+      // 13 dígitos passam num `if (cnpj)` e reprovam na SEFAZ. A forma do bug
+      // é sempre a mesma: o dado existe e não é verdade.
+      expect(motivoDeNaoBaixar(contexto({ emitente_documento: "123" }))).toMatch(/CNPJ/);
+    });
+
+    it("sem certificado ou sem senha, não sai do chão", () => {
+      expect(motivoDeNaoBaixar(contexto({ certificado_path: null }))).toMatch(/Certificado/);
+      expect(motivoDeNaoBaixar(contexto({}, null))).toMatch(/Senha/);
+    });
+
+    it("IE, UF e endereço ausentes NÃO barram o download", () => {
+      // É a diferença inteira entre os dois portões: o download autentica pelo
+      // certificado e filtra pelo CNPJ. Exigir o resto aqui seria barrar um
+      // download por dado que o download não usa.
+      const motivo = motivoDeNaoBaixar(
+        contexto({ ie: null, uf: null, codigo_municipio: null, municipio: null }),
+      );
+      expect(motivo).toBeNull();
+    });
   });
 });
