@@ -47,7 +47,15 @@ class ServicoEntrada
         if ($ultNsu < 0) {
             return ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => 'ult_nsu não pode ser negativo.'];
         }
-        $tools = $this->ferramentas();
+        // O `ferramentas()` DENTRO do try de proposito: a validacao do config
+        // do sped-nfe joga `DocumentsException` (ex.: UF vazia reprova o
+        // schema) — fora do try isso vira fatal HTML, o app recebe
+        // nao-JSON e responde "inalcancavel" para um erro de configuracao.
+        try {
+            $tools = $this->ferramentas();
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'codigo' => 'CONFIG_INVALIDA', 'mensagem' => substr($e->getMessage(), 0, 500)];
+        }
         if ($tools === null) {
             return ['ok' => false, 'codigo' => 'CERT_NAO_LIDO', 'mensagem' => 'Arquivo de certificado não legível no volume /certs ou senha vazia.'];
         }
@@ -108,7 +116,15 @@ class ServicoEntrada
         if ($evento === '210240' && mb_strlen($justificativa) < 15) {
             return ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => 'Operação não realizada exige justificativa (15+ letras).'];
         }
-        $tools = $this->ferramentas();
+        // O `ferramentas()` DENTRO do try de proposito: a validacao do config
+        // do sped-nfe joga `DocumentsException` (ex.: UF vazia reprova o
+        // schema) — fora do try isso vira fatal HTML, o app recebe
+        // nao-JSON e responde "inalcancavel" para um erro de configuracao.
+        try {
+            $tools = $this->ferramentas();
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'codigo' => 'CONFIG_INVALIDA', 'mensagem' => substr($e->getMessage(), 0, 500)];
+        }
         if ($tools === null) {
             return ['ok' => false, 'codigo' => 'CERT_NAO_LIDO', 'mensagem' => 'Arquivo de certificado não legível no volume /certs ou senha vazia.'];
         }
@@ -155,7 +171,11 @@ class ServicoEntrada
             'cnpj' => preg_replace('/\D/', '', (string)($c['cnpj'] ?? '')),
             'ie' => preg_replace('/\D/', '', (string)($c['ie'] ?? '')),
             'siglaUF' => strtoupper((string)($c['uf'] ?? '')),
-            'scheme' => 'PL_010',
+            // `schemes` no plural: o schema do sped-nfe (`storage/config.schema`)
+            // exige `schemes`, e `scheme` no singular reprova a validação com
+            // `wrongDocument(8)` — medido em 10/10/2026, com o app recebendo
+            // HTML 500 e respondendo "inalcançável" para um erro de config.
+            'schemes' => 'PL_010',
             'versao' => '4.00',
         ]), $cert);
         $tools->model('55');

@@ -94,6 +94,12 @@ export function motivoDeNaoBaixar(ctx: ContextoSped): string | null {
       "que o download exige — sem ele a SEFAZ não sabe de quem trazer as notas."
     );
   }
+  // UF aqui, e não só no sidecar: o schema do sped-nfe exige `siglaUF` com
+  // 2 letras, e sem ela o sidecar responderia `CONFIG_INVALIDA` com jargão
+  // de schema. O portão do app existe para dizer em português.
+  if ((ctx.emitente.uf ?? "").trim().length !== 2) {
+    return "UF do emitente ausente (configuração fiscal). A biblioteca fiscal exige a sigla do estado.";
+  }
   if (!ctx.emitente.certificado_path) {
     return "Certificado A1 ausente: coloque o .pfx em /certs e registre o caminho.";
   }
