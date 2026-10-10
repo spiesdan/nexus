@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.26] — 2026-10-10
+
+### Corrigido
+
+- **Três problemas que só apareciam com os dados reais da instalação** **Fechar um alerta não resolvia e o aviso voltava.** Um item marcado como tratado
+  que continuava valendo era registrado de novo a cada verificação — a cada dez
+  minutos. Além de encher a tela, a pessoa fechava o aviso e ele voltava, e a lição
+  que fica é que não adianta fechar nada.
+
+  **O aviso de pedido fora da carga nunca aparecia.** A comparação de cidade olhava o
+  endereço do cliente em vez do endereço de entrega do pedido — e o mesmo cliente pode
+  receber em outro lugar. Onde as duas informações existiam, a rotina não comparava as
+  cidades certas; onde o endereço de entrega estava preenchido, ela passava a comparar.
+
+  **O aviso de nota fiscal pendente apontava para o problema errado.** Ele dizia que
+  faltava configurar o provedor, mas o que impedia a emissão era o cadastro do
+  emitente incompleto. Quem seguia a indicação arrumava o provedor e a emissão
+  continuava barrada, sem explicação.
+
+  Agora o aviso lista tudo o que falta de uma vez, na ordem em que cada item
+  libera o próximo, e diz onde cada informação é obtida.
+
 ## [1.25.25] — 2026-10-10
 
 ### Adicionado
@@ -3276,7 +3298,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.25...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.26...HEAD
+[1.25.26]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.25...v1.25.26
 [1.25.25]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.24...v1.25.25
 [1.25.24]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.23...v1.25.24
 [1.25.23]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.22...v1.25.23
