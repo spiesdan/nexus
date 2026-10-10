@@ -132,7 +132,13 @@ describe("agruparDoDia", () => {
       agora: AGORA,
       tarefas: [],
       compromissos: [
-        { id: "lixo", titulo: "Lixo", contato: null, iniciaEm: "não é data", situacao: "confirmed" },
+        {
+          id: "lixo",
+          titulo: "Lixo",
+          contato: null,
+          iniciaEm: "não é data",
+          situacao: "confirmed",
+        },
       ],
     });
     expect(linha.hoje).toEqual([]);
@@ -152,9 +158,7 @@ describe("saudacaoDoDia", () => {
 
 describe("dataPorExtenso", () => {
   it("data por extenso em pt-BR", () => {
-    expect(dataPorExtenso(new Date(2026, 9, 2), "pt-BR")).toBe(
-      "sexta-feira, 2 de outubro",
-    );
+    expect(dataPorExtenso(new Date(2026, 9, 2), "pt-BR")).toBe("sexta-feira, 2 de outubro");
   });
 });
 
