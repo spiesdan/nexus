@@ -16,7 +16,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { carregarContextoSped, motivoDeNaoTransmitir } from "@/lib/fiscal/eventos";
+import { carregarContextoSped, motivoDeNaoBaixar } from "@/lib/fiscal/eventos";
 import { importarHistoricoEmitidas } from "@/lib/fiscal/historico";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -65,16 +65,19 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // Mesmo portão das transmissões: sem sidecar/certificado não há de onde
-  // baixar — o 502 nomeia o que falta em vez de fingir progresso.
+  // O portão do DOWNLOAD, e não o da transmissão: baixar exige CNPJ +
+  // certificado + senha — provedor e IE não entram na chamada à SEFAZ.
+  // Com o portão de transmissão aqui, o botão respondia 502 com provedor
+  // `stub` mesmo com certificado válido (medido em 10/10/2026). O 502 continua
+  // nomeando o que falta em vez de fingir progresso.
   const contexto = await carregarContextoSped(authz.org.orgId);
   const bloqueio = contexto
-    ? motivoDeNaoTransmitir(contexto)
+    ? motivoDeNaoBaixar(contexto)
     : "Sem configuração fiscal para a organização.";
   if (bloqueio) {
     // `fiscal_nao_configurado`, e não `upstream_unavailable`: o portão diz que
-    // falta configuração (o provedor é `stub`, não há sidecar), que é um estado
-    // esperado da instalação. `upstream_unavailable` continua reservado para a
+    // falta CNPJ, certificado ou senha — estado esperado de instalação sem
+    // fiscal completo. `upstream_unavailable` continua reservado para a
     // SEFAZ/sidecar cair DE VERDADE, abaixo — que é vermelho e é o que o
     // operador precisa ver. Juntar os dois obriga a escolher um tom para os dois.
     return fail("fiscal_nao_configurado", `Importação não executada: ${bloqueio}`, 502, {

@@ -42,7 +42,13 @@ interface CorpoSidecar {
 }
 
 function falha(mensagem: string, cstat: string | null = null): RetornoEvento {
-  return { ok: false, protocolo: null, cstat, xmotivo: mensagem, retentavel: eRetentavel(mensagem) };
+  return {
+    ok: false,
+    protocolo: null,
+    cstat,
+    xmotivo: mensagem,
+    retentavel: eRetentavel(mensagem),
+  };
 }
 
 /**
@@ -59,6 +65,35 @@ export function motivoDeNaoTransmitir(ctx: ContextoSped): string | null {
   if (!ctx.emitente.emitente_documento) return "CNPJ do emitente ausente (configuração fiscal).";
   if (!ctx.emitente.ie) return "Inscrição Estadual ausente (configuração fiscal).";
   if (!ctx.emitente.uf) return "UF do emitente ausente (configuração fiscal).";
+  if (!ctx.emitente.certificado_path) {
+    return "Certificado A1 ausente: coloque o .pfx em /certs e registre o caminho.";
+  }
+  if (!ctx.senhaCertificado) return "Senha do certificado ausente (configuração fiscal).";
+  return null;
+}
+/**
+ * O lado "baixar da SEFAZ": CNPJ + certificado + senha. E SÓ.
+ *
+ * Por que este portão existe separado do de transmissão:
+ * `motivoDeNaoTransmitir` exige provedor `spednfe` — e a rota de importacao
+ * usava ele. Resultado: com provedor `stub`, o botao "Importar" respondia 502
+ * mesmo com certificado e CNPJ validos. Mas baixar NÃO é transmitir: a
+ * Distribuição da SEFAZ autentica pelo certificado e filtra pelo CNPJ. IE,
+ * endereco e provedor não entram na chamada — exigi-los aqui seria barrar um
+ * download por causa de dado que o download não usa.
+ *
+ * Medido em 10/10/2026: a instalacao real tinha certificado + senha e só
+ * faltava o CNPJ — e o 502 dizia "configure o sidecar", apontando para o
+ * lado errado (o sidecar estava no ar).
+ */
+export function motivoDeNaoBaixar(ctx: ContextoSped): string | null {
+  const cnpj = (ctx.emitente.emitente_documento ?? "").replace(/\D/g, "");
+  if (cnpj.length !== 14) {
+    return (
+      "CNPJ do emitente ausente (configuração fiscal). É o único dado da empresa " +
+      "que o download exige — sem ele a SEFAZ não sabe de quem trazer as notas."
+    );
+  }
   if (!ctx.emitente.certificado_path) {
     return "Certificado A1 ausente: coloque o .pfx em /certs e registre o caminho.";
   }
@@ -118,9 +153,16 @@ async function chamarEvento(rota: string, corpo: Record<string, unknown>): Promi
     const codigo = c.codigo ?? "";
     const cstat = codigo.startsWith("SEFAZ_") ? codigo.slice("SEFAZ_".length) : null;
     const mensagem = c.mensagem ?? "Sem motivo informado.";
-    return { ok: false, protocolo: null, cstat, xmotivo: mensagem, retentavel: eRetentavel(`${codigo} ${mensagem}`) };
+    return {
+      ok: false,
+      protocolo: null,
+      cstat,
+      xmotivo: mensagem,
+      retentavel: eRetentavel(`${codigo} ${mensagem}`),
+    };
   } catch (e) {
-    const msg = e instanceof Error && e.name === "AbortError" ? "tempo esgotado (60s)" : "inalcançável";
+    const msg =
+      e instanceof Error && e.name === "AbortError" ? "tempo esgotado (60s)" : "inalcançável";
     return falha(`Sidecar fiscal ${msg}.`);
   } finally {
     clearTimeout(limite);
@@ -133,7 +175,10 @@ export interface DadosCartaCorrecao {
   sequencia: number;
 }
 
-export async function transmitirCartaCorrecao(ctx: ContextoSped, dados: DadosCartaCorrecao): Promise<RetornoEvento> {
+export async function transmitirCartaCorrecao(
+  ctx: ContextoSped,
+  dados: DadosCartaCorrecao,
+): Promise<RetornoEvento> {
   const bloqueio = motivoDeNaoTransmitir(ctx);
   if (bloqueio) return falha(bloqueio);
   if (!/^\d{44}$/.test(dados.chave)) return falha("Chave de acesso inválida (44 dígitos).", null);
@@ -152,7 +197,10 @@ export interface DadosInutilizacao {
   modelo?: string | null;
 }
 
-export async function transmitirInutilizacao(ctx: ContextoSped, dados: DadosInutilizacao): Promise<RetornoEvento> {
+export async function transmitirInutilizacao(
+  ctx: ContextoSped,
+  dados: DadosInutilizacao,
+): Promise<RetornoEvento> {
   const bloqueio = motivoDeNaoTransmitir(ctx);
   if (bloqueio) return falha(bloqueio);
   const serie = Number(dados.serie);
@@ -174,11 +222,15 @@ export interface DadosCancelamento {
   justificativa: string;
 }
 
-export async function transmitirCancelamento(ctx: ContextoSped, dados: DadosCancelamento): Promise<RetornoEvento> {
+export async function transmitirCancelamento(
+  ctx: ContextoSped,
+  dados: DadosCancelamento,
+): Promise<RetornoEvento> {
   const bloqueio = motivoDeNaoTransmitir(ctx);
   if (bloqueio) return falha(bloqueio);
   if (!/^\d{44}$/.test(dados.chave)) return falha("Chave de acesso inválida (44 dígitos).", null);
-  if (dados.justificativa.trim().length < 15) return falha("Justificativa do cancelamento: mínimo de 15 caracteres.", null);
+  if (dados.justificativa.trim().length < 15)
+    return falha("Justificativa do cancelamento: mínimo de 15 caracteres.", null);
   return chamarEvento("/cancelar", { ...envelope(ctx), ...dados });
 }
 
