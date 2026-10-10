@@ -21368,3 +21368,16 @@ create or replace view public.operational_alerts_insistentes as
     end as reaperturas_por_fechamento
   from public.operational_alerts
   where status = 'aberto' and reaberturas > 0;
+
+-- 0263_pedido_chave_sincronizacao (apêndice — ver supabase/migrations/20261010150000_0263_pedido_chave_sincronizacao.sql)
+--
+-- O sincronizador offline manda o pedido, o timeout estoura, e ele manda de
+-- novo. Sem esta trava, o retry cria um segundo pedido. Apêndice idempotente
+-- porque o update.sh reaplica o baseline em instalação existente — migration
+-- sozinha não chega na VPS (medido em 10/10/2026 com a 0262).
+alter table public.commercial_orders
+  add column if not exists chave_sincronizacao text;
+
+drop index if exists commercial_orders_org_chave_sincronizacao_uidx;
+create unique index if not exists commercial_orders_org_chave_sincronizacao_uidx
+  on public.commercial_orders (organization_id, chave_sincronizacao);
