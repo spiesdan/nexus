@@ -63,6 +63,7 @@ kpi-e-charts-canonicos.spec.ts
 marca-logo.spec.ts
 meu-dia.spec.ts
 meu-dia-alertas.spec.ts
+pedido-idempotencia.spec.ts
 mfa-opcional.spec.ts
 navegacao.spec.ts
 notificacoes-diz-o-que-falta.spec.ts

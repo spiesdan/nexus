@@ -21,6 +21,7 @@ import {
 } from "@/components/app/ImpersonateBanner";
 import { ConexaoCaidaBanner } from "@/components/app/ConexaoCaidaBanner";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { SincronizadorOffline } from "./_components/SincronizadorOffline";
 import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
 

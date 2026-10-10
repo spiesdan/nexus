@@ -332,7 +332,8 @@ jobs:
       # Se um dia uma spec de follow-up entrar na PARTE_1 com nome depois de
       # `relogio-`, é aqui que se olha: ou ela vai para a PARTE_2, ou esta vai.
       SPECS_PARTE_2: >-
-        meu-dia-alertas.spec.ts        agente-marca-consulta.spec.ts agenda-marcar-pela-tela.spec.ts agenda-remarcar-e-cancelar.spec.ts
+        meu-dia-alertas.spec.ts
+        pedido-idempotencia.spec.ts        agente-marca-consulta.spec.ts agenda-marcar-pela-tela.spec.ts agenda-remarcar-e-cancelar.spec.ts
         agenda-tipos-de-agendamento.spec.ts agenda-grade-interativa.spec.ts
         agente-novo-e-uso.spec.ts agente-organiza-operacao.spec.ts
         central-de-avisos-capacidades.spec.ts escalacao-ciclo.spec.ts
@@ -405,6 +406,20 @@ jobs:
       # (main, 2026-08-09) semeia o catálogo no job, então a condição que a excluía
       # deixou de existir e ela voltou para a lista de execução.
       #
+      # `mobile-offline` entrou aqui em 2026-10-10, junto com a criação, e o motivo
+      # é arquitetural — não é flake nem ambiente:
+      #
+      #  (a) ELA RODA EM OUTRO WORKFLOW. É a suíte do shell Capacitor
+      #      (`playwright.mobile.config.ts`, servidor vite próprio, `Pixel 7`),
+      #      executada pelo job `apk-debug` do `apk.yml` — antes de compilar o
+      #      APK. Pô-la em SPECS_PARTE_1/2 a faria rodar contra o `baseURL` do
+      #      Next, onde `/index.html` é 404.
+      #
+      #  (b) O gate `toda spec do disco está em exatamente uma lista` continua
+      #      vendo ela aqui — cobertura parcial silenciosa se lê como cobertura
+      #      total, e este motivo escrito é o que impede a leitura errada.
+      #
+
       # `inbox-tempo-real` entrou aqui em 2026-08-26, no dia seguinte ao merge, e o
       # motivo é medido nos dois eixos que importam — não é "está flaky, tira".
       #
@@ -482,6 +497,7 @@ jobs:
       FORA_DO_CI: >-
         vps-fresh-onboarding.spec.ts
         inbox-tempo-real.spec.ts
+        mobile-offline.spec.ts
     steps:
       - uses: actions/checkout@v7
 
