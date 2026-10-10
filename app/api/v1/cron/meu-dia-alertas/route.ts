@@ -48,6 +48,7 @@ import {
 } from "@/lib/meu-dia/nf-pendente";
 import {
   chaveDoAlerta as chaveForaDaCarga,
+  cidadeDoEndereco,
   foraDaCargaDe,
   type CargaMontada,
   type PedidoElegivel,
@@ -306,7 +307,9 @@ async function varrerForaDaCarga(
 
   const { data: candidatos, error: erroCandidatos } = await admin
     .from("commercial_orders")
-    .select("id, numero, cliente_nome, status, created_at, previsao_entrega, contact_id")
+    .select(
+      "id, numero, cliente_nome, status, created_at, previsao_entrega, contact_id, endereco_entrega",
+    )
     .eq("organization_id", organizationId)
     .in("status", ["aprovado", "faturado", "em_analise", "rascunho"])
     .lt("created_at", `${ontem}T23:59:59Z`)
@@ -532,7 +535,7 @@ async function lerPedidos(
   if (ids.length === 0) return [];
   const { data, error } = await admin
     .from("commercial_orders")
-    .select("id, contact_id")
+    .select("id, contact_id, endereco_entrega")
     .in("id", ids.slice(0, SCAN_LIMIT * 2));
   if (error) {
     throw new Error(`pedidos da carga: ${error.message}`);
@@ -549,27 +552,43 @@ async function lerPedidos(
  */
 async function cidadesDosPedidos(
   admin: ReturnType<typeof createAdminClient>,
-  pedidos: { id: string; contact_id: string | null }[],
+  pedidos: { id: string; contact_id: string | null; endereco_entrega?: string | null }[],
 ): Promise<Map<string, string | null>> {
   const saida = new Map<string, string | null>();
   if (pedidos.length === 0) return saida;
 
-  const idsContato = [...new Set(pedidos.map((p) => p.contact_id).filter(Boolean))] as string[];
-  if (idsContato.length === 0) return saida;
+  // ─── O ENDEREÇO PRIMEIRO ──────────────────────────────────────────────────
+  //
+  // Medido em produção em 10/10/2026: `endereco_entrega` está em 82% dos pedidos
+  // e `contacts.cidade` em 25% dos contatos. E o endereço é a fonte CORRETA: o
+  // mesmo cliente pode receber em outro lugar, e o que define a praça da carga é
+  // para onde o pedido ENTRA.
+  //
+  // A rotina lia só o contato. Em produção isso significava zero comparação de
+  // cidade — sem erro e sem log, porque "não achei cidade" é um resultado
+  // legítimo.
+  const faltamContato = pedidos.filter((p) => !cidadeDoEndereco(p.endereco_entrega));
 
-  const { data, error } = await admin
-    .from("contacts")
-    .select("id, cidade")
-    .in("id", idsContato.slice(0, SCAN_LIMIT * 2));
-  if (error) {
-    throw new Error(`cidades dos contatos: ${error.message}`);
-  }
   const porContato = new Map<string, string | null>();
-  for (const c of (data ?? []) as unknown as { id: string; cidade: string | null }[]) {
-    porContato.set(c.id, c.cidade ?? null);
+  const idsContato = [
+    ...new Set(faltamContato.map((p) => p.contact_id).filter(Boolean)),
+  ] as string[];
+  if (idsContato.length > 0) {
+    const { data, error } = await admin
+      .from("contacts")
+      .select("id, cidade")
+      .in("id", idsContato.slice(0, SCAN_LIMIT * 2));
+    if (error) {
+      throw new Error(`cidades dos contatos: ${error.message}`);
+    }
+    for (const c of (data ?? []) as unknown as { id: string; cidade: string | null }[]) {
+      porContato.set(c.id, c.cidade ?? null);
+    }
   }
+
   for (const p of pedidos) {
-    saida.set(p.id, p.contact_id ? (porContato.get(p.contact_id) ?? null) : null);
+    const doEndereco = cidadeDoEndereco(p.endereco_entrega);
+    saida.set(p.id, doEndereco ?? (p.contact_id ? (porContato.get(p.contact_id) ?? null) : null));
   }
   return saida;
 }

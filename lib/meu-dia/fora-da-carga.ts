@@ -122,6 +122,99 @@ export function foraDaCargaDe(
 }
 
 /**
+ * A CIDADE DE ENTREGA, lida do endereço.
+ *
+ * ─── Por que o endereço e não o contato ────────────────────────────────────
+ *
+ * Medido em produção em 10/10/2026, org `4bc721ce…`:
+ *
+ *   - `contacts.cidade` preenchida em 3.110 de 12.644 contatos (25%)
+ *   - `commercial_orders.endereco_entrega` em 8.848 de 10.786 pedidos (82%)
+ *
+ * E o endereço é a fonte CORRETA, não a mais disponível por acaso: `contacts.cidade`
+ * é o endereço do cliente, e o mesmo cliente pode receber em outro lugar. O que
+ * decide em que cidade a carga precisa ir é para onde o pedido ENTRA — e isso
+ * está em `endereco_entrega`.
+ *
+ * A rotina lia só o contato, então em produção a comparação de cidade não tinha o
+ * que comparar: zero alertas, sem erro e sem log, porque "não achei cidade" é um
+ * resultado legítimo.
+ *
+ * ─── O formato ──────────────────────────────────────────────────────────────
+ *
+ * O que as pessoas digitam termina em `CIDADE/UF, CEP`:
+ *
+ *   RUA JOSÉ PSCHEIDT, 55 — CENTRO, ITAIOPOLIS/SC, 89340000
+ *   Rua Caetano Costa, 942723034 — Centro, Canoinhas/SC, 89460098
+ *   RODOVIA BR 280 KM 225,5, SN — APARECIDA, CANOINHAS/SC, 89460540
+ *
+ * O CEP é o âncora: ele vai no fim e é sempre dígitos. O nome da cidade fica
+ * logo antes de `/UF`.
+ *
+ * ─── Por que a vírgula NÃO entra na classe de caracteres ──────────────────
+ *
+ * Porque `CENTRO, ITAIOPOLIS/SC` precisa devolver `ITAIOPOLIS`, e não
+ * `CENTRO, ITAIOPOLIS`. A vírgula é o separador entre o bairro e a cidade, e é
+ * o bairro que vem antes dela. Se a vírgula estivesse na classe, a regra pegaria
+ * o bairro junto — e o alerta passaria a dizer que uma carga foi para `CENTRO`.
+ *
+ * ─── Quando NÃO há `/UF` ───────────────────────────────────────────────────
+ *
+ * Devolve `null`, e o pedido não é candidato. Um palpite sem estado seria pior
+ * que ausência: `Rua X, Centro, Canoinhas, 89460098` tem `Centro` (bairro) na
+ * posição da cidade, e um alertaErrado treina o operador a ignorar o Meu Dia —
+ * que é o custo caro desta regra, não o de perder um.
+ */
+export function cidadeDoEndereco(endereco: string | null | undefined): string | null {
+  if (!endereco) return null;
+
+  // A classe de caracteres NÃO tem vírgula — ver a nota acima.
+  //   (?<!...) garante que não pegamos o pedaço errado de um nome com espaço.
+  const achado = endereco.match(
+    /([A-ZÀ-Üa-zà-ü][A-ZÀ-Üa-zà-ü.\s]{1,40})\/([A-Z]{2})\s*,\s*(\d{5}-?\d{3})\s*$/u,
+  );
+  if (!achado) return null;
+
+  // O estado é conferido contra a lista real. `/\s*$/` sozinho casaria `xx/QQ`,
+  // que não é um estado — e um estado inválido é sinal de que o "endereço" não
+  // é um endereço, e aí a resposta honesta é não ter cidade.
+  if (!ESTADOS_BRASILEIROS.has(achado[2]!.toUpperCase())) return null;
+
+  return achado[1]!.trim() || null;
+}
+
+/** Os 27 estados + Distrito Federal. `null` fora desta lista é endereço ruim. */
+const ESTADOS_BRASILEIROS = new Set([
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
+]);
+
+/**
  * Normaliza o nome da cidade para comparar.
  *
  * "Canoinhas/SC" e "canoinhas" são a mesma cidade. Sem isso, o sinal — que é
