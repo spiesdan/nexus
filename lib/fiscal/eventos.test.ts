@@ -134,14 +134,15 @@ describe("motivoDeNaoTransmitir — o portão honesto", () => {
       expect(motivoDeNaoBaixar(contexto({}, null))).toMatch(/Senha/);
     });
 
-    it("IE, UF e endereço ausentes NÃO barram o download", () => {
-      // É a diferença inteira entre os dois portões: o download autentica pelo
-      // certificado e filtra pelo CNPJ. Exigir o resto aqui seria barrar um
-      // download por dado que o download não usa.
-      const motivo = motivoDeNaoBaixar(
-        contexto({ ie: null, uf: null, codigo_municipio: null, municipio: null }),
-      );
-      expect(motivo).toBeNull();
+    it("IE e endereço ausentes NÃO barram o download — mas UF sim", () => {
+      // IE, município e endereço: o download não usa, então não barra.
+      expect(
+        motivoDeNaoBaixar(contexto({ ie: null, codigo_municipio: null, municipio: null })),
+      ).toBeNull();
+      // UF: o schema do sped-nfe exige `siglaUF` com 2 letras. Sem ela o
+      // sidecar reprova o config — e o portão do app diz isso em português.
+      expect(motivoDeNaoBaixar(contexto({ uf: null }))).toMatch(/UF/);
+      expect(motivoDeNaoBaixar(contexto({ uf: "S" }))).toMatch(/UF/);
     });
   });
 });
