@@ -80,7 +80,12 @@ jobs:
 
       - name: Compilar APK de debug
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        # Defesa em profundidade: o bit +x do gradlew já vem do git, mas um
+        # checkout sem ele (medido em 10/10/2026: exit 126, Permission denied)
+        # derruba o job inteiro por um bit.
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v6
         with:
