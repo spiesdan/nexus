@@ -28,6 +28,7 @@ import { getRequestPool } from "@/lib/agent-engine/db/request-pool";
 import { llmEdgeConfigFromEnv } from "@/lib/agent-engine/edge/llm/credentials";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { silenciarPorInteresse } from "@/lib/prospeccao/silenciar-ia";
 
 import { gerarAbordagem } from "./abordagem";
 import { classificarResposta } from "./classificacao";
@@ -141,7 +142,12 @@ export async function processarTick(
     const org = campanha.organization_id;
     const { fuso, nome: nomeDaOrg } = await infoDaOrg(org);
     const { dia } = relogioNoFuso(agoraIso, fuso);
-    const janelaAberta = dentroDaJanela(agoraIso, fuso, campanha.janela_inicio, campanha.janela_fim);
+    const janelaAberta = dentroDaJanela(
+      agoraIso,
+      fuso,
+      campanha.janela_inicio,
+      campanha.janela_fim,
+    );
     if (!janelaAberta) resumo.fora_da_janela++;
 
     try {
@@ -546,13 +552,55 @@ async function enviarFollowup(d: {
       .limit(1)
       .maybeSingle();
     if (resposta) {
-      await volta({});
+      // ─── A IA FALA UMA VEZ ───────────────────────────────────────────────
+      //
+      // O prospect respondeu. A fila de venda automatica nao e a unica coisa
+      // que atende: o dispatcher de IA responde a conversa inteira, e sem calar
+      // o BOT ele continua se apresentando como atendente — que e o defeito que
+      // o pedido descreve ("a IA continua a conversa como se fosse o atendente
+      // humano").
+      //
+      // A decisao do usuario em 09/10/2026: calar no PRIMEIRO interesse.
+      //
+      // O corpo da resposta vem junto porque "respondeu" nao basta: um "boa
+      // tarde" nao e interesse, e calar a IA numa conversa que ela atendia bem
+      // e pior do que nao calar. Ver `mostraInteresse`.
+      const { data: corpoDaResposta } = await admin
+        .from("messages")
+        .select("body")
+        .eq("id", (resposta as unknown as { id: string }).id)
+        .maybeSingle();
+
+      const calada = await silenciarPorInteresse(admin, {
+        organizationId,
+        conversationId: linha.conversation_id,
+        corpo: (corpoDaResposta as unknown as { body: string | null } | null)?.body ?? null,
+      });
+
+      if (calada.conversou) {
+        await registrarEvento(admin, {
+          organizationId,
+          campaignId: campanha.id,
+          queueId: linha.id,
+          tipo: "humano_assumiu",
+          payload: { conversa: linha.conversation_id, motivo: calada.motivo },
+        });
+        // A campanha NAO acaba: a linha sai do follow-up e vira lead quente,
+        // que e informacao que a pessoa pagou para conseguir.
+        await volta({ proximo_followup_at: null, status: "responded" });
+      } else {
+        await volta({});
+      }
       return "pulado";
     }
   }
 
   const horas = campanha.followup_horas ?? [];
-  const texto = textoDeFollowup(campanha.followup_textos ?? [], linha.followup_count, linha.snapshot.nome ?? "");
+  const texto = textoDeFollowup(
+    campanha.followup_textos ?? [],
+    linha.followup_count,
+    linha.snapshot.nome ?? "",
+  );
   if (!texto) {
     await transicionar(admin, organizationId, linha.id, "contacting", {
       status: "no_response",
@@ -754,7 +802,11 @@ async function classificarLinha(d: {
   }
 
   // Lead no funil para alto/oportunidade (§12): dono = responsável da campanha.
-  if ((novoStatus === "qualified_lead" || novoStatus === "opportunity") && !linha.lead_id && linha.prospect_id) {
+  if (
+    (novoStatus === "qualified_lead" || novoStatus === "opportunity") &&
+    !linha.lead_id &&
+    linha.prospect_id
+  ) {
     const leadId = await criarLead(admin, organizationId, {
       contactId: linha.contact_id,
       title: linha.snapshot?.nome ?? "Novo lead",

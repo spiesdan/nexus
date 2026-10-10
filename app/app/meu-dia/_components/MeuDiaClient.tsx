@@ -66,14 +66,15 @@ function Bloco({
   children,
 }: {
   titulo: string;
-  href: string;
-  hrefLabel: string;
+  /** href e hrefLabel sao OPCIONAIS: o bloco de alertas nao tem "ver tudo". */
+  href?: string | null;
+  hrefLabel?: string | null;
   loading: boolean;
   erro: boolean;
   erroTexto: string;
   onRetry: () => void;
   vazio: boolean;
-  vazioTexto: string;
+  vazioTexto?: string | null;
   children: React.ReactNode;
 }) {
   const t = useT();
@@ -81,9 +82,11 @@ function Bloco({
     <section aria-label={titulo} className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-text">{titulo}</h2>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={href}>{hrefLabel}</Link>
-        </Button>
+        {href && (
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={href}>{hrefLabel}</Link>
+          </Button>
+        )}
       </div>
       {loading ? (
         <>
@@ -128,6 +131,42 @@ function Bloco({
  * saudação e a data só existem depois do mount — a primeira pintura é igual
  * no servidor e no cliente, sem briga de hidratação.
  */
+/** Um alerta operacional, como `GET /api/v1/alertas` devolve. */
+interface AlertaDaApi {
+  alertas: {
+    id: string;
+    chave: string;
+    origem: "nf_pendente" | "fora_da_carga" | "vencimento_proximo" | "vencimento_vencido";
+    origem_id: string | null;
+    titulo: string;
+    descricao: string | null;
+    acao_recomendada: string | null;
+    href: string | null;
+    prioridade: "baixa" | "normal" | "alta" | "critica";
+    repeticoes: number;
+    atualizado_em: string;
+    criado_em: string;
+  }[];
+  por_origem: Record<string, number>;
+}
+
+/**
+ * Os grupos de alerta, na ORDEM em que aparecem.
+ *
+ * A ordem é por prioridade, e é o critério do pedido original: quem abre o Meu
+ * Dia precisa ver primeiro o que exige ação hoje — vencidos e nota pendente —
+ * e depois o que pode esperar (o preventivo de vencimento).
+ *
+ * Um grupo vazio não renderiza: quatro cabeçalhos com "(0)" abaixo de cada um
+ * é ruído que faz o operador passar por cima dos dois que importam.
+ */
+const GRUPOS_DE_ALERTA: { origem: AlertaDaApi["alertas"][number]["origem"]; rotulo: string }[] = [
+  { origem: "vencimento_vencido", rotulo: "Vencidos" },
+  { origem: "nf_pendente", rotulo: "Nota fiscal pendente" },
+  { origem: "fora_da_carga", rotulo: "Pedidos fora da carga" },
+  { origem: "vencimento_proximo", rotulo: "Vencendo em breve" },
+];
+
 export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: string }) {
   const t = useT();
   const qc = useQueryClient();
@@ -170,6 +209,19 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
         .get<{ data: AgendamentoDaApi[] }>(`/api/v1/agenda/agendamentos?${qs.toString()}`)
         .then((r) => (Array.isArray(r.data) ? r.data : []));
     },
+  });
+
+  // ─── OS ALERTAS OPERACIONAIS ──────────────────────────────────────────────
+  //
+  // A MESMA API que a agenda e as notificações leem. Não há uma segunda lista:
+  // resolver o evento num lugar tira dos três, e é o que o pedido original pede
+  // — "evitar a criação de três pendências independentes para o mesmo evento".
+  const alertas = useQuery({
+    queryKey: ["alertas", "abertos"],
+    queryFn: () =>
+      apiClient
+        .get<{ data: AlertaDaApi }>("/api/v1/alertas")
+        .then((r) => (r.data as unknown as AlertaDaApi) ?? { alertas: [], por_origem: {} }),
   });
 
   const mensagens = useQuery({
@@ -276,11 +328,8 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
     listaBrain.length === 0;
 
   const tagDoIdioma = useTagDeIdioma();
-  const titulo = agora
-    ? `${saudacaoDoDia(agora)}${nome ? `, ${nome}` : ""}`
-    : t("Meu Dia");
-  const plural = (n: number, um: string, muitos: string): string =>
-    `${n} ${n === 1 ? um : muitos}`;
+  const titulo = agora ? `${saudacaoDoDia(agora)}${nome ? `, ${nome}` : ""}` : t("Meu Dia");
+  const plural = (n: number, um: string, muitos: string): string => `${n} ${n === 1 ? um : muitos}`;
   const resumo = [
     linha.atrasado.length > 0 ? plural(linha.atrasado.length, "atrasada", "atrasadas") : null,
     linha.hoje.length > 0 ? `${linha.hoje.length} hoje` : null,
@@ -308,7 +357,9 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
           <NexusEmptyState
             icon={Sun}
             headline={t("Dia limpo")}
-            subcopy={t("Nada pendente, nenhuma mensagem, nenhum follow-up e nenhuma recomendação à vista.")}
+            subcopy={t(
+              "Nada pendente, nenhuma mensagem, nenhum follow-up e nenhuma recomendação à vista.",
+            )}
           />
         </Card>
       ) : (
@@ -322,6 +373,58 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
           />
 
           <aside className="space-y-6" aria-label={t("Contexto do dia")}>
+            {/*
+              OS ALERTAS OPERACIONAIS, no topo do contexto.
+
+              Cada linha abre o registro: o pedido original pede que "ao clicar
+              no alerta, o usuário consiga abrir o pedido ou o registro
+              financeiro relacionado", e `href` vem da rotina — que é quem sabe
+              qual registro é.
+            */}
+            {GRUPOS_DE_ALERTA.map((grupo) => {
+              const doGrupo = (alertas.data?.alertas ?? []).filter(
+                (a) => a.origem === grupo.origem,
+              );
+              if (doGrupo.length === 0) return null;
+              return (
+                <Bloco
+                  key={grupo.origem}
+                  titulo={`${t(grupo.rotulo)} (${doGrupo.length})`}
+                  href={null}
+                  hrefLabel={null}
+                  loading={alertas.isLoading}
+                  erro={alertas.isError}
+                  erroTexto={t("Não consegui ler os alertas.")}
+                  onRetry={() => void alertas.refetch()}
+                  vazio={false}
+                  vazioTexto={null}
+                >
+                  {doGrupo.map((a) => (
+                    <li key={a.id} className="rounded-md border border-border bg-surface p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-text">{a.titulo}</p>
+                        {a.prioridade === "critica" && (
+                          <span className="shrink-0 rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
+                            {t("Urgente")}
+                          </span>
+                        )}
+                      </div>
+                      {a.descricao && (
+                        <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>
+                      )}
+                      {a.acao_recomendada && (
+                        <p className="mt-1 text-xs text-muted-foreground">→ {a.acao_recomendada}</p>
+                      )}
+                      {a.href && (
+                        <Button variant="ghost" size="sm" className="mt-1 h-7 px-2" asChild>
+                          <Link href={a.href}>{t("Abrir registro")}</Link>
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </Bloco>
+              );
+            })}
             <Bloco
               titulo={t("Mensagens")}
               href="/app/inbox"
@@ -334,7 +437,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
               vazioTexto={t("Nenhuma mensagem não lida para você.")}
             >
               {naoLidas.map((c) => (
-                <li key={c.id} className="rounded-lg border border-border bg-surface p-3">
+                <li key={c.id} className="rounded-md border border-border bg-surface p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-medium text-text">
                       {c.contacts?.display_name ?? c.contacts?.name ?? t("Sem nome")}
@@ -368,8 +471,13 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
               vazioTexto={t("Nenhum follow-up ativo agora.")}
             >
               {listaFollow.map((f) => (
-                <li key={`${f.source}-${f.id}`} className="rounded-lg border border-border bg-surface p-3">
-                  <p className="truncate text-sm font-medium text-text">{f.flow_name ?? t("Fluxo")}</p>
+                <li
+                  key={`${f.source}-${f.id}`}
+                  className="rounded-md border border-border bg-surface p-3"
+                >
+                  <p className="truncate text-sm font-medium text-text">
+                    {f.flow_name ?? t("Fluxo")}
+                  </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {f.contact.name} · {f.node_or_reason}
                   </p>
@@ -389,7 +497,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
               vazioTexto={t("Nenhuma recomendação agora.")}
             >
               {listaBrain.map((r) => (
-                <li key={r.contact_id} className="rounded-lg border border-border bg-surface p-3">
+                <li key={r.contact_id} className="rounded-md border border-border bg-surface p-3">
                   {r.contact_name ? (
                     <p className="truncate text-sm font-medium text-text">{r.contact_name}</p>
                   ) : null}
@@ -406,7 +514,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
 
             <section aria-label={t("Pedidos e atalhos")} className="space-y-2">
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-border bg-surface p-3">
+                <div className="rounded-md border border-border bg-surface p-3">
                   <Receipt className="mb-1 size-4 text-muted-foreground" aria-hidden />
                   <p className="text-lg font-semibold text-text">
                     {pedidosHoje.isLoading ? "—" : (pedidosHoje.data ?? 0)}
