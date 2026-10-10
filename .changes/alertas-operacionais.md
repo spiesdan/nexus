@@ -1,6 +1,6 @@
 ---
 impacto: nada_mudou
-secao: capacidade
+secao: adicionado
 titulo: O Meu Dia passa a avisar sobre nota pendente, carga incompleta e vencimento
 ---
 
