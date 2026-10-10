@@ -80,17 +80,35 @@ test("alertas: a rotina cria, o Meu Dia mostra, e resolver tira da tela", async 
   });
   await expect(bloco).toContainText("Cliente do Alerta NF");
   await expect(bloco).toContainText(`Pedido #${criado.data.numero}`);
-  // A ação recomendada é o que o pedido original pede: "a ação necessária".
-  await expect(bloco).toContainText(/Emitir a nota|Corrigir a marcação/);
+
+  // ─── O estado é `nao_verificavel`, e ESTE é o ponto do teste ────────────────
+  //
+  // A instalação de teste roda com o provedor fiscal `stub`, que grava
+  // `invoices` sem consultar a SEFAZ. Um alerta que dissesse "a nota não foi
+  // emitida" estaria afirmando uma confirmação que ninguém fez.
+  //
+  // Por isso o texto tem que ser o de `nao_verificavel` — e este teste falha se
+  // alguém trocar o provedor de teste e o alerta passar a prometer o que não sabe.
+  await expect(bloco).toContainText("a emissão não pode ser conferida");
+  await expect(bloco).toContainText(/não tem provedor que confirme a emissão/);
+  await expect(bloco).not.toContainText("Emitir a nota");
 
   await page.screenshot({ path: EVIDENCIA, fullPage: true });
-  console.log("evidência:", path.relative(process.cwd(), EVIDENCIA));
+  console.info("evidência:", path.relative(process.cwd(), EVIDENCIA));
 
   // ── 4. A MESMA origem nos três lugares ────────────────────────────────────
   // O item 8 do pedido: "evitar a criação de três pendências independentes".
   const chaveDoAlerta = `nf_pendente:${pedidoId}`;
-  const agenda = await page.request.get("/api/v1/agenda/agendamentos?de=&ate=");
-  expect(agenda.ok()).toBeTruthy();
+
+  // A agenda é lida pela MESMA janela que o Meu Dia usa — com `de` e `ate`
+  // preenchidos. A primeira versão mandou `de=&ate=`, que é 422: um check que
+  // passa por não devolver a chave de um corpo de erro não é check nenhum.
+  // A rota exige ISO COMPLETO com offset (`z.string().datetime({offset:true})`),
+  // não a data solta — e a diferença é um 422 silencioso que não diz o que falta.
+  const hoje = new Date().toISOString();
+  const amanha = new Date(Date.now() + 86_400_000).toISOString();
+  const agenda = await page.request.get(`/api/v1/agenda/agendamentos?de=${hoje}&ate=${amanha}`);
+  expect(agenda.ok(), `agenda → ${agenda.status()}`).toBeTruthy();
   const corpoAgenda = await agenda.text();
   expect(
     corpoAgenda.includes(chaveDoAlerta),

@@ -60,8 +60,6 @@ export const dynamic = "force-dynamic";
 /** Teto por organização e por varredura. Ver a nota do cabeçalho. */
 const SCAN_LIMIT = 300;
 
-/** UUID inválido, para a clause `.in()` nunca receber lista vazia. */
-const ZERO_UUID = "00000000-0000-0000-0000-000000000000";
 
 export async function GET(req: NextRequest): Promise<Response> {
   return rodar(req);
@@ -273,25 +271,9 @@ async function varrerForaDaCarga(
     emAlgumaCarga.add(i.order_id);
   }
 
-  // Os pedidos das cargas E os candidatos que ficaram de fora, na mesma
-  // consulta: uma vez só, e o filtro de cidade acontece na comparação.
-  const cidadePorId = new Map<string, string | null>();
-  const idsDasCargas = [...emAlgumaCarga];
-  const { data: infoCarga, error: erroInfoCarga } = await admin
-    .from("commercial_orders")
-    .select("id, cidade_entrega")
-    .in("id", idsDasCargas.length > 0 ? idsDasCargas : [ZERO_UUID])
-    .limit(SCAN_LIMIT * 2);
-  if (erroInfoCarga) {
-    throw new Error(`pedidos da carga: ${erroInfoCarga.message}`);
-  }
-  for (const i of (infoCarga ?? []) as unknown as { id: string; cidade_entrega: string | null }[]) {
-    cidadePorId.set(i.id, i.cidade_entrega);
-  }
-
   const { data: candidatos, error: erroCandidatos } = await admin
     .from("commercial_orders")
-    .select("id, numero, cliente_nome, status, cidade_entrega, created_at, previsao_entrega")
+    .select("id, numero, cliente_nome, status, created_at, previsao_entrega, contact_id")
     .eq("organization_id", organizationId)
     .in("status", ["aprovado", "faturado", "em_analise", "rascunho"])
     .lt("created_at", `${ontem}T23:59:59Z`)
@@ -301,9 +283,27 @@ async function varrerForaDaCarga(
     throw new Error(`candidatos: ${erroCandidatos.message}`);
   }
 
-  const listaCandidatos = (candidatos ?? []) as unknown as (PedidoElegivel & {
-    cidade_entrega: string | null;
-  })[];
+  // ─── A CIDADE NÃO ESTÁ NO PEDIDO ───────────────────────────────────────────
+  //
+  // A primeira versão desta rotina pedia `commercial_orders.cidade_entrega`, e a
+  // coluna não existe. O Postgres respondia `column ... does not exist`, a rota
+  // registrava "organization failed" e seguia — um tick que respondia 200 com
+  // zero de tudo, e nenhum alerta de "fora da carga" jamais apareceria.
+  //
+  // A cidade mora em `contacts.cidade`, e o pedido chega lá por `contact_id`.
+  // Duas consultas para N pedidos: uma por pedido seria o N+1 que a instalação
+  // grande não aguenta.
+  const pedidosDaCarga = await lerPedidos(admin, [...emAlgumaCarga]);
+  const cidadeDosPedidosDaCarga = await cidadesDosPedidos(admin, pedidosDaCarga);
+  const cidadeDosCandidatos = await cidadesDosPedidos(
+    admin,
+    (candidatos ?? []) as unknown as { id: string; contact_id: string | null }[],
+  );
+
+  const listaCandidatos = ((candidatos ?? []) as unknown as PedidoComCidade[]).map((c) => ({
+    ...c,
+    cidade_entrega: cidadeDosCandidatos.get(c.id) ?? null,
+  }));
 
   const saida: AlertaParaSubir[] = [];
   const vistos = new Set<string>();
@@ -312,7 +312,10 @@ async function varrerForaDaCarga(
     const idsDaCarga = porCarga.get(c.id) ?? [];
     const comCidade: CargaMontada = {
       ...c,
-      pedidosDaCarga: idsDaCarga.map((id) => ({ id, cidade: cidadePorId.get(id) ?? null })),
+      pedidosDaCarga: idsDaCarga.map((id) => ({
+        id,
+        cidade: cidadeDosPedidosDaCarga.get(id) ?? null,
+      })),
     };
 
     for (const achado of foraDaCargaDe(comCidade, listaCandidatos, emAlgumaCarga)) {
@@ -343,10 +346,7 @@ async function varrerVencimentos(
 ): Promise<AlertaParaSubir[]> {
   const { data, error } = await admin
     .from("financial_receivables")
-    .select(
-      "id, order_id, contact_id, cliente_nome, valor_original_cents, vencimento, " +
-        "status, forma_pagamento, parcela_n, total_parcelas, vencimento_depende_de_nf",
-    )
+    .select(COLUNAS_DO_RECEBIVEL)
     .eq("organization_id", organizationId)
     .in("status", ["aberto", "parcial"])
     .not("vencimento", "is", null)
@@ -357,17 +357,14 @@ async function varrerVencimentos(
     throw new Error(`recebíveis: ${error.message}`);
   }
 
-  const lista = (data ?? []) as unknown as RecebivelParaConferir[];
+  const lista = await enriquecerComNome(admin, (data ?? []) as unknown as RecebivelParaConferir[]);
   if (lista.length === 0) return [];
 
   // Os 15 dias que faltam para o 45 dias não aparecem em `lte(hoje)` — eles
   // estão no FUTURO. Uma segunda varredura, que é a que produz o preventivo.
   const { data: futuros, error: erroFuturos } = await admin
     .from("financial_receivables")
-    .select(
-      "id, order_id, contact_id, cliente_nome, valor_original_cents, vencimento, " +
-        "status, forma_pagamento, parcela_n, total_parcelas, vencimento_depende_de_nf",
-    )
+    .select(COLUNAS_DO_RECEBIVEL)
     .eq("organization_id", organizationId)
     .in("status", ["aberto", "parcial"])
     .not("vencimento", "is", null)
@@ -379,11 +376,81 @@ async function varrerVencimentos(
     throw new Error(`recebíveis futuros: ${erroFuturos.message}`);
   }
 
-  return alertasDeVencimento(
-    [...lista, ...((futuros ?? []) as unknown as RecebivelParaConferir[])],
-    hoje,
-    organizationId,
+  const futurosComNome = await enriquecerComNome(
+    admin,
+    (futuros ?? []) as unknown as RecebivelParaConferir[],
   );
+
+  return alertasDeVencimento([...lista, ...futurosComNome], hoje, organizationId);
+}
+
+/**
+ * As colunas que existem de verdade.
+ *
+ * `cliente_nome` NÃO está entre elas — `financial_receivables` guarda
+ * `contact_id` e `order_id`, e o nome vem do contato ou do pedido. A primeira
+ * versão pedia `cliente_nome` no SELECT, e o Postgres respondia
+ * `column financial_receivables.cliente_nome does not exist` — que a rota
+ * registrava como "organization failed", uma linha por organização, e seguia.
+ *
+ * A falha era invisível do lado de fora: o cron respondia 200 com um resumo de
+ * zeros, e a única pista estava no log, com o nome de uma coluna que ninguém
+ * procurou porque o pedido do alerta não fala em nome de cliente.
+ */
+const COLUNAS_DO_RECEBIVEL =
+  "id, order_id, contact_id, valor_original_cents, vencimento, " +
+  "status, forma_pagamento, parcela_n, total_parcelas, vencimento_depende_de_nf";
+
+/**
+ * Traz o nome de quem deve pagar.
+ *
+ * Duas consultas, não uma por linha: um recebível por pedido que o N+1
+ * transformaria em uma consulta por parcelado.
+ */
+async function enriquecerComNome(
+  admin: ReturnType<typeof createAdminClient>,
+  recebiveis: RecebivelParaConferir[],
+): Promise<RecebivelParaConferir[]> {
+  if (recebiveis.length === 0) return recebiveis;
+
+  const idsContato = [...new Set(recebiveis.map((r) => r.contact_id).filter(Boolean))] as string[];
+  const idsPedido = [...new Set(recebiveis.map((r) => r.order_id).filter(Boolean))] as string[];
+
+  const nomePorContato = new Map<string, string>();
+  if (idsContato.length > 0) {
+    const { data } = await admin
+      .from("contacts")
+      .select("id, display_name, name")
+      .in("id", idsContato);
+    for (const c of (data ?? []) as unknown as {
+      id: string;
+      display_name: string | null;
+      name: string | null;
+    }[]) {
+      nomePorContato.set(c.id, c.display_name ?? c.name ?? "");
+    }
+  }
+
+  const nomePorPedido = new Map<string, string>();
+  if (idsPedido.length > 0) {
+    const { data } = await admin
+      .from("commercial_orders")
+      .select("id, cliente_nome")
+      .in("id", idsPedido);
+    for (const o of (data ?? []) as unknown as { id: string; cliente_nome: string }[]) {
+      nomePorPedido.set(o.id, o.cliente_nome);
+    }
+  }
+
+  return recebiveis.map((r) => ({
+    ...r,
+    // O contato é a fonte: o pedido guarda um SNAPSHOT do nome na venda, e o
+    // contato o nome atual. Um parcelado de dois meses mostra o nome de hoje.
+    cliente_nome:
+      (r.contact_id ? nomePorContato.get(r.contact_id) : null) ??
+      (r.order_id ? nomePorPedido.get(r.order_id) : null) ??
+      null,
+  }));
 }
 
 function somarDiasLocal(iso: string, dias: number): string {
@@ -394,3 +461,56 @@ function somarDiasLocal(iso: string, dias: number): string {
 
 // Reexporta o schema para os testes poderem validar a entrada do cron.
 export const AlertaQuerySchema = z.object({}).passthrough();
+
+/** Um pedido com a cidade que a rota calculou — a coluna é do CONTATO. */
+type PedidoComCidade = PedidoElegivel & { cidade_entrega: string | null };
+
+/** Lê os pedidos por id. Devolve um mapa, para o chamador não precisar(indexar). */
+async function lerPedidos(
+  admin: ReturnType<typeof createAdminClient>,
+  ids: string[],
+): Promise<{ id: string; contact_id: string | null }[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await admin
+    .from("commercial_orders")
+    .select("id, contact_id")
+    .in("id", ids.slice(0, SCAN_LIMIT * 2));
+  if (error) {
+    throw new Error(`pedidos da carga: ${error.message}`);
+  }
+  return (data ?? []) as unknown as { id: string; contact_id: string | null }[];
+}
+
+/**
+ * A cidade de cada pedido, veio do contato.
+ *
+ * Pedido sem contato fica sem cidade — e sem cidade não é candidato, porque
+ * "cidade em comum" que não se pode verificar não é sinal de nada. A regra pura
+ * já devolve `null` para cidade vazia, e é ela que decide.
+ */
+async function cidadesDosPedidos(
+  admin: ReturnType<typeof createAdminClient>,
+  pedidos: { id: string; contact_id: string | null }[],
+): Promise<Map<string, string | null>> {
+  const saida = new Map<string, string | null>();
+  if (pedidos.length === 0) return saida;
+
+  const idsContato = [...new Set(pedidos.map((p) => p.contact_id).filter(Boolean))] as string[];
+  if (idsContato.length === 0) return saida;
+
+  const { data, error } = await admin
+    .from("contacts")
+    .select("id, cidade")
+    .in("id", idsContato.slice(0, SCAN_LIMIT * 2));
+  if (error) {
+    throw new Error(`cidades dos contatos: ${error.message}`);
+  }
+  const porContato = new Map<string, string | null>();
+  for (const c of (data ?? []) as unknown as { id: string; cidade: string | null }[]) {
+    porContato.set(c.id, c.cidade ?? null);
+  }
+  for (const p of pedidos) {
+    saida.set(p.id, p.contact_id ? (porContato.get(p.contact_id) ?? null) : null);
+  }
+  return saida;
+}
