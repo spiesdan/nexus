@@ -21330,3 +21330,41 @@ create index if not exists commercial_orders_exige_nf_idx on public.commercial_o
 -- Semeia `exige_nf` a partir do que já estava escrito na observação. Idempotente:
 -- a segunda execução só encontra pedidos que JÁ estão marcados.
 update public.commercial_orders set exige_nf = true where exige_nf = false and status <> 'cancelado' and observacoes is not null and observacoes ~* '(^|[^a-z0-9])nf([^a-z0-9]|$)';
+
+-- 0262_alerta_reabertura (apêndice — ver supabase/migrations/20261010120000_0262_alerta_reabertura.sql)
+--
+-- Por que isto é um apêndice e não uma chamada à pasta de migrations: o baseline é
+-- o que `update.sh` reaplica em instalação existente (migrações individuais não
+-- rodam nele). Sem este apêndice, a coluna `reaberturas` nunca chega na VPS e a
+-- rotina continua inserindo uma linha nova por tick para cada alerta resolvido.
+--
+-- Medido no banco em 10/10/2026: um PATCH seguido de um tick produzia 2 linhas
+-- para a mesma chave. O conserto no motor (reabertura em vez de INSERT) depende
+-- desta coluna.
+alter table public.operational_alerts
+  add column if not exists reaberturas integer not null default 0;
+
+comment on column public.operational_alerts.reaberturas is
+  'Quantas vezes o alerta foi fechado por alguém e a condição continuou valendo.';
+
+-- A rotina precisa achar "a linha resolvida mais recente desta chave".
+create index if not exists operational_alerts_chave_recent_idx
+  on public.operational_alerts (chave, updated_at desc)
+  where status <> 'aberto';
+
+create or replace view public.operational_alerts_insistentes as
+  select
+    id,
+    organization_id,
+    chave,
+    origem_tipo,
+    origem_id,
+    titulo,
+    reaberturas,
+    updated_at,
+    case
+      when reaberturas = 0 then null
+      else round(repeticoes::numeric / reaberturas, 2)
+    end as reaperturas_por_fechamento
+  from public.operational_alerts
+  where status = 'aberto' and reaberturas > 0;
