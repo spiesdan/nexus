@@ -1,0 +1,96 @@
+# APK DE DEBUG — compila o shell e entrega o arquivo para baixar.
+#
+# ─── Por que workflow separado ──────────────────────────────────────────────
+#
+# O `publish-image.yml` publica containers; o APK não é container. E o build
+# Android precisa de JDK + SDK + 8-15 minutos — pendurar isso no `verify` ou
+# no `e2e` puniria todo PR que não toca em mobile.
+#
+# Roda em: `workflow_dispatch` (botão), e em PR que toque em `mobile/`,
+# `lib/offline/`, `capacitor.config.ts` ou neste arquivo.
+#
+# ─── Debug, e não release ───────────────────────────────────────────────────
+#
+# Assinado com a chave de debug do próprio Gradle — instala por sideload sem
+# store e sem keystore. A release assinada (keystore próprio, `build.gradle`
+# com `signingConfigs`) entra quando o app for para a mão de vendedores de
+# verdade; antes disso, gerenciar segredo de assinatura é burocracia sem uso.
+name: "APK do app offline (debug)"
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "lib/offline/**"
+      - "capacitor.config.ts"
+      - "app/app/_components/SincronizadorOffline.tsx"
+      - ".github/workflows/apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  apk-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Java 21, e não 17: o Capacitor 8 compila com 
+      # (medido em 10/10/2026:  com o 17).
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Sem `android-actions/setup-android`: o runner ubuntu já traz o SDK
+      # (`/usr/local/lib/android/sdk`) e a v3 da action quebra tentando
+      # instalar o pacote obsoleto `tools` ("Failed to find package 'tools'",
+      # medido em 10/10/2026). Basta apontar as variáveis.
+      - name: SDK do Android (pré-instalado no runner)
+        run: |
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> "$GITHUB_ENV"
+          sdkmanager --list_installed | tail -5
+
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: E2E do shell (navegador)
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test -c playwright.mobile.config.ts --reporter=line
+
+      - name: Testes de unidade do offline
+        run: pnpm exec vitest run tests/unit/offline-outbox-sync.test.ts tests/unit/pedido-chave-sincronizacao.test.ts
+
+      - name: Build do shell
+        run: pnpm mobile:build
+
+      - name: Sincronizar Capacitor
+        run: pnpm exec cap sync android
+
+      - name: Compilar APK de debug
+        working-directory: android
+        # Defesa em profundidade: o bit +x do gradlew já vem do git, mas um
+        # checkout sem ele (medido em 10/10/2026: exit 126, Permission denied)
+        # derruba o job inteiro por um bit.
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: bill-higiene-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

@@ -132,6 +132,18 @@ export const pedidoCreateSchema = z.object({
    * cima, e a rota cobra com o gate canônico — nunca comparação de rank.
    */
   ignorar_credito: z.boolean().default(false),
+  /**
+   * Chave de idempotência da sincronização offline (0263).
+   *
+   * UUID gerado no dispositivo que capturou o pedido. Retry com a mesma chave
+   * devolve o pedido existente (`ja_existia: true`) em vez de criar outro.
+   * Opcional: sem ela, o POST se comporta como antes.
+   *
+   * `z.string().uuid()` e não texto livre: uma chave malformada repetida por
+   * engano colidiria com outro pedido — e o formato válido é o que torna a
+   * colisão acidental impraticável.
+   */
+  chave_sincronizacao: z.string().uuid().nullable().optional(),
   itens: z.array(itemCreateSchema).min(1, "o pedido precisa de ao menos 1 item").max(200),
 });
 

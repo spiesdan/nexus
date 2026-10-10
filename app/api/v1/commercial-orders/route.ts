@@ -12,11 +12,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import {
-  COLUNAS_DO_PEDIDO,
-  STATUS_DO_PEDIDO,
-  pedidoCreateSchema,
-} from "@/lib/schemas/pedidos";
+import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, pedidoCreateSchema } from "@/lib/schemas/pedidos";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { createClient } from "@/lib/supabase/server";
@@ -75,7 +71,10 @@ export async function GET(req: NextRequest): Promise<Response> {
   // "Emitido por <nome>": a lista da tela refaz aqui a cada filtro, então o
   // nome nasce NESTA rota — não só no page server, senão o rótulo de origem
   // voltaria depois da primeira recarga.
-  const linhas = (data ?? []) as unknown as Array<{ created_by: string | null; vendedor_user_id: string | null }>;
+  const linhas = (data ?? []) as unknown as Array<{
+    created_by: string | null;
+    vendedor_user_id: string | null;
+  }>;
   return ok(await comNomeDoEmitente(linhas), { requestId });
 }
 
@@ -101,24 +100,55 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (entrada.ignorar_estoque || entrada.ignorar_credito) {
     const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
     if (!mgr.ok) {
-      return fail("validation_failed", "Só gerente pode ignorar estoque ou crédito.", 422, { requestId });
+      return fail("validation_failed", "Só gerente pode ignorar estoque ou crédito.", 422, {
+        requestId,
+      });
     }
     podeIgnorar = true;
   }
 
   const supabase = await createClient();
-  const resultado = await criarPedidoComercial(supabase, createAdminClient(), {
-    orgId: authz.org.orgId,
-    userId: authz.user.id,
-    podeIgnorar,
-  }, entrada);
+  const resultado = await criarPedidoComercial(
+    supabase,
+    createAdminClient(),
+    {
+      orgId: authz.org.orgId,
+      userId: authz.user.id,
+      podeIgnorar,
+    },
+    entrada,
+  );
 
   if (!resultado.ok) {
-    const status = resultado.code === "validation_failed" ? 422 : resultado.code === "conflict" ? 409 : 500;
-    return fail(resultado.code === "conflict" ? "conflict" : resultado.code === "validation_failed" ? "validation_failed" : "internal_error", resultado.message, status, {
-      requestId,
-      ...(resultado.details ? { details: resultado.details } : {}),
-    });
+    const status =
+      resultado.code === "validation_failed" ? 422 : resultado.code === "conflict" ? 409 : 500;
+    return fail(
+      resultado.code === "conflict"
+        ? "conflict"
+        : resultado.code === "validation_failed"
+          ? "validation_failed"
+          : "internal_error",
+      resultado.message,
+      status,
+      {
+        requestId,
+        ...(resultado.details ? { details: resultado.details } : {}),
+      },
+    );
+  }
+
+  // Replay da sincronização offline (0263): nada foi criado, então não há
+  // `commercial_order.created` para auditar — auditar de novo mentiria que
+  // dois pedidos nasceram. O `ja_existia: true` é o rastro para quem chamou.
+  if (resultado.ja_existia) {
+    return ok(
+      {
+        ...resultado.pedido,
+        aprovacao_necessaria: resultado.aprovacao_necessaria,
+        ja_existia: true,
+      },
+      { requestId, status: 200 },
+    );
   }
 
   await audit({
@@ -131,7 +161,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   });
 
   return ok(
-    { ...resultado.pedido, aprovacao_necessaria: resultado.aprovacao_necessaria },
+    {
+      ...resultado.pedido,
+      aprovacao_necessaria: resultado.aprovacao_necessaria,
+      ja_existia: false,
+    },
     { requestId, status: 201 },
   );
 }
