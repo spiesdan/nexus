@@ -422,6 +422,10 @@ export const AUDIT_ACTIONS = [
   "shipment.created",
   "shipment.updated",
   "shipment.deleted",
+  // Fechar a carga e dar baixa no que foi CONFIRMADO. Uma ação só para o ato
+  // completo: dar baixa em um pedido de cada vez é `financial_payment.created`,
+  // que já existe — duplicar aqui seria um segundo nome para o mesmo fato.
+  "shipment.conciliado",
   "shipment_order.status",
   "shipment_order.removed",
   // Separação (migration 0240). Conferência antes da rota: quem separou
