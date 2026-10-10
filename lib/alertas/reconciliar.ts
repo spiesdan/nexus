@@ -74,6 +74,15 @@ interface AlertaAberto {
   id: string;
   chave: string;
   repeticoes?: number | null;
+  /**
+   * Quantas vezes este alerta foi fechado e a condição continuou valendo.
+   *
+   * Distinto de `repeticoes`: `repeticoes` conta quantas vezes a rotina rodou e
+   * MANTIVE o aviso; `reaberturas` conta quantas vezes alguém FECHOU e ele voltou.
+   * Um evento que ninguém toca tem `repeticoes = 900` e `reaberturas = 0` — e é
+   * justamente o 0 que significa "ninguém tentou", não "não precisa".
+   */
+  reaberturas?: number | null;
   origem_tipo: string;
 }
 
@@ -119,6 +128,22 @@ export async function reconciliarAlertas(
     porChave.set(a.chave, a);
   }
 
+  // ─── A LINHA RESOLVIDA DESTA MESMA CHAVE ───────────────────────────────────
+  //
+  // Sem isto, resolver um alerta que continua valendo insere uma linha NOVA a
+  // cada tick (a cada 10 minutos). Medido no banco em 10/10/2026: 2 linhas para a
+  // mesma chave depois de um PATCH e um tick.
+  //
+  // A linha resolvida mais recente de cada chave é a que reabre. Uma por evento:
+  // o histórico não infla e o operador vê `reaberturas` contando quantas vezes o
+  // tratamento manual não segurou.
+  const chavesCandidatas = [...new Set(candidatos.map((c) => c.chave))];
+  const resolvidasPorChave = await alertasResolvidosRecentes(
+    admin,
+    organizationId,
+    chavesCandidatas,
+  );
+
   let criados = 0;
   let atualizados = 0;
   for (const c of candidatos) {
@@ -152,6 +177,51 @@ export async function reconciliarAlertas(
       }
       atualizados++;
     } else {
+      const resolvida = resolvidasPorChave.get(c.chave);
+      if (resolvida) {
+        // ─── REABERIR, e não criar outra linha ─────────────────────────────────
+        //
+        // A condição continua valendo, então o aviso volta — fingir que não é
+        // uma afirmação falsa sobre o estado real. Mas volta NA MESMA LINHA.
+        //
+        // Os campos de resolução são zerados porque a linha deixa de ser um
+        // alerta resolvido: quem a traiter agora é a pessoa que a reabriu, e a
+        // data da resolução antiga não descreve mais nada. O POR QUE ela foi
+        // fechada continua em `audit_log`, que é onde o histórico mora.
+        const reaberturas = (resolvida.reaberturas ?? 0) + 1;
+        const { error: e } = await admin
+          .from("operational_alerts")
+          .update({
+            status: "aberto",
+            titulo: c.titulo,
+            descricao: c.descricao ?? null,
+            acao_recomendada: c.acaoRecomendada ?? null,
+            href: c.href ?? null,
+            prioridade: c.prioridade ?? "normal",
+            reaberturas,
+            repeticoes: (resolvida.repeticoes ?? 0) + 1,
+            resolvido_por: null,
+            resolvido_em: null,
+            motivo_resolucao: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", resolvida.id)
+          // O `status` no WHERE é a idempotência entre dois ticks simultâneos:
+          // o segundo não reabre o que o primeiro já reabriu, e não soma
+          // `reaberturas` duas vezes pelo mesmo tick.
+          .eq("status", "resolvido");
+        if (e) {
+          logger.error("[alertas.reconciliar] reabertura falhou", {
+            error: e.message,
+            chave: c.chave,
+            organizationId,
+          });
+          continue;
+        }
+        atualizados++;
+        continue;
+      }
+
       const { error: e } = await admin.from("operational_alerts").insert({
         organization_id: organizationId,
         chave: c.chave,
@@ -187,6 +257,52 @@ export async function reconciliarAlertas(
   const resolvidos = await resolverTudo(admin, organizationId, paraResolver, "nao-confirmado");
 
   return { criados, atualizados, resolvidos };
+}
+
+/**
+ * A linha RESOLVIDA mais recente de cada chave candidata.
+ *
+ * Só as chaves que estão na lista de candidatos entram no `.in`: é a mesma
+ * disciplina do `.in("origem_tipo", ...)` da leitura dos abertos — e pelo mesmo
+ * motivo. Uma origem que falhou não aparece na lista, e nenhuma linha dela é
+ * tocada aqui.
+ *
+ * Devolve um mapa, não um array: o chamador pergunta por chave.
+ */
+async function alertasResolvidosRecentes(
+  admin: SupabaseClient,
+  organizationId: string,
+  chaves: string[],
+): Promise<Map<string, AlertaAberto>> {
+  const saida = new Map<string, AlertaAberto>();
+  if (chaves.length === 0) return saida;
+
+  const { data, error } = await admin
+    .from("operational_alerts")
+    .select("id, chave, status, repeticoes, reaberturas")
+    .eq("organization_id", organizationId)
+    .in("chave", chaves)
+    .neq("status", "aberto")
+    .order("updated_at", { ascending: false })
+    .limit(chaves.length);
+
+  if (error) {
+    // Não derruba a reconciliação. Sem esta consulta o motor ainda insere
+    // alerts novos; o que se perde é a reabertura, que é uma melhoria — e uma
+    // falha de leitura到此 nunca pode virar "não há nada a fazer".
+    logger.error("[alertas.reconciliar] leitura das resolvidas falhou", {
+      error: error.message,
+      organizationId,
+    });
+    return saida;
+  }
+
+  for (const a of (data ?? []) as unknown as AlertaAberto[]) {
+    // A ordem é por `updated_at desc`, então a PRIMEIRA ocorrência da chave é a
+    // mais recente. As demais são linhas antigas do mesmo evento e não importam.
+    if (!saida.has(a.chave)) saida.set(a.chave, a);
+  }
+  return saida;
 }
 
 async function resolverTudo(

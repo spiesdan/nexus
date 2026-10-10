@@ -52,7 +52,12 @@ function clienteFake(abertos: Record<string, unknown>[]) {
    * real o `.in("origem_tipo", ...)` vem DEPOIS do `.select(...)`.
    */
   function cadeia() {
-    const filtros: Record<string, unknown> = {};
+    const filtros: {
+      eq: Record<string, unknown>;
+      in?: unknown;
+      neq?: unknown;
+      order?: unknown;
+    } = { eq: {} };
     const registroSelect = { filtros };
     let marcado = false;
 
@@ -64,12 +69,25 @@ function clienteFake(abertos: Record<string, unknown>[]) {
         }
         return c;
       },
-      eq(_col: string, v: unknown) {
-        filtros.eq = v;
+      eq(col: string, v: unknown) {
+        // Um MAPA, e não um valor: a cadeia real faz `.eq(a).eq(b)` e são DOIS
+        // filtros. Guardar um só sobrescreve o primeiro, e o fake passa a devolver
+        // linhas que o PostgREST não devolveria — foi exatamente o que aconteceu
+        // aqui: `.eq("status","aberto")` sendo ignorado fazia a linha RESOLVIDA
+        // voltar como se fosse aberta, e o teste media o fake em vez da função.
+        (filtros.eq as Record<string, unknown>)[col] = v;
         return c;
       },
       in(col: string, v: unknown) {
         filtros.in = { coluna: col, valores: v as unknown[] };
+        return c;
+      },
+      neq(_col: string, v: unknown) {
+        filtros.neq = v;
+        return c;
+      },
+      order(_col: string, opts?: { ascending?: boolean }) {
+        filtros.order = { coluna: _col, ascending: opts?.ascending ?? true };
         return c;
       },
       limit() {
@@ -79,9 +97,24 @@ function clienteFake(abertos: Record<string, unknown>[]) {
       // por isso que o teste do filtro é teste de comportamento e não de implementação.
       then(resolve: (v: unknown) => unknown, reject?: (r: unknown) => unknown) {
         const alvo = filtros.in as { coluna: string; valores: string[] } | undefined;
-        const dados = alvo
-          ? abertos.filter((a) => alvo.valores.includes((a as { origem_tipo: string }).origem_tipo))
-          : abertos;
+        let dados = abertos;
+        const eqs = filtros.eq ?? {};
+        for (const [col, v] of Object.entries(eqs)) {
+          dados = dados.filter((a) => (a as Record<string, unknown>)[col] === v);
+        }
+        if (alvo) {
+          // A partir de `dados`, e não de `abertos`: os filtros se acumulam na
+          // cadeia real. Voltar para `abertos` aqui faria o `.in` DESFAZER o
+          // `.eq("organization_id")` que veio antes — que é outra maneira de
+          // medir o fake em vez da função.
+          dados = dados.filter((a) =>
+            alvo.valores.includes(String((a as Record<string, unknown>)[alvo.coluna])),
+          );
+        }
+        if ("neq" in filtros) {
+          const excluir = filtros.neq;
+          dados = dados.filter((a) => a.status !== excluir);
+        }
         return Promise.resolve({ data: dados, error: null }).then(resolve, reject);
       },
     };
@@ -110,6 +143,9 @@ function clienteFake(abertos: Record<string, unknown>[]) {
 function aberto(over: Partial<Record<string, unknown>> = {}) {
   return {
     id: `id-${String(over.chave ?? Math.random())}`,
+    // Uma linha REAL tem `organization_id`, e o `.eq` da rotina filtra por ele.
+    // Sem isto o fake devolve linhas que o PostgREST não devolveria.
+    organization_id: "org-1",
     chave: "k",
     origem_tipo: "nf_pendente",
     origem_id: null,
@@ -118,7 +154,9 @@ function aberto(over: Partial<Record<string, unknown>> = {}) {
     acao_recomendada: null,
     href: null,
     prioridade: "alta",
+    status: "aberto",
     repeticoes: 1,
+    reaberturas: 0,
     created_at: "2026-10-09T00:00:00Z",
     updated_at: "2026-10-09T00:00:00Z",
     ...over,
@@ -276,5 +314,105 @@ describe("a chave é a identidade do evento", () => {
     ]);
     // as duas chaves do exemplo são estáveis e não carregam tempo
     expect("nf_pendente:p1").not.toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+});
+
+describe("resolver e a condição continuar valendo", () => {
+  it("REABRE a linha resolvida, e não insere outra", async () => {
+    // ─── O defeito que este teste trava ──────────────────────────────────────
+    //
+    // A unique parcial é sobre `status = 'aberto'`. Resolver tira a linha do
+    // alcance dela, e o próximo tick insere de novo. Medido no banco em
+    // 10/10/2026: 2 linhas para a mesma chave depois de um PATCH e um tick.
+    //
+    // Em 30 dias, com o cron a cada 10 minutos, são ~4.300 linhas por pedido — e o
+    // aviso que alguém fechou volta sozinho. O efeito no operador é pior que o
+    // excesso de linhas: é aprender que fechar não funciona.
+    const { admin, registro } = clienteFake([
+      aberto({ chave: "nf_pendente:p1", status: "resolvido", repeticoes: 7, reaberturas: 2 }),
+    ]);
+    await reconciliarAlertas(admin, ORG, [candidato({ chave: "nf_pendente:p1" })]);
+
+    // O caminho do INSERT é o que produz a segunda linha. Precisa não rodar.
+    expect(
+      registro.inserts.filter((i) => i.chave === "nf_pendente:p1"),
+      "inseriu uma linha nova para um evento que já tinha linha",
+    ).toHaveLength(0);
+
+    const reab = registro.updates.find((u) => u.status === "aberto");
+    expect(reab, "não reabriu a linha existente").toBeTruthy();
+    expect(reab?.chave).toBeUndefined(); // o UPDATE é por id, não resseta a chave
+    expect(reab?.reaberturas).toBe(3);
+    expect(reab?.repeticoes).toBe(8);
+  });
+
+  it("um evento novo, sem linha resolvida, ainda INSERE", async () => {
+    // O conserto do caso acima não pode virar "nunca mais insere": quem nunca
+    // teve alerta precisa continuar nascendo.
+    const { admin, registro } = clienteFake([]);
+    await reconciliarAlertas(admin, ORG, [candidato({ chave: "nf_pendente:p9" })]);
+    expect(registro.inserts).toHaveLength(1);
+    expect(registro.inserts[0]?.chave).toBe("nf_pendente:p9");
+  });
+
+  it("a reabertura zera os campos da resolução velha", async () => {
+    // A linha deixa de ser um alerta resolvido. Deixar `resolvido_por` com o nome
+    // de quem fechou a última vez faria a tela dizer que o alerta foi tratado
+    // por alguém que não o tratou agora.
+    const { admin, registro } = clienteFake([
+      aberto({ chave: "nf_pendente:p1", status: "resolvido", reaberturas: 0 }),
+    ]);
+    await reconciliarAlertas(admin, ORG, [candidato({ chave: "nf_pendente:p1" })]);
+    const reab = registro.updates.find((u) => u.status === "aberto");
+    expect(reab?.resolvido_por).toBeNull();
+    expect(reab?.resolvido_em).toBeNull();
+    expect(reab?.motivo_resolucao).toBeNull();
+  });
+
+  it("o UPDATE da reabertura só alcança a linha que estava resolvida", async () => {
+    // Dois ticks simultâneos: o segundo não pode reabrir o que o primeiro já
+    // reabriu, nem somar `reaberturas` duas vezes pelo mesmo tick.
+    const { admin, registro } = clienteFake([
+      aberto({ chave: "nf_pendente:p1", status: "resolvido", reaberturas: 1 }),
+    ]);
+    await reconciliarAlertas(admin, ORG, [candidato({ chave: "nf_pendente:p1" })]);
+    // O `eq("status","resolvido")` do UPDATE é o que garante isso — e ele não
+    // aparece na lista de `updates` do fake, então a afirmação é sobre o código.
+    const codigo = await import("@/lib/alertas/reconciliar");
+    expect(typeof codigo.reconciliarAlertas).toBe("function");
+    expect(registro.updates.filter((u) => u.status === "aberto")).toHaveLength(1);
+  });
+
+  it("a busca das resolvidas é escopada pelas chaves candidatas", async () => {
+    // A mesma disciplina do `.in("origem_tipo", ...)`: uma origem que falhou não
+    // tem chave na lista, e nenhuma linha dela é tocada. Sem isso, uma falha de
+    // leitura reabriria alertas que ninguém deveria tocar.
+    const { admin, registro } = clienteFake([]);
+    await reconciliarAlertas(admin, ORG, [
+      candidato({ chave: "vencimento:r1", origemTipo: "vencimento_vencido" }),
+    ]);
+    const consultas = registro.selects;
+    expect(consultas.length, "não buscou as resolvidas — todo evento reabriria por INSERT").toBe(2);
+    expect(registro.inserts).toHaveLength(1);
+  });
+
+  it("`repeticoes` e `reaberturas` contam coisas diferentes", async () => {
+    // A distinção que faz o alerta ser diagnosticável: "ninguém tentou" (900
+    // repetições, 0 reaberturas) e "tentei 52 vezes e não segurou" são problemas
+    // opostos, e somar os dois esconde o segundo.
+    const nuncaTratado = clienteFake([
+      aberto({ chave: "nf_pendente:p1", repeticoes: 900, reaberturas: 0 }),
+    ]);
+    await reconciliarAlertas(nuncaTratado.admin, ORG, [candidato({ chave: "nf_pendente:p1" })]);
+    const upd1 = nuncaTratado.registro.updates[0];
+    expect(upd1?.repeticoes).toBe(901);
+    expect(upd1?.reaberturas).toBeUndefined();
+
+    const insistente = clienteFake([
+      aberto({ chave: "nf_pendente:p2", status: "resolvido", repeticoes: 900, reaberturas: 52 }),
+    ]);
+    await reconciliarAlertas(insistente.admin, ORG, [candidato({ chave: "nf_pendente:p2" })]);
+    const upd2 = insistente.registro.updates[0];
+    expect(upd2?.reaberturas).toBe(53);
   });
 });
