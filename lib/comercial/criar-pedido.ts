@@ -32,7 +32,18 @@ export interface ContextoDeCriacao {
 }
 
 export type ResultadoDeCriacao =
-  | { ok: true; pedido: Record<string, unknown>; itens: number; aprovacao_necessaria: boolean }
+  | {
+      ok: true;
+      pedido: Record<string, unknown>;
+      itens: number;
+      aprovacao_necessaria: boolean;
+      /**
+       * O POST já tinha criado este pedido antes (retry com a mesma
+       * `chave_sincronizacao`). A rota devolve 200 em vez de 201 — e NÃO
+       * audita `commercial_order.created` de novo, porque nada foi criado.
+       */
+      ja_existia: boolean;
+    }
   | {
       ok: false;
       code: "validation_failed" | "internal_error" | "conflict";
@@ -51,6 +62,45 @@ export async function criarPedidoComercial(
   ctx: ContextoDeCriacao,
   entrada: PedidoCreate,
 ): Promise<ResultadoDeCriacao> {
+  // ─── Idempotência da sincronização offline (0263) ──────────────────────────
+  //
+  // O sincronizador manda, o timeout estoura, ele manda de novo. A busca vem
+  // ANTES de qualquer validação de negócio de propósito: um retry não precisa
+  // revalidar crédito/estoque — ele precisa da resposta que o primeiro POST
+  // deu. Revalidar aqui transformaria "já criei" em "agora o crédito estourou"
+  // para o MESMO pedido, e o celular concluiria que o sync falhou.
+  if (entrada.chave_sincronizacao) {
+    const { data: existente, error: erroBusca } = await supabase
+      .from("commercial_orders")
+      .select(COLUNAS_DO_PEDIDO)
+      .eq("organization_id", ctx.orgId)
+      .eq("chave_sincronizacao", entrada.chave_sincronizacao)
+      .maybeSingle();
+    if (erroBusca) {
+      return {
+        ok: false,
+        code: "internal_error",
+        message: "Erro ao conferir a chave de sincronização.",
+      };
+    }
+    if (existente) {
+      const itensExistentes = await supabase
+        .from("commercial_order_items")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", ctx.orgId)
+        .eq("order_id", (existente as unknown as { id: string }).id);
+      return {
+        ok: true,
+        pedido: existente as unknown as Record<string, unknown>,
+        itens: itensExistentes.count ?? 0,
+        // `false` aqui seria mentira: o pedido NÃO passou por aprovação agora.
+        // Quem sincroniza lê `ja_existia` e não reexibe "aguardando gerente".
+        aprovacao_necessaria: false,
+        ja_existia: true,
+      };
+    }
+  }
+
   // Políticas da org (defaults seguros quando sem linha).
   const { data: polDb } = await supabase
     .from("commercial_policies")
@@ -291,11 +341,39 @@ export async function criarPedidoComercial(
       previsao_entrega: entrada.previsao_entrega ?? null,
       parcelas: calcularParcelas(total, entrada.condicao_pagamento),
       created_by: ctx.userId,
+      // 0263: a chave que impede o pedido duplicado no retry do sync.
+      chave_sincronizacao: entrada.chave_sincronizacao ?? null,
     })
     .select(COLUNAS_DO_PEDIDO)
     .single();
 
   if (erroPedido || !pedido) {
+    // ─── A corrida entre dois ticks do sincronizador ───────────────────────
+    //
+    // Dois POSTs com a mesma chave ao mesmo tempo: os dois passam pela busca
+    // (nenhum acha), os dois inserem, e a unique derruba o segundo com 23505.
+    // O segundo NÃO é erro: o primeiro criou, e a resposta certa é reler e
+    // devolver o pedido — o mesmo que a busca inicial devolveria.
+    if (
+      entrada.chave_sincronizacao &&
+      (erroPedido?.code === "23505" || erroPedido?.message?.includes("duplicate"))
+    ) {
+      const { data: corrida } = await supabase
+        .from("commercial_orders")
+        .select(COLUNAS_DO_PEDIDO)
+        .eq("organization_id", ctx.orgId)
+        .eq("chave_sincronizacao", entrada.chave_sincronizacao)
+        .maybeSingle();
+      if (corrida) {
+        return {
+          ok: true,
+          pedido: corrida as unknown as Record<string, unknown>,
+          itens: entrada.itens.length,
+          aprovacao_necessaria: false,
+          ja_existia: true,
+        };
+      }
+    }
     return { ok: false, code: "internal_error", message: "Erro ao salvar o pedido." };
   }
   const pedidoId = (pedido as unknown as { id: string }).id;
@@ -333,5 +411,6 @@ export async function criarPedidoComercial(
     pedido: { ...(pedido as unknown as Record<string, unknown>), numero },
     itens: itensMontados.length,
     aprovacao_necessaria: aprovacaoNecessaria,
+    ja_existia: false,
   };
 }
