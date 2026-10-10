@@ -15,10 +15,22 @@
  * `tests/unit/meu-dia-fora-da-carga.test.ts` (17 casos, incluindo todos os falsos
  * positivos). Aqui só se prova o caminho — HTTP, banco, tela.
  */
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoDono } from "./helpers/login-admin";
 import { semearProduto } from "./helpers/pedidos";
+
+/**
+ * A prova visual.
+ *
+ * Reproduzível, não histórica: o código que a produz continua no repositório e
+ * rodar a spec de novo regenera o PNG. Ver `evidence/README.md` para a
+ * distinção — e a razão de um "antes" virar histórico no instante em que a wave
+ * é commitada.
+ */
+const EVIDENCIA = path.join(process.cwd(), "evidence", "meu-dia-alertas.png");
 
 test.setTimeout(240_000);
 
@@ -71,6 +83,9 @@ test("alertas: a rotina cria, o Meu Dia mostra, e resolver tira da tela", async 
   // A ação recomendada é o que o pedido original pede: "a ação necessária".
   await expect(bloco).toContainText(/Emitir a nota|Corrigir a marcação/);
 
+  await page.screenshot({ path: EVIDENCIA, fullPage: true });
+  console.log("evidência:", path.relative(process.cwd(), EVIDENCIA));
+
   // ── 4. A MESMA origem nos três lugares ────────────────────────────────────
   // O item 8 do pedido: "evitar a criação de três pendências independentes".
   const chaveDoAlerta = `nf_pendente:${pedidoId}`;
@@ -99,6 +114,13 @@ test("alertas: a rotina cria, o Meu Dia mostra, e resolver tira da tela", async 
   if (await depois.count()) {
     await expect(depois).not.toContainText("Cliente do Alerta NF");
   }
+
+  // A segunda imagem: a MESMA tela depois de resolver. Sem ela, a primeira
+  // prova que o alerta aparece e ninguém prova que ele sai.
+  await page.screenshot({
+    path: path.join(process.cwd(), "evidence", "meu-dia-alertas-resolvido.png"),
+    fullPage: true,
+  });
 
   // ── 6. A rotina reconcilia: o que foi resolvido NÃO volta ────────────────
   // A condição continua valendo — o pedido ainda pede NF — e é por isso que
