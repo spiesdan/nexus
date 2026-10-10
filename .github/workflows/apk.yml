@@ -1,23 +1,21 @@
-/**
- * APK DE DEBUG — compila o shell e entrega o arquivo para baixar.
- *
- * ─── Por que workflow separado ──────────────────────────────────────────────
- *
- * O `publish-image.yml` publica containers; o APK não é container. E o build
- * Android precisa de JDK + SDK + 8-15 minutos — pendurar isso no `verify` ou
- * no `e2e` puniria todo PR que não toca em mobile.
- *
- * Roda em: `workflow_dispatch` (botão), e em PR que toque em `mobile/`,
- * `lib/offline/`, `capacitor.config.ts` ou neste arquivo.
- *
- * ─── Debug, e não release ───────────────────────────────────────────────────
- *
- * Assinado com a chave de debug do próprio Gradle — instala por sideload sem
- * store e sem keystore. A release assinada (keystore próprio, `build.gradle`
- * com `signingConfigs`) entra quando o app for para a mão de vendedores de
- * verdade; antes disso, gerenciar segredo de assinatura é burocracia sem uso.
- */
-name: "APK do app offline (debug)";
+# APK DE DEBUG — compila o shell e entrega o arquivo para baixar.
+#
+# ─── Por que workflow separado ──────────────────────────────────────────────
+#
+# O `publish-image.yml` publica containers; o APK não é container. E o build
+# Android precisa de JDK + SDK + 8-15 minutos — pendurar isso no `verify` ou
+# no `e2e` puniria todo PR que não toca em mobile.
+#
+# Roda em: `workflow_dispatch` (botão), e em PR que toque em `mobile/`,
+# `lib/offline/`, `capacitor.config.ts` ou neste arquivo.
+#
+# ─── Debug, e não release ───────────────────────────────────────────────────
+#
+# Assinado com a chave de debug do próprio Gradle — instala por sideload sem
+# store e sem keystore. A release assinada (keystore próprio, `build.gradle`
+# com `signingConfigs`) entra quando o app for para a mão de vendedores de
+# verdade; antes disso, gerenciar segredo de assinatura é burocracia sem uso.
+name: "APK do app offline (debug)"
 
 on:
   workflow_dispatch: {}
