@@ -325,6 +325,43 @@ export async function sendMessageHandler(
   let outboundBody = input.body ?? null;
   let outboundMetadata: Record<string, unknown> = { ...(input.metadata ?? {}) };
 
+  // ─── A ASSINATURA DO ATENDENTE (0266) ─────────────────────────────────────
+  //
+  // Só humano (`actor.type === "user"`), só texto e legenda de mídia. Bot, IA,
+  // automação e template passam intactos — cada um tem (ou não pode ter) a
+  // própria identidade.
+  //
+  // Assina o `outboundBody` (o que VAI para o canal) e grava assinado no banco:
+  // o histórico mostra o que o cliente recebeu. Retry relê do banco e
+  // `aplicarAssinatura` é idempotente — sem assinatura dupla.
+  //
+  // Sem setor ou sem nome, `montarAssinatura` devolve null e nada muda: falhar
+  // o envio por causa de carimbo seria travar atendimento por estética.
+  if (
+    ctx.actor.type === "user" &&
+    (input.type === "text" ||
+      input.type === "image" ||
+      input.type === "video" ||
+      input.type === "document") &&
+    outboundBody &&
+    outboundBody.trim() !== ""
+  ) {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const {
+      identidadeDoAtendente,
+      montarAssinatura,
+      aplicarAssinatura,
+    } = await import("@/lib/atendimento/assinatura");
+    const quem = await identidadeDoAtendente(supabase, createAdminClient(), {
+      orgId: c.organization_id,
+      userId: ctx.actor.id,
+    });
+    if (quem) {
+      const assinado = aplicarAssinatura(outboundBody, montarAssinatura(quem));
+      if (assinado) outboundBody = assinado;
+    }
+  }
+
   if (input.type === "contact") {
     const sharedId = input.metadata?.shared_contact_id;
     const inline = input.metadata?.shared_contact;
@@ -453,7 +490,7 @@ export async function sendMessageHandler(
     type: input.type,
     direction: "outbound" as const,
     status: "queued",
-    body: input.body ?? null,
+    body: outboundBody ?? null,
     media_url: input.media_url ?? null,
     media_mime: input.media_mime ?? null,
     media_storage_path: input.media_storage_path ?? null,
@@ -629,7 +666,7 @@ export async function sendMessageHandler(
             url: signed.signedUrl,
             mime: input.media_mime ?? "application/octet-stream",
             filename,
-            caption: input.body ?? null,
+            caption: outboundBody ?? null,
           },
           // O id que a PLATAFORMA conhece, lido da linha citada agora — não uma
           // cópia guardada no envio, que poderia divergir da linha.
@@ -670,7 +707,7 @@ export async function sendMessageHandler(
           to: chatId,
           providerConversationId: c.provider_conversation_id,
           kind: input.type,
-          body: input.body ?? "",
+          body: outboundBody ?? "",
           replyToExternalId: citada?.external_id ?? null,
         }));
       }

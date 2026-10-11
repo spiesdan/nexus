@@ -21368,3 +21368,17 @@ create or replace view public.operational_alerts_insistentes as
     end as reaperturas_por_fechamento
   from public.operational_alerts
   where status = 'aberto' and reaberturas > 0;
+
+-- 0266_membro_setor (apêndice — ver supabase/migrations/20261011150000_0266_membro_setor.sql)
+--
+-- Ramal do atendente no vínculo. Apêndice idempotente porque o update.sh
+-- reaplica o baseline em instalação existente.
+alter table public.user_organizations
+  add column if not exists setor text;
+
+alter table public.user_organizations
+  drop constraint if exists user_organizations_setor_tamanho;
+
+alter table public.user_organizations
+  add constraint user_organizations_setor_tamanho
+  check (setor is null or (char_length(setor) >= 2 and char_length(setor) <= 60));

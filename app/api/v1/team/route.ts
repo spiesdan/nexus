@@ -42,7 +42,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from("user_organizations")
-    .select("user_id, role, invited_at, accepted_at, revoked_at, created_at")
+    .select("user_id, role, setor, invited_at, accepted_at, revoked_at, created_at")
     .eq("organization_id", activeOrg.orgId)
     .is("revoked_at", null)
     .order("created_at", { ascending: true });

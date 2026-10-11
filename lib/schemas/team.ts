@@ -33,6 +33,18 @@ export const changeRoleSchema = z.object({
 });
 export type ChangeRoleInput = z.infer<typeof changeRoleSchema>;
 
+/**
+ * Ramal do atendente (0266): texto livre até 60, `null` limpa.
+ *
+ * `min(2)` porque setor de 1 letra ("A", "X") é sigla que ninguém entende no
+ * atendimento — e a assinatura com sigla de 1 letra ("… - X Ana") confunde
+ * mais do que identifica.
+ */
+export const changeSetorSchema = z.object({
+  setor: z.string().trim().min(2).max(60).nullable(),
+});
+export type ChangeSetorInput = z.infer<typeof changeSetorSchema>;
+
 export const createApiTokenSchema = z.object({
   name: z.string().min(2).max(100),
   scopes: z.array(z.string()).min(1),
