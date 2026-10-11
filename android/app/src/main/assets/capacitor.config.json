@@ -1,0 +1,15 @@
+{
+	"appId": "tech.billhigiene.crm",
+	"appName": "Bill Higiene",
+	"webDir": "mobile/www",
+	"backgroundColor": "#0f172a",
+	"android": {
+		"allowMixedContent": false
+	},
+	"plugins": {
+		"CapacitorSQLite": {
+			"iosIsEncryption": false,
+			"androidIsEncryption": false
+		}
+	}
+}

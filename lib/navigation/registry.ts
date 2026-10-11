@@ -13,6 +13,7 @@ import {
   ClipboardText,
   ClockCountdown,
   ClockCounterClockwise,
+  Eye,
   FileText,
   Flag,
   FlowArrow,
@@ -223,7 +224,8 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // própria busca.
     href: "/app/busca",
     label: "Busca",
-    description: "Resultados da busca global: telas, conversas, clientes, pedidos, leads, produtos e títulos.",
+    description:
+      "Resultados da busca global: telas, conversas, clientes, pedidos, leads, produtos e títulos.",
     icon: MagnifyingGlass,
     group: "visao",
   },
@@ -464,6 +466,16 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     icon: MagnifyingGlass,
     group: "vendas",
     sidebar: true,
+  },
+  {
+    // Laboratório (0265): as 6 personas testam a campanha antes dela falar
+    // com gente de verdade. SEM sidebar (mesmo precedente da Venda
+    // Automática: dobra medida); a porta é o ⌘K — que lê deste registro.
+    href: "/app/laboratorio",
+    label: "Laboratório",
+    description: "Teste a campanha com clientes simulados antes de ativar.",
+    icon: Eye,
+    group: "vendas",
   },
   {
     // Venda Automática (spec 18): o Radar vira fila, a fila vira conversa.
