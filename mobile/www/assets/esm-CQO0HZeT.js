@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-DoD8ulqT.js","assets/dist-TLtlamx_.js"])))=>i.map(i=>d[i]);
+import{n as e}from"./db-Dc1f6nGl.js";import{registerPlugin as t}from"./dist-TLtlamx_.js";var n=t(`Network`,{web:()=>e(()=>import(`./web-DoD8ulqT.js`).then(e=>new e.NetworkWeb),__vite__mapDeps([0,1]))});export{n as Network};

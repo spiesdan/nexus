@@ -123,3 +123,5 @@ evidence/.sonda-score-residuo.json
 
 # QA em VPS: guarda segredo TOTP da conta de teste (repo e publico)
 .qa-vps/
+# Gerado por `cap sync` (mobile/www copiado). Nunca versionar: o CI gera.
+android/app/src/main/assets/public/

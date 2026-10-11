@@ -370,6 +370,14 @@ beforeAll(() => {
           values (v_org, 'rls/' || v_tag, 'nf_pendente', 'alerta de prova');
         end if;
 
+        -- migration 0265 — rodadas do Laboratório. Leitura org-scoped; escrita
+        -- pelo POST do lab (manager) e nunca update/delete (imutável).
+        if not exists (select 1 from public.lab_avaliacoes where organization_id = v_org) then
+          insert into public.lab_avaliacoes
+            (organization_id, campanha_nome, persona, nota, resumo)
+          values (v_org, 'Campanha RLS', 'decidido', 80, 'prova');
+        end if;
+
         -- migration 0219 — foto do produto.
         if not exists (select 1 from public.product_images where organization_id = v_org) then
           insert into public.product_images (organization_id, product_id, storage_path)
@@ -564,6 +572,8 @@ export const TABLES = [
   "financial_receivables",
   "financial_payments",
   "operational_alerts",
+  // migration 0265 — rodadas do Laboratório (nota por persona por rodada).
+  "lab_avaliacoes",
   "prospecting_searches",
   "business_prospects",
   "prospect_search_results",

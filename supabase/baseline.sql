@@ -21368,3 +21368,70 @@ create or replace view public.operational_alerts_insistentes as
     end as reaperturas_por_fechamento
   from public.operational_alerts
   where status = 'aberto' and reaberturas > 0;
+
+-- 0264_prospect_site_situacao (apêndice — ver supabase/migrations/20261011120000_0264_prospect_site_situacao.sql)
+--
+-- O Raio-X grava onde: situação + porquê (jsonb) + quando. Apêndice idempotente
+-- porque o update.sh reaplica o baseline em instalação existente — migration
+-- sozinha não chega na VPS (medido em 10/10/2026 com a 0262).
+alter table public.business_prospects
+  add column if not exists site_situacao text;
+
+alter table public.business_prospects
+  drop constraint if exists business_prospects_site_situacao_valida;
+
+alter table public.business_prospects
+  add constraint business_prospects_site_situacao_valida
+  check (
+    site_situacao is null
+    or site_situacao = any (
+      array['sem_site', 'site_ruim', 'site_simples', 'site_ok', 'nao_verificado']
+    )
+  );
+
+alter table public.business_prospects
+  add column if not exists site_detalhes jsonb not null default '{}'::jsonb;
+
+alter table public.business_prospects
+  add column if not exists site_verificado_em timestamptz;
+
+create index if not exists business_prospects_site_pendente_idx
+  on public.business_prospects (organization_id, updated_at desc)
+  where website is not null and website <> '' and site_situacao is null;
+
+-- 0265_lab_avaliacoes (apêndice — ver supabase/migrations/20261011140000_0265_lab_avaliacoes.sql)
+--
+-- Rodadas do Laboratório: nota + achados + transcrição + hash da config, uma
+-- linha por persona. Apêndice idempotente porque o update.sh reaplica o
+-- baseline em instalação existente.
+create table if not exists public.lab_avaliacoes (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  campanha_id uuid,
+  campanha_nome text not null default '',
+  persona text not null,
+  nota integer,
+  resumo text not null default '',
+  achados jsonb not null default '[]'::jsonb,
+  transcricao jsonb not null default '[]'::jsonb,
+  config_hash text not null default '',
+  rodada_em timestamptz not null default now(),
+  created_by uuid,
+  created_at timestamptz not null default now()
+);
+
+alter table public.lab_avaliacoes enable row level security;
+
+drop policy if exists lab_avaliacoes_select on public.lab_avaliacoes;
+create policy lab_avaliacoes_select on public.lab_avaliacoes
+  for select using (
+    (organization_id in (select public.fn_user_org_ids()))
+    or public.fn_is_platform_admin()
+  );
+
+drop policy if exists lab_avaliacoes_insert on public.lab_avaliacoes;
+create policy lab_avaliacoes_insert on public.lab_avaliacoes
+  for insert with check (
+    (organization_id in (select public.fn_user_org_ids()))
+    or public.fn_is_platform_admin()
+  );
