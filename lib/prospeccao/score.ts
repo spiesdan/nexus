@@ -13,9 +13,17 @@
  * faria a mesma linha pontuar diferente para quem olha.
  */
 
+import { pesoDoSite, type SituacaoDoSite } from "./raio-x-site";
+
 export interface EntradaScore {
   temTelefone: boolean;
   temWebsite: boolean;
+  /**
+   * Situação do Raio-X (0264). Quando presente, SUBSTITUI o booleano
+   * `temWebsite` no peso: site bom vale cheio, simples vale parcial, ruim
+   * quase nada, sem site zero. Quando ausente, vale o comportamento antigo.
+   */
+  situacaoSite?: SituacaoDoSite | null;
   whatsappPotencial: boolean;
   nota: number | null;
   totalAvaliacoes: number;
@@ -61,7 +69,13 @@ export function prioridadeAlta(score: number): boolean {
 export function scoreDeProspect(e: EntradaScore): number {
   let score = 0;
   if (e.temTelefone) score += PESOS_SCORE.telefone;
-  if (e.temWebsite) score += PESOS_SCORE.website;
+  // Com Raio-X, o peso é graduado; sem ele, o booleano antigo (5 pontos, que
+  // era o valor neutro entre "tem" e "não tem" na escala antiga de 10).
+  score += e.situacaoSite
+    ? pesoDoSite(e.situacaoSite, e.temWebsite)
+    : e.temWebsite
+      ? PESOS_SCORE.website
+      : 0;
   if (e.whatsappPotencial) score += PESOS_SCORE.whatsapp;
   if (e.nota !== null) score += Math.round(PESOS_SCORE.nota * Math.min(1, e.nota / 5));
   score += Math.round(PESOS_SCORE.avaliacoes * Math.min(1, e.totalAvaliacoes / 500));
