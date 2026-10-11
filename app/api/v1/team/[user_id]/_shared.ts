@@ -16,7 +16,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { ApiError } from "@/lib/api/types";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
-import { changeRoleSchema, validateRequest } from "@/lib/schemas";
+import { changeRoleSchema, changeSetorSchema, validateRequest } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 
 export async function changeMemberRole(
@@ -96,4 +96,78 @@ export async function changeMemberRole(
   });
 
   return ok({ user_id: targetUserId, role: input.role }, { requestId });
+}
+
+/**
+ * Shared handler: change a member's setor (ramal, 0266).
+ *
+ * Canonical route: PATCH /api/v1/team/[user_id]/setor
+ *
+ * Guardrails (mesmos do role):
+ *  - Caller must be admin of the active org (requireRole, spec 13 §4).
+ *  - Cannot change setor of a revoked member.
+ *
+ * `setor: null` LIMPA o ramal (e desliga a assinatura). Não há "string vazia":
+ * o schema transforma em 422, porque vazio assinaria errado em vez de não
+ * assinar.
+ */
+export async function changeMemberSetor(
+  req: NextRequest,
+  ctx: { params: Promise<{ user_id: string }> },
+): Promise<Response> {
+  const requestId = randomUUID();
+  const { user_id: targetUserId } = await ctx.params;
+
+  const authz = await requireRole("admin", { requestId, resource: "team" });
+  if (!authz.ok) return authz.response;
+  const { user: authUser, org: activeOrg } = authz;
+
+  let input;
+  try {
+    input = await validateRequest(changeSetorSchema, req);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return fail(err.code, err.message, err.status, {
+        details: err.details as Record<string, unknown> | undefined,
+        requestId,
+      });
+    }
+    throw err;
+  }
+
+  const supabase = await createClient();
+
+  const { data: target, error: fetchErr } = await supabase
+    .from("user_organizations")
+    .select("id, user_id, setor, revoked_at")
+    .eq("organization_id", activeOrg.orgId)
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+  if (fetchErr) return fail("internal_error", fetchErr.message, 500, { requestId });
+  if (!target) return fail("not_found", "Membro não encontrado.", 404, { requestId });
+  if (target.revoked_at) {
+    return fail("state_conflict", "Membro está revogado.", 409, { requestId });
+  }
+
+  const { error: updErr } = await supabase
+    .from("user_organizations")
+    .update({ setor: input.setor, updated_at: new Date().toISOString() })
+    .eq("id", target.id);
+  if (updErr) return fail("internal_error", updErr.message, 500, { requestId });
+
+  await audit({
+    action: "team.setor_changed",
+    actorUserId: authUser.id,
+    organizationId: activeOrg.orgId,
+    resourceType: "membership",
+    resourceId: target.id,
+    requestId,
+    metadata: {
+      target_user_id: targetUserId,
+      old_setor: (target as unknown as { setor: string | null }).setor,
+      new_setor: input.setor,
+    },
+  });
+
+  return ok({ user_id: targetUserId, setor: input.setor }, { requestId });
 }

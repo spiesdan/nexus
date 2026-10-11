@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { ROLES, type Role } from "@/lib/schemas/team";
 import { DotsThree } from "@/lib/ui/icons";
+import { SetorCell } from "./SetorCell";
 
 interface Props {
   currentUserId: string;
@@ -91,6 +92,14 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                     {m.email ? (
                       <div className="text-xs text-muted-foreground">{m.email}</div>
                     ) : null}
+                  </TableCell>
+                  <TableCell>
+                    <SetorCell
+                      userId={m.user_id}
+                      nome={m.full_name ?? m.email ?? m.user_id}
+                      setor={m.setor}
+                      podeEditar={canManage && m.user_id !== currentUserId}
+                    />
                   </TableCell>
                   <TableCell>
                     {canManage && m.user_id !== currentUserId ? (
