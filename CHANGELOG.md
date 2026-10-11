@@ -8,6 +8,31 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.30] — 2026-10-11
+
+### Adicionado
+
+- **Laboratório do agente e Raio-X do site do prospect** **Laboratório.** Seis clientes simulados testam a campanha antes dela falar
+  com gente de verdade: o decidido, o perguntão de preço, o irritado, o que
+  pergunta o que não sabemos, o que exige humano e o que escreve errado. A
+  conversa roda em sandbox — nada é enviado — com o mesmo gerador de mensagem
+  da produção, e um juiz dá nota de 0 a 100 com os achados e a evidência. O
+  histórico mostra se a mudança na campanha melhorou ou piorou a nota.
+
+  **Raio-X do site.** Na ficha do prospect, um botão analisa o site: ele abre a
+  página e verifica se existe, se tem HTTPS, se funciona no celular, se é rápido
+  e se tem WhatsApp e contato à mostra. O resultado entra na prioridade da fila —
+  um site cuidado conta mais do que um endereço que não abre.
+
+- **Ramal do atendente com assinatura visível para o cliente** Cada membro da equipe agora tem um ramal — Faturamento, Vendas, Expedição —
+  definido na tela de Equipe. A transferência de conversa entre atendentes já
+  existia e continua igual.
+
+  O que muda para o cliente: toda mensagem escrita por uma pessoa termina com
+  quem escreveu, como "Bill Higiene e Limpeza - Faturamento Ana". Mensagens do
+  robô e automáticas não levam assinatura. Quem ainda não tem ramal definido
+  continua enviando normalmente, sem assinatura.
+
 ## [1.25.29] — 2026-10-10
 
 ### Corrigido
@@ -3343,7 +3368,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.30...HEAD
+[1.25.30]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...v1.25.30
 [1.25.29]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...v1.25.29
 [1.25.28]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.27...v1.25.28
 [1.25.27]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.26...v1.25.27
