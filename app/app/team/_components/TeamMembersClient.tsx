@@ -42,6 +42,7 @@ import {
 import { ROLES, type Role } from "@/lib/schemas/team";
 import { DotsThree } from "@/lib/ui/icons";
 import { SetorCell } from "./SetorCell";
+import { NomeCell } from "./NomeCell";
 
 interface Props {
   currentUserId: string;
@@ -86,9 +87,12 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
               {members.map((m) => (
                 <TableRow key={m.user_id}>
                   <TableCell>
-                    <div className="font-medium">
-                      {m.full_name ?? m.email ?? m.user_id.slice(0, 8)}
-                    </div>
+                    <NomeCell
+                        userId={m.user_id}
+                        nome={m.full_name}
+                        email={m.email}
+                        podeEditar={canManage && m.user_id !== currentUserId}
+                      />
                     {m.email ? (
                       <div className="text-xs text-muted-foreground">{m.email}</div>
                     ) : null}
