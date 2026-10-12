@@ -32,7 +32,55 @@
  * busca se atura a sugerir. Mexer nela é mexer em quanto casamento fraco
  * passa — mude com teste.
  */
-import { pontuar, tokenizar } from "@/lib/catalogo/busca";
+import { normalizar, pontuar, tokenizar } from "@/lib/catalogo/busca";
+
+/**
+ * O vocabulário da tabela: toda palavra que aparece em alguma descrição.
+ *
+ * Comparado já normalizado (o mesmo `normalizar` do `tokenizar`), então
+ * "Águas" da tabela casa "aguas" do produto. Uma passada só por chamada —
+ * para a tabela IBPT inteira (~20 mil linhas) é rápido, e sem isto cada
+ * token fora do vocabulário seria um falso negativo silencioso.
+ */
+function vocabularioDaTabela(linhas: LinhaIbptCandidata[]): Set<string> {
+  const vocab = new Set<string>();
+  for (const linha of linhas) {
+    if (!linha.descricao) continue;
+    for (const palavra of normalizar(linha.descricao).split(" ")) {
+      if (palavra !== "") vocab.add(palavra);
+    }
+  }
+  return vocab;
+}
+
+/**
+ * Frequência por token: em quantas descrições cada palavra aparece.
+ *
+ * Base do filtro de palavras comuns (regra 4 do `candidatosDeNcm`).
+ * Calculado da própria tabela em vez de lista hardcoded — vale para qualquer
+ * tabela, e muda sozinho quando a tabela muda.
+ */
+function frequenciaPorToken(linhas: LinhaIbptCandidata[]): {
+  mapa: Map<string, number>;
+  total: number;
+} {
+  const mapa = new Map<string, number>();
+  let total = 0;
+  for (const linha of linhas) {
+    if (!linha.descricao) continue;
+    total++;
+    const vistas = new Set(
+      normalizar(linha.descricao)
+        .split(" ")
+        .filter((w) => w !== ""),
+    );
+    for (const w of vistas) mapa.set(w, (mapa.get(w) ?? 0) + 1);
+  }
+  return { mapa, total };
+}
+
+/** Acima desta fração de linhas, a palavra não distingue nada. */
+const LIMITE_DF = 0.3;
 
 /** Uma linha candidata da tabela IBPT (org já filtrada pela rota). */
 export interface LinhaIbptCandidata {
@@ -81,14 +129,61 @@ export function candidatosDeNcm(
 ): CandidatoDeNcm[] {
   const { palavras } = tokenizar(nomeDoProduto);
   if (palavras.length === 0) return [];
-  const tokens = { palavras, numeros: [] as string[] };
+
+  // ─── 3. FORA DO VOCABULÁRIO, FORA DA CONTA ──────────────────────────────
+  //
+  // Token que não aparece em NENHUMA descrição da tabela (marca própria como
+  // "BILL", que está em todo produto da org e em zero descrições oficiais)
+  // não pode somar nem dividir: somar zero derruba a média de um casamento
+  // exato — "AGUA SANITARIA BILL" media 0.5999… e reprovava no piso 0.6.
+  //
+  // Medido em 11/10/2026 contra o catálogo real (631 produtos, quase todos
+  // com a marca no nome). Sem isto, o lote inteiro ia para revisão.
+  //
+  // A pertinência é por PREFIXO (a mesma do `pontuar`: "agua" vale para
+  // "aguas"). Comparação exata aqui descartaria o singular contra o plural —
+  // que é exatamente o caso que o prefixo existe para salvar.
+  const vocabulario = vocabularioDaTabela(linhas);
+  const uteis = palavras.filter((p) => {
+    if (vocabulario.has(p)) return true;
+    if (p.length < 3) return false;
+    for (const v of vocabulario) {
+      if (v.startsWith(p) || p.startsWith(v)) return true;
+    }
+    return false;
+  });
+  if (uteis.length === 0) return [];
+
+  // ─── 4. PALAVRA COMUM DEMAIS NÃO DECIDE SOZINHA ───────────────────────────
+  //
+  // "NÃO" está em centenas de descrições ("não desnaturado", "não
+  // acondicionado"…). Um produto chamado "XYZQ NÃO EXISTE NADA" casava uma
+  // descrição qualquer SÓ pelo "não" com nota 1.0 — e com margem, o lote
+  // APLICAVA. Medido em 11/10/2026 no teste da rota.
+  //
+  // Token presente em mais de 30% das linhas sai da conta (IDF-lite calculado
+  // da própria tabela, sem lista hardcoded — vale para qualquer tabela).
+  const { mapa: frequencia, total: linhasComDescricao } = frequenciaPorToken(linhas);
+  const distintivos = uteis.filter(
+    (p) => (frequencia.get(p) ?? 0) / Math.max(1, linhasComDescricao) <= LIMITE_DF,
+  );
+  if (distintivos.length === 0) return [];
+  const tokens = { palavras: distintivos, numeros: [] as string[] };
 
   const pontuados: CandidatoDeNcm[] = [];
   for (const linha of linhas) {
     if (!linha.descricao) continue;
     const nota = pontuar({ nome: linha.descricao, codigo: linha.codigo }, tokens);
     if (nota === null || nota < CONFIANCA_MINIMA) continue;
-    pontuados.push({ ncm: linha.codigo, ex: linha.ex, descricao: linha.descricao, confianca: nota });
+    // Arredonda para 3 casas: (0.9+0.9)/2 é 0.9 na matemática e 0.8999999… no
+    // float — e o piso do lote compara com 0.9 exato. Sem isto, casamento
+    // exato reprova por erro de representação.
+    pontuados.push({
+      ncm: linha.codigo,
+      ex: linha.ex,
+      descricao: linha.descricao,
+      confianca: Math.round(nota * 1000) / 1000,
+    });
   }
 
   pontuados.sort((a, b) => b.confianca - a.confianca || (a.ex === "" ? -1 : b.ex === "" ? 1 : 0));

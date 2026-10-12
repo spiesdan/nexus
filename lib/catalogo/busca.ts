@@ -141,7 +141,12 @@ export function pontuar(produto: ProdutoBuscavel, tokens: TokensDaBusca): number
       // nota 0.9 — enchimento de conversa virando produto. Duas letras não
       // identificam nada; a partir de três, "pro", "max" e "air" seguem
       // funcionando.
-      else if (p.length >= 3 && (t.startsWith(p) || p.startsWith(t))) nota = 0.9;
+      else if (p.length >= 3 && t.length >= 3 && (t.startsWith(p) || p.startsWith(t))) nota = 0.9;
+      // ^^^  (11/10/2026): sem ele, palavra-alvo de 1 letra
+      // ("a", "e", "o" — toda descrição tem) casa por prefixo com qualquer
+      // consulta que comece com ela: "alcool".startsWith("a") valia 0.9.
+      // O comentário acima já dizia que 2 letras não identificam nada — valia
+      // só para a consulta; agora vale para os dois lados.
       else if (p.length >= 4 && distanciaAte(p, t, 1)) nota = mesmaInicial ? 0.75 : 0.5;
       // Distância 2 só para palavra longa: é o caso de "ifone" × "iphone" (falta
       // uma letra E troca outra). Abaixo de 5 letras a tolerância vira ruído —

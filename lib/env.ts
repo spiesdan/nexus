@@ -215,6 +215,12 @@ const schema = z.object({
   VERCEL_AI_GATEWAY_URL: z.string().optional().default(""),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   OPENAI_API_KEY: z.string().optional().default(""),
+  // Gemini direto (0267, passe de IA do NCM): gratuito no tier free do Google
+  // AI Studio, e o modelo default é o flash (rápido e barato). Opcional como
+  // as outras chaves — sem ela, o lote usa só regra e o resto vai para
+  // revisão; nada quebra, nada finge.
+  GEMINI_API_KEY: z.string().optional().default(""),
+  GEMINI_MODEL: z.string().optional().default("gemini-2.0-flash"),
 
   // Motor de decisão do RADAR — `laya-serve`, rodando na mesma VPS (rede
   // interna, nunca exposto). As duas são OPCIONAIS e sem elas o recurso fica
