@@ -25,11 +25,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import {
-  PONTOS_DE_IA,
-  pontosPorPapel,
-  type PontoDeIa,
-} from "@/lib/ai/pontos/registro";
+import { PONTOS_DE_IA, pontosPorPapel, type PontoDeIa } from "@/lib/ai/pontos/registro";
 
 import { arquivosDeCodigo, RAIZ_DO_REPO } from "./helpers/varrer-codigo";
 
@@ -97,6 +93,20 @@ const FORA_DO_SEAM: Record<string, { arquivo: string; marcador: string }> = {
   teste_de_agente: {
     arquivo: "lib/ai/runtime/agent.ts",
     marcador: "buildModel",
+  },
+  // MEDIDO EM 12/10/2026: `assistente` estava no código e FORA do registro, e
+  // a varredura NÃO reclamou — porque ele não passa pelo seam (não há
+  // `purpose: 'x'` literal; o id vai como argumento). O desfecho foi o pior
+  // que esta frente existe para evitar: o dono cadastrou a chave Google, a
+  // tela mostrou a credencial validada, e o assistente continuava chamando o
+  // provedor default — porque ninguém conseguia apontar o ponto para ela.
+  assistente: {
+    arquivo: "app/api/v1/assistente/chat/route.ts",
+    // O marcador leva o PROPÓSITO, não só o nome da função: com o nome sozinho
+    // a prova passa trivialmente (o arquivo continua chamando o resolver para
+    // outro ponto) e a mutação que troca 'assistente' por outro id — que é
+    // exatamente o desfecho silencioso deste buraco — não reprovaria nada.
+    marcador: 'resolverModeloDoPonto("assistente"',
   },
 };
 
@@ -232,9 +242,7 @@ describe("capacidade exigida", () => {
 describe("agrupamento por papel", () => {
   it("todo ponto configurável cai em algum papel da tela", () => {
     const agrupado = pontosPorPapel();
-    const noAgrupamento = new Set(
-      Object.values(agrupado).flatMap((ps) => ps.map((p) => p.id)),
-    );
+    const noAgrupamento = new Set(Object.values(agrupado).flatMap((ps) => ps.map((p) => p.id)));
     const foraDaTela = PONTOS_DE_IA.filter((p) => !noAgrupamento.has(p.id)).map((p) => p.id);
     expect(foraDaTela, "ponto sem papel não aparece na tela agrupada").toEqual([]);
   });
