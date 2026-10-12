@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.32] — 2026-10-12
+
+### Adicionado
+
+- **Pedido offline no celular, com envio automático ao voltar o sinal** O vendedor sem área de cobertura agora captura o pedido no celular mesmo assim:
+  escolhe o cliente e os produtos do catálogo já baixado, confere o total e salva
+  na fila do aparelho — cada pedido com um número provisório para acompanhar.
+
+  Quando o sinal volta e o sistema é aberto, tudo o que estava na fila é enviado
+  sozinho, na ordem em que foi capturado. O número definitivo da empresa aparece
+  no lugar do provisório. Se o servidor recusar algum item (crédito, preço ou
+  estoque), ele fica marcado com o motivo para ser resolvido — nunca some em
+  silêncio.
+
+  O catálogo de produtos e clientes é baixado com um toque quando há internet, e
+  a tela mostra há quantos dias ele foi atualizado — preço antigo pode ser
+  recusado no envio, e quem vende precisa saber disso antes de prometer.
+
+  Detalhe técnico para quem opera: o envio usa uma chave que impede o pedido
+  duplicado quando a conexão cai no meio da transmissão. Sem ela, cada retry
+  criaria um pedido novo igual ao anterior.
+
 ## [1.25.31] — 2026-10-12
 
 ### Adicionado
@@ -3407,7 +3429,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.31...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.32...HEAD
+[1.25.32]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.31...v1.25.32
 [1.25.31]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.30...v1.25.31
 [1.25.30]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...v1.25.30
 [1.25.29]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...v1.25.29
