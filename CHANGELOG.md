@@ -8,6 +8,52 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.33] — 2026-10-12
+
+### Corrigido
+
+- **A chave de IA cadastrada pela tela agora liga o passe de NCM** A chave do Google cadastrada em **IA › Credenciais** não habilitava o passe de
+  IA do botão "Completar NCM". O código lia só a chave da instalação (o
+  `GEMINI_API_KEY` do `.env`) e mais nada — ou seja, quem cadastrava a chave pela
+  tela via o nome dela na lista, com a validação em dia, e o recurso continuava
+  desligado.
+
+  É o mesmo defeito que a base de conhecimento já teve com a OpenAI, e que a
+  própria tela promete não repetir: oferecer uma chave que o motor ignora.
+
+  Agora o passe de NCM resolve a chave na ordem do mais específico ao mais
+  genérico: primeiro a credencial Google da organização (ativa e validada), depois
+  a chave da instalação. Com mais de uma chave Google ativa, vale a mais antiga —
+  e a tela avisa qual está em uso e quantas existem, porque o desempate
+  silencioso faria o dono achar que a chave nova está valendo.
+
+  A tela de produtos passou a dizer qual chave o passe usou (ou que não houve
+  chave e o lote foi só por regra), para ninguém descobrir por que a IA não liga
+  só rodando o lote e olhando o resultado.
+
+- **O assistente interno passa a ser configurável em IA › Provedores** O assistente interno (`/api/v1/assistente/chat`) resolvia o modelo por um
+  propósito — `assistente` — que **não estava no registro de pontos de IA**. Três
+  consequências, todas silenciosas:
+
+  - A tela de provedores não oferecia o ponto, então ninguém conseguia apontá-lo
+    para uma credencial.
+  - A API recusava a configuração com `ponto_desconhecido`.
+  - Sem binding, o assistente caía no modelo padrão da instalação, ignorando as
+    credenciais cadastradas pela tela.
+
+  Medido em 12/10/2026 na instalação real: a chave do Google estava cadastrada,
+  ativa e validada, e o assistente seguia chamando `anthropic/claude-sonnet-5`
+  pelo OpenRouter — porque nada o ligava àquela chave.
+
+  Agora `assistente` está no registro, com a exigência de tools declarada (é o
+  que separa "responde" de "faz"), então a tela passa a oferecer e a API passa a
+  aceitar a configuração.
+
+  O teste de completude ganhou a entrada do ponto. Ele não pegaria sozinho: o
+  assistente não passa pelo seam, então não há `purpose: 'x'` literal para a
+  varredura encontrar — sem a entrada explícita ele continuaria invisível, que é
+  como passou despercebido até agora.
+
 ## [1.25.32] — 2026-10-12
 
 ### Adicionado
@@ -3429,7 +3475,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.32...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.33...HEAD
+[1.25.33]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.32...v1.25.33
 [1.25.32]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.31...v1.25.32
 [1.25.31]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.30...v1.25.31
 [1.25.30]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...v1.25.30
