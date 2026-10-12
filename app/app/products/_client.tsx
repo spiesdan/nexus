@@ -184,6 +184,48 @@ export function ProdutosClient({
   const [salvandoEdicao, setSalvandoEdicao] = React.useState(false);
   const [importando, setImportando] = React.useState(false);
   const [resumo, setResumo] = React.useState<ResumoDaImportacao | null>(null);
+  const [completandoNcm, setCompletandoNcm] = React.useState(false);
+  const [resumoNcm, setResumoNcm] = React.useState<{
+    /** Quantos a REGRA sozinha fechou. */
+    aplicados: number;
+    /** Quantos a regra e a IA fecharam juntas (concordância). */
+    aplicadosComIa: number;
+    para_revisar: { id: string; nome: string; motivo: string }[];
+    /** O passe de IA batou no teto por chamada e sobrou item cinzento. */
+    continuar: boolean;
+    iaChamadas: number;
+  } | null>(null);
+
+  /**
+   * Completa o NCM em lote (0267): auto-aplica o casamento certo, devolve o
+   * resto para revisar na edição (que já mostra sugestão por produto).
+   */
+  async function completarNcm(): Promise<void> {
+    setCompletandoNcm(true);
+    setResumoNcm(null);
+    try {
+      const r = await apiClient.post<{
+        data: {
+          aplicados: { id: string; via: "regra" | "regra+ia" }[];
+          para_revisar: { id: string; nome: string; motivo: string }[];
+          ia_chamadas: number;
+          continuar: boolean;
+        };
+      }>("/api/v1/products/ncm-completar", {});
+      setResumoNcm({
+        aplicados: r.data.aplicados.filter((a) => a.via === "regra").length,
+        aplicadosComIa: r.data.aplicados.filter((a) => a.via === "regra+ia").length,
+        para_revisar: r.data.para_revisar,
+        continuar: r.data.continuar,
+        iaChamadas: r.data.ia_chamadas,
+      });
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setCompletandoNcm(false);
+    }
+  }
   const arquivoRef = React.useRef<HTMLInputElement>(null);
 
   // ── NCM pelo nome (0256) ──────────────────────────────────────────────────
@@ -469,12 +511,55 @@ export function ProdutosClient({
             >
               {t(importando ? "Importando…" : "Importar planilha")}
             </Button>
+            <Button
+              variant="outline"
+              disabled={completandoNcm}
+              onClick={() => void completarNcm()}
+              data-testid="completar-ncm"
+              title={t(
+                "Preenche o NCM dos produtos sem código: casamento certo pela regra e, na dúvida, a IA desempata. O resto volta para revisar",
+              )}
+            >
+              {t(completandoNcm ? "Completando…" : "Completar NCM")}
+            </Button>
             <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
               {t(criando ? "Cancelar" : "Novo produto")}
             </Button>
           </FilterActions>
         ) : null}
       </FilterBar>
+      {resumoNcm ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {t("NCM aplicado em")} {resumoNcm.aplicados}
+          {resumoNcm.aplicadosComIa > 0
+            ? " (" + t("com IA") + ": " + resumoNcm.aplicadosComIa + ")"
+            : ""}{" "}
+          ·{" "}
+          {resumoNcm.para_revisar.length > 0
+            ? t("para revisar na edição") +
+              ": " +
+              resumoNcm.para_revisar
+                .slice(0, 5)
+                .map((x) => x.nome)
+                .join(", ") +
+              (resumoNcm.para_revisar.length > 5 ? "…" : "")
+            : t("nada pendente")}
+          {resumoNcm.continuar ? (
+            <>
+              {" "}
+              <button
+                type="button"
+                className="underline"
+                disabled={completandoNcm}
+                onClick={() => void completarNcm()}
+                data-testid="continuar-ncm"
+              >
+                {t("Rodar de novo para o resto")}
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
         <TabsList aria-label={t("Abas do catálogo")}>

@@ -15,7 +15,12 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { candidatosDeNcm, CONFIANCA_MINIMA, termosParaFiltrar, type LinhaIbptCandidata } from "./sugerir-ncm";
+import {
+  candidatosDeNcm,
+  CONFIANCA_MINIMA,
+  termosParaFiltrar,
+  type LinhaIbptCandidata,
+} from "./sugerir-ncm";
 
 const LINHAS: LinhaIbptCandidata[] = [
   { codigo: "85183000", ex: "", descricao: "Fones de ouvido, com ou sem microfone" },
@@ -64,10 +69,60 @@ describe("candidatosDeNcm", () => {
 
 describe("termosParaFiltrar", () => {
   it("leva as palavras mais longas primeiro e deixa números de fora", () => {
-    expect(termosParaFiltrar("Fone de ouvido Bluetooth 5.3")).toEqual(["bluetooth", "ouvido", "fone"]);
+    expect(termosParaFiltrar("Fone de ouvido Bluetooth 5.3")).toEqual([
+      "bluetooth",
+      "ouvido",
+      "fone",
+    ]);
   });
 
   it("teto de termos, para o ILIKE do PostgREST não virar uma árvore", () => {
     expect(termosParaFiltrar("a b c d e f g", 3)).toHaveLength(3);
+  });
+});
+
+describe("candidatosDeNcm — marca própria, float e prefixo curto (11/10/2026)", () => {
+  // Fixture com VOLUME de propósito: o filtro de palavras comuns (regra 4)
+  // é estatístico — com 2 linhas, qualquer palavra "comum" derrubaria
+  // candidatas legítimas. Na tabela real (~20 mil linhas) a estatística tem
+  // o que morder; aqui, 6 linhas com "nao" em 4 delas (67%).
+  const LIMPEZA: LinhaIbptCandidata[] = [
+    { codigo: "28289011", ex: "", descricao: "Aguas sanitarias e alvejantes" },
+    { codigo: "22071010", ex: "", descricao: "Alcool etilico nao desnaturado" },
+    { codigo: "34011190", ex: "", descricao: "Saboes para lavagem nao industriais" },
+    { codigo: "38089419", ex: "", descricao: "Desinfetantes de uso geral nao diluidos" },
+    { codigo: "34022000", ex: "", descricao: "Detergentes nao toxicos para louca" },
+    { codigo: "96039000", ex: "", descricao: "Vassouras e escovas" },
+  ];
+
+  it("marca no nome não derruba casamento exato (caso real: BILL em 631 produtos)", () => {
+    // "AGUA SANITARIA BILL" mediava 0.5999… e reprovava no piso 0.6, porque
+    // BILL somava zero. Token fora do vocabulário não entra na conta.
+    const r = candidatosDeNcm(LIMPEZA, "AGUA SANITARIA BILL 5 L");
+    expect(r[0]?.ncm).toBe("28289011");
+    expect(r[0]?.confianca).toBeGreaterThanOrEqual(CONFIANCA_MINIMA);
+  });
+
+  it("singular contra plural vale (a tolerância é a do pontuar)", () => {
+    // "agua" não está no vocabulário {"aguas", ...} em comparação exata —
+    // mas o score casa por prefixo, e o filtro de vocabulário tem que usar
+    // a mesma tolerância ou descartaria o que o score aceitaria.
+    const r = candidatosDeNcm(LIMPEZA, "AGUA SANITARIA");
+    expect(r[0]?.ncm).toBe("28289011");
+  });
+
+  it("confiança exata não perde para o float", () => {
+    // (0.9+0.9)/2 === 0.9 na matemática e 0.8999999… no float. O piso do lote
+    // compara com 0.9 exato — sem arredondar, casamento exato reprova.
+    const r = candidatosDeNcm(LIMPEZA, "AGUA SANITARIA");
+    expect(r[0]?.confianca).toBe(0.9);
+  });
+
+  it("palavra de 1 letra no alvo não casa por prefixo", () => {
+    // "alcool".startsWith("a") valia 0.9 — e toda descrição tem "a"/"e".
+    // Sem o guarda, ALCOOL casava água sanitária com 0.9 (medido).
+    const r = candidatosDeNcm(LIMPEZA, "ALCOOL LIQUIDO");
+    expect(r.map((c) => c.ncm)).not.toContain("28289011");
+    expect(r[0]?.ncm).toBe("22071010");
   });
 });

@@ -532,6 +532,7 @@ export const AUDIT_ACTIONS = [
   // hora: sem este código o fiscal vê `sugerido` na linha e não vê QUANDO a
   // máquina escolheu nem quem salvou por cima.
   "catalog_product.ncm_sugerido",
+"catalog_product.ncm_lote",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
