@@ -194,6 +194,12 @@ export function ProdutosClient({
     /** O passe de IA batou no teto por chamada e sobrou item cinzento. */
     continuar: boolean;
     iaChamadas: number;
+    /** Qual chave o passe de IA usou — ou `null` se ele nem rodou. */
+    iaOrigem: {
+      origem: "credencial_da_organizacao" | "chave_da_instalacao";
+      rotulo: string | null;
+      avisos: string[];
+    } | null;
   } | null>(null);
 
   /**
@@ -210,6 +216,11 @@ export function ProdutosClient({
           para_revisar: { id: string; nome: string; motivo: string }[];
           ia_chamadas: number;
           continuar: boolean;
+          ia_origem: {
+            origem: "credencial_da_organizacao" | "chave_da_instalacao";
+            rotulo: string | null;
+            avisos: string[];
+          } | null;
         };
       }>("/api/v1/products/ncm-completar", {});
       setResumoNcm({
@@ -218,6 +229,7 @@ export function ProdutosClient({
         para_revisar: r.data.para_revisar,
         continuar: r.data.continuar,
         iaChamadas: r.data.ia_chamadas,
+        iaOrigem: r.data.ia_origem,
       });
       router.refresh();
     } catch (e) {
@@ -544,6 +556,12 @@ export function ProdutosClient({
                 .join(", ") +
               (resumoNcm.para_revisar.length > 5 ? "…" : "")
             : t("nada pendente")}
+          {t("IA:")}{" "}
+          {resumoNcm.iaOrigem === null
+            ? t("sem chave configurada — só regra")
+            : resumoNcm.iaOrigem.rotulo
+              ? t("chave") + " " + resumoNcm.iaOrigem.rotulo
+              : t("chave da instalação")}{" "}
           {resumoNcm.continuar ? (
             <>
               {" "}
@@ -558,6 +576,14 @@ export function ProdutosClient({
               </button>
             </>
           ) : null}
+          {/* As incoerências que NÃO impedem a chamada, mas alguém precisa ver.
+              Ex.: com duas chaves Google ativas o desempate é pela mais antiga
+              — se isso não for dito, o dono acha que a chave nova está valendo. */}
+          {resumoNcm.iaOrigem?.avisos.map((aviso) => (
+            <span key={aviso} className="block text-xs text-muted-foreground">
+              {aviso}
+            </span>
+          ))}
         </p>
       ) : null}
 

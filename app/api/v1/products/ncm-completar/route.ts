@@ -43,7 +43,7 @@ import {
   type LinhaIbptCandidata,
 } from "@/lib/catalogo/sugerir-ncm";
 import { concordam, sugerirNcmPorIa, type CandidatoParaIa } from "@/lib/catalogo/sugerir-ncm-ia";
-import { env } from "@/lib/env";
+import { resolverChaveDeNcm } from "@/lib/catalogo/chave-ncm";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -190,9 +190,13 @@ export async function POST(_req: NextRequest): Promise<Response> {
   // Só itens com candidatos (abaixo_do_piso + ambiguo): sem candidatos não há
   // o que julgar. Só com chave configurada: sem ela, tudo já está decidido
   // (revisão). Teto por chamada para não estourar timeout nem cota do free.
-  const ia = env.GEMINI_API_KEY
-    ? { chave: env.GEMINI_API_KEY, modelo: env.GEMINI_MODEL || "gemini-2.0-flash" }
-    : null;
+  //
+  // A chave vem de `resolverChaveDeNcm`: credencial Google da organização
+  // primeiro, chave da instalação depois. Ler só o env (como antes) fazia o
+  // passe NÃO ligar para quem cadastrou a chave pela tela — o defeito que
+  // `lib/catalogo/chave-ncm.ts` documenta.
+  const chaveDeIa = await resolverChaveDeNcm(authz.org.orgId);
+  const ia = chaveDeIa ? { chave: chaveDeIa.apiKey, modelo: chaveDeIa.modelo } : null;
   let iaChamadas = 0;
   let iaAplicados = 0;
   let continuar = false;
@@ -276,7 +280,17 @@ export async function POST(_req: NextRequest): Promise<Response> {
   });
 
   return ok(
-    { aplicados, para_revisar: paraRevisar, ia_chamadas: iaChamadas, continuar },
+    {
+      aplicados,
+      para_revisar: paraRevisar,
+      ia_chamadas: iaChamadas,
+      continuar,
+      // "Chave nenhuma" é resposta legítima — o lote usou só a regra. Quem
+      // cadastrou a chave pela tela precisa ver que ELA está valendo.
+      ia_origem: chaveDeIa
+        ? { origem: chaveDeIa.origem, rotulo: chaveDeIa.rotulo, avisos: chaveDeIa.avisos }
+        : null,
+    },
     { requestId },
   );
 }
