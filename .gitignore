@@ -125,3 +125,4 @@ evidence/.sonda-score-residuo.json
 .qa-vps/
 # Gerado por `cap sync` (mobile/www copiado). Nunca versionar: o CI gera.
 android/app/src/main/assets/public/
+mobile/www/

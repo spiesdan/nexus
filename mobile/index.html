@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Bill Higiene — Pedidos offline</title>
+    <link rel="stylesheet" href="./src/estilo.css" />
+  </head>
+  <body>
+    <!-- O SQLite no navegador: o elemento PRECISA estar no DOM (invisível).
+         Sem ele, initWebStore falha com "not present in the DOM". -->
+    <jeep-sqlite style="display:none" aria-hidden="true"></jeep-sqlite>
+    <main class="tela">
+      <header class="topo">
+        <h1>Bill Higiene</h1>
+        <p id="sinal" class="sinal" role="status">verificando sinal…</p>
+      </header>
+
+      <section class="cartao" aria-label="Pedidos para enviar">
+        <h2>Fila de envio <span id="conta-fila" class="conta"></span></h2>
+        <ul id="fila" class="lista"></ul>
+        <p id="fila-vazia" class="miudo">Nenhum pedido esperando. O que você capturar sem internet aparece aqui.</p>
+      </section>
+
+      <section class="cartao" aria-label="Catálogo">
+        <h2>Catálogo</h2>
+        <p id="catalogo-estado" class="miudo">verificando…</p>
+        <button id="btn-catalogo" type="button" class="btn secundario">Baixar catálogo agora</button>
+      </section>
+
+      <nav class="acoes">
+        <a id="btn-novo" class="btn primario" href="./novo-pedido.html">Novo pedido offline</a>
+        <button id="btn-sistema" type="button" class="btn secundario">Abrir o sistema</button>
+        <button id="btn-enviar" type="button" class="btn secundario">Enviar agora</button>
+      </nav>
+      <p id="aviso" class="aviso" role="status"></p>
+    </main>
+    <script type="module" src="./src/shell.ts"></script>
+  </body>
+</html>

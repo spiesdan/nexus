@@ -137,6 +137,18 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "Este é o check obrigatório `invariants` (`pnpm test:db`) — o único que exercita o " +
       "`baseline.sql` que o self-hoster aplica, e o isolamento RLS entre organizações.",
   },
+  // O APK não é container e não entra na cadeia release→tag→GHCR→VPS: é um
+  // artefato lateral para sideload. SEM `if:` de job de propósito — o gatilho
+  // é `paths:` no `on:`, e paths não contam como condição de desligamento.
+  "apk.yml::apk-debug": {
+    condicao: null,
+    efeito:
+      "Este job COMPILA o APK de debug do shell offline e o publica como " +
+      "artifact — é o arquivo que o vendedor instala no celular. Desligá-lo " +
+      "não quebra nenhum check obrigatório, e é assim que o APK deixaria de " +
+      "sair sem ninguém notar: o PR passaria verde e o link de download " +
+      "morreria de velho.",
+  },
   "e2e.yml::e2e": {
     condicao: null,
     efeito:

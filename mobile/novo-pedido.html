@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Novo pedido offline — Bill Higiene</title>
+    <link rel="stylesheet" href="./src/estilo.css" />
+  </head>
+  <body>
+    <!-- O SQLite no navegador: o elemento PRECISA estar no DOM (invisível).
+         Sem ele, initWebStore falha com "not present in the DOM". -->
+    <jeep-sqlite style="display:none" aria-hidden="true"></jeep-sqlite>
+    <main class="tela">
+      <header class="topo">
+        <a class="voltar" href="./index.html">← fila</a>
+        <h1>Novo pedido <span id="provisorio" class="conta"></span></h1>
+      </header>
+
+      <section class="cartao" aria-label="Cliente">
+        <h2>Cliente</h2>
+        <input id="busca-cliente" type="search" placeholder="Digite o nome…" autocomplete="off" />
+        <ul id="clientes" class="lista"></ul>
+        <p id="cliente-escolhido" class="escolhido">nenhum cliente escolhido</p>
+      </section>
+
+      <section class="cartao" aria-label="Itens">
+        <h2>Itens</h2>
+        <input id="busca-produto" type="search" placeholder="Digite o produto…" autocomplete="off" />
+        <ul id="produtos" class="lista"></ul>
+        <ul id="itens" class="lista"></ul>
+        <p id="total" class="total">Total: R$ 0,00</p>
+      </section>
+
+      <section class="cartao" aria-label="Observação">
+        <h2>Observação <span class="miudo">(opcional)</span></h2>
+        <input id="obs" type="text" maxlength="500" placeholder="Ex.: entregar após as 14h" autocomplete="off" />
+      </section>
+
+      <button id="btn-salvar" type="button" class="btn primario grande">Salvar na fila</button>
+      <p id="aviso" class="aviso" role="status"></p>
+    </main>
+    <script type="module" src="./src/novo-pedido.ts"></script>
+  </body>
+</html>
