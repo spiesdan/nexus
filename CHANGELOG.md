@@ -8,6 +8,45 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.31] — 2026-10-12
+
+### Adicionado
+
+- **Desempate do NCM por IA (Gemini) no preenchimento em lote** O botão "Completar NCM" ganhou um passe de IA na zona cinzenta. Onde o
+  casamento por regra é duvidoso (empate ou nota abaixo do limiar), o produto
+  vai para o Gemini escolher entre os candidatos que a própria regra separou.
+
+  A IA NÃO escolhe o código: ela recebe a lista de candidatos e a resposta só é
+  aceita se o código vier de dentro dela. Fora da lista é invenção — e NCM
+  inventado em nota é autuação, então a resposta é descartada.
+
+  Só o nível mais alto de confiança grava sozinho: quando a IA escolhe o mesmo
+  primeiro colocado da regra com confiança alta, dois sistemas independentes
+  dizendo a mesma coisa. Discordância, confiança baixa ou falha de rede vão
+  para revisão humana — com a opinião da IA anexada no item, para acelerar
+  quem revisa em vez de substituir a revisão.
+
+  Sem chave do Gemini configurada (`GEMINI_API_KEY`, gratuita no Google AI
+  Studio) nada muda: o lote usa só a regra e o resto continua indo para revisão.
+  Cada falha vira "vai para revisão", nunca "aplica qualquer coisa".
+
+- **Completar o NCM dos produtos em lote** Um botão novo na tela de produtos preenche o NCM de tudo que está sem código
+  de uma vez: para cada produto, o sistema compara o nome com a tabela oficial
+  do IBPT e grava sozinho só quando o casamento é certo e sem empate. O resto
+  volta listado para revisar na edição de cada produto, que já mostrava
+  sugestão individual.
+
+  Sem a tabela do IBPT importada (Notas → IBPT), o botão explica em vez de
+  rodar e devolver zero em silêncio. Tudo que a máquina preenche fica marcado
+  como sugerido, separado do que foi digitado à mão.
+
+- **Nome de exibição editável na tela de Equipe** O nome que a Equipe lista, o inbox mostra e a assinatura usa agora pode ser
+  alterado na própria tela de Equipe, por quem administra. É um nome só para
+  todos os lugares: trocar aqui troca na assinatura junto.
+
+  Vale para o caso comum que motivou: conta criada sem nome, que assinava com
+  o começo do e-mail. Dois toques e a assinatura sai com o nome certo.
+
 ## [1.25.30] — 2026-10-11
 
 ### Adicionado
@@ -3368,7 +3407,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.30...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.31...HEAD
+[1.25.31]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.30...v1.25.31
 [1.25.30]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.29...v1.25.30
 [1.25.29]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.28...v1.25.29
 [1.25.28]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.27...v1.25.28
