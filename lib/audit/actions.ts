@@ -193,6 +193,7 @@ export const AUDIT_ACTIONS = [
   "authz.denied",
   "team.role_changed",
 "team.setor_changed",
+"team.nome_changed",
   "leads.bulk_assigned",
   "attendant.availability_changed",
   "routing.config_changed",

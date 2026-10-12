@@ -45,6 +45,19 @@ export const changeSetorSchema = z.object({
 });
 export type ChangeSetorInput = z.infer<typeof changeSetorSchema>;
 
+/**
+ * Nome de exibição do membro (0267).
+ *
+ * Mora em `auth.users.user_metadata.full_name` — GLOBAL, não por org: é o
+ * nome da pessoa, e dois nomes (um por org) fariam a Equipe mostrar X e a
+ * assinatura dizer Y. `min(2)`: sem null aqui — sem nome, a tela mostra o
+ * e-mail (comportamento atual); nome de 1 letra é o mesmo problema do setor.
+ */
+export const changeNomeSchema = z.object({
+  nome: z.string().trim().min(2).max(80),
+});
+export type ChangeNomeInput = z.infer<typeof changeNomeSchema>;
+
 export const createApiTokenSchema = z.object({
   name: z.string().min(2).max(100),
   scopes: z.array(z.string()).min(1),
