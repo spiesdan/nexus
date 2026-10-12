@@ -178,7 +178,10 @@ class ServicoEntrada
             'schemes' => 'PL_010',
             'versao' => '4.00',
         ]), $cert);
-        $tools->model('55');
+        // `55` int, e não `'55'` string: a versão atual do sped-nfe tipa
+        // `model(?int)`, e string derruba com TypeError dentro do try — que
+        // voltaria como CONFIG_INVALIDA apontando para o lugar certo.
+        $tools->model(55);
         return $tools;
     }
 
