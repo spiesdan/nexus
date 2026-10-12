@@ -202,6 +202,26 @@ export function seletoresPara(categoria: string): { seletores: string[]; aproxim
   return { seletores: [], aproximado: true };
 }
 
+/**
+ * O motivo que o Overpass escreve no XML de erro.
+ *
+ * O espelho sinaliza em texto livre dentro de `<p>`, com o código depois da
+ * palavra "Error". Extrair o código é o que permite decidir entre repetir
+ * (cota) e trocar de espelho (instante morto) — sem ele, todo erro vira a
+ * mesma string e o operador não sabe o que aconteceu.
+ */
+export function erroDoOverpass(xml: string): string | null {
+  if (!xml.includes("<p>")) return null;
+  const limpo = xml
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+  const m = /Error:?\s*(.*?)(?:\.|$)/i.exec(limpo);
+  if (m?.[1]) return m[1].trim().slice(0, 180);
+  return limpo.slice(0, 180) || null;
+}
+
 async function dormir(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -303,7 +323,38 @@ export class OSMOverpassProvider implements BusinessDiscoveryProvider {
       const texto = await res.text().catch(() => "");
       throw new Error(`overpass_${res.status}: ${texto.slice(0, 300)}`);
     }
-    return (await res.json()) as T;
+
+    // ─── O OVERPASS RESPONDE 200 COM XML DE ERRO ───────────────────────────
+    // Medido em 12/10/2026: o espelho devolve status 200 e o corpo é o HTML
+    // de erro do Overpass, não JSON. O `res.json()` estourava aqui — mas o
+    // motor tratava a exceção como "busca falhou" e o painel mostrava
+    // "Encontradas 0 · Erros 0" numa varredura de 210 células, o que é
+    // indistinguível de "essa cidade não tem empresas". Um silêncio que mente:
+    // o operador achava que o dado não existia e não que a fonte estava fora.
+    //
+    // A detecção é pelo XML, não pelo status: o espelho sinaliza
+    // `duplicate_query` e `timeout` no corpo, e ambos chegam com 200.
+    // Lê o corpo UMA vez e decide pelo conteúdo, não pelo status: o espelho
+    // sinaliza `duplicate_query`/`timeout` com 200 e XML, e o `res.json()`
+    // estourava sem dizer nada. `clone()` porque o corpo já pode ter sido
+    // consumido por um `text()` anterior no caminho de erro.
+    // `text()` primeiro, parse no MESMO corpo: um Response real consome o
+    // corpo uma vez, e os mocks deste repo nao tem `clone()`. Ler `json()` e
+    // `text()` tornaria o comportamento dependente de qual dos dois o chamador
+    // ja leu.
+    const texto = await res.text().catch(() => "");
+    if (!texto.trimStart().startsWith("{")) {
+      throw new Error(
+        texto.trim() === ""
+          ? "overpass_resposta_vazia"
+          : `overpass_erro_no_corpo: ${erroDoOverpass(texto) ?? texto.slice(0, 200)}`,
+      );
+    }
+    try {
+      return JSON.parse(texto) as T;
+    } catch {
+      throw new Error(`overpass_resposta_ilegivel: ${texto.slice(0, 200)}`);
+    }
   }
 
   async geocodificar(consulta: string): Promise<{ latitude: number; longitude: number } | null> {
