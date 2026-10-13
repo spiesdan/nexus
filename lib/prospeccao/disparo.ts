@@ -1,6 +1,6 @@
 /**
  * DISPARO EM LOTE para prospects — o PLANEJADOR. Função pura: nada aqui fala
- * com banco, com WAHA ou com o relógio do sistema (o instante chega por
+ * com banco, com o canal ou com o relógio do sistema (o instante chega por
  * parâmetro). O chamador monta o contexto, esta função decide.
  *
  * ═══ POR QUE ISTO NÃO É "POSTAR A MENSAGEM EM 500 PONTOS" ═══════════════

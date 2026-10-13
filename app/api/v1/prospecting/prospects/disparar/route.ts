@@ -354,7 +354,7 @@ interface ParamsDoEnvio {
  *
  * 1. **Um por um, sem `Promise.all`.** Mandar 500 de uma vez é o padrão que
  *    ban. O ritmo é o plano, e o plano é sequencial.
- * 2. **Falha de um não derruba os outros.** Um número rejeitado pelo WAHA não
+ * 2. **Falha de um não derruba os outros.** Um número rejeitado pelo canal não
  *    pode impedir a campanha inteira — quem manda em lote precisa do relatório
  *    do que deu errado, não de um 500 no meio.
  * 3. **O contato é resolvido por telefone.** O prospect pode não terido contato
