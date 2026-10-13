@@ -8,6 +8,53 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.35] — 2026-10-13
+
+### Corrigido
+
+- **Erro do Overpass com status 200 não pode virar "zero empresas"** O Overpass responde **HTTP 200 com um XML de erro** quando a instância recusa a
+  consulta — `duplicate_query`, `timeout`, "server too busy". O parser aceitava
+  esse corpo como se fosse resultado.
+
+  O desfecho medido em 12/10/2026, na instalação real: uma varredura de 210
+  células em Calmon terminou com `encontradas: 0 · novas: 0 · erros: 0` e status
+  `completed`. Não existia empresa nenhuma porque o espelho estava recusando —
+  mas nada disso era visível.
+
+  O pior do modo de falha não é o zero, é o zero **sem erro**: o painel mostra
+  "Encontradas 0 · Erros 0", indistinguível de "essa cidade não tem empresas". O
+  operador conclui que o dado não existe, não que a fonte estava fora. É o
+  mesmo silêncio que o arquivo de embedding descreve em `lib/ai/embeddings/chave.ts`:
+  sintoma invisível que se disfarça de ausência de dado.
+
+  Agora o corpo é inspecionado antes do parse: XML de erro vira exceção com o
+  motivo que o espelho escreveu (`erroDoOverpass`), e a busca é marcada como
+  `falhou` — com o motivo visível — em vez de completar com zero.
+
+- **Mapa não cobre mais o modal, e a tela de Empresas ganha categoria, estado e data** **O mapa cobria a UI que abria sobre ele.** O Leaflet escreve z-index nos
+  próprios panes — 400 na overlay, 600 nos marcadores, 800 no popup, 1000 no
+  controle — e esses valores são em pixels, na MESMA pilha da página. O `Dialog`
+  e o `Sheet` deste repo usam `z-50` (50), que é MENOR que qualquer pane: abrir a
+  ficha de uma empresa deixava o mapa inteiro por cima do modal, e o popup por
+  cima de tudo. O `isolate` na caixa do mapa cria um stacking context próprio — os
+  z-index do Leaflet passam a valer só dentro dele.
+
+  **Filtros que a tela não tinha, com o dado já gravado:**
+
+  - **Categoria** — seletor com as categorias REAIS e a contagem de cada uma,
+    vindas de `GET /prospects/categorias`. Não são as 83 subcategorias do Radar:
+    aquelas são termos de busca em português, e o campo gravado é o rótulo da
+    API do Google ("Auto repair shop", "Building materials store"). Um seletor
+    com as 83 devolveria vazio para quase tudo.
+  - **Busca por categoria passou a ser parcial** (`ilike` em vez de `eq`):
+    assim "mecanica" traz "Auto repair shop" em vez de exigir a string exata.
+  - **Estado** — campo de 2 letras, com o valor em maiúsculas.
+  - **Prospectada há** — corta por `discovered_at`: hoje, 7, 30 ou 90 dias.
+
+  Os três viram chip removível, e o contador de filtros ativos passou a contá-los
+  — sem isso, um filtro aplicado ficava invisível depois de fechar "Filtros
+  avançados".
+
 ## [1.25.34] — 2026-10-12
 
 ### Adicionado
@@ -3511,7 +3558,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.34...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.35...HEAD
+[1.25.35]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.34...v1.25.35
 [1.25.34]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.33...v1.25.34
 [1.25.33]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.32...v1.25.33
 [1.25.32]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.31...v1.25.32
