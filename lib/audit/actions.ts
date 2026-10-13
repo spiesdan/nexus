@@ -86,6 +86,7 @@ export const AUDIT_ACTIONS = [
   "conversation.released",
   "conversation.closed",
   "conversation.archived_all",
+  "commercial_order.items_replaced",
   // O par que faltava do `ai.reactivated_by_agent`: pausar o atendimento
   // automático numa conversa não tinha rota e, portanto, não tinha ação de
   // auditoria. Desligar uma automação é decisão auditável tanto quanto religá-la.

@@ -23,6 +23,17 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (!authz.ok) return authz.response;
 
   const busca = req.nextUrl.searchParams.get("busca")?.trim() ?? "";
+
+  // O teto é EXPLICITO e ajustável, não um 500 solto no fim do `limit`.
+  //
+  // A instalação real tem 635 produtos e o editor de itens do pedido precisa do
+  // catálogo inteiro para o seletor: com 500 fixos, os produtos além do 500º
+  // simplesmente não apareceriam — e o usuário veria "o produto não existe" sem
+  // nenhuma pista do motivo. Falha silenciosa é a pior das três.
+  //
+  // O padrão continua 500: quem não pede mais, não paga mais.
+  const bruto = Number(req.nextUrl.searchParams.get("limite") ?? 500);
+  const limite = Number.isFinite(bruto) ? Math.min(Math.max(Math.trunc(bruto), 1), 2000) : 500;
   const supabase = await createClient();
 
   let q = supabase
@@ -38,7 +49,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await q
     .order("ativo", { ascending: false })
     .order("nome")
-    .limit(500);
+    .limit(limite);
 
   if (error) return fail("internal_error", "Erro ao listar os produtos.", 500, { requestId });
   return ok(data ?? [], { requestId });

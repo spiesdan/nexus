@@ -265,9 +265,57 @@ export function MapaRota({
 
   return (
     <div className="space-y-2">
+      {/* STACKING CONTEXT PRÓPRIO PARA O LEAFLET.
+
+          O Leaflet escreve z-index nos próprios panes, em pixels, na MESMA pilha
+          da página: 400 overlay, 600 marcadores, 700 popup, 800/1000 controle.
+
+          Sem contexto de pilha próprio, os dois lados do sintoma "elemento por
+          cima do mapa ou por trás" aparecem:
+
+          - o cabeçalho `sticky top-14 z-10` desta página (linha 245 de
+            `_client.tsx`) fica ABAIXO de popup e marcadores — o mapa invade o
+            cabeçalho ao rolar;
+          - `Dialog` e `Sheet`, que usam `z-50`, ficam ATRÁS do mapa.
+
+          Aqui não havia NENHUMA das duas classes. O mapa de prospecção
+          (`app/app/prospeccao/_mapa.tsx`) já tinha `isolate` desde um conserto
+          anterior — mesmo sintoma, outra tela, mesma causa, e o conserto feito
+          pela metade. `leaflet-isolado-em-contexto-de-stack.test.ts` agora trava
+          os dois juntos, e vale para qualquer mapa novo.
+
+          Por que as DUAS classes, `isolate` e `z-0`, se uma resolve:
+
+          - `isolate` → o Tailwind 4.3.3 gera `isolation: isolate` para o
+            utilitário (verificado no CSS compilado). Repare no NOME DA
+            PROPRIEDADE: `isolation`, o apelido antigo. Escrever `isolate` (o
+            nome novo da padronização) à mão em CSS é outra coisa — o browser de
+            verificação não reconhece a propriedade nova e DESCARTA a declaração
+            em silêncio, sem aviso. Como utilitário do Tailwind, está correto.
+          - `z-0` → cria o mesmo stacking context pelo caminho mais fundamental
+            (elemento posicionado com `z-index` diferente de `auto`), sem
+            depender do apelido da propriedade.
+
+          Medido no browser, com o CSS real do `node_modules` e o CSS compilado
+          do Tailwind, rolando o mapa até o controle de zoom cair no meio de um
+          cabeçalho `sticky z-10`:
+
+            sem nada → MAPA por cima do cabeçalho  ❌
+            isolate  → CABEÇALHO por cima             ✅
+            z-0      → CABEÇALHO por cima             ✅
+
+          Duas rotas independentes para a mesma garantia: se uma deixar de
+          funcionar por qualquer motivo, a outra ainda segura. Custa uma
+          palavra no className.
+
+          `relative` está declarado porque `z-index` só vale em elemento
+          POSICIONADO. O Leaflet já põe `position: relative` inline no container
+          ao montar (medido), então `z-0` funcionaria sozinho — mas depender
+          disso é depender de detalhe de runtime de terceiro. */}
+
       <div
         ref={refCaixa}
-        className="overflow-hidden rounded-2xl border bg-muted"
+        className="relative isolate z-0 overflow-hidden rounded-2xl border bg-muted"
         style={{ height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }}
       />
       <p className="text-xs text-muted-foreground">
