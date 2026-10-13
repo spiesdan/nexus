@@ -8,6 +8,34 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.42] — 2026-10-13
+
+### Alterado
+
+- **@types/jest sai do projeto — o repositório usa vitest** O Dependabot propôs bumpar `@types/jest` de 29 para 30 (PR #3), e a resposta
+  certa era remover o pacote. Este repositório roda **vitest**: não existe um
+  único `import` de `@jest/globals` ou `jest.` em `app/`, `lib/`, `components/` ou
+  `tests/`, e nenhum `tsconfig` referencia o pacote.
+
+  Bumpar dependência morta é manutenção de nada — e deixa o Dependabot com um PR
+  aberto para sempre, porque a próxima major chega do mesmo jeito. Removendo, o
+  PR se fecha na raiz: não havendo pacote, não há bump a propor.
+
+  A remoção é segura porque os testes importam do vitest explicitamente.
+  `describe`, `it` e `expect` vêm de `import { ... } from "vitest"` em cada
+  arquivo, e não de globais injetadas pelos types do jest. Se algum teste
+  dependesse das globais, o typecheck DIRIA o arquivo inteiro — e é por isso que
+  `tsc` limpo aqui é a prova, e não um detalhe.
+
+  Medido depois da remoção: `tsc --noEmit` limpo, `pnpm lint` com 0 erros,
+  `pnpm test:unit` com **792 arquivos e 8.398 testes verdes** — os mesmos números
+  de antes, com um pacote a menos instalado.
+
+  O que o Dependabot ainda propõe por aqui é legítimo e fica para o próximo ciclo:
+  o PR #134, com 52 bumps incluindo o minor do próprio `next` (16.3.3 → 16.4.0) e
+  do `react` (19.2.8 → 19.3.0). Esse precisou de conserto antes de passar, e o
+  conserto está na seção de correções desta versão.
+
 ## [1.25.41] — 2026-10-13
 
 ### Adicionado
@@ -3931,7 +3959,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.41...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.42...HEAD
+[1.25.42]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.41...v1.25.42
 [1.25.41]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.40...v1.25.41
 [1.25.40]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.39...v1.25.40
 [1.25.39]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.38...v1.25.39
