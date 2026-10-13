@@ -126,3 +126,6 @@ evidence/.sonda-score-residuo.json
 # Gerado por `cap sync` (mobile/www copiado). Nunca versionar: o CI gera.
 android/app/src/main/assets/public/
 mobile/www/
+
+# Marcador local do ai-memory (memoria de agente, nao versiona)
+.ai-memory.toml

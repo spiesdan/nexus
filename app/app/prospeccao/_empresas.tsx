@@ -144,6 +144,8 @@ interface Filtros {
   categoria: string;
   cidade: string;
   estado: string;
+  /** "Prospectada ha": quantos dias atras a empresa entrou no Radar. */
+  prospectadoHa: string;
   status: string;
   comTelefone: boolean;
   comWebsite: boolean;
@@ -158,6 +160,7 @@ const VAZIOS: Filtros = {
   categoria: "",
   cidade: "",
   estado: "",
+  prospectadoHa: "",
   status: "",
   comTelefone: false,
   comWebsite: false,
@@ -187,6 +190,33 @@ export function EmpresasTab({
     const texto = paramsUrl.get("busca") ?? "";
     return UUID_RE.test(texto) ? texto : null;
   });
+  // As categorias do seletor: uma vez na montagem da tela. Uma chamada so —
+  // refazer a cada tecla da busca travaria a tela com o numero de categorias.
+  const [opcoesCategoria, setOpcoesCategoria] = React.useState<
+    Array<{ nome: string; total: number }>
+  >([]);
+  React.useEffect(() => {
+    let vivo = true;
+    apiClient
+      .get<{ data?: { categorias?: Array<{ nome: string; total: number }> } }>(
+        "/api/v1/prospecting/prospects/categorias",
+      )
+      .then((r) => {
+        if (!vivo) return;
+        const c = (r as { data?: { categorias?: Array<{ nome: string; total: number }> } })
+          ?.data?.categorias;
+        setOpcoesCategoria(Array.isArray(c) ? c : []);
+      })
+      // A tela nao pode quebrar por causa do seletor: sem lista, o filtro de
+      // categoria fica vazio e o resto continua funcionando.
+      .catch(() => {
+        if (vivo) setOpcoesCategoria([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
   const [filtros, setFiltros] = React.useState<Filtros>(() => {
     const texto = paramsUrl.get("busca") ?? "";
     return {
@@ -303,6 +333,7 @@ export function EmpresasTab({
         if (f.categoria.trim()) qs.set("categoria", f.categoria.trim());
         if (f.cidade.trim()) qs.set("cidade", f.cidade.trim());
         if (f.estado.trim()) qs.set("estado", f.estado.trim());
+        if (f.prospectadoHa) qs.set("prospectado_ha", f.prospectadoHa);
         if (f.status) qs.set("status", f.status);
         if (f.comTelefone) qs.set("com_telefone", "true");
         if (f.comWebsite) qs.set("com_website", "true");
@@ -362,6 +393,9 @@ export function EmpresasTab({
   const [avancadosAbertos, setAvancadosAbertos] = React.useState(false);
   const avancadosAtivos = [
     filtros.cidade.trim(),
+    filtros.estado.trim(),
+    filtros.categoria.trim(),
+    filtros.prospectadoHa,
     filtros.notaMin,
     filtros.comTelefone ? "x" : "",
     filtros.comWebsite ? "x" : "",
@@ -385,6 +419,31 @@ export function EmpresasTab({
       key: "busca",
       label: filtros.busca.trim(),
       onRemove: () => mudar({ busca: "" }, true),
+    });
+  }
+  if (filtros.categoria.trim()) {
+    chips.push({
+      key: "categoria",
+      label: `${t("Categoria")}: ${filtros.categoria.trim()}`,
+      onRemove: () => mudar({ categoria: "" }),
+    });
+  }
+  if (filtros.estado.trim()) {
+    chips.push({
+      key: "estado",
+      label: `${t("Estado")}: ${filtros.estado.trim()}`,
+      onRemove: () => mudar({ estado: "" }, true),
+    });
+  }
+  if (filtros.prospectadoHa) {
+    const rotulo =
+      filtros.prospectadoHa === "1"
+        ? t("Hoje")
+        : `${t("Últimos")} ${filtros.prospectadoHa} ${t("dias")}`;
+    chips.push({
+      key: "prospectado_ha",
+      label: `${t("Prospectada há")}: ${rotulo}`,
+      onRemove: () => mudar({ prospectadoHa: "" }),
     });
   }
   if (filtros.status) {
@@ -850,6 +909,48 @@ export function EmpresasTab({
             value={filtros.notaMin}
             onChange={(notaMin) => mudar({ notaMin })}
             min={0}
+          />
+          {/* A categoria vem da API do Google, com o texto exato que esta
+              gravado (ver /prospects/categorias). Digitar "mecanica" traz
+              "Auto repair shop" porque o backend casa por `ilike`. */}
+          <FilterSelect
+            id="f-categoria"
+            label={t("Categoria")}
+            value={filtros.categoria}
+            onChange={(categoria) => mudar({ categoria })}
+            allLabel={t("Todas as categorias")}
+            className="w-full sm:w-56"
+            options={opcoesCategoria.map((c) => ({
+              value: c.nome,
+              label: `${c.nome} (${c.total})`,
+            }))}
+          />
+          <div className="w-full space-y-1.5 sm:w-32 md:shrink-0">
+            <Label htmlFor="f-estado" className="block text-sm font-medium">
+              {t("Estado")}
+            </Label>
+            <Input
+              id="f-estado"
+              value={filtros.estado}
+              onChange={(e) => mudar({ estado: e.target.value.toUpperCase() }, true)}
+              placeholder="SC"
+              maxLength={2}
+              className="h-9"
+            />
+          </div>
+          <FilterSelect
+            id="f-prospectado-ha"
+            label={t("Prospectada há")}
+            value={filtros.prospectadoHa}
+            onChange={(prospectadoHa) => mudar({ prospectadoHa })}
+            allLabel={t("Qualquer data")}
+            className="w-full sm:w-48"
+            options={[
+              { value: "1", label: t("Hoje") },
+              { value: "7", label: t("Últimos 7 dias") },
+              { value: "30", label: t("Últimos 30 dias") },
+              { value: "90", label: t("Últimos 90 dias") },
+            ]}
           />
           <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
             {(

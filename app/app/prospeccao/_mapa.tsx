@@ -388,7 +388,19 @@ export function MapaProspects({
           {t("Tela cheia")}
         </button>
       </div>
-      <div ref={refCaixa} className={`${alturaClasse ?? "h-[65vh]"} overflow-hidden rounded-2xl border bg-muted`} />
+      {/* ISOLA O LEAFLET NUM CONTEXTO DE STACK PROPRIO.
+          O Leaflet escreve z-index nos próprios panes (400 na overlay, 600 nos
+          marcadores, 800 no popup, 1000 no controle) — em px, na MESMA
+          pilha da página. O Dialog e o Sheet deste repo usam `z-50` (50), que
+          em z-index é MENOR que qualquer pane: abrir a ficha de uma empresa
+          deixava o mapa por cima do modal, e o popup (1000) por cima de tudo.
+          `isolate` cria um stacking context novo — os z-index do Leaflet
+          passam a valer só DENTRO do mapa, e o modal (z-50 na raiz) volta a
+          ficar acima. */}
+      <div
+        ref={refCaixa}
+        className={`${alturaClasse ?? "h-[65vh]"} isolate overflow-hidden rounded-2xl border bg-muted`}
+      />
       <p className="text-xs text-muted-foreground">
         {t("Mapa: OpenStreetMap · Satélite: Esri. Círculo = raio da busca.")}
       </p>

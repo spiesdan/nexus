@@ -210,7 +210,14 @@ describe("OSMOverpassProvider", () => {
                 { type: "node", id: 7, lat: -26.17, lon: -50.32, tags: { name: "Oficina Vale" } },
               ],
             }),
-          text: () => Promise.resolve("{}"),
+          text: () =>
+            Promise.resolve(
+              JSON.stringify({
+                elements: [
+                  { type: "node", id: 7, lat: -26.17, lon: -50.32, tags: { name: "Oficina Vale" } },
+                ],
+              }),
+            ),
         });
       }),
     );
@@ -342,8 +349,11 @@ it("um 5xx em um espelho leva ao espelho seguinte, em vez de insistir no mesmo",
         ok: status === 200,
         status,
         headers: new Headers(),
+        // espelho responde 200 com JSON de verdade (elements vazio e um 200
+        // legitimo). O mock dizia text():"" com json() cheio — incoerente,
+        // e um Response real so deixa ler o corpo uma vez.
         json: () => Promise.resolve({ elements: [] }),
-        text: () => Promise.resolve(""),
+        text: () => Promise.resolve(JSON.stringify({ elements: [] })),
       });
     }),
   );
