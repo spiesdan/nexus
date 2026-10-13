@@ -4,6 +4,8 @@
  */
 import { z } from "zod";
 
+import { PAPEIS_HUMANOS } from "@/lib/auth/types";
+
 export const welcomeSchema = z.object({
   display_name: z.string().min(2).max(120),
   /**
@@ -128,7 +130,7 @@ export const inviteOnboardingSchema = z.object({
     .array(
       z.object({
         email: z.string().email(),
-        role: z.enum(["viewer", "agent", "manager", "admin"]),
+        role: z.enum(PAPEIS_HUMANOS as unknown as [string, ...string[]]),
       }),
     )
     .min(1)
