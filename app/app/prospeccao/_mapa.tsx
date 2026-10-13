@@ -4,9 +4,16 @@ import * as React from "react";
 import type { DivIcon, LayerGroup, Map as MapaLeaflet } from "leaflet";
 
 import "leaflet/dist/leaflet.css";
+// CSS do plugin de cluster. ESTATICO, junto do leaflet.css acima — e nao um
+// `import()` dentro do efeito: o Next resolve CSS importado por JavaScript
+// no grafo do modulo, e um import dinamico ali cairia fora do bundle de CSS.
+// Sem o `MarkerCluster.css` o Leaflet nao calcula o tamanho do icone do
+// agregado, e o cluster aparece como um disco do tamanho errado.
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 import { useT } from "@/hooks/i18n/useT";
-import { clusterizar, ehCluster, type PontoGeo } from "@/lib/prospeccao/geo";
+import { ehCluster, itensParaDesenho, type ModoMapa, type PontoGeo } from "@/lib/prospeccao/geo";
 
 /**
  * O MAPA (§§3–10, 15–16, 20, 34–38 do plano) — os mesmos prospects da lista.
@@ -118,7 +125,7 @@ export function MapaProspects({
   onFila?: (id: string) => void;
   centro: { latitude: number; longitude: number } | null;
   raioKm: number | null;
-  modo: "marcadores" | "densidade";
+  modo: ModoMapa;
   onModo: (modo: "marcadores" | "densidade") => void;
   onArea: (limites: { sul: number; oeste: number; norte: number; leste: number }) => void;
   /** Linha da rota (pontos ordenados de visita). */
@@ -128,7 +135,13 @@ export function MapaProspects({
   const t = useT();
   const refCaixa = React.useRef<HTMLDivElement>(null);
   const refMapa = React.useRef<MapaLeaflet | null>(null);
-  const refCamada = React.useRef<LayerGroup | null>(null);
+  // O `markerClusterGroup` expoe a MESMA superficie do `LayerGroup`
+  // (`addLayer`/`clearLayers`/`removeLayer`) e e aceito por todo lugar que o
+  // Leaflet aceita camada, mas a classe TS nao o declara como LayerGroup. O
+  // `as unknown as LayerGroup` fica AQUI, uma vez, para o resto do arquivo
+  // continuar operando com o tipo que ele ja usava.
+  type SuperficieDeCamada = LayerGroup;
+  const refCamada = React.useRef<SuperficieDeCamada | null>(null);
   const cbRef = React.useRef({ onSelecionar, onVer, onAdicionar, onFila, onArea });
   React.useEffect(() => {
     cbRef.current = { onSelecionar, onVer, onAdicionar, onFila, onArea };
@@ -162,7 +175,48 @@ export function MapaProspects({
       );
       osm.addTo(mapa);
       L.control.layers({ Mapa: osm, Satélite: satelite }).addTo(mapa);
-      refCamada.current = L.layerGroup().addTo(mapa);
+      // ─── CLUSTERIZAÇÃO ───────────────────────────────────────────────────
+      // Um `layerGroup` desenha UM marcador Leaflet por empresa, cada um com
+      // popup e DOM próprios. Medido em 13/10/2026 com o acervo do scraper
+      // (4.734 empresas em 7 cidades): o navegador engasga arrastando a lista
+      // inteira — e o "Carregar mais" só soma, porque o mapa redesenha tudo a
+      // cada busca.
+      //
+      // O cluster agrupa por proximidade e só materializa os pontos quando o
+      // zoom pede. De milhares de nodos DOM para dezenas.
+      //
+      // O plugin registra `L.markerClusterGroup` como EFEITO COLATERAL do
+      // import (é por isso que os tipos estendem o módulo `leaflet` em vez de
+      // exportar algo). Importar e usar e o contrato; `L.markerClusterGroup`
+      // existe depois desta linha.
+      await import("leaflet.markercluster");
+      const agrupador = (
+        L as unknown as {
+          markerClusterGroup: (opcoes: Record<string, unknown>) => {
+            addTo: (m: unknown) => unknown;
+          };
+        }
+      ).markerClusterGroup;
+      refCamada.current = agrupador({
+        // O icone do agregado e o MESMO que a tela ja usava (disco escuro),
+        // nao o azul-claro padrao do plugin — que destoa do tema. Reaproveita
+        // `iconeCluster` em vez de deixar a funcao virar codigo morto.
+        iconCreateFunction: (c: { getChildCount: () => number }) => iconeCluster(L, c.getChildCount()),
+        // Carrega os pontos em pedaços, em vez de processar 4.734 de uma vez
+        // no primeiro `addLayer` — sem isso a tela fica branca por segundos
+        // a cada "Carregar mais", que é o sintoma que o operador viu.
+        chunkedLoading: true,
+        // Sem o balão de "N empresas nesta área" ao passar o mouse: ele
+        // dispara um mousemove por pixel e era parte do travamento.
+        showCoverageOnHover: false,
+        // A partir do zoom 17 os pontos aparecem soltos. É o zoom de rua —
+        // abaixo dele o operador trabalha por região, e o agregado é a
+        // informação útil, não o endereço.
+        disableClusteringAtZoom: 17,
+        // 70px é o raio (em tela) em que dois pontos entram no mesmo
+        // agregado. Maior junta mais; menor espalha mais.
+        maxClusterRadius: 70,
+      }).addTo(mapa) as unknown as LayerGroup;
       mapa.on("zoomend moveend", () => setZoom(mapa.getZoom()));
       refMapa.current = mapa;
       setMapaPronto(true);
@@ -190,13 +244,16 @@ export function MapaProspects({
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
       if (centro && raioKm) {
+        // No MAPA, nao na camada: o `markerClusterGroup` conta cada layer que
+        // recebe como ponto, e o circulo do raio nao e uma empresa — entraria
+        // na conta dos agregados e mostraria "+1" onde nao ha nada.
         L.circle([centro.latitude, centro.longitude], {
           radius: raioKm * 1000,
           color: "#7c3aed",
           weight: 1.5,
           dashArray: "6 4",
           fillOpacity: 0.05,
-        }).addTo(camada);
+        }).addTo(mapa);
         L.marker([centro.latitude, centro.longitude], {
           icon: L.divIcon({
             className: "",
@@ -205,10 +262,12 @@ export function MapaProspects({
             iconAnchor: [6, 6],
           }),
           interactive: false,
-        }).addTo(camada);
+        }).addTo(mapa);
       }
 
-      const itens = clusterizar(lista, zoom);
+      // QUEM agrupa depende do modo — e a decisao mora em `itensParaDesenho`
+      // (`lib/prospeccao/geo.ts`), com teste. Aqui so se consome o resultado.
+      const itens = itensParaDesenho(lista, modo, zoom);
       if (modo === "densidade") {
         const max = Math.max(1, ...itens.map((i) => (ehCluster(i) ? i.pontos.length : 1)));
         for (const item of itens) {
@@ -225,14 +284,12 @@ export function MapaProspects({
         return;
       }
 
+      // Aqui `item` e SEMPRE um ponto solto: quem agrupa e o
+      // `markerClusterGroup`. O ramo de cluster simulado saiu daqui porque
+      // virou inalcancavel depois que o modo marcadores passou a entregar a
+      // lista CRUA ao Leaflet.
       for (const item of itens) {
-        if (ehCluster(item)) {
-          const mk = L.marker([item.latitude, item.longitude], { icon: iconeCluster(M, item.pontos.length) });
-          (mk as unknown as CamadaComId)._pontoId = item.id;
-          mk.on("click", () => mapa.setView([item.latitude, item.longitude], Math.min(19, mapa.getZoom() + 2)));
-          mk.addTo(camada);
-          continue;
-        }        const p = item as PontoMapa;
+        const p = item as PontoMapa;
         const fone = p.telefone ? `<br>${escapar(p.telefone)}` : "";
         const zap = p.telefone
           ? `<br><a href="https://wa.me/${p.telefone.replace(/\D/g, "")}" target="_blank" rel="noopener">WhatsApp</a>`

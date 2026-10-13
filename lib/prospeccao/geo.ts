@@ -56,6 +56,40 @@ export function clusterizar<T extends PontoGeo>(pontos: T[], zoom: number): (Clu
   return saida;
 }
 
+/**
+ * O QUE o mapa desenha em cada modo — e onde a clusterização acontece.
+ *
+ * ─── Por que isto é uma função, e não um ternário dentro do componente ────
+ *
+ * Medido em 13/10/2026 com o acervo do scraper (4.734 empresas em 7 cidades):
+ * o modo "marcadores" engasgava, porque as DUAS clusterizações rodavam
+ * juntas. `clusterizar` (grade, por zoom) criava um marcador "falso" por
+ * célula, e esse marcador entrava no `markerClusterGroup` do Leaflet como se
+ * fosse UMA empresa:
+ *
+ *   4.734 empresas → clusterizar → ~300 células → Leaflet agrupa as células
+ *   → agregado dizia "+34" onde havia 3.400 empresas, e o zoom desagregava em
+ *   marcadores que JÁ estavam agrupados por outra regra.
+ *
+ * No modo "marcadores" quem agrupa é o Leaflet: proximidade geográfica real,
+ * zoom real, e os pontos só viram DOM quando o zoom pede. O `clusterizar`
+ * continua sendo o certo para o modo "densidade", onde o agregado serve para
+ * dimensionar um círculo — não para virar marcador.
+ *
+ * Por isso a decisão mora AQUI e tem teste: voltar a chamar `clusterizar` no
+ * modo marcadores é regressão silenciosa (não quebra build, não quebra tipos,
+ * só volta a mentir na tela).
+ */
+export type ModoMapa = "marcadores" | "densidade";
+
+export function itensParaDesenho<T extends PontoGeo>(
+  pontos: T[],
+  modo: ModoMapa,
+  zoom: number,
+): (Cluster<T> | T)[] {
+  return modo === "densidade" ? clusterizar(pontos, zoom) : pontos;
+}
+
 export function ehCluster<T extends PontoGeo>(item: Cluster<T> | T): item is Cluster<T> {
   return (item as Cluster<T>).pontos !== undefined;
 }
