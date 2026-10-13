@@ -59,6 +59,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   const comWhatsapp = p.get("com_whatsapp") === "true";
   const notaMin = Number(p.get("nota_min") ?? 0) || 0;
   const avalMin = Number(p.get("avaliacoes_min") ?? 0) || 0;
+  // "Prospectada há": quantos dias atras a empresa foi descoberta. O dado e o
+  // `discovered_at` que o import grava; o filtro corta a lista por ele.
+  const diasAtras = Number(p.get("prospectado_ha") ?? 0) || 0;
   const soSemCliente = p.get("so_sem_cliente") === "true";
   const minhaFila = p.get("minha_fila") === "true";
   const limite = Math.min(200, Math.max(1, Number(p.get("limite") ?? 50) || 50));
@@ -111,7 +114,11 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("bloqueado", false);
     if (buscaId) q = q.in("id", idsDaBusca);
     if (soId) q = q.eq("id", soId);
-    if (categoria) q = q.eq("categoria", categoria);
+    // Categoria por `ilike` e nao `eq`: o campo vem da API do Google, em
+    // ingles e com capitalizacao variavel ("Auto repair shop", "Auto Repair
+    // Shop"). Com `eq` o seletor so batia numa string exata e digitar
+    // "mecanica" nao trazia "Auto repair shop" nem "Mecânica".
+    if (categoria) q = q.ilike("categoria", `%${categoria}%`);
     if (cidade) q = q.ilike("cidade", `%${cidade}%`);
     if (estado) q = q.eq("estado", estado.toUpperCase());
     if (status !== "") {
@@ -131,6 +138,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
     if (notaMin > 0) q = q.gte("nota", notaMin);
     if (avalMin > 0) q = q.gte("total_avaliacoes", avalMin);
+    if (diasAtras > 0) {
+      // O corte e por `>=` em UTC: "hoje" tem que trazer o que entrou hoje,
+      // e a data gravada tem hora — cortar em meia-noite perderia o dia.
+      const desde = new Date(Date.now() - diasAtras * 86_400_000).toISOString();
+      q = q.gte("discovered_at", desde);
+    }
     if (soSemCliente) q = q.is("contact_id", null);
     if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
     if (busca) {
