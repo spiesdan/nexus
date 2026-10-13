@@ -79,3 +79,64 @@ if (typeof globalThis.ResizeObserver === "undefined") {
     disconnect() {}
   };
 }
+
+/**
+ * `URL.createObjectURL` É DUBLADO, e este é o motivo de ele não vir do jsdom.
+ *
+ * ═══ O QUE ACONTECEU ═════════════════════════════════════════════════════
+ *
+ * O bump do Dependabot #134 trouxe `jsdom` 30.0.1 → 30.1.2, e três testes caíram
+ * com `TypeError: Cannot read properties of undefined (reading '_buffer')`, em
+ * `AttachmentPreviewDialog.tsx:24`:
+ *
+ *   URL.createObjectURL(file)  →  a implementação do jsdom lê `_buffer` do Blob
+ *
+ * `_buffer` é detalhe INTERNO do jsdom. A implementação mudou, o campo interno
+ * mudou de nome ou de lugar, e três testes que não têm nada a ver com object URL
+ * pararam de passar.
+ *
+ * ═══ POR QUE DUBLAR E NÃO PINAR O JSDOM ═══════════════════════════════════
+ *
+ * Pinar significaria segurar o jsdom numa versão antiga para sempre, por causa
+ * de um detalhe de implementação que ninguém está testando. Cada bump seguinte
+ * de jsdom voltaria a derrubar o `verify`, e a resposta seria a mesma: pedir
+ * para o Dependabot não tocar.
+ *
+ * O que os testes do composer medem é o COMPORTAMENTO — abrir preview, enviar,
+ * manter o diálogo aberto quando o upload falha. A object URL é meio, não fim.
+ * Dublando, o teste passa a depender do contrato (`createObjectURL` recebe algo
+ * e devolve string) e não da representação interna de Blob do jsdom.
+ *
+ * O dublê não mexe em produção: no browser, `createObjectURL` é nativo e
+ * funciona. As 15 chamadas do app continuam usando a nativa.
+ *
+ * A URL devolvida é única e com cara de blob: um preview que a renderiza continua
+ * sendo testado de verdade, e `revokeObjectURL` continua sendo chamado e
+ * verificável.
+ */
+let contadorObjectUrl = 0;
+const objectUrlsCriadas = new Map<string, Blob>();
+
+if (typeof URL.createObjectURL === "undefined") {
+  // jsdom antigo ou removido: o teste tem que falhar alto, não passar em branco.
+  throw new Error(
+    "URL.createObjectURL não existe — o dublê abaixo depende dele para decidir se precisa instalar.",
+  );
+}
+URL.createObjectURL = function createObjectURL(objeto: Blob | MediaSource): string {
+  const id = ++contadorObjectUrl;
+  const url = `blob:https://test.invalid/${id}`;
+  objectUrlsCriadas.set(url, objeto as Blob);
+  return url;
+};
+URL.revokeObjectURL = function revokeObjectURL(url: string): void {
+  objectUrlsCriadas.delete(url);
+};
+
+/**
+ * O que o dublê recebeu — para o teste que quiser afirmar que o preview usou a
+ * URL certa, sem precisar expor o mapa inteiro.
+ */
+export function objectUrlDe(url: string): Blob | undefined {
+  return objectUrlsCriadas.get(url);
+}
