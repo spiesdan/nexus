@@ -18,9 +18,19 @@ import { buildInviteEmail } from "@/lib/email/templates/invite";
 import { sendEmail } from "@/lib/email/resend";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { inviteOnboardingSchema } from "@/lib/schemas/onboarding";
+import { PAPEIS_HUMANOS } from "@/lib/auth/types";
+
 import { requireOnboardingCtx, patchOnboardingState, OnboardingError } from "./_shared";
 
-type PapelHumano = "viewer" | "agent" | "manager" | "admin";
+/**
+ * Papel humano, derivado de `PAPEIS_HUMANOS`.
+ *
+ * Esta era a QUARTA cópia da lista de cargos (a 1ª é `lib/auth/types.ts`, a 2ª
+ * o CHECK do banco, a 3ª `lib/schemas/team.ts`). Cópia é como a lista diverge:
+ * hoje `vendedor` existia só na 1ª, e esta aceitaria um convite que o banco
+ * rejeitaria. Uma lista só, importada de todo lugar.
+ */
+type PapelHumano = (typeof PAPEIS_HUMANOS)[number];
 
 export type SendInvitesResult =
   | {

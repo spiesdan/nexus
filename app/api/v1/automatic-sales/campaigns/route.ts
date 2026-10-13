@@ -103,7 +103,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       followup_horas: parsed.data.followup_horas,
       followup_textos: parsed.data.followup_textos,
       responsavel_user_id: parsed.data.responsavel_user_id,
-      created_by: authz.user.id,
+      // SEM `created_by`: a coluna NÃO existe em `automatic_sales_campaigns` —
+      // nem no banco de produção (medido em 13/10/2026) nem em
+      // `lib/database.types.ts`. Escrevê-la fazia o PostgREST responder
+      // "column not found" e a rota devolver 500 em TODA criação de campanha.
+      //
+      // Quem criou está em `api_audit_log` (`campaign.created`), que é onde a
+      // auditoria deste produto vive. A coluna que faria falta aqui é uma
+      // decisão de schema, não um conserto de bug: se um dia existir, entra
+      // por migration + baseline + MANIFEST, com as três.
     })
     .select("id")
     .single();

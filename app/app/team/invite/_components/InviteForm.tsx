@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES, type Role } from "@/lib/schemas/team";
+import { DESCRICAO_DO_PAPEL, PAPEIS_HUMANOS, ROTULO_DO_PAPEL } from "@/lib/auth/types";
+import { type Role } from "@/lib/schemas/team";
 
 interface ResultState {
   sent: Array<{ email: string; accept_url: string; email_dispatched: boolean; expires_at: string }>;
@@ -73,15 +74,18 @@ export function InviteForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="role">Role</Label>
+          <Label htmlFor="role">{t("Cargo")}</Label>
           <Select value={role} onValueChange={(v) => setRole(v as Role)}>
             <SelectTrigger id="role">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ROLES.map((r) => (
+              {PAPEIS_HUMANOS.map((r) => (
                 <SelectItem key={r} value={r}>
-                  {r}
+                  {ROTULO_DO_PAPEL[r]}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {DESCRICAO_DO_PAPEL[r]}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

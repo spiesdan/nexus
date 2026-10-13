@@ -28,6 +28,7 @@ import type { ItemDoPedido, PedidoComercial, StatusDoPedido } from "@/lib/schema
 
 import { PillDoStatus } from "../_pills";
 import { FotosDoProduto } from "../../products/_fotos";
+import { EditorDeItens } from "./_editar-itens";
 
 export interface ContatoDoPedido {
   id: string;
@@ -248,6 +249,10 @@ export function DetalheDoPedido({
   const router = useRouter();
   const [pedido, setPedido] = React.useState(inicial);
   const [editando, setEditando] = React.useState(false);
+  // Modo SEPARADO do de cima, de propósito: um "Salvar" que grava condição de
+  // pagamento e itens ao mesmo tempo mistura dois PATCH de naturezas diferentes —
+  // e o de itens é DELETE + INSERT + recálculo, que só faz sentido atômico.
+  const [editandoItens, setEditandoItens] = React.useState(false);
   const [condicao, setCondicao] = React.useState(inicial.condicao_pagamento ?? "");
   const [endereco, setEndereco] = React.useState(inicial.endereco_entrega ?? "");
   const [transportadora, setTransportadora] = React.useState(inicial.transportadora_nome ?? "");
@@ -516,7 +521,20 @@ export function DetalheDoPedido({
 
       {/* PRODUTOS */}
       <Card className="hover-raise p-4">
-        <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">{t("PRODUTOS")}</p>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground">
+            {t("PRODUTOS")}
+          </p>
+          {/* O botão fica aqui, e não no cabeçalho, porque é o que ele
+              funciona: a lista de itens. Colocá-lo longe da tabela faria o
+              usuário procurar onde mexer nos produtos de um pedido que já está
+              pronto — que é exatamente a dúvida que ele tem. */}
+          {podeEditar && !editandoItens && (
+            <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditandoItens(true)}>
+              {t("Editar itens")}
+            </Button>
+          )}
+        </div>
         {itens.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("Sem itens.")}</p>
         ) : (
@@ -576,6 +594,24 @@ export function DetalheDoPedido({
           </p>
         </div>
       </Card>
+
+      {editandoItens && podeEditar && (
+        <EditorDeItens
+          pedido={pedido}
+          itens={itens}
+          aoCancelar={() => setEditandoItens(false)}
+          aoSalvar={async () => {
+            await recarregar();
+            // `recarregar()` traz o pedido (com o total novo), mas NÃO os
+            // itens: eles são prop do Server Component, e só mudam quando o
+            // servidor re-renderiza. Sem este `refresh`, a tabela continuaria
+            // mostrando a lista antiga com o total novo — que é a combinação
+            // que faz alguém achar que o salvamento deu errado.
+            router.refresh();
+            setEditandoItens(false);
+          }}
+        />
+      )}
 
       {/* DETALHES DO PEDIDO */}
       <Card className="hover-raise space-y-4 p-4">

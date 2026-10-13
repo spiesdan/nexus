@@ -7,7 +7,17 @@
  */
 import { z } from "zod";
 
-export const ROLES = ["viewer", "agent", "manager", "admin"] as const;
+import { PAPEIS_HUMANOS } from "@/lib/auth/types";
+
+/**
+ * Papéis aceitáveis num CONVITE.
+ *
+ * Deriva de `PAPEIS_HUMANOS` em vez de repetir a lista: as duas viviam em
+ * arquivos diferentes e já tinham divergido (`ai_operator` estava no RBAC e
+ * não aqui). Repetir um vocabulário que o banco restringe por CHECK é pedir
+ * para o formulário aceitar algo que o banco recusa.
+ */
+export const ROLES = PAPEIS_HUMANOS as unknown as readonly string[] as readonly ["viewer", "agent", "vendedor", "manager", "admin"];
 export type Role = (typeof ROLES)[number];
 
 export const inviteMemberSchema = z.object({

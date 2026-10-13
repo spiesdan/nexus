@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { sendOnboardingInvites } from "@/app/actions/onboarding/sendOnboardingInvites";
-import { ROLES, type Role } from "@/lib/schemas/team";
-import { ROTULO_DO_PAPEL } from "@/lib/auth/types";
+import { type Role } from "@/lib/schemas/team";
+import { DESCRICAO_DO_PAPEL, PAPEIS_HUMANOS, ROTULO_DO_PAPEL } from "@/lib/auth/types";
 
 export function InviteTeamForm() {
   const t = useT();
@@ -88,14 +88,12 @@ export function InviteTeamForm() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {/*
-              Os valores do banco (viewer, agent, manager, admin) apareciam
-              crus no seletor. O produto já traduz esses papéis em
-              `ROTULO_DO_PAPEL` — a tela do wizard era a única que não usava.
-            */}
-            {ROLES.map((r) => (
+            {PAPEIS_HUMANOS.map((r) => (
               <SelectItem key={r} value={r}>
                 {t(ROTULO_DO_PAPEL[r])}
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {t(DESCRICAO_DO_PAPEL[r])}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>

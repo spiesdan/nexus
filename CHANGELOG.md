@@ -8,6 +8,379 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.41] — 2026-10-13
+
+### Adicionado
+
+- **Editar os itens de um pedido — inclusive depois de pronto** **Não dava para alterar os itens de um pedido. Nunca.** Não depois de pronto,
+  não antes: em nenhum status. A rota `PATCH /api/v1/commercial-orders/[id]/itens`
+  não existia, e o `itensPatchSchema` estava escrito em `lib/schemas/pedidos.ts`
+  desde antes sem nada o consumindo.
+
+  O sintoma era "não consigo alterar o pedido depois que ele ficou pronto", e a
+  leitura natural disso está certa na consequência e errada na causa: nunca deu,
+  porque a rota nunca foi escrita. Havia até um teste — `pedido-itens-route.test.ts`
+  — que importava um `PATCH` inexistente, e por isso não rodava.
+
+  **A regra que o teste afirmava foi mudada de propósito.** Era *"só rascunho/
+  em_analise"*, com 422 para o resto. Você pediu para corrigir o pedido depois de
+  pronto, que é exatamente essa regra. A rota agora aceita e **avisa**: devolve
+  `avisos` dizendo o que a troca **não** estorna — comissão apurada, expedição,
+  nota emitida.
+
+  A rota não inventa a política de comissão, expedição e NF porque essa regra não
+  está escrita neste repositório. O que está escrito é o comportamento, e
+  quem decide a consequência é quem lê o aviso. Se um dia existir a regra, ela
+  entra aqui — com nome, com migration se precisar de coluna, com teste que a
+  nomeie.
+
+  **Um PATCH, não um por linha.** Adicionar, remover e ajustar vão num único
+  `PATCH`, num único "Salvar". PATCH item a item deixa o pedido com item novo e
+  total velho no meio da operação, e "total velho com item novo" é a forma mais
+  cara de errar num pedido comercial. Se o servidor recusar, nada foi gravado.
+
+  **`ajustar` mantém o id do item.** Trocar o conjunto inteiro criaria ids novos e
+  deixaria o `ajustar` da tela apontando para o nada, com tudo que guarde id de
+  item órfão.
+
+  **O que o editor faz pela tela:** botão "Editar itens" na própria lista de
+  produtos da ficha, quantidade/preço/desconto editáveis, remoção por linha, e
+  busca de produto para acrescentar — com o preço do catálogo como sugestão
+  editável, não como verdade. Preço de venda é da linha, e quem decide é quem
+  está na tela.
+
+  **Um bug que os testes acharam no caminho**
+
+  Remover o item 0 de uma lista de 2 fazia o item novo nascer no `posicao` 2 e o
+  `filter` de gravação o deixava de fora: a lista ficava `1,2` com um buraco no
+  `0`. Numa tela ordenada por posição, isso aparece como "o primeiro item sumiu",
+  sem erro nenhum. O teste de reindexação pegou; o serviço foi corrigido
+  para gravar a reindexação de todas as linhas, novas inclusive.
+
+  **Junto: o catálogo tinha teto escondido**
+
+  `GET /api/v1/products` cortava em **500** linhas com um `.limit(500)` solto. A
+  instalação tem **635 produtos**, e o editor de itens precisa do catálogo inteiro
+  para o seletor — com 500 fixos, os produtos acima do 500º **não apareceriam**,
+  sem erro e sem aviso. O limite virou parâmetro explícito (`limite`, padrão 500,
+  teto 2000). Falha silenciosa é a pior das três, e nenhuma delas é aceitável num
+  produto vendido como código.
+
+  **Mutações provadas:** `ajustar` sem recalcular subtotal reprova 6 testes; sem
+  reindexação reprova o de posição; a rota voltando a recusar pedido pronto
+  reprova 2; o `.limit()` voltando a 500 fixo reprova 5.
+
+### Corrigido
+
+- **A tela de expedição desenhava por cima do cabeçalho — e o mapa da prospecção nunca foi consertado de fato** **Elementos por cima do mapa ou por trás dele na tela de expedição.** Os dois
+  sintomas são o mesmo defeito: o contêiner do mapa não tinha stacking context
+  próprio.
+
+  O Leaflet escreve z-index nos próprios panes — 400 overlay, 600 marcadores, 700
+  popup, 800/1000 controle — em pixels, na **mesma pilha da página**. O cabeçalho
+  da ficha de expedição é `sticky top-14 z-10`: popup e marcadores (600/700) ficam
+  **acima** dele, e o mapa invade o cabeçalho ao rolar. E `Dialog`/`Sheet`, que
+  usam `z-50`, ficam **atrás** do mapa.
+
+  **O mapa da prospecção já tinha `isolate` — e nunca foi conserto de verdade.**
+  Foi aplicado numa tela e esquecido na outra: mesmo sintoma, outra tela, mesma
+  causa. Pior, medindo no browser, `isolate` e `z-0` chegam ao mesmo resultado
+  por caminhos independentes:
+
+      sem nada → MAPA por cima do cabeçalho   ❌
+      isolate  → CABEÇALHO por cima            ✅
+      z-0      → CABEÇALHO por cima            ✅
+
+  `z-0` cria o stacking context pelo caminho mais fundamental — elemento
+  posicionado com `z-index` diferente de `auto` — e não depende do apelido da
+  propriedade. Os dois mapas agora levam `relative isolate z-0`: se um deixar de
+  funcionar por qualquer motivo, o outro segura.
+
+  **Um detalhe que quase virou diagnóstico errado.** O utilitário `isolate` do
+  Tailwind 4.3.3 gera `isolation: isolate` — repare no NOME DA PROPRIEDADE, que é
+  o apelido antigo. Escrever `isolate:` (o nome novo da padronização) à mão em CSS
+  é outra coisa: o browser de verificação não reconhece e descarta a
+  declaração em silêncio, sem aviso. A primeira leitura desse bug foi essa, e
+  levou ao comentario errado no código — medir no browser, e não de olho no nome
+  da classe, foi o que corrigiu.
+
+  **O teste trava os dois juntos** (`leaflet-isolado-em-contexto-de-stack.test.ts`)
+  e vale para qualquer mapa novo: varre o repo, acha quem instancia `L.map()` e
+  exige `isolate` ou `z-0`. O leitor de `className` remove comentários antes de
+  buscar, porque a primeira versão dele achava `z-0` **dentro do comentário** que
+  explica o conserto — e a mutação que tirava a classe do JSX passava verde. Um
+  teste que lê o próprio texto explicativo mede a documentação.
+
+  **Mutações provadas:** tirar `isolate` e `z-0` do mapa de expedição reprova;
+  tirar do mapa de prospecção reprova; e o leitor ler o className em vez do
+  comentário está coberto por teste próprio.
+
+- **Criar venda automática devolvia 500 — a rota escrevia uma coluna que não existe** **O botão "Criar venda automática" devolvia 500 em toda tentativa.** A rota
+  `POST /api/v1/automatic-sales/campaigns` escrevia `created_by` no insert — e
+  essa coluna **não existe** em `automatic_sales_campaigns`, nem no banco de
+  produção (medido em 13/10/2026) nem em `lib/database.types.ts`.
+
+  O Postgres responde `column not found` e a rota devolve 500. Nenhuma campanha
+  foi criada, nenhuma mensagem saiu.
+
+  **Por que o typecheck não pegou.** O `.insert()` do cliente Supabase não é
+  estrito o bastante para reclamar de uma chave a mais. A pista é que `created_by`
+  existe em outras tabelas, como `commercial_orders` — então ler uma rota que usa
+  e concluir que o padrão vale para todas parece certo, e não é.
+
+  **O teste agora é geral, não desta coluna.** `rotas-nao-escrevem-coluna-
+  inexistente.test.ts` compara **toda** chave escrita no insert com as colunas
+  que o tipo gerado declara — e tem duas guardas de vácuo, porque um `Set` vazio
+  faz todo `expect` passar. É a mesma classe do `comando_da_conversa` (que é
+  função, não coluna), e as duas apareceram na mesma semana.
+
+  Quem criou a campanha continua registrado em `api_audit_log`. Adicionar a
+  coluna de verdade, se um dia for preciso, é decisão de schema — e entra por
+  migration + apêndice do baseline + MANIFEST, com as três.
+
+  **Mutação provada:** readicionar uma coluna inexistente no insert reprova o
+  teste `toda coluna escrita existe no tipo gerado do schema`.
+
+## [1.25.40] — 2026-10-13
+
+### Adicionado
+
+- **Cargo "Vendedor", e a tela de equipe em português** **A tela de equipe mostrava "Role" e o valor cru do enum.** O operador lia
+  `agent`, `viewer`, `manager`. O rótulo estava hardcoded em inglês, sem passar
+  pelo `t()`, e as opções mostravam o enum em vez do nome.
+
+  O produto **já tinha** o mapa: `PAPEIS_HUMANOS` e `ROTULO_DO_PAPEL` existem em
+  `lib/auth/types.ts` e ninguém usava. Por isso três telas mostravam o enum cru.
+  Ligar o que existia foi o conserto.
+
+  **Cargo novo: `vendedor`.** Entra no nível 2, o mesmo do `agent`. Quem vende
+  precisa de pedido, prospect, inbox e conversa — que é o que o atendente já tem.
+  Cargo novo com nível novo seria decisão de segurança disfarçada de rótulo:
+  subir o vendedor acima do atendente daria a ele o que o gerente tem sem
+  ninguém pedir. Este papel é um **nome** para o que o atendente já podia.
+  Consequência deliberada: `requireRole("agent")` libera o vendedor.
+
+  **Duas portas no banco, e as duas importam.** O CHECK de `role` impede gravar
+  papel desconhecido; `fn_role_at_least` é a escada que a RLS consulta. Sem a
+  segunda, o vendedor cai em `false` em **toda** política — "entra na empresa" e
+  não vê nada, sem erro nenhum.
+
+  **Quatro cópias do vocabulário de cargos** era a origem da divergência:
+  `lib/auth/types.ts`, o CHECK do banco, `lib/schemas/team.ts` e
+  `sendOnboardingInvites.ts`. As três de código agora derivam de
+  `PAPEIS_HUMANOS`, e um invariante compara com o CHECK do banco — é ele que
+  impede alguém de acrescentar um papel no TypeScript e esquecer o banco, o que
+  faria o convite aceitar algo que o INSERT recusa.
+
+  `ai_operator` **não** entra, e está certo: é o papel do agente publicado e
+  nunca é gravado em `user_organizations`. Um teste afirma isso, para que a
+  próxima pessoa não "conserte" a escada acrescentando um papel que não pertence
+  a ela.
+
+  **Produtos.** `fotosIniciais={fotosPorProduto[p.id] ?? []}` criava um array
+  novo a cada render, e o efeito do filho compara **identidade**. Com 641
+  produtos, abrir a edição fazia o ciclo inteiro rodar de novo.
+
+  **Quatro correções que os testes exigiram, e que estavam certas:**
+
+  - meu comentário **dentro do corpo** da função ia para o `prosrc` e quebrava
+    `papel-do-agente-publicado`, que afirma que `ai_operator` não aparece ali;
+  - o apêndice do baseline foi para **depois** do bloco da varredura de anon,
+    que é auto-curativo e só cura o que foi criado **antes** dele;
+  - criei o teste de invariante em `tests/invariantes/` em vez de
+    `tests/invariants/`, e ele rodava na suíte unitária sem banco;
+  - meu próprio teste lia só a **primeira linha** do `pg_get_functiondef` — o
+    corpo vem depois — e buscava `search_path = 'public'` num texto que o
+    Postgres normaliza para `SET search_path TO 'public'`. O banco estava certo;
+    o teste é que não media.
+
+  Suíte: **8.352 unitários** e **148 arquivos de invariante** (1.353 testes).
+
+## [1.25.39] — 2026-10-13
+
+### Corrigido
+
+- **Categorias da prospecção em português — e a busca que estava quebrada** **O filtro de categoria estava em inglês, e a busca não funcionava.** As duas
+  coisas são o mesmo defeito.
+
+  **O inglês.** O valor gravado em `business_prospects.categoria` é o rótulo que
+  a API do Google Maps devolve. Medido nesta instalação: 533 categorias distintas, todas em inglês.
+  "Auto repair shop" tem 154 empresas, "Gas station" 107, "Real estate agency"
+  97, "Car wash" 93.
+
+  Um seletor que oferece "Auto repair shop" está em inglês, por mais que o resto
+  da tela esteja em português. E o operador que quer "apenas mecânicas" não sabe
+  qual das 533 opções é a oficina dele.
+
+  **A busca quebrada — e era um erro meu.** O filtro comparava
+  `categoria ilike '%termo%'` contra o valor gravado. Digitar "mecanica" não
+  trazia "Auto repair shop": `ilike` compara letra a letra, e "mecanica" não é
+  substring de "auto repair shop". Eu anunciei o contrário no PR do filtro. A
+  correção é `categoriasQueCasam` converter o termo português nos valores em
+  inglês que ele descreve — 533 traduções, medidas uma a uma contra o banco.
+
+  Agora **"mecanica" traz "Auto repair shop"**, e funciona sem acento e com
+  flexão de gênero: "mecanica" acha "Mecânico" também, porque em português a
+  flexão mais comum é a de gênero e ela é tratada.
+
+  **O que continua em inglês é o valor, não a tela.** O select mostra "Oficina
+  mecânica (154)" e envia "Auto repair shop" — porque é assim que o dado está
+  gravado. Inverter os dois faria a tela aparecer filtrada e a lista vir vazia,
+  sem erro nenhum; por isso o `nome` e o `rotulo` são campos separados na
+  resposta da API, e o chip de filtro ativo mostra o português.
+
+  **Uma palavra igual em português fica igual.** "Hotel" traduz para "Hotel", e
+  está certo. O teste que garante que nenhum rótulo do filtro sai em inglês tem
+  uma lista explícita dessas palavras — inventar "Pousada" para "Hotel" seria
+  traduzir o produto errado, e teste que obriga a fazer isso ensina a fazer.
+
+  **Testes:** 19 casos, e **7 mutações provadas** por
+  `scripts/provar-mutacoes-categoria-pt.py` — desligar a substring em português,
+  desligar a busca no valor gravado, devolver vazio em vez do original, desligar
+  a flexão, desligar o `semAcento`, deixar termo vazio trazer tudo, e apagar uma
+  tradução: todas reprovaram.
+
+  Uma mutação **não reprovou na primeira rodada**, e foi o que valeu: ela
+  mostrou que um passo de "tradução exata" que eu tinha escrito era **redundante**
+  — o conjunto que ele produzia já era subconjunto do seguinte. O passo foi
+  removido e o comentário que atribuía a ele aéri o de "filtrar só uma
+  categoria" estava errado: quem segura a lista curta é o filtro ser por
+  categoria, não a ordem dos passos.
+
+  Suíte: **8.352 verdes**, `tsc`, lint e `lint:channels` limpos.
+
+## [1.25.38] — 2026-10-13
+
+### Corrigido
+
+- **Arquivar o inbox não quebrava com 500 — `comando_da_conversa` é função** **A rota de arquivar o inbox escrevia um campo que não existe.** Ela mandava
+  `comando_da_conversa: "encerrada"` no update, mas esse campo não é coluna: em
+  `supabase/baseline.sql:17146` é a **função**
+  `public.comando_da_conversa(c public.conversations)`, que o PostgREST resolve
+  no `?select=`. Escrever nela dá `column does not exist`, e o arquivamento
+  inteiro caía com 500 sem ter arquivado nada — em qualquer instalação, porque a
+  rotina é a mesma em todas.
+
+  Medido nesta instalação: `pg_proc` tem as duas funções, `pg_attribute` não tem
+  a coluna.
+
+  **O que torna isso enganoso:** `lib/database.types.ts` lista
+  `comando_da_conversa` como campo da Row de `conversations`. Lista porque
+  `supabase gen types` inclui função exposta pelo PostgREST no shape do schema —
+  o PostgREST devolve a função como coluna virtual. Então o TypeScript aceita, o
+  gerador concorda, e só o banco discorda. Conferir coluna lendo os tipos é o
+  caminho natural, e está errado.
+
+  **Por isso a defesa ficou em duas frentes.** Um teste de unidade proíbe a rota
+  de escrever o nome e checa que ela escreve as três colunas que "zerar o inbox"
+  significa. E um invariante pergunta ao Postgres de verdade: `pg_attribute`
+  confirma que a coluna não existe, `pg_proc` confirma que as funções existem, e
+  a função devolve um dos quatro valores do CHECK numa linha real.
+
+  O teste de unidade tem uma asserção de vácuo de propósito: um `for` sobre lista
+  vazia faz todo `expect` passar, então há um caso exigindo que a leitura das
+  colunas ache colunas conhecidas. Sem ele, o teste passaria verde com o parser
+  quebrado.
+
+  **Efeito colateral em produção:** o inbox foi zerado com a mesma regra da rota
+  (8 conversas arquivadas, 3 que já estavam fechadas preservadas, nenhuma
+  não-lida), e o ato ficou registrado em `api_audit_log` com a nota de que foi
+  SQL direto — a rota exige sessão autenticada.
+
+## [1.25.37] — 2026-10-13
+
+### Adicionado
+
+- **Disparo em lote com simulação por padrão, e arquivamento do inbox** **A mesma mensagem para as empresas marcadas — e o plano antes do envio.**
+
+  Em `/app/prospeccao` → Empresas, a barra de seleção ganha **"Enviar mensagem"**.
+
+  **O botão de enviar só existe depois que a simulação voltou**, e vem escrito
+  com o número dela: *"Enviar para 312 empresas"*. Não é etapa de confirmação: é
+  o que segura a tela, porque enviar mensagem de WhatsApp é das poucas coisas em
+  que o erro não aparece como erro — o número é banido e o dano só se vê semanas
+  depois, como "não recebo mais mensagem".
+
+  A simulação responde três perguntas: **quantos vão sair** (e quantos não, e por
+  quê, um a um); quanto tempo leva no ritmo configurado; e se dá para enviar
+  agora — isto é, se há número de WhatsApp conectado.
+
+  Sem a terceira, o operador descobre que mandou 300 mensagens para lugar nenhum:
+  com a sessão parada, o envio **não devolve erro** — joga a linha em `queued` e,
+  no caminho humano, ninguém reagenda. Medido nesta instalação: 6 sessões de
+  canal, todas em `STOPPED`, e a única real com `archived_at` preenchido.
+
+  `dry_run` é `true` **no schema**, não na tela: quem chama tem que pedir o envio.
+
+  **O ritmo faz parte do plano.** Mensagem fixa para centenas de números é o
+  padrão que derruba um número, e o repositório já tem o gate que pega isso. Por
+  isso o plano carrega cota do dia (padrão 50, teto 500) e intervalo entre
+  envios (1,2s + jitter). O envio usa o intervalo que o plano prometeu — e não o
+  espaçador fixo da automação, que faria a simulação mentir sobre o tempo.
+
+  **Quem não recebe, e a tela diz o motivo:** pediu para não ser contatado ·
+  bloqueado · **já é cliente** · pediu para parar (opt-out) · recusa registrada ·
+  sem telefone · fixo ou país sem WhatsApp · já tem conversa aberta · recebeu
+  mensagem há pouco · **cota do dia esgotada**.
+
+  Duas decisões. A primeira: **"já é cliente" vem antes da canalização**,
+  porque mandar oferta para quem já compra não pode aparecer como "sem WhatsApp".
+  A segunda: **cota esgotada fica separado**, porque quem ficou fora por cota
+  não é lead ruim — é lead para amanhã. Se a tela dissesse "não pode mandar", o
+  operador descartaria.
+
+  **Arquivar o inbox.** `POST /api/v1/conversations/arquivar-todas`, `manager`+
+  e exigindo `{"confirmar": true}`. **Arquiva, não apaga:** sai das abas Fila,
+  Minhas e Todas, zera as não-lidas, e o histórico continua para quando alguém
+  perguntar o que foi mandado em outubro. Apagar para limpar a tela troca um
+  problema pequeno por um que não tem volta.
+
+  **Testes.** 32 do planejador, 9 do contrato, e **10 mutações provadas** por
+  `scripts/provar-mutacoes-disparo.py` — desligar o opt-out, inverter o
+  bloqueado, tirar o "já é cliente", ignorar a recusa registrada, abrir a cota em
+  um, liberar envio sem sessão, mandar colado, ignorar a coluna de WhatsApp
+  potencial, ignorar a regex de celular, deixar telefone nulo passar: todas
+  reprovaram.
+
+  Uma delas **falhou na primeira rodada** e foi o que valeu: o teste da coluna
+  usava um telefone fixo, que a regex barrava sozinha — a coluna podia ser lida
+  sem ser lida e o teste continuaria verde. O caso em que só a coluna barra foi
+  acrescentado.
+
+## [1.25.36] — 2026-10-13
+
+### Corrigido
+
+- **Mapa da prospecção clusteriza de verdade (Leaflet.markercluster)** **O mapa desenhava um marcador Leaflet por empresa — e são 4.734.** Era o
+  travamento que o operador viu ao arrastar a lista.
+
+  Pior: havia **duas** clusterizações rodando juntas no modo "marcadores".
+  `clusterizar` (`lib/prospeccao/geo.ts`, grade por zoom) criava um marcador
+  "falso" por célula, e esse marcador entrava no `markerClusterGroup` do Leaflet
+  como se fosse **uma** empresa:
+
+  ```
+  4.734 pontos → clusterizar → ~300 células → Leaflet agrupa as células
+               → o agregado contava células, não empresas
+  ```
+
+  A tela mentia sem quebrar build nem tipo. Agora:
+
+  - **Modo "marcadores"** entrega a lista crua ao `markerClusterGroup`
+    (`chunkedLoading`, `disableClusteringAtZoom: 17`, `maxClusterRadius: 70`) —
+    proximidade geográfica real, zoom real, pontos só viram DOM quando o zoom
+    pede.
+  - **Modo "densidade"** continua usando `clusterizar`, onde o agregado serve
+    para dimensionar o círculo, não para virar marcador.
+  - O círculo do raio e o pino do centro foram para o **mapa**, não para a camada
+    clusterizada: contariam como empresas no agregado.
+  - O ícone do agregado é o disco escuro que a tela já usava, não o azul-claro
+    padrão do plugin.
+
+  A decisão de "quem agrupa" mora em `itensParaDesenho`
+  (`lib/prospeccao/geo.ts`), com 5 testes — **mutação provada**: trocar a
+  retorna por `clusterizar(...)` sempre reprova 3 deles.
+
 ## [1.25.35] — 2026-10-13
 
 ### Corrigido
@@ -3558,7 +3931,13 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.35...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.41...HEAD
+[1.25.41]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.40...v1.25.41
+[1.25.40]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.39...v1.25.40
+[1.25.39]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.38...v1.25.39
+[1.25.38]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.37...v1.25.38
+[1.25.37]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.36...v1.25.37
+[1.25.36]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.35...v1.25.36
 [1.25.35]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.34...v1.25.35
 [1.25.34]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.33...v1.25.34
 [1.25.33]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.32...v1.25.33

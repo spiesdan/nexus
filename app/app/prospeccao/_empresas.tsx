@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { DialogoDisparo } from "./_disparo";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import {
@@ -193,19 +194,23 @@ export function EmpresasTab({
   // As categorias do seletor: uma vez na montagem da tela. Uma chamada so —
   // refazer a cada tecla da busca travaria a tela com o numero de categorias.
   const [opcoesCategoria, setOpcoesCategoria] = React.useState<
-    Array<{ nome: string; total: number }>
+    Array<{ nome: string; rotulo: string; total: number }>
   >([]);
   React.useEffect(() => {
     let vivo = true;
+    type CategoriaDaApi = { nome: string; rotulo?: string; total: number };
     apiClient
-      .get<{ data?: { categorias?: Array<{ nome: string; total: number }> } }>(
+      .get<{ data?: { categorias?: CategoriaDaApi[] } }>(
         "/api/v1/prospecting/prospects/categorias",
       )
       .then((r) => {
         if (!vivo) return;
-        const c = (r as { data?: { categorias?: Array<{ nome: string; total: number }> } })
-          ?.data?.categorias;
-        setOpcoesCategoria(Array.isArray(c) ? c : []);
+        const c = (r as { data?: { categorias?: CategoriaDaApi[] } })?.data?.categorias;
+        // `rotulo` ausente cai no valor gravado: uma API velha (ou um cache
+        // velho) não pode esvaziar o filtro de categoria.
+        setOpcoesCategoria(
+          Array.isArray(c) ? c.map((x) => ({ ...x, rotulo: x.rotulo ?? x.nome })) : [],
+        );
       })
       // A tela nao pode quebrar por causa do seletor: sem lista, o filtro de
       // categoria fica vazio e o resto continua funcionando.
@@ -249,6 +254,9 @@ export function EmpresasTab({
   // (ações em lote) — quem entra vê a tela comercial, não a planilha.
   const [visao, setVisao] = React.useState<"tabela" | "mapa">("mapa");
   const [dono, setDono] = React.useState("");
+  const [disparoAberto, setDisparoAberto] = React.useState(false);
+  // Contador que remonta o diálogo: cada abertura começa sem plano antigo.
+  const [disparoVez, setDisparoVez] = React.useState(0);
   const [vendedores, setVendedores] = React.useState<
     { user_id: string; full_name: string | null }[]
   >([]);
@@ -424,7 +432,10 @@ export function EmpresasTab({
   if (filtros.categoria.trim()) {
     chips.push({
       key: "categoria",
-      label: `${t("Categoria")}: ${filtros.categoria.trim()}`,
+      label: `${t("Categoria")}: ${
+        opcoesCategoria.find((c) => c.nome === filtros.categoria)?.rotulo ??
+        filtros.categoria.trim()
+      }`,
       onRemove: () => mudar({ categoria: "" }),
     });
   }
@@ -920,9 +931,14 @@ export function EmpresasTab({
             onChange={(categoria) => mudar({ categoria })}
             allLabel={t("Todas as categorias")}
             className="w-full sm:w-56"
+            /* A ETIQUETA é em português e o VALOR é o que está gravado.
+               Inverter os dois é o defeito silencioso daqui: o filtro manda o
+               valor ao backend, e "Oficina mecânica" não é substring de
+               "Auto repair shop" — a tela apareceria filtrada e a lista viria
+               vazia, sem erro nenhum. */
             options={opcoesCategoria.map((c) => ({
               value: c.nome,
-              label: `${c.nome} (${c.total})`,
+              label: `${c.rotulo} (${c.total})`,
             }))}
           />
           <div className="w-full space-y-1.5 sm:w-32 md:shrink-0">
@@ -1355,6 +1371,17 @@ export function EmpresasTab({
               <Button size="sm" onClick={() => void importar(selecionados)}>
                 {t("Adicionar ao CRM")}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setDisparoVez((v) => v + 1);
+                  setDisparoAberto(true);
+                }}
+                title={t("A mesma mensagem para as empresas selecionadas")}
+              >
+                {t("Enviar mensagem")}
+              </Button>
             </Card>
           )}
           <div className="overflow-x-auto rounded-3xl border">
@@ -1708,6 +1735,14 @@ export function EmpresasTab({
           onImportado={() => void buscar(filtros, buscaId)}
         />
       )}
+
+      <DialogoDisparo
+        key={disparoVez}
+        ids={selecionados}
+        aberto={disparoAberto}
+        onFechar={() => setDisparoAberto(false)}
+        onConcluido={() => void buscar(filtros, buscaId)}
+      />
     </div>
   );
 }

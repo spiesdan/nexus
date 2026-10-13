@@ -39,7 +39,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ROLES, type Role } from "@/lib/schemas/team";
+import { DESCRICAO_DO_PAPEL, PAPEIS_HUMANOS, ROTULO_DO_PAPEL, rotuloDoPapel } from "@/lib/auth/types";
+import { type Role } from "@/lib/schemas/team";
 import { DotsThree } from "@/lib/ui/icons";
 import { SetorCell } from "./SetorCell";
 import { NomeCell } from "./NomeCell";
@@ -77,7 +78,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Membro")}</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>{t("Cargo")}</TableHead>
                 <TableHead>{t("Status")}</TableHead>
                 <TableHead>{t("Última atividade")}</TableHead>
                 {canManage ? <TableHead className="w-[80px]" /> : null}
@@ -120,15 +121,18 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {ROLES.map((r) => (
+                          {PAPEIS_HUMANOS.map((r) => (
                             <SelectItem key={r} value={r}>
-                              {r}
+                              {ROTULO_DO_PAPEL[r]}
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {DESCRICAO_DO_PAPEL[r]}
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Badge variant="secondary">{m.role}</Badge>
+                      <Badge variant="secondary">{rotuloDoPapel(m.role)}</Badge>
                     )}
                   </TableCell>
                   <TableCell>

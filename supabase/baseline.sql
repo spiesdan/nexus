@@ -666,7 +666,7 @@ CREATE OR REPLACE FUNCTION "public"."fn_role_at_least"("p_org" "uuid", "p_min" "
     SET "search_path" TO 'public'
     AS $$
   with levels(role, lvl) as (
-    values ('viewer',1),('agent',2),('manager',3),('admin',4)
+    values ('viewer',1),('agent',2),('vendedor',2),('manager',3),('admin',4)
   )
   select coalesce(
     (select user_lvl.lvl >= min_lvl.lvl
@@ -1854,7 +1854,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_organizations" (
     "revoked_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "user_organizations_role_check" CHECK (("role" = ANY (ARRAY['viewer'::"text", 'agent'::"text", 'manager'::"text", 'admin'::"text"])))
+    CONSTRAINT "user_organizations_role_check" CHECK (("role" = ANY (ARRAY['viewer'::"text", 'agent'::"text", 'vendedor'::"text", 'manager'::"text", 'admin'::"text"])))
 );
 
 
@@ -19999,6 +19999,66 @@ comment on function public.encrypt_cpf(text) is
   'Cifra at-rest do CPF (pgp_sym_encrypt/aes256, chave mestra da 0041). Exigida pelo CHECK contacts_cpf_consistency.';
 comment on function public.decrypt_cpf(uuid, uuid) is
   'Decifra o CPF de UM contato da ORG informada (molde 0209: membresia conferida quando há auth.uid). Service_role (MCP) segue direto.';
+
+-- 0267_cargo_vendedor entra AQUI, antes da varredura, de propósito: o bloco da
+-- varredura é auto-curativo e só cura o que foi criado ANTES dele.
+
+-- 0267_cargo_vendedor (apêndice — ver supabase/migrations/20261013120000_0267_cargo_vendedor.sql)
+--
+-- O cargo "Vendedor". Apêndice idempotente porque o update.sh reaplica o
+-- baseline em instalação existente — migration sozinha não chega na VPS
+-- (medido em 10/10/2026 com a 0262).
+--
+-- DOIS lugares, porque o vocabulário de cargos tem duas portas independentes e
+-- o banco é o que tem a palavra final:
+--   1. o CHECK de `user_organizations.role`, que impede gravar papel desconhecido;
+--   2. `fn_role_at_least`, a escada que a RLS consulta.
+-- Sem o 1 o INSERT bate na parede; sem o 2 o vendedor cai em `false` em toda
+-- política e "entra na empresa" sem ver nada.
+--
+-- `vendedor` divide o nível 2 com `agent`: mesmo poder, nome que a empresa
+-- usa. `ai_operator` NÃO entra — é papel do agente publicado e nunca é gravado
+-- em user_organizations.
+alter table public.user_organizations
+  drop constraint if exists user_organizations_role_check;
+
+alter table public.user_organizations
+  add constraint user_organizations_role_check
+  check (role = any (array['viewer'::text, 'agent'::text, 'vendedor'::text,
+                       'manager'::text, 'admin'::text]));
+
+-- O comentário vai AQUI, fora do corpo, de propósito: um `--` dentro do
+-- `as $$ ... $$` vai para `prosrc`, e `pg_get_functiondef` devolve o texto
+-- incluindo comentário. Foi assim que `tests/unit/papel-do-agente-publicado`
+-- reprovou: o corpo passou a CONTER a palavra que o teste garante não estar lá.
+-- Explicação no corpo da função é documentação que vira assert.
+create or replace function public.fn_role_at_least(p_org uuid, p_min text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = 'public'
+as $$
+  with levels(role, lvl) as (
+    values ('viewer',1),('agent',2),('vendedor',2),('manager',3),('admin',4)
+  )
+  select coalesce(
+    (select user_lvl.lvl >= min_lvl.lvl
+     from levels user_lvl
+     join levels min_lvl on min_lvl.role = p_min
+     where user_lvl.role = public.fn_user_role_in_org(p_org)),
+    false
+  );
+$$;
+
+comment on function public.fn_role_at_least(uuid, text) is
+  'Escada de cargos do tenant. `vendedor` divide o nível 2 com `agent` — mesmo poder, nome que a empresa usa. `ai_operator` NÃO entra: é papel do agente publicado e nunca é gravado em user_organizations.';
+
+-- DUAS origens de EXECUTE: revogar só uma deixa a função alcançável por `anon`
+-- como RPC pela anon key.
+revoke all on function public.fn_role_at_least(uuid, text) from public;
+revoke all on function public.fn_role_at_least(uuid, text) from anon;
+grant execute on function public.fn_role_at_least(uuid, text) to authenticated;
 
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --

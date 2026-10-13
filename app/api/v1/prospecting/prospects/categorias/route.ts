@@ -20,6 +20,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { traduzirCategoria } from "@/lib/prospeccao/categoria-pt";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +58,10 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   const categorias = [...contagem.entries()]
-    .map(([nome, total]) => ({ nome, total }))
+    // O `nome` continua sendo o valor GRAVADO — é ele que a API filtra com `in`.
+    // O que a tela mostra é o `rotulo`, em português. Enviar o rótulo em vez do
+    // valor gravado faria o filtro não casar com nada, e nenhum erro apareceria.
+    .map(([nome, total]) => ({ nome, rotulo: traduzirCategoria(nome), total }))
     .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR"))
     .slice(0, LIMITE);
 
