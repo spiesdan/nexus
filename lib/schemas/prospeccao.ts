@@ -88,6 +88,32 @@ export const importBatchSchema = z.object({
 });
 
 /**
+ * DISPARO EM LOTE — a mesma mensagem para os prospects escolhidos.
+ *
+ * `dry_run` é `true` POR PADRITO. A rota que envia uma mensagem fixa para
+ * centenas de números é das poucas em que o erro não aparece como erro: o
+ * WhatsApp derruba o número e o dano só aparece semanas depois, como "não
+ * recebo mais mensagem". Quem chama tem que PEDIR o envio; não happens por
+ * omissão de um campo.
+ */
+export const disparoSchema = z.object({
+  prospect_ids: z.array(z.string().uuid()).min(1).max(2000),
+  // O `.trim()` antes do `.min(1)` é o que faz "   " ser erro de formulário.
+  // Sem ele, `min(1)` passa (a string tem 3 caracteres) e a mensagem em branco
+  // só morre lá dentro no `validarMensagem` — 400 mais tarde, e o operador vê
+  // "Nenhum dos prospects pertence a esta organização" num campo de texto.
+  mensagem: z.string().trim().min(1).max(4000),
+  /** Cota do dia. O teto real é `TETO_DIARIO` do planejador. */
+  limite: z.number().int().min(1).max(500).optional(),
+  /** Intervalo mínimo entre dois envios, em ms. */
+  espaco_ms: z.number().int().min(0).max(60000).optional(),
+  /** `false` envia de verdade. O padrão é só simular. */
+  dry_run: z.boolean().default(true),
+});
+
+export type Disparo = z.infer<typeof disparoSchema>;
+
+/**
  * Linha da ponte do Google Maps Scraper (JSON já mapeado pela tela via
  * `lib/prospeccao/importacao-maps.ts`). Espelha `NegocioDescoberto` campo a
  * campo — a rota revalida tudo, nunca confia no cliente.

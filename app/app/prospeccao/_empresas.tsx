@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { DialogoDisparo } from "./_disparo";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
 import {
@@ -249,6 +250,9 @@ export function EmpresasTab({
   // (ações em lote) — quem entra vê a tela comercial, não a planilha.
   const [visao, setVisao] = React.useState<"tabela" | "mapa">("mapa");
   const [dono, setDono] = React.useState("");
+  const [disparoAberto, setDisparoAberto] = React.useState(false);
+  // Contador que remonta o diálogo: cada abertura começa sem plano antigo.
+  const [disparoVez, setDisparoVez] = React.useState(0);
   const [vendedores, setVendedores] = React.useState<
     { user_id: string; full_name: string | null }[]
   >([]);
@@ -1355,6 +1359,17 @@ export function EmpresasTab({
               <Button size="sm" onClick={() => void importar(selecionados)}>
                 {t("Adicionar ao CRM")}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setDisparoVez((v) => v + 1);
+                  setDisparoAberto(true);
+                }}
+                title={t("A mesma mensagem para as empresas selecionadas")}
+              >
+                {t("Enviar mensagem")}
+              </Button>
             </Card>
           )}
           <div className="overflow-x-auto rounded-3xl border">
@@ -1708,6 +1723,14 @@ export function EmpresasTab({
           onImportado={() => void buscar(filtros, buscaId)}
         />
       )}
+
+      <DialogoDisparo
+        key={disparoVez}
+        ids={selecionados}
+        aberto={disparoAberto}
+        onFechar={() => setDisparoAberto(false)}
+        onConcluido={() => void buscar(filtros, buscaId)}
+      />
     </div>
   );
 }
