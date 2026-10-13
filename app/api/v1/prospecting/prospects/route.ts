@@ -28,6 +28,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
+import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
 import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -114,11 +115,27 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("bloqueado", false);
     if (buscaId) q = q.in("id", idsDaBusca);
     if (soId) q = q.eq("id", soId);
-    // Categoria por `ilike` e nao `eq`: o campo vem da API do Google, em
-    // ingles e com capitalizacao variavel ("Auto repair shop", "Auto Repair
-    // Shop"). Com `eq` o seletor so batia numa string exata e digitar
-    // "mecanica" nao trazia "Auto repair shop" nem "Mecânica".
-    if (categoria) q = q.ilike("categoria", `%${categoria}%`);
+    // ═══ CATEGORIA: o termo chega em PORTUGUÊS, o banco guarda em INGLÊS ═══
+    //
+    // Este filtro já foi um defeito meu. Ele comparava `categoria ilike
+    // '%termo%'` contra o valor gravado, e o valor gravado é o rótulo da API
+    // do Google Maps — "Auto repair shop". Eu anunciei que digitar "mecanica"
+    // traria "Auto repair shop" e não trazia: `ilike` compara letra a letra e
+    // "mecanica" não é substring de "auto repair shop".
+    //
+    // `categoriasQueCasam` traduz o termo de volta para os valores em inglês
+    // que ele descreve (ver `lib/prospeccao/categoria-pt.ts`, 533 categorias
+    // medidas no banco). O `in` abaixo é o que casa.
+    //
+    // E o fallback: se a tradução não achou nada, filtra por `ilike` no valor
+    // gravado. Sem ele, digitar uma categoria que chegou do Google hoje e não
+    // está na tabela devolveria lista vazia — o filtro apareceria quebrado
+    // quando o problema é só uma linha a mais no mapa.
+    if (categoria) {
+      const emIngles = categoriasQueCasam(categoria);
+      if (emIngles.length > 0) q = q.in("categoria", emIngles.slice(0, 200));
+      else q = q.ilike("categoria", `%${categoria}%`);
+    }
     if (cidade) q = q.ilike("cidade", `%${cidade}%`);
     if (estado) q = q.eq("estado", estado.toUpperCase());
     if (status !== "") {
