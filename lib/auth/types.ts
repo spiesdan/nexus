@@ -19,10 +19,22 @@ import type { Idioma } from "@/lib/i18n/idiomas";
  * consulta `fn_user_role_in_org`, que lê `user_organizations`. O agente não é
  * usuário. A RLS segue intacta.
  */
-export type Role = "viewer" | "agent" | "ai_operator" | "manager" | "admin";
+export type Role = "viewer" | "agent" | "vendedor" | "ai_operator" | "manager" | "admin";
 export const ROLE_RANK: Record<Role, number> = {
   viewer: 1,
   agent: 2,
+  // `vendedor` TEM O MESMO rank de `agent`, de propósito: quem vende precisa
+  // de pedido, prospect, inbox e conversa — que é o que `agent` já é.
+  //
+  // Cargo novo com rank novo seria uma decisão de segurança disfarçada de
+  // rótulo: subir o vendedor acima do atendente daria a ele o que o gerente
+  // tem, sem ninguém pedir. Este papel é um NOME para o que o atendente já
+  // podia, porque é assim que a empresa fala — não um poder novo.
+  //
+  // Dois papéis com o mesmo rank é normal: `>=` compara número, e o autoritar
+  // é o código. O que não pode é o NOME virar o poder — por isso
+  // `fn_role_at_least` no banco também entra com `vendedor` no nível 2.
+  vendedor: 2,
   ai_operator: 3,
   manager: 4,
   admin: 5,
@@ -44,16 +56,51 @@ export function roleAtLeast(role: string | null | undefined, min: Role): boolean
 }
 
 /** Papéis que uma PESSOA pode ter. Espelha `user_organizations_role_check`. */
-export const PAPEIS_HUMANOS: ReadonlyArray<Role> = ["viewer", "agent", "manager", "admin"];
+export const PAPEIS_HUMANOS: ReadonlyArray<Role> = [
+  "viewer",
+  "agent",
+  "vendedor",
+  "manager",
+  "admin",
+];
 
 /** Rótulo pt-BR para quem configura. `ai_operator` nunca aparece em seletor de time. */
 export const ROTULO_DO_PAPEL: Record<Role, string> = {
   viewer: "Somente leitura",
   agent: "Atendente",
+  vendedor: "Vendedor",
   ai_operator: "Assistente com autonomia de operação",
   manager: "Gerente",
   admin: "Administrador",
 };
+
+/**
+ * O que cada papel FAZ — a linha de apoio do seletor.
+ *
+ * Sem isto, "Vendedor" e "Atendente" são duas palavras para a mesma permissão
+ * e ninguém sabe qual escolher. A descrição é o que separa "quero que ele
+ * venda" de "quero que ele atenda o inbox".
+ */
+export const DESCRICAO_DO_PAPEL: Record<Role, string> = {
+  viewer: "Só consulta. Não altera nada.",
+  agent: "Atende o inbox e cria pedidos.",
+  vendedor: "Vende: é dono dos prospects e dos pedidos dele.",
+  ai_operator: "Assistente com autonomia de operação.",
+  manager: "Gerencia a equipe e os cadastros.",
+  admin: "Administra a instalação inteira.",
+};
+
+/**
+ * Rótulo de um papel, com o valor cru de volta se o papel for desconhecido.
+ *
+ * O fallback é o ponto: um papel que o código não conhece (vindo do banco,
+ * gravado por uma versão mais nova) aparece como está, e não como "—" nem
+ * vazio. Mostrar o valor cru é informação; esconder é erro sem causa.
+ */
+export function rotuloDoPapel(papel: string | null | undefined): string {
+  if (!papel) return "—";
+  return ROTULO_DO_PAPEL[papel as Role] ?? papel;
+}
 
 /**
  * Escopo de visualização de conversas por atendente (G4-01, spec 13 §3.5).

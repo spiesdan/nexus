@@ -29,6 +29,21 @@ import {
 
 import { FotosDoProduto, type Foto } from "./_fotos";
 
+/**
+ * Array vazio ESTÁVEL, para o produto que não tem foto.
+ *
+ * `fotosPorProduto[p.id] ?? []` cria um array NOVO a cada render — e o
+ * `FotosDoProduto` tem `useEffect(..., [fotosIniciais])`, que compara
+ * IDENTIDADE. O efeito então dispara a cada render do pai e chama `setFotos`,
+ * o que renderiza o filho de novo.
+ *
+ * Medido nesta instalação: 641 produtos, e a imensa maioria sem foto. Abrir a
+ * edição de um produto re-renderiza o pai, e os 641 filhos faziam o ciclo
+ * inteiro de novo. Uma constante resolve sem tocar no filho: é a mesma
+ * referência sempre, e o efeito não tem o queComparar.
+ */
+const FOTOS_NENHUMA: Foto[] = [];
+
 interface Textos {
   titulo: string;
   subtitulo: string;
@@ -787,7 +802,7 @@ export function ProdutosClient({
                 <FotosDoProduto
                   productId={p.id}
                   podeEditar={podeEditar}
-                  fotosIniciais={fotosPorProduto[p.id] ?? []}
+                  fotosIniciais={fotosPorProduto[p.id] ?? FOTOS_NENHUMA}
                   aoMudar={recarregarFotos}
                 />
                 <div className="min-w-0 flex-1">
