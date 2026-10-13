@@ -81,15 +81,23 @@ export async function POST(req: NextRequest): Promise<Response> {
   const ids = ((alvo ?? []) as Array<{ id: string }>).map((c) => c.id);
   if (ids.length === 0) return ok({ arquivadas: 0 }, { requestId });
 
+  // Só `status`, `status_changed_at` e as não-lidas.
+  //
+  // NÃO se escreve `comando_da_conversa` — ela NÃO é coluna: em
+  // `supabase/baseline.sql:17146` é a FUNÇÃO `public.comando_da_conversa(c
+  // conversations)`, resolvida pelo PostgREST no `?select=`. Escrever nela dá
+  // "column does not exist" e derrubaria TODO o arquivamento com 500 — e,
+  // pior, alguém leria o 500 como "o arquivamento está quebrado" quando o que
+  // quebrou foi o campo que não devia ser escrito.
+  //
+  // O "quem manda" (`arquivada` → fora de todas as filas) é derivado do
+  // próprio status, então mudar o status basta.
   const { error } = await admin
     .from("conversations")
     .update({
       status: "archived",
       status_changed_at: new Date().toISOString(),
       unread_count_for_assignee: 0,
-      // A conversa sai da fila; o automático não pode "pegar de volta" uma
-      // conversa arquivada, senão o zero de hoje vira fila amanhã.
-      comando_da_conversa: "encerrada",
     })
     .eq("organization_id", orgId)
     .in("id", ids);
