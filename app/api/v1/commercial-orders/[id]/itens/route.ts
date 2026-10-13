@@ -1,205 +1,155 @@
 /**
- * PATCH /api/v1/commercial-orders/[id]/itens — edita os itens do RASCUNHO.
+ * PATCH /api/v1/commercial-orders/[id]/itens — adicionar, remover, ajustar.
  *
- * Adicionar, remover e ajustar quantidade/preço/desconto — com as MESMAS
- * regras da criação (estoque, preço de tabela, totais server-side). Só em
- * rascunho/em_analise: pedido comprometido não se reescreve, se cancela e
- * refaz (o histórico fiscal agradece). Recalcula subtotal/total e as
- * parcelas; revalida crédito quando virar compromisso (o PATCH de status
- * faz, aqui só recalcula).
+ * ─── A REGRA DE STATUS MUDOU, E ESTE É O LUGAR DE MUDAR ────────────────────
+ *
+ * O contrato anterior recusava: *"só rascunho/em_analise"*. O dono pediu para
+ * corrigir o pedido **depois de pronto**.
+ *
+ * A rota agora NÃO recusa — e devolve `avisos` describing o que a troca não
+ * estorna (comissão apurada, expedição, NF emitida). A razão está em
+ * `lib/comercial/patch-itens.ts`, e é a mesma aqui: a regra de negócio do que
+ * fazer com um pedido já faturado **não está escrita neste repositório**, e
+ * escrevê-la aqui seria inventar política fiscal e comercial.
+ *
+ * ─── POR QUE PATCH E NÃO ACRESCENTAR `itens` AO `pedidoPatchSchema` ─────────
+ *
+ * Mexer num campo é UPDATE de uma linha. Mexer no conjunto de itens é DELETE +
+ * INSERT + recálculo de total, que só faz sentido atômico — e o `ajustar`
+ * chega pelo **id** do item, que precisa sobreviver à operação.
  */
 import { randomUUID } from "node:crypto";
+
 import { type NextRequest } from "next/server";
 
-import { audit } from "@/lib/audit";
+import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import {
-  calcularParcelas,
-  COLUNAS_DO_ITEM,
-  COLUNAS_DO_PEDIDO,
-  itensPatchSchema,
-  subtotalDoItem,
-} from "@/lib/schemas/pedidos";
-import { createClient } from "@/lib/supabase/server";
+import { aplicarPatchDeItens } from "@/lib/comercial/patch-itens";
+import { logger } from "@/lib/logger";
+import { itensPatchSchema } from "@/lib/schemas/pedidos";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
+/** Status em que a troca muda a natureza do ato. Não impede — avisa. */
+const STATUS_COMPROMETIDOS = ["aprovado", "expedido", "entregue", "faturado"] as const;
+
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("agent", { requestId, resource: "commercial_orders" });
   if (!authz.ok) return authz.response;
+  const orgId = authz.org.orgId;
 
-  const parsed = itensPatchSchema.safeParse(await req.json().catch(() => null));
+  const { id } = await ctx.params;
+  // Sem esta checagem, um id não-UUID vai ao Postgres, que responde
+  // `invalid input syntax for type uuid` — e a rota devolveria 500 para o que
+  // é, na origem, um erro de quem chamou. 400 diz a verdade.
+  if (!z.string().uuid().safeParse(id).success) {
+    return fail("validation_failed", "id inválido.", 400, { requestId });
+  }
+
+  let bruto: unknown;
+  try {
+    bruto = await req.json();
+  } catch {
+    bruto = null;
+  }
+
+  const parsed = itensPatchSchema.safeParse(bruto);
   if (!parsed.success) {
-    return fail("validation_failed", "Dados inválidos.", 422, {
+    return fail("validation_failed", "Corpo de itens inválido.", 422, {
       requestId,
       details: parsed.error.flatten().fieldErrors as Record<string, unknown>,
     });
   }
+
+  // Patch vazio é 422, e ANTES de tocar no banco: "não pediu nada" é erro de
+  // quem chamou, não operação no-op que devolve 200 e faz a tela piscar.
   if (
     parsed.data.adicionar.length === 0 &&
     parsed.data.remover.length === 0 &&
     parsed.data.ajustar.length === 0
   ) {
-    return fail("validation_failed", "Nada para alterar.", 422, { requestId });
+    return fail("validation_failed", "O patch de itens está vazio.", 422, { requestId });
   }
 
-  const { id } = await params;
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const { data: pedido } = await supabase
+  const { data: antes, error: erroLeitura } = await admin
     .from("commercial_orders")
-    .select("id, status, desconto_cents, frete_cents, condicao_pagamento")
+    .select("status, exige_nf, total_cents")
     .eq("id", id)
-    .eq("organization_id", authz.org.orgId)
+    .eq("organization_id", orgId)
     .maybeSingle();
-  const atual = pedido as unknown as {
-    id: string;
-    status: string;
-    desconto_cents: number;
-    frete_cents: number;
-    condicao_pagamento: string | null;
-  } | null;
-  if (!atual) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
-  if (atual.status !== "rascunho" && atual.status !== "em_analise") {
-    return fail(
-      "validation_failed",
-      `Pedido "${atual.status}" não aceita edição de itens. Cancele e refaça.`,
-      422,
-      { requestId },
-    );
-  }
 
-  const { data: itensDb } = await supabase
-    .from("commercial_order_items")
-    .select(COLUNAS_DO_ITEM)
-    .eq("order_id", id)
-    .eq("organization_id", authz.org.orgId)
-    .order("posicao");
-  type Item = {
-    id: string;
-    product_id: string | null;
-    produto_codigo: string;
-    produto_nome: string;
-    quantidade: number;
-    preco_unit_cents: number;
-    desconto_pct: number;
-    subtotal_cents: number;
-    posicao: number;
-  };
-  let itens = ((itensDb ?? []) as unknown as Item[]).map((i) => ({ ...i }));
+  if (erroLeitura) return fail("internal_error", "Erro ao ler o pedido.", 500, { requestId });
+  if (!antes) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
 
-  // Remover.
-  const remover = new Set(parsed.data.remover);
-  itens = itens.filter((i) => !remover.has(i.id));
+  const pedido = antes as { status: string; exige_nf: boolean };
 
-  // Ajustar (quantidade/preço/desconto, com subtotal recalculado no servidor).
-  for (const aj of parsed.data.ajustar) {
-    const linha = itens.find((i) => i.id === aj.id);
-    if (!linha) {
-      return fail("validation_failed", "Um dos itens não é deste pedido.", 422, { requestId });
-    }
-    if (aj.quantidade !== undefined) linha.quantidade = aj.quantidade;
-    if (aj.preco_unit_cents !== undefined) linha.preco_unit_cents = aj.preco_unit_cents;
-    if (aj.desconto_pct !== undefined) linha.desconto_pct = aj.desconto_pct;
-    linha.subtotal_cents = subtotalDoItem(linha.quantidade, linha.preco_unit_cents, linha.desconto_pct);
-  }
-
-  // Adicionar (snapshot mínimo: produto precisa existir para snapshot real —
-  // sem product_id, entra como avulso com o preço informado).
-  for (const novo of parsed.data.adicionar) {
-    let codigo = "AVULSO";
-    let nome = "Item avulso";
-    if (novo.product_id) {
-      const { data: prod } = await supabase
-        .from("catalog_products")
-        .select("codigo, nome")
-        .eq("id", novo.product_id)
-        .eq("organization_id", authz.org.orgId)
-        .maybeSingle();
-      const p = prod as unknown as { codigo: string; nome: string } | null;
-      if (!p) {
-        return fail("validation_failed", "Um dos produtos não existe.", 422, { requestId });
-      }
-      codigo = p.codigo;
-      nome = p.nome;
-    }
-    itens.push({
-      id: `novo-${itens.length}-${Date.now()}`,
-      product_id: novo.product_id ?? null,
-      produto_codigo: codigo,
-      produto_nome: nome,
-      quantidade: novo.quantidade,
-      preco_unit_cents: novo.preco_unit_cents,
-      desconto_pct: novo.desconto_pct,
-      subtotal_cents: subtotalDoItem(novo.quantidade, novo.preco_unit_cents, novo.desconto_pct),
-      posicao: itens.length,
-    });
-  }
-
-  if (itens.length === 0) {
-    return fail("validation_failed", "O pedido ficaria sem itens.", 422, { requestId });
-  }
-
-  const subtotal = itens.reduce((s, i) => s + i.subtotal_cents, 0);
-  if (atual.desconto_cents > subtotal) {
-    return fail("validation_failed", "Desconto maior que o subtotal.", 422, { requestId });
-  }
-  const total = subtotal - atual.desconto_cents + atual.frete_cents;
-
-  // Troca total: apaga e reinsere (posições recalculadas). Rascunho sem
-  // histórico de itens — o audit registra o gesto, não cada linha.
-  const { error: erroApaga } = await supabase
-    .from("commercial_order_items")
-    .delete()
-    .eq("order_id", id)
-    .eq("organization_id", authz.org.orgId);
-  if (erroApaga) return fail("internal_error", "Erro ao regravar os itens.", 500, { requestId });
-
-  const { error: erroInsere } = await supabase.from("commercial_order_items").insert(
-    itens.map((item, pos) => ({
-      organization_id: authz.org.orgId,
-      order_id: id,
-      posicao: pos,
-      product_id: item.product_id,
-      produto_codigo: item.produto_codigo,
-      produto_nome: item.produto_nome,
-      quantidade: item.quantidade,
-      preco_unit_cents: item.preco_unit_cents,
-      desconto_pct: item.desconto_pct,
-      subtotal_cents: item.subtotal_cents,
-    })),
-  );
-  if (erroInsere) return fail("internal_error", "Erro ao regravar os itens.", 500, { requestId });
-
-  const { data: atualizado, error } = await supabase
-    .from("commercial_orders")
-    .update({
-      subtotal_cents: subtotal,
-      total_cents: total,
-      parcelas: calcularParcelas(total, atual.condicao_pagamento),
-    })
-    .eq("id", id)
-    .eq("organization_id", authz.org.orgId)
-    .select(COLUNAS_DO_PEDIDO)
-    .single();
-
-  if (error || !atualizado) {
-    return fail("internal_error", "Erro ao atualizar os totais.", 500, { requestId });
-  }
-
-  await audit({
-    organizationId: authz.org.orgId,
-    actorUserId: authz.user.id,
-    action: "commercial_order.items_updated",
-    resourceType: "commercial_orders",
-    resourceId: id,
+  const resultado = await aplicarPatchDeItens(admin, {
+    pedidoId: id,
+    organizationId: orgId,
+    patch: parsed.data,
+    userId: authz.user.id,
     requestId,
   });
 
-  return ok(atualizado, { requestId });
+  if (!resultado.ok) {
+    if (resultado.motivo === "nao_encontrado") {
+      return fail("not_found", "Pedido não encontrado.", 404, { requestId });
+    }
+    if (resultado.motivo === "produto_desconhecido") {
+      // A posição chega 0-based; a tela e a mensagem falam em 1-based, e a
+      // diferença já produziu "item 0" numa tela de usuário.
+      const item = (resultado.posicao ?? 0) + 1;
+      return fail(
+        "validation_failed",
+        `O produto do item ${item} não existe no catálogo.`,
+        422,
+        { requestId, details: { itens: [`item ${item}: produto não encontrado`] } },
+      );
+    }
+    // `remover`/`ajustar` com id que não é deste pedido é erro de quem
+    // chamou. Devolver 200 aqui faria a tela dizer "2 itens removidos" tendo
+    // removido 1 — ou 0.
+    return fail("validation_failed", "Um dos itens não pertence a este pedido.", 422, { requestId });
+  }
+
+  const comprometido = (STATUS_COMPROMETIDOS as readonly string[]).includes(pedido.status);
+  const avisos: string[] = [];
+  if (comprometido) {
+    avisos.push(
+      `O pedido está "${pedido.status}" e os itens foram trocados. Comissão apurada, expedição e nota não foram estornadas.`,
+    );
+  }
+  if (pedido.exige_nf) {
+    avisos.push(
+      "O pedido está marcado como exige NF. Se a nota já foi emitida, precisa ser cancelada e refeita com os itens novos.",
+    );
+  }
+
+  logger.info("itens do pedido alterados", {
+    pedidoId: id,
+    ...resultado,
+    requestId,
+  });
+
+  return ok(
+    {
+      adicionados: resultado.adicionados ?? 0,
+      removidos: resultado.removidos ?? 0,
+      ajustados: resultado.ajustados ?? 0,
+      subtotal_cents: resultado.subtotal_cents,
+      total_cents: resultado.total_cents,
+      status: pedido.status,
+      avisos,
+    },
+    { requestId },
+  );
 }
