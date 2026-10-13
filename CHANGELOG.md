@@ -8,6 +8,139 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.41] — 2026-10-13
+
+### Adicionado
+
+- **Editar os itens de um pedido — inclusive depois de pronto** **Não dava para alterar os itens de um pedido. Nunca.** Não depois de pronto,
+  não antes: em nenhum status. A rota `PATCH /api/v1/commercial-orders/[id]/itens`
+  não existia, e o `itensPatchSchema` estava escrito em `lib/schemas/pedidos.ts`
+  desde antes sem nada o consumindo.
+
+  O sintoma era "não consigo alterar o pedido depois que ele ficou pronto", e a
+  leitura natural disso está certa na consequência e errada na causa: nunca deu,
+  porque a rota nunca foi escrita. Havia até um teste — `pedido-itens-route.test.ts`
+  — que importava um `PATCH` inexistente, e por isso não rodava.
+
+  **A regra que o teste afirmava foi mudada de propósito.** Era *"só rascunho/
+  em_analise"*, com 422 para o resto. Você pediu para corrigir o pedido depois de
+  pronto, que é exatamente essa regra. A rota agora aceita e **avisa**: devolve
+  `avisos` dizendo o que a troca **não** estorna — comissão apurada, expedição,
+  nota emitida.
+
+  A rota não inventa a política de comissão, expedição e NF porque essa regra não
+  está escrita neste repositório. O que está escrito é o comportamento, e
+  quem decide a consequência é quem lê o aviso. Se um dia existir a regra, ela
+  entra aqui — com nome, com migration se precisar de coluna, com teste que a
+  nomeie.
+
+  **Um PATCH, não um por linha.** Adicionar, remover e ajustar vão num único
+  `PATCH`, num único "Salvar". PATCH item a item deixa o pedido com item novo e
+  total velho no meio da operação, e "total velho com item novo" é a forma mais
+  cara de errar num pedido comercial. Se o servidor recusar, nada foi gravado.
+
+  **`ajustar` mantém o id do item.** Trocar o conjunto inteiro criaria ids novos e
+  deixaria o `ajustar` da tela apontando para o nada, com tudo que guarde id de
+  item órfão.
+
+  **O que o editor faz pela tela:** botão "Editar itens" na própria lista de
+  produtos da ficha, quantidade/preço/desconto editáveis, remoção por linha, e
+  busca de produto para acrescentar — com o preço do catálogo como sugestão
+  editável, não como verdade. Preço de venda é da linha, e quem decide é quem
+  está na tela.
+
+  **Um bug que os testes acharam no caminho**
+
+  Remover o item 0 de uma lista de 2 fazia o item novo nascer no `posicao` 2 e o
+  `filter` de gravação o deixava de fora: a lista ficava `1,2` com um buraco no
+  `0`. Numa tela ordenada por posição, isso aparece como "o primeiro item sumiu",
+  sem erro nenhum. O teste de reindexação pegou; o serviço foi corrigido
+  para gravar a reindexação de todas as linhas, novas inclusive.
+
+  **Junto: o catálogo tinha teto escondido**
+
+  `GET /api/v1/products` cortava em **500** linhas com um `.limit(500)` solto. A
+  instalação tem **635 produtos**, e o editor de itens precisa do catálogo inteiro
+  para o seletor — com 500 fixos, os produtos acima do 500º **não apareceriam**,
+  sem erro e sem aviso. O limite virou parâmetro explícito (`limite`, padrão 500,
+  teto 2000). Falha silenciosa é a pior das três, e nenhuma delas é aceitável num
+  produto vendido como código.
+
+  **Mutações provadas:** `ajustar` sem recalcular subtotal reprova 6 testes; sem
+  reindexação reprova o de posição; a rota voltando a recusar pedido pronto
+  reprova 2; o `.limit()` voltando a 500 fixo reprova 5.
+
+### Corrigido
+
+- **A tela de expedição desenhava por cima do cabeçalho — e o mapa da prospecção nunca foi consertado de fato** **Elementos por cima do mapa ou por trás dele na tela de expedição.** Os dois
+  sintomas são o mesmo defeito: o contêiner do mapa não tinha stacking context
+  próprio.
+
+  O Leaflet escreve z-index nos próprios panes — 400 overlay, 600 marcadores, 700
+  popup, 800/1000 controle — em pixels, na **mesma pilha da página**. O cabeçalho
+  da ficha de expedição é `sticky top-14 z-10`: popup e marcadores (600/700) ficam
+  **acima** dele, e o mapa invade o cabeçalho ao rolar. E `Dialog`/`Sheet`, que
+  usam `z-50`, ficam **atrás** do mapa.
+
+  **O mapa da prospecção já tinha `isolate` — e nunca foi conserto de verdade.**
+  Foi aplicado numa tela e esquecido na outra: mesmo sintoma, outra tela, mesma
+  causa. Pior, medindo no browser, `isolate` e `z-0` chegam ao mesmo resultado
+  por caminhos independentes:
+
+      sem nada → MAPA por cima do cabeçalho   ❌
+      isolate  → CABEÇALHO por cima            ✅
+      z-0      → CABEÇALHO por cima            ✅
+
+  `z-0` cria o stacking context pelo caminho mais fundamental — elemento
+  posicionado com `z-index` diferente de `auto` — e não depende do apelido da
+  propriedade. Os dois mapas agora levam `relative isolate z-0`: se um deixar de
+  funcionar por qualquer motivo, o outro segura.
+
+  **Um detalhe que quase virou diagnóstico errado.** O utilitário `isolate` do
+  Tailwind 4.3.3 gera `isolation: isolate` — repare no NOME DA PROPRIEDADE, que é
+  o apelido antigo. Escrever `isolate:` (o nome novo da padronização) à mão em CSS
+  é outra coisa: o browser de verificação não reconhece e descarta a
+  declaração em silêncio, sem aviso. A primeira leitura desse bug foi essa, e
+  levou ao comentario errado no código — medir no browser, e não de olho no nome
+  da classe, foi o que corrigiu.
+
+  **O teste trava os dois juntos** (`leaflet-isolado-em-contexto-de-stack.test.ts`)
+  e vale para qualquer mapa novo: varre o repo, acha quem instancia `L.map()` e
+  exige `isolate` ou `z-0`. O leitor de `className` remove comentários antes de
+  buscar, porque a primeira versão dele achava `z-0` **dentro do comentário** que
+  explica o conserto — e a mutação que tirava a classe do JSX passava verde. Um
+  teste que lê o próprio texto explicativo mede a documentação.
+
+  **Mutações provadas:** tirar `isolate` e `z-0` do mapa de expedição reprova;
+  tirar do mapa de prospecção reprova; e o leitor ler o className em vez do
+  comentário está coberto por teste próprio.
+
+- **Criar venda automática devolvia 500 — a rota escrevia uma coluna que não existe** **O botão "Criar venda automática" devolvia 500 em toda tentativa.** A rota
+  `POST /api/v1/automatic-sales/campaigns` escrevia `created_by` no insert — e
+  essa coluna **não existe** em `automatic_sales_campaigns`, nem no banco de
+  produção (medido em 13/10/2026) nem em `lib/database.types.ts`.
+
+  O Postgres responde `column not found` e a rota devolve 500. Nenhuma campanha
+  foi criada, nenhuma mensagem saiu.
+
+  **Por que o typecheck não pegou.** O `.insert()` do cliente Supabase não é
+  estrito o bastante para reclamar de uma chave a mais. A pista é que `created_by`
+  existe em outras tabelas, como `commercial_orders` — então ler uma rota que usa
+  e concluir que o padrão vale para todas parece certo, e não é.
+
+  **O teste agora é geral, não desta coluna.** `rotas-nao-escrevem-coluna-
+  inexistente.test.ts` compara **toda** chave escrita no insert com as colunas
+  que o tipo gerado declara — e tem duas guardas de vácuo, porque um `Set` vazio
+  faz todo `expect` passar. É a mesma classe do `comando_da_conversa` (que é
+  função, não coluna), e as duas apareceram na mesma semana.
+
+  Quem criou a campanha continua registrado em `api_audit_log`. Adicionar a
+  coluna de verdade, se um dia for preciso, é decisão de schema — e entra por
+  migration + apêndice do baseline + MANIFEST, com as três.
+
+  **Mutação provada:** readicionar uma coluna inexistente no insert reprova o
+  teste `toda coluna escrita existe no tipo gerado do schema`.
+
 ## [1.25.40] — 2026-10-13
 
 ### Adicionado
@@ -3798,7 +3931,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.40...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.41...HEAD
+[1.25.41]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.40...v1.25.41
 [1.25.40]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.39...v1.25.40
 [1.25.39]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.38...v1.25.39
 [1.25.38]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.37...v1.25.38
