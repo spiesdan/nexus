@@ -1,6 +1,6 @@
 ---
 impacto: nada_mudou
-secao: acrescentado
+secao: adicionado
 titulo: Cargo "Vendedor", e a tela de equipe em português
 ---
 
