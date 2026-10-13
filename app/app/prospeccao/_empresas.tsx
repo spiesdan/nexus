@@ -194,19 +194,23 @@ export function EmpresasTab({
   // As categorias do seletor: uma vez na montagem da tela. Uma chamada so —
   // refazer a cada tecla da busca travaria a tela com o numero de categorias.
   const [opcoesCategoria, setOpcoesCategoria] = React.useState<
-    Array<{ nome: string; total: number }>
+    Array<{ nome: string; rotulo: string; total: number }>
   >([]);
   React.useEffect(() => {
     let vivo = true;
+    type CategoriaDaApi = { nome: string; rotulo?: string; total: number };
     apiClient
-      .get<{ data?: { categorias?: Array<{ nome: string; total: number }> } }>(
+      .get<{ data?: { categorias?: CategoriaDaApi[] } }>(
         "/api/v1/prospecting/prospects/categorias",
       )
       .then((r) => {
         if (!vivo) return;
-        const c = (r as { data?: { categorias?: Array<{ nome: string; total: number }> } })
-          ?.data?.categorias;
-        setOpcoesCategoria(Array.isArray(c) ? c : []);
+        const c = (r as { data?: { categorias?: CategoriaDaApi[] } })?.data?.categorias;
+        // `rotulo` ausente cai no valor gravado: uma API velha (ou um cache
+        // velho) não pode esvaziar o filtro de categoria.
+        setOpcoesCategoria(
+          Array.isArray(c) ? c.map((x) => ({ ...x, rotulo: x.rotulo ?? x.nome })) : [],
+        );
       })
       // A tela nao pode quebrar por causa do seletor: sem lista, o filtro de
       // categoria fica vazio e o resto continua funcionando.
@@ -428,7 +432,10 @@ export function EmpresasTab({
   if (filtros.categoria.trim()) {
     chips.push({
       key: "categoria",
-      label: `${t("Categoria")}: ${filtros.categoria.trim()}`,
+      label: `${t("Categoria")}: ${
+        opcoesCategoria.find((c) => c.nome === filtros.categoria)?.rotulo ??
+        filtros.categoria.trim()
+      }`,
       onRemove: () => mudar({ categoria: "" }),
     });
   }
@@ -924,9 +931,14 @@ export function EmpresasTab({
             onChange={(categoria) => mudar({ categoria })}
             allLabel={t("Todas as categorias")}
             className="w-full sm:w-56"
+            /* A ETIQUETA é em português e o VALOR é o que está gravado.
+               Inverter os dois é o defeito silencioso daqui: o filtro manda o
+               valor ao backend, e "Oficina mecânica" não é substring de
+               "Auto repair shop" — a tela apareceria filtrada e a lista viria
+               vazia, sem erro nenhum. */
             options={opcoesCategoria.map((c) => ({
               value: c.nome,
-              label: `${c.nome} (${c.total})`,
+              label: `${c.rotulo} (${c.total})`,
             }))}
           />
           <div className="w-full space-y-1.5 sm:w-32 md:shrink-0">
