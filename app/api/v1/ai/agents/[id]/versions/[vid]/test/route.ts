@@ -118,6 +118,7 @@ export async function POST(req: NextRequest, ctx: Ctx): Promise<Response> {
         versionId: vid,
         sampleMessage: parsed.data.sample_message,
         sampleContact: parsed.data.sample_contact,
+        historico: parsed.data.historico,
       });
     } catch (err) {
       const detalhe = err instanceof Error ? err.message : String(err);
@@ -220,6 +221,7 @@ async function callInternalRuntime(args: {
   versionId: string;
   sampleMessage: string;
   sampleContact?: { name?: string; phone?: string };
+  historico?: { papel: "user" | "assistente"; texto: string }[];
 }): Promise<Record<string, unknown>> {
   // S-13.08 wires the real runtime. We invoke `runAgent` in-process to avoid
   // a fetch loopback (no cold-start, no INTERNAL_SECRET required in dev).
@@ -231,6 +233,7 @@ async function callInternalRuntime(args: {
     override: {
       sampleMessage: args.sampleMessage,
       sampleContact: args.sampleContact,
+      historico: args.historico,
     },
   });
   // O runtime desta rota é o `@deprecated`, e ele NÃO importa `runBeforeSend` —

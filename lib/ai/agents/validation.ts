@@ -201,6 +201,21 @@ export const testRunSchema = z
         phone: z.string().trim().min(3).max(40).optional(),
       })
       .optional(),
+    /**
+     * Turnos anteriores do ensaio, do mais antigo ao mais recente — SEM a
+     * mensagem atual (ela vai em `sample_message`). Teto de 20: cada turno
+     * vira 2 mensagens no prompt, e sem teto o ensaio de uma conversa longa
+     * estouraria a janela do modelo sem dizer por quê.
+     */
+    historico: z
+      .array(
+        z.object({
+          papel: z.enum(["user", "assistente"]),
+          texto: z.string().trim().min(1).max(4000),
+        }),
+      )
+      .max(20)
+      .optional(),
   })
   .strict();
 
