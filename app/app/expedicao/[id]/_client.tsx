@@ -243,10 +243,14 @@ export function CargaClient({
   return (
     <div className="space-y-6 p-6">
       {/* Cabeçalho fixo: na página longa (mapa + paradas + pedidos), voltar
-        e ações acompanham a rolagem em vez de sumirem para cima — gruda
-        logo abaixo da TopBar (h-14), com fundo para o conteúdo passar
-        por baixo sem vazar por cima. */}
-      <div className="sticky top-14 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background/95 px-6 py-3 backdrop-blur">
+        e ações acompanham a rolagem em vez de sumirem para cima.
+        `sticky -top-6` (NÃO `top-14`): o scroll é do `main` (AppShell), e a
+        TopBar é irmã dele, fora da área rolável — então `top-14` flutuava o
+        banner 80px abaixo do topo visível, por cima da lista (medido em
+        14/10/2026). O `-top-6` compensa o `p-6` do `main` e encosta o banner
+        flush logo abaixo da TopBar. Fundo SÓLIDO (`bg-background`, sem /95):
+        translúcido deixava as linhas da lista vazarem por trás ao rolar. */}
+      <div className="sticky -top-6 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background px-6 py-3 backdrop-blur">
         <Link href="/app/expedicao" className="text-sm underline underline-offset-4">
           ← {textos.voltar}
         </Link>
