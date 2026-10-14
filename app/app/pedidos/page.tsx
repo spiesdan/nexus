@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
+import { extremosDoPeriodo, FUSO_PADRAO } from "@/lib/comercial/janela-do-dia";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
@@ -65,10 +66,23 @@ export default async function PedidosPage({
   if (iniciais.status) q = q.eq("status", iniciais.status);
   if (iniciais.origem) q = q.eq("origem", iniciais.origem);
   if (iniciais.vendedor) q = q.eq("vendedor_user_id", iniciais.vendedor);
-  if (iniciais.de)
-    q = q.gte("created_at", DIA.test(iniciais.de) ? `${iniciais.de}T00:00:00Z` : iniciais.de);
-  if (iniciais.ate)
-    q = q.lt("created_at", DIA.test(iniciais.ate) ? `${iniciais.ate}T23:59:59.999Z` : iniciais.ate);
+
+  // O período vai para `created_at` (UTC no banco) como INSTANTE, e o
+  // instante sai de uma parede local: "14/10" no filtro são as 24 horas que o
+  // DONO conta, não as 24 horas UTC que começam às 03:00.
+  //
+  // Antes isso era `T00:00:00Z` a `T23:59:59.999Z`, que em Brasília cobria de
+  // 13/10 21:00 até 14/10 20:59 — trazia três horas do dia anterior e perdia
+  // três deste. Fechando o dia, o total não batia e nada indicava por quê.
+  //
+  // `user.timezone` e não `user_metadata.timezone`: o mesmo cuidado que a
+  // Agenda tomou (`app/app/agenda/page.tsx:47`), pelo mesmo motivo — o
+  // `AuthUser` deste ponto já é o do servidor.
+  const fuso = user.timezone ?? FUSO_PADRAO;
+  const periodo = extremosDoPeriodo(iniciais.de, iniciais.ate, fuso);
+  if (periodo.de) q = q.gte("created_at", periodo.de);
+  if (periodo.ate) q = q.lt("created_at", periodo.ate);
+
   const { data } = await q.order("created_at", { ascending: false }).limit(200);
   const iniciaisComEmitente = await comNomeDoEmitente(
     (data ?? []) as unknown as Array<{
