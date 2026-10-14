@@ -8,6 +8,33 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.45] — 2026-10-14
+
+### Adicionado
+
+- **Ensaio do agente vira conversa — dá para testar resposta com memória** **O "Testar agente" aceitava uma mensagem só.** Cada envio era um primeiro
+  contato: o agente nunca lembrava do que já foi dito, e o teste mentia sobre
+  memória — aprovava um agente que, numa conversa real, esqueceria tudo no
+  segundo turno.
+
+  O painel agora é uma conversa: cada envio manda os turnos anteriores em
+  `historico`, e o runtime usa como passado do ensaio. A mensagem atual continua
+  indo em `sample_message`; o histórico mora no navegador e morre com a conversa
+  de teste. Nada dele é gravado no banco — o único registro por turno continua
+  sendo a linha de `ai_agent_runs` em dry-run, que já existia.
+
+  **O passado do ensaio só vale no ensaio.** Fora do dry-run o `override` é
+  ignorado: numa execução real o histórico vem da conversa, e aceitar histórico
+  do chamador seria deixar quem chama reescrever o passado do cliente.
+
+  **Limites honestos.** Teto de 20 turnos no schema: cada turno vira 2 mensagens
+  no prompt, e sem teto o ensaio de uma conversa longa estouraria a janela do
+  modelo sem dizer por quê. Papel inventado e turno vazio são 422 antes de tocar
+  no runtime.
+
+  **Mutações provadas:** papel trocado no mapeamento (`assistente` lido como
+  `user`) reprova 2 testes; rota sem repassar o histórico reprova 1.
+
 ## [1.25.44] — 2026-10-14
 
 ### Corrigido
@@ -4106,7 +4133,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.44...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...HEAD
+[1.25.45]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.44...v1.25.45
 [1.25.44]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.43...v1.25.44
 [1.25.43]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.42...v1.25.43
 [1.25.42]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.41...v1.25.42
