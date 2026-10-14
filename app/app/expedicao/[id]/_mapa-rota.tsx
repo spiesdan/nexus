@@ -273,7 +273,7 @@ export function MapaRota({
           Sem contexto de pilha próprio, os dois lados do sintoma "elemento por
           cima do mapa ou por trás" aparecem:
 
-          - o cabeçalho `sticky top-14 z-10` desta página (linha 245 de
+          - o cabeçalho `sticky -top-6 z-10` desta página (linha 249 de
             `_client.tsx`) fica ABAIXO de popup e marcadores — o mapa invade o
             cabeçalho ao rolar;
           - `Dialog` e `Sheet`, que usam `z-50`, ficam ATRÁS do mapa.
