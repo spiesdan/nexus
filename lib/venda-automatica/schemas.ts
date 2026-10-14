@@ -39,6 +39,25 @@ export const campanhaVaCreateSchema = z
       .default([24, 48]),
     followup_textos: z.array(z.string().trim().min(1).max(500)).max(5).default([]),
     responsavel_user_id: z.uuid().nullable().default(null),
+    /**
+     * Texto fixo da abordagem (0269). Quando preenchida, o motor a envia como
+     * está, sem chamar a IA. O teto é o mesmo da mensagem do disparo em lote
+     * (`TAMANHO_MAXIMO_MENSAGEM`, 1000): uma mensagem maior que isso o WAHA
+     * corta no meio, e cortada no meio ela mente.
+     */
+    mensagem_padrao: z.string().trim().min(1).max(1000).nullable().default(null),
+    /**
+     * Segundos entre um envio e outro da mesma campanha (0269). O piso não é
+     * 1: abaixo de 10 segundos não é cooldown, é rajada com outro nome — e
+     * rajada contra o WAHA é ban. Espelha o CHECK da migration.
+     */
+    cooldown_segundos: z.number().int().min(10).max(3600).default(60),
+    /**
+     * Seleção congelada da prospecção (0269). Quando preenchida, o motor só
+     * enfileira estes prospects — passando pela mesma elegibilidade — e nunca
+     * preenche pelo filtro. Vazia = preencher pelo filtro como antes.
+     */
+    prospect_ids: z.array(z.uuid()).max(500).default([]),
   })
   .refine((v) => v.janela_inicio < v.janela_fim, {
     message: "A janela não pode atravessar a meia-noite.",

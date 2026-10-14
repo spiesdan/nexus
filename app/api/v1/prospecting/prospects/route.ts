@@ -105,6 +105,17 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "id inválido.", 400, { requestId });
   }
 
+  // Seleção da prospecção (0269): a aba "nova campanha da seleção" precisa
+  // mostrar as empresas marcadas. Lista fechada, teto de 500 — o mesmo da
+  // campanha. Id inválido é descartado, não erro: colar URL com um id
+  // digitado errado não pode derrubar a tela inteira.
+  const idsParam = p.get("ids")?.trim() ?? "";
+  const idsSelecao = idsParam
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => UUID_RE.test(s))
+    .slice(0, 500);
+
   // Os MESMOS filtros nas duas queries (contagem exata + página) — a
   // contagem tem que responder pela mesma recorte que a lista.
   const montar = (colunas: string, opts?: { count?: "exact"; head?: boolean }) => {
@@ -115,6 +126,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("bloqueado", false);
     if (buscaId) q = q.in("id", idsDaBusca);
     if (soId) q = q.eq("id", soId);
+    if (idsSelecao.length > 0) q = q.in("id", idsSelecao);
     // ═══ CATEGORIA: o termo chega em PORTUGUÊS, o banco guarda em INGLÊS ═══
     //
     // Este filtro já foi um defeito meu. Ele comparava `categoria ilike

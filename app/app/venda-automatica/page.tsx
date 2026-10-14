@@ -17,7 +17,11 @@ export const dynamic = "force-dynamic";
  * campanhas já filtradas pela organização ativa; o resto (painel, fila,
  * timeline, ações) vem das rotas `/api/v1/automatic-sales/*` pelo cliente.
  */
-export default async function VendaAutomaticaPage() {
+export default async function VendaAutomaticaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ origem?: string; cidade?: string; uf?: string; categoria?: string; ids?: string }>;
+}) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
@@ -37,11 +41,34 @@ export default async function VendaAutomaticaPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const params = await searchParams;
+
+  // Aba da seleção (0269): o botão "Criar venda automática" da prospecção
+  // chega aqui com o recorte — cidade obrigatória, o resto opcional. Sem
+  // `origem=prospeccao`, a tela abre como sempre: a aba é um modo de entrada,
+  // não um estado permanente.
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const cidadeSel = (params.cidade ?? "").trim();
+  const selecaoInicial =
+    params.origem === "prospeccao" && cidadeSel !== ""
+      ? {
+          cidade: cidadeSel,
+          uf: (params.uf ?? "").trim().toUpperCase().slice(0, 2),
+          categoria: (params.categoria ?? "").trim(),
+          ids: (params.ids ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => UUID.test(s))
+            .slice(0, 500),
+        }
+      : null;
+
   return (
     <VendaAutomaticaClient
       campanhasIniciais={(Array.isArray(campanhas) ? campanhas : []) as unknown as CampanhaVa[]}
       podeOperar={podeOperar}
       podeGerenciar={podeGerenciar}
+      selecaoInicial={selecaoInicial}
       textos={{
         titulo: t("Venda Automática"),
         subtitulo: t("Campanhas de abordagem automática com cota, janela e follow-up."),

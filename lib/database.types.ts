@@ -1617,6 +1617,7 @@ export type Database = {
         Row: {
           categorias: string[];
           cidade: string;
+          cooldown_segundos: number;
           created_at: string;
           followup_horas: number[];
           followup_textos: string[];
@@ -1624,19 +1625,23 @@ export type Database = {
           janela_fim: string;
           janela_inicio: string;
           limite_diario: number;
+          mensagem_padrao: string | null;
           nome: string;
           objetivo: string | null;
           oferta_produtos: string[];
           organization_id: string;
           perfil_abordagem: string | null;
+          prospect_ids: string[] | null;
           responsavel_user_id: string | null;
           status: string;
           uf: string | null;
+          ultimo_envio_at: string | null;
           updated_at: string;
         };
         Insert: {
           categorias?: string[];
           cidade: string;
+          cooldown_segundos?: number;
           created_at?: string;
           followup_horas?: number[];
           followup_textos?: string[];
@@ -1644,19 +1649,23 @@ export type Database = {
           janela_fim?: string;
           janela_inicio?: string;
           limite_diario: number;
+          mensagem_padrao?: string | null;
           nome: string;
           objetivo?: string | null;
           oferta_produtos?: string[];
           organization_id: string;
           perfil_abordagem?: string | null;
+          prospect_ids?: string[] | null;
           responsavel_user_id?: string | null;
           status?: string;
           uf?: string | null;
+          ultimo_envio_at?: string | null;
           updated_at?: string;
         };
         Update: {
           categorias?: string[];
           cidade?: string;
+          cooldown_segundos?: number;
           created_at?: string;
           followup_horas?: number[];
           followup_textos?: string[];
@@ -1664,14 +1673,17 @@ export type Database = {
           janela_fim?: string;
           janela_inicio?: string;
           limite_diario?: number;
+          mensagem_padrao?: string | null;
           nome?: string;
           objetivo?: string | null;
           oferta_produtos?: string[];
           organization_id?: string;
           perfil_abordagem?: string | null;
+          prospect_ids?: string[] | null;
           responsavel_user_id?: string | null;
           status?: string;
           uf?: string | null;
+          ultimo_envio_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -8797,8 +8809,78 @@ export type Database = {
           },
         ];
       };
+      shipment_closings: {
+        Row: {
+          conferente_nome: string | null;
+          conferente_user_id: string | null;
+          conferido_em: string | null;
+          created_at: string;
+          diferenca_cents: number;
+          entradas_cents: number;
+          esperado_cents: number;
+          id: string;
+          linhas: Json;
+          liquido_cents: number;
+          observacao: string | null;
+          organization_id: string;
+          saidas_cents: number;
+          shipment_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          conferente_nome?: string | null;
+          conferente_user_id?: string | null;
+          conferido_em?: string | null;
+          created_at?: string;
+          diferenca_cents?: number;
+          entradas_cents?: number;
+          esperado_cents?: number;
+          id?: string;
+          linhas: Json;
+          liquido_cents?: number;
+          observacao?: string | null;
+          organization_id: string;
+          saidas_cents?: number;
+          shipment_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          conferente_nome?: string | null;
+          conferente_user_id?: string | null;
+          conferido_em?: string | null;
+          created_at?: string;
+          diferenca_cents?: number;
+          entradas_cents?: number;
+          esperado_cents?: number;
+          id?: string;
+          linhas?: Json;
+          liquido_cents?: number;
+          observacao?: string | null;
+          organization_id?: string;
+          saidas_cents?: number;
+          shipment_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipment_closings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_closings_shipment_id_fkey";
+            columns: ["shipment_id"];
+            isOneToOne: false;
+            referencedRelation: "shipments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shipment_orders: {
         Row: {
+          conferido: boolean;
           created_at: string;
           entregue_em: string | null;
           entregue_lat: number | null;
@@ -8815,6 +8897,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          conferido?: boolean;
           created_at?: string;
           entregue_em?: string | null;
           entregue_lat?: number | null;
@@ -8831,6 +8914,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          conferido?: boolean;
           created_at?: string;
           entregue_em?: string | null;
           entregue_lat?: number | null;

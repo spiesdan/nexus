@@ -21612,3 +21612,27 @@ grant select, insert, update, delete on public.shipment_closings to authenticate
 -- apêndice concedia `public.shipment_closings_id_seq` e o `update.sh` quebrava
 -- com "relation does not exist" — medido em 14/10/2026 rodando o apêndice
 -- sozinho num Postgres descartável.
+
+-- 0269_venda_automatica_msg_cooldown (apêndice — ver supabase/migrations/20261014200000_0269_venda_automatica_msg_cooldown.sql)
+--
+-- Mensagem padrão fixa, lista fechada da seleção e cooldown entre envios. Sem
+-- revoke extra: são colunas numa tabela que já tem RLS e policies, então nada
+-- muda sobre quem alcança a tabela.
+alter table public.automatic_sales_campaigns
+  add column if not exists mensagem_padrao text;
+
+alter table public.automatic_sales_campaigns
+  add column if not exists cooldown_segundos integer not null default 60;
+
+alter table public.automatic_sales_campaigns
+  add column if not exists prospect_ids uuid[];
+
+alter table public.automatic_sales_campaigns
+  add column if not exists ultimo_envio_at timestamptz;
+
+alter table public.automatic_sales_campaigns
+  drop constraint if exists automatic_sales_campaigns_cooldown_faixa;
+
+alter table public.automatic_sales_campaigns
+  add constraint automatic_sales_campaigns_cooldown_faixa
+  check (cooldown_segundos >= 10 and cooldown_segundos <= 3600);
