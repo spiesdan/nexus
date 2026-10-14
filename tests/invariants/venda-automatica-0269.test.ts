@@ -96,7 +96,7 @@ describe("0269 — venda automática com mensagem e cooldown", () => {
 
   it("MUTAÇÃO: CHECK com piso 1 liberaria rajada — o banco não deixa", () => {
     // Se a migration dissesse `>= 1`, este insert passaria e o teste abaixo
-    // cairia: cooldown de 1 segundo contra o WAHA é ban com outro nome.
+    // cairia: cooldown de 1 segundo contra o canal é ban com outro nome.
     const org = ORG;
     const tentativa = q(
       `insert into automatic_sales_campaigns (organization_id, nome, cidade, limite_diario, janela_inicio, janela_fim, cooldown_segundos)
