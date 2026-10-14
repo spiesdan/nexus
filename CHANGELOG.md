@@ -8,6 +8,67 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.46] — 2026-10-14
+
+### Adicionado
+
+- **Criar venda automática abre a seleção com mensagem padrão e cooldown de 60s** O botão "Criar venda automática" criava a campanha direto, sem texto e sem
+  lista. A mensagem era gerada pela IA a cada envio, a fila era preenchida
+  pelo filtro a cada tick, e os envios saíam em rajada — limitados só por cota e
+  janela. O "criar" era um ato de fé: o dono só descobria o que saiu quando o
+  cliente recebia.
+
+  Agora o botão leva para uma aba com **as empresas do filtro** (cidade,
+  categoria, ou a marcação manual): a lista, a **mensagem padrão**, o **cooldown**
+  e o limite — e só então cria. A campanha nasce com lista fechada: o motor só
+  enfileira aqueles prospects (passando pela mesma elegibilidade de telefone,
+  WhatsApp e duplicidade) e nunca preenche pelo filtro.
+
+  **Com mensagem padrão, sem IA.** Quando preenchida, o texto sai como está —
+  inclusive em instalação sem LLM configurado, que antes falhava tudo com
+  `ia_indisponivel`. Sem mensagem, a IA gera como antes. O cliente recebe
+  exatamente o que foi escrito na tela.
+
+  **60 segundos entre um envio e outro.** O espaçamento que já existia
+  (`espacarEnvio`) é um Map em memória: morre no restart e não vale entre
+  processos. O cooldown novo é carimbo no banco (`ultimo_envio_at`): antes de
+  cada envio o motor confere, e a fila que não coube espera o próximo tick (o
+  cron roda a cada minuto). O carimbo anda em toda tentativa, não só no sucesso
+  — sem isso, uma sequência de falhas mandaria em rajada.
+
+  Abaixo de 10 segundos não é cooldown, é rajada com outro nome — e rajada
+  contra o canal é ban. O piso é 10 no schema, no CHECK e no teste, os três.
+
+  **Mutações provadas:** `ids` fora da rota listaria o catálogo inteiro (2
+  testes); coluna esquecida no insert criaria campanha muda (1 teste); CHECK com
+  piso 1 liberaria rajada (invariante com insert de verdade); sanitizador
+  removido quebraria o filtro (1 teste); off-by-one no range (1 teste).
+
+### Corrigido
+
+- **Banner da carga flutuava sobre a lista ao rolar** **O banner com totais e ações pairava 80px abaixo do topo, por cima das linhas.**
+  Ao abrir uma carga e rolar para baixo, o cabeçalho (total em mercadorias, a
+  cobrar, paradas, botões) ficava flutuando no meio da tela, com linhas da lista
+  visíveis acima e abaixo dele e o texto vazando por trás.
+
+  Duas causas, as duas no mesmo `className`:
+
+  1. **`sticky top-14`.** Foi escrito como se a TopBar rolasse junto ("gruda
+     logo abaixo da TopBar (h-14)") — mas a TopBar é irmã do `main`, fora da
+     área rolável (AppShell). O `top-14` não encostava em nada: suspendia o
+     banner 80px abaixo do topo visível (medido no browser). O correto dentro do
+     `main` é encostar: `sticky -top-6`, onde o `-top-6` compensa o `p-6` do
+     `main`. Gap 0, medido no mesmo repro.
+  2. **Fundo translúcido (`bg-background/95`).** Com o banner sobre o conteúdo
+     rolando, 5% de transparência é o suficiente para as linhas vazarem por
+     trás. Fundo sólido.
+
+  O banner continua fixo ao rolar — voltar e ações acompanhando a rolagem era a
+  intenção original, e continua valendo. O que mudou é que ele agora é um
+  sub-cabeçalho encostado, não uma barra flutuante.
+
+  **Mutações provadas:** voltar a `top-14` reprova 2 testes do banner.
+
 ## [1.25.45] — 2026-10-14
 
 ### Adicionado
@@ -4133,7 +4194,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...HEAD
+[1.25.46]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...v1.25.46
 [1.25.45]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.44...v1.25.45
 [1.25.44]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.43...v1.25.44
 [1.25.43]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.42...v1.25.43
