@@ -34,7 +34,7 @@ import { gerarAbordagem } from "./abordagem";
 import { classificarResposta } from "./classificacao";
 import { contextoDeDuplicidade } from "./dedupe";
 import { encontrarOuCriarContato, criarLead, etiquetarConversa } from "./contatos";
-import { avaliarElegibilidade, cotaRestante } from "./elegibilidade";
+import { avaliarElegibilidade, cotaRestante, type CandidatoDaCampanha } from "./elegibilidade";
 import { registrarEvento } from "./eventos";
 import {
   candidatosDaCampanha,
@@ -67,6 +67,8 @@ export interface ResumoTick {
   falhas: number;
   fora_da_janela: number;
   cota_atingida: number;
+  /** Ticks em que havia fila mas o cooldown mandou esperar. */
+  aguardando_cooldown: number;
 }
 
 const VAZIO: ResumoTick = {
@@ -79,6 +81,7 @@ const VAZIO: ResumoTick = {
   falhas: 0,
   fora_da_janela: 0,
   cota_atingida: 0,
+  aguardando_cooldown: 0,
 };
 
 interface CampanhaAtiva extends CampanhaParaFila {
@@ -87,6 +90,42 @@ interface CampanhaAtiva extends CampanhaParaFila {
   janela_fim: string;
   oferta_produtos: string[];
   perfil_abordagem: string | null;
+  mensagem_padrao: string | null;
+  cooldown_segundos: number;
+  prospect_ids: string[] | null;
+  ultimo_envio_at: string | null;
+}
+
+/**
+ * Candidatos da LISTA FECHADA (0269): os prospects que a seleção congelou,
+ * nas mesmas colunas que o filtro entrega. Sem `ilike` de cidade e sem teto:
+ * a lista já é o recorte, e o teto aqui seria o `orcamento` contando duas
+ * vezes (o `for` abaixo já para em `inseridos >= orcamento`).
+ */
+async function candidatosDaLista(
+  admin: SupabaseClient,
+  organizationId: string,
+  ids: string[],
+): Promise<Array<{ id: string } & CandidatoDaCampanha>> {
+  if (ids.length === 0) return [];
+  const { data } = await admin
+    .from("business_prospects")
+    .select("id, nome, cidade, categorias, telefone_normalizado, do_not_contact")
+    .eq("organization_id", organizationId)
+    .in("id", ids);
+  return ((data ?? []) as unknown as Array<{ id: string } & CandidatoDaCampanha>);
+}
+
+/**
+ * Segundos desde o último envio da campanha. NULL (nunca enviou) = 0: a
+ * primeira mensagem sai no primeiro tick, sem esperar por anterior que nunca
+ * existiu.
+ */
+export function segundosDesdeUltimoEnvio(ultimoEnvioAt: string | null, agoraMs: number): number {
+  if (!ultimoEnvioAt) return Number.POSITIVE_INFINITY;
+  const t = Date.parse(ultimoEnvioAt);
+  if (!Number.isFinite(t)) return Number.POSITIVE_INFINITY;
+  return Math.max(0, (agoraMs - t) / 1000);
 }
 
 export async function processarTick(
@@ -100,7 +139,8 @@ export async function processarTick(
     .from("automatic_sales_campaigns")
     .select(
       "id, organization_id, nome, cidade, uf, categorias, limite_diario, janela_inicio, janela_fim, " +
-        "oferta_produtos, perfil_abordagem, followup_horas, followup_textos, responsavel_user_id",
+        "oferta_produtos, perfil_abordagem, followup_horas, followup_textos, responsavel_user_id, " +
+        "mensagem_padrao, cooldown_segundos, prospect_ids, ultimo_envio_at",
     )
     .eq("status", "active")
     .order("created_at", { ascending: true });
@@ -158,12 +198,20 @@ export async function processarTick(
       const pendentes = await pendentesDoDia(admin, org, campanha.id);
       const orcamento = campanha.limite_diario - consumidos - pendentes;
       if (orcamento > 0) {
-        const candidatos = await candidatosDaCampanha(
-          admin,
-          org,
-          { cidade: campanha.cidade, uf: campanha.uf, categorias: campanha.categorias },
-          Math.min(orcamento * 4 + 10, 120),
-        );
+        // Lista fechada (0269): a seleção congelada na criação. Passa pela
+        // MESMA elegibilidade do filtro — telefone, WhatsApp, duplicidade —
+        // porque vir da seleção não torna o número discável. O que NÃO roda é
+        // a busca pelo filtro: a lista é a lista, e o filtro não escolhe mais.
+        const listaFechada = (campanha.prospect_ids ?? []).filter((id) => id.trim() !== "");
+        const candidatos =
+          listaFechada.length > 0
+            ? await candidatosDaLista(admin, org, listaFechada)
+            : await candidatosDaCampanha(
+                admin,
+                org,
+                { cidade: campanha.cidade, uf: campanha.uf, categorias: campanha.categorias },
+                Math.min(orcamento * 4 + 10, 120),
+              );
         let rejeicoes = 0;
         let inseridos = 0;
         for (const candidato of candidatos) {
@@ -248,7 +296,21 @@ export async function processarTick(
             });
           } else {
             const linhas = await filaParaEnvio(admin, org, campanha.id, restante);
+            // Cooldown (0269) POR LINHA, não por leva: o gate fica dentro do
+            // loop porque um tick manda N linhas — checar uma vez antes do
+            // loop mandaria a fila inteira de uma vez, e o "60 segundos entre
+            // cada" viraria "60 segundos antes da rajada".
+            //
+            // Sem `sleep`: dormir 60s × N dentro do cron estouraria o timeout
+            // do tick. A fila que não coube espera o próximo tick (o cron roda
+            // a cada minuto), e o carimbo no banco vale entre processos e
+            // restarts — o Map em memória do `espacarEnvio` não.
+            let ultimoEnvio = campanha.ultimo_envio_at;
             for (const linha of linhas) {
+              if (segundosDesdeUltimoEnvio(ultimoEnvio, Date.now()) < campanha.cooldown_segundos) {
+                resumo.aguardando_cooldown++;
+                break;
+              }
               const reivindicou = await reivindicarEnvio(admin, org, linha.id, dia);
               if (!reivindicou) continue;
 
@@ -311,6 +373,17 @@ export async function processarTick(
               });
               if (r === "enviado") resumo.enviados++;
               else if (r === "falhou") resumo.falhas++;
+              // O carimbo anda em TODA tentativa, não só no sucesso: sem isso,
+              // uma sequência de falhas mandaria em rajada (uma por linha, sem
+              // esperar), que é exatamente o que o cooldown existe para impedir.
+              if (r !== "pulado") {
+                ultimoEnvio = new Date().toISOString();
+                await admin
+                  .from("automatic_sales_campaigns")
+                  .update({ ultimo_envio_at: ultimoEnvio })
+                  .eq("id", campanha.id)
+                  .eq("organization_id", org);
+              }
             }
           }
         }
@@ -378,20 +451,14 @@ async function enviarPrimeiraMensagem(d: {
 }): Promise<"enviado" | "falhou" | "pulado"> {
   const { admin, organizationId, campanha, queueId, contactId, sessao, snapshot } = d;
 
-  if (!d.pool || !d.llmCfg) {
-    await transicionar(admin, organizationId, queueId, "contacting", {
-      status: "failed",
-      rejection_reason: "ia_indisponivel",
-    });
-    await registrarEvento(admin, {
-      organizationId,
-      campaignId: campanha.id,
-      queueId,
-      tipo: "mensagem_falhou",
-      payload: { motivo: "ia_indisponivel" },
-    });
-    return "falhou";
-  }
+  // Mensagem padrão (0269): texto fixo escrito pelo dono. Quando preenchida,
+  // sai como está — sem IA, sem pool, sem chave. É o que faz a campanha
+  // funcionar em instalação sem LLM configurado, e o que garante que o
+  // cliente recebe EXATAMENTE o que foi escrito na tela.
+  const textoFixo = campanha.mensagem_padrao?.trim() ? campanha.mensagem_padrao.trim() : null;
+
+  const pool = d.pool;
+  const llmCfg = d.llmCfg;
 
   // Os NOMES dos produtos ofertados (uuid[] → catálogo real). Sem preço aqui:
   // preço em primeira mensagem fria é spam, e preço que a IA "lembra" é preço
@@ -408,33 +475,52 @@ async function enviarPrimeiraMensagem(d: {
     produtos = ((doCatalogo ?? []) as Array<{ nome: string }>).map((p) => p.nome);
   }
 
-  // O texto ANTES de abrir conversa: IA que não escreve não deixa conversa
-  // vazia no rastro (mesma ordem da ação irmã send_ai_message).
-  const gerado = await gerarAbordagem(d.pool, d.llmCfg, {
-    tenantId: organizationId,
-    contactId,
-    empresa: {
-      nome: snapshot.nome ?? "",
-      categoria: snapshot.categoria ?? "",
-      cidade: snapshot.cidade ?? "",
-      perfil: campanha.perfil_abordagem,
-    },
-    produtos,
-    remetente: d.remetente,
-  });
-  if (!gerado.ok) {
-    await transicionar(admin, organizationId, queueId, "contacting", {
-      status: "failed",
-      rejection_reason: `ia: ${gerado.reason}`.slice(0, 200),
+  // Com mensagem padrão não há chamada de IA — e sem IA não há
+  // `ia_indisponivel`, porque nada foi pedido a ela. Sem mensagem, a IA
+  // escreve como antes, e a falta dela continua sendo falha.
+  let texto: string | null = textoFixo;
+  if (texto === null) {
+    if (!pool || !llmCfg) {
+      await transicionar(admin, organizationId, queueId, "contacting", {
+        status: "failed",
+        rejection_reason: "ia_indisponivel",
+      });
+      await registrarEvento(admin, {
+        organizationId,
+        campaignId: campanha.id,
+        queueId,
+        tipo: "mensagem_falhou",
+        payload: { motivo: "ia_indisponivel" },
+      });
+      return "falhou";
+    }
+    const gerado = await gerarAbordagem(pool, llmCfg, {
+      tenantId: organizationId,
+      contactId,
+      empresa: {
+        nome: snapshot.nome ?? "",
+        categoria: snapshot.categoria ?? "",
+        cidade: snapshot.cidade ?? "",
+        perfil: campanha.perfil_abordagem,
+      },
+      produtos,
+      remetente: d.remetente,
     });
-    await registrarEvento(admin, {
-      organizationId,
-      campaignId: campanha.id,
-      queueId,
-      tipo: "mensagem_falhou",
-      payload: { motivo: gerado.reason },
-    });
-    return "falhou";
+    if (!gerado.ok) {
+      await transicionar(admin, organizationId, queueId, "contacting", {
+        status: "failed",
+        rejection_reason: `ia: ${gerado.reason}`.slice(0, 200),
+      });
+      await registrarEvento(admin, {
+        organizationId,
+        campaignId: campanha.id,
+        queueId,
+        tipo: "mensagem_falhou",
+        payload: { motivo: gerado.reason },
+      });
+      return "falhou";
+    }
+    texto = gerado.texto;
   }
 
   try {
@@ -448,7 +534,7 @@ async function enviarPrimeiraMensagem(d: {
         actor: { type: "webhook_source", id: campanha.id },
         requestId: `automatic-sales:${queueId}`,
       },
-      { conversation_id: conversa, type: "text", body: gerado.texto } as Parameters<
+      { conversation_id: conversa, type: "text", body: texto } as Parameters<
         typeof sendMessageHandler
       >[2],
     );
@@ -468,7 +554,7 @@ async function enviarPrimeiraMensagem(d: {
       campaignId: campanha.id,
       queueId,
       tipo: "mensagem_enviada",
-      payload: { texto: gerado.texto, conversa: conversa },
+      payload: { texto, conversa },
     });
     return "enviado";
   } catch (erro) {

@@ -103,6 +103,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       followup_horas: parsed.data.followup_horas,
       followup_textos: parsed.data.followup_textos,
       responsavel_user_id: parsed.data.responsavel_user_id,
+      mensagem_padrao: parsed.data.mensagem_padrao,
+      cooldown_segundos: parsed.data.cooldown_segundos,
+      // Lista fechada: NULL quando vazia, para o motor distinguir "sem lista"
+      // (preencher pelo filtro) de "lista" — array vazio no banco seria uma
+      // terceira interpretação que ninguém pediu.
+      prospect_ids: parsed.data.prospect_ids.length > 0 ? parsed.data.prospect_ids : null,
       // SEM `created_by`: a coluna NÃO existe em `automatic_sales_campaigns` —
       // nem no banco de produção (medido em 13/10/2026) nem em
       // `lib/database.types.ts`. Escrevê-la fazia o PostgREST responder

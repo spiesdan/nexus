@@ -753,39 +753,26 @@ export function EmpresasTab({
   }
 
   /**
-   * §24 do spec da Venda Automática: a ação nasce do filtro ATUAL — cidade,
-   * categoria e a quantidade que a lista (ou a seleção) já mostrou. A cidade é
-   * obrigatória porque a elegibilidade da campanha casa por cidade; sem ela o
-   * botão fica desligado em vez de criar campanha que nunca casa candidato.
+   * §24 do spec da Venda Automática virou ABA (0269): em vez de criar a
+   * campanha direto, leva para `/app/venda-automatica` com o recorte — cidade,
+   * categoria e a seleção (ou o filtro inteiro). Lá o dono vê AS EMPRESAS,
+   * escreve a mensagem padrão e cria: sem a aba, a campanha nascia sem texto
+   * e sem lista, e o "criar" era um ato de fé.
    */
-  async function criarVendaAutomatica(): Promise<void> {
+  function criarVendaAutomatica(): void {
     const cidade = filtros.cidade.trim();
     if (!cidade) return;
-    const quantidade = Math.min(
-      Math.max(selecionados.length > 0 ? selecionados.length : listaFiltrada.length, 1),
-      500,
-    );
-    try {
-      const corpo = await apiClient.post<{ data: { id: string } | null }>(
-        "/api/v1/automatic-sales/campaigns",
-        {
-          nome: `Radar ${cidade}${filtros.categoria.trim() ? ` · ${filtros.categoria.trim()}` : ""}`,
-          cidade,
-          uf: filtros.estado.trim() ? filtros.estado.trim().toUpperCase() : null,
-          categorias: filtros.categoria.trim() ? [filtros.categoria.trim()] : [],
-          limite_diario: quantidade,
-          janela_inicio: "09:00",
-          janela_fim: "17:30",
-          followup_horas: [24, 48],
-        },
-      );
-      if (corpo?.data?.id) {
-        toast.success(t("Campanha de venda automática criada"));
-        router.push("/app/venda-automatica");
-      }
-    } catch (e) {
-      showApiError(e);
+    const qs = new URLSearchParams({ origem: "prospeccao", cidade });
+    if (filtros.estado.trim()) qs.set("uf", filtros.estado.trim().toUpperCase());
+    if (filtros.categoria.trim()) qs.set("categoria", filtros.categoria.trim());
+    // Seleção manual vai por id; sem ela, a aba carrega o filtro inteiro.
+    // URL tem teto prático: acima de 100 marcadas, manda o filtro e a aba
+    // mostra as primeiras — mandar 500 UUIDs na URL estouraria o limite do
+    // navegador e do servidor no meio do caminho.
+    if (selecionados.length > 0 && selecionados.length <= 100) {
+      qs.set("ids", selecionados.join(","));
     }
+    router.push(`/app/venda-automatica?${qs.toString()}`);
   }
 
   // Detalhe vindo de ?prospect= (fora da lista): refaz o GET para a

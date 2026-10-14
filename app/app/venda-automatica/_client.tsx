@@ -28,6 +28,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 
+import { NovaCampanhaDaSelecao } from "./_nova-da-selecao";
 /**
  * Tela da Venda Automática (spec 18 §21–§25): lista de campanhas à esquerda,
  * painel + fila + timeline à direita. Tudo que muda passa pelas rotas
@@ -153,11 +154,19 @@ export function VendaAutomaticaClient({
   podeOperar,
   podeGerenciar,
   textos,
+  selecaoInicial,
 }: {
   campanhasIniciais: CampanhaVa[];
   podeOperar: boolean;
   podeGerenciar: boolean;
   textos: TextosVa;
+  /** Recorte vindo da prospecção (?origem=prospeccao). Sem ele, sem aba. */
+  selecaoInicial: {
+    cidade: string;
+    uf: string;
+    categoria: string;
+    ids: string[];
+  } | null;
 }) {
   const t = useT();
   const confirmar = useConfirmar();
@@ -263,6 +272,14 @@ export function VendaAutomaticaClient({
 
   return (
     <div className="space-y-6">
+      {selecaoInicial && podeOperar && (
+        <NovaCampanhaDaSelecao
+          selecao={selecaoInicial}
+          aoCriar={(id) => {
+            void recarregarCampanhas().then(() => selecionar(id));
+          }}
+        />
+      )}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">{textos.titulo}</h1>

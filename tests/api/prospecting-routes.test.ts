@@ -840,6 +840,51 @@ describe("GET /api/v1/prospecting/prospects — filtros", () => {
   });
 });
 
+describe("GET /api/v1/prospecting/prospects — ids da seleção (0269)", () => {
+  it("ids válidos filtram; lixo é descartado sem derrubar", async () => {
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A }),
+        prospecto({ id: PROSPECT_B, nome: "Outro" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req("GET", undefined, `http://localhost/api/v1/prospecting/prospects?ids=${PROSPECT_A},lixo`),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+  });
+
+  it("MUTAÇÃO: sem o filtro, a aba mostraria o catálogo inteiro", async () => {
+    // Se o `.in("id", ...)` saísse da rota, `?ids=` seria ignorado e a aba da
+    // seleção listaria tudo — com a mensagem pronta para 500 empresas que o
+    // dono não escolheu.
+    const db = makeDb({
+      business_prospects: [prospecto({ id: PROSPECT_A }), prospecto({ id: PROSPECT_B })],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req("GET", undefined, `http://localhost/api/v1/prospecting/prospects?ids=${PROSPECT_B}`),
+    );
+    expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_B]);
+  });
+
+  it("só lixo = sem filtro (a tela mostra o filtro, não erro)", async () => {
+    // Colar URL com id digitado errado não pode derrubar a tela: sem uuid
+    // válido, o parâmetro é ignorado e valem os outros filtros.
+    const db = makeDb({
+      business_prospects: [prospecto({ id: PROSPECT_A }), prospecto({ id: PROSPECT_B })],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?ids=lixo"),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data).toHaveLength(2);
+  });
+});
+
 describe("PATCH/DELETE /api/v1/prospecting/prospects/[id] — fila", () => {
   function patchReq(id: string, body: unknown) {
     return { req: req("PATCH", body, "http://localhost/api/v1/prospecting/prospects/x"), params: Promise.resolve({ id }) };
