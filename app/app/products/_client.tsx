@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
+import { janelaDePaginas, totalDePaginas } from "@/lib/catalogo/paginacao";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   precoDeVitrine,
@@ -175,6 +176,9 @@ export function ProdutosClient({
    * digitou, em vez de pedir para digitar de novo na lista inteira.
    */
   buscaInicial,
+  total,
+  pagina,
+  porPagina,
 }: {
   inicial: Produto[];
   /**
@@ -186,10 +190,51 @@ export function ProdutosClient({
   textos: Textos;
   esconderCabecalho?: boolean;
   buscaInicial?: string;
+  /**
+   * Total do SERVIDOR (com o filtro da busca aplicado). NULL quando o `count`
+   * não veio — a paginação mostra "Página N" sem "de Y" em vez de chutar.
+   */
+  total: number | null;
+  /** Página que o servidor entregou (1-based). */
+  pagina: number;
+  /** Itens por página — 50, para o navegador não receber o catálogo inteiro. */
+  porPagina: number;
 }) {
   const t = useT();
   const router = useRouter();
   const [busca, setBusca] = React.useState(buscaInicial ?? "");
+
+  // A busca da TELA vira busca do SERVIDOR (?busca=): a página entrega 50 por
+  // vez e o filtro local nunca alcançaria o resto do catálogo (medido: "saco
+  // de lixo" mora nas posições 904–958 de 1141). Nova busca recomeça da
+  // página 1. O hook com debounce já existe para isso — o estado reflete na
+  // hora, a ida ao servidor espera a pessoa parar de digitar.
+  const levarBuscaAoServidor = useDebouncedCallback((termo: string) => {
+    const atual = termo.trim();
+    if (atual === (buscaInicial ?? "").trim()) return;
+    const qs = new URLSearchParams();
+    if (atual) qs.set("busca", atual);
+    const sufixo = qs.toString();
+    router.replace(sufixo ? `/app/products?${sufixo}` : "/app/products");
+  }, 400);
+
+  function aoMudarBusca(valor: string) {
+    setBusca(valor);
+    levarBuscaAoServidor(valor);
+  }
+
+  // Troca de página preserva o termo JÁ confirmado na URL (buscaInicial), não
+  // o que está meio digitado no campo — senão um clique no meio da digitação
+  // congela o rascunho como busca.
+  function irParaPagina(p: number) {
+    const qs = new URLSearchParams();
+    const termo = (buscaInicial ?? "").trim();
+    if (termo) qs.set("busca", termo);
+    if (p > 1) qs.set("pagina", String(p));
+    const sufixo = qs.toString();
+    router.replace(sufixo ? `/app/products?${sufixo}` : "/app/products");
+  }
+
   const [aba, setAba] = React.useState<"todos" | "promocoes" | "destaques">("todos");
   const [criando, setCriando] = React.useState(false);
   const [rascunho, setRascunho] = React.useState<Rascunho>(VAZIO);
@@ -520,7 +565,7 @@ export function ProdutosClient({
             id="busca-produto"
             label={t("Buscar")}
             value={busca}
-            onChange={setBusca}
+            onChange={aoMudarBusca}
             placeholder={t("Buscar por nome, código ou marca")}
             dataTestId="busca-produto"
           />
@@ -778,7 +823,7 @@ export function ProdutosClient({
       {filtrados.length === 0 ? (
         busca.trim() ? (
           <EmptyFilterResults
-            primary={{ label: t("Limpar filtros"), onClick: () => setBusca("") }}
+            primary={{ label: t("Limpar filtros"), onClick: () => aoMudarBusca("") }}
           />
         ) : (
           <div
@@ -869,6 +914,76 @@ export function ProdutosClient({
           })}
         </ul>
       )}
+
+      {(() => {
+        // 50 por página: o navegador não recebe o catálogo inteiro, e a troca
+        // de página é navegação (?pagina=) para o servidor entregar a fatia.
+        const totalPaginas = total === null ? null : totalDePaginas(total, porPagina);
+        const mostrar =
+          totalPaginas === null ? inicial.length >= porPagina : totalPaginas > 1;
+        if (!mostrar) return null;
+        const de = (pagina - 1) * porPagina + 1;
+        const ate =
+          total === null ? de + inicial.length - 1 : Math.min(pagina * porPagina, total);
+        const numeros = totalPaginas === null ? [] : janelaDePaginas(pagina, totalPaginas);
+        const temAnterior = pagina > 1;
+        const temProxima =
+          totalPaginas === null ? inicial.length >= porPagina : pagina < totalPaginas;
+        return (
+          <nav
+            className="flex flex-wrap items-center justify-between gap-3 pt-2"
+            aria-label={t("Paginação do catálogo")}
+            data-testid="paginacao"
+          >
+            <p className="text-sm text-muted-foreground" role="status">
+              {total === null || totalPaginas === null
+                ? `${t("Página")} ${pagina}`
+                : `${de}–${ate} ${t("de")} ${total} · ${t("Página")} ${pagina} ${t("de")} ${totalPaginas}`}
+            </p>
+            <div className="flex flex-wrap items-center gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!temAnterior}
+                onClick={() => irParaPagina(pagina - 1)}
+                data-testid="pagina-anterior"
+              >
+                {t("Anterior")}
+              </Button>
+              {numeros.map((n, i) =>
+                n === "…" ? (
+                  <span key={`vazio-${i}`} className="px-1 text-sm text-muted-foreground">
+                    …
+                  </span>
+                ) : (
+                  <Button
+                    key={n}
+                    type="button"
+                    variant={n === pagina ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => irParaPagina(n)}
+                    aria-current={n === pagina ? "page" : undefined}
+                    data-testid={`pagina-${n}`}
+                  >
+                    {n}
+                  </Button>
+                ),
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!temProxima}
+                onClick={() => irParaPagina(pagina + 1)}
+                data-testid="pagina-proxima"
+              >
+                {t("Próxima")}
+              </Button>
+            </div>
+          </nav>
+        );
+      })()}
 
       {editando && podeEditar ? (
         <div className="rounded-lg border p-4" data-testid="form-editar-produto">
