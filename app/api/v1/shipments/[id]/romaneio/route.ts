@@ -1,8 +1,15 @@
 /**
- * GET /api/v1/shipments/[id]/romaneio — romaneio + fechamento em PDF único.
+ * GET /api/v1/shipments/[id]/romaneio — o romaneio em PDF, e SÓ o romaneio.
  *
- * O motorista leva um papel só: romaneio na frente (carrega e entrega),
- * fechamento atrás (presta contas). Mesmo molde do pedido em PDF.
+ * O motorista leva um papel só, e esse papel é a lista do que carregar e
+ * entregar. O fechamento de caixa NÃO sai mais aqui: ele vive no sistema, na
+ * tela da carga (`PUT /api/v1/shipments/[id]/fechamento`), porque fechar caixa
+ * no papel é conferir de olho e guardar em arquivo físico.
+ *
+ * Antes esta rota imprimia romaneio na frente e fechamento atrás, mesma folha
+ * (`renderRomaneioEFechamentoPdf`). A metade do fechamento foi removida junto
+ * com o componente que a desenhava — código que ninguém chama apodrece, e
+ * apodrecer justo na conta do caixa é o pior lugar.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
@@ -10,7 +17,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
-import { renderRomaneioEFechamentoPdf } from "@/lib/comercial/romaneio-pdf";
+import { renderRomaneioPdf } from "@/lib/comercial/romaneio-pdf";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +36,7 @@ export async function GET(
   const [{ data: carga }, { data: org }] = await Promise.all([
     supabase
       .from("shipments")
-      .select("numero, placa, veiculo_tipo, motorista_nome, created_at")
+      .select("numero, placa, veiculo_tipo, motorista_nome")
       .eq("id", id)
       .eq("organization_id", authz.org.orgId)
       .single(),
@@ -44,7 +51,7 @@ export async function GET(
 
   const { data: itens } = await supabase
     .from("shipment_orders")
-    .select("sequencia, status, order_id, motivo, entregue_em")
+    .select("sequencia, status, order_id")
     .eq("shipment_id", id)
     .eq("organization_id", authz.org.orgId)
     .order("sequencia");
@@ -56,16 +63,17 @@ export async function GET(
     cliente_nome: string;
     endereco_entrega: string | null;
     total_cents: number;
-    condicao_pagamento: string | null;
   }
   const pedidos: Record<string, LinhaPedido> = {};
   const itensPorPedido: Record<string, { codigo: string; nome: string; quantidade: number }[]> = {};
-  const pagoPorPedido: Record<string, number> = {};
   if (ids.length > 0) {
-    const [{ data }, { data: itensPedidos }, { data: recebiveis }] = await Promise.all([
+    // Sem recebíveis aqui de propósito: o "pago antecipado" era insumo da
+    // metade do fechamento, que não sai mais neste PDF. Menos uma query, e
+    // nenhuma coluna de dinheiro que ninguém lê.
+    const [{ data }, { data: itensPedidos }] = await Promise.all([
       supabase
         .from("commercial_orders")
-        .select("id, numero, cliente_nome, endereco_entrega, total_cents, condicao_pagamento")
+        .select("id, numero, cliente_nome, endereco_entrega, total_cents")
         .eq("organization_id", authz.org.orgId)
         .in("id", ids),
       supabase
@@ -74,12 +82,6 @@ export async function GET(
         .eq("organization_id", authz.org.orgId)
         .in("order_id", ids)
         .order("posicao"),
-      supabase
-        .from("financial_receivables")
-        .select("order_id, valor_original_cents")
-        .eq("organization_id", authz.org.orgId)
-        .in("order_id", ids)
-        .eq("status", "pago"),
     ]);
     for (const p of ((data ?? []) as unknown as LinhaPedido[])) {
       pedidos[p.id] = p;
@@ -91,9 +93,6 @@ export async function GET(
       lista.push({ codigo: it.produto_codigo, nome: it.produto_nome, quantidade: it.quantidade });
       itensPorPedido[it.order_id] = lista;
     }
-    for (const r of ((recebiveis ?? []) as unknown as { order_id: string; valor_original_cents: number }[])) {
-      pagoPorPedido[r.order_id] = (pagoPorPedido[r.order_id] ?? 0) + r.valor_original_cents;
-    }
   }
 
   const c = carga as unknown as {
@@ -101,20 +100,18 @@ export async function GET(
     placa: string | null;
     veiculo_tipo: string | null;
     motorista_nome: string | null;
-    created_at: string;
   };
   const o = (org ?? {}) as unknown as { display_name: string | null; legal_name: string | null };
 
-  const buf = await renderRomaneioEFechamentoPdf(
+  const buf = await renderRomaneioPdf(
     { nome: o.legal_name ?? o.display_name ?? "Empresa" },
     {
       numero: c.numero,
       placa: c.placa,
       veiculo_tipo: c.veiculo_tipo,
       motorista_nome: c.motorista_nome,
-      montada_em: c.created_at,
       paradas: ((itens ?? []) as unknown as {
-        sequencia: number; status: string; order_id: string; motivo: string | null; entregue_em: string | null;
+        sequencia: number; status: string; order_id: string;
       }[]).map((i) => {
         const ped = pedidos[i.order_id];
         return {
@@ -125,14 +122,9 @@ export async function GET(
           total_cents: ped?.total_cents ?? 0,
           status: i.status,
           itens: itensPorPedido[i.order_id] ?? [],
-          condicao: ped?.condicao_pagamento ?? null,
-          motivo: i.motivo,
-          entregue_em: i.entregue_em,
-          pago_cents: pagoPorPedido[i.order_id] ?? 0,
         };
       }),
     },
-    new Date().toISOString(),
   );
 
   const nome = `romaneio-${numeroDaCarga(c.numero).replace(/\s+/g, "-").toLowerCase()}.pdf`;

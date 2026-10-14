@@ -284,6 +284,13 @@ beforeAll(() => {
           insert into public.shipment_orders (organization_id, shipment_id, order_id)
             values (v_org, v_shi, v_ord);
         end if;
+        -- migration 0268 — fechamento de caixa da carga. Uma linha por carga
+        -- (índice único em shipment_id): o seed põe uma por org, que é o que o
+        -- controle positivo ("lê a própria") precisa para não ser vácuo.
+        if not exists (select 1 from public.shipment_closings where organization_id = v_org) then
+          insert into public.shipment_closings (organization_id, shipment_id, linhas)
+            values (v_org, v_shi, '[]'::jsonb);
+        end if;
         if not exists (select 1 from public.shipment_positions where organization_id = v_org) then
           insert into public.shipment_positions (organization_id, shipment_id, latitude, longitude)
             values (v_org, v_shi, -23.5505, -46.6333);
@@ -551,6 +558,12 @@ export const TABLES = [
   "shipments",
   "commercial_shipment_counters",
   "shipment_orders",
+  // migration 0268 — fechamento de caixa da carga. Mesmo molde da onda acima:
+  // leitura org-scoped sem gate de papel (a tela do fechamento lê junto da
+  // carga); a ESCRITA é `manager`, provada na rota PUT do fechamento
+  // (`tests/unit/shipment-fechamento-route.test.ts`, 403 para viewer).
+  // Seed em `beforeAll`, logo após o item da carga (FK em shipment_id).
+  "shipment_closings",
   "shipment_positions",
   "shipment_proofs",
   "product_images",

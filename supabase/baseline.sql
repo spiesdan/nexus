@@ -21521,3 +21521,94 @@ alter table public.commercial_orders
 drop index if exists commercial_orders_org_chave_sincronizacao_uidx;
 create unique index if not exists commercial_orders_org_chave_sincronizacao_uidx
   on public.commercial_orders (organization_id, chave_sincronizacao);
+
+-- 0268_fechamento_carga (apêndice — ver supabase/migrations/20261014120000_0268_fechamento_carga.sql)
+--
+-- O PDF de romaneio imprimia a conferência de caixa como OITO LINHAS VAZIAS —
+-- dinheiro, PIX, cartão, cheques, boletos, menos vale ao motorista, menos
+-- combustível e menos outras despesas — mais "total líquido entregue ao
+-- caixa" e "diferença (sobra/falta)". Preenchidas no papel, guardadas em
+-- arquivo físico, e a diferença conferida de olho.
+--
+-- Aqui as oito viram dados, e a soma é feita pelo servidor. Apêndice
+-- idempotente porque o update.sh reaplica o baseline em instalação existente —
+-- migration sozinha não chega na VPS.
+--
+-- ⚠️ ESTE APÊNDICE ENTRA DEPOIS DO BLOCO DA VARREDURA anon (que é o último do
+-- arquivo). A varredura revoga `all` das tabelas novas de `anon`; como este
+-- bloco já passou, a tabela nasce COM o default do Postgres, que é `anon`
+-- PUBLIC. Por isso o `revoke` está AQUI, dentro do apêndice, e não no bloco
+-- final — reordenar os dois para "ficar mais bonito" reabre a tabela para anon.
+
+alter table public.shipment_orders
+  add column if not exists conferido boolean not null default false;
+
+comment on column public.shipment_orders.conferido is
+  'Conferencia manual do pedido no fechamento da carga (o ☐ do romaneio em papel). Independe do status: status diz o que aconteceu na rota, isto diz se alguem olhou.';
+
+create table if not exists public.shipment_closings (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  shipment_id uuid not null references public.shipments (id) on delete cascade,
+  linhas jsonb not null default '[]'::jsonb,
+  entradas_cents bigint not null default 0,
+  saidas_cents bigint not null default 0,
+  liquido_cents bigint not null default 0,
+  esperado_cents bigint not null default 0,
+  diferenca_cents bigint not null default 0,
+  conferente_nome text,
+  conferente_user_id uuid references auth.users (id) on delete set null,
+  conferido_em timestamptz,
+  observacao text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint shipment_closings_valores_nao_negativos
+    check (entradas_cents >= 0 and saidas_cents >= 0 and liquido_cents >= 0 and esperado_cents >= 0)
+);
+
+create unique index if not exists shipment_closings_carga_unico
+  on public.shipment_closings (shipment_id);
+
+create index if not exists shipment_closings_org_idx
+  on public.shipment_closings (organization_id, updated_at desc);
+
+comment on table public.shipment_closings is
+  'Conferencia de caixa da rota: as oito linhas do PDF de romaneio, gravadas. As somas sao calculadas pelo servidor.';
+comment on column public.shipment_closings.linhas is
+  'Pares {chave, valor_cents} na ordem do PDF. Ausente = linha nao contada, que e diferente de contada em zero.';
+comment on column public.shipment_closings.diferenca_cents is
+  'liquido menos esperado. Positivo sobrou, negativo faltou. Calculado pelo servidor.';
+
+alter table public.shipment_closings enable row level security;
+
+drop policy if exists shipment_closings_select on public.shipment_closings;
+create policy shipment_closings_select on public.shipment_closings
+  for select
+  using (organization_id in (select fn_user_org_ids()) or fn_is_platform_admin());
+
+drop policy if exists shipment_closings_insert on public.shipment_closings;
+create policy shipment_closings_insert on public.shipment_closings
+  for insert
+  with check (organization_id in (select fn_user_org_ids()) or fn_is_platform_admin());
+
+drop policy if exists shipment_closings_update on public.shipment_closings;
+create policy shipment_closings_update on public.shipment_closings
+  for update
+  using (organization_id in (select fn_user_org_ids()) or fn_is_platform_admin());
+
+drop policy if exists shipment_closings_delete on public.shipment_closings;
+create policy shipment_closings_delete on public.shipment_closings
+  for delete
+  using (organization_id in (select fn_user_org_ids()) or fn_is_platform_admin());
+
+-- O revoke fica AQUI, e não no bloco final da varredura: este apêndice é
+-- escrito depois dele, e quem não revoga aqui deixa a tabela alcançável pela
+-- anon key. Medido em 14/10/2026 conferindo o catálogo depois de aplicar.
+revoke all on public.shipment_closings from anon;
+revoke all on public.shipment_closings from authenticated;
+grant select, insert, update, delete on public.shipment_closings to authenticated;
+-- Sem `grant` de sequência: `shipment_closings.id` é `uuid` com default
+-- `gen_random_uuid()`, e a tabela NÃO tem sequence. A primeira versão deste
+-- apêndice concedia `public.shipment_closings_id_seq` e o `update.sh` quebrava
+-- com "relation does not exist" — medido em 14/10/2026 rodando o apêndice
+-- sozinho num Postgres descartável.

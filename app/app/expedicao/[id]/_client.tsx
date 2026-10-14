@@ -27,6 +27,7 @@ import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 
 import { ModoMotorista } from "./_motorista";
 import { Roteirizador } from "./_roteirizador";
+import { FechamentoCarga } from "./_fechamento";
 
 interface Textos {
   voltar: string;
@@ -70,11 +71,14 @@ export function CargaClient({
   cargaId,
   podeOperar,
   podeExcluir,
+  podeFechar,
   textos,
 }: {
   cargaId: string;
   podeOperar: boolean;
   podeExcluir: boolean;
+  /** Fechar caixa é mexer em dinheiro: o mesmo nível do PUT, `manager`+. */
+  podeFechar: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -470,6 +474,14 @@ export function CargaClient({
           </ul>
         )}
       </div>
+
+      {/*
+        FECHAMENTO DE CAIXA — a prestação de contas que era papel. Fica depois
+        da lista de paradas porque é o último ato da carga: primeiro se entrega,
+        depois se confere. O romaneio em PDF continua existindo para o motorista
+        levar; o fechamento não sai mais no papel.
+      */}
+      <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
     </div>
   );
 }

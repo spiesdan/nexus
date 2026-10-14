@@ -22,6 +22,11 @@ export default async function CargaPage({ params }: { params: Promise<{ id: stri
     user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
   const podeExcluir =
     user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
+  // Fechar caixa é mexer em dinheiro: o mesmo nível do PUT do fechamento e do
+  // POST /conciliar. Nível próprio em vez de reaproveitar `podeExcluir` —
+  // excluir carga e fechar caixa são permissões diferentes que hoje coincidem.
+  const podeFechar =
+    user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const { id } = await params;
   const supabase = await createClient();
@@ -38,10 +43,13 @@ export default async function CargaPage({ params }: { params: Promise<{ id: stri
       cargaId={id}
       podeOperar={podeOperar}
       podeExcluir={podeExcluir}
+      podeFechar={podeFechar}
       textos={{
         voltar: t("Voltar para expedição"),
         rota: t("Ordem de entrega"),
-        romaneio: t("Romaneio e fechamento (PDF)"),
+        // O fechamento saiu do papel: o PDF é só romaneio agora. O nome do
+        // botão diz isso para ninguém procurar o fechamento no impresso.
+        romaneio: t("Romaneio (PDF)"),
         totalMercadorias: t("Total em mercadorias"),
         aCobrar: t("A cobrar na entrega"),
         paradasConcluidas: t("Paradas concluídas"),

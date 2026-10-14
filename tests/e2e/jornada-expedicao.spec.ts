@@ -61,9 +61,12 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   await page.waitForURL(/\/app\/expedicao\/[0-9a-f-]+/, { timeout: 20_000 });
 
   // 3. Ficha da carga: número, status Montando e o romaneio como PDF.
+  // O botão é SÓ romaneio: o fechamento saiu do papel e vive na tela da
+  // carga. Se o nome voltar a dizer "fechamento", alguém vai procurar o
+  // impresso que não existe mais.
   await expect(page.getByRole("heading", { level: 1, name: /^Carga \d{3}$/ })).toBeVisible();
   await expect(page.getByText(/Montando · ABC1D23/)).toBeVisible();
-  const romaneio = page.getByRole("link", { name: /romaneio e fechamento/i });
+  const romaneio = page.getByRole("link", { name: /^Romaneio \(PDF\)$/ });
   await expect(romaneio).toBeVisible();
   await expect(romaneio).toHaveAttribute("href", /\/api\/v1\/shipments\/.+\/romaneio/);
 

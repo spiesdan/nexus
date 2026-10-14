@@ -430,6 +430,11 @@ export const AUDIT_ACTIONS = [
   // completo: dar baixa em um pedido de cada vez é `financial_payment.created`,
   // que já existe — duplicar aqui seria um segundo nome para o mesmo fato.
   "shipment.conciliado",
+  // Fechamento de caixa (migration 0268). O que foi contado, o líquido e a
+  // diferença — separado da baixa porque fechar caixa é CONFERIR dinheiro e
+  // conciliar é DAR BAIXA. Juntar os dois num ato só seria a mistura entre
+  // operação e dinheiro que a regra proíbe.
+  "shipment.fechamento_salvo",
   "operational_alert.updated",
   "shipment_order.status",
   "shipment_order.removed",
