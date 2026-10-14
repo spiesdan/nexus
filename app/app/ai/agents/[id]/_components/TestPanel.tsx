@@ -1,11 +1,13 @@
 "use client";
 /**
- * TestPanel — dry-run de uma version (S-13.12).
+ * TestPanel — dry-run de uma version (S-13.12), agora em conversa.
  *
- * Envia sample message via POST `:test` (admin-only). Renderiza trace +
- * "Mensagem que SERIA enviada". Não toca WAHA, não cria messages.outbound.
- * Quando `INTERNAL_AGENT_RUN_STUB=true` o backend devolve trace stub com
- * `stub: true`; o componente mostra um aviso amigável.
+ * Envia mensagens via POST `:test` (admin-only), mandando de volta os turnos
+ * anteriores em `historico` a cada envio — é assim que o agente "lembra" do
+ * que já foi dito, sem conversa de verdade no banco. Renderiza trace +
+ * "Mensagem que SERIA enviada" do último turno. Não toca WAHA, não cria
+ * messages.outbound. Quando `INTERNAL_AGENT_RUN_STUB=true` o backend devolve
+ * trace stub com `stub: true`; o componente mostra um aviso amigável.
  */
 import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -127,16 +129,23 @@ function Verificacoes({ g }: { g: NonNullable<TestResponse["data"]["guardrails"]
   );
 }
 
+interface TurnoDaTela {
+  papel: "user" | "assistente";
+  texto: string;
+  resultado?: TestResponse["data"];
+}
+
 export function TestPanel({ agent, draft, published, readOnly }: Props) {
   const t = useT();
   const target = draft ?? published;
   const qc = useQueryClient();
 
+  const [turnos, setTurnos] = React.useState<TurnoDaTela[]>([]);
   const [message, setMessage] = React.useState("");
   const [contactName, setContactName] = React.useState("");
   const [contactPhone, setContactPhone] = React.useState("");
   const [pending, setPending] = React.useState(false);
-  const [result, setResult] = React.useState<TestResponse["data"] | null>(null);
+  const ultimoResultado = [...turnos].reverse().find((x) => x.resultado)?.resultado ?? null;
 
   if (!target) {
     return (
@@ -152,15 +161,22 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
       : `v${target.version_number} ${t("(rascunho)")}`;
 
   async function handleRun() {
-    if (!message.trim()) {
+    const texto = message.trim();
+    if (!texto) {
       toast.error(t("Informe uma mensagem de teste."));
       return;
     }
     if (!target) return;
+    // O passado vai junto: sem ele, cada envio seria um primeiro contato e o
+    // agente nunca lembraria do que já foi dito — o teste mentiria sobre
+    // memória. O histórico mora no navegador e morre com a conversa de teste:
+    // nada dele é gravado no banco.
+    const passado = turnos.map((x) => ({ papel: x.papel, texto: x.texto }));
     setPending(true);
-    setResult(null);
+    setMessage("");
+    setTurnos((atual) => [...atual, { papel: "user", texto }]);
     try {
-      const body: Record<string, unknown> = { sample_message: message.trim() };
+      const body: Record<string, unknown> = { sample_message: texto, historico: passado };
       if (contactName.trim() || contactPhone.trim()) {
         body.sample_contact = {
           ...(contactName.trim() ? { name: contactName.trim() } : {}),
@@ -171,9 +187,11 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
         `/api/v1/ai/agents/${agent.id}/versions/${target.id}/test`,
         body,
       );
-      setResult(res.data);
+      setTurnos((atual) => [
+        ...atual,
+        { papel: "assistente", texto: res.data.final_text ?? "", resultado: res.data },
+      ]);
       qc.invalidateQueries({ queryKey: agentRunsKey(agent.id) });
-      toast.success(t("Teste executado."));
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(t(err.message) || `${t("Erro")}: ${err.code}`);
@@ -183,6 +201,11 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
     } finally {
       setPending(false);
     }
+  }
+
+  function novaConversa() {
+    setTurnos([]);
+    setMessage("");
   }
 
   return (
@@ -209,18 +232,6 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
           </p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="test-message">{t("Mensagem do cliente (sample)")}</Label>
-          <Textarea
-            id="test-message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={t("Oi, quanto custa X?")}
-            rows={4}
-            disabled={pending || readOnly}
-          />
-        </div>
-
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-2">
             <Label htmlFor="test-name">{t("Nome (opcional)")}</Label>
@@ -244,17 +255,71 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
           </div>
         </div>
 
-        <Button onClick={handleRun} disabled={pending || readOnly} className="self-start">
-          {pending ? t("Executando…") : t("Executar teste")}
-        </Button>
+        <div
+          className="flex min-h-64 flex-col gap-2 overflow-y-auto rounded-lg border p-3"
+          data-testid="teste-conversa"
+        >
+          {turnos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("Escreva a primeira mensagem do cliente abaixo.")}
+            </p>
+          ) : null}
+          {turnos.map((x, i) => (
+            <div
+              key={i}
+              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                x.papel === "user"
+                  ? "self-end bg-primary text-primary-foreground"
+                  : "self-start border bg-muted/40"
+              }`}
+            >
+              {x.texto}
+            </div>
+          ))}
+          {pending ? (
+            <p className="text-sm text-muted-foreground">{t("O agente está digitando…")}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="test-message">{t("Mensagem do cliente")}</Label>
+          <Textarea
+            id="test-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void handleRun();
+              }
+            }}
+            placeholder={t("Oi, quanto custa X? (Enter envia, Shift+Enter quebra linha)")}
+            rows={3}
+            disabled={pending || readOnly}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={handleRun} disabled={pending || readOnly} className="self-start">
+            {pending ? t("Executando…") : t("Enviar")}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={novaConversa}
+            disabled={pending || readOnly || turnos.length === 0}
+            className="self-start"
+          >
+            {t("Nova conversa")}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {t("Resultado")}
+          {t("Última resposta (detalhe)")}
         </p>
 
-        {!result && !pending ? (
+        {!ultimoResultado && !pending ? (
           <p className="text-sm text-muted-foreground">
             {t("Nenhum teste executado ainda.")}
           </p>
@@ -264,33 +329,35 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
           <p className="text-sm text-muted-foreground">{t("Executando dry-run…")}</p>
         ) : null}
 
-        {result ? (
+        {ultimoResultado ? (
           <>
-            {result.stub ? (
+            {ultimoResultado.stub ? (
               <p className="rounded-2xl border border-border/60 bg-muted/40 p-2 text-xs text-muted-foreground">
                 {t("Stub: o runtime real é entregue na S-13.08. O trace abaixo é simulado.")}
               </p>
             ) : null}
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <Cell label={t("Status")}>{result.status}</Cell>
+              <Cell label={t("Status")}>{ultimoResultado.status}</Cell>
               <Cell label={t("Latência")}>
-                {typeof result.latency_ms === "number" ? `${result.latency_ms}ms` : "—"}
+                {typeof ultimoResultado.latency_ms === "number"
+                  ? `${ultimoResultado.latency_ms}ms`
+                  : "—"}
               </Cell>
               <Cell label={t("Tokens in/out")}>
-                {(result.tokens_in ?? 0).toLocaleString()} /{" "}
-                {(result.tokens_out ?? 0).toLocaleString()}
+                {(ultimoResultado.tokens_in ?? 0).toLocaleString()} /{" "}
+                {(ultimoResultado.tokens_out ?? 0).toLocaleString()}
               </Cell>
-              <Cell label={t("Custo (cents)")}>{result.cost_cents ?? 0}</Cell>
+              <Cell label={t("Custo (cents)")}>{ultimoResultado.cost_cents ?? 0}</Cell>
             </div>
 
             <RunTrace
-              toolCalls={result.tool_calls}
-              finalText={result.final_text ?? null}
+              toolCalls={ultimoResultado.tool_calls}
+              finalText={ultimoResultado.final_text ?? null}
               emptyMessage={t("Sem tool calls (resposta direta do LLM).")}
             />
 
-            {result.guardrails ? <Verificacoes g={result.guardrails} /> : null}
+            {ultimoResultado.guardrails ? <Verificacoes g={ultimoResultado.guardrails} /> : null}
           </>
         ) : null}
       </div>

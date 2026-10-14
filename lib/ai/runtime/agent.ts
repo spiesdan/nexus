@@ -60,7 +60,30 @@ export interface RunAgentInput {
   override?: {
     sampleMessage?: string;
     sampleContact?: { name?: string; phone?: string };
+    /**
+     * Turnos anteriores do ensaio, do mais antigo ao mais recente — SEM a
+     * mensagem atual (ela vai em `sampleMessage`). Só vale em dry-run: numa
+     * execução real o histórico vem da conversa (`loadHistoryWithBudget`), e
+     * aceitar histórico do chamador seria deixar quem chama reescrever o
+     * passado do cliente.
+     */
+    historico?: { papel: "user" | "assistente"; texto: string }[];
   };
+}
+
+/**
+ * Histórico do ensaio para mensagens do modelo. Pura de propósito: a troca
+ * aqui é silenciosa e cara — `assistente` virando `user` faria o agente ler
+ * as próprias falas como se fossem do cliente, e o teste aprovaria uma
+ * conversa onde o agente concorda consigo mesmo.
+ */
+export function mapearHistoricoDeEnsaio(
+  historico: { papel: "user" | "assistente"; texto: string }[],
+): { role: "user" | "assistant"; content: string }[] {
+  return historico.map((t) => ({
+    role: t.papel === "assistente" ? "assistant" : "user",
+    content: t.texto,
+  }));
 }
 
 export interface RunAgentResult {
@@ -455,7 +478,15 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     });
 
     // 8) Load history with budget.
-    const history = run.conversation_id
+    // Em dry-run com histórico de ensaio, o passado vem do chamador (a tela
+    // do teste guarda os turnos no navegador e manda de volta a cada envio).
+    // Fora do dry-run o `override` é ignorado de propósito: ver o comentário
+    // no tipo `RunAgentInput["override"]`.
+    const historicoDeEnsaio =
+      run.is_dry_run && input.override?.historico?.length
+        ? mapearHistoricoDeEnsaio(input.override.historico)
+        : null;
+    const history = historicoDeEnsaio ?? (run.conversation_id
       ? await loadHistoryWithBudget(admin, {
           conversationId: run.conversation_id,
           organizationId: run.organization_id,
@@ -463,7 +494,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
           tokenWindow: version.history_token_window,
           excludeMessageId: run.inbound_message_id ?? undefined,
         })
-      : [];
+      : []);
 
     // 9) Build LM directly against the provider (BYOK credential — see buildModel doc).
     const model = buildModel(version.provider, credentialApiKey, version.model);

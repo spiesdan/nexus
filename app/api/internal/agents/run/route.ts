@@ -32,6 +32,17 @@ const bodySchema = z.object({
       phone: z.string().max(40).optional(),
     })
     .optional(),
+  // Turnos anteriores, do mais antigo ao mais recente — sem a mensagem atual.
+  // Opcional para não quebrar quem já chama (dispatcher do worker).
+  historico: z
+    .array(
+      z.object({
+        papel: z.enum(["user", "assistente"]),
+        texto: z.string().trim().min(1).max(4000),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 function timingSafeEq(a: string, b: string): boolean {
@@ -89,6 +100,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       override: {
         sampleMessage: parsed.data.sample_message,
         sampleContact: parsed.data.sample_contact,
+        historico: parsed.data.historico,
       },
     });
     return ok(result, { requestId, meta: { requestId } });
