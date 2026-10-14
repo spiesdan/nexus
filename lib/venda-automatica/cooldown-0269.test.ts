@@ -106,7 +106,7 @@ describe("campanhaVaCreateSchema — 0269", () => {
 
   it("MUTAÇÃO: piso 1 em vez de 10 liberaria rajada de 1s", () => {
     // Abaixo de 10 segundos não é cooldown, é rajada com outro nome — e
-    // rajada contra o WAHA é ban. O CHECK do banco diz o mesmo; este teste
+    // rajada contra o canal é ban. O CHECK do banco diz o mesmo; este teste
     // diz na primeira trincheira.
     expect(campanhaVaCreateSchema.safeParse(base({ cooldown_segundos: 1 })).success).toBe(false);
   });

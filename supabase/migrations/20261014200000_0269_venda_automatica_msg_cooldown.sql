@@ -25,7 +25,7 @@
 -- O QUE NÃO ESTÁ AQUI, DE PROPÓSITO:
 --
 -- - O CHECK é 10..3600. Abaixo de 10 segundos não é cooldown, é rajada com
---   outro nome — e rajada contra o WAHA é ban. Acima de 1 hora, a campanha de
+--   outro nome — e rajada contra o canal é ban. Acima de 1 hora, a campanha de
 --   500/dia nunca termina dentro da janela.
 -- - `ultimo_envio_at` nasce NULL: a primeira mensagem sai no primeiro tick,
 --   sem esperar 60 segundos por uma anterior que nunca existiu.

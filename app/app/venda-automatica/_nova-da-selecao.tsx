@@ -300,7 +300,7 @@ export function NovaCampanhaDaSelecao({
           {salvando ? t("Criando…") : t(`Criar e enfileirar ${empresas.length} empresas`)}
         </Button>
         <p className="text-xs text-muted-foreground">
-          {t(`O WAHA manda uma a cada ${Number.isInteger(cooldownNum) ? cooldownNum : 60}s. Sem sessão conectada, a fila espera.`)}
+          {t(`As mensagens saem uma a cada ${Number.isInteger(cooldownNum) ? cooldownNum : 60}s. Sem sessão conectada, a fila espera.`)}
         </p>
       </div>
     </Card>

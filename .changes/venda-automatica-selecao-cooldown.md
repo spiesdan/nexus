@@ -29,7 +29,7 @@ cron roda a cada minuto). O carimbo anda em toda tentativa, não só no sucesso
 — sem isso, uma sequência de falhas mandaria em rajada.
 
 Abaixo de 10 segundos não é cooldown, é rajada com outro nome — e rajada
-contra o WAHA é ban. O piso é 10 no schema, no CHECK e no teste, os três.
+contra o canal é ban. O piso é 10 no schema, no CHECK e no teste, os três.
 
 **Mutações provadas:** `ids` fora da rota listaria o catálogo inteiro (2
 testes); coluna esquecida no insert criaria campanha muda (1 teste); CHECK com

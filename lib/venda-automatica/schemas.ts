@@ -42,14 +42,14 @@ export const campanhaVaCreateSchema = z
     /**
      * Texto fixo da abordagem (0269). Quando preenchida, o motor a envia como
      * está, sem chamar a IA. O teto é o mesmo da mensagem do disparo em lote
-     * (`TAMANHO_MAXIMO_MENSAGEM`, 1000): uma mensagem maior que isso o WAHA
+     * (`TAMANHO_MAXIMO_MENSAGEM`, 1000): uma mensagem maior que isso o canal
      * corta no meio, e cortada no meio ela mente.
      */
     mensagem_padrao: z.string().trim().min(1).max(1000).nullable().default(null),
     /**
      * Segundos entre um envio e outro da mesma campanha (0269). O piso não é
      * 1: abaixo de 10 segundos não é cooldown, é rajada com outro nome — e
-     * rajada contra o WAHA é ban. Espelha o CHECK da migration.
+     * rajada contra o canal é ban. Espelha o CHECK da migration.
      */
     cooldown_segundos: z.number().int().min(10).max(3600).default(60),
     /**
