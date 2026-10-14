@@ -12,6 +12,13 @@ import {
 } from "@/lib/schemas/precos";
 import { createClient } from "@/lib/supabase/server";
 import { fotosDosProdutos } from "@/lib/comercial/fotos-dos-produtos";
+import {
+  POR_PAGINA_DO_CATALOGO,
+  faixaDaPagina,
+  lerPagina,
+  sanitizarBuscaParaIlike,
+  totalDePaginas,
+} from "@/lib/catalogo/paginacao";
 
 import { CatalogoClient } from "./_catalogo";
 
@@ -37,25 +44,54 @@ export const dynamic = "force-dynamic";
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string }>;
+  searchParams: Promise<{ busca?: string; pagina?: string }>;
 }) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
-  const { busca } = await searchParams;
+  const { busca, pagina: paginaBruta } = await searchParams;
 
   const podeEditar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
+  // Capturado aqui porque o `redirect` acima já provou que existe: dentro do
+  // `buscarProdutos` o narrowing não alcança e o `orgId` viraria `possibly null`.
+  const orgId = activeOrg.orgId;
   const supabase = await createClient();
-  const [{ data: produtos }, { data: categorias }, { data: tabelas }] = await Promise.all([
-    supabase
+
+  // A busca filtra no SERVIDOR, não no navegador: a página entrega 50 por vez
+  // e o filtro local nunca alcançaria o resto do catálogo (medido: "saco de
+  // lixo" mora nas posições 904–958 de 1141). O predicado é o mesmo da rota
+  // GET /api/v1/products — nome, código ou marca como substring.
+  const termo = sanitizarBuscaParaIlike(busca ?? "");
+  async function buscarProdutos(pagina: number) {
+    const { de, ate } = faixaDaPagina(pagina, POR_PAGINA_DO_CATALOGO);
+    let consulta = supabase
       .from("catalog_products")
-      .select(COLUNAS_DO_PRODUTO)
-      .eq("organization_id", activeOrg.orgId)
+      .select(COLUNAS_DO_PRODUTO, { count: "exact" })
+      .eq("organization_id", orgId)
       .order("ativo", { ascending: false })
-      .order("nome")
-      .limit(500),
+      .order("nome");
+    if (termo !== "") {
+      consulta = consulta.or(
+        `nome.ilike.%${termo}%,codigo.ilike.%${termo}%,marca.ilike.%${termo}%`,
+      );
+    }
+    return consulta.range(de, ate);
+  }
+
+  const pedida = lerPagina(paginaBruta);
+  let { data: produtos, count: total } = await buscarProdutos(pedida);
+  const totalPaginas = totalDePaginas(total ?? null, POR_PAGINA_DO_CATALOGO);
+  // URL com página além do fim (digitado à mão): volta para a última em vez
+  // de mostrar lista vazia sem saída.
+  let pagina = pedida;
+  if (totalPaginas !== null && pedida > totalPaginas) {
+    pagina = totalPaginas;
+    ({ data: produtos, count: total } = await buscarProdutos(pagina));
+  }
+
+  const [{ data: categorias }, { data: tabelas }] = await Promise.all([
     supabase
       .from("product_categories")
       .select(COLUNAS_DA_CATEGORIA)
@@ -87,6 +123,9 @@ export default async function ProdutosPage({
       tabelas={(tabelas ?? []) as unknown as TabelaDePreco[]}
       podeEditar={podeEditar}
       buscaInicial={busca ?? ""}
+      total={total ?? null}
+      pagina={pagina}
+      porPagina={POR_PAGINA_DO_CATALOGO}
       textosProdutos={{
         titulo: t("Produtos"),
         subtitulo: t(

@@ -81,7 +81,16 @@ function produto(over: Partial<Produto> = {}): Produto {
 }
 
 function montar(inicial: Produto[] = [], podeEditar = true) {
-  return render(<ProdutosClient inicial={inicial} podeEditar={podeEditar} textos={TEXTOS} />);
+  return render(
+    <ProdutosClient
+      inicial={inicial}
+      podeEditar={podeEditar}
+      textos={TEXTOS}
+      total={inicial.length}
+      pagina={1}
+      porPagina={50}
+    />,
+  );
 }
 
 /**

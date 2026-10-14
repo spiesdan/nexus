@@ -26,6 +26,9 @@ export function CatalogoClient({
   podeEditar,
   textosProdutos,
   buscaInicial,
+  total,
+  pagina,
+  porPagina,
 }: {
   produtos: Produto[];
   /** Fotos prontas, montadas no servidor: chegam no HTML inicial. */
@@ -35,6 +38,10 @@ export function CatalogoClient({
   podeEditar: boolean;
   textosProdutos: React.ComponentProps<typeof ProdutosClient>["textos"];
   buscaInicial?: string;
+  /** NULL quando o `count` não veio: a tela mostra "Página N" sem "de Y". */
+  total: number | null;
+  pagina: number;
+  porPagina: number;
 }) {
   const t = useT();
   return (
@@ -59,6 +66,9 @@ export function CatalogoClient({
             textos={textosProdutos}
             esconderCabecalho
             buscaInicial={buscaInicial}
+            total={total}
+            pagina={pagina}
+            porPagina={porPagina}
           />
         </TabsContent>
         <TabsContent value="categorias" className="mt-4">
