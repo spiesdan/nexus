@@ -34,6 +34,9 @@ import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { paraCSV } from "@/lib/comercial/relatorios";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { idsDoLote } from "@/lib/comercial/ids-do-lote";
+
+import { FiltroPorPeriodo } from "./_periodo";
 import {
   badgeDaOrigem,
   ROTULO_DO_STATUS,
@@ -507,6 +510,17 @@ export function PedidosClient({
     URL.revokeObjectURL(url);
   }
 
+  // O que o botão de imprimir realmente leva. O teto vem de `idsDoLote` /
+  // `MAXIMO_PEDIDOS_NO_LOTE` — a MESMA regra que a página de impressão e a rota
+  // de PDF aplicam, importada de lá em vez de repetida como um `50` solto.
+  // Repetir o número é como as duas pontas divergem: um dia o teto sobe para 60
+  // e a tela continua mandando 50, sem erro nenhum.
+  const idsDoLoteImpresso = React.useMemo(
+    () =>
+      selecionados.length > 0 ? selecionados : idsDoLote(pedidos.map((x) => x.id).join(",")),
+    [selecionados, pedidos],
+  );
+
   const porStatus = React.useMemo(() => {
     const mapa = new Map<StatusDoPedido, PedidoComercial[]>();
     for (const s of STATUS_DO_PEDIDO) mapa.set(s, []);
@@ -566,15 +580,29 @@ export function PedidosClient({
                 href={
                   selecionados.length > 0
                     ? `/app/pedidos/imprimir?ids=${selecionados.join(",")}`
-                    : `/app/pedidos/imprimir?ids=${pedidos
-                        .map((x) => x.id)
-                        .slice(0, 50)
-                        .join(",")}`
+                    : `/app/pedidos/imprimir?ids=${idsDoLoteImpresso.join(",")}`
+                }
+                // O teto de 50 é deliberado (`lib/comercial/ids-do-lote.ts`) —
+                // um PDF com 50 páginas fecha; 500 não. Mas um teto mudo é pior
+                // que a falta dele: o dono pede "os pedidos do dia", recebe 50
+                // e não tem como saber que 30 ficaram de fora. O `title` diz
+                // antes do clique.
+                title={
+                  selecionados.length === 0 && idsDoLoteImpresso.length < pedidos.length
+                    ? t(
+                        "Vai imprimir os 50 pedidos mais recentes de {total}. Para o resto, marque-os e imprima de novo.",
+                      ).replace("{total}", String(pedidos.length))
+                    : undefined
                 }
               >
                 <Printer size={16} /> {t("Imprimir pedidos")}
               </Link>
             </Button>
+            {selecionados.length === 0 && idsDoLoteImpresso.length < pedidos.length && (
+              <span className="text-xs text-muted-foreground">
+                {t("imprimindo os 50 mais recentes de")} <strong>{pedidos.length}</strong>
+              </span>
+            )}
           </>
         }
       />
@@ -664,6 +692,21 @@ export function PedidosClient({
         >
           <option value="">{t("Sem considerar o envio")}</option>
         </select>
+        {/*
+          PERÍODO. Fica na linha dos outros filtros porque é um filtro como
+          qualquer outro — e não dentro dos "avançados", porque o pedido mais
+          comum desta tela é "os pedidos de hoje", e quem procura coisa comum
+          dentro do que está marcado como avançado não encontra.
+
+          Um dia em `de` e `ate` é o que o botão de atalho preenche. A conversão
+          para instante UTC é do servidor, no fuso de quem pediu
+          (`lib/comercial/janela-do-dia.ts`) — aqui a data vai crua.
+        */}
+        <FiltroPorPeriodo
+          de={filtros.de}
+          ate={filtros.ate}
+          aoMudar={(patch) => mudar(patch)}
+        />
       </p>
 
       <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
