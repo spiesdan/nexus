@@ -11,7 +11,6 @@ import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-p
 import React from "react";
 
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
-import { ConteudoFechamento, type FechamentoCarga } from "./fechamento-expedicao-pdf";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", color: "#1f2937" },
@@ -209,67 +208,6 @@ export function RomaneioPdf({
   );
 }
 
-/**
- * O DOCUMENTO ÚNICO — romaneio na frente, fechamento atrás, mesma folha
- * impressa. O motorista leva um papel só: carrega e entrega pela frente,
- * presta contas pelo verso.
- */
-export interface ParadaCompleta extends ParadaDoRomaneio {
-  condicao: string | null;
-  motivo: string | null;
-  entregue_em: string | null;
-  pago_cents: number;
-}
-
-export interface RomaneioEFechamentoDados extends Omit<RomaneioDados, "paradas"> {
-  montada_em: string;
-  paradas: ParadaCompleta[];
-}
-
-export function RomaneioEFechamentoPdf({
-  emitente,
-  carga,
-  emitidoEm,
-}: {
-  emitente: { nome: string };
-  carga: RomaneioEFechamentoDados;
-  emitidoEm: string;
-}) {
-  const fechamento: FechamentoCarga = {
-    numero: carga.numero,
-    placa: carga.placa,
-    veiculo_tipo: carga.veiculo_tipo,
-    motorista_nome: carga.motorista_nome,
-    status: "",
-    montada_em: carga.montada_em,
-    paradas: carga.paradas.map((p) => ({
-      sequencia: p.sequencia,
-      numero: p.numero,
-      cliente_nome: p.cliente_nome,
-      endereco_entrega: p.endereco_entrega,
-      total_cents: p.total_cents,
-      condicao: p.condicao,
-      situacao: p.status,
-      motivo: p.motivo,
-      entregue_em: p.entregue_em,
-      volumes: (p.itens ?? []).reduce((s, i) => s + i.quantidade, 0),
-      pago_cents: p.pago_cents,
-    })),
-  };
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <ConteudoRomaneio emitente={emitente} carga={carga} />
-        <Rodape emitenteNome={emitente.nome} />
-      </Page>
-      <Page size="A4" style={styles.page}>
-        <ConteudoFechamento carga={fechamento} emitidoEm={emitidoEm} />
-        <Rodape emitenteNome={emitente.nome} />
-      </Page>
-    </Document>
-  );
-}
-
 function ConteudoRomaneio({
   emitente,
   carga,
@@ -381,16 +319,5 @@ export async function renderRomaneioPdf(
   carga: RomaneioDados,
 ): Promise<Buffer> {
   const buf = await renderToBuffer(<RomaneioPdf emitente={emitente} carga={carga} />);
-  return buf as Buffer;
-}
-
-export async function renderRomaneioEFechamentoPdf(
-  emitente: { nome: string },
-  carga: RomaneioEFechamentoDados,
-  emitidoEm: string,
-): Promise<Buffer> {
-  const buf = await renderToBuffer(
-    <RomaneioEFechamentoPdf emitente={emitente} carga={carga} emitidoEm={emitidoEm} />,
-  );
   return buf as Buffer;
 }
