@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.48] — 2026-10-15
+
+### Alterado
+
+- **Imprimir o dia passa para o primeiro botão do cabeçalho de pedidos** **Ordem pedida pelo dono.** Nada muda no funcionamento dos três botões —
+  só a posição: "Imprimir o dia" abre a fila, "Criar pedido / orçamento" vem
+  em seguida. Travado por teste de ordem no DOM.
+
+- **Catálogo ganha aba Sem fotos e conta exata na paginação** **Aba Sem fotos (?sem_foto=1).** Filtra no banco os produtos sem nenhuma
+  imagem, com busca e paginação funcionando juntas — antes, a contagem da tela
+  vinha de amostra e produto além da página sumia do filtro. O total agora é
+  exato (lista de ids, sem depender do `count`) e a troca de página preserva
+  busca e aba na URL.
+
 ## [1.25.47] — 2026-10-15
 
 ### Adicionado
@@ -4228,7 +4242,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.48...HEAD
+[1.25.48]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...v1.25.48
 [1.25.47]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...v1.25.47
 [1.25.46]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...v1.25.46
 [1.25.45]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.44...v1.25.45
