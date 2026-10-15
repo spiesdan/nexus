@@ -59,6 +59,20 @@ export function normalizar(texto: string): string {
  */
 const RUIDO = new Set(["de", "do", "da", "com", "para", "por", "the", "e", "o", "a", "um", "uma"]);
 
+/**
+ * VOCABULÁRIO DO BALCÃO — apelido que o cliente fala → nome do catálogo.
+ *
+ * Decretado pelo dono em 2026-10-15, depois de o agente perguntar "solubill
+ * ou produto da girando sol?" para quem pediu "solupa": a dúvida nunca
+ * existiu. "Solupa" SEMPRE é Solubill, "intercap" SEMPRE é Billcap.
+ * Gravado na FERRAMENTA (não só no prompt) para valer em todo agente:
+ * com o token já canônico, o "girando sol" nem empata.
+ */
+const SINONIMOS_DE_BALCAO: Record<string, string> = {
+  solupa: "solubill",
+  intercap: "billcap",
+};
+
 export interface TokensDaBusca {
   /** Tokens difusos — casam por prefixo/semelhança. */
   palavras: string[];
@@ -71,10 +85,14 @@ export function tokenizar(consulta: string): TokensDaBusca {
   const numeros: string[] = [];
   for (const t of normalizar(consulta).split(" ")) {
     if (t === "" || RUIDO.has(t)) continue;
+    // Apelido de balcão vira nome de catálogo ANTES de pontuar: "solupa"
+    // chega aqui já como "solubill", e o empate fantasma com "girando sol"
+    // nem nasce.
+    const canonico = SINONIMOS_DE_BALCAO[t] ?? t;
     // "256gb" é número com unidade colada: o número é a identidade.
-    const comUnidade = /^(\d+)([a-z]{1,4})?$/.exec(t);
+    const comUnidade = /^(\d+)([a-z]{1,4})?$/.exec(canonico);
     if (comUnidade?.[1] !== undefined) numeros.push(comUnidade[1]);
-    else palavras.push(t);
+    else palavras.push(canonico);
   }
   return { palavras, numeros };
 }
