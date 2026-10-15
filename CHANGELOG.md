@@ -8,6 +8,17 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.49] — 2026-10-15
+
+### Alterado
+
+- **Consolidação das sessões paralelas (APIs, workers, prospecção, testes)** **Lote de deploy das abas paralelas.** Reúne o trabalho em andamento das
+  sessões: APIs (ai, canais, contatos, saúde), workers (rag, mídia, lgpd,
+  sentiment, respostas), telas de prospecção, testes novos e scripts de
+  importação (prospecção maps, produtos odivix, fotos mercos). Nenhum item
+  exige ação do operador — `gov:verify` verde na hora do corte (806 arquivos,
+  8525 testes).
+
 ## [1.25.48] — 2026-10-15
 
 ### Alterado
@@ -4242,7 +4253,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.48...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.49...HEAD
+[1.25.49]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.48...v1.25.49
 [1.25.48]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...v1.25.48
 [1.25.47]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...v1.25.47
 [1.25.46]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...v1.25.46
