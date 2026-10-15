@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -20,6 +21,7 @@ import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -36,7 +38,7 @@ import { paraCSV } from "@/lib/comercial/relatorios";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { idsDoLote } from "@/lib/comercial/ids-do-lote";
 
-import { FiltroPorPeriodo } from "./_periodo";
+import { FiltroPorPeriodo, hojeEmChave } from "./_periodo";
 import {
   badgeDaOrigem,
   ROTULO_DO_STATUS,
@@ -213,6 +215,7 @@ export function PedidosClient({
   const t = useT();
   const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
+  const router = useRouter();
   const [pedidos, setPedidos] = React.useState(inicial);
   const filtrosIniciais = React.useMemo<Filtros>(
     () => ({
@@ -241,6 +244,7 @@ export function PedidosClient({
   const [carregando, setCarregando] = React.useState(false);
   const [visao, setVisao] = React.useState<"tabela" | "quadro" | "cartoes">("cartoes");
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
+  const [imprimindoDia, setImprimindoDia] = React.useState(false);
   const [expandido, setExpandido] = React.useState<string | null>(null);
   const [filtrosSalvos, setFiltrosSalvos] = React.useState<Record<string, Filtros>>(() => {
     try {
@@ -521,6 +525,50 @@ export function PedidosClient({
     [selecionados, pedidos],
   );
 
+  /**
+   * Imprime TODOS os pedidos do dia, num clique só.
+   *
+   * O botão "Imprimir pedidos" imprime o que a lista mostra (seleção ou os
+   * 50 primeiros do filtro). Este zera o filtro para o dia e busca os ids
+   * direto na API — porque a lista na tela pode estar paginada ou filtrada,
+   * e o "todos do dia" não pode depender do que por acaso está visível.
+   *
+   * Dia = `YYYY-MM-DD` local, o mesmo dos atalhos e do agrupamento "Hoje".
+   */
+  async function imprimirODia(): Promise<void> {
+    const hoje = hojeEmChave();
+    setImprimindoDia(true);
+    try {
+      const qs = new URLSearchParams({ de: hoje, ate: hoje });
+      const corpo = await apiClient.get<{ data: unknown }>(
+        `/api/v1/commercial-orders?${qs.toString()}`,
+      );
+      const dados = (corpo as { data?: unknown } | null)?.data;
+      const lista = Array.isArray(dados) ? (dados as { id: string }[]) : [];
+      if (lista.length === 0) {
+        toast.info(t("Nenhum pedido hoje."));
+        return;
+      }
+      // A tela passa a mostrar o dia impresso — o que sai no papel é o que
+      // fica na tela, sem surpresa.
+      mudar({ ...FILTROS_VAZIOS, de: hoje, ate: hoje });
+      const ids = idsDoLote(lista.map((x) => x.id).join(","));
+      if (ids.length < lista.length) {
+        toast.warning(
+          t("O dia tem {total} pedidos; o impresso leva os 50 mais recentes.").replace(
+            "{total}",
+            String(lista.length),
+          ),
+        );
+      }
+      router.push(`/app/pedidos/imprimir?ids=${ids.join(",")}`);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setImprimindoDia(false);
+    }
+  }
+
   const porStatus = React.useMemo(() => {
     const mapa = new Map<StatusDoPedido, PedidoComercial[]>();
     for (const s of STATUS_DO_PEDIDO) mapa.set(s, []);
@@ -603,19 +651,33 @@ export function PedidosClient({
                 {t("imprimindo os 50 mais recentes de")} <strong>{pedidos.length}</strong>
               </span>
             )}
+            <Button
+              variant="outline"
+              className="bg-surface"
+              disabled={imprimindoDia}
+              onClick={() => void imprimirODia()}
+              title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
+            >
+              <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
+            </Button>
           </>
         }
       />
 
-      {/* Busca + atalho dos filtros avancados */}
-      <div className="w-full sm:w-auto">
+      {/* Filtros: um painel só, com rótulo em cada controle. Antes eram quatro
+        zonas espalhadas (busca solta + frase com selects + chips + avançados),
+        e no meio um select "Envio" que não filtrava nada — controle morto que
+        mente é pior que controle ausente. A frase ("Mostrando X feitos por Y")
+        economizava pixels e cobrava legibilidade: 13px, sem rótulo, embrulhando
+        mal no mobile. Comportamento 100% preservado; só o layout mudou. */}
+      <Card className="space-y-3 p-3 sm:p-4">
         <div className="flex">
           <Input
             value={filtros.busca}
             onChange={(e) => mudar({ busca: e.target.value }, true)}
             placeholder={t("Pedido, cliente ou representada")}
             aria-label={textos.buscar}
-            className="h-9 w-full rounded-r-none bg-surface sm:w-64"
+            className="h-9 w-full rounded-r-none bg-surface sm:max-w-md"
           />
           <Button
             type="button"
@@ -627,136 +689,119 @@ export function PedidosClient({
             <MagnifyingGlass size={16} />
           </Button>
         </div>
-        <button
-          type="button"
-          className="mt-1 text-xs text-accent hover:underline"
-          onClick={() => setAvancadosAbertos((a) => !a)}
-        >
-          {t("Pesquise por nota fiscal, data de emissão, etc.")}
-        </button>
-      </div>
 
-      {/* Linha de filtros por frase, como no Mercos */}
-      <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px] text-muted-foreground">
-        <span>{t("Mostrando")}</span>
-        <select
-          value={filtros.status}
-          onChange={(e) => mudar({ status: e.target.value })}
-          aria-label={textos.statusLabel}
-          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
-        >
-          <option value="">{t("Pedidos ativos")}</option>
-          {STATUS_DO_PEDIDO.map((st) => (
-            <option key={st} value={st}>
-              {ROTULO_DO_STATUS[st]}
-            </option>
-          ))}
-        </select>
-        <span>{t("feitos por")}</span>
-        <select
-          value={filtros.meus ? "meus" : filtros.vendedorId || ""}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (v === "meus") mudar({ meus: true, vendedorId: "" });
-            else if (v === "") mudar({ meus: false, vendedorId: "" });
-            else mudar({ meus: false, vendedorId: v });
-          }}
-          aria-label={t("Vendedor")}
-          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
-        >
-          <option value="">{t("Todos os vendedores")}</option>
-          <option value="meus">{textos.meus}</option>
-          {filtros.vendedorId && !filtros.meus && (
-            <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
-          )}
-        </select>
-        <span>{t("via")}</span>
-        <select
-          value={filtros.origem}
-          onChange={(e) => mudar({ origem: e.target.value })}
-          aria-label={t("Origem")}
-          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
-        >
-          <option value="">{t("Todas as plataformas")}</option>
-          {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          value=""
-          onChange={() => {}}
-          aria-label={t("Envio")}
-          className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
-        >
-          <option value="">{t("Sem considerar o envio")}</option>
-        </select>
-        {/*
-          PERÍODO. Fica na linha dos outros filtros porque é um filtro como
-          qualquer outro — e não dentro dos "avançados", porque o pedido mais
-          comum desta tela é "os pedidos de hoje", e quem procura coisa comum
-          dentro do que está marcado como avançado não encontra.
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="f-status">{textos.statusLabel}</Label>
+            <select
+              id="f-status"
+              value={filtros.status}
+              onChange={(e) => mudar({ status: e.target.value })}
+              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+            >
+              <option value="">{t("Pedidos ativos")}</option>
+              {STATUS_DO_PEDIDO.map((st) => (
+                <option key={st} value={st}>
+                  {ROTULO_DO_STATUS[st]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="f-vendedor">{t("Vendedor")}</Label>
+            <select
+              id="f-vendedor"
+              value={filtros.meus ? "meus" : filtros.vendedorId || ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "meus") mudar({ meus: true, vendedorId: "" });
+                else if (v === "") mudar({ meus: false, vendedorId: "" });
+                else mudar({ meus: false, vendedorId: v });
+              }}
+              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+            >
+              <option value="">{t("Todos os vendedores")}</option>
+              <option value="meus">{textos.meus}</option>
+              {filtros.vendedorId && !filtros.meus && (
+                <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
+              )}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="f-origem">{t("Origem")}</Label>
+            <select
+              id="f-origem"
+              value={filtros.origem}
+              onChange={(e) => mudar({ origem: e.target.value })}
+              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+            >
+              <option value="">{t("Todas as plataformas")}</option>
+              {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/*
+            PERÍODO. Fica na linha dos outros filtros porque é um filtro como
+            qualquer outro — e não dentro dos "avançados", porque o pedido mais
+            comum desta tela é "os pedidos de hoje", e quem procura coisa comum
+            dentro do que está marcado como avançado não encontra.
 
-          Um dia em `de` e `ate` é o que o botão de atalho preenche. A conversão
-          para instante UTC é do servidor, no fuso de quem pediu
-          (`lib/comercial/janela-do-dia.ts`) — aqui a data vai crua.
-        */}
-        <FiltroPorPeriodo
-          de={filtros.de}
-          ate={filtros.ate}
-          aoMudar={(patch) => mudar(patch)}
-        />
-      </p>
+            Um dia em `de` e `ate` é o que o botão de atalho preenche. A conversão
+            para instante UTC é do servidor, no fuso de quem pediu
+            (`lib/comercial/janela-do-dia.ts`) — aqui a data vai crua.
+          */}
+          <div className="space-y-1">
+            <span className="block text-sm font-medium">{t("Período")}</span>
+            <FiltroPorPeriodo
+              de={filtros.de}
+              ate={filtros.ate}
+              aoMudar={(patch) => mudar(patch)}
+            />
+          </div>
+        </div>
 
-      <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
+        <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
+      </Card>
 
-      {/* Avancados + salvos + troca de visao (colapsado para nao poluir o molde) */}
-      <div className="flex flex-wrap items-center gap-2">
-        <details open={avancadosAbertos} className="text-sm">
-          <summary className="cursor-pointer text-xs text-accent hover:underline">
-            {textos.avancados}
-            {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
-          </summary>
-          <div className="mt-2 flex flex-wrap items-end gap-2">
-            <div className="w-full space-y-1.5 sm:w-44">
-              <label className="block text-sm font-medium" htmlFor="f-condicao">
-                {textos.condicao}
-              </label>
-              <Input
-                id="f-condicao"
-                value={filtros.condicao}
-                onChange={(e) => mudar({ condicao: e.target.value }, true)}
-                placeholder="30/60"
-                className="h-9 bg-surface"
+        {/* Avancados + salvos + troca de visao (colapsado para nao poluir o molde) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <details open={avancadosAbertos} className="text-sm">
+            <summary className="cursor-pointer text-xs text-accent hover:underline">
+              {textos.avancados}
+              {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
+            </summary>
+            <div className="mt-2 flex flex-wrap items-end gap-2">
+              <div className="w-full space-y-1.5 sm:w-44">
+                <label className="block text-sm font-medium" htmlFor="f-condicao">
+                  {textos.condicao}
+                </label>
+                <Input
+                  id="f-condicao"
+                  value={filtros.condicao}
+                  onChange={(e) => mudar({ condicao: e.target.value }, true)}
+                  placeholder="30/60"
+                  className="h-9 bg-surface"
+                />
+              </div>
+              <FilterNumber
+                id="f-vmin"
+                label={textos.valorMin}
+                value={filtros.valorMin}
+                onChange={(valorMin) => mudar({ valorMin })}
+                placeholder="0,00"
+              />
+              <FilterNumber
+                id="f-vmax"
+                label={textos.valorMax}
+                value={filtros.valorMax}
+                onChange={(valorMax) => mudar({ valorMax })}
+                placeholder="0,00"
               />
             </div>
-            <FilterNumber
-              id="f-vmin"
-              label={textos.valorMin}
-              value={filtros.valorMin}
-              onChange={(valorMin) => mudar({ valorMin })}
-              placeholder="0,00"
-            />
-            <FilterNumber
-              id="f-vmax"
-              label={textos.valorMax}
-              value={filtros.valorMax}
-              onChange={(valorMax) => mudar({ valorMax })}
-              placeholder="0,00"
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant={filtros.meus ? "default" : "outline"}
-              onClick={() => mudar({ meus: !filtros.meus })}
-              aria-pressed={filtros.meus}
-              className="bg-surface"
-            >
-              {textos.meus}
-            </Button>
-          </div>
-        </details>
+          </details>
         <FilterActions>
           <SavedFilters
             names={Object.keys(filtrosSalvos)}

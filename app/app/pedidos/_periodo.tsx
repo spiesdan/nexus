@@ -30,8 +30,8 @@ import * as React from "react";
 
 import { useT } from "@/hooks/i18n/useT";
 
-/** `YYYY-MM-DD` do dia, no fuso do navegador — para os atalhos. */
-function hojeEmChave(offsetDias = 0): string {
+/** `YYYY-MM-DD` do dia, no fuso do navegador — para os atalhos e o botão do dia. */
+export function hojeEmChave(offsetDias = 0): string {
   const d = new Date();
   d.setDate(d.getDate() + offsetDias);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -48,9 +48,6 @@ export function FiltroPorPeriodo({
 }) {
   const t = useT();
 
-  /** Um dia em ambos os campos: o pedido literal ("todos os pedidos do dia X"). */
-  const escolherDia = (dia: string) => aoMudar({ de: dia, ate: dia });
-
   // Atalhos que dependem do que JÁ está escolhido — o de "ayer" só faz sentido
   // se o filtro for o dia anterior ao que está na tela.
   const atalhos: { rotulo: string; dias: () => { de: string; ate: string } }[] = [
@@ -64,23 +61,23 @@ export function FiltroPorPeriodo({
 
   return (
     <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
-      <span>{t("entre")}</span>
+      <span className="text-sm text-muted-foreground">{t("entre")}</span>
       <input
         type="date"
         value={de.slice(0, 10)}
         max={ate ? ate.slice(0, 10) : undefined}
         onChange={(e) => aoMudar({ de: e.target.value })}
         aria-label={t("De")}
-        className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
+        className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
       />
-      <span>{t("e")}</span>
+      <span className="text-sm text-muted-foreground">{t("e")}</span>
       <input
         type="date"
         value={ate.slice(0, 10)}
         min={de ? de.slice(0, 10) : undefined}
         onChange={(e) => aoMudar({ ate: e.target.value })}
         aria-label={t("Até")}
-        className="cursor-pointer bg-transparent font-semibold text-accent outline-hidden"
+        className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
       />
       <span className="ml-1 flex gap-1">
         {atalhos.map((a) => (
