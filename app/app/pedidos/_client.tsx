@@ -616,6 +616,15 @@ export function PedidosClient({
         subtitle={textos.subtitulo}
         actions={
           <>
+            <Button
+              variant="outline"
+              className="bg-surface"
+              disabled={imprimindoDia}
+              onClick={() => void imprimirODia()}
+              title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
+            >
+              <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
+            </Button>
             {podeCriar && (
               <Button asChild className="font-semibold">
                 <Link href="/app/pedidos/novo">
@@ -651,15 +660,6 @@ export function PedidosClient({
                 {t("imprimindo os 50 mais recentes de")} <strong>{pedidos.length}</strong>
               </span>
             )}
-            <Button
-              variant="outline"
-              className="bg-surface"
-              disabled={imprimindoDia}
-              onClick={() => void imprimirODia()}
-              title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
-            >
-              <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
-            </Button>
           </>
         }
       />

@@ -18,7 +18,6 @@ import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/re
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { PedidoComercial } from "@/lib/schemas/pedidos";
 import { hojeEmChave } from "@/app/app/pedidos/_periodo";
 
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
@@ -170,5 +169,26 @@ describe("Imprimir o dia", () => {
     clicarImprimirODia();
 
     await waitFor(() => expect(pushMock).not.toHaveBeenCalled());
+  });
+
+  it("ordem no cabeçalho: Imprimir o dia antes de Criar pedido / orçamento", async () => {
+    // Pedido explícito do dono. Se alguém reordenar de volta, este teste
+    // conta a história — não é gosto, é posição pedida.
+    //
+    // O Criar é `asChild` e renderiza como link, não botão — por isso a ordem
+    // é medida sobre os dois papéis, na ordem do DOM.
+    montar();
+    const noDom = [
+      ...screen.queryAllByRole("button"),
+      ...screen.queryAllByRole("link"),
+    ].sort((a, b) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+    );
+    const textos = noDom.map((el) => el.textContent ?? "");
+    const iDia = textos.findIndex((t) => t.includes("Imprimir o dia"));
+    const iCriar = textos.findIndex((t) => t.includes("Criar pedido"));
+    expect(iDia).toBeGreaterThanOrEqual(0);
+    expect(iCriar).toBeGreaterThanOrEqual(0);
+    expect(iDia).toBeLessThan(iCriar);
   });
 });
