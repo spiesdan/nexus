@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.53] — 2026-10-15
+
+### Alterado
+
+- **Busca aceita limite até 60 para pergunta ampla** **Lista cortada.** Pergunta de categoria ("saco de lixo", 47 opções)
+  precisava da lista inteira de uma vez e o teto 20 não deixava. Teto 60,
+  default segue 8 para pergunta específica.
+
 ## [1.25.52] — 2026-10-15
 
 ### Corrigido
@@ -4281,7 +4289,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.52...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...HEAD
+[1.25.53]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.52...v1.25.53
 [1.25.52]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.51...v1.25.52
 [1.25.51]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.50...v1.25.51
 [1.25.50]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.49...v1.25.50
