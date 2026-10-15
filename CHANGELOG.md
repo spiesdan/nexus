@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.50] — 2026-10-15
+
+### Corrigido
+
+- **Busca do agente mostra variação sem estoque em vez de esconder** **Variação sumida.** Com o filtro de disponíveis ligado por padrão, a busca
+  devolvia só o item com saldo — "solupa" trazia o 20L e escondia 2L/5L/60L
+  que a loja tem, e o agente respondia um item só. Agora a busca devolve todas
+  as variações com o sinal `disponivel` explícito, e o agente apresenta as
+  opções avisando o que confirma de estoque antes de prometer.
+
 ## [1.25.49] — 2026-10-15
 
 ### Alterado
@@ -4253,7 +4263,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.49...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.50...HEAD
+[1.25.50]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.49...v1.25.50
 [1.25.49]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.48...v1.25.49
 [1.25.48]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...v1.25.48
 [1.25.47]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...v1.25.47
