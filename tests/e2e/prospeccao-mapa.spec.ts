@@ -42,7 +42,9 @@ test("mapa mostra marcadores, clique sincroniza lista e detalhe abre", async ({ 
   await entrar(page, creds);
   await page.goto("/app/prospeccao");
 
-  await page.getByRole("tab", { name: /empresas/i }).click();
+  // Nome EXATO: desde a fase 6 há duas abas casando /empresas/i
+  // ("Encontrar empresas" e "Empresas") — sem `exact` o clique é ambíguo.
+  await page.getByRole("tab", { name: "Empresas", exact: true }).click();
   await page.getByRole("button", { name: /^mapa$/i }).click();
   const mapa = page.locator(".leaflet-container").first();
   await expect(mapa, "visão Mapa sem contêiner Leaflet").toBeVisible({ timeout: 30_000 });

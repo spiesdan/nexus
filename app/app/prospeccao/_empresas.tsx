@@ -594,6 +594,17 @@ export function EmpresasTab({
   );
   const centroRaio = React.useMemo(() => (limites ? centroERaioDoBbox(limites) : null), [limites]);
 
+  // Identidade ESTÁVEL para o mapa: o efeito de desenho do Leaflet recria
+  // TODOS os marcadores quando `centro`/`rota` mudam de referência — e objeto
+  // literal no JSX muda a toda renderização (ex.: a cada clique de seleção),
+  // congelando a tela com milhares de pontos. Só muda quando o recorte muda.
+  const centroMapa = React.useMemo(
+    () =>
+      centroRaio ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude } : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [centroRaio?.latitude, centroRaio?.longitude],
+  );
+
   const ordenada = React.useMemo(() => {
     const base = [...listaFiltrada];
     const ref = centroRaio;
@@ -708,6 +719,15 @@ export function EmpresasTab({
       ),
     };
   }, [rotaIds, pontos]);
+
+  // Mesmo motivo do `centroMapa` acima: `.map()` no JSX devolveria um array
+  // novo por render e o mapa redesenharia a rota + marcadores a cada clique.
+  const rotaMapa = React.useMemo(
+    () =>
+      rota?.pontos.map((p) => ({ latitude: p.latitude, longitude: p.longitude, nome: p.nome })) ??
+      undefined,
+    [rota],
+  );
 
   // O detalhe vivo é o da lista; ?prospect= (FASE 11) cai no extra quando o
   // id não está na janela carregada.
@@ -1311,22 +1331,12 @@ export function EmpresasTab({
               onVer={(id) => setDetalheId(id)}
               onAdicionar={(ids) => void importar(ids)}
               onFila={podeOperar ? (id) => void adicionarNaFila(id) : undefined}
-              centro={
-                centroRaio
-                  ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude }
-                  : null
-              }
+              centro={centroMapa}
               raioKm={centroRaio?.raioKm ?? null}
               modo={modoMapa}
               onModo={setModoMapa}
               onArea={(lim) => void buscarNestaArea(lim)}
-              rota={
-                rota?.pontos.map((p) => ({
-                  latitude: p.latitude,
-                  longitude: p.longitude,
-                  nome: p.nome,
-                })) ?? undefined
-              }
+              rota={rotaMapa}
               alturaClasse="h-[65vh]"
             />
           </div>

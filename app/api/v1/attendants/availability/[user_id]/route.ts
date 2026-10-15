@@ -61,7 +61,7 @@ export async function PATCH(
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   const supabase = await createClient();

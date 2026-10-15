@@ -19,7 +19,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { fail } from "@/lib/api/wrappers";
+import { fail, ok } from "@/lib/api/wrappers";
 import { lerEnvelopeMeta } from "@/lib/channels/meta/envelope";
 import { parseMetaWebhook, verificationChallenge, verifyMetaSignature } from "@/lib/channels/meta/webhook";
 import { ingestMetaInbound } from "@/lib/channels/meta/ingest";
@@ -154,9 +154,8 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<NextRespons
   // interessa: a Meta re-entrega tudo que não recebe 2xx, e recusar o que
   // ignoramos vira re-tentativa em backoff por horas.
   // `outcomes` no corpo: quem depura vê o que aconteceu com cada evento em vez de
-  // ler um contador que não distingue sucesso de falha.
-  return NextResponse.json(
-    { received: eventos.length, outcomes: desfechos },
-    { status: 200 },
-  );
+  // ler um contador que não distingue sucesso de falha. A Meta ignora o corpo,
+  // então o envelope padrão é seguro aqui (só o GET de handshake precisa de
+  // texto cru — ver o cabeçalho do arquivo).
+  return ok({ received: eventos.length, outcomes: desfechos }, { requestId });
 }

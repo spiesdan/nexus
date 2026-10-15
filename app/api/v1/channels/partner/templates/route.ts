@@ -25,6 +25,7 @@
  */
 import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
@@ -135,7 +136,27 @@ export async function GET(): Promise<Response> {
  *
  * Duas ações na mesma rota porque as duas terminam no mesmo lugar — o espelho —
  * e separá-las obrigaria a tela a saber que criar também sincroniza.
+ *
+ * Corpo do POST: `acao` ausente ou "sincronizar" = só sincroniza; "criar"
+ * exige nome, idioma e conteúdo. Ação desconhecida é 422, não sincronização
+ * silenciosa — sincronizar por engano (typo no cliente) esconderia o bug e
+ * ainda bateria na plataforma à toa.
  */
+const corpoSchema = z
+  .object({
+    acao: z.enum(["criar", "sincronizar"]).optional(),
+    name: z.string().trim().min(1).max(128).optional(),
+    language: z.string().trim().min(2).max(16).optional(),
+    category: z.enum(["AUTHENTICATION", "MARKETING", "UTILITY"]).optional(),
+    components: z.array(z.unknown()).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.acao === "criar") {
+      if (!v.name) ctx.addIssue({ code: "custom", message: "Falta o nome." });
+      if (!v.language) ctx.addIssue({ code: "custom", message: "Falta o idioma." });
+      if (!v.components) ctx.addIssue({ code: "custom", message: "Falta o conteúdo." });
+    }
+  });
 export async function POST(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const r = await contexto(requestId);
@@ -146,29 +167,29 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("not_implemented", "Este canal não gerencia definições.", 501, { requestId });
   }
 
-  const corpo = (await req.json().catch(() => ({}))) as {
-    acao?: string;
-    name?: string;
-    language?: string;
-    category?: string;
-    components?: unknown[];
-  };
+  const bruto: unknown = await req.json().catch(() => ({}));
+  const parsed = corpoSchema.safeParse(bruto);
+  if (!parsed.success) {
+    return fail("invalid_request", "Ação ou campos inválidos.", 400, {
+      requestId,
+      details: parsed.error.flatten(),
+    });
+  }
+  const corpo = parsed.data;
 
   try {
     if (corpo.acao === "criar") {
-      if (!corpo.name || !corpo.language || !Array.isArray(corpo.components)) {
-        return fail("invalid_request", "Faltam nome, idioma ou conteúdo.", 400, { requestId });
-      }
+      // Nome, idioma e conteúdo já garantidos pelo schema acima.
       // A plataforma valida o formato do nome e devolve o motivo com código. Não
       // duplicamos a regra: regra copiada envelhece separado da fonte.
       await adapter.templates.create({
         organizationId: r.ctx.orgId,
         sessionRef: r.ctx.sessionRef,
         draft: {
-          name: corpo.name,
-          language: corpo.language,
-          category: (corpo.category ?? "UTILITY") as "AUTHENTICATION" | "MARKETING" | "UTILITY",
-          components: corpo.components,
+          name: corpo.name!,
+          language: corpo.language!,
+          category: corpo.category ?? "UTILITY",
+          components: corpo.components!,
         },
       });
       await audit({

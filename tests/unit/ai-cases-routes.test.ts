@@ -351,11 +351,15 @@ describe("POST /api/v1/ai/cases/:id/reply", () => {
     vi.mocked(enqueueJob).mockRejectedValueOnce(new Error("job_queue indisponível"));
 
     const { POST } = await import("@/app/api/v1/ai/cases/[id]/reply/route");
-    await expect(
-      POST(replyReq({ action: "need_lead_info", body: "Qual o CPF?" }), {
-        params: Promise.resolve({ id: CASE_ID }),
-      }),
-    ).rejects.toThrow("job_queue indisponível");
+    const res = await POST(replyReq({ action: "need_lead_info", body: "Qual o CPF?" }), {
+      params: Promise.resolve({ id: CASE_ID }),
+    });
+
+    // Erro inesperado sai no envelope (500 + X-Request-Id), nunca como throw
+    // para o framework responder HTML — o rollback abaixo é o que importa.
+    expect(res.status).toBe(500);
+    const corpo = (await res.json()) as { error: { code: string } };
+    expect(corpo.error.code).toBe("internal_error");
 
     // Sem o rollback, a transição ficaria commitada sem job: o lead nunca seria
     // avisado e a rota passaria a responder 409 para sempre.

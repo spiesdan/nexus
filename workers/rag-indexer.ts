@@ -52,6 +52,7 @@ import {
   activateVersion,
 } from "@/lib/ai/rag/version";
 import type { EventRow, HandlerResult } from "@/lib/event-log/dispatcher";
+import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NuvemshopApiClient } from "@/lib/nuvemshop/api-client";
 
@@ -122,11 +123,11 @@ async function marcarFonte(
       .eq("id", sourceId)
       .eq("organization_id", organizationId);
   } catch (err) {
-    console.warn(
-      "[rag-indexer] não consegui carimbar o estado da fonte",
-      sourceId,
-      err instanceof Error ? err.message : String(err),
-    );
+    logger.warn("[rag-indexer] não consegui carimbar o estado da fonte", {
+      organization_id: organizationId,
+      source_id: sourceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -162,10 +163,11 @@ async function avisarNaCentral(
       ref_id: fonte.id,
     });
   } catch (err) {
-    console.warn(
-      "[rag-indexer] não consegui abrir o aviso na Central",
-      err instanceof Error ? err.message : String(err),
-    );
+    logger.warn("[rag-indexer] não consegui abrir o aviso na Central", {
+      organization_id: organizationId,
+      source_id: fonte.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -253,7 +255,9 @@ async function buscarProdutoNaLoja(
 ): Promise<NuvemshopProduct | null> {
   const creds = await credenciaisDaLoja(organizationId);
   if (!creds) {
-    console.warn("[rag-indexer] loja não conectada para a org", organizationId);
+    logger.warn("[rag-indexer] loja não conectada para a org", {
+      organization_id: organizationId,
+    });
     return null;
   }
   try {
@@ -263,11 +267,11 @@ async function buscarProdutoNaLoja(
     });
     return (await client.get<NuvemshopProduct>(`/products/${productId}`)) ?? null;
   } catch (err) {
-    console.warn(
-      "[rag-indexer] busca do produto falhou",
-      productId,
-      err instanceof Error ? err.message : String(err),
-    );
+    logger.warn("[rag-indexer] busca do produto falhou", {
+      organization_id: organizationId,
+      product_id: productId,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return null;
   }
 }
@@ -359,9 +363,12 @@ async function indexarFonte(
     sourceType: tipo,
   });
 
-  console.warn(
-    `[rag-indexer] "${fonte.name}" → versão ${versionNumber} (${versionId}), ${pedacos.length} trecho(s)`,
-  );
+  logger.info("[rag-indexer] indexação concluída", {
+    organization_id: fonte.organization_id,
+    source_id: fonte.id,
+    version: versionNumber,
+    trechos: pedacos.length,
+  });
 
   const admin = createAdminClient();
   let gravados = 0;
@@ -403,7 +410,12 @@ async function indexarFonte(
     );
 
     if (upErr) {
-      console.warn(`[rag-indexer] trecho ${i} não gravou:`, upErr.message);
+      logger.warn("[rag-indexer] trecho não gravou", {
+        organization_id: fonte.organization_id,
+        source_id: fonte.id,
+        position: i,
+        error: upErr.message,
+      });
     } else {
       gravados++;
     }
@@ -489,7 +501,10 @@ async function garantirFonteDeCatalogo(organizationId: string): Promise<FonteRow
     .single();
 
   if (error) {
-    console.warn("[rag-indexer] não consegui criar a fonte de catálogo:", error.message);
+    logger.warn("[rag-indexer] não consegui criar a fonte de catálogo", {
+      organization_id: organizationId,
+      error: error.message,
+    });
     return null;
   }
   return criada as FonteRow;
@@ -500,9 +515,12 @@ export async function processRagIndexer(row: EventRow): Promise<HandlerResult> {
 
   const lagMs = Date.now() - new Date(String(row.payload["created_at"] ?? row.created_at)).getTime();
   if (Number.isFinite(lagMs) && lagMs > LAG_WARN_MS) {
-    console.warn(
-      `[rag-indexer] atraso de ${Math.round(lagMs / 1000)}s no evento ${row.id} (${row.event_type})`,
-    );
+    logger.warn("[rag-indexer] atraso no evento", {
+      organization_id: row.organization_id,
+      event_id: row.id,
+      event_type: row.event_type,
+      lag_s: Math.round((lagMs as number) / 1000),
+    });
   }
 
   if (row.event_type !== "knowledge_source.updated" && row.event_type !== "nuvemshop.product_synced") {
@@ -598,7 +616,11 @@ export async function processRagIndexer(row: EventRow): Promise<HandlerResult> {
       return { consumer_key: consumerKey, status: "retry", detail: "sem_chave_de_embedding" };
     }
     const detalhe = err instanceof Error ? err.message : String(err);
-    console.error("[rag-indexer] erro não tratado:", detalhe);
+    logger.error("[rag-indexer] erro não tratado", {
+      organization_id: row.organization_id,
+      event_id: row.id,
+      detail: detalhe,
+    });
     return { consumer_key: consumerKey, status: "error", detail: detalhe };
   }
 }

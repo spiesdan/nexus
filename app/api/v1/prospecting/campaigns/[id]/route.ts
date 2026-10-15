@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   const supabase = await createClient();

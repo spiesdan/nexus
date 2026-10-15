@@ -194,7 +194,7 @@ export async function POST(req: NextRequest, { params }: RouteParams): Promise<R
       }
     } catch (err) {
       await client.query("rollback");
-      throw err;
+      return fail("internal_error", "Erro interno.", 500, { requestId });
     } finally {
       client.release();
     }

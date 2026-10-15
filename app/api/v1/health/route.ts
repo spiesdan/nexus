@@ -22,7 +22,8 @@
  * quem opera o sistema vê para onde ele tentou ir; quem só passa na frente, não.
  */
 import { timingSafeEqual } from "node:crypto";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { ok } from "@/lib/api/wrappers";
 
 import { env } from "@/lib/env";
 import { alvoDe, classificarFalhaDeAlcance, type FalhaDeAlcance } from "@/lib/net/alcance";
@@ -252,23 +253,21 @@ export async function GET(req: NextRequest) {
 
   const httpStatus = status === "unhealthy" ? 503 : 200;
 
-  return NextResponse.json(
+  return ok(
     {
-      data: {
-        status,
-        // APP_VERSION é injetada no build da imagem (ARG no Dockerfile) e vale
-        // "1.2.3" numa release, ou o SHA curto fora de tag.
-        //
-        // Antes isto era `process.env.npm_package_version ?? "0.1.0"`, e a
-        // variável só existe quando o processo nasce de um `npm`/`pnpm run`. O
-        // CMD da imagem é `node server.js`: TODA instalação do mundo reportava
-        // "0.1.0". Um campo que responde o valor errado com confiança é pior que
-        // um campo ausente — ele desliga a pergunta em vez de deixá-la aberta.
-        // Por isso o fallback agora é "desconhecido", e não um número plausível.
-        version: process.env.APP_VERSION || "desconhecido",
-        timestamp: new Date().toISOString(),
-        checks,
-      },
+      status,
+      // APP_VERSION é injetada no build da imagem (ARG no Dockerfile) e vale
+      // "1.2.3" numa release, ou o SHA curto fora de tag.
+      //
+      // Antes isto era `process.env.npm_package_version ?? "0.1.0"`, e a
+      // variável só existe quando o processo nasce de um `npm`/`pnpm run`. O
+      // CMD da imagem é `node server.js`: TODA instalação do mundo reportava
+      // "0.1.0". Um campo que responde o valor errado com confiança é pior que
+      // um campo ausente — ele desliga a pergunta em vez de deixá-la aberta.
+      // Por isso o fallback agora é "desconhecido", e não um número plausível.
+      version: process.env.APP_VERSION || "desconhecido",
+      timestamp: new Date().toISOString(),
+      checks,
     },
     { status: httpStatus },
   );

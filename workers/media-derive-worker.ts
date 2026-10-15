@@ -162,7 +162,11 @@ export async function deriveMessageMedia(row: EventRow): Promise<HandlerResult> 
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     if (row.attempts >= DRAIN_MAX_ATTEMPTS - 1) {
-      logger.error("[media-derive] failed permanently", { message_id: msg.id, detail });
+      logger.error("[media-derive] failed permanently", {
+        organization_id: msg.organization_id,
+        message_id: msg.id,
+        detail,
+      });
       await markFailed();
     }
     return { consumer_key, status: "error", detail };

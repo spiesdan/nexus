@@ -29,7 +29,8 @@
  *   passa por `fundirTokens` antes de qualquer escrita.
  */
 
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { fail, ok } from "@/lib/api/wrappers";
 import { apenasDeMembrosAtivos } from "@/lib/agenda/google/membros";
 
 import { audit } from "@/lib/audit";
@@ -212,10 +213,10 @@ function autorizado(req: NextRequest): boolean {
 
 async function executar(req: NextRequest): Promise<Response> {
   if (!autorizado(req)) {
-    return NextResponse.json({ error: { code: "unauthenticated", message: "cron secret inválido" } }, { status: 401 });
+    return fail("unauthenticated", "cron secret inválido", 401);
   }
   const resumo = await renovarAgendasDoGoogle(createAdminClient(), { agora: new Date() });
-  return NextResponse.json({ data: resumo });
+  return ok(resumo);
 }
 
 export async function GET(req: NextRequest): Promise<Response> {

@@ -10,7 +10,8 @@
  *   programmatically from the trusted event_log row, never from user input.
  * - Any failure is swallowed (try/catch global) so the bot path in
  *   ai-response-worker keeps running unaffected.
- * - `console.log` is forbidden — only `console.warn`/`console.error` with prefix.
+ * - Logs via `logger` estruturado (com `organization_id`) — `console.*`
+ *   direto não carrega contexto de tenant e quebra a correlação por org.
  */
 
 import { generateObject } from "ai";
@@ -23,6 +24,7 @@ import { resolverModeloDoPonto } from "@/lib/ai/gateway-binding";
 import { logInvocation } from "@/lib/ai/log-invocation";
 import { SENTIMENT_SYSTEM_PROMPT } from "@/lib/ai/prompts/sentiment";
 import type { EventRow } from "@/lib/event-log/dispatcher";
+import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const SENTIMENT_MODEL = DEFAULT_CLASSIFIER_MODEL; // "anthropic/claude-haiku-4-5"
@@ -263,7 +265,8 @@ export async function processSentiment(event: EventRow): Promise<SentimentResult
       .eq("organization_id", event.organization_id);
 
     if (updateErr) {
-      console.warn("[ai-sentiment-worker] metadata update failed", {
+      logger.warn("[ai-sentiment-worker] metadata update failed", {
+        organization_id: event.organization_id,
         message_id: messageId,
         error: updateErr.message,
       });
@@ -317,7 +320,8 @@ export async function processSentiment(event: EventRow): Promise<SentimentResult
       } as never);
 
       if (emitErr) {
-        console.warn("[ai-sentiment-worker] ai.sentiment_alert emit failed", {
+        logger.warn("[ai-sentiment-worker] ai.sentiment_alert emit failed", {
+          organization_id: event.organization_id,
           message_id: messageId,
           error: emitErr.message,
         });
@@ -327,7 +331,8 @@ export async function processSentiment(event: EventRow): Promise<SentimentResult
     return { skipped: false, sentiment_score: result.sentiment_score };
   } catch (err) {
     // Global catch: NEVER throw — must not break the bot path.
-    console.warn("[ai-sentiment-worker] sentiment_classify_failed", {
+    logger.warn("[ai-sentiment-worker] sentiment_classify_failed", {
+      organization_id: event.organization_id,
       event_id: event.id,
       error: err instanceof Error ? err.message : String(err),
     });

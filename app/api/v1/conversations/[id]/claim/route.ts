@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   // Optimistic lock (spec 04 §9.2): expected null/omitido = só assume se livre;

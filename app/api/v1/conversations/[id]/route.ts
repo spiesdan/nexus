@@ -58,7 +58,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
     if (err instanceof ApiError) {
       return fail(err.code, err.message, err.status, { requestId });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }
 
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx): Promise<Response> 
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   try {
@@ -102,6 +102,6 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx): Promise<Response> 
     if (err instanceof ApiError) {
       return fail(err.code, err.message, err.status, { requestId });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }

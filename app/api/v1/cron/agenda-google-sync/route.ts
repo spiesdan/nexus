@@ -52,7 +52,8 @@
  * referência do cal.com carrega até hoje.
  */
 
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { fail, ok } from "@/lib/api/wrappers";
 import { apenasDeMembrosAtivos } from "@/lib/agenda/google/membros";
 
 import { audit } from "@/lib/audit";
@@ -307,7 +308,7 @@ function autorizado(req: NextRequest): boolean {
 
 async function executar(req: NextRequest): Promise<Response> {
   if (!autorizado(req)) {
-    return NextResponse.json({ error: { code: "unauthenticated", message: "cron secret inválido" } }, { status: 401 });
+    return fail("unauthenticated", "cron secret inválido", 401);
   }
   const admin = createAdminClient();
   const { data } = await admin
@@ -345,7 +346,7 @@ async function executar(req: NextRequest): Promise<Response> {
   // uma segunda rota amanhã — também para de ser sincronizado.
   const doTime = await apenasDeMembrosAtivos(admin, calendarios);
   const resumo = await sincronizarAgendasDoGoogle(admin, { agora: new Date(), calendarios: doTime });
-  return NextResponse.json({ data: resumo });
+  return ok(resumo);
 }
 
 export async function GET(req: NextRequest): Promise<Response> {

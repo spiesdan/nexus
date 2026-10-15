@@ -545,7 +545,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<NextRespons
       });
       return fail(err.code, err.message ?? "erro", err.status, { requestId });
     }
-    throw err;
+    return fail("internal_error", "Erro ao criar lead.", 500, { requestId });
   }
 
   await admin

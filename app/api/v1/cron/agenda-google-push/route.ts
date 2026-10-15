@@ -24,7 +24,8 @@
  * mesma função responde às duas perguntas porque a pergunta é uma só — esta
  * pessoa ainda é do time?
  */
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
+import { fail, ok } from "@/lib/api/wrappers";
 
 import { apenasDeMembrosAtivos } from "@/lib/agenda/google/membros";
 import { apagarNoGoogle, publicarNoGoogle } from "@/lib/agenda/google/escrita";
@@ -65,10 +66,7 @@ function autorizado(req: NextRequest): boolean {
 
 async function executar(req: NextRequest): Promise<Response> {
   if (!autorizado(req)) {
-    return NextResponse.json(
-      { error: { code: "unauthenticated", message: "cron secret inválido" } },
-      { status: 401 },
-    );
+    return fail("unauthenticated", "cron secret inválido", 401);
   }
 
   const admin = createAdminClient();
@@ -112,7 +110,7 @@ async function executar(req: NextRequest): Promise<Response> {
 
   if (erroLeitura) {
     logger.warn("[agenda-google-push] leitura falhou", { error: erroLeitura.message });
-    return NextResponse.json({ error: { code: "internal_error", message: erroLeitura.message } }, { status: 500 });
+    return fail("internal_error", erroLeitura.message, 500);
   }
 
   const linhas = (pendentes ?? []) as LinhaParaIda[];
@@ -120,7 +118,7 @@ async function executar(req: NextRequest): Promise<Response> {
   if (linhas.length === 0) {
     // Rodada vazia NÃO audita: o repo já pagou 95% do audit log em batida de
     // cron sem efeito. Auditar é para quando houve efeito.
-    return NextResponse.json({ data: resumo });
+    return ok(resumo);
   }
 
   // Só de quem ainda é do time — mesma função que impede a leitura.
@@ -249,7 +247,7 @@ async function executar(req: NextRequest): Promise<Response> {
     });
   }
 
-  return NextResponse.json({ data: resumo });
+  return ok(resumo);
 }
 
 export async function GET(req: NextRequest): Promise<Response> {

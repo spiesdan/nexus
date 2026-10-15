@@ -49,7 +49,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   const supabase = await createClient();
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         resultado.nao_encontrados.push(id);
         continue;
       }
-      throw err;
+      return fail("internal_error", "Erro interno.", 500, { requestId });
     }
   }
 

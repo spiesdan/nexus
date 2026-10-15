@@ -10,7 +10,7 @@
  *     confiável — e `../../` é o começo de uma escrita fora do diretório;
  *  3. o destino fica no diretório de certificados, nunca no Storage público.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   DIRETORIO_DE_CERTIFICADOS_NO_APP,
@@ -170,11 +170,17 @@ describe("onde o certificado fica", () => {  it("NUNCA no Storage público", () 
     expect(DIRETORIO_DE_CERTIFICADOS_NO_APP).not.toMatch(/storage/);
   });
 
-  it("o diretório do host é o mesmo que o sidecar lê", () => {
+  it("o diretório do host é o mesmo que o sidecar lê", async () => {
     // Um e sem o outro é a configuração que produz "arquivo não encontrado":
     // o app grava num lugar que o sidecar não olha.
+    // Hermético contra `.env.local`: `FISCAL_CERTS_DIR` aponta nele para um
+    // temp dir do macOS, e sem o stub este teste só passa no CI.
+    vi.stubEnv("FISCAL_CERTS_DIR", "");
+    vi.resetModules();
+    const fresco = await import("@/lib/fiscal/certificado");
+    vi.unstubAllEnvs();
     expect(DIRETORIO_DE_CERTIFICADOS_NO_HOST).toBe("/srv/fiscal/certs");
-    expect(DIRETORIO_DE_CERTIFICADOS_NO_APP).toBe("/fiscal-certs");
+    expect(fresco.DIRETORIO_DE_CERTIFICADOS_NO_APP).toBe("/fiscal-certs");
     expect(NOME_DO_CERTIFICADO).toBe("certificado.pfx");
   });
 });

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<Response> {
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
   // Destino tem que ser membro ativo agent+ da MESMA org (a RLS de

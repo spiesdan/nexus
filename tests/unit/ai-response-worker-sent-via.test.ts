@@ -153,10 +153,19 @@ function makeAdminStub(confidenceThreshold: number) {
     // Proxy devolveria a MESMA linha de agente para as duas perguntas, e o
     // worker cederia sempre — os testes ficariam verdes medindo o skip.
     let consultaDePublicado = false;
+    // A checagem de idempotência de `persistAndDispatch` (`metadata->>
+    // inbound_message_id`) procura uma OUTBOUND prévia: nestes cenários não
+    // há nenhuma, então ela devolve null — sem isto o stub devolveria a
+    // linha inbound para qualquer `maybeSingle` e o worker reaproveitaria
+    // uma resposta que nunca existiu.
+    let consultaDeDedup = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const terminais: any = {
       maybeSingle: () =>
-        Promise.resolve({ data: consultaDePublicado ? null : single, error: null }),
+        Promise.resolve({
+          data: consultaDeDedup ? null : consultaDePublicado ? null : single,
+          error: null,
+        }),
       single: () => Promise.resolve({ data: single, error: null }),
       insert: (row: Record<string, unknown>) => {
         inserted.push({ table, row });
@@ -216,6 +225,9 @@ function makeAdminStub(confidenceThreshold: number) {
           ? alvo[prop as keyof typeof alvo]
           : (...args: unknown[]) => {
               if (prop === "not" && args[0] === "published_version_id") consultaDePublicado = true;
+              if (prop === "eq" && args[0] === "metadata->>inbound_message_id") {
+                consultaDeDedup = true;
+              }
               return chain;
             },
     });

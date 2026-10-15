@@ -47,7 +47,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
   // Propor ≠ executar: nível de execução (4+) sem UI de aprovação não sai daqui.
   if (input.nivel > 3) {

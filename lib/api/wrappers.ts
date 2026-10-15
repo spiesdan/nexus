@@ -42,7 +42,10 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 // -----------------------------------------------------------------------------
 
 type OkOptions = {
-  status?: 200 | 201 | 204;
+  // 503 é do healthcheck (`unhealthy`): sucesso de protocolo (o probe responde)
+  // com falha de conteúdo. Não abrir para 4xx/5xx genéricos — erro de
+  // negócio usa `fail()`, e o tipo é a guarda.
+  status?: 200 | 201 | 204 | 503;
   meta?: ApiSuccess<unknown>["meta"];
   requestId?: string;
   headers?: HeadersInit;

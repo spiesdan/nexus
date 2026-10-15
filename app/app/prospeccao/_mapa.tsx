@@ -147,6 +147,11 @@ export function MapaProspects({
     cbRef.current = { onSelecionar, onVer, onAdicionar, onFila, onArea };
   });
   const [zoom, setZoom] = React.useState(12);
+  // O zoom SÓ alimenta o desenho no modo densidade (`itensParaDesenho`
+  // ignora zoom em marcadores — o cluster do Leaflet cuida). Sem isto, cada
+  // pan/zoom (`moveend` → `setZoom`) recriava todos os marcadores: arrastar o
+  // mapa congelava junto com o clique de seleção.
+  const zoomEfetivo = modo === "densidade" ? zoom : 0;
   // O desenho SÓ acontece quando o mapa existe: o efeito de desenho roda no
   // mount com os refs ainda nulos (o import do Leaflet é assíncrono) e, sem
   // este estado, nada o dispara de novo — a lista chega antes do chunk e os
@@ -267,7 +272,7 @@ export function MapaProspects({
 
       // QUEM agrupa depende do modo — e a decisao mora em `itensParaDesenho`
       // (`lib/prospeccao/geo.ts`), com teste. Aqui so se consome o resultado.
-      const itens = itensParaDesenho(lista, modo, zoom);
+      const itens = itensParaDesenho(lista, modo, zoomEfetivo);
       if (modo === "densidade") {
         const max = Math.max(1, ...itens.map((i) => (ehCluster(i) ? i.pontos.length : 1)));
         for (const item of itens) {
@@ -341,7 +346,7 @@ export function MapaProspects({
     return () => {
       cancelado = true;
     };
-  }, [lista, zoom, modo, centro, raioKm, rota, mapaPronto]);
+  }, [lista, zoomEfetivo, modo, centro, raioKm, rota, mapaPronto]);
 
   // O ANEL DE SELEÇÃO sem recriar a camada: `setIcon` no marcador certo.
   // Recriar aqui (o `clearLayers` do efeito acima) removia a camada-fonte da

@@ -36,6 +36,12 @@ interface SendArgs {
   replyTo?: string;
   tags?: { name: string; value: string }[];
   /**
+   * Chave de idempotência da Resend (deduplica reenvios por até 24h).
+   * Opcional: só quem tem efeito externo irreversível + retry (ex. export LGPD)
+   * precisa. Sem ela, crash entre `send` e marcação de concluído reenvia.
+   */
+  idempotencyKey?: string;
+  /**
    * Nome de exibição do remetente — a marca resolvida (`marcaDaSaida().nome`).
    * Ausente usa o endereço puro: quem não passa marca não ganha a nossa.
    */
@@ -116,6 +122,7 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
       text: args.text,
       replyTo: args.replyTo,
       tags: args.tags,
+      ...(args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : {}),
     });
 
     if (error) {

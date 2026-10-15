@@ -110,6 +110,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     .from("ai_provider_credentials_safe")
     .select(SAFE_COLUMNS)
     .eq("id", guardado.id)
+    .eq("organization_id", activeOrg.orgId)
     .single();
 
   return ok(created, { status: 201, requestId });

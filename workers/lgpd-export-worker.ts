@@ -275,6 +275,10 @@ export async function processLgpdExport(event: EventRow): Promise<HandlerResult>
         signedUrl: signed.signedUrl,
         expiresAt,
         marca: await marcaDaSaida(orgId),
+        // Crash entre este envio e o `completed` abaixo faz o retry passar
+        // por aqui de novo: a chave faz a Resend devolver o mesmo envio em
+        // vez de entregar duas vezes.
+        idempotencyKey: `lgpd-export:${requestId}`,
       });
       messageId = sent.messageId;
     } catch (err) {

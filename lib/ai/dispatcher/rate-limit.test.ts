@@ -29,6 +29,32 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Estes testes medem o CONTADOR EM MEMÓRIA — o fallback. Sem o mock, numa
+ * máquina com Upstash alcançável (`.env.local` com credencial real) o `incr`
+ * vai ao Redis de verdade, o mapa fica vazio e os testes falham (ou passam
+ * por vacuidade). O mock força o fallback em qualquer ambiente, que é o que
+ * os casos medem. Mesmo padrão de `rate-limit-misconf.test.ts`.
+ */
+vi.mock("@upstash/redis", () => ({
+  Redis: class {
+    get = async () => {
+      throw new Error("fetch failed");
+    };
+    incr = async () => {
+      throw new Error("fetch failed");
+    };
+    expire = async () => 1;
+  },
+}));
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    UPSTASH_REDIS_REST_URL: "https://redis-de-teste.example",
+    UPSTASH_REDIS_REST_TOKEN: "token-de-teste",
+  },
+}));
+
 describe("contador em memória", () => {
   beforeEach(() => {
     vi.resetModules();

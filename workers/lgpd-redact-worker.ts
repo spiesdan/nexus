@@ -9,10 +9,13 @@
  *      - 'contact': resolve contactId (req.contact_id || external_customer_id);
  *        if absent → status='pending_review' (L-03 no local footprint).
  *        Else call RPC fn_lgpd_cascade_redact_contact (atomic TX).
- *      - 'tenant' (emergency=true, store-level uninstall): batch loop of 100
- *        contacts with checkpointed offset persisted in
- *        request_payload.progress. On finish: organizations.status='redacted'
- *        + redacted_at=now().
+ *      - 'tenant' (emergency=true, store-level uninstall): loop lê sempre do
+ *        início (`is_anonymized = false` exclui o já processado — SEM offset,
+ *        que sobre conjunto mutável pulava contatos), com checkpoint em
+ *        request_payload.progress e exclusão das falhas desta execução (que
+ *        voltam na próxima). `organizations.status='redacted'` SOMENTE com
+ *        zero falhas; com pendências o pedido termina `pending_review` e a org
+ *        não é marcada.
  *   5. Mark status='completed' (or 'partial_failure' for tenant).
  *   6. Try Nuvemshop callback (stub when adapter missing).
  *   7. Emit lgpd.redact_applied (success) or lgpd.redact_failed (error).
@@ -44,6 +47,11 @@ function shortId(id: string): string {
 
 interface TenantProgress {
   processed: number;
+  /**
+   * LEGADO: o loop usava offset sobre conjunto filtrado que encolhe, o que
+   * pulava contatos. Não é mais lido nem escrito — mantido no tipo para
+   * tolerar payloads antigos persistidos.
+   */
   batch_offset: number;
   failed_contacts: string[];
 }
@@ -312,17 +320,58 @@ export async function processLgpdRedact(event: EventRow): Promise<HandlerResult>
       const progress = readTenantProgress(req.request_payload);
       const aggregate = { contacts: 0, conversations: 0, messages: 0 };
 
-      // Loop until empty batch — each iteration checkpoints progress.
-      // Uses keyset-style ordering by id with offset (small batches, full table
-      // is bounded by tenant size).
+      // Re-tenta os que falharam na execução anterior (o pedido volta com
+      // `pending_review`, não `failed`, então há nova tentativa). Re-tentar é
+      // seguro: contato já anonimizado volta como `alreadyAnonymized`.
+      const retryIds = progress.failed_contacts;
+      progress.failed_contacts = [];
+      for (const contactId of retryIds) {
+        try {
+          const cascade = await cascadeRedactContact({
+            organizationId: orgId,
+            contactId,
+            requestId,
+          });
+          if (!cascade.alreadyAnonymized) {
+            aggregate.contacts += cascade.counts["contacts"] ?? 0;
+            aggregate.conversations += cascade.counts["conversations"] ?? 0;
+            aggregate.messages += cascade.counts["messages"] ?? 0;
+          }
+          progress.processed++;
+        } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          progress.failed_contacts.push(contactId);
+          logger.warn("[lgpd-redact-worker] tenant cascade retry failed", {
+            request_id: shortId(requestId),
+            organization_id: orgId,
+            contact_id_short: shortId(contactId),
+            error_hash: sha256(detail),
+          });
+        }
+      }
+
+      // Loop até o lote vazio — cada iteração persiste checkpoint.
+      //
+      // SEM offset, de propósito: o filtro é `is_anonymized = false` e o lote
+      // anonimiza in-place, então as linhas processadas SAEM do conjunto e a
+      // próxima leitura recomeça do início. Offset sobre conjunto mutável pula
+      // ~100 contatos por lote (o redact do tenant saía incompleto — risco
+      // legal). Falhas desta execução são excluídas da seleção (senão o loop
+      // nunca termina); elas voltam na próxima execução pelo re-tento acima.
       while (true) {
-        const { data: batch, error: batchErr } = await admin
+        let query = admin
           .from("contacts")
           .select("id")
           .eq("organization_id", orgId)
           .eq("is_anonymized", false)
-          .order("id", { ascending: true })
-          .range(progress.batch_offset, progress.batch_offset + TENANT_BATCH_SIZE - 1);
+          .order("id", { ascending: true });
+        if (progress.failed_contacts.length > 0) {
+          query = query.not("id", "in", `(${progress.failed_contacts.join(",")})`);
+        }
+        const { data: batch, error: batchErr } = await query.range(
+          0,
+          TENANT_BATCH_SIZE - 1,
+        );
 
         if (batchErr) {
           throw new Error(`tenant_batch_select_failed: ${batchErr.message}`);
@@ -356,9 +405,8 @@ export async function processLgpdRedact(event: EventRow): Promise<HandlerResult>
           }
         }
 
-        progress.batch_offset += rows.length;
-
-        // Persist checkpoint.
+        // Persiste checkpoint (sem offset: a seleção recomeça do início e o
+        // filtro `is_anonymized = false` exclui o já processado).
         const updatedPayload = {
           ...(req.request_payload as Record<string, unknown>),
           progress,
@@ -373,23 +421,29 @@ export async function processLgpdRedact(event: EventRow): Promise<HandlerResult>
         if (rows.length < TENANT_BATCH_SIZE) break;
       }
 
-      // Tenant fully processed → flip organizations.status='redacted'.
-      const { error: orgUpdateErr } = await admin
-        .from("organizations")
-        .update({ status: "redacted", redacted_at: new Date().toISOString() })
-        .eq("id", orgId);
+      // Tenant totalmente processado → marca organizations.status='redacted'
+      // SOMENTE com zero falhas. Com pendências o pedido termina
+      // `pending_review` e a org NÃO pode dizer "redacted" com dados por
+      // anonimizar — tela verde sobre dado pendente.
+      const failedCount = progress.failed_contacts.length;
+      const finalStatus = failedCount > 0 ? "pending_review" : "completed";
+      const organizationStatus = failedCount > 0 ? null : "redacted";
 
-      if (orgUpdateErr) {
-        logger.warn("[lgpd-redact-worker] organizations status update failed", {
-          organization_id: orgId,
-          error_hash: sha256(orgUpdateErr.message),
-        });
+      if (organizationStatus !== null) {
+        const { error: orgUpdateErr } = await admin
+          .from("organizations")
+          .update({ status: "redacted", redacted_at: new Date().toISOString() })
+          .eq("id", orgId);
+
+        if (orgUpdateErr) {
+          logger.warn("[lgpd-redact-worker] organizations status update failed", {
+            organization_id: orgId,
+            error_hash: sha256(orgUpdateErr.message),
+          });
+        }
       }
 
       const callback = await tryNuvemshopCallback(orgId, req.request_payload ?? {});
-
-      const failedCount = progress.failed_contacts.length;
-      const finalStatus = failedCount > 0 ? "pending_review" : "completed";
 
       await admin
         .from("lgpd_requests")
@@ -402,7 +456,7 @@ export async function processLgpdRedact(event: EventRow): Promise<HandlerResult>
             failed_contacts_count: failedCount,
             aggregate_counts: aggregate,
             callback_status: callback.status,
-            organization_status: "redacted",
+            organization_status: organizationStatus ?? "unchanged_pending_review",
           },
           cascaded_to: aggregate,
           error_message: failedCount > 0 ? "partial_failure" : null,

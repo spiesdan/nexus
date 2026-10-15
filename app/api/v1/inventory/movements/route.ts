@@ -64,7 +64,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
   if (input.tipo !== "ajuste" && input.quantidade <= 0) {
     return fail("validation_failed", "entrada/saída pede quantidade positiva.", 422, { requestId });

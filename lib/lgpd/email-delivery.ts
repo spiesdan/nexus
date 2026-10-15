@@ -54,6 +54,12 @@ interface SendArgs {
   expiresAt: Date;
   /** A marca de quem PROCESSOU a solicitação. Obrigatória — ver o cabeçalho. */
   marca: MarcaDeSaida;
+  /**
+   * Idempotência do envio (Resend dedup por 24h). O worker passa
+   * `lgpd-export:<requestId>`: crash entre envio e `completed` faz o retry
+   * reenviar, e sem a chave o titular recebe o relatório duas vezes.
+   */
+  idempotencyKey?: string;
 }
 
 export async function sendExportEmail(args: SendArgs): Promise<{ messageId: string }> {
@@ -102,6 +108,7 @@ Base legal: LGPD Lei nº 13.709/2018, Art. 18, II.`;
       { name: "kind", value: "lgpd_export" },
       { name: "request_short", value: shortId },
     ],
+    ...(args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : {}),
   });
 
   if (!result.ok) {

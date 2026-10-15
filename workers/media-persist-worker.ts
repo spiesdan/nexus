@@ -66,9 +66,25 @@ export async function persistMessageMedia(row: EventRow): Promise<HandlerResult>
   if (msg.media_storage_path) return { consumer_key, status: "skipped", detail: "already stored" };
 
   const markStatus = async (media_status: "stored" | "failed", patch: Record<string, unknown> = {}) => {
+    // Re-lê o metadata NA HORA de gravar, e não o snapshot do início: entre a
+    // leitura e aqui passam segundos (download + upload), e outro worker
+    // (ex.: sentiment fundindo `sentiment_score` no mesmo JSON) gravaria no
+    // meio — fundir sobre o snapshot apagaria o campo dele (lost update).
+    // Re-ler estreita a janela para ms; não a fecha (sem coluna dedicada ou
+    // `jsonb ||` via RPC), mas torna a colisão residual desprezível.
+    const { data: atual } = await admin
+      .from("messages")
+      .select("metadata")
+      .eq("id", msg.id)
+      .eq("organization_id", msg.organization_id)
+      .maybeSingle();
+    const base =
+      (atual as { metadata?: Record<string, unknown> } | null)?.metadata ??
+      msg.metadata ??
+      {};
     const { error: updErr } = await admin
       .from("messages")
-      .update({ metadata: { ...(msg.metadata ?? {}), media_status }, ...patch })
+      .update({ metadata: { ...base, media_status }, ...patch })
       .eq("id", msg.id)
       .eq("organization_id", msg.organization_id);
     if (updErr) throw new Error(`message update failed: ${updErr.message}`);
@@ -113,7 +129,11 @@ export async function persistMessageMedia(row: EventRow): Promise<HandlerResult>
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     if (isLastAttempt) {
-      logger.error("[media-persist] download failed permanently", { message_id: msg.id, detail });
+      logger.error("[media-persist] download failed permanently", {
+        organization_id: msg.organization_id,
+        message_id: msg.id,
+        detail,
+      });
       await markStatus("failed");
     }
     return { consumer_key, status: "error", detail };
@@ -126,6 +146,7 @@ export async function persistMessageMedia(row: EventRow): Promise<HandlerResult>
   if (uploadErr) {
     if (isLastAttempt) {
       logger.error("[media-persist] upload failed permanently", {
+        organization_id: msg.organization_id,
         message_id: msg.id,
         detail: uploadErr.message,
       });

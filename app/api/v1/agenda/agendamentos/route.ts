@@ -282,6 +282,6 @@ async function despachar<T>(
         requestId,
       });
     }
-    throw err;
+    return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }

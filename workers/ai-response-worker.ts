@@ -294,6 +294,7 @@ export async function processMessageReceived(row: EventRow): Promise<ProcessResu
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     logger.error("[ai-response-worker] invocation failed", {
+      organization_id: ctx.organization_id,
       conversation_id: ctx.conversation_id,
       message_id: ctx.message_id,
       error: detail,
@@ -993,6 +994,31 @@ async function persistAndDispatch(
 ): Promise<{ outbound_message_id: string }> {
   const admin = createAdminClient();
 
+  // Idempotência de retry: o drain re-entrega o job após erro/crash, e o LLM
+  // já rodou de novo antes de chegarmos aqui. Sem esta checagem cada retry
+  // inseria UMA outbound nova (linha `sending` órfã + custo LLM dobrado). A
+  // âncora é o inbound que originou a resposta (`ctx.message_id`), gravada no
+  // metadata abaixo.
+  const { data: existente } = await admin
+    .from("messages")
+    .select("id")
+    .eq("organization_id", ctx.organization_id)
+    .eq("conversation_id", ctx.conversation_id)
+    .eq("direction", "outbound")
+    .eq("sent_via", "ai")
+    .eq("metadata->>inbound_message_id", ctx.message_id)
+    .maybeSingle();
+
+  if (existente) {
+    logger.warn("[ai-response-worker] outbound duplicada evitada no retry", {
+      organization_id: ctx.organization_id,
+      conversation_id: ctx.conversation_id,
+      inbound_message_id: ctx.message_id,
+      outbound_message_id: (existente as { id: string }).id,
+    });
+    return { outbound_message_id: (existente as { id: string }).id };
+  }
+
   const insertRow = {
     organization_id: ctx.organization_id,
     conversation_id: ctx.conversation_id,
@@ -1006,6 +1032,7 @@ async function persistAndDispatch(
     sent_at: new Date().toISOString(),
     metadata: {
       ai_generated: true,
+      inbound_message_id: ctx.message_id,
       agent_id: ctx.agent.id,
       kb_version_id: ctx.agent.active_kb_version_id,
       finish_reason: response.finish_reason,

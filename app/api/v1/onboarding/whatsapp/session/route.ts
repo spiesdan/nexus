@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-import { NextResponse } from "next/server";
 import { ok, fail } from "@/lib/api/wrappers";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
@@ -141,11 +140,18 @@ export async function POST(req: Request) {
   const sessionName = defaultSessionName(activeOrg.orgId);
 
   // 1) Make sure we have a row in channel_sessions.
-  const channelSessionId = await ensureChannelSession(activeOrg.orgId, sessionName, {
-    userId: user.id,
-    requestId,
-    metadata: { provider: CHANNEL_PROVIDER_WAHA, origin: "onboarding" },
-  });
+  let channelSessionId: string;
+  try {
+    channelSessionId = await ensureChannelSession(activeOrg.orgId, sessionName, {
+      userId: user.id,
+      requestId,
+      metadata: { provider: CHANNEL_PROVIDER_WAHA, origin: "onboarding" },
+    });
+  } catch {
+    return fail("internal_error", "Não foi possível preparar a sessão do WhatsApp.", 500, {
+      requestId,
+    });
+  }
 
   // 1b) `?restart=1` = pedido explícito de QR novo. O start sozinho não resolve
   // uma sessão FAILED: o WAHA responde 422 ("already exists") e o usuário fica
@@ -178,9 +184,6 @@ export async function POST(req: Request) {
         { requestId },
       );
     }
-    return NextResponse.json(
-      { error: { code: "waha_start_failed", message: msg } },
-      { status: 502 },
-    );
+    return fail("upstream_unavailable", msg, 502, { requestId });
   }
 }
