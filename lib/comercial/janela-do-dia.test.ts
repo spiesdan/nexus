@@ -120,14 +120,17 @@ describe("janelaDoDia", () => {
     // A prova independente: `paredeComoUtc` monta o instante a partir do que o
     // runtime do Node mostra para a parede local, e o código sob teste tem de
     // chegar ao mesmo número.
-    const j = janelaDoDia("2026-10-14", SP)!;
+    //
+    // Os DOIS lados saem do mesmo dia — o que o runtime diz que é hoje em SP.
+    // A versão anterior comparava data fixa ("2026-10-14") com o dia corrente
+    // e apodrecia à meia-noite: virou 15/10 e caiu no CI, sem ninguém ter
+    // tocado no código. Teste que mede o calendário em vez do acordo mente
+    // sobre o que prova.
     const peloRuntime = paredeComoUtc("2026-10-14", 0);
+    const dia = `${peloRuntime.getUTCFullYear()}-${String(peloRuntime.getUTCMonth() + 1).padStart(2, "0")}-${String(peloRuntime.getUTCDate()).padStart(2, "0")}`;
+    const j = janelaDoDia(dia, SP)!;
     // O runtime reconstrói a partir do instante atual; compara-se o DIA.
-    expect(Date.parse(j.de)).toBe(
-      Date.parse(
-        `${peloRuntime.getUTCFullYear()}-${String(peloRuntime.getUTCMonth() + 1).padStart(2, "0")}-${String(peloRuntime.getUTCDate()).padStart(2, "0")}T03:00:00.000Z`,
-      ),
-    );
+    expect(Date.parse(j.de)).toBe(Date.parse(`${dia}T03:00:00.000Z`));
   });
 
   it("vira o dia no fim de mês e em ano bissexto", () => {
