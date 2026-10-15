@@ -24,6 +24,7 @@ vi.mock("@/lib/api/client", () => ({
 }));
 vi.mock("@/components/nexus-ui/forms/ConfirmacaoProvider", () => ({ useConfirmar: () => vi.fn() }));
 vi.mock("@/components/feedback/ApiErrorToast", () => ({ showApiError: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/components/nexus-ui/feedback/nexus-toast", () => ({
   nexusToast: { success: vi.fn(), error: vi.fn() },
 }));

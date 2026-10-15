@@ -30,8 +30,8 @@ import * as React from "react";
 
 import { useT } from "@/hooks/i18n/useT";
 
-/** `YYYY-MM-DD` do dia, no fuso do navegador — para os atalhos. */
-function hojeEmChave(offsetDias = 0): string {
+/** `YYYY-MM-DD` do dia, no fuso do navegador — para os atalhos e o botão do dia. */
+export function hojeEmChave(offsetDias = 0): string {
   const d = new Date();
   d.setDate(d.getDate() + offsetDias);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

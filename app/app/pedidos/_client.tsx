@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -36,7 +37,7 @@ import { paraCSV } from "@/lib/comercial/relatorios";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { idsDoLote } from "@/lib/comercial/ids-do-lote";
 
-import { FiltroPorPeriodo } from "./_periodo";
+import { FiltroPorPeriodo, hojeEmChave } from "./_periodo";
 import {
   badgeDaOrigem,
   ROTULO_DO_STATUS,
@@ -213,6 +214,7 @@ export function PedidosClient({
   const t = useT();
   const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
+  const router = useRouter();
   const [pedidos, setPedidos] = React.useState(inicial);
   const filtrosIniciais = React.useMemo<Filtros>(
     () => ({
@@ -241,6 +243,7 @@ export function PedidosClient({
   const [carregando, setCarregando] = React.useState(false);
   const [visao, setVisao] = React.useState<"tabela" | "quadro" | "cartoes">("cartoes");
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
+  const [imprimindoDia, setImprimindoDia] = React.useState(false);
   const [expandido, setExpandido] = React.useState<string | null>(null);
   const [filtrosSalvos, setFiltrosSalvos] = React.useState<Record<string, Filtros>>(() => {
     try {
@@ -521,6 +524,50 @@ export function PedidosClient({
     [selecionados, pedidos],
   );
 
+  /**
+   * Imprime TODOS os pedidos do dia, num clique só.
+   *
+   * O botão "Imprimir pedidos" imprime o que a lista mostra (seleção ou os
+   * 50 primeiros do filtro). Este zera o filtro para o dia e busca os ids
+   * direto na API — porque a lista na tela pode estar paginada ou filtrada,
+   * e o "todos do dia" não pode depender do que por acaso está visível.
+   *
+   * Dia = `YYYY-MM-DD` local, o mesmo dos atalhos e do agrupamento "Hoje".
+   */
+  async function imprimirODia(): Promise<void> {
+    const hoje = hojeEmChave();
+    setImprimindoDia(true);
+    try {
+      const qs = new URLSearchParams({ de: hoje, ate: hoje });
+      const corpo = await apiClient.get<{ data: unknown }>(
+        `/api/v1/commercial-orders?${qs.toString()}`,
+      );
+      const dados = (corpo as { data?: unknown } | null)?.data;
+      const lista = Array.isArray(dados) ? (dados as { id: string }[]) : [];
+      if (lista.length === 0) {
+        toast.info(t("Nenhum pedido hoje."));
+        return;
+      }
+      // A tela passa a mostrar o dia impresso — o que sai no papel é o que
+      // fica na tela, sem surpresa.
+      mudar({ ...FILTROS_VAZIOS, de: hoje, ate: hoje });
+      const ids = idsDoLote(lista.map((x) => x.id).join(","));
+      if (ids.length < lista.length) {
+        toast.warning(
+          t("O dia tem {total} pedidos; o impresso leva os 50 mais recentes.").replace(
+            "{total}",
+            String(lista.length),
+          ),
+        );
+      }
+      router.push(`/app/pedidos/imprimir?ids=${ids.join(",")}`);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setImprimindoDia(false);
+    }
+  }
+
   const porStatus = React.useMemo(() => {
     const mapa = new Map<StatusDoPedido, PedidoComercial[]>();
     for (const s of STATUS_DO_PEDIDO) mapa.set(s, []);
@@ -603,6 +650,15 @@ export function PedidosClient({
                 {t("imprimindo os 50 mais recentes de")} <strong>{pedidos.length}</strong>
               </span>
             )}
+            <Button
+              variant="outline"
+              className="bg-surface"
+              disabled={imprimindoDia}
+              onClick={() => void imprimirODia()}
+              title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
+            >
+              <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
+            </Button>
           </>
         }
       />
