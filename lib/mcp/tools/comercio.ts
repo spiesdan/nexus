@@ -156,7 +156,10 @@ const produtosInputShape = {
     .trim()
     .min(2)
     .describe("o que a pessoa disse — pode ser o nome, a marca, o código ou tudo junto"),
-  limite: z.number().int().min(1).max(20).optional().default(8),
+  // Teto 60 (era 20): pergunta ampla ("saco de lixo", 47 opções) precisa da
+  // lista INTEIRA para o agente mandar tudo de uma vez — medido em 2026-10-15.
+  // Default segue 8 para pergunta específica; ampla pede limite alto.
+  limite: z.number().int().min(1).max(60).optional().default(8),
   // Default FALSE de propósito (medido em 2026-10-15): com `true`, loja cujo
   // estoque não é contado some da resposta — "solupa" devolvia só o 20L
   // (único com saldo) e escondia o 2L/5L/60L que a loja TEM. Cada item já vem
