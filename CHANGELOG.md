@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.51] — 2026-10-15
+
+### Adicionado
+
+- **Busca entende apelido do balcão (solupa, intercap)** **Fim do "quis dizer".** Apelido que o cliente fala vira nome de catálogo
+  na tokenização: "solupa" sempre casa Solubill, "intercap" sempre casa
+  Billcap — sem perguntar, sem empate fantasma com marca parecida.
+
 ## [1.25.50] — 2026-10-15
 
 ### Corrigido
@@ -4263,7 +4271,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.50...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.51...HEAD
+[1.25.51]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.50...v1.25.51
 [1.25.50]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.49...v1.25.50
 [1.25.49]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.48...v1.25.49
 [1.25.48]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...v1.25.48
