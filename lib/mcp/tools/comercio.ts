@@ -157,7 +157,12 @@ const produtosInputShape = {
     .min(2)
     .describe("o que a pessoa disse — pode ser o nome, a marca, o código ou tudo junto"),
   limite: z.number().int().min(1).max(20).optional().default(8),
-  somente_disponiveis: z.boolean().optional().default(true),
+  // Default FALSE de propósito (medido em 2026-10-15): com `true`, loja cujo
+  // estoque não é contado some da resposta — "solupa" devolvia só o 20L
+  // (único com saldo) e escondia o 2L/5L/60L que a loja TEM. Cada item já vem
+  // com `disponivel` explícito; quem decide o que prometer é o agente, com a
+  // regra de confirmar estoque antes de fechar.
+  somente_disponiveis: z.boolean().optional().default(false),
 };
 
 /** O preço como a pessoa lê, não como o banco guarda. */
@@ -232,8 +237,10 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "('ifone') e acha por marca, categoria ou código. " +
     "⚠️ SE VOLTAR MAIS DE UM produto com `empate: true`, NÃO escolha por conta própria — os dois " +
     "casam igualmente o que ela disse, e a diferença entre eles é de preço. Pergunte qual é. " +
-    "Lista vazia significa que a loja não tem esse item cadastrado: não invente, ofereça consultar " +
-    "com a equipe.",
+    "Cada produto volta com `disponivel` (false = sem saldo no controle de estoque): apresente " +
+    "todas as variações com preço, e para as marcadas false diga que confirma o estoque antes " +
+    "de prometer. Lista vazia significa que a loja não tem esse item cadastrado: não invente, " +
+    "ofereça consultar com a equipe.",
   inputSchema: produtosInputShape,
   category: "read",
   requiresRole: "agent",
