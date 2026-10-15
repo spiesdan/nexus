@@ -239,7 +239,9 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "casam igualmente o que ela disse, e a diferença entre eles é de preço. Pergunte qual é. " +
     "Cada produto volta com `disponivel` (false = sem saldo no controle de estoque): apresente " +
     "todas as variações com preço, e para as marcadas false diga que confirma o estoque antes " +
-    "de prometer. Lista vazia significa que a loja não tem esse item cadastrado: não invente, " +
+    "de prometer. `total_encontrados` diz quantos casaram antes do corte do `limite`: se ele " +
+    "for bem maior que a lista, NÃO afirme que são só aqueles — resuma por tamanho e pergunte " +
+    "qual. Lista vazia significa que a loja não tem esse item cadastrado: não invente, " +
     "ofereça consultar com a equipe.",
   inputSchema: produtosInputShape,
   category: "read",
@@ -370,6 +372,11 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     const mensagem = avisosDaBusca({ empate, ignorados });
 
     return {
+      // Total ANTES do corte do limite: sem ele o agente trata a amostra
+      // como o catálogo ("tem 10 e 100 litros" para 47 opções de saco de
+      // lixo, medido em 2026-10-15). Com o total ele resume por tamanho e
+      // pergunta, em vez de afirmar sobre o que não viu.
+      total_encontrados: disponiveis.length,
       produtos: topo.map(({ produto }) => {
         // Mesmo preço de vitrine da tela: promoção válida vence o base — uma
         // regra só, ou o agente anuncia um preço e o pedido cobra outro.
