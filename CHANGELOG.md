@@ -8,6 +8,40 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.25.47] — 2026-10-15
+
+### Adicionado
+
+- **Botão Imprimir o dia, ao lado do Imprimir pedidos** **Um clique imprime todos os pedidos do dia.** O botão zera o filtro para
+  hoje, busca os ids direto na API e abre a impressão — porque a lista na tela
+  pode estar paginada ou filtrada, e o "todos do dia" não pode depender do que
+  por acaso está visível. A tela passa a mostrar o dia impresso: o que sai no
+  papel é o que fica na tela, sem surpresa.
+
+  Dia vazio avisa e não navega — abrir a tela de impressão vazia pareceria bug.
+  Acima de 50, trunca pelo lote e avisa — nunca em silêncio. Medido em 90 dias:
+  o dia com mais pedidos teve 41, então o teto quase nunca aparece, mas o
+  código não conta com isso.
+
+  **Mutações provadas:** fetch sem `de`/`ate` (imprimiria tudo sem filtro)
+  reprova 2 testes; push sem `idsDoLote` (sem teto) reprova 1.
+
+### Alterado
+
+- **Filtros de pedidos num painel só, com rótulo e sem controle morto** **Os filtros eram quatro zonas espalhadas com um controle que mentia.** Busca
+  solta com link falso ("Pesquise por nota fiscal..." só abria os avançados),
+  frase com selects de 13px sem rótulo, um select "Envio" que não filtrava nada
+  — clicável, sério e morto — e avançados com o "meus" duplicado.
+
+  Agora é um painel só: busca, Status, Vendedor, Origem e Período, cada um com
+  rótulo, mesma altura, mesma borda. Chips e avançados continuam onde estavam.
+  Comportamento 100% preservado — inclusive o atalho "meus" (vive no select de
+  vendedor) e a contagem dos avançados.
+
+  **Mutações provadas:** nenhuma nova — a prova aqui é visual (Playwright
+  contra dev local com banco semeado, desktop 1440 e mobile 390) mais os 19
+  testes de render/filtro existentes, que passam sem tocar.
+
 ## [1.25.46] — 2026-10-14
 
 ### Adicionado
@@ -4194,7 +4228,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.47...HEAD
+[1.25.47]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.46...v1.25.47
 [1.25.46]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.45...v1.25.46
 [1.25.45]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.44...v1.25.45
 [1.25.44]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.43...v1.25.44
