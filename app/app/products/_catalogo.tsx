@@ -26,6 +26,7 @@ export function CatalogoClient({
   podeEditar,
   textosProdutos,
   buscaInicial,
+  semFoto,
   total,
   pagina,
   porPagina,
@@ -38,8 +39,10 @@ export function CatalogoClient({
   podeEditar: boolean;
   textosProdutos: React.ComponentProps<typeof ProdutosClient>["textos"];
   buscaInicial?: string;
-  /** NULL quando o `count` não veio: a tela mostra "Página N" sem "de Y". */
-  total: number | null;
+  /** Vem da lista de ids (exata, sem depender do `count`): a aba "Sem fotos". */
+  semFoto?: boolean;
+  /** Total EXATO (tamanho da lista de ids): nunca chute, nunca amostra. */
+  total: number;
   pagina: number;
   porPagina: number;
 }) {
@@ -66,6 +69,7 @@ export function CatalogoClient({
             textos={textosProdutos}
             esconderCabecalho
             buscaInicial={buscaInicial}
+            semFotoInicial={semFoto}
             total={total}
             pagina={pagina}
             porPagina={porPagina}

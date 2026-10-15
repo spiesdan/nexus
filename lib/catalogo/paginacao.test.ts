@@ -13,6 +13,7 @@ import {
   lerPagina,
   sanitizarBuscaParaIlike,
   totalDePaginas,
+  urlDoCatalogo,
 } from "@/lib/catalogo/paginacao";
 
 describe("paginacao do catalogo", () => {
@@ -63,5 +64,19 @@ describe("paginacao do catalogo", () => {
     expect(sanitizarBuscaParaIlike("a,b\\c")).toBe("a b c");
     expect(sanitizarBuscaParaIlike("  muito   espaco  ")).toBe("muito espaco");
     expect(sanitizarBuscaParaIlike("")).toBe("");
+  });
+
+  it("urlDoCatalogo: sem filtro é a URL limpa; página 1 é omitida", () => {
+    expect(urlDoCatalogo({})).toBe("/app/products");
+    expect(urlDoCatalogo({ pagina: 1 })).toBe("/app/products");
+    expect(urlDoCatalogo({ busca: "saco" })).toBe("/app/products?busca=saco");
+    expect(urlDoCatalogo({ semFoto: true })).toBe("/app/products?sem_foto=1");
+    expect(urlDoCatalogo({ pagina: 3 })).toBe("/app/products?pagina=3");
+  });
+
+  it("urlDoCatalogo: trocar de página preserva busca e aba", () => {
+    expect(urlDoCatalogo({ busca: "saco de lixo", semFoto: true, pagina: 2 })).toBe(
+      "/app/products?busca=saco+de+lixo&sem_foto=1&pagina=2",
+    );
   });
 });

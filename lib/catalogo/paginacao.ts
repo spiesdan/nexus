@@ -62,3 +62,18 @@ export function janelaDePaginas(pagina: number, totalPaginas: number): (number |
 export function sanitizarBuscaParaIlike(busca: string): string {
   return busca.replace(/[,\\]/g, " ").replace(/\s+/g, " ").trim();
 }
+
+/**
+ * Reconstrói a URL do catálogo preservando os filtros ativos — é o único
+ * lugar que monta essa URL, para a troca de página não derrubar a busca nem
+ * a aba (e vice-versa). Página 1 é omitida: URL limpa é URL compartilhável.
+ */
+export function urlDoCatalogo(op: { busca?: string; semFoto?: boolean; pagina?: number }): string {
+  const qs = new URLSearchParams();
+  const termo = (op.busca ?? "").trim();
+  if (termo) qs.set("busca", termo);
+  if (op.semFoto) qs.set("sem_foto", "1");
+  if ((op.pagina ?? 1) > 1) qs.set("pagina", String(op.pagina));
+  const sufixo = qs.toString();
+  return sufixo ? `/app/products?${sufixo}` : "/app/products";
+}

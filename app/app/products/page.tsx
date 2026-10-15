@@ -12,13 +12,7 @@ import {
 } from "@/lib/schemas/precos";
 import { createClient } from "@/lib/supabase/server";
 import { fotosDosProdutos } from "@/lib/comercial/fotos-dos-produtos";
-import {
-  POR_PAGINA_DO_CATALOGO,
-  faixaDaPagina,
-  lerPagina,
-  sanitizarBuscaParaIlike,
-  totalDePaginas,
-} from "@/lib/catalogo/paginacao";
+import { POR_PAGINA_DO_CATALOGO, lerPagina, sanitizarBuscaParaIlike } from "@/lib/catalogo/paginacao";
 
 import { CatalogoClient } from "./_catalogo";
 
@@ -44,31 +38,40 @@ export const dynamic = "force-dynamic";
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string; pagina?: string }>;
+  searchParams: Promise<{ busca?: string; pagina?: string; sem_foto?: string }>;
 }) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
-  const { busca, pagina: paginaBruta } = await searchParams;
+  const { busca, pagina: paginaBruta, sem_foto: semFotoBruto } = await searchParams;
 
   const podeEditar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
-  // Capturado aqui porque o `redirect` acima já provou que existe: dentro do
-  // `buscarProdutos` o narrowing não alcança e o `orgId` viraria `possibly null`.
+  // Capturado aqui porque o `redirect` acima já provou que existe: dentro dos
+  // closures o narrowing não alcança e o `orgId` viraria `possibly null`.
   const orgId = activeOrg.orgId;
   const supabase = await createClient();
 
-  // A busca filtra no SERVIDOR, não no navegador: a página entrega 50 por vez
-  // e o filtro local nunca alcançaria o resto do catálogo (medido: "saco de
-  // lixo" mora nas posições 904–958 de 1141). O predicado é o mesmo da rota
+  // IDS PRIMEIRO, PÁGINA DEPOIS. O filtro "sem foto" (NOT EXISTS) não se
+  // expressa no PostgREST: `!left + is.null` filtra o embed, não o pai
+  // (medido: devolveu os 1139 com `product_images: []`), e `in` com 700 UUIDs
+  // estoura a URL. Duas consultas leves resolvem sem mudar o schema: a
+  // primeira traz só ids em ordem (paginável e contável com exatidão — sem
+  // depender do `count`, que some atrás de proxy), a segunda traz as 50
+  // linhas da página. O navegador continua recebendo só a fatia.
+  //
+  // A busca filtra no SERVIDOR pelo mesmo motivo: a página entrega 50 por vez
+  // e o filtro local nunca alcançaria o resto (medido: "saco de lixo" mora
+  // nas posições 904–958 de 1141). O predicado é o mesmo da rota
   // GET /api/v1/products — nome, código ou marca como substring.
   const termo = sanitizarBuscaParaIlike(busca ?? "");
-  async function buscarProdutos(pagina: number) {
-    const { de, ate } = faixaDaPagina(pagina, POR_PAGINA_DO_CATALOGO);
+  const semFoto = semFotoBruto === "1";
+
+  function consultaDeIds() {
     let consulta = supabase
       .from("catalog_products")
-      .select(COLUNAS_DO_PRODUTO, { count: "exact" })
+      .select("id")
       .eq("organization_id", orgId)
       .order("ativo", { ascending: false })
       .order("nome");
@@ -77,19 +80,44 @@ export default async function ProdutosPage({
         `nome.ilike.%${termo}%,codigo.ilike.%${termo}%,marca.ilike.%${termo}%`,
       );
     }
-    return consulta.range(de, ate);
+    return consulta;
   }
 
-  const pedida = lerPagina(paginaBruta);
-  let { data: produtos, count: total } = await buscarProdutos(pedida);
-  const totalPaginas = totalDePaginas(total ?? null, POR_PAGINA_DO_CATALOGO);
+  const { data: linhasDeIds } = await consultaDeIds();
+  let ids = ((linhasDeIds ?? []) as unknown as { id: string }[]).map((l) => l.id);
+
+  if (semFoto) {
+    const { data: comFoto } = await supabase
+      .from("product_images")
+      .select("product_id")
+      .eq("organization_id", orgId);
+    const temFoto = new Set(
+      ((comFoto ?? []) as unknown as { product_id: string }[]).map((r) => r.product_id),
+    );
+    ids = ids.filter((id) => !temFoto.has(id));
+  }
+
+  const total = ids.length;
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA_DO_CATALOGO));
   // URL com página além do fim (digitado à mão): volta para a última em vez
   // de mostrar lista vazia sem saída.
-  let pagina = pedida;
-  if (totalPaginas !== null && pedida > totalPaginas) {
-    pagina = totalPaginas;
-    ({ data: produtos, count: total } = await buscarProdutos(pagina));
-  }
+  const pagina = Math.min(lerPagina(paginaBruta), totalPaginas);
+  const idsDaPagina = ids.slice(
+    (pagina - 1) * POR_PAGINA_DO_CATALOGO,
+    pagina * POR_PAGINA_DO_CATALOGO,
+  );
+
+  // `in=()` vazio é inválido no PostgREST: página vazia não consulta.
+  const { data: produtos } =
+    idsDaPagina.length === 0
+      ? { data: [] }
+      : await supabase
+          .from("catalog_products")
+          .select(COLUNAS_DO_PRODUTO)
+          .eq("organization_id", orgId)
+          .in("id", idsDaPagina)
+          .order("ativo", { ascending: false })
+          .order("nome");
 
   const [{ data: categorias }, { data: tabelas }] = await Promise.all([
     supabase
@@ -123,7 +151,8 @@ export default async function ProdutosPage({
       tabelas={(tabelas ?? []) as unknown as TabelaDePreco[]}
       podeEditar={podeEditar}
       buscaInicial={busca ?? ""}
-      total={total ?? null}
+      semFoto={semFoto}
+      total={total}
       pagina={pagina}
       porPagina={POR_PAGINA_DO_CATALOGO}
       textosProdutos={{

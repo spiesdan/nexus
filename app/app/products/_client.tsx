@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
-import { janelaDePaginas, totalDePaginas } from "@/lib/catalogo/paginacao";
+import { janelaDePaginas, totalDePaginas, urlDoCatalogo } from "@/lib/catalogo/paginacao";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   precoDeVitrine,
@@ -176,6 +176,7 @@ export function ProdutosClient({
    * digitou, em vez de pedir para digitar de novo na lista inteira.
    */
   buscaInicial,
+  semFotoInicial,
   total,
   pagina,
   porPagina,
@@ -190,11 +191,14 @@ export function ProdutosClient({
   textos: Textos;
   esconderCabecalho?: boolean;
   buscaInicial?: string;
+  /** Aba ativa vinda da URL (`?sem_foto=1`): filtra no SERVIDOR, não na página. */
+  semFotoInicial?: boolean;
   /**
-   * Total do SERVIDOR (com o filtro da busca aplicado). NULL quando o `count`
-   * não veio — a paginação mostra "Página N" sem "de Y" em vez de chutar.
+   * Total EXATO do servidor (tamanho da lista de ids, com busca e aba
+   * aplicados). Nunca amostra — é o que permite afirmar "não há" com a
+   * busca vazia.
    */
-  total: number | null;
+  total: number;
   /** Página que o servidor entregou (1-based). */
   pagina: number;
   /** Itens por página — 50, para o navegador não receber o catálogo inteiro. */
@@ -207,15 +211,12 @@ export function ProdutosClient({
   // A busca da TELA vira busca do SERVIDOR (?busca=): a página entrega 50 por
   // vez e o filtro local nunca alcançaria o resto do catálogo (medido: "saco
   // de lixo" mora nas posições 904–958 de 1141). Nova busca recomeça da
-  // página 1. O hook com debounce já existe para isso — o estado reflete na
-  // hora, a ida ao servidor espera a pessoa parar de digitar.
+  // página 1, preservando a aba. O hook com debounce já existe para isso — o
+  // estado reflete na hora, a ida ao servidor espera a pessoa parar de digitar.
   const levarBuscaAoServidor = useDebouncedCallback((termo: string) => {
     const atual = termo.trim();
     if (atual === (buscaInicial ?? "").trim()) return;
-    const qs = new URLSearchParams();
-    if (atual) qs.set("busca", atual);
-    const sufixo = qs.toString();
-    router.replace(sufixo ? `/app/products?${sufixo}` : "/app/products");
+    router.replace(urlDoCatalogo({ busca: atual, semFoto: semFotoInicial, pagina: 1 }));
   }, 400);
 
   function aoMudarBusca(valor: string) {
@@ -225,14 +226,26 @@ export function ProdutosClient({
 
   // Troca de página preserva o termo JÁ confirmado na URL (buscaInicial), não
   // o que está meio digitado no campo — senão um clique no meio da digitação
-  // congela o rascunho como busca.
+  // congela o rascunho como busca. E preserva a aba.
   function irParaPagina(p: number) {
-    const qs = new URLSearchParams();
-    const termo = (buscaInicial ?? "").trim();
-    if (termo) qs.set("busca", termo);
-    if (p > 1) qs.set("pagina", String(p));
-    const sufixo = qs.toString();
-    router.replace(sufixo ? `/app/products?${sufixo}` : "/app/products");
+    router.replace(
+      urlDoCatalogo({ busca: buscaInicial, semFoto: semFotoInicial, pagina: p }),
+    );
+  }
+
+  // A aba "Sem fotos" é navegação (?sem_foto=1), não estado: o filtro roda no
+  // SERVIDOR, junto da busca. As outras abas continuam filtro local da página.
+  function aoMudarAba(valor: string) {
+    if (valor === "sem_fotos") {
+      router.replace(
+        urlDoCatalogo({ busca: buscaInicial, semFoto: true, pagina: 1 }),
+      );
+      return;
+    }
+    if (semFotoInicial) {
+      router.replace(urlDoCatalogo({ busca: buscaInicial, pagina: 1 }));
+    }
+    setAba(valor as typeof aba);
   }
 
   const [aba, setAba] = React.useState<"todos" | "promocoes" | "destaques">("todos");
@@ -647,11 +660,15 @@ export function ProdutosClient({
         </p>
       ) : null}
 
-      <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
+      <Tabs value={semFotoInicial ? "sem_fotos" : aba} onValueChange={aoMudarAba}>
         <TabsList aria-label={t("Abas do catálogo")}>
           <TabsTrigger value="todos">{t("Produtos")}</TabsTrigger>
           <TabsTrigger value="promocoes">{t("Promoções")}</TabsTrigger>
           <TabsTrigger value="destaques">{t("Destaques")}</TabsTrigger>
+          <TabsTrigger value="sem_fotos" data-testid="aba-sem-fotos">
+            {t("Sem fotos")}
+            {semFotoInicial ? ` (${total})` : ""}
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -825,6 +842,16 @@ export function ProdutosClient({
           <EmptyFilterResults
             primary={{ label: t("Limpar filtros"), onClick: () => aoMudarBusca("") }}
           />
+        ) : semFotoInicial && total === 0 ? (
+          <div
+            className="rounded-lg border border-dashed p-8 text-center"
+            data-testid="sem-fotos-vazio"
+          >
+            <p className="font-medium">{t("Nenhum produto sem foto")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("Todo o catálogo tem imagem.")}
+            </p>
+          </div>
         ) : (
           <div
             className="rounded-lg border border-dashed p-8 text-center"
@@ -918,17 +945,14 @@ export function ProdutosClient({
       {(() => {
         // 50 por página: o navegador não recebe o catálogo inteiro, e a troca
         // de página é navegação (?pagina=) para o servidor entregar a fatia.
-        const totalPaginas = total === null ? null : totalDePaginas(total, porPagina);
-        const mostrar =
-          totalPaginas === null ? inicial.length >= porPagina : totalPaginas > 1;
-        if (!mostrar) return null;
+        // O total é EXATO (tamanho da lista de ids) — nunca amostra.
+        const totalPaginas = totalDePaginas(total, porPagina) ?? 1;
+        if (totalPaginas <= 1) return null;
         const de = (pagina - 1) * porPagina + 1;
-        const ate =
-          total === null ? de + inicial.length - 1 : Math.min(pagina * porPagina, total);
-        const numeros = totalPaginas === null ? [] : janelaDePaginas(pagina, totalPaginas);
+        const ate = Math.min(pagina * porPagina, total);
+        const numeros = janelaDePaginas(pagina, totalPaginas);
         const temAnterior = pagina > 1;
-        const temProxima =
-          totalPaginas === null ? inicial.length >= porPagina : pagina < totalPaginas;
+        const temProxima = pagina < totalPaginas;
         return (
           <nav
             className="flex flex-wrap items-center justify-between gap-3 pt-2"
@@ -936,9 +960,7 @@ export function ProdutosClient({
             data-testid="paginacao"
           >
             <p className="text-sm text-muted-foreground" role="status">
-              {total === null || totalPaginas === null
-                ? `${t("Página")} ${pagina}`
-                : `${de}–${ate} ${t("de")} ${total} · ${t("Página")} ${pagina} ${t("de")} ${totalPaginas}`}
+              {`${de}–${ate} ${t("de")} ${total} · ${t("Página")} ${pagina} ${t("de")} ${totalPaginas}`}
             </p>
             <div className="flex flex-wrap items-center gap-1">
               <Button
