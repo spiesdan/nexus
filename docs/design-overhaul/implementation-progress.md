@@ -93,6 +93,22 @@
 - TeamMembers: **bug real de cabeçalhos trocados** (4 colunas) corrigido; teste (3) verde.
 - ConexoesShell: aninhadas com deep-link + labels white-label — padrão correto. MANTER.
 
+## Ciclo 5 (2026-10-16) — auditoria em pixels (Fase F, em andamento)
+
+- Ambiente E2E de pé: Supabase local + `baseline.sql` + seeds + `next build`.
+  Spec `tests/e2e/auditoria-capturas.spec.ts` (FORA_DO_CI, com motivo): 10 rotas
+  × 7 larguras × 2 temas = 70 capturas em `evidence/auditoria/`.
+- Achados já aplicados: eixo X do `CrmSalesChart` com desbaste (~8 marcos +
+  último + hoje; hover dia-a-dia intacto); fio do inbox limitado a `max-w-3xl`;
+  `CartaoKpi` sem truncar em 768 (`text-xl` + `title`).
+- Refutados por pixel: inbox 3-colunas OK em 1280; abas aninhadas do catálogo
+  legíveis; `mm/dd/yyyy` nos date inputs = locale do browser de teste
+  (`lang="pt-BR"` setado); tooltip do assistente é transitório (uma vez).
+- Bolha flutuante sobre canvas: convenção aceita (posicionada p/ dock/print);
+  regra: ações primárias fora do canto inferior-direito.
+- Correções do ciclo 5 entraram DEPOIS do `e2e:build`: recapturar dashboard-1280
+  e inbox-1920 ao fim para provar o antes/depois.
+
 ## Backlog restante (residual honesto)
 
 1. Fatias pendentes das 8 telas: colapso de alertas (T2), `renderCard` contatos (T4),
