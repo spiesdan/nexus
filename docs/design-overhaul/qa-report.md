@@ -12,6 +12,7 @@
   sessão — pendência declarada da Fase F (exige app rodando + banco semeado;
   ver `docs/harness-audit.md`). Nenhuma mudança desta sessão altera
   contrato/API/persistência/RLS; risco E2E avaliado como baixo por construção.
+- `pnpm build`: **verde** (Next 16, todas as rotas compilam — item 15 do aceite).
 
 ## Ciclo 3 — lote IA/operação/settings/admin (ver `implementation-progress.md`)
 
