@@ -1,0 +1,95 @@
+/**
+ * PRINCIPAL × ACESSÓRIO — o caso da vassoura que voltou cabo avulso.
+ *
+ * A pontuação mede qualidade de casamento textual: "vassoura" casa
+ * "Cabo de vassoura avulso" com nota 1.0, igual às vassouras de verdade — e o
+ * desempate alfabético punha "Cabo…" em primeiro. O modelo lê de cima para
+ * baixo e apresentava o primeiro. Estes testes prendem a classificação
+ * estrutural (`direta` × `relacionada`) e a ordenação que dela decorre.
+ */
+import { describe, expect, it } from "vitest";
+
+import {
+  buscarComRelaxamento,
+  classificarRelacao,
+  type ProdutoBuscavel,
+} from "@/lib/catalogo/busca";
+
+const VASSOURAS: ProdutoBuscavel[] = [
+  { nome: "Vassoura de pelo", codigo: "VAS-PELO", categoria: "vassouras" },
+  { nome: "Vassoura de nylon", codigo: "VAS-NYLON", categoria: "vassouras" },
+  { nome: "Vassourão", codigo: "VAS-GRANDE", categoria: "vassouras" },
+  { nome: "Cabo de vassoura avulso", codigo: "CABO-VAS", categoria: "acessórios" },
+];
+
+function nomes(consulta: string, catalogo: ProdutoBuscavel[] = VASSOURAS) {
+  return buscarComRelaxamento(catalogo, consulta).achados;
+}
+
+describe("classificação principal × acessório", () => {
+  it("⭐ 'quais vassouras vocês têm?' — cabo é relacionada, vassouras são diretas", () => {
+    expect(classificarRelacao("Quais vassouras vocês têm?", VASSOURAS[3]!)).toBe("relacionada");
+    expect(classificarRelacao("Quais vassouras vocês têm?", VASSOURAS[0]!)).toBe("direta");
+    expect(classificarRelacao("Quais vassouras vocês têm?", VASSOURAS[2]!)).toBe("direta");
+  });
+
+  it("⭐ pedido explícito de acessório volta direta — 'quero um cabo de vassoura avulso'", () => {
+    expect(classificarRelacao("Quero um cabo de vassoura avulso", VASSOURAS[3]!)).toBe("direta");
+  });
+
+  it("rodo × refil: 'têm refil de rodo?' casa o refil como direta", () => {
+    const rodo = { nome: "Rodo 40cm", codigo: "RODO-40", categoria: "rodos" };
+    const refil = { nome: "Refil para rodo 40cm", codigo: "REFIL-40", categoria: "acessórios" };
+    expect(classificarRelacao("Vocês têm refil de rodo?", refil)).toBe("direta");
+    expect(classificarRelacao("Vocês têm rodo?", refil)).toBe("relacionada");
+    expect(classificarRelacao("Vocês têm rodo?", rodo)).toBe("direta");
+  });
+
+  it("categoria de acessório sem marca no nome também é relacionada", () => {
+    const peca = { nome: "Alça reserva", codigo: "ALC-1", categoria: "peças" };
+    expect(classificarRelacao("Vocês têm balde?", peca)).toBe("relacionada");
+    expect(classificarRelacao("Vocês têm alça reserva?", peca)).toBe("direta");
+  });
+
+  it("consulta só com número não demove nada — número não é intenção de produto", () => {
+    expect(classificarRelacao("128", VASSOURAS[3]!)).toBe("direta");
+  });
+});
+
+describe("ordenação: diretas antes, sem duplicar", () => {
+  it("⭐ 'quais vassouras vocês têm?' lista os 3 modelos antes do cabo", () => {
+    const r = nomes("Quais vassouras vocês têm?");
+    expect(r.map((a) => a.produto.codigo)).toEqual([
+      "VAS-NYLON",
+      "VAS-PELO",
+      "VAS-GRANDE",
+      "CABO-VAS",
+    ]);
+    expect(r[3]!.relacao).toBe("relacionada");
+    expect(r.filter((a) => a.relacao === "direta")).toHaveLength(3);
+  });
+
+  it("o empate alfabético não põe mais o cabo na frente", () => {
+    // Todos os 4 casam "vassoura" com nota máxima; antes do conserto o "Cabo…"
+    // vinha primeiro por ordem alfabética e o modelo apresentava ele.
+    const r = nomes("vassoura");
+    expect(r[0]!.produto.codigo).not.toBe("CABO-VAS");
+  });
+});
+
+describe("sinônimos, erros de digitação e falsos amigos", () => {
+  it("'vasoura' (erro) ainda acha as vassouras como diretas", () => {
+    const r = nomes("vasoura");
+    expect(r.filter((a) => a.relacao === "direta").length).toBeGreaterThan(0);
+    expect(r[r.length - 1]!.produto.codigo).toBe("CABO-VAS");
+  });
+
+  it("'cabo' sozinho não traz 'acabou' como se fosse produto", () => {
+    const catalogo: ProdutoBuscavel[] = [
+      { nome: "Cabo de vassoura avulso", codigo: "CABO-VAS", categoria: "acessórios" },
+      { nome: "Acabamento premium", codigo: "ACAB-1", categoria: "outros" },
+    ];
+    const r = nomes("cabo", catalogo);
+    expect(r.map((a) => a.produto.codigo)).toEqual(["CABO-VAS"]);
+  });
+});

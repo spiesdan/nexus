@@ -115,6 +115,115 @@ export interface ProdutoBuscavel {
 }
 
 /**
+ * Principal × acessório — a distinção que a nota NÃO faz (e que causou o caso
+ * da "vassoura" que voltou "cabo de vassoura avulso" em primeiro lugar).
+ *
+ * A pontuação mede QUALIDADE de casamento textual: "vassoura" casa
+ * "Cabo de vassoura avulso" com nota 1.0, igual às vassouras de verdade — e o
+ * desempate alfabético põe "Cabo…" na frente. O modelo lê de cima para baixo e
+ * apresenta o primeiro. A relação abaixo diz QUEM o produto é diante do
+ * pedido, para a ferramenta ordenar e instruir em cima de dado, não de texto:
+ *
+ * - `direta`: o pedido nomeia o produto (cabeça do nome ou categoria casam).
+ * - `relacionada`: o produto é um acessório/peça do que foi pedido (a cabeça
+ *   do nome é um marcador de acessório que o pedido NÃO contém) ou vive numa
+ *   categoria de acessório que o pedido não menciona. Nunca é eliminada — vira
+ *   alternativa explícita, nunca resposta.
+ *
+ * Pedido explícito de acessório ("quero um cabo de vassoura") casa a cabeça e
+ * volta `direta`: a regra protege a intenção, não uma lista de produtos.
+ */
+export type RelacaoProduto = 'direta' | 'relacionada';
+
+/**
+ * Cabeças de nome que fazem de um item um acessório/peça — e não o produto.
+ * Conservadora de propósito: só o que é acessório em QUALQUER loja entra aqui
+ * ("cabo", "refil"); o resto ("tampa", "suporte de parede"?) varia por
+ * catálogo e seria regra rígida demais. Precisão acima de cobertura: o que
+ * não está aqui continua passando pela categoria.
+ */
+const MARCADORES_ACESSORIO = new Set([
+  'cabo',
+  'cabos',
+  'refil',
+  'refis',
+  'alca',
+  'alcas',
+  'filtro',
+  'filtros',
+  'capa',
+  'capas',
+  'peca',
+  'pecas',
+  'reposicao',
+  'reposicoes',
+  'bico',
+  'bicos',
+  'anel',
+  'aneis',
+]);
+
+/** Categorias que dizem "sou acessório" sem precisar ler o nome. */
+const CATEGORIAS_ACESSORIO = new Set([
+  'acessorio',
+  'acessorios',
+  'peca',
+  'pecas',
+  'reposicao',
+  'reposicoes',
+]);
+
+/** Primeira palavra com conteúdo do nome — o "quem" do produto ("Cabo …", "Vassoura …"). */
+function cabecaDoNome(nome: string): string {
+  for (const t of normalizar(nome).split(' ')) {
+    if (t !== '' && !RUIDO.has(t)) return t;
+  }
+  return '';
+}
+
+/**
+ * Esta palavra do catálogo é o que o pedido disse? Mesma tolerância da
+ * pontuação (exato, prefixo, distância 1) — "vassourao" é "vassouras" para
+ * este efeito, e "cabo" NÃO é "acabou".
+ */
+function casaComPedido(palavra: string, tokens: TokensDaBusca): boolean {
+  if (palavra === '') return false;
+  for (const q of [...tokens.palavras, ...tokens.numeros]) {
+    if (palavra === q) return true;
+    if (
+      palavra.length >= 3 &&
+      q.length >= 3 &&
+      (palavra.startsWith(q) || q.startsWith(palavra))
+    ) {
+      return true;
+    }
+    if (palavra.length >= 4 && q.length >= 4 && distanciaAte(palavra, q, 1)) return true;
+  }
+  return false;
+}
+
+export function classificarRelacao(consulta: string, produto: ProdutoBuscavel): RelacaoProduto {
+  const tokens = tokenizar(consulta);
+  if (tokens.palavras.length === 0) return 'direta';
+  // O pedido nomeia a cabeça do produto (ou a categoria): é ele, mesmo sendo
+  // acessório — "quero um cabo de vassoura" TEM de devolver o cabo.
+  const cabeca = cabecaDoNome(produto.nome);
+  if (casaComPedido(cabeca, tokens)) return 'direta';
+  const categoria = normalizar(produto.categoria ?? '');
+  if (categoria !== '' && categoria.split(' ').some((c) => casaComPedido(c, tokens))) {
+    return 'direta';
+  }
+  // Cabeça acessória que o pedido não contém ("Cabo …" para quem pediu
+  // "vassoura"): relacionado, nunca resposta.
+  if (MARCADORES_ACESSORIO.has(cabeca)) return 'relacionada';
+  // Categoria acessória que o pedido não menciona: mesmo veredito.
+  if (categoria !== '' && categoria.split(' ').some((c) => CATEGORIAS_ACESSORIO.has(c))) {
+    return 'relacionada';
+  }
+  return 'direta';
+}
+
+/**
  * Nota de 0 a 1 — ou `null` quando o produto é ELIMINADO.
  *
  * `null` não é "nota zero": é "este produto está descartado", e a diferença
@@ -207,6 +316,12 @@ function distanciaAte(a: string, b: string, teto: number): boolean {
 export interface Achado<T> {
   produto: T;
   nota: number;
+  /**
+   * Quem o produto é diante do pedido (ver `classificarRelacao`). A ordenação
+   * põe `direta` antes de `relacionada` — antes do desempate alfabético, que
+   * punha "Cabo de vassoura avulso" na frente das vassouras de verdade.
+   */
+  relacao: RelacaoProduto;
 }
 
 /**
@@ -276,13 +391,19 @@ function numerosQueOCatalogoConhece<T extends ProdutoBuscavel>(
 function pontuarTodos<T extends ProdutoBuscavel>(
   produtos: readonly T[],
   tokens: TokensDaBusca,
+  consulta: string,
 ): Achado<T>[] {
   const achados: Achado<T>[] = [];
   for (const produto of produtos) {
     const nota = pontuar(produto, tokens);
-    if (nota !== null) achados.push({ produto, nota });
+    if (nota !== null) achados.push({ produto, nota, relacao: classificarRelacao(consulta, produto) });
   }
-  return achados.sort((a, b) => b.nota - a.nota || a.produto.nome.localeCompare(b.produto.nome));
+  return achados.sort(
+    (a, b) =>
+      (a.relacao === b.relacao ? 0 : a.relacao === 'direta' ? -1 : 1) ||
+      b.nota - a.nota ||
+      a.produto.nome.localeCompare(b.produto.nome),
+  );
 }
 
 export interface BuscaRelaxada<T> {
@@ -307,7 +428,7 @@ export function buscarComRelaxamento<T extends ProdutoBuscavel>(
     return { achados: [], ignorados: [] };
   }
 
-  const exatos = pontuarTodos(produtos, tokens);
+  const exatos = pontuarTodos(produtos, tokens, consulta);
   if (exatos.length > 0 || tokens.numeros.length === 0) {
     return { achados: exatos, ignorados: [] };
   }
@@ -319,10 +440,14 @@ export function buscarComRelaxamento<T extends ProdutoBuscavel>(
   const ignorados = tokens.numeros.filter((n) => !conhecidos.has(n));
   if (ignorados.length === 0) return { achados: exatos, ignorados: [] };
 
-  const relaxados = pontuarTodos(produtos, {
-    palavras: tokens.palavras,
-    numeros: tokens.numeros.filter((n) => conhecidos.has(n)),
-  });
+  const relaxados = pontuarTodos(
+    produtos,
+    {
+      palavras: tokens.palavras,
+      numeros: tokens.numeros.filter((n) => conhecidos.has(n)),
+    },
+    consulta,
+  );
 
   // Sem palavra nenhuma sobrando, "quero 2" viraria o catálogo inteiro.
   if (tokens.palavras.length === 0) return { achados: [], ignorados: [] };
