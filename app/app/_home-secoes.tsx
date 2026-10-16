@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
@@ -160,7 +161,11 @@ export function ClientesParaAgir() {
             </Button>
           </div>
           {radar.isError ? (
-            <p className="text-sm text-muted-foreground">{t("Não foi possível carregar agora.")}</p>
+            <NexusErrorState
+              description={t("Não foi possível carregar o radar agora.")}
+              onRetry={() => radar.refetch()}
+              className="border-0 py-6"
+            />
           ) : paraAgir.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("Ninguém precisa de atenção agora.")}</p>
           ) : (
@@ -200,7 +205,11 @@ export function ClientesParaAgir() {
             </Button>
           </div>
           {fila.isError ? (
-            <p className="text-sm text-muted-foreground">{t("Não foi possível carregar agora.")}</p>
+            <NexusErrorState
+              description={t("Não foi possível carregar a fila agora.")}
+              onRetry={() => fila.refetch()}
+              className="border-0 py-6"
+            />
           ) : vencidos.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("Fila em dia.")}</p>
           ) : (
@@ -228,47 +237,6 @@ export function ClientesParaAgir() {
   );
 }
 
-export function SalesRadar() {
-  const t = useT();
-  const radar = useRadarDoDashboard();
-  const contagens = contarPorGrupo(radar.data ?? []);
-
-  return (
-    <section aria-label={t("Sales radar")} className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold tracking-wide text-foreground">{t("Sales radar")}</h2>
-        <Button size="sm" variant="ghost" asChild>
-          <Link href="/app/radar">{t("Abrir radar")}</Link>
-        </Button>
-      </div>
-      {radar.isLoading ? (
-        <div className="grid grid-cols-3 gap-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      ) : radar.isError ? (
-        <p className="text-sm text-muted-foreground">{t("Não foi possível carregar agora.")}</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Card className="hover-raise p-4">
-            <p className="text-xs text-muted-foreground">{t("Risco")}</p>
-            <p className="text-xl font-semibold tabular-nums">{contagens.risco}</p>
-          </Card>
-          <Card className="hover-raise p-4">
-            <p className="text-xs text-muted-foreground">{t("Oportunidade")}</p>
-            <p className="text-xl font-semibold tabular-nums">{contagens.oportunidade}</p>
-          </Card>
-          <Card className="hover-raise p-4">
-            <p className="text-xs text-muted-foreground">{t("Recompra")}</p>
-            <p className="text-xl font-semibold tabular-nums">{contagens.recompra}</p>
-          </Card>
-        </div>
-      )}
-    </section>
-  );
-}
-
 function brl(cents: number): string {
   return comoMoeda(cents, "BRL");
 }
@@ -287,7 +255,10 @@ export function SalesRoadmap() {
     return (
       <section aria-label={t("Sales roadmap")} className="space-y-3">
         <h2 className="text-sm font-semibold tracking-wide text-foreground">{t("Sales roadmap")}</h2>
-        <p className="text-sm text-muted-foreground">{t("Não foi possível carregar agora.")}</p>
+        <NexusErrorState
+          description={t("Não foi possível carregar o roadmap agora.")}
+          onRetry={() => roadmap.refetch()}
+        />
       </section>
     );
   }

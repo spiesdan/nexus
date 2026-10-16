@@ -14,7 +14,7 @@ import { comoMoeda } from "@/lib/format/moeda";
 import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { NAV_DESTINATIONS } from "@/lib/navigation/registry";
 import { deslocarMes } from "@/lib/comercial/visao-do-mes";
-import { ClientesParaAgir, SalesRadar, SalesRoadmap } from "./_home-secoes";
+import { ClientesParaAgir, SalesRoadmap } from "./_home-secoes";
 import { Atividade } from "./indicadores/_atividade";
 
 export interface DadosDashboard {
@@ -191,8 +191,6 @@ export function DashboardHome(inicial: DadosDashboard) {
       <ClientesParaAgir />
 
       <SalesRoadmap />
-
-      <SalesRadar />
 
       <BrainRecomendacoes />
 
