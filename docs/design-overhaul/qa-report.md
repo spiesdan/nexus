@@ -4,7 +4,10 @@
 
 ## Fase F visual — 70 capturas (10 rotas × 7 larguras × 2 temas)
 
-Evidência: `evidence/auditoria/` (70 PNGs, app real + banco do baseline + seeds).
+Evidência: `evidence/auditoria/` (74 PNGs, app real + banco do baseline + seeds).
+A spec de capturas foi removida após cumprir sua função (para não crescer o
+`FORA_DO_CI` permanentemente com uma spec sem asserção); recupera-se via
+`git show 5aa11bc64:tests/e2e/auditoria-capturas.spec.ts`.
 Achados que viraram código no ciclo 5:
 - Eixo X do `CrmSalesChart`: 31 rótulos colidiam em ≤1280 → desbaste (~8 marcos
   + último + hoje; hover dia-a-dia intacto, 19 unit verdes).
