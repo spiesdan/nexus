@@ -21636,3 +21636,11 @@ alter table public.automatic_sales_campaigns
 alter table public.automatic_sales_campaigns
   add constraint automatic_sales_campaigns_cooldown_faixa
   check (cooldown_segundos >= 10 and cooldown_segundos <= 3600);
+
+-- 0270_foco_produto_checkpoint (apêndice — ver supabase/migrations/20261016000000_0270_foco_produto_checkpoint.sql)
+--
+-- Intenção de produto fechada no turno ({termo, categoria}), para preservar o
+-- assunto em pergunta de continuação. Sem revoke extra: coluna numa tabela que
+-- já tem RLS e policies, então nada muda sobre quem alcança a tabela.
+alter table public.lead_checkpoints
+  add column if not exists foco_produto jsonb;
