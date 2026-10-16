@@ -8,6 +8,15 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.26.3] — 2026-10-16
+
+### Corrigido
+
+- **Tela de teste do agente não estoura mais o timeout** A tela de Teste abortava a chamada em 10 segundos enquanto o turno real leva
+  dezenas de segundos: cada retry rodava o agente de novo no servidor e a tela
+  terminava em "Erro inesperado". O timeout da chamada passou para 120 segundos.
+  Nada precisa ser feito na atualização.
+
 ## [1.26.2] — 2026-10-16
 
 ### Corrigido
@@ -4319,7 +4328,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.3...HEAD
+[1.26.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...v1.26.3
 [1.26.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...v1.26.2
 [1.26.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...v1.26.0
