@@ -2,7 +2,40 @@
 
 > Última atualização: 2026-10-16 (final — `gov:verify` verde).
 
-## Final — `pnpm gov:verify` (typecheck + lint + test:unit)
+## Fase F visual — 70 capturas (10 rotas × 7 larguras × 2 temas)
+
+Evidência: `evidence/auditoria/` (70 PNGs, app real + banco do baseline + seeds).
+Achados que viraram código no ciclo 5:
+- Eixo X do `CrmSalesChart`: 31 rótulos colidiam em ≤1280 → desbaste (~8 marcos
+  + último + hoje; hover dia-a-dia intacto, 19 unit verdes).
+- Fio do inbox sem largura máxima em 1920 → `max-w-3xl` centralizado.
+- `CartaoKpi` truncava "R$ 2.6…" em 768 → `text-xl` responsivo + `title`.
+Refutados por pixel (correções honestas à auditoria estática):
+- Inbox 3-colunas OK em 1280; abas aninhadas do catálogo legíveis; empty do
+  estoque exemplar; financeiro é o modelo do DS nos dois temas.
+- `mm/dd/yyyy` nos date inputs = locale do browser de teste (`lang="pt-BR"`
+  setado em `app/layout.tsx:285`); tagIdioma força `dd/mm/aaaa` nos textos.
+- Tooltip "Precisa de ajuda?" é transitório (uma vez); bolha segue convenção
+  flutuante (posicionada p/ dock/print) — regra: ações primárias fora do canto
+  inferior-direito.
+- Fio aberto em 1920 (`dark-1920-thread-aberto.png`, conversa do seed de
+  escalação): header operacional completo (status, responsável, 5 ações),
+  composer com Responder/Nota interna, painel CRM rico (tags rápidas, demandas,
+  leads, pedidos, compras, produtos, títulos). Composição aprovada nos pixels.
+- Mobile 390/430: CTAs empilham, tabs rolam, tabelas com scroll, dock correto.
+Falhas do run: 9 + 2 + 1 capturas falharam por timeout sob carga paralela e
+passaram no retry serial — flakiness de ambiente, não bug (páginas renderizam
+nas mesmas larguras em outras passagens).
+
+## Final — verificação completa da sessão
+
+- `pnpm gov:verify`: **808 arquivos, 8540 passed + 1 expected fail.**
+- `pnpm build`: **verde** (Next 16, todas as rotas).
+- E2E smoke (a suíte do CI em PR: smoke, auth, navegacao, error-pages,
+  contato-salva-email, risk-radar, jornada-venda, inbox-scope):
+  **32 passed em 6.2 min**, contra app buildado + banco do `baseline.sql`.
+- Visual: 70 capturas (10 rotas × 7 larguras × 2 temas) + antes/depois do eixo
+  + fio aberto em 1920 — tudo em `evidence/auditoria/`.
 
 - **808 arquivos, 8540 passed + 1 expected fail. Zero falha.**
 - No caminho: o gate `i18n-a-data-segue-o-idioma` reprovou 1 ponto do ciclo 3
