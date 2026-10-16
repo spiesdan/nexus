@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import type { Produto } from "@/lib/schemas/produtos";
 import type { Categoria, TabelaDePreco } from "@/lib/schemas/precos";
@@ -49,12 +50,10 @@ export function CatalogoClient({
   const t = useT();
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Catálogo")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("Produtos, categorias e tabelas de preço da loja.")}
-        </p>
-      </header>
+      <NexusPageHeader
+        title={t("Catálogo")}
+        subtitle={t("Produtos, categorias e tabelas de preço da loja.")}
+      />
       <Tabs defaultValue="produtos">
         <TabsList>
           <TabsTrigger value="produtos">{t("Produtos")}</TabsTrigger>

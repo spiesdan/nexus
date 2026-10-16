@@ -39,6 +39,21 @@ export function RadarTabs({
   usuarioId: string;
 }) {
   const t = useT();
+  /*
+    Deep-link por hash SEM virar abas: o conteúdo continua todo renderizado
+    (os e2e `recompra-radar`, `risk-radar` e `retorno-anti-morte` leem sem
+    clique), mas o clique registra `#radar-x` na URL e a abertura com hash
+    rola até a seção — recarregar perde a posição, nunca mais.
+  */
+  React.useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    document.getElementById(hash)?.scrollIntoView({ block: "start" });
+  }, []);
+  const irPara = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${id}`);
+  };
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2" role="navigation" aria-label={t("Seções do radar")}>
@@ -47,7 +62,7 @@ export function RadarTabs({
             key={s.id}
             size="sm"
             variant="outline"
-            onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onClick={() => irPara(s.id)}
           >
             {t(s.rotulo)}
           </Button>

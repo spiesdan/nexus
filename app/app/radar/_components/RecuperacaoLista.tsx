@@ -6,6 +6,7 @@ import Link from "next/link";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,10 +21,10 @@ import {
 } from "@/lib/comercial/inatividade";
 import { comoMoeda } from "@/lib/format/moeda";
 
-const COR_DA_FAIXA: Record<FaixaDeInatividade, string> = {
-  atencao: "bg-yellow-100 text-yellow-800",
-  morno: "bg-orange-100 text-orange-800",
-  frio: "bg-red-100 text-red-800",
+const FAIXA_VARIANT: Record<FaixaDeInatividade, "info" | "warning" | "error"> = {
+  atencao: "info",
+  morno: "warning",
+  frio: "error",
 };
 
 /**
@@ -56,7 +57,7 @@ export function RecuperacaoLista({ temBase }: { temBase: boolean }) {
   }, [buscar]);
 
   if (!temBase) {
-    return <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{t("Ainda não há pedidos antigos para medir inatividade.")}</Card>;
+    return <Card className="hover-raise p-8 text-center text-sm text-muted-foreground">{t("Ainda não há pedidos com mais de 60 dias para medir inatividade.")}</Card>;
   }
 
   return (
@@ -104,11 +105,9 @@ export function RecuperacaoLista({ temBase }: { temBase: boolean }) {
                       {c.qtd_pedidos} {t("pedidos")}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${COR_DA_FAIXA[c.faixa]}`}
-                  >
+                  <Badge variant={FAIXA_VARIANT[c.faixa]}>
                     {ROTULO_DA_FAIXA[c.faixa]}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {zap && (
