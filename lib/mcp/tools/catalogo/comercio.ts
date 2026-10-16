@@ -28,6 +28,26 @@ export const TOOLS_COMERCIO = declararTools([
     pacotes: ["vender", "atender"],
   },
   {
+    name: "crm_get_product_photos",
+    category: "read",
+    rotulo: "Pegar foto do produto",
+    explicacao:
+      "Devolve as fotos cadastradas de um produto pelo código, para o assistente mandar a foto no WhatsApp quando o cliente pedir. Sem foto cadastrada, ele avisa em vez de inventar.",
+    oQueToca: "Fotos do catálogo",
+    risco: "seguro",
+    pacotes: ["vender", "atender"],
+  },
+  {
+    name: "crm_send_product_photo",
+    category: "write",
+    rotulo: "Enviar foto do produto",
+    explicacao:
+      "Manda a foto cadastrada na conversa atual. Sem foto, recusa com motivo em vez de inventar.",
+    oQueToca: "Conversa atual (foto do catálogo)",
+    risco: "atencao",
+    pacotes: ["vender", "atender"],
+  },
+  {
     name: "commercial_create_order",
     category: "write",
     rotulo: "Montar rascunho de pedido",

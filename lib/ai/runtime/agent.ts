@@ -468,6 +468,9 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       actor: auth.actor,
       apiTokenId: ephemeral.id,
       requestId: run.id,
+      // Alvo de envios do turno (ex.: foto do produto): vem da row do run,
+      // nunca do payload do modelo.
+      conversationId: run.conversation_id,
       supabase: admin,
     };
     const handoffSignal: RuntimeHandoffSignal = { triggered: false };

@@ -71,6 +71,12 @@ export interface SendMessageInput {
   conversationId: string;
   body: string;
   /**
+   * Anexo de foto do catálogo já copiado para `{org}/{conversa}/` (ver
+   * `copiarFotoParaConversa`). O `body` vira a legenda e entra no hash de
+   * idempotência junto do caminho — mesma legenda em foto diferente não colide.
+   */
+  media?: { storagePath: string; mime: string };
+  /**
    * Presente = envio de TEMPLATE. O `body` continua sendo o texto RENDERIZADO — é
    * ele que entra no hash de idempotência e é ele que os gates de conteúdo avaliaram.
    * Trocar a chave por "nome do template" faria dois envios com valores diferentes
@@ -132,7 +138,13 @@ export async function sendTurnMessage(
               template_language: input.template.language,
               template_values: input.template.values,
             }
-          : { type: 'text' as const }),
+          : input.media
+            ? {
+                type: 'image' as const,
+                media_storage_path: input.media.storagePath,
+                media_mime: input.media.mime,
+              }
+            : { type: 'text' as const }),
         body: input.body,
         metadata: { idempotency_key: idempotencyKey },
       },

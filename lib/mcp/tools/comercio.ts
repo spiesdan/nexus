@@ -12,6 +12,8 @@
 import { z } from "zod";
 
 import { logger } from "@/lib/logger";
+import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
+import { resolverFotoDoProduto } from "@/lib/catalogo/foto-do-produto";
 
 import type { McpToolDefinition } from "../types";
 import { buscarComRelaxamento } from "@/lib/catalogo/busca";
@@ -450,6 +452,117 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       ...(ignorados.length > 0 ? { numeros_ignorados: ignorados } : {}),
       ...(mensagem ? { mensagem } : {}),
     };
+  },
+};
+
+/**
+ * Fotos do produto (base do trabalho em andamento do usuário, integrada aqui
+ * com registro no catálogo + testes). Lê `product_images` pelo código — nunca
+ * descreve foto que não viu, nunca inventa caminho.
+ */
+const fotosDoProdutoShape = {
+  codigo: z
+    .string()
+    .trim()
+    .min(1)
+    .max(60)
+    .describe("o CÓDIGO do produto, como voltou em `crm_search_products` — nunca o nome"),
+};
+
+export const crmGetProductPhotos: McpToolDefinition<typeof fotosDoProdutoShape> = {
+  name: "crm_get_product_photos",
+  description:
+    "Devolve as fotos CADASTRADAS de um produto do catálogo, pelo código. Use quando a pessoa " +
+    "pedir foto, imagem ou 'manda foto'. Cada foto volta com `storage_path`. Para ENVIAR, use " +
+    "`crm_send_product_photo` com o mesmo código (ela resolve a foto e manda) — nunca invente " +
+    "caminho. Lista vazia = o produto não tem foto cadastrada: diga isso e ofereça mandar " +
+    "quando tiver, nunca descreva foto que não viu.",
+  inputSchema: fotosDoProdutoShape,
+  category: "read",
+  requiresRole: "agent",
+  requiresScope: "mcp:read",
+  handler: async (input, ctx) => {
+    const foto = await resolverFotoDoProduto(ctx.supabase, ctx.organizationId, input.codigo.trim());
+    if (foto.found === false) return { fotos: [], mensagem: foto.mensagem };
+    return {
+      fotos: foto.fotos,
+      ...(foto.fotos.length === 0 ? { mensagem: foto.mensagem } : {}),
+    };
+  },
+};
+
+/**
+ * ENVIA a foto de um produto do catálogo na conversa do turno.
+ *
+ * Por que uma tool de envio em vez de `send_message` com anexo: o runtime
+ * legado não tem tool de envio (manda pelo texto final), então anexo em
+ * `send_message` só existiria no engine — dois caminhos com garantias
+ * diferentes. Esta tool resolve (código → foto), valida e envia pelo handler
+ * central nos DOIS runtimes, com a mesma idempotência. No engine ela é
+ * BLOQUEADA de propósito (ver `BLOCKED_TOOL_IDS` em `edge/crm/mcp-tools.ts`):
+ * lá o envio com legenda passa pela cadeia before_send; aqui, pelo handler
+ * (opt-out, propriedade do caminho e sessão valem nos dois).
+ */
+const enviarFotoShape = {
+  codigo: z
+    .string()
+    .trim()
+    .min(1)
+    .max(60)
+    .describe("o CÓDIGO do produto, como voltou em `crm_search_products` — nunca o nome"),
+  legenda: z
+    .string()
+    .trim()
+    .min(1)
+    .max(300)
+    .optional()
+    .describe("legenda curta sob a foto; omita para usar o nome do produto"),
+};
+
+
+
+export const crmSendProductPhoto: McpToolDefinition<typeof enviarFotoShape> = {  name: "crm_send_product_photo",
+  description:
+    "ENVIA a foto cadastrada de um produto na conversa atual. Use DEPOIS de " +
+    "`crm_get_product_photos` confirmar que há foto — nunca sem consultar. Sem foto " +
+    "cadastrada a tool recusa (motivo `sem_foto`): diga isso ao cliente em vez de " +
+    "descrever foto que não viu. A legenda default é o nome do produto.",
+  inputSchema: enviarFotoShape,
+  category: "write",
+  requiresRole: "agent",
+  requiresScope: "mcp:write",
+  handler: async (input, ctx) => {
+    // Destino vem DO RUNTIME (conversa do turno/run), nunca do payload: mirar
+    // conversa pelo input permitiria ao modelo escolher outra conversa da org.
+    const conversaId = ctx.conversationId ?? null;
+    if (!conversaId) {
+      return { sent: false, motivo: "sem_conversa" as const };
+    }
+    const foto = await resolverFotoDoProduto(ctx.supabase, ctx.organizationId, input.codigo);
+    if (foto.found === false || foto.fotos.length === 0) {
+      return {
+        sent: false,
+        motivo: (foto.found === false ? "produto_desconhecido" : "sem_foto") as const,
+        mensagem: foto.mensagem,
+      };
+    }
+    const primeira = foto.fotos[0]!;
+    const extensao = primeira.storage_path.split(".").pop()?.toLowerCase();
+    const mime =
+      extensao === "png" ? "image/png" : extensao === "webp" ? "image/webp" : "image/jpeg";
+    const message = await sendMessageHandler(
+      ctx.supabase,
+      { organization_id: ctx.organizationId, actor: ctx.actor, requestId: ctx.requestId },
+      {
+        conversation_id: conversaId,
+        type: "image",
+        body: input.legenda ?? foto.produto.nome,
+        media_storage_path: primeira.storage_path,
+        media_mime: mime,
+        metadata: { idempotency_key: `foto-produto:${ctx.requestId}:${foto.produto.id}` },
+      },
+    );
+    return { sent: true, message_id: message.id, status: message.status };
   },
 };
 

@@ -33,7 +33,14 @@ import type { PublishedAgentConfig } from '../../agent/agent-config';
  * (spec 16 §3.2) depende desta lista, e uma garantia que nenhum teste consegue
  * ler é uma garantia que ninguém percebe quando some.
  */
-export const BLOCKED_TOOL_IDS = new Set(['crm_send_whatsapp_message', 'crm_request_human_handoff']);
+export const BLOCKED_TOOL_IDS = new Set([
+  'crm_send_whatsapp_message',
+  'crm_request_human_handoff',
+  // Envio de foto vai por `send_message(image_storage_path)` com legenda, que
+  // passa pela cadeia before_send. A tool direta existe para o runtime legado
+  // (sem cadeia); montá-la aqui criaria dois caminhos com garantias diferentes.
+  'crm_send_product_photo',
+]);
 
 export interface McpTurnTools {
   tools: Record<string, Tool>;
@@ -45,7 +52,7 @@ export interface McpTurnTools {
 
 export async function buildMcpTurnTools(
   cfg: CrmEdgeConfig,
-  ids: { organizationId: string; jobId: string },
+  ids: { organizationId: string; jobId: string; conversationId?: string | null },
   agentConfig: PublishedAgentConfig,
   log: Logger,
 ): Promise<McpTurnTools | null> {
@@ -82,6 +89,9 @@ export async function buildMcpTurnTools(
     },
     apiTokenId: ephemeral.id,
     requestId: ids.jobId,
+    // Conversa do turno (inbound a tem; operador não — e lá a tool que precisa
+    // de destino recusa em vez de adivinhar).
+    conversationId: ids.conversationId ?? null,
     supabase: cfg.supabase,
   };
   const auth: McpAuthResult = {

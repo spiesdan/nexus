@@ -36,6 +36,16 @@ export interface ChannelSendInput {
     /** Valor por slot, chaveado por `slotKey` — a mesma chave da tela. */
     values: Record<string, string>;
   };
+  /**
+   * Presente = este envio leva UMA foto junto (o `body` vira legenda). Path no
+   * bucket `whatsapp-media`, já sob `{org}/{conversa}/` — o runtime copia para
+   * lá antes de chamar, nunca passa caminho de outro bucket. Opcional como o
+   * template: canal que só sabe texto envia o `body`.
+   */
+  media?: {
+    storagePath: string;
+    mime: string;
+  };
 }
 
 /**

@@ -103,6 +103,7 @@ import {
 } from './human-cases';
 import { buildMcpTurnTools } from '../edge/crm/mcp-tools';
 import type { ItemCitavel } from '../guardrails/catalog-identity';
+import { copiarFotoParaConversa } from '@/lib/messaging/media/copiar-foto-produto';
 import { cancelPendingCronsForLead } from '../cron/scheduler';
 import {
   latestInboundSignal,
@@ -156,6 +157,15 @@ export const AGENT_TOOL_DEFS = {
       'Envia UMA mensagem de WhatsApp ao lead desta conversa. É o ÚNICO jeito de falar com o lead; texto fora desta tool nunca é enviado.',
     inputSchema: z.object({
       body: z.string().min(1).describe('corpo da mensagem, em pt-br, pronto para envio'),
+      image_storage_path: z
+        .string()
+        .min(1)
+        .max(500)
+        .optional()
+        .describe(
+          'OPCIONAL: caminho de foto JÁ devolvido por `crm_get_product_photos` (nunca inventado). ' +
+            'O corpo vira a legenda. Sem foto confirmada pela tool, não preencha.',
+        ),
     }),
   },
   update_lead_state: {
@@ -2149,7 +2159,7 @@ async function executarTurnoDoAgente(
     }),
     send_message: tool({
       ...AGENT_TOOL_DEFS.send_message,
-      execute: async ({ body }) => {
+      execute: async ({ body, image_storage_path }) => {
         if (seq >= maxSendsPerTurn) {
           return {
             ok: false,
@@ -2160,6 +2170,50 @@ async function executarTurnoDoAgente(
                 'NÃO envie mais nada agora — encerre o turno e espere a resposta do lead.',
             },
           };
+        }
+        // Anexo de foto do catálogo: copia para `{org}/{conversa}/` ANTES de
+        // qualquer gate — caminho fora desse prefixo é erro de ENSINO (o modelo
+        // corrige no turno, sem gastar envio nem quebrar o ledger). O handler
+        // reconfere a propriedade de verdade; aqui vale só não deixar passar
+        // lixo óbvio. Falha de storage vira erro de tool (o modelo avisa ou
+        // tenta de novo), nunca exceção que mata o turno.
+        const imagePath =
+          typeof image_storage_path === 'string' && image_storage_path !== ''
+            ? image_storage_path
+            : null;
+        let midia: { storagePath: string; mime: string } | null = null;
+        if (imagePath !== null) {
+          try {
+            const copiada = await copiarFotoParaConversa(deps.crmCfg.supabase, {
+              organizationId: tenantId,
+              conversationId: input.conversationId,
+              storagePath: imagePath,
+            });
+            midia = { storagePath: copiada.destino, mime: copiada.mime };
+          } catch (err) {
+            const motivo = err instanceof Error ? err.message : String(err);
+            if (motivo.startsWith('foto_nao_confirmada') || motivo.startsWith('caminho_de_foto_invalido')) {
+              return {
+                ok: false,
+                error: {
+                  code: 'invalid_image_path',
+                  message:
+                    'image_storage_path precisa ser um caminho INTEIRO devolvido por ' +
+                    '`crm_get_product_photos` nesta conversa — nunca inventado nem de outro lugar.',
+                },
+              };
+            }
+            return {
+              ok: false,
+              error: {
+                code: 'image_copy_failed',
+                message:
+                  'não consegui copiar a foto para envio agora (' +
+                  motivo.slice(0, 120) +
+                  '). Diga ao cliente que manda a foto em seguida, ou tente de novo.',
+              },
+            };
+          }
         }
         // F4-04: sinaliza (independente do gate F4-01/F4-08) se ESTA candidata é uma
         // promessa fora de tabela — usado só para correlacionar com o jailbreak no fim do
@@ -2232,8 +2286,23 @@ async function executarTurnoDoAgente(
             ...(semanticClassifier !== undefined ? { classifyPromiseSemantic: semanticClassifier } : {}),
             // `finalBody` = corpo após a cadeia (o disclosureGate F4-05 pode prependar o
             // disclosure via inject); é ELE que vai ao canal, não o `body` capturado da tool.
+            // Com foto: ela sai UMA vez, com o corpo inteiro de legenda (fracionar
+            // legenda em bolhas quebraria o vínculo foto-texto no WhatsApp).
             send: (finalBody: string) =>
-              sendInBubbles(finalBody, {
+              midia !== null
+                ? (async () => {
+                    seq += 1;
+                    return channel.send({
+                      tenantId,
+                      leadId,
+                      jobId: job.id,
+                      seq,
+                      conversationId: input.conversationId,
+                      body: finalBody,
+                      media: midia,
+                    });
+                  })()
+                : sendInBubbles(finalBody, {
                 enabled: agentConfig?.splitMessages ?? false,
                 maxChars: agentConfig?.splitMaxChars ?? 600,
                 sleep: deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
@@ -2765,7 +2834,7 @@ async function executarTurnoDoAgente(
       if (catalogoEntregue.length > 0) {
         runLog.info('capacidades de catálogo entregues ao operador', { entregues: catalogoEntregue });
       }
-      const mcp = await buildMcpTurnTools(deps.crmCfg, { organizationId: tenantId, jobId: job.id }, configDoTurno, runLog);
+      const mcp = await buildMcpTurnTools(deps.crmCfg, { organizationId: tenantId, jobId: job.id, conversationId: input.conversationId }, configDoTurno, runLog);
       if (mcp !== null) {
         mcpCleanup = mcp.cleanup;
         for (const [name, mcpTool] of Object.entries(mcp.tools)) {

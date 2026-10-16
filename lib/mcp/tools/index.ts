@@ -52,6 +52,8 @@ import {
 import {
   commercialCreateOrder,
   commercialDeliveryStatus,
+  crmGetProductPhotos,
+  crmSendProductPhoto,
   crmListContactOrders,
   crmSearchProducts,
 } from "./comercio";
@@ -120,6 +122,8 @@ export const allTools: ReadonlyArray<McpToolDefinition> = [
   crmSaveOrgMemory,
   crmListContactOrders,
   crmSearchProducts,
+  crmGetProductPhotos,
+  crmSendProductPhoto,
   commercialCreateOrder,
   commercialDeliveryStatus,
   crmListPrivacyRequests,

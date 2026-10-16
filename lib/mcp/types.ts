@@ -19,6 +19,13 @@ export interface McpContext {
   requestId: string;
   /** Service-role admin client. Tools devem filtrar `organization_id` em toda query. */
   supabase: SupabaseClient;
+  /**
+   * Conversa vinculada a este turno/run, quando o chamador a conhece (foto e
+   * envios a ela). Vem DO RUNTIME (row do job/run), nunca do payload do modelo
+   * — passar destino pelo payload permitiria ao modelo mirar outra conversa.
+   * Ausente = a tool que precisa de destino recusa em vez de adivinhar.
+   */
+  conversationId?: string | null;
 }
 
 export type McpToolCategory = "read" | "write" | "handoff";
