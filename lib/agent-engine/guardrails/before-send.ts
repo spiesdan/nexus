@@ -65,6 +65,7 @@ import type { DisclosureMode } from './disclosure/template';
 import { escalateLgpdVeto, isLegalBasisValid } from './lgpd/legal-basis';
 import type { LgpdInput } from './lgpd/legal-basis';
 import { detectHumanPromise } from './human-promise';
+import { validarCitacaoCatalogo, type ItemCitavel } from './catalog-identity';
 import { detectarVazamentoInterno, renderVetoDeVazamento } from './vazamento-interno';
 // Módulo PURO de propósito (`capabilities`, não `index`): o seam não arrasta o
 // adapter — e com ele o cliente HTTP do canal — para dentro do worker.
@@ -141,6 +142,14 @@ export interface GateContext {
    * ao modelo no veto (erro de ensino), mas nunca vai a log (PII fora de log).
    */
   semanticPromise: PromiseClassification | null;
+  /**
+   * Resultado das buscas de catálogo NESTE turno (F4-10) — o que
+   * `crm_search_products` devolveu, com a marca `relacao` de cada item. Quem
+   * monta o run injeta; ausente/null = gate no-op (testes e caminhos sem
+   * modelo não têm contra o que conferir — e chutar seria vetar preço vindo
+   * de RAG/prompt do tenant).
+   */
+  catalogo?: { itens: ItemCitavel[] } | null;
   /**
    * Disclosure "assistente virtual" (F4-05; blueprint 5.7) — carregado por ponteiro sob o
    * lock. `template` null = org não configurou disclosure (gate no-op). `isFirstOutbound`
@@ -360,6 +369,36 @@ export const semanticPromiseGate: Gate = {
   },
 };
 
+/**
+ * Gate de identidade de catálogo (F4-10) — a garantia DURA de que o que o modelo
+ * CITA (nome, preço, código) veio do que a busca DEVOLVEU neste turno.
+ *
+ * Motivação medida: "vassoura" devolveu [cabo avulso, vassoura de pelo,
+ * vassoura de nylon] e o modelo respondeu SÓ o cabo, com o preço certo. O
+ * `promiseGate` não pega (R$ 5,00 existe na tabela) e o produto existe no
+ * catálogo — só não é o pedido. Preço certo + produto existente, intenção
+ * trocada: só a comparação com o resultado do turno pega.
+ *
+ * Puro e síncrono como os demais (ver `catalog-identity.ts`); o contexto chega
+ * pronto no `GateContext.catalogo`. Posição 6.1 de `BEFORE_SEND_GATES`: logo
+ * após as duas camadas de promessa (é a terceira perna da mesma invariante —
+ * "não prometa o que não existe"), antes do `casePromiseGate`.
+ */
+export const catalogIdentityGate: Gate = {
+  name: 'catalog_identity',
+  evaluate: (ctx) => {
+    if (!ctx.catalogo || ctx.catalogo.itens.length === 0) return { pass: true };
+    const veredito = validarCitacaoCatalogo(ctx.body, ctx.catalogo.itens);
+    return veredito.ok
+      ? { pass: true }
+      : {
+          pass: false,
+          code: veredito.code ?? 'catalogo_identidade',
+          reason: veredito.reason ?? '',
+          detail: { camada: 'catalogo' },
+        };
+  },
+};
 /**
  * Gate anti-alucinação de casos humanos (spec 15 §10.2, Wave 4) — a garantia DURA da
  * invariante "o lead nunca recebe promessa-de-humano sem caso aberto". Off (`casesEnabled`
@@ -656,8 +695,14 @@ const spinningGate: Gate = {
  * `GateContext.agenda`): só o caminho do agente o arma quando o agente publicado tem
  * `crm_book_appointment` nas tools, então a v7 também não muda o destino de nenhum envio que
  * já existia fora desse caso — muda o TRACE e passa a medir/impedir a promessa vazia.
+ * v8 = insere `catalogIdentityGate` logo após `semanticPromiseGate` — a garantia
+ * DETERMINÍSTICA de que nome/preço/código citados vieram do que a busca devolveu
+ * NESTE turno (medido no caso da vassoura: preço certo + produto existente, intenção
+ * trocada — nenhum gate anterior pega). Nasce DESARMADO por default (ver
+ * `GateContext.catalogo`): só o caminho do agente o arma, então a v8 não muda o
+ * destino de nenhum envio fora desse caso.
  */
-export const BEFORE_SEND_CHAIN_VERSION = 7;
+export const BEFORE_SEND_CHAIN_VERSION = 8;
 
 /**
  * Ordem FINAL da cadeia (F4-08/F4-09; edge-contract §before_send / blueprint órgão 5) — DADO
@@ -669,6 +714,9 @@ export const BEFORE_SEND_CHAIN_VERSION = 7;
  *   (4) spinning — template idêntico em massa (F2-12);
  *   (5) promise — validação determinística de preço/desconto/parcelamento (F4-01);
  *   (6) semantic_promise — promessa em texto livre que a regex não pega (F4-02);
+ *   (6.1) catalog_identity — nome/preço/código citados vieram do que a busca
+ *         devolveu neste turno (F4-10); antes do case_promise porque é a terceira
+ *         perna da invariante anti-promessa;
  *   (6.5) case_promise — anti-alucinação de casos humanos (spec 15 §10.2, Wave 4);
  *   (6.7) internal_vocabulary — vazamento de vocabulário interno ao cliente (doutrina
  *         `separacao-fala-e-operacao.md`); antes do disclosure porque ele pode emendar o corpo;
@@ -685,6 +733,7 @@ export const BEFORE_SEND_GATES: readonly Gate[] = [
   spinningGate,
   promiseGate,
   semanticPromiseGate,
+  catalogIdentityGate,
   casePromiseGate,
   internalVocabularyGate,
   agendaStallGate,
@@ -806,6 +855,11 @@ export interface RunBeforeSendArgs {
    */
   agenda?: { active: boolean; toolCalledThisTurn: boolean };
   /**
+   * Resultado das buscas de catálogo NESTE turno (F4-10) — ver `GateContext.catalogo`.
+   * Ausente = gate no-op.
+   */
+  catalogo?: { itens: ItemCitavel[] };
+  /**
    * Enviado SÓ se TODOS os gates passarem — ChannelAdapter (própria tx/idempotência). Recebe o
    * corpo FINAL (o disclosureGate F4-05 pode emendá-lo via `amendBody`): quem monta o send DEVE
    * enviar este `body`, não o corpo original capturado antes da cadeia.
@@ -888,6 +942,7 @@ export async function runBeforeSend(args: RunBeforeSendArgs): Promise<BeforeSend
         : {}),
       internalVocabularyEnforced: args.enforceInternalVocabulary ?? false,
       ...(args.agenda !== undefined ? { agenda: args.agenda } : {}),
+      catalogo: args.catalogo ?? null,
     };
 
     const trace: GateTraceEntry[] = [];

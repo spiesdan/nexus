@@ -102,6 +102,7 @@ import {
   provideCaseUpdateInputSchema,
 } from './human-cases';
 import { buildMcpTurnTools } from '../edge/crm/mcp-tools';
+import type { ItemCitavel } from '../guardrails/catalog-identity';
 import { cancelPendingCronsForLead } from '../cron/scheduler';
 import {
   latestInboundSignal,
@@ -344,6 +345,16 @@ export const checkpointContentSchema = z.object({
   next_action: z.string().nullable().default(null),
   rolling_summary: z.string().default(''),
   /**
+   * Foco de produto do turno (intenção de compra estruturada): o que o turno
+   * fechou como assunto — termo que o cliente pediu + categoria. Opcional SEM
+   * default, como `declaracao`: ausente = o turno não tratou de produto (ou o
+   * modelo não declarou), e a abertura só injeta o bloco quando há valor.
+   * É o que preserva "vassouras" diante de "qual vocês têm?" no turno seguinte.
+   */
+  foco_produto: z
+    .object({ termo: z.string().max(120), categoria: z.string().max(120) })
+    .optional(),
+  /**
    * A declaração do turno (spec 16 §5) — a fronteira entre FALAR e OPERAR.
    *
    * `.optional()` SEM default, e a diferença importa: `undefined` significa que o
@@ -367,7 +378,7 @@ export type CheckpointContent = z.infer<typeof checkpointContentSchema>;
  * prometer `undefined` onde `select *` entrega `null` — e o `=== undefined` de
  * quem lesse a row seria falso justamente no caso que ele quer pegar.
  */
-export interface LeadCheckpointRow extends Omit<CheckpointContent, 'declaracao'> {
+export interface LeadCheckpointRow extends Omit<CheckpointContent, 'declaracao' | 'foco_produto'> {
   id: string;
   seq: string;
   organization_id: string;
@@ -375,6 +386,8 @@ export interface LeadCheckpointRow extends Omit<CheckpointContent, 'declaracao'>
   job_id: string | null;
   created_at: Date;
   declaracao: DeclaracaoDoTurno | null;
+  /** Espelha a coluna (migration 0270) — `select *` a devolve; ausente em bancos antigos. */
+  foco_produto?: { termo: string; categoria: string } | null;
 }
 
 /**
@@ -388,9 +401,12 @@ export interface LeadCheckpointRow extends Omit<CheckpointContent, 'declaracao'>
  */
 export const CHECKPOINT_INSTRUCTION =
   'Feche o turno AGORA. Responda SOMENTE com um JSON válido no formato ' +
-  '{"commitments": string[], "objections": string[], "next_action": string|null, "rolling_summary": string} ' +
+  '{"commitments": string[], "objections": string[], "next_action": string|null, "rolling_summary": string, "foco_produto": {"termo": string, "categoria": string}|null} ' +
   '— compromissos assumidos, objeções do lead, próxima ação e o resumo acumulado ' +
   'da conversa até aqui (inclua o que o resumo anterior já dizia). ' +
+  '`foco_produto` é o assunto de PRODUTO do turno (o termo que o cliente pediu + categoria, ' +
+  'ex. {"termo": "vassoura", "categoria": "vassouras"}); null quando o turno não tratou de ' +
+  'produto. É ele que preserva a intenção diante de pergunta de continuação ("qual vocês têm?"). ' +
   // ⚠️ O REFERENCIAL DE `next_action`, e ele não é zelo de redação.
   //
   // Este JSON é escrito no FECHO do turno: a pergunta já saiu, a resposta ainda
@@ -874,8 +890,8 @@ async function insertCheckpoint(
   input: { tenantId: string; leadId: string; jobId: string; content: CheckpointContent },
 ): Promise<void> {
   await db.query(
-    `insert into lead_checkpoints (organization_id, contact_id, job_id, commitments, objections, next_action, rolling_summary, declaracao)
-     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    `insert into lead_checkpoints (organization_id, contact_id, job_id, commitments, objections, next_action, rolling_summary, declaracao, foco_produto)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       input.tenantId,
       input.leadId,
@@ -889,6 +905,9 @@ async function insertCheckpoint(
       // sustenta em memória. Gravar um objeto vazio aqui jogaria fora, no
       // Postgres, a informação que o Zod tomou o cuidado de manter.
       input.content.declaracao === undefined ? null : JSON.stringify(input.content.declaracao),
+      // Mesmo contrato do foco de produto (migration 0270): ausente = sem
+      // assunto de produto neste turno, e a abertura não injeta bloco nenhum.
+      input.content.foco_produto === undefined ? null : JSON.stringify(input.content.foco_produto),
     ],
   );
 }
@@ -954,6 +973,16 @@ export function ritualBlocks(
       })
     : 'primeiro turno — sem checkpoint anterior';
   const summaryBlock = previous?.rolling_summary ? previous.rolling_summary : '—';
+  // Foco de produto do turno anterior (migration 0270): só entra quando há —
+  // bloco dizendo "sem assunto de produto" custaria tokens em toda conversa
+  // para informar uma ausência que o modelo não precisa saber. Quando há, ele
+  // ancora a intenção diante de pergunta de continuação ("qual vocês têm?")
+  // sem depender só do resumo textual.
+  const foco = previous?.foco_produto ?? null;
+  const focoBlock =
+    foco !== null && typeof foco.termo === 'string' && foco.termo.trim() !== ''
+      ? `termo: ${foco.termo}${typeof foco.categoria === 'string' && foco.categoria.trim() !== '' ? `; categoria: ${foco.categoria}` : ''}`
+      : null;
   // slot previsto na F2-09, preenchido pela F2-10: estado do funil no ritual de
   // abertura — sem registro ainda, o lead está em "new" (default da 0008).
   const stateBlock = leadState
@@ -978,6 +1007,16 @@ export function ritualBlocks(
     '## Resumo acumulado da conversa',
     summaryBlock,
     '',
+    ...(focoBlock !== null
+      ? [
+          '## Foco de produto do turno anterior — o assunto que o cliente estava comprando',
+          '(Se a mensagem nova nomear outro produto, o novo manda. Se ela for continuação ' +
+            '("qual vocês têm?", "e os preços?", "manda foto"), o assunto continua sendo este — ' +
+            'repita o termo da busca anterior em vez de buscar o texto solto.)',
+          focoBlock,
+          '',
+        ]
+      : []),
     // Era "## Estado do funil (lead_state)". O nome da tabela no cabeçalho era
     // vazamento gratuito — o modelo o lê e o repete, que é a porta 2 medida, só
     // que sem nem precisar de uma ferramenta para carregá-la. O CONTEÚDO deste
@@ -1849,6 +1888,10 @@ async function executarTurnoDoAgente(
   // as tools do modelo rodam em passos anteriores do mesmo loop, o valor já está certo
   // quando o modelo decide mandar a resposta.
   let agendaToolCalledThisTurn = false;
+  // F4-10: o que `crm_search_products` DEVOLVEU neste turno (acumulado de todas
+  // as chamadas) — alimenta o `catalogIdentityGate` no envio. Por turno
+  // (closure), nunca cross-turno: mesma garantia de isolamento do resto do run.
+  const buscasDoTurno: ItemCitavel[] = [];
   const outcomes: ChannelSendResult[] = [];
   // Citações acumuladas por buscas de conhecimento DESTE turno — anexadas à
   // próxima outbound enviada (shape de lib/ai/citations/types, que a UI já lê).
@@ -2180,6 +2223,9 @@ async function executarTurnoDoAgente(
               active: agentConfig !== null && agentConfig.toolIds.includes('crm_book_appointment'),
               toolCalledThisTurn: agendaToolCalledThisTurn,
             },
+            // F4-10: o gate confere o citado contra o devolvido; sem busca no
+            // turno, ausente = no-op (preço pode vir de RAG/prompt do tenant).
+            ...(buscasDoTurno.length > 0 ? { catalogo: { itens: [...buscasDoTurno] } } : {}),
             ...(deps.knobs.disclosureMode !== undefined ? { disclosureMode: deps.knobs.disclosureMode } : {}),
             // Gate 5 (F4-02): classificador semântico roteado pelo MESMO seam agnóstico (budget
             // da org checado nele). Closure com tenant/lead/job da ROW fechados — nunca do payload.
@@ -2733,6 +2779,35 @@ async function executarTurnoDoAgente(
               execute: (async (...args: Parameters<typeof executeOriginal>) => {
                 agendaToolCalledThisTurn = true;
                 return executeOriginal(...args);
+              }) as typeof mcpTool.execute,
+            };
+          } else if (name === 'crm_search_products' && typeof mcpTool.execute === 'function') {
+            // F4-10: registra o que a busca DEVOLVEU neste turno para o
+            // `catalogIdentityGate` conferir o que o modelo CITAR no envio. Sem
+            // este registro o gate não teria contra o que conferir e seria no-op.
+            const executeOriginal = mcpTool.execute.bind(mcpTool);
+            rawTools[name] = {
+              ...mcpTool,
+              execute: (async (...args: Parameters<typeof executeOriginal>) => {
+                const resultado = (await executeOriginal(...args)) as {
+                  produtos?: Array<{
+                    codigo: string;
+                    nome: string;
+                    preco_cents: number;
+                    relacao?: 'direta' | 'relacionada';
+                  }>;
+                } | null;
+                for (const p of resultado?.produtos ?? []) {
+                  if (typeof p?.codigo === 'string' && typeof p?.nome === 'string') {
+                    buscasDoTurno.push({
+                      codigo: p.codigo,
+                      nome: p.nome,
+                      preco_cents: typeof p.preco_cents === 'number' ? p.preco_cents : 0,
+                      ...(p.relacao === 'relacionada' ? { relacao: 'relacionada' as const } : {}),
+                    });
+                  }
+                }
+                return resultado;
               }) as typeof mcpTool.execute,
             };
           } else {

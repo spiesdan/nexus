@@ -135,6 +135,18 @@ export const CONFERENCIAS_DE_SAIDA: readonly ConferenciaDeSaida[] = [
     camada: "promessa_semantica",
   },
   {
+    nome: "catalog_identity",
+    rotulo: "Só citar produto, preço e código que a busca devolveu",
+    oQueProtege:
+      "Barra a resposta que troca o pedido por um acessório (cabo avulso no lugar da " +
+      "vassoura), o preço ajustado e o código inventado — só sai o que veio do catálogo.",
+    escolha: null,
+    porQueNaoSeDesliga:
+      "É a conferência que impede a troca silenciosa de produto: preço certo com item errado " +
+      "não é pego por nenhuma outra. Desligar reabre exatamente o caso da vassoura.",
+     camada: null,
+  },
+  {
     nome: "case_promise",
     rotulo: "Não prometer atendimento humano que não existe",
     oQueProtege:
