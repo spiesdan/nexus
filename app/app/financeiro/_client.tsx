@@ -12,6 +12,7 @@ import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -98,6 +99,7 @@ export function FinanceiroClient({
   buscaInicial?: string;
 }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const [aba, setAba] = React.useState(abaInicial ?? "recebiveis");
   const [linhas, setLinhas] = React.useState<Recebivel[] | null>(null);
   const [total, setTotal] = React.useState(0);
@@ -569,6 +571,7 @@ function situacaoDoPagavel(p: Pagavel, hoje: string): Situacao {
 
 function AbaPagar() {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const [pagaveis, setPagaveis] = React.useState<Pagavel[] | null>(null);
   const [erro, setErro] = React.useState(false);
   const [statusFiltro, setStatusFiltro] = React.useState("");
@@ -749,6 +752,7 @@ function AbaPagar() {
 
 function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const [linhas, setLinhas] = React.useState<Recebivel[] | null>(null);
   const [erro, setErro] = React.useState(false);
 
@@ -871,6 +875,7 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
 
 function AbaFluxo() {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const [dias, setDias] = React.useState(60);
   const [fluxo, setFluxo] = React.useState<Fluxo | null>(null);
   const [erro, setErro] = React.useState(false);
@@ -1021,6 +1026,7 @@ function DetalheRecebivel({
   aoMudar: () => void;
 }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const [dados, setDados] = React.useState<{
     pagamentos: Pagamento[];
