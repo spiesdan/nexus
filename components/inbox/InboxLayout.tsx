@@ -436,6 +436,30 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               )}
             </div>
           )}
+          {selectedConversation && (
+            /*
+              A porta da ficha no intervalo `md–xl`: a terceira coluna
+              (`CRMSidePanel`) só existe em `xl+`, e o gatilho do Sheet morava
+              na barra `md:hidden` do celular — num notebook 1280px o contexto
+              do cliente sumia sem aviso e sem saída. Esta faixa só aparece
+              onde a coluna não existe (`md:flex xl:hidden`).
+            */
+            <div className="hidden items-center gap-1 border-b border-border px-1 py-1 md:flex xl:hidden">
+              <div className="flex-1" />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2">
+                    <IdentificationCard size={16} />
+                    {t("Ficha")}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[min(22rem,90vw)] overflow-y-auto p-0">
+                  <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
+                  <CRMSidePanel conversation={selectedConversation} />
+                </SheetContent>
+              </Sheet>
+            </div>
+          )}
           {selectedConversation ? (
             <>
               <ConversationHeader conversation={selectedConversation} />

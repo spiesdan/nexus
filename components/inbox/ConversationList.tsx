@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
 import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
@@ -112,16 +113,12 @@ export function ConversationList({
 
   if (q.isError) {
     return (
-      <div className="p-4 text-center text-sm text-muted-foreground">
-        <p>Erro ao carregar conversas.</p>
-        <Button
-          size="sm"
-          variant="outline"
-          className={`mt-2 ${BTN_REF} ${BTN_REF_SEC}`}
-          onClick={() => q.refetch()}
-        >
-          Tentar novamente
-        </Button>
+      <div className="p-3">
+        <NexusErrorState
+          description={t("Erro ao carregar conversas.")}
+          onRetry={() => q.refetch()}
+          className="border-0 py-6"
+        />
       </div>
     );
   }

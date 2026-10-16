@@ -1051,7 +1051,7 @@ export function PedidosClient({
                         {comoMoeda(p.total_cents, p.moeda)}
                       </TableCell>
                       <TableCell>
-                        {ROTULO_DO_STATUS[p.status as StatusDoPedido] ?? p.status}
+                        <PillDoStatus status={p.status as StatusDoPedido} />
                       </TableCell>
                       <TableCell>
                         <span
