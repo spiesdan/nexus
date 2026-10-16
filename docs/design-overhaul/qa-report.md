@@ -1,6 +1,17 @@
 # NEXUS — Relatório de QA (visual + funcional)
 
-> Última atualização: 2026-10-16 (ciclo 3).
+> Última atualização: 2026-10-16 (final — `gov:verify` verde).
+
+## Final — `pnpm gov:verify` (typecheck + lint + test:unit)
+
+- **808 arquivos, 8540 passed + 1 expected fail. Zero falha.**
+- No caminho: o gate `i18n-a-data-segue-o-idioma` reprovou 1 ponto do ciclo 3
+  (`toLocaleDateString("pt-BR")` fixo no financeiro) — corrigido para o
+  `tagIdioma` do hook (`useTagDeIdioma`), que é a regra do produto.
+- E2E (88 specs no CI) e screenshots multi-largura/tema: não rodados nesta
+  sessão — pendência declarada da Fase F (exige app rodando + banco semeado;
+  ver `docs/harness-audit.md`). Nenhuma mudança desta sessão altera
+  contrato/API/persistência/RLS; risco E2E avaliado como baixo por construção.
 
 ## Ciclo 3 — lote IA/operação/settings/admin (ver `implementation-progress.md`)
 
