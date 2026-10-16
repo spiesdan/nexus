@@ -55,11 +55,11 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 | rota | arquivo | decisão | nota |
 |---|---|---|---|
 | `/app` (Dashboard) | `app/app/page.tsx` + `_home.tsx` + `_home-secoes.tsx` | REFINAR | §C-T1. Dedupe `SalesRadar` + erros com retry — **aplicado em 2026-10-15** |
-| `/app/meu-dia` | `app/app/meu-dia/page.tsx` + `_components/MeuDiaClient.tsx` | REFINAR | §C-T2 — pendente |
-| `/app/inbox` | `app/app/inbox/page.tsx` (`InboxLayout`) | RECONSTRUIR | §C-T3 — pendente |
+| `/app/meu-dia` | `app/app/meu-dia/page.tsx` + `_components/MeuDiaClient.tsx` | REFINAR | §C-T2 — fatia aplicada (ciclo 2) |
+| `/app/inbox` | `app/app/inbox/page.tsx` (`InboxLayout`) | RECONSTRUIR | §C-T3 — fatia aplicada (ciclo 2) |
 | `/app/inbox/[id]` | resolver (push) | MANTER | não é UI |
-| `/app/contacts` | `app/app/contacts/page.tsx` + `_client.tsx` | REFINAR | §C-T4 — pendente |
-| `/app/contacts/[id]` | `app/app/contacts/[id]/page.tsx` + `_client.tsx` | REFINAR | §C-T4 — pendente |
+| `/app/contacts` | `app/app/contacts/page.tsx` + `_client.tsx` | REFINAR | §C-T4 — fatia aplicada (ciclo 2) |
+| `/app/contacts/[id]` | `app/app/contacts/[id]/page.tsx` + `_client.tsx` | REFINAR | §C-T4 — fatia aplicada (ciclo 2) |
 | `/app/leads/[id]` | resolver (permalinks) | MANTER | não é UI |
 | `/app/busca` | `app/app/busca/page.tsx` | INVESTIGAR | |
 | `/app/carteira` | `app/app/carteira/page.tsx` | INVESTIGAR | header+DataTable+empty (sinal positivo) |
@@ -73,11 +73,11 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 
 | rota | arquivo | decisão | nota |
 |---|---|---|---|
-| `/app/pedidos` | `app/app/pedidos/page.tsx` + `_client.tsx` | CONSOLIDAR | §C-T5 — pendente |
+| `/app/pedidos` | `app/app/pedidos/page.tsx` + `_client.tsx` | CONSOLIDAR | §C-T5 — fatia aplicada (ciclo 2) |
 | `/app/pedidos/novo` | `app/app/pedidos/novo/page.tsx` + `_editor.tsx` | REFINAR | §C-T5 — wizard ok, barra mobile |
-| `/app/pedidos/[id]` | detalhe | REFINAR | §C-T5 — pendente |
+| `/app/pedidos/[id]` | detalhe | REFINAR | §C-T5 — fatia aplicada (ciclo 2) |
 | `/app/pedidos/imprimir` | `app/app/pedidos/imprimir/page.tsx` | INVESTIGAR | impressão (table crua justificável) |
-| `/app/products` | `app/app/products/page.tsx` + `_catalogo.tsx` | REFINAR | §C-T8 — pendente |
+| `/app/products` | `app/app/products/page.tsx` + `_catalogo.tsx` | REFINAR | §C-T8 — fatia aplicada (ciclo 2) |
 | `/app/estoque` | `app/app/estoque/page.tsx` + `_client.tsx` | INVESTIGAR | header+3×DataTable (sinal positivo) |
 | `/app/compras` | `app/app/compras/page.tsx` | INVESTIGAR | sinal positivo |
 | `/app/compras/[id]` | `app/app/compras/[id]/page.tsx` | INVESTIGAR | sinal positivo |
@@ -92,7 +92,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 
 | rota | arquivo | decisão | nota |
 |---|---|---|---|
-| `/app/radar` | `app/app/radar/page.tsx` + `_tabs.tsx` | REFINAR | §C-T6 — pendente |
+| `/app/radar` | `app/app/radar/page.tsx` + `_tabs.tsx` | REFINAR | §C-T6 — fatia aplicada (ciclo 2) |
 | `/app/recuperacao` | redirect → `/radar#recuperacao` | MANTER | fusão documentada, redirect com âncora |
 | `/app/relatorios` | `app/app/relatorios/page.tsx` | INVESTIGAR | |
 | `/app/indicadores` | `app/app/indicadores/page.tsx` | INVESTIGAR | `/metrics` redireciona p/ cá |
@@ -180,7 +180,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
    `app/app/_home.tsx`, `app/app/_home-secoes.tsx`. Aceite: sem seção duplicada;
    falha de radar/roadmap/fila mostra alerta com retry funcional.
 
-### T2 — Meu Dia `/app/meu-dia` — REFINAR (pendente)
+### T2 — Meu Dia `/app/meu-dia` — REFINAR (fatia aplicada ciclo 2; resto pendente)
 
 - Título "Meu Dia" até o mount, depois saudação com data — layout shift a cada abertura.
   Corrigir com data inicial no servidor ou título estático + data como subtítulo.
@@ -191,7 +191,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
   `NexusSkeleton`/`NexusErrorState`).
 - Mobile: timeline acima de todo o contexto — com dia cheio, muito scroll até mensagens.
 
-### T3 — Inbox `/app/inbox` — RECONSTRUIR (pendente)
+### T3 — Inbox `/app/inbox` — RECONSTRUIR→fatia aplicada ciclo 2 (ver §C; rebuild integral adiado com justificativa)
 
 - Única tela relevante com zero uso do DS (`Nexus*`): empties artesanais.
 - Painel de contexto some entre `md` e `xl` sem aviso (notebook 1280px perde o contexto).
@@ -199,7 +199,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 - Filtros/busca/atribuição com vocabulário próprio, fora do `FilterBar`.
 - Preservar 3 painéis no desktop; mobile uma coluna por vez com header de contato consistente.
 
-### T4 — Contatos `/app/contacts` + `[id]` — REFINAR (pendente)
+### T4 — Contatos `/app/contacts` + `[id]` — REFINAR (fatia aplicada ciclo 2; resto pendente)
 
 - Lista é referência (`FilterBar` canônico + paginação). `tagOptions` deriva só dos
   contatos carregados — tag além da página some do filtro (derivar do backend).
@@ -208,7 +208,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 - Header com 2 CTAs estoura em 390px (empilhar ações no mobile).
 - Tabela sem fallback em cards no mobile (adotar `renderCard` do `NexusDataTable`).
 
-### T5 — Pedidos `/app/pedidos` (+novo, +[id]) — CONSOLIDAR/REFINAR (pendente)
+### T5 — Pedidos `/app/pedidos` (+novo, +[id]) — CONSOLIDAR (status unificado ciclo 2; resto verificado-mantido)
 
 - Três visões, três linguagens de status (Pill / texto / coluna). Unificar selo.
 - Header com 3 ações de impressão + criar — primária compete com duas quase idênticas.
@@ -217,7 +217,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 - Novo: `pb-24 lg:pb-6` sugere CTA fixa sob navegação no mobile — verificar sobreposição.
 - Catálogo/contatos limitados a 500 linhas no servidor sem aviso — paginar ou avisar.
 
-### T6 — Radar `/app/radar` — REFINAR (pendente)
+### T6 — Radar `/app/radar` — REFINAR (fatia aplicada ciclo 2)
 
 - "Abas" são botões de scroll sem `aria-current`, sem deep-link, sem estado ativo.
   Virar abas reais (ou segmented control com `?secao=`, preservando scroll atual por e2e).
@@ -225,7 +225,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 - Critério "sem base" (pedido >60d) invisível na UI — exibir o critério no empty.
 - Gate `podeOperar` para viewer sem copy explicativa — checar.
 
-### T7 — Financeiro `/app/financeiro` — REFINAR menor (pendente)
+### T7 — Financeiro `/app/financeiro` — REFINAR menor (parser+locale ciclo 2; trends pendentes)
 
 - Modelo do DS (header + KPIs + tabs + DataTable + detalhe inline). Manter a estrutura.
 - KPIs sem `trend`/`variation` (só "Vencido") — valores estáticos sem contexto.
@@ -234,7 +234,7 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
   exibiria MM/DD/YYYY).
 - TabsList mobile: verificado OK na classe (`tabs.tsx:62`).
 
-### T8 — Catálogo `/app/products` — REFINAR (pendente)
+### T8 — Catálogo `/app/products` — REFINAR (header ciclo 2; resto pendente)
 
 - Header artesanal (`h1 text-2xl font-medium`) — terceiro estilo de título do produto;
   adotar `NexusPageHeader`.
