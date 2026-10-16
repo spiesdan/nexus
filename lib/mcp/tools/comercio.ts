@@ -11,6 +11,8 @@
  */
 import { z } from "zod";
 
+import { logger } from "@/lib/logger";
+
 import type { McpToolDefinition } from "../types";
 import { buscarComRelaxamento } from "@/lib/catalogo/busca";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
@@ -209,7 +211,12 @@ const TAMANHO_DA_PAGINA = 1000;
  */
 const PAGINAS_MAXIMAS = 10;
 
-export function avisosDaBusca(input: { empate: boolean; ignorados: readonly string[] }): string {
+export function avisosDaBusca(input: {
+  empate: boolean;
+  ignorados: readonly string[];
+  /** Tudo que voltou é acessório/alternativa — opcional para não quebrar chamadas existentes. */
+  soRelacionadas?: boolean;
+}): string {
   const avisos: string[] = [];
   if (input.ignorados.length > 0) {
     avisos.push(
@@ -226,6 +233,13 @@ export function avisosDaBusca(input: { empate: boolean; ignorados: readonly stri
         "Pergunte qual é antes de responder valor.",
     );
   }
+  if (input.soRelacionadas === true) {
+    avisos.push(
+      "atenção: TUDO que voltou é acessório ou alternativa do pedido, nada é o produto em si. " +
+        "NÃO apresente nenhum como se fosse o pedido — diga que não encontrou o item completo " +
+        "e ofereça a alternativa deixando clara a diferença.",
+    );
+  }
   return avisos.join(" ");
 }
 
@@ -238,6 +252,13 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "loja terá de cumprir ou desfazer. " +
     "Passe o que a pessoa escreveu, do jeito que ela escreveu: a busca entende erro de digitação " +
     "('ifone') e acha por marca, categoria ou código. " +
+    "⚠️ PRINCIPAL × ACESSÓRIO — cada produto pode voltar com `relacao: \"relacionada\"`: é um " +
+    "acessório ou peça do que foi pedido (cabo avulso para quem pediu vassoura, refil para quem " +
+    "pediu rodo), NUNCA a resposta. Apresente primeiro os sem marcação; o marcado só entra como " +
+    "alternativa EXPLÍCITA ('não temos a vassoura, mas temos o cabo avulso por R$ X — quer?'). Se " +
+    "a pessoa pediu o acessório pelo nome ('quero um cabo'), ele volta sem marcação: é o pedido. " +
+    "⚠️ PERGUNTA DE CONTINUAÇÃO sem produto novo ('qual vocês têm?', 'e os preços?'): NÃO busque " +
+    "o texto solto — repita o termo da sua busca anterior da conversa, que já tem o produto. " +
     "⚠️ SE VOLTAR MAIS DE UM produto com `empate: true`, NÃO escolha por conta própria — os dois " +
     "casam igualmente o que ela disse, e a diferença entre eles é de preço. Pergunte qual é. " +
     "Cada produto volta com `disponivel` (false = sem saldo no controle de estoque): apresente " +
@@ -347,6 +368,16 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
 
     const topo = disponiveis.slice(0, input.limite);
 
+    // §10 — diagnóstico da busca sem conteúdo privado: contagens e classificação,
+    // nunca o termo cru além de um prefixo curto (pode carregar dado do cliente).
+    logger.info('[mcp.crm_search_products]', {
+      diretas: disponiveis.filter((a) => a.relacao === 'direta').length,
+      relacionadas: disponiveis.filter((a) => a.relacao === 'relacionada').length,
+      ignorados,
+      total_encontrados: disponiveis.length,
+      varredura_parcial: varreduraParcial,
+    });
+
     if (topo.length === 0) {
       if (achados.length > 0) {
         return {
@@ -372,7 +403,13 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     // casa o Pro e o Pro Max igualmente, e a diferença entre eles é o preço.
     const empate = topo.length > 1 && topo[0]!.nota === topo[1]!.nota;
 
-    const mensagem = avisosDaBusca({ empate, ignorados });
+    // Só alternativas: o pedido não tem correspondência direta no que voltou.
+    // É o caso "só tem o cabo" — o modelo precisa DIZER isso, não apresentar o
+    // cabo como vassoura.
+    const soRelacionadas =
+      topo.length > 0 && topo.every((t) => t.relacao === 'relacionada');
+
+    const mensagem = avisosDaBusca({ empate, ignorados, soRelacionadas });
 
     return {
       // Total ANTES do corte do limite: sem ele o agente trata a amostra
@@ -380,7 +417,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       // lixo, medido em 2026-10-15). Com o total ele resume por tamanho e
       // pergunta, em vez de afirmar sobre o que não viu.
       total_encontrados: disponiveis.length,
-      produtos: topo.map(({ produto }) => {
+      produtos: topo.map(({ produto, relacao }) => {
         // Mesmo preço de vitrine da tela: promoção válida vence o base — uma
         // regra só, ou o agente anuncia um preço e o pedido cobra outro.
         const vitrine = precoDeVitrine(
@@ -396,6 +433,9 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
           nome: produto.nome,
           preco: precoLegivel(vitrine.cents, produto.moeda),
           preco_cents: vitrine.cents,
+          // Só o marcado viaja: `direta` é o default e não custa token. Quem lê
+          // (modelo ou gate de identidade) trata ausência como direta.
+          ...(relacao === 'relacionada' ? { relacao: 'relacionada' as const } : {}),
           ...(vitrine.emPromocao ? { em_promocao: true as const } : {}),
           ...(produto.marca ? { marca: produto.marca } : {}),
           ...(produto.descricao ? { descricao: produto.descricao } : {}),
@@ -409,6 +449,60 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       // número que sumiu importava.
       ...(ignorados.length > 0 ? { numeros_ignorados: ignorados } : {}),
       ...(mensagem ? { mensagem } : {}),
+    };
+  },
+};
+
+const fotosDoProdutoShape = {
+  codigo: z
+    .string()
+    .trim()
+    .min(1)
+    .max(60)
+    .describe("o CÓDIGO do produto, como voltou em `crm_search_products` — nunca o nome"),
+};
+
+export const crmGetProductPhotos: McpToolDefinition<typeof fotosDoProdutoShape> = {
+  name: "crm_get_product_photos",
+  description:
+    "Devolve as fotos CADASTRADAS de um produto do catálogo, pelo código. Use quando a pessoa " +
+    "pedir foto, imagem ou 'manda foto'. Cada foto volta com `storage_path` — passe-o INTEIRO em " +
+    "`send_message.image_storage_path` para enviar; nunca invente caminho. Lista vazia = o produto " +
+    "não tem foto cadastrada: diga isso e ofereça mandar quando tiver, nunca descreva foto que não viu.",
+  inputSchema: fotosDoProdutoShape,
+  category: "read",
+  requiresRole: "agent",
+  requiresScope: "mcp:read",
+  handler: async (input, ctx) => {
+    const codigo = input.codigo.trim();
+    const { data: produto, error: errProd } = await ctx.supabase
+      .from("catalog_products")
+      .select("id, nome")
+      .eq("organization_id", ctx.organizationId)
+      .eq("codigo", codigo)
+      .maybeSingle();
+    if (errProd) throw new Error(`buscar_produto_falhou: ${errProd.message}`);
+    if (!produto) {
+      return { fotos: [], mensagem: `não há produto com código "${codigo}" no catálogo. Confira com \`crm_search_products\`.` };
+    }
+    const p = produto as { id: string; nome: string };
+    const { data: fotos, error: errFotos } = await ctx.supabase
+      .from("product_images")
+      .select("storage_path, posicao")
+      .eq("organization_id", ctx.organizationId)
+      .eq("product_id", p.id)
+      .order("posicao", { ascending: true });
+    if (errFotos) throw new Error(`buscar_fotos_falhou: ${errFotos.message}`);
+    // `local:` mora em disco do servidor, não no bucket — o envio não alcança.
+    // Devolver o caminho cru faria o envio quebrar longe da causa.
+    const enviaveis = ((fotos ?? []) as { storage_path: string; posicao: number }[]).filter(
+      (f) => !f.storage_path.startsWith("local:"),
+    );
+    return {
+      fotos: enviaveis.map((f) => ({ storage_path: f.storage_path, posicao: f.posicao })),
+      ...(enviaveis.length === 0
+        ? { mensagem: `o produto "${p.nome}" não tem foto cadastrada para envio.` }
+        : {}),
     };
   },
 };
