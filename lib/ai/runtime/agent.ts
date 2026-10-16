@@ -40,6 +40,11 @@ import type { McpAuthResult } from "@/lib/mcp/auth";
 import type { McpContext } from "@/lib/mcp/types";
 import { computeCostCents } from "./cost";
 import { finalizeRun } from "./finalize";
+import { validarCitacaoCatalogo } from "@/lib/agent-engine/guardrails/catalog-identity";
+import {
+  extrairItensDoTurnoLegado,
+  FALLBACK_IDENTIDADE_LEGADO,
+} from "./extrair-itens-do-turno";
 import { sendFinalResponse } from "./finalize";
 import { finalizeHandoff } from "./handoff";
 import { loadHistoryWithBudget } from "./history";
@@ -641,14 +646,29 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     // 16) Happy path. Send the reply through the channel when not dry-run.
     let outboundMessageId: string | null = null;
     const finalText = (result.text ?? "").trim();
-    if (!run.is_dry_run && finalText && run.conversation_id) {
+    // F4-10 (runtime legado: sem cadeia before_send): valida a citação contra
+    // o que a busca devolveu NESTE run. Veto = não envia o texto incorreto;
+    // sai o fallback honesto e o veto fica no trace para diagnóstico.
+    let textoParaEnvio = finalText;
+    let vetoIdentidade: string | null = null;
+    if (finalText) {
+      const veredito = validarCitacaoCatalogo(
+        finalText,
+        extrairItensDoTurnoLegado(result.steps as readonly unknown[]),
+      );
+      if (!veredito.ok) {
+        vetoIdentidade = veredito.code ?? "catalogo_identidade";
+        textoParaEnvio = FALLBACK_IDENTIDADE_LEGADO;
+      }
+    }
+    if (!run.is_dry_run && textoParaEnvio && run.conversation_id) {
       outboundMessageId = await sendFinalResponse({
         supabase: admin,
         organizationId: run.organization_id,
         runId: run.id,
         agentId: run.agent_id,
         conversationId: run.conversation_id,
-        text: finalText,
+        text: textoParaEnvio,
         requestId: run.id,
       });
     }

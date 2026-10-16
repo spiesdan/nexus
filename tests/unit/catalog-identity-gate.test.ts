@@ -10,6 +10,10 @@ import {
   validarCitacaoCatalogo,
   type ItemCitavel,
 } from "@/lib/agent-engine/guardrails/catalog-identity";
+import {
+  extrairItensDoTurnoLegado,
+  FALLBACK_IDENTIDADE_LEGADO,
+} from "@/lib/ai/runtime/extrair-itens-do-turno";
 
 const TURNO_VASSOURA: ItemCitavel[] = [
   { codigo: "CABO-VAS", nome: "Cabo de vassoura avulso", preco_cents: 500, relacao: "relacionada" },
@@ -88,5 +92,45 @@ describe("o gate não veta conversa normal", () => {
     expect(validarCitacaoCatalogo("Temos o cabo de vassoura avulso por R$ 5,00", soCabo).ok).toBe(
       true,
     );
+  });
+});
+
+describe("runtime legado: extração dos itens do turno + fallback", () => {
+  const passos = [
+    {
+      toolResults: [
+        { toolName: "get_lead_context", output: { contato: "x" } },
+        {
+          toolName: "crm_search_products",
+          output: {
+            produtos: [
+              { codigo: "CABO-VAS", nome: "Cabo de vassoura avulso", preco_cents: 500, relacao: "relacionada" },
+              { codigo: "VAS-PELO", nome: "Vassoura de pelo", preco_cents: 1500 },
+            ],
+          },
+        },
+      ],
+    },
+  ];
+
+  it("⭐ extrai só crm_search_products, ignorando as demais tools", () => {
+    const itens = extrairItensDoTurnoLegado(passos);
+    expect(itens.map((i) => i.codigo)).toEqual(["CABO-VAS", "VAS-PELO"]);
+    expect(itens[0]).toMatchObject({ preco_cents: 500, relacao: "relacionada" });
+  });
+
+  it("passo sem toolResults não quebra a extração", () => {
+    expect(extrairItensDoTurnoLegado([{}, { toolResults: null }])).toEqual([]);
+  });
+
+  it("o fluxo completo barra o cabo no legado: extrai → valida → veta", () => {
+    const itens = extrairItensDoTurnoLegado(passos);
+    const v = validarCitacaoCatalogo("Cabo de vassoura avulso — R$ 5,00", itens);
+    expect(v.ok).toBe(false);
+    expect(v.code).toBe("catalogo_troca_por_acessorio");
+  });
+
+  it("o fallback honesto não contém preço nem produto — passa em qualquer turno", () => {
+    expect(validarCitacaoCatalogo(FALLBACK_IDENTIDADE_LEGADO, TURNO_VASSOURA).ok).toBe(true);
   });
 });
