@@ -8,6 +8,17 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.26.0] — 2026-10-16
+
+### Alterado
+
+- **Auditoria visual completa — 40 telas refinadas, erros com retry, deep-links** A interface passou por auditoria página por página (129 rotas) e 40 telas foram
+  refinadas sem mudar nenhuma regra de negócio: cabeçalhos padronizados, erros que
+  antes eram frase cinza agora têm botão "Tentar novamente", radar com link direto
+  para cada seção, gráfico com eixo legível, prioridades visíveis no Meu Dia, valores
+  em formato brasileiro onde se digita, datas no idioma do usuário e tabelas que
+  rolam no celular. Nada precisa ser feito na atualização — só aproveitar.
+
 ## [1.25.53] — 2026-10-15
 
 ### Alterado
@@ -4289,7 +4300,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...HEAD
+[1.26.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...v1.26.0
 [1.25.53]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.52...v1.25.53
 [1.25.52]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.51...v1.25.52
 [1.25.51]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.50...v1.25.51
