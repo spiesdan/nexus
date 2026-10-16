@@ -1,6 +1,16 @@
 # NEXUS — Relatório de QA (visual + funcional)
 
-> Última atualização: 2026-10-16 (ciclo 2).
+> Última atualização: 2026-10-16 (ciclo 3).
+
+## Ciclo 3 — lote IA/operação/settings/admin (ver `implementation-progress.md`)
+
+- `pnpm eslint` nos 30 arquivos tocados: limpo (1 warning pré-existente em
+  TemplateFormDialog, fora do escopo — init de dialog em efeito).
+- `pnpm typecheck` (`tsc --noEmit`): limpo.
+- Unit: kanban (7) + moeda (5) + meu-dia (6) = 18 no ciclo; acumulado 98.
+- Nenhum teste precisou mudar neste ciclo (headers novos preservam copy/testids;
+  e2e de abas/agenda/tipos verificados por leitura — não rodados).
+- E2E e screenshots multi-largura/tema seguem pendentes (Fase F final).
 
 ## Ciclo 2 — T2 a T8 (fatia por tela, ver `implementation-progress.md`)
 

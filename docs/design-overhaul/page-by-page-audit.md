@@ -254,3 +254,76 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
 5. **Tabs:** `TabsList` da classe já rola (`overflow-x-auto`); telas usam sem reinventar.
 6. **Datas/moeda:** `pt-BR` explícito; parser BR único para inputs monetários.
 7. **Dedupe antes de decorar:** redundância (T1) sai antes de microanimação.
+
+## E. Varredura ciclo 3 (2026-10-16) — todos os módulos restantes
+
+Método: 4 auditorias read-only paralelas (código-fonte, sem screenshot) + verificação
+e correção pelo executor. Onde a primeira impressão foi refutada por evidência, a
+decisão registra o motivo (regra da Fase 4: sem migração por preferência).
+
+### E.1 Operação comercial
+
+| rota | decisão final | nota |
+|---|---|---|
+| `/app/estoque` | MANTER | exemplar (header+FilterBar+DataTable+renderCard) |
+| `/app/compras`, `/compras/[id]` | MANTER | idem + prefill `?novo=1` |
+| `/app/carteira` | MANTER | RSC + filtro client (sem fetch = sem error state) |
+| `/app/agenda` | MANTER | calendário justifica filtros próprios; tem loading+error |
+| `/app/busca` | MANTER | busca instantânea; hints adequados |
+| `/app/expedicao` (lista) | MANTER | server-driven, testids e2e, empties distintos ("não achei"×"não há") |
+| `/app/notas` | MANTER | GradeNotas: dados via prop server + empties canônicos |
+| `/app/faturamento` | REFINAR aplicado | `falhou` + error/retry no DataTable |
+| `/app/comissoes` | REFINAR aplicado | idem |
+| `/app/kanban` | REFINAR aplicado | `role=alert` nos erros de mutação (retry inviável: ação desconhecida) |
+| `/app/pipelines/[id]` | REFINAR aplicado | header canônico + error/retry + `role=status` |
+| `/app/tarefas` | CONSOLIDAR aplicado | pills→Badge, loading skeleton, error+retry, toggle no slot `navigation` |
+| `/app/expedicao/[id]` | REFINAR aplicado | error+retry no load (antes: skeleton eterno); banner sticky MANTIDO (operacional) |
+| `/app/venda-automatica` | REFINAR aplicado | header canônico |
+| `/app/kanban` × `settings/tenant/pipelines` | CONSOLIDAR pendente | duplicação real; exige decisão de produto (links/seed) — não remover sem ela |
+
+### E.2 Inteligência + IA
+
+| rota | decisão final | nota |
+|---|---|---|
+| `/app/relatorios`, `/indicadores`, `/inteligencia`, `/prospeccao` | MANTER | headers+estados ok; sem decorativo (verificado grep) |
+| `/app/laboratorio` | REFINAR aplicado | header canônico |
+| `/app/ai` (hub), `/ai/usage`, `/ai/evolution` | MANTER | hub NavHub; evolution exemplar de vazio |
+| `/app/ai/agents`, `/cases`, `/controle`, `/credentials`, `/inbox`, `/followups`, `/knowledge/sources`, `/memory`, `/proposals`, `/decisoes`, `/skills`, `/routers`, `/usage` | REFINAR aplicado | 14 headers `h1`→`NexusPageHeader`, copy intacta |
+| `/app/ai/agents/[id]`, `/new`, `/followups/[id]`, `/enrollments/[id]`, `/routers/[id]`, `/providers`, `/runs` | INVESTIGAR | header/estados dentro dos clients/editores — próxima varredura |
+
+### E.3 Settings + plataforma
+
+| rota | decisão final | nota |
+|---|---|---|
+| `/app/settings` (hub), `/atendimento`, `/atualizacao`, `/billing`, `/marca`, `/profile`, `/security`, `/tenant`, `/templates`(redirect), `/tenant/whatsapp`, `/settings/canal-oficial` | MANTER | FormField onde importa; state-machines exemplares; redirects legados |
+| `/app/settings/notifications` | MANTER | tabela já `ui/table` (§100: troca era só moldura — feita) |
+| `/app/settings/api-tokens` | REFINAR aplicado | FormField + erro inline de escopos (era só toast) |
+| `/app/team/invite` | REFINAR aplicado | FormField + hint limite + erro inline (era só toast) |
+| `/app/templates` | REFINAR aplicado | dialog em FormField; gates e copy intactos |
+| `/app/settings/tenant/agenda`, `/settings/tenant/pipelines` (editor), `/app/audit` (filtros) | MANTER justificado | forms rotulados + e2e-pinned + validação própria; FormField = churn sem benefício (regra Fase 4) |
+| `/app/team` (membros) | INVESTIGAR | coluna Cargo renderiza `SetorCell` — confirmar com produto se é rótulo trocado |
+| `/app/team` (atendimento) | MANTER | resumo tz-aware + dirty-save são o acerto |
+| `/app/lgpd/requests` (+`[id]`) | MANTER | SLA + justificativa + trilha auditável |
+| `/app/connections` | MANTER casca / INVESTIGAR `ConexoesShell` | auditar abas internas na próxima varredura |
+| `/app/webhooks`, `/integrations/nuvemshop` | MANTER | Tabs+mounted; máquina 3-estados |
+
+### E.4 Admin + público + sistema
+
+| rota | decisão final | nota |
+|---|---|---|
+| Admin: tenants, users, audit, incidents, lgpd, marca, google, usage, platform-admins, tenants/new, users/[id], incidents/[id], audit/[entryId] | MANTER | padrão canônico + skeletons + retry |
+| `/admin/dashboard` | REFINAR aplicado | error+retry (era o único sem) |
+| `/admin/tenants/[id]` | REFINAR aplicado | subtitle no header |
+| `/admin/tenants/[id]/health` | MANTER | herda header/tabs do layout; segundo header duplicaria |
+| `/admin/inbox` | MANTER + limitação registrada | read-only assumido; 360px fixo = desktop-first (admin interno); mobile do tenant já coberto |
+| `/admin/forbidden`, login (5), signup, onboarding (9), 403/500/503/suspended, legal (2), accept-invite, `/` | MANTER | shells próprios; login env×DB intencional; onboarding = exceção wizard declarada |
+| `/design` | MANTER | `DeskcommCRM` no h1 é allowlist explícita do `branding.test.ts:352,388` |
+| `/vitrine-agenda` | MANTER | isolada + noindex de propósito |
+
+### E.5 Deferidos com motivo (não esquecidos)
+
+- Endpoint de tags distintas p/ filtro de contatos: exige rota API + RLS + teste — backend, fora do escopo visual; sem inventar.
+- Trends/comparativos nos KPIs (financeiro): dado não existe; inventar é proibido.
+- `renderCard` em ContatosTable: bulk+sort acoplados; reescrita = risco sem benefício medido.
+- Colapso/lazy das 5 seções do Radar: 3 e2e leem sem clique; lazy quebraria a premissa.
+- Timeline acima do contexto no mobile (Meu Dia): estrutural; exige desenho, não ajuste.

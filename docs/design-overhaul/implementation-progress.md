@@ -1,16 +1,18 @@
 # NEXUS — Progresso da implementação
 
 > Atualizado durante o trabalho, nunca só no final. Números = contagem real.
-> Última atualização: 2026-10-16 (ciclo 2).
+> Última atualização: 2026-10-16 (ciclo 3 — varredura total + correções).
 
 ## Contadores
 
 | métrica | valor | como medido |
 |---|---|---|
 | rotas identificadas | 129 | `find app -name page.tsx \| wc -l` |
-| páginas auditadas (deep-dive) | 8 | §C do `page-by-page-audit.md` |
-| páginas corrigidas (fatia aplicada) | 8 | ciclos 1–2 |
-| páginas reconstruídas | 0 | T3 virou fatia (ver abaixo) |
+| páginas auditadas | 129 | 8 deep-dive (§C) + 121 varredura (§E) |
+| páginas corrigidas (fatia aplicada) | 34 | ciclos 1–3 (1+8+25) |
+| páginas reconstruídas | 0 | T3 virou fatia (rebuild integral adiado com justificativa) |
+| páginas mantidas com justificativa | ~80 | §B + §E |
+| páginas em INVESTIGAR residual | 13 | detalhe/new IA, ConexoesShell, TeamMembers SetorCell (ver §E.5/lista) |
 | páginas mantidas com justificativa | 8 | redirects/resolvers/stubs + vitrine + TabsList |
 | páginas bloqueadas | 0 | — |
 | módulos concluídos | 0 de 9 | nenhum módulo 100% auditado+corrigido |
@@ -67,7 +69,21 @@
   densa, não grid `sm:grid-cols-2`. Abas aninhadas seguem pendentes. Arquivo:
   `app/app/products/_catalogo.tsx`.
 
-## Backlog restante
+## Ciclo 3 (2026-10-16) — varredura total + lote IA/operação/settings/admin
+
+- 4 auditorias read-only paralelas cobriram os ~121 restantes; decisões em §E.
+- Lote IA: 14 headers `h1`→`NexusPageHeader` + laboratório (copy intacta).
+- Operação: faturamento/comissões (error+retry), kanban (`role=alert`), pipelines/[id]
+  (header+error+retry), tarefas (Badge pills, skeleton, error+retry, toggle em `navigation`),
+  expedição detalhe (error+retry), venda-automática (header).
+- Settings: api-tokens/invite/templates em FormField com erro inline (antes: só toast).
+- Admin: dashboard (error+retry), tenants/[id] (subtitle).
+- Mantidos com justificativa escrita: expedição lista, notas, agenda/pipelines/audit forms
+  (e2e-pinned, rotulados — FormField seria churn), notifications (swap §100 já feito),
+  health (header herdado), admin/inbox mobile (desktop-first), design (allowlist),
+  onboarding (exceção wizard), login env×DB (intencional).
+
+## Backlog restante (residual honesto)
 
 1. Fatias pendentes das 8 telas: colapso de alertas (T2), `renderCard` contatos (T4),
    abas aninhadas catálogo (T8), trends KPI financeiro (T7), endpoint de tags (backend).
