@@ -16,6 +16,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -280,26 +281,26 @@ export function VendaAutomaticaClient({
           }}
         />
       )}
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">{textos.titulo}</h1>
-          <p className="text-sm text-muted-foreground">{textos.subtitulo}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {selecionada && (
-            <Button variant="outline" size="sm" onClick={() => void carregar(selecionada)}>
-              <ArrowsClockwise className="h-4 w-4" />
-              {textos.recarregar}
-            </Button>
-          )}
-          {podeOperar && (
-            <Button size="sm" onClick={() => setDialogoAberto(true)}>
-              <Plus className="h-4 w-4" />
-              {textos.novaCampanha}
-            </Button>
-          )}
-        </div>
-      </header>
+      <NexusPageHeader
+        title={textos.titulo}
+        subtitle={textos.subtitulo}
+        actions={
+          <>
+            {selecionada && (
+              <Button variant="outline" size="sm" onClick={() => void carregar(selecionada)}>
+                <ArrowsClockwise className="h-4 w-4" />
+                {textos.recarregar}
+              </Button>
+            )}
+            {podeOperar && (
+              <Button size="sm" onClick={() => setDialogoAberto(true)}>
+                <Plus className="h-4 w-4" />
+                {textos.novaCampanha}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(260px,340px)_1fr]">
         <section aria-label={textos.titulo} className="space-y-2">

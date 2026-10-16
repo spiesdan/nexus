@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
@@ -85,11 +86,13 @@ export function CargaClient({
   const confirmar = useConfirmar();
   const router = useRouter();
   const [detalhe, setDetalhe] = React.useState<Detalhe | null>(null);
+  const [falhou, setFalhou] = React.useState(false);
   const [modo, setModo] = React.useState<"operador" | "motorista">("operador");
   const [motivoPara, setMotivoPara] = React.useState<string | null>(null);
   const [motivo, setMotivo] = React.useState<MotivoDevolucao>("cliente_ausente");
 
   const recarregar = React.useCallback(async () => {
+    setFalhou(false);
     try {
       const corpo = await apiClient.get<{ data: Detalhe }>(`/api/v1/shipments/${cargaId}`);
       const d = corpo?.data;
@@ -97,9 +100,11 @@ export function CargaClient({
         setDetalhe({ ...d, itens: d.itens });
       } else {
         setDetalhe(null);
+        setFalhou(true);
         showApiError(new Error(t("Resposta inesperada do servidor.")));
       }
     } catch (e) {
+      setFalhou(true);
       showApiError(e);
     }
   }, [cargaId, t]);
@@ -220,9 +225,18 @@ export function CargaClient({
   if (!detalhe) {
     return (
       <div className="space-y-3 p-6">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-40 w-full" />
+        {falhou ? (
+          <NexusErrorState
+            description={t("Não foi possível carregar esta carga.")}
+            onRetry={() => void recarregar()}
+          />
+        ) : (
+          <>
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </>
+        )}
       </div>
     );
   }

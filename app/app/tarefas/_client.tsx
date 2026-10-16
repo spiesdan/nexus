@@ -4,7 +4,10 @@ import * as React from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,10 +35,10 @@ interface Atividade {
   ocorrida_em: string;
 }
 
-const PILL_STATUS: Record<string, string> = {
-  pendente: "bg-yellow-100 text-yellow-800",
-  concluida: "bg-green-100 text-green-800",
-  cancelada: "bg-muted text-muted-foreground",
+const PILL_STATUS: Record<string, "warning" | "success" | "neutral"> = {
+  pendente: "warning",
+  concluida: "success",
+  cancelada: "neutral",
 };
 
 export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
@@ -45,6 +48,7 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
   const [tarefas, setTarefas] = React.useState<Tarefa[]>([]);
   const [atividades, setAtividades] = React.useState<Atividade[]>([]);
   const [carregando, setCarregando] = React.useState(true);
+  const [falhou, setFalhou] = React.useState(false);
   const [titulo, setTitulo] = React.useState("");
   const [data, setData] = React.useState("");
   const [tipoAtv, setTipoAtv] = React.useState("visita");
@@ -57,6 +61,7 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       setTarefas(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
+      setFalhou(true);
     }
   }
 
@@ -66,20 +71,27 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       setAtividades(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
+      setFalhou(true);
     }
   }
+
+  const recarregar = React.useCallback(async () => {
+    setCarregando(true);
+    setFalhou(false);
+    await Promise.all([carregarTarefas(), carregarAtividades()]);
+    setCarregando(false);
+  }, []);
 
   React.useEffect(() => {
     let vivo = true;
     void (async () => {
-      setCarregando(true);
-      await Promise.all([carregarTarefas(), carregarAtividades()]);
-      if (vivo) setCarregando(false);
+      await recarregar();
+      if (!vivo) return;
     })();
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [recarregar]);
 
   async function criarTarefa() {
     if (titulo.trim().length < 2) {
@@ -180,8 +192,8 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       <NexusPageHeader
         title={t("Tarefas")}
         subtitle={t("Agendadas, check-in de visita e atividades realizadas.")}
-        actions={
-          <div className="flex gap-2">
+        navigation={
+          <div className="flex gap-2" role="tablist" aria-label={t("Visões de tarefas")}>
             <Button size="sm" variant={aba === "tarefas" ? "default" : "outline"} onClick={() => setAba("tarefas")}>
               {t("Tarefas")} ({pendentes.length})
             </Button>
@@ -193,7 +205,12 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
       />
 
       {carregando ? (
-        <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
+        <NexusTableSkeleton rows={3} columns={1} />
+      ) : falhou && tarefas.length === 0 && atividades.length === 0 ? (
+        <NexusErrorState
+          description={t("Não foi possível carregar tarefas e atividades.")}
+          onRetry={() => void recarregar()}
+        />
       ) : aba === "tarefas" ? (
         <>
           {podeRegistrar && (
@@ -228,11 +245,9 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
                       {tarefa.checkin_em ? ` · ${t("check-in feito")}` : ""}
                     </p>
                   </div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${PILL_STATUS[tarefa.status] ?? PILL_STATUS.pendente}`}
-                  >
+                  <Badge variant={PILL_STATUS[tarefa.status] ?? "warning"}>
                     {ROTULO_STATUS_TAREFA[tarefa.status as keyof typeof ROTULO_STATUS_TAREFA] ?? tarefa.status}
-                  </span>
+                  </Badge>
                   {podeRegistrar && tarefa.status === "pendente" && (
                     <>
                       <Button size="sm" variant="outline" onClick={() => checkin(tarefa.id)}>

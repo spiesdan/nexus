@@ -25,6 +25,8 @@ import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { FilterBar } from "@/components/kanban/FilterBar";
 import { BulkActionBar } from "@/components/kanban/BulkActionBar";
 import { NewLeadDialog } from "@/components/kanban/NewLeadDialog";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Button } from "@/components/ui/button";
 import { Plus } from "@/lib/ui/icons";
 import type { LeadFilters } from "@/lib/kanban/filters";
@@ -38,7 +40,7 @@ export function PipelinePageClient({
   initialName: string;
 }) {
   const t = useT();
-  const { data, isLoading, error, pulses, realtimeStatus, seguranca } = useBoard(pipelineId);
+  const { data, isLoading, error, refetch, pulses, realtimeStatus, seguranca } = useBoard(pipelineId);
   const searchParams = useSearchParams();
   // Os filtros são ESTADO LOCAL; a URL é espelho (deep-link lido na montagem)
   // — ver `lib/navigation/shallow.ts`. O `router.replace` de antes re-renderi-
@@ -76,18 +78,16 @@ export function PipelinePageClient({
       data-refetch-divergencias={seguranca.divergencias}
       data-refetch-em={seguranca.ultimaVerificacao ?? ""}
     >
-      {/* `flex-col` no mobile: nome de funil comprido (é texto livre, sem
-          limite curto) + botão na mesma linha sem quebra empurrava o botão pra
-          fora da viewport em telas estreitas. De `sm:` pra cima volta a ser
-          uma linha só, como sempre foi. */}
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="min-w-0 truncate text-2xl font-medium tracking-tight text-text">
-          {data?.pipeline.name ?? initialName}
-        </h1>
-        <Button onClick={() => setNewOpen(true)} disabled={!data} className="shrink-0">
-          <Plus size={16} className="mr-2" /> {t("Novo Lead")}
-        </Button>
-      </header>
+      {/* Nome de funil comprido (texto livre) quebra linha em telas estreitas —
+          o `truncate` anterior escondia o nome; quebrar é mais seguro que cortar. */}
+      <NexusPageHeader
+        title={data?.pipeline.name ?? initialName}
+        actions={
+          <Button onClick={() => setNewOpen(true)} disabled={!data}>
+            <Plus size={16} className="mr-2" /> {t("Novo Lead")}
+          </Button>
+        }
+      />
       {data && (
         <NewLeadDialog
           open={newOpen}
@@ -98,11 +98,16 @@ export function PipelinePageClient({
       )}
       <FilterBar filters={filters} onChange={setFilters} leads={data?.leads ?? []} />
       {error ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm">
-          {t("Não consegui carregar este funil:")} {formatError(error, t)}
-        </div>
+        <NexusErrorState
+          description={`${t("Não consegui carregar este funil:")} ${formatError(error, t)}`}
+          onRetry={() => void refetch()}
+        />
       ) : isLoading || !data ? (
-        <div className="flex flex-1 animate-pulse items-center justify-center text-muted-foreground">
+        <div
+          role="status"
+          aria-label={t("Carregando funil")}
+          className="flex flex-1 animate-pulse items-center justify-center text-muted-foreground"
+        >
           {t("Carregando…")}
         </div>
       ) : (

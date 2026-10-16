@@ -389,15 +389,24 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
               financeiro relacionado", e `href` vem da rotina — que é quem sabe
               qual registro é.
             */}
-            {GRUPOS_DE_ALERTA.map((grupo) => {
-              const doGrupo = (alertas.data?.alertas ?? []).filter(
-                (a) => a.origem === grupo.origem,
-              );
-              if (doGrupo.length === 0) return null;
+            {/*
+              OS ALERTAS OPERACIONAIS, no topo do contexto — UM bloco só.
+
+              Já foram um Bloco por origem (Vencidos / NF / Fora da carga /
+              Vencendo): com as quatro origens cheias a coluna virava quatro
+              cabeçalhos empilhados antes de qualquer outro contexto. Agora os
+              grupos são rótulos dentro do mesmo bloco, na mesma ordem de
+              prioridade; grupo vazio continua não renderizando.
+            */}
+            {(() => {
+              const grupos = GRUPOS_DE_ALERTA.map((grupo) => ({
+                ...grupo,
+                itens: (alertas.data?.alertas ?? []).filter((a) => a.origem === grupo.origem),
+              })).filter((g) => g.itens.length > 0);
+              if (!alertas.isLoading && !alertas.isError && grupos.length === 0) return null;
               return (
                 <Bloco
-                  key={grupo.origem}
-                  titulo={`${t(grupo.rotulo)} (${doGrupo.length})`}
+                  titulo={`${t("Alertas operacionais")}${grupos.length > 0 ? ` (${grupos.reduce((n, g) => n + g.itens.length, 0)})` : ""}`}
                   href={null}
                   hrefLabel={null}
                   loading={alertas.isLoading}
@@ -407,45 +416,52 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
                   vazio={false}
                   vazioTexto={null}
                 >
-                  {doGrupo.map((a) => (
-                    <li key={a.id} className="rounded-md border border-border bg-surface p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium text-text">{a.titulo}</p>
-                        {/*
-                          Escala visual de prioridade: só `baixa` não tem selo
-                          (ausência = pode esperar). Antes só `critica` se
-                          destacava e alta/normal/baixa eram indistinguíveis.
-                        */}
-                        {a.prioridade === "critica" ? (
-                          <Badge variant="error" className="shrink-0">
-                            {t("Urgente")}
-                          </Badge>
-                        ) : a.prioridade === "alta" ? (
-                          <Badge variant="warning" className="shrink-0">
-                            {t("Alta")}
-                          </Badge>
-                        ) : a.prioridade === "normal" ? (
-                          <Badge variant="neutral" className="shrink-0">
-                            {t("Normal")}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      {a.descricao && (
-                        <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>
-                      )}
-                      {a.acao_recomendada && (
-                        <p className="mt-1 text-xs text-muted-foreground">→ {a.acao_recomendada}</p>
-                      )}
-                      {a.href && (
-                        <Button variant="ghost" size="sm" className="mt-1 h-7 px-2" asChild>
-                          <Link href={a.href}>{t("Abrir registro")}</Link>
-                        </Button>
-                      )}
-                    </li>
-                  ))}
+                  {grupos.flatMap((grupo) => [
+                    <li key={`g-${grupo.origem}`}>
+                      <p className="pt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        {t(grupo.rotulo)} ({grupo.itens.length})
+                      </p>
+                    </li>,
+                    ...grupo.itens.map((a) => (
+                      <li key={a.id} className="rounded-md border border-border bg-surface p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium text-text">{a.titulo}</p>
+                          {/*
+                            Escala visual de prioridade: só `baixa` não tem selo
+                            (ausência = pode esperar). Antes só `critica` se
+                            destacava e alta/normal/baixa eram indistinguíveis.
+                          */}
+                          {a.prioridade === "critica" ? (
+                            <Badge variant="error" className="shrink-0">
+                              {t("Urgente")}
+                            </Badge>
+                          ) : a.prioridade === "alta" ? (
+                            <Badge variant="warning" className="shrink-0">
+                              {t("Alta")}
+                            </Badge>
+                          ) : a.prioridade === "normal" ? (
+                            <Badge variant="neutral" className="shrink-0">
+                              {t("Normal")}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        {a.descricao && (
+                          <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>
+                        )}
+                        {a.acao_recomendada && (
+                          <p className="mt-1 text-xs text-muted-foreground">→ {a.acao_recomendada}</p>
+                        )}
+                        {a.href && (
+                          <Button variant="ghost" size="sm" className="mt-1 h-7 px-2" asChild>
+                            <Link href={a.href}>{t("Abrir registro")}</Link>
+                          </Button>
+                        )}
+                      </li>
+                    )),
+                  ])}
                 </Bloco>
               );
-            })}
+            })()}
             <Bloco
               titulo={t("Mensagens")}
               href="/app/inbox"

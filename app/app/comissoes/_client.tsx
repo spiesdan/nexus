@@ -51,12 +51,14 @@ export function ComissoesClient({
   const [vendedor, setVendedor] = React.useState("");
   const [linhas, setLinhas] = React.useState<LinhaComissao[]>([]);
   const [carregando, setCarregando] = React.useState(true);
+  const [falhou, setFalhou] = React.useState(false);
 
   const nomeVendedor = (id: string | null): string =>
     !id ? t("Sem vendedor") : (nomesVendedores[id] ?? id.slice(0, 8));
 
   async function carregar(m: string, v: string) {
     setCarregando(true);
+    setFalhou(false);
     try {
       const qs = new URLSearchParams({ ano_mes: m });
       if (v) qs.set("vendedor", v);
@@ -64,6 +66,7 @@ export function ComissoesClient({
       setLinhas(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
+      setFalhou(true);
     } finally {
       setCarregando(false);
     }
@@ -83,6 +86,7 @@ export function ComissoesClient({
       (e: unknown) => {
         if (!vivo) return;
         showApiError(e);
+        setFalhou(true);
         setCarregando(false);
       },
     );
@@ -223,7 +227,9 @@ export function ComissoesClient({
       </div>
 
       <NexusDataTable<LinhaComissao>
-        state={carregando ? "loading" : linhas.length === 0 ? "empty" : "ready"}
+        state={carregando ? "loading" : falhou ? "error" : linhas.length === 0 ? "empty" : "ready"}
+        onRetry={() => void carregar(mes, vendedor)}
+        errorDescription={t("Não foi possível carregar as comissões.")}
         empty={
           <NexusEmptyState
             icon={Wallet}

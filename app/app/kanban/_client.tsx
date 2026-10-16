@@ -185,7 +185,7 @@ export function FunisClient({
           />
         )}
         {erro && (
-          <p className="text-sm text-destructive" data-testid="erro-geral">
+          <p role="alert" className="text-sm text-destructive" data-testid="erro-geral">
             {erro.texto}
           </p>
         )}
@@ -213,7 +213,7 @@ export function FunisClient({
       {formularioDeCriacao}
 
       {erro?.id === null && (
-        <p className="text-sm text-destructive" data-testid="erro-geral">
+        <p role="alert" className="text-sm text-destructive" data-testid="erro-geral">
           {erro.texto}
         </p>
       )}

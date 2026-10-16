@@ -36,9 +36,11 @@ export function FaturamentoClient({
   const [ate, setAte] = React.useState("");
   const [linhas, setLinhas] = React.useState<LinhaFaturamento[]>([]);
   const [carregando, setCarregando] = React.useState(true);
+  const [falhou, setFalhou] = React.useState(false);
 
   async function carregar(d: string, a: string) {
     setCarregando(true);
+    setFalhou(false);
     try {
       const qs = new URLSearchParams();
       if (d) qs.set("de", d);
@@ -49,6 +51,7 @@ export function FaturamentoClient({
       setLinhas(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
+      setFalhou(true);
     } finally {
       setCarregando(false);
     }
@@ -66,6 +69,7 @@ export function FaturamentoClient({
       .catch((e: unknown) => {
         if (!vivo) return;
         showApiError(e);
+        setFalhou(true);
         setCarregando(false);
       });
     return () => {
@@ -157,7 +161,9 @@ export function FaturamentoClient({
       </div>
 
       <NexusDataTable<LinhaFaturamento>
-        state={carregando ? "loading" : linhas.length === 0 ? "empty" : "ready"}
+        state={carregando ? "loading" : falhou ? "error" : linhas.length === 0 ? "empty" : "ready"}
+        onRetry={() => void carregar(de, ate)}
+        errorDescription={t("Não foi possível carregar o faturamento.")}
         empty={
           <NexusEmptyState
             icon={Archive}
