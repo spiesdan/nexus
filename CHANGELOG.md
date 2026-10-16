@@ -8,6 +8,15 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.26.2] — 2026-10-16
+
+### Corrigido
+
+- **Validação de produto também no runtime legado + fallback honesto** O gate de identidade do catálogo não alcançava o runtime legado (que atende
+  via `ai_agent_runs`, sem cadeia before_send): a validação agora roda antes do
+  envio também lá, com fallback honesto ("vou conferir") em vez de resposta
+  incorreta. Nada precisa ser feito na atualização.
+
 ## [1.26.1] — 2026-10-16
 
 ### Corrigido
@@ -4310,7 +4319,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...HEAD
+[1.26.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...v1.26.2
 [1.26.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...v1.26.0
 [1.25.53]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.52...v1.25.53
