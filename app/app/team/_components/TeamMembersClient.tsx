@@ -78,7 +78,8 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Membro")}</TableHead>
-                <TableHead>{t("Cargo")}</TableHead>
+                <TableHead>{t("Setor")}</TableHead>
+                <TableHead>{t("Papel")}</TableHead>
                 <TableHead>{t("Status")}</TableHead>
                 <TableHead>{t("Última atividade")}</TableHead>
                 {canManage ? <TableHead className="w-[80px]" /> : null}

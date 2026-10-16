@@ -20,7 +20,7 @@ export function NexusPageHeader({
   headingLevel = 1,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actions?: ReactNode;
   navigation?: ReactNode;
   headingLevel?: 1 | 2;

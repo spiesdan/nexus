@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useT } from "@/hooks/i18n/useT";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 interface Ponto {
   id: string;
@@ -176,13 +177,15 @@ export function PainelDeProvedores() {
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6" data-testid="painel-de-provedores">
-      <header className="mb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Provedores de IA")}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t("Seu sistema usa inteligência artificial em")} {dados.pontos.length}{" "}
-          {t("lugares diferentes. Aqui você vê qual está atendendo cada um — e troca, se quiser.")}
-        </p>
-      </header>
+      <NexusPageHeader
+        title={t("Provedores de IA")}
+        subtitle={
+          <>
+            {t("Seu sistema usa inteligência artificial em")} {dados.pontos.length}{" "}
+            {t("lugares diferentes. Aqui você vê qual está atendendo cada um — e troca, se quiser.")}
+          </>
+        }
+      />
 
       {semChave && (
         <Card className="mb-6 border-warning/40 bg-warning-bg p-4" data-testid="aviso-sem-chave">

@@ -9,7 +9,7 @@
 |---|---|---|
 | rotas identificadas | 129 | `find app -name page.tsx \| wc -l` |
 | páginas auditadas | 129 | 8 deep-dive (§C) + 121 varredura (§E) |
-| páginas corrigidas (fatia aplicada) | 34 | ciclos 1–3 (1+8+25) |
+| páginas corrigidas (fatia aplicada) | 37 | ciclos 1–4 (1+8+25+3) |
 | páginas reconstruídas | 0 | T3 virou fatia (rebuild integral adiado com justificativa) |
 | páginas mantidas com justificativa | ~80 | §B + §E |
 | páginas em INVESTIGAR residual | 13 | detalhe/new IA, ConexoesShell, TeamMembers SetorCell (ver §E.5/lista) |
@@ -82,6 +82,15 @@
   (e2e-pinned, rotulados — FormField seria churn), notifications (swap §100 já feito),
   health (header herdado), admin/inbox mobile (desktop-first), design (allowlist),
   onboarding (exceção wizard), login env×DB (intencional).
+
+## Ciclo 4 (2026-10-16) — residual + DS
+
+- Providers/runs: headers → `NexusPageHeader`; `subtitle` do DS alargado
+  `string`→`ReactNode` (contagem dinâmica no subtítulo, retrocompatível).
+- Agents/[id]/new + followups detalhe/dossiê: editores com header próprio —
+  page-header duplicaria. MANTER justificado.
+- TeamMembers: **bug real de cabeçalhos trocados** (4 colunas) corrigido; teste (3) verde.
+- ConexoesShell: aninhadas com deep-link + labels white-label — padrão correto. MANTER.
 
 ## Backlog restante (residual honesto)
 

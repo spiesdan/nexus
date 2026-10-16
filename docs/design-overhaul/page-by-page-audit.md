@@ -289,7 +289,8 @@ decisão registra o motivo (regra da Fase 4: sem migração por preferência).
 | `/app/laboratorio` | REFINAR aplicado | header canônico |
 | `/app/ai` (hub), `/ai/usage`, `/ai/evolution` | MANTER | hub NavHub; evolution exemplar de vazio |
 | `/app/ai/agents`, `/cases`, `/controle`, `/credentials`, `/inbox`, `/followups`, `/knowledge/sources`, `/memory`, `/proposals`, `/decisoes`, `/skills`, `/routers`, `/usage` | REFINAR aplicado | 14 headers `h1`→`NexusPageHeader`, copy intacta |
-| `/app/ai/agents/[id]`, `/new`, `/followups/[id]`, `/enrollments/[id]`, `/routers/[id]`, `/providers`, `/runs` | INVESTIGAR | header/estados dentro dos clients/editores — próxima varredura |
+| `/app/ai/agents/[id]`, `/new`, `/followups/[id]`, `/enrollments/[id]`, `/routers/[id]` | MANTER justificado | editores com header próprio (AgentForm h2, Dossiê h1-identidade); page-header duplicaria |
+| `/app/ai/providers`, `/runs` | REFINAR aplicado | headers → `NexusPageHeader`; `subtitle` do DS alargado p/ `ReactNode` (contagem dinâmica) |
 
 ### E.3 Settings + plataforma
 
@@ -301,10 +302,10 @@ decisão registra o motivo (regra da Fase 4: sem migração por preferência).
 | `/app/team/invite` | REFINAR aplicado | FormField + hint limite + erro inline (era só toast) |
 | `/app/templates` | REFINAR aplicado | dialog em FormField; gates e copy intactos |
 | `/app/settings/tenant/agenda`, `/settings/tenant/pipelines` (editor), `/app/audit` (filtros) | MANTER justificado | forms rotulados + e2e-pinned + validação própria; FormField = churn sem benefício (regra Fase 4) |
-| `/app/team` (membros) | INVESTIGAR | coluna Cargo renderiza `SetorCell` — confirmar com produto se é rótulo trocado |
+| `/app/team` (membros) | CORRIGIDO | **bug real**: 4 cabeçalhos trocados (Cargo→Setor, Status→Papel, Última→Status, faltava Última) — corrigido ciclo 3 |
 | `/app/team` (atendimento) | MANTER | resumo tz-aware + dirty-save são o acerto |
 | `/app/lgpd/requests` (+`[id]`) | MANTER | SLA + justificativa + trilha auditável |
-| `/app/connections` | MANTER casca / INVESTIGAR `ConexoesShell` | auditar abas internas na próxima varredura |
+| `/app/connections` | MANTER | `ConexoesShell`: abas aninhadas com `?aba=&sub=` (deep-link), labels white-label-safe — o padrão correto de aninhadas |
 | `/app/webhooks`, `/integrations/nuvemshop` | MANTER | Tabs+mounted; máquina 3-estados |
 
 ### E.4 Admin + público + sistema

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 /**
  * O MESMO formato da tela de Uso — as duas leem `llm_calls.cost_cents`, que é
@@ -121,14 +122,12 @@ export function ExecucoesDeIa() {
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6" data-testid="execucoes-de-ia">
-      <header className="mb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Execuções de IA")}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t(
+      <NexusPageHeader
+        title={t("Execuções de IA")}
+        subtitle={t(
             "Tudo que a inteligência artificial fez por aqui — e, quando algo falhou, o que aconteceu e o que fazer.",
           )}
-        </p>
-      </header>
+      />
 
       {/* O resumo responde "está tudo bem?" antes da lista. */}
       <Card className="mb-6 p-4" data-testid="resumo">
