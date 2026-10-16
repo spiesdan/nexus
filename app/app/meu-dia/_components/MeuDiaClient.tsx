@@ -9,6 +9,7 @@ import { apiClient } from "@/lib/api/client";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
@@ -328,7 +329,13 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
     listaBrain.length === 0;
 
   const tagDoIdioma = useTagDeIdioma();
-  const titulo = agora ? `${saudacaoDoDia(agora)}${nome ? `, ${nome}` : ""}` : t("Meu Dia");
+  /*
+    O h1 é ESTÁTICO ("Meu Dia"): a saudação com o nome vivia no título e só
+    existia depois do mount (relógio do navegador), trocando o h1 a cada
+    abertura — layout shift na primeira pintura. A saudação continua existindo,
+    mas como subtítulo, que pode aparecer depois sem deslocar o título.
+  */
+  const titulo = t("Meu Dia");
   const plural = (n: number, um: string, muitos: string): string => `${n} ${n === 1 ? um : muitos}`;
   const resumo = [
     linha.atrasado.length > 0 ? plural(linha.atrasado.length, "atrasada", "atrasadas") : null,
@@ -337,8 +344,9 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
   ]
     .filter(Boolean)
     .join(" · ");
+  const saudacao = agora ? `${saudacaoDoDia(agora)}${nome ? `, ${nome}` : ""}` : null;
   const subtitulo = agora
-    ? [dataPorExtenso(agora, tagDoIdioma), resumo].filter(Boolean).join(" · ")
+    ? [saudacao, dataPorExtenso(agora, tagDoIdioma), resumo].filter(Boolean).join(" · ")
     : undefined;
 
   const acoes: AcoesDaLinha = {
@@ -403,11 +411,24 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
                     <li key={a.id} className="rounded-md border border-border bg-surface p-3">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium text-text">{a.titulo}</p>
-                        {a.prioridade === "critica" && (
-                          <span className="shrink-0 rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">
+                        {/*
+                          Escala visual de prioridade: só `baixa` não tem selo
+                          (ausência = pode esperar). Antes só `critica` se
+                          destacava e alta/normal/baixa eram indistinguíveis.
+                        */}
+                        {a.prioridade === "critica" ? (
+                          <Badge variant="error" className="shrink-0">
                             {t("Urgente")}
-                          </span>
-                        )}
+                          </Badge>
+                        ) : a.prioridade === "alta" ? (
+                          <Badge variant="warning" className="shrink-0">
+                            {t("Alta")}
+                          </Badge>
+                        ) : a.prioridade === "normal" ? (
+                          <Badge variant="neutral" className="shrink-0">
+                            {t("Normal")}
+                          </Badge>
+                        ) : null}
                       </div>
                       {a.descricao && (
                         <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>

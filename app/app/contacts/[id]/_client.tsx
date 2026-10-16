@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { useContact } from "@/hooks/contacts/useContact";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ROLE_RANK } from "@/lib/auth/types";
@@ -46,16 +47,18 @@ export function ContactDetailClient({ contactId }: Props) {
   if (q.isLoading) {
     return (
       <div className="space-y-4 p-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-32 w-full" />
+        <NexusPageSkeleton />
       </div>
     );
   }
 
   if (q.isError || !q.data) {
     return (
-      <div className="p-6">
-        <Card className="hover-raise p-6 text-center text-sm text-error-fg">Erro ao carregar contato.</Card>
+      <div className="space-y-4 p-6">
+        <NexusErrorState
+          description={t("Não foi possível carregar este cliente.")}
+          onRetry={() => q.refetch()}
+        />
       </div>
     );
   }

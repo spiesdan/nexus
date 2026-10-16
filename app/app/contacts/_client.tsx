@@ -4,7 +4,8 @@ import { useT } from "@/hooks/i18n/useT";
 import { Plus, UploadSimple } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import {
   FilterBar,
@@ -114,16 +115,21 @@ export function ContactsListClient() {
         subtitle={t("Customer 360 — busque, filtre e gerencie clientes.")}
         actions={
           /*
-            A estrutura é a da main (o "Importar CSV" do PR #313); o `shrink-0`
-            vem do PR #267, e vale para os DOIS botões agora: numa tela de 390px
-            uma linha de dois botões sem isso comprime os rótulos.
+            Empilha no mobile (largura cheia) e só fica lado a lado a partir
+            de `sm`: numa tela de 390px dois botões `shrink-0` comprimiam os
+            rótulos. O `NexusPageHeader` já empilha título × ações; aqui só
+            faltava as ações empilharem entre si.
           */
-          <div className="flex shrink-0 items-center gap-2">
-            <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              onClick={() => setImportOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <UploadSimple size={16} weight="bold" aria-hidden />
               <span>{t("Importar CSV")}</span>
             </Button>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
               <Plus size={16} weight="bold" aria-hidden />
               <span>{t("Novo cliente")}</span>
             </Button>
@@ -177,23 +183,12 @@ export function ContactsListClient() {
       </FilterBar>
 
       {q.isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
+        <NexusTableSkeleton rows={5} />
       ) : q.isError ? (
-        <Card className="hover-raise p-6 text-center">
-          <p className="text-sm text-error-fg">{t("Erro ao carregar clientes.")}</p>
-          <Button
-            size="sm"
-            variant="outline"
-            className="mt-2"
-            onClick={() => q.refetch()}
-          >
-            {t("Tentar novamente")}
-          </Button>
-        </Card>
+        <NexusErrorState
+          description={t("Erro ao carregar clientes.")}
+          onRetry={() => q.refetch()}
+        />
       ) : allContacts.length === 0 ? (
         <Card className="hover-raise p-2">
           <EmptyContacts />

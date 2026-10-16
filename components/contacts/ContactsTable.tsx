@@ -158,6 +158,7 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
   }
 
   return (    <>
+    <div className="overflow-x-auto">
     <Table>
       <TableHeader>
         <TableRow>
@@ -306,6 +307,7 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
         ))}
       </TableBody>
     </Table>
+    </div>
 
     {alvo && (
       <NexusConfirmDialog

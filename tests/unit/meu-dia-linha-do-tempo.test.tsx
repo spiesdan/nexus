@@ -134,12 +134,14 @@ describe("MeuDiaClient — a linha do tempo do dia", () => {
     expect(screen.getByText("10:00")).toBeInTheDocument();
 
     // Saudação = relógio AGORA + nome (o "Bom dia" fixo era o defeito).
+    // Desde a T2 da auditoria visual o h1 é estático ("Meu Dia", sem trocar
+    // a cada abertura — layout shift) e a saudação vive no subtítulo, que
+    // continua vindo do relógio de quem olha.
+    expect(screen.getByRole("heading", { level: 1, name: "Meu Dia" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 1, name: `${saudacaoDoDia(new Date())}, Ana` }),
-    ).toBeInTheDocument();
-    // Subtítulo = data por extenso + o resumo de contagens da própria tela.
-    expect(
-      screen.getByText(`${dataPorExtenso(new Date(), "pt-BR")} · 1 atrasada · 2 hoje`),
+      screen.getByText(
+        `${saudacaoDoDia(new Date())}, Ana · ${dataPorExtenso(new Date(), "pt-BR")} · 1 atrasada · 2 hoje`,
+      ),
     ).toBeInTheDocument();
   });
 
