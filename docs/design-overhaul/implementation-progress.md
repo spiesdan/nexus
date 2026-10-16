@@ -61,9 +61,10 @@
   `app/app/radar/_tabs.tsx`, `_components/RecuperacaoLista.tsx`.
 - **T7 Financeiro**: `centavosDeBr()` canônico em `lib/format/moeda.ts` + teste
   (`lib/format/moeda.test.ts`, 5 casos); 5 `toLocaleDateString()` sem locale →
-  `pt-BR`. KPIs sem trend seguem pendentes (comparativo real não existe —
-  inventar dado é proibido). Arquivos: `lib/format/moeda*.ts`,
-  `app/app/financeiro/_client.tsx`.
+  `tagIdioma` do hook (primeira tentativa com `"pt-BR"` fixo foi reprovada pelo
+  gate `i18n-a-data-segue-o-idioma` — o correto é o idioma do usuário).
+  KPIs sem trend seguem pendentes (comparativo real não existe — inventar dado
+  é proibido). Arquivos: `lib/format/moeda*.ts`, `app/app/financeiro/_client.tsx`.
 - **T8 Catálogo**: header artesanal → `NexusPageHeader`. Hipóteses refutadas por
   evidência: empty de viewer não sugere cadastrar (copy ok); lista é `ul`
   densa, não grid `sm:grid-cols-2`. Abas aninhadas seguem pendentes. Arquivo:

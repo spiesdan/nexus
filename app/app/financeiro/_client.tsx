@@ -407,7 +407,7 @@ export function FinanceiroClient({
                       <React.Fragment key={l.id}>
                         <TableRow className="align-top">
                           <TableCell className="whitespace-nowrap tabular-nums">
-                            {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                            {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString(tagIdioma)}
                             {l.dias_atraso > 0 && (
                               <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
                             )}
@@ -722,7 +722,7 @@ function AbaPagar() {
                       {p.parcela_n}/{p.total_parcelas}
                     </TableCell>
                     <TableCell className="whitespace-nowrap tabular-nums">
-                      {new Date(`${p.vencimento}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                      {new Date(`${p.vencimento}T12:00:00Z`).toLocaleDateString(tagIdioma)}
                       {atrasoDias > 0 && (
                         <span className="block text-xs text-error-fg">+{atrasoDias}d</span>
                       )}
@@ -838,7 +838,7 @@ function AbaCobrancas({ aoAbrirTitulos }: { aoAbrirTitulos: () => void }) {
                     )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap tabular-nums">
-                    {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                    {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString(tagIdioma)}
                     {l.dias_atraso > 0 && (
                       <span className="block text-xs text-error-fg">+{l.dias_atraso}d</span>
                     )}
@@ -974,7 +974,7 @@ function AbaFluxo() {
               {comMovimento.map((d) => (
                 <TableRow key={d.dia} className="align-top">
                   <TableCell className="whitespace-nowrap tabular-nums">
-                    {new Date(`${d.dia}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                    {new Date(`${d.dia}T12:00:00Z`).toLocaleDateString(tagIdioma)}
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap tabular-nums">
                     {comoMoeda(d.receber_cents, "BRL")}
@@ -1105,7 +1105,7 @@ function DetalheRecebivel({
               <li key={p.id} className="flex items-center gap-2 text-sm">
                 <span className="tabular-nums">{comoMoeda(p.valor_cents, "BRL")}</span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(p.pago_em).toLocaleDateString("pt-BR")}
+                  {new Date(p.pago_em).toLocaleDateString(tagIdioma)}
                 </span>
                 {podeRegistrar && (
                   <Button size="sm" variant="ghost" onClick={() => void estornar(p.id)}>
