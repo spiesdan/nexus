@@ -1,5 +1,6 @@
 "use client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Card, CardContent } from "@/components/ui/card";
 import { KPICards } from "@/components/admin/dashboard/KPICards";
 import { AlertsBanner } from "@/components/admin/dashboard/AlertsBanner";
@@ -38,7 +39,7 @@ function AlertsSkeleton() {
 
 export function DashboardClient() {
   const t = useT();
-  const { data, isLoading } = useAdminDashboardKPIs();
+  const { data, isLoading, isError, refetch } = useAdminDashboardKPIs();
   useAlertsRealtime();
 
   return (
@@ -49,10 +50,17 @@ export function DashboardClient() {
       />
 
       {isLoading || !data ? (
-        <>
-          <KPISkeleton />
-          <AlertsSkeleton />
-        </>
+        isError ? (
+          <NexusErrorState
+            description={t("Não foi possível carregar o painel da plataforma.")}
+            onRetry={() => void refetch()}
+          />
+        ) : (
+          <>
+            <KPISkeleton />
+            <AlertsSkeleton />
+          </>
+        )
       ) : (
         <>
           <KPICards kpis={data} />

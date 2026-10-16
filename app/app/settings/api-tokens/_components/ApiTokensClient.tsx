@@ -14,7 +14,7 @@ import { copyToClipboard } from "@/lib/clipboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import {
   Table,
   TableBody,
@@ -70,15 +70,17 @@ export function ApiTokensClient() {
   const [scopes, setScopes] = useState<string[]>([]);
   const [expiresInDays, setExpiresInDays] = useState<string>("");
   const [created, setCreated] = useState<CreatedApiToken | null>(null);
+  const [erroEscopos, setErroEscopos] = useState<string | null>(null);
 
   const tokens = data?.data ?? [];
 
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (scopes.length === 0) {
-      toast.error(t("Selecione ao menos um escopo."));
+      setErroEscopos(t("Selecione ao menos um escopo."));
       return;
     }
+    setErroEscopos(null);
     try {
       const res = await create.mutateAsync({
         name,
@@ -96,6 +98,7 @@ export function ApiTokensClient() {
   };
 
   const toggleScope = (s: string) => {
+    setErroEscopos(null);
     setScopes((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
@@ -181,10 +184,8 @@ export function ApiTokensClient() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={onCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="t-name">{t("Nome")}</Label>
+            <FormField id="t-name" label={t("Nome")} obrigatorio>
               <Input
-                id="t-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("Worker de import")}
@@ -192,9 +193,13 @@ export function ApiTokensClient() {
                 maxLength={100}
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label>{t("Escopos")}</Label>
+            </FormField>
+            <FormField
+              label={t("Escopos")}
+              obrigatorio
+              erro={erroEscopos}
+              hint={t("Ao menos um escopo — o token só acessa o que está marcado.")}
+            >
               <div className="flex flex-wrap gap-2">
                 {SCOPES.map((s) => (
                   <button
@@ -212,11 +217,9 @@ export function ApiTokensClient() {
                   </button>
                 ))}
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="t-exp">{t("Expira em (dias) — opcional")}</Label>
+            </FormField>
+            <FormField id="t-exp" label={t("Expira em (dias) — opcional")}>
               <Input
-                id="t-exp"
                 type="number"
                 min={1}
                 max={365}
@@ -224,7 +227,7 @@ export function ApiTokensClient() {
                 onChange={(e) => setExpiresInDays(e.target.value)}
                 placeholder="365"
               />
-            </div>
+            </FormField>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>
                 {t("Cancelar")}

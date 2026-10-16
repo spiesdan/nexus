@@ -68,7 +68,10 @@ export default async function TenantDetailLayout({
         {traduzir("Tenants", idioma)}
       </Link>
 
-      <NexusPageHeader title={org?.display_name ?? id} />
+      <NexusPageHeader
+        title={org?.display_name ?? id}
+        subtitle={traduzir("Operação, saúde, equipe e uso deste tenant.", idioma)}
+      />
       <div className="flex flex-wrap items-center gap-3">
         {org?.slug && (
           <code className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">

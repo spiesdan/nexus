@@ -6,7 +6,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useInviteMembers } from "@/hooks/team/useInviteMembers";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import {
   Select,
   SelectContent,
@@ -27,6 +27,7 @@ export function InviteForm() {
   const [emailsRaw, setEmailsRaw] = useState("");
   const [role, setRole] = useState<Role>("agent");
   const [result, setResult] = useState<ResultState | null>(null);
+  const [erroLocal, setErroLocal] = useState<string | null>(null);
   const invite = useInviteMembers();
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -37,13 +38,14 @@ export function InviteForm() {
       .filter(Boolean);
     const unique = Array.from(new Set(emails));
     if (unique.length === 0) {
-      toast.error(t("Adicione ao menos um email."));
+      setErroLocal(t("Adicione ao menos um email."));
       return;
     }
     if (unique.length > 20) {
-      toast.error(t("Máximo 20 emails por convite."));
+      setErroLocal(t("Máximo 20 emails por convite."));
       return;
     }
+    setErroLocal(null);
     try {
       const res = await invite.mutateAsync({
         invitations: unique.map((email) => ({ email, role })),
@@ -63,20 +65,30 @@ export function InviteForm() {
   return (
     <div className="grid gap-6 md:grid-cols-[1fr,2fr]">
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="emails">Emails</Label>
+        <FormField
+          id="emails"
+          label="Emails"
+          obrigatorio
+          hint={t("Um por linha — vírgula e ponto-e-vírgula também valem. Máximo 20.")}
+          erro={erroLocal}
+        >
           <Textarea
-            id="emails"
             value={emailsRaw}
-            onChange={(e) => setEmailsRaw(e.target.value)}
+            onChange={(e) => {
+              setEmailsRaw(e.target.value);
+              if (erroLocal) setErroLocal(null);
+            }}
             rows={8}
             placeholder={"alice@empresa.com\nbob@empresa.com"}
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="role">{t("Cargo")}</Label>
+        </FormField>
+        <FormField
+          id="role"
+          label={t("Cargo")}
+          hint={DESCRICAO_DO_PAPEL[role]}
+        >
           <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-            <SelectTrigger id="role">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -90,7 +102,7 @@ export function InviteForm() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
         <Button type="submit" disabled={invite.isPending}>
           {invite.isPending ? t("Enviando…") : t("Enviar convites")}
         </Button>

@@ -7,7 +7,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/nexus-ui/forms/form-field";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -112,10 +112,8 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="tpl-title">{t("Título")}</Label>
+          <FormField id="tpl-title" label={t("Título")} obrigatorio>
             <Input
-              id="tpl-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("Saudação inicial")}
@@ -123,11 +121,18 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
               maxLength={80}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tpl-body">{t("Mensagem")}</Label>
+          </FormField>
+          <FormField
+            id="tpl-body"
+            label={t("Mensagem")}
+            obrigatorio
+            hint={
+              <>
+                {t("Use")} {"{{primeiro_nome}}"} {t("e")} {"{{nome}}"} {t("para personalizar.")}
+              </>
+            }
+          >
             <Textarea
-              id="tpl-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder={t("Oi {{primeiro_nome}}, tudo bem?")}
@@ -136,30 +141,19 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
               required
               rows={5}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("Use")} {"{{primeiro_nome}}"} {t("e")} {"{{nome}}"} {t("para personalizar.")}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tpl-shortcut">{t("Atalho (opcional)")}</Label>
+          </FormField>
+          <FormField id="tpl-shortcut" label={t("Atalho (opcional)")}>
             <Input
-              id="tpl-shortcut"
               value={shortcut}
               onChange={(e) => setShortcut(e.target.value)}
               placeholder="oi"
               maxLength={40}
             />
-          </div>
+          </FormField>
           {canShare && (
-            <div className="flex items-center gap-2">
-              <Switch
-                id="tpl-shared"
-                checked={shared}
-                onCheckedChange={setShared}
-                disabled={isEdit}
-              />
-              <Label htmlFor="tpl-shared">{t("Compartilhar com a equipe")}</Label>
-            </div>
+            <FormField id="tpl-shared" label={t("Compartilhar com a equipe")}>
+              <Switch checked={shared} onCheckedChange={setShared} disabled={isEdit} />
+            </FormField>
           )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
