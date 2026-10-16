@@ -183,9 +183,15 @@ export function TestPanel({ agent, draft, published, readOnly }: Props) {
           ...(contactPhone.trim() ? { phone: contactPhone.trim() } : {}),
         };
       }
+      // Um turno real (modelo + tools, idas e vindas) leva dezenas de segundos:
+      // com o default de 10s do cliente, o navegador abortava e RE-tentava —
+      // cada retry rodava o agente DE NOVO no servidor (rajadas de runs
+      // completos no banco) e no fim mostrava "Erro inesperado". 120s cobre o
+      // turno sem virar espera infinita.
       const res = await apiClient.post<TestResponse>(
         `/api/v1/ai/agents/${agent.id}/versions/${target.id}/test`,
         body,
+        { timeoutMs: 120_000 },
       );
       setTurnos((atual) => [
         ...atual,
