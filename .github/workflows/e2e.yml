@@ -494,10 +494,15 @@ jobs:
       #      com consentimento pré-aprovado. Sem ela o job pararia num
       #      `accounts.google.com` esperando login humano — e é por isto que ela
       #      fica FORA do CI em vez de ficar sem existir.
+      # `auditoria-capturas` fica FORA_DO_CI de propósito: ela não tem asserção
+      # nenhuma — só captura screenshots p/ a auditoria visual
+      # (`docs/design-overhaul/evidence/`). Rodá-la no CI gastaria um job para
+      # produzir pixels que ninguém olha lá; ela roda manual, sob demanda.
       FORA_DO_CI: >-
         vps-fresh-onboarding.spec.ts
         inbox-tempo-real.spec.ts
         mobile-offline.spec.ts
+        auditoria-capturas.spec.ts
     steps:
       - uses: actions/checkout@v7
 

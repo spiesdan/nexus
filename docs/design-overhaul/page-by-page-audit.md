@@ -191,13 +191,22 @@ composição/fluxo muda · `CONSOLIDAR` unificar duplicados · `INVESTIGAR` sem 
   `NexusSkeleton`/`NexusErrorState`).
 - Mobile: timeline acima de todo o contexto — com dia cheio, muito scroll até mensagens.
 
-### T3 — Inbox `/app/inbox` — RECONSTRUIR→fatia aplicada ciclo 2 (ver §C; rebuild integral adiado com justificativa)
+### T3 — Inbox `/app/inbox` — REFINAR (fatia aplicada ciclos 2–3; rebuild integral recusado com evidência)
 
-- Única tela relevante com zero uso do DS (`Nexus*`): empties artesanais.
-- Painel de contexto some entre `md` e `xl` sem aviso (notebook 1280px perde o contexto).
-- Colunas rígidas em px + altura travada — viewport baixo vira overflow duplo.
-- Filtros/busca/atribuição com vocabulário próprio, fora do `FilterBar`.
-- Preservar 3 painéis no desktop; mobile uma coluna por vez com header de contato consistente.
+- "Zero Nexus*". **Refutado**: `EmptyInbox` canônico; erro tinha retry (virou
+  `NexusErrorState` ciclo 2).
+- Painel de contexto some entre `md` e `xl` sem aviso. **Corrigido ciclo 2**:
+  gatilho "Ficha" (Sheet) na faixa `md–xl`.
+- Colunas rígidas em px + altura travada. **Verificado**: lista/painel fixos +
+  centro fluido é o padrão de 3-painéis; altura desconta TopBar+padding por
+  token (`InboxLayout.tsx:293-336`). MANTER.
+- Filtros com vocabulário próprio. **Verificado**: `InboxFilters`
+  (fila/minhas/fechadas/IA) é vocabulário de fila, não divergência. MANTER.
+- Volta mobile. **Verificado**: `colunasDoCelular` (fonte única) + voltar fora
+  do ramo carregado (`InboxLayout.tsx:56-61,404-438`). MANTER.
+- Conclusão: a composição-alvo (3 painéis desktop, 1 coluna mobile, ficha em
+  Sheet, atalhos de teclado, realtime observável) **já é a implementada** —
+  reclassificado de RECONSTRUIR para REFINAR. Rebuild integral seria churn.
 
 ### T4 — Contatos `/app/contacts` + `[id]` — REFINAR (fatia aplicada ciclo 2; resto pendente)
 
