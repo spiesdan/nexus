@@ -8,6 +8,15 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.26.4] — 2026-10-16
+
+### Corrigido
+
+- **Combos e kits não lideram como se fossem o produto** "PÁ COM COLETOR + VASSOURA" aparecia como vassoura: o pedido vinha como
+  complemento (depois de "+" ou "para"), e a busca não distinguia. Agora kit e
+  combo voltam marcados como alternativa, como já acontecia com acessórios.
+  Nada precisa ser feito na atualização.
+
 ## [1.26.3] — 2026-10-16
 
 ### Corrigido
@@ -4328,7 +4337,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.3...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.4...HEAD
+[1.26.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.3...v1.26.4
 [1.26.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...v1.26.3
 [1.26.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...v1.26.2
 [1.26.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...v1.26.1
