@@ -21,7 +21,7 @@ Refutados por pixel (correções honestas à auditoria estática):
 - Tooltip "Precisa de ajuda?" é transitório (uma vez); bolha segue convenção
   flutuante (posicionada p/ dock/print) — regra: ações primárias fora do canto
   inferior-direito.
-- Fio aberto em 1920 (`dark-1920-thread-aberto.png`, conversa do seed de
+- Fio aberto em 1920 (`evidence/auditoria/dark-1920-thread-aberto.png`, conversa do seed de
   escalação): header operacional completo (status, responsável, 5 ações),
   composer com Responder/Nota interna, painel CRM rico (tags rápidas, demandas,
   leads, pedidos, compras, produtos, títulos). Composição aprovada nos pixels.
@@ -91,7 +91,7 @@ nas mesmas larguras em outras passagens).
   do usuário em `lib/agent-engine/*`, `lib/mcp/*`, `loop/checkpoints/*` —
   **não incluídas nem tocadas**.
 - Responsividade (1920→390), temas claro/escuro, screenshots Playwright do
-  dashboard antes/depois: **pendentes** (exigência de aceite T1 em aberto).
+  dashboard antes/depois: **concluídos no ciclo 5** (`evidence/auditoria/`, 74 PNGs).
 
 ## Verificado sem mudança (evidência para MANTER)
 
@@ -104,3 +104,159 @@ nas mesmas larguras em outras passagens).
 Screenshots por tela relevante (inicial, acima/abaixo da dobra, filtros/menus
 abertos, interação principal), comparação 7 larguras, claro+escuro, testes de
 interação nos fluxos críticos, suíte E2E de escopo no fechamento.
+
+## Índice de evidências (Fase F)
+
+Cada captura abaixo lastreia uma afirmação deste relatório ou do
+`page-by-page-audit.md`. Rota · largura · tema no nome do arquivo.
+
+### `app-contacts`
+- `evidence/auditoria/dark-1024-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/dark-1024-app-inbox.png`
+### `app`
+- `evidence/auditoria/dark-1024-app.png`
+### `app-antes`
+- `evidence/auditoria/dark-1280-app-antes.png`
+### `app-contacts`
+- `evidence/auditoria/dark-1280-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/dark-1280-app-inbox.png`
+### `app`
+- `evidence/auditoria/dark-1280-app.png`
+### `app-comissoes`
+- `evidence/auditoria/dark-1440-app-comissoes.png`
+### `app-contacts`
+- `evidence/auditoria/dark-1440-app-contacts.png`
+### `app-estoque`
+- `evidence/auditoria/dark-1440-app-estoque.png`
+### `app-financeiro`
+- `evidence/auditoria/dark-1440-app-financeiro.png`
+### `app-inbox`
+- `evidence/auditoria/dark-1440-app-inbox.png`
+### `app-meu-dia`
+- `evidence/auditoria/dark-1440-app-meu-dia.png`
+### `app-pedidos`
+- `evidence/auditoria/dark-1440-app-pedidos.png`
+### `app-products`
+- `evidence/auditoria/dark-1440-app-products.png`
+### `app-radar`
+- `evidence/auditoria/dark-1440-app-radar.png`
+### `app`
+- `evidence/auditoria/dark-1440-app.png`
+### `app-contacts`
+- `evidence/auditoria/dark-1920-app-contacts.png`
+### `app-inbox-antes`
+- `evidence/auditoria/dark-1920-app-inbox-antes.png`
+### `app-inbox`
+- `evidence/auditoria/dark-1920-app-inbox.png`
+### `app`
+- `evidence/auditoria/dark-1920-app.png`
+### `thread-aberto`
+- `evidence/auditoria/dark-1920-thread-aberto.png`
+### `app-comissoes`
+- `evidence/auditoria/dark-390-app-comissoes.png`
+### `app-contacts`
+- `evidence/auditoria/dark-390-app-contacts.png`
+### `app-estoque`
+- `evidence/auditoria/dark-390-app-estoque.png`
+### `app-financeiro`
+- `evidence/auditoria/dark-390-app-financeiro.png`
+### `app-inbox`
+- `evidence/auditoria/dark-390-app-inbox.png`
+### `app-meu-dia`
+- `evidence/auditoria/dark-390-app-meu-dia.png`
+### `app-pedidos`
+- `evidence/auditoria/dark-390-app-pedidos.png`
+### `app-products`
+- `evidence/auditoria/dark-390-app-products.png`
+### `app-radar`
+- `evidence/auditoria/dark-390-app-radar.png`
+### `app`
+- `evidence/auditoria/dark-390-app.png`
+### `app-contacts`
+- `evidence/auditoria/dark-430-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/dark-430-app-inbox.png`
+### `app`
+- `evidence/auditoria/dark-430-app.png`
+### `app-contacts`
+- `evidence/auditoria/dark-768-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/dark-768-app-inbox.png`
+### `app`
+- `evidence/auditoria/dark-768-app.png`
+### `app-contacts`
+- `evidence/auditoria/light-1024-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/light-1024-app-inbox.png`
+### `app`
+- `evidence/auditoria/light-1024-app.png`
+### `app-antes`
+- `evidence/auditoria/light-1280-app-antes.png`
+### `app-contacts`
+- `evidence/auditoria/light-1280-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/light-1280-app-inbox.png`
+### `app`
+- `evidence/auditoria/light-1280-app.png`
+### `app-comissoes`
+- `evidence/auditoria/light-1440-app-comissoes.png`
+### `app-contacts`
+- `evidence/auditoria/light-1440-app-contacts.png`
+### `app-estoque`
+- `evidence/auditoria/light-1440-app-estoque.png`
+### `app-financeiro`
+- `evidence/auditoria/light-1440-app-financeiro.png`
+### `app-inbox`
+- `evidence/auditoria/light-1440-app-inbox.png`
+### `app-meu-dia`
+- `evidence/auditoria/light-1440-app-meu-dia.png`
+### `app-pedidos`
+- `evidence/auditoria/light-1440-app-pedidos.png`
+### `app-products`
+- `evidence/auditoria/light-1440-app-products.png`
+### `app-radar`
+- `evidence/auditoria/light-1440-app-radar.png`
+### `app`
+- `evidence/auditoria/light-1440-app.png`
+### `app-contacts`
+- `evidence/auditoria/light-1920-app-contacts.png`
+### `app-inbox-antes`
+- `evidence/auditoria/light-1920-app-inbox-antes.png`
+### `app-inbox`
+- `evidence/auditoria/light-1920-app-inbox.png`
+### `app`
+- `evidence/auditoria/light-1920-app.png`
+### `app-comissoes`
+- `evidence/auditoria/light-390-app-comissoes.png`
+### `app-contacts`
+- `evidence/auditoria/light-390-app-contacts.png`
+### `app-estoque`
+- `evidence/auditoria/light-390-app-estoque.png`
+### `app-financeiro`
+- `evidence/auditoria/light-390-app-financeiro.png`
+### `app-inbox`
+- `evidence/auditoria/light-390-app-inbox.png`
+### `app-meu-dia`
+- `evidence/auditoria/light-390-app-meu-dia.png`
+### `app-pedidos`
+- `evidence/auditoria/light-390-app-pedidos.png`
+### `app-products`
+- `evidence/auditoria/light-390-app-products.png`
+### `app-radar`
+- `evidence/auditoria/light-390-app-radar.png`
+### `app`
+- `evidence/auditoria/light-390-app.png`
+### `app-contacts`
+- `evidence/auditoria/light-430-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/light-430-app-inbox.png`
+### `app`
+- `evidence/auditoria/light-430-app.png`
+### `app-contacts`
+- `evidence/auditoria/light-768-app-contacts.png`
+### `app-inbox`
+- `evidence/auditoria/light-768-app-inbox.png`
+### `app`
+- `evidence/auditoria/light-768-app.png`
