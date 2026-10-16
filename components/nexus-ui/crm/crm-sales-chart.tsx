@@ -178,7 +178,10 @@ function CartaoKpi({ label, valor, pct, cor, bgCor, Icone, info }: PropsKpi) {
           </span>
         ) : null}
       </div>
-      <div className="mt-2.5 truncate text-2xl font-semibold leading-none tabular-nums text-fg xl:text-3xl">
+      <div
+        title={fmtBRL.format(valor / 100)}
+        className="mt-2.5 truncate text-xl font-semibold leading-none tabular-nums text-fg sm:text-2xl xl:text-3xl"
+      >
         {fmtBRL.format(valor / 100)}
       </div>
       <div className="mt-3 flex items-center gap-2">
@@ -761,30 +764,38 @@ export function CrmSalesChart({
               ) : null}
             </g>
 
-            {/* eixo X: dia + letra do dia da semana */}
-            {visiveis.map((p, i) => (
-              <g key={p.dia}>
-                <text
-                  x={M.left + xDoIdx(i)}
-                  y={M.top + IH + 14}
-                  textAnchor="middle"
-                  fontSize={8.5}
-                  fill={p.dia === diaHoje && atual ? "#e4e4e7" : "#94a3b8"}
-                >
-                  {p.dia}
-                </text>
-                <text
-                  x={M.left + xDoIdx(i)}
-                  y={M.top + IH + 26}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fill="#94a3b8"
-                  fillOpacity={0.7}
-                >
-                  {letraDoDia(mes, p.dia)}
-                </text>
-              </g>
-            ))}
+            {/* eixo X: dia + letra do dia da semana, com desbaste — 31 rótulos
+                lado a lado colidem abaixo de ~1400px (medido em screenshot
+                1280). Mostra ~8 marcos + o último dia + o hoje; o hover por
+                coluna continua dia a dia (os `rect[data-dia]` não mudam). */}
+            {(() => {
+              const passo = Math.max(1, Math.ceil(visiveis.length / 8));
+              return visiveis.map((p, i) =>
+                i % passo === 0 || i === visiveis.length - 1 || (p.dia === diaHoje && atual) ? (
+                  <g key={p.dia}>
+                    <text
+                      x={M.left + xDoIdx(i)}
+                      y={M.top + IH + 14}
+                      textAnchor="middle"
+                      fontSize={8.5}
+                      fill={p.dia === diaHoje && atual ? "#e4e4e7" : "#94a3b8"}
+                    >
+                      {p.dia}
+                    </text>
+                    <text
+                      x={M.left + xDoIdx(i)}
+                      y={M.top + IH + 26}
+                      textAnchor="middle"
+                      fontSize={8}
+                      fill="#94a3b8"
+                      fillOpacity={0.7}
+                    >
+                      {letraDoDia(mes, p.dia)}
+                    </text>
+                  </g>
+                ) : null,
+              );
+            })()}
           </svg>
 
           {pontoHover && hover != null ? (

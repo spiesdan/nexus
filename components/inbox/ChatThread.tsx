@@ -213,6 +213,10 @@ export function ChatThread({ conversationId, onResponder }: Props) {
         // bolhas e a nota nascerem todas alinhadas na mesma margem.
         className="flex-1 overflow-y-auto px-6 py-5"
       >
+        {/* Coluna de leitura limitada: em ultrawide (1920) as bolhas
+            esticavam a tela inteira — screenshot da auditoria. O padrão é o
+            do WhatsApp Web: fio centralizado com respiro nas bordas. */}
+        <div className="mx-auto w-full max-w-3xl">
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button
@@ -269,6 +273,7 @@ export function ChatThread({ conversationId, onResponder }: Props) {
         ))}
 
         <div ref={bottomRef} />
+        </div>
       </div>
     </div>
   );
