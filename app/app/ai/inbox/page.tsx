@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { AgentInboxList } from "./_components/AgentInboxList";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +17,13 @@ export default async function AgentInboxPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Central de avisos", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir(
+      <NexusPageHeader
+        title={traduzir("Central de avisos", idioma)}
+        subtitle={traduzir(
             "O que o assistente precisou escalar para o time: conexões caídas, tarefas que falharam, atendimentos passados a humanos.",
             idioma,
           )}
-        </p>
-      </header>
+      />
       <AgentInboxList canResolve={canResolve} />
     </div>
   );

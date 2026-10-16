@@ -7,6 +7,7 @@ import { BudgetCard } from "@/components/ai/BudgetCard";
 import { getBudgetStatus } from "@/lib/ai/budget/check";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { UsageDashboardClient } from "./_client";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -56,15 +57,13 @@ export default async function AiUsagePage({ searchParams }: PageProps) {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Uso de IA", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir(
+      <NexusPageHeader
+        title={traduzir("Uso de IA", idioma)}
+        subtitle={traduzir(
             "Quanto a inteligência artificial custou, quantos atendimentos ela fez, quanto demorou para responder e quantas vezes precisou chamar uma pessoa — nos últimos 30 dias.",
             idioma,
           )}
-        </p>
-      </header>
+      />
       <BudgetCard initialData={budget} isAdmin={isAdmin} />
       <UsageDashboardClient agents={agents} initial={initial} />
     </div>

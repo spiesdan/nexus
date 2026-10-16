@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { OrgMemoryState } from "@/hooks/ai/useOrgMemory";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { OrgMemoryClient } from "./_client";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -66,15 +67,13 @@ export default async function OrgMemoryPage() {
 
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Memória da IA", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir(
+      <NexusPageHeader
+        title={traduzir("Memória da IA", idioma)}
+        subtitle={traduzir(
             "Regras e aprendizados que TODOS os agentes de IA desta organização seguem em qualquer conversa — não é uma configuração de um agente específico.",
             idioma,
           )}
-        </p>
-      </header>
+      />
       <OrgMemoryClient initialState={initialState} />
     </div>
   );

@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { DecisoesList } from "./_components/DecisoesList";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -24,15 +25,13 @@ export default async function DecisoesPage() {
   const idioma = user.idioma;
   return (
     <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Decisões da IA", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir(
+      <NexusPageHeader
+        title={traduzir("Decisões da IA", idioma)}
+        subtitle={traduzir(
             "Ações que o vendedor autônomo propôs, com motivo, dados e impacto. Aprovar não executa sozinho — execução vive atrás de política explícita.",
             idioma,
           )}
-        </p>
-      </header>
+      />
       <DecisoesList />
     </div>
   );

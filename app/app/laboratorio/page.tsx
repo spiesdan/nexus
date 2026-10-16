@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { LaboratorioClient } from "./_components/LaboratorioClient";
 
 export const dynamic = "force-dynamic";
@@ -19,13 +20,10 @@ export default async function LaboratorioPage() {
   if (!activeOrg) redirect("/app");
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-6">
-      <div>
-        <h1 className="text-xl font-bold">Laboratório do agente</h1>
-        <p className="text-sm text-muted-foreground">
-          Seis clientes simulados testam a campanha antes dela falar com gente de verdade. Cada
-          rodada gasta IA de verdade e demora alguns minutos.
-        </p>
-      </div>
+      <NexusPageHeader
+        title="Laboratório do agente"
+        subtitle="Seis clientes simulados testam a campanha antes dela falar com gente de verdade. Cada rodada gasta IA de verdade e demora alguns minutos."
+      />
       <LaboratorioClient />
     </main>
   );
