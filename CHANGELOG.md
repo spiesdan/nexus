@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.26.1] — 2026-10-16
+
+### Corrigido
+
+- **Atendente não troca mais o produto por acessório** O atendente respondia "cabo de vassoura avulso" para quem pedia vassoura: a
+  busca pontuava o acessório igual ao produto e o desempate alfabético o punha
+  em primeiro. Agora a busca marca acessórios como alternativa (nunca como
+  resposta), o envio valida nome, preço e código contra o que a busca devolveu
+  e a intenção do produto atravessa turnos. Nada precisa ser feito na atualização.
+
 ## [1.26.0] — 2026-10-16
 
 ### Alterado
@@ -4300,7 +4310,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...HEAD
+[1.26.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.0...v1.26.1
 [1.26.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.53...v1.26.0
 [1.25.53]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.52...v1.25.53
 [1.25.52]: https://github.com/melgarafael/DeskcommCRM/compare/v1.25.51...v1.25.52
