@@ -253,8 +253,8 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "Passe o que a pessoa escreveu, do jeito que ela escreveu: a busca entende erro de digitação " +
     "('ifone') e acha por marca, categoria ou código. " +
     "⚠️ PRINCIPAL × ACESSÓRIO — cada produto pode voltar com `relacao: \"relacionada\"`: é um " +
-    "acessório ou peça do que foi pedido (cabo avulso para quem pediu vassoura, refil para quem " +
-    "pediu rodo), NUNCA a resposta. Apresente primeiro os sem marcação; o marcado só entra como " +
+    "acessório, peça ou combo do que foi pedido (cabo avulso para quem pediu vassoura, refil " +
+    "para quem pediu rodo, pá com coletor + vassoura para quem pediu vassoura), NUNCA a resposta. " +
     "alternativa EXPLÍCITA ('não temos a vassoura, mas temos o cabo avulso por R$ X — quer?'). Se " +
     "a pessoa pediu o acessório pelo nome ('quero um cabo'), ele volta sem marcação: é o pedido. " +
     "⚠️ PERGUNTA DE CONTINUAÇÃO sem produto novo ('qual vocês têm?', 'e os preços?'): NÃO busque " +

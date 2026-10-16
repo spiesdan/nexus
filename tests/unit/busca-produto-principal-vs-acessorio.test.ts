@@ -98,6 +98,33 @@ describe("ordenação: diretas antes, sem duplicar", () => {
   });
 });
 
+describe("combos e kits — 'vassoura é apenas vassoura'", () => {
+  it("⭐ 'PÁ COM COLETOR + VASSOURA' para quem pediu vassoura é relacionada", () => {
+    const pa = { nome: "PÁ COM COLETOR + VASSOURA", codigo: "149", categoria: "Vassouras" };
+    expect(classificarRelacao("quais vassouras vocês têm?", pa)).toBe("relacionada");
+  });
+
+  it("'PÁ COM COLETOR + VASSOURA' para quem pediu PÁ é direta", () => {
+    const pa = { nome: "PÁ COM COLETOR + VASSOURA", codigo: "149", categoria: "Vassouras" };
+    expect(classificarRelacao("vocês têm pá de lixo?", pa)).toBe("direta");
+  });
+
+  it("'Vassoura com rotação' continua direta — a ligação vem depois", () => {
+    const v = { nome: "Vassoura com rotação", codigo: "426", categoria: "Vassouras" };
+    expect(classificarRelacao("quais vassouras vocês têm?", v)).toBe("direta");
+  });
+
+  it("'Suporte para celular' para quem pediu celular é relacionada", () => {
+    const s = { nome: "Suporte para celular", codigo: "SUP-1", categoria: "acessórios" };
+    expect(classificarRelacao("vocês têm celular?", s)).toBe("relacionada");
+  });
+
+  it("'Vassoura de palha cabo longo' continua direta — 'cabo' no fim não desvia", () => {
+    const v = { nome: "Vassoura de palha cabo longo", codigo: "430", categoria: "Vassouras" };
+    expect(classificarRelacao("quais vassouras vocês têm?", v)).toBe("direta");
+  });
+});
+
 describe("sinônimos, erros de digitação e falsos amigos", () => {
   it("'vasoura' (erro) ainda acha as vassouras como diretas", () => {
     const r = nomes("vasoura");

@@ -173,6 +173,29 @@ const CATEGORIAS_ACESSORIO = new Set([
   'reposicoes',
 ]);
 
+/**
+ * O pedido aparece SÓ depois de separador/kit? Então o item é um combo cujo
+ * pedido é coadjuvante — "PÁ com coletor + VASSOURA" não é vassoura, "vassoura
+ * é apenas vassoura". O primeiro segmento lidera: se nenhum termo do pedido
+ * casa com palavra dele, o produto é relacionado.
+ */
+function soComplemento(nome: string, tokens: TokensDaBusca): boolean {
+  // Divide no texto CRU: `normalizar` troca "+" e "/" por espaço, e depois
+  // deles não sobra rastro para decidir. A comparação em si usa texto
+  // normalizado (acentos, caixa).
+  const antesDoMais = nome.split(/[+/]/)[0] ?? '';
+  const lider = antesDoMais.split(/\s+(?:com|c|e|para|p)\s+/i)[0] ?? '';
+  const normalizado = normalizar(nome);
+  const palavrasDoLider = normalizar(lider).split(' ').filter((w) => w !== '');
+  const casa = (alvo: string, q: string) =>
+    casaComPedido(alvo, { palavras: [q], numeros: [] });
+  const palavrasConsulta = tokens.palavras.filter((q) => q.length >= 3);
+  if (palavrasConsulta.length === 0) return false;
+  const apareceNoNome = (q: string) => normalizado.split(' ').some((w) => casa(w, q));
+  const apareceNoLider = (q: string) => palavrasDoLider.some((w) => casa(w, q));
+  return palavrasConsulta.some((q) => apareceNoNome(q) && !apareceNoLider(q));
+}
+
 /** Primeira palavra com conteúdo do nome — o "quem" do produto ("Cabo …", "Vassoura …"). */
 function cabecaDoNome(nome: string): string {
   for (const t of normalizar(nome).split(' ')) {
@@ -214,6 +237,9 @@ export function classificarRelacao(consulta: string, produto: ProdutoBuscavel): 
   //    "Vassouras" (no cadastro real, tudo vive nessa categoria, inclusive o
   //    cabo; a categoria diz a família, a cabeça diz quem o item é).
   if (MARCADORES_ACESSORIO.has(cabeca)) return 'relacionada';
+  // 2b. Pedido só como complemento ("PÁ com coletor + VASSOURA", "suporte PARA
+  //    celular"): combo/kit, não o produto — "vassoura é apenas vassoura".
+  if (soComplemento(produto.nome, tokens)) return 'relacionada';
   // 3. O pedido nomeia a categoria: é da família pedida.
   const categoria = normalizar(produto.categoria ?? '');
   if (categoria !== '' && categoria.split(' ').some((c) => casaComPedido(c, tokens))) {

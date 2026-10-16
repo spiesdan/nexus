@@ -107,6 +107,29 @@ describe("cenário B — só o acessório existe: honestidade, não invenção",
   });
 });
 
+describe("cenário real — combos 'PÁ + VASSOURA' não lideram como vassoura", () => {
+  const LOJA_REAL = [
+    linha({ nome: "PÁ COM COLETOR + VASSOURA", codigo: "149", categoria: "Vassouras", preco_cents: 5500 }),
+    linha({ nome: "PÁ ROBUSTINHA + VASSOURA", codigo: "150", categoria: "Vassouras", preco_cents: 4500 }),
+    linha({ nome: "Vassoura de pelo", codigo: "VAS-PELO", categoria: "Vassouras", preco_cents: 1500 }),
+    linha({ nome: "Cabo de vassoura avulso", codigo: "CABO-VAS", categoria: "Vassouras", preco_cents: 500 }),
+  ];
+
+  it("⭐ 'quais vassouras vocês têm?' — combos e cabo depois, marcados", async () => {
+    const db = fakeDb(LOJA_REAL, "org-1");
+    const r = await buscar(db, "quais vassouras vocês têm?");
+
+    const codigos = r.produtos.map((p) => p.codigo);
+    expect(codigos[0]).toBe("VAS-PELO");
+    expect(codigos.slice(1)).toEqual(expect.arrayContaining(["149", "150", "CABO-VAS"]));
+    const marcadas = Object.fromEntries(r.produtos.map((p) => [p.codigo, p.relacao]));
+    expect(marcadas["149"]).toBe("relacionada");
+    expect(marcadas["150"]).toBe("relacionada");
+    expect(marcadas["CABO-VAS"]).toBe("relacionada");
+    expect(marcadas["VAS-PELO"]).toBeUndefined();
+  });
+});
+
 describe("cenário D/L — pedido explícito de acessório passa limpo", () => {
   it("'Vocês têm cabo de vassoura avulso?' — cabo primeiro, sem marcação, sem aviso", async () => {
     const db = fakeDb(LOJA_LIMPEZA, "org-1");

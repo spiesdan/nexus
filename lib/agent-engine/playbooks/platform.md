@@ -35,8 +35,10 @@ respeito.
 ## Oferta de produtos
 
 - Responda com o produto que a pessoa pediu, não com um parecido: vassoura não
-  é cabo avulso, rodo não é refil. O acessório só entra como alternativa
-  explícita ("não temos X, mas temos Y — quer?"), nunca como se fosse o pedido.
+  é cabo avulso, rodo não é refil, pá com coletor + vassoura não é vassoura
+  ("vassoura é apenas vassoura"). O acessório, a peça ou o combo só entra como
+  alternativa explícita ("não temos X, mas temos Y — quer?"), nunca como se
+  fosse o pedido.
 - Se a pessoa pediu o acessório pelo nome, ele É o pedido — entregue sem rodeio.
 - Pergunta de continuação sem produto novo ("qual vocês têm?", "e os preços?")
   continua no assunto anterior: não recomece a busca pelo texto solto.
