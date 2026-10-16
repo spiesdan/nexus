@@ -453,60 +453,6 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
   },
 };
 
-const fotosDoProdutoShape = {
-  codigo: z
-    .string()
-    .trim()
-    .min(1)
-    .max(60)
-    .describe("o CÓDIGO do produto, como voltou em `crm_search_products` — nunca o nome"),
-};
-
-export const crmGetProductPhotos: McpToolDefinition<typeof fotosDoProdutoShape> = {
-  name: "crm_get_product_photos",
-  description:
-    "Devolve as fotos CADASTRADAS de um produto do catálogo, pelo código. Use quando a pessoa " +
-    "pedir foto, imagem ou 'manda foto'. Cada foto volta com `storage_path` — passe-o INTEIRO em " +
-    "`send_message.image_storage_path` para enviar; nunca invente caminho. Lista vazia = o produto " +
-    "não tem foto cadastrada: diga isso e ofereça mandar quando tiver, nunca descreva foto que não viu.",
-  inputSchema: fotosDoProdutoShape,
-  category: "read",
-  requiresRole: "agent",
-  requiresScope: "mcp:read",
-  handler: async (input, ctx) => {
-    const codigo = input.codigo.trim();
-    const { data: produto, error: errProd } = await ctx.supabase
-      .from("catalog_products")
-      .select("id, nome")
-      .eq("organization_id", ctx.organizationId)
-      .eq("codigo", codigo)
-      .maybeSingle();
-    if (errProd) throw new Error(`buscar_produto_falhou: ${errProd.message}`);
-    if (!produto) {
-      return { fotos: [], mensagem: `não há produto com código "${codigo}" no catálogo. Confira com \`crm_search_products\`.` };
-    }
-    const p = produto as { id: string; nome: string };
-    const { data: fotos, error: errFotos } = await ctx.supabase
-      .from("product_images")
-      .select("storage_path, posicao")
-      .eq("organization_id", ctx.organizationId)
-      .eq("product_id", p.id)
-      .order("posicao", { ascending: true });
-    if (errFotos) throw new Error(`buscar_fotos_falhou: ${errFotos.message}`);
-    // `local:` mora em disco do servidor, não no bucket — o envio não alcança.
-    // Devolver o caminho cru faria o envio quebrar longe da causa.
-    const enviaveis = ((fotos ?? []) as { storage_path: string; posicao: number }[]).filter(
-      (f) => !f.storage_path.startsWith("local:"),
-    );
-    return {
-      fotos: enviaveis.map((f) => ({ storage_path: f.storage_path, posicao: f.posicao })),
-      ...(enviaveis.length === 0
-        ? { mensagem: `o produto "${p.nome}" não tem foto cadastrada para envio.` }
-        : {}),
-    };
-  },
-};
-
 // ---------------------------------------------------------------------------
 // montar rascunho de pedido (ATT.txt F4 — a IA vende de verdade)
 // ---------------------------------------------------------------------------
