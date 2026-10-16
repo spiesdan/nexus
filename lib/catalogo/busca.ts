@@ -205,18 +205,21 @@ function casaComPedido(palavra: string, tokens: TokensDaBusca): boolean {
 export function classificarRelacao(consulta: string, produto: ProdutoBuscavel): RelacaoProduto {
   const tokens = tokenizar(consulta);
   if (tokens.palavras.length === 0) return 'direta';
-  // O pedido nomeia a cabeça do produto (ou a categoria): é ele, mesmo sendo
-  // acessório — "quero um cabo de vassoura" TEM de devolver o cabo.
   const cabeca = cabecaDoNome(produto.nome);
+  // 1. O pedido nomeia a cabeça do produto: é ele, mesmo sendo acessório —
+  //    "quero um cabo de vassoura" TEM de devolver o cabo.
   if (casaComPedido(cabeca, tokens)) return 'direta';
+  // 2. Cabeça acessória que o pedido não contém ("Cabo …" para quem pediu
+  //    "vassoura"): relacionado, NUNCA resposta — mesmo que a categoria diga
+  //    "Vassouras" (no cadastro real, tudo vive nessa categoria, inclusive o
+  //    cabo; a categoria diz a família, a cabeça diz quem o item é).
+  if (MARCADORES_ACESSORIO.has(cabeca)) return 'relacionada';
+  // 3. O pedido nomeia a categoria: é da família pedida.
   const categoria = normalizar(produto.categoria ?? '');
   if (categoria !== '' && categoria.split(' ').some((c) => casaComPedido(c, tokens))) {
     return 'direta';
   }
-  // Cabeça acessória que o pedido não contém ("Cabo …" para quem pediu
-  // "vassoura"): relacionado, nunca resposta.
-  if (MARCADORES_ACESSORIO.has(cabeca)) return 'relacionada';
-  // Categoria acessória que o pedido não menciona: mesmo veredito.
+  // 4. Categoria acessória que o pedido não menciona: mesmo veredito do item 2.
   if (categoria !== '' && categoria.split(' ').some((c) => CATEGORIAS_ACESSORIO.has(c))) {
     return 'relacionada';
   }
@@ -394,9 +397,24 @@ function pontuarTodos<T extends ProdutoBuscavel>(
   consulta: string,
 ): Achado<T>[] {
   const achados: Achado<T>[] = [];
+  const vistos = new Set<string>();
   for (const produto of produtos) {
     const nota = pontuar(produto, tokens);
-    if (nota !== null) achados.push({ produto, nota, relacao: classificarRelacao(consulta, produto) });
+    if (nota === null) continue;
+    // Linhas duplicadas do cadastro (mesmo nome + mesmo preço, SKUs
+    // diferentes — medido no catálogo real: "CABO…" ×2, "CERLON 40" ×2).
+    // Listar as duas faz o agente oferecer "duas opções" idênticas; a
+    // primeira fica, as demais somem antes de ordenar — sem fundir nada no
+    // banco, que continua intacto. Sem preço conhecido não há como saber se
+    // são duplicadas ou variantes com o mesmo nome: aí não deduplica.
+    const precoConhecido =
+      'preco_cents' in produto && typeof produto.preco_cents === 'number'
+        ? String(produto.preco_cents)
+        : produto.codigo;
+    const chave = `${normalizar(produto.nome)}|${precoConhecido}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    achados.push({ produto, nota, relacao: classificarRelacao(consulta, produto) });
   }
   return achados.sort(
     (a, b) =>

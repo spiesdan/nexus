@@ -75,6 +75,27 @@ describe("ordenação: diretas antes, sem duplicar", () => {
     const r = nomes("vassoura");
     expect(r[0]!.produto.codigo).not.toBe("CABO-VAS");
   });
+
+  it("linhas duplicadas do cadastro (mesmo nome + preço) aparecem uma vez", () => {
+    // Medido no catálogo real: "CABO DE VASSOURA AVULSO" ×2 e
+    // "VASSOURA CERLON 40 CM PLASTICA" ×2 — sem isto o agente lista "duas opções" idênticas.
+    const catalogo = [
+      { nome: "Cabo de vassoura avulso", codigo: "CABO-1", categoria: "Vassouras", preco_cents: 500 },
+      { nome: "Cabo de vassoura avulso", codigo: "CABO-2", categoria: "Vassouras", preco_cents: 500 },
+      { nome: "Vassoura de pelo", codigo: "VAS-1", categoria: "vassouras", preco_cents: 1500 },
+    ];
+    const r = buscarComRelaxamento(catalogo, "vassoura");
+    expect(r.achados.map((a) => a.produto.codigo)).toEqual(["VAS-1", "CABO-1"]);
+  });
+
+  it("mesmo nome com preços diferentes NÃO deduplica — pode ser variante real", () => {
+    const catalogo = [
+      { nome: "Vassoura X", codigo: "X-1", categoria: "vassouras", preco_cents: 1200 },
+      { nome: "Vassoura X", codigo: "X-2", categoria: "vassouras", preco_cents: 1500 },
+    ];
+    const r = buscarComRelaxamento(catalogo, "vassoura x");
+    expect(r.achados).toHaveLength(2);
+  });
 });
 
 describe("sinônimos, erros de digitação e falsos amigos", () => {
