@@ -112,6 +112,11 @@ export const ALVO_DE_FUNIL: Record<string, AlvoDeFunil> = {
 
   // ---- não têm funil, e isso é declarado ----
   crm_send_whatsapp_message: "sem_funil",
+  // Manda foto do CATÁLOGO na conversa do turno. Não recebe `lead_id` nem
+  // `pipeline_id` — a conversa vem do runtime — então o mesmo argumento de
+  // `crm_send_whatsapp_message` acima: declara-se `sem_funil` em vez de
+  // classificar por um lead que nunca chega.
+  crm_send_product_photo: "sem_funil",
   crm_add_case_note: "sem_funil",
   crm_close_human_case: "sem_funil",
   crm_assign_conversation: "sem_funil",

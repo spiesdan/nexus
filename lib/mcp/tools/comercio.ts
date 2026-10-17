@@ -521,7 +521,11 @@ const enviarFotoShape = {
 
 
 
-export const crmSendProductPhoto: McpToolDefinition<typeof enviarFotoShape> = {  name: "crm_send_product_photo",
+/** Motivo da recusa — vocabulário fechado para o modelo não inventar leitura. */
+type MotivoDaRecusa = "sem_conversa" | "produto_desconhecido" | "sem_foto";
+
+export const crmSendProductPhoto: McpToolDefinition<typeof enviarFotoShape> = {
+  name: "crm_send_product_photo",
   description:
     "ENVIA a foto cadastrada de um produto na conversa atual. Use DEPOIS de " +
     "`crm_get_product_photos` confirmar que há foto — nunca sem consultar. Sem foto " +
@@ -529,22 +533,22 @@ export const crmSendProductPhoto: McpToolDefinition<typeof enviarFotoShape> = { 
     "descrever foto que não viu. A legenda default é o nome do produto.",
   inputSchema: enviarFotoShape,
   category: "write",
-  requiresRole: "agent",
+  // Piso `ai_operator`, igual a qualquer envio ao cliente: a foto SAI do
+  // sistema para o celular de um terceiro e não volta atrás. Um `agent`
+  // logado não alcança esta tool.
+  requiresRole: "ai_operator",
   requiresScope: "mcp:write",
   handler: async (input, ctx) => {
     // Destino vem DO RUNTIME (conversa do turno/run), nunca do payload: mirar
     // conversa pelo input permitiria ao modelo escolher outra conversa da org.
     const conversaId = ctx.conversationId ?? null;
     if (!conversaId) {
-      return { sent: false, motivo: "sem_conversa" as const };
+      return { sent: false, motivo: "sem_conversa" as MotivoDaRecusa };
     }
     const foto = await resolverFotoDoProduto(ctx.supabase, ctx.organizationId, input.codigo);
     if (foto.found === false || foto.fotos.length === 0) {
-      return {
-        sent: false,
-        motivo: (foto.found === false ? "produto_desconhecido" : "sem_foto") as const,
-        mensagem: foto.mensagem,
-      };
+      const motivo: MotivoDaRecusa = foto.found === false ? "produto_desconhecido" : "sem_foto";
+      return { sent: false, motivo, mensagem: foto.mensagem };
     }
     const primeira = foto.fotos[0]!;
     const extensao = primeira.storage_path.split(".").pop()?.toLowerCase();

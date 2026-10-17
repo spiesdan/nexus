@@ -44,7 +44,10 @@ export const TOOLS_COMERCIO = declararTools([
     explicacao:
       "Manda a foto cadastrada na conversa atual. Sem foto, recusa com motivo em vez de inventar.",
     oQueToca: "Conversa atual (foto do catálogo)",
-    risco: "atencao",
+    // `critico` pelo MESMO motivo de `crm_send_whatsapp_message`: a foto chega
+    // no celular do cliente e não volta atrás. Só difere no conteúdo — e é
+    // conteúdo que veio do catálogo, o que faz o efeito irreversível menor.
+    risco: "critico",
     pacotes: ["vender", "atender"],
   },
   {
