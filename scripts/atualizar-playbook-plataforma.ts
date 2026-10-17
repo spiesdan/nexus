@@ -32,11 +32,20 @@ import { validatePlaybookLayerContent } from '@/lib/agent-engine/agent/playbook'
 
 const ARQUIVO = path.join(process.cwd(), 'lib', 'agent-engine', 'playbooks', 'platform.md');
 
+/**
+ * A conexão é a MESMA que o produto usa — medida no container em 2026-10-17:
+ * a variável em uso é `SUPABASE_DB_URL`, e a primeira versão deste script só
+ * aceitava `DATABASE_URL`/`POSTGRES_URL`. Resultado: o comando que a própria
+ * documentação manda rodar falhava com "sem DATABASE_URL" numa instância
+ * perfeitamente saudável, que é a forma mais cara de errar um nome de variável.
+ */
 function conexao(): string {
-  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+  const url =
+    process.env.SUPABASE_DB_URL ?? process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!url) {
     throw new Error(
-      'sem DATABASE_URL: este script fala com o Postgres da própria instância, não com o Supabase gerenciado.',
+      'sem SUPABASE_DB_URL (nem DATABASE_URL/POSTGRES_URL): este script fala com o Postgres da ' +
+        'própria instância. Na VPS, a variável já está no ambiente do worker.',
     );
   }
   return url;
