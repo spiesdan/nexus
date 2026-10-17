@@ -8,67 +8,6 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
-## [1.28.0] — 2026-10-17
-
-### Adicionado
-
-- **Assistente sabe o que cada produto é antes de responder** Cada produto do catálogo passa por uma ficha lida por máquina: se é produto
-  único, conjunto (com quais itens) ou peça de reposição, além de medida,
-  concentração e quantidade por embalagem. Tudo sai do que a loja cadastrou —
-  nome, categoria, marca — e nada é inventado.
-
-  Efeito na conversa: "vassoura" não volta mais com cabo de vassoura avulso nem
-  com pá com coletor + vassoura, porque esses dois chegam marcados como peça e
-  como conjunto. O assistente também passa a responder "vende em caixa fechada?"
-  com o número real da embalagem.
-
-  Em installs com produto sem descrição cadastrada, a descrição passa a ser
-  preenchida a partir da ficha. Quem quiser revisar antes pode rodar
-  `pnpm tsx scripts/estudar-catalogo.ts --org=<uuid>`: ele imprime o estudo
-  completo de todos os produtos e o SQL, sem gravar nada.
-
-### Alterado
-
-- **Assistente lê material, tamanho, cor e uso de cada produto** Além de separar produto único, conjunto e peça de reposição, o assistente passa a
-  ler do nome do produto o que a loja registrou: material (cerlon, inox, nitrílo,
-  látex, microfibra), comprimento em cm/mm, cor, a característica que muda o
-  produto dentro da categoria (com pedal, com tampa, basculante, interfolha) e o
-  que ele serve para (cozinha, vidrarias, mãos, industrial).
-
-  O vocabulário foi medido nos 1141 produtos do catálogo real — 41 categorias — em
-  vez de vir de léxico pronto, que erra justamente nas palavras que esta loja não
-  tem. Regra que não se nega: entra só o que está escrito no nome. Produto cujo
-  nome é só o nome continua sem atributo inventado.
-
-  Efeito na conversa: "vassoura de cerlon 40 cm" e "vassoura de nylon" deixam de
-  ser a mesma frase, e "qual a diferença?" tem resposta.
-
-- **Agente aceita 30 capacidades em vez de 28** A tela de Capacidades agora deixa o agente chegar a 30 capacidades marcadas
-  (antes 28). Motivo medido: em instalações reais o `tool_ids` vai acumulando
-  capacidades de versões antigas — várias delas já nem entram mais por pacote — e
-  o dono ficava sem vaga para marcar qualquer coisa nova, com os checkboxes
-  desabilitados e sem explicação.
-
-  Nenhuma instalação quebra: os agentes que já estão configurados continuam
-  válidos, e a contagem de capacidades do painel passa a contar com a folga nova.
-
-### Corrigido
-
-- **O playbook de plataforma versãoado agora chega ao banco** A camada de playbook que o assistente lê na conversa (as regras de plataforma,
-  versionadas em `lib/agent-engine/playbooks/platform.md`) só era lida no
-  primeiro boot de uma instalação nova. Em instalação já existente, editar o
-  arquivo não mudava nada em campo — foi assim que a regra que separa vassoura
-  de cabo de vassoura ficou no código e não chegou a nenhum agente. É defeito de
-  entrega, não de conteúdo: agora existe caminho para aplicar a versão nova.
-
-  Para levar a versão nova à sua instância, com o antes/depois na tela:
-
-      pnpm tsx scripts/atualizar-playbook-plataforma.ts
-      pnpm tsx scripts/atualizar-playbook-plataforma.ts --aplicar
-
-  O primeiro comando só mostra a diferença; o segundo grava. A versão anterior
-  continua no histórico, então dá para voltar.
-
 ## [1.27.0] — 2026-10-17
 
 ### Adicionado
@@ -4414,8 +4353,7 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.28.0...HEAD
-[1.28.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.27.0...v1.28.0
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.27.0...HEAD
 [1.27.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.4...v1.27.0
 [1.26.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.3...v1.26.4
 [1.26.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...v1.26.3
