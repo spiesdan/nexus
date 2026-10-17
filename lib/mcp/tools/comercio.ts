@@ -14,6 +14,7 @@ import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
 import { resolverFotoDoProduto } from "@/lib/catalogo/foto-do-produto";
+import { fichaDoProduto } from "@/lib/catalogo/ficha-do-produto";
 
 import type { McpToolDefinition } from "../types";
 import { buscarComRelaxamento } from "@/lib/catalogo/busca";
@@ -430,6 +431,17 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
           },
           new Date().toISOString().slice(0, 10),
         );
+        // Ficha: o que o produto É, lido do cadastro (kit de 2 itens, peça de
+        // reposição, medida, caixa com N). Sem ela o modelo decide "o que é
+        // isto" só pelo nome em caixa alta — foi assim que "PÁ COM COLETOR +
+        // VASSOURA" virou resposta para quem pediu vassoura. Custo: ~8
+        // tokens, e só o que existe no cadastro.
+        const ficha = fichaDoProduto({
+          nome: produto.nome,
+          descricao: produto.descricao,
+          categoria: produto.categoria,
+          marca: produto.marca,
+        });
         return {
           codigo: produto.codigo,
           nome: produto.nome,
@@ -438,9 +450,18 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
           // Só o marcado viaja: `direta` é o default e não custa token. Quem lê
           // (modelo ou gate de identidade) trata ausência como direta.
           ...(relacao === 'relacionada' ? { relacao: 'relacionada' as const } : {}),
+          ...(ficha.tipo !== 'simples' ? { tipo: ficha.tipo } : {}),
+          ...(ficha.itens.length > 0 ? { itens: ficha.itens } : {}),
+          ...(ficha.quantidadeEmbalagem !== null
+            ? { embalagem: `${ficha.quantidadeEmbalagem} unidades` }
+            : {}),
           ...(vitrine.emPromocao ? { em_promocao: true as const } : {}),
           ...(produto.marca ? { marca: produto.marca } : {}),
-          ...(produto.descricao ? { descricao: produto.descricao } : {}),
+          // Descrição da LOJA quando existe (ela é dona da palavra do produto);
+          // senão a gerada pela ficha, que é feita do que a loja cadastrou.
+          ...((produto.descricao?.trim() || ficha.descricao)
+            ? { descricao: produto.descricao?.trim() || ficha.descricao }
+            : {}),
           disponivel: !produto.controla_estoque || produto.quantidade > 0,
         };
       }),

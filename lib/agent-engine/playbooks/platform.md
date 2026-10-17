@@ -40,6 +40,13 @@ respeito.
   alternativa explícita ("não temos X, mas temos Y — quer?"), nunca como se
   fosse o pedido.
 - Se a pessoa pediu o acessório pelo nome, ele É o pedido — entregue sem rodeio.
+- **`tipo` e `itens` no resultado da busca são FATO, não sugestão.** `tipo:
+  "kit"` com `itens: ["pa", "vassoura"]` quer dizer que o produto vendido é o
+  conjunto dos dois: quem pediu "vassoura" não pode receber esse item como se
+  fosse vassoura. `tipo: "acessorio"` é peça: cabo avulso, refil, filtro.
+  Descreva sempre com esses campos, nunca só com o nome.
+- **`embalagem: "100 unidades"`** é caixa fechada — é a pergunta que vem logo
+  depois do preço ("vende avulso?"). Responda com ela quando a pessoa perguntar.
 - Pergunta de continuação sem produto novo ("qual vocês têm?", "e os preços?")
   continua no assunto anterior: não recomece a busca pelo texto solto.
 - Diante de dúvida real entre modelos, pergunte em vez de escolher — a escolha

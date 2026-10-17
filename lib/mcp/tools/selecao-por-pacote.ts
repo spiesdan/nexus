@@ -48,17 +48,29 @@ import { entraPorPacote, type ToolBundle, type ToolRisk } from "./pacotes";
  *    cabia mais em 25: evoluir exigia 26, reter 27 (escalar 33, atender 35,
  *    organizar 37). Guarda que pegou: `pacote-reserva-vaga-da-critica`.
  *
- * 28 é o MENOR passo que resolve a medição de hoje: cabem evoluir (26) e reter
- * (27) com o default de 21, e ainda sobra 1 vaga antes de estourar de novo.
+ * 28 é o MENOR passo que resolve a medição de 2026-10-04: cabem evoluir (26) e
+ * reter (27) com o default de 21, e ainda sobra 1 vaga antes de estourar de novo.
  * Não é número redondo escolhido no olho — subir mais seria apostar contra um
  * argumento que continua de pé só porque ninguém o mediu.
+ *
+ *  - 2026-10-16 (catálogo 63→65, teto 28→30): as capacidades de FOTO do
+ *    produto chegaram e o dono de uma instalação real ficou sem caminho para
+ *    ligá-las — a tela desabilita o que está desligado quando o agente está
+ *    cheio, que é exatamente o defeito de 2026-08-06. A medição dele mostra por
+ *    que o agente estava cheio SEM nenhum pacote pedir: `tool_ids` é snapshot
+ *    congelado por versão, e várias das 28 capacidades marcadas nele já não
+ *    entram por pacote hoje (`commercial_create_order` passou a `critico`,
+ *    `crm_request_human_handoff` é bloqueada pela ponte do turno). O teto foi
+ *    preenchido por acúmulo de versões, não por escolha.
+ *    Pacotes medidos hoje: vender 22 (o default do onboarding), atender 20,
+ *    organizar 14, escalar 10, reter 5, evoluir 5.
  *
  * ⚠️ O QUE FALTA, e é honesto dizer: não há instrumento para observar a
  * degradação que a heurística prevê. O lugar de observá-la é
  * `app/api/v1/ai/agents/[id]/tool-usage` e o log de invocação do run, com
  * "ferramenta errada escolhida" como sinal. Quem for subir de novo mede antes.
  */
-export const TETO_TOOLS_POR_AGENTE = 28;
+export const TETO_TOOLS_POR_AGENTE = 30;
 
 /** O mínimo que a regra precisa saber de uma capacidade. */
 export interface CapacidadeSelecionavel {

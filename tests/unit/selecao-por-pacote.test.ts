@@ -143,6 +143,28 @@ describe("o teto de capacidades", () => {
     expect(excedeuTeto(cheio)).toBe(false);
     expect(excedeuTeto([...cheio, "estourou"])).toBe(true);
   });
+
+  it("⭐ o teto é 30 — número que envelhece em silêncio precisa de testemunha", () => {
+    // O histórico do teto é de MEDIÇÃO (2026-08-06, 2026-10-04, 2026-10-16), não
+    // de gosto. Uma constante sem valor fixado aqui volta a 28 sem que nada
+    // reclame, e o defeito volta junto: a tela desabilita o checkbox que o dono
+    // quer marcar e ele não descobre o porquê. Quando subir de novo, atualiza
+    // aqui E o bloco de medição acima da constante, com a contagem que autorizou.
+    expect(TETO_TOOLS_POR_AGENTE).toBe(30);
+  });
+
+  it("⭐ o default do onboarding ainda deixa espaço para o opt-in", () => {
+    // O defeito de 2026-10-16: a instalação real estava CHEIA de capacidades que
+    // já não entram por pacote (acúmulo de versões), então nenhuma capacidade
+    // nova marcada à mão cabia. Com o teto atual, `vender` + as duas de foto do
+    // produto cabem — é a medição que motivou 28→30.
+    const vender = ligarPacote([], TOOL_CATALOG, "vender");
+    const foto = TOOL_CATALOG.filter(
+      (t) => t.name === "crm_get_product_photos" || t.name === "crm_send_product_photo",
+    ).map((t) => t.name);
+    expect(foto).toHaveLength(2);
+    expect(excedeuTeto([...vender, ...foto]), "vender + foto tem que caber no teto").toBe(false);
+  });
 });
 
 describe("o catálogo real — a fixture prova a função, isto prova o produto", () => {
