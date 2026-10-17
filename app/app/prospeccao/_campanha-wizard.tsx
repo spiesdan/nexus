@@ -74,6 +74,13 @@ export function CampanhaWizard({
   const [alcancado, setAlcancado] = React.useState(0);
   const [nome, setNome] = React.useState("");
   const [marcadas, setMarcadas] = React.useState<string[]>([]);
+  /**
+   * De onde a campanha tira o público (0271). `busca` é o padrão histórico —
+   * fan-out no provedor ativo, gastando API. `base`: só o que já está
+   * cadastrado, sem chave e sem gastar nada, que é o caminho de quem tem a
+   * lista pronta e não quer pagar Google para ouvir de novo.
+   */
+  const [fontePublico, setFontePublico] = React.useState<"busca" | "base" | "ambas">("busca");
   const [cidadesTexto, setCidadesTexto] = React.useState("");
   const [recorrencia, setRecorrencia] = React.useState("");
   const [templateId, setTemplateId] = React.useState("__nenhum");
@@ -183,6 +190,7 @@ export function CampanhaWizard({
           nome: nome.trim(),
           categorias: marcadas,
           cidades,
+          fonte_publico: fontePublico,
           ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
         },
       );
@@ -271,6 +279,30 @@ export function CampanhaWizard({
                 onChange={(e) => setCidadesTexto(e.target.value)}
                 placeholder={t("Exemplo de cidades") + ": Canoinhas/SC, Mafra/SC"}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="wiz-fonte">{t("De onde sai o público")}</Label>
+              <select
+                id="wiz-fonte"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
+                value={fontePublico}
+                onChange={(e) => setFontePublico(e.target.value as typeof fontePublico)}
+              >
+                <option value="busca">
+                  {t("Buscar empresas agora (usa API do Google)")}
+                </option>
+                <option value="base">{t("Usar o que já está cadastrado (sem API)")}</option>
+                <option value="ambas">{t("Os dois")}</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                {fontePublico === "busca"
+                  ? t(
+                      "A campanha procura empresas novas na região. Gastou API do Google e precisa de chave ativa.",
+                    )
+                  : t(
+                      "A campanha usa só as empresas que você já tem cadastradas, nas mesmas cidades e categorias. Empresas duplicadas e clientes que a loja já atende saem da fila.",
+                    )}
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="wiz-rec">{t("Repetir a cada (dias, opcional)")}</Label>

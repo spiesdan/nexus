@@ -505,6 +505,10 @@ export const AUDIT_ACTIONS = [
   "prospect.importado_arquivo",
   "prospecting_settings.updated",
   "prospecting_campaign.updated",
+  // Leitura do público da campanha (a tela Campaigns showing "quem ela alcança").
+  // Entrada nova no audit porque CONTAR público decide se alguém vira cliente
+  // próprio por engano — e o registro é o que permite reconstituir isso.
+  "prospecting_campaigns.public_read",
   // Metas comerciais (migration 0225). Meta é decisão gerencial com efeito no
   // dashboard de todo mundo — quem mudou e para quanto fica registrado.
   "commercial_goal.saved",

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -90,6 +90,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       categorias: parsed.data.categorias,
       cidades: parsed.data.cidades,
       recorrencia_dias: parsed.data.recorrencia_dias ?? null,
+      fonte_publico: parsed.data.fonte_publico ?? "busca",
       status: "rascunho",
       created_by: authz.user.id,
     })

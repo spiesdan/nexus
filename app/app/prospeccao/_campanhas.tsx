@@ -18,6 +18,7 @@ import { comoMoeda } from "@/lib/format/moeda";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
 import { CampanhaWizard } from "./_campanha-wizard";
+import { DialogoDisparo } from "./_disparo";
 
 /**
  * Aba CAMPANHAS — painel de funil (§28), não lista técnica.
@@ -40,6 +41,8 @@ interface CampanhaDescoberta {
   status: string;
   recorrencia_dias: number | null;
   ultima_execucao_at: string | null;
+  /** 0271: `busca` (provider ativo) | `base` (já cadastrado) | `ambas`. */
+  fonte_publico?: string | null;
   funil?: FunilDaCampanha | null;
 }
 
@@ -57,6 +60,28 @@ interface CampanhaVa {
 type CardCampanha =
   | { tipo: "descoberta"; campanha: CampanhaDescoberta }
   | { tipo: "va"; campanha: CampanhaVa };
+
+/** O que `executar` devolve quando a campanha tira o público da base (0271). */
+interface PublicoDaBase {
+  campanha: string;
+  linhas: Array<{ id: string; nome: string; telefone: string | null; cidade: string | null }>;
+  ja_clientes: Array<{ nome: string; igual_a: string; similaridade: number }>;
+  duplicadas: number;
+  para_revisar: Array<{ nome: string; igual_a: string; similaridade: number }>;
+  resumo: string;
+}
+
+interface RespostaDaExecucao {
+  buscas?: number;
+  sem_mapa?: string[];
+  fonte?: "base" | "busca" | "ambas";
+  campanha?: string;
+  linhas?: PublicoDaBase["linhas"];
+  ja_clientes?: PublicoDaBase["ja_clientes"];
+  duplicadas?: number;
+  para_revisar?: PublicoDaBase["para_revisar"];
+  resumo?: string;
+}
 
 /**
  * O status da campanha nunca chega cru à tela (`rascunho`/`ativa`/`concluida`
@@ -191,6 +216,8 @@ export function CampanhasTab({
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
   const [vas, setVas] = React.useState<CampanhaVa[] | null>(null);
   const [erro, setErro] = React.useState(false);
+  const [publico, setPublico] = React.useState<PublicoDaBase | null>(null);
+  const [disparoAberto, setDisparoAberto] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -218,11 +245,25 @@ export function CampanhasTab({
 
   async function executar(id: string) {
     try {
-      const corpo = await apiClient.post<{ data: { buscas: number; sem_mapa: string[] } | null }>(
+      const corpo = await apiClient.post<{ data: RespostaDaExecucao | null }>(
         `/api/v1/prospecting/campaigns/${id}/executar`,
         {},
       );
       const r = corpo?.data ?? { buscas: 0, sem_mapa: [] as string[] };
+      // Campanha da base não cria busca: devolve o público pronto, com o que
+      // saiu (clientes que a loja já atende, duplicatas) e o resto para
+      // disparar. O envio continua sendo do `disparar`, que é simulação primeiro.
+      if (r.fonte === "base") {
+        setPublico({
+          campanha: r.campanha ?? "",
+          linhas: r.linhas ?? [],
+          ja_clientes: r.ja_clientes ?? [],
+          duplicadas: r.duplicadas ?? 0,
+          para_revisar: r.para_revisar ?? [],
+          resumo: r.resumo ?? "",
+        });
+        return;
+      }
       toast.success(t(`${r.buscas} buscas criadas`));
       if (Array.isArray(r.sem_mapa) && r.sem_mapa.length > 0)
         toast.warning(t(`Sem mapa: ${r.sem_mapa.join(", ")}`));
@@ -291,6 +332,19 @@ export function CampanhasTab({
                       {rotuloDaCampanha(card.campanha.status, t)}
                     </Badge>
                     {card.tipo === "descoberta" &&
+                      (card.campanha.fonte_publico === "base" ||
+                        card.campanha.fonte_publico === "ambas") && (
+                        <Badge
+                          variant="outline"
+                          className="h-5 px-2 text-xs font-normal"
+                          title={t(
+                            "Usa o que já está cadastrado, sem gastar API de busca. As empresas que a loja já atende saem da fila.",
+                          )}
+                        >
+                          {t("Base já coletada")}
+                        </Badge>
+                      )}
+                    {card.tipo === "descoberta" &&
                       podeOperar &&
                       card.campanha.status !== "concluida" && (
                         <Button
@@ -299,7 +353,11 @@ export function CampanhasTab({
                           className="ml-auto"
                           onClick={() => void executar(id)}
                         >
-                          {t("Executar")}
+                          {card.tipo === "descoberta" &&
+                          (card.campanha.fonte_publico === "base" ||
+                            card.campanha.fonte_publico === "ambas")
+                            ? t("Ver público")
+                            : t("Executar")}
                         </Button>
                       )}
                   </div>
@@ -334,6 +392,75 @@ export function CampanhasTab({
           })}
         </ul>
       )}
+
+      {/* O público da base, e o que saiu dele. A tela mostra o número E o
+          motivo: "1.200 empresas" sozinho esconde as 103 que a loja já atende. */}
+      {publico !== null && (
+        <Card className="mt-4 space-y-3 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <strong className="text-sm">{publico.campanha}</strong>
+            <Badge variant="secondary" className="h-5 px-2 text-xs font-normal">
+              {t("Público da base")}
+            </Badge>
+          </div>
+          <p className="text-sm">{publico.resumo}</p>
+          {publico.ja_clientes.length > 0 && (
+            <details className="text-xs">
+              <summary className="cursor-pointer">
+                {t(`${publico.ja_clientes.length} já são clientes — fora da fila`)}
+              </summary>
+              <ul className="mt-1 space-y-0.5">
+                {publico.ja_clientes.slice(0, 40).map((c) => (
+                  <li key={c.nome}>
+                    {c.nome} — {t("igual a")} {c.igual_a} ({c.similaridade.toFixed(2)})
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {publico.para_revisar.length > 0 && (
+            <details className="text-xs">
+              <summary className="cursor-pointer">
+                {t(`${publico.para_revisar.length} com nome parecido — revise`)}
+              </summary>
+              <ul className="mt-1 space-y-0.5">
+                {publico.para_revisar.slice(0, 40).map((c) => (
+                  <li key={c.nome}>
+                    {c.nome} — {t("parecido com")} {c.igual_a} ({c.similaridade.toFixed(2)})
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={publico.linhas.length === 0}
+              onClick={() => setPublico(null)}
+            >
+              {t("Fechar")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={publico.linhas.length === 0}
+              onClick={() => setDisparoAberto(true)}
+            >
+              {t("Preparar disparo")}
+            </Button>
+          </div>
+        </Card>
+      )}
+      <DialogoDisparo
+        ids={publico?.linhas.map((l) => l.id) ?? []}
+        aberto={disparoAberto}
+        onFechar={() => setDisparoAberto(false)}
+        onConcluido={() => {
+          setDisparoAberto(false);
+          setPublico(null);
+          void recarregar();
+        }}
+      />
     </div>
   );
 }

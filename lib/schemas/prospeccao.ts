@@ -162,7 +162,22 @@ export const campanhaCreateSchema = z.object({
     .min(1)
     .max(50),
   recorrencia_dias: z.number().int().min(7).max(365).nullable().optional(),
+  /**
+   * De onde a campanha tira o público (0271). `busca` é o de sempre: fan-out
+   * no provider ativo, gastando API. `base`: o que já está cadastrado em
+   * `business_prospects`, sem API e sem chave. `ambas`: a union.
+   *
+   * O default é `busca` porque campanha que muda de fonte sem o operador pedir
+   * é campanha que manda para a pessoa errada — e o dano (mensagem a cliente
+   * próprio) não volta.
+   */
+  fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
 });
+
+/** A fonte do público é um botão da tela de campanha, não campo de texto. */
+export type FonteDoPublico = NonNullable<
+  z.infer<typeof campanhaCreateSchema>["fonte_publico"]
+>;
 
 /**
  * FASE 10 (§28): objetivo é o único campo editável da campanha por enquanto —
@@ -171,6 +186,8 @@ export const campanhaCreateSchema = z.object({
  */
 export const campanhaPatchSchema = z.object({
   objetivo: z.string().trim().max(300).nullable(),
+  /** 0271 — trocar a fonte do público é decisão do operador, e fica registrada. */
+  fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
 });
 
 export const settingsPutSchema = z.object({

@@ -21644,3 +21644,20 @@ alter table public.automatic_sales_campaigns
 -- já tem RLS e policies, então nada muda sobre quem alcança a tabela.
 alter table public.lead_checkpoints
   add column if not exists foco_produto jsonb;
+
+-- 0271_publico_da_base_na_campanha (apêndice — ver supabase/migrations/20261017000000_0271_publico_da_base_na_campanha.sql)
+--
+-- De onde a campanha tira o público: `busca` (provider ativo, o comportamento
+-- de sempre), `base` (o que já está em business_prospects, sem gastar API) ou
+-- `ambas`. Medido em 2026-10-17: a instalação tinha 21.668 empresas na base e a
+-- campanha enxergava 16, porque a fila da campanha sai das buscas — e a
+-- importação de arquivo não se liga a nenhuma.
+alter table public.prospecting_campaigns
+  add column if not exists fonte_publico text not null default 'busca';
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_fonte_publico_valida;
+
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_fonte_publico_valida
+  check (fonte_publico in ('busca', 'base', 'ambas'));

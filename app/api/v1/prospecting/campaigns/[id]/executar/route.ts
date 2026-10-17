@@ -14,6 +14,14 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { indiceDeClientes } from "@/lib/prospeccao/ja-cadastrada";
+import {
+  LIMITE_PADRAO,
+  publicoDaBase,
+  resumoDaBase,
+  usaBase,
+  usaBusca,
+} from "@/lib/prospeccao/publico-da-base";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -36,7 +44,7 @@ export async function POST(
 
   const { data: campanha } = await supabase
     .from("prospecting_campaigns")
-    .select("id, categorias, cidades, status")
+    .select("id, categorias, cidades, status, fonte_publico")
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
@@ -45,10 +53,62 @@ export async function POST(
     categorias: string[];
     cidades: { cidade: string; estado?: string }[];
     status: string;
+    fonte_publico: string | null;
   } | null;
   if (!camp) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
   if (camp.status === "concluida") {
     return fail("validation_failed", "Campanha concluída.", 422, { requestId });
+  }
+
+  // ═══ FONTE DA BASE (0271): aqui não há o que executar ═══════════════════
+  //
+  // "Executar" é o fan-out de buscas. Numa campanha que tira o público da base
+  // já coletada, criar busca é gastar API para rediscoverar o que a pessoa já
+  // tem na tela — e, pior, é o caminho que medido estava quase parado (5
+  // concluídas, 60 failed, 67 canceladas). Então a resposta é o público, com o
+  // que saiu e por quê, e a instrução de onde disparar. Sem envio: `disparar`
+  // é a rota que envia, e ela é simulação por padrão.
+  if (usaBase(camp.fonte_publico) && !usaBusca(camp.fonte_publico)) {
+    const adminBase = createAdminClient();
+    const clientes = await indiceDeClientes(adminBase, authz.org.orgId);
+    const publico = await publicoDaBase(adminBase, {
+      organizationId: authz.org.orgId,
+      cidades: camp.cidades,
+      categorias: camp.categorias,
+      limite: LIMITE_PADRAO,
+      clientes,
+    });
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "prospecting_campaigns.public_read",
+      resourceType: "prospecting_campaigns",
+      resourceId: camp.id,
+      requestId,
+      metadata: {
+        total: publico.total,
+        ja_clientes: publico.ja_clientes.length,
+        duplicadas: publico.duplicadas,
+        para_revisar: publico.para_revisar.length,
+      },
+    });
+    return ok(
+      {
+        fonte: "base",
+        buscas: 0,
+        total: publico.total,
+        linhas: publico.linhas,
+        ja_clientes: publico.ja_clientes,
+        duplicadas: publico.duplicadas,
+        para_revisar: publico.para_revisar,
+        varridas: publico.varridas,
+        completa: publico.completa,
+        resumo: resumoDaBase(publico),
+        proximo_passo:
+          "Público pronto, sem busca e sem envio. Para mandar, abra Disparo com estas empresas.",
+      },
+      { requestId },
+    );
   }
 
   // Geocodifica no fan-out com o provider ATIVO do tenant (falha rápida

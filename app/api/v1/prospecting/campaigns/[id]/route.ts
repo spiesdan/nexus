@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
 const COLUNAS =
-  "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at";
+  "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -71,7 +71,14 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospecting_campaigns")
-    .update({ objetivo: input.objetivo, updated_at: new Date().toISOString() })
+    .update({
+      // `objetivo` volta como null quando o corpo o traz vazio (contrato do
+      // PATCH); `fonte_publico` só é tocado quando veio — PATCH que não fala
+      // de um campo não reescreve o campo.
+      ...(input.objetivo !== undefined ? { objetivo: input.objetivo } : {}),
+      ...(input.fonte_publico !== undefined ? { fonte_publico: input.fonte_publico } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .select(COLUNAS)
