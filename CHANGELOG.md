@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.27.0] — 2026-10-17
+
+### Adicionado
+
+- **Atendente busca e envia foto do produto no WhatsApp** Quando o cliente pede foto ("tem foto?", "manda foto"), o atendente busca a
+  foto cadastrada do produto e manda na conversa, com o nome do produto como
+  legenda. Sem foto cadastrada, ele avisa em vez de inventar.
+
+  Para ligar: no Agente, abra Capacidades e marque "Pegar foto do produto" e
+  "Enviar foto do produto". A segunda aparece marcada como "efeito que não dá
+  para desfazer" e nunca entra por pacote — é o mesmo cuidado do envio de
+  mensagem.
+
+  A foto é uma cópia do arquivo do catálogo feita para a pasta da conversa: o
+  arquivo original não é mexido, e a foto some da org se o produto for removido.
+
 ## [1.26.4] — 2026-10-16
 
 ### Corrigido
@@ -4337,7 +4353,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.4...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.27.0...HEAD
+[1.27.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.4...v1.27.0
 [1.26.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.3...v1.26.4
 [1.26.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.2...v1.26.3
 [1.26.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.1...v1.26.2
