@@ -39,6 +39,11 @@
  * erro do outro lado.
  */
 import { normalizar } from './busca';
+import {
+  atributosDoNome,
+  complementoDeAtributos,
+  type AtributosDoNome,
+} from './atributos-do-nome';
 
 /** Que tipo de coisa é o produto — o que a pessoa precisa saber antes de comprar. */
 export type TipoProduto = 'simples' | 'kit' | 'acessorio';
@@ -62,6 +67,12 @@ export interface FichaProduto {
   quantidadeEmbalagem: number | null;
   /** Descrição legível, montada só com o que o cadastro tem. Null se não há nada a dizer. */
   descricao: string | null;
+  /**
+   * O que o NOME diz além da medida: material, comprimento, cor, aplicação.
+   * Vazio quando o nome não diz — e é o caso comum: produto cujo nome é só o
+   * nome não ganha atributo inventado.
+   */
+  atributos: AtributosDoNome;
 }
 
 /** Cabeças de nome que são peça/reposição/accessório. */
@@ -298,12 +309,14 @@ export function fichaDoProduto(produto: ProdutoParaFicha): FichaProduto {
   const marca =
     produto.marca && produto.marca.trim().length > 0 ? produto.marca.trim() : null;
 
+  const atributos = atributosDoNome(nome);
   const fatos = (extra?: string): string[] => {
     const lista: string[] = [];
     if (extra !== undefined) lista.push(extra);
     if (medida !== null) lista.push(`Medida: ${medida}.`);
     if (concentracao !== null) lista.push(`Concentração: ${concentracao}.`);
     if (quantidadeEmbalagem !== null) lista.push(`Embalagem com ${quantidadeEmbalagem} unidades.`);
+    lista.push(...complementoDeAtributos(atributos));
     if (marca !== null) lista.push(`Marca: ${marca}.`);
     if (categoria !== null) lista.push(`Categoria: ${categoria}.`);
     return lista;
@@ -336,6 +349,7 @@ export function fichaDoProduto(produto: ProdutoParaFicha): FichaProduto {
       concentracao,
       quantidadeEmbalagem,
       descricao,
+      atributos,
     };
   }
 
@@ -352,6 +366,7 @@ export function fichaDoProduto(produto: ProdutoParaFicha): FichaProduto {
       concentracao,
       quantidadeEmbalagem,
       descricao: fatos('Peça de reposição/acessório.').join(' '),
+      atributos,
     };
   }
 
@@ -369,6 +384,7 @@ export function fichaDoProduto(produto: ProdutoParaFicha): FichaProduto {
     concentracao,
     quantidadeEmbalagem,
     descricao: semInformacao ? null : extras.join(' '),
+    atributos,
   };
 }
 

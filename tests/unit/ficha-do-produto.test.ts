@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 
+import { atributosDoNome } from '@/lib/catalogo/atributos-do-nome';
 import {
   componentesEntreParenteses,
   descricaoParaGravar,
@@ -189,7 +190,42 @@ describe("descricaoParaGravar — o backfill não pisa na palavra da loja", () =
 
   it("produto SEM descrição recebe a gerada", () => {
     expect(descricaoParaGravar({ nome: "CABO DE VASSOURA AVULSO" })).toBe(
-      "Peça de reposição/acessório.",
+      "Peça de reposição/acessório. Características: avulso.",
+    );
+  });
+});
+
+describe("atributos lidos do nome — léxico medido nos 1141", () => {
+  it("⭐ vassoura: material, comprimento e formato saem do nome", () => {
+    expect(fichaDoProduto({ nome: "VASSOURA CERLON 40 CM PLASTICA" }).descricao).toBe(
+      "Produto único. Material: cerlon (plástico rígido), plástico. Comprimento: 40 CM.",
+    );
+  });
+
+  it("luva: material, cor no gênero do nome e caixa fechada", () => {
+    const f = fichaDoProduto({ nome: "LUVA NITRILICA BOMPACK PRETA G(9) C/100" });
+    expect(f.atributos.materiais).toEqual(["nitrilo"]);
+    expect(f.atributos.cores).toEqual(["preta"]);
+    expect(f.atributos.tamanho).toBe("G(9)");
+    expect(f.quantidadeEmbalagem).toBe(100);
+  });
+
+  it("⭐ 'P/' é 'para', NÃO é tamanho P (120 falsos positivos medidos)", () => {
+    expect(atributosDoNome("PAPEL HIG. P/ COZINHA").tamanho).toBeNull();
+    expect(atributosDoNome("CABO EXTENSOR 2 M").tamanho).toBeNull();
+    expect(atributosDoNome("CABOS DE 28 MM").tamanho).toBeNull();
+  });
+
+  it("como é: a variação que muda o produto dentro da categoria", () => {
+    const f = fichaDoProduto({ nome: "CESTO INOX C/TAMPA 10,5L" });
+    expect(f.atributos.materiais).toEqual(["inox"]);
+    expect(f.atributos.caracteristicas).toContain("com tampa");
+    expect(f.medida).toBe("10.5 L");
+  });
+
+  it("grama é aplicação, e o catálogo escreve assim mesmo", () => {
+    expect(fichaDoProduto({ nome: "Vassoura de Grama" }).atributos.aplicacoes).toContain(
+      "jardim/grama",
     );
   });
 });
