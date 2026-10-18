@@ -89,8 +89,18 @@ test("alertas: a rotina cria, o Meu Dia mostra, e resolver tira da tela", async 
   //
   // Por isso o texto tem que ser o de `nao_verificavel` — e este teste falha se
   // alguém trocar o provedor de teste e o alerta passar a prometer o que não sabe.
+  //
+  // ⚠️ A segunda asserção usava exigir a frase ANTIGA — "não tem provedor que
+  // confirme a emissão" — que deixou de existir em `8cba65cdc` (10/10), quando o
+  // alerta passou a nomear a pendência real em vez do provedor. A spec não foi
+  // atualizada junto, e por isso esta linha reprovava desde então: o job `e2e`
+  // ficou vermelho em `253eabd`, `461d3fa` e nos commits desta série, sempre
+  // com o mesmo sintoma, e com a tela já mostrando a frase nova.
+  //
+  // O que se exige agora é o que a tela mostra: a pendência nomeada. E continua
+  // exigindo que o alerta NÃO prometa "Emitir a nota", que é o ponto do teste.
   await expect(bloco).toContainText("a emissão não pode ser conferida");
-  await expect(bloco).toContainText(/não tem provedor que confirme a emissão/);
+  await expect(bloco).toContainText("A instalação não consegue emitir: falta ");
   await expect(bloco).not.toContainText("Emitir a nota");
 
   await page.screenshot({ path: EVIDENCIA, fullPage: true });
