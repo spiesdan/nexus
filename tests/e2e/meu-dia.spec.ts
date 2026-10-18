@@ -14,7 +14,9 @@ let creds: CredsE2E = lerCreds();
  * tarde) com a coluna de contexto. O que esta spec prova de ponta a ponta:
  *
  *  1. a saudação vem do RELÓGIO do navegador (Bom dia/Boa tarde/Boa noite) —
- *     o "Bom dia" fixo à noite era o defeito;
+ *     o "Bom dia" fixo à noite era o defeito. Ela aparece como SUBTÍTULO
+ *     desde 15/10 (`514a9f7c7`), que tirou o layout shift da primeira pintura;
+ *     o `h1` é "Meu Dia" e estático;
  *  2. as tarefas semeadas na rota `/api/v1/tarefas` (a mesma que a tela lê,
  *     com `responsavel=minhas`) caem nos grupos certos;
  *  3. **Concluir** funciona de verdade: PATCH → refetch → a linha some;
@@ -45,6 +47,30 @@ test.beforeAll(() => {
   creds = lerCreds();
 });
 
+/**
+ * A tela carregou — o h1 é "Meu Dia" e a saudação é o SUBTÍTULO.
+ *
+ * ⚠️ Desde `514a9f7c7` (15/10), que trocou a saudação de título para subtítulo
+ * para matar o layout shift da primeira pintura (a saudação dependia do relógio
+ * do navegador e só existia depois do mount, mudando o h1 a cada abertura). O
+ * motivo está escrito no próprio componente.
+ *
+ * A spec continuou exigindo a saudação no `h1`, e por isso ficou **vermelha
+ * desde então** — foi uma das duas specs que derrubaram o job `e2e` em 17/10, em
+ * `253eabd`, antes de qualquer mudança desta série. A saudação continua
+ * existindo e é verificada aqui, agora onde ela mora de verdade.
+ *
+ * O `getByText` é o visível na tela, sem exigir heading: a saudação é texto de
+ * subtítulo e um `getByRole('heading')` sobre ela seria um teste de semântica
+ * que a tela não promete.
+ */
+async function telaCarregada(page: Page): Promise<void> {
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Meu Dia" }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/(Bom dia|Boa tarde|Boa noite)/)).toBeVisible();
+}
+
 test("meu dia: linha do tempo monta, Concluir some a tarefa e a tela não quebra", async ({ page }) => {
   await loginComoDono(page, creds);
 
@@ -64,9 +90,7 @@ test("meu dia: linha do tempo monta, Concluir some a tarefa e a tela não quebra
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/app/meu-dia");
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: /(Bom dia|Boa tarde|Boa noite)/ }),
-  ).toBeVisible({ timeout: 15_000 });
+  await telaCarregada(page);
 
   // Grupos da linha do tempo com as tarefas certas dentro.
   await expect(page.getByRole("heading", { name: /^Atrasado/ })).toBeVisible();
@@ -93,9 +117,7 @@ test("meu dia: linha do tempo monta, Concluir some a tarefa e a tela não quebra
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/app/meu-dia");
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: /(Bom dia|Boa tarde|Boa noite)/ }),
-  ).toBeVisible({ timeout: 15_000 });
+  await telaCarregada(page);
   await expect(page.getByRole("heading", { name: /^Atrasado/ })).toBeVisible();
   await expect(page.getByText(TITULO_ATRASADA)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Mensagens" })).toBeVisible();
