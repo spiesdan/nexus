@@ -27,6 +27,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
+
 import {
   classificar,
   IndiceDeNomes,
@@ -44,6 +46,8 @@ export interface CriterioDaBase {
   categorias: string[];
   /** Estado único, quando a campanha inteira é de uma UF (atalho do filtro). */
   estado: string | null;
+  /** Conjunto já traduzido das categorias aceitas (PT ↔ EN). Opcional. */
+  aceitas?: Set<string>;
 }
 
 export interface ProspectoDaBase {
@@ -105,8 +109,42 @@ export function empresaServe(empresa: ProspectoDaBase, criterio: CriterioDaBase)
   const daEmpresa = [
     ...(empresa.categorias ?? []),
     ...(empresa.categoria ? [empresa.categoria] : []),
-  ].map(semAcento);
-  return criterio.categorias.some((c) => daEmpresa.includes(semAcento(c)));
+  ].map((c) => semAcento(c).trim());
+  const aceitas = criterio.aceitas ?? categoriasAceitas(criterio.categorias);
+  return daEmpresa.some((c) => aceitas.has(c));
+}
+
+/**
+ * As categorias que a campanha aceita, nas DUAS línguas em que a base grava.
+ *
+ * ═══ O MESMO DEFEITO QUE O USUÁRIO APONTOU, COM O NOME ═══
+ *
+ * A base grava o rótulo cru da API do Google — **inglês**: "Auto repair shop",
+ * "Gas station", "Tire repair shop". A campanha é montada em **português**:
+ * "Oficina mecânica", "Posto de combustível", "Borracharia". Comparar as duas
+ * strings direto é o mesmo erro de comparar "Salomon" com "Salomón": medido em
+ * Videira, a campanha "Oficinas - SC" alcançava **1** das 1.268 empresas da
+ * cidade — porque "Oficina mecânica" ≠ "Auto repair shop".
+ *
+ * O mapa PT↔EN já existe (`lib/prospeccao/categoria-pt.ts`) e é o que o filtro
+ * da aba Empresas usa. Aqui é o mesmo mapa: o termo da campanha vira os rótulos
+ * que ele descreve, e cada rótulo entra no conjunto já sem acento.
+ *
+ * ⚠️ NÃO há um segundo passo "tradução exata" varrendo o mapa ao contrário, e
+ * isso foi medido, não assumido: a mutação que o desligou passou a suíte
+ * inteira. `categoriasQueCasam` já compara por `includes` no rótulo em
+ * português, e igualdade ⊂ `includes` — o passo inverso só repetiria o que o
+ * primeiro devolve. É a mesma lição que o passo "tradução exata" da
+ * `categoria-pt.ts` já deu uma vez: código que a mutação não derruba é código
+ * que ninguém sabe se trabalha.
+ */
+export function categoriasAceitas(categorias: string[]): Set<string> {
+  const aceitas = new Set<string>();
+  for (const c of categorias) {
+    aceitas.add(semAcento(c).trim());
+    for (const bruta of categoriasQueCasam(c)) aceitas.add(semAcento(bruta).trim());
+  }
+  return aceitas;
 }
 
 /** Critério a partir da campanha, já com o estado abreviado quando é um só. */
@@ -119,6 +157,10 @@ export function criterioDaCampanha(input: {
     cidades: input.cidades,
     categorias: input.categorias,
     estado: estados.length === 1 ? estados[0]! : null,
+    // Traduzido UMA vez por campanha, não por linha: a base tem 21.668 linhas
+    // e o mapa tem 536 rótulos — refazer isso por linha seria 11 milhões de
+    // comparações por clique.
+    aceitas: categoriasAceitas(input.categorias),
   };
 }
 
