@@ -8,6 +8,33 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.29.2] — 2026-10-18
+
+### Corrigido
+
+- **Dá para apagar uma organização que tem agente com lead atribuído** Se você tinha um agente de IA atendendo um lead e apagava a empresa inteira, o
+  sistema recusava a exclusão com um erro de banco de dados, sem dizer o que
+  aconteceria. A causa era o registro automático do evento "lead sem dono": ele
+  tentava gravar o histórico depois que a empresa já tinha sido removida, e a
+  gravação era barrada.
+
+  Resolvido: o registro automático agora reconhece que a empresa já não existe mais
+  e deixa passar, exatamente como a auditoria já fazia. Nada no seu dado muda — é
+  só a exclusão de uma empresa inteira que deixa de travar no meio do caminho.
+
+- **O aviso de pendência fiscal some da tela do Meu Dia** Se a sua configuração fiscal tivesse **uma única** pendência — o CNPJ preenchido
+  e o código do município faltando, por exemplo, que é como toda instalação começa
+  — o aviso do Meu Dia **não aparecia**. Não por Cosplay: a tela abria normal, sem
+  aquele bloco, como se não houvesse nada a fazer.
+
+  A causa era um erro de programação numa frase que monta o aviso: ela montava uma
+  lista com dois campos e, quando só havia um, tentava ler o segundo. O erro era
+  engolido de propósito — o alerta do dia é feito de várias partes independentes, e
+  uma parte com problema não pode derrubar as outras — e o efeito foi o aviso sumir
+  em silêncio. Quem olhasse o Meu Dia concluía que estava tudo em dia.
+
+  Agora o aviso aparece com o nome do que falta, seja uma pendência só ou várias.
+
 ## [1.29.1] — 2026-10-18
 
 ### Corrigido
@@ -4478,7 +4505,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.2...HEAD
+[1.29.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...v1.29.2
 [1.29.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.27.0...v1.28.0
