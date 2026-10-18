@@ -67,7 +67,27 @@ export interface LinhaDaBase extends ProspectoDaBase {
 
 /** Teto de linhas por página — o limite do PostgREST é 1000. */
 export const LIMITE_POR_PAGINA = 1000;
-export const MAX_PAGINAS = 10;
+/**
+ * Quantas páginas a varredura lê no máximo.
+ *
+ * ═══ POR QUE 50, E NÃO 10 ════════════════════════════════════════════════
+ *
+ * Medido em 18/10/2026 com a base real (21.668 empresas, `scripts/prova-publico-
+ * da-campanha.ts`): com 10 páginas a varredura lia **10.000 linhas** e a
+ * campanha "Videira × mecânica" alcançava **62** empresas — quando as 123 que
+ * servem à campanha estavam todas na base. Metade da fila sumia, e não por
+ * critério nenhum: por a janela acabar antes.
+ *
+ * Pior que o número: a consulta NÃO tinha `order by`, então *quais* 10.000
+ * entram é a ordem física da tabela. Uma reorganização do Postgres mudaria a
+ * fila sem mudar um dado — o mesmo defeito do "Salomon"/"Salomón", agora na
+ * ordem de leitura. Por isso a janela tem ordem explícita e o teto é largo o
+ * bastante para a base do dono caber inteira (50 páginas = 50.000 linhas).
+ *
+ * Teto continua existindo: `completa: false` avisa quando não deu, e a tela
+ * mostra. Silêncio era o defeito.
+ */
+export const MAX_PAGINAS = 50;
 export const LIMITE_PADRAO = 500;
 export const LIMITE_MAXIMO = 5000;
 
@@ -164,16 +184,44 @@ export function criterioDaCampanha(input: {
   };
 }
 
-/** Uma consulta só, com o que o Postgres filtra bem: org, opt-out e WhatsApp. */
-function consultaDaBase(supabase: SupabaseClient, org: string, comWhatsapp: boolean) {
+/**
+ * Uma consulta só, com o que o Postgres filtra bem: org, opt-out, WhatsApp —
+ * e a UF, quando a campanha inteira é de uma.
+ *
+ * ⚠️ O `order("id")` NÃO é enfeite: sem ele a paginação por `range` caminha
+ * pela ordem física da tabela, e a janela de leitura deixa de ser um conjunto
+ * estável entre uma execução e outra. Medido em 18/10/2026: sem ordem, a
+ * campanha de Videira alcançava 62 de 123 empresas — e quais 62 dependia de
+ * quando o Postgres reorganizou a tabela.
+ *
+ * O filtro por UF vale quando `criterio.estado` existe, e só então: é
+ * exatamente a mesma condição que `empresaServe` exige (cidade bate E, se a
+ * campanha declarou uma UF, a UF bate). Campanha com duas ou mais UFs fica sem
+ * filtro de estado aqui — para não excluir uma empresa que a regra de negócio
+ * aceitaria, e porque o nome da cidade sozinho já é seletivo.
+ */
+function consultaDaBase(
+  supabase: SupabaseClient,
+  org: string,
+  comWhatsapp: boolean,
+  uf: string | null,
+) {
   let q = supabase
     .from("business_prospects")
     .select(
       "id, nome, telefone, cidade, estado, categoria, categorias, whatsapp_potencial, do_not_contact",
     )
     .eq("organization_id", org)
-    .eq("do_not_contact", false);
+    .eq("do_not_contact", false)
+    .order("id", { ascending: true });
   if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
+  if (uf !== null && uf !== "") {
+    // `in`, e não `ilike`: a UF da campanha é do operador e pode vir com `%`
+    // colado de uma planilha — `ilike` trataria isso como curinga e a varredura
+    // leria o país inteiro. Três valores porque a base grava caixa inconsistente.
+    const variantes = [...new Set([uf, uf.toLowerCase(), uf.toUpperCase()])];
+    q = q.in("estado", variantes);
+  }
   return q;
 }
 
@@ -212,6 +260,39 @@ export interface ResultadoDaBase {
  * WhatsApp — campanha de prospecção é WhatsApp, e telefone fixo aqui é
  * mensagem que não sai.
  */
+/**
+ * A ocorrência de uma chave (nome normalizado + cidade) que já foi vista.
+ *
+ * `linha` é o índice dentro de `linhas` — e é ele que permite a troca quando a
+ * duplicata posterior tem telefone melhor. `null` significa que aquela
+ * ocorrência saiu da fila por ser cliente: aí não há linha para substituir.
+ */
+interface VistaDaDuplicata {
+  nome: string;
+  telefone: string | null;
+  whatsapp: boolean;
+  linha: number | null;
+}
+
+/**
+ * A linha nova vale mais que a que ficou na fila?
+ *
+ * Só em dois casos, e nenhum deles piora o resultado:
+ * 1. a que ficou está sem telefone e a nova tem;
+ * 2. as duas têm telefone, mas a nova tem WhatsApp potencial e a que ficou
+ *    não — porque WhatsApp potencial é o que o Disparo de fato envia.
+ */
+function valeMais(
+  telNovo: string | null,
+  waNovo: boolean,
+  telVisto: string | null,
+  waVisto: boolean,
+): boolean {
+  if (telNovo === null) return false;
+  if (telVisto === null) return true;
+  return !waVisto && waNovo;
+}
+
 export async function publicoDaBase(
   supabase: SupabaseClient,
   input: {
@@ -236,9 +317,14 @@ export async function publicoDaBase(
   const jaClientes: ResultadoDaBase["ja_clientes"] = [];
   const paraRevisar: ResultadoDaBase["para_revisar"] = [];
   // Duplicata interna: chave + cidade já vistas NESTA varredura. A segunda
-  // ocorrência sai — mandar duas vezes para a mesma empresa é o erro que o
+  // ocorrência SAI — mandar duas vezes para a mesma empresa é o erro que o
   // operador vê ("recebi duas mensagens") e que nenhuma tela contava.
-  const vistas = new Map<string, string>();
+  //
+  // `linha` é o índice em `linhas` (ou null quando a ocorrência saiu por ser
+  // cliente) para que a duplicata com telefone melhor POSSA substituir a que
+  // ficou. Ver o comentário do `valeMais` lá embaixo: sem isso a fila dependia
+  // da ordem de leitura, que muda a cada execução porque o id é uuid.
+  const vistas = new Map<string, VistaDaDuplicata>();
   let duplicadas = 0;
   for (let pagina = 0; pagina < MAX_PAGINAS && linhas.length < limite; pagina++) {
     const de = pagina * LIMITE_POR_PAGINA;
@@ -246,6 +332,7 @@ export async function publicoDaBase(
       supabase,
       input.organizationId,
       input.somenteWhatsapp ?? true,
+      criterio.estado,
     ).range(de, de + LIMITE_POR_PAGINA - 1);
     if (error) throw new Error(`base_indisponivel: ${error.message}`);
     const lote = (data ?? []) as unknown as LinhaDaBase[];
@@ -255,12 +342,51 @@ export async function publicoDaBase(
       if (!empresaServe(e, criterio)) continue;
 
       const chave = `${chaveDeNome(e.nome)}|${chaveDeNome(e.cidade ?? "")}`;
-      const primeira = vistas.get(chave);
-      if (primeira !== undefined) {
+      const vista = vistas.get(chave);
+      if (vista !== undefined) {
         duplicadas += 1;
+        // ═══ DUPLICATA: VENCE A QUE TEM TELEFONE, NÃO A QUE CHEGOU PRIMEIRO ══
+        //
+        // A varredura é paginada por `id`, e o id é uuid — ou seja, a ordem de
+        // leitura MUDA a cada execução. Venceu a primeira, a fila mudava sem
+        // mudar um dado: medido em 18/10/2026, duas execuções da mesma campanha
+        // deram 16 e 17 empresas sem telefone na fila. Uma fila que muda sozinha
+        // não é uma fila: é uma loteria, e o operador não sabe o que vai mandar.
+        //
+        // A troca é só quando a nova linha é melhor (tem telefone, ou tem
+        // WhatsApp potencial), então nunca piora a anterior. E não re-roda a
+        // checagem de cliente: as duas linhas têm o MESMO nome normalizado e a
+        // MESMA cidade — o veredito é o mesmo por construção.
+        if (
+          vista.linha !== null &&
+          valeMais(e.telefone, e.whatsapp_potencial, vista.telefone, vista.whatsapp)
+        ) {
+          linhas[vista.linha] = {
+            id: e.id,
+            nome: e.nome,
+            telefone: e.telefone,
+            cidade: e.cidade,
+            categoria: e.categoria,
+          };
+          vistas.set(chave, {
+            nome: e.nome,
+            telefone: e.telefone,
+            whatsapp: e.whatsapp_potencial,
+            linha: vista.linha,
+          });
+        }
         continue;
       }
-      vistas.set(chave, e.nome);
+      // Registrada ANTES da checagem de cliente: a chave precisa existir mesmo para
+      // a ocorrência que sair por ser cliente — senão a próxima duplicata dela
+      // seria tratada como empresa nova e entraria na fila. O `linha` é corrigido
+      // nos dois desfechos abaixo (cliente → null, entrou na fila → o índice).
+      vistas.set(chave, {
+        nome: e.nome,
+        telefone: e.telefone,
+        whatsapp: e.whatsapp_potencial,
+        linha: null,
+      });
 
       if (input.clientes) {
         const candidatos = input.clientes.candidatos(e.nome, e.cidade, e.estado);
@@ -272,6 +398,7 @@ export async function publicoDaBase(
             igual_a: veredito.comQuem ?? "",
             similaridade: veredito.similaridade,
           });
+          vistas.set(chave, { nome: e.nome, telefone: e.telefone, whatsapp: e.whatsapp_potencial, linha: null });
           continue;
         }
         if (veredito.estado === "revisar") {
@@ -290,6 +417,12 @@ export async function publicoDaBase(
         telefone: e.telefone,
         cidade: e.cidade,
         categoria: e.categoria,
+      });
+      vistas.set(chave, {
+        nome: e.nome,
+        telefone: e.telefone,
+        whatsapp: e.whatsapp_potencial,
+        linha: linhas.length - 1,
       });
       if (linhas.length >= limite) break;
     }

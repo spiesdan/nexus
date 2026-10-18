@@ -16,10 +16,17 @@
  *
  *  1. `empresaServe` voltar a comparar `daEmpresa.includes(criterio)` → reprova
  *     5 testes ("a campanha em português alcança o rótulo em inglês da base")
- *  2. `criterioDaCampanha` NÃO pré-computar `aceitas` → reprova "traduz uma vez
+ *  2. a consulta perder o `order("id")` → reprova "ordena por id" — sem ele a
+ *     janela de leitura é ordem física de tabela, que muda sem mudar um dado
+ *  3. a UF da campanha parar de ir para a consulta → reprova "empurra o estado
+ *     para o banco" (a varredura de uma campanha de SC leria a base inteira)
+ *  4. duplicata voltar a ser "primeira chegada vence" → reprova os dois casos
+ *     de desempate (a fila mudava de execução para execução, medido: 16 e 17
+ *     empresas sem telefone em duas rodadas)
+ *  5. `criterioDaCampanha` NÃO pré-computar `aceitas` → reprova "traduz uma vez
  *     por campanha": 21.668 linhas × 536 rótulos é trabalho que a tela paga a
  *     cada clique
- *  3. `semAcento` deixar de tirar acento em `chaveDeCidade` → reprova "cidade
+ *  6. `semAcento` deixar de tirar acento em `chaveDeCidade` → reprova "cidade
  *     com acento casa com a que o operador digitou sem"
  *
  * E uma medição que tirou código, não confirmou: `categoriasAceitas` tinha um
@@ -31,14 +38,20 @@
  */
 import { describe, expect, it } from "vitest";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
 
 import {
+  LIMITE_POR_PAGINA,
+  MAX_PAGINAS,
   categoriasAceitas,
   chaveDeCidade,
   criterioDaCampanha,
   empresaServe,
+  publicoDaBase,
   type CriterioDaBase,
+  type LinhaDaBase,
   type ProspectoDaBase,
 } from "@/lib/prospeccao/publico-da-base";
 
@@ -203,5 +216,159 @@ describe("criterioDaCampanha", () => {
     const c = criterioDaCampanha({ cidades: [{ cidade: "Videira" }], categorias: ["Oficina mecânica"] });
     expect(c.aceitas).toBeInstanceOf(Set);
     expect(c.aceitas?.has("auto repair shop")).toBe(true);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  A CONSULTA — o que o Postgres filtra antes de a decisão rodar em JS.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Um cliente Supabase que NÃO consulta nada: registra a cadeia de filtros e
+ * devolve as páginas que o teste mandar. É o jeito de olhar a consulta sem
+ * banco — e é a consulta que decide *quais* linhas a decisão em JS chega a ver.
+ */
+function clienteFalso(paginas: Array<Array<Partial<LinhaDaBase>>>) {
+  const chamadas: Array<{ metodo: string; args: unknown[] }> = [];
+  const cliente = {
+    from(tabela: string) {
+      chamadas.push({ metodo: "from", args: [tabela] });
+      return cliente;
+    },
+    select(...args: unknown[]) {
+      chamadas.push({ metodo: "select", args });
+      return cliente;
+    },
+    eq(...args: unknown[]) {
+      chamadas.push({ metodo: "eq", args });
+      return cliente;
+    },
+    in(...args: unknown[]) {
+      chamadas.push({ metodo: "in", args });
+      return cliente;
+    },
+    order(...args: unknown[]) {
+      chamadas.push({ metodo: "order", args });
+      return cliente;
+    },
+    range(de: number, ate: number) {
+      chamadas.push({ metodo: "range", args: [de, ate] });
+      return Promise.resolve({ data: paginas[de / 1000] ?? [], error: null });
+    },
+  };
+  return { cliente: cliente as unknown as SupabaseClient, chamadas };
+}
+
+/** Uma linha que serve à campanha de Videira × Oficina mecânica. */
+function servindo(i: number): Partial<LinhaDaBase> {
+  return {
+    id: `id-${i}`,
+    nome: `Mecânica ${i}`,
+    telefone: "+554935660000",
+    cidade: "Videira",
+    estado: "SC",
+    categoria: "Auto repair shop",
+    categorias: [],
+    whatsapp_potencial: true,
+    do_not_contact: false,
+  };
+}
+
+describe("publicoDaBase — a consulta", () => {
+  it("ordena por id: sem isso a janela de leitura muda quando o Postgres muda", () => {
+    const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
+    return publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+    }).then(() => {
+      expect(chamadas.some((c) => c.metodo === "order" && c.args[0] === "id")).toBe(true);
+    });
+  });
+
+  it("campanha de uma UF empurra o estado para o banco", () => {
+    const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
+    return publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+    }).then(() => {
+      const filtroUf = chamadas.find((c) => c.metodo === "in" && c.args[0] === "estado");
+      // Sem o filtro, a varredura de uma campanha de SC lê a base inteira.
+      expect(filtroUf, "a UF da campanha não foi para a consulta").toBeDefined();
+      expect(filtroUf!.args[1]).toEqual(expect.arrayContaining(["SC", "sc"]));
+    });
+  });
+
+  it("campanha de duas UFs NÃO filtra estado — a regra em JS aceita qualquer estado", () => {
+    const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
+    return publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [
+        { cidade: "Videira", estado: "SC" },
+        { cidade: "Curitiba", estado: "PR" },
+      ],
+      categorias: ["Oficina mecânica"],
+    }).then(() => {
+      expect(chamadas.some((c) => c.metodo === "in" && c.args[0] === "estado")).toBe(false);
+    });
+  });
+
+  it("base maior que o teto diz que NÃO leu tudo", async () => {
+    // 51 páginas de 1.000 linhas que NÃO servem à campanha: a varredura tem de
+    // chegar ao fim do teto sem nunca encher a fila, e é aí que ela declara
+    // `completa: false`. É o número que a tela mostra quando falta base.
+    const paginas: Array<Array<Partial<LinhaDaBase>>> = [];
+    for (let p = 0; p < MAX_PAGINAS + 1; p++) {
+      paginas.push(Array.from({ length: LIMITE_POR_PAGINA }, (_, i) => ({
+        ...servindo(p * 1000 + i),
+        categoria: "Pharmacy", // fora da campanha
+      })));
+    }
+    const { cliente } = clienteFalso(paginas);
+    const r = await publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+      limite: 5000,
+    });
+    expect(r.completa).toBe(false);
+    expect(r.varridas).toBe(MAX_PAGINAS * LIMITE_POR_PAGINA);
+    expect(r.total).toBe(0);
+  });
+
+  it("entre duas duplicatas vence a que tem telefone — e a ordem de leitura não decide", async () => {
+    // A ordem de leitura é por `id`, e id é uuid: muda a cada execução. Medido
+    // em 18/10/2026 — duas execuções da mesma campanha deram 16 e 17 empresas
+    // sem telefone na fila. Aqui a duplicata SEM telefone vem PRIMEIRO, que é
+    // o caso que a "primeira chegada vence" resolvia errado.
+    const semTel = { ...servindo(1), id: "a", nome: "Mecânica Aliança", telefone: null };
+    const comTel = { ...servindo(2), id: "b", nome: "Mecânica Aliança", telefone: "+5549998887777" };
+    for (const lote of [[semTel, comTel], [comTel, semTel]]) {
+      const { cliente } = clienteFalso([lote]);
+      const r = await publicoDaBase(cliente, {
+        organizationId: "org",
+        cidades: [{ cidade: "Videira", estado: "SC" }],
+        categorias: ["Oficina mecânica"],
+      });
+      expect(r.total, "a duplicata entrou duas vezes").toBe(1);
+      expect(r.duplicadas).toBe(1);
+      expect(r.linhas[0]?.telefone, "a fila ficou com a linha sem telefone").toBe(
+        "+5549998887777",
+      );
+    }
+  });
+
+  it("entre duas duplicatas com telefone vence a que tem WhatsApp potencial", async () => {
+    const fixa = { ...servindo(1), id: "a", nome: "Mecânica Aliança", telefone: "+554833334444", whatsapp_potencial: false };
+    const movel = { ...servindo(2), id: "b", nome: "Mecânica Aliança", telefone: "+5549998887777", whatsapp_potencial: true };
+    const { cliente } = clienteFalso([[fixa, movel]]);
+    const r = await publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+    });
+    expect(r.total).toBe(1);
+    expect(r.linhas[0]?.telefone).toBe("+5549998887777");
   });
 });
