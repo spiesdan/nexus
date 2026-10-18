@@ -229,10 +229,14 @@ async function medir(rotulo: string, somenteWhatsapp: boolean) {
 
 /** Todas as linhas da organização, paginadas de verdade (o PostgREST corta em 1.000). */
 async function lerBase(): Promise<
-  Array<{ id: string; nome: string; cidade: string | null; estado: string | null; categoria: string | null; telefone: string | null; whatsapp_potencial: boolean }>
+  Array<{ id: string; nome: string; cidade: string | null; estado: string | null; categoria: string | null; telefone: string | null; telefone_normalizado: string | null; whatsapp_potencial: boolean }>
 > {
-  const COLS = "id, nome, cidade, estado, categoria, telefone, whatsapp_potencial";
-  const todas: Array<{ id: string; nome: string; cidade: string | null; estado: string | null; categoria: string | null; telefone: string | null; whatsapp_potencial: boolean }> = [];
+  // `telefone_normalizado` vem junto porque é o que o Disparo lee — o
+  // planejador revalida o número nele, e medir com o telefone cru daria um
+  // número diferente do que a tela mostra.
+  const COLS =
+    "id, nome, cidade, estado, categoria, telefone, telefone_normalizado, whatsapp_potencial";
+  const todas: Array<{ id: string; nome: string; cidade: string | null; estado: string | null; categoria: string | null; telefone: string | null; telefone_normalizado: string | null; whatsapp_potencial: boolean }> = [];
   for (let de = 0; ; de += 1000) {
     const { data, error } = await admin
       .from("business_prospects")
@@ -339,6 +343,53 @@ process.stdout.write(
 process.stdout.write(
   `   ⚠️ das ${naFila.length - semTelefone - comWaPotencial} que têm telefone mas NÃO têm WhatsApp potencial, ` +
     `a grande parte é FIXO (a regra libera só celular com 9): telefone fixo aqui é número que a mensagem não alcança.\n\n`,
+);
+
+// ─── A SIMULAÇÃO DO DISPARO ─────────────────────────────────────────────────
+// A fila só "funciona" se os ids dela chegarem ao planejador de envio. Rodamos
+// o planejador de verdade (o mesmo de POST /prospects/disparar, `dry_run` por
+// padrão) sobre os ids da fila: o que sai de fato. É o número que responde
+// "amanhã sai mensagem?" — e imprime os motivos de cada recusa, porque uma
+// recusa sem motivo é o mesmo silêncio que a tela esconde.
+const { planejarDisparo, ROTULO_DA_RECUSA, LIMITE_PADRAO_DIA, ESPACO_PADRAO_MS } = await import(
+  "@/lib/prospeccao/disparo"
+);
+const plano = planejarDisparo(
+  naFila.map((l) => ({
+    id: l.id,
+    nome: l.nome,
+    telefone_normalizado: l.telefone_normalizado ?? null,
+    do_not_contact: false,
+    bloqueado: false,
+    whatsapp_potencial: l.whatsapp_potencial,
+    status_comercial: "novo",
+    contact_id: null,
+    contatoBloqueado: false,
+    consentRecusado: false,
+    conversaAberta: false,
+    mensagemRecente: false,
+  })),
+  {
+    limite: LIMITE_PADRAO_DIA,
+    jaEnviadosHoje: 0,
+    espacoMs: ESPACO_PADRAO_MS,
+    sessaoWorking: true, // isolado: o que a sessão real faz é tema da outra prova
+  },
+);
+const porMotivo = new Map<string, number>();
+for (const r of plano.recusados) porMotivo.set(r.motivo, (porMotivo.get(r.motivo) ?? 0) + 1);
+process.stdout.write("── a simulação do Disparo (o planejador de verdade, dry_run)\n");
+process.stdout.write(
+  `   ${semWa.linhas.length} na fila → ${plano.aprovados.length} aprovados para envio` +
+    ` (cota padrão ${LIMITE_PADRAO_DIA}/dia, ${ESPACO_PADRAO_MS} ms de intervalo)\n`,
+);
+for (const [motivo, n] of [...porMotivo].sort((a, b) => b[1] - a[1])) {
+  process.stdout.write(`   − ${n} recusados: ${ROTULO_DA_RECUSA[motivo as never] ?? motivo}\n`);
+}
+process.stdout.write(
+  `   duração prevista: ${(plano.duracaoPrevistaMs / 1000).toFixed(1)} s` +
+    (plano.bloqueio ? ` · BLOQUEADO: ${plano.bloqueio}` : "") +
+    "\n\n",
 );
 
 process.stdout.write("primeiras 10 da fila (o que o Disparo receberia):\n");
