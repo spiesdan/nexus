@@ -8,6 +8,45 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.29.1] — 2026-10-18
+
+### Corrigido
+
+- **Campanha alcança a empresa pela categoria que a base gravou** A aba Campanhas filtrava a categoria comparando o texto da campanha com o texto
+  gravado na base, letra por letra. Só que a base guarda o rótulo que a API do
+  Google devolveu, **em inglês** ("Auto repair shop", "Gas station", "Tire repair
+  shop"), e a campanha é montada em português ("Oficina mecânica", "Posto de
+  combustível", "Borracharia"). O resultado era uma fila quase vazia sem aviso
+  nenhum: medido em Videira/SC, a campanha "Oficinas - SC" alcançava **1** das
+  1.268 empresas da cidade.
+
+  Agora as duas pontas falam a mesma língua. O termo da campanha é convertido nos
+  rótulos que ele descreve, pelo mesmo mapa de tradução que o filtro da aba
+  Empresas já usava — e a tradução é feita uma vez por campanha, não uma vez por
+  empresa da base. Categoria fora da campanha continua fora, e empresa sem
+  categoria continua fora.
+
+- **A fila da campanha para de depender da ordem em que o banco entrega as linhas** Medido na sua base (21.668 empresas) com a campanha de Videira: a tela mostrava
+  62 empresas quando 123 serviam à campanha. A fila não estava certa por critério
+  nenhum — a varredura lia as primeiras 10.000 linhas da base e parava, e como a
+  consulta não tinha ordem definida, *quais* 10.000 eram essas dependia da ordem
+  física da tabela.
+
+  Agora a varredura:
+
+  - lê a base inteira (teto de 50 páginas = 50.000 linhas), na ordem do `id`, que
+    é estável;
+  - empurra o estado para o banco quando a campanha é de uma UF só, o que corta a
+    varredura pela metade sem mudar a regra;
+  - e, quando duas empresas têm o mesmo nome na mesma cidade, vence a que tem
+    telefone — antes vencia a que aparecesse primeiro, e a ordem de leitura muda
+    a cada execução. Duas rodadas da mesma campanha davam 16 e 17 empresas sem
+    telefone na fila; agora dão sempre as mesmas.
+
+  Videira × {Oficina mecânica, Borracharia, Autopeças, Posto de combustível}:
+  84 empresas na fila, 68 com telefone e 27 com WhatsApp potencial — as 27 são
+  as que o Disparo envia.
+
 ## [1.29.0] — 2026-10-17
 
 ### Adicionado
@@ -4439,7 +4478,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...HEAD
+[1.29.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.27.0...v1.28.0
 [1.27.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.26.4...v1.27.0
