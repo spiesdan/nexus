@@ -44,7 +44,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await pool.query("delete from organizations where id = any($1)", [[ORG, ORG2]]);
+  await pool.query("delete from organizations where id = any($1)", [
+    [ORG, ORG2, "de1e7e00-0000-4000-8000-000000000003"],
+  ]);
   await pool.end();
 });
 
@@ -87,6 +89,80 @@ describe("apagar uma ORGANIZAÇÃO", () => {
       [ORG],
     );
     expect(depois[0]!.n).toBe("0");
+  });
+});
+
+describe("apagar uma organização que tem agente COM LEAD atribuido", () => {
+  it("funciona — o caso que os dois testes acima deixavam de fora (0272)", async () => {
+    // ═══ O BURACO QUE ESTE CASO FECHA ═══════════════════════════════════════
+    //
+    // O teste de cima apaga a organização com um agente ÓRFÃO — sem lead. O
+    // agente é o único que dispara `fn_audit_log_row`, e por isso ele mede
+    // qualquer coisa que o cascade faça com ele.
+    //
+    // Mas existe um segundo gatilho em `ai_agents` que SÓ dispara com lead
+    // atribuído: `fn_liberar_leads_do_agente`, que zera `crm_leads.owner_*`. O
+    // UPDATE no lead aciona `fn_emit_event_on_lead_change` → `emit_event` →
+    // INSERT em `event_log` **com a organização já removida dentro do mesmo
+    // cascade** → FK violation, transação inteira abortada.
+    //
+    // Medido em 2026-10-18 na instalação do usuário, limpando 13 organizações de
+    // teste que o E2E tinha escrito na produção:
+    //
+    //   ERROR: insert or update on table "event_log" violates foreign key
+    //          constraint "event_log_organization_id_fkey"
+    //   CONTEXT: fn_emit_event_on_lead_change() … fn_liberar_leads_do_agente()
+    //            … DELETE FROM ONLY "public"."ai_agents"
+    //
+    // Ou seja: **a organização era indeponível de apagar**, e nada no repo
+    // vigiava — os dois testes acima passavam, e passariam para sempre, porque
+    // nenhum dos dois tinha lead no caminho.
+    const ORG3 = "de1e7e00-0000-4000-8000-000000000003";
+    const agente = "de1e7e00-0000-4000-8000-0000000000e2";
+    const pipeline = "de1e7e00-0000-4000-8000-0000000000b2";
+    const stage = "de1e7e00-0000-4000-8000-0000000000c3";
+    const lead = "de1e7e00-0000-4000-8000-0000000000d2";
+
+    await criarOrg(ORG3, "org-delete-3");
+    await pool.query(
+      `insert into ai_agents (id, organization_id, name, kind, system_prompt, model)
+       values ($1, $2, 'Agente com lead', 'mcp_agent', 'oi', 'claude-sonnet-4-6')
+       on conflict (id) do nothing`,
+      [agente, ORG3],
+    );
+    await pool.query(
+      `insert into crm_pipelines (id, organization_id, name, slug) values ($1, $2, 'Funil do lead', 'funil-do-lead')
+       on conflict (id) do nothing`,
+      [pipeline, ORG3],
+    );
+    await pool.query(
+      `insert into crm_stages (id, organization_id, pipeline_id, name, slug, position)
+       values ($1, $2, $3, 'Etapa', 'etapa-do-lead', 1) on conflict (id) do nothing`,
+      [stage, ORG3, pipeline],
+    );
+    // O lead ATRIBUÍDO ao agente. Sem esta linha o caso mede nada: é a
+    // atribuição que faz `fn_liberar_leads_do_agente` ter linha para atualizar.
+    await pool.query(
+      `insert into crm_leads (id, organization_id, pipeline_id, stage_id, title, owner_kind, owner_agent_id)
+       values ($1, $2, $3, $4, 'Lead que derruba o delete da org', 'ai', $5)
+       on conflict (id) do nothing`,
+      [lead, ORG3, pipeline, stage, agente],
+    );
+
+    const { rows: controle } = await pool.query<{ owner_agent_id: string | null }>(
+      "select owner_agent_id from crm_leads where id = $1",
+      [lead],
+    );
+    expect(controle[0]!.owner_agent_id, "controle: o lead precisa estar atribuído ao agente").toBe(agente);
+
+    // O delete DIRETO da organização, com cascade e tudo.
+    await expect(pool.query("delete from organizations where id = $1", [ORG3])).resolves.toBeDefined();
+
+    const { rows: depois } = await pool.query<{ n: string }>(
+      "select count(*) as n from organizations where id = $1",
+      [ORG3],
+    );
+    expect(depois[0]!.n, "a organização tem de ter desaparecido").toBe("0");
   });
 });
 

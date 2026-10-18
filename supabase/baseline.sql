@@ -21661,3 +21661,61 @@ alter table public.prospecting_campaigns
 alter table public.prospecting_campaigns
   add constraint prospecting_campaigns_fonte_publico_valida
   check (fonte_publico in ('busca', 'base', 'ambas'));
+
+-- 0272_emit_event_guarda_organizacao_inexistente (apêndice — ver supabase/migrations/20261018120000_0272_emit_event_guarda_organizacao_inexistente.sql)
+--
+-- Apagar uma organização que tivesse agente de IA com lead atribuído falhava com
+-- FK violation em `event_log`: o CASCADE chega em `ai_agents`, o gatilho BEFORE
+-- DELETE zera `crm_leads.owner_*`, e o UPDATE no lead dispara `emit_event` — que
+-- tentava gravar um evento para uma organização já removida dentro do mesmo
+-- cascade. Medido em 2026-10-18 na instalação do usuário, ao remover 13
+-- organizações de teste que o E2E tinha escrito na produção.
+--
+-- A guarda é a MESMA que `fn_audit_log_row` já tem no ramo DELETE: registro de um
+-- tenant que está indo embora não tem consumidor. Fica em `emit_event` (e não em
+-- cada gatilho) porque é o único funil — `fn_log_event` e todos os gatilhos passam
+-- por ele. Depois da checagem de papel, não antes: quem chamou autenticado e sem
+-- papel tem de ser recusado, não absorvido por esta guarda.
+CREATE OR REPLACE FUNCTION "public"."emit_event"("p_event_type" "text", "p_entity_kind" "text", "p_entity_id" "uuid", "p_payload" "jsonb" DEFAULT '{}'::"jsonb", "p_metadata" "jsonb" DEFAULT '{}'::"jsonb", "p_organization_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_org_id uuid;
+  v_event_id uuid;
+begin
+  v_org_id := p_organization_id;
+  if v_org_id is null then
+    -- Try to resolve from caller's first org (best-effort; trigger callers MUST pass it)
+    select organization_id into v_org_id
+      from public.user_organizations
+      where user_id = auth.uid() and revoked_at is null
+      limit 1;
+  end if;
+  if v_org_id is null then
+    raise exception 'emit_event: organization_id obrigatorio';
+  end if;
+
+  if auth.uid() is not null
+     and not public.fn_role_at_least(v_org_id, 'viewer') then
+    raise exception 'caller_not_authorized_for_org'
+      using hint = 'emit_event: caller must be an active member of the organization';
+  end if;
+
+  -- Organização indo embora (cascade em curso): o evento não teria consumidor, e a
+  -- FK de event_log reprovaria o INSERT — abortando a exclusão da org inteira.
+  if not exists (select 1 from public.organizations where id = v_org_id) then
+    return null;
+  end if;
+
+  insert into public.event_log
+    (organization_id, event_type, entity_kind, entity_id, payload, metadata)
+  values
+    (v_org_id, p_event_type, p_entity_kind, p_entity_id,
+     coalesce(p_payload, '{}'::jsonb),
+     coalesce(p_metadata, '{}'::jsonb)
+       || jsonb_build_object('emitted_at', extract(epoch from now())))
+  returning id into v_event_id;
+
+  return v_event_id;
+end $$;
