@@ -212,3 +212,64 @@ describe("o que NÃO é pendência", () => {
     expect(chaves).not.toContain("senha");
   });
 });
+
+/**
+ * UMA pendência só. ════════════════════════════════════════════════════════
+ *
+ * `fraseDasPendencias` assumia que sempre havia DUAS: fazia
+ * `const [primeira, segunda] = pendencias` e interpolava as duas com `!`. O
+ * `!` é mentira que o compilador aceita (`noUncheckedIndexedAccess` desligado
+ * neste projeto) e o runtime cobra — com **uma** pendência, `segunda` é
+ * `undefined` e a função morre em `Cannot read properties of undefined
+ * (reading 'rotulo')`.
+ *
+ * E UMA é o caso mais comum do mundo: quem preencheu o CNPJ e falta só o código
+ * do município; ou o contrário. Uma instalação nova chega com um campo por vez.
+ *
+ * O custo não foi uma exceção na tela — foi o `tryPorOrigem` do cron engolindo
+ * a falha e o **bloco de NF pendente simplesmente não aparecendo** no Meu Dia.
+ * Medido em 18/10/2026: 2 specs de `meu-dia-alertas.spec.ts` vermelhas em três
+ * runs seguidos do job `e2e`, com `[meu-dia-alertas] origem falhou
+ * origem=nf_pendente`. Um alerta que some em silêncio é o pior defeito possível
+ * aqui: o operador vê Meu Dia sem a pendência e conclui que está tudo em dia.
+ */
+describe("a frase com UMA pendência só", () => {
+  it("não estoura, e nomeia a pendência", () => {
+    // Configuração quase completa: falta só o código do município.
+    const quaseCompleta: ConfigFiscalParaProntidao = { ...COMPLETA, codigo_municipio: null };
+    const p = pendenciasFiscais(quaseCompleta);
+    expect(p).toHaveLength(1);
+    expect(fraseDasPendencias(p)).toContain("Código IBGE do município");
+    expect(fraseDasPendencias(p)).not.toContain("undefined");
+  });
+
+  it("cada campo isolado gera uma frase de uma pendência, sem 'e' pendurado", () => {
+    // A mutação que quebra aqui é voltar ao `segunda!.rotulo`. Variar TODOS os
+    // campos é o que garante que nenhum caminho volte a produzir lista de 1.
+    const umPorVez: Array<[string, ConfigFiscalParaProntidao]> = [
+      ["emitente_documento", { ...COMPLETA, emitente_documento: null }],
+      ["ie", { ...COMPLETA, ie: null }],
+      ["uf", { ...COMPLETA, uf: null }],
+      ["codigo_municipio", { ...COMPLETA, codigo_municipio: null }],
+      ["municipio", { ...COMPLETA, municipio: null }],
+      ["cep", { ...COMPLETA, cep: null }],
+    ];
+    for (const [campo, config] of umPorVez) {
+      const p = pendenciasFiscais(config);
+      expect(p.map((x) => x.chave), `campo ${campo} deveria dar uma pendência só`).toEqual([
+        campo,
+      ]);
+      const frase = fraseDasPendencias(p);
+      expect(frase, `campo ${campo}: a frase estourou ou ficou indefinida`).not.toContain("undefined");
+      expect(frase).toContain("falta ");
+    }
+  });
+
+  it("a instalação sem configuração nenhuma continua com a frase própria", () => {
+    // O caminho `config === null` devolve UMA pendência também — e é o que uma
+    // instalação recém-criada tem. Era este o caso que mais gerou o crash.
+    const frase = fraseDasPendencias(pendenciasFiscais(null));
+    expect(frase).toContain("Configuração fiscal");
+    expect(frase).not.toContain("undefined");
+  });
+});

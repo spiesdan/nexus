@@ -171,8 +171,31 @@ export function fraseDasPendencias(pendencias: Pendencia[]): string {
   if (pendencias.length === 0) {
     return "A configuração fiscal está completa e o provedor confere a emissão.";
   }
-  const [primeira, segunda] = pendencias;
-  const duas = `${primeira!.rotulo} e ${segunda!.rotulo}`;
+  // ═══ UMA PENDÊNCIA NÃO É "DUAS" ══════════════════════════════════════════
+  //
+  // A versão anterior fazia `const [primeira, segunda] = pendencias` e depois
+  // interpolava as duas com `!` — o que o Typecheck aceita e o runtime não
+  // cumpre. Com **exatamente uma** pendência (e é o caso mais comum do mundo:
+  // quem tem o CNPJ preenchido e falta só o código do município, ou o
+  // contrário), `segunda` é `undefined` e a função morre em
+  //
+  //   Cannot read properties of undefined (reading 'rotulo')
+  //
+  // Medido em 18/10/2026: o `e2e` vermelho do job `e2e` (2 specs de
+  // `meu-dia-alertas.spec.ts`, "o bloco de NF pendente não apareceu no Meu Dia")
+  // reproduzido em três runs seguidos. A origem falhava com
+  // `[meu-dia-alertas] origem falhou  origem=nf_pendente` — o `tryPorOrigem`
+  // segurava a exceção, o tick inteiro passava, e o bloco **simplesmente não
+  // aparecia**. Um alerta que some em silêncio é o pior defeito possível
+  // aqui: o operador vê Meu Dia sem a pendência fiscal e concludes que está
+  // tudo em dia.
+  //
+  // O `!` era a mentira: `noUncheckedIndexedAccess` está desligado neste
+  // projeto, então o compilador disse que o elemento existia. A lista é
+  // montada por `add()` e pode ter tamanho qualquer entre 0 e o número de
+  // campos — "duas primeiras" era suposição, não fato.
+  const rotulos = pendencias.slice(0, 2).map((p) => p.rotulo);
+  const duas = rotulos.length === 1 ? rotulos[0]! : `${rotulos[0]} e ${rotulos[1]}`;
   const resto = pendencias.length - 2;
   const lista = resto > 0 ? `${duas} (e mais ${resto})` : duas;
   return `A instalação não consegue emitir: falta ${lista}. Notas → Configuração fiscal.`;
