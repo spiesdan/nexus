@@ -30,11 +30,16 @@ export function NexusPageHeader({
     <div className="space-y-3">
       {navigation ? <div className="text-sm text-muted-foreground">{navigation}</div> : null}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        {/* `min-w-0 flex-1`: sem isso o bloco de título e o de ações encolhiam
+            JUNTOS (flex-shrink proporcional ao conteúdo). Em Pedidos o subtítulo
+            virava três linhas e "Mais opções" caía para a segunda fileira, com
+            a barra de ações começando no meio da tela. Agora o título cede e as
+            ações ficam inteiras. */}
+        <div className="min-w-0 flex-1">
           <Titulo className="text-2xl font-medium tracking-tight text-text">{title}</Titulo>
-          {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+          {subtitle ? <p className="text-sm text-pretty text-muted-foreground">{subtitle}</p> : null}
         </div>
-        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div> : null}
       </div>
     </div>
   );

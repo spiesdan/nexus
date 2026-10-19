@@ -131,13 +131,13 @@ function montar(pedidos: PedidoComercial[], podeCriar = true) {
 describe("o card diz quem EMITIU o pedido", () => {
   it("mostra o nome de quem criou", () => {
     montar([pedido({ emitente_nome: "Daniel" })]);
-    expect(screen.getByText(/emitido por Daniel/i)).toBeTruthy();
-    expect(screen.queryByText(/emitido por Vendedor/i)).toBeNull();
+    expect(screen.getByText(/· Daniel/)).toBeTruthy();
+    expect(screen.queryByText(/· Vendedor/)).toBeNull();
   });
 
   it("sem nome a resolver, cai no badge de origem — nunca no UUID", () => {
     montar([pedido({ emitente_nome: null, origem: "vendedor" })]);
-    expect(screen.getByText(/emitido por Vendedor/i)).toBeTruthy();
+    expect(screen.getByText(/· Vendedor/)).toBeTruthy();
     expect(screen.queryByText(/33333333-3333-3333-3333-333333333333/)).toBeNull();
   });
 
@@ -146,6 +146,6 @@ describe("o card diz quem EMITIU o pedido", () => {
     expect(screen.queryByText(/Criar com IA no WhatsApp/)).toBeNull();
     // O resto da barra continua de pé: se quebrasse aqui, o teste anterior
     // "passaria" com a barra inteira fora do ar.
-    expect(screen.getByText(/Criar pedido \/ orçamento/)).toBeTruthy();
+    expect(screen.getByText(/Criar pedido/)).toBeTruthy();
   });
 });

@@ -20,8 +20,14 @@ import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -31,7 +37,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarBlank, MagnifyingGlass, Plus, Printer, Receipt, Storefront } from "@/lib/ui/icons";
+import {
+  CaretDown,
+  Funnel,
+  MagnifyingGlass,
+  Plus,
+  Printer,
+  Receipt,
+} from "@/lib/ui/icons";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { paraCSV } from "@/lib/comercial/relatorios";
@@ -631,237 +644,243 @@ export function PedidosClient({
         subtitle={textos.subtitulo}
         actions={
           <>
-            <Button
-              variant="outline"
-              className="w-full bg-surface sm:w-auto"
-              disabled={imprimindoDia}
-              onClick={() => void imprimirODia()}
-              title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
-            >
-              <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
-            </Button>
+            {/* UM botão de imprimir, com o "o quê" dentro. Antes eram dois botões
+                do mesmo peso e um aviso solto ("imprimindo os 50 mais recentes
+                de 66") flutuando à direita, longe do botão que ele explicava. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="bg-surface" disabled={imprimindoDia}>
+                  <Printer size={16} />
+                  {imprimindoDia ? t("Buscando o dia…") : t("Imprimir")}
+                  <CaretDown size={12} className="opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuItem onClick={() => void imprimirODia()}>
+                  <Printer size={14} className="mr-2" />
+                  {t("Imprimir o dia")}
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={
+                      selecionados.length > 0
+                        ? `/app/pedidos/imprimir?ids=${selecionados.join(",")}`
+                        : `/app/pedidos/imprimir?ids=${idsDoLoteImpresso.join(",")}`
+                    }
+                  >
+                    <Printer size={14} className="mr-2" />
+                    {t("Imprimir pedidos")}
+                  </Link>
+                </DropdownMenuItem>
+                {/* O teto de 50 é deliberado (`lib/comercial/ids-do-lote.ts`) —
+                    um PDF com 50 páginas fecha; 500 não. Mas um teto mudo é pior
+                    que a falta dele: o dono pede "os pedidos do dia", recebe 50
+                    e não tem como saber que 30 ficaram de fora. */}
+                {selecionados.length === 0 && idsDoLoteImpresso.length < pedidos.length && (
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                    {t("imprimindo os 50 mais recentes de")} {pedidos.length}
+                  </DropdownMenuLabel>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             {podeCriar && (
-              <Button asChild className="w-full font-semibold sm:w-auto">
+              <Button asChild className="font-semibold">
                 <Link href="/app/pedidos/novo">
-                  <Plus size={16} weight="bold" /> {t("Criar pedido / orçamento")}
+                  <Plus size={16} weight="bold" /> {t("Criar pedido")}
                 </Link>
               </Button>
-            )}
-            <Button variant="outline" asChild className="w-full bg-surface sm:w-auto">
-              <Link
-                href={
-                  selecionados.length > 0
-                    ? `/app/pedidos/imprimir?ids=${selecionados.join(",")}`
-                    : `/app/pedidos/imprimir?ids=${idsDoLoteImpresso.join(",")}`
-                }
-                // O teto de 50 é deliberado (`lib/comercial/ids-do-lote.ts`) —
-                // um PDF com 50 páginas fecha; 500 não. Mas um teto mudo é pior
-                // que a falta dele: o dono pede "os pedidos do dia", recebe 50
-                // e não tem como saber que 30 ficaram de fora. O `title` diz
-                // antes do clique.
-                title={
-                  selecionados.length === 0 && idsDoLoteImpresso.length < pedidos.length
-                    ? t(
-                        "Vai imprimir os 50 pedidos mais recentes de {total}. Para o resto, marque-os e imprima de novo.",
-                      ).replace("{total}", String(pedidos.length))
-                    : undefined
-                }
-              >
-                <Printer size={16} /> {t("Imprimir pedidos")}
-              </Link>
-            </Button>
-            {selecionados.length === 0 && idsDoLoteImpresso.length < pedidos.length && (
-              <span className="text-xs text-muted-foreground">
-                {t("imprimindo os 50 mais recentes de")} <strong>{pedidos.length}</strong>
-              </span>
             )}
           </>
         }
       />
 
-      {/* Filtros: um painel só, com rótulo em cada controle. Antes eram quatro
-        zonas espalhadas (busca solta + frase com selects + chips + avançados),
-        e no meio um select "Envio" que não filtrava nada — controle morto que
-        mente é pior que controle ausente. A frase ("Mostrando X feitos por Y")
-        economizava pixels e cobrava legibilidade: 13px, sem rótulo, embrulhando
-        mal no mobile. Comportamento 100% preservado; só o layout mudou. */}
-      <Card className="space-y-3 p-3 sm:p-4">
-        <div className="flex">
-          <Input
-            value={filtros.busca}
-            onChange={(e) => mudar({ busca: e.target.value }, true)}
-            placeholder={t("Pedido, cliente ou representada")}
-            aria-label={textos.buscar}
-            className="h-9 w-full rounded-r-none bg-surface sm:max-w-md"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            aria-label={textos.buscar}
-            className="rounded-l-none border-l-0 bg-surface"
-            onClick={() => void recarregar(filtros)}
-          >
-            <MagnifyingGlass size={16} />
-          </Button>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-x-3 gap-y-3">
-          <div className="space-y-1">
-            <Label htmlFor="f-status">{textos.statusLabel}</Label>
-            <select
-              id="f-status"
-              value={filtros.status}
-              onChange={(e) => mudar({ status: e.target.value })}
-              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
-            >
-              <option value="">{t("Pedidos ativos")}</option>
-              {STATUS_DO_PEDIDO.map((st) => (
-                <option key={st} value={st}>
-                  {ROTULO_DO_STATUS[st]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="f-vendedor">{t("Vendedor")}</Label>
-            <select
-              id="f-vendedor"
-              value={filtros.meus ? "meus" : filtros.vendedorId || ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "meus") mudar({ meus: true, vendedorId: "" });
-                else if (v === "") mudar({ meus: false, vendedorId: "" });
-                else mudar({ meus: false, vendedorId: v });
-              }}
-              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
-            >
-              <option value="">{t("Todos os vendedores")}</option>
-              <option value="meus">{textos.meus}</option>
-              {filtros.vendedorId && !filtros.meus && (
-                <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
-              )}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="f-origem">{t("Origem")}</Label>
-            <select
-              id="f-origem"
-              value={filtros.origem}
-              onChange={(e) => mudar({ origem: e.target.value })}
-              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
-            >
-              <option value="">{t("Todas as plataformas")}</option>
-              {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/*
-            PERÍODO. Fica na linha dos outros filtros porque é um filtro como
-            qualquer outro — e não dentro dos "avançados", porque o pedido mais
-            comum desta tela é "os pedidos de hoje", e quem procura coisa comum
-            dentro do que está marcado como avançado não encontra.
-
-            Um dia em `de` e `ate` é o que o botão de atalho preenche. A conversão
-            para instante UTC é do servidor, no fuso de quem pediu
-            (`lib/comercial/janela-do-dia.ts`) — aqui a data vai crua.
-          */}
-          <div className="space-y-1">
-            <span className="block text-sm font-medium">{t("Período")}</span>
-            <FiltroPorPeriodo
-              de={filtros.de}
-              ate={filtros.ate}
-              aoMudar={(patch) => mudar(patch)}
+      {/* Filtros: UMA linha, e o resto atrás do botão. O painel antigo gastava
+          170px de altura — busca em linha própria, rótulo acima de cada select,
+          botão de lupa que repetia o Enter — antes de mostrar o primeiro pedido.
+          O que se usa todo dia cabe numa linha; o que se usa de vez em quando
+          (condição, faixa de valor, filtro salvo) abre em um clique. */}
+      <Card className="p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 basis-full sm:basis-64">
+            <MagnifyingGlass
+              size={15}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-subtle"
+            />
+            <Input
+              value={filtros.busca}
+              onChange={(e) => mudar({ busca: e.target.value }, true)}
+              placeholder={t("Pedido, cliente ou representada")}
+              aria-label={textos.buscar}
+              className="h-9 bg-surface pl-9"
             />
           </div>
+
+          <select
+            aria-label={textos.statusLabel}
+            value={filtros.status}
+            onChange={(e) => mudar({ status: e.target.value })}
+            className="h-9 min-w-0 flex-1 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium sm:flex-none"
+          >
+            <option value="">{t("Pedidos ativos")}</option>
+            {STATUS_DO_PEDIDO.map((st) => (
+              <option key={st} value={st}>
+                {ROTULO_DO_STATUS[st]}
+              </option>
+            ))}
+          </select>
+
+          {/* No celular, vendedor/origem/período moram atrás do botão de filtros:
+              abertos por padrão, os quatro selects empurravam o primeiro pedido
+              para fora da tela. No desktop ficam na mesma linha, como antes
+              (`contents` dissolve o wrapper no layout do pai). */}
+          <div className={avancadosAbertos ? "contents" : "hidden sm:contents"}>
+          <select
+            aria-label={t("Vendedor")}
+            value={filtros.meus ? "meus" : filtros.vendedorId || ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "meus") mudar({ meus: true, vendedorId: "" });
+              else if (v === "") mudar({ meus: false, vendedorId: "" });
+              else mudar({ meus: false, vendedorId: v });
+            }}
+            className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+          >
+            <option value="">{t("Todos os vendedores")}</option>
+            <option value="meus">{textos.meus}</option>
+            {filtros.vendedorId && !filtros.meus && (
+              <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
+            )}
+          </select>
+
+          <select
+            aria-label={t("Origem")}
+            value={filtros.origem}
+            onChange={(e) => mudar({ origem: e.target.value })}
+            className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+          >
+            <option value="">{t("Todas as plataformas")}</option>
+            {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          {/*
+            PERÍODO na mesma linha porque é filtro como os outros — e não dentro
+            dos "avançados", porque o pedido mais comum desta tela é "os pedidos
+            de hoje", e quem procura coisa comum dentro do que está marcado como
+            avançado não encontra.
+          */}
+          <FiltroPorPeriodo de={filtros.de} ate={filtros.ate} aoMudar={(patch) => mudar(patch)} />
+          </div>
+
+          <Button
+            type="button"
+            size="sm"
+            variant={avancadosAbertos || contaAvancados(filtros) > 0 ? "default" : "outline"}
+            // `bg-surface` só quando é secundário: no variant default ele
+            // apagava o roxo e o botão ativo ficava idêntico ao inativo.
+            className={
+              "h-9 " + (avancadosAbertos || contaAvancados(filtros) > 0 ? "" : "bg-surface")
+            }
+            aria-expanded={avancadosAbertos}
+            onClick={() => setAvancadosAbertos((v) => !v)}
+          >
+            <Funnel size={14} />
+            {textos.avancados}
+            {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
+          </Button>
+
+          {/* Troca de visão: um segmentado, não três botões de mesmo peso. No
+              celular ele some — três botões custam uma linha inteira e a lista
+              compacta já é a visão certa para 390px. */}
+          <div className="ml-auto hidden items-center gap-0.5 rounded-lg border border-border bg-stage-2 p-0.5 sm:flex">
+            {(
+              [
+                ["cartoes", textos.cartoes],
+                ["tabela", textos.tabela],
+                ["quadro", textos.quadro],
+              ] as const
+            ).map(([valor, rotulo]) => (
+              <button
+                key={valor}
+                type="button"
+                onClick={() => setVisao(valor)}
+                aria-pressed={visao === valor}
+                className={
+                  "h-8 rounded-md px-2.5 text-xs font-medium transition-colors " +
+                  (visao === valor
+                    ? "bg-surface text-text shadow-sm"
+                    : "text-muted-foreground hover:text-text")
+                }
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
-      </Card>
-
-        {/* Avancados + salvos + troca de visao (colapsado para nao poluir o molde) */}
-        <div className="flex flex-wrap items-center gap-2">
-          <details open={avancadosAbertos} className="text-sm">
-            <summary className="cursor-pointer text-xs text-accent hover:underline">
-              {textos.avancados}
-              {contaAvancados(filtros) > 0 ? ` (${contaAvancados(filtros)})` : ""}
-            </summary>
-            <div className="mt-2 flex flex-wrap items-end gap-2">
-              <div className="w-full space-y-1.5 sm:w-44">
-                <label className="block text-sm font-medium" htmlFor="f-condicao">
-                  {textos.condicao}
-                </label>
-                <Input
-                  id="f-condicao"
-                  value={filtros.condicao}
-                  onChange={(e) => mudar({ condicao: e.target.value }, true)}
-                  placeholder="30/60"
-                  className="h-9 bg-surface"
-                />
-              </div>
-              <FilterNumber
-                id="f-vmin"
-                label={textos.valorMin}
-                value={filtros.valorMin}
-                onChange={(valorMin) => mudar({ valorMin })}
-                placeholder="0,00"
-              />
-              <FilterNumber
-                id="f-vmax"
-                label={textos.valorMax}
-                value={filtros.valorMax}
-                onChange={(valorMax) => mudar({ valorMax })}
-                placeholder="0,00"
+        {avancadosAbertos && (
+          <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-border pt-3">
+            <div className="w-full space-y-1.5 sm:w-40">
+              <label className="block text-xs font-medium text-muted-foreground" htmlFor="f-condicao">
+                {textos.condicao}
+              </label>
+              <Input
+                id="f-condicao"
+                value={filtros.condicao}
+                onChange={(e) => mudar({ condicao: e.target.value }, true)}
+                placeholder="30/60"
+                className="h-9 bg-surface"
               />
             </div>
-          </details>
-        <FilterActions>
-          <SavedFilters
-            names={Object.keys(filtrosSalvos)}
-            onApply={(nome) => {
-              const f = filtrosSalvos[nome];
-              if (f) aplicarSalvo(f);
-            }}
-            onSave={(nome) => gravarSalvos({ ...filtrosSalvos, [nome]: filtros })}
-            onRemove={(nome) => {
-              const prox = { ...filtrosSalvos };
-              delete prox[nome];
-              gravarSalvos(prox);
-            }}
-            texts={{
-              savePlaceholder: textos.nomeFiltro,
-              saveButton: textos.salvarFiltro,
-              applyPlaceholder: textos.salvos,
-              removeLabel: textos.excluir,
-            }}
-          />
-          <div className="ml-auto flex gap-2">
-            <Button
-              size="sm"
-              variant={visao === "cartoes" ? "default" : "outline"}
-              onClick={() => setVisao("cartoes")}
-            >
-              {textos.cartoes}
-            </Button>
-            <Button
-              size="sm"
-              variant={visao === "tabela" ? "default" : "outline"}
-              onClick={() => setVisao("tabela")}
-            >
-              {textos.tabela}
-            </Button>
-            <Button
-              size="sm"
-              variant={visao === "quadro" ? "default" : "outline"}
-              onClick={() => setVisao("quadro")}
-            >
-              {textos.quadro}
-            </Button>
+            <FilterNumber
+              id="f-vmin"
+              label={textos.valorMin}
+              value={filtros.valorMin}
+              onChange={(valorMin) => mudar({ valorMin })}
+              placeholder="0,00"
+            />
+            <FilterNumber
+              id="f-vmax"
+              label={textos.valorMax}
+              value={filtros.valorMax}
+              onChange={(valorMax) => mudar({ valorMax })}
+              placeholder="0,00"
+            />
+            <div className="ml-auto">
+              <FilterActions>
+                <SavedFilters
+                  names={Object.keys(filtrosSalvos)}
+                  onApply={(nome) => {
+                    const f = filtrosSalvos[nome];
+                    if (f) aplicarSalvo(f);
+                  }}
+                  onSave={(nome) => gravarSalvos({ ...filtrosSalvos, [nome]: filtros })}
+                  onRemove={(nome) => {
+                    const prox = { ...filtrosSalvos };
+                    delete prox[nome];
+                    gravarSalvos(prox);
+                  }}
+                  texts={{
+                    savePlaceholder: textos.nomeFiltro,
+                    saveButton: textos.salvarFiltro,
+                    applyPlaceholder: textos.salvos,
+                    removeLabel: textos.excluir,
+                  }}
+                />
+              </FilterActions>
+            </div>
           </div>
-        </FilterActions>
-      </div>
+        )}
+
+        {chips.length > 0 && (
+          <div className="mt-3 border-t border-border pt-2">
+            <FilterChips chips={chips} onClearAll={limparFiltros} clearLabel={textos.limpar} />
+          </div>
+        )}
+      </Card>
 
       {/* Barra de massa */}
       {podeCriar && selecionados.length > 0 && (
@@ -910,75 +929,97 @@ export function PedidosClient({
           primary={podeCriar ? { label: textos.novo, href: "/app/pedidos/novo" } : undefined}
         />
       ) : visao === "cartoes" ? (
+        // LISTA COMPACTA. Cada pedido ocupava ~170px: quatro linhas de 13px
+        // dentro de um cartão, com o valor escondido no fim e metade da direita
+        // vazia. Em 1000px de tela cabiam 4 pedidos. Agora cabe o dobro, e a
+        // informação que se procura primeiro — número, cliente, valor, dia —
+        // fica na mesma linha de leitura.
         <div className="space-y-5">
-          {porDia.map((g) => (
-            <section key={g.chave} aria-label={g.rotulo}>
-              <p className="mb-2 text-[13px] font-normal tracking-wide text-text-subtle uppercase">
-                {g.rotulo.toUpperCase()}
-              </p>
-              <div className="space-y-3">
-                {g.itens.map((p) => {
-                  // Quem EMITIU (created_by) antes do badge de origem: o
-                  // rótulo "Vendedor" dizia a procedência, não a pessoa.
-                  const emissor = p.emitente_nome ?? ROTULO_DA_ORIGEM[p.origem] ?? p.origem;
-                  const segundaLinha = p.cliente_documento || badgeDaOrigem(p.origem).rotulo;
-                  return (
-                    <article
-                      key={p.id}
-                      className="overflow-hidden rounded-xl border border-border fill-well"
-                    >
-                      <div className="flex items-center justify-between gap-2 bg-stage-2 px-3 py-2">
-                        <p className="flex min-w-0 items-center gap-2 text-[13px]">
-                          {podeCriar && (
-                            <input
-                              type="checkbox"
-                              checked={selecionados.includes(p.id)}
-                              onChange={() => alternar(p.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={numeroDoPedido(p.numero)}
-                            />
-                          )}
-                          <span className="truncate">
-                            <Link
-                              href={`/app/pedidos/${p.id}`}
-                              className="font-bold text-accent hover:underline"
-                            >
-                              {numeroDoPedido(p.numero)}
-                            </Link>{" "}
-                            <span className="text-muted-foreground">
-                              {t("emitido por")} {emissor}
-                            </span>
-                          </span>
-                        </p>
-                        <PillDoStatus status={p.status as StatusDoPedido} />
-                      </div>
-                      <Link
-                        href={`/app/pedidos/${p.id}`}
-                        className="block space-y-1 px-3 py-2.5 text-[13px] leading-5 text-text"
+          {porDia.map((g) => {
+            const totalDoDia = g.itens.reduce((soma, p) => soma + (p.total_cents ?? 0), 0);
+            return (
+              <section key={g.chave} aria-label={g.rotulo}>
+                <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
+                  <p className="truncate text-[11px] font-semibold tracking-[0.08em] text-text-subtle uppercase">
+                    {/* No celular o rótulo longo ("QUINTA-FEIRA, 15 DE OUTUBRO
+                        DE 2026") quebrava em duas linhas e empurrava a lista.
+                        dd/mm diz o mesmo e cabe. */}
+                    <span className="sm:hidden">
+                      {g.chave ? `${g.chave.slice(8, 10)}/${g.chave.slice(5, 7)}` : g.rotulo}
+                    </span>
+                    <span className="hidden sm:inline">{g.rotulo}</span>
+                  </p>
+                  <p className="shrink-0 text-[11px] whitespace-nowrap text-text-subtle tabular-nums">
+                    {g.itens.length} {g.itens.length === 1 ? t("pedido") : t("pedidos")} ·{" "}
+                    {comoMoeda(totalDoDia, g.itens[0]?.moeda ?? "BRL")}
+                  </p>
+                </div>
+                <div className="divide-y divide-border overflow-hidden rounded-xl border border-border fill-well">
+                  {g.itens.map((p) => {
+                    // Quem EMITIU (created_by) antes do badge de origem: o
+                    // rótulo "Vendedor" dizia a procedência, não a pessoa.
+                    const emissor = p.emitente_nome ?? ROTULO_DA_ORIGEM[p.origem] ?? p.origem;
+                    // Documento e condição — e só. A origem entrava como
+                    // fallback e imprimia "Vendedor" embaixo do nome do
+                    // cliente, que se lê como o papel de uma pessoa e não
+                    // informa nada; a origem já é filtrável acima.
+                    const detalhe = [p.cliente_documento, p.condicao_pagamento]
+                      .filter((v): v is string => Boolean(v && v.trim()))
+                      .join(" · ");
+                    // A data sai da MESMA chave do agrupamento (`chaveDoDia`,
+                    // fuso da organização) — `toLocaleDateString` aqui daria um
+                    // dia diferente entre servidor e navegador, que é o #418.
+                    const dia = p.created_at ? chaveDoDia(new Date(p.created_at)) : "";
+                    const diaCurto = dia ? `${dia.slice(8, 10)}/${dia.slice(5, 7)}` : "—";
+                    return (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
                       >
-                        <span className="flex items-center gap-1.5">
-                          <Storefront size={13} className="shrink-0 text-text-subtle" />
-                          <span className="truncate font-medium uppercase">{p.cliente_nome}</span>
-                        </span>
-                        {segundaLinha && (
-                          <span className="block truncate pl-5 text-muted-foreground">
-                            {segundaLinha}
-                          </span>
+                        {podeCriar && (
+                          <input
+                            type="checkbox"
+                            checked={selecionados.includes(p.id)}
+                            onChange={() => alternar(p.id)}
+                            aria-label={numeroDoPedido(p.numero)}
+                            className="shrink-0"
+                          />
                         )}
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <CalendarBlank size={13} className="shrink-0 text-text-subtle" />
-                          <span className="truncate uppercase">{p.condicao_pagamento || "—"}</span>
-                        </span>
-                        <span className="block pl-5 font-bold text-text">
-                          {comoMoeda(p.total_cents, p.moeda)}
-                        </span>
-                      </Link>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+                        <Link
+                          href={`/app/pedidos/${p.id}`}
+                          className="flex min-w-0 flex-1 items-center gap-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent">
+                                {numeroDoPedido(p.numero)}
+                              </span>
+                              <PillDoStatus status={p.status as StatusDoPedido} />
+                            </div>
+                            <p className="truncate text-sm font-medium text-text">
+                              {p.cliente_nome}
+                            </p>
+                            {detalhe && (
+                              <p className="truncate text-xs text-text-subtle">{detalhe}</p>
+                            )}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm font-semibold text-text tabular-nums">
+                              {comoMoeda(p.total_cents, p.moeda)}
+                            </p>
+                            <p className="max-w-44 truncate text-xs text-text-subtle">
+                              <span className="tabular-nums">{diaCurto}</span>
+                              <span className="hidden sm:inline"> · {emissor}</span>
+                            </p>
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
       ) : visao === "quadro" ? (
         <div className="flex gap-3 overflow-x-auto pb-2">
