@@ -24,7 +24,7 @@ type Params = { params: Promise<{ id: string }> };
 
 const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
-  "created_at, fonte_publico, prospect_ids, mensagens, espaco_ms, limite_diario, " +
+  "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, espaco_ms, limite_diario, " +
   "data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {

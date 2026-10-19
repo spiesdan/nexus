@@ -633,7 +633,7 @@ export function PedidosClient({
           <>
             <Button
               variant="outline"
-              className="bg-surface"
+              className="w-full bg-surface sm:w-auto"
               disabled={imprimindoDia}
               onClick={() => void imprimirODia()}
               title={t("Filtra o dia de hoje e imprime todos os pedidos dele.")}
@@ -641,13 +641,13 @@ export function PedidosClient({
               <Printer size={16} /> {imprimindoDia ? t("Buscando o dia…") : t("Imprimir o dia")}
             </Button>
             {podeCriar && (
-              <Button asChild className="font-semibold">
+              <Button asChild className="w-full font-semibold sm:w-auto">
                 <Link href="/app/pedidos/novo">
                   <Plus size={16} weight="bold" /> {t("Criar pedido / orçamento")}
                 </Link>
               </Button>
             )}
-            <Button variant="outline" asChild className="bg-surface">
+            <Button variant="outline" asChild className="w-full bg-surface sm:w-auto">
               <Link
                 href={
                   selecionados.length > 0

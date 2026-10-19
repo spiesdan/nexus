@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -226,12 +233,30 @@ function LinhaDetalhe({ rotulo, valor }: { rotulo: string; valor: string }) {
   );
 }
 
+
+/**
+ * O número da seção, como no Mercos (1 CLIENTE · 2 REPRESENTADA · 3 PRODUTOS ·
+ * 4 DETALHES DO PEDIDO). É âncora de leitura, não passo de formulário: a ficha
+ * é uma página só.
+ */
+function TituloDaSecao({ numero, children }: { numero: number; children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] text-foreground">
+        {numero}
+      </span>
+      {children}
+    </p>
+  );
+}
+
 export function DetalheDoPedido({
   pedido: inicial,
   itens,
   contato,
   nomeVendedor,
   nomeOrganizacao,
+  representada,
   podeEditar,
   podeExcluir,
 }: {
@@ -240,6 +265,12 @@ export function DetalheDoPedido({
   contato: ContatoDoPedido | null;
   nomeVendedor: string | null;
   nomeOrganizacao: string;
+  /** Razão social, CNPJ e telefone do emitente — o bloco 2 do Mercos. */
+  representada?: {
+    razaoSocial?: string | null;
+    cnpj?: string | null;
+    telefone?: string | null;
+  };
   podeEditar: boolean;
   podeExcluir: boolean;
 }) {
@@ -256,11 +287,24 @@ export function DetalheDoPedido({
   const [condicao, setCondicao] = React.useState(inicial.condicao_pagamento ?? "");
   const [endereco, setEndereco] = React.useState(inicial.endereco_entrega ?? "");
   const [transportadora, setTransportadora] = React.useState(inicial.transportadora_nome ?? "");
+  // 0276 — os dois campos do bloco 4 que não existiam.
+  const [rastreamento, setRastreamento] = React.useState(inicial.rastreamento ?? "");
+  const [contatoNoCliente, setContatoNoCliente] = React.useState(
+    inicial.contato_no_cliente ?? "",
+  );
   const [obs, setObs] = React.useState(inicial.observacoes ?? "");
   const [timeline, setTimeline] = React.useState<{ acao: string; por: string; em: string }[] | null>(null);
   const [trocando, setTrocando] = React.useState(false);
   const [buscaCliente, setBuscaCliente] = React.useState("");
   const [candidatos, setCandidatos] = React.useState<{ id: string; display_name: string | null; name: string | null }[]>([]);
+  // O link de aprovação do orçamento. Fica na tela depois de gerado porque é o
+  // que o operador precisa: copiar e colar na conversa que já está aberta. Com o
+  // WhatsApp da conexão fora do ar, é o ÚNICO caminho que funciona.
+  const [linkDoOrcamento, setLinkDoOrcamento] = React.useState<string | null>(null);
+  // O telefone em E.164 que a rota devolve — é o que faz o `wa.me` abrir a
+  // conversa com o cliente certo (sem DDI, o link disca para outro país).
+  const [telefoneDoCliente, setTelefoneDoCliente] = React.useState<string | null>(null);
+  const [gerandoLink, setGerandoLink] = React.useState(false);
 
   React.useEffect(() => {
     let vivo = true;
@@ -337,6 +381,8 @@ export function DetalheDoPedido({
         condicao_pagamento: condicao.trim() || null,
         endereco_entrega: endereco.trim() || null,
         transportadora_nome: transportadora.trim() || null,
+        rastreamento: rastreamento.trim() || null,
+        contato_no_cliente: contatoNoCliente.trim() || null,
         observacoes: obs.trim() || null,
       });
       toast.success("Detalhes salvos");
@@ -387,7 +433,55 @@ export function DetalheDoPedido({
     }
   }
 
+  /**
+   * Gera o link de aprovação e tenta mandar no WhatsApp do cliente.
+   *
+   * O toast diz o que ACONTECEU, não o que era para ter acontecido: com a
+   * conexão fora do ar (ou cliente sem telefone) o link continua válido na tela
+   * para o operador colar à mão — e a mensagem do aviso diz qual dos dois foi.
+   */
+  async function gerarLinkDoOrcamento() {
+    setGerandoLink(true);
+    try {
+      const corpo = await apiClient.post<{
+        data: { url: string; enviado: boolean; motivo: string | null; telefone: string | null };
+      }>(`/api/v1/commercial-orders/${pedido.id}/orcamento`, { enviar: true });
+      setLinkDoOrcamento(corpo.data.url);
+      setTelefoneDoCliente(corpo.data.telefone);
+
+      if (corpo.data.enviado) {
+        toast.success(t("Orçamento enviado no WhatsApp do cliente"));
+      } else if (corpo.data.motivo === "sem_sessao") {
+        toast.info(t("Link gerado. Sem WhatsApp conectado — copie e envie pelo seu aparelho."));
+      } else if (corpo.data.motivo === "sem_telefone") {
+        toast.info(t("Link gerado. O cliente não tem telefone no cadastro — copie e envie."));
+      } else if (corpo.data.motivo === "sem_cliente") {
+        toast.info(t("Link gerado. O pedido não tem cliente vinculado — copie e envie."));
+      } else {
+        toast.error(t("Não foi possível enviar agora. O link continua válido abaixo."));
+      }
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setGerandoLink(false);
+    }
+  }
+
+  async function copiarLinkDoOrcamento() {
+    if (!linkDoOrcamento) return;
+    const ok = await copyToClipboard(linkDoOrcamento);
+    if (ok) {
+      toast.success(t("Link copiado"));
+    } else {
+      toast.error(t("Não foi possível copiar"));
+    }
+  }
+
   const resumoWhats = `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome} — ${comoMoeda(pedido.total_cents, pedido.moeda)}`;
+  // O texto que acompanha o link quando o operador manda pelo próprio aparelho.
+  const mensagemDoOrcamento = linkDoOrcamento
+    ? `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome}\nTotal: ${comoMoeda(pedido.total_cents, pedido.moeda)}\nAprove por aqui: ${linkDoOrcamento}`
+    : "";
   const qtdTotal = itens.reduce((a, i) => a + i.quantidade, 0);
   const proximo = PROXIMO_STATUS[pedido.status as StatusDoPedido];
 
@@ -412,7 +506,7 @@ export function DetalheDoPedido({
             )}
             <Button size="sm" variant="outline" asChild>
               <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
-                {t("Visualizar PDF")}
+                {t("Visualizar")}
               </Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
@@ -424,29 +518,53 @@ export function DetalheDoPedido({
                 {t("Enviar por WhatsApp")}
               </a>
             </Button>
+            {podeEditar && (pedido.status === "rascunho" || pedido.status === "em_analise") && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void gerarLinkDoOrcamento()}
+                disabled={gerandoLink}
+              >
+                {gerandoLink ? t("Gerando link…") : t("Orçamento com aprovação")}
+              </Button>
+            )}
             {contato?.email && (
               <Button size="sm" variant="outline" asChild>
                 <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={copiarLink}>
-              {t("Copiar link do pedido")}
+              {t("Copiar link do pedido no Portal")}
             </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
-                {t("Imprimir pedido")}
-              </Link>
-            </Button>
-            {podeEditar && (
-              <Button size="sm" variant="outline" onClick={() => void duplicar()}>
-                {t("Duplicar")}
-              </Button>
-            )}
-            {podeExcluir && (
-              <Button size="sm" variant="destructive" onClick={() => void excluir()}>
-                {t("Excluir pedido")}
-              </Button>
-            )}
+            {/* O "Mais opções" do Mercos: o que se usa de vez em quando sai da
+                frente das ações do dia a dia (faturar, visualizar, enviar). */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  {t("Mais opções")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
+                    {t("Imprimir pedido")}
+                  </Link>
+                </DropdownMenuItem>
+                {podeEditar && (
+                  <DropdownMenuItem onSelect={() => void duplicar()}>
+                    {t("Duplicar")}
+                  </DropdownMenuItem>
+                )}
+                {podeExcluir && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onSelect={() => void excluir()}>
+                      {t("Excluir pedido")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
@@ -455,9 +573,40 @@ export function DetalheDoPedido({
         <PillDoStatus status={pedido.status as StatusDoPedido} />
       </div>
 
+      {/* O LINK DE APROVAÇÃO fica na tela depois de gerado: com o WhatsApp da
+          conexão fora do ar, copiar e colar na conversa é o caminho que
+          funciona — e é o que o operador faz de verdade. */}
+      {linkDoOrcamento && (
+        <div className="rounded-xl border bg-muted/30 p-3 text-sm">
+          <p className="font-medium">{t("Link de aprovação do orçamento")}</p>
+          <p className="mt-1 break-all text-xs text-muted-foreground">{linkDoOrcamento}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => void copiarLinkDoOrcamento()}>
+              {t("Copiar link")}
+            </Button>
+            {telefoneDoCliente && (
+              <Button size="sm" variant="outline" asChild>
+                <a
+                  href={`https://wa.me/${telefoneDoCliente.replace(/\D/g, "")}?text=${encodeURIComponent(mensagemDoOrcamento)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("Abrir conversa do cliente")}
+                </a>
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" asChild>
+              <a href={linkDoOrcamento} target="_blank" rel="noopener noreferrer">
+                {t("Ver como o cliente vê")}
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* CLIENTE */}
       <Card className="hover-raise space-y-2 p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("CLIENTE")}</p>
+        <TituloDaSecao numero={1}>{t("CLIENTE")}</TituloDaSecao>
         <p className="font-medium">
           {contato ? (
             <Link href={`/app/contacts/${contato.id}`} className="underline underline-offset-4">
@@ -514,24 +663,33 @@ export function DetalheDoPedido({
       {/* ORGANIZAÇÃO (a "representada" do Mercos). */}
       {nomeOrganizacao && (
         <Card className="hover-raise space-y-1 p-4">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("EMPRESA")}</p>
-          <p className="font-medium">{nomeOrganizacao}</p>
+          <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
+          <p className="text-sm">
+            <span className="font-medium text-accent">{nomeOrganizacao}</span>
+            {(() => {
+              const linha = [representada?.razaoSocial, representada?.cnpj]
+                .filter((v): v is string => Boolean(v && v.trim()))
+                .join(" - ");
+              return linha ? <span className="text-muted-foreground"> - {linha}</span> : null;
+            })()}
+          </p>
+          {representada?.telefone && (
+            <p className="text-sm text-muted-foreground">{representada.telefone}</p>
+          )}
         </Card>
       )}
 
       {/* PRODUTOS */}
       <Card className="hover-raise p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground">
-            {t("PRODUTOS")}
-          </p>
+          <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
           {/* O botão fica aqui, e não no cabeçalho, porque é o que ele
               funciona: a lista de itens. Colocá-lo longe da tabela faria o
               usuário procurar onde mexer nos produtos de um pedido que já está
               pronto — que é exatamente a dúvida que ele tem. */}
           {podeEditar && !editandoItens && (
             <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditandoItens(true)}>
-              {t("Editar itens")}
+              {t("Adicionar produto ao pedido")}
             </Button>
           )}
         </div>
@@ -546,8 +704,9 @@ export function DetalheDoPedido({
                   <TableHead>{t("Código")}</TableHead>
                   <TableHead>{t("Descrição")}</TableHead>
                   <TableHead className="text-right">{t("Qtde.")}</TableHead>
-                  <TableHead className="text-right">{t("Preço un.")}</TableHead>
-                  <TableHead className="text-right">{t("Desc. %")}</TableHead>
+                  <TableHead className="text-right">{t("Preço Tab.")}</TableHead>
+                  <TableHead className="text-right">{t("Desc. Acrés.")}</TableHead>
+                  <TableHead className="text-right">{t("Preço Líq.")}</TableHead>
                   <TableHead className="text-right">{t("Subtotal")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -569,6 +728,15 @@ export function DetalheDoPedido({
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {Number(it.desconto_pct) > 0 ? `${Number(it.desconto_pct)} %` : "—"}
+                    </TableCell>
+                    {/* Preço Líq. é o unitário JÁ descontado; Subtotal é ele ×
+                        quantidade. Sem a coluna, o desconto só aparecia no
+                        total, e conferir "quanto ficou a unidade" exigia conta. */}
+                    <TableCell className="text-right tabular-nums">
+                      {comoMoeda(
+                        Math.round(it.preco_unit_cents * (1 - Number(it.desconto_pct) / 100)),
+                        pedido.moeda,
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-medium tabular-nums">
                       {comoMoeda(it.subtotal_cents, pedido.moeda)}
@@ -615,7 +783,7 @@ export function DetalheDoPedido({
 
       {/* DETALHES DO PEDIDO */}
       <Card className="hover-raise space-y-4 p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("DETALHES DO PEDIDO")}</p>
+        <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
         <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <LinhaDetalhe rotulo={t("Nº do pedido")} valor={numeroDoPedido(pedido.numero)} />
           <LinhaDetalhe
@@ -626,6 +794,15 @@ export function DetalheDoPedido({
           <LinhaDetalhe rotulo={t("Cond. de pagamento")} valor={pedido.condicao_pagamento ?? ""} />
           <LinhaDetalhe rotulo={t("End. de entrega")} valor={pedido.endereco_entrega ?? ""} />
           <LinhaDetalhe rotulo={t("Transportadora")} valor={pedido.transportadora_nome ?? ""} />
+          <LinhaDetalhe
+            rotulo={t("Valor do frete")}
+            valor={pedido.frete_cents > 0 ? comoMoeda(pedido.frete_cents, pedido.moeda) : ""}
+          />
+          <LinhaDetalhe rotulo={t("Rastreamento")} valor={pedido.rastreamento ?? ""} />
+          <LinhaDetalhe
+            rotulo={t("Contato no cliente")}
+            valor={pedido.contato_no_cliente ?? ""}
+          />
           <LinhaDetalhe rotulo={t("Origem")} valor={pedido.origem} />
           <LinhaDetalhe
             rotulo={t("Atualizado em")}
@@ -636,7 +813,7 @@ export function DetalheDoPedido({
           <div className="space-y-1 text-sm">
             {pedido.observacoes && (
               <p>
-                <span className="text-muted-foreground">{t("Observações")}: </span>
+                <span className="text-muted-foreground">{t("Informações adicionais")}: </span>
                 {pedido.observacoes}
               </p>
             )}
@@ -654,6 +831,16 @@ export function DetalheDoPedido({
               <Input value={condicao} onChange={(e) => setCondicao(e.target.value)} placeholder={t("Condição de pagamento")} />
               <Input value={transportadora} onChange={(e) => setTransportadora(e.target.value)} placeholder={t("Transportadora")} />
               <Input
+                value={rastreamento}
+                onChange={(e) => setRastreamento(e.target.value)}
+                placeholder={t("Rastreamento")}
+              />
+              <Input
+                value={contatoNoCliente}
+                onChange={(e) => setContatoNoCliente(e.target.value)}
+                placeholder={t("Contato no cliente")}
+              />
+              <Input
                 value={endereco}
                 onChange={(e) => setEndereco(e.target.value)}
                 placeholder={t("Endereço de entrega")}
@@ -669,7 +856,7 @@ export function DetalheDoPedido({
               <Input
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
-                placeholder={t("Observações")}
+                placeholder={t("Informações adicionais")}
                 className="sm:col-span-2"
               />
               <div className="flex gap-2 sm:col-span-2">

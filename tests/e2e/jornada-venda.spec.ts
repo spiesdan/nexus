@@ -9,25 +9,26 @@ test.setTimeout(300_000);
  * pagamento → aprovação → pedido criado.
  *
  * Mapeamento para a UI real (não inventado): o editor de `/app/pedidos/novo`
- * tem 5 passos — Cliente · Produtos · Condições · Entrega · Revisão — e o
- * spec se encaixa assim:
+ * é uma página só, com as quatro seções do Mercos — 1 Cliente · 2 Representada
+ * · 3 Produtos · 4 Detalhes do pedido — e o spec se encaixa assim:
  *
  * - **cliente**: contato criado pela API (a criação não é o que se testa) e
  *   ESCOLHIDO pelo autocomplete da tela (`#busca-cliente`);
  * - **produtos**: busca `#busca-produto` + clique no destaque (Enter faz o
  *   mesmo);
- * - **desconto**: `Desconto (%)` no passo Condições — 3% fica DENTRO do teto
+ * - **desconto**: `Desconto (%)` nos totais da seção Produtos — 3% fica DENTRO do teto
  *   da política (`desconto_max_vendedor_pct`, default 5%), então o pedido
  *   nasce `aprovado`;
  * - **pagamento**: não existe etapa de método de pagamento no produto — o que
  *   existe é `Condição de pagamento` (texto livre que gera as parcelas do
- *   resumo). O passo "pagamento" do spec é esta condição;
+ *   resumo), na seção Detalhes do pedido;
  * - **aprovação**: pedido acima do teto só escala para `em_analise` quando o
  *   papel é menor que manager (aqui é admin, então não dispara sozinho). O
  *   passo é exercitado de propósito criando um pedido já em `em_analise` e
  *   aprovando-o pela tela ("Aprovar pedido" → pill "Aprovado" → "Faturar
  *   pedido" vira o próximo passo);
- * - **pedido criado**: toast `Pedido criado: PED-…` + redirect para
+ * - **pedido criado**: `Gerar pedido` no cabeçalho (o mesmo botão fecha a
+ *   barra do rodapé) → toast `Pedido criado: PED-…` + redirect para
  *   `/app/pedidos`, ficha aberta pelo card da lista.
  *
  * Guardas de ambiente: o autosave (`localStorage["pedido-rascunho"]`) é
@@ -61,7 +62,7 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   });
   expect(contato.status(), "não deu para criar o contato de teste").toBe(201);
 
-  // 1. Passo Cliente — escolher pelo autocomplete (o nome digitado sozinho é
+  // 1. Seção Cliente — escolher pelo autocomplete (o nome digitado sozinho é
   // o caminho do cliente avulso; aqui o cliente é real).
   await page.goto("/app/pedidos/novo");
   await expect(page.getByRole("heading", { level: 1, name: /novo pedido/i })).toBeVisible({
@@ -70,29 +71,22 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   await page.locator("#busca-cliente").fill(cliente);
   await page.getByRole("button", { name: new RegExp(cliente) }).click();
   await expect(page.locator("#busca-cliente")).toHaveValue(cliente);
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
 
-  // 2. Passo Produtos — busca por código, destaque clicado, item na lista.
+  // 2. Seção Produtos — busca por código, destaque clicado, item na lista.
+  // A página é única: a seção já está visível, não há "Continuar".
   await page.locator("#busca-produto").fill(codigo);
   await page.getByRole("button", { name: new RegExp(codigo) }).click();
   // O stepper do item tem 3 elementos com o label "Quantidade" (o input e os
   // dois botões ±) — o que prova item adicionado é o input de quantidade.
   await expect(page.getByRole("spinbutton", { name: "Quantidade" })).toBeVisible();
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
 
-  // 3. Passo Condições — pagamento (condição) + desconto dentro do teto.
+  // 3. Seção Detalhes — pagamento (condição) + desconto dentro do teto.
   await page.locator("#condicao").fill("30/60 dias");
   await page.locator("#desconto-pct").fill("3");
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
 
-  // 4. Passo Entrega — sem obrigatoriedade; segue direto para a revisão.
-  await page.getByRole("button", { name: "Continuar", exact: true }).click();
-
-  // 5. Revisão — o card "Cliente:" é o da revisão (fora do `#resumo`, que é o
-  // card de totais do OrderSummary), e o Finalizar é o POST.
+  // 4. Os totais ficam na seção Produtos, como a faixa do Mercos.
   await expect(page.locator("#resumo")).toBeVisible();
-  await expect(page.getByText(`Cliente: ${cliente}`)).toBeVisible();
-  await page.getByRole("button", { name: "Finalizar pedido" }).click();
+  await page.getByTestId("gerar-pedido").click();
 
   const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Pedido criado" }).first();
   await expect(toast).toBeVisible({ timeout: 30_000 });

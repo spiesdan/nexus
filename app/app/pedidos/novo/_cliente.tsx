@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -197,15 +198,28 @@ export function CustomerSelector({
         {buscando && (
           <p className="text-xs text-muted-foreground">{t("Buscando…")}</p>
         )}
-        {aoCriarNovo && (
-          // Quem chega aqui com um cliente que ainda não existe não pode ser
-          // obrigado a abandonar o pedido, cadastrar em outra tela e voltar:
-          // o rascunho se perde no caminho. O diálogo cria e devolve o
-          // contato já escolhido (ver `OrderEditor`).
-          <Button type="button" variant="outline" size="sm" onClick={aoCriarNovo}>
-            {t("Cadastrar novo cliente")}
-          </Button>
-        )}
+        {/* O par do Mercos: "Novo cliente" ao lado de "Listar todos clientes".
+            O segundo abre a base inteira — é para quem não sabe o nome de
+            cor e prefere procurar na lista, em vez de digitar e esperar. */}
+        <div className="flex flex-wrap items-center gap-3">
+          {aoCriarNovo && (
+            // Quem chega aqui com um cliente que ainda não existe não pode ser
+            // obrigado a abandonar o pedido, cadastrar em outra tela e voltar:
+            // o rascunho se perde no caminho. O diálogo cria e devolve o
+            // contato já escolhido (ver `OrderEditor`).
+            <Button type="button" variant="outline" size="sm" onClick={aoCriarNovo}>
+              {t("Cadastrar novo cliente")}
+            </Button>
+          )}
+          <Link
+            href="/app/contacts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-accent underline underline-offset-4"
+          >
+            {t("Listar todos os clientes")}
+          </Link>
+        </div>
       </div>
 
       {resumo && (

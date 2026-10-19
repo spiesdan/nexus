@@ -37,6 +37,7 @@ export function OrderSummary({
   enviando,
   aoSalvar,
   aoFinalizar,
+  mostrarAcoes = true,
   textos,
 }: {
   totais: TotaisDoResumo;
@@ -49,6 +50,13 @@ export function OrderSummary({
   enviando: boolean;
   aoSalvar: () => void;
   aoFinalizar: () => void;
+  /**
+   * `false` quando a tela já tem a barra de ação própria (o editor em página
+   * única, como o Mercos). Dois "Gerar pedido" na mesma dobra confundem mais
+   * que ajudam — e o segundo, fora do campo de visão do rodapé, era o que
+   * ficava escondido no celular.
+   */
+  mostrarAcoes?: boolean;
   textos: {
     subtotal: string;
     desconto: string;
@@ -80,6 +88,7 @@ export function OrderSummary({
             <dt className="text-muted-foreground">{textos.desconto} (R$)</dt>
             <dd>
               <Input
+                id="desconto"
                 className="w-28 text-right"
                 value={descontoTexto}
                 onChange={(e) => aoDesconto(e.target.value)}
@@ -90,7 +99,10 @@ export function OrderSummary({
           <div className="flex items-center justify-between gap-2">
             <dt className="text-muted-foreground">{textos.desconto} (%)</dt>
             <dd>
+              {/* `id` estável: é por ele que a jornada E2E preenche o desconto,
+                  e é ele que liga o campo ao rótulo para o leitor de tela. */}
               <Input
+                id="desconto-pct"
                 className="w-28 text-right"
                 type="number"
                 min={0}
@@ -105,6 +117,7 @@ export function OrderSummary({
             <dt className="text-muted-foreground">{textos.frete} (R$)</dt>
             <dd>
               <Input
+                id="frete"
                 className="w-28 text-right"
                 value={freteTexto}
                 onChange={(e) => aoFrete(e.target.value)}
@@ -141,17 +154,20 @@ export function OrderSummary({
             ))}
           </ul>
         )}
-        <div className="flex flex-col gap-2">
-          <Button variant="outline" disabled={enviando} onClick={aoSalvar}>
-            {textos.salvarRascunho}
-          </Button>
-          <Button disabled={enviando} onClick={aoFinalizar}>
-            {textos.finalizar}
-          </Button>
-        </div>
+        {mostrarAcoes ? (
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" disabled={enviando} onClick={aoSalvar}>
+              {textos.salvarRascunho}
+            </Button>
+            <Button disabled={enviando} onClick={aoFinalizar}>
+              {textos.finalizar}
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
       {/* Barra mobile (§41): o resumo viaja com o vendedor. */}
+      {mostrarAcoes ? (
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background p-3 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">{textos.itensUnidades(totais.qtdItens, totais.qtdUnidades)}</p>
@@ -164,6 +180,7 @@ export function OrderSummary({
           </Button>
         </div>
       </div>
+      ) : null}
     </>
   );
 }

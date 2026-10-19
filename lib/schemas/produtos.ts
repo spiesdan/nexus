@@ -131,6 +131,42 @@ export const produtoCreateSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "promoção até YYYY-MM-DD")
     .nullable()
     .optional(),
+  /**
+   * 0275 — a ficha do produto igual à do Mercos: IPI, observações, venda em
+   * múltiplos de N, peso e dimensões (unidade e caixa master) e as variações.
+   *
+   * `comissao_pct` NÃO nasce aqui: a coluna existe desde a 0272 e já era lida
+   * pela baixa de comissão — o que faltava era ela passar pelo formulário.
+   */
+  ipi_pct: z.number().min(0, "IPI não pode ser negativo").max(100, "IPI é % (0..100)").nullable().optional(),
+  comissao_pct: z
+    .number()
+    .min(0, "comissão não pode ser negativa")
+    .max(100, "comissão é % (0..100)")
+    .nullable()
+    .optional(),
+  multiplo: z.number().int().min(1, "múltiplo mínimo é 1").max(100000).optional(),
+  observacoes: z.string().trim().max(2000).nullable().optional(),
+  peso_bruto_kg: z.number().min(0, "peso não pode ser negativo").nullable().optional(),
+  largura_cm: z.number().min(0, "largura não pode ser negativa").nullable().optional(),
+  altura_cm: z.number().min(0, "altura não pode ser negativa").nullable().optional(),
+  comprimento_cm: z.number().min(0, "comprimento não pode ser negativo").nullable().optional(),
+  caixa_peso_bruto_kg: z.number().min(0, "peso não pode ser negativo").nullable().optional(),
+  caixa_largura_cm: z.number().min(0).nullable().optional(),
+  caixa_altura_cm: z.number().min(0).nullable().optional(),
+  caixa_comprimento_cm: z.number().min(0).nullable().optional(),
+  /**
+   * Cores e tamanhos, como o Mercos os chama. NÃO gera SKU filho (ver a
+   * migration 0275): grava a combinação que o lojista definiu, e a tela a
+   * devolve. `null` = produto simples, que é o caso de todos hoje.
+   */
+  variacoes: z
+    .object({
+      cores: z.array(z.string().trim().min(1).max(60)).max(50).default([]),
+      tamanhos: z.array(z.string().trim().min(1).max(60)).max(50).default([]),
+    })
+    .nullable()
+    .optional(),
 });
 
 /** Tudo opcional: o PATCH muda o que veio e não encosta no resto. */
@@ -162,14 +198,62 @@ export interface Produto {
   destaque: boolean;
   preco_promocional_cents: number | null;
   promocao_ate: string | null;
+  /** 0275 — a ficha do Mercos. */
+  ipi_pct: number | null;
+  comissao_pct: number | null;
+  multiplo: number;
+  observacoes: string | null;
+  peso_bruto_kg: number | null;
+  largura_cm: number | null;
+  altura_cm: number | null;
+  comprimento_cm: number | null;
+  caixa_peso_bruto_kg: number | null;
+  caixa_largura_cm: number | null;
+  caixa_altura_cm: number | null;
+  caixa_comprimento_cm: number | null;
+  /** Cores e tamanhos definidos — `null` = produto simples (ver 0275). */
+  variacoes: VariacoesDoProduto | null;
   updated_at: string;
+}
+
+/** O shape de `catalog_products.variacoes` — o CHECK do banco cobra objeto. */
+export interface VariacoesDoProduto {
+  cores: string[];
+  tamanhos: string[];
 }
 
 /** As colunas que a tela e a rota leem — uma lista, não duas. */
 export const COLUNAS_DO_PRODUTO =
   "id, codigo, nome, descricao, marca, categoria, preco_cents, moeda, custo_cents, " +
   "controla_estoque, quantidade, ativo, origem, imagem_url, ncm, ncm_origem, unidade, cfop, " +
-  "destaque, preco_promocional_cents, promocao_ate, updated_at";
+  "destaque, preco_promocional_cents, promocao_ate, ipi_pct, comissao_pct, multiplo, " +
+  "observacoes, peso_bruto_kg, largura_cm, altura_cm, comprimento_cm, caixa_peso_bruto_kg, " +
+  "caixa_largura_cm, caixa_altura_cm, caixa_comprimento_cm, variacoes, updated_at";
+
+/**
+ * Porcentagem em texto livre → número. `""` e lixo viram `null`, que é
+ * "não informado" — e não 0, que seria "isento" (a diferença importa na nota:
+ * 0% de IPI é uma afirmação fiscal, vazio não é).
+ *
+ * Aceita "70", "70,5" e "70.5": o campo é percentual e a vírgula é o separador
+ * que o teclado brasileiro oferece.
+ */
+export function pctParaNumero(entrada: string): number | null {
+  const limpo = entrada.replace(/\s/g, "").replace(",", ".");
+  if (limpo === "") return null;
+  if (!/^\d+(\.\d+)?$/.test(limpo)) return null;
+  const n = Number(limpo);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Dimensão/peso em texto livre → número. Mesma régua do `pctParaNumero`. */
+export const numeroDecimal = pctParaNumero;
+
+/** `70` → `"70"`; `null` → `""`. Sem `,00` artificial no que é inteiro. */
+export function numeroParaTexto(n: number | null): string {
+  if (n === null) return "";
+  return String(n);
+}
 
 /**
  * Preço de VITRINE (0228): a promoção vale quando há preço promocional E

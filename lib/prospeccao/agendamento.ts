@@ -5,17 +5,21 @@
  *
  * ═══ A ORDEM DAS RECUSAS, E POR QUE ELA IMPORTA ═════════════════════════
  *
- * Período → janela → cota → intervalo. A ordem é do mais ESTRUTURAL ao mais
- * circunstancial:
+ * Período → dia da semana → janela → cota → intervalo. A ordem é do mais
+ * ESTRUTURAL ao mais circunstancial:
  *
  *   1. PERÍODO  ("do dia 19/10 ao 23/10") — fora dele a campanha nem devia
  *      estar agendada; recusar aqui é o que faz o tick "parar sozinho".
- *   2. JANELA   ("das 7 às 12 e das 13 às 19") — é o RELÓGIO do dia.
- *   3. COTA     — é o DIA inteiro. Confundir cota com janela faz o operador
+ *   2. DIA      ("de segunda a sexta") — é o CALENDÁRIO. Vem antes da janela
+ *      porque um sábado fora dos dias escolhidos não é "fora do horário": sem
+ *      este motivo separado, o operador que lê "fora da janela" num sábado
+ *      desligado procuraria o defeito no horário.
+ *   3. JANELA   ("das 7 às 12 e das 13 às 19") — é o RELÓGIO do dia.
+ *   4. COTA     — é o DIA inteiro. Confundir cota com janela faz o operador
  *      achar que "não mandou" quando na verdade **já mandou tudo hoje**: a
  *      cota estourou às 10h e a janela das 13h está aberta — recusar por cota
  *      (e não por janela) é o que deixa o motivo certo na tela.
- *   4. INTERVALO ("uma por minuto") — o ritmo entre duas mensagens.
+ *   5. INTERVALO ("uma por minuto") — o ritmo entre duas mensagens.
  *
  * O `"concluida"` existe no tipo porque quem decide que "não sobra prospect" é
  * o MOTOR (ele enxerga o ledger), não esta função — aqui só os quatro primeiros
@@ -24,15 +28,28 @@
 import { offsetEmMinutos, partesNoFuso } from "@/lib/agenda/fuso";
 import { dentroDaJanela, fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
 
-/** Uma janela do dia, em HH:MM no fuso da organização. */
+/**
+ * Uma janela do dia, em HH:MM no fuso da organização.
+ */
 export interface JanelaDoDia {
   inicio: string;
   fim: string;
+  /**
+   * Os DIAS DA SEMANA em que esta janela vale — 0 = domingo … 6 = sábado, o
+   * MESMO `getUTCDay()` de quem monta a tela.
+   *
+   * Ausente ou vazia = TODOS os dias: é a campanha que não escolheu dias (e
+   * toda campanha agendada antes de 1.31), e tratá-la como "nenhum dia" a
+   * deixaria parada com a janela aberta na tela — o defeito silencioso que
+   * este arquivo existe para tornar impossível.
+   */
+  dias?: number[];
 }
 
 /** Por que o tick espera. A tela mostra o rótulo, nunca o código. */
 export type MotivoDeEspera =
   | "fora_do_periodo"
+  | "fora_do_dia"
   | "fora_da_janela"
   | "intervalo"
   | "cota_do_dia"
@@ -55,9 +72,55 @@ export function dentroDoPeriodo(
 }
 
 /**
- * Está aberta alguma das janelas do dia? Lista VAZIA = sem restrição (sempre
+ * O dia da semana de um `YYYY-MM-DD` — 0 = domingo … 6 = sábado, em UTC.
+ *
+ * `Date.UTC` de propósito: o dia JÁ é um dia de calendário no fuso da org
+ * (quem o calculou foi `relogioNoFuso`), e reler a meia-noite local de quem
+ * roda o worker daria o dia errado para quem está a leste de Greenwich.
+ *
+ * `null` quando o texto não é uma data: quem chama trata como "sem filtro de
+ * dia" em vez de recusar tudo por causa de um campo torto.
+ */
+export function diaDaSemanaDe(dia: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dia);
+  if (!m) return null;
+  const instante = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const dow = new Date(instante).getUTCDay();
+  return Number.isInteger(dow) ? dow : null;
+}
+
+/** A janela vale naquele dia da semana? `dias` ausente/vazia = todos. */
+export function janelaValeNoDia(janela: JanelaDoDia, diaDaSemana: number): boolean {
+  const dias = janela.dias;
+  if (!dias || dias.length === 0) return true;
+  return dias.includes(diaDaSemana);
+}
+
+/**
+ * Alguma janela vale para HOJE? É o portão que separa "hoje não é um dos dias
+ * escolhidos" de "hoje é, mas agora está fora do horário" — dois motivos
+ * distintos na tela.
+ *
+ * Lista vazia (campanha sem horário) e dia ilegível devolvem `true`: o filtro
+ * de dia só existe quando o operador escolheu dias.
+ */
+export function dentroDeAlgumDia(
+  janelas: JanelaDoDia[],
+  diaDaSemana: number | null,
+): boolean {
+  if (janelas.length === 0 || diaDaSemana === null) return true;
+  return janelas.some((j) => janelaValeNoDia(j, diaDaSemana));
+}
+
+/**
+ * Está aberta alguma das janelas de HOJE? Lista VAZIA = sem restrição (sempre
  * dentro) — é o caso da campanha que não escolheu horário, e tratá-la como
  * "fechada" deixaria a campanha parada sem explicação.
+ *
+ * ⚠️ A janela só conta no DIA dela. Sem esta amarração, duas janelas com dias
+ * diferentes se somariam: "sábado das 8 às 17" + "segunda das 20 às 22" abriria
+ * a SEGUNDA ÀS 10H — o dia da segunda casaria pelo segundo elemento e a hora
+ * pelo primeiro.
  */
 export function dentroDeAlgumaJanela(
   agoraIso: string,
@@ -66,7 +129,12 @@ export function dentroDeAlgumaJanela(
 ): boolean {
   if (janelas.length === 0) return true;
   const seguro = fusoSeguro(fuso);
-  return janelas.some((j) => dentroDaJanela(agoraIso, seguro, j.inicio, j.fim));
+  const diaDaSemana = diaDaSemanaDe(relogioNoFuso(agoraIso, seguro).dia);
+  return janelas.some(
+    (j) =>
+      (diaDaSemana === null || janelaValeNoDia(j, diaDaSemana)) &&
+      dentroDaJanela(agoraIso, seguro, j.inicio, j.fim),
+  );
 }
 
 /**
@@ -127,6 +195,11 @@ export function podeEnviarAgora(
 
   if (!dentroDoPeriodo(dia, p.dataInicio, p.dataFim)) {
     return { pode: false, motivo: "fora_do_periodo" };
+  }
+  // O CALENDÁRIO antes do RELÓGIO: sábado fora dos dias escolhidos não é
+  // "fora do horário", e o motivo errado faria o operador conferir a janela.
+  if (!dentroDeAlgumDia(p.janelas, diaDaSemanaDe(dia))) {
+    return { pode: false, motivo: "fora_do_dia" };
   }
   if (!dentroDeAlgumaJanela(p.agoraIso, p.fuso, p.janelas)) {
     return { pode: false, motivo: "fora_da_janela" };

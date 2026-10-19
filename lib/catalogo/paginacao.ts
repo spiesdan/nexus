@@ -67,12 +67,34 @@ export function sanitizarBuscaParaIlike(busca: string): string {
  * Reconstrói a URL do catálogo preservando os filtros ativos — é o único
  * lugar que monta essa URL, para a troca de página não derrubar a busca nem
  * a aba (e vice-versa). Página 1 é omitida: URL limpa é URL compartilhável.
+ *
+ * 0275 acrescentou os filtros da barra do Mercos — categoria e situação —, e
+ * eles TÊM de viajar junto: trocar de página com categoria escolhida e voltar
+ * para "todas" é o mesmo defeito de antes, só que com outro campo.
  */
-export function urlDoCatalogo(op: { busca?: string; semFoto?: boolean; pagina?: number }): string {
+export function urlDoCatalogo(op: {
+  busca?: string;
+  semFoto?: boolean;
+  pagina?: number;
+  /** Nome da categoria, como a coluna `categoria` guarda. */
+  categoria?: string;
+  /** `todos` (default) | `ativos` | `inativos`. */
+  status?: "todos" | "ativos" | "inativos";
+  /** "Promoções" e "Destaques" como FILTRO DO SERVIDOR, não da página. */
+  promo?: boolean;
+  destaque?: boolean;
+  /** A aba "Configurações" (categorias/tabelas) — também é URL, não estado. */
+  config?: "categorias" | "tabelas";
+}): string {
   const qs = new URLSearchParams();
   const termo = (op.busca ?? "").trim();
   if (termo) qs.set("busca", termo);
   if (op.semFoto) qs.set("sem_foto", "1");
+  if (op.categoria?.trim()) qs.set("categoria", op.categoria.trim());
+  if (op.status && op.status !== "todos") qs.set("status", op.status);
+  if (op.promo) qs.set("promo", "1");
+  if (op.destaque) qs.set("destaque", "1");
+  if (op.config) qs.set("config", op.config);
   if ((op.pagina ?? 1) > 1) qs.set("pagina", String(op.pagina));
   const sufixo = qs.toString();
   return sufixo ? `/app/products?${sufixo}` : "/app/products";

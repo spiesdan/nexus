@@ -54,6 +54,14 @@ export const PUBLIC_PATHS: RegExp[] = [
   /^\/manifest\.webmanifest$/,
   /^\/team\/accept-invite\/.+$/,
   /^\/account-suspended$/,
+  // ORÇAMENTO PÚBLICO. O cliente não tem sessão nesta instalação: ele recebe o
+  // link no WhatsApp e abre no celular. A credencial é o TOKEN ASSINADO
+  // (HMAC-SHA256 de pedido + organização + validade) que vai no path — sem a
+  // assinatura não se forja, e sem esta linha o `proxy` responderia 401 antes de
+  // a página existir. Ancorados com `$` e com UM segmento só: um sub-path novo
+  // não nasce público de carona.
+  /^\/o\/[^/]+$/,
+  /^\/api\/v1\/public\/orcamento\/[^/]+$/,
   // Documentos legais. O checkbox obrigatório de `/onboarding/welcome` linka os
   // dois, e o aceite acontece antes de a pessoa ter qualquer coisa no sistema —
   // exigir sessão para LER o que se está aceitando inverte a ordem. Âncorado nos

@@ -2729,12 +2729,18 @@ export type Database = {
       };
       catalog_products: {
         Row: {
+          altura_cm: number | null;
           ativo: boolean;
+          caixa_altura_cm: number | null;
+          caixa_comprimento_cm: number | null;
+          caixa_largura_cm: number | null;
+          caixa_peso_bruto_kg: number | null;
           categoria: string | null;
           categoria_id: string | null;
           cfop: string | null;
           codigo: string;
           comissao_pct: number | null;
+          comprimento_cm: number | null;
           controla_estoque: boolean;
           created_at: string;
           custo_cents: number | null;
@@ -2743,27 +2749,39 @@ export type Database = {
           estoque_minimo: number;
           id: string;
           imagem_url: string | null;
+          ipi_pct: number | null;
+          largura_cm: number | null;
           marca: string | null;
           moeda: string;
+          multiplo: number;
           ncm: string | null;
           ncm_origem: string | null;
           nome: string;
+          observacoes: string | null;
           organization_id: string;
           origem: string;
+          peso_bruto_kg: number | null;
           preco_cents: number;
           preco_promocional_cents: number | null;
           promocao_ate: string | null;
           quantidade: number;
           unidade: string | null;
           updated_at: string;
+          variacoes: Json | null;
         };
         Insert: {
+          altura_cm?: number | null;
           ativo?: boolean;
+          caixa_altura_cm?: number | null;
+          caixa_comprimento_cm?: number | null;
+          caixa_largura_cm?: number | null;
+          caixa_peso_bruto_kg?: number | null;
           categoria?: string | null;
           categoria_id?: string | null;
           cfop?: string | null;
           codigo: string;
           comissao_pct?: number | null;
+          comprimento_cm?: number | null;
           controla_estoque?: boolean;
           created_at?: string;
           custo_cents?: number | null;
@@ -2772,27 +2790,39 @@ export type Database = {
           estoque_minimo?: number;
           id?: string;
           imagem_url?: string | null;
+          ipi_pct?: number | null;
+          largura_cm?: number | null;
           marca?: string | null;
           moeda?: string;
+          multiplo?: number;
           ncm?: string | null;
           ncm_origem?: string | null;
           nome: string;
+          observacoes?: string | null;
           organization_id: string;
           origem?: string;
+          peso_bruto_kg?: number | null;
           preco_cents: number;
           preco_promocional_cents?: number | null;
           promocao_ate?: string | null;
           quantidade?: number;
           unidade?: string | null;
           updated_at?: string;
+          variacoes?: Json | null;
         };
         Update: {
+          altura_cm?: number | null;
           ativo?: boolean;
+          caixa_altura_cm?: number | null;
+          caixa_comprimento_cm?: number | null;
+          caixa_largura_cm?: number | null;
+          caixa_peso_bruto_kg?: number | null;
           categoria?: string | null;
           categoria_id?: string | null;
           cfop?: string | null;
           codigo?: string;
           comissao_pct?: number | null;
+          comprimento_cm?: number | null;
           controla_estoque?: boolean;
           created_at?: string;
           custo_cents?: number | null;
@@ -2801,19 +2831,25 @@ export type Database = {
           estoque_minimo?: number;
           id?: string;
           imagem_url?: string | null;
+          ipi_pct?: number | null;
+          largura_cm?: number | null;
           marca?: string | null;
           moeda?: string;
+          multiplo?: number;
           ncm?: string | null;
           ncm_origem?: string | null;
           nome?: string;
+          observacoes?: string | null;
           organization_id?: string;
           origem?: string;
+          peso_bruto_kg?: number | null;
           preco_cents?: number;
           preco_promocional_cents?: number | null;
           promocao_ate?: string | null;
           quantidade?: number;
           unidade?: string | null;
           updated_at?: string;
+          variacoes?: Json | null;
         };
         Relationships: [
           {
@@ -3340,6 +3376,7 @@ export type Database = {
           cliente_nome: string;
           condicao_pagamento: string | null;
           contact_id: string | null;
+          contato_no_cliente: string | null;
           created_at: string;
           created_by: string | null;
           desconto_cents: number;
@@ -3357,6 +3394,7 @@ export type Database = {
           parcelas: NonNullable<Json>;
           previsao_entrega: string | null;
           price_table_id: string | null;
+          rastreamento: string | null;
           status: string;
           subtotal_cents: number;
           total_cents: number;
@@ -3369,6 +3407,7 @@ export type Database = {
           cliente_nome: string;
           condicao_pagamento?: string | null;
           contact_id?: string | null;
+          contato_no_cliente?: string | null;
           created_at?: string;
           created_by?: string | null;
           desconto_cents?: number;
@@ -3386,6 +3425,7 @@ export type Database = {
           parcelas?: NonNullable<Json>;
           previsao_entrega?: string | null;
           price_table_id?: string | null;
+          rastreamento?: string | null;
           status?: string;
           subtotal_cents?: number;
           total_cents?: number;
@@ -3398,6 +3438,7 @@ export type Database = {
           cliente_nome?: string;
           condicao_pagamento?: string | null;
           contact_id?: string | null;
+          contato_no_cliente?: string | null;
           created_at?: string;
           created_by?: string | null;
           desconto_cents?: number;
@@ -3415,6 +3456,7 @@ export type Database = {
           parcelas?: NonNullable<Json>;
           previsao_entrega?: string | null;
           price_table_id?: string | null;
+          rastreamento?: string | null;
           status?: string;
           subtotal_cents?: number;
           total_cents?: number;
@@ -8206,6 +8248,7 @@ export type Database = {
           agendada_em: string | null;
           categorias: string[];
           cidades: NonNullable<Json>;
+          contato_ids: string[];
           created_at: string;
           created_by: string | null;
           data_fim: string | null;
@@ -8220,6 +8263,7 @@ export type Database = {
           objetivo: string | null;
           organization_id: string;
           prospect_ids: string[];
+          publico: string;
           recorrencia_dias: number | null;
           status: string;
           ultima_execucao_at: string | null;
@@ -8230,6 +8274,7 @@ export type Database = {
           agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
+          contato_ids?: string[];
           created_at?: string;
           created_by?: string | null;
           data_fim?: string | null;
@@ -8244,6 +8289,7 @@ export type Database = {
           objetivo?: string | null;
           organization_id: string;
           prospect_ids?: string[];
+          publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;
@@ -8254,6 +8300,7 @@ export type Database = {
           agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
+          contato_ids?: string[];
           created_at?: string;
           created_by?: string | null;
           data_fim?: string | null;
@@ -8268,6 +8315,7 @@ export type Database = {
           objetivo?: string | null;
           organization_id?: string;
           prospect_ids?: string[];
+          publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;

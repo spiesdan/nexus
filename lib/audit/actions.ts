@@ -414,6 +414,13 @@ export const AUDIT_ACTIONS = [
   "commercial_order.items_updated",
   "commercial_order.duplicated",
   "commercial_order.deleted",
+  // Aprovação do CLIENTE pelo link público do orçamento. Dois códigos porque são
+  // dois fatos diferentes: `approved_by_client` é o pedido que entrou na fila com
+  // o clique do cliente; `client_approved` é a aprovação REGISTRADA que ainda
+  // espera o gerente (desconto acima do teto do vendedor). Sem a distinção, a
+  // trilha diria "aprovado" para um pedido parado em `em_analise`.
+  "commercial_order.approved_by_client",
+  "commercial_order.client_approved",
   // Categorias e tabelas de preço (migration 0210). Preço de venda é dado que
   // a equipe disputa — mesmo motivo do catálogo.
   "catalog_category.created",
