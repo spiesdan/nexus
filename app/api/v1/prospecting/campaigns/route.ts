@@ -91,7 +91,17 @@ export async function POST(req: NextRequest): Promise<Response> {
       cidades: parsed.data.cidades,
       recorrencia_dias: parsed.data.recorrencia_dias ?? null,
       fonte_publico: parsed.data.fonte_publico ?? "busca",
-      status: "rascunho",
+      // 0273 — a criação também aceita o agendamento; os campos ausentes ficam
+      // no default da coluna (o operador que agenda pela tela usa o PATCH).
+      ...(parsed.data.prospect_ids !== undefined ? { prospect_ids: parsed.data.prospect_ids } : {}),
+      ...(parsed.data.mensagens !== undefined ? { mensagens: parsed.data.mensagens } : {}),
+      ...(parsed.data.espaco_ms !== undefined ? { espaco_ms: parsed.data.espaco_ms } : {}),
+      ...(parsed.data.limite_diario !== undefined ? { limite_diario: parsed.data.limite_diario } : {}),
+      ...(parsed.data.data_inicio !== undefined ? { data_inicio: parsed.data.data_inicio } : {}),
+      ...(parsed.data.data_fim !== undefined ? { data_fim: parsed.data.data_fim } : {}),
+      ...(parsed.data.janelas !== undefined ? { janelas: parsed.data.janelas } : {}),
+      ...(parsed.data.agendada_em !== undefined ? { agendada_em: parsed.data.agendada_em } : {}),
+      status: parsed.data.status ?? "rascunho",
       created_by: authz.user.id,
     })
     .select("id")

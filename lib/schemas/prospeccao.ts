@@ -165,6 +165,66 @@ export const arquivoMapsSchema = z.object({
 
 export type ArquivoMaps = z.infer<typeof arquivoMapsSchema>;
 
+/**
+ * AGENDAMENTO — o relógio da campanha (0273).
+ *
+ * `janelas` são VÁRIAS por dia ([{inicio:"07:00",fim:"12:00"},{inicio:"13:00",
+ * fim:"19:00"}]). `inicio < fim` é a regra dura: uma janela invertida nunca
+ * fica aberta, e a campanha ficaria parada sem o operador entender por quê —
+ * melhor recusar na borda com uma frase do que gravar silêncio.
+ *
+ * `espaco_ms` = intervalo entre mensagens; `limite_diario` = a cota do DIA (a
+ * janela é do RELÓGIO; confundir as duas é o erro que a tela precisa ajudar a
+ * não cometer).
+ */
+export const janelaDoDiaSchema = z
+  .object({
+    inicio: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM (ex.: 07:00)."),
+    fim: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM (ex.: 12:00)."),
+  })
+  .refine((j) => j.inicio < j.fim, {
+    message: "O fim da janela tem de ser depois do início.",
+    path: ["fim"],
+  });
+
+export const agendamentoSchema = z.object({
+  /**
+   * A LISTA FECHADA escolhida na tela — o tick manda só para ela.
+   *
+   * Teto alto de propósito: a base desta instalação tem 21.668 empresas e uma
+   * campanha de 5 dias úteis com janelas 07–12/13–19 tem ~3.300 vagas de um
+   * minuto. Recusar em 2.000 cortaria a campanha que o operador quer montar.
+   */
+  prospect_ids: z.array(z.string().uuid()).min(1).max(10_000).optional(),
+  /** As variações (1..5) da rotação anti-ban. */
+  mensagens: z
+    .array(z.string().trim().min(1).max(4000))
+    .min(1)
+    .max(MENSAGENS_POR_DISPARO_MAX)
+    .optional(),
+  espaco_ms: z.number().int().min(1000).max(60000).optional(),
+  limite_diario: z.number().int().min(1).max(500).optional(),
+  data_inicio: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+    .nullable()
+    .optional(),
+  data_fim: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+    .nullable()
+    .optional(),
+  janelas: z.array(janelaDoDiaSchema).max(10).optional(),
+  /** Quando o agendamento foi confirmado; NULL = não agendada. */
+  agendada_em: z.string().datetime({ offset: true }).nullable().optional(),
+  /** `ativa` liga o tick; `concluida` encerra; `pausada` para sem perder a agenda. */
+  status: z.enum(["rascunho", "ativa", "pausada", "concluida"]).optional(),
+});
+
+/** O período só faz sentido com os dois lados — e nunca com o fim antes. */
+const periodoValido = (v: { data_inicio?: string | null; data_fim?: string | null }) =>
+  !v.data_inicio || !v.data_fim || v.data_fim >= v.data_inicio;
+
 export const campanhaCreateSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   objetivo: z.string().trim().max(300).nullable().optional(),
@@ -189,7 +249,14 @@ export const campanhaCreateSchema = z.object({
    * próprio) não volta.
    */
   fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
-});
+})
+  // A criação também aceita o agendamento (0273): quem cria a campanha já com
+  // o relógio não precisa de um segundo request — mas os campos são opcionais.
+  .extend(agendamentoSchema.shape)
+  .refine(periodoValido, {
+    message: "A data final não pode ser anterior à inicial.",
+    path: ["data_fim"],
+  });
 
 /** A fonte do público é um botão da tela de campanha, não campo de texto. */
 export type FonteDoPublico = NonNullable<
@@ -201,11 +268,21 @@ export type FonteDoPublico = NonNullable<
  * o PATCH existe para o painel preencher o "Objetivo" que a spec cobra.
  * null explícito limpa o campo (mesmo contrato do prospectPatchSchema).
  */
-export const campanhaPatchSchema = z.object({
-  objetivo: z.string().trim().max(300).nullable(),
-  /** 0271 — trocar a fonte do público é decisão do operador, e fica registrada. */
-  fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
-});
+export const campanhaPatchSchema = z
+  .object({
+    // `objetivo` vira opcional (era obrigatório quando era o único campo): o
+    // PATCH do agendamento não mexe nele, e exigir a chave obrigaria a tela a
+    // reescrever um campo que ela não tocou.
+    objetivo: z.string().trim().max(300).nullable().optional(),
+    /** 0271 — trocar a fonte do público é decisão do operador, e fica registrada. */
+    fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
+  })
+  // 0273 — o mesmo PATCH que salva o objetivo salva o relógio da campanha.
+  .extend(agendamentoSchema.shape)
+  .refine(periodoValido, {
+    message: "A data final não pode ser anterior à inicial.",
+    path: ["data_fim"],
+  });
 
 export const settingsPutSchema = z.object({
   provider_ativo: z.enum(["google_places", "osm_overpass", "maps_browser"]).optional(),

@@ -8203,45 +8203,75 @@ export type Database = {
       };
       prospecting_campaigns: {
         Row: {
+          agendada_em: string | null;
           categorias: string[];
           cidades: NonNullable<Json>;
           created_at: string;
           created_by: string | null;
+          data_fim: string | null;
+          data_inicio: string | null;
+          espaco_ms: number;
+          fonte_publico: string;
           id: string;
+          janelas: NonNullable<Json>;
+          limite_diario: number;
+          mensagens: string[];
           nome: string;
           objetivo: string | null;
           organization_id: string;
+          prospect_ids: string[];
           recorrencia_dias: number | null;
           status: string;
           ultima_execucao_at: string | null;
+          ultimo_envio_at: string | null;
           updated_at: string;
         };
         Insert: {
+          agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
           created_at?: string;
           created_by?: string | null;
+          data_fim?: string | null;
+          data_inicio?: string | null;
+          espaco_ms?: number;
+          fonte_publico?: string;
           id?: string;
+          janelas?: NonNullable<Json>;
+          limite_diario?: number;
+          mensagens?: string[];
           nome: string;
           objetivo?: string | null;
           organization_id: string;
+          prospect_ids?: string[];
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;
+          ultimo_envio_at?: string | null;
           updated_at?: string;
         };
         Update: {
+          agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
           created_at?: string;
           created_by?: string | null;
+          data_fim?: string | null;
+          data_inicio?: string | null;
+          espaco_ms?: number;
+          fonte_publico?: string;
           id?: string;
+          janelas?: NonNullable<Json>;
+          limite_diario?: number;
+          mensagens?: string[];
           nome?: string;
           objetivo?: string | null;
           organization_id?: string;
+          prospect_ids?: string[];
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;
+          ultimo_envio_at?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -8367,6 +8397,58 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prospecting_sends: {
+        Row: {
+          campaign_id: string;
+          enviado_em: string;
+          id: string;
+          mensagem_indice: number;
+          message_id: string | null;
+          organization_id: string;
+          prospect_id: string;
+        };
+        Insert: {
+          campaign_id: string;
+          enviado_em?: string;
+          id?: string;
+          mensagem_indice?: number;
+          message_id?: string | null;
+          organization_id: string;
+          prospect_id: string;
+        };
+        Update: {
+          campaign_id?: string;
+          enviado_em?: string;
+          id?: string;
+          mensagem_indice?: number;
+          message_id?: string | null;
+          organization_id?: string;
+          prospect_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_sends_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "prospecting_campaigns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prospecting_sends_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prospecting_sends_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: false;
+            referencedRelation: "business_prospects";
             referencedColumns: ["id"];
           },
         ];

@@ -44,6 +44,25 @@ import { apiClient } from "@/lib/api/client";
 import { ESPACO_ANTIBAN_MS } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
 
+/** Uma janela do dia, em HH:MM — o mesmo shape de `lib/prospeccao/agendamento`. */
+interface Janela {
+  inicio: string;
+  fim: string;
+}
+
+/** `YYYY-MM-DD` de hoje/daqui a N dias no relógio de QUEM OPERA a tela. */
+function diaLocal(diasAFrente = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + diasAFrente);
+  return d.toLocaleDateString("en-CA");
+}
+
+/** `2026-10-19` → `19/10` (é assim que o dono fala: "do dia 19/10 ao 23/10"). */
+function diaCurto(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${m[3]}/${m[2]}` : iso;
+}
+
 /** O que a rota devolve na simulação. Espelha `resumo` do `route.ts`. */
 interface Plano {
   simulacao: boolean;
@@ -96,11 +115,25 @@ export function DialogoDisparo({
   aberto,
   onFechar,
   onConcluido,
+  campanhaId = null,
+  campanhaPadrao,
 }: {
   ids: string[];
   aberto: boolean;
   onFechar: () => void;
   onConcluido: () => void;
+  /**
+   * A campanha que recebe a agenda. A lista fechada, as janelas e o período
+   * moram NELA (0273) — agendar sem campanha não tem onde guardar o relógio.
+   * Quando não vem (tela de Empresas), a confirmação CRIA uma campanha com a
+   * `campanhaPadrao` (nome/categorias/cidades do filtro) antes de agendar.
+   */
+  campanhaId?: string | null;
+  campanhaPadrao?: {
+    nome: string;
+    categorias: string[];
+    cidades: Array<{ cidade: string; estado?: string }>;
+  };
 }) {
   const t = useT();
   // As opções de texto. Só a primeira é obrigatória: campo vazio é opção que
@@ -119,6 +152,19 @@ export function DialogoDisparo({
   const [ocupado, setOcupado] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 
+  // ── AGENDAMENTO (0273) ──────────────────────────────────────────────────
+  // "Enviar agora" continua sendo o disparo síncrono de sempre. "Agendar"
+  // grava o relógio na campanha e quem manda é o cron de 1 minuto.
+  const [modo, setModo] = React.useState<"agora" | "agendar">("agora");
+  const [dataInicio, setDataInicio] = React.useState(() => diaLocal());
+  const [dataFim, setDataFim] = React.useState(() => diaLocal(7));
+  // As janelas do pedido do dono: "das 7 às 12, 13 às 19".
+  const [janelas, setJanelas] = React.useState<Janela[]>([
+    { inicio: "07:00", fim: "12:00" },
+    { inicio: "13:00", fim: "19:00" },
+  ]);
+  const [agendado, setAgendado] = React.useState(false);
+
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
 
@@ -131,8 +177,94 @@ export function DialogoDisparo({
     ? Math.min(60000, Math.max(0, Math.round(segundos * 1000)))
     : 60000;
 
+  // O agendamento tem piso de 1s (o CHECK do banco é 1000ms). No "Enviar
+  // agora" o 0 continua valendo — é a saída de emergência de quem testa.
+  const espacoMsAgendado = Math.min(60000, Math.max(1000, espacoMs));
+  const janelasValidas = janelas.filter(
+    (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
+  );
+  const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
+  const podeAgendar =
+    preenchidas.length > 0 &&
+    ids.length > 0 &&
+    janelasValidas.length === janelas.length &&
+    janelas.length > 0 &&
+    periodoValido;
+
+  const segundosAgenda = Math.round(espacoMsAgendado / 1000);
+  const ritmo =
+    segundosAgenda === 60
+      ? t("1 por minuto")
+      : t(`1 a cada ${segundosAgenda} segundos`);
+  const resumoDaAgenda = [
+    t(`${ids.length} empresas`),
+    ritmo,
+    janelasValidas.length > 0
+      ? janelasValidas.map((j) => t(`das ${j.inicio} às ${j.fim}`)).join(` ${t("e")} `)
+      : t("sem restrição de horário"),
+    dataInicio && dataFim
+      ? t(`de ${diaCurto(dataInicio)} a ${diaCurto(dataFim)}`)
+      : dataInicio
+        ? t(`a partir de ${diaCurto(dataInicio)}`)
+        : t("sem data final"),
+  ].join(", ");
+
   function trocarMensagem(i: number, valor: string) {
     setMensagens((atual) => atual.map((m, j) => (j === i ? valor : m)));
+  }
+
+  function trocarJanela(i: number, campo: "inicio" | "fim", valor: string) {
+    setJanelas((atual) => atual.map((j, k) => (k === i ? { ...j, [campo]: valor } : j)));
+  }
+
+  /**
+   * Confirma o agendamento. A campanha é o LUGAR do relógio: quando ela já
+   * existe (aba Campanhas), é PATCH; quando não (tela de Empresas), cria uma
+   * campanha com o nome/categorias/cidades do filtro e agenda nela.
+   */
+  async function agendar() {
+    setOcupado(true);
+    setErro(null);
+    try {
+      let id = campanhaId;
+      if (!id) {
+        const criada = await apiClient.post<{ data?: { id?: string } }>(
+          "/api/v1/prospecting/campaigns",
+          {
+            nome: campanhaPadrao?.nome ?? `Prospecção ${diaCurto(dataInicio)}`,
+            categorias:
+              campanhaPadrao && campanhaPadrao.categorias.length > 0
+                ? campanhaPadrao.categorias
+                : ["empresas"],
+            cidades:
+              campanhaPadrao && campanhaPadrao.cidades.length > 0
+                ? campanhaPadrao.cidades
+                : [{ cidade: "Não informada" }],
+            fonte_publico: "base",
+          },
+        );
+        id = criada?.data?.id ?? null;
+      }
+      if (!id) throw new Error(t("Não foi possível criar a campanha do agendamento."));
+
+      await apiClient.patch(`/api/v1/prospecting/campaigns/${id}`, {
+        prospect_ids: ids,
+        mensagens: preenchidas,
+        janelas,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        limite_diario: Number(limite) || 50,
+        espaco_ms: espacoMsAgendado,
+        agendada_em: new Date().toISOString(),
+        status: "ativa",
+      });
+      setAgendado(true);
+      onConcluido();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : t("Não foi possível agendar o disparo."));
+    } finally {
+      setOcupado(false);
+    }
   }
 
   async function chamar(dryRun: boolean) {
@@ -175,6 +307,30 @@ export function DialogoDisparo({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Enviar agora x Agendar. O "agora" é o POST síncrono de sempre; o
+              "agendar" grava o relógio na campanha e o cron manda uma por
+              minuto. Não é um substituto: é a mesma mensagem com outro tempo. */}
+          <div className="flex gap-2 rounded-lg border p-1">
+            <button
+              type="button"
+              onClick={() => setModo("agora")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm ${
+                modo === "agora" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+              }`}
+            >
+              {t("Enviar agora")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo("agendar")}
+              className={`flex-1 rounded-md px-3 py-1.5 text-sm ${
+                modo === "agendar" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+              }`}
+            >
+              {t("Agendar")}
+            </button>
+          </div>
+
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="disparo-mensagem-0">{t("Mensagem 1 (sai primeiro)")}</Label>
@@ -242,7 +398,111 @@ export function DialogoDisparo({
             )}
           </p>
 
-          {!plano && !resultado && (
+          {modo === "agendar" && (
+            <div className="space-y-3 rounded-xl border p-3">
+              <p className="text-sm font-medium">{t("Quando ele pode mandar")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "O relógio é o da organização — o mesmo fuso das outras janelas de envio do produto, não o relógio do servidor. O agendamento manda uma mensagem por vez, no intervalo escolhido, e para sozinho quando acaba a lista ou o período.",
+                )}
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <div className="w-40 space-y-1.5">
+                  <Label htmlFor="agenda-inicio">{t("Data de")}</Label>
+                  <Input
+                    id="agenda-inicio"
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                  />
+                </div>
+                <div className="w-40 space-y-1.5">
+                  <Label htmlFor="agenda-fim">{t("Data até")}</Label>
+                  <Input
+                    id="agenda-fim"
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                  />
+                </div>
+              </div>
+              {!periodoValido && (
+                <p className="text-xs text-destructive">
+                  {t("A data final não pode ser anterior à inicial.")}
+                </p>
+              )}
+
+              <div className="space-y-2">
+                <Label>{t("Horários do dia")}</Label>
+                {janelas.map((j, i) => {
+                  const invalida = j.inicio >= j.fim;
+                  return (
+                    <div key={i} className="flex flex-wrap items-center gap-2">
+                      <Input
+                        aria-label={t("Início")}
+                        type="time"
+                        value={j.inicio}
+                        onChange={(e) => trocarJanela(i, "inicio", e.target.value)}
+                        className="w-32"
+                      />
+                      <span className="text-xs text-muted-foreground">{t("às")}</span>
+                      <Input
+                        aria-label={t("Fim")}
+                        type="time"
+                        value={j.fim}
+                        onChange={(e) => trocarJanela(i, "fim", e.target.value)}
+                        className="w-32"
+                      />
+                      {invalida && (
+                        <span className="text-xs text-destructive">
+                          {t("O fim tem de ser depois do início.")}
+                        </span>
+                      )}
+                      {janelas.length > 1 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setJanelas((atual) => atual.filter((_, k) => k !== i))}
+                        >
+                          {t("Remover")}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setJanelas((atual) => [...atual, { inicio: "07:00", fim: "12:00" }].slice(0, 10))
+                  }
+                >
+                  {t("Adicionar horário")}
+                </Button>
+              </div>
+
+              <p className="rounded-lg bg-muted p-2 text-sm">
+                <strong>{t("Resumo:")}</strong> {resumoDaAgenda}
+              </p>
+            </div>
+          )}
+
+          {agendado && (
+            <div className="rounded-xl border p-3 text-sm">
+              <p className="font-medium">{t("Agendamento salvo.")}</p>
+              <p className="text-muted-foreground">{resumoDaAgenda}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(
+                  "Pode acompanhar pelos envios da campanha. Ele para sozinho quando a lista acaba ou o período termina.",
+                )}
+              </p>
+            </div>
+          )}
+
+          {!plano && !resultado && modo === "agora" && (
             <Button size="sm" disabled={preenchidas.length === 0 || ocupado} onClick={() => void chamar(true)}>
               {t("Simular envio")}
             </Button>
@@ -328,13 +588,18 @@ export function DialogoDisparo({
         </div>
 
         <DialogFooter>
-          {plano?.pode_enviar && !resultado && (
+          {modo === "agendar" && !agendado && (
+            <Button disabled={ocupado || !podeAgendar} onClick={() => void agendar()}>
+              {t(`Agendar para ${ids.length} empresas`)}
+            </Button>
+          )}
+          {modo === "agora" && plano?.pode_enviar && !resultado && (
             <Button disabled={ocupado} onClick={() => void chamar(false)}>
               {t(`Enviar para ${plano.serao_enviados} empresas`)}
             </Button>
           )}
           <Button variant="outline" onClick={onFechar}>
-            {resultado ? t("Fechar") : t("Cancelar")}
+            {resultado || agendado ? t("Fechar") : t("Cancelar")}
           </Button>
         </DialogFooter>
       </DialogContent>

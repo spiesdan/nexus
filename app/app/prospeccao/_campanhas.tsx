@@ -63,6 +63,8 @@ type CardCampanha =
 
 /** O que `executar` devolve quando a campanha tira o público da base (0271). */
 interface PublicoDaBase {
+  /** A campanha que vai receber a agenda (0273) — vem do `executar(id)`. */
+  campanha_id: string;
   campanha: string;
   linhas: Array<{ id: string; nome: string; telefone: string | null; cidade: string | null }>;
   ja_clientes: Array<{ nome: string; igual_a: string; similaridade: number }>;
@@ -255,6 +257,7 @@ export function CampanhasTab({
       // disparar. O envio continua sendo do `disparar`, que é simulação primeiro.
       if (r.fonte === "base") {
         setPublico({
+          campanha_id: id,
           campanha: r.campanha ?? "",
           linhas: r.linhas ?? [],
           ja_clientes: r.ja_clientes ?? [],
@@ -453,6 +456,7 @@ export function CampanhasTab({
       )}
       <DialogoDisparo
         ids={publico?.linhas.map((l) => l.id) ?? []}
+        campanhaId={publico?.campanha_id ?? null}
         aberto={disparoAberto}
         onFechar={() => setDisparoAberto(false)}
         onConcluido={() => {

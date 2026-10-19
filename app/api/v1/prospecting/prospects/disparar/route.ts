@@ -41,12 +41,11 @@ import { randomUUID } from "node:crypto";
 
 import { type NextRequest } from "next/server";
 
-import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
 import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { ensureConversation } from "@/lib/automation/start-conversation";
 import { jitterMs } from "@/lib/automation/throttle";
+import { enviarParaProspect } from "@/lib/prospeccao/envio";
 import {
   ESPACO_PADRAO_MS,
   LIMITE_PADRAO_DIA,
@@ -408,48 +407,32 @@ async function enviarPlano(p: ParamsDoEnvio) {
   const falhas: Array<{ nome: string; erro: string }> = [];
 
   for (const item of p.plano.aprovados) {
-    try {
-      await esperar(p.sessaoId, p.espacoMs);
+    await esperar(p.sessaoId, p.espacoMs);
 
-      const chatId = item.telefone_normalizado.replace(/\D/g, "");
-      const { data: contactId, error: errContato } = await p.admin.rpc("fn_upsert_wa_contact", {
-        p_org: p.orgId,
-        p_kind: "phone",
-        p_phone: chatId,
-        p_lid: null,
-        p_chat_id: chatId,
-        // `p_notify` é o NOME DE EXIBIÇÃO (o "notify name" do WhatsApp), não
-        // um booleano — a coluna é `text`. Mandar `true` faria o contato de
-        // todo mundo se chamar "true" no CRM.
-        p_notify: item.nome,
+    // O envio é compartilhado com o AGENDAMENTO (`lib/prospeccao/envio.ts`):
+    // upsert do contato → conversa → `sendMessageHandler`. Um segundo caminho
+    // de envio no produto é onde os guardrails divergem e o número queima.
+    const resultado = await enviarParaProspect(p.admin, {
+      orgId: p.orgId,
+      usuarioId: p.usuarioId,
+      requestId: p.requestId,
+      sessaoId: p.sessaoId,
+      prospect: {
+        id: item.id,
+        nome: item.nome,
+        telefone_normalizado: item.telefone_normalizado,
+      },
+      mensagem: mensagemDaVez(p.mensagens, item.mensagem_indice),
+    });
+    if (resultado.ok) {
+      enviados.push({ nome: item.nome, message_id: resultado.messageId, status: resultado.status });
+    } else {
+      falhas.push({ nome: item.nome, erro: resultado.erro });
+      logger.error("disparo: envio falhou", {
+        prospectId: item.id,
+        erro: resultado.erro,
+        requestId: p.requestId,
       });
-      if (errContato || !contactId) {
-        falhas.push({ nome: item.nome, erro: errContato?.message ?? "Não foi possível criar o contato." });
-        continue;
-      }
-
-      // `ensureConversation` devolve sempre um id ou lança — o erro cai no
-      // `catch` abaixo e vira uma linha de `falhas`, sem parar a campanha.
-      const conversationId = await ensureConversation(p.admin, p.orgId, contactId, p.sessaoId);
-
-      const mensagem = await sendMessageHandler(
-        p.admin,
-        {
-          organization_id: p.orgId,
-          actor: { type: "user", id: p.usuarioId },
-          requestId: p.requestId,
-        },
-        {
-          conversation_id: conversationId,
-          type: "text",
-          body: mensagemDaVez(p.mensagens, item.mensagem_indice),
-        },
-      );
-      enviados.push({ nome: item.nome, message_id: mensagem.id, status: mensagem.status });
-    } catch (err) {
-      const mensagem = err instanceof ApiError ? err.message : "Erro desconhecido.";
-      falhas.push({ nome: item.nome, erro: mensagem });
-      logger.error("disparo: envio falhou", { prospectId: item.id, erro: mensagem, requestId: p.requestId });
     }
   }
 

@@ -24,6 +24,7 @@ import {
 } from "@/components/filters/FilterBar";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -183,6 +184,10 @@ export function EmpresasTab({
   usuarioId: string;
 }) {
   const t = useT();
+  // A etiqueta do idioma em vigor para a data nativa (`toLocaleDateString`).
+  // "pt-BR" escrito à mão vira uma data no idioma errado quando a sessão está em
+  // outro idioma — e é o defeito que o gate `i18n-a-data-segue-o-idioma` pega.
+  const tagIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const router = useRouter();
   const paramsUrl = useSearchParams();
@@ -895,6 +900,28 @@ export function EmpresasTab({
     if (digitos.length < 10) return null;
     return `https://wa.me/${digitos}?text=${encodeURIComponent(`Olá ${p.nome}! Posso falar sobre uma condição para sua empresa?`)}`;
   }
+
+  // O agendamento (0273) mora na CAMPANHA: a lista fechada, as janelas e o
+  // período são dela. Da tela de Empresas não há campanha escolhida, então a
+  // confirmação cria uma com o nome/categorias/cidades do RECORTE atual — a
+  // audiência continua sendo `prospect_ids`, isto é só o rótulo da campanha.
+  const selecionadasParaAgenda = (lista ?? []).filter((p) => selecionados.includes(p.id));
+  const categoriasDaAgenda = [
+    ...new Set(
+      selecionadasParaAgenda
+        .map((p) => p.categoria)
+        .filter((c): c is string => Boolean(c && c.trim() !== "")),
+    ),
+  ].slice(0, 10);
+  const cidadesDaAgenda = [
+    ...new Set(
+      selecionadasParaAgenda
+        .map((p) => p.cidade)
+        .filter((c): c is string => Boolean(c && c.trim() !== "")),
+    ),
+  ]
+    .slice(0, 50)
+    .map((cidade) => ({ cidade }));
 
   return (
     <div className="space-y-4">
@@ -1753,6 +1780,11 @@ export function EmpresasTab({
       <DialogoDisparo
         key={disparoVez}
         ids={selecionados}
+        campanhaPadrao={{
+          nome: `Prospecção ${new Date().toLocaleDateString(tagIdioma)}`,
+          categorias: categoriasDaAgenda,
+          cidades: cidadesDaAgenda,
+        }}
         aberto={disparoAberto}
         onFechar={() => setDisparoAberto(false)}
         onConcluido={() => void buscar(filtros, buscaId)}

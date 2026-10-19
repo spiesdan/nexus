@@ -1,6 +1,7 @@
 /**
  * GET   /api/v1/prospecting/campaigns/[id] — detalhe da campanha (§28).
- * PATCH /api/v1/prospecting/campaigns/[id] — editar objetivo (§28).
+ * PATCH /api/v1/prospecting/campaigns/[id] — editar objetivo (§28) e AGENDAR
+ *       o disparo (0273: lista fechada, janelas, período, ritmo e cota).
  *
  * Antes da FASE 10 não existia rota nenhuma em `[id]` (só `executar/`); o
  * painel precisa do detalhe e de onde escrever o "Objetivo" que a spec cobra.
@@ -22,7 +23,9 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
 const COLUNAS =
-  "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico";
+  "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
+  "created_at, fonte_publico, prospect_ids, mensagens, espaco_ms, limite_diario, " +
+  "data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -77,6 +80,17 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
       // de um campo não reescreve o campo.
       ...(input.objetivo !== undefined ? { objetivo: input.objetivo } : {}),
       ...(input.fonte_publico !== undefined ? { fonte_publico: input.fonte_publico } : {}),
+      // 0273 — o relógio do agendamento. Cada campo só é escrito quando veio:
+      // um PATCH que salva o objetivo não zera as janelas nem a lista fechada.
+      ...(input.prospect_ids !== undefined ? { prospect_ids: input.prospect_ids } : {}),
+      ...(input.mensagens !== undefined ? { mensagens: input.mensagens } : {}),
+      ...(input.espaco_ms !== undefined ? { espaco_ms: input.espaco_ms } : {}),
+      ...(input.limite_diario !== undefined ? { limite_diario: input.limite_diario } : {}),
+      ...(input.data_inicio !== undefined ? { data_inicio: input.data_inicio } : {}),
+      ...(input.data_fim !== undefined ? { data_fim: input.data_fim } : {}),
+      ...(input.janelas !== undefined ? { janelas: input.janelas } : {}),
+      ...(input.agendada_em !== undefined ? { agendada_em: input.agendada_em } : {}),
+      ...(input.status !== undefined ? { status: input.status } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

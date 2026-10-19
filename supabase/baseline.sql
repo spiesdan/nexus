@@ -21720,3 +21720,100 @@ alter table public.prospecting_campaigns
 alter table public.prospecting_campaigns
   add constraint prospecting_campaigns_fonte_publico_valida
   check (fonte_publico in ('busca', 'base', 'ambas'));
+
+-- 0273_prospeccao_agendada (apêndice — ver supabase/migrations/20261019120000_0273_prospeccao_agendada.sql)
+--
+-- O relógio da prospecção: período (data_inicio/data_fim), VÁRIAS janelas por
+-- dia, ritmo (espaco_ms), cota do dia (limite_diario), a lista fechada
+-- (prospect_ids), as variações (mensagens) e o ledger `prospecting_sends`, que
+-- torna o tick idempotente e conta a cota do dia. Tabela nova → policy copiada
+-- de `prospecting_campaigns`, revoke da anon e grants por tabela.
+alter table public.prospecting_campaigns
+  add column if not exists prospect_ids uuid[] not null default '{}';
+
+alter table public.prospecting_campaigns
+  add column if not exists mensagens text[] not null default '{}';
+
+alter table public.prospecting_campaigns
+  add column if not exists espaco_ms integer not null default 60000;
+
+alter table public.prospecting_campaigns
+  add column if not exists limite_diario integer not null default 50;
+
+alter table public.prospecting_campaigns
+  add column if not exists data_inicio date;
+
+alter table public.prospecting_campaigns
+  add column if not exists data_fim date;
+
+alter table public.prospecting_campaigns
+  add column if not exists janelas jsonb not null default '[]'::jsonb;
+
+alter table public.prospecting_campaigns
+  add column if not exists agendada_em timestamptz;
+
+alter table public.prospecting_campaigns
+  add column if not exists ultimo_envio_at timestamptz;
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_espaco_faixa;
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_espaco_faixa
+  check (espaco_ms >= 1000 and espaco_ms <= 60000);
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_limite_faixa;
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_limite_faixa
+  check (limite_diario >= 1 and limite_diario <= 500);
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_janelas_array;
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_janelas_array
+  check (jsonb_typeof(janelas) = 'array');
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_periodo_valido;
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_periodo_valido
+  check (data_fim is null or data_inicio is null or data_fim >= data_inicio);
+
+create table if not exists public.prospecting_sends (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  campaign_id uuid not null references public.prospecting_campaigns(id) on delete cascade,
+  prospect_id uuid not null references public.business_prospects(id) on delete cascade,
+  mensagem_indice smallint not null default 0,
+  message_id text,
+  enviado_em timestamptz not null default now(),
+  constraint prospecting_sends_campanha_prospect_unico unique (campaign_id, prospect_id)
+);
+
+create index if not exists prospecting_sends_org_campanha_idx
+  on public.prospecting_sends (organization_id, campaign_id, enviado_em);
+
+alter table public.prospecting_sends enable row level security;
+
+drop policy if exists prospecting_sends_select on public.prospecting_sends;
+create policy prospecting_sends_select on public.prospecting_sends
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists prospecting_sends_write on public.prospecting_sends;
+create policy prospecting_sends_write on public.prospecting_sends
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+revoke all on public.prospecting_sends from anon;
+grant select, insert, update, delete on public.prospecting_sends to authenticated;
+grant all on public.prospecting_sends to service_role;

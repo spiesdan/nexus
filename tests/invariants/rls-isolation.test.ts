@@ -410,6 +410,14 @@ beforeAll(() => {
           insert into public.prospecting_campaigns (organization_id, nome)
             values (v_org, 'Campanha RLS Invariant') returning id into v_camp;
         end if;
+        select id into v_camp from public.prospecting_campaigns where organization_id = v_org limit 1;
+        -- migration 0273 — o ledger do disparo agendado. A linha é a prova
+        -- comportamental da tabela: sem ela, o controle positivo (a própria org
+        -- lê ≥1) não teria o que ler.
+        if not exists (select 1 from public.prospecting_sends where organization_id = v_org) then
+          insert into public.prospecting_sends (organization_id, campaign_id, prospect_id)
+            values (v_org, v_camp, v_prospect);
+        end if;
         if not exists (select 1 from public.prospecting_settings where organization_id = v_org) then
           insert into public.prospecting_settings (organization_id)
             values (v_org);
@@ -592,6 +600,12 @@ export const TABLES = [
   "prospect_search_results",
   "prospecting_campaigns",
   "prospecting_settings",
+  // migration 0273 — o ledger do disparo agendado. Mesmo molde da onda acima:
+  // leitura org-scoped sem gate de papel (o `agent` semeado serve de controle
+  // positivo); a ESCRITA exige `agent`+, e quem escreve de verdade é o cron com
+  // service role (`lib/prospeccao/agendado.ts`). Seed em `beforeAll`, logo após
+  // a campanha (FK em campaign_id/prospect_id).
+  "prospecting_sends",
   // migration 0250 (spec 19, FASE 13) — hit de cache de busca de prospecção.
   // Leitura org-scoped; escrita agent+ provada no POST /prospecting/searches
   // (`registrarCacheHit` em lib/prospeccao/uso.ts, best-effort).
