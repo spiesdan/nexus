@@ -10,8 +10,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   diaDeReferencia,
+  documentoNormalizado,
   filtrarEmbarcaveisPor,
   temCidade,
+  vincularPorDocumento,
 } from "@/lib/expedicao/buscar-embarcavel";
 
 const PEDIDOS = [
@@ -126,5 +128,67 @@ describe("filtrarEmbarcaveisPor — período", () => {
 describe("temCidade — o que o filtro não tem como julgar", () => {
   it("conta como sem cidade só quem não tem endereço NEM cadastro", () => {
     expect(PEDIDOS.filter((p) => !temCidade(p, doContato)).map((p) => p.id)).toEqual(["d"]);
+  });
+});
+
+describe("a busca de texto também acha pela cidade", () => {
+  // O campo diz "Buscar por número, cliente, cidade ou CNPJ". Antes desta
+  // correção ele só olhava `endereco_entrega`, e quem tem a cidade no cadastro
+  // do cliente — a maioria da base — não era achado pela busca.
+  it("acha pela cidade do CADASTRO", () => {
+    expect(ids({ busca: "união da vitória" })).toEqual(["b"]);
+  });
+
+  it("acha pela cidade do ENDEREÇO", () => {
+    expect(ids({ busca: "canoinhas" })).toEqual(["c"]);
+  });
+
+  it("ainda acha pelo número e pelo nome", () => {
+    expect(ids({ busca: "PED-0002" })).toEqual(["b"]);
+    expect(ids({ busca: "oficina gama" })).toEqual(["c"]);
+  });
+});
+
+describe("vincularPorDocumento — o pedido importado sem contato", () => {
+  // O caso medido em produção: 107 dos 109 pedidos aprovados/faturados vieram
+  // do emissor sem `contact_id`, e 101 deles casam com um cadastro pelo CNPJ.
+  // Sem o vínculo, filtrar por "Canoinhas" devolvia zero com 32 pedidos de
+  // Canoinhas na fila.
+  const CNPJ = "81.521.056/0001-93";
+
+  it("casa o documento com máscara contra o cadastro em dígitos", () => {
+    expect(documentoNormalizado(CNPJ)).toBe("81521056000193");
+    const [vinculado] = vincularPorDocumento(
+      [{ ...PEDIDOS[3]!, cliente_documento: CNPJ }],
+      { "81521056000193": "c9" },
+    );
+    expect(vinculado?.contact_id).toBe("c9");
+  });
+
+  it("não sobrescreve o contato que o pedido já tem", () => {
+    const [mantido] = vincularPorDocumento(
+      [{ ...PEDIDOS[0]!, contact_id: "c1", cliente_documento: CNPJ }],
+      { "81521056000193": "c9" },
+    );
+    expect(mantido?.contact_id).toBe("c1");
+  });
+
+  it("deixa como está quem não casa com cadastro nenhum", () => {
+    const [solto] = vincularPorDocumento(
+      [{ ...PEDIDOS[3]!, cliente_documento: "00.000.000/0001-00" }],
+      {},
+    );
+    expect(solto?.contact_id).toBeNull();
+  });
+
+  it("depois do vínculo, o filtro de cidade acha o pedido importado", () => {
+    const importado = { ...PEDIDOS[3]!, cliente_documento: CNPJ };
+    const [vinculado] = vincularPorDocumento([importado], { "81521056000193": "c9" });
+    const cidades: Record<string, string> = { c9: "Canoinhas/SC" };
+    expect(
+      filtrarEmbarcaveisPor([vinculado!], { cidade: "canoinhas" }, (id) =>
+        id ? (cidades[id] ?? null) : null,
+      ),
+    ).toHaveLength(1);
   });
 });
