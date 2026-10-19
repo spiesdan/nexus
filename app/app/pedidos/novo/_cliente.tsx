@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
@@ -40,12 +41,15 @@ export function CustomerSelector({
   contatoId,
   clienteNome,
   aoEscolher,
+  aoCriarNovo,
   textos,
 }: {
   contatos: ContatoOpcao[];
   contatoId: string | null;
   clienteNome: string;
   aoEscolher: (id: string | null, nome: string) => void;
+  /** Abre o cadastro de cliente sem sair do pedido (só quando o pai oferece). */
+  aoCriarNovo?: () => void;
   textos: { cliente: string; buscarCliente: string; clienteAvulso: string };
 }) {
   const t = useT();
@@ -103,17 +107,55 @@ export function CustomerSelector({
     };
   }, [contatoId]);
 
+  const [remotos, setRemotos] = React.useState<ContatoOpcao[]>([]);
+  const [buscando, setBuscando] = React.useState(false);
+
+  // A lista que chega por PROP é a primeira página da organização (500
+  // contatos, em ordem alfabética). Numa base de milhares, o cliente
+  // recém-cadastrado quase nunca está nela — e era exatamente por isso que ele
+  // "não aparecia" no seletor. A busca agora pergunta ao servidor, que procura
+  // na base inteira; a lista local continua valendo como resposta imediata.
+  React.useEffect(() => {
+    const b = busca.trim();
+    if (b.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRemotos([]);
+      return;
+    }
+    let vivo = true;
+    const timer = setTimeout(() => {
+      setBuscando(true);
+      apiClient
+        .get<{ data: ContatoOpcao[] }>(
+          `/api/v1/contacts?search=${encodeURIComponent(b)}&limit=12`,
+        )
+        .then((r) => {
+          if (vivo) setRemotos(Array.isArray(r.data) ? r.data : []);
+        })
+        .catch(() => {
+          // A lista local continua valendo: busca remota é reforço, não gate.
+        })
+        .finally(() => {
+          if (vivo) setBuscando(false);
+        });
+    }, 250);
+    return () => {
+      vivo = false;
+      clearTimeout(timer);
+    };
+  }, [busca]);
+
   const filtrados = React.useMemo(() => {
     const b = busca.trim().toLowerCase();
     if (!b) return [];
-    return contatos
-      .filter((c) =>
-        [c.display_name, c.name, c.phone_number, c.email]
-          .filter(Boolean)
-          .some((v) => (v as string).toLowerCase().includes(b)),
-      )
-      .slice(0, 8);
-  }, [busca, contatos]);
+    const locais = contatos.filter((c) =>
+      [c.display_name, c.name, c.phone_number, c.email]
+        .filter(Boolean)
+        .some((v) => (v as string).toLowerCase().includes(b)),
+    );
+    const vistos = new Set(locais.map((c) => c.id));
+    return [...locais, ...remotos.filter((c) => !vistos.has(c.id))].slice(0, 8);
+  }, [busca, contatos, remotos]);
 
   return (
     <div className="space-y-2">
@@ -152,6 +194,18 @@ export function CustomerSelector({
           </ul>
         )}
         <p className="text-xs text-muted-foreground">{textos.clienteAvulso}</p>
+        {buscando && (
+          <p className="text-xs text-muted-foreground">{t("Buscando…")}</p>
+        )}
+        {aoCriarNovo && (
+          // Quem chega aqui com um cliente que ainda não existe não pode ser
+          // obrigado a abandonar o pedido, cadastrar em outra tela e voltar:
+          // o rascunho se perde no caminho. O diálogo cria e devolve o
+          // contato já escolhido (ver `OrderEditor`).
+          <Button type="button" variant="outline" size="sm" onClick={aoCriarNovo}>
+            {t("Cadastrar novo cliente")}
+          </Button>
+        )}
       </div>
 
       {resumo && (

@@ -36,6 +36,19 @@ interface FormShape {
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  /**
+   * O contato que acabou de nascer. Existe para quem cria de dentro de outra
+   * tela (o pedido novo): sem o retorno, a tela teria de recarregar a lista
+   * inteira para descobrir o id — e o cliente recém-digitado não estaria nela
+   * até o cache virar.
+   */
+  onCreated?: (contato: {
+    id: string;
+    name: string | null;
+    display_name: string | null;
+    phone_number: string | null;
+    email: string | null;
+  }) => void;
 }
 
 /**
@@ -43,7 +56,7 @@ interface Props {
  * CNPJ + busca na Receita + fantasia + IE) e o endereço é sempre o mesmo
  * bloco — igual à ficha do Mercos, onde endereço nunca falta.
  */
-export function NewContactDialog({ open, onOpenChange }: Props) {
+export function NewContactDialog({ open, onOpenChange, onCreated }: Props) {
   const t = useT();
   const create = useCreateContact();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -91,10 +104,17 @@ export function NewContactDialog({ open, onOpenChange }: Props) {
     }
 
     try {
-      await create.mutateAsync(parsed.data as ContactCreate);
+      const criado = await create.mutateAsync(parsed.data as ContactCreate);
       toast.success(t("Cliente criado"));
       form.reset();
       setEndereco(ENDERECO_VAZIO);
+      onCreated?.({
+        id: criado.data.id,
+        name: criado.data.name,
+        display_name: criado.data.display_name,
+        phone_number: criado.data.phone_number,
+        email: criado.data.email,
+      });
       onOpenChange(false);
     } catch {
       // error toast already handled by hook

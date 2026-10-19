@@ -56,10 +56,17 @@ export function CnpjLookup({
     setBuscando(true);
     setAviso(null);
     try {
-      const r = await apiClient.get<
-        | { ja_cadastrado: true; contact_id: string; nome: string | null }
-        | ({ ja_cadastrado: false } & DadosDaReceita)
-      >(`/api/v1/contacts/cnpj-lookup?cnpj=${digitos}`);
+      // `ok()` embrulha o corpo em `{ data }` (`lib/api/wrappers.ts`) e o
+      // `apiClient` devolve o corpo como veio. Sem desembrulhar, `r.ja_cadastrado`
+      // é `undefined` e `aoPreencher(r)` entrega o ENVELOPE — os diálogos copiam
+      // `undefined` por cima dos campos, então "Buscar dados" limpava o CNPJ e a
+      // razão em vez de preenchê-los.
+      const resposta = await apiClient.get<{
+        data:
+          | { ja_cadastrado: true; contact_id: string; nome: string | null }
+          | ({ ja_cadastrado: false } & DadosDaReceita);
+      }>(`/api/v1/contacts/cnpj-lookup?cnpj=${digitos}`);
+      const r = resposta.data;
       if (r.ja_cadastrado) {
         setAviso(t(`Já cadastrado como "${r.nome ?? "contato"}".`));
         return;

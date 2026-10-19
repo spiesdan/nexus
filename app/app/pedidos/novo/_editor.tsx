@@ -21,6 +21,8 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
+import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { NewContactDialog } from "@/components/contacts/NewContactDialog";
 import { precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
 import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
 import { CustomerSelector, type ContatoOpcao } from "./_cliente";
@@ -98,6 +100,11 @@ export function OrderEditor({
 
   const [contatoId, setContatoId] = React.useState<string | null>(null);
   const [clienteNome, setClienteNome] = React.useState("");
+  // A lista vem do servidor no carregamento da página; o estado local existe
+  // para o cliente cadastrado AQUI entrar na hora, sem recarregar a tela (e sem
+  // perder o rascunho do pedido).
+  const [listaDeContatos, setListaDeContatos] = React.useState<ContatoOpcao[]>(contatos);
+  const [novoClienteAberto, setNovoClienteAberto] = React.useState(false);
   const [linhas, setLinhas] = React.useState<LinhaDoPedido[]>([]);
   const [condicao, setCondicao] = React.useState("");
   // 0261: o prazo estruturado e a marcação de NF. São dois campos e não um,
@@ -470,7 +477,11 @@ export function OrderEditor({
       if (pedido.aprovacao_necessaria) setAprovacao(true);
       nexusToast.success(`${textos.pedidoCriado}: PED-${String(pedido.numero).padStart(4, "0")}`);
       limpar();
+      // `refresh()` junto do `push` de propósito: o Router Cache do Next serve
+      // o RSC de `/app/pedidos` por 30s (`next.config.ts`, `staleTimes.dynamic`)
+      // e o pedido recém-criado não estaria nele — a lista abria sem o pedido.
       router.push("/app/pedidos");
+      router.refresh();
     } catch (e) {
       showApiError(e);
     }
@@ -527,13 +538,14 @@ export function OrderEditor({
       {passo === 0 && (
         <section aria-label={PASSOS[0]} className="min-w-0 space-y-4">
           <CustomerSelector
-            contatos={contatos}
+            contatos={listaDeContatos}
             contatoId={contatoId}
             clienteNome={clienteNome}
             aoEscolher={(id, nome) => {
               setContatoId(id);
               setClienteNome(nome);
             }}
+            aoCriarNovo={() => setNovoClienteAberto(true)}
             textos={{
               cliente: textos.cliente,
               buscarCliente: textos.buscarCliente,
@@ -542,6 +554,28 @@ export function OrderEditor({
           />
         </section>
       )}
+
+      {/* Cadastro de cliente sem sair do pedido. Ao criar, o contato entra na
+          lista local E já fica escolhido: quem digitou o nome acabou de digitar
+          quer ele selecionado, não quer procurá-lo de novo. */}
+      <NewContactDialog
+        open={novoClienteAberto}
+        onOpenChange={setNovoClienteAberto}
+        onCreated={(c) => {
+          const novo: ContatoOpcao = {
+            id: c.id,
+            name: c.name,
+            display_name: c.display_name,
+            phone_number: c.phone_number,
+            email: c.email,
+          };
+          setListaDeContatos((prev) =>
+            prev.some((p) => p.id === novo.id) ? prev : [...prev, novo],
+          );
+          setContatoId(novo.id);
+          setClienteNome(rotuloDoContato(novo, t));
+        }}
+      />
 
       {passo === 1 && (
         <section aria-label={PASSOS[1]} className="min-w-0 space-y-4">

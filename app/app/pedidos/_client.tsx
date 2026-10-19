@@ -37,6 +37,8 @@ import { apiClient } from "@/lib/api/client";
 import { paraCSV } from "@/lib/comercial/relatorios";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { idsDoLote } from "@/lib/comercial/ids-do-lote";
+import { chaveDoDia } from "@/lib/tempo/dia";
+import { FUSO_PADRAO } from "@/lib/tempo/fusos";
 
 import { FiltroPorPeriodo, hojeEmChave } from "./_periodo";
 import {
@@ -246,22 +248,27 @@ export function PedidosClient({
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const [imprimindoDia, setImprimindoDia] = React.useState(false);
   const [expandido, setExpandido] = React.useState<string | null>(null);
-  const [filtrosSalvos, setFiltrosSalvos] = React.useState<Record<string, Filtros>>(() => {
+  // Os filtros salvos vêm do `localStorage`, que não existe no servidor. Ler no
+  // inicializador do `useState` fazia o HTML do SSR (sem filtro nenhum)
+  // discordar do primeiro render do cliente (com os filtros) — erro #418. Depois
+  // da hidratação é uma atualização de estado comum, sem mismatch.
+  const [filtrosSalvos, setFiltrosSalvos] = React.useState<Record<string, Filtros>>({});
+  React.useEffect(() => {
     try {
-      const cru =
-        typeof window === "undefined"
-          ? null
-          : window.localStorage.getItem("pedidos-filtros-salvos");
-      if (!cru) return {};
+      const cru = window.localStorage.getItem("pedidos-filtros-salvos");
+      if (!cru) return;
       const parsed = JSON.parse(cru) as Record<string, Partial<Filtros>>;
       // Salvos antigos não têm de/ate/vendedorId — completa com o vazio.
-      return Object.fromEntries(
-        Object.entries(parsed).map(([k, v]) => [k, { ...FILTROS_VAZIOS, ...v }]),
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFiltrosSalvos(
+        Object.fromEntries(
+          Object.entries(parsed).map(([k, v]) => [k, { ...FILTROS_VAZIOS, ...v }]),
+        ),
       );
     } catch {
-      return {};
+      // Cortesia, nunca erro.
     }
-  });
+  }, []);
   const [avancadosAbertos, setAvancadosAbertos] = React.useState(() =>
     temAvancado(filtrosIniciais),
   );
@@ -583,19 +590,22 @@ export function PedidosClient({
   /** Cartões agrupados por dia, como no Mercos (ONTEM, SEXTA-FEIRA, 04/09…). */
   const porDia = React.useMemo(() => {
     const grupos = new Map<string, { chave: string; rotulo: string; itens: PedidoComercial[] }>();
+    // A chave do dia sai de `chaveDoDia`, que lê o fuso da ORGANIZAÇÃO — e não
+    // de `getFullYear()/getMonth()/getDate()`, que leem o fuso do runtime e
+    // faziam o servidor (UTC) e o navegador (UTC−3) discordarem na hidratação.
     const hoje = new Date();
-    const dia = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    const hojeChave = dia(hoje);
-    const ontemChave = dia(new Date(hoje.getTime() - 86400000));
+    const hojeChave = chaveDoDia(hoje);
+    const ontemChave = chaveDoDia(new Date(hoje.getTime() - 86400000));
     for (const p of pedidos) {
       const d = new Date(p.created_at);
-      const chave = dia(d);
+      const chave = chaveDoDia(d);
       let rotulo: string;
       if (chave === hojeChave) rotulo = "Hoje";
       else if (chave === ontemChave) rotulo = "Ontem";
       else
         rotulo = d
           .toLocaleDateString(tagIdioma, {
+            timeZone: FUSO_PADRAO,
             weekday: "long",
             day: "2-digit",
             month: "long",
@@ -1045,7 +1055,9 @@ export function PedidosClient({
                       <TableCell className="font-medium">{numeroDoPedido(p.numero)}</TableCell>
                       <TableCell>{p.cliente_nome}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString(tagIdioma)}
+                        {new Date(p.created_at).toLocaleDateString(tagIdioma, {
+                          timeZone: FUSO_PADRAO,
+                        })}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {comoMoeda(p.total_cents, p.moeda)}
