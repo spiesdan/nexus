@@ -88,6 +88,7 @@ export function OrderSummary({
             <dt className="text-muted-foreground">{textos.desconto} (R$)</dt>
             <dd>
               <Input
+                id="desconto"
                 className="w-28 text-right"
                 value={descontoTexto}
                 onChange={(e) => aoDesconto(e.target.value)}
@@ -98,7 +99,10 @@ export function OrderSummary({
           <div className="flex items-center justify-between gap-2">
             <dt className="text-muted-foreground">{textos.desconto} (%)</dt>
             <dd>
+              {/* `id` estável: é por ele que a jornada E2E preenche o desconto,
+                  e é ele que liga o campo ao rótulo para o leitor de tela. */}
               <Input
+                id="desconto-pct"
                 className="w-28 text-right"
                 type="number"
                 min={0}
@@ -113,6 +117,7 @@ export function OrderSummary({
             <dt className="text-muted-foreground">{textos.frete} (R$)</dt>
             <dd>
               <Input
+                id="frete"
                 className="w-28 text-right"
                 value={freteTexto}
                 onChange={(e) => aoFrete(e.target.value)}
