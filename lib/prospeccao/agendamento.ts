@@ -100,8 +100,20 @@ export interface EstadoDoEnvio {
   /** Carimbo do último envio da campanha (`ultimo_envio_at`); null = nunca. */
   ultimoEnvioAt: string | null;
   espacoMs: number;
+  /** Envios de HOJE desta campanha — é o que a cota dela conta. */
   enviadosHoje: number;
+  /** A cota do dia desta campanha (`limite_diario`). */
   limiteDiario: number;
+  /**
+   * A cota do NÚMERO — a MESMA régua que o agente de IA obedece: todo envio do
+   * dia pelo mesmo WhatsApp, de qualquer origem (as campanhas e o agente),
+   * contra o teto do número.
+   *
+   * Ausente = sem leitura, e o motor não inventa teto. `Infinity` é "número
+   * formado": o teto do CRM não limita.
+   */
+  enviadosHojeDoNumero?: number;
+  tetoDoNumero?: number;
 }
 
 /**
@@ -122,6 +134,19 @@ export function podeEnviarAgora(
   // A cota é do DIA, não do relógio: quando ela estoura, a janela aberta não
   // muda nada — e o motivo tem de dizer cota, não janela.
   if (p.enviadosHoje >= p.limiteDiario) {
+    return { pode: false, motivo: "cota_do_dia" };
+  }
+  // A cota do NÚMERO, logo depois da cota da campanha e ANTES do intervalo: as
+  // duas são "cota do dia" (mesmo motivo, mesma tela), e o teto do número manda
+  // quando é menor. Sem esta linha a campanha furava o warm-up que o agente de
+  // IA respeita — o número recebia 50 do disparo no dia em que o próprio
+  // produto diz que 20 é o seguro. Quem paga o banimento é o WhatsApp da
+  // empresa, não a campanha.
+  if (
+    p.tetoDoNumero !== undefined &&
+    p.enviadosHojeDoNumero !== undefined &&
+    p.enviadosHojeDoNumero >= p.tetoDoNumero
+  ) {
     return { pode: false, motivo: "cota_do_dia" };
   }
   if (p.ultimoEnvioAt) {

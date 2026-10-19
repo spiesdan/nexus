@@ -23,5 +23,13 @@ A campanha **para sozinha**: quando a lista acaba, ela vira concluída; quando o
 período vence, ela vira pausada — em vez de ficar na tela parecendo ativa e nunca
 mais falar. Estender a data e agendar de novo é o que a retoma.
 
+O ritmo tem dois limites, e vale o menor: a cota que você escolhe para a campanha
+e o **teto do número** — o limite da conexão cruzado com o aquecimento da idade
+dele, a mesma régua que já rege as respostas do agente de IA. Número recém
+pareado começa em 20 mensagens por dia; quando o número já está aquecido, esse
+teto some. O que você digita na tela é um máximo, nunca um atalho para passar por
+cima do aquecimento — e em Conexões dá para declarar o número como já aquecido.
+Vale para as duas formas de disparar, a agendada e a imediata.
+
 A campanha guarda tudo: a lista escolhida, os horários, o período e o ritmo. Quem
 acompanha vê o que falta pelos envios da campanha.

@@ -56,6 +56,7 @@ import {
   validarMensagem,
   type CandidatoAoDisparo,
 } from "@/lib/prospeccao/disparo";
+import { lerTetoDoNumero } from "@/lib/prospeccao/teto-do-numero";
 import { validateRequest } from "@/lib/schemas";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -120,7 +121,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const limite = entrada.limite ?? LIMITE_PADRAO_DIA;
+  // `limite` é `let` porque o TETO DO NÚMERO pode reduzi-lo mais abaixo (o
+  // operador pede 50, o número em aquecimento só aceita 20 — vale o menor).
+  let limite = entrada.limite ?? LIMITE_PADRAO_DIA;
   const espacoMs = entrada.espaco_ms ?? ESPACO_PADRAO_MS;
 
   // ─── Sessão utilizável ───────────────────────────────────────────────────
@@ -130,13 +133,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, status, archived_at")
+    .select("id, status, archived_at, daily_message_limit")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null)
     .limit(1);
   if (errSessao) return fail("internal_error", "Erro ao ler as sessões.", 500, { requestId });
-  const sessao = (sessoes as Array<{ id: string }> | null)?.[0] ?? null;
+  const sessao =
+    (sessoes as Array<{ id: string; daily_message_limit: number | null }> | null)?.[0] ?? null;
   const sessaoWorking = sessao !== null;
 
   // ─── Prospects + contexto ────────────────────────────────────────────────
@@ -168,22 +172,33 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const porContato = await contextoDosContatos(admin, orgId, contactIds);
 
-  // ─── Cota do dia ─────────────────────────────────────────────────────────
-  // `pacing_ledger` é quem conta envio de verdade (o `channel_session_warmup`
-  // não tem escritor — ver `lib/automation/throttle.ts`). Conta-se o dia
-  // inteiro em UTC, que é o fuso que a coluna `sent_at` grava.
+  // ─── As DUAS cotas do dia ────────────────────────────────────────────────
+  // A que o operador pede (`limite`) e o TETO DO NÚMERO — `daily_message_limit`
+  // ∩ o warm-up da idade, a MESMA régua que o motor anti-ban impõe ao agente de
+  // IA. Vale a MENOR. Um disparo que passasse por cima do warm-up mandaria 50
+  // mensagens por um número no dia em que o próprio produto diz que 20 é o
+  // seguro, e o banimento cairia na linha da empresa — não na campanha.
+  //
+  // `jaEnviadosHoje` sai da MESMA leitura: `pacing_ledger` é quem conta envio de
+  // verdade (o `channel_session_warmup` não tem escritor — ver
+  // `lib/automation/throttle.ts`), e o dia começa na meia-noite LOCAL, igual ao
+  // `sentToday` que o agente vê.
   let jaEnviadosHoje = 0;
   if (sessao) {
-    const inicioDoDia = new Date();
-    inicioDoDia.setUTCHours(0, 0, 0, 0);
-    const { count, error: errCota } = await admin
-      .from("pacing_ledger")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId)
-      .eq("channel_session_id", sessao.id)
-      .gte("sent_at", inicioDoDia.toISOString());
-    if (errCota) return fail("internal_error", "Erro ao ler a cota do dia.", 500, { requestId });
-    jaEnviadosHoje = count ?? 0;
+    const { data: org } = await admin
+      .from("organizations")
+      .select("timezone")
+      .eq("id", orgId)
+      .maybeSingle();
+    const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
+      orgId,
+      sessaoId: sessao.id,
+      agoraIso: new Date().toISOString(),
+      fuso: (org as { timezone?: string | null } | null)?.timezone ?? null,
+      limiteDoCrm: sessao.daily_message_limit,
+    });
+    jaEnviadosHoje = enviadosHoje;
+    limite = Math.min(limite, teto);
   }
 
   const candidatos: CandidatoAoDisparo[] = brutos.map((p) => {

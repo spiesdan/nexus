@@ -26,6 +26,12 @@ function combina(linha: Linha, filtros: unknown[]): boolean {
       if (!(arr[2] as unknown[]).includes(linha[col])) return false;
       continue;
     }
+    if (arr[1] === "__gte__") {
+      // ISO-8601 UTC ordena como string (mesmo comprimento), que é como o
+      // PostgREST compara timestamptz.
+      if (String(linha[col]) < String(arr[2])) return false;
+      continue;
+    }
     if (linha[col] !== arr[1]) return false;
   }
   return true;
@@ -45,13 +51,16 @@ class Query {
   private payload: Linha | null = null;
   private conflito: string[] | null = null;
   private ignorarDuplicados = false;
+  /** `.select(..., { count: "exact" })` — o fake devolve `count = linhas`. */
+  private contar = false;
 
   constructor(
     private dados: Record<string, Linha[]>,
     private tabela: string,
   ) {}
 
-  select(): this {
+  select(_cols?: string, opts?: { count?: string; head?: boolean }): this {
+    if (opts?.count) this.contar = true;
     return this;
   }
   update(payload: Linha): this {
@@ -75,6 +84,10 @@ class Query {
     this.filtros.push([col, val]);
     return this;
   }
+  gte(col: string, val: unknown): this {
+    this.filtros.push([col, "__gte__", val]);
+    return this;
+  }
   is(col: string, val: unknown): this {
     this.filtros.push([col, val]);
     return this;
@@ -96,7 +109,7 @@ class Query {
     return this;
   }
 
-  private executar(): { data: Linha[] | null; error: null } {
+  private executar(): { data: Linha[] | null; error: null; count?: number } {
     const linhas = this.dados[this.tabela] ?? (this.dados[this.tabela] = []);
     // Simula o tick OVERLAPADO: outro processo reservou o prospect entre a
     // leitura do ledger e o insert, então o `ON CONFLICT DO NOTHING` não devolve
@@ -113,7 +126,9 @@ class Query {
         );
       }
       if (this.limite !== null) saida = saida.slice(0, this.limite);
-      return { data: saida, error: null };
+      return this.contar
+        ? { data: saida, error: null, count: saida.length }
+        : { data: saida, error: null };
     }
     if (this.acao === "update") {
       for (const l of linhas) if (combina(l, this.filtros)) Object.assign(l, this.payload);
@@ -134,7 +149,9 @@ class Query {
   }
 
   // O cliente do Supabase é "thenable": `await admin.from(x).select(...).eq(...)`.
-  then<T>(onFulfilled: (r: { data: Linha[] | null; error: null }) => T): Promise<T> {
+  then<T>(
+    onFulfilled: (r: { data: Linha[] | null; error: null; count?: number }) => T,
+  ): Promise<T> {
     return Promise.resolve(this.executar()).then(onFulfilled);
   }
 }
@@ -200,6 +217,33 @@ function base(tabelas: Record<string, Linha[]>): Record<string, Linha[]> {
 const DENTRO = "2026-10-19T17:00:00.000Z";
 /** 12:30 de São Paulo — no buraco entre as janelas. */
 const FORA = "2026-10-19T15:30:00.000Z";
+
+/**
+ * Um envio EFETIVADO pelo número (é o que `pacing_ledger` guarda).
+ *
+ * `sent_at` de 4h antes do instante do teste, de propósito: ele está no MESMO
+ * dia local (conta na cota) e fora do `espaco_ms` (não aciona a trava de
+ * ritmo). Um carimbo igual a "agora" faria a campanha parar por INTERVALO
+ * antes de a cota do número ser avaliada — e o teste mediria a coisa errada.
+ */
+function ledgers(extra: Linha = {}): Linha {
+  return {
+    organization_id: "org-1",
+    channel_session_id: "sess-1",
+    sent_at: "2026-10-19T13:00:00.000Z",
+    ...extra,
+  };
+}
+
+/** Knobs do número declarado JÁ AQUECIDO — aí só o teto do CRM limita. */
+function knobsAquecidos(): Linha {
+  return {
+    organization_id: "org-1",
+    channel_session_id: "sess-1",
+    warmup_daily_caps: [{ minAgeDays: 0, cap: null }],
+    number_activated_at: "2026-01-01T00:00:00.000Z",
+  };
+}
 
 function senderFalso() {
   return vi.fn(
@@ -388,5 +432,154 @@ describe("processarCampanhasAgendadas", () => {
     expect(resumo.pausadas).toBe(0);
     expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "fora_do_periodo" }]);
     expect(dados.prospecting_campaigns![0]!.status).toBe("ativa");
+  });
+
+  it("(l) o TETO DO NÚMERO manda quando é menor que a cota da campanha", async () => {
+    // A campanha pede 50/dia e o número aceita 3 (limite do CRM). Vale o menor:
+    // é a MESMA régua que o agente de IA obedece, e sem ela a campanha furaria o
+    // aquecimento do próprio número que o produto promete proteger.
+    const dados = base({
+      prospecting_campaigns: [campanha({ limite_diario: 50 })],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          daily_message_limit: 3,
+        },
+      ],
+      channel_knobs: [knobsAquecidos()],
+      pacing_ledger: [1, 2, 3].map(() => ledgers()),
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "cota_do_dia" }]);
+  });
+
+  it("(m) sem linha em channel_knobs, o warm-up DEFAULT (20/dia) segura a campanha", async () => {
+    // Quem nunca abriu Conexões não tem linha em `channel_knobs` e cai nos
+    // defaults do pacing, que tratam o número como recém-nascido. É conservador
+    // de propósito — e é a decisão que o agente de IA já toma para o mesmo
+    // número. 20 é o degrau de idade 0 em `PACING_DEFAULTS`.
+    const dados = base({
+      prospecting_campaigns: [campanha({ limite_diario: 50 })],
+      pacing_ledger: Array.from({ length: 20 }, () => ledgers()),
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "cota_do_dia" }]);
+  });
+
+  it("(n) duas campanhas ativas nunca mandam duas no MESMO tick", async () => {
+    // Duas campanhas, teto do número = 1, mesmo tick. A primeira manda; a
+    // segunda é barrada pelo RITMO (o número acabou de falar) — e é o ritmo que
+    // responde primeiro, porque a trava global roda antes de a cota da campanha
+    // ser avaliada. O que importa: sai UMA mensagem, não duas. Na passada
+    // seguinte a cota do número já enxerga o envio no `pacing_ledger` e barra
+    // (o teto é 1/dia).
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({ id: "camp-1", prospect_ids: ["p-001"], created_at: "2026-10-19T10:00:00.000Z" }),
+        campanha({ id: "camp-2", prospect_ids: ["p-002"], created_at: "2026-10-19T11:00:00.000Z" }),
+      ],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          daily_message_limit: 1,
+        },
+      ],
+      channel_knobs: [knobsAquecidos()],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    expect(enviar).toHaveBeenCalledTimes(1);
+    expect(enviar.mock.calls[0]![1].prospect.id).toBe("p-001");
+    expect(resumo.pulados).toEqual([{ campanha: "camp-2", motivo: "intervalo" }]);
+
+    // Segunda passada: o envio da primeira já está no ledger, e agora a cota do
+    // número barra a segunda campanha — não há como mandar duas no dia.
+    const dados2 = base({
+      prospecting_campaigns: [campanha({ id: "camp-2", prospect_ids: ["p-002"] })],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          daily_message_limit: 1,
+        },
+      ],
+      channel_knobs: [knobsAquecidos()],
+      pacing_ledger: [ledgers({ sent_at: "2026-10-19T13:00:00.000Z" })],
+    });
+    const enviar2 = senderFalso();
+    const resumo2 = await processarCampanhasAgendadas(
+      criarAdmin(dados2),
+      "2026-10-19T18:00:00.000Z",
+      enviar2,
+    );
+
+    expect(enviar2).not.toHaveBeenCalled();
+    expect(resumo2.pulados).toEqual([{ campanha: "camp-2", motivo: "cota_do_dia" }]);
+  });
+
+  it("(o) a cota do número conta o que o AGENTE já mandou hoje", async () => {
+    // O `pacing_ledger` não distingue origem: um envio do agente de IA é um
+    // envio do número. Com o teto em 2 e duas respostas já dadas na conversa, a
+    // campanha não manda — é o mesmo orçamento.
+    const dados = base({
+      prospecting_campaigns: [campanha({ limite_diario: 50 })],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          daily_message_limit: 2,
+        },
+      ],
+      channel_knobs: [knobsAquecidos()],
+      pacing_ledger: [1, 2].map(() => ledgers()),
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "cota_do_dia" }]);
+  });
+
+  it("(p) envio de ONTEM não consome a cota de hoje", async () => {
+    // A meia-noite é a LOCAL da organização (São Paulo, UTC−3): o corte é
+    // 03:00Z. Contar em UTC faria a cota reiniciar às 21h de Brasília.
+    const dados = base({
+      prospecting_campaigns: [campanha({ limite_diario: 50 })],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          daily_message_limit: 2,
+        },
+      ],
+      channel_knobs: [knobsAquecidos()],
+      // 02:00Z de hoje = 23:00 de ONTEM em São Paulo — fora do dia local.
+      pacing_ledger: [1, 2].map(() => ledgers({ sent_at: "2026-10-19T02:00:00.000Z" })),
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    expect(enviar).toHaveBeenCalledTimes(1);
   });
 });

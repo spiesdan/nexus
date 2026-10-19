@@ -13,7 +13,12 @@
  *
  *   1. JANELA + PERÍODO + COTA — `podeEnviarAgora` (lib/prospeccao/agendamento).
  *      A cota é do DIA e a janela é do RELÓGIO: confundir as duas faz o
- *      operador achar que "não mandou" quando já mandou tudo.
+ *      operador achar que "não mandou" quando já mandou tudo. São DUAS cotas, e
+ *      a MENOR manda: a da campanha (`limite_diario`) e a do NÚMERO (o teto do
+ *      CRM ∩ o warm-up da idade) — a mesma régua que o agente de IA obedece.
+ *      Sem a segunda, a campanha furaria o aquecimento do próprio número que o
+ *      produto se compromete a proteger, e quem leva o banimento é o WhatsApp
+ *      da empresa.
  *   2. ESPAÇAMENTO GLOBAL POR NÚMERO — `pacing_ledger`. É o que garante
  *      "nunca duas no mesmo segundo", inclusive com DUAS campanhas ativas na
  *      mesma organização: depois de um envio, o tick registra o instante no
@@ -38,6 +43,7 @@ import {
   type JanelaDoDia,
   type MotivoDeEspera,
 } from "./agendamento";
+import { lerTetoDoNumero } from "./teto-do-numero";
 
 /** Teto de campanhas por tick — o tick tem 60s, não é varredura ilimitada. */
 const MAX_CAMPANHAS = 200;
@@ -93,6 +99,23 @@ interface EstadoDaOrg {
   sessaoId: string | null;
   /** `sent_at` mais recente em `pacing_ledger` da sessão WORKING (ms). */
   ultimoEnvioMs: number | null;
+  /**
+   * O TETO DIÁRIO DO NÚMERO: `channel_sessions.daily_message_limit` ∩ o degrau
+   * de warm-up da idade do número. `Infinity` = número formado.
+   *
+   * É a mesma régua que `decidePacing` aplica ao agente de IA — uma campanha
+   * que mandasse mais do que o teto do número furaria o warm-up que o produto
+   * promete respeitar, e o banimento cairia no WhatsApp da empresa.
+   */
+  tetoDoNumero: number;
+  /**
+   * Envios de HOJE pelo número, de QUALQUER origem (campanhas + agente de IA) —
+   * é o `sentToday` do pacing, lido do `pacing_ledger` no início do tick. Não é
+   * somado durante o tick porque a trava de ritmo acima já garante uma única
+   * mensagem por número por passada; um envio deste tick aparece nesta conta na
+   * passada seguinte.
+   */
+  enviadosHojeDoNumero: number;
 }
 
 const COLUNAS =
@@ -130,7 +153,7 @@ export async function processarCampanhasAgendadas(
   const estadoDaOrg = async (orgId: string): Promise<EstadoDaOrg> => {
     const memo = orgs.get(orgId);
     if (memo) return memo;
-    const estado = await carregarEstadoDaOrg(admin, orgId);
+    const estado = await carregarEstadoDaOrg(admin, orgId, agoraIso);
     orgs.set(orgId, estado);
     return estado;
   };
@@ -207,6 +230,8 @@ export async function processarCampanhasAgendadas(
         espacoMs,
         enviadosHoje,
         limiteDiario: campanha.limite_diario,
+        enviadosHojeDoNumero: org.enviadosHojeDoNumero,
+        tetoDoNumero: org.tetoDoNumero,
       });
       if (!decisao.pode) {
         // PERÍODO VENCIDO: o dia de hoje passou do `data_fim` e ainda sobra
@@ -335,7 +360,10 @@ export async function processarCampanhasAgendadas(
         .eq("id", campanha.id)
         .eq("organization_id", campanha.organization_id);
 
-      // O ritmo passa a valer para a PRÓXIMA campanha deste mesmo tick.
+      // O ritmo passa a valer para a PRÓXIMA campanha deste mesmo tick — é a
+      // trava global por número, e ela sozinha já garante UMA mensagem por
+      // número em cada tick. O gasto do dia NÃO é somado aqui: quem o carrega
+      // adiante é a leitura fresca do `pacing_ledger` no tick seguinte.
       org.ultimoEnvioMs = Date.parse(agoraIso);
       resumo.enviados++;
     } catch (erro) {
@@ -351,10 +379,11 @@ export async function processarCampanhasAgendadas(
   return resumo;
 }
 
-/** Fuso da org + a sessão WORKING + o carimbo mais recente da sessão. */
+/** Fuso da org + a sessão WORKING + o ritmo, o teto do número e o que ele já gastou hoje. */
 async function carregarEstadoDaOrg(
   admin: SupabaseClient,
   orgId: string,
+  agoraIso: string,
 ): Promise<EstadoDaOrg> {
   const { data: org } = await admin
     .from("organizations")
@@ -365,15 +394,36 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id")
+    .select("id, daily_message_limit")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null)
     .limit(1);
-  const sessaoId = ((sessoes ?? []) as unknown as Array<{ id: string }>)[0]?.id ?? null;
+  const sessao = ((sessoes ?? []) as unknown as Array<{
+    id: string;
+    daily_message_limit: number | null;
+  }>)[0];
+  const sessaoId = sessao?.id ?? null;
 
   let ultimoEnvioMs: number | null = null;
+  let tetoDoNumero = Number.POSITIVE_INFINITY;
+  let enviadosHojeDoNumero = 0;
+
   if (sessaoId) {
+    // ── O teto do NÚMERO e o que ele já gastou hoje ─────────────────────────
+    // A régua (warm-up ∩ limite do CRM) e a contagem do dia moram em
+    // `teto-do-numero.ts`: o "Enviar agora" faz a MESMA pergunta, e duas
+    // cópias divergiriam — deixando a outra porta sem teto.
+    const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
+      orgId,
+      sessaoId,
+      agoraIso,
+      fuso,
+      limiteDoCrm: sessao?.daily_message_limit ?? null,
+    });
+    tetoDoNumero = teto;
+    enviadosHojeDoNumero = enviadosHoje;
+
     const { data: ultimo } = await admin
       .from("pacing_ledger")
       .select("sent_at")
@@ -386,7 +436,7 @@ async function carregarEstadoDaOrg(
     const ms = sentAt ? Date.parse(sentAt) : Number.NaN;
     ultimoEnvioMs = Number.isFinite(ms) ? ms : null;
   }
-  return { fuso, sessaoId, ultimoEnvioMs };
+  return { fuso, sessaoId, ultimoEnvioMs, tetoDoNumero, enviadosHojeDoNumero };
 }
 
 /**
