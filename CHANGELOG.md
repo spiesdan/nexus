@@ -8,6 +8,171 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.30.0] — 2026-10-19
+
+### Adicionado
+
+- **Dá para cadastrar o cliente sem sair do pedido novo** Quem começa um pedido e descobre que o cliente ainda não existe tinha de
+  abandonar a tela, cadastrar em Contatos e voltar — e o rascunho do pedido se
+  perdia no caminho.
+
+  O passo **Cliente** do pedido novo agora tem o botão **Cadastrar novo cliente**,
+  que abre a mesma ficha do Mercos (PF/PJ, CNPJ com busca na Receita, endereço) por
+  cima do pedido. Ao salvar, o cliente entra na lista na hora e já fica
+  **selecionado** — não é preciso procurar de novo o nome que acabou de ser
+  digitado.
+
+  A busca do seletor também passou a consultar a base inteira no servidor, e não
+  só a primeira página que vinha com a tela.
+
+- **O disparo em lote alterna três mensagens e espera 60 segundos entre uma e outra** Mandar a mesma mensagem para dezenas de números que nunca falaram com a gente é o
+  padrão que o WhatsApp reconhece como spam — e o estrago não aparece como erro:
+  aparece semanas depois, como número banido. A tela de disparo em lote agora pede
+  até **três opções de texto** e as alterna: a primeira empresa recebe a mensagem 1,
+  a segunda a 2, a terceira a 3, a quarta volta para a 1. Cada empresa continua
+  recebendo **uma** mensagem — só não é mais a mesma string cinquenta vezes.
+
+  O intervalo padrão passou de 1,2s para **60 segundos**, e a tela mostra isso em
+  segundos, com o campo aberto para quem precisar de outro ritmo. A simulação diz
+  quanto tempo o disparo vai levar e em que ordem as mensagens vão sair, para dar
+  para conferir a rotação antes de qualquer coisa sair.
+
+  Quem manda um texto único continua preenchendo um campo só: as opções 2 e 3 são
+  opcionais, e a API aceita tanto a mensagem única de sempre quanto a lista de
+  variações.
+
+- **O disparo da prospecção vira agenda: período, horários e uma mensagem por minuto** Até agora a prospecção só sabia mandar "agora": você escolhia as empresas, clicava
+  em enviar e ficava esperando a fila andar — uma requisição que segurava a tela por
+  quase uma hora para mandar 50 mensagens.
+
+  Agora a tela de disparo tem **Enviar agora** e **Agendar**. No agendamento você
+  escolhe o período (por exemplo, de 19/10 a 23/10) e os horários de cada dia, com
+  quantas faixas quiser (por exemplo, das 7 às 12 e das 13 às 19). A partir daí quem
+  manda é o sistema, uma mensagem por vez, no ritmo escolhido — o padrão é uma por
+  minuto.
+
+  As mensagens continuam sendo até 5, e a rotação segue de onde parou: a primeira
+  empresa recebe a mensagem 1, a segunda a 2, a terceira a 3, a quarta volta para a
+  1 — nunca duas no mesmo segundo, e a mesma empresa nunca entra duas vezes na
+  mesma campanha.
+
+  A campanha **para sozinha**: quando a lista acaba, ela vira concluída; quando o
+  período vence, ela vira pausada — em vez de ficar na tela parecendo ativa e nunca
+  mais falar. Estender a data e agendar de novo é o que a retoma.
+
+  O ritmo tem dois limites, e vale o menor: a cota que você escolhe para a campanha
+  e o **teto do número** — o limite da conexão cruzado com o aquecimento da idade
+  dele, a mesma régua que já rege as respostas do agente de IA. Número recém
+  pareado começa em 20 mensagens por dia; quando o número já está aquecido, esse
+  teto some. O que você digita na tela é um máximo, nunca um atalho para passar por
+  cima do aquecimento — e em Conexões dá para declarar o número como já aquecido.
+  Vale para as duas formas de disparar, a agendada e a imediata.
+
+  A campanha guarda tudo: a lista escolhida, os horários, o período e o ritmo. Quem
+  acompanha vê o que falta pelos envios da campanha.
+
+- **O filtro de categoria da prospecção aceita várias categorias ao mesmo tempo** Quem vende para oficina, borracharia e autopeças tinha que olhar a lista três
+  vezes — uma por categoria. Agora a aba Empresas da prospecção aceita mais de uma
+  categoria marcada ao mesmo tempo, com busca pelo nome em português, e mostra as
+  empresas das categorias escolhidas juntas.
+
+  Cada categoria marcada vira uma etiqueta removível uma por uma, e o botão
+  "Criar venda automática" leva todas as marcadas: a campanha nasce com o mesmo
+  recorte que você viu na tela, em vez de só a primeira.
+
+### Corrigido
+
+- **A cota diária do disparo passa a contar o que já foi enviado** A tela de disparo limitava o dia lendo uma tabela que **nada escrevia**: o
+  registro de envios. Na prática, a cota não diminuía — uma campanha que já tinha
+  mandado as 50 mensagens do dia continuava autorizando mais 50 no disparo
+  seguinte, e o limite existia só no papel.
+
+  Agora cada mensagem enviada é registrada, e é desse registro que saem a cota do
+  dia, o ritmo entre duas mensagens e o "a mesma empresa não recebe duas vezes".
+  Como todo envio do sistema passa por ali, o agendamento de uma campanha e o
+  envio do agente de IA contam juntos para o mesmo número — que é como o WhatsApp
+  interpreta: um número.
+
+- **Excluir a carga devolve os pedidos, e o romaneio filtra por cidade e data** Excluir uma carga gerada por engano tirava a carga da tela e deixava os pedidos
+  presos. Criar a carga levava cada pedido para **expedido**, e a fila de
+  "aguardando embarque" só lê **aprovado** e **faturado**: fora da carga e fora da
+  fila, o pedido não aparecia em lugar nenhum — nem para ser reembarcado. A
+  confirmação na tela já dizia que os pedidos voltavam; agora eles voltam de
+  verdade, e a mensagem diz **quantos** voltaram.
+
+  Tirar um pedido só da carga tinha o mesmo defeito, com a mesma promessa na tela.
+
+  O romaneio ganhou os dois filtros que faltavam: **cidade** e **data** (entrega,
+  ou criação quando o pedido não tem data marcada). A cidade é procurada no
+  endereço de entrega e também na cidade do cadastro do cliente — o endereço é
+  digitado por pedido e boa parte da base não tem nenhum. Quando o filtro de
+  cidade está ligado, a tela diz quantos pedidos ficaram de fora por não terem
+  cidade em nenhuma das duas fontes, em vez de escondê-los em silêncio.
+
+- **A NF-e era recusada pela SEFAZ antes de ser lida — dois defeitos do emissor** A primeira emissão de verdade deste sistema foi feita contra a SEFAZ de
+  homologação, com o certificado A1 da instalação, e ela nunca chegou a autorizar.
+  Não era configuração: eram dois defeitos no lado emissor, e o primeiro deles
+  derrubava qualquer nota, em qualquer instalação, com todos os campos certos.
+
+  O XML era recusado por um campo de versão do próprio emissor
+  (`verProc`), que tinha 27 caracteres onde o leiaute aceita no máximo 20. A SEFAZ
+  rejeitava o documento inteiro antes de olhar qualquer regra fiscal. A mesma
+  string carregava o nome do fornecedor — e ela viaja no XML autorizado, visível no
+  portal da SEFAZ de quem comprou o sistema. Agora ela é neutra e cabe no leiaute.
+
+  Passado esse, a SEFAZ recusou por falta do indicador de intermediador, exigido
+  para a presença de compra que o sistema usa. A nota passa a declarar "operação
+  sem intermediador", que é o caso da venda pelo canal da própria empresa.
+
+  O emissor é um serviço em PHP e não tinha teste nenhum — foi por isso que os dois
+  defeitos conviveram com uma suíte verde. Agora há um, e ele lê o código do
+  emissor e cobra as duas invariantes.
+
+  **A emissão ainda não funciona**, e é bom que esteja escrito: a terceira recusa da
+  mesma sessão foi a falta do endereço do destinatário, que a nota exige e que o
+  sistema ainda não tem por onde receber. Onde esse endereço passa a vir é decisão
+  de produto, ainda em aberto — até ela ser tomada, nenhuma nota sai.
+
+- **O pedido novo aparecia sem o cliente, a lista escondia o pedido e o "Buscar dados" limpava o formulário** Quatro defeitos da tela de pedidos, todos com a mesma assinatura: a tela dizia
+  que tinha dado certo e o dado não estava lá.
+
+  O **"Buscar dados" do CNPJ** lia a resposta da API como se ela fosse o contato,
+  mas a API embrulha tudo em `{ data }`. Os campos chegavam `undefined` e eram
+  copiados por cima do que a pessoa tinha digitado — o botão limpava o CNPJ e a
+  razão, com toast de sucesso. Agora desembrulha.
+
+  O **pedido recém-criado** não aparecia na lista: o `router.push` ia para
+  `/app/pedidos` e o cache de navegação do Next servia a página anterior por até
+  30 segundos. O redirecionamento agora invalida esse cache.
+
+  O **cliente recém-cadastrado** não aparecia no seletor do pedido. A tela recebia
+  só a primeira página de 500 contatos da organização (em ordem alfabética) — numa
+  base de milhares, quase nenhum cliente novo está nela. A busca do seletor agora
+  pergunta ao servidor e procura na base inteira.
+
+  O **erro #418** (`text content does not match`) vinha da hidratação: o
+  agrupamento por dia usava o fuso do runtime, então o servidor (UTC) e o
+  navegador (UTC−3) discordavam para todo pedido criado entre 21h e meia-noite, e
+  os filtros salvos eram lidos do `localStorage` antes da hidratação. O dia agora
+  sai de um fuso único (`lib/tempo/dia.ts`) e os filtros entram depois de montar.
+
+- **A suíte de testes não escreve mais no seu banco por acidente** Se você roda os testes deste projeto na sua máquina e o arquivo de configuração
+  local aponta para a instalação que está na VPS, a suíte podia criar empresas,
+  usuários e sessões de teste **dentro do seu sistema** — e terminar dizendo
+  "verde". Aconteceu em 07/10/2026: entraram 13 empresas de teste, 11 usuários e
+  1.483 registros.
+
+  O aviso já existia e não bastou: era uma linha amarela que ninguém era obrigado a
+  ler, e ela imprimia enquanto a escrita acontecia. Agora a execução **para**, com o
+  motivo escrito, sempre que a única fonte do endereço do banco for esse arquivo
+  local e ele apontar para fora da máquina.
+
+  Rodar contra a sua instalação de propósito continua possível — mas passou a
+  exigir dizer isso em voz alta (`TESTE_PERMITE_BANCO_REMOTO=1`). Autorizar virou um
+  ato, em vez de um esquecimento.
+
+  Nada muda na sua instalação: quem fica seguro é o ambiente de teste.
+
 ## [1.29.2] — 2026-10-18
 
 ### Corrigido
@@ -4505,7 +4670,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.30.0...HEAD
+[1.30.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.2...v1.30.0
 [1.29.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...v1.29.2
 [1.29.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.28.0...v1.29.0
