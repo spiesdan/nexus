@@ -226,6 +226,23 @@ function LinhaDetalhe({ rotulo, valor }: { rotulo: string; valor: string }) {
   );
 }
 
+
+/**
+ * O número da seção, como no Mercos (1 CLIENTE · 2 REPRESENTADA · 3 PRODUTOS ·
+ * 4 DETALHES DO PEDIDO). É âncora de leitura, não passo de formulário: a ficha
+ * é uma página só.
+ */
+function TituloDaSecao({ numero, children }: { numero: number; children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] text-foreground">
+        {numero}
+      </span>
+      {children}
+    </p>
+  );
+}
+
 export function DetalheDoPedido({
   pedido: inicial,
   itens,
@@ -554,7 +571,7 @@ export function DetalheDoPedido({
 
       {/* CLIENTE */}
       <Card className="hover-raise space-y-2 p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("CLIENTE")}</p>
+        <TituloDaSecao numero={1}>{t("CLIENTE")}</TituloDaSecao>
         <p className="font-medium">
           {contato ? (
             <Link href={`/app/contacts/${contato.id}`} className="underline underline-offset-4">
@@ -611,7 +628,7 @@ export function DetalheDoPedido({
       {/* ORGANIZAÇÃO (a "representada" do Mercos). */}
       {nomeOrganizacao && (
         <Card className="hover-raise space-y-1 p-4">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("EMPRESA")}</p>
+          <TituloDaSecao numero={2}>{t("EMPRESA")}</TituloDaSecao>
           <p className="font-medium">{nomeOrganizacao}</p>
         </Card>
       )}
@@ -619,9 +636,7 @@ export function DetalheDoPedido({
       {/* PRODUTOS */}
       <Card className="hover-raise p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground">
-            {t("PRODUTOS")}
-          </p>
+          <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
           {/* O botão fica aqui, e não no cabeçalho, porque é o que ele
               funciona: a lista de itens. Colocá-lo longe da tabela faria o
               usuário procurar onde mexer nos produtos de um pedido que já está
@@ -643,8 +658,9 @@ export function DetalheDoPedido({
                   <TableHead>{t("Código")}</TableHead>
                   <TableHead>{t("Descrição")}</TableHead>
                   <TableHead className="text-right">{t("Qtde.")}</TableHead>
-                  <TableHead className="text-right">{t("Preço un.")}</TableHead>
-                  <TableHead className="text-right">{t("Desc. %")}</TableHead>
+                  <TableHead className="text-right">{t("Preço Tab.")}</TableHead>
+                  <TableHead className="text-right">{t("Desc. Acrés.")}</TableHead>
+                  <TableHead className="text-right">{t("Preço Líq.")}</TableHead>
                   <TableHead className="text-right">{t("Subtotal")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -666,6 +682,15 @@ export function DetalheDoPedido({
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {Number(it.desconto_pct) > 0 ? `${Number(it.desconto_pct)} %` : "—"}
+                    </TableCell>
+                    {/* Preço Líq. é o unitário JÁ descontado; Subtotal é ele ×
+                        quantidade. Sem a coluna, o desconto só aparecia no
+                        total, e conferir "quanto ficou a unidade" exigia conta. */}
+                    <TableCell className="text-right tabular-nums">
+                      {comoMoeda(
+                        Math.round(it.preco_unit_cents * (1 - Number(it.desconto_pct) / 100)),
+                        pedido.moeda,
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-medium tabular-nums">
                       {comoMoeda(it.subtotal_cents, pedido.moeda)}
@@ -712,7 +737,7 @@ export function DetalheDoPedido({
 
       {/* DETALHES DO PEDIDO */}
       <Card className="hover-raise space-y-4 p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("DETALHES DO PEDIDO")}</p>
+        <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
         <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           <LinhaDetalhe rotulo={t("Nº do pedido")} valor={numeroDoPedido(pedido.numero)} />
           <LinhaDetalhe

@@ -76,6 +76,7 @@ export default async function NovoPedidoPage() {
         (policies as unknown as { comissao_padrao_pct: number | null } | null)
           ?.comissao_padrao_pct ?? null
       }
+      nomeOrganizacao={activeOrg.name ?? ""}
       textos={{
         titulo: t("Novo pedido"),
         subtitulo: t("Busque o cliente, adicione os produtos e finalize."),
@@ -112,7 +113,7 @@ export default async function NovoPedidoPage() {
         comissao: t("Comissão estimada"),
         aguardandoAprovacao: t("Desconto acima do teto: vai para aprovação comercial."),
         salvarRascunho: t("Salvar rascunho"),
-        finalizar: t("Finalizar pedido"),
+        finalizar: t("Gerar pedido"),
         revisar: t("Revisar pedido"),
         pedidoCriado: t("Pedido criado"),
       }}

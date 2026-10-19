@@ -5,10 +5,26 @@ import { useRouter } from "next/navigation";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
-import { NexusSteps } from "@/components/nexus-ui/forms/NexusSteps";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CaretDown, Eye } from "@/lib/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -85,6 +101,7 @@ export function OrderEditor({
   tabelas,
   verMargem,
   comissaoPct,
+  nomeOrganizacao,
   textos,
 }: {
   produtos: Produto[];
@@ -92,6 +109,8 @@ export function OrderEditor({
   tabelas: { id: string; nome: string; desconto_pct: number }[];
   verMargem: boolean;
   comissaoPct: number | null;
+  /** A "representada" do Mercos: a empresa que emite este pedido. */
+  nomeOrganizacao: string;
   textos: TextosBase;
 }) {
   const t = useT();
@@ -123,11 +142,10 @@ export function OrderEditor({
   const [freteTexto, setFreteTexto] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
   const [aprovacao, setAprovacao] = React.useState(false);
-  // Fluxo guiado (§2 Nexus): cliente → produtos → condições → entrega → revisão.
-  // O estado do pedido continua único aqui em cima — os passos só decidem o
-  // que aparece, nunca duplicam lógica de preço, estoque ou crédito.
-  const [passo, setPasso] = React.useState(0);
-  const [alcancado, setAlcancado] = React.useState(0);
+  // Uma página só, como o Mercos: as quatro seções (cliente, representada,
+  // produtos, detalhes) ficam todas visíveis e o estado é único. Nada de passo
+  // escondendo campo — o vendedor confere o pedido inteiro antes de gerar.
+  const [previaAberta, setPreviaAberta] = React.useState(false);
   const [ultimos, setUltimos] = React.useState<Map<string, UltimoPreco>>(new Map());
   const [historicoItens, setHistoricoItens] = React.useState<
     {
@@ -427,12 +445,12 @@ export function OrderEditor({
   async function enviar(status: "rascunho" | "aprovado") {
     if (!clienteNome.trim()) {
       nexusToast.error(t("Escolha ou digite o nome do cliente."));
-      setPasso(0);
+      irPara("cliente");
       return;
     }
     if (linhas.length === 0) {
       nexusToast.error(t("Adicione ao menos 1 produto."));
-      setPasso(1);
+      irPara("produtos");
       return;
     }
     const itens = [];
@@ -440,7 +458,7 @@ export function OrderEditor({
       const unit = precoParaCentavos(l.precoTexto);
       if (unit === null) {
         nexusToast.error(`${t("Preço inválido em")} "${l.nome}". ${t("Escreva assim: 5.499,00")}`);
-        setPasso(1);
+        irPara("produtos");
         return;
       }
       itens.push({
@@ -502,28 +520,15 @@ export function OrderEditor({
     }
   }
 
-  const PASSOS = [t("Cliente"), t("Produtos"), t("Condições"), t("Entrega"), t("Revisão")];
-
-  function continuar() {
-    if (passo === 0 && !clienteNome.trim()) {
-      nexusToast.error(t("Escolha ou digite o nome do cliente."));
-      return;
-    }
-    if (passo === 1 && linhas.length === 0) {
-      nexusToast.error(t("Adicione ao menos 1 produto."));
-      return;
-    }
-    const prox = Math.min(PASSOS.length - 1, passo + 1);
-    setPasso(prox);
-    setAlcancado((a) => Math.max(a, prox));
-  }
-
-  function voltar() {
-    setPasso((p) => Math.max(0, p - 1));
+  /** Rola até a seção: validação que reclama longe do campo não ensina nada. */
+  function irPara(secao: "cliente" | "produtos") {
+    document
+      .getElementById(`secao-${secao}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-6 pb-24 lg:pb-6">
+    <div className="mx-auto w-full max-w-4xl space-y-5 p-4 pb-28 sm:p-6 lg:pb-6">
       <NexusPageHeader
         title={textos.titulo}
         subtitle={
@@ -531,12 +536,46 @@ export function OrderEditor({
             ? `${textos.subtitulo} · ${t("salvo")} ${haQuantoTempo(salvoEm) ?? ""}`
             : textos.subtitulo
         }
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => void comEnvio("aprovado")}
+              disabled={enviando}
+              data-testid="gerar-pedido"
+            >
+              {enviando ? t("Gerando…") : textos.finalizar}
+            </Button>
+            <Button variant="outline" onClick={() => setPreviaAberta(true)}>
+              <Eye size={16} className="mr-1.5" /> {t("Visualizar")}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  {t("Mais opções")} <CaretDown size={14} className="ml-1.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={enviando}
+                  onSelect={() => void comEnvio("rascunho")}
+                  data-testid="salvar-rascunho"
+                >
+                  {textos.salvarRascunho}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setPreviaAberta(true)}>
+                  {t("Prévia do pedido")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        }
       />
 
-      <NexusSteps steps={PASSOS} current={passo} reached={alcancado} onGo={(i) => setPasso(i)} />
-
-      {passo === 0 && (
-        <section aria-label={PASSOS[0]} className="min-w-0 space-y-4">
+      {/* 1 · CLIENTE — o mesmo autocomplete com cadastro inline de antes. */}
+      <section id="secao-cliente" aria-label={t("Cliente")} className="space-y-2">
+        <TituloDaSecao numero={1}>{t("CLIENTE")}</TituloDaSecao>
+        <Card className="p-4">
           <CustomerSelector
             contatos={listaDeContatos}
             contatoId={contatoId}
@@ -552,8 +591,8 @@ export function OrderEditor({
               clienteAvulso: textos.clienteAvulso,
             }}
           />
-        </section>
-      )}
+        </Card>
+      </section>
 
       {/* Cadastro de cliente sem sair do pedido. Ao criar, o contato entra na
           lista local E já fica escolhido: quem digitou o nome acabou de digitar
@@ -577,105 +616,161 @@ export function OrderEditor({
         }}
       />
 
-      {passo === 1 && (
-        <section aria-label={PASSOS[1]} className="min-w-0 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
-            <Select
-              value={tabelaId || "__nenhuma"}
-              onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
-            >
-              <SelectTrigger id="tabela" className="w-full">
-                <SelectValue placeholder={textos.semTabela} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
-                {tabelas.map((tb) => (
-                  <SelectItem key={tb.id} value={tb.id}>
-                    {tb.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* 2 · REPRESENTADA — quem emite. Só leitura: não é escolha do vendedor. */}
+      <section aria-label={t("Representada")} className="space-y-2">
+        <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
+        <Card className="space-y-1 p-4">
+          <p className="font-medium">{nomeOrganizacao || "—"}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("O pedido sai em nome desta empresa.")}
+          </p>
+        </Card>
+      </section>
+
+      {/* 3 · PRODUTOS */}
+      <section id="secao-produtos" aria-label={t("Produtos")} className="space-y-3">
+        <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
+          <Select
+            value={tabelaId || "__nenhuma"}
+            onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+          >
+            <SelectTrigger id="tabela" className="w-full">
+              <SelectValue placeholder={textos.semTabela} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
+              {tabelas.map((tb) => (
+                <SelectItem key={tb.id} value={tb.id}>
+                  {tb.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <ProductSearch
+          produtos={produtos}
+          tabela={tabela}
+          ultimosPrecos={ultimos}
+          inputRef={buscaRef}
+          aoAdicionar={(p, q) => {
+            const prod = porId.get(p.id);
+            if (prod) adicionar(prod, q);
+          }}
+          textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
+        />
+
+        <OrderItems
+          linhas={linhas}
+          aoMudar={mudarLinha}
+          aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
+        />
+
+        <AfinsNoPedido
+          carrinho={linhas.map((l) => l.product_id)}
+          contatoId={contatoId}
+          porId={porId}
+          aoAdicionar={adicionar}
+        />
+
+        {relacionados.length > 0 && (
+          <div className="rounded-2xl border p-3">
+            <p className="mb-2 text-sm font-medium">{textos.relacionados}</p>
+            <div className="flex flex-wrap gap-2">
+              {relacionados.map((p) => (
+                <Button key={p.id} size="sm" variant="outline" onClick={() => adicionar(p, 1)}>
+                  + {p.nome}
+                </Button>
+              ))}
+            </div>
           </div>
+        )}
 
-          <ProductSearch
-            produtos={produtos}
-            tabela={tabela}
-            ultimosPrecos={ultimos}
-            inputRef={buscaRef}
-            aoAdicionar={(p, q) => {
-              const prod = porId.get(p.id);
-              if (prod) adicionar(prod, q);
-            }}
-            textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
-          />
-
-          <OrderItems
-            linhas={linhas}
-            aoMudar={mudarLinha}
-            aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
-          />
-
-          <AfinsNoPedido
-            carrinho={linhas.map((l) => l.product_id)}
-            contatoId={contatoId}
-            porId={porId}
-            aoAdicionar={adicionar}
-          />
-
-          {relacionados.length > 0 && (
-            <div className="rounded-2xl border p-3">
-              <p className="mb-2 text-sm font-medium">{textos.relacionados}</p>
-              <div className="flex flex-wrap gap-2">
-                {relacionados.map((p) => (
-                  <Button key={p.id} size="sm" variant="outline" onClick={() => adicionar(p, 1)}>
-                    + {p.nome}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {reposicoes.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center justify-between gap-2 rounded-2xl border p-3 text-sm"
+        {reposicoes.map((r) => (
+          <div
+            key={r.id}
+            className="flex items-center justify-between gap-2 rounded-2xl border p-3 text-sm"
+          >
+            <p>
+              💡 {r.nome} · {r.qtd} un · {t("a cada")} ~{r.dias} {t("dias")}? ({t("há")} {r.dias}{" "}
+              {t("dias")})
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const p = porId.get(r.id);
+                if (p) adicionar(p, r.qtd);
+              }}
             >
-              <p>
-                💡 {r.nome} · {r.qtd} un · {t("a cada")} ~{r.dias} {t("dias")}? ({t("há")} {r.dias}{" "}
-                {t("dias")})
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  const p = porId.get(r.id);
-                  if (p) adicionar(p, r.qtd);
-                }}
-              >
-                {textos.adicionar}
-              </Button>
-            </div>
-          ))}
+              {textos.adicionar}
+            </Button>
+          </div>
+        ))}
 
-          {historicoItens.length > 0 && (
-            <details className="rounded-2xl border p-3 text-sm">
-              <summary className="cursor-pointer font-medium">{textos.historico}</summary>
-              <ul className="mt-2 space-y-1 text-muted-foreground">
-                {historicoItens.slice(0, 8).map((h, i) => (
-                  <li key={i}>
-                    {h.produto_nome} · {h.quantidade} un
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </section>
-      )}
+        {historicoItens.length > 0 && (
+          <details className="rounded-2xl border p-3 text-sm">
+            <summary className="cursor-pointer font-medium">{textos.historico}</summary>
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+              {historicoItens.slice(0, 8).map((h, i) => (
+                <li key={i}>
+                  {h.produto_nome} · {h.quantidade} un
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
 
-      {passo === 2 && (
-        <section aria-label={PASSOS[2]} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Os totais ficam DENTRO de Produtos, como a faixa do Mercos
+            (Itens no pedido · Quantidade total · Valor total). Os botões de
+            ação saíram daqui: com a página inteira visível, eles pertencem ao
+            cabeçalho e à barra do rodapé, não ao meio da tela. */}
+        <OrderSummary
+          totais={{
+            subtotal,
+            descontoCents: descontoCents + descontoPctCents,
+            freteCents,
+            total,
+            qtdItens: linhas.length,
+            qtdUnidades,
+            margemPct,
+            comissaoCents,
+            parcelas: calcularParcelas(total, condicao),
+            aprovacaoNecessaria: aprovacao,
+          }}
+          descontoTexto={descontoTexto}
+          aoDesconto={setDescontoTexto}
+          descontoPctTexto={descontoPctTexto}
+          aoDescontoPct={setDescontoPctTexto}
+          freteTexto={freteTexto}
+          aoFrete={setFreteTexto}
+          enviando={enviando}
+          aoSalvar={() => void comEnvio("rascunho")}
+          aoFinalizar={() => void comEnvio("aprovado")}
+          mostrarAcoes={false}
+          textos={{
+            subtotal: textos.subtotal,
+            desconto: textos.desconto,
+            frete: textos.frete,
+            total: textos.total,
+            salvarRascunho: textos.salvarRascunho,
+            finalizar: textos.finalizar,
+            margem: textos.margem,
+            comissao: textos.comissao,
+            aguardandoAprovacao: textos.aguardandoAprovacao,
+            revisar: textos.revisar,
+            itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
+          }}
+        />
+      </section>
+
+      {/* 4 · DETALHES DO PEDIDO — os campos que o Mercos deixa aqui. */}
+      <section aria-label={t("Detalhes do pedido")} className="space-y-2">
+        <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
+        <Card className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="condicao">{textos.condicao}</Label>
             <Input
@@ -729,59 +824,9 @@ export function OrderEditor({
               <span>{textos.exigeNfOpcao}</span>
             </label>
             {formaPagamento !== "" && formaPagamento !== "a_vista" && !exigeNf && (
-              // O aviso some quando a pessoa marca a NF — e é por isso que ele
-              // é condicional: aqui ele diz "falta escolher se é com nota",
-              // que é a única coisa que falta escolher.
               <p className="text-xs text-muted-foreground">{textos.prazoPrecisaNf}</p>
             )}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="desconto">{`${textos.desconto} (R$)`}</Label>
-            <Input
-              id="desconto"
-              value={descontoTexto}
-              onChange={(e) => setDescontoTexto(e.target.value)}
-              placeholder="0,00"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="desconto-pct">{`${textos.desconto} (%)`}</Label>
-            <Input
-              id="desconto-pct"
-              type="number"
-              min={0}
-              max={100}
-              value={descontoPctTexto}
-              onChange={(e) => setDescontoPctTexto(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="frete">{`${textos.frete} (R$)`}</Label>
-            <Input
-              id="frete"
-              value={freteTexto}
-              onChange={(e) => setFreteTexto(e.target.value)}
-              placeholder="0,00"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="obs">{textos.observacoes}</Label>
-            <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="obs-interna">{textos.obsInterna}</Label>
-            <Input
-              id="obs-interna"
-              value={obsInterna}
-              onChange={(e) => setObsInterna(e.target.value)}
-            />
-          </div>
-        </section>
-      )}
-
-      {passo === 3 && (
-        <section aria-label={PASSOS[3]} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="transportadora">{textos.transportadora}</Label>
             <Input
@@ -799,117 +844,103 @@ export function OrderEditor({
               placeholder={textos.enderecoExemplo}
             />
           </div>
-        </section>
-      )}
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="obs">{textos.observacoes}</Label>
+            <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="obs-interna">{textos.obsInterna}</Label>
+            <Input
+              id="obs-interna"
+              value={obsInterna}
+              onChange={(e) => setObsInterna(e.target.value)}
+            />
+          </div>
+        </Card>
+      </section>
 
-      {passo === 4 && (
-        <section aria-label={PASSOS[4]} className="min-w-0 space-y-4">
-          <div className="rounded-2xl border p-4 text-sm">
+      {/* A barra de ação do Mercos, no rodapé: no celular ela fica fixa, porque
+          "Gerar pedido" não pode exigir rolar quatro seções de volta. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-background p-3 lg:static lg:rounded-xl lg:border lg:bg-card">
+        <p className="text-sm text-muted-foreground">
+          {linhas.length} {t("itens")} · {qtdUnidades} un
+        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-lg font-semibold tabular-nums">{comoMoeda(total, "BRL")}</p>
+          <Button onClick={() => void comEnvio("aprovado")} disabled={enviando}>
+            {enviando ? t("Gerando…") : textos.finalizar}
+          </Button>
+        </div>
+      </div>
+
+      {/* A prévia não grava nada: é o "Visualizar" do Mercos. */}
+      <Dialog open={previaAberta} onOpenChange={setPreviaAberta}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("Prévia do pedido")}</DialogTitle>
+            <DialogDescription>
+              {t("Como o pedido vai sair. Nada foi gravado ainda.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
             <p>
               <span className="text-muted-foreground">{t("Cliente")}: </span>
               <strong>{clienteNome || "—"}</strong>
             </p>
-            <p className="mt-1">
-              <span className="text-muted-foreground">{t("Itens")}: </span>
-              <strong className="tabular-nums">
-                {linhas.length} · {qtdUnidades} un · {comoMoeda(total, "BRL")}
-              </strong>
+            <p>
+              <span className="text-muted-foreground">{textos.condicao}: </span>
+              <strong>{condicao.trim() || "—"}</strong>
             </p>
-            {condicao.trim() && (
-              <p className="mt-1">
-                <span className="text-muted-foreground">{textos.condicao}: </span>
-                <strong>{condicao.trim()}</strong>
-              </p>
-            )}
-            {/* O resumo confirma as DUAS escolhas logo depois de feitas, e o
-                prazo mostra quando a contagem começa. Sem esta linha o operador
-                marca 45 dias e vê um vencimento que o cálculo não produz — os
-                dois campos existem, e é aqui que eles se encontram. */}
-            {(formaPagamento !== "" || exigeNf) && (
-              <p className="mt-1">
-                <span className="text-muted-foreground">{textos.formaPagamento}: </span>
-                <strong>
-                  {formaPagamento === ""
-                    ? textos.prazoLivre
-                    : FORMA_DE_PAGAMENTO_LABEL[formaPagamento]}
-                </strong>
-                {exigeNf ? (
-                  <>
-                    {" · "}
-                    <strong>{textos.exigeNfOpcao}</strong>
-                  </>
-                ) : null}
-              </p>
-            )}
-            {(transportadora.trim() || endereco.trim()) && (
-              <p className="mt-1">
-                <span className="text-muted-foreground">
-                  {textos.transportadora}/{textos.endereco}:{" "}
-                </span>
-                <strong>
-                  {[transportadora.trim(), endereco.trim()].filter(Boolean).join(" · ")}
-                </strong>
-              </p>
-            )}
+            <ul className="divide-y rounded-lg border">
+              {linhas.length === 0 ? (
+                <li className="px-3 py-2 text-muted-foreground">{t("Nenhum item.")}</li>
+              ) : (
+                linhas.map((l) => (
+                  <li key={l.key} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <span className="min-w-0 truncate">{l.nome}</span>
+                    <span className="shrink-0 tabular-nums">
+                      {l.quantidade} × {comoMoeda(precoParaCentavos(l.precoTexto) ?? 0, "BRL")}
+                    </span>
+                  </li>
+                ))
+              )}
+            </ul>
+            <div className="flex justify-between border-t pt-2 text-base font-semibold">
+              <span>{textos.total}</span>
+              <span className="tabular-nums">{comoMoeda(total, "BRL")}</span>
+            </div>
           </div>
-          <OrderSummary
-            totais={{
-              subtotal,
-              descontoCents: descontoCents + descontoPctCents,
-              freteCents,
-              total,
-              qtdItens: linhas.length,
-              qtdUnidades,
-              margemPct,
-              comissaoCents,
-              parcelas: calcularParcelas(total, condicao),
-              aprovacaoNecessaria: aprovacao,
-            }}
-            descontoTexto={descontoTexto}
-            aoDesconto={setDescontoTexto}
-            descontoPctTexto={descontoPctTexto}
-            aoDescontoPct={setDescontoPctTexto}
-            freteTexto={freteTexto}
-            aoFrete={setFreteTexto}
-            enviando={enviando}
-            aoSalvar={() => void comEnvio("rascunho")}
-            aoFinalizar={() => void comEnvio("aprovado")}
-            textos={{
-              subtotal: textos.subtotal,
-              desconto: textos.desconto,
-              frete: textos.frete,
-              total: textos.total,
-              salvarRascunho: textos.salvarRascunho,
-              finalizar: textos.finalizar,
-              margem: textos.margem,
-              comissao: textos.comissao,
-              aguardandoAprovacao: textos.aguardandoAprovacao,
-              revisar: textos.revisar,
-              itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
-            }}
-          />
-        </section>
-      )}
-
-      {passo < PASSOS.length - 1 && (
-        <div className="flex items-center justify-between gap-3">
-          {passo > 0 ? (
-            <Button variant="outline" onClick={voltar}>
-              {t("Voltar")}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviaAberta(false)}>
+              {t("Fechar")}
             </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex items-center gap-3">
-            {passo === 1 && linhas.length > 0 && (
-              <p className="text-sm text-muted-foreground tabular-nums">
-                {linhas.length} {t("itens")} · {comoMoeda(total, "BRL")}
-              </p>
-            )}
-            <Button onClick={continuar}>{t("Continuar")}</Button>
-          </div>
-        </div>
-      )}
+            <Button
+              onClick={() => {
+                setPreviaAberta(false);
+                void comEnvio("aprovado");
+              }}
+              disabled={enviando}
+            >
+              {textos.finalizar}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+/**
+ * O número da seção, como no Mercos (1 CLIENTE · 2 REPRESENTADA · 3 PRODUTOS ·
+ * 4 DETALHES DO PEDIDO). Âncora de leitura, não passo de formulário.
+ */
+function TituloDaSecao({ numero, children }: { numero: number; children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] text-foreground">
+        {numero}
+      </span>
+      {children}
+    </p>
   );
 }
