@@ -43,6 +43,8 @@
  *   quando o nome está escrito de um jeito e o pedido de outro.
  */
 
+import { chaveDoDia } from "@/lib/tempo/dia";
+
 /** Tira acento, caixa e espaço extra — o mesmo tipo de chave usada em `lib/rotas/paradas.ts`. */
 export function chaveDeBusca(texto: string | null | undefined): string {
   return (texto ?? "")
@@ -61,6 +63,64 @@ export interface PedidoBuscavel {
   endereco_entrega: string | null;
 }
 
+/** O que a tela filtra, além do texto livre. */
+export interface FiltroDeEmbarque {
+  busca?: string;
+  /** Cidade: casa no endereço de entrega OU na cidade do cadastro do cliente. */
+  cidade?: string;
+  /** `AAAA-MM-DD` — dia de referência (previsão de entrega, ou criação). */
+  de?: string;
+  ate?: string;
+}
+
+/** O pedido com o que o filtro de cidade/data precisa ler. */
+export interface PedidoFiltravel extends PedidoBuscavel {
+  contact_id?: string | null;
+  previsao_entrega?: string | null;
+  created_at?: string | null;
+}
+
+/**
+ * O DIA DE REFERÊNCIA do pedido para o filtro de data.
+ *
+ * `previsao_entrega` quando existe (é o dia em que a carga precisa sair) e,
+ * quando não existe, o dia da criação — nunca `null`, senão o pedido some de
+ * qualquer recorte por data e a pessoa conclui que ele não está na fila.
+ *
+ * A criação passa por `chaveDoDia` (fuso de São Paulo) para o recorte casar com
+ * o que a tela mostra; cortar o ISO em UTC jogaria para o dia seguinte todo
+ * pedido feito depois das 21h.
+ */
+export function diaDeReferencia(p: PedidoFiltravel): string | null {
+  const previsao = p.previsao_entrega?.slice(0, 10);
+  if (previsao) return previsao;
+  return p.created_at ? chaveDoDia(new Date(p.created_at)) : null;
+}
+
+/**
+ * A CIDADE do pedido como texto pesquisável: o endereço de entrega (quando
+ * preenchido) mais a cidade/UF do cadastro do cliente.
+ *
+ * As duas fontes existem porque o dado real é assim: o endereço é digitado por
+ * pedido e boa parte não tem; o cadastro do cliente é preenchido uma vez e vale
+ * para todos. Filtrar só pelo endereço escondia quase a fila inteira.
+ */
+export function cidadeDoPedido(
+  p: PedidoFiltravel,
+  cidadeDoContato?: (contactId: string | null | undefined) => string | null,
+): string {
+  const doCadastro = p.contact_id ? (cidadeDoContato?.(p.contact_id) ?? "") : "";
+  return chaveDeBusca(`${p.endereco_entrega ?? ""} ${doCadastro}`);
+}
+
+/** A cidade do pedido existe? (Para a tela dizer o que o filtro está escondendo.) */
+export function temCidade(
+  p: PedidoFiltravel,
+  cidadeDoContato?: (contactId: string | null | undefined) => string | null,
+): boolean {
+  return cidadeDoPedido(p, cidadeDoContato) !== "";
+}
+
 /**
  * Filtra os embarcáveis pelo que a pessoa digita.
  *
@@ -69,23 +129,54 @@ export interface PedidoBuscavel {
  * pedido" sem explicar.
  */
 export function filtrarEmbarcaveis<T extends PedidoBuscavel>(pedidos: T[], busca: string): T[] {
-  const alvo = chaveDeBusca(busca);
-  if (alvo === "") return pedidos;
+  return filtrarEmbarcaveisPor(pedidos, { busca });
+}
+
+/**
+ * O filtro completo da tela: texto livre + cidade + período.
+ *
+ * `cidadeDoContato` é uma FUNÇÃO e não um mapa porque o mapa carrega só os
+ * contatos da página; quem não estiver nele cai em "sem cidade" em vez de
+ * quebrar.
+ */
+export function filtrarEmbarcaveisPor<T extends PedidoFiltravel>(
+  pedidos: T[],
+  filtro: FiltroDeEmbarque,
+  cidadeDoContato?: (contactId: string | null | undefined) => string | null,
+): T[] {
+  const alvo = chaveDeBusca(filtro.busca ?? "");
+  const cidade = chaveDeBusca(filtro.cidade ?? "");
+  const de = (filtro.de ?? "").slice(0, 10);
+  const ate = (filtro.ate ?? "").slice(0, 10);
 
   return pedidos.filter((p) => {
-    // O número entra nas duas formas: `18558`, que é o que a pessoa digita
-    // ouvindo no telefone, e `PED-18558`, que é o que ela lê na tela. Procurar
-    // só um dos dois faz a busca "não funcionar" em metade das vezes sem
-    // nenhum erro visível.
-    const numeroCru = String(p.numero);
-    const numeroFormatado = `ped-${String(p.numero).padStart(4, "0")}`;
-    if (numeroCru.includes(alvo) || chaveDeBusca(numeroFormatado).includes(alvo)) return true;
+    if (alvo !== "") {
+      // O número entra nas duas formas: `18558`, que é o que a pessoa digita
+      // ouvindo no telefone, e `PED-18558`, que é o que ela lê na tela. Procurar
+      // só um dos dois faz a busca "não funcionar" em metade das vezes sem
+      // nenhum erro visível.
+      const numeroCru = String(p.numero);
+      const numeroFormatado = `ped-${String(p.numero).padStart(4, "0")}`;
+      const casou =
+        numeroCru.includes(alvo) ||
+        chaveDeBusca(numeroFormatado).includes(alvo) ||
+        chaveDeBusca(p.cliente_nome).includes(alvo) ||
+        chaveDeBusca(p.cliente_documento).includes(alvo) ||
+        chaveDeBusca(p.endereco_entrega).includes(alvo);
+      if (!casou) return false;
+    }
 
-    if (chaveDeBusca(p.cliente_nome).includes(alvo)) return true;
-    if (chaveDeBusca(p.cliente_documento).includes(alvo)) return true;
-    // O endereço carrega a cidade (`CIDADE/UF`) e é a única fonte dela.
-    if (chaveDeBusca(p.endereco_entrega).includes(alvo)) return true;
+    if (cidade !== "" && !cidadeDoPedido(p, cidadeDoContato).includes(cidade)) return false;
 
-    return false;
+    if (de !== "" || ate !== "") {
+      const dia = diaDeReferencia(p);
+      // Sem data de referência o pedido não pode afirmar que está no recorte:
+      // fica de fora, e a tela mostra quantos ficaram (nunca invisível).
+      if (!dia) return false;
+      if (de !== "" && dia < de) return false;
+      if (ate !== "" && dia > ate) return false;
+    }
+
+    return true;
   });
 }

@@ -212,6 +212,16 @@ export async function DELETE(
     .eq("organization_id", authz.org.orgId);
   if (error) return fail("internal_error", "Erro ao tirar o pedido da carga.", 500, { requestId });
 
+  // Sair da carga não desfaz sozinho o `expedido` que o POST da carga gravou:
+  // sem esta devolução o pedido some da fila de embarque (que só lê
+  // `aprovado`/`faturado`) e a tela promete "de volta na fila" sem entregar.
+  await supabase
+    .from("commercial_orders")
+    .update({ status: "aprovado" })
+    .eq("organization_id", authz.org.orgId)
+    .eq("id", orderId)
+    .eq("status", "expedido");
+
   await audit({
     organizationId: authz.org.orgId,
     actorUserId: authz.user.id,

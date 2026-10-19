@@ -10,8 +10,9 @@ perdia no caminho.
 
 O passo **Cliente** do pedido novo agora tem o botão **Cadastrar novo cliente**,
 que abre a mesma ficha do Mercos (PF/PJ, CNPJ com busca na Receita, endereço) por
-cima do pedido. Ao salvar, o cliente entra na lista na hora e **já fica
-selecionado**: não é preciso procurar de novo o nome que acabou de ser digitado.
+cima do pedido. Ao salvar, o cliente entra na lista na hora e já fica
+**selecionado** — não é preciso procurar de novo o nome que acabou de ser
+digitado.
 
 A busca do seletor também passou a consultar a base inteira no servidor, e não
 só a primeira página que vinha com a tela.

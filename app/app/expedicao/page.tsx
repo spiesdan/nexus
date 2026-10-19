@@ -44,10 +44,35 @@ export default async function ExpedicaoPage() {
       .limit(200),
   ]);
 
+  // A CIDADE DE CADA PEDIDO, para o filtro de cidade.
+  //
+  // O endereço de entrega é digitado por pedido e boa parte da base não tem
+  // (medido: 107 dos 109 pedidos abertos desta instalação). O cadastro do
+  // cliente tem cidade/UF preenchidos em 3.200 dos 12.605 contatos — ou seja,
+  // uma fonte complementar, não a principal. As duas juntas é o que faz o
+  // filtro achar alguém; só o endereço não acha quase ninguém.
+  const pedidos = (embarcaveis ?? []) as unknown as PedidoComercial[];
+  const idsDeContato = [
+    ...new Set(pedidos.map((p) => p.contact_id).filter((v): v is string => Boolean(v))),
+  ];
+  const { data: contatos } = idsDeContato.length
+    ? await supabase
+        .from("contacts")
+        .select("id, cidade, uf")
+        .eq("organization_id", activeOrg.orgId)
+        .in("id", idsDeContato)
+    : { data: [] as { id: string; cidade: string | null; uf: string | null }[] };
+  const cidadePorContato: Record<string, string> = {};
+  for (const c of (contatos ?? []) as { id: string; cidade: string | null; uf: string | null }[]) {
+    const texto = [c.cidade, c.uf].filter(Boolean).join("/");
+    if (texto) cidadePorContato[c.id] = texto;
+  }
+
   return (
     <ExpedicaoClient
       inicial={(cargas ?? []) as unknown as Carga[]}
-      embarcaveis={(embarcaveis ?? []) as unknown as PedidoComercial[]}
+      embarcaveis={pedidos}
+      cidadePorContato={cidadePorContato}
       podeCriar={podeCriar}
       textos={{
         titulo: t("Expedição"),
@@ -59,6 +84,10 @@ export default async function ExpedicaoPage() {
         nenhumEmbarcavel: t("Nenhum pedido aprovado aguardando embarque."),
         buscarPedido: t("Buscar por número, cliente, cidade ou CNPJ"),
         buscaSemResultado: t("Nenhum pedido encontrado com esse termo."),
+        filtrarCidade: t("Cidade"),
+        filtrarDe: t("De"),
+        filtrarAte: t("Até"),
+        semCidade: t("{n} pedido(s) sem cidade no cadastro"),
         selecionados: t("Na carga"),
         // O i18n deste projeto traduz frase inteira e não interpola — por isso
         // `{a}`/`{de}` são trocados à mão em `_client.tsx`, e não por `t()`.

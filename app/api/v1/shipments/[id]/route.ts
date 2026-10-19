@@ -11,6 +11,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { logger } from "@/lib/logger";
 import { cargaPatchSchema, COLUNAS_DA_CARGA } from "@/lib/schemas/expedicao";
 import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { createClient } from "@/lib/supabase/server";
@@ -201,15 +202,56 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
     return fail("validation_failed", "Carga encerrada não pode ser excluída.", 422, { requestId });
   }
 
-  // Os itens caem juntos (FK on delete cascade); os pedidos voltam sozinhos
-  // para "esperando carga", porque a lista de embarcáveis é pedido faturado
-  // fora de carga — nada para "devolver" manualmente.
+  // Os itens caem juntos (FK on delete cascade) — mas os PEDIDOS não "voltam
+  // sozinhos". Criar a carga os levou para `expedido` (`shipments/route.ts`) e
+  // a fila de embarque só lê `aprovado`/`faturado`: sem a devolução explícita
+  // abaixo, excluir a carga deixava os pedidos invisíveis nas DUAS telas — nem
+  // na carga, nem na fila. Este comentário afirmava o contrário e estava errado
+  // desde a 0214.
+  const { data: itensDaCarga } = await supabase
+    .from("shipment_orders")
+    .select("order_id")
+    .eq("shipment_id", id)
+    .eq("organization_id", authz.org.orgId);
+  const idsDosPedidos = ((itensDaCarga ?? []) as Array<{ order_id: string }>).map(
+    (i) => i.order_id,
+  );
+
   const { error } = await supabase
     .from("shipments")
     .delete()
     .eq("id", id)
     .eq("organization_id", authz.org.orgId);
   if (error) return fail("internal_error", "Erro ao excluir a carga.", 500, { requestId });
+
+  // De volta para a fila. Só `expedido` regride, e só para `aprovado`: um
+  // pedido que já seguiu para `entregue` (ou que outra carga pegou no meio do
+  // caminho) não é desfeito — a exclusão devolve o que ESTA carga tinha levado.
+  let devolvidos = 0;
+  if (idsDosPedidos.length > 0) {
+    const { data: voltaram, error: erroVolta } = await supabase
+      .from("commercial_orders")
+      .update({ status: "aprovado" })
+      .eq("organization_id", authz.org.orgId)
+      .in("id", idsDosPedidos)
+      .eq("status", "expedido")
+      .select("id");
+    if (erroVolta) {
+      logger.error("Carga excluída, mas os pedidos não voltaram para a fila", {
+        organizationId: authz.org.orgId,
+        shipmentId: id,
+        pedidos: idsDosPedidos.length,
+        requestId,
+      });
+      return fail(
+        "internal_error",
+        "A carga foi excluída, mas os pedidos não voltaram para a fila de embarque. Abra-os e reenvie.",
+        500,
+        { requestId },
+      );
+    }
+    devolvidos = (voltaram ?? []).length;
+  }
 
   await audit({
     organizationId: authz.org.orgId,
@@ -220,5 +262,5 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
     requestId,
   });
 
-  return ok({ id }, { requestId });
+  return ok({ id, pedidos_devolvidos: devolvidos }, { requestId });
 }

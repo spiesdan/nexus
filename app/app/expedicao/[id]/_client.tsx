@@ -188,8 +188,17 @@ export function CargaClient({
     });
     if (!ok) return;
     try {
-      await apiClient.delete(`/api/v1/shipments/${cargaId}`);
-      toast.success(t("Romaneio excluído."));
+      const res = await apiClient.delete<{ data: { id: string; pedidos_devolvidos?: number } }>(
+        `/api/v1/shipments/${cargaId}`,
+      );
+      const devolvidos = res?.data?.pedidos_devolvidos ?? 0;
+      // O texto do confirm diz que os pedidos voltam; dizer QUANTOS voltaram é
+      // o que prova que voltaram.
+      toast.success(
+        devolvidos > 0
+          ? `${devolvidos} ${t("pedido(s) de volta na fila de embarque.")}`
+          : t("Romaneio excluído."),
+      );
       router.push("/app/expedicao");
     } catch (e) {
       showApiError(e);

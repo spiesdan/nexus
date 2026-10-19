@@ -22,7 +22,7 @@ import {
   type StatusDaCarga,
 } from "@/lib/schemas/expedicao";
 import { type PedidoComercial } from "@/lib/schemas/pedidos";
-import { filtrarEmbarcaveis } from "@/lib/expedicao/buscar-embarcavel";
+import { filtrarEmbarcaveisPor, temCidade } from "@/lib/expedicao/buscar-embarcavel";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 
 interface Textos {
@@ -35,6 +35,12 @@ interface Textos {
   nenhumEmbarcavel: string;
   buscarPedido: string;
   buscaSemResultado: string;
+  /** Filtros de cidade e período do romaneio. */
+  filtrarCidade: string;
+  filtrarDe: string;
+  filtrarAte: string;
+  /** `{n}` é substituído à mão — o i18n não interpola. */
+  semCidade: string;
   selecionados: string;
   /** Contagem do filtro. `{a}` e `{de}` são substituídos — o i18n não interpola. */
   mostrando: string;
@@ -58,11 +64,14 @@ const VARIANTE_CARGA: Record<
 export function ExpedicaoClient({
   inicial,
   embarcaveis,
+  cidadePorContato,
   podeCriar,
   textos,
 }: {
   inicial: Carga[];
   embarcaveis: PedidoComercial[];
+  /** `contact_id` → "CIDADE/UF". A cidade do cadastro, para o filtro achar quem não tem endereço no pedido. */
+  cidadePorContato: Record<string, string>;
   podeCriar: boolean;
   textos: Textos;
 }) {
@@ -72,10 +81,18 @@ export function ExpedicaoClient({
   const [veiculo, setVeiculo] = React.useState("");
   const [motorista, setMotorista] = React.useState("");
   const [busca, setBusca] = React.useState("");
+  const [cidade, setCidade] = React.useState("");
+  const [de, setDe] = React.useState("");
+  const [ate, setAte] = React.useState("");
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
   const [enviando, setEnviando] = React.useState(false);
 
-  const filtrando = busca.trim() !== "";
+  const cidadeDoContato = React.useCallback(
+    (id: string | null | undefined) => (id ? (cidadePorContato[id] ?? null) : null),
+    [cidadePorContato],
+  );
+
+  const filtrando = busca.trim() !== "" || cidade.trim() !== "" || de !== "" || ate !== "";
   /**
    * Os ESCOLHIDOS saem do filtro de propósito.
    *
@@ -96,8 +113,24 @@ export function ExpedicaoClient({
     [embarcaveis, selecionados],
   );
   const filtrados = React.useMemo(
-    () => filtrarEmbarcaveis(embarcaveis, busca).filter((p) => !selecionados.includes(p.id)),
-    [embarcaveis, busca, selecionados],
+    () =>
+      filtrarEmbarcaveisPor(embarcaveis, { busca, cidade, de, ate }, cidadeDoContato).filter(
+        (p) => !selecionados.includes(p.id),
+      ),
+    [embarcaveis, busca, cidade, de, ate, selecionados, cidadeDoContato],
+  );
+
+  /**
+   * Quantos pedidos o filtro de cidade NÃO tem como julgar.
+   *
+   * Sem isto, filtrar por cidade devolve uma lista curta (ou vazia) e a pessoa
+   * conclui que o pedido não está na fila — quando o que falta é o cadastro.
+   * O endereço de entrega é digitado por pedido e a maioria não tem; quem não
+   * tem endereço nem cidade no contato fica invisível para o filtro.
+   */
+  const semCidade = React.useMemo(
+    () => (cidade.trim() === "" ? 0 : embarcaveis.filter((p) => !temCidade(p, cidadeDoContato)).length),
+    [cidade, embarcaveis, cidadeDoContato],
   );
 
   function alternar(id: string) {
@@ -236,7 +269,7 @@ export function ExpedicaoClient({
               {/* A busca só aparece quando há o que buscar. Um campo de filtro
                   sobre lista vazia é um campo que nada faz. */}
               {embarcaveis.length > 0 && (
-                <div className="mb-2">
+                <div className="mb-2 space-y-2">
                   <Input
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
@@ -244,14 +277,61 @@ export function ExpedicaoClient({
                     aria-label={textos.buscarPedido}
                     data-testid="carga-busca"
                   />
+                  {/* Cidade e período: é assim que a carga é montada de verdade
+                      — "o que sai para Videira na sexta". A busca livre continua
+                      acima, para achar UM pedido. */}
+                  <div className="flex flex-wrap items-end gap-2">
+                    <div className="min-w-[10rem] flex-1 space-y-1">
+                      <Label htmlFor="carga-cidade" className="text-xs">
+                        {textos.filtrarCidade}
+                      </Label>
+                      <Input
+                        id="carga-cidade"
+                        value={cidade}
+                        onChange={(e) => setCidade(e.target.value)}
+                        data-testid="carga-cidade"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="carga-de" className="text-xs">
+                        {textos.filtrarDe}
+                      </Label>
+                      <Input
+                        id="carga-de"
+                        type="date"
+                        value={de}
+                        max={ate || undefined}
+                        onChange={(e) => setDe(e.target.value)}
+                        data-testid="carga-de"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="carga-ate" className="text-xs">
+                        {textos.filtrarAte}
+                      </Label>
+                      <Input
+                        id="carga-ate"
+                        type="date"
+                        value={ate}
+                        min={de || undefined}
+                        onChange={(e) => setAte(e.target.value)}
+                        data-testid="carga-ate"
+                      />
+                    </div>
+                  </div>
                   {filtrando && (
                     <p
-                      className="mt-1 text-xs text-muted-foreground"
+                      className="text-xs text-muted-foreground"
                       data-testid="carga-busca-conta"
                     >
                       {textos.mostrando
                         .replace("{a}", String(filtrados.length))
                         .replace("{de}", String(embarcaveis.length))}
+                    </p>
+                  )}
+                  {semCidade > 0 && (
+                    <p className="text-xs text-muted-foreground" data-testid="carga-sem-cidade">
+                      {textos.semCidade.replace("{n}", String(semCidade))}
                     </p>
                   )}
                 </div>
