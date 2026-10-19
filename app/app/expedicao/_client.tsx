@@ -359,6 +359,17 @@ export function ExpedicaoClient({
                         />
                         <span className="font-medium">{numeroDoPedido(p.numero)}</span>
                         <span className="min-w-0 flex-1 truncate">{p.cliente_nome}</span>
+                        {/* A cidade da linha é a mesma que o filtro usa: sem
+                            ela, filtrar por "Canoinhas" devolve pedidos sem
+                            nada na tela dizendo que são de lá. */}
+                        {cidadeDoContato(p.contact_id) && (
+                          <span
+                            className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                            data-testid={`carga-cidade-${p.numero}`}
+                          >
+                            {cidadeDoContato(p.contact_id)}
+                          </span>
+                        )}
                         <span className="font-medium">{comoMoeda(p.total_cents, p.moeda)}</span>
                       </label>
                     </li>

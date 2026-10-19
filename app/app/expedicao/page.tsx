@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
+import { documentoNormalizado, vincularPorDocumento } from "@/lib/expedicao/buscar-embarcavel";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { COLUNAS_DA_CARGA, type Carga } from "@/lib/schemas/expedicao";
 import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
@@ -55,23 +56,68 @@ export default async function ExpedicaoPage() {
   const idsDeContato = [
     ...new Set(pedidos.map((p) => p.contact_id).filter((v): v is string => Boolean(v))),
   ];
-  const { data: contatos } = idsDeContato.length
+
+  // QUEM NÃO TEM CONTATO VINCULADO — o caso dos pedidos importados, que trazem
+  // o CNPJ no pedido mas não o vínculo com o cadastro. Sem esta segunda busca,
+  // 101 dos 109 pedidos aprovados/faturados ficavam sem cidade nenhuma e o
+  // filtro "Canoinhas" devolvia zero com 32 pedidos de Canoinhas na fila.
+  const documentosSemContato = [
+    ...new Set(
+      pedidos
+        .filter((p) => !p.contact_id)
+        .map((p) => documentoNormalizado(p.cliente_documento))
+        // Só CNPJ: `contacts.cnpj` guarda 14 dígitos, e CPF do pedido nunca
+        // casaria com a coluna de lá — buscá-lo só aumentaria o `in`.
+        .filter((doc) => doc.length === 14),
+    ),
+  ];
+
+  const { data: contatosPorId } = idsDeContato.length
     ? await supabase
         .from("contacts")
         .select("id, cidade, uf")
         .eq("organization_id", activeOrg.orgId)
         .in("id", idsDeContato)
     : { data: [] as { id: string; cidade: string | null; uf: string | null }[] };
+  const { data: contatosPorDocumento } = documentosSemContato.length
+    ? await supabase
+        .from("contacts")
+        .select("id, cnpj, cidade, uf")
+        .eq("organization_id", activeOrg.orgId)
+        .in("cnpj", documentosSemContato)
+    : { data: [] as { id: string; cnpj: string | null; cidade: string | null; uf: string | null }[] };
+
   const cidadePorContato: Record<string, string> = {};
-  for (const c of (contatos ?? []) as { id: string; cidade: string | null; uf: string | null }[]) {
+  const idPorDocumento: Record<string, string> = {};
+
+  for (const c of (contatosPorId ?? []) as { id: string; cidade: string | null; uf: string | null }[]) {
     const texto = [c.cidade, c.uf].filter(Boolean).join("/");
     if (texto) cidadePorContato[c.id] = texto;
   }
+  for (const c of (contatosPorDocumento ?? []) as {
+    id: string;
+    cnpj: string | null;
+    cidade: string | null;
+    uf: string | null;
+  }[]) {
+    const texto = [c.cidade, c.uf].filter(Boolean).join("/");
+    if (texto) cidadePorContato[c.id] = texto;
+    const doc = documentoNormalizado(c.cnpj);
+    // Cadastro duplicado pelo mesmo CNPJ: fica o que tem cidade. Sem esta
+    // regra, o último lido (possivelmente o duplicado vazio) venceria e a
+    // cidade sumiria de novo.
+    if (doc && (cidadePorContato[c.id] || !idPorDocumento[doc])) idPorDocumento[doc] = c.id;
+  }
+
+  // O pedido importado fica com o contato que o documento achou, em memória e
+  // só para leitura: o filtro lê a cidade por `contact_id`, e a linha passa a
+  // mostrar a cidade do cadastro como as demais.
+  const pedidosComContato = vincularPorDocumento(pedidos, idPorDocumento);
 
   return (
     <ExpedicaoClient
       inicial={(cargas ?? []) as unknown as Carga[]}
-      embarcaveis={pedidos}
+      embarcaveis={pedidosComContato}
       cidadePorContato={cidadePorContato}
       podeCriar={podeCriar}
       textos={{

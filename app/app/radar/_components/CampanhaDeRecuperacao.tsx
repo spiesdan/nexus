@@ -22,6 +22,8 @@ import type { ClienteInativo } from "@/lib/comercial/inatividade";
 
 /** O mesmo teto da prospecção: a rotação anti-ban tem 1..5 variações. */
 const MENSAGENS_MAX = 5;
+/** Quantas caixas a tela abre. É o pedido do produto — o mesmo 3 do disparo. */
+const MENSAGENS_NA_TELA = 3;
 
 interface Janela {
   inicio: string;
@@ -60,7 +62,13 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
   const t = useT();
   const [aberto, setAberto] = React.useState(false);
   const [nome, setNome] = React.useState("");
-  const [mensagens, setMensagens] = React.useState<string[]>([""]);
+  // TRÊS caixas de mensagem, como no disparo de prospecção: a rotação anti-ban
+  // precisa de variação para o mesmo texto não sair repetido para todo mundo.
+  // Antes a tela abria com uma só e as outras duas ficavam escondidas atrás de
+  // um botão — quem não clicasse mandava a mesma mensagem 500 vezes.
+  const [mensagens, setMensagens] = React.useState<string[]>(() =>
+    Array.from({ length: MENSAGENS_NA_TELA }, () => ""),
+  );
   const [janelas, setJanelas] = React.useState<Janela[]>(JANELAS_PADRAO);
   const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
   const [inicio, setInicio] = React.useState("");
@@ -83,7 +91,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
     const depois = new Date(hoje);
     depois.setDate(depois.getDate() + 5);
     setNome(`${t("Recuperação")} — ${comFone.length} ${t("clientes")}`);
-    setMensagens([""]);
+    setMensagens(Array.from({ length: MENSAGENS_NA_TELA }, () => ""));
     setJanelas(JANELAS_PADRAO);
     setDias(DIAS_UTEIS);
     setInicio(diaIso(hoje));

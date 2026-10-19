@@ -55,6 +55,17 @@ export function chaveDeBusca(texto: string | null | undefined): string {
     .trim();
 }
 
+/**
+ * O DOCUMENTO em dígitos — a chave que casa pedido e cadastro.
+ *
+ * O pedido guarda o documento como veio do emissor (`81.521.056/0001-93`) e o
+ * cadastro guarda só os dígitos (`81521056000193`). Comparar as duas formas
+ * direto nunca casa — e o sintoma não é erro, é um filtro que devolve zero.
+ */
+export function documentoNormalizado(documento: string | null | undefined): string {
+  return (documento ?? "").replace(/\D/g, "");
+}
+
 /** Só o que a busca precisa do pedido — não a linha inteira. */
 export interface PedidoBuscavel {
   numero: number;
@@ -122,6 +133,26 @@ export function temCidade(
 }
 
 /**
+ * VINCULA o pedido importado ao cadastro pelo documento.
+ *
+ * Pedido que veio do emissor traz o CNPJ mas não o `contact_id`; sem o vínculo
+ * ele não tem cidade nenhuma, e o filtro de cidade devolve zero com a fila
+ * cheia. O vínculo é feito em memória e só para leitura — nada é gravado.
+ *
+ * `idPorDocumento` vem indexado por `documentoNormalizado()`.
+ */
+export function vincularPorDocumento<T extends PedidoFiltravel>(
+  pedidos: T[],
+  idPorDocumento: Record<string, string>,
+): T[] {
+  return pedidos.map((p) => {
+    if (p.contact_id) return p;
+    const id = idPorDocumento[documentoNormalizado(p.cliente_documento)];
+    return id ? { ...p, contact_id: id } : p;
+  });
+}
+
+/**
  * Filtra os embarcáveis pelo que a pessoa digita.
  *
  * Busca vazia devolve a lista inteira — sem filtro é o estado inicial, e uma
@@ -162,7 +193,10 @@ export function filtrarEmbarcaveisPor<T extends PedidoFiltravel>(
         chaveDeBusca(numeroFormatado).includes(alvo) ||
         chaveDeBusca(p.cliente_nome).includes(alvo) ||
         chaveDeBusca(p.cliente_documento).includes(alvo) ||
-        chaveDeBusca(p.endereco_entrega).includes(alvo);
+        // A cidade também entra no texto livre: o campo diz "cidade" e, sem
+        // esta linha, digitar "canoinhas" na busca devolvia zero porque a
+        // cidade mora no cadastro do cliente, não em `endereco_entrega`.
+        cidadeDoPedido(p, cidadeDoContato).includes(alvo);
       if (!casou) return false;
     }
 
