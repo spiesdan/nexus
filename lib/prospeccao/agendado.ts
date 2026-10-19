@@ -540,7 +540,12 @@ async function escolherProspect(
   return null;
 }
 
-/** `janelas` é jsonb; um shape torto vira lista vazia (= sempre dentro). */
+/**
+ * `janelas` é jsonb; um shape torto vira lista vazia (= sempre dentro).
+ *
+ * `dias` ausente/vazia é preservado como ausente: os dois significam "todos os
+ * dias" no motor, e gravar `[]` na leitura faria a linha parecer editada.
+ */
 function normalizarJanelas(bruto: unknown): JanelaDoDia[] {
   if (!Array.isArray(bruto)) return [];
   const saida: JanelaDoDia[] = [];
@@ -548,7 +553,16 @@ function normalizarJanelas(bruto: unknown): JanelaDoDia[] {
     if (!j || typeof j !== "object") continue;
     const inicio = (j as { inicio?: unknown }).inicio;
     const fim = (j as { fim?: unknown }).fim;
-    if (typeof inicio === "string" && typeof fim === "string") saida.push({ inicio, fim });
+    if (typeof inicio !== "string" || typeof fim !== "string") continue;
+    const janela: JanelaDoDia = { inicio, fim };
+    const dias = (j as { dias?: unknown }).dias;
+    if (Array.isArray(dias)) {
+      const limpos = dias.filter(
+        (d): d is number => typeof d === "number" && Number.isInteger(d) && d >= 0 && d <= 6,
+      );
+      if (limpos.length > 0) janela.dias = limpos;
+    }
+    saida.push(janela);
   }
   return saida;
 }

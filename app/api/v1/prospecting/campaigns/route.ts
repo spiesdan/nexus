@@ -28,7 +28,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, contato_ids",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, contato_ids, janelas, data_inicio, data_fim, agendada_em",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })

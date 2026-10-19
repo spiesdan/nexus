@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { DIAS_UTEIS, DiasDaSemana } from "@/components/prospeccao/DiasDaSemana";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,6 +62,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
   const [nome, setNome] = React.useState("");
   const [mensagens, setMensagens] = React.useState<string[]>([""]);
   const [janelas, setJanelas] = React.useState<Janela[]>(JANELAS_PADRAO);
+  const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
   const [inicio, setInicio] = React.useState("");
   const [fim, setFim] = React.useState("");
   const [cota, setCota] = React.useState("50");
@@ -83,6 +85,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
     setNome(`${t("Recuperação")} — ${comFone.length} ${t("clientes")}`);
     setMensagens([""]);
     setJanelas(JANELAS_PADRAO);
+    setDias(DIAS_UTEIS);
     setInicio(diaIso(hoje));
     setFim(diaIso(depois));
     setCota("50");
@@ -95,6 +98,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
     nome.trim().length >= 2 &&
     comFone.length > 0 &&
     mensagensValidas.length > 0 &&
+    dias.length > 0 &&
     (!inicio || !fim || fim >= inicio);
 
   async function criar() {
@@ -105,7 +109,9 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
         nome: nome.trim(),
         contato_ids: comFone.map((c) => c.contact_id),
         mensagens: mensagensValidas,
-        janelas: janelas.filter((j) => j.inicio && j.fim && j.inicio < j.fim),
+        janelas: janelas
+          .filter((j) => j.inicio && j.fim && j.inicio < j.fim)
+          .map((j) => ({ ...j, dias })),
         data_inicio: inicio || null,
         data_fim: fim || null,
         limite_diario: Number(cota) > 0 ? Number(cota) : undefined,
@@ -184,6 +190,8 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
                 </Button>
               )}
             </div>
+
+            <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="recuperacao" />
 
             <div className="space-y-2">
               <Label>{t("Janelas de envio")}</Label>

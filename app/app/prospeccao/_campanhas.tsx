@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Megaphone, PencilSimple } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
@@ -46,6 +47,11 @@ interface CampanhaDescoberta {
   /** 0274: `prospects` (garimpagem) | `contatos` (recuperação). */
   publico?: string | null;
   contato_ids?: string[] | null;
+  /** 0273 — o relógio da campanha. Não vem na aba de venda automática. */
+  janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
+  data_inicio?: string | null;
+  data_fim?: string | null;
+  agendada_em?: string | null;
   funil?: FunilDaCampanha | null;
 }
 
@@ -97,6 +103,39 @@ function rotuloDaCampanha(status: string, t: (texto: string) => string): string 
   if (status === "concluida" || status === "completed") return t("Concluída");
   if (status === "paused" || status === "pausada") return t("Pausada");
   return t("Rascunho");
+}
+
+/** `2026-10-19` → `19/10` (é assim que o dono fala: "do dia 19/10 ao 23/10"). */
+function diaCurto(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${m[3]}/${m[2]}` : iso;
+}
+
+/**
+ * A agenda da campanha em uma linha — `null` quando ela não está agendada (a
+ * aba mistura descoberta e venda automática, e a segunda não tem relógio).
+ *
+ * Existe porque a pergunta "quando é que essa campanha fala?" era respondida
+ * abrindo o formulário. A lista diz o relógio REAL gravado, que é o que o
+ * motor lê — não o que a tela ofereceu no dia em que foi montada.
+ */
+function agendaDaCampanha(
+  c: CampanhaDescoberta,
+  t: (texto: string) => string,
+): string | null {
+  if (!c.agendada_em) return null;
+  const janelas = (c.janelas ?? []).filter((j) => j?.inicio && j?.fim);
+  if (janelas.length === 0) return null;
+  const dias = [...new Set(janelas.flatMap((j) => j.dias ?? []))].sort((a, b) => a - b);
+  return [
+    dias.length > 0 && dias.length < 7 ? t(resumoDosDias(dias)) : null,
+    janelas.map((j) => t(`das ${j.inicio} às ${j.fim}`)).join(` ${t("e")} `),
+    c.data_inicio && c.data_fim
+      ? t(`de ${diaCurto(c.data_inicio)} a ${diaCurto(c.data_fim)}`)
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 const ESTAGIOS: { chave: keyof FunilDaCampanha; rotulo: (t: (s: string) => string) => string }[] = [
@@ -395,6 +434,16 @@ export function CampanhasTab({
                           card.campanha.categorias.join(", ") || "—"
                         }`}
                   </p>
+
+                  {card.tipo === "descoberta" &&
+                    (() => {
+                      const agenda = agendaDaCampanha(card.campanha, t);
+                      return agenda ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t("Agenda")}: {agenda}
+                        </p>
+                      ) : null;
+                    })()}
 
                   {recuperacao ? null : funil ? (
                     <>

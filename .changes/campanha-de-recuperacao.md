@@ -9,11 +9,11 @@ por conversa, no WhatsApp de quem estivesse com o celular na mão. Agora a lista
 vira **campanha**: no Radar, na seção de recuperação, o botão "Criar campanha de
 recuperação" monta o agendamento com todo mundo que está na lista.
 
-A agenda é a mesma da prospecção, porque o motor é o mesmo: **uma mensagem por
-minuto**, dentro das janelas que você escolher (por exemplo 7h–12h e 13h–19h),
-no período que você definir (19/10 a 23/10), com até **5 variações** de mensagem
-girando em ordem e um **máximo por dia**. Terminou a lista, a campanha para
-sozinha; venceu o período, ela pausa.
+A agenda é a mesma da prospecção, porque o motor é o mesmo: **uma mensagem por minuto**,
+dentro das janelas que você escolher (por exemplo 7h–12h e 13h–19h), no período que
+você definir (19/10 a 23/10), com até **5 variações** de mensagem girando em ordem e
+um **máximo por dia**. Terminou a lista, a campanha para sozinha; venceu o período,
+ela pausa.
 
 Duas travas que valem a pena saber:
 

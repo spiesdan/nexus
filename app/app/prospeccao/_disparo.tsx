@@ -41,6 +41,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
+import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { ESPACO_ANTIBAN_MS } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -164,6 +165,10 @@ export function DialogoDisparo({
     { inicio: "13:00", fim: "19:00" },
   ]);
   const [agendado, setAgendado] = React.useState(false);
+  // Os dias da semana da campanha (seg–sex por padrão): é o "de segunda a
+  // sexta" que o dono pediu, e sem ele "19/10 a 23/10 das 7 às 19" também
+  // mandaria no sábado e no domingo se o período os incluísse.
+  const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
 
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
@@ -184,12 +189,16 @@ export function DialogoDisparo({
     (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
   );
   const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
+  // Sem dia escolhido não há quando mandar — e o motor leria a lista vazia
+  // como "todos os dias", que é o OPOSTO da intenção de quem desmarcou tudo.
+  const diasValidos = dias.length > 0;
   const podeAgendar =
     preenchidas.length > 0 &&
     ids.length > 0 &&
     janelasValidas.length === janelas.length &&
     janelas.length > 0 &&
-    periodoValido;
+    periodoValido &&
+    diasValidos;
 
   const segundosAgenda = Math.round(espacoMsAgendado / 1000);
   const ritmo =
@@ -199,6 +208,7 @@ export function DialogoDisparo({
   const resumoDaAgenda = [
     t(`${ids.length} empresas`),
     ritmo,
+    t(resumoDosDias(dias)),
     janelasValidas.length > 0
       ? janelasValidas.map((j) => t(`das ${j.inicio} às ${j.fim}`)).join(` ${t("e")} `)
       : t("sem restrição de horário"),
@@ -250,7 +260,7 @@ export function DialogoDisparo({
       await apiClient.patch(`/api/v1/prospecting/campaigns/${id}`, {
         prospect_ids: ids,
         mensagens: preenchidas,
-        janelas,
+        janelas: janelas.map((j) => ({ ...j, dias })),
         data_inicio: dataInicio,
         data_fim: dataFim,
         limite_diario: Number(limite) || 50,
@@ -432,6 +442,8 @@ export function DialogoDisparo({
                   {t("A data final não pode ser anterior à inicial.")}
                 </p>
               )}
+
+              <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="disparo" />
 
               <div className="space-y-2">
                 <Label>{t("Horários do dia")}</Label>

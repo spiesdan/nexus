@@ -661,4 +661,37 @@ describe("processarCampanhasAgendadas", () => {
     // como falha no resumo do tick.
     expect(resumo.pulados).toEqual([]);
   });
+
+  it("(t) a campanha de segunda a sexta NÃO manda no sábado (o dia vem do jsonb)", async () => {
+    // SÁBADO às 14:00 de São Paulo. A janela 13–19 está ABERTA: se o dia da
+    // semana não chegasse do `janelas` (jsonb) até o motor, este tick mandaria.
+    const SABADO = "2026-10-17T17:00:00.000Z";
+    const uteis = campanha({
+      data_inicio: "2026-10-12",
+      data_fim: "2026-10-25",
+      janelas: [
+        { inicio: "07:00", fim: "12:00", dias: [1, 2, 3, 4, 5] },
+        { inicio: "13:00", fim: "19:00", dias: [1, 2, 3, 4, 5] },
+      ],
+    });
+
+    const noSabado = await processarCampanhasAgendadas(
+      criarAdmin(base({ prospecting_campaigns: [uteis] })),
+      SABADO,
+      senderFalso(),
+    );
+    expect(noSabado.enviados).toBe(0);
+    expect(noSabado.pulados).toEqual([{ campanha: "camp-1", motivo: "fora_do_dia" }]);
+
+    // A MESMA campanha na segunda-feira (19/10) manda: o dia não é um bloqueio
+    // cego, ele deixa passar quem está na lista de dias.
+    const enviar = senderFalso();
+    const naSegunda = await processarCampanhasAgendadas(
+      criarAdmin(base({ prospecting_campaigns: [uteis] })),
+      DENTRO,
+      enviar,
+    );
+    expect(naSegunda.enviados).toBe(1);
+    expect(enviar).toHaveBeenCalledTimes(1);
+  });
 });

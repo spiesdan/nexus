@@ -181,6 +181,14 @@ export const janelaDoDiaSchema = z
   .object({
     inicio: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM (ex.: 07:00)."),
     fim: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM (ex.: 12:00)."),
+    /**
+     * OS DIAS DA SEMANA da janela — 0 = domingo … 6 = sábado.
+     *
+     * Ausente ou vazia = TODOS os dias. É o que mantém as campanhas agendadas
+     * antes desta versão mandando no dia seguinte ao deploy: a coluna é jsonb,
+     * então a linha antiga simplesmente não tem a chave.
+     */
+    dias: z.array(z.number().int().min(0).max(6)).max(7).optional(),
   })
   .refine((j) => j.inicio < j.fim, {
     message: "O fim da janela tem de ser depois do início.",
