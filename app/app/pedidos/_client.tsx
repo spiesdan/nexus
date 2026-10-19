@@ -974,7 +974,7 @@ export function PedidosClient({
                     return (
                       <div
                         key={p.id}
-                        className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
+                        className="relative flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
                       >
                         {podeCriar && (
                           <input
@@ -982,18 +982,24 @@ export function PedidosClient({
                             checked={selecionados.includes(p.id)}
                             onChange={() => alternar(p.id)}
                             aria-label={numeroDoPedido(p.numero)}
-                            className="shrink-0"
+                            className="relative z-10 shrink-0"
                           />
                         )}
-                        <Link
-                          href={`/app/pedidos/${p.id}`}
-                          className="flex min-w-0 flex-1 items-center gap-3"
-                        >
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent">
+                              {/* Link ESTICADO: o número é o único texto do
+                                  link (nome acessível e alvo do teste e2e), e o
+                                  `after` cobre a linha inteira para o clique em
+                                  qualquer ponto abrir a ficha. Antes o link
+                                  envolvia a linha toda e o nome acessível virava
+                                  "PED-1 Aprovado CLIENTE R$…". */}
+                              <Link
+                                href={`/app/pedidos/${p.id}`}
+                                className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent after:absolute after:inset-0 after:content-['']"
+                              >
                                 {numeroDoPedido(p.numero)}
-                              </span>
+                              </Link>
                               <PillDoStatus status={p.status as StatusDoPedido} />
                             </div>
                             <p className="truncate text-sm font-medium text-text">
@@ -1012,7 +1018,7 @@ export function PedidosClient({
                               <span className="hidden sm:inline"> · {emissor}</span>
                             </p>
                           </div>
-                        </Link>
+                        </div>
                       </div>
                     );
                   })}
