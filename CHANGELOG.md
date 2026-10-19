@@ -8,6 +8,48 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.31.1] — 2026-10-19
+
+### Corrigido
+
+- **A campanha de recuperação abre com as três caixas de mensagem** A **campanha de recuperação** (Radar → Recuperação) é a que fala com quem
+  comprou e parou. Ela manda uma mensagem por minuto, dentro das janelas, e
+  alterna os textos para o mesmo conteúdo não sair idêntico para centenas de
+  pessoas seguidas — que é o que mais chama atenção de bloqueio por spam.
+
+  Só que a tela abria com **uma** caixa. As outras duas existiam atrás do botão
+  "+ Variação", e quem não clicasse criava a campanha com um texto só: o mesmo
+  para todo mundo, exatamente o que a rotação evita. O disparo de prospecção já
+  abria com três; agora as duas telas abrem igual.
+
+  As três caixas giram em ordem e voltam ao começo quando acabam — a 1ª no
+  primeiro envio, a 2ª no segundo, a 3ª no terceiro, a 1ª de novo no quarto.
+  Cada cliente recebe uma. Campo vazio não entra na rotação.
+
+- **O filtro de cidade da Expedição acha os pedidos importados** Na tela **Expedição**, filtrar por **Canoinhas** devolvia zero pedidos — mesmo
+  com 32 pedidos de Canoinhas na fila de embarque.
+
+  A cidade não é um campo do pedido: ela mora no cadastro do cliente. E 107 dos
+  109 pedidos aprovados ou faturados desta instalação vieram do emissor sem o
+  vínculo com o cadastro (`contact_id` vazio), embora trouxessem o CNPJ. Sem
+  vínculo não havia cidade para comparar, e o filtro — que estava correto —
+  concluía, corretamente, que nenhum pedido era de lá.
+
+  Agora o pedido sem vínculo é ligado ao cadastro **pelo CNPJ**, na hora de
+  mostrar a tela. O documento do pedido vem com máscara
+  (`81.521.056/0001-93`) e o cadastro guarda só os dígitos
+  (`81521056000193`) — é essa diferença, invisível na tela, que fazia o encontro
+  falhar. Dos 109 pedidos, 101 passam a ter cidade.
+
+  O mesmo defeito existia na **busca por texto**, que promete "Buscar por número,
+  cliente, cidade ou CNPJ" mas só olhava o endereço de entrega: digitar
+  "canoinhas" ali também não achava nada. A busca passou a olhar a cidade do
+  cadastro, e cada linha da lista mostra a cidade ao lado do valor, para dar para
+  conferir de relance por que aquele pedido apareceu.
+
+  Nada é gravado: o vínculo é só de leitura, e o pedido continua como está no
+  banco.
+
 ## [1.31.0] — 2026-10-19
 
 ### Adicionado
@@ -4824,7 +4866,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.1...HEAD
+[1.31.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.0...v1.31.1
 [1.31.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.2...v1.30.0
 [1.29.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...v1.29.2
