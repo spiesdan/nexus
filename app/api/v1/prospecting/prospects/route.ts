@@ -29,6 +29,7 @@ import { logger } from "@/lib/logger";
 import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
+import { valoresDoParametro } from "@/lib/prospeccao/parametros";
 import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -39,13 +40,27 @@ const LIMITE_CRUZAMENTO = 2000;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Um valor dentro de um `.or()` do PostgREST.
+ *
+ * A cláusula é separada por vírgula e agrupada por parêntese, então valor que
+ * tenha vírgula ou parêntese PRECISA vir entre aspas — e valor entre aspas não
+ * pode conter aspas. Só aspas quando necessário: os rótulos do Google quase
+ * nunca têm vírgula, e sem aspas a cláusula fica legível no log.
+ */
+function valorParaOr(valor: string): string {
+  return /[(),"]/.test(valor) ? `"${valor.replace(/"/g, "")}"` : valor;
+}
+
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "business_prospects" });
   if (!authz.ok) return authz.response;
 
   const p = req.nextUrl.searchParams;
-  const categoria = p.get("categoria")?.trim() ?? "";
+  // Categoria aceita VÁRIOS valores (repetição do parâmetro: `?categoria=A&categoria=B`),
+  // pela mesma porta do resto do contrato. Quem manda é a lista, não o primeiro.
+  const categorias = valoresDoParametro(p.getAll("categoria"));
   const cidade = p.get("cidade")?.trim() ?? "";
   const estado = p.get("estado")?.trim() ?? "";
   const status = p.get("status")?.trim() ?? "";
@@ -143,10 +158,32 @@ export async function GET(req: NextRequest): Promise<Response> {
     // gravado. Sem ele, digitar uma categoria que chegou do Google hoje e não
     // está na tabela devolveria lista vazia — o filtro apareceria quebrado
     // quando o problema é só uma linha a mais no mapa.
-    if (categoria) {
-      const emIngles = categoriasQueCasam(categoria);
-      if (emIngles.length > 0) q = q.in("categoria", emIngles.slice(0, 200));
-      else q = q.ilike("categoria", `%${categoria}%`);
+    //
+    // VÁRIAS categorias são a UNIÃO, nunca a interseção: `categoria` guarda um
+    // rótulo só, então "E" entre duas categorias daria lista vazia sempre. Quem
+    // marca Oficina + Borracharia + Autopeças quer as três na tela.
+    if (categorias.length > 0) {
+      const traduzidas = new Set<string>();
+      const semTraducao: string[] = [];
+      for (const termo of categorias) {
+        const emIngles = categoriasQueCasam(termo);
+        if (emIngles.length > 0) for (const v of emIngles) traduzidas.add(v);
+        else semTraducao.push(termo);
+      }
+      const lista = [...traduzidas].slice(0, 200);
+
+      if (semTraducao.length === 0) {
+        q = q.in("categoria", lista);
+      } else {
+        // Categoria desconhecida ainda tem que filtrar. Sem este caminho,
+        // marcar uma categoria que a tabela PT↔EN não conhece junto de outra
+        // conhecida devolveria só a conhecida — em silêncio.
+        const partes = [
+          ...(lista.length > 0 ? [`categoria.in.(${lista.map(valorParaOr).join(",")})`] : []),
+          ...semTraducao.map((termo) => `categoria.ilike.${valorParaOr(`%${termo}%`)}`),
+        ];
+        q = q.or(partes.join(","));
+      }
     }
     if (cidade) q = q.ilike("cidade", `%${cidade}%`);
     if (estado) q = q.eq("estado", estado.toUpperCase());

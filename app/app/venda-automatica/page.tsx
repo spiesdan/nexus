@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { valoresDoParametro } from "@/lib/prospeccao/parametros";
 import { createClient } from "@/lib/supabase/server";
 
 import { VendaAutomaticaClient, type CampanhaVa } from "./_client";
@@ -20,7 +21,14 @@ export const dynamic = "force-dynamic";
 export default async function VendaAutomaticaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ origem?: string; cidade?: string; uf?: string; categoria?: string; ids?: string }>;
+  searchParams: Promise<{
+    origem?: string;
+    cidade?: string;
+    uf?: string;
+    /** Repetido uma vez por categoria marcada na prospecção: `string[]`. */
+    categoria?: string | string[];
+    ids?: string;
+  }>;
 }) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
@@ -49,12 +57,15 @@ export default async function VendaAutomaticaPage({
   // não um estado permanente.
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const cidadeSel = (params.cidade ?? "").trim();
+  // `?categoria=A&categoria=B` chega como array; `?categoria=A` chega como
+  // string. Normalizar aqui é o que impede o resto da tela de ter dois casos.
+  const categoriasSel = valoresDoParametro(params.categoria);
   const selecaoInicial =
     params.origem === "prospeccao" && cidadeSel !== ""
       ? {
           cidade: cidadeSel,
           uf: (params.uf ?? "").trim().toUpperCase().slice(0, 2),
-          categoria: (params.categoria ?? "").trim(),
+          categorias: categoriasSel,
           ids: (params.ids ?? "")
             .split(",")
             .map((s) => s.trim())

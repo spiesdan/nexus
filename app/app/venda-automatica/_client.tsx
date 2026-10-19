@@ -29,7 +29,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 
-import { NovaCampanhaDaSelecao } from "./_nova-da-selecao";
+import { NovaCampanhaDaSelecao, type SelecaoInicial } from "./_nova-da-selecao";
 /**
  * Tela da Venda Automática (spec 18 §21–§25): lista de campanhas à esquerda,
  * painel + fila + timeline à direita. Tudo que muda passa pelas rotas
@@ -162,12 +162,7 @@ export function VendaAutomaticaClient({
   podeGerenciar: boolean;
   textos: TextosVa;
   /** Recorte vindo da prospecção (?origem=prospeccao). Sem ele, sem aba. */
-  selecaoInicial: {
-    cidade: string;
-    uf: string;
-    categoria: string;
-    ids: string[];
-  } | null;
+  selecaoInicial: SelecaoInicial | null;
 }) {
   const t = useT();
   const confirmar = useConfirmar();

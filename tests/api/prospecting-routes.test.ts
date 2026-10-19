@@ -838,6 +838,101 @@ describe("GET /api/v1/prospecting/prospects — filtros", () => {
       classificacao: "cliente_existente",
     });
   });
+
+  it("VÁRIAS categorias = UNIÃO (a tela manda uma por parâmetro repetido)", async () => {
+    // A campanha de oficina vende para oficina, borracharia e autopeças. Com
+    // uma categoria só, o dono precisava de três listas — e conferir as três
+    // na mão. Marcar as três tem que devolver as três.
+    const TERCEIRO = "33333333-3333-4333-8333-555555555555";
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Auto repair shop" }),
+        prospecto({ id: PROSPECT_B, categoria: "Gas station" }),
+        prospecto({ id: TERCEIRO, categoria: "Restaurant" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req(
+        "GET",
+        undefined,
+        "http://localhost/api/v1/prospecting/prospects?categoria=Auto+repair+shop&categoria=Gas+station",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect(
+      (await res.json()).data.map((l: Row) => l.id).sort(),
+    ).toEqual([PROSPECT_A, PROSPECT_B].sort());
+  });
+
+  it("MUTAÇÃO: ler só a PRIMEIRA categoria corta metade do recorte, em silêncio", async () => {
+    // Se a rota voltasse a `p.get("categoria")`, a segunda categoria marcada
+    // sumiria da lista sem erro e sem aviso: a tela apareceria filtrada com
+    // dois chips acesos e traria as empresas de um só.
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Auto repair shop" }),
+        prospecto({ id: PROSPECT_B, categoria: "Gas station" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req(
+        "GET",
+        undefined,
+        "http://localhost/api/v1/prospecting/prospects?categoria=Gas+station&categoria=Auto+repair+shop",
+      ),
+    );
+    expect((await res.json()).data.map((l: Row) => l.id).sort()).toEqual(
+      [PROSPECT_A, PROSPECT_B].sort(),
+    );
+  });
+
+  it("categoria que a tabela PT↔EN não conhece entra por `ilike`, junto das conhecidas", async () => {
+    // Toda lista de categorias envelhece: uma categoria nova do Google chega
+    // antes de a tradução existir. Ela não pode ser descartada em silêncio
+    // quando o dono a marca ao lado de uma conhecida — as duas valem.
+    const INEDITA = "33333333-3333-4333-8333-666666666666";
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Auto repair shop" }),
+        prospecto({ id: INEDITA, categoria: "Loja de bugigangas ZZZ" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req(
+        "GET",
+        undefined,
+        "http://localhost/api/v1/prospecting/prospects?categoria=Auto+repair+shop&categoria=Loja+de+bugigangas+ZZZ",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((l: Row) => l.id).sort()).toEqual(
+      [PROSPECT_A, INEDITA].sort(),
+    );
+  });
+
+  it("só categoria desconhecida filtra por `ilike` — e não devolve o catálogo inteiro", async () => {
+    // O caminho do `ilike` sozinho é o que impede `in.()` vazio (que traria
+    // tudo). E o filtro continua sendo filtro: quem não casa fica fora.
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Loja de bugigangas ZZZ" }),
+        prospecto({ id: PROSPECT_B, categoria: "Auto repair shop" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req(
+        "GET",
+        undefined,
+        "http://localhost/api/v1/prospecting/prospects?categoria=Loja+de+bugigangas+ZZZ",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+  });
 });
 
 describe("GET /api/v1/prospecting/prospects — ids da seleção (0269)", () => {

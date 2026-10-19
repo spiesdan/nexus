@@ -15,6 +15,7 @@ import {
   FilterAdvanced,
   FilterBar,
   FilterChips,
+  FilterMultiSelect,
   FilterNumber,
   FilterPrimary,
   FilterSearch,
@@ -51,6 +52,7 @@ import {
 import { abrirConversaDoProspect } from "@/lib/prospeccao/conversa";
 import { prioridadeAlta } from "@/lib/prospeccao/score";
 import { ROTULO_CLASSIFICACAO, type Classificacao } from "@/lib/prospeccao/classificacao";
+import { valoresDoParametro } from "@/lib/prospeccao/parametros";
 import type { PontoMapa } from "./_mapa";
 import { ROTULO_STATUS_COMERCIAL, STATUS_COMERCIAL, type Prospect } from "@/lib/schemas/prospeccao";
 
@@ -142,7 +144,8 @@ const MapaProspects = dynamic(() => import("./_mapa").then((m) => m.MapaProspect
 
 interface Filtros {
   busca: string;
-  categoria: string;
+  /** VÁRIAS categorias: a lista mostra a união delas (ver o backend). */
+  categorias: string[];
   cidade: string;
   estado: string;
   /** "Prospectada ha": quantos dias atras a empresa entrou no Radar. */
@@ -158,7 +161,7 @@ interface Filtros {
 
 const VAZIOS: Filtros = {
   busca: "",
-  categoria: "",
+  categorias: [],
   cidade: "",
   estado: "",
   prospectadoHa: "",
@@ -227,7 +230,9 @@ export function EmpresasTab({
     return {
       ...VAZIOS,
       busca: UUID_RE.test(texto) ? "" : texto,
-      categoria: paramsUrl.get("categoria") ?? "",
+      // Deep-link antigo com UMA categoria continua valendo — `getAll` devolve
+      // uma posição só. Várias chegam repetindo o parâmetro.
+      categorias: valoresDoParametro(paramsUrl.getAll("categoria")),
       cidade: paramsUrl.get("cidade") ?? "",
       estado: paramsUrl.get("estado") ?? "",
       status: paramsUrl.get("status") ?? "",
@@ -338,7 +343,9 @@ export function EmpresasTab({
         if (acrescentar) qs.set("offset", String(opcoes?.offset ?? 0));
         if (idBusca) qs.set("busca_id", idBusca);
         if (f.busca.trim()) qs.set("busca", f.busca.trim());
-        if (f.categoria.trim()) qs.set("categoria", f.categoria.trim());
+        // Uma categoria = um parâmetro. Repetir o parâmetro é o contrato do
+        // backend (e o que a campanha já fazia com `cidades`).
+        for (const c of f.categorias) qs.append("categoria", c);
         if (f.cidade.trim()) qs.set("cidade", f.cidade.trim());
         if (f.estado.trim()) qs.set("estado", f.estado.trim());
         if (f.prospectadoHa) qs.set("prospectado_ha", f.prospectadoHa);
@@ -402,7 +409,10 @@ export function EmpresasTab({
   const avancadosAtivos = [
     filtros.cidade.trim(),
     filtros.estado.trim(),
-    filtros.categoria.trim(),
+    // Categoria múltipla conta como UM filtro ativo — o selo diz "quantos
+    // filtros", não "quantos valores". Três categorias continuam sendo o
+    // mesmo filtro ligado.
+    filtros.categorias.length > 0 ? "x" : "",
     filtros.prospectadoHa,
     filtros.notaMin,
     filtros.comTelefone ? "x" : "",
@@ -429,16 +439,17 @@ export function EmpresasTab({
       onRemove: () => mudar({ busca: "" }, true),
     });
   }
-  if (filtros.categoria.trim()) {
+  // UM chip por categoria: o contrato do `FilterChips` é remoção individual —
+  // um chip só, "Categoria: 3", obrigaria a reabrir o painel para tirar uma.
+  filtros.categorias.forEach((valor) => {
     chips.push({
-      key: "categoria",
+      key: `categoria-${valor}`,
       label: `${t("Categoria")}: ${
-        opcoesCategoria.find((c) => c.nome === filtros.categoria)?.rotulo ??
-        filtros.categoria.trim()
+        opcoesCategoria.find((c) => c.nome === valor)?.rotulo ?? valor
       }`,
-      onRemove: () => mudar({ categoria: "" }),
+      onRemove: () => mudar({ categorias: filtros.categorias.filter((v) => v !== valor) }),
     });
-  }
+  });
   if (filtros.estado.trim()) {
     chips.push({
       key: "estado",
@@ -508,7 +519,7 @@ export function EmpresasTab({
     const qs = new URLSearchParams();
     if (buscaId) qs.set("busca_id", buscaId);
     if (filtros.busca.trim()) qs.set("busca", filtros.busca.trim());
-    if (filtros.categoria.trim()) qs.set("categoria", filtros.categoria.trim());
+    for (const c of filtros.categorias) qs.append("categoria", c);
     if (filtros.cidade.trim()) qs.set("cidade", filtros.cidade.trim());
     if (filtros.estado.trim()) qs.set("estado", filtros.estado.trim());
     if (filtros.status) qs.set("status", filtros.status);
@@ -524,7 +535,7 @@ export function EmpresasTab({
   }, [
     buscaId,
     filtros.busca,
-    filtros.categoria,
+    filtros.categorias,
     filtros.cidade,
     filtros.estado,
     filtros.status,
@@ -784,7 +795,9 @@ export function EmpresasTab({
     if (!cidade) return;
     const qs = new URLSearchParams({ origem: "prospeccao", cidade });
     if (filtros.estado.trim()) qs.set("uf", filtros.estado.trim().toUpperCase());
-    if (filtros.categoria.trim()) qs.set("categoria", filtros.categoria.trim());
+    // Todas as categorias marcadas viajam — mandar só a primeira faria a
+    // campanha nascer com um recorte menor que o da tela, em silêncio.
+    for (const c of filtros.categorias) qs.append("categoria", c);
     // Seleção manual vai por id; sem ela, a aba carrega o filtro inteiro.
     // URL tem teto prático: acima de 100 marcadas, manda o filtro e a aba
     // mostra as primeiras — mandar 500 UUIDs na URL estouraria o limite do
@@ -929,14 +942,18 @@ export function EmpresasTab({
             min={0}
           />
           {/* A categoria vem da API do Google, com o texto exato que esta
-              gravado (ver /prospects/categorias). Digitar "mecanica" traz
-              "Auto repair shop" porque o backend casa por `ilike`. */}
-          <FilterSelect
+              gravado (ver /prospects/categorias). O backend casa o valor por
+              tradução (`categoriasQueCasam`) e, quando ela não conhece o
+              termo, por `ilike`. Agora aceita VÁRIAS: quem vende para
+              oficina, borracharia e autopeças não precisa de três listas. */}
+          <FilterMultiSelect
             id="f-categoria"
             label={t("Categoria")}
-            value={filtros.categoria}
-            onChange={(categoria) => mudar({ categoria })}
+            values={filtros.categorias}
+            onChange={(categorias) => mudar({ categorias })}
             allLabel={t("Todas as categorias")}
+            searchPlaceholder={t("Buscar categoria…")}
+            clearLabel={t("Limpar")}
             className="w-full sm:w-56"
             /* A ETIQUETA é em português e o VALOR é o que está gravado.
                Inverter os dois é o defeito silencioso daqui: o filtro manda o

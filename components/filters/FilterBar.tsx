@@ -2,10 +2,11 @@
 
 import * as React from "react";
 
-import { CaretDown, Funnel, MagnifyingGlass, X } from "@/lib/ui/icons";
+import { CaretDown, Check, Funnel, MagnifyingGlass, X } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
  * O PADRÃO GLOBAL DE FILTROS — uma linguagem só para todas as listas.
@@ -139,6 +140,168 @@ export function FilterSelect({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Multi-select — VÁRIOS valores do mesmo filtro, na mesma consulta.
+// ---------------------------------------------------------------------------
+//
+// POR QUE EXISTE: o filtro de Categoria da prospecção aceitava UMA categoria,
+// e quem vende para oficina, borracharia e autopeças tinha que olhar três
+// listas — ou nenhuma. A campanha já aceitava várias (`categorias` é array);
+// a lista não. Este componente fecha essa assimetria.
+//
+// Ele é o irmão de `FilterSelect`, não um substituto: um valor só continua
+// sendo um `<select>` nativo (teclado do sistema, sem JS). Aqui o painel
+// FICA ABERTO a cada escolha — marcar três categorias não pode custar três
+// aberturas — e por isso é popover e não menu: menu fecha no primeiro item.
+//
+// Com até ~500 categorias medidas no banco, a lista tem busca própria: rolar
+// 500 linhas para achar "Oficina mecânica" é pior que digitar "mecan".
+export function FilterMultiSelect({
+  id,
+  label,
+  values,
+  onChange,
+  options,
+  allLabel,
+  searchPlaceholder,
+  clearLabel,
+  className = "",
+  dataTestId,
+}: {
+  id: string;
+  label: string;
+  values: string[];
+  onChange: (valores: string[]) => void;
+  options: { value: string; label: string }[];
+  /** Rótulo do estado sem nada marcado ("Todas as categorias"). */
+  allLabel: string;
+  searchPlaceholder: string;
+  clearLabel: string;
+  className?: string;
+  /** Gancho para e2e — não muda comportamento. */
+  dataTestId?: string;
+}) {
+  const [aberto, setAberto] = React.useState(false);
+  const [busca, setBusca] = React.useState("");
+  const labelId = `${id}-rotulo`;
+  const marcados = new Set(values);
+
+  // A busca casa no RÓTULO (português, o que a pessoa lê) e no VALOR (o que
+  // está gravado). Casar só no valor faria "mecanica" não achar nada — o
+  // mesmo defeito que `categoriasQueCasam` corrigiu no backend.
+  const visiveis = React.useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    if (termo === "") return options;
+    return options.filter(
+      (o) => o.label.toLowerCase().includes(termo) || o.value.toLowerCase().includes(termo),
+    );
+  }, [busca, options]);
+
+  function alternar(valor: string) {
+    onChange(marcados.has(valor) ? values.filter((v) => v !== valor) : [...values, valor]);
+  }
+
+  // O gatilho fechado é a única superfície que sobra quando o painel está
+  // fechado: ele tem que dizer o que está aplicado.
+  const resumo =
+    values.length === 0
+      ? allLabel
+      : values.length === 1
+        ? (options.find((o) => o.value === values[0])?.label ?? allLabel)
+        : `${label}: ${values.length}`;
+
+  return (
+    <div className={`w-full space-y-1.5 sm:w-44 md:shrink-0 ${className}`}>
+      <Label id={labelId} className="block text-sm font-medium">
+        {label}
+      </Label>
+      <Popover
+        open={aberto}
+        onOpenChange={(o) => {
+          setAberto(o);
+          if (!o) setBusca("");
+        }}
+      >
+        <PopoverTrigger asChild>
+          <button
+            id={id}
+            type="button"
+            aria-labelledby={labelId}
+            aria-expanded={aberto}
+            aria-haspopup="listbox"
+            data-testid={dataTestId}
+            className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-left text-sm"
+          >
+            <span className={`truncate ${values.length === 0 ? "text-muted-foreground" : ""}`}>
+              {resumo}
+            </span>
+            <CaretDown
+              size={14}
+              aria-hidden
+              className={`shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`}
+            />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-72 p-2">
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+            className="h-8"
+          />
+          <div
+            role="listbox"
+            aria-multiselectable="true"
+            aria-label={label}
+            className="mt-2 max-h-64 overflow-auto"
+          >
+            {visiveis.length === 0 ? (
+              <p className="px-2 py-3 text-sm text-muted-foreground">{searchPlaceholder}</p>
+            ) : (
+              visiveis.map((o) => {
+                const marcado = marcados.has(o.value);
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="option"
+                    aria-selected={marcado}
+                    onClick={() => alternar(o.value)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  >
+                    <span
+                      className={`flex size-4 shrink-0 items-center justify-center rounded-sm border ${
+                        marcado ? "border-primary bg-primary text-primary-foreground" : ""
+                      }`}
+                    >
+                      {marcado && <Check size={12} aria-hidden />}
+                    </span>
+                    <span className="truncate">{o.label}</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t pt-2">
+            <span className="text-xs text-muted-foreground">{values.length}</span>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2"
+              onClick={() => onChange([])}
+              disabled={values.length === 0}
+            >
+              {clearLabel}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

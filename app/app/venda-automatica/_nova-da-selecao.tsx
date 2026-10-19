@@ -47,7 +47,12 @@ import type { Prospect } from "@/lib/schemas/prospeccao";
 export interface SelecaoInicial {
   cidade: string;
   uf: string;
-  categoria: string;
+  /**
+   * VÁRIAS categorias. Era uma só até a prospecção aceitar multi-seleção —
+   * mandar só a primeira faria a campanha nascer com um recorte menor que o
+   * da tela, em silêncio.
+   */
+  categorias: string[];
   ids: string[];
 }
 
@@ -70,8 +75,15 @@ export function NovaCampanhaDaSelecao({
   const [carregando, setCarregando] = React.useState(true);
   const [trazendoMais, setTrazendoMais] = React.useState(false);
 
+  // O que a pessoa lê no título e no cabeçalho: uma categoria é o nome dela;
+  // várias viram a contagem — a lista inteira estoura o título.
+  const rotuloCategorias =
+    selecao.categorias.length <= 1
+      ? (selecao.categorias[0] ?? "")
+      : `${selecao.categorias.length} categorias`;
+
   const [nome, setNome] = React.useState(
-    `Venda ${selecao.cidade}${selecao.categoria ? ` · ${selecao.categoria}` : ""}`,
+    `Venda ${selecao.cidade}${rotuloCategorias ? ` · ${rotuloCategorias}` : ""}`,
   );
   const [mensagem, setMensagem] = React.useState("");
   const [cooldown, setCooldown] = React.useState("60");
@@ -90,7 +102,7 @@ export function NovaCampanhaDaSelecao({
       } else {
         qs.set("cidade", selecao.cidade);
         if (selecao.uf) qs.set("estado", selecao.uf);
-        if (selecao.categoria) qs.set("categoria", selecao.categoria);
+        for (const c of selecao.categorias) qs.append("categoria", c);
       }
       const corpo = await apiClient.get<{
         data: unknown;
@@ -154,7 +166,7 @@ export function NovaCampanhaDaSelecao({
           nome: nome.trim() || `Venda ${selecao.cidade}`,
           cidade: selecao.cidade,
           uf: selecao.uf || null,
-          categorias: selecao.categoria ? [selecao.categoria] : [],
+          categorias: selecao.categorias,
           limite_diario: limiteEfetivo,
           janela_inicio: inicio,
           janela_fim: fim,
@@ -191,7 +203,7 @@ export function NovaCampanhaDaSelecao({
           <p className="text-sm text-muted-foreground">
             {selecao.cidade}
             {selecao.uf ? `/${selecao.uf}` : ""}
-            {selecao.categoria ? ` · ${selecao.categoria}` : ""} ·{" "}
+            {rotuloCategorias ? ` · ${rotuloCategorias}` : ""} ·{" "}
             {carregando
               ? t("carregando empresas…")
               : total !== null
