@@ -1004,7 +1004,7 @@ export function ProdutosClient({
           type="button"
           onClick={() => aoMudarAba("todos")}
           aria-current={aba === "todos" ? "page" : undefined}
-          className={`px-3 py-2 text-sm ${
+          className={`shrink-0 px-3 py-2 text-sm ${
             aba === "todos"
               ? "border-b-2 border-accent font-medium text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -1015,7 +1015,7 @@ export function ProdutosClient({
         </button>
         <Link
           href="/app/estoque"
-          className="inline-flex items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex shrink-0 items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <Boxes className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
           {t("Gerenciar estoque")}
@@ -1025,7 +1025,7 @@ export function ProdutosClient({
           onClick={() => aoMudarAba("sem_fotos")}
           aria-current={aba === "sem_fotos" ? "page" : undefined}
           data-testid="aba-sem-fotos"
-          className={`px-3 py-2 text-sm ${
+          className={`shrink-0 px-3 py-2 text-sm ${
             aba === "sem_fotos"
               ? "border-b-2 border-accent font-medium text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -1143,7 +1143,9 @@ export function ProdutosClient({
                 <TableHead className="w-10">
                   <span className="sr-only">{t("Adicionar a uma tabela de preço")}</span>
                 </TableHead>
-                <TableHead className="w-24 text-right">{t("Ações")}</TableHead>
+                <TableHead className="w-10">
+                  <span className="sr-only">{t("Ações")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1229,14 +1231,24 @@ export function ProdutosClient({
                     </TableCell>
                     <TableCell className="text-right">
                       {podeEditar ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        // A coluna é de ícone, como as do Mercos: o rótulo
+                        // "Destacar" mede ~80px e empurrava as colunas de
+                        // número para fora da tela em 1440px.
+                        <button
+                          type="button"
                           onClick={() => void alternarDestaque(p)}
                           data-testid={`destaque-${p.codigo}`}
+                          title={t(p.destaque ? "Tirar destaque" : "Destacar")}
+                          aria-label={t(p.destaque ? "Tirar destaque" : "Destacar")}
+                          aria-pressed={p.destaque}
+                          className="rounded-md p-1 hover:bg-muted"
                         >
-                          {t(p.destaque ? "Tirar destaque" : "Destacar")}
-                        </Button>
+                          <Star
+                            className={`h-4 w-4 ${
+                              p.destaque ? "fill-current text-accent" : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
                       ) : null}
                     </TableCell>
                   </TableRow>

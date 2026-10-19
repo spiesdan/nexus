@@ -60,26 +60,36 @@ export function FiltroPorPeriodo({
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
-      <span className="text-sm text-muted-foreground">{t("entre")}</span>
-      <input
-        type="date"
-        value={de.slice(0, 10)}
-        max={ate ? ate.slice(0, 10) : undefined}
-        onChange={(e) => aoMudar({ de: e.target.value })}
-        aria-label={t("De")}
-        className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
-      />
-      <span className="text-sm text-muted-foreground">{t("e")}</span>
-      <input
-        type="date"
-        value={ate.slice(0, 10)}
-        min={de ? de.slice(0, 10) : undefined}
-        onChange={(e) => aoMudar({ ate: e.target.value })}
-        aria-label={t("Até")}
-        className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
-      />
-      <span className="ml-1 flex gap-1">
+    // Rótulo colado no campo, e não "entre … e …": em 390px a frase quebrava
+    // no meio, o "entre" ficava órfão no fim de uma linha e o segundo campo
+    // desalinhava do primeiro. Com `<label>` de verdade cada campo diz o que é
+    // — inclusive para o leitor de tela, que antes só tinha o `aria-label`.
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <label className="flex items-center gap-1.5">
+        <span className="text-xs text-muted-foreground">{t("De")}</span>
+        <input
+          type="date"
+          lang="pt-BR"
+          value={de.slice(0, 10)}
+          max={ate ? ate.slice(0, 10) : undefined}
+          onChange={(e) => aoMudar({ de: e.target.value })}
+          aria-label={t("De")}
+          className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
+        />
+      </label>
+      <label className="flex items-center gap-1.5">
+        <span className="text-xs text-muted-foreground">{t("Até")}</span>
+        <input
+          type="date"
+          lang="pt-BR"
+          value={ate.slice(0, 10)}
+          min={de ? de.slice(0, 10) : undefined}
+          onChange={(e) => aoMudar({ ate: e.target.value })}
+          aria-label={t("Até")}
+          className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm"
+        />
+      </label>
+      <span className="flex gap-1">
         {atalhos.map((a) => (
           <button
             key={a.rotulo}

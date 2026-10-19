@@ -132,7 +132,10 @@ export function CatalogoClient({
         subtitle={t("Produtos, categorias e tabelas de preço da loja.")}
       />
       <Tabs value={abaSuperior} onValueChange={aoMudarAbaSuperior}>
-        <TabsList aria-label={t("Abas do catálogo")}>
+        <TabsList
+          aria-label={t("Abas do catálogo")}
+          className="h-auto flex-wrap overflow-x-visible"
+        >
           <TabsTrigger value="produtos">
             <Package className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
             {t("Produtos")}
@@ -178,7 +181,10 @@ export function CatalogoClient({
               )
             }
           >
-            <TabsList aria-label={t("Configurações do catálogo")}>
+            <TabsList
+              aria-label={t("Configurações do catálogo")}
+              className="h-auto flex-wrap overflow-x-visible"
+            >
               <TabsTrigger value="categorias">{t("Categorias")}</TabsTrigger>
               <TabsTrigger value="tabelas">{t("Tabelas de preço")}</TabsTrigger>
             </TabsList>
