@@ -600,8 +600,13 @@ export function PedidosClient({
       const d = new Date(p.created_at);
       const chave = chaveDoDia(d);
       let rotulo: string;
-      if (chave === hojeChave) rotulo = "Hoje";
-      else if (chave === ontemChave) rotulo = "Ontem";
+      // Pedido sem data válida: grupo próprio, com nome, e no FIM da lista (a
+      // chave vazia é a menor em ordem decrescente). Sem este ramo a tela
+      // imprimia "INVALID DATE" no cabeçalho — quando o `chaveDoDia` devolvia
+      // data inventada, a tela nem chegava a renderizar.
+      if (chave === "") rotulo = t("Sem data");
+      else if (chave === hojeChave) rotulo = t("Hoje");
+      else if (chave === ontemChave) rotulo = t("Ontem");
       else
         rotulo = d
           .toLocaleDateString(tagIdioma, {
@@ -617,7 +622,7 @@ export function PedidosClient({
       grupos.set(chave, g);
     }
     return [...grupos.values()].sort((a, b) => (a.chave < b.chave ? 1 : -1));
-  }, [pedidos, tagIdioma]);
+  }, [pedidos, tagIdioma, t]);
 
   return (
     <div className="min-h-full space-y-3 p-4 sm:p-6">

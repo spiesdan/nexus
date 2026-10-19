@@ -40,4 +40,18 @@ describe("chaveDoDia", () => {
       else process.env.TZ = antes;
     }
   });
+
+  it("instante inválido devolve vazio, em vez de derrubar a tela", () => {
+    // `new Date(undefined)` / `new Date("")` são `Invalid Date`, e
+    // `formatToParts` neles lança `RangeError: Invalid time value`. Como isto
+    // roda na renderização, o lançamento era a lista de pedidos inteira em
+    // branco — medido com um pedido sem `created_at`.
+    expect(chaveDoDia(new Date(Number.NaN))).toBe("");
+    expect(chaveDoDia(new Date(""))).toBe("");
+    expect(chaveDoDia(new Date("ontem"))).toBe("");
+    // `null`/`undefined` nem chegam como Date, mas o contrato é o mesmo: nada
+    // de inventar dia para quem não tem data.
+    expect(chaveDoDia(null as unknown as Date)).toBe("");
+    expect(chaveDoDia(undefined as unknown as Date)).toBe("");
+  });
 });
