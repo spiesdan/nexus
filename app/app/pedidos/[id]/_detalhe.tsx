@@ -261,6 +261,14 @@ export function DetalheDoPedido({
   const [trocando, setTrocando] = React.useState(false);
   const [buscaCliente, setBuscaCliente] = React.useState("");
   const [candidatos, setCandidatos] = React.useState<{ id: string; display_name: string | null; name: string | null }[]>([]);
+  // O link de aprovação do orçamento. Fica na tela depois de gerado porque é o
+  // que o operador precisa: copiar e colar na conversa que já está aberta. Com o
+  // WhatsApp da conexão fora do ar, é o ÚNICO caminho que funciona.
+  const [linkDoOrcamento, setLinkDoOrcamento] = React.useState<string | null>(null);
+  // O telefone em E.164 que a rota devolve — é o que faz o `wa.me` abrir a
+  // conversa com o cliente certo (sem DDI, o link disca para outro país).
+  const [telefoneDoCliente, setTelefoneDoCliente] = React.useState<string | null>(null);
+  const [gerandoLink, setGerandoLink] = React.useState(false);
 
   React.useEffect(() => {
     let vivo = true;
@@ -387,7 +395,55 @@ export function DetalheDoPedido({
     }
   }
 
+  /**
+   * Gera o link de aprovação e tenta mandar no WhatsApp do cliente.
+   *
+   * O toast diz o que ACONTECEU, não o que era para ter acontecido: com a
+   * conexão fora do ar (ou cliente sem telefone) o link continua válido na tela
+   * para o operador colar à mão — e a mensagem do aviso diz qual dos dois foi.
+   */
+  async function gerarLinkDoOrcamento() {
+    setGerandoLink(true);
+    try {
+      const corpo = await apiClient.post<{
+        data: { url: string; enviado: boolean; motivo: string | null; telefone: string | null };
+      }>(`/api/v1/commercial-orders/${pedido.id}/orcamento`, { enviar: true });
+      setLinkDoOrcamento(corpo.data.url);
+      setTelefoneDoCliente(corpo.data.telefone);
+
+      if (corpo.data.enviado) {
+        toast.success(t("Orçamento enviado no WhatsApp do cliente"));
+      } else if (corpo.data.motivo === "sem_sessao") {
+        toast.info(t("Link gerado. Sem WhatsApp conectado — copie e envie pelo seu aparelho."));
+      } else if (corpo.data.motivo === "sem_telefone") {
+        toast.info(t("Link gerado. O cliente não tem telefone no cadastro — copie e envie."));
+      } else if (corpo.data.motivo === "sem_cliente") {
+        toast.info(t("Link gerado. O pedido não tem cliente vinculado — copie e envie."));
+      } else {
+        toast.error(t("Não foi possível enviar agora. O link continua válido abaixo."));
+      }
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setGerandoLink(false);
+    }
+  }
+
+  async function copiarLinkDoOrcamento() {
+    if (!linkDoOrcamento) return;
+    const ok = await copyToClipboard(linkDoOrcamento);
+    if (ok) {
+      toast.success(t("Link copiado"));
+    } else {
+      toast.error(t("Não foi possível copiar"));
+    }
+  }
+
   const resumoWhats = `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome} — ${comoMoeda(pedido.total_cents, pedido.moeda)}`;
+  // O texto que acompanha o link quando o operador manda pelo próprio aparelho.
+  const mensagemDoOrcamento = linkDoOrcamento
+    ? `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome}\nTotal: ${comoMoeda(pedido.total_cents, pedido.moeda)}\nAprove por aqui: ${linkDoOrcamento}`
+    : "";
   const qtdTotal = itens.reduce((a, i) => a + i.quantidade, 0);
   const proximo = PROXIMO_STATUS[pedido.status as StatusDoPedido];
 
@@ -424,6 +480,16 @@ export function DetalheDoPedido({
                 {t("Enviar por WhatsApp")}
               </a>
             </Button>
+            {podeEditar && (pedido.status === "rascunho" || pedido.status === "em_analise") && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void gerarLinkDoOrcamento()}
+                disabled={gerandoLink}
+              >
+                {gerandoLink ? t("Gerando link…") : t("Orçamento com aprovação")}
+              </Button>
+            )}
             {contato?.email && (
               <Button size="sm" variant="outline" asChild>
                 <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
@@ -454,6 +520,37 @@ export function DetalheDoPedido({
       <div className="flex flex-wrap items-center gap-3">
         <PillDoStatus status={pedido.status as StatusDoPedido} />
       </div>
+
+      {/* O LINK DE APROVAÇÃO fica na tela depois de gerado: com o WhatsApp da
+          conexão fora do ar, copiar e colar na conversa é o caminho que
+          funciona — e é o que o operador faz de verdade. */}
+      {linkDoOrcamento && (
+        <div className="rounded-xl border bg-muted/30 p-3 text-sm">
+          <p className="font-medium">{t("Link de aprovação do orçamento")}</p>
+          <p className="mt-1 break-all text-xs text-muted-foreground">{linkDoOrcamento}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => void copiarLinkDoOrcamento()}>
+              {t("Copiar link")}
+            </Button>
+            {telefoneDoCliente && (
+              <Button size="sm" variant="outline" asChild>
+                <a
+                  href={`https://wa.me/${telefoneDoCliente.replace(/\D/g, "")}?text=${encodeURIComponent(mensagemDoOrcamento)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("Abrir conversa do cliente")}
+                </a>
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" asChild>
+              <a href={linkDoOrcamento} target="_blank" rel="noopener noreferrer">
+                {t("Ver como o cliente vê")}
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* CLIENTE */}
       <Card className="hover-raise space-y-2 p-4">
