@@ -24,6 +24,16 @@
  * `env` do Playwright) redirecionar qualquer script sem editar nenhum deles.
  * Sem valor no ambiente, cai em `.env.local` — o comportamento de sempre, para
  * quem roda uma sonda à mão durante o desenvolvimento.
+ *
+ * ═══ E A QUALIFICAÇÃO DESSA REGRA (issue #197, 18/10/2026) ═══
+ *
+ * O fallback para o arquivo **RECUSA** um destino remoto. Ele não avisa: lança.
+ *
+ * "Sem valor no ambiente, cai em `.env.local`" é uma conveniência para quem
+ * roda uma sonda à mão; na máquina de trabalho do dono esse arquivo aponta para
+ * a VPS, e foi assim que a suíte E2E escreveu 1.483 linhas de teste em 63
+ * tabelas da produção em 07/10. O aviso existia e **não impediu nada** — o que
+ * impede é a exceção. Ver `recusarSeRemotoVindoDoArquivo`.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -72,26 +82,39 @@ function lerArquivo(arquivo: string): Record<string, string> {
  * ao Supabase com credencial vazia e um erro três camadas adiante.
  */
 export function credenciaisSupabaseDeTeste(): CredenciaisSupabase {
+  const arquivo = lerArquivo(".env.local");
   const doAmbiente = {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
     serviceRole: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   };
   if (doAmbiente.url !== "" && doAmbiente.serviceRole !== "") {
+    // Cai no arquivo antes de desistir: quem exporta URL + service role no
+    // ambiente (o CI faz isso) não necessariamente exporta a conexão direta,
+    // e ela costuma estar no `.env.local` do lado. Só o ambiente venceria a
+    // regra desta função; nada aqui a contradiz — `process.env` continua
+    // tendo precedência quando existe.
+    //
+    // ⚠️ É ESTE O RAMO QUE ESCREVEU EM PRODUÇÃO (issue #197). Com a API vinda
+    // do ambiente e a conexão direta só do arquivo, os dois canais apontam para
+    // bancos DIFERENTES — e o alarme dizia `escrevendo em LOCAL` enquanto 15
+    // arquivos abriam `pg.Pool` contra o banco real. Por isso a guarda: o que o
+    // arquivo fornece em silêncio não pode apontar para fora.
+    const dbUrlDoAmbiente = process.env.SUPABASE_DB_URL ?? "";
+    if (dbUrlDoAmbiente === "") {
+      recusarSeRemotoVindoDoArquivo(
+        "credenciaisSupabaseDeTeste:SUPABASE_DB_URL",
+        arquivo.SUPABASE_DB_URL ?? "",
+      );
+    }
     return {
       ...doAmbiente,
       anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
       appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      // Cai no arquivo antes de desistir: quem exporta URL + service role no
-      // ambiente (o CI faz isso) não necessariamente exporta a conexão direta,
-      // e ela costuma estar no `.env.local` do lado. Só o ambiente venceria a
-      // regra desta função; nada aqui a contradiz — `process.env` continua
-      // tendo precedência quando existe.
-      dbUrl: process.env.SUPABASE_DB_URL ?? lerArquivo(".env.local").SUPABASE_DB_URL ?? "",
+      dbUrl: dbUrlDoAmbiente !== "" ? dbUrlDoAmbiente : (arquivo.SUPABASE_DB_URL ?? ""),
       origem: "ambiente",
     };
   }
 
-  const arquivo = lerArquivo(".env.local");
   const url = arquivo.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const serviceRole = arquivo.SUPABASE_SERVICE_ROLE_KEY ?? "";
   if (url === "" || serviceRole === "") {
@@ -100,6 +123,14 @@ export function credenciaisSupabaseDeTeste(): CredenciaisSupabase {
         "no ambiente (ex.: `set -a; . ./.env.e2e; set +a`) ou no .env.local.",
     );
   }
+  // Ramo do ARQUIVO: aqui o ambiente não decidiu NADA. É o caso do
+  // `pnpm tsx tests/sonda-x.ts` na máquina de trabalho, que é onde o defeito da
+  // #197 morava — a suíte parecia local e escrevia na nuvem.
+  recusarSeRemotoVindoDoArquivo("credenciaisSupabaseDeTeste:NEXT_PUBLIC_SUPABASE_URL", url);
+  recusarSeRemotoVindoDoArquivo(
+    "credenciaisSupabaseDeTeste:SUPABASE_DB_URL",
+    arquivo.SUPABASE_DB_URL ?? "",
+  );
   return {
     url,
     serviceRole,
@@ -135,6 +166,89 @@ export function destinoEhLocal(alvo: string): boolean {
   return host === "localhost" || host === "::1" || host === "[::1]" || host.startsWith("127.");
 }
 
+/** As duas chaves que decidem CONTRA QUAL BANCO o script escreve. */
+const CHAVES_DE_DESTINO = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_DB_URL"] as const;
+
+/**
+ * O operador autorizou escrever num banco remoto, de propósito?
+ *
+ * Existe porque a recusa abaixo precisa de uma saída: alguém que quer MEDIR a
+ * instalação instalada (o caminho do `e2e-pos-deploy.yml`, ou uma sonda à mão
+ * contra a VPS) não pode ficar sem porta. O que não pode existir é a porta
+ * ABERTA — autorizar tem de ser um ato, não um esquecimento.
+ */
+export function permiteBancoRemoto(): boolean {
+  const v = (process.env.TESTE_PERMITE_BANCO_REMOTO ?? "").trim().toLowerCase();
+  return v !== "" && v !== "0" && v !== "false" && v !== "nao" && v !== "não";
+}
+
+/**
+ * A PORTA QUE FALTAVA — o fallback para o `.env.local` RECUSA um destino remoto.
+ *
+ * ═══ O defeito que isto fecha (issue #197, medido em 07/10/2026) ═══
+ *
+ * A suíte E2E escreveu **1.483 linhas de teste em 63 tabelas** da base de
+ * produção: 13 organizações (`e2e-test-org`, `minha-empresa-<hash>`…), 11
+ * usuários, 5 `channel_sessions` e 761 linhas de `api_audit_log`. O dono abriu a
+ * tela de sessões para saber se dava para disparar campanha e encontrou cinco
+ * sessões de WhatsApp que não eram de ninguém.
+ *
+ * O conserto de 06/08 tirou o `.env.local` do disco dos 108 arquivos que o liam
+ * direto, e criou um gate para isso — mas `carregarEnvLocal()` **continuava**
+ * caindo no arquivo quando o ambiente não definia a variável, e isso era
+ * deliberado:
+ *
+ *   "Sem valor no ambiente, cai em `.env.local` — o comportamento de sempre,
+ *    para quem roda uma sonda à mão durante o desenvolvimento."
+ *
+ * Na máquina de trabalho do dono esse arquivo aponta para a VPS. O alarme que
+ * existia para avisar disso (`anunciarDestino`) imprimia `DESTINO MISTO` em
+ * `console.warn` — informação, não recusa, por decisão registrada no próprio
+ * arquivo. **O aviso que ninguém transformou em erro não impediu a escrita.**
+ *
+ * ═══ POR QUE A REGRA É "O QUE VEIO DO ARQUIVO", E NÃO "REMOTO = NÃO" ═══
+ *
+ * Recusar todo destino remoto mataria caminhos legítimos: o `e2e-pos-deploy.yml`
+ * roda a suíte contra a instalação publicada, e o `.env.e2e` aponta para lá de
+ * propósito. A diferença entre os dois casos não é o destino — é **quem
+ * escolheu**:
+ *
+ *   valor no AMBIENTE  → alguém exportou isto de propósito (`set -a; . ./.env.e2e`,
+ *                        o `env` do workflow). Confio.
+ *   valor do ARQUIVO   → ninguém decidiu nada; a máquina do dev decidiu. Não confio.
+ *
+ * É a mesma regra que o resto do arquivo já segue (`process.env` vence), agora
+ * aplicada ao que acontece quando `process.env` NÃO tem a resposta.
+ *
+ * Cobre os dois canais porque o estado perigoso é justamente o misto: com a API
+ * no ambiente (local) e o Postgres caindo no arquivo (produção), o alarme dizia
+ * `escrevendo em LOCAL` enquanto 15 arquivos abriam `pg.Pool` contra o banco real.
+ */
+function recusarSeRemotoVindoDoArquivo(canal: string, valor: string): void {
+  if (destinoEhLocal(valor)) return;
+
+  if (permiteBancoRemoto()) {
+    console.warn(
+      `[${canal}] ⚠️  destino REMOTO liberado por TESTE_PERMITE_BANCO_REMOTO: ` +
+        `${hostDe(valor)}. A escrita é sua.`,
+    );
+    return;
+  }
+
+  throw new Error(
+    `[${canal}] O .env.local aponta para um destino REMOTO (${hostDe(valor)}) e o ambiente não ` +
+      `definiu esta credencial.\n` +
+      `\n` +
+      `É exatamente o modo de falha que escreveu 1.483 linhas de teste na base de PRODUÇÃO em ` +
+      `07/10/2026 (issue #197): a suíte parece rodar local e escreve na nuvem.\n` +
+      `\n` +
+      `Para rodar local: \`set -a; . ./.env.e2e; set +a\` — ou \`pnpm test:e2e\`, que publica o ` +
+      `.env.e2e no processo e faz o ambiente vencer o arquivo.\n` +
+      `Se o destino remoto é DELIBERADO (medir a instalação instalada), exporte ` +
+      `TESTE_PERMITE_BANCO_REMOTO=1 e assuma a escrita.`,
+  );
+}
+
 /**
  * Diz em voz alta contra QUAL banco o script vai escrever.
  *
@@ -157,10 +271,13 @@ export function destinoEhLocal(alvo: string): boolean {
  * script escrevia no banco real: exatamente a classe de defeito que esta função
  * foi criada para tornar visível, no canal que ela não cobria.
  *
- * Continua sendo INFORMAÇÃO, não gate: não recuso a execução aqui porque não
- * consigo provar que nenhum fluxo legítimo usa o par misto, e uma exceção nova em
- * 19 call sites é impacto maior que o defeito. O que muda é que o texto passa a
- * ser verdade — e a linha misto sai em `console.warn`, não `info`.
+ * Continua sendo INFORMAÇÃO, e agora o gate vive em outro lugar: quem RECUSA é
+ * `recusarSeRemotoVindoDoArquivo`, na resolução das credenciais. Aqui não dá para
+ * recusar porque este ponto roda depois — `anunciarDestino(script, c)` recebe as
+ * credenciais já resolvidas, e uma exceção nova nos 34 call sites seria impacto
+ * maior que o defeito. Os dois papéis se completam: a resolução recusa o que veio
+ * do arquivo, e esta linha diz em voz alta contra qual banco o script VAI
+ * escrever — inclusive nos casos legítimos, que agora são os únicos que chegam.
  */
 export function anunciarDestino(script: string, c: CredenciaisSupabase): void {
   const apiLocal = destinoEhLocal(c.url);
@@ -209,6 +326,25 @@ export function anunciarDestino(script: string, c: CredenciaisSupabase): void {
  */
 export function carregarEnvLocal(): Record<string, string> {
   const doArquivo = lerArquivo(".env.local");
+
+  // ═══ A GUARDA ENTRA ANTES DE POPULAR `process.env` (issue #197) ═══
+  //
+  // A ordem importa: esta função ESCREVE no `process.env`, e é por isso que ela
+  // é o caminho do defeito. Uma spec que só quer o `INTERNAL_SECRET` chama isto,
+  // o `.env.local` completa o resto do ambiente, e a partir daí TODO filho
+  // (`execFileSync`, `pg.Pool`) enxerga o `SUPABASE_DB_URL` da produção — sem
+  // que nenhum deles tenha pedido por credencial de banco.
+  //
+  // Aqui só o canal que o ARQUIVO fornece é checado. Chave já no ambiente foi
+  // decisão de quem rodou, e continua valendo.
+  for (const chave of CHAVES_DE_DESTINO) {
+    const doAmbiente = process.env[chave] ?? "";
+    const doDisco = doArquivo[chave] ?? "";
+    if (doAmbiente === "" && doDisco !== "") {
+      recusarSeRemotoVindoDoArquivo(`carregarEnvLocal:${chave}`, doDisco);
+    }
+  }
+
   for (const [k, v] of Object.entries(doArquivo)) {
     if (process.env[k] === undefined || process.env[k] === "") process.env[k] = v;
   }
