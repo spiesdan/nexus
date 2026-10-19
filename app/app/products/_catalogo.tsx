@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { Boxes, ImageUp, Package, Settings2, Star, Table2, Tags } from "lucide-react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
@@ -131,10 +133,22 @@ export function CatalogoClient({
       />
       <Tabs value={abaSuperior} onValueChange={aoMudarAbaSuperior}>
         <TabsList aria-label={t("Abas do catálogo")}>
-          <TabsTrigger value="produtos">{t("Produtos")}</TabsTrigger>
-          <TabsTrigger value="promocoes">{t("Promoções")}</TabsTrigger>
-          <TabsTrigger value="destaques">{t("Destaques")}</TabsTrigger>
-          <TabsTrigger value="configuracoes">{t("Configurações")}</TabsTrigger>
+          <TabsTrigger value="produtos">
+            <Package className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            {t("Produtos")}
+          </TabsTrigger>
+          <TabsTrigger value="promocoes">
+            <Tags className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            {t("Promoções")}
+          </TabsTrigger>
+          <TabsTrigger value="destaques">
+            <Star className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            {t("Destaques")}
+          </TabsTrigger>
+          <TabsTrigger value="configuracoes">
+            <Settings2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            {t("Configurações")}
+          </TabsTrigger>
         </TabsList>
 
         {/*

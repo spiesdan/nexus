@@ -15,7 +15,7 @@ import {
 } from "@/components/filters/FilterBar";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
-import { Eye, EyeOff, Plus, Star } from "lucide-react";
+import { Boxes, Eye, EyeOff, ImageUp, Plus, Star, Table2 } from "lucide-react";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
@@ -888,19 +888,24 @@ export function ProdutosClient({
           // (esconderCabecalho): o botão de novo produto sumia em
           // /app/products inteiro. Aqui o FilterBar é renderizado sempre.
           <FilterActions>
-            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setCriando((v) => !v)}
+              data-testid="novo-produto"
+            >
               {t(criando ? "Cancelar" : "Cadastrar produto")}
             </Button>
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               disabled={importando}
               onClick={() => arquivoRef.current?.click()}
               data-testid="importar-planilha"
             >
               {t(importando ? "Importando…" : "Importar produtos")}
             </Button>
-            <details className="relative">
-              <summary className="inline-flex h-9 cursor-pointer list-none items-center rounded-lg border border-input px-3 text-sm [&::-webkit-details-marker]:hidden">
+            <details className="relative w-full sm:w-auto">
+              <summary className="inline-flex h-9 w-full cursor-pointer list-none items-center justify-between rounded-lg border border-input px-3 text-sm sm:w-auto sm:justify-start [&::-webkit-details-marker]:hidden">
                 {t("Mais opções")}
               </summary>
               <div className="absolute right-0 z-20 mt-1 w-64 rounded-lg border bg-popover p-1 shadow-md">
@@ -1005,12 +1010,14 @@ export function ProdutosClient({
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
+          <Table2 className="mr-1.5 inline h-3.5 w-3.5 align-[-2px]" aria-hidden="true" />
           {t("Produtos e tabelas")}
         </button>
         <Link
           href="/app/estoque"
-          className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
         >
+          <Boxes className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
           {t("Gerenciar estoque")}
         </Link>
         <button
@@ -1024,6 +1031,7 @@ export function ProdutosClient({
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
+          <ImageUp className="mr-1.5 inline h-3.5 w-3.5 align-[-2px]" aria-hidden="true" />
           {t("Importar fotos")}
           {aba === "sem_fotos" ? ` (${total})` : ""}
         </button>
@@ -1142,7 +1150,7 @@ export function ProdutosClient({
               {filtrados.map((p) => {
                 const vitrine = precoDeVitrine(p, hoje);
                 return (
-                  <TableRow key={p.id} data-testid={`produto-${p.codigo}`}>
+                  <TableRow key={p.id} className="even:bg-muted/30" data-testid={`produto-${p.codigo}`}>
                     {/* O olho do Mercos: clicado, ativa/inativa o produto. */}
                     <TableCell className="align-middle">
                       <button
@@ -1176,7 +1184,7 @@ export function ProdutosClient({
                           onClick={() => abrirEdicao(p)}
                           data-testid={`editar-${p.codigo}`}
                           title={t("Abrir a ficha do produto")}
-                          className={`min-w-0 truncate text-left underline-offset-2 hover:underline disabled:no-underline ${
+                          className={`min-w-0 break-words text-left underline-offset-2 hover:underline disabled:no-underline ${
                             p.ativo ? "" : "text-muted-foreground line-through"
                           }`}
                         >
