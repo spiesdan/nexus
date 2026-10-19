@@ -8,6 +8,160 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.31.0] — 2026-10-19
+
+### Adicionado
+
+- **Campanha de recuperação para quem comprava e parou** O radar já mostrava quem comprava e parou — e a única saída era abrir conversa
+  por conversa, no WhatsApp de quem estivesse com o celular na mão. Agora a lista
+  vira **campanha**: no Radar, na seção de recuperação, o botão "Criar campanha de
+  recuperação" monta o agendamento com todo mundo que está na lista.
+
+  A agenda é a mesma da prospecção, porque o motor é o mesmo: **uma mensagem por minuto**,
+  dentro das janelas que você escolher (por exemplo 7h–12h e 13h–19h), no período que
+  você definir (19/10 a 23/10), com até **5 variações** de mensagem girando em ordem e
+  um **máximo por dia**. Terminou a lista, a campanha para sozinha; venceu o período,
+  ela pausa.
+
+  Duas travas que valem a pena saber:
+
+  - **O limite diário da empresa é o teto.** A campanha respeita o menor valor
+    entre o máximo que você digitou e o limite do número de WhatsApp (o
+    aquecimento do número) — a mesma régua que o agente de IA obedece. Campanha
+    não acelera por cima do número.
+  - **Só entra quem tem telefone no cadastro.** Cliente sem telefone é uma linha
+    que não sairia em silêncio; a tela diz quantos ficaram de fora.
+
+  A campanha aparece na aba **Campanhas** da prospecção, marcada como
+  "Recuperação", e pode ser pausada ou retomada como qualquer outra. Ela fala com
+  CLIENTES (quem já comprou), não com a base de prospecção — o garimpo de empresas
+  novas continua sendo o outro caminho.
+
+- **O catálogo tem a ficha e a tabela de produtos do Mercos** A lista de produtos era uma pilha de cartões: foto, nome, preço e três botões. Não
+  dava para comparar nada de relance — nem ver quais itens têm IPI, em que unidade
+  são vendidos ou qual a comissão de cada um — e a ficha do produto parava no preço,
+  no NCM e no estoque.
+
+  A tela agora é a **tabela do Mercos**: uma linha por produto, com as colunas
+  **Fotos · Código · Nome · IPI · Unidade · Comissão · Preço de Tabela**, o olho que
+  ativa e inativa o item e o **"+"** que coloca o produto numa tabela de preço. O
+  rodapé diz "Resultados 1 - 50 de 1.141" — o total é o do catálogo inteiro, não o
+  da página. Acima, os dois filtros que faltavam: **categoria** e **situação**
+  (todos, só ativos, só inativos), ambos do lado do servidor, para o filtro não
+  responder sobre a fatia de 50.
+
+  A **ficha do produto** passou a ter as quatro abas de lá:
+
+  - **Tabelas de preço** — moeda, preço de tabela, custo, marca e o preço promocional
+    com validade;
+  - **Informações gerais** — NCM (com a sugestão automática de sempre), **IPI**,
+    **comissão** e **observações**;
+  - **Variações** — cores e tamanhos;
+  - **Peso e dimensões** — peso bruto, largura, altura e comprimento da unidade **e**
+    da caixa master.
+
+  No cabeçalho, sempre visível como no Mercos: nome, código, unidade de medida,
+  **venda em múltiplos de** e categoria (agora uma lista das categorias da loja, não
+  texto solto). Os botões são os de lá: *Salvar*, *Salvar e cadastrar outro* e
+  *Cancelar* no cadastro; *Salvar* e *Excluir produto* na edição.
+
+  Duas coisas que esta versão deliberadamente **não** faz, para não prometer o que
+  não entrega: **variações não geram um código por combinação** (o Mercos cria um
+  SKU filho para cada cor/tamanho; aqui as cores e tamanhos ficam gravados no
+  produto, que continua sendo um só) e a **comissão** é guardada e mostrada, mas não
+  entra em nenhum cálculo de folha — quem a consome hoje é a baixa de comissão.
+
+  A tabela rola na horizontal no celular, com as mesmas colunas: no telefone a
+  primeira dobra mostra foto, código, nome e preço, e o resto chega deslizando.
+
+- **O orçamento vai por link e o cliente aprova pelo celular** Orçamento no sistema era um pedido parado esperando alguém dizer "pode fazer". O
+  cliente recebia o PDF, respondia no WhatsApp, e quem digitava a aprovação era
+  você. Agora o pedido em rascunho ou em análise ganha um **link de aprovação**:
+  o cliente abre no celular, vê a lista de itens, os valores, o frete, o total e a
+  condição de pagamento, e aprova com um toque.
+
+  No detalhe do pedido, o botão "Orçamento com aprovação" gera o link e tenta
+  mandar no WhatsApp do cliente. **O link funciona sem WhatsApp conectado**: se a
+  conexão estiver fora do ar, ou se o cliente não tiver telefone no cadastro, ele
+  fica na tela para você copiar e colar na conversa que já está aberta — e o aviso
+  diz qual dos dois aconteceu, em vez de dizer que enviou. Há ainda "Abrir conversa
+  do cliente", que abre o WhatsApp com o link pronto.
+
+  Aprovado pelo cliente, o pedido entra na fila: sai de rascunho/em análise e vira
+  **aprovado**, de onde segue para faturamento e expedição.
+
+  Uma trava que veio junto: quando o desconto passou do teto do vendedor, quem
+  aprova é o gerente. Nesse caso a aprovação do cliente é **registrada** e a
+  página diz que o time confirma os detalhes — o link não é um atalho para furar a
+  alçada de desconto. Cada aprovação tem rastro na auditoria, separando "o cliente
+  aprovou e o pedido entrou na fila" de "o cliente aprovou e falta o gerente".
+
+  O link vale **30 dias** e é assinado: sem a assinatura da instalação, ninguém
+  adivinha o endereço do orçamento de outra empresa.
+
+- **A campanha escolhe os dias da semana, não só o horário** Agendar prospecção era escolher o horário e o período. Faltava o dia: "de segunda
+  a sexta, das 8 às 17" não tinha como ser dito, e um período de 19/10 a 23/10 com a
+  janela das 7 às 19 mandaria também no sábado e no domingo se a data os alcançasse.
+
+  Agora o formulário de agendamento tem os **sete dias da semana**, com atalhos para
+  "Seg a Sex" e "Todos". O padrão é segunda a sexta — disparo frio em massa no fim de
+  semana é a exceção, e quem quer sábado marca o sábado. Vale para a prospecção e
+  para a **campanha de recuperação** do radar, que usa o mesmo motor.
+
+  Fora dos dias escolhidos a campanha simplesmente espera, e o motivo aparece
+  separado: "não é um dos dias escolhidos" não é a mesma coisa que "hoje passou do
+  horário" — quem lesse o segundo num sábado desligado iria procurar o defeito no
+  horário. As campanhas agendadas antes desta versão continuam mandando todos os
+  dias, como mandavam.
+
+  A tela de Campanhas passou a mostrar a agenda de cada campanha (dias, janelas e
+  período), para não ser preciso abrir o formulário para saber quando ela fala.
+
+### Alterado
+
+- **Criar e ler um pedido ficou igual ao Mercos, campo a campo** A tela de pedido era um formulário em cinco passos que escondia o pedido: você
+  escolhia o cliente, avançava, escolhia produtos, avançava de novo, e só no fim
+  via o todo. Quem vende no balcão não trabalha assim — confere cliente, produto e
+  condição na mesma olhada, e volta para o campo que ficou errado sem perder o
+  lugar.
+
+  Agora é **uma página só**, com as quatro seções numeradas do Mercos:
+
+  1. **CLIENTE** — busca por nome, telefone ou e-mail, com "Cadastrar novo
+     cliente" e "Listar todos os clientes" ao lado;
+  2. **REPRESENTADA** — a empresa que emite, com razão social, CNPJ e telefone;
+  3. **PRODUTOS** — busca, tabela de preço e a lista de itens com a faixa de
+     totais (itens, quantidade, valor);
+  4. **DETALHES DO PEDIDO** — número, data da emissão, vendedor, condição de
+     pagamento, valor do frete, transportadora, rastreamento, contato no cliente,
+     endereço de entrega e informações adicionais.
+
+  No topo, o cartão com o número e a situação do pedido. Na barra de ações, os
+  mesmos botões de lá: **Gerar pedido**, **Visualizar** (uma prévia que não grava
+  nada), **Enviar por e-mail** e **Enviar por WhatsApp**. O envio grava o pedido
+  antes de abrir o canal — um pedido que não existe não tem o que enviar — e
+  depois leva você para a ficha dele.
+
+  A **ficha do pedido** seguiu a mesma ordem: cliente com "Trocar cliente",
+  representada completa, produtos com a tabela do Mercos (Preço Tab., Desc.
+  Acrés., Preço Líq., Subtotal) e os detalhes completos. "Imprimir",
+  "Duplicar" e "Excluir" saíram da fila de botões e foram para **Mais opções**,
+  para as ações do dia a dia ficarem na frente.
+
+  Dois campos que o Mercos mostra e nós não tínhamos onde guardar entraram no
+  banco: **rastreamento** e **contato no cliente**. O primeiro é o código que a
+  transportadora devolve; o segundo, quem pediu do lado do comprador. São
+  anotação, não cálculo — e são os dois que alguém procura quando o cliente liga
+  perguntando onde está a carga.
+
+  O que esta versão **não** copia, de propósito: os botões de inteligência
+  artificial do Mercos ("Adicionar com IA", "Resumir perfil", "Analisar pedido"),
+  "adicionar por planilha" e "Informar somente o valor total do pedido" — nenhum
+  deles existe do nosso lado, e um botão que não faz nada é pior que a ausência
+  dele. Os nomes de situação também continuam os nossos (Rascunho, Em análise,
+  Aprovado, Faturado, Expedido, Entregue, Cancelado), porque cada um carrega uma
+  regra de aprovação, estoque e financeiro atrás.
+
 ## [1.30.0] — 2026-10-19
 
 ### Adicionado
@@ -4670,7 +4824,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.30.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.0...HEAD
+[1.31.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.2...v1.30.0
 [1.29.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.1...v1.29.2
 [1.29.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.29.0...v1.29.1
