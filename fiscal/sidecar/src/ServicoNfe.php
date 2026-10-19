@@ -598,8 +598,24 @@ class ServicoNfe
             // leiaute 4.00 ele só existe dentro de detPag (o XSD tem um único
             // indPag, filho de detPag) — em ide ele rejeita.
             'indPres' => '9',
+            // Com indPres 9 a NT 2020.006 passa a exigir o indicador do
+            // intermediador, e a SEFAZ recusa a nota inteira sem ele (434:
+            // "NF-e sem indicativo do intermediador" — medido na 1ª emissão em
+            // homologação, 19/10/2026). 0 = operação sem intermediador, que é a
+            // venda no canal do próprio emitente (WhatsApp/CRM). O XSD admite
+            // só 0 e 1: venda por marketplace exigiria 1 MAIS o grupo
+            // `infIntermed` com o CNPJ do intermediador — que este sidecar não
+            // configura hoje (limitação conhecida, não regra inventada).
+            'indIntermed' => '0',
             'procEmi' => '0',
-            'verProc' => 'deskcomm-fiscal-sidecar/1.0',
+            // verProc tem maxLength 20 no XSD do leiaute 4.00. A string
+            // anterior — 'deskcomm-fiscal-sidecar/1.0', 27 caracteres — fazia
+            // a SEFAZ recusar TODO XML com `XML_INVALIDO`, e nenhuma nota
+            // emitia em lugar nenhum. Ela carregava, ainda, o nome do
+            // fornecedor num documento fiscal do cliente, que é exatamente o
+            // que a doutrina de marca própria proíbe (`docs/white-label.md`).
+            // Neutra, descritiva do software e com folga: 18.
+            'verProc' => 'fiscal-sidecar/1.0',
         ]);
         $make->tagemit((object)[
             'xNome' => (string)$c['razao'],
