@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 
+import { MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
 
 const BASE = {
@@ -69,5 +70,51 @@ describe("disparoSchema", () => {
     const r = disparoSchema.parse(BASE);
     expect(r.limite).toBeUndefined();
     expect(r.espaco_ms).toBeUndefined();
+  });
+});
+
+/**
+ * As VARIAÇÕES de texto (anti-ban) — o que a rota aceita a mais desde que
+ * passou a alternar 1→2→3→1.
+ */
+describe("disparoSchema — as variacoes de mensagem", () => {
+  const tres = ["Ola! Tudo bem?", "Oi! Podemos ajudar?", "Bom dia! Falamos com o responsavel?"];
+
+  it("aceita variacoes sem a mensagem unica", () => {
+    const r = disparoSchema.parse({ prospect_ids: BASE.prospect_ids, mensagens: tres });
+    expect(r.mensagens).toEqual(tres);
+  });
+
+  it("aceita a mensagem unica de sempre — quem ja chamava a API nao muda nada", () => {
+    expect(disparoSchema.parse(BASE).mensagem).toBe(BASE.mensagem);
+  });
+
+  it("sem texto nenhum e erro de formulario, nao um plano de 500 recusas", () => {
+    expect(disparoSchema.safeParse({ prospect_ids: BASE.prospect_ids }).success).toBe(false);
+  });
+
+  it("lista de variacoes vazia tambem e ausencia de texto", () => {
+    expect(
+      disparoSchema.safeParse({ prospect_ids: BASE.prospect_ids, mensagens: [] }).success,
+    ).toBe(false);
+  });
+
+  it("uma variacao em branco no meio reprova — sairia como bolha vazia no WhatsApp", () => {
+    expect(
+      disparoSchema.safeParse({ prospect_ids: BASE.prospect_ids, mensagens: [tres[0], "   "] }).success,
+    ).toBe(false);
+  });
+
+  it("o teto de variacoes e o mesmo do planejador", () => {
+    const muitas = Array.from({ length: MENSAGENS_POR_DISPARO_MAX + 1 }, (_, i) => `texto ${i}`);
+    expect(
+      disparoSchema.safeParse({ prospect_ids: BASE.prospect_ids, mensagens: muitas }).success,
+    ).toBe(false);
+    expect(
+      disparoSchema.safeParse({
+        prospect_ids: BASE.prospect_ids,
+        mensagens: muitas.slice(0, MENSAGENS_POR_DISPARO_MAX),
+      }).success,
+    ).toBe(true);
   });
 });

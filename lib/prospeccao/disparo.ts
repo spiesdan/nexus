@@ -5,18 +5,24 @@
  *
  * ═══ POR QUE ISTO NÃO É "POSTAR A MENSAGEM EM 500 PONTOS" ═══════════════
  *
- * A mensagem aqui é **fixa** — a mesma para todos. Isso é o que a tela pede e
- * é o que funciona comercialmente (a pessoa responde "oi" e a conversa começa).
- * Mas é exatamente o padrão que derruba um número de WhatsApp: dezenas de mensagens
- * idênticas em sequência, para números que nunca falaram com a gente, em
- * poucos minutos. O próprio repositório já sabe disso — o gate `spinning` da
- * cadeia `before-send` existe para pegar "mensagem idêntica em massa no
- * número" (`lib/agent-engine/guardrails/before-send.ts`).
+ * A mensagem é a mesma para todos — e é o que funciona comercialmente (a
+ * pessoa responde "oi" e a conversa começa). Mas é exatamente o padrão que
+ * derruba um número de WhatsApp: dezenas de mensagens **idênticas** em
+ * sequência, para números que nunca falaram com a gente, em poucos minutos.
+ * O próprio repositório já sabe disso — o gate `spinning` da cadeia
+ * `before-send` existe para pegar "mensagem idêntica em massa no número"
+ * (`lib/agent-engine/guardrails/before-send.ts`).
  *
- * Por isso o planejador não devolve só uma lista de aprovados: devolve o
- * **plano com ritmo**. Cotar por dia, espaçar entre envios e só enviar dentro
- * da janela. Um disparo sem isso não é mais rápido — é mais curto: ban em
- * dias, e o número não volta.
+ * Por isso o planejador devolve o **plano com ritmo**: cota por dia,
+ * espaçamento entre envios, e — desde o anti-ban — a **rotação de variações**
+ * de texto (1→2→3→1), que é o que impede a mesma string de sair 50 vezes
+ * seguidas. Um disparo sem isso não é mais rápido: é mais curto. Ban em dias,
+ * e o número não volta.
+ *
+ * As três coisas andam juntas de propósito. Rotação sem espaçamento continua
+ * rajada (o WhatsApp vê 3 padrões repetindo rápido); espaçamento sem rotação
+ * continua string idêntica. O par está em `mensagemDaVez` e no `mensagem_indice`
+ * do plano.
  *
  * ═══ A REGRA MAIS DURA: SEM SESSÃO, NÃO SE ENVIA NADA ════════════════════
  *
@@ -42,8 +48,26 @@ export const LIMITE_PADRAO_DIA = 50;
 /** Menor intervalo entre dois envios, em ms. 1,2s é o que a automação usa. */
 export const ESPACO_PADRAO_MS = 1200;
 
+/**
+ * O ritmo ANTI-BAN: uma mensagem por minuto.
+ *
+ * 1,2s é o espaçamento entre duas mensagens de uma CONVERSA (a automação). Um
+ * disparo frio em massa é outra coisa: dezenas de mensagens idênticas para
+ * quem nunca falou com a gente, em poucos minutos, é o padrão que derruba um
+ * número. Com 60s, 50 mensagens levam 50 minutos — e é isso que se quer
+ * quando o número é o ativo da empresa. Este é o padrão da TELA; a API
+ * continua aceitando qualquer valor até 60s.
+ */
+export const ESPACO_ANTIBAN_MS = 60_000;
+
 /** Acima disto o WhatsApp costuma truncar, e o texto já não é uma conversa. */
 export const TAMANHO_MAXIMO_MENSAGEM = 1000;
+
+/**
+ * Quantas VARIAÇÕES de texto um disparo aceita. Acima disso não é variação de
+ * uma mensagem — é campanha, e campanha tem outra tela.
+ */
+export const MENSAGENS_POR_DISPARO_MAX = 5;
 
 export type MotivoDeRecusa =
   /** `business_prospects.do_not_contact` — pedido para não ser contatado. */
@@ -95,6 +119,11 @@ export interface ParametrosDoDisparo {
   espacoMs: number;
   /** `true` quando há `channel_sessions.status = 'WORKING'` não arquivada. */
   sessaoWorking: boolean;
+  /**
+   * Quantas variações de texto o disparo tem. Ausente = 1 (a mensagem única
+   * de sempre). É o que faz a rotação 1→2→3→1 existir no plano.
+   */
+  quantidadeDeMensagens?: number;
 }
 
 /** Um corte, com o motivo — é o que a tela mostra para o operador entender. */
@@ -111,6 +140,12 @@ export interface Aprovado {
   contact_id: string | null;
   /** Milissegundos a partir do início do disparo em que este envio parte. */
   instanteMs: number;
+  /**
+   * Qual variação de texto este envio leva (base 0). Sem variações, é sempre
+   * 0. Vem do PLANO, não do envio, para a tela poder mostrar a rotação antes
+   * de qualquer mensagem sair.
+   */
+  mensagem_indice: number;
 }
 
 export interface PlanoDeDisparo {
@@ -125,6 +160,8 @@ export interface PlanoDeDisparo {
   /** Soma dos `instanteMs` do último aprovado, em ms. */
   duracaoPrevistaMs: number;
   espacoMs: number;
+  /** Quantas variações de texto estão em rotação (1 quando é texto único). */
+  variacoes: number;
 }
 
 /** Motivo → rótulo. A tela mostra o rótulo, nunca o código. */
@@ -162,6 +199,27 @@ export function validarMensagem(texto: string): { ok: true } | { ok: false; erro
 }
 
 /**
+ * A mensagem da vez: a 1ª no primeiro envio, a 2ª no segundo, a 3ª no
+ * terceiro — e volta à 1ª quando as variações acabam (1→2→3→1→2→3…).
+ *
+ * Por que a rotação, e não a mesma mensagem para todos: mensagem idêntica em
+ * massa é exatamente o padrão que o WhatsApp reconhece como spam
+ * (`lib/agent-engine/guardrails/before-send.ts`, gate `spinning`). Alternar
+ * três textos não esconde o disparo — só deixa de mandar 50 vezes a MESMA
+ * string, que é o que o filtro procura.
+ *
+ * Função pura de propósito: é a regra inteira da rotação, e a única coisa que
+ * o teste precisa exercitar. `indice` negativo ou maior que a lista não
+ * quebra — o resto da divisão dá a volta.
+ */
+export function mensagemDaVez(mensagens: readonly string[], indice: number): string {
+  if (mensagens.length === 0) return "";
+  const n = mensagens.length;
+  const i = ((Math.trunc(indice) % n) + n) % n;
+  return mensagens[i] ?? mensagens[0] ?? "";
+}
+
+/**
  * Decide quem recebe, em que ordem e em que ritmo.
  *
  * A ordem de recusa é a de "o mais duro primeiro": quem pediu para não ser
@@ -175,6 +233,12 @@ export function planejarDisparo(
   const espacoMs = Math.max(0, parametros.espacoMs);
   const limite = Math.max(0, Math.min(parametros.limite, TETO_DIARIO));
   const cotaRestante = Math.max(0, limite - parametros.jaEnviadosHoje);
+  // O piso é 1 (mensagem única) e o teto é o que a tela oferece. Um número
+  // inválido que viesse do chamador não pode zerar o divisor da rotação.
+  const variacoes = Math.max(
+    1,
+    Math.min(Math.trunc(parametros.quantidadeDeMensagens ?? 1) || 1, MENSAGENS_POR_DISPARO_MAX),
+  );
 
   const aprovados: Aprovado[] = [];
   const recusados: Recusa[] = [];
@@ -204,6 +268,10 @@ export function planejarDisparo(
       telefone_normalizado: c.telefone_normalizado!,
       contact_id: c.contact_id,
       instanteMs: usadasNaCota * espacoMs,
+      // A rotação anda com o ENVIO, não com o candidato: quem é recusado não
+      // consome uma volta, senão um opt-out no meio trocaria a mensagem de
+      // quem vem depois sem nada ter saído.
+      mensagem_indice: (usadasNaCota - 1) % variacoes,
     });
   }
 
@@ -215,6 +283,7 @@ export function planejarDisparo(
     estouraramACota,
     duracaoPrevistaMs: usadasNaCota * espacoMs,
     espacoMs,
+    variacoes,
   };
 }
 

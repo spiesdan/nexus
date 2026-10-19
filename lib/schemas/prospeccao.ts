@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Classificacao } from "@/lib/prospeccao/classificacao";
+import { MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 
 /**
  * O CONTRATO DA PROSPECÇÃO — um só, lido pela tela E pelas rotas.
@@ -96,20 +97,36 @@ export const importBatchSchema = z.object({
  * recebo mais mensagem". Quem chama tem que PEDIR o envio; não happens por
  * omissão de um campo.
  */
-export const disparoSchema = z.object({
-  prospect_ids: z.array(z.string().uuid()).min(1).max(2000),
-  // O `.trim()` antes do `.min(1)` é o que faz "   " ser erro de formulário.
-  // Sem ele, `min(1)` passa (a string tem 3 caracteres) e a mensagem em branco
-  // só morre lá dentro no `validarMensagem` — 400 mais tarde, e o operador vê
-  // "Nenhum dos prospects pertence a esta organização" num campo de texto.
-  mensagem: z.string().trim().min(1).max(4000),
-  /** Cota do dia. O teto real é `TETO_DIARIO` do planejador. */
-  limite: z.number().int().min(1).max(500).optional(),
-  /** Intervalo mínimo entre dois envios, em ms. */
-  espaco_ms: z.number().int().min(0).max(60000).optional(),
-  /** `false` envia de verdade. O padrão é só simular. */
-  dry_run: z.boolean().default(true),
-});
+export const disparoSchema = z
+  .object({
+    prospect_ids: z.array(z.string().uuid()).min(1).max(2000),
+    // O `.trim()` antes do `.min(1)` é o que faz "   " ser erro de formulário.
+    // Sem ele, `min(1)` passa (a string tem 3 caracteres) e a mensagem em branco
+    // só morre lá dentro no `validarMensagem` — 400 mais tarde, e o operador vê
+    // "Nenhum dos prospects pertence a esta organização" num campo de texto.
+    mensagem: z.string().trim().min(1).max(4000).optional(),
+    /**
+     * As VARIAÇÕES de texto, na ordem. O 1º envio leva a 1ª, o 2º a 2ª… e
+     * quando acabam, volta à 1ª (1→2→3→1). É o que evita a mesma string em
+     * massa, que é o padrão que queima número.
+     *
+     * `mensagem` (texto único) continua valendo: quem já chamava a API não
+     * precisa mudar nada. Os dois campos juntos: as variações ganham.
+     */
+    mensagens: z.array(z.string().trim().min(1).max(4000)).min(1).max(MENSAGENS_POR_DISPARO_MAX).optional(),
+    /** Cota do dia. O teto real é `TETO_DIARIO` do planejador. */
+    limite: z.number().int().min(1).max(500).optional(),
+    /** Intervalo mínimo entre dois envios, em ms. */
+    espaco_ms: z.number().int().min(0).max(60000).optional(),
+    /** `false` envia de verdade. O padrão é só simular. */
+    dry_run: z.boolean().default(true),
+  })
+  // Sem texto não há disparo — e o erro tem que sair daqui, não de um plano
+  // com 500 recusas de "mensagem vazia", que não é recusa de NINGUÉM.
+  .refine((v) => Boolean(v.mensagem?.trim()) || (v.mensagens?.length ?? 0) > 0, {
+    message: "Informe a mensagem (ou as variações) do disparo.",
+    path: ["mensagem"],
+  });
 
 export type Disparo = z.infer<typeof disparoSchema>;
 

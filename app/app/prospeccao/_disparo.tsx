@@ -1,7 +1,19 @@
 "use client";
 
 /**
- * DISPARO EM LOTE — a mesma mensagem para as empresas marcadas.
+ * DISPARO EM LOTE — até 3 variações de mensagem, alternadas 1→2→3→1, com
+ * ritmo anti-ban (60s entre um envio e outro).
+ *
+ * ═══ POR QUE TRÊS MENSAGENS, E NÃO UMA ═══════════════════════════════════
+ *
+ * Mensagem idêntica 50 vezes seguidas para números que nunca falaram com a
+ * gente é o padrão exato que o WhatsApp reconhece como spam — o dano não
+ * aparece como erro, aparece como número banido semanas depois. Alternar três
+ * textos quebra essa assinatura sem mudar o que o cliente recebe.
+ *
+ * Os campos são três OPÇÕES, não três envios: quem recebe recebe UMA. O 1º
+ * pega a 1ª, o 2º a 2ª, o 3º a 3ª, e o 4º volta para a 1ª. Só a primeira é
+ * obrigatória — quem quer mandar um texto único continua preenchendo um campo.
  *
  * ═══ POR QUE A SIMULAÇÃO VEM ANTES DO BOTÃO DE ENVIAR ═══════════════════
  *
@@ -17,6 +29,10 @@
  * conectada" — e o botão fica desabilitado, com o motivo escrito embaixo.
  * Sem isso o operador descobre que mandou 300 mensagens para lugar nenhum
  * depois.
+ *
+ * A simulação também mostra a ROTAÇÃO (`rotacao`): qual das opções cada um
+ * dos primeiros recebe. Três caixas de texto sem isso são uma promessa que o
+ * operador não tem como conferir.
  */
 import * as React from "react";
 
@@ -25,6 +41,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
+import { ESPACO_ANTIBAN_MS } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
 
 /** O que a rota devolve na simulação. Espelha `resumo` do `route.ts`. */
@@ -41,9 +58,24 @@ interface Plano {
   limite: number;
   espaco_ms: number;
   duracao_prevista_ms: number;
+  /** Quantas variações estão em rotação (1 = texto único). */
+  variacoes: number;
+  /** Os primeiros envios, cada um com o número da opção (1, 2, 3…). */
+  rotacao: number[];
   por_motivo: Array<{ motivo: string; rotulo: string; total: number }>;
   recusas: Array<{ nome: string; motivo: string }>;
 }
+
+/**
+ * Quantas caixas de mensagem a tela oferece — o pedido do produto: três
+ * opções. É a TELA que limita a três, não a API (que aceita até
+ * `MENSAGENS_POR_DISPARO_MAX`): quem usa a tela quer o caso simples e
+ * repetível, não uma matriz de textos.
+ */
+const OPCOES_DE_MENSAGEM = 3;
+
+/** O padrão do campo de intervalo, em segundos — a fonte é o anti-ban. */
+const SEGUNDOS_PADRAO = ESPACO_ANTIBAN_MS / 1000;
 
 interface ResultadoDoEnvio {
   enviados: number;
@@ -71,13 +103,37 @@ export function DialogoDisparo({
   onConcluido: () => void;
 }) {
   const t = useT();
-  const [mensagem, setMensagem] = React.useState("");
+  // As opções de texto. Só a primeira é obrigatória: campo vazio é opção que
+  // não existe, e some da rotação antes de sair daqui.
+  const [mensagens, setMensagens] = React.useState<string[]>(() =>
+    Array.from({ length: OPCOES_DE_MENSAGEM }, () => ""),
+  );
   const [limite, setLimite] = React.useState("50");
-  const [espaco, setEspaco] = React.useState("1200");
+  // 60s, não 1,2s. O espaçamento curto é o da CONVERSA (a automação responde
+  // na hora); disparo frio em massa é outra coisa, e é aqui que o número
+  // queima. Quem quiser mais rápido muda o campo — mas o padrão seguro é o
+  // que sai da caixa.
+  const [espaco, setEspaco] = React.useState(String(SEGUNDOS_PADRAO));
   const [plano, setPlano] = React.useState<Plano | null>(null);
   const [resultado, setResultado] = React.useState<ResultadoDoEnvio | null>(null);
   const [ocupado, setOcupado] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
+
+  // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
+  const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
+
+  // A tela fala em SEGUNDOS (é assim que se pensa em ritmo); a API, em ms. O
+  // campo vazio volta ao padrão seguro em vez de virar 0 — e um 0 digitado de
+  // propósito continua valendo, porque é a saída de emergência de quem está
+  // testando.
+  const segundos = espaco.trim() === "" ? SEGUNDOS_PADRAO : Number(espaco);
+  const espacoMs = Number.isFinite(segundos)
+    ? Math.min(60000, Math.max(0, Math.round(segundos * 1000)))
+    : 60000;
+
+  function trocarMensagem(i: number, valor: string) {
+    setMensagens((atual) => atual.map((m, j) => (j === i ? valor : m)));
+  }
 
   async function chamar(dryRun: boolean) {
     setOcupado(true);
@@ -87,9 +143,9 @@ export function DialogoDisparo({
         "/api/v1/prospecting/prospects/disparar",
         {
           prospect_ids: ids,
-          mensagem,
+          mensagens: preenchidas,
           limite: Number(limite) || 50,
-          espaco_ms: Number(espaco) || 1200,
+          espaco_ms: espacoMs,
           dry_run: dryRun,
         },
       )) as { data?: { plano?: Plano; resultado?: ResultadoDoEnvio } };
@@ -119,18 +175,39 @@ export function DialogoDisparo({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="disparo-mensagem">{t("Mensagem padrão")}</Label>
-            <textarea
-              id="disparo-mensagem"
-              value={mensagem}
-              onChange={(e) => setMensagem(e.target.value)}
-              rows={5}
-              placeholder={t("Ola! Somos do escritório X. Podemos ajudar com o quê?")}
-              className="w-full rounded-lg border bg-background p-3 text-sm"
-            />
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="disparo-mensagem-0">{t("Mensagem 1 (sai primeiro)")}</Label>
+              <textarea
+                id="disparo-mensagem-0"
+                value={mensagens[0] ?? ""}
+                onChange={(e) => trocarMensagem(0, e.target.value)}
+                rows={4}
+                placeholder={t("Ola! Somos do escritório X. Podemos ajudar com o quê?")}
+                className="w-full rounded-lg border bg-background p-3 text-sm"
+              />
+            </div>
+
+            {[1, 2].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <Label htmlFor={`disparo-mensagem-${i}`}>{t(`Mensagem ${i + 1} (opcional)`)}</Label>
+                <textarea
+                  id={`disparo-mensagem-${i}`}
+                  value={mensagens[i] ?? ""}
+                  onChange={(e) => trocarMensagem(i, e.target.value)}
+                  rows={3}
+                  placeholder={t("Outra forma de dizer a mesma coisa")}
+                  className="w-full rounded-lg border bg-background p-3 text-sm"
+                />
+              </div>
+            ))}
+
             <p className="text-xs text-muted-foreground">
-              {t("A mesma mensagem para todas. Quem responde entra na conversa no Inbox.")}
+              {preenchidas.length > 1
+                ? t(
+                    `As ${preenchidas.length} mensagens se alternam: a 1ª no primeiro envio, a 2ª no segundo, e assim por diante, voltando à 1ª. Cada empresa recebe UMA. Quem responde entra na conversa no Inbox.`,
+                  )
+                : t("A mesma mensagem para todas. Quem responde entra na conversa no Inbox.")}
             </p>
           </div>
 
@@ -147,20 +224,26 @@ export function DialogoDisparo({
               />
             </div>
             <div className="w-40 space-y-1.5">
-              <Label htmlFor="disparo-espaco">{t("Intervalo (ms)")}</Label>
+              <Label htmlFor="disparo-espaco">{t("Intervalo (s)")}</Label>
               <Input
                 id="disparo-espaco"
                 type="number"
                 min={0}
-                max={60000}
+                max={60}
                 value={espaco}
                 onChange={(e) => setEspaco(e.target.value)}
               />
             </div>
           </div>
 
+          <p className="text-xs text-muted-foreground">
+            {t(
+              "Espera esse tempo entre uma mensagem e a seguinte. 60s é o ritmo que não queima o número — apertar aqui é mais rápido hoje e mais curto amanhã.",
+            )}
+          </p>
+
           {!plano && !resultado && (
-            <Button size="sm" disabled={mensagem.trim() === "" || ocupado} onClick={() => void chamar(true)}>
+            <Button size="sm" disabled={preenchidas.length === 0 || ocupado} onClick={() => void chamar(true)}>
               {t("Simular envio")}
             </Button>
           )}
@@ -195,6 +278,19 @@ export function DialogoDisparo({
                 <p className="text-xs text-muted-foreground">
                   {t("Já saíram hoje nesta instalação:")} {plano.ja_enviados_hoje}
                 </p>
+              )}
+
+              {plano.variacoes > 1 && (
+                <div className="text-xs">
+                  <p className="mb-1 font-medium">
+                    {t(`${plano.variacoes} mensagens alternando`)}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t("A ordem dos primeiros envios será:")}{" "}
+                    <strong>{plano.rotacao.join(" → ")}</strong>
+                    {plano.serao_enviados > plano.rotacao.length ? " → …" : ""}
+                  </p>
+                </div>
               )}
 
               {plano.por_motivo.length > 0 && (

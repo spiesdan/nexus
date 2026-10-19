@@ -21,14 +21,20 @@
  *  6. `podeEnviar: parametros.sessaoWorking` → `true`
  *                                                 → reprova os 3 de sessão
  *  7. `espacoMs` sempre 0                        → reprova o espaçamento
+ *  8. `mensagem_indice` sempre 0                 → reprova a rotação
+ *  9. rotação contando o CANDIDATO em vez do
+ *     ENVIO aprovado                              → reprova "recusa não gasta volta"
  */
 import { describe, expect, it } from "vitest";
 
 import {
+  ESPACO_ANTIBAN_MS,
   ESPACO_PADRAO_MS,
   LIMITE_PADRAO_DIA,
+  MENSAGENS_POR_DISPARO_MAX,
   TETO_DIARIO,
   TAMANHO_MAXIMO_MENSAGEM,
+  mensagemDaVez,
   planejarDisparo,
   validarMensagem,
   type CandidatoAoDisparo,
@@ -336,5 +342,101 @@ describe("planejarDisparo — a lista inteira", () => {
   it("carrega o contact_id, para o envio reaproveitar o contato em vez de duplicar", () => {
     const r = planejarDisparo([candidato({ contact_id: "ct-9" })], parametros());
     expect(r.aprovados[0]?.contact_id).toBe("ct-9");
+  });
+});
+
+describe("mensagemDaVez — a rotação 1→2→3→1", () => {
+  const tres = ["um", "dois", "tres"];
+
+  it("anda pela ordem e volta para a primeira quando as opcoes acabam", () => {
+    expect([0, 1, 2, 3, 4, 5, 6].map((i) => mensagemDaVez(tres, i))).toEqual([
+      "um",
+      "dois",
+      "tres",
+      "um",
+      "dois",
+      "tres",
+      "um",
+    ]);
+  });
+
+  it("com uma opcao so, ela e sempre a da vez", () => {
+    expect([0, 1, 2].map((i) => mensagemDaVez(["unica"], i))).toEqual(["unica", "unica", "unica"]);
+  });
+
+  it("indice negativo da a volta em vez de estourar", () => {
+    // `-1 % 3` em JS e `-1`, e `tres[-1]` seria `undefined`: a bolha sairia
+    // VAZIA. O duplo resto e o que impede isso.
+    expect(mensagemDaVez(tres, -1)).toBe("tres");
+    expect(mensagemDaVez(tres, -4)).toBe("tres");
+  });
+
+  it("lista vazia devolve vazio em vez de quebrar o envio", () => {
+    expect(mensagemDaVez([], 3)).toBe("");
+  });
+});
+
+describe("planejarDisparo — a rotacao das mensagens", () => {
+  it("o primeiro envio leva a 1a, o segundo a 2a, e volta a 1a na quarta", () => {
+    const lista = Array.from({ length: 7 }, (_, i) => n(String(i)));
+    const r = planejarDisparo(lista, parametros({ quantidadeDeMensagens: 3, espacoMs: 0 }));
+
+    expect(r.aprovados.map((a) => a.mensagem_indice)).toEqual([0, 1, 2, 0, 1, 2, 0]);
+    expect(r.variacoes).toBe(3);
+  });
+
+  it("sem informar variacoes, e a mensagem unica de sempre", () => {
+    const lista = Array.from({ length: 3 }, (_, i) => n(String(i)));
+    const r = planejarDisparo(lista, parametros({ espacoMs: 0 }));
+
+    expect(r.variacoes).toBe(1);
+    expect(r.aprovados.map((a) => a.mensagem_indice)).toEqual([0, 0, 0]);
+  });
+
+  it("RECUSA nao gasta volta: quem e recusado no meio nao troca a mensagem de quem vem depois", () => {
+    // A rotação anda com o ENVIO, não com o candidato. Se andasse com o
+    // candidato, um opt-out no meio da lista embaralharia as variações sem
+    // nada ter saido — e a simulação mostraria uma ordem que o envio não faz.
+    const lista = [
+      n("0"),
+      n("1", { do_not_contact: true }),
+      n("2"),
+      n("3", { telefone_normalizado: null }),
+      n("4"),
+    ];
+    const r = planejarDisparo(lista, parametros({ quantidadeDeMensagens: 3, espacoMs: 0 }));
+
+    expect(r.aprovados.map((a) => a.id)).toEqual(["0", "2", "4"]);
+    expect(r.aprovados.map((a) => a.mensagem_indice)).toEqual([0, 1, 2]);
+  });
+
+  it("variacoes fora da faixa viram 1, nunca zero — zero seria divisao por zero", () => {
+    const lista = [n("0"), n("1")];
+    for (const quantidade of [0, -3, Number.NaN]) {
+      const r = planejarDisparo(lista, parametros({ quantidadeDeMensagens: quantidade, espacoMs: 0 }));
+      expect(r.variacoes).toBe(1);
+      expect(r.aprovados.map((a) => a.mensagem_indice)).toEqual([0, 0]);
+    }
+  });
+
+  it("mais variacoes que o limite nao passam: o teto e o mesmo da API", () => {
+    const r = planejarDisparo([n("0")], parametros({ quantidadeDeMensagens: 99, espacoMs: 0 }));
+    expect(r.variacoes).toBe(MENSAGENS_POR_DISPARO_MAX);
+  });
+});
+
+describe("o ritmo anti-ban", () => {
+  it("o padrao da TELA e 60s, nao o 1,2s da conversa", () => {
+    // Trava contra a "otimizacao" que transforma 50 envios em 1 minuto de
+    // rajada — exatamente o que queima o numero. 1,2s continua sendo o
+    // intervalo da automacao (`ESPACO_PADRAO_MS`), que e outra coisa.
+    expect(ESPACO_ANTIBAN_MS).toBe(60_000);
+    expect(ESPACO_ANTIBAN_MS).toBeGreaterThan(ESPACO_PADRAO_MS);
+  });
+
+  it("a duracao prometida acompanha o intervalo pedido, sem mentir sobre o tempo", () => {
+    const lista = Array.from({ length: 3 }, (_, i) => n(String(i)));
+    const r = planejarDisparo(lista, parametros({ espacoMs: ESPACO_ANTIBAN_MS }));
+    expect(r.duracaoPrevistaMs).toBe(180_000);
   });
 });

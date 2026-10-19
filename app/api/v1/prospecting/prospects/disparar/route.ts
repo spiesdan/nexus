@@ -1,6 +1,6 @@
 /**
- * POST /api/v1/prospecting/prospects/disparar — a MESMA mensagem para os
- * prospects escolhidos, com simulação por padrão.
+ * POST /api/v1/prospecting/prospects/disparar — as mensagens para os
+ * prospects escolhidos, com rotação, ritmo e simulação por padrão.
  *
  * ═══ A REGRA DE OURO DESTA ROTA ═════════════════════════════════════════
  *
@@ -15,6 +15,14 @@
  *   1. quantos vão sair — e quantos NÃO vão, e por quê (um por linha)
  *   2. quanto tempo vai levar, no ritmo configurado
  *   3. se dá para enviar AGORA — isto é, se há sessão de WhatsApp utilizável
+ *
+ * ═══ AS VARIAÇÕES (ANTI-BAN) ═════════════════════════════════════════════
+ *
+ * O corpo aceita `mensagens` (1 a 5 textos) além do `mensagem` único de
+ * sempre. O 1º envio leva a 1ª, o 2º a 2ª, e a rotação volta à 1ª quando
+ * acaba: 1→2→3→1. Quem recebe qual vem do PLANO (`mensagem_indice`), não de
+ * um contador dentro do laço — assim a simulação já mostra a rotação antes de
+ * qualquer mensagem sair, e recusa não consome uma volta.
  *
  * ═══ POR QUE A SIMULAÇÃO VÊ A SESSÃO, E O ENVIO NÃO PODE ESQUECER ════════
  *
@@ -42,7 +50,9 @@ import { jitterMs } from "@/lib/automation/throttle";
 import {
   ESPACO_PADRAO_MS,
   LIMITE_PADRAO_DIA,
+  MENSAGENS_POR_DISPARO_MAX,
   ROTULO_DA_RECUSA,
+  mensagemDaVez,
   planejarDisparo,
   validarMensagem,
   type CandidatoAoDisparo,
@@ -85,8 +95,30 @@ export async function POST(req: NextRequest): Promise<Response> {
   // mesma que a tela vai mostrar. Aqui é só para devolver 400 em vez de um
   // plano com 500 recusas de "mensagem vazia" (que não é um motivo de recusa
   // de ninguém).
-  const texto = validarMensagem(entrada.mensagem);
-  if (!texto.ok) return fail("validation_failed", texto.erro, 400, { requestId });
+  //
+  // As variações ganham do texto único quando os dois vêm: quem manda
+  // `mensagens` está pedindo rotação, e ignorar em silêncio seria pior que
+  // recusar. Cada uma passa pela MESMA régua (vazia, tamanho) da mensagem
+  // única — uma variação em branco sairia como bolha vazia no WhatsApp.
+  const mensagens = (entrada.mensagens?.length
+    ? entrada.mensagens
+    : [entrada.mensagem ?? ""]
+  )
+    .map((m) => m.trim())
+    .filter((m) => m !== "")
+    .slice(0, MENSAGENS_POR_DISPARO_MAX);
+  if (mensagens.length === 0) {
+    return fail("validation_failed", "Informe a mensagem (ou as variações) do disparo.", 400, {
+      requestId,
+    });
+  }
+  for (const [i, m] of mensagens.entries()) {
+    const texto = validarMensagem(m);
+    if (!texto.ok) {
+      const rotulo = mensagens.length > 1 ? `Mensagem ${i + 1}: ` : "";
+      return fail("validation_failed", `${rotulo}${texto.erro}`, 400, { requestId });
+    }
+  }
 
   const admin = createAdminClient();
   const limite = entrada.limite ?? LIMITE_PADRAO_DIA;
@@ -178,6 +210,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     jaEnviadosHoje,
     espacoMs,
     sessaoWorking,
+    quantidadeDeMensagens: mensagens.length,
   });
 
   const resumo = {
@@ -193,6 +226,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     limite,
     espaco_ms: espacoMs,
     duracao_prevista_ms: plano.duracaoPrevistaMs,
+    // A rotação é o que o operador precisa conferir antes de mandar: quantas
+    // variações vão alternar e em que ordem. Sem isso, três textos na tela
+    // viram uma promessa que ninguém pode checar.
+    variacoes: plano.variacoes,
+    rotacao: plano.aprovados.slice(0, 12).map((a) => a.mensagem_indice + 1),
     por_motivo: contarPorMotivo(plano.recusados),
     // A lista vem com o NOME e o motivo, nunca com o telefone: a simulação é
     // uma tela, e telefone na tela de plano é um dado de contato à toa.
@@ -222,7 +260,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     requestId,
     sessaoId: sessao!.id,
     espacoMs,
-    mensagem: entrada.mensagem,
+    mensagens,
     plano,
   });
 
@@ -343,14 +381,15 @@ interface ParamsDoEnvio {
   requestId: string;
   sessaoId: string;
   espacoMs: number;
-  mensagem: string;
+  /** As variações de texto; cada envio pega a sua pelo `mensagem_indice`. */
+  mensagens: string[];
   plano: ReturnType<typeof planejarDisparo>;
 }
 
 /**
- * Executa o plano. Um por um, com o mesmo espaçamento da automação.
+ * Executa o plano. Um por um, no ritmo que a simulação prometeu.
  *
- * Três decisões que valem o comentário:
+ * Quatro decisões que valem o comentário:
  *
  * 1. **Um por um, sem `Promise.all`.** Mandar 500 de uma vez é o padrão que
  *    ban. O ritmo é o plano, e o plano é sequencial.
@@ -360,6 +399,9 @@ interface ParamsDoEnvio {
  * 3. **O contato é resolvido por telefone.** O prospect pode não terido contato
  *    ainda: `fn_upsert_wa_contact` cria, e é o mesmo caminho que a entrada
  *    usa — não há segunda forma de "criar contato" neste produto.
+ * 4. **A variação vem do PLANO.** `item.mensagem_indice`, não um contador
+ *    daqui: a simulação e o envio contam a mesma história, e uma mensagem que
+ *    falhou não desloca a rotação de quem vem depois.
  */
 async function enviarPlano(p: ParamsDoEnvio) {
   const enviados: Array<{ nome: string; message_id: string; status: string }> = [];
@@ -397,7 +439,11 @@ async function enviarPlano(p: ParamsDoEnvio) {
           actor: { type: "user", id: p.usuarioId },
           requestId: p.requestId,
         },
-        { conversation_id: conversationId, type: "text", body: p.mensagem },
+        {
+          conversation_id: conversationId,
+          type: "text",
+          body: mensagemDaVez(p.mensagens, item.mensagem_indice),
+        },
       );
       enviados.push({ nome: item.nome, message_id: mensagem.id, status: mensagem.status });
     } catch (err) {
