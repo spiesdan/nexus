@@ -3376,6 +3376,7 @@ export type Database = {
           cliente_nome: string;
           condicao_pagamento: string | null;
           contact_id: string | null;
+          contato_no_cliente: string | null;
           created_at: string;
           created_by: string | null;
           desconto_cents: number;
@@ -3393,6 +3394,7 @@ export type Database = {
           parcelas: NonNullable<Json>;
           previsao_entrega: string | null;
           price_table_id: string | null;
+          rastreamento: string | null;
           status: string;
           subtotal_cents: number;
           total_cents: number;
@@ -3405,6 +3407,7 @@ export type Database = {
           cliente_nome: string;
           condicao_pagamento?: string | null;
           contact_id?: string | null;
+          contato_no_cliente?: string | null;
           created_at?: string;
           created_by?: string | null;
           desconto_cents?: number;
@@ -3422,6 +3425,7 @@ export type Database = {
           parcelas?: NonNullable<Json>;
           previsao_entrega?: string | null;
           price_table_id?: string | null;
+          rastreamento?: string | null;
           status?: string;
           subtotal_cents?: number;
           total_cents?: number;
@@ -3434,6 +3438,7 @@ export type Database = {
           cliente_nome?: string;
           condicao_pagamento?: string | null;
           contact_id?: string | null;
+          contato_no_cliente?: string | null;
           created_at?: string;
           created_by?: string | null;
           desconto_cents?: number;
@@ -3451,6 +3456,7 @@ export type Database = {
           parcelas?: NonNullable<Json>;
           previsao_entrega?: string | null;
           price_table_id?: string | null;
+          rastreamento?: string | null;
           status?: string;
           subtotal_cents?: number;
           total_cents?: number;

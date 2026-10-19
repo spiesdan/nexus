@@ -104,6 +104,8 @@ function pedido(over: Partial<PedidoComercial> = {}): PedidoComercial {
     obs_interna: null,
     endereco_entrega: null,
     transportadora_nome: null,
+    rastreamento: null,
+    contato_no_cliente: null,
     modalidade_frete: "cif",
     previsao_entrega: null,
     parcelas: [],

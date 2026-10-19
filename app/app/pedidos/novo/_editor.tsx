@@ -7,6 +7,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -102,6 +103,8 @@ export function OrderEditor({
   verMargem,
   comissaoPct,
   nomeOrganizacao,
+  representada,
+  nomeVendedor,
   textos,
 }: {
   produtos: Produto[];
@@ -111,9 +114,23 @@ export function OrderEditor({
   comissaoPct: number | null;
   /** A "representada" do Mercos: a empresa que emite este pedido. */
   nomeOrganizacao: string;
+  /**
+   * O bloco REPRESENTADA do Mercos não mostra só o nome: mostra razão social,
+   * CNPJ e telefone (e o logo). Os três primeiros nós temos no banco — este
+   * objeto é opcional porque a tela funciona sem ele, e porque inventar dado
+   * de emitente é pior do que mostrar menos.
+   */
+  representada?: {
+    razaoSocial?: string | null;
+    cnpj?: string | null;
+    telefone?: string | null;
+  };
+  /** Quem está vendendo — o "Vendedor" do bloco de detalhes. */
+  nomeVendedor?: string | null;
   textos: TextosBase;
 }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const buscaRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -135,6 +152,17 @@ export function OrderEditor({
   const [obsInterna, setObsInterna] = React.useState("");
   const [endereco, setEndereco] = React.useState("");
   const [transportadora, setTransportadora] = React.useState("");
+  // 0276: os dois campos do bloco "Detalhes" do Mercos que não existiam.
+  const [rastreamento, setRastreamento] = React.useState("");
+  const [contatoNoCliente, setContatoNoCliente] = React.useState("");
+  // "Hoje" só depois de montar: o servidor formata em UTC e o navegador no
+  // fuso do dono; as duas datas discordam entre 21h e meia-noite e o React
+  // acusa hidratação (#418). `null` no primeiro render é o preço de não
+  // mentir a data.
+  const [hoje, setHoje] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setHoje(new Date().toLocaleDateString(tagIdioma));
+  }, [tagIdioma]);
   const [tabelaId, setTabelaId] = React.useState("");
   const [tabela, setTabela] = React.useState<PrecoDeTabela | null>(null);
   const [descontoTexto, setDescontoTexto] = React.useState("");
@@ -290,6 +318,8 @@ export function OrderEditor({
       obsInterna,
       endereco,
       transportadora,
+      rastreamento,
+      contatoNoCliente,
       tabelaId,
       descontoTexto,
       descontoPctTexto,
@@ -316,6 +346,9 @@ export function OrderEditor({
         formaPagamento?: FormaDePagamento | "";
         exigeNf?: boolean;
         observacoes: string;
+        transportadora?: string;
+        rastreamento?: string;
+        contatoNoCliente?: string;
       };
       setContatoId(s.contatoId);
       setClienteNome(s.clienteNome);
@@ -327,6 +360,9 @@ export function OrderEditor({
       setFormaPagamento(s.formaPagamento ?? "");
       setExigeNf(s.exigeNf ?? false);
       setObservacoes(s.observacoes ?? "");
+      setTransportadora(s.transportadora ?? "");
+      setRastreamento(s.rastreamento ?? "");
+      setContatoNoCliente(s.contatoNoCliente ?? "");
       nexusToast.info(textos.rascunhoRestaurado);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -442,7 +478,19 @@ export function OrderEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historicoItens]);
 
-  async function enviar(status: "rascunho" | "aprovado") {
+  /**
+   * ├── por que o canal entra AQUI ──────────────────────────────────────────
+   *
+   * O "Enviar por e-mail" e o "Enviar por WhatsApp" do Mercos ficam na mesma
+   * barra do "Gerar pedido", e isso só é possível lá porque o Mercos cria o
+   * rascunho no instante em que a tela abre. Aqui o pedido nasce no clique —
+   * e mandar sem gravar mandaria um pedido que não existe.
+   *
+   * Então o botão grava (rascunho) e só depois abre o canal. O pedido fica
+   * com número, aparece na lista, e o vendedor cai na ficha dele: nada de
+   * "enviei e não sei o que foi enviado".
+   */
+  async function enviar(status: "rascunho" | "aprovado", canal?: "email" | "whatsapp") {
     if (!clienteNome.trim()) {
       nexusToast.error(t("Escolha ou digite o nome do cliente."));
       irPara("cliente");
@@ -490,10 +538,35 @@ export function OrderEditor({
         ...(obsInterna.trim() ? { obs_interna: obsInterna.trim() } : {}),
         ...(endereco.trim() ? { endereco_entrega: endereco.trim() } : {}),
         ...(transportadora.trim() ? { transportadora_nome: transportadora.trim() } : {}),
+        ...(rastreamento.trim() ? { rastreamento: rastreamento.trim() } : {}),
+        ...(contatoNoCliente.trim() ? { contato_no_cliente: contatoNoCliente.trim() } : {}),
         itens,
       });
       if (pedido.aprovacao_necessaria) setAprovacao(true);
-      nexusToast.success(`${textos.pedidoCriado}: PED-${String(pedido.numero).padStart(4, "0")}`);
+      const numero = `PED-${String(pedido.numero).padStart(4, "0")}`;
+      nexusToast.success(`${textos.pedidoCriado}: ${numero}`);
+      if (canal) {
+        // Grava primeiro (acima), abre o canal e só então navega: o app de
+        // e-mail/WhatsApp precisa assumir antes de a página trocar.
+        const resumo = `${numero} — ${clienteNome.trim()} — ${comoMoeda(total, "BRL")}`;
+        const email = listaDeContatos.find((c) => c.id === contatoId)?.email;
+        const alvo =
+          canal === "email"
+            ? `mailto:${email ?? ""}?subject=${encodeURIComponent(resumo)}&body=${encodeURIComponent(resumo)}`
+            : `https://wa.me/?text=${encodeURIComponent(resumo)}`;
+        // Âncora clicada em vez de `window.location.href = …`: o app de e-mail
+        // e o WhatsApp assumem a navegação, e a aba do pedido continua viva
+        // para receber o `router.push` do detalhe logo abaixo.
+        const link = document.createElement("a");
+        link.href = alvo;
+        link.rel = "noopener";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => router.push(`/app/pedidos/${pedido.id}`), 900);
+        limpar();
+        return;
+      }
       limpar();
       // `refresh()` junto do `push` de propósito: o Router Cache do Next serve
       // o RSC de `/app/pedidos` por 30s (`next.config.ts`, `staleTimes.dynamic`)
@@ -511,10 +584,10 @@ export function OrderEditor({
     desfocar: () => (document.activeElement as HTMLElement | null)?.blur(),
   });
 
-  async function comEnvio(status: "rascunho" | "aprovado") {
+  async function comEnvio(status: "rascunho" | "aprovado", canal?: "email" | "whatsapp") {
     setEnviando(true);
     try {
-      await enviar(status);
+      await enviar(status, canal);
     } finally {
       setEnviando(false);
     }
@@ -548,6 +621,24 @@ export function OrderEditor({
             <Button variant="outline" onClick={() => setPreviaAberta(true)}>
               <Eye size={16} className="mr-1.5" /> {t("Visualizar")}
             </Button>
+            {/* Os dois botões do Mercos. Aqui eles GRAVAM o pedido antes de
+                abrir o canal — ver o comentário de `enviar()`. Sem e-mail no
+                cliente, o de e-mail fica desabilitado em vez de abrir um
+                "para:" vazio. */}
+            <Button
+              variant="outline"
+              onClick={() => void comEnvio("rascunho", "email")}
+              disabled={enviando || !listaDeContatos.find((c) => c.id === contatoId)?.email}
+            >
+              {t("Enviar por e-mail")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void comEnvio("rascunho", "whatsapp")}
+              disabled={enviando}
+            >
+              {t("Enviar por WhatsApp")}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -571,6 +662,19 @@ export function OrderEditor({
           </div>
         }
       />
+
+      {/* O cartão do topo do Mercos: número e pill do status. O número só
+          existe depois do "Gerar pedido" — mostrá-lo aqui exigiria criar o
+          rascunho no instante em que a tela abre, e é exatamente isso que
+          enche a base de pedido fantasma de quem abriu, olhou e desistiu. */}
+      <Card className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+        <p className="text-sm font-medium">
+          <span className="text-muted-foreground">#</span> {t("novo")}
+        </p>
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          {t("Rascunho")}
+        </span>
+      </Card>
 
       {/* 1 · CLIENTE — o mesmo autocomplete com cadastro inline de antes. */}
       <section id="secao-cliente" aria-label={t("Cliente")} className="space-y-2">
@@ -620,8 +724,19 @@ export function OrderEditor({
       <section aria-label={t("Representada")} className="space-y-2">
         <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
         <Card className="space-y-1 p-4">
-          <p className="font-medium">{nomeOrganizacao || "—"}</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm">
+            <span className="font-medium text-accent">{nomeOrganizacao || "—"}</span>
+            {(() => {
+              const linha = [representada?.razaoSocial, representada?.cnpj]
+                .filter((v): v is string => Boolean(v && v.trim()))
+                .join(" - ");
+              return linha ? <span className="text-muted-foreground"> - {linha}</span> : null;
+            })()}
+          </p>
+          {representada?.telefone && (
+            <p className="text-sm text-muted-foreground">{representada.telefone}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
             {t("O pedido sai em nome desta empresa.")}
           </p>
         </Card>
@@ -771,6 +886,27 @@ export function OrderEditor({
       <section aria-label={t("Detalhes do pedido")} className="space-y-2">
         <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
         <Card className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+          {/* Os campos que o Mercos mostra como leitura: número (que ainda
+              não existe), data da emissão (hoje) e vendedor (quem está
+              logado). São leitura porque não são decisão de quem vende. */}
+          <div className="space-y-1">
+            <span className="text-sm text-muted-foreground">{t("Nº do pedido")}</span>
+            <p className="text-sm font-medium">{t("novo")}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-sm text-muted-foreground">{t("Data da emissão")}</span>
+            <p className="text-sm font-medium">{hoje ?? "—"}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-sm text-muted-foreground">{t("Vendedor")}</span>
+            <p className="text-sm font-medium">{nomeVendedor || "—"}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-sm text-muted-foreground">{t("Valor do frete")}</span>
+            <p className="text-sm font-medium tabular-nums">
+              {freteCents > 0 ? comoMoeda(freteCents, "BRL") : "—"}
+            </p>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="condicao">{textos.condicao}</Label>
             <Input
@@ -833,6 +969,26 @@ export function OrderEditor({
               id="transportadora"
               value={transportadora}
               onChange={(e) => setTransportadora(e.target.value)}
+            />
+          </div>
+          {/* 0276 — os dois campos do Mercos que não existiam: o código que a
+              transportadora devolve e a pessoa que pediu do lado do cliente. */}
+          <div className="space-y-1.5">
+            <Label htmlFor="rastreamento">{t("Rastreamento")}</Label>
+            <Input
+              id="rastreamento"
+              value={rastreamento}
+              onChange={(e) => setRastreamento(e.target.value)}
+              placeholder={t("Código de rastreio da transportadora")}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="contato-no-cliente">{t("Contato no cliente")}</Label>
+            <Input
+              id="contato-no-cliente"
+              value={contatoNoCliente}
+              onChange={(e) => setContatoNoCliente(e.target.value)}
+              placeholder={t("Quem fez o pedido")}
             />
           </div>
           <div className="space-y-1.5 sm:col-span-2">

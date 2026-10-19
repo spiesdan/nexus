@@ -114,6 +114,10 @@ export const pedidoCreateSchema = z.object({
   /** Onde este pedido desce (0212). Por pedido, não por cliente. */
   endereco_entrega: z.string().trim().max(500).optional(),
   transportadora_nome: z.string().trim().max(120).optional(),
+  /** Rastreio que a transportadora devolve depois da coleta (0276). */
+  rastreamento: z.string().trim().max(120).optional(),
+  /** Quem fez o pedido do lado do comprador (0276). */
+  contato_no_cliente: z.string().trim().max(120).optional(),
   modalidade_frete: z.enum(MODALIDADES_FRETE).default("retirada"),
   previsao_entrega: z
     .string()
@@ -162,6 +166,9 @@ export const pedidoPatchSchema = z.object({
   obs_interna: z.string().trim().max(2000).nullable().optional(),
   endereco_entrega: z.string().trim().max(500).nullable().optional(),
   transportadora_nome: z.string().trim().max(120).nullable().optional(),
+  /** 0276: anotação operacional — dá para limpar (null), não para calcular. */
+  rastreamento: z.string().trim().max(120).nullable().optional(),
+  contato_no_cliente: z.string().trim().max(120).nullable().optional(),
   modalidade_frete: z.enum(MODALIDADES_FRETE).optional(),
   previsao_entrega: z
     .string()
@@ -221,6 +228,10 @@ export interface PedidoComercial {
   obs_interna: string | null;
   endereco_entrega: string | null;
   transportadora_nome: string | null;
+  /** 0276: código de rastreio da transportadora. */
+  rastreamento: string | null;
+  /** 0276: quem pediu do lado do comprador. */
+  contato_no_cliente: string | null;
   modalidade_frete: string;
   previsao_entrega: string | null;
   parcelas: Parcela[];
@@ -239,6 +250,7 @@ export const COLUNAS_DO_PEDIDO =
   "id, numero, contact_id, cliente_nome, cliente_documento, created_by, vendedor_user_id, " +
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
   "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
+  "rastreamento, contato_no_cliente, " +
   "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at";
 
 /**

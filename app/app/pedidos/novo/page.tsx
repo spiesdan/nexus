@@ -28,8 +28,13 @@ export default async function NovoPedidoPage() {
   const verMargem = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
-  const [{ data: produtos }, { data: contatos }, { data: tabelas }, { data: policies }] =
-    await Promise.all([
+  const [
+    { data: produtos },
+    { data: contatos },
+    { data: tabelas },
+    { data: policies },
+    { data: organizacao },
+  ] = await Promise.all([
       supabase
         .from("catalog_products")
         .select(COLUNAS_DO_PRODUTO)
@@ -56,6 +61,13 @@ export default async function NovoPedidoPage() {
         .select("comissao_padrao_pct")
         .eq("organization_id", activeOrg.orgId)
         .maybeSingle(),
+      // A "representada" do Mercos: razão social, CNPJ e telefone do emitente.
+      // É o bloco 2 da tela de pedido — e é o que o cliente vê no PDF.
+      supabase
+        .from("organizations")
+        .select("legal_name, cnpj, phone")
+        .eq("id", activeOrg.orgId)
+        .maybeSingle(),
     ]);
 
   return (
@@ -77,6 +89,13 @@ export default async function NovoPedidoPage() {
           ?.comissao_padrao_pct ?? null
       }
       nomeOrganizacao={activeOrg.name ?? ""}
+      representada={{
+        razaoSocial:
+          (organizacao as unknown as { legal_name?: string | null } | null)?.legal_name ?? null,
+        cnpj: (organizacao as unknown as { cnpj?: string | null } | null)?.cnpj ?? null,
+        telefone: (organizacao as unknown as { phone?: string | null } | null)?.phone ?? null,
+      }}
+      nomeVendedor={user.full_name ?? user.email}
       textos={{
         titulo: t("Novo pedido"),
         subtitulo: t("Busque o cliente, adicione os produtos e finalize."),
@@ -92,7 +111,7 @@ export default async function NovoPedidoPage() {
         ),
         exigeNf: t("Nota fiscal"),
         exigeNfOpcao: t("Este pedido é com NF"),
-        observacoes: t("Observações"),
+        observacoes: t("Informações adicionais"),
         obsInterna: t("Observação interna (equipe)"),
         endereco: t("Endereço de entrega"),
         enderecoExemplo: t("Rua, número, bairro, cidade"),

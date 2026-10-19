@@ -21951,3 +21951,32 @@ begin
       check (variacoes is null or jsonb_typeof(variacoes) = 'object');
   end if;
 end $$;
+
+-- ── 0276 · rastreio e contato no cliente ─────────────────────────────────────
+-- Os dois campos do bloco "DETALHES DO PEDIDO" do Mercos que não tínhamos onde
+-- guardar. Idempotente: quem já tem as colunas não vê nada acontecer.
+alter table public.commercial_orders
+  add column if not exists rastreamento text,
+  add column if not exists contato_no_cliente text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'commercial_orders_rastreamento_tamanho'
+  ) then
+    alter table public.commercial_orders
+      add constraint commercial_orders_rastreamento_tamanho
+      check (rastreamento is null or char_length(rastreamento) <= 120);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'commercial_orders_contato_no_cliente_tamanho'
+  ) then
+    alter table public.commercial_orders
+      add constraint commercial_orders_contato_no_cliente_tamanho
+      check (contato_no_cliente is null or char_length(contato_no_cliente) <= 120);
+  end if;
+end $$;

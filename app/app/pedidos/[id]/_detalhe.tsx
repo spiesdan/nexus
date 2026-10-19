@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -249,6 +256,7 @@ export function DetalheDoPedido({
   contato,
   nomeVendedor,
   nomeOrganizacao,
+  representada,
   podeEditar,
   podeExcluir,
 }: {
@@ -257,6 +265,12 @@ export function DetalheDoPedido({
   contato: ContatoDoPedido | null;
   nomeVendedor: string | null;
   nomeOrganizacao: string;
+  /** Razão social, CNPJ e telefone do emitente — o bloco 2 do Mercos. */
+  representada?: {
+    razaoSocial?: string | null;
+    cnpj?: string | null;
+    telefone?: string | null;
+  };
   podeEditar: boolean;
   podeExcluir: boolean;
 }) {
@@ -273,6 +287,11 @@ export function DetalheDoPedido({
   const [condicao, setCondicao] = React.useState(inicial.condicao_pagamento ?? "");
   const [endereco, setEndereco] = React.useState(inicial.endereco_entrega ?? "");
   const [transportadora, setTransportadora] = React.useState(inicial.transportadora_nome ?? "");
+  // 0276 — os dois campos do bloco 4 que não existiam.
+  const [rastreamento, setRastreamento] = React.useState(inicial.rastreamento ?? "");
+  const [contatoNoCliente, setContatoNoCliente] = React.useState(
+    inicial.contato_no_cliente ?? "",
+  );
   const [obs, setObs] = React.useState(inicial.observacoes ?? "");
   const [timeline, setTimeline] = React.useState<{ acao: string; por: string; em: string }[] | null>(null);
   const [trocando, setTrocando] = React.useState(false);
@@ -362,6 +381,8 @@ export function DetalheDoPedido({
         condicao_pagamento: condicao.trim() || null,
         endereco_entrega: endereco.trim() || null,
         transportadora_nome: transportadora.trim() || null,
+        rastreamento: rastreamento.trim() || null,
+        contato_no_cliente: contatoNoCliente.trim() || null,
         observacoes: obs.trim() || null,
       });
       toast.success("Detalhes salvos");
@@ -485,7 +506,7 @@ export function DetalheDoPedido({
             )}
             <Button size="sm" variant="outline" asChild>
               <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
-                {t("Visualizar PDF")}
+                {t("Visualizar")}
               </Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
@@ -513,23 +534,37 @@ export function DetalheDoPedido({
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={copiarLink}>
-              {t("Copiar link do pedido")}
+              {t("Copiar link do pedido no Portal")}
             </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
-                {t("Imprimir pedido")}
-              </Link>
-            </Button>
-            {podeEditar && (
-              <Button size="sm" variant="outline" onClick={() => void duplicar()}>
-                {t("Duplicar")}
-              </Button>
-            )}
-            {podeExcluir && (
-              <Button size="sm" variant="destructive" onClick={() => void excluir()}>
-                {t("Excluir pedido")}
-              </Button>
-            )}
+            {/* O "Mais opções" do Mercos: o que se usa de vez em quando sai da
+                frente das ações do dia a dia (faturar, visualizar, enviar). */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  {t("Mais opções")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
+                    {t("Imprimir pedido")}
+                  </Link>
+                </DropdownMenuItem>
+                {podeEditar && (
+                  <DropdownMenuItem onSelect={() => void duplicar()}>
+                    {t("Duplicar")}
+                  </DropdownMenuItem>
+                )}
+                {podeExcluir && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onSelect={() => void excluir()}>
+                      {t("Excluir pedido")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
@@ -628,8 +663,19 @@ export function DetalheDoPedido({
       {/* ORGANIZAÇÃO (a "representada" do Mercos). */}
       {nomeOrganizacao && (
         <Card className="hover-raise space-y-1 p-4">
-          <TituloDaSecao numero={2}>{t("EMPRESA")}</TituloDaSecao>
-          <p className="font-medium">{nomeOrganizacao}</p>
+          <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
+          <p className="text-sm">
+            <span className="font-medium text-accent">{nomeOrganizacao}</span>
+            {(() => {
+              const linha = [representada?.razaoSocial, representada?.cnpj]
+                .filter((v): v is string => Boolean(v && v.trim()))
+                .join(" - ");
+              return linha ? <span className="text-muted-foreground"> - {linha}</span> : null;
+            })()}
+          </p>
+          {representada?.telefone && (
+            <p className="text-sm text-muted-foreground">{representada.telefone}</p>
+          )}
         </Card>
       )}
 
@@ -643,7 +689,7 @@ export function DetalheDoPedido({
               pronto — que é exatamente a dúvida que ele tem. */}
           {podeEditar && !editandoItens && (
             <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditandoItens(true)}>
-              {t("Editar itens")}
+              {t("Adicionar produto ao pedido")}
             </Button>
           )}
         </div>
@@ -748,6 +794,15 @@ export function DetalheDoPedido({
           <LinhaDetalhe rotulo={t("Cond. de pagamento")} valor={pedido.condicao_pagamento ?? ""} />
           <LinhaDetalhe rotulo={t("End. de entrega")} valor={pedido.endereco_entrega ?? ""} />
           <LinhaDetalhe rotulo={t("Transportadora")} valor={pedido.transportadora_nome ?? ""} />
+          <LinhaDetalhe
+            rotulo={t("Valor do frete")}
+            valor={pedido.frete_cents > 0 ? comoMoeda(pedido.frete_cents, pedido.moeda) : ""}
+          />
+          <LinhaDetalhe rotulo={t("Rastreamento")} valor={pedido.rastreamento ?? ""} />
+          <LinhaDetalhe
+            rotulo={t("Contato no cliente")}
+            valor={pedido.contato_no_cliente ?? ""}
+          />
           <LinhaDetalhe rotulo={t("Origem")} valor={pedido.origem} />
           <LinhaDetalhe
             rotulo={t("Atualizado em")}
@@ -758,7 +813,7 @@ export function DetalheDoPedido({
           <div className="space-y-1 text-sm">
             {pedido.observacoes && (
               <p>
-                <span className="text-muted-foreground">{t("Observações")}: </span>
+                <span className="text-muted-foreground">{t("Informações adicionais")}: </span>
                 {pedido.observacoes}
               </p>
             )}
@@ -776,6 +831,16 @@ export function DetalheDoPedido({
               <Input value={condicao} onChange={(e) => setCondicao(e.target.value)} placeholder={t("Condição de pagamento")} />
               <Input value={transportadora} onChange={(e) => setTransportadora(e.target.value)} placeholder={t("Transportadora")} />
               <Input
+                value={rastreamento}
+                onChange={(e) => setRastreamento(e.target.value)}
+                placeholder={t("Rastreamento")}
+              />
+              <Input
+                value={contatoNoCliente}
+                onChange={(e) => setContatoNoCliente(e.target.value)}
+                placeholder={t("Contato no cliente")}
+              />
+              <Input
                 value={endereco}
                 onChange={(e) => setEndereco(e.target.value)}
                 placeholder={t("Endereço de entrega")}
@@ -791,7 +856,7 @@ export function DetalheDoPedido({
               <Input
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}
-                placeholder={t("Observações")}
+                placeholder={t("Informações adicionais")}
                 className="sm:col-span-2"
               />
               <div className="flex gap-2 sm:col-span-2">

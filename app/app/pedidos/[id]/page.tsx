@@ -53,7 +53,11 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
           .eq("organization_id", activeOrg.orgId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from("organizations").select("display_name").eq("id", activeOrg.orgId).maybeSingle(),
+    supabase
+      .from("organizations")
+      .select("display_name, legal_name, cnpj, phone")
+      .eq("id", activeOrg.orgId)
+      .maybeSingle(),
   ]);
 
   // Nome do vendedor: auth metadata via admin, mesmo molde do dashboard. Sem
@@ -107,6 +111,12 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
       contato={contatoFinal}
       nomeVendedor={nomeVendedor}
       nomeOrganizacao={(org as unknown as { display_name?: string } | null)?.display_name ?? ""}
+      representada={{
+        razaoSocial:
+          (org as unknown as { legal_name?: string | null } | null)?.legal_name ?? null,
+        cnpj: (org as unknown as { cnpj?: string | null } | null)?.cnpj ?? null,
+        telefone: (org as unknown as { phone?: string | null } | null)?.phone ?? null,
+      }}
       podeEditar={user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent}
       podeExcluir={user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager}
     />

@@ -73,6 +73,35 @@ describe("pedidoCreateSchema", () => {
     ).toBe(false);
   });
 
+  // 0276 — os dois campos do bloco "Detalhes do pedido" do Mercos.
+  it("aceita rastreamento e contato no cliente, e os corta no teto", () => {
+    const r = pedidoCreateSchema.safeParse({
+      ...base,
+      rastreamento: "BR123456789BR",
+      contato_no_cliente: "Gilson",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.rastreamento).toBe("BR123456789BR");
+      expect(r.data.contato_no_cliente).toBe("Gilson");
+    }
+    expect(pedidoCreateSchema.safeParse({ ...base, rastreamento: "x".repeat(121) }).success).toBe(
+      false,
+    );
+    expect(
+      pedidoCreateSchema.safeParse({ ...base, contato_no_cliente: "x".repeat(121) }).success,
+    ).toBe(false);
+  });
+
+  it("PATCH aceita limpar os dois campos (null), não só trocá-los", () => {
+    const r = pedidoPatchSchema.safeParse({ rastreamento: null, contato_no_cliente: null });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.rastreamento).toBeNull();
+      expect(r.data.contato_no_cliente).toBeNull();
+    }
+  });
+
   it("PATCH nunca aceita itens nem totais", () => {
     const r = pedidoPatchSchema.safeParse({ status: "aprovado", total_cents: 999 });
     expect(r.success).toBe(true);
