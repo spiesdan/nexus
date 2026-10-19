@@ -21817,3 +21817,48 @@ create policy prospecting_sends_write on public.prospecting_sends
 revoke all on public.prospecting_sends from anon;
 grant select, insert, update, delete on public.prospecting_sends to authenticated;
 grant all on public.prospecting_sends to service_role;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0274_campanha_de_recuperacao — apêndice idempotente
+--
+-- A campanha passa a ter DUAS audiências: prospect (business_prospects, o de
+-- sempre) e contato (contacts — cliente que já comprou e parou). `publico`
+-- escolhe; `contato_ids` é a lista fechada da segunda. O ledger perde a FK para
+-- business_prospects porque agora guarda o id da linha da AUDIÊNCIA (prospect ou
+-- contato); a UNIQUE (campaign_id, prospect_id), que é a trava do tick, fica.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+alter table public.prospecting_campaigns
+  add column if not exists publico text not null default 'prospects';
+
+alter table public.prospecting_campaigns
+  add column if not exists contato_ids uuid[] not null default '{}';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'prospecting_campaigns_publico_check'
+      and conrelid = 'public.prospecting_campaigns'::regclass
+  ) then
+    alter table public.prospecting_campaigns
+      add constraint prospecting_campaigns_publico_check
+      check (publico in ('prospects', 'contatos'));
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'prospecting_campaigns_contatos_check'
+      and conrelid = 'public.prospecting_campaigns'::regclass
+  ) then
+    alter table public.prospecting_campaigns
+      add constraint prospecting_campaigns_contatos_check
+      check (publico <> 'contatos' or cardinality(contato_ids) >= 1);
+  end if;
+end $$;
+
+alter table public.prospecting_sends
+  drop constraint if exists prospecting_sends_prospect_id_fkey;

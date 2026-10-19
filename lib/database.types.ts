@@ -8206,6 +8206,7 @@ export type Database = {
           agendada_em: string | null;
           categorias: string[];
           cidades: NonNullable<Json>;
+          contato_ids: string[];
           created_at: string;
           created_by: string | null;
           data_fim: string | null;
@@ -8220,6 +8221,7 @@ export type Database = {
           objetivo: string | null;
           organization_id: string;
           prospect_ids: string[];
+          publico: string;
           recorrencia_dias: number | null;
           status: string;
           ultima_execucao_at: string | null;
@@ -8230,6 +8232,7 @@ export type Database = {
           agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
+          contato_ids?: string[];
           created_at?: string;
           created_by?: string | null;
           data_fim?: string | null;
@@ -8244,6 +8247,7 @@ export type Database = {
           objetivo?: string | null;
           organization_id: string;
           prospect_ids?: string[];
+          publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;
@@ -8254,6 +8258,7 @@ export type Database = {
           agendada_em?: string | null;
           categorias?: string[];
           cidades?: NonNullable<Json>;
+          contato_ids?: string[];
           created_at?: string;
           created_by?: string | null;
           data_fim?: string | null;
@@ -8268,6 +8273,7 @@ export type Database = {
           objetivo?: string | null;
           organization_id?: string;
           prospect_ids?: string[];
+          publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
           ultima_execucao_at?: string | null;

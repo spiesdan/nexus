@@ -43,6 +43,9 @@ interface CampanhaDescoberta {
   ultima_execucao_at: string | null;
   /** 0271: `busca` (provider ativo) | `base` (já cadastrado) | `ambas`. */
   fonte_publico?: string | null;
+  /** 0274: `prospects` (garimpagem) | `contatos` (recuperação). */
+  publico?: string | null;
+  contato_ids?: string[] | null;
   funil?: FunilDaCampanha | null;
 }
 
@@ -303,6 +306,13 @@ export function CampanhasTab({
           {cards.map((card) => {
             const id = card.campanha.id;
             const funil = card.campanha.funil ?? null;
+            // 0274 — campanha de recuperação: a audiência é `contacts`, não
+            // prospect. O funil de garimpagem (encontrados/contatados) não se
+            // aplica, e mostrar zeros ali seria mentir sobre a campanha.
+            const recuperacao =
+              card.tipo === "descoberta" && card.campanha.publico === "contatos";
+            const contatoIds =
+              card.tipo === "descoberta" ? (card.campanha.contato_ids ?? []) : [];
             const rotaPatch =
               card.tipo === "descoberta"
                 ? `/api/v1/prospecting/campaigns/${id}`
@@ -334,6 +344,17 @@ export function CampanhasTab({
                     <Badge variant="outline" className="h-5 px-2 text-xs font-normal">
                       {rotuloDaCampanha(card.campanha.status, t)}
                     </Badge>
+                    {recuperacao && (
+                      <Badge
+                        variant="outline"
+                        className="h-5 px-2 text-xs font-normal"
+                        title={t(
+                          "Audiência: clientes que já compraram e pararam — recuperação, não prospecção.",
+                        )}
+                      >
+                        {t("Recuperação")} · {contatoIds.length}
+                      </Badge>
+                    )}
                     {card.tipo === "descoberta" &&
                       (card.campanha.fonte_publico === "base" ||
                         card.campanha.fonte_publico === "ambas") && (
@@ -368,11 +389,14 @@ export function CampanhasTab({
                   <ObjetivoInline valor={objetivo} rota={rotaPatch} salvo={atualizarObjetivo} />
 
                   <p className="text-xs text-muted-foreground">
-                    {t("Região")}: {regiao || "—"} · {t("Categorias")}:{" "}
-                    {card.campanha.categorias.join(", ") || "—"}
+                    {recuperacao
+                      ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
+                      : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
+                          card.campanha.categorias.join(", ") || "—"
+                        }`}
                   </p>
 
-                  {funil ? (
+                  {recuperacao ? null : funil ? (
                     <>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                         <Kpi rotulo={t("Quantidade de prospects")} valor={String(funil.encontrados)} />

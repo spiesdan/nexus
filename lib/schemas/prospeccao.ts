@@ -258,6 +258,47 @@ export const campanhaCreateSchema = z.object({
     path: ["data_fim"],
   });
 
+/**
+ * A CAMPANHA DE RECUPERAÇÃO (0274) — a MESMA agenda da prospecção, com outra
+ * audiência.
+ *
+ * A lista não vem de busca nem de importação: vem do radar de recuperação
+ * (`GET /api/v1/comercial/inativos`), que devolve contatos que JÁ compraram e
+ * pararam de comprar. Por isso não há `categorias` nem `cidades` aqui — esse
+ * recorte é da garimpagem, não de quem já é cliente.
+ *
+ * A campanha nasce AGENDADA e ativa: o formulário da tela é a agenda inteira
+ * (janelas, período, mensagens, cota). Quem quiser parar, pausa na lista.
+ */
+export const campanhaDeRecuperacaoSchema = z
+  .object({
+    nome: z.string().trim().min(2).max(120),
+    /** A lista fechada do radar. */
+    contato_ids: z.array(z.string().uuid()).min(1).max(10_000),
+    /** As variações (1..5) da rotação anti-ban — a mesma régua do disparo. */
+    mensagens: z
+      .array(z.string().trim().min(1).max(4000))
+      .min(1)
+      .max(MENSAGENS_POR_DISPARO_MAX),
+    espaco_ms: z.number().int().min(1000).max(60000).optional(),
+    limite_diario: z.number().int().min(1).max(500).optional(),
+    data_inicio: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+      .nullable()
+      .optional(),
+    data_fim: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+      .nullable()
+      .optional(),
+    janelas: z.array(janelaDoDiaSchema).max(10).optional(),
+  })
+  .refine(periodoValido, {
+    message: "A data final não pode ser anterior à inicial.",
+    path: ["data_fim"],
+  });
+
 /** A fonte do público é um botão da tela de campanha, não campo de texto. */
 export type FonteDoPublico = NonNullable<
   z.infer<typeof campanhaCreateSchema>["fonte_publico"]

@@ -32,6 +32,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { normalizaTelefone } from "@/lib/contacts/csv";
 import { logger } from "@/lib/logger";
 import { mensagemDaVez } from "@/lib/prospeccao/disparo";
 import { enviarParaProspect, type ProspectParaEnvio } from "@/lib/prospeccao/envio";
@@ -75,7 +76,10 @@ interface CampanhaAgendada {
   id: string;
   organization_id: string;
   nome: string;
+  /** A audiência: `prospects` (default) ou `contatos` (recuperação, 0274). */
+  publico: string | null;
   prospect_ids: string[] | null;
+  contato_ids: string[] | null;
   mensagens: string[] | null;
   espaco_ms: number;
   limite_diario: number;
@@ -119,8 +123,8 @@ interface EstadoDaOrg {
 }
 
 const COLUNAS =
-  "id, organization_id, nome, prospect_ids, mensagens, espaco_ms, limite_diario, " +
-  "data_inicio, data_fim, janelas, ultimo_envio_at";
+  "id, organization_id, nome, publico, prospect_ids, contato_ids, mensagens, espaco_ms, " +
+  "limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
 
 export async function processarCampanhasAgendadas(
   admin: SupabaseClient,
@@ -161,7 +165,13 @@ export async function processarCampanhasAgendadas(
   for (const campanha of lista) {
     resumo.campanhas++;
     try {
-      const listaFechada = (campanha.prospect_ids ?? []).filter((id) => id.trim() !== "");
+      // A lista fechada vem da coluna da AUDIÊNCIA: prospecção lê
+      // `prospect_ids`, recuperação lê `contato_ids` (0274). Ler a coluna
+      // errada mandaria para a empresa errada — ou não mandaria para ninguém.
+      const publico = campanha.publico === "contatos" ? "contatos" : "prospects";
+      const listaFechada = (
+        (publico === "contatos" ? campanha.contato_ids : campanha.prospect_ids) ?? []
+      ).filter((id) => id.trim() !== "");
       if (listaFechada.length === 0) continue; // nada a mandar — não é "pulo", é campanha vazia
 
       const org = await estadoDaOrg(campanha.organization_id);
@@ -257,9 +267,10 @@ export async function processarCampanhasAgendadas(
         continue;
       }
 
-      // O PRIMEIRO prospect da lista fechada que ainda não recebeu — e que
-      // passa na elegibilidade (sem telefone/opt-out/bloqueado/cliente). Sem a
-      // elegibilidade, o agendamento mandaria para quem o disparo manual recusa.
+      // O PRIMEIRO da lista fechada que ainda não recebeu — e que passa na
+      // elegibilidade (sem telefone/opt-out/bloqueado/cliente, na prospecção;
+      // sem telefone, na recuperação). Sem a elegibilidade, o agendamento
+      // mandaria para quem o disparo manual recusa.
       //
       // Em fatias: os primeiros da lista podem ser todos inelegíveis, e desistir
       // na primeira fatia deixaria a campanha parada com gente elegível logo
@@ -267,10 +278,11 @@ export async function processarCampanhasAgendadas(
       let escolhido: ProspectParaEnvio | null = null;
       const TETO_ELEGIVEL = MAX_PROSPECTS_POR_TICK * 5;
       for (let i = 0; i < restantes.length && i < TETO_ELEGIVEL; i += MAX_PROSPECTS_POR_TICK) {
-        escolhido = await escolherProspect(
+        escolhido = await escolherDaAudiencia(
           admin,
           campanha.organization_id,
           restantes.slice(i, i + MAX_PROSPECTS_POR_TICK),
+          publico,
         );
         if (escolhido) break;
       }
@@ -437,6 +449,61 @@ async function carregarEstadoDaOrg(
     ultimoEnvioMs = Number.isFinite(ms) ? ms : null;
   }
   return { fuso, sessaoId, ultimoEnvioMs, tetoDoNumero, enviadosHojeDoNumero };
+}
+
+/**
+ * A AUDIÊNCIA decide de QUE TABELA sai a próxima mensagem (0274).
+ *
+ * Prospecção continua igual: `business_prospects`, pulando quem já é cliente
+ * (cliente não é alvo de garimpo). Recuperação lê `contacts` — cliente que já
+ * comprou e parou — e a única inelegibilidade é não ter telefone: não há
+ * opt-out nem bloqueio nesta tabela, e cliente é exatamente quem se quer
+ * chamar de volta.
+ *
+ * As duas devolvem o MESMO `ProspectParaEnvio` (id + nome + telefone), que é o
+ * que o envio canônico precisa. O id é o da linha da audiência — é ele que vai
+ * para o ledger.
+ */
+async function escolherDaAudiencia(
+  admin: SupabaseClient,
+  orgId: string,
+  ids: string[],
+  publico: "prospects" | "contatos",
+): Promise<ProspectParaEnvio | null> {
+  return publico === "contatos"
+    ? escolherContato(admin, orgId, ids)
+    : escolherProspect(admin, orgId, ids);
+}
+
+/** O primeiro CONTATO da lista (na ORDEM do array) que ainda pode receber. */
+async function escolherContato(
+  admin: SupabaseClient,
+  orgId: string,
+  ids: string[],
+): Promise<ProspectParaEnvio | null> {
+  if (ids.length === 0) return null;
+  const { data } = await admin
+    .from("contacts")
+    .select("id, name, display_name, phone_number")
+    .eq("organization_id", orgId)
+    .in("id", ids);
+  const porId = new Map(
+    ((data ?? []) as unknown as Array<{
+      id: string;
+      name: string | null;
+      display_name: string | null;
+      phone_number: string | null;
+    }>).map((c) => [c.id, c]),
+  );
+
+  for (const id of ids) {
+    const c = porId.get(id);
+    if (!c) continue; // contato apagado — o tick ignora e segue
+    const fone = c.phone_number ? normalizaTelefone(c.phone_number) : null;
+    if (!fone || !/^\+\d{8,15}$/.test(fone)) continue;
+    return { id, nome: c.display_name ?? c.name ?? "(sem nome)", telefone_normalizado: fone };
+  }
+  return null;
 }
 
 /**

@@ -582,4 +582,83 @@ describe("processarCampanhasAgendadas", () => {
     expect(resumo.enviados).toBe(1);
     expect(enviar).toHaveBeenCalledTimes(1);
   });
+
+  it("(q) campanha de recuperação fala com o CONTATO — nunca com a coluna de prospect", async () => {
+    // `prospect_ids` fica preenchido DE PROPÓSITO: se o tick lesse a coluna
+    // errada, mandaria para a empresa errada e o teste não veria.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({ publico: "contatos", contato_ids: ["c-001"], prospect_ids: ["p-001"] }),
+      ],
+      contacts: [
+        {
+          id: "c-001",
+          organization_id: "org-1",
+          name: "Mercado ME",
+          display_name: "Mercado do Zé",
+          phone_number: "(49) 99999-8888",
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    const p = enviar.mock.calls[0]![1];
+    expect(p.prospect.id).toBe("c-001");
+    expect(p.prospect.nome).toBe("Mercado do Zé");
+    // O telefone passa pela regra da casa: 11 dígitos sem DDI ganham +55.
+    expect(p.prospect.telefone_normalizado).toBe("+5549999998888");
+    expect(dados.prospecting_sends![0]).toMatchObject({
+      campaign_id: "camp-1",
+      prospect_id: "c-001",
+    });
+  });
+
+  it("(r) contato sem telefone é pulado e o próximo da lista recebe", async () => {
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({ publico: "contatos", contato_ids: ["c-001", "c-002"], prospect_ids: [] }),
+      ],
+      contacts: [
+        {
+          id: "c-001",
+          organization_id: "org-1",
+          name: "Sem fone",
+          display_name: null,
+          phone_number: null,
+        },
+        {
+          id: "c-002",
+          organization_id: "org-1",
+          name: "Com fone",
+          display_name: null,
+          phone_number: "+5549888887777",
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    expect(enviar.mock.calls[0]![1].prospect.id).toBe("c-002");
+    // `name` vale quando não há `display_name`.
+    expect(enviar.mock.calls[0]![1].prospect.nome).toBe("Com fone");
+  });
+
+  it("(s) recuperação sem contatos não cai para prospect_ids", async () => {
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({ publico: "contatos", contato_ids: [], prospect_ids: ["p-001"] }),
+      ],
+      contacts: [],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    // Campanha sem lista não é "pulo": é campanha vazia, e ela não aparece
+    // como falha no resumo do tick.
+    expect(resumo.pulados).toEqual([]);
+  });
 });

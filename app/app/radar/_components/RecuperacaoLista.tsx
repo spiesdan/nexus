@@ -21,6 +21,8 @@ import {
 } from "@/lib/comercial/inatividade";
 import { comoMoeda } from "@/lib/format/moeda";
 
+import { CampanhaDeRecuperacao } from "./CampanhaDeRecuperacao";
+
 const FAIXA_VARIANT: Record<FaixaDeInatividade, "info" | "warning" | "error"> = {
   atencao: "info",
   morno: "warning",
@@ -77,6 +79,7 @@ export function RecuperacaoLista({ temBase }: { temBase: boolean }) {
           />
         </div>
         <Button onClick={() => void buscar(dias)}>{t("Aplicar")}</Button>
+        {lista !== null && lista.length > 0 && <CampanhaDeRecuperacao contatos={lista} />}
       </div>
 
       {falhou && lista === null ? (
