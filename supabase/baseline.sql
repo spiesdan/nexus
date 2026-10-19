@@ -21862,3 +21862,92 @@ end $$;
 
 alter table public.prospecting_sends
   drop constraint if exists prospecting_sends_prospect_id_fkey;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0275_ficha_do_produto — apêndice idempotente
+--
+-- A ficha do produto copia os campos que o Mercos oferece: IPI, observações,
+-- venda em múltiplos de N, peso e dimensões da unidade E da caixa master, e as
+-- variações (cores/tamanhos) em jsonb. `comissao_pct` já existia desde a 0272 —
+-- o que faltava era a tela, não a coluna.
+--
+-- numeric, e não integer: peso de 0,480 kg arredondado para inteiro vira 0 e o
+-- frete sai de graça. Os CHECKs são a defesa contra a planilha que manda "700"
+-- onde se queria "7,00" — o campo é %, e 700 não é uma porcentagem.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+alter table public.catalog_products
+  add column if not exists ipi_pct numeric(5, 2);
+
+alter table public.catalog_products
+  add column if not exists multiplo integer not null default 1;
+
+alter table public.catalog_products
+  add column if not exists observacoes text;
+
+alter table public.catalog_products
+  add column if not exists peso_bruto_kg numeric(10, 3),
+  add column if not exists largura_cm numeric(8, 2),
+  add column if not exists altura_cm numeric(8, 2),
+  add column if not exists comprimento_cm numeric(8, 2);
+
+alter table public.catalog_products
+  add column if not exists caixa_peso_bruto_kg numeric(10, 3),
+  add column if not exists caixa_largura_cm numeric(8, 2),
+  add column if not exists caixa_altura_cm numeric(8, 2),
+  add column if not exists caixa_comprimento_cm numeric(8, 2);
+
+alter table public.catalog_products
+  add column if not exists variacoes jsonb;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'catalog_products_ipi_faixa'
+  ) then
+    alter table public.catalog_products
+      add constraint catalog_products_ipi_faixa
+      check (ipi_pct is null or (ipi_pct >= 0 and ipi_pct <= 100));
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'catalog_products_multiplo_valido'
+  ) then
+    alter table public.catalog_products
+      add constraint catalog_products_multiplo_valido check (multiplo >= 1);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'catalog_products_dimensoes_nao_negativas'
+  ) then
+    alter table public.catalog_products
+      add constraint catalog_products_dimensoes_nao_negativas
+      check (
+        (peso_bruto_kg is null or peso_bruto_kg >= 0)
+        and (largura_cm is null or largura_cm >= 0)
+        and (altura_cm is null or altura_cm >= 0)
+        and (comprimento_cm is null or comprimento_cm >= 0)
+        and (caixa_peso_bruto_kg is null or caixa_peso_bruto_kg >= 0)
+        and (caixa_largura_cm is null or caixa_largura_cm >= 0)
+        and (caixa_altura_cm is null or caixa_altura_cm >= 0)
+        and (caixa_comprimento_cm is null or caixa_comprimento_cm >= 0)
+      );
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'catalog_products_variacoes_forma'
+  ) then
+    alter table public.catalog_products
+      add constraint catalog_products_variacoes_forma
+      check (variacoes is null or jsonb_typeof(variacoes) = 'object');
+  end if;
+end $$;

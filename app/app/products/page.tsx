@@ -38,13 +38,31 @@ export const dynamic = "force-dynamic";
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string; pagina?: string; sem_foto?: string }>;
+  searchParams: Promise<{
+    busca?: string;
+    pagina?: string;
+    sem_foto?: string;
+    categoria?: string;
+    status?: string;
+    promo?: string;
+    destaque?: string;
+    config?: string;
+  }>;
 }) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
-  const { busca, pagina: paginaBruta, sem_foto: semFotoBruto } = await searchParams;
+  const {
+    busca,
+    pagina: paginaBruta,
+    sem_foto: semFotoBruto,
+    categoria: categoriaBruta,
+    status: statusBruto,
+    promo: promoBruto,
+    destaque: destaqueBruto,
+    config: configBruto,
+  } = await searchParams;
 
   const podeEditar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
@@ -67,6 +85,17 @@ export default async function ProdutosPage({
   // GET /api/v1/products — nome, código ou marca como substring.
   const termo = sanitizarBuscaParaIlike(busca ?? "");
   const semFoto = semFotoBruto === "1";
+  // A barra de filtros do Mercos, do lado do SERVIDOR: com 50 por página, filtro
+  // local responderia sobre a fatia, não sobre o catálogo (o mesmo defeito que a
+  // busca tinha). A situação default é `todos` — nunca sumir com produto
+  // desativado sem a pessoa ter pedido.
+  const categoria = (categoriaBruta ?? "").trim();
+  const status: "todos" | "ativos" | "inativos" =
+    statusBruto === "ativos" || statusBruto === "inativos" ? statusBruto : "todos";
+  const promo = promoBruto === "1";
+  const destaque = destaqueBruto === "1";
+  const config: "categorias" | "tabelas" | null =
+    configBruto === "tabelas" ? "tabelas" : configBruto === "categorias" ? "categorias" : null;
 
   function consultaDeIds() {
     let consulta = supabase
@@ -80,6 +109,10 @@ export default async function ProdutosPage({
         `nome.ilike.%${termo}%,codigo.ilike.%${termo}%,marca.ilike.%${termo}%`,
       );
     }
+    if (categoria !== "") consulta = consulta.eq("categoria", categoria);
+    if (status !== "todos") consulta = consulta.eq("ativo", status === "ativos");
+    if (promo) consulta = consulta.not("preco_promocional_cents", "is", null);
+    if (destaque) consulta = consulta.eq("destaque", true);
     return consulta;
   }
 
@@ -152,6 +185,11 @@ export default async function ProdutosPage({
       podeEditar={podeEditar}
       buscaInicial={busca ?? ""}
       semFoto={semFoto}
+      categoriaInicial={categoria}
+      statusInicial={status}
+      promoInicial={promo}
+      destaqueInicial={destaque}
+      configInicial={config}
       total={total}
       pagina={pagina}
       porPagina={POR_PAGINA_DO_CATALOGO}

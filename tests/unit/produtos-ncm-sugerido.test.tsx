@@ -31,6 +31,10 @@ vi.mock("@/lib/api/client", () => ({
   apiClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 vi.mock("@/app/app/products/_fotos", () => ({ FotosDoProduto: () => null }));
+// A confirmação de exclusão mora num provider de layout; este teste não é sobre ela.
+vi.mock("@/components/nexus-ui/forms/ConfirmacaoProvider", () => ({
+  useConfirmar: () => async () => true,
+}));
 
 import { apiClient } from "@/lib/api/client";
 import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
@@ -75,6 +79,20 @@ function produto(over: Partial<Produto> = {}): Produto {
     destaque: false,
     preco_promocional_cents: null,
     promocao_ate: null,
+    // 0275 — a ficha do Mercos (a coluna nova da ficha do produto).
+    ipi_pct: null,
+    comissao_pct: null,
+    multiplo: 1,
+    observacoes: null,
+    peso_bruto_kg: null,
+    largura_cm: null,
+    altura_cm: null,
+    comprimento_cm: null,
+    caixa_peso_bruto_kg: null,
+    caixa_largura_cm: null,
+    caixa_altura_cm: null,
+    caixa_comprimento_cm: null,
+    variacoes: null,
     updated_at: "2026-10-04T12:00:00Z",
     ...over,
   };

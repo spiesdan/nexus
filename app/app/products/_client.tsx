@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
@@ -13,21 +14,41 @@ import {
   FilterSearch,
 } from "@/components/filters/FilterBar";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
+import { Eye, EyeOff, Plus, Star } from "lucide-react";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { apiClient } from "@/lib/api/client";
 import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
 import { janelaDePaginas, totalDePaginas, urlDoCatalogo } from "@/lib/catalogo/paginacao";
 import { comoMoeda } from "@/lib/format/moeda";
+import type { Categoria, TabelaDePreco } from "@/lib/schemas/precos";
 import {
+  numeroDecimal,
+  numeroParaTexto,
+  pctParaNumero,
   precoDeVitrine,
   precoParaCentavos,
   type OrigemDoNcm,
   type Produto,
 } from "@/lib/schemas/produtos";
 
+import {
+  FichaDoProduto,
+  RASCUNHO_VAZIO,
+  listaDeTexto,
+  textoDeLista,
+  type Rascunho,
+} from "./_ficha";
 import { FotosDoProduto, type Foto } from "./_fotos";
 
 /**
@@ -60,39 +81,8 @@ interface ResumoDaImportacao {
   colunas_ignoradas: string[];
 }
 
-interface Rascunho {
-  codigo: string;
-  nome: string;
-  marca: string;
-  categoria: string;
-  preco: string;
-  custo: string;
-  quantidade: string;
-  controla_estoque: boolean;
-  ncm: string;
-  unidade: string;
-  destaque: boolean;
-  emPromocao: boolean;
-  precoPromocional: string;
-  promocaoAte: string;
-}
-
-const VAZIO: Rascunho = {
-  codigo: "",
-  nome: "",
-  marca: "",
-  categoria: "",
-  preco: "",
-  custo: "",
-  quantidade: "0",
-  controla_estoque: true,
-  ncm: "",
-  unidade: "",
-  destaque: false,
-  emPromocao: false,
-  precoPromocional: "",
-  promocaoAte: "",
-};
+/** O formulário e o formulário vazio vivem em `_ficha.tsx` — um só, para os dois lados. */
+const VAZIO: Rascunho = RASCUNHO_VAZIO;
 
 /**
  * O NCM que a busca devolveu, ou `null`.
@@ -126,6 +116,56 @@ function doRascunho(
   const ncm = r.ncm.replace(/\D/g, "");
   if (ncm !== "" && !/^\d{8}$/.test(ncm)) return { erro: t("NCM tem 8 dígitos (só números).") };
 
+  // 0275 — percentuais e dimensões. Vazio é `null` (não informado), e não 0:
+  // "isento de IPI" e "ninguém preencheu" são coisas diferentes na nota.
+  // Texto que não é número é ERRO, não null silencioso — a pessoa digitou algo.
+  const percentual = (texto: string, rotulo: string): number | null => {
+    const limpo = texto.trim();
+    if (limpo === "") return null;
+    const n = pctParaNumero(limpo);
+    if (n === null || n < 0 || n > 100) {
+      throw new Error(t(`${rotulo} inválido: use um número de 0 a 100.`));
+    }
+    return n;
+  };
+
+  const pesos: Record<string, number | null> = {};
+  let ipi_pct: number | null = null;
+  let comissao_pct: number | null = null;
+  try {
+    ipi_pct = percentual(r.ipi, t("IPI"));
+    comissao_pct = percentual(r.comissao, t("Comissão"));
+    const dimensoes: Array<[string, string, string]> = [
+      ["peso_bruto_kg", r.pesoBruto, t("Peso bruto")],
+      ["largura_cm", r.largura, t("Largura")],
+      ["altura_cm", r.altura, t("Altura")],
+      ["comprimento_cm", r.comprimento, t("Comprimento")],
+      ["caixa_peso_bruto_kg", r.caixaPeso, t("Peso da caixa")],
+      ["caixa_largura_cm", r.caixaLargura, t("Largura da caixa")],
+      ["caixa_altura_cm", r.caixaAltura, t("Altura da caixa")],
+      ["caixa_comprimento_cm", r.caixaComprimento, t("Comprimento da caixa")],
+    ];
+    for (const [campo, texto, rotulo] of dimensoes) {
+      if (texto.trim() === "") {
+        pesos[campo] = null;
+        continue;
+      }
+      const n = numeroDecimal(texto);
+      if (n === null || n < 0) throw new Error(t(`${rotulo} inválido.`));
+      pesos[campo] = n;
+    }
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : t("Número inválido.") };
+  }
+
+  // Cores e tamanhos: lista curta e aberta. Sem nada, `null` (produto simples).
+  const cores = listaDeTexto(r.cores);
+  const tamanhos = listaDeTexto(r.tamanhos);
+  const variacoes = cores.length > 0 || tamanhos.length > 0 ? { cores, tamanhos } : null;
+
+  const multiplo = Math.trunc(Number(r.multiplo) || 1);
+  if (multiplo < 1) return { erro: t("Venda em múltiplos de: mínimo 1.") };
+
   let promo: Record<string, unknown> = {};
   if (r.emPromocao) {
     const promoCents = precoParaCentavos(r.precoPromocional);
@@ -146,6 +186,7 @@ function doRascunho(
     nome: r.nome.trim(),
     ...(r.marca.trim() ? { marca: r.marca.trim() } : {}),
     ...(r.categoria.trim() ? { categoria: r.categoria.trim() } : {}),
+    moeda: r.moeda || "BRL",
     preco_cents,
     custo_cents,
     controla_estoque: r.controla_estoque,
@@ -156,7 +197,107 @@ function doRascunho(
     // origem a dizer — a coluna fica NULL, como numa linha anterior à 0256.
     ...(ncm !== "" ? { ncm, ncm_origem: origemDoNcm } : {}),
     ...(r.unidade.trim() ? { unidade: r.unidade.trim().toUpperCase().slice(0, 10) } : {}),
+    ipi_pct,
+    comissao_pct,
+    multiplo,
+    observacoes: r.observacoes.trim() === "" ? null : r.observacoes.trim(),
+    ...pesos,
+    variacoes,
   };
+}
+
+
+/** "70,00 %" — ou "---", como o Mercos mostra quando não há valor. */
+function comoPorcentagem(n: number | null): string {
+  if (n == null) return "---";
+  return `${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+}
+
+/**
+ * O "+" da coluna "Preço de Tabela" (no Mercos: "Adicionar preço").
+ *
+ * ⚠️ A rota de itens é PUT que TROCA o conjunto inteiro. Mandar só o produto
+ * novo apagaria todos os outros da tabela — por isso lemos a tabela antes e
+ * reenviamos a lista completa. É a diferença entre "adicionar" e "substituir
+ * tudo por um item".
+ */
+function AdicionarATabela({
+  produto,
+  tabelas,
+}: {
+  produto: Produto;
+  tabelas: TabelaDePreco[];
+}) {
+  const t = useT();
+  const [aberto, setAberto] = React.useState(false);
+  const [salvando, setSalvando] = React.useState<string | null>(null);
+
+  async function adicionar(tabela: TabelaDePreco) {
+    setSalvando(tabela.id);
+    try {
+      const atual = await apiClient.get<{
+        data: { itens?: Array<{ product_id: string; preco_cents: number | null }> };
+      }>(`/api/v1/price-tables/${tabela.id}`);
+      const itens = atual?.data?.itens ?? [];
+      if (itens.some((i) => i.product_id === produto.id)) {
+        toast.success(t(`Já está em ${tabela.nome}`));
+        setAberto(false);
+        return;
+      }
+      await apiClient.put(`/api/v1/price-tables/${tabela.id}/items`, {
+        itens: [
+          ...itens.map((i) => ({ product_id: i.product_id, preco_cents: i.preco_cents })),
+          // `null` = usa o desconto padrão da tabela (ver `lib/schemas/precos.ts`).
+          { product_id: produto.id, preco_cents: null },
+        ],
+      });
+      toast.success(t(`Adicionado em ${tabela.nome}`));
+      setAberto(false);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setSalvando(null);
+    }
+  }
+
+  if (tabelas.length === 0) {
+    return (
+      <span className="text-xs text-muted-foreground" title={t("Nenhuma tabela de preço cadastrada")}>
+        +
+      </span>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        aria-label={t("Adicionar a uma tabela de preço")}
+        aria-expanded={aberto}
+        data-testid={`add-tabela-${produto.codigo}`}
+        onClick={() => setAberto((v) => !v)}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-md border text-muted-foreground hover:text-foreground"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+      {aberto ? (
+        <div className="absolute right-0 z-20 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-md">
+          <p className="px-2 py-1 text-xs text-muted-foreground">{t("Adicionar em")}</p>
+          {tabelas.map((tabela) => (
+            <button
+              key={tabela.id}
+              type="button"
+              disabled={salvando !== null}
+              onClick={() => void adicionar(tabela)}
+              className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted disabled:opacity-50"
+            >
+              {salvando === tabela.id ? t("Salvando…") : tabela.nome}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function ProdutosClient({
@@ -177,9 +318,15 @@ export function ProdutosClient({
    */
   buscaInicial,
   semFotoInicial,
+  categoriaInicial,
+  statusInicial,
+  promoInicial,
+  destaqueInicial,
   total,
   pagina,
   porPagina,
+  categorias = [],
+  tabelas = [],
 }: {
   inicial: Produto[];
   /**
@@ -193,6 +340,14 @@ export function ProdutosClient({
   buscaInicial?: string;
   /** Aba ativa vinda da URL (`?sem_foto=1`): filtra no SERVIDOR, não na página. */
   semFotoInicial?: boolean;
+  /** Categoria escolhida na barra (`?categoria=`), do SERVIDOR. */
+  categoriaInicial?: string;
+  /** Situação (`?status=ativos|inativos`), do SERVIDOR. Default: todos. */
+  statusInicial?: "todos" | "ativos" | "inativos";
+  /** Aba Promoções (`?promo=1`), do SERVIDOR. */
+  promoInicial?: boolean;
+  /** Aba Destaques (`?destaque=1`), do SERVIDOR. */
+  destaqueInicial?: boolean;
   /**
    * Total EXATO do servidor (tamanho da lista de ids, com busca e aba
    * aplicados). Nunca amostra — é o que permite afirmar "não há" com a
@@ -203,10 +358,31 @@ export function ProdutosClient({
   pagina: number;
   /** Itens por página — 50, para o navegador não receber o catálogo inteiro. */
   porPagina: number;
+  /** As categorias da loja — a coluna "Categoria" da ficha é uma lista, não texto. */
+  categorias?: Categoria[];
+  /** As tabelas de preço — o "+" da linha adiciona o produto a uma delas. */
+  tabelas?: TabelaDePreco[];
 }) {
   const t = useT();
   const router = useRouter();
+  const confirmar = useConfirmar();
   const [busca, setBusca] = React.useState(buscaInicial ?? "");
+
+  /** Os filtros que vivem na URL, num lugar só: toda navegação os preserva. */
+  const filtrosDaUrl = {
+    busca: buscaInicial,
+    categoria: categoriaInicial,
+    status: statusInicial,
+  };
+
+  /** Qual das quatro abas está acesa — a URL é a única fonte. */
+  const aba: "todos" | "promocoes" | "destaques" | "sem_fotos" = semFotoInicial
+    ? "sem_fotos"
+    : promoInicial
+      ? "promocoes"
+      : destaqueInicial
+        ? "destaques"
+        : "todos";
 
   // A busca da TELA vira busca do SERVIDOR (?busca=): a página entrega 50 por
   // vez e o filtro local nunca alcançaria o resto do catálogo (medido: "saco
@@ -216,7 +392,7 @@ export function ProdutosClient({
   const levarBuscaAoServidor = useDebouncedCallback((termo: string) => {
     const atual = termo.trim();
     if (atual === (buscaInicial ?? "").trim()) return;
-    router.replace(urlDoCatalogo({ busca: atual, semFoto: semFotoInicial, pagina: 1 }));
+    router.replace(urlDoCatalogo({ ...filtrosDaUrl, busca: atual, pagina: 1 }));
   }, 400);
 
   function aoMudarBusca(valor: string) {
@@ -226,35 +402,60 @@ export function ProdutosClient({
 
   // Troca de página preserva o termo JÁ confirmado na URL (buscaInicial), não
   // o que está meio digitado no campo — senão um clique no meio da digitação
-  // congela o rascunho como busca. E preserva a aba.
+  // congela o rascunho como busca. E preserva os filtros todos.
   function irParaPagina(p: number) {
-    router.replace(
-      urlDoCatalogo({ busca: buscaInicial, semFoto: semFotoInicial, pagina: p }),
-    );
+    router.replace(urlDoCatalogo({ ...filtrosDaUrl, pagina: p }));
   }
 
-  // A aba "Sem fotos" é navegação (?sem_foto=1), não estado: o filtro roda no
-  // SERVIDOR, junto da busca. As outras abas continuam filtro local da página.
+  /**
+   * As QUATRO abas do Mercos são navegação, não estado local.
+   *
+   * Antes, "Promoções" e "Destaques" filtravam a fatia de 50 já baixada — a
+   * mesma mentira que a busca contava antes de virar servidor: dizia "nenhuma
+   * promoção" com o catálogo cheio delas. Agora cada aba escreve o filtro na
+   * URL, e quem filtra é o banco.
+   */
   function aoMudarAba(valor: string) {
+    const comum = {
+      busca: buscaInicial,
+      categoria: categoriaInicial,
+      status: statusInicial,
+    };
     if (valor === "sem_fotos") {
-      router.replace(
-        urlDoCatalogo({ busca: buscaInicial, semFoto: true, pagina: 1 }),
-      );
+      router.replace(urlDoCatalogo({ ...comum, semFoto: true, pagina: 1 }));
       return;
     }
-    if (semFotoInicial) {
-      router.replace(urlDoCatalogo({ busca: buscaInicial, pagina: 1 }));
+    if (valor === "promocoes") {
+      router.replace(urlDoCatalogo({ ...comum, promo: true, pagina: 1 }));
+      return;
     }
-    setAba(valor as typeof aba);
+    if (valor === "destaques") {
+      router.replace(urlDoCatalogo({ ...comum, destaque: true, pagina: 1 }));
+      return;
+    }
+    router.replace(urlDoCatalogo({ ...comum, pagina: 1 }));
   }
 
-  const [aba, setAba] = React.useState<"todos" | "promocoes" | "destaques">("todos");
+  /** Troca de categoria/situação: mesmo caminho, do servidor. */
+  function aoMudarFiltro(campo: "categoria" | "status", valor: string) {
+    router.replace(
+      urlDoCatalogo({
+        busca: buscaInicial,
+        categoria: campo === "categoria" ? valor : categoriaInicial,
+        status: campo === "status" ? (valor as "todos" | "ativos" | "inativos") : statusInicial,
+        promo: promoInicial,
+        destaque: destaqueInicial,
+        pagina: 1,
+      }),
+    );
+  }
   const [criando, setCriando] = React.useState(false);
   const [rascunho, setRascunho] = React.useState<Rascunho>(VAZIO);
   const [salvando, setSalvando] = React.useState(false);
   const [editando, setEditando] = React.useState<Produto | null>(null);
   const [rascunhoEdicao, setRascunhoEdicao] = React.useState<Rascunho>(VAZIO);
   const [salvandoEdicao, setSalvandoEdicao] = React.useState(false);
+  const [excluindo, setExcluindo] = React.useState(false);
   const [importando, setImportando] = React.useState(false);
   const [resumo, setResumo] = React.useState<ResumoDaImportacao | null>(null);
   const [completandoNcm, setCompletandoNcm] = React.useState(false);
@@ -396,16 +597,18 @@ export function ProdutosClient({
   }
 
   const hoje = new Date().toISOString().slice(0, 10);
+  // O filtro de verdade — busca, categoria, situação, promoção, destaque — roda
+  // no SERVIDOR (page.tsx). Aqui resta o eco do campo de busca enquanto o
+  // debounce não dispara: a lista responde na hora ao que está sendo digitado,
+  // sem afirmar ausência (quem responde "não existe" é o servidor, quando o
+  // termo chega lá).
   const filtrados = React.useMemo(() => {
     const q = busca.trim().toLowerCase();
-    let lista = inicial;
-    if (aba === "promocoes") lista = lista.filter((p) => precoDeVitrine(p, hoje).emPromocao);
-    if (aba === "destaques") lista = lista.filter((p) => p.destaque);
-    if (q === "") return lista;
-    return lista.filter((p) =>
+    if (q === "") return inicial;
+    return inicial.filter((p) =>
       [p.nome, p.codigo, p.marca ?? "", p.categoria ?? ""].join(" ").toLowerCase().includes(q),
     );
-  }, [inicial, busca, aba, hoje]);
+  }, [inicial, busca]);
 
   // As fotos JÁ CHEGAM no HTML inicial, montadas pelo servidor
   // (`fotosDosProdutos`, em `page.tsx`). Aqui não há mais nenhuma requisição.
@@ -431,7 +634,7 @@ export function ProdutosClient({
     }
   }, []);
 
-  async function salvar() {
+  async function salvar(opcoes?: { eCadastrarOutro?: boolean }) {
     const corpo = doRascunho(rascunho, t, origemNcmCriar);
     if ("erro" in corpo) {
       toast.error(corpo.erro as string);
@@ -441,10 +644,23 @@ export function ProdutosClient({
     try {
       await apiClient.post("/api/v1/products", corpo);
       toast.success(t("Produto cadastrado"));
-      setRascunho(VAZIO);
-      setSugestaoCriar(null);
-      setOrigemNcmCriar(null);
-      setCriando(false);
+      if (opcoes?.eCadastrarOutro) {
+        // "Salvar e cadastrar outro" (Mercos): limpa a ficha e mantém o que
+        // costuma se repetir no próximo item — unidade, categoria e marca.
+        setRascunho({
+          ...VAZIO,
+          unidade: rascunho.unidade,
+          categoria: rascunho.categoria,
+          marca: rascunho.marca,
+        });
+        setSugestaoCriar(null);
+        setOrigemNcmCriar(null);
+      } else {
+        setRascunho(VAZIO);
+        setSugestaoCriar(null);
+        setOrigemNcmCriar(null);
+        setCriando(false);
+      }
       router.refresh();
     } catch (e) {
       showApiError(e);
@@ -462,6 +678,7 @@ export function ProdutosClient({
       nome: p.nome,
       marca: p.marca ?? "",
       categoria: p.categoria ?? "",
+      moeda: p.moeda || "BRL",
       preco: (p.preco_cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
       custo:
         p.custo_cents == null
@@ -471,6 +688,20 @@ export function ProdutosClient({
       controla_estoque: p.controla_estoque,
       ncm: p.ncm ?? "",
       unidade: p.unidade ?? "",
+      multiplo: String(p.multiplo ?? 1),
+      ipi: numeroParaTexto(p.ipi_pct),
+      comissao: numeroParaTexto(p.comissao_pct),
+      observacoes: p.observacoes ?? "",
+      pesoBruto: numeroParaTexto(p.peso_bruto_kg),
+      largura: numeroParaTexto(p.largura_cm),
+      altura: numeroParaTexto(p.altura_cm),
+      comprimento: numeroParaTexto(p.comprimento_cm),
+      caixaPeso: numeroParaTexto(p.caixa_peso_bruto_kg),
+      caixaLargura: numeroParaTexto(p.caixa_largura_cm),
+      caixaAltura: numeroParaTexto(p.caixa_altura_cm),
+      caixaComprimento: numeroParaTexto(p.caixa_comprimento_cm),
+      cores: textoDeLista(p.variacoes?.cores),
+      tamanhos: textoDeLista(p.variacoes?.tamanhos),
       destaque: p.destaque,
       emPromocao: promoAtiva,
       precoPromocional:
@@ -506,6 +737,37 @@ export function ProdutosClient({
       showApiError(e);
     } finally {
       setSalvandoEdicao(false);
+    }
+  }
+
+  /**
+   * Excluir produto (o Mercos oferece dentro da ficha, não na lista).
+   *
+   * A confirmação é a `useConfirmar` do design system — o produto não abre mais
+   * caixa do navegador. Exclusão de catálogo é irreversível pela tela e o item
+   * pode estar em pedido: se a FK barrar, o erro da rota é mostrado e nada é
+   * apagado.
+   */
+  async function excluirProduto() {
+    if (!editando) return;
+    const confirmou = await confirmar({
+      title: t("Excluir este produto?"),
+      description: t(`${editando.nome} sai do catálogo. Isso não pode ser desfeito.`),
+      confirmLabel: t("Excluir produto"),
+      cancelLabel: t("Cancelar"),
+      danger: true,
+    });
+    if (!confirmou) return;
+    setExcluindo(true);
+    try {
+      await apiClient.delete(`/api/v1/products/${editando.id}`);
+      toast.success(t("Produto excluído"));
+      setEditando(null);
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -579,37 +841,94 @@ export function ProdutosClient({
             label={t("Buscar")}
             value={busca}
             onChange={aoMudarBusca}
-            placeholder={t("Buscar por nome, código ou marca")}
+            placeholder={t("Pesquise por código ou nome")}
             dataTestId="busca-produto"
           />
+          {/* As duas listas do Mercos. Nativas de propósito: o valor vai para a
+              URL e o `select` nativo já é navegável por teclado sem portal. */}
+          <label className="text-sm" htmlFor="filtro-categoria">
+            <span className="sr-only">{t("Categoria")}</span>
+            <select
+              id="filtro-categoria"
+              data-testid="filtro-categoria"
+              value={categoriaInicial ?? ""}
+              onChange={(e) => aoMudarFiltro("categoria", e.target.value)}
+              className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
+            >
+              <option value="">{t("Todas as categorias")}</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.nome}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm" htmlFor="filtro-status">
+            <span className="sr-only">{t("Situação")}</span>
+            <select
+              id="filtro-status"
+              data-testid="filtro-status"
+              value={statusInicial ?? "todos"}
+              onChange={(e) => aoMudarFiltro("status", e.target.value)}
+              className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
+            >
+              <option value="todos">{t("Todos os produtos")}</option>
+              <option value="ativos">{t("Exibir produtos ativos")}</option>
+              <option value="inativos">{t("Exibir produtos inativos")}</option>
+            </select>
+          </label>
         </FilterPrimary>
         {podeEditar ? (
-          // Vivia no cabeçalho, que o catálogo em abas esconde
-          // (esconderCabecalho) — o botão de novo produto sumia em
+          // A ordem é a do Mercos: Cadastrar produto · Importar produtos ·
+          // Mais opções. O que é NOSSO e lá não existe (sugestão de NCM em
+          // lote e planilha modelo) vive dentro de "Mais opções" — nada some,
+          // só deixa de competir com a ação principal.
+          //
+          // Este bloco vivia no cabeçalho, que o catálogo em abas esconde
+          // (esconderCabecalho): o botão de novo produto sumia em
           // /app/products inteiro. Aqui o FilterBar é renderizado sempre.
           <FilterActions>
+            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
+              {t(criando ? "Cancelar" : "Cadastrar produto")}
+            </Button>
             <Button
               variant="outline"
               disabled={importando}
               onClick={() => arquivoRef.current?.click()}
               data-testid="importar-planilha"
             >
-              {t(importando ? "Importando…" : "Importar planilha")}
+              {t(importando ? "Importando…" : "Importar produtos")}
             </Button>
-            <Button
-              variant="outline"
-              disabled={completandoNcm}
-              onClick={() => void completarNcm()}
-              data-testid="completar-ncm"
-              title={t(
-                "Preenche o NCM dos produtos sem código: casamento certo pela regra e, na dúvida, a IA desempata. O resto volta para revisar",
-              )}
-            >
-              {t(completandoNcm ? "Completando…" : "Completar NCM")}
-            </Button>
-            <Button onClick={() => setCriando((v) => !v)} data-testid="novo-produto">
-              {t(criando ? "Cancelar" : "Novo produto")}
-            </Button>
+            <details className="relative">
+              <summary className="inline-flex h-9 cursor-pointer list-none items-center rounded-lg border border-input px-3 text-sm [&::-webkit-details-marker]:hidden">
+                {t("Mais opções")}
+              </summary>
+              <div className="absolute right-0 z-20 mt-1 w-64 rounded-lg border bg-popover p-1 shadow-md">
+                <button
+                  type="button"
+                  disabled={completandoNcm}
+                  onClick={() => void completarNcm()}
+                  data-testid="completar-ncm"
+                  title={t(
+                    "Preenche o NCM dos produtos sem código: casamento certo pela regra e, na dúvida, a IA desempata. O resto volta para revisar",
+                  )}
+                  className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted disabled:opacity-50"
+                >
+                  {t(completandoNcm ? "Completando…" : "Completar NCM")}
+                </button>
+                {/* Rota de API que devolve o arquivo com `content-disposition:
+                    attachment` — é download, não navegação de página, e `<Link>`
+                    do Next faria navegação de cliente para algo que não é tela. */}
+                <a
+                  href="/api/v1/products/import"
+                  download="modelo-catalogo.csv"
+                  data-testid="modelo-planilha"
+                  className="block rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                >
+                  {t("Baixar planilha modelo")}
+                </a>
+              </div>
+            </details>
           </FilterActions>
         ) : null}
       </FilterBar>
@@ -660,31 +979,55 @@ export function ProdutosClient({
         </p>
       ) : null}
 
-      <Tabs value={semFotoInicial ? "sem_fotos" : aba} onValueChange={aoMudarAba}>
-        <TabsList aria-label={t("Abas do catálogo")}>
-          <TabsTrigger value="todos">{t("Produtos")}</TabsTrigger>
-          <TabsTrigger value="promocoes">{t("Promoções")}</TabsTrigger>
-          <TabsTrigger value="destaques">{t("Destaques")}</TabsTrigger>
-          <TabsTrigger value="sem_fotos" data-testid="aba-sem-fotos">
-            {t("Sem fotos")}
-            {semFotoInicial ? ` (${total})` : ""}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/*
+        A segunda fileira do Mercos, dentro de "Produtos": Produtos e tabelas ·
+        Gerenciar estoque · Importar fotos.
 
-      {podeEditar ? (
-        // Rota de API que devolve o arquivo com `content-disposition:
-        // attachment` — é download, não navegação de página, e `<Link>` do Next
-        // faria navegação de cliente para algo que não é tela.
-        <a
-          href="/api/v1/products/import"
-          download="modelo-catalogo.csv"
-          className="mb-4 inline-block text-xs text-muted-foreground underline"
-          data-testid="modelo-planilha"
+        "Importar fotos" não é um importador de arquivo em lote — é a lista dos
+        produtos SEM foto, que é onde a foto entra (uma por produto, pela coluna
+        Fotos da tabela). O nome é o de lá porque o destino é o mesmo: deixar o
+        catálogo com imagem.
+      */}
+      {/* A fileira de baixo só existe DENTRO de "Produtos", como no Mercos:
+          em Promoções/Destaques ela não é o contexto da tela. */}
+      <nav
+        className="flex flex-wrap items-center gap-1 border-b"
+        aria-label={t("Seções de produtos")}
+        hidden={Boolean(promoInicial || destaqueInicial)}
+      >
+        <button
+          type="button"
+          onClick={() => aoMudarAba("todos")}
+          aria-current={aba === "todos" ? "page" : undefined}
+          className={`px-3 py-2 text-sm ${
+            aba === "todos"
+              ? "border-b-2 border-accent font-medium text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
         >
-          {t("Baixar planilha modelo")}
-        </a>
-      ) : null}
+          {t("Produtos e tabelas")}
+        </button>
+        <Link
+          href="/app/estoque"
+          className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          {t("Gerenciar estoque")}
+        </Link>
+        <button
+          type="button"
+          onClick={() => aoMudarAba("sem_fotos")}
+          aria-current={aba === "sem_fotos" ? "page" : undefined}
+          data-testid="aba-sem-fotos"
+          className={`px-3 py-2 text-sm ${
+            aba === "sem_fotos"
+              ? "border-b-2 border-accent font-medium text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("Importar fotos")}
+          {aba === "sem_fotos" ? ` (${total})` : ""}
+        </button>
+      </nav>
 
       {resumo ? (
         <div className="mb-6 rounded-lg border p-4 text-sm" data-testid="resumo-importacao">
@@ -722,116 +1065,29 @@ export function ProdutosClient({
 
       {criando && podeEditar ? (
         <div className="mb-6 rounded-lg border p-4" data-testid="form-produto">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              {t("Código")}
-              <input
-                value={rascunho.codigo}
-                onChange={(e) => setRascunho({ ...rascunho, codigo: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="produto-codigo"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Nome")}
-              <input
-                value={rascunho.nome}
-                onChange={(e) => nomeNoCriar(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="produto-nome"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Marca")}
-              <input
-                value={rascunho.marca}
-                onChange={(e) => setRascunho({ ...rascunho, marca: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Categoria")}
-              <input
-                value={rascunho.categoria}
-                onChange={(e) => setRascunho({ ...rascunho, categoria: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Preço de venda")}
-              <input
-                value={rascunho.preco}
-                onChange={(e) => setRascunho({ ...rascunho, preco: e.target.value })}
-                placeholder="5.499,00"
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="produto-preco"
-              />
-            </label>
-            <label className="text-sm">
-              NCM <span className="text-muted-foreground">{t("(opcional — exigido na NF-e)")}</span>
-              <input
-                value={rascunho.ncm}
-                onChange={(e) => ncmNoCriar(e.target.value)}
-                placeholder="28289011"
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="produto-ncm"
-              />
-              {badgeDeNcm(sugestaoCriar, rascunho.ncm, "ncm-sugerido-criar")}
-            </label>
-            <label className="text-sm">
-              {t("Unidade")}
-              <input
-                value={rascunho.unidade}
-                onChange={(e) => setRascunho({ ...rascunho, unidade: e.target.value })}
-                placeholder="UN"
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Custo")} <span className="text-muted-foreground">{t("(opcional)")}</span>
-              <input
-                value={rascunho.custo}
-                onChange={(e) => setRascunho({ ...rascunho, custo: e.target.value })}
-                placeholder="4.100,00"
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-              />
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {t(
-                  "Serve para o atendente saber até onde pode negociar. Não aparece para o cliente.",
-                )}
-              </span>
-            </label>
-          </div>
-
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={rascunho.controla_estoque}
-              onChange={(e) => setRascunho({ ...rascunho, controla_estoque: e.target.checked })}
-              data-testid="produto-controla-estoque"
-            />
-            {t("Controlar estoque deste produto")}
-          </label>
-          {rascunho.controla_estoque ? (
-            <label className="mt-2 block text-sm">
-              {t("Quantidade")}
-              <input
-                value={rascunho.quantidade}
-                onChange={(e) => setRascunho({ ...rascunho, quantidade: e.target.value })}
-                className="mt-1 h-9 w-32 rounded-lg border px-3"
-              />
-            </label>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t(
-                "Sem controle de estoque, este produto sempre aparece como disponível para o atendente — é o certo para item sob encomenda ou fracionado.",
-              )}
-            </p>
-          )}
-
-          <div className="mt-4">
-            <Button onClick={salvar} disabled={salvando} data-testid="salvar-produto">
-              {t(salvando ? "Salvando…" : "Salvar produto")}
+          <FichaDoProduto
+            prefixo="produto"
+            rascunho={rascunho}
+            setRascunho={setRascunho}
+            categorias={categorias}
+            aoMudarNome={nomeNoCriar}
+            aoMudarNcm={ncmNoCriar}
+            badgeNcm={badgeDeNcm(sugestaoCriar, rascunho.ncm, "ncm-sugerido-criar")}
+          />
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button onClick={() => void salvar()} disabled={salvando} data-testid="salvar-produto">
+              {t(salvando ? "Salvando…" : "Salvar")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void salvar({ eCadastrarOutro: true })}
+              disabled={salvando}
+              data-testid="salvar-e-novo"
+            >
+              {t("Salvar e cadastrar outro")}
+            </Button>
+            <Button variant="ghost" onClick={() => setCriando(false)}>
+              {t("Cancelar")}
             </Button>
           </div>
         </div>
@@ -862,84 +1118,125 @@ export function ProdutosClient({
           </div>
         )
       ) : (
-        <ul className="divide-y rounded-lg border" data-testid="lista-produtos">
-          {filtrados.map((p) => {
-            const vitrine = precoDeVitrine(p, hoje);
-            return (
-              <li
-                key={p.id}
-                className="flex items-center gap-4 p-3"
-                data-testid={`produto-${p.codigo}`}
-              >
-                <FotosDoProduto
-                  productId={p.id}
-                  podeEditar={podeEditar}
-                  fotosIniciais={fotosPorProduto[p.id] ?? FOTOS_NENHUMA}
-                  aoMudar={recarregarFotos}
-                />
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`truncate font-medium ${p.ativo ? "" : "text-muted-foreground line-through"}`}
-                  >
-                    {p.destaque && <span aria-label={t("Destaque")}>★ </span>}
-                    {p.nome}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.codigo}
-                    {p.marca ? ` · ${p.marca}` : ""}
-                    {p.controla_estoque
-                      ? ` · ${p.quantidade} ${t("em estoque")}`
-                      : ` · ${t("sem controle de estoque")}`}
-                    {vitrine.emPromocao && (
-                      <span className="ml-1 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800">
-                        {t("Promoção")}
-                        {p.promocao_ate
-                          ? ` até ${p.promocao_ate.split("-").reverse().join("/")}`
-                          : ""}
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <span className="shrink-0 font-medium tabular-nums">
-                  {vitrine.emPromocao && (
-                    <span className="mr-2 text-sm font-normal text-muted-foreground line-through">
-                      {comoMoeda(p.preco_cents, p.moeda)}
-                    </span>
-                  )}
-                  {comoMoeda(vitrine.cents, p.moeda)}
-                </span>
-                {podeEditar ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => abrirEdicao(p)}
-                      data-testid={`editar-${p.codigo}`}
-                    >
-                      {t("Editar")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void alternarDestaque(p)}
-                      data-testid={`destaque-${p.codigo}`}
-                    >
-                      {t(p.destaque ? "Tirar destaque" : "Destacar")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void alternarAtivo(p)}
-                      data-testid={`alternar-${p.codigo}`}
-                    >
-                      {t(p.ativo ? "Desativar" : "Reativar")}
-                    </Button>
-                  </>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="overflow-x-auto rounded-lg border" data-testid="lista-produtos">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <span className="sr-only">{t("Ativo")}</span>
+                </TableHead>
+                <TableHead className="w-16">{t("Fotos")}</TableHead>
+                <TableHead className="w-20">{t("Código")}</TableHead>
+                <TableHead className="min-w-[14rem]">{t("Nome")}</TableHead>
+                <TableHead className="w-16">{t("IPI")}</TableHead>
+                <TableHead className="w-20">{t("Unidade")}</TableHead>
+                <TableHead className="w-20">{t("Comissão")}</TableHead>
+                <TableHead className="w-28 text-right">{t("Preço de Tabela")}</TableHead>
+                <TableHead className="w-10">
+                  <span className="sr-only">{t("Adicionar a uma tabela de preço")}</span>
+                </TableHead>
+                <TableHead className="w-24 text-right">{t("Ações")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtrados.map((p) => {
+                const vitrine = precoDeVitrine(p, hoje);
+                return (
+                  <TableRow key={p.id} data-testid={`produto-${p.codigo}`}>
+                    {/* O olho do Mercos: clicado, ativa/inativa o produto. */}
+                    <TableCell className="align-middle">
+                      <button
+                        type="button"
+                        disabled={!podeEditar}
+                        onClick={() => {
+                          if (podeEditar) void alternarAtivo(p);
+                        }}
+                        title={t(p.ativo ? "Clique para inativar" : "Clique para ativar")}
+                        aria-label={t(p.ativo ? "Inativar" : "Ativar")}
+                        data-testid={`alternar-${p.codigo}`}
+                        className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-40"
+                      >
+                        {p.ativo ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <FotosDoProduto
+                        productId={p.id}
+                        podeEditar={podeEditar}
+                        fotosIniciais={fotosPorProduto[p.id] ?? FOTOS_NENHUMA}
+                        aoMudar={recarregarFotos}
+                      />
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">{p.codigo}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          disabled={!podeEditar}
+                          onClick={() => abrirEdicao(p)}
+                          data-testid={`editar-${p.codigo}`}
+                          title={t("Abrir a ficha do produto")}
+                          className={`min-w-0 truncate text-left underline-offset-2 hover:underline disabled:no-underline ${
+                            p.ativo ? "" : "text-muted-foreground line-through"
+                          }`}
+                        >
+                          {p.nome}
+                        </button>
+                        {p.destaque ? (
+                          <Star
+                            className="h-3.5 w-3.5 shrink-0 fill-current text-amber-500"
+                            aria-label={t("Destaque")}
+                          />
+                        ) : null}
+                        {vitrine.emPromocao ? (
+                          <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800">
+                            {t("Promoção")}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {p.marca ? `${p.marca} · ` : ""}
+                        {p.controla_estoque
+                          ? `${p.quantidade} ${t("em estoque")}`
+                          : t("sem controle de estoque")}
+                      </p>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">
+                      {comoPorcentagem(p.ipi_pct)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{p.unidade ?? "---"}</TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">
+                      {comoPorcentagem(p.comissao_pct)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-right tabular-nums">
+                      {vitrine.emPromocao ? (
+                        <span className="mr-1 text-xs text-muted-foreground line-through">
+                          {comoMoeda(p.preco_cents, p.moeda)}
+                        </span>
+                      ) : null}
+                      <span className="font-medium">{comoMoeda(vitrine.cents, p.moeda)}</span>
+                    </TableCell>
+                    <TableCell>
+                      {podeEditar ? <AdicionarATabela produto={p} tabelas={tabelas} /> : null}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {podeEditar ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void alternarDestaque(p)}
+                          data-testid={`destaque-${p.codigo}`}
+                        >
+                          {t(p.destaque ? "Tirar destaque" : "Destacar")}
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {(() => {
@@ -947,9 +1244,13 @@ export function ProdutosClient({
         // de página é navegação (?pagina=) para o servidor entregar a fatia.
         // O total é EXATO (tamanho da lista de ids) — nunca amostra.
         const totalPaginas = totalDePaginas(total, porPagina) ?? 1;
-        if (totalPaginas <= 1) return null;
-        const de = (pagina - 1) * porPagina + 1;
-        const ate = Math.min(pagina * porPagina, total);
+        // O rodapé do Mercos aparece SEMPRE ("Resultados 1 - 15"), mesmo com
+        // uma página só: é ele que responde "quantos produtos existem?" sem
+        // obrigar a pessoa a somar páginas. Só os botões somem.
+        const de = total === 0 ? 0 : (pagina - 1) * porPagina + 1;
+        // O fim é o último item DESTA página, não o fim da fatia: na última
+        // página cheia pela metade, "1 - 50" mentiria sobre o que está na tela.
+        const ate = total === 0 ? 0 : Math.min(de + inicial.length - 1, total);
         const numeros = janelaDePaginas(pagina, totalPaginas);
         const temAnterior = pagina > 1;
         const temProxima = pagina < totalPaginas;
@@ -959,10 +1260,13 @@ export function ProdutosClient({
             aria-label={t("Paginação do catálogo")}
             data-testid="paginacao"
           >
-            <p className="text-sm text-muted-foreground" role="status">
-              {`${de}–${ate} ${t("de")} ${total} · ${t("Página")} ${pagina} ${t("de")} ${totalPaginas}`}
+            <p className="text-sm text-muted-foreground" role="status" data-testid="resultados">
+              {total === 0
+                ? t("Nenhum resultado")
+                : `${t("Resultados")} ${de} - ${ate} ${t("de")} ${total}`}
+              {totalPaginas > 1 ? ` · ${t("Página")} ${pagina} ${t("de")} ${totalPaginas}` : ""}
             </p>
-            <div className="flex flex-wrap items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1" hidden={totalPaginas <= 1}>
               <Button
                 type="button"
                 variant="outline"
@@ -1012,151 +1316,42 @@ export function ProdutosClient({
           <p className="mb-3 font-medium">
             {t("Editar")} · {editando.codigo} — {editando.nome}
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              {t("Nome")}
-              <input
-                value={rascunhoEdicao.nome}
-                onChange={(e) => nomeNaEdicao(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-nome"
+          <FichaDoProduto
+            prefixo="editar"
+            rascunho={rascunhoEdicao}
+            setRascunho={setRascunhoEdicao}
+            categorias={categorias}
+            aoMudarNome={nomeNaEdicao}
+            aoMudarNcm={ncmNaEdicao}
+            badgeNcm={badgeDeNcm(sugestaoEditar, rascunhoEdicao.ncm, "ncm-sugerido-editar")}
+            fotoSlot={
+              <FotosDoProduto
+                productId={editando.id}
+                podeEditar={podeEditar}
+                fotosIniciais={fotosPorProduto[editando.id] ?? FOTOS_NENHUMA}
+                aoMudar={recarregarFotos}
               />
-            </label>
-            <label className="text-sm">
-              {t("Preço de venda (R$)")}
-              <input
-                value={rascunhoEdicao.preco}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, preco: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-preco"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Marca")}
-              <input
-                value={rascunhoEdicao.marca}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, marca: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-marca"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Categoria")}
-              <input
-                value={rascunhoEdicao.categoria}
-                onChange={(e) =>
-                  setRascunhoEdicao({ ...rascunhoEdicao, categoria: e.target.value })
-                }
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-categoria"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Custo (R$)")}
-              <input
-                value={rascunhoEdicao.custo}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, custo: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                placeholder="4.100,00"
-                data-testid="editar-custo"
-              />
-            </label>
-            <label className="text-sm">
-              {t("Unidade")}
-              <input
-                value={rascunhoEdicao.unidade}
-                onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, unidade: e.target.value })}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-unidade"
-              />
-            </label>
-            <label className="text-sm">
-              {t("NCM (8 dígitos)")}
-              <input
-                value={rascunhoEdicao.ncm}
-                onChange={(e) => ncmNaEdicao(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border px-3"
-                data-testid="editar-ncm"
-              />
-              {badgeDeNcm(sugestaoEditar, rascunhoEdicao.ncm, "ncm-sugerido-editar")}
-            </label>
-            <label className="text-sm">
-              {t("Quantidade em estoque")}
-              <input
-                value={rascunhoEdicao.quantidade}
-                onChange={(e) =>
-                  setRascunhoEdicao({ ...rascunhoEdicao, quantidade: e.target.value })
-                }
-                className="mt-1 h-9 w-32 rounded-lg border px-3"
-                data-testid="editar-quantidade"
-              />
-            </label>
-          </div>
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={rascunhoEdicao.destaque}
-              onChange={(e) => setRascunhoEdicao({ ...rascunhoEdicao, destaque: e.target.checked })}
-            />
-            {t("Destaque (aparece na aba Destaques)")}
-          </label>
-          <label className="mt-2 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={rascunhoEdicao.emPromocao}
-              onChange={(e) =>
-                setRascunhoEdicao({ ...rascunhoEdicao, emPromocao: e.target.checked })
-              }
-            />
-            {t("Em promoção")}
-          </label>
-          {rascunhoEdicao.emPromocao && (
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                {t("Preço promocional (R$)")}
-                <input
-                  value={rascunhoEdicao.precoPromocional}
-                  onChange={(e) =>
-                    setRascunhoEdicao({ ...rascunhoEdicao, precoPromocional: e.target.value })
-                  }
-                  className="mt-1 h-9 w-full rounded-lg border px-3"
-                  data-testid="editar-preco-promocional"
-                />
-              </label>
-              <label className="text-sm">
-                {t("Válida até (vazio = sem fim)")}
-                <input
-                  type="date"
-                  value={rascunhoEdicao.promocaoAte}
-                  onChange={(e) =>
-                    setRascunhoEdicao({ ...rascunhoEdicao, promocaoAte: e.target.value })
-                  }
-                  className="mt-1 h-9 w-full rounded-lg border bg-background px-3"
-                  data-testid="editar-promocao-ate"
-                />
-              </label>
-            </div>
-          )}
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={rascunhoEdicao.controla_estoque}
-              onChange={(e) =>
-                setRascunhoEdicao({ ...rascunhoEdicao, controla_estoque: e.target.checked })
-              }
-            />
-            {t("Controlar estoque deste produto")}
-          </label>
-          <div className="mt-4 flex gap-2">
+            }
+          />
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button
               onClick={() => void salvarEdicao()}
               disabled={salvandoEdicao}
               data-testid="salvar-edicao"
             >
-              {t(salvandoEdicao ? "Salvando…" : "Salvar alterações")}
+              {t(salvandoEdicao ? "Salvando…" : "Salvar")}
             </Button>
             <Button variant="outline" onClick={() => setEditando(null)}>
               {t("Cancelar")}
+            </Button>
+            <Button
+              variant="ghost"
+              className="ml-auto text-destructive"
+              disabled={excluindo}
+              onClick={() => void excluirProduto()}
+              data-testid="excluir-produto"
+            >
+              {t(excluindo ? "Excluindo…" : "Excluir produto")}
             </Button>
           </div>
         </div>
