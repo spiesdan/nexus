@@ -150,8 +150,10 @@ export interface Textos {
   nenhumaCarta: string;
   sequencia: string;
   buscarCarta: string;
-  importarHistorico: string;
-  nsuTitulo: string;
+  importarXmls: string;
+  importarXmlsAjuda: string;
+  importarXmlsNsu: string;
+  escolherXmls: string;
   ncm: string;
   ex: string;
   consultarIbpt: string;

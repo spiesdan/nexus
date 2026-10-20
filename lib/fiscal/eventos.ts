@@ -104,6 +104,39 @@ export function motivoDeNaoBaixar(ctx: ContextoSped): string | null {
     return "Certificado A1 ausente: coloque o .pfx em /certs e registre o caminho.";
   }
   if (!ctx.senhaCertificado) return "Senha do certificado ausente (configuração fiscal).";
+  // Homologação não tem DF-e de terceiro: a SEFAZ responde 137 (nada novo) com
+  // ultNSU/maxNSU em zero, e a tela lia isso como "sincronizou e não veio nada".
+  // É ambiente, não falha — então o botão diz o que trocar em vez de fingir
+  // sucesso vazio.
+  if (ambienteNormalizado(ctx.emitente.ambiente) !== "producao") {
+    return (
+      "Ambiente em homologação: a SEFAZ não distribui notas reais nele. " +
+      "Troque para produção em Notas → Configuração fiscal para sincronizar."
+    );
+  }
+  return null;
+}
+
+function ambienteNormalizado(v: string | null | undefined): string {
+  return (v ?? "").trim().toLowerCase();
+}
+
+/**
+ * O portão do UPLOAD de XML: aqui nada fala com a SEFAZ.
+ *
+ * A única régua é o CNPJ do emitente — é com ele que o importador separa a
+ * nossa nota da nota de terceiro. Exigir certificado, sidecar ou ambiente de
+ * produção barraria uma importação que não usa nenhum dos três; o XML do
+ * sistema antigo entra igual, em homologação ou sem sidecar.
+ */
+export function motivoDeNaoImportarXml(ctx: ContextoSped | null): string | null {
+  const cnpj = (ctx?.emitente.emitente_documento ?? "").replace(/\D/g, "");
+  if (cnpj.length !== 14) {
+    return (
+      "CNPJ do emitente ausente (configuração fiscal). O upload compara o CNPJ " +
+      "de cada XML com ele para não importar nota de terceiro."
+    );
+  }
   return null;
 }
 

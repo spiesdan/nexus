@@ -34,13 +34,13 @@ import { apiClient } from "@/lib/api/client";
 import { ROTULO_DA_NOTA, type NotaFiscal, type StatusDaNota } from "@/lib/schemas/fiscal";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
-  ArrowsClockwise,
   DownloadSimple,
   FileText,
   MagnifyingGlass,
   Plus,
   Printer,
   Receipt,
+  UploadSimple,
 } from "@/lib/ui/icons";
 
 import type { Textos } from "./textos";
@@ -105,24 +105,24 @@ export function GradeNotas({
   const [progressoXml, setProgressoXml] = React.useState<{ total: number; feitos: number } | null>(
     null,
   );
-  const [cursor, setCursor] = React.useState<{ ult_nsu: number; max_nsu: number } | null>(null);
-  const [importando, setImportando] = React.useState(false);
+  const [importarXmlAberto, setImportarXmlAberto] = React.useState(false);
+  const [importandoXml, setImportandoXml] = React.useState(false);
+  const [resumoXml, setResumoXml] = React.useState<{
+    importados: number;
+    jaExistiam: number;
+    fora_do_emitente: number;
+    ilegiveis: number;
+    conflitos: number;
+    naoAutorizadas: number;
+    erros: string[];
+  } | null>(null);
+  const [erroXml, setErroXml] = React.useState<string | null>(null);
+  const arquivoXmlRef = React.useRef<HTMLInputElement>(null);
 
-  // NSU do histórico (Fase 3): lido no mount, atualizado por cada importação.
-  React.useEffect(() => {
-    let vivo = true;
-    apiClient
-      .get<{ data: { ult_nsu: number; max_nsu: number } | null }>("/api/v1/invoices/importar-sefaz")
-      .then((r) => {
-        if (vivo && r.data) setCursor({ ult_nsu: r.data.ult_nsu, max_nsu: r.data.max_nsu });
-      })
-      .catch(() => {
-        // Sem cursor a tela continua: o botão de importar diz o resto.
-      });
-    return () => {
-      vivo = false;
-    };
-  }, []);
+  // O NSU foi embora desta aba de propósito: a distribuição da SEFAZ é do
+  // DESTINATÁRIO e não devolve ao emitente as notas que ele mesmo emitiu
+  // (NT 2014.002). O botão antigo ficava em "NSU 0/0" para sempre. O histórico
+  // entra pelo XML exportado do sistema antigo — ver o diálogo abaixo.
 
   function noPeriodo(iso: string): boolean {
     if (periodo === "tudo") return true;
@@ -250,35 +250,51 @@ export function GradeNotas({
     });
   }
 
-  /** Importar histórico do SEFAZ: anda com o cursor e mostra o resumo. */
-  async function importarHistorico() {
-    setImportando(true);
+  /**
+   * Importar o histórico do sistema antigo (Mercos, Odivix…) pelos XMLs.
+   *
+   * O resumo fica NO DIÁLOGO, não num toast que some: quem sobe 300 notas
+   * precisa ler quantas entraram, quantas já existiam e quais foram recusadas.
+   */
+  async function importarXmls(arquivos: File[]) {
+    setImportandoXml(true);
+    setErroXml(null);
+    setResumoXml(null);
     try {
-      const r = await apiClient.post<{
-        data?: {
-          lidos?: number;
-          importados?: number;
-          jaExistiam?: number;
-          ult_nsu?: number;
-          max_nsu?: number;
-          aviso?: string | null;
-        };
-      }>("/api/v1/invoices/importar-sefaz", {});
-      const d = r.data ?? {};
-      if (typeof d.ult_nsu === "number" && typeof d.max_nsu === "number") {
-        setCursor({ ult_nsu: d.ult_nsu, max_nsu: d.max_nsu });
+      const form = new FormData();
+      for (const arquivo of arquivos) form.append("arquivos", arquivo);
+      // `fetch` direto: upload de ZIP grande passa do timeout de 10s do
+      // apiClient, e o `Content-Type` com boundary tem que ser o do browser.
+      const res = await fetch("/api/v1/invoices/importar-xmls", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const json = (await res.json().catch(() => null)) as
+        | {
+            data?: {
+              importados: number;
+              jaExistiam: number;
+              fora_do_emitente: number;
+              ilegiveis: number;
+              conflitos: number;
+              naoAutorizadas: number;
+              erros: string[];
+            };
+            error?: { message?: string };
+          }
+        | null;
+      if (!res.ok || !json?.data) {
+        setErroXml(json?.error?.message ?? t("Não consegui importar os XMLs."));
+        return;
       }
-      if (d.aviso) toast.info(d.aviso);
-      toast.success(
-        `${d.importados ?? 0} ${t("importada(s)")} · ${d.jaExistiam ?? 0} ${t("já existiam")} · NSU ${
-          d.ult_nsu ?? 0
-        }/${d.max_nsu ?? 0}`,
-      );
+      setResumoXml(json.data);
       router.refresh();
-    } catch (e) {
-      showApiError(e);
+    } catch {
+      setErroXml(t("Não consegui enviar os arquivos."));
     } finally {
-      setImportando(false);
+      setImportandoXml(false);
+      if (arquivoXmlRef.current) arquivoXmlRef.current.value = "";
     }
   }
 
@@ -387,20 +403,10 @@ export function GradeNotas({
             {textos.exportarCsv}
           </Button>
           {podeEmitir && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void importarHistorico()}
-              disabled={importando}
-            >
-              <ArrowsClockwise size={14} />
-              {importando ? t("Importando…") : textos.importarHistorico}
+            <Button size="sm" variant="outline" onClick={() => setImportarXmlAberto(true)}>
+              <UploadSimple size={14} />
+              {textos.importarXmls}
             </Button>
-          )}
-          {cursor && (
-            <span className="text-xs text-muted-foreground tabular-nums" title={textos.nsuTitulo}>
-              {textos.nsuTitulo} {cursor.ult_nsu}/{cursor.max_nsu}
-            </span>
           )}
           <select
             aria-label={textos.modelo}
@@ -699,6 +705,102 @@ export function GradeNotas({
                 {registrandoCarta ? t("Enviando…") : textos.registrarCarta}
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {importarXmlAberto && (
+        <Dialog
+          open
+          onOpenChange={(o) => {
+            if (!o) {
+              setImportarXmlAberto(false);
+              setResumoXml(null);
+              setErroXml(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="text-base font-medium text-text">
+                {textos.importarXmls}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {textos.importarXmlsAjuda}
+              </DialogDescription>
+            </DialogHeader>
+
+            <p className="rounded-lg border border-border bg-surface-elevated p-3 text-xs text-muted-foreground">
+              {textos.importarXmlsNsu}
+            </p>
+
+            <input
+              ref={arquivoXmlRef}
+              type="file"
+              multiple
+              accept=".xml,.zip,application/xml,application/zip"
+              className="hidden"
+              data-testid="arquivos-xml"
+              onChange={(e) => {
+                const arquivos = Array.from(e.target.files ?? []);
+                if (arquivos.length > 0) void importarXmls(arquivos);
+              }}
+            />
+
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              disabled={importandoXml}
+              onClick={() => arquivoXmlRef.current?.click()}
+            >
+              <UploadSimple size={16} />
+              {importandoXml ? t("Importando…") : textos.escolherXmls}
+            </Button>
+
+            {erroXml && <p className="text-sm text-destructive">{erroXml}</p>}
+
+            {resumoXml && (
+              <div className="space-y-1 rounded-lg border border-border p-3 text-sm">
+                <p className="font-medium">
+                  {resumoXml.importados} {t("importada(s)")} · {resumoXml.jaExistiam}{" "}
+                  {t("já existiam")}
+                </p>
+                {(resumoXml.fora_do_emitente > 0 ||
+                  resumoXml.ilegiveis > 0 ||
+                  resumoXml.naoAutorizadas > 0 ||
+                  resumoXml.conflitos > 0) && (
+                  <ul className="space-y-0.5 text-xs text-muted-foreground">
+                    {resumoXml.fora_do_emitente > 0 && (
+                      <li>
+                        {resumoXml.fora_do_emitente} {t("de outro emitente (não é o seu CNPJ)")}
+                      </li>
+                    )}
+                    {resumoXml.ilegiveis > 0 && (
+                      <li>
+                        {resumoXml.ilegiveis} {t("ilegível(is) — não era um procNFe")}
+                      </li>
+                    )}
+                    {resumoXml.naoAutorizadas > 0 && (
+                      <li>
+                        {resumoXml.naoAutorizadas}{" "}
+                        {t("sem protocolo de autorização (cStat diferente de 100)")}
+                      </li>
+                    )}
+                    {resumoXml.conflitos > 0 && (
+                      <li>
+                        {resumoXml.conflitos} {t("conflito(s) de numeração")}
+                      </li>
+                    )}
+                  </ul>
+                )}
+                {resumoXml.erros.length > 0 && (
+                  <ul className="space-y-0.5 text-xs text-destructive">
+                    {resumoXml.erros.map((erro) => (
+                      <li key={erro}>{erro}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

@@ -339,8 +339,14 @@ export default async function NotasPage({
     nenhumaCarta: t("Nenhuma carta de correção ainda"),
     sequencia: t("Sequência"),
     buscarCarta: t("Buscar carta…"),
-    importarHistorico: t("Importar histórico do SEFAZ"),
-    nsuTitulo: t("NSU"),
+    importarXmls: t("Importar XMLs"),
+    importarXmlsAjuda: t(
+      "Suba os XMLs (ou o ZIP) exportados do sistema antigo — Mercos, Odivix e afins. Cada nota entra com número, série, valor e protocolo.",
+    ),
+    importarXmlsNsu: t(
+      "Por que não buscar no SEFAZ? A distribuição por NSU é da nota RECEBIDA: a SEFAZ não devolve ao emitente as notas que ele mesmo emitiu. A aba Entradas usa o NSU para as compras; o histórico de vendas entra pelo XML.",
+    ),
+    escolherXmls: t("Escolher XMLs ou ZIP"),
     ncm: t("NCM"),
     ex: t("EX"),
     consultarIbpt: t("Consultar"),
