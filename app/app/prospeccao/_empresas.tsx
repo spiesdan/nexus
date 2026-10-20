@@ -199,36 +199,15 @@ export function EmpresasTab({
     const texto = paramsUrl.get("busca") ?? "";
     return UUID_RE.test(texto) ? texto : null;
   });
-  // As categorias do seletor: uma vez na montagem da tela. Uma chamada so —
-  // refazer a cada tecla da busca travaria a tela com o numero de categorias.
+  // As categorias do seletor seguem o RECORTE da tela — cidade, estado,
+  // status e o resto. Contar a organização inteira anunciava "Oficina
+  // mecânica (115)" com "Videira" selecionada: o número da base, não o da
+  // cidade. O recorte é refeito quando um filtro muda (com espera curta no
+  // texto, como a lista); `categorias` fica de fora do gatilho porque mudar a
+  // seleção não muda os totais disponíveis.
   const [opcoesCategoria, setOpcoesCategoria] = React.useState<
     Array<{ nome: string; rotulo: string; total: number }>
   >([]);
-  React.useEffect(() => {
-    let vivo = true;
-    type CategoriaDaApi = { nome: string; rotulo?: string; total: number };
-    apiClient
-      .get<{ data?: { categorias?: CategoriaDaApi[] } }>(
-        "/api/v1/prospecting/prospects/categorias",
-      )
-      .then((r) => {
-        if (!vivo) return;
-        const c = (r as { data?: { categorias?: CategoriaDaApi[] } })?.data?.categorias;
-        // `rotulo` ausente cai no valor gravado: uma API velha (ou um cache
-        // velho) não pode esvaziar o filtro de categoria.
-        setOpcoesCategoria(
-          Array.isArray(c) ? c.map((x) => ({ ...x, rotulo: x.rotulo ?? x.nome })) : [],
-        );
-      })
-      // A tela nao pode quebrar por causa do seletor: sem lista, o filtro de
-      // categoria fica vazio e o resto continua funcionando.
-      .catch(() => {
-        if (vivo) setOpcoesCategoria([]);
-      });
-    return () => {
-      vivo = false;
-    };
-  }, []);
 
   const [filtros, setFiltros] = React.useState<Filtros>(() => {
     const texto = paramsUrl.get("busca") ?? "";
@@ -389,6 +368,87 @@ export function EmpresasTab({
   React.useEffect(() => {
     void buscar(iniciaisRef.current.filtros, iniciaisRef.current.buscaId);
   }, [buscar]);
+
+  // Rótulos já vistos (valor gravado → português): mantém legível a categoria
+  // marcada por deep-link mesmo antes de ela aparecer numa resposta.
+  const rotulosDeCategoria = React.useRef(new Map<string, string>());
+  // `categorias` fora das dependências: o recorte de contagem ignora a
+  // categoria marcada (é o que a faceta mede). O ref lê a seleção atual sem
+  // transformar cada clique num request.
+  const selecionadasRef = React.useRef<string[]>([]);
+  selecionadasRef.current = filtros.categorias;
+
+  const recorteDasCategorias = [
+    buscaId ?? "",
+    filtros.busca.trim(),
+    filtros.cidade.trim(),
+    filtros.estado.trim(),
+    filtros.prospectadoHa,
+    filtros.status,
+    filtros.comTelefone ? "fone" : "",
+    filtros.comWebsite ? "site" : "",
+    filtros.comWhatsapp ? "zap" : "",
+    filtros.notaMin,
+    filtros.soSemCliente ? "semcliente" : "",
+    filtros.minhaFila ? "fila" : "",
+  ].join("|");
+
+  React.useEffect(() => {
+    let vivo = true;
+    const timer = setTimeout(() => {
+      const qs = new URLSearchParams();
+      if (buscaId) qs.set("busca_id", buscaId);
+      if (filtros.busca.trim()) qs.set("busca", filtros.busca.trim());
+      if (filtros.cidade.trim()) qs.set("cidade", filtros.cidade.trim());
+      if (filtros.estado.trim()) qs.set("estado", filtros.estado.trim());
+      if (filtros.prospectadoHa) qs.set("prospectado_ha", filtros.prospectadoHa);
+      if (filtros.status) qs.set("status", filtros.status);
+      if (filtros.comTelefone) qs.set("com_telefone", "true");
+      if (filtros.comWebsite) qs.set("com_website", "true");
+      if (filtros.comWhatsapp) qs.set("com_whatsapp", "true");
+      if (filtros.notaMin) qs.set("nota_min", filtros.notaMin);
+      if (filtros.soSemCliente) qs.set("so_sem_cliente", "true");
+      if (filtros.minhaFila) qs.set("minha_fila", "true");
+
+      type CategoriaDaApi = { nome: string; rotulo?: string; total: number };
+      apiClient
+        .get<{ data?: { categorias?: CategoriaDaApi[] } }>(
+          `/api/v1/prospecting/prospects/categorias?${qs.toString()}`,
+        )
+        .then((r) => {
+          if (!vivo) return;
+          const c = (r as { data?: { categorias?: CategoriaDaApi[] } })?.data?.categorias;
+          // `rotulo` ausente cai no valor gravado: uma API velha (ou um cache
+          // velho) não pode esvaziar o filtro de categoria.
+          const novas = Array.isArray(c)
+            ? c.map((x) => ({ ...x, rotulo: x.rotulo ?? x.nome }))
+            : [];
+          for (const o of novas) rotulosDeCategoria.current.set(o.nome, o.rotulo);
+          // A categoria marcada continua na lista mesmo com 0 no recorte: se
+          // ela sumisse, o gatilho voltaria a "Todas as categorias" com o
+          // filtro ligado — a tela diria uma coisa e faria outra.
+          const presentes = new Set(novas.map((o) => o.nome));
+          const mantidas = selecionadasRef.current
+            .filter((nome) => !presentes.has(nome))
+            .map((nome) => ({
+              nome,
+              rotulo: rotulosDeCategoria.current.get(nome) ?? nome,
+              total: 0,
+            }));
+          setOpcoesCategoria([...novas, ...mantidas]);
+        })
+        // A tela nao pode quebrar por causa do seletor: sem resposta, o
+        // filtro fica com a lista anterior e o resto continua funcionando.
+        .catch(() => undefined);
+    }, 300);
+
+    return () => {
+      vivo = false;
+      clearTimeout(timer);
+    };
+    // O recorte é a chave: cada campo entra nele acima.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recorteDasCategorias, buscaId]);
 
   // Texto espera 350ms parada; selects e toggles aplicam na hora — o mesmo
   // vocabulário da tela de pedidos.

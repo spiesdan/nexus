@@ -35,6 +35,7 @@ import * as rotaCampanhasVa from "@/app/api/v1/automatic-sales/campaigns/route";
 import * as rotaCampanhas from "@/app/api/v1/prospecting/campaigns/route";
 import * as rotaConsumo from "@/app/api/v1/prospecting/consumo/route";
 import * as rotaMercado from "@/app/api/v1/prospecting/mercado/route";
+import * as rotaCategorias from "@/app/api/v1/prospecting/prospects/categorias/route";
 import * as rotaProspect from "@/app/api/v1/prospecting/prospects/[id]/route";
 import * as rotaProspects from "@/app/api/v1/prospecting/prospects/route";
 import * as rotaSearches from "@/app/api/v1/prospecting/searches/route";
@@ -278,6 +279,11 @@ function makeDb(seed: Record<string, Row[]> = {}) {
       },
       not(col: string, operador: string, val: unknown) {
         filtros.push({ op: operador === "is" ? "not_is" : "neq", col, val });
+        return b;
+      },
+      filter(col: string, operador: string, val: unknown) {
+        // Dialeto `filter(col, "not.is", null)` usado pela rota de categorias.
+        filtros.push({ op: operador === "not.is" ? "not_is" : operador, col, val });
         return b;
       },
       ilike(col: string, val: string) {
@@ -932,6 +938,85 @@ describe("GET /api/v1/prospecting/prospects — filtros", () => {
     );
     expect(res.status).toBe(200);
     expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+  });
+});
+
+describe("GET /api/v1/prospecting/prospects/categorias — a contagem segue o recorte", () => {
+  const URL_CATEGORIAS = "http://localhost/api/v1/prospecting/prospects/categorias";
+
+  it("com cidade selecionada, conta a cidade — não a base inteira", async () => {
+    // O defeito medido: "Videira" selecionada e o seletor anunciava
+    // "Oficina mecânica (115)" — o número da organização inteira. Sem este
+    // filtro na contagem, o operador lê muito mais empresa do que existe na
+    // cidade e conclui que o filtro não funciona (ele não funcionava).
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, cidade: "Videira", categoria: "Auto repair shop" }),
+        prospecto({ id: PROSPECT_B, cidade: "Videira", categoria: "Gas station" }),
+        prospecto({ id: PROSPECT_C, cidade: "Joinville", categoria: "Auto repair shop" }),
+        prospecto({ id: "33333333-3333-4333-8333-777777777777", cidade: "Joinville", categoria: "Auto repair shop" }),
+      ],
+    });
+    session("viewer", db);
+
+    const emVideira = await rotaCategorias.GET(req("GET", undefined, `${URL_CATEGORIAS}?cidade=Videira`));
+    expect(emVideira.status).toBe(200);
+    const categorias = (await emVideira.json()).data.categorias as Array<Row>;
+    expect(categorias.map((c) => [c.nome, c.total])).toEqual([
+      ["Auto repair shop", 1],
+      ["Gas station", 1],
+    ]);
+
+    // MUTAÇÃO: a mesma chamada sem o filtro devolve o total da base (3
+    // oficinas, não 1). Se a rota parar de aplicar a cidade, o primeiro
+    // expect acima falha — é o gate.
+    const semRecorte = await rotaCategorias.GET(req("GET", undefined, URL_CATEGORIAS));
+    const todas = (await semRecorte.json()).data.categorias as Array<Row>;
+    expect(todas.find((c) => c.nome === "Auto repair shop")?.total).toBe(3);
+  });
+
+  it("estado e status também entram na contagem", async () => {
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, estado: "SC", status_comercial: "novo", categoria: "Auto repair shop" }),
+        prospecto({ id: PROSPECT_B, estado: "SC", status_comercial: "contatado", categoria: "Gas station" }),
+        prospecto({ id: PROSPECT_C, estado: "PR", status_comercial: "novo", categoria: "Auto repair shop" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaCategorias.GET(
+      req("GET", undefined, `${URL_CATEGORIAS}?estado=SC&status=novo`),
+    );
+    expect((await res.json()).data.categorias.map((c: Row) => [c.nome, c.total])).toEqual([
+      ["Auto repair shop", 1],
+    ]);
+  });
+
+  it("a categoria JÁ marcada não recorta a contagem (é o que a faceta mede)", async () => {
+    // Se a seleção entrasse no recorte, marcar "Gas station" deixaria só ela
+    // no seletor — as outras desapareceriam e não haveria como somar uma
+    // segunda categoria, que é justamente o uso da lista.
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Auto repair shop" }),
+        prospecto({ id: PROSPECT_B, categoria: "Gas station" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaCategorias.GET(
+      req("GET", undefined, `${URL_CATEGORIAS}?categoria=Gas+station`),
+    );
+    expect((await res.json()).data.categorias).toHaveLength(2);
+  });
+
+  it("busca_id de outra org devolve seletor vazio, sem confirmar existência", async () => {
+    const db = makeDb({ business_prospects: [prospecto()] });
+    session("viewer", db);
+    const res = await rotaCategorias.GET(
+      req("GET", undefined, `${URL_CATEGORIAS}?busca_id=${BUSCA_OUTRA_ORG}`),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.categorias).toEqual([]);
   });
 });
 
