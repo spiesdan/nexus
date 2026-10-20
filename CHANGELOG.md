@@ -8,6 +8,44 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.31.6] — 2026-10-20
+
+### Corrigido
+
+- **PDF do pedido para de sobrepor descrição e valores, e pagina por altura real** A descrição do produto era desenhada numa linha só e passava por cima das
+  colunas de Qtde., Unidade e Preço em qualquer nome acima de ~30 caracteres —
+  um pedido em cada três no histórico importado. Agora o texto é medido antes de
+  ser desenhado, quebra dentro da coluna e empurra as linhas seguintes, com a
+  régua da linha descendo junto.
+
+  A paginação deixou de contar 30 itens fixos e passou a somar a altura real de
+  cada linha quebrada: um pedido com descrições longas não empurra mais a cauda
+  (totais, condição e vendedor) para fora da folha. O rodapé ganhou a paginação
+  "Pedido Nº X · página N de M" quando o pedido ocupa mais de uma folha.
+
+  O código do produto, que nas notas importadas carrega descrições compradas
+  ("RODO DE ALUMINIO 1MT C/ CABO 1,50MT REF025"), é truncado com reticências em
+  vez de virar quatro linhas e abrir um clarão nas colunas de valor. Os rótulos
+  Qtde./Preço Líquido/Subtotal passaram a alinhar à direita com os valores, o
+  cabeçalho da grade ganhou um cinza claro e o total saiu em negrito.
+
+  O documento do cliente também deixou de sair rotulado errado: cadastro sem
+  `tipo_pessoa` com CPF de 11 dígitos imprime "CPF", não "CNPJ" (pedido 18458).
+
+- **Categoria da prospecção conta a cidade filtrada, não a base inteira** O seletor de categoria da aba Empresas mostrava a contagem da organização
+  inteira, ignorando o recorte da tela. Com a cidade "Videira" selecionada, ele
+  anunciava "Oficina mecânica (115)" — o número do banco todo, não o da cidade.
+
+  Agora a contagem responde ao mesmo recorte da lista: cidade, estado, status,
+  busca, origem, telefone, site, WhatsApp, nota, data de descoberta e "minha
+  fila". A categoria já marcada não entra no próprio recorte, senão o seletor
+  mostraria só ela e não haveria como somar uma segunda.
+
+  A lista do seletor também é recarregada quando um filtro muda, com a mesma
+  espera curta do texto. Categoria marcada que fica com zero no recorte continua
+  visível, com o rótulo em português — escondê-la faria o gatilho voltar a "Todas
+  as categorias" com o filtro ligado.
+
 ## [1.31.5] — 2026-10-20
 
 ### Alterado
@@ -4964,7 +5002,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...HEAD
+[1.31.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...v1.31.6
 [1.31.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...v1.31.5
 [1.31.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.3...v1.31.4
 [1.31.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.2...v1.31.3
