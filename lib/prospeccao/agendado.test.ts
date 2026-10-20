@@ -319,6 +319,38 @@ describe("processarCampanhasAgendadas", () => {
     expect(dados.prospecting_sends![1]).toMatchObject({ mensagem_indice: 1 });
   });
 
+  it("(d2) com TRÊS mensagens, o quarto envio volta para a primeira (1→2→3→1)", async () => {
+    // A rotação é `enviadas.length % mensagens.length`. Com três variações e
+    // três envios feitos, o próximo é o índice 0 de novo — sem este teste, uma
+    // troca futura para `min(enviadas, n-1)` (que "parece" mais seguro) faria
+    // todo mundo depois do terceiro receber sempre a mesma mensagem.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          mensagens: ["A", "B", "C"],
+          prospect_ids: ["p-001", "p-002", "p-003", "p-004"],
+        }),
+      ],
+      business_prospects: [
+        prospect("p-001", "Primeira"),
+        prospect("p-002", "Segunda"),
+        prospect("p-003", "Terceira"),
+        prospect("p-004", "Quarta"),
+      ],
+      prospecting_sends: [
+        { organization_id: "org-1", campaign_id: "camp-1", prospect_id: "p-001", enviado_em: DENTRO },
+        { organization_id: "org-1", campaign_id: "camp-1", prospect_id: "p-002", enviado_em: DENTRO },
+        { organization_id: "org-1", campaign_id: "camp-1", prospect_id: "p-003", enviado_em: DENTRO },
+      ],
+    });
+    const enviar = senderFalso();
+    await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).toHaveBeenCalledTimes(1);
+    expect(enviar.mock.calls[0]![1].mensagem).toBe("A");
+    expect(dados.prospecting_sends![3]).toMatchObject({ mensagem_indice: 0 });
+  });
+
   it("(e) cota do dia esgotada não envia", async () => {
     const dados = base({
       prospecting_campaigns: [campanha({ limite_diario: 1 })],
