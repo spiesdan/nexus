@@ -206,4 +206,15 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
       expect(Object.keys(CATEGORIA_PT)).toContain(achada);
     }
   });
+
+  it("casa a taxonomia comercial com a traducao do Google", () => {
+    // "Pizzaria" nao e substring de "Restaurante de pizza": sem apelido, a
+    // campanha "Pizzaria" nao encontra nenhuma pizzaria. Estes sao os casos
+    // em que o rotulo da tela e o rotulo gravado usam palavras diferentes.
+    expect(categoriasQueCasam("Pizzaria")).toContain("Pizza restaurant");
+    expect(categoriasQueCasam("Marmoraria")).toContain("Marble supplier");
+    expect(categoriasQueCasam("Esquadrias")).toContain("Aluminum frames supplier");
+    expect(categoriasQueCasam("Material de construção")).toContain("Building materials store");
+    expect(categoriasQueCasam("Clínica veterinária")).toContain("Veterinarian");
+  });
 });

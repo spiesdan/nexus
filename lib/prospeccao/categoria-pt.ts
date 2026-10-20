@@ -873,11 +873,53 @@ function semAcentoFlexivel(v: string): string {
   return base.replace(/(os|as|o|a)$/, "");
 }
 
+/**
+ * A taxonomia da tela (`CATEGORIAS_COMERCIAIS`) usa nomes que NÃO são a
+ * tradução literal do Google: "Pizzaria" não é substring de "Restaurante de
+ * pizza"; "Esquadrias" não é substring de "Fornecedor de caixilharia". Sem
+ * estes apelidos, a campanha "Pizzaria" não encontra nenhuma pizzaria — o
+ * filtro não mente, mas a categoria comercial não casa com o rótulo gravado.
+ * Cada apelido é um rótulo cru do Google que a categoria representa.
+ */
+const APELIDOS_DE_CATEGORIA: Record<string, string[]> = {
+  pizzaria: ["Pizza restaurant", "Pizza delivery", "Pizza takeaway"],
+  marmoraria: ["Marble supplier", "Marble contractor"],
+  esquadrias: ["Aluminum frames supplier", "Aluminum window", "Window installation service"],
+  marmitaria: ["Marmita", "Comida caseira"],
+  "material de construcao": ["Building materials store", "Home improvement store", "Hardware store"],
+  "clinica veterinaria": ["Veterinarian", "Veterinary care", "Animal hospital"],
+  "oficina de caminhoes": ["Truck repair shop"],
+  "auto eletrica": ["Auto electrical service", "Electrical repair shop"],
+  "lubrificante e troca de oleo": ["Oil change service"],
+  "loja de roupas": ["Clothing store"],
+  calcados: ["Shoe store"],
+  papelaria: ["Stationery store"],
+  presentes: ["Gift shop"],
+  "loja agricola": ["Agricultural store"],
+  mudancas: ["Moving company"],
+  taxi: ["Taxi service"],
+  "curso de idiomas": ["Language school"],
+  "banho e tosa": ["Pet groomer"],
+  estetica: ["Beautician", "Medical spa"],
+  contabilidade: ["Accounting firm", "Accountant"],
+  advocacia: ["Law firm", "Lawyer"],
+  imobiliaria: ["Real estate agency"],
+  engenharia: ["Engineering consultant", "Civil engineer"],
+  metalurgica: ["Metal fabricator", "Metalworking shop"],
+  grafica: ["Print shop", "Graphic designer"],
+  marcenaria: ["Carpenter", "Cabinet maker"],
+  serralheria: ["Welder", "Metal fabricator"],
+  madeireira: ["Lumber store", "Saw mill"],
+  pedreira: ["Quarry"],
+  tintas: ["Paint store"],
+};
+
 export function categoriasQueCasam(termo: string): string[] {
   const t = semAcento(termo);
   if (t === "") return [];
 
   const achadas = new Set<string>();
+  for (const apelido of APELIDOS_DE_CATEGORIA[t] ?? []) achadas.add(apelido);
   const tFlex = semAcentoFlexivel(termo);
 
   for (const [gravada, pt] of Object.entries(CATEGORIA_PT)) {
