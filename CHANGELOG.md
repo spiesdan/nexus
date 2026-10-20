@@ -8,6 +8,44 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.31.5] — 2026-10-20
+
+### Alterado
+
+- **Campanha de prospecção pergunta as mensagens e o horário de funcionamento** O assistente de campanha tinha um único campo de mensagem — e o texto nem
+  entrava no POST: quem escrevia a abordagem ali perdia o texto ao aprovar.
+  Também não havia data nem horário, então a campanha saía sem saber quando
+  podia falar.
+
+  Agora o passo Mensagem abre com três caixas (até cinco, pelo "+ Variação"), e
+  as preenchidas são gravadas na campanha. O mesmo passo ganhou "Quando enviar":
+  data de início e fim, dias da semana, horário de funcionamento (as janelas de
+  envio, com "+ Janela") e o teto por dia.
+
+  O ritmo fica escrito na tela: uma mensagem por minuto (60s) por número — o
+  teto anti-ban —, e a campanha grava o intervalo de 60s de forma explícita.
+
+  O painel Disparo passa a abrir com as mensagens e a agenda da campanha já
+  preenchidas; antes ele mostrava três caixas vazias e os horários padrão dele,
+  ignorando o que o dono tinha escolhido.
+
+### Corrigido
+
+- **Notas importa o histórico por XML, e a busca por NSU deixa de prometer o que a SEFAZ não entrega** O botão "Importar histórico do SEFAZ" ficava em NSU 0/0 para sempre. A causa
+  não era defeito de chamada: a distribuição de DF-e por NSU é do DESTINATÁRIO,
+  e a SEFAZ não devolve ao emitente as notas que ele mesmo emitiu (NT 2014.002).
+  Ela só distribui as notas recebidas, que é o que a aba Entradas já faz.
+
+  A aba Notas agora importa por XML: aceita os .xml ou o .zip exportados do
+  sistema antigo (Mercos, Odivix e afins), mostra quantas entraram, quantas já
+  existiam e o motivo de cada recusa — sem fechar o diálogo. O envio não fala
+  com a SEFAZ, então funciona sem sidecar e em homologação; a única régua é o
+  CNPJ do emitente, para não importar nota de terceiro.
+
+  Em homologação, a sincronização de entradas passa a dizer que a SEFAZ não
+  distribui notas reais naquele ambiente, em vez de responder "0 nova(s)" e
+  mandar esperar uma hora.
+
 ## [1.31.4] — 2026-10-20
 
 ### Alterado
@@ -4926,7 +4964,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...HEAD
+[1.31.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...v1.31.5
 [1.31.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.3...v1.31.4
 [1.31.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.2...v1.31.3
 [1.31.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.1...v1.31.2
