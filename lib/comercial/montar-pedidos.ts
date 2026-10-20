@@ -28,6 +28,7 @@ import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO } from "@/lib/schemas/pedidos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+import { rotuloDoDocumento } from "./documento";
 import type { PedidoPdfCliente, PedidoPdfDados, PedidoPdfItem } from "./pedido-pdf";
 
 type ClienteServidor = Awaited<ReturnType<typeof createClient>>;
@@ -201,7 +202,7 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
   const base: PedidoPdfCliente = {
     nome: linha.cliente_nome,
     fantasia: null,
-    rotuloDocumento: (linha.cliente_documento ?? "").replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ",
+    rotuloDocumento: rotuloDoDocumento(null, linha.cliente_documento),
     documento: linha.cliente_documento,
     ie: null,
     endereco: linha.endereco_entrega,
@@ -213,11 +214,12 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
     email: null,
   };
   if (!contato) return base;
+  const documento = contato.cnpj ?? linha.cliente_documento;
   return {
     nome: contato.display_name ?? contato.name ?? linha.cliente_nome,
     fantasia: contato.fantasia,
-    rotuloDocumento: contato.tipo_pessoa === "F" ? "CPF" : "CNPJ",
-    documento: contato.cnpj ?? linha.cliente_documento,
+    rotuloDocumento: rotuloDoDocumento(contato.tipo_pessoa, documento),
+    documento,
     ie: contato.ie,
     endereco:
       enderecoEmLinha({
