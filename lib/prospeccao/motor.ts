@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "@/lib/logger";
+import { categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { termosDeDescoberta } from "@/lib/prospeccao/expansao";
@@ -660,14 +661,30 @@ async function inserirProspect(
     distanciaKm: distancia,
     raioKm: busca.raio_km > 0 ? busca.raio_km : null,
   });
+  // A categoria crua do Google manda sobre o termo que o operador digitou: o
+  // termo é a BUSCA, não necessariamente o que o estabelecimento é. E a linha
+  // já nasce com a categoria efetiva resolvida — sem isso, uma cafeteria dentro
+  // de posto entraria na base com canônica nula e o filtro/faceta voltaria a
+  // mostrá-la como posto até um backfill manual.
+  const categoriaBruta = b.categoriaPrincipal?.trim() || categoriaBusca;
+  const categoriasBrutas = [categoriaBruta, ...(b.categoriasSecundarias ?? [])].slice(0, 10);
+  const efetiva = categoriaEfetiva({
+    nome: b.nome,
+    categoria: categoriaBruta,
+    categorias: categoriasBrutas,
+    website: b.website,
+  });
   const { data, error } = await admin
     .from("business_prospects")
     .insert({
       organization_id: busca.organization_id,
       nome: b.nome.trim(),
       nome_normalizado: c.nome_normalizado,
-      categoria: categoriaBusca,
-      categorias: [categoriaBusca, ...(b.categoriasSecundarias ?? [])].slice(0, 10),
+      categoria: categoriaBruta,
+      categorias: categoriasBrutas,
+      categoria_canonica: efetiva.revisar ? null : efetiva.rotulo,
+      categoria_revisar: efetiva.revisar,
+      categoria_confianca: efetiva.confianca,
       telefone: b.telefone,
       telefone_normalizado: c.telefone_normalizado,
       whatsapp_potencial: whatsappPotencial(c.telefone_normalizado),

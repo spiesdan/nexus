@@ -77,6 +77,13 @@ describe("categoriaEfetiva — o nome confirma o posto", () => {
     }
   });
 
+  it("secundária que só repete o primário não confirma posto", () => {
+    // O Google repete "Gas station" nas secundárias. Isso não é evidência
+    // independente; sem nome/site, a linha continua em revisão.
+    const c = posto("Branca", { categorias: ["Gas station"] });
+    expect(c.revisar).toBe(true);
+  });
+
   it("posto classificado como oficina é corrigido pelo nome", () => {
     const c = categoriaEfetiva({
       nome: "Posto Ipiranga",

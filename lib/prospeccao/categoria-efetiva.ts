@@ -154,10 +154,6 @@ const SINAL_DE_POSTO =
 /** Domínio de bandeira — o "Auto Desk" com site da Shell é posto. */
 const DOMINIO_DE_POSTO = /(^|\.)(shell|ipiranga|petrobras|vibra|postos?|combustiveis?)\./i;
 
-function semAcentoOuVazio(v: string | null | undefined): string {
-  return v ? semAcento(v) : "";
-}
-
 /** A tradução do rótulo cru; `null` quando ele é genérico/vazio. */
 function traduzidoEspecifico(
   bruto: string | null | undefined,
@@ -276,8 +272,13 @@ export function categoriaEfetiva(prospect: {
     const temSiteDePosto = website !== null && DOMINIO_DE_POSTO.test(website);
     const temMarca = MARCA_DE_POSTO.test(nome);
     const temSinal = SINAL_DE_POSTO.test(nome);
-    const secundariaDePosto = secundarias.some((c) =>
-      /gas station|fuel supplier|fuel/i.test(c),
+    // A secundária só CONFIRMA se disser algo além do primário. O Google
+    // repete "Gas station" na lista de categorias com frequência; contar a
+    // repetição como evidência independente anulava a revisão de "Branca".
+    const secundariaDePosto = secundarias.some(
+      (c) =>
+        semAcento(c) !== semAcento(bruto) &&
+        /gas station|fuel supplier|fuel/i.test(c),
     );
 
     if (temSiteDePosto || temMarca || secundariaDePosto) {
