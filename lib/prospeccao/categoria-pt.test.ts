@@ -71,6 +71,9 @@ describe("traduzirCategoria", () => {
     expect(traduzirCategoria("Box lunch supplier")).toBe("Marmitaria");
     expect(traduzirCategoria("Wheel store")).toBe("Loja de autopeças");
     expect(traduzirCategoria("Urgent care center")).toBe("Clínica médica");
+    expect(traduzirCategoria("Building materials market")).toBe("Material de construção");
+    expect(traduzirCategoria("Jujitsu school")).toBe("Academia");
+    expect(traduzirCategoria("Certified public accountant")).toBe("Contabilidade");
   });
 
   it("NENHUMA das 22 categorias medidas no banco fica em ingles", () => {
