@@ -255,14 +255,6 @@ export function AgendaClient({
         <AvisoDaConexaoGoogle />
       </React.Suspense>
 
-      <CartaoDaConexaoGoogle
-        configurado={googleConfigurado}
-        falta={faltaNoGoogle}
-        linkDeConfiguracao={linkDeConfiguracaoDoGoogle}
-        contaConectada={contaConectada}
-        enderecoDeRetorno={enderecoDeRetorno}
-      />
-
       <NexusPageHeader
         title={t("Agenda")}
         subtitle={t("O que está marcado, com quem, e quem atende — seu e da equipe.")}
@@ -314,6 +306,17 @@ export function AgendaClient({
             </Button>
           </div>
         }
+      />
+
+      {/* O aviso do Google DEPOIS do título. Antes ele abria a página: quem
+          entrava na Agenda via primeiro um parágrafo sobre credenciais que não
+          são problema dela, e o nome da tela aparecia 120px abaixo. */}
+      <CartaoDaConexaoGoogle
+        configurado={googleConfigurado}
+        falta={faltaNoGoogle}
+        linkDeConfiguracao={linkDeConfiguracaoDoGoogle}
+        contaConectada={contaConectada}
+        enderecoDeRetorno={enderecoDeRetorno}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
