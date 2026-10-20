@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.32.1] — 2026-10-20
+
+### Corrigido
+
+- **Campanha de recuperação recusa contato já reservado com 409, não com erro interno** A criação de campanha de recuperação não consultava a reserva da 0277 antes de
+  gravar. Se o contato já estivesse na lista fechada de outra campanha, o trigger
+  do banco recusava — mas a tela recebia um 500 genérico, sem saber quem reservou.
+
+  Agora a rota faz a mesma checagem da campanha de prospecção e responde 409 com a
+  lista de conflitos e o nome da campanha que já tem o contato. O erro do trigger
+  também é traduzido para 409, para o caso de duas abas correrem juntas.
+
 ## [1.32.0] — 2026-10-20
 
 ### Adicionado
@@ -5022,7 +5034,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.1...HEAD
+[1.32.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...v1.32.0
 [1.31.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...v1.31.6
 [1.31.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...v1.31.5
