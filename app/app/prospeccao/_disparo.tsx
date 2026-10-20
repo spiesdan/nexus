@@ -42,7 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
 import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
-import { ESPACO_ANTIBAN_MS } from "@/lib/prospeccao/disparo";
+import { ESPACO_ANTIBAN_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
 
 /** Uma janela do dia, em HH:MM — o mesmo shape de `lib/prospeccao/agendamento`. */
@@ -118,6 +118,8 @@ export function DialogoDisparo({
   onConcluido,
   campanhaId = null,
   campanhaPadrao,
+  mensagensIniciais = [],
+  agendaInicial,
 }: {
   ids: string[];
   aberto: boolean;
@@ -135,14 +137,42 @@ export function DialogoDisparo({
     categorias: string[];
     cidades: Array<{ cidade: string; estado?: string }>;
   };
+  /**
+   * As mensagens que a campanha já tem (0273). O assistente "Encontrar
+   * empresas" grava 1..5 variações nela; sem esta prop, o Disparo abria com
+   * as três caixas vazias e o operador digitava tudo de novo — ou pior,
+   * mandava o texto genérico sem perceber que o dele tinha ficado para trás.
+   */
+  mensagensIniciais?: string[];
+  /**
+   * O "quando" que a campanha já tem: período, janelas e cota do dia. Mesma
+   * razão das mensagens — o assistente pergunta, e o Disparo não pode abrir
+   * com um horário diferente do que o dono escolheu.
+   */
+  agendaInicial?: {
+    data_inicio?: string | null;
+    data_fim?: string | null;
+    limite_diario?: number | null;
+    janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
+  } | null;
 }) {
   const t = useT();
   // As opções de texto. Só a primeira é obrigatória: campo vazio é opção que
   // não existe, e some da rotação antes de sair daqui.
-  const [mensagens, setMensagens] = React.useState<string[]>(() =>
-    Array.from({ length: OPCOES_DE_MENSAGEM }, () => ""),
+  //
+  // O tamanho nasce do que a campanha trouxe (1..5), com o piso de três
+  // caixas: campanha sem mensagem continua abrindo como sempre abriu.
+  const [mensagens, setMensagens] = React.useState<string[]>(() => {
+    const jaVem = mensagensIniciais.map((m) => (typeof m === "string" ? m : ""));
+    const total = Math.min(
+      MENSAGENS_POR_DISPARO_MAX,
+      Math.max(OPCOES_DE_MENSAGEM, jaVem.length),
+    );
+    return Array.from({ length: total }, (_, i) => jaVem[i] ?? "");
+  });
+  const [limite, setLimite] = React.useState(() =>
+    String(agendaInicial?.limite_diario ?? 50),
   );
-  const [limite, setLimite] = React.useState("50");
   // 60s, não 1,2s. O espaçamento curto é o da CONVERSA (a automação responde
   // na hora); disparo frio em massa é outra coisa, e é aqui que o número
   // queima. Quem quiser mais rápido muda o campo — mas o padrão seguro é o
@@ -157,18 +187,32 @@ export function DialogoDisparo({
   // "Enviar agora" continua sendo o disparo síncrono de sempre. "Agendar"
   // grava o relógio na campanha e quem manda é o cron de 1 minuto.
   const [modo, setModo] = React.useState<"agora" | "agendar">("agora");
-  const [dataInicio, setDataInicio] = React.useState(() => diaLocal());
-  const [dataFim, setDataFim] = React.useState(() => diaLocal(7));
-  // As janelas do pedido do dono: "das 7 às 12, 13 às 19".
-  const [janelas, setJanelas] = React.useState<Janela[]>([
-    { inicio: "07:00", fim: "12:00" },
-    { inicio: "13:00", fim: "19:00" },
-  ]);
+  const [dataInicio, setDataInicio] = React.useState(
+    () => agendaInicial?.data_inicio || diaLocal(),
+  );
+  const [dataFim, setDataFim] = React.useState(() => agendaInicial?.data_fim || diaLocal(7));
+  // As janelas do pedido do dono: "das 7 às 12, 13 às 19". Se a campanha já
+  // trouxe as dela, são elas que abrem — senão o operador ajustaria de novo um
+  // horário que já tinha decidido no assistente.
+  const [janelas, setJanelas] = React.useState<Janela[]>(() => {
+    const vindas = (agendaInicial?.janelas ?? []).filter(
+      (j) => typeof j?.inicio === "string" && typeof j?.fim === "string",
+    );
+    return vindas.length > 0
+      ? vindas.map((j) => ({ inicio: j.inicio, fim: j.fim }))
+      : [
+          { inicio: "07:00", fim: "12:00" },
+          { inicio: "13:00", fim: "19:00" },
+        ];
+  });
   const [agendado, setAgendado] = React.useState(false);
   // Os dias da semana da campanha (seg–sex por padrão): é o "de segunda a
   // sexta" que o dono pediu, e sem ele "19/10 a 23/10 das 7 às 19" também
   // mandaria no sábado e no domingo se o período os incluísse.
-  const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
+  const [dias, setDias] = React.useState<number[]>(() => {
+    const vindos = (agendaInicial?.janelas ?? []).find((j) => (j?.dias?.length ?? 0) > 0)?.dias;
+    return vindos && vindos.length > 0 ? vindos : DIAS_UTEIS;
+  });
 
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
@@ -354,19 +398,35 @@ export function DialogoDisparo({
               />
             </div>
 
-            {[1, 2].map((i) => (
-              <div key={i} className="space-y-1.5">
-                <Label htmlFor={`disparo-mensagem-${i}`}>{t(`Mensagem ${i + 1} (opcional)`)}</Label>
-                <textarea
-                  id={`disparo-mensagem-${i}`}
-                  value={mensagens[i] ?? ""}
-                  onChange={(e) => trocarMensagem(i, e.target.value)}
-                  rows={3}
-                  placeholder={t("Outra forma de dizer a mesma coisa")}
-                  className="w-full rounded-lg border bg-background p-3 text-sm"
-                />
-              </div>
-            ))}
+            {mensagens.slice(1).map((m, idx) => {
+              const i = idx + 1;
+              return (
+                <div key={i} className="space-y-1.5">
+                  <Label htmlFor={`disparo-mensagem-${i}`}>
+                    {t(`Mensagem ${i + 1} (opcional)`)}
+                  </Label>
+                  <textarea
+                    id={`disparo-mensagem-${i}`}
+                    value={m}
+                    onChange={(e) => trocarMensagem(i, e.target.value)}
+                    rows={3}
+                    placeholder={t("Outra forma de dizer a mesma coisa")}
+                    className="w-full rounded-lg border bg-background p-3 text-sm"
+                  />
+                </div>
+              );
+            })}
+
+            {mensagens.length < MENSAGENS_POR_DISPARO_MAX && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMensagens((atual) => [...atual, ""])}
+              >
+                {t("+ Variação")}
+              </Button>
+            )}
 
             <p className="text-xs text-muted-foreground">
               {preenchidas.length > 1

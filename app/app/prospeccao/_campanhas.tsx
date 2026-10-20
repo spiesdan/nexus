@@ -49,8 +49,12 @@ interface CampanhaDescoberta {
   contato_ids?: string[] | null;
   /** 0273 — o relógio da campanha. Não vem na aba de venda automática. */
   janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
+  /** 0273 — as variações da rotação, na ordem. O Disparo nasce com elas. */
+  mensagens?: string[] | null;
   data_inicio?: string | null;
   data_fim?: string | null;
+  /** 0273 — a cota do dia, que o Disparo também herda. */
+  limite_diario?: number | null;
   agendada_em?: string | null;
   funil?: FunilDaCampanha | null;
 }
@@ -530,6 +534,10 @@ export function CampanhasTab({
       <DialogoDisparo
         ids={publico?.linhas.map((l) => l.id) ?? []}
         campanhaId={publico?.campanha_id ?? null}
+        mensagensIniciais={
+          descobertas?.find((c) => c.id === publico?.campanha_id)?.mensagens ?? []
+        }
+        agendaInicial={descobertas?.find((c) => c.id === publico?.campanha_id) ?? null}
         aberto={disparoAberto}
         onFechar={() => setDisparoAberto(false)}
         onConcluido={() => {
