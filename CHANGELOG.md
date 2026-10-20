@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.31.4] — 2026-10-20
+
+### Alterado
+
+- **Os cartões de Indicadores dizem o que são antes de carregar** Quem abria **Indicadores** numa VPS via três retângulos cinza sem nome no meio
+  da página — o resumo inteligente, o funil e a atividade ficavam como buracos,
+  e não dava para saber o que ia aparecer ali. O carregamento agora desenha o
+  **cartão de verdade**, com o título no mesmo lugar e no mesmo tamanho do
+  conteúdo final: só as linhas de baixo trocam quando os dados chegam, então a
+  página também deixa de pular.
+
+  O componente que faz isso (`NexusCardSkeleton`) passa a existir no catálogo de
+  esqueletos, para as próximas telas não repetirem o retângulo anônimo.
+
 ## [1.31.3] — 2026-10-20
 
 ### Alterado
@@ -4912,7 +4926,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.3...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...HEAD
+[1.31.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.3...v1.31.4
 [1.31.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.2...v1.31.3
 [1.31.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.1...v1.31.2
 [1.31.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.0...v1.31.1
