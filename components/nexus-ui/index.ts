@@ -8,6 +8,7 @@ export {
   NexusTableSkeleton,
   NexusCardsSkeleton,
   NexusPageSkeleton,
+  NexusCardSkeleton,
 } from "@/components/nexus-ui/feedback/NexusSkeleton";
 export { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 export { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";

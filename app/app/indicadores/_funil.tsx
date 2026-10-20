@@ -2,7 +2,7 @@
 
 import { useAttendantMetrics } from "@/hooks/metrics/useAttendantMetrics";
 import { useT } from "@/hooks/i18n/useT";
-import { Skeleton } from "@/components/ui/skeleton";
+import { NexusCardSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -15,7 +15,7 @@ export function Funil() {
   const { data: resposta, isLoading, isError, refetch } = useAttendantMetrics(null);
   const data = resposta?.data;
 
-  if (isLoading) return <Skeleton className="h-32 w-full" />;
+  if (isLoading) return <NexusCardSkeleton titulo={t("Funil de atendimento")} linhas={3} />;
   if (isError || !data) {
     return (
       <div className="hover-raise rounded-lg border border-border bg-surface p-4 text-sm shadow-xs">

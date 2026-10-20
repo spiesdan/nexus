@@ -7,7 +7,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useAtRiskLeads } from "@/hooks/leads/useAtRiskLeads";
 import { useProposals } from "@/hooks/leads/useProposals";
 import { NexusAiBriefing, type NexusInsight } from "@/components/nexus-ui/ai/NexusAi";
-import { Skeleton } from "@/components/ui/skeleton";
+import { NexusCardSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 
 /**
  * Briefing de decisão: cada frase cita um número real lido agora
@@ -38,7 +38,7 @@ export function Briefing({ necessarioDia }: { necessarioDia: number | null }) {
 
   const carregando =
     atRisk.isLoading || proposals.isLoading || inativos.isLoading || radar.isLoading;
-  if (carregando) return <Skeleton className="h-36 w-full" />;
+  if (carregando) return <NexusCardSkeleton titulo={t("Resumo inteligente")} linhas={3} />;
 
   const insights: NexusInsight[] = [];
   const emRisco = (radar.data ?? []).filter((r) => r.situacao === "em_risco").length;
