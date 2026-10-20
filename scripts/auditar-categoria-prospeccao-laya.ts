@@ -263,7 +263,7 @@ function pergunta(cands: string[]) {
   };
 }
 
-async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null, incluirTodos: boolean) {
+async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null, incluirTodos: boolean, somenteRevisar: boolean) {
   const PAGINA = 1_000;
   const todos: Linha[] = [];
   for (let inicio = 0; ; inicio += PAGINA) {
@@ -277,6 +277,7 @@ async function carregar(admin: SupabaseClient, organizationId: string, cidade: s
       .order("id", { ascending: true })
       .range(inicio, inicio + PAGINA - 1);
     if (!incluirTodos) q = q.eq("provider", "maps_browser");
+    if (somenteRevisar) q = q.eq("categoria_revisar", true);
     if (cidade) q = q.eq("cidade", cidade);
     const { data, error } = await q;
     if (error) throw error;
@@ -361,10 +362,10 @@ async function chamaLaya(
  */
 const FAMILIAS: Array<[string, RegExp]> = [
   ["postos", /posto|combust|gnv|lubrific|lavagem de ve/i],
+  ["industria", /ind[uú]stria|metal[uú]rgica|gr[aá]fica|alimentos \(ind/i],
   ["alimentacao", /restaurante|lanchonete|pizzaria|padaria|cafeteria|sorveteria|\bbar\b|marmitaria|supermercado|mercado|a[cç]ougue|hortifruti|alimento|doce/i],
   ["automotivo", /oficina|mec[aâ]nic|auto|pneu|borrachar|pe[cç]a|funilar|ve[ií]culo|ret[ií]fica|lava[cç][aã]o|lavej|concession|revenda/i],
   ["construcao", /materia(?:l|is) de constru|madeir|marcen|vidra|tinta|esquadria|construtora|engenh|marmor|pedreira|el[eé]trica|hidr[aá]ulica/i],
-  ["industria", /ind[uú]stria|metal[uú]rgica|gr[aá]fica|alimentos \(ind/i],
   ["saude", /cl[ií]nica|farm[aá]cia|fisioter|laborat|[oó]tica|veterin|dentista|m[eé]dic/i],
   ["beleza", /sal[aã]o|barbear|est[eé]tic|manic|pedic/i],
   ["comercio", /loja|cal[cç]ado|papelaria|presente|roupa/i],
@@ -430,7 +431,14 @@ async function main(): Promise<void> {
   if (errOrg) throw errOrg;
   if (!org) throw new Error("organização bill-higiene-limpeza não encontrada");
 
-  const linhas = await carregar(admin, org.id as string, cidade, limite, process.argv.includes("--todos"));
+  const linhas = await carregar(
+    admin,
+    org.id as string,
+    cidade,
+    limite,
+    process.argv.includes("--todos"),
+    process.argv.includes("--revisar"),
+  );
   log(`auditando ${linhas.length} prospects${cidade ? ` de ${cidade}` : ""}`);
   if (linhas.length === 0) return;
 
