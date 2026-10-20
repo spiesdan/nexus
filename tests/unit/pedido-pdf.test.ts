@@ -364,6 +364,100 @@ describe("renderPedidoPdf", () => {
     expect((await linhasDoPdf(await renderPedidoPdf(EMITENTE, longo))).paginas).toBe(2);
   });
 
+  it("nome de produto comprido quebra dentro da coluna e empurra a linha seguinte", async () => {
+    const p = pedido(7);
+    p.itens = [
+      {
+        produto_codigo: "492",
+        produto_nome: "LIXEIRA COM PEDAL BRANCA 34 LITROS RISCHIOTO",
+        quantidade: 1,
+        unidade: "UN",
+        preco_unit_cents: 1000,
+        desconto_pct: 0,
+        subtotal_cents: 1000,
+      },
+      {
+        produto_codigo: "493",
+        produto_nome: "Segundo item",
+        quantidade: 1,
+        unidade: "UN",
+        preco_unit_cents: 1000,
+        desconto_pct: 0,
+        subtotal_cents: 1000,
+      },
+    ];
+    const { trechos } = await linhasDoPdf(await renderPedidoPdf(EMITENTE, p));
+    const ys = new Set(trechos.map((x) => x.y));
+
+    // Primeira linha do item 1 na base de sempre; a segunda desce uma linha de
+    // texto; o item 2 desce a linha inteira (16 + 13,4).
+    expect(ys.has(607)).toBe(true);
+    expect(ys.has(593.6)).toBe(true);
+    expect(ys.has(577.6)).toBe(true);
+    // Se a descrição não fosse medida, o item 2 cairia na régua fixa de 16.
+    expect(ys.has(591)).toBe(false);
+  });
+
+  it("código comprido é truncado numa linha, não estica a altura da linha", async () => {
+    const p = pedido(7);
+    p.itens = [
+      {
+        produto_codigo: "RODO DE ALUMINIO 1MT C/ CABO 1,50MT REF025",
+        produto_nome: "Água Sanitária 5L",
+        quantidade: 1,
+        unidade: "UN",
+        preco_unit_cents: 1000,
+        desconto_pct: 0,
+        subtotal_cents: 1000,
+      },
+      {
+        produto_codigo: "P2",
+        produto_nome: "Segundo item",
+        quantidade: 1,
+        unidade: "UN",
+        preco_unit_cents: 1000,
+        desconto_pct: 0,
+        subtotal_cents: 1000,
+      },
+    ];
+    const buf = await renderPedidoPdf(EMITENTE, p);
+    const t = await texto(buf);
+    const { trechos } = await linhasDoPdf(buf);
+    const ys = new Set(trechos.map((x) => x.y));
+
+    // O código foi cortado com reticências, não quebrado em 3–4 linhas...
+    expect(t).toMatch(/RODO DE [A-Z]+\.\.\./);
+    expect(t).not.toContain("REF025");
+    // ...e a linha seguinte continua na régua de 16, sem o clarão de 3–4
+    // linhas que o código comprido abria nas colunas de valor.
+    expect(ys.has(591)).toBe(true);
+    expect(ys.has(593.6)).toBe(false);
+  });
+
+  it("descrições quebradas reduzem a lotação da página e o rodapé pagina", async () => {
+    const itens = Array.from({ length: 20 }, (_, i) => ({
+      produto_codigo: `P${i}`,
+      produto_nome: "LIXEIRA COM PEDAL BRANCA 34 LITROS RISCHIOTO",
+      quantidade: 1,
+      unidade: "UN",
+      preco_unit_cents: 1000,
+      desconto_pct: 0,
+      subtotal_cents: 1000,
+    }));
+    const buf = await renderPedidoPdf(EMITENTE, { ...pedido(7), itens });
+    const { paginas } = await linhasDoPdf(buf);
+    expect(paginas).toBe(2);
+
+    const t = await texto(buf);
+    expect(t).toContain("página 1 de 2");
+    expect(t).toContain("página 2 de 2");
+  });
+
+  it("pedido de uma página não imprime rodapé de paginação", async () => {
+    const t = await texto(await renderPedidoPdf(EMITENTE, pedido(7)));
+    expect(t).not.toContain("página 1 de 1");
+  });
+
   it("numera com zeros à esquerda", () => {
     expect(numeroDoPedidoPdf(7)).toBe("PED-0007");
   });

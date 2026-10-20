@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { rotuloDoDocumento } from "@/lib/comercial/documento";
 import { idsDoLote } from "@/lib/comercial/ids-do-lote";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
@@ -102,7 +103,7 @@ export default async function ImprimirLotePage({
       return {
         nome: p.cliente_nome,
         fantasia: null,
-        rotuloDocumento: (p.cliente_documento ?? "").replace(/\D/g, "").length === 11 ? "CPF" : "CNPJ",
+        rotuloDocumento: rotuloDoDocumento(null, p.cliente_documento),
         documento: p.cliente_documento,
         ie: null,
         endereco: p.endereco_entrega,
@@ -115,11 +116,12 @@ export default async function ImprimirLotePage({
       };
     }
     const s = (k: string) => (c[k] as string | null) ?? null;
+    const documento = s("cnpj") ?? p.cliente_documento;
     return {
       nome: s("display_name") ?? s("name") ?? p.cliente_nome,
       fantasia: s("fantasia"),
-      rotuloDocumento: s("tipo_pessoa") === "F" ? "CPF" : "CNPJ",
-      documento: s("cnpj") ?? p.cliente_documento,
+      rotuloDocumento: rotuloDoDocumento(s("tipo_pessoa"), documento),
+      documento,
       ie: s("ie"),
       endereco:
         enderecoEmLinha({

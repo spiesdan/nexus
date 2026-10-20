@@ -70,17 +70,14 @@ const GEO = {  esquerda: 36,
   direita: 302,
   caixaEsquerda: 33,
   caixaDireita: 566,
-  /** As colunas da grade, cada uma com o x do cabeçalho e a caixa do valor. */
+  /** As colunas da grade; cada caixa é a régua usada pelo valor E pelo rótulo. */
   numero: 36,
   codigo: 57,
   produto: 133,
-  qtdeCabecalho: 280,
   qtdeValor: { esquerda: 260, largura: 33 },
   unidade: { esquerda: 312, largura: 40 },
   desconto: { esquerda: 373, largura: 23 },
-  precoCabecalho: 441,
   precoValor: { esquerda: 430, largura: 66 },
-  subtotalCabecalho: 531,
   subtotalValor: { esquerda: 500, largura: 64 },
   /** Bloco de totais: rótulos alinhados à direita e valores à direita da caixa. */
   rotuloTotal: { esquerda: 380, largura: 90 },
@@ -195,16 +192,45 @@ const COLUNA_DA_CONDICAO = 374.4;
 const ITENS_POR_PAGINA_BASE = 30;
 
 /**
- * Quantos itens a página aceita com o cabeçalho que ESTE pedido tem.
+ * Quanto o cabeçalho pode empurrar a grade e quantas linhas cabem na página.
  *
  * Um campo quebrado em duas linhas empurra a grade (e a cauda) em 13,4pt, e a
  * página não estica: cada linha a mais se paga tirando um item da fatia (o
- * item vale 16pt, então cobre a linha). Sem isso, um pedido de 30 itens com o
- * nome do cliente quebrado imprimiria a cauda para fora do papel.
+ * item vale 16pt, então cobre a linha). O número de "slots" continua sendo o
+ * de antes para linha de uma linha só (30, menos o que o cabeçalho quebrado
+ * consome): é a régua coberta pelos testes e a que deixa a cauda com a mesma
+ * folga da referência. O que mudou é que cada item agora PESA o que ocupa —
+ * uma descrição de duas linhas vale 29,4pt, não 16 — então a fatia é calculada
+ * pelas alturas medidas, não por uma contagem fixa.
  */
-function itensPorPagina(empurrao: number): number {
-  const itensAMenos = Math.ceil(Math.max(0, empurrao) / Y.passoDaLinha);
-  return Math.max(1, ITENS_POR_PAGINA_BASE - itensAMenos);
+function paginarGrade(linhas: LinhaDaGrade[], empurrao: number): LinhaDaGrade[][] {
+  const slots = Math.max(
+    1,
+    ITENS_POR_PAGINA_BASE - Math.ceil(Math.max(0, empurrao) / Y.passoDaLinha),
+  );
+  // Linha de base da última linha visual do último item que ainda deixa a
+  // cauda (totais/condição/vendedor) acima do pé da caixa.
+  const minimo = Y.primeiroItem - empurrao - (slots - 1) * Y.passoDaLinha;
+
+  const paginas: LinhaDaGrade[][] = [];
+  let atual: LinhaDaGrade[] = [];
+  let y = Y.primeiroItem - empurrao;
+
+  for (const linha of linhas) {
+    // A última linha VISUAL do item, não a primeira: um nome de duas linhas
+    // ocupa a segunda antes de a cauda começar.
+    const ultimaLinhaVisual = y - (linha.linhas - 1) * TAMANHO.alturaDaLinha;
+    if (atual.length > 0 && ultimaLinhaVisual < minimo) {
+      paginas.push(atual);
+      atual = [];
+      y = Y.primeiroItem - empurrao;
+    }
+    atual.push(linha);
+    y -= linha.altura;
+  }
+
+  if (atual.length > 0 || paginas.length === 0) paginas.push(atual);
+  return paginas;
 }
 
 const TAMANHO = { titulo: 10.2, corpo: 8.5, grade: 8.3, alturaDaLinha: 13.4 };
@@ -299,6 +325,115 @@ function ouTraco(valor: string | null | undefined): string {
   return valor?.trim() ? valor.trim() : "-----";
 }
 
+/** Larguras úteis das colunas da grade (as mesmas usadas no desenho). */
+const LARGURA_DO_PRODUTO = 126;
+const LARGURA_DO_CODIGO = 70;
+
+/**
+ * Quebra o texto na largura da coluna e, se uma palavra sozinha ainda passar,
+ * corta por caractere.
+ *
+ * `quebrarEmLinhas` imita o navegador e NÃO corta palavra comprida — o que é
+ * certo para nome de cliente (um nome cortado no meio engana mais). Na grade
+ * é o contrário: um código ou descrição sem espaços (SKU colado, "60x80",
+ * "C/100") atravessaria as colunas de Qtde./Unidade e borraria o impresso.
+ */
+function quebrarNaColuna(texto: string, largura: number, tamanho: number): string[] {
+  const linhas = quebrarEmLinhas(
+    texto,
+    { primeira: largura, seguintes: largura },
+    tamanho,
+  );
+  const saida: string[] = [];
+  for (const linha of linhas) {
+    if (larguraDoTexto(linha, tamanho) <= largura) {
+      saida.push(linha);
+      continue;
+    }
+    let atual = "";
+    let larguraAtual = 0;
+    for (const caractere of linha) {
+      const doCaractere = larguraDoTexto(caractere, tamanho);
+      if (atual !== "" && larguraAtual + doCaractere > largura) {
+        saida.push(atual);
+        atual = caractere;
+        larguraAtual = doCaractere;
+      } else {
+        atual += caractere;
+        larguraAtual += doCaractere;
+      }
+    }
+    if (atual !== "") saida.push(atual);
+  }
+  return saida.length > 0 ? saida : [""];
+}
+
+/**
+ * Corta o texto na largura da coluna com reticências.
+ *
+ * A coluna Código é um identificador, não prosa: nas notas importadas ela
+ * carrega descrições longas ("RODO DE ALUMINIO 1MT C/ CABO 1,50MT REF025") e,
+ * se quebrasse como o nome do produto, uma linha viraria cinco e abriria um
+ * clarão branco nas colunas de valor. Um código truncado é honesto; uma linha
+ * de 60pt de altura por causa dele não é.
+ */
+function truncarNaColuna(texto: string, largura: number, tamanho: number): string {
+  if (larguraDoTexto(texto, tamanho) <= largura) return texto;
+  const reticencias = "...";
+  const limite = Math.max(0, largura - larguraDoTexto(reticencias, tamanho));
+  let saida = "";
+  let larguraAtual = 0;
+  for (const caractere of texto) {
+    const doCaractere = larguraDoTexto(caractere, tamanho);
+    if (larguraAtual + doCaractere > limite) break;
+    saida += caractere;
+    larguraAtual += doCaractere;
+  }
+  return `${saida.trimEnd()}${reticencias}`;
+}
+
+/** Uma linha da grade já medida: o texto quebrado e a altura que ela ocupa. */
+interface LinhaDaGrade {
+  item: PedidoPdfItem;
+  nome: string[];
+  codigo: string;
+  /** Quantas linhas de texto a linha mais alta da grade ocupa. */
+  linhas: number;
+  /** Altura total em pontos: 16 com uma linha, +13,4 por linha extra. */
+  altura: number;
+}
+
+/**
+ * Mede cada item ANTES de desenhar.
+ *
+ * O defeito que isto corrige: a descrição era desenhada numa linha só e
+ * passava por cima das colunas de Qtde./Unidade/Preço — visível em qualquer
+ * pedido com nome de produto acima de ~30 caracteres. A página é posicionada
+ * por coordenada, então quem não mede o texto não tem como empurrar o resto.
+ */
+function montarLinhasDaGrade(itens: PedidoPdfItem[]): LinhaDaGrade[] {
+  return itens.map((item) => {
+    const nome = quebrarNaColuna(
+      item.produto_nome?.trim() ?? "",
+      LARGURA_DO_PRODUTO,
+      TAMANHO.grade,
+    );
+    const codigo = truncarNaColuna(
+      ouTraco(item.produto_codigo),
+      LARGURA_DO_CODIGO,
+      TAMANHO.grade,
+    );
+    const linhas = Math.max(nome.length, 1);
+    return {
+      item,
+      nome,
+      codigo,
+      linhas,
+      altura: Y.passoDaLinha + (linhas - 1) * TAMANHO.alturaDaLinha,
+    };
+  });
+}
+
 /** Posição da CAIXA de texto a partir da linha de base medida. */
 function topo(y: number, tamanho: number): number {
   return A4.altura - y - tamanho * BASE;
@@ -317,6 +452,7 @@ function Linha({
   tamanho = TAMANHO.corpo,
   alinhamento,
   negrito,
+  cor,
   children,
 }: {
   y: number;
@@ -325,6 +461,8 @@ function Linha({
   tamanho?: number;
   alinhamento?: "left" | "right" | "center";
   negrito?: boolean;
+  /** Cor do texto — o rodapé de página usa um cinza discreto. */
+  cor?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -334,6 +472,7 @@ function Linha({
           fontSize: tamanho,
           fontWeight: negrito ? "bold" : "normal",
           textAlign: alinhamento ?? "left",
+          ...(cor ? { color: cor } : {}),
         }}
       >
         {children}
@@ -600,14 +739,18 @@ export function montarCabecalho(
   return { linhas, reguas, empurrao };
 }
 
-/** Divide os itens nas páginas do impresso. */
-function paginar(itens: PedidoPdfItem[], porPagina: number): PedidoPdfItem[][] {
-  if (itens.length === 0) return [[]];
-  const paginas: PedidoPdfItem[][] = [];
-  for (let i = 0; i < itens.length; i += porPagina) {
-    paginas.push(itens.slice(i, i + porPagina));
+/**
+ * As linhas de base de cada item na página, de cima para baixo. A altura de
+ * cada linha já inclui as linhas extras do nome (ver `montarLinhasDaGrade`).
+ */
+function posicoesDosItens(linhas: LinhaDaGrade[], primeiroY: number): number[] {
+  const posicoes: number[] = [];
+  let y = primeiroY;
+  for (const linha of linhas) {
+    posicoes.push(y);
+    y -= linha.altura;
   }
-  return paginas;
+  return posicoes;
 }
 
 /**
@@ -621,38 +764,56 @@ function Pagina({
   emitente,
   pedido,
   cabecalho,
-  itens,
+  linhas,
   continuacao,
   ultima,
+  pagina,
+  paginas,
 }: {
   emitente: PedidoPdfEmitente;
   pedido: PedidoPdfDados;
   cabecalho: CabecalhoMontado;
-  itens: PedidoPdfItem[];
+  linhas: LinhaDaGrade[];
   continuacao: boolean;
   ultima: boolean;
+  pagina: number;
+  paginas: number;
 }) {
   // Quanto o cabeçalho cresceu; a grade e a cauda descem o mesmo tanto (o
   // referencial do documento cresce para cima, então "descer" é subtrair).
   const empurrao = cabecalho.empurrao;
-  const ultimoItem = Y.primeiroItem - Y.passoDaLinha * Math.max(itens.length - 1, 0) - empurrao;
-  const baseDaCaixa = ultima ? ultimoItem - CAUDA.baseDaCaixa : ultimoItem - 6;
+  const primeiroY = Y.primeiroItem - empurrao;
+
+  // A linha de base de cada item, na ordem. A altura de cada um já inclui as
+  // linhas extras do nome/código (ver `montarLinhasDaGrade`).
+  const posicoes = posicoesDosItens(linhas, primeiroY);
+  const ultimaLinha = linhas[linhas.length - 1];
+  // Onde a cauda começa: a última linha VISUAL do último item. Com uma linha
+  // só é a própria base (o caso da referência, coordenada intacta).
+  const baseDoConteudo = ultimaLinha
+    ? (posicoes[posicoes.length - 1] ?? primeiroY) -
+      (ultimaLinha.linhas - 1) * TAMANHO.alturaDaLinha
+    : primeiroY;
+  const baseDaCaixa = ultima ? baseDoConteudo - CAUDA.baseDaCaixa : baseDoConteudo - 6;
 
   // Réguas da cauda — só quando a cauda existe (última página).
   const reguas = [
     ...cabecalho.reguas,
-    ...itens.map((_, i) => ({
-      y: Y.primeiroItem - empurrao - Y.passoDaLinha * i - CAUDA.reguaDoItem,
+    ...linhas.map((linha, i) => ({
+      y:
+        (posicoes[i] ?? primeiroY) -
+        (linha.linhas - 1) * TAMANHO.alturaDaLinha -
+        CAUDA.reguaDoItem,
       traco: TRACO.fina,
     })),
     ...(ultima
       ? [
-          { y: ultimoItem - CAUDA.reguaDevolumes, traco: TRACO.fina },
-          { y: ultimoItem - CAUDA.reguaDoTotal, traco: TRACO.fina },
-          { y: ultimoItem - CAUDA.reguaForteDoTotal, traco: TRACO.forte },
-          { y: ultimoItem - CAUDA.reguaDaCondicao, traco: TRACO.fina },
-          { y: ultimoItem - CAUDA.reguaForteDaCondicao, traco: TRACO.forte },
-          { y: ultimoItem - CAUDA.reguaDoVendedor, traco: TRACO.forte },
+          { y: baseDoConteudo - CAUDA.reguaDevolumes, traco: TRACO.fina },
+          { y: baseDoConteudo - CAUDA.reguaDoTotal, traco: TRACO.fina },
+          { y: baseDoConteudo - CAUDA.reguaForteDoTotal, traco: TRACO.forte },
+          { y: baseDoConteudo - CAUDA.reguaDaCondicao, traco: TRACO.fina },
+          { y: baseDoConteudo - CAUDA.reguaForteDaCondicao, traco: TRACO.forte },
+          { y: baseDoConteudo - CAUDA.reguaDoVendedor, traco: TRACO.forte },
         ]
       : []),
   ];
@@ -666,7 +827,7 @@ function Pagina({
     ...COLUNAS_DA_GRADE.map((x) => ({
       x,
       y: topoDaGrade,
-      altura: topoDaGrade - (ultimoItem - CAUDA.reguaDoItem),
+      altura: topoDaGrade - (baseDoConteudo - CAUDA.reguaDoItem),
     })),
     ...(ultima
       ? [
@@ -674,12 +835,12 @@ function Pagina({
             // Do rótulo do item (a régua de cima) até a régua dos totais: a
             // coluna que fecha "Qtde. volumes" e "Valor total".
             x: COLUNA_DOS_TOTAIS,
-            y: ultimoItem - CAUDA.reguaDoItem,
+            y: baseDoConteudo - CAUDA.reguaDoItem,
             altura: CAUDA.reguaDoTotal - CAUDA.reguaDoItem,
           },
           {
             x: COLUNA_DA_CONDICAO,
-            y: ultimoItem - CAUDA.reguaDoTotal,
+            y: baseDoConteudo - CAUDA.reguaDoTotal,
             altura: CAUDA.reguaDaCondicao - CAUDA.reguaDoTotal,
           },
         ]
@@ -698,6 +859,19 @@ function Pagina({
           height: TOPO_DA_CAIXA - baseDaCaixa,
           borderWidth: TRACO.forte,
           borderColor: "#000000",
+        }}
+      />
+      {/* Fundo do cabeçalho da grade: um cinza bem claro que separa os rótulos
+          das linhas de item sem virar faixa pesada no papel. Desenhado antes
+          das réguas para não cobrir as divisórias. */}
+      <View
+        style={{
+          position: "absolute",
+          left: GEO.caixaEsquerda + 0.5,
+          top: A4.altura - topoDaGrade,
+          width: GEO.caixaDireita - GEO.caixaEsquerda - 1,
+          height: topoDaGrade - (Y.cabecalhoDaGrade - empurrao - CAUDA.reguaDoCabecalho),
+          backgroundColor: "#f2f2f2",
         }}
       />
       {reguas.map((r, i) => (
@@ -752,19 +926,32 @@ function Pagina({
       <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.numero} largura={40} tamanho={TAMANHO.grade} negrito>#</Linha>
       <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.codigo} largura={70} tamanho={TAMANHO.grade} negrito>Código</Linha>
       <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.produto} largura={140} tamanho={TAMANHO.grade} negrito>Produto</Linha>
-      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.qtdeCabecalho} largura={40} tamanho={TAMANHO.grade} negrito>Qtde.</Linha>
+      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.qtdeValor.esquerda} largura={GEO.qtdeValor.largura} tamanho={TAMANHO.grade} alinhamento="right" negrito>Qtde.</Linha>
       <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.unidade.esquerda} largura={GEO.unidade.largura} tamanho={TAMANHO.grade} alinhamento="center" negrito>Unidade</Linha>
       <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.desconto.esquerda} largura={GEO.desconto.largura} tamanho={TAMANHO.grade} alinhamento="center" negrito>Desc.</Linha>
-      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.precoCabecalho} largura={120} tamanho={TAMANHO.grade} negrito>Preço Líquido</Linha>
-      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.subtotalCabecalho} largura={40} tamanho={TAMANHO.grade} negrito>Subtotal</Linha>
+      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.precoValor.esquerda} largura={GEO.precoValor.largura} tamanho={TAMANHO.grade} alinhamento="right" negrito>Preço Líquido</Linha>
+      <Linha y={Y.cabecalhoDaGrade - empurrao} x={GEO.subtotalValor.esquerda} largura={GEO.subtotalValor.largura} tamanho={TAMANHO.grade} alinhamento="right" negrito>Subtotal</Linha>
 
-      {itens.map((item, i) => {
-        const y = Y.primeiroItem - empurrao - Y.passoDaLinha * i;
+      {linhas.map((linha, i) => {
+        const y = posicoes[i] ?? primeiroY;
+        const { item } = linha;
         return (
           <React.Fragment key={`item-${i}`}>
             <Linha y={y} x={GEO.numero} largura={20} tamanho={TAMANHO.grade}>{i + 1}</Linha>
-            <Linha y={y} x={GEO.codigo} largura={70} tamanho={TAMANHO.grade}>{ouTraco(item.produto_codigo)}</Linha>
-            <Linha y={y} x={GEO.produto} largura={126} tamanho={TAMANHO.grade}>{item.produto_nome}</Linha>
+            <Linha y={y} x={GEO.codigo} largura={LARGURA_DO_CODIGO} tamanho={TAMANHO.grade}>
+              {linha.codigo}
+            </Linha>
+            {linha.nome.map((parte, k) => (
+              <Linha
+                key={`nome-${k}`}
+                y={y - TAMANHO.alturaDaLinha * k}
+                x={GEO.produto}
+                largura={LARGURA_DO_PRODUTO}
+                tamanho={TAMANHO.grade}
+              >
+                {parte}
+              </Linha>
+            ))}
             <Linha y={y} x={GEO.qtdeValor.esquerda} largura={GEO.qtdeValor.largura} tamanho={TAMANHO.grade} alinhamento="right">{item.quantidade}</Linha>
             <Linha y={y} x={GEO.unidade.esquerda} largura={GEO.unidade.largura} tamanho={TAMANHO.grade} alinhamento="center">{item.unidade || "UN"}</Linha>
             <Linha y={y} x={GEO.desconto.esquerda} largura={GEO.desconto.largura} tamanho={TAMANHO.grade} alinhamento="center">
@@ -782,33 +969,49 @@ function Pagina({
 
       {ultima && (
         <>
-          <Linha y={ultimoItem - CAUDA.volumes} x={GEO.rotuloTotal.esquerda} largura={GEO.rotuloTotal.largura} alinhamento="right" negrito>
+          <Linha y={baseDoConteudo - CAUDA.volumes} x={GEO.rotuloTotal.esquerda} largura={GEO.rotuloTotal.largura} alinhamento="right" negrito>
             Qtde. volumes:
           </Linha>
-          <Linha y={ultimoItem - CAUDA.volumes} x={GEO.valorTotal.esquerda} largura={GEO.valorTotal.largura} alinhamento="right">
+          <Linha y={baseDoConteudo - CAUDA.volumes} x={GEO.valorTotal.esquerda} largura={GEO.valorTotal.largura} alinhamento="right">
             0 Vol
           </Linha>
 
-          <Linha y={ultimoItem - CAUDA.total} x={GEO.rotuloTotal.esquerda} largura={GEO.rotuloTotal.largura} alinhamento="right" negrito>
+          <Linha y={baseDoConteudo - CAUDA.total} x={GEO.rotuloTotal.esquerda} largura={GEO.rotuloTotal.largura} alinhamento="right" negrito>
             Valor total:
           </Linha>
-          <Linha y={ultimoItem - CAUDA.total} x={GEO.valorTotal.esquerda} largura={GEO.valorTotal.largura} alinhamento="right">
+          <Linha y={baseDoConteudo - CAUDA.total} x={GEO.valorTotal.esquerda} largura={GEO.valorTotal.largura} tamanho={9.4} alinhamento="right" negrito>
             {moeda(pedido.total_cents)}
           </Linha>
 
-          <Linha y={ultimoItem - CAUDA.condicao} x={GEO.esquerda} largura={330} negrito>Condição de Pagamento:</Linha>
-          <Linha y={ultimoItem - CAUDA.condicao} x={GEO.segundaColuna} largura={180} negrito>Data de Emissão:</Linha>
-          <Linha y={ultimoItem - CAUDA.valorDaCondicao} x={GEO.esquerda} largura={330}>
+          <Linha y={baseDoConteudo - CAUDA.condicao} x={GEO.esquerda} largura={330} negrito>Condição de Pagamento:</Linha>
+          <Linha y={baseDoConteudo - CAUDA.condicao} x={GEO.segundaColuna} largura={180} negrito>Data de Emissão:</Linha>
+          <Linha y={baseDoConteudo - CAUDA.valorDaCondicao} x={GEO.esquerda} largura={330}>
             {ouTraco(pedido.condicao_pagamento)}
           </Linha>
-          <Linha y={ultimoItem - CAUDA.valorDaCondicao} x={GEO.segundaColuna} largura={180}>
+          <Linha y={baseDoConteudo - CAUDA.valorDaCondicao} x={GEO.segundaColuna} largura={180}>
             {dataFmt(pedido.created_at)}
           </Linha>
 
-          <Linha y={ultimoItem - CAUDA.vendedor} x={GEO.esquerda} largura={GEO.caixaDireita - GEO.esquerda - 3}>
+          <Linha y={baseDoConteudo - CAUDA.vendedor} x={GEO.esquerda} largura={GEO.caixaDireita - GEO.esquerda - 3}>
             <Campo rotulo="Vendedor" valor={pedido.vendedor_nome} />
           </Linha>
         </>
+      )}
+
+      {/* Rodapé de paginação: só quando o pedido ocupa mais de uma folha —
+          numa página só ele seria ruído, e na pilha de papel é o que evita
+          perder a ordem das folhas. */}
+      {paginas > 1 && (
+        <Linha
+          y={20}
+          x={GEO.caixaEsquerda}
+          largura={GEO.caixaDireita - GEO.caixaEsquerda}
+          tamanho={7}
+          alinhamento="center"
+          cor="#666666"
+        >
+          Pedido Nº {pedido.numero} · página {pagina} de {paginas}
+        </Linha>
       )}
     </Page>
   );
@@ -831,18 +1034,21 @@ export function PedidoPagina({
   // e é ele que diz quantos itens a página aceita (campo quebrado desce a
   // grade e encurta a fatia).
   const cabecalho = montarCabecalho(emitente, pedido);
-  const fatias = paginar(pedido.itens, itensPorPagina(cabecalho.empurrao));
+  const grade = montarLinhasDaGrade(pedido.itens);
+  const fatias = paginarGrade(grade, cabecalho.empurrao);
   return (
     <>
-      {fatias.map((itens, i) => (
+      {fatias.map((linhas, i) => (
         <Pagina
           key={i}
           emitente={emitente}
           pedido={pedido}
           cabecalho={cabecalho}
-          itens={itens}
+          linhas={linhas}
           continuacao={i > 0}
           ultima={i === fatias.length - 1}
+          pagina={i + 1}
+          paginas={fatias.length}
         />
       ))}
     </>
