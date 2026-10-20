@@ -175,14 +175,21 @@ export function candidatosDa(linha: Linha): string[] {
   const nome = linha.nome;
 
   // 1. Macro do alvo principal: "Restaurante de pizza" → Alimentação.
+  //    Rótulo genérico ("Store", "Corporate office") não define macro: usá-lo
+  //    faria a IA escolher entre roupas e presentes uma empresa que pode ser
+  //    qualquer coisa. Sem sinal específico, a linha fica em revisão.
+  const GENERICO = /^(loja|comercio|store|corporate office|point of interest|establishment|service establishment|shopping mall|shopping center|local business)$/;
+  const temAlvoEspecifico = alvos.some((a) => !GENERICO.test(semAcento(a).trim()));
   let macro: string | null = null;
   let melhor = 0;
-  for (const alvo of alvos) {
-    for (const r of ROTULOS) {
-      const p = pontua(r, alvo);
-      if (p > melhor) {
-        melhor = p;
-        macro = MACRO_DO_ROTULO.get(r) ?? null;
+  if (temAlvoEspecifico) {
+    for (const alvo of alvos) {
+      for (const r of ROTULOS) {
+        const p = pontua(r, alvo);
+        if (p > melhor) {
+          melhor = p;
+          macro = MACRO_DO_ROTULO.get(r) ?? null;
+        }
       }
     }
   }

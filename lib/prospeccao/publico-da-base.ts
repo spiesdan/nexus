@@ -191,6 +191,11 @@ function consultaDaBase(
     )
     .eq("organization_id", org)
     .eq("do_not_contact", false)
+    // Empresa bloqueada (fora da região, fraude, pedido do dono) não é
+    // "público em aberto": some da fila, não só do envio. O disparo já a
+    // recusava; deixá-la na contagem fazia a tela prometer um número que o
+    // motor nunca entregava.
+    .eq("bloqueado", false)
     .order("id", { ascending: true });
   if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
   if (uf !== null && uf !== "") {
