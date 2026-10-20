@@ -198,8 +198,13 @@ describe("categoriasAceitas — o conjunto traduzido", () => {
   it("não engole o catálogo inteiro", () => {
     // O oposto de aceitar demais também é defeito: "Oficina" sozinho (termo
     // parcial) é BUSCA na tela, mas como categoria da campanha tem que ser o
-    // rótulo que descreve. Aqui provamos o tamanho do conjunto do caso medido.
-    expect(categoriasAceitas(["Oficina mecânica"]).size).toBeLessThan(4);
+    // rótulo que descreve. O conjunto cresceu de 3 para 5 quando a campanha
+    // passou a alcançar "Auto tune up service" e "Car service" — as duas são
+    // a mesma oficina com outro nome do Google. Continua sendo um punhado,
+    // não o catálogo.
+    const aceitas = categoriasAceitas(["Oficina mecânica"]);
+    expect(aceitas.size).toBeLessThan(8);
+    expect(aceitas.has("auto parts store")).toBe(false);
   });
 });
 
@@ -308,6 +313,18 @@ describe("publicoDaBase — a consulta", () => {
     }).then(() => {
       expect(chamadas.some((c) => c.metodo === "order" && c.args[0] === "id")).toBe(true);
     });
+  });
+
+  it("empresa bloqueada não entra na fila — o filtro é do banco, não da tela", async () => {
+    const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
+    await publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+    });
+    const filtro = chamadas.find((c) => c.metodo === "eq" && c.args[0] === "bloqueado");
+    expect(filtro, "a consulta não excluiu empresa bloqueada").toBeDefined();
+    expect(filtro!.args[1]).toBe(false);
   });
 
   it("campanha de uma UF empurra o estado para o banco", () => {

@@ -67,6 +67,13 @@ describe("traduzirCategoria", () => {
     expect(traduzirCategoria("Car wash")).toBe("Lavejão");
     expect(traduzirCategoria("Pharmacy")).toBe("Farmácia");
     expect(traduzirCategoria("Building materials store")).toBe("Loja de materiais de construção");
+    expect(traduzirCategoria("Seed supplier")).toBe("Sementes e insumos");
+    expect(traduzirCategoria("Box lunch supplier")).toBe("Marmitaria");
+    expect(traduzirCategoria("Wheel store")).toBe("Loja de autopeças");
+    expect(traduzirCategoria("Urgent care center")).toBe("Clínica médica");
+    expect(traduzirCategoria("Building materials market")).toBe("Material de construção");
+    expect(traduzirCategoria("Jujitsu school")).toBe("Academia");
+    expect(traduzirCategoria("Certified public accountant")).toBe("Contabilidade");
   });
 
   it("NENHUMA das 22 categorias medidas no banco fica em ingles", () => {
@@ -176,6 +183,23 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
     expect(achadas).not.toContain("Auto parts store");
   });
 
+  it("a campanha de oficina alcança o serviço de revisão e o car service", () => {
+    // O Google devolve "Auto tune up service" e "Car service" para a mesma
+    // oficina que ele chama de "Auto repair shop" em outra rua. Sem o apelido,
+    // a campanha "Oficina mecânica" perdia 29 empresas em Videira.
+    const achadas = categoriasQueCasam("Oficina mecânica");
+    expect(achadas).toContain("Auto tune up service");
+    expect(achadas).toContain("Car service");
+  });
+
+  it("a campanha de lavação alcança o car wash", () => {
+    expect(categoriasQueCasam("Lavação")).toContain("Car wash");
+  });
+
+  it("a campanha de esquadrias alcança o fornecedor de caixilharia", () => {
+    expect(categoriasQueCasam("Esquadrias")).toContain("Aluminum window supplier");
+  });
+
   it("quem digita o ingles ainda acha", () => {
     expect(categoriasQueCasam("auto repair")).toContain("Auto repair shop");
     expect(categoriasQueCasam("Gas station")).toContain("Gas station");
@@ -205,5 +229,18 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
     for (const achada of categoriasQueCasam("mecanica")) {
       expect(Object.keys(CATEGORIA_PT)).toContain(achada);
     }
+  });
+
+  it("casa a taxonomia comercial com a traducao do Google", () => {
+    // "Pizzaria" nao e substring de "Restaurante de pizza": sem apelido, a
+    // campanha "Pizzaria" nao encontra nenhuma pizzaria. Estes sao os casos
+    // em que o rotulo da tela e o rotulo gravado usam palavras diferentes.
+    expect(categoriasQueCasam("Pizzaria")).toContain("Pizza restaurant");
+    expect(categoriasQueCasam("Marmoraria")).toContain("Marble supplier");
+    expect(categoriasQueCasam("Esquadrias")).toContain("Aluminum frames supplier");
+    expect(categoriasQueCasam("Material de construção")).toContain("Building materials store");
+    expect(categoriasQueCasam("Clínica veterinária")).toContain("Veterinarian");
+    expect(categoriasQueCasam("Agropecuária")).toContain("Farm");
+    expect(categoriasQueCasam("Lavagem de veículo (posto)")).toContain("Car wash");
   });
 });
