@@ -32,6 +32,9 @@ import { CATEGORIA_PT, semAcento, traduzirCategoria } from "@/lib/prospeccao/cat
 // scraper rodando na mesma VPS; o retry divide mais se ainda falhar.
 const MAX_LOTE = 8;
 const REVISAR = "revisar";
+/** Rótulo que não descreve atividade: não define macro nem candidato. */
+const ROTULO_GENERICO =
+  /^(loja|comercio|store|corporate office|point of interest|establishment|service establishment|shopping mall|shopping center|local business)$/;
 
 const MACROS = CATEGORIAS_COMERCIAIS.map((m) => ({
   macro: m.macro,
@@ -85,7 +88,7 @@ const SINAIS: Array<[RegExp, string[]]> = [
   [/marmit|comida\s*caseira/i, ["Marmitaria", "Restaurante"]],
   [/posto|combust|gasolina|etanol|diesel/i, ["Posto de combustível", "Posto de GNV", "Lubrificante e troca de óleo", "Lavagem de veículo (posto)"]],
   [/farm[aá]cia|drogaria/i, ["Farmácia"]],
-  [/supermerc|hipermerc|mercado/i, ["Supermercado", "Mercado"]],
+  [/supermerc|hipermerc|\bmercado\b/i, ["Supermercado", "Mercado"]],
   [/oficina|mec[aâ]nic|auto\s*center/i, ["Oficina mecânica", "Centro automotivo", "Oficina de caminhões"]],
   [/lava\s*jato|lava[jj]ato|lavagem/i, ["Lavação", "Lavagem de veículo (posto)"]],
   [/borrachar/i, ["Borracharia"]],
@@ -196,9 +199,8 @@ export function candidatosDa(linha: Linha): string[] {
   //    Rótulo genérico ("Store", "Corporate office") não define macro: usá-lo
   //    faria a IA escolher entre roupas e presentes uma empresa que pode ser
   //    qualquer coisa. Sem sinal específico, a linha fica em revisão.
-  const GENERICO = /^(loja|comercio|store|corporate office|point of interest|establishment|service establishment|shopping mall|shopping center|local business)$/;
   const alvosMacro = alvosConhecidos(linha);
-  const temAlvoEspecifico = alvosMacro.some((a) => !GENERICO.test(semAcento(a).trim()));
+  const temAlvoEspecifico = alvosMacro.some((a) => !ROTULO_GENERICO.test(semAcento(a).trim()));
   let macro: string | null = null;
   let melhor = 0;
   if (temAlvoEspecifico) {
@@ -457,13 +459,24 @@ async function main(): Promise<void> {
       auditadas.push({ ...linha, ia_categoria: null, ia_confianca: null, ia_candidatos: cands });
       continue;
     }
-    const macros = new Map<string, number>();
-    for (const c of cands) {
-      const m = MACRO_DO_ROTULO.get(c);
-      if (m) macros.set(m, (macros.get(m) ?? 0) + 1);
+    // A macro do GRUPO não pode sair dos candidatos: "Pomar de Frutas" tem
+    // Hortifruti entre os sinais, e Hortifruti é da macro Alimentação — isso
+    // juntava a frutaria com a pizzaria e a IA escolhia Pizzaria para a fruta.
+    // Só quem tem alvo conhecido e específico entra por macro; o resto agrupa
+    // pelo primeiro sinal do nome.
+    const alvos = alvosConhecidos(linha);
+    const temAlvo = alvos.some((a) => !ROTULO_GENERICO.test(semAcento(a).trim()));
+    let k: string;
+    if (temAlvo) {
+      const macros = new Map<string, number>();
+      for (const c of cands) {
+        const m = MACRO_DO_ROTULO.get(c);
+        if (m) macros.set(m, (macros.get(m) ?? 0) + 1);
+      }
+      k = [...macros.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? `sinal:${cands[0] ?? "generico"}`;
+    } else {
+      k = `sinal:${cands[0] ?? "generico"}`;
     }
-    const macro = [...macros.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    const k = macro ?? `sinal:${cands[0] ?? "generico"}`;
     const g = grupos.get(k) ?? { cands: new Set<string>(), linhas: [] };
     for (const c of cands) g.cands.add(c);
     g.linhas.push(linha);
