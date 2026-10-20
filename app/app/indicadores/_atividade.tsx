@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
-import { Skeleton } from "@/components/ui/skeleton";
+import { NexusCardSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 
 interface AtividadeLinha {
   id: string;
@@ -48,7 +48,7 @@ export function Atividade() {
     staleTime: 60_000,
   });
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <NexusCardSkeleton titulo={t("Atividade recente")} linhas={4} />;
   const recentes = (data ?? []).slice(0, 8);
 
   return (

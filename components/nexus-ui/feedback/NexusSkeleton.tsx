@@ -70,3 +70,44 @@ export function NexusPageSkeleton({ className }: { className?: string }) {
     </div>
   );
 }
+
+/**
+ * O CARTÃO QUE SE SABE QUAL É, ANTES DE SABER O CONTEÚDO.
+ *
+ * `NexusCardSkeleton` existe porque a alternativa — um `<Skeleton className="h-32
+ * w-full" />` solto — desenha um retângulo cinza SEM NOME no meio da página. Em
+ * Indicadores eram três seguidos: quem abria a tela via três buracos e não
+ * sabia se eram funil, atividade ou resumo. Na VPS, com o primeiro render
+ * esperando a API, isso é a primeira impressão da tela.
+ *
+ * O título é o do cartão de verdade, no mesmo `h2` e no mesmo tamanho, então o
+ * layout não pula quando o conteúdo chega: só as linhas de baixo trocam.
+ */
+export function NexusCardSkeleton({
+  titulo,
+  linhas = 3,
+  className,
+}: {
+  titulo: string;
+  linhas?: number;
+  className?: string;
+}) {
+  const t = useT();
+  return (
+    <section
+      role="status"
+      aria-label={`${t("Carregando")} ${titulo}`}
+      className={cn("rounded-lg border border-border bg-surface p-4 shadow-xs", className)}
+    >
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-sm font-semibold text-text">{titulo}</h2>
+        <Skeleton className="h-3 w-16" />
+      </div>
+      <div className="mt-3 space-y-2">
+        {Array.from({ length: linhas }).map((_, i) => (
+          <Skeleton key={i} className={i === 0 ? "h-6 w-3/4" : "h-3 w-full"} />
+        ))}
+      </div>
+    </section>
+  );
+}
