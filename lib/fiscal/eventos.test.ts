@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   lerMensagemCarta,
   motivoDeNaoBaixar,
+  motivoDeNaoImportarXml,
   motivoDeNaoTransmitir,
   montarMensagemCarta,
 } from "./eventos";
@@ -27,7 +28,7 @@ function contexto(
       codigo_municipio: null,
       uf: "SP",
       cep: null,
-      ambiente: "homologacao",
+      ambiente: "producao",
       certificado_path: "/certs/empresa.pfx",
       provedor: "spednfe",
       ...emitente,
@@ -134,6 +135,15 @@ describe("motivoDeNaoTransmitir — o portão honesto", () => {
       expect(motivoDeNaoBaixar(contexto({}, null))).toMatch(/Senha/);
     });
 
+    it("homologação não distribui DF-e: diz o que trocar, em vez de '0 novas'", () => {
+      // Medido na instalação real: em homologação a SEFAZ responde 137 com
+      // ultNSU/maxNSU em zero, e a tela lia isso como sincronização vazia.
+      // É ambiente, não falha — o portão tem que nomear a troca.
+      const motivo = motivoDeNaoBaixar(contexto({ ambiente: "homologacao" }));
+      expect(motivo).toMatch(/homologa/i);
+      expect(motivo).toMatch(/produ/i);
+    });
+
     it("IE e endereço ausentes NÃO barram o download — mas UF sim", () => {
       // IE, município e endereço: o download não usa, então não barra.
       expect(
@@ -143,6 +153,27 @@ describe("motivoDeNaoTransmitir — o portão honesto", () => {
       // sidecar reprova o config — e o portão do app diz isso em português.
       expect(motivoDeNaoBaixar(contexto({ uf: null }))).toMatch(/UF/);
       expect(motivoDeNaoBaixar(contexto({ uf: "S" }))).toMatch(/UF/);
+    });
+  });
+
+  describe("motivoDeNaoImportarXml — upload não fala com a SEFAZ", () => {
+    it("só o CNPJ importa; certificado, sidecar, provedor e ambiente não entram", () => {
+      // O XML exportado do sistema antigo entra sem certificado e sem sidecar:
+      // nada no upload chama a SEFAZ. Exigir os dois barraria a única via que
+      // funciona para o histórico de emissão.
+      const motivo = motivoDeNaoImportarXml(
+        contexto({
+          provedor: "stub",
+          certificado_path: null,
+          ambiente: "homologacao",
+        }),
+      );
+      expect(motivo).toBeNull();
+    });
+
+    it("sem CNPJ não há como separar a nossa nota da de terceiro", () => {
+      expect(motivoDeNaoImportarXml(null)).toMatch(/CNPJ/);
+      expect(motivoDeNaoImportarXml(contexto({ emitente_documento: "123" }))).toMatch(/CNPJ/);
     });
   });
 });

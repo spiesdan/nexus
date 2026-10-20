@@ -15,6 +15,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
 import { buscarNaSefaz, type ContextoEntrada, type DocumentoSefaz } from "@/lib/fiscal/entrada";
+import { motivoDeNaoBaixar } from "@/lib/fiscal/eventos";
 import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
 import { COLUNAS_DA_ENTRADA, STATUS_DA_ENTRADA } from "@/lib/schemas/fiscal-entrada";
@@ -72,35 +73,32 @@ export async function POST(_req: NextRequest): Promise<Response> {
   }
 
   const ctx = await carregarContextoSped(authz.org.orgId);
-  const cnpj = soDigitos(ctx?.emitente.emitente_documento ?? null);
-  if (
-    !ctx ||
-    cnpj === "" ||
-    !ctx.emitente.uf ||
-    !ctx.emitente.certificado_path ||
-    !ctx.senhaCertificado
-  ) {
-    return fail(
-      "validation_failed",
-      "Faltam CNPJ, UF, certificado (.pfx) ou senha na configuração fiscal.",
-      422,
-      { requestId },
-    );
+  // O mesmo portão do download: CNPJ, UF, certificado, senha — e o ambiente.
+  // Homologação não distribui DF-e de terceiro; sincronizar ali sempre voltava
+  // "0 nova(s)" com aviso de pausa, que a tela lia como defeito da busca.
+  const bloqueio = ctx ? motivoDeNaoBaixar(ctx) : "Sem configuração fiscal para a organização.";
+  if (!ctx || bloqueio) {
+    return fail("fiscal_nao_configurado", `Sincronização não executada: ${bloqueio}`, 422, {
+      requestId,
+    });
   }
+  const cnpj = soDigitos(ctx.emitente.emitente_documento);
+  // O portão já garantiu os quatro; o `??` existe só para o tipo, porque a
+  // checagem mora em outra função e o TypeScript não a propaga.
   const entrada: ContextoEntrada = {
     ambiente: ctx.emitente.ambiente,
     cnpj,
     razao: ctx.emitente.emitente_documento ?? cnpj,
     ie: ctx.emitente.ie ?? "",
-    uf: ctx.emitente.uf,
-    certificadoPath: ctx.emitente.certificado_path,
+    uf: (ctx.emitente.uf ?? "").trim().toUpperCase(),
+    certificadoPath: ctx.emitente.certificado_path ?? "",
     // O sidecar valida que o caminho esta dentro de `/certs/`, e o
     // `certificado_path` do banco e so o NOME. Sem este campo o caminho
     // montado aqui seria recusado com "deve estar dentro de /certs/" e a
     // // nota apareceria como "nao transmitida", sem dizer que o caminho
     // esta errado.
     caminhoDoCertificado: caminhoDoCertificadoNoSidecar(ctx.orgId),
-    senhaCertificado: ctx.senhaCertificado,
+    senhaCertificado: ctx.senhaCertificado ?? "",
   };
 
   const { data: cursor } = await supabase

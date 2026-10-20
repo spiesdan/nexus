@@ -15,7 +15,7 @@ import { unzipSync } from "fflate";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { carregarContextoSped, motivoDeNaoTransmitir } from "@/lib/fiscal/eventos";
+import { carregarContextoSped, motivoDeNaoImportarXml } from "@/lib/fiscal/eventos";
 import {
   lerProcNfe,
   registrarEmitidas,
@@ -77,14 +77,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // O CNPJ do emitente é a régua de quem é "nossa" emissão: sem config
-  // fiscal não há o que comparar, e o 502 nomeia o que falta.
+  // O CNPJ do emitente é a régua de quem é "nossa" emissão — e a única coisa
+  // que o upload precisa. Ele NÃO fala com a SEFAZ: certificado, sidecar,
+  // provedor e ambiente ficam de fora do portão de propósito.
   const contexto = await carregarContextoSped(authz.org.orgId);
-  const bloqueio = contexto
-    ? motivoDeNaoTransmitir(contexto)
-    : "Sem configuração fiscal para a organização.";
-  // Configuração ausente é estado esperado, não queda de serviço — ver o mesmo
-  // portão em `importar-sefaz/route.ts`.
+  const bloqueio = motivoDeNaoImportarXml(contexto);
+  // Configuração ausente é estado esperado, não queda de serviço — o mesmo
+  // tom de `fiscal_nao_configurado` usado na sincronização de entradas.
   if (bloqueio)
     return fail("fiscal_nao_configurado", `Importação não executada: ${bloqueio}`, 502, {
       requestId,

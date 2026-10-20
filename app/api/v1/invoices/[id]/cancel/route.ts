@@ -85,9 +85,10 @@ export async function POST(
       ? motivoDeNaoTransmitir(contexto)
       : "Sem configuração fiscal para a organização.";
     if (bloqueio) {
-      // Configuração ausente é estado esperado — ver o mesmo portão em
-      // `importar-sefaz/route.ts`. O 502 abaixo, logo depois, é o sidecar
-      // caindo de verdade, e esse continua `upstream_unavailable`.
+      // Configuração ausente é estado esperado — o mesmo tom de
+      // `fiscal_nao_configurado` em `importar-xmls/route.ts`. O 502 abaixo,
+      // logo depois, é o sidecar caindo de verdade, e esse continua
+      // `upstream_unavailable`.
       return fail("fiscal_nao_configurado", `Cancelamento não transmitido: ${bloqueio}`, 502, {
         requestId,
       });
