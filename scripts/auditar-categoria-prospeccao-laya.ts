@@ -244,7 +244,7 @@ function pergunta(cands: string[]) {
   };
 }
 
-async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null) {
+async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null, todos: boolean) {
   const PAGINA = 1_000;
   const todos: Linha[] = [];
   for (let inicio = 0; ; inicio += PAGINA) {
@@ -254,9 +254,10 @@ async function carregar(admin: SupabaseClient, organizationId: string, cidade: s
         "id, nome, categoria, categorias, cidade, estado, website, categoria_canonica, categoria_revisar",
       )
       .eq("organization_id", organizationId)
-      .eq("provider", "maps_browser")
+      .eq("bloqueado", false)
       .order("id", { ascending: true })
       .range(inicio, inicio + PAGINA - 1);
+    if (!todos) q = q.eq("provider", "maps_browser");
     if (cidade) q = q.eq("cidade", cidade);
     const { data, error } = await q;
     if (error) throw error;
@@ -410,16 +411,18 @@ async function main(): Promise<void> {
   if (errOrg) throw errOrg;
   if (!org) throw new Error("organização bill-higiene-limpeza não encontrada");
 
-  const linhas = await carregar(admin, org.id as string, cidade, limite);
+  const linhas = await carregar(admin, org.id as string, cidade, limite, process.argv.includes("--todos"));
   log(`auditando ${linhas.length} prospects${cidade ? ` de ${cidade}` : ""}`);
   if (linhas.length === 0) return;
 
   const auditadas: Auditada[] = [];
   let semCandidato = 0;
 
-  // Agrupa por conjunto de candidatos: a API usa o MESMO critério para o lote
-  // inteiro. Empresas com a mesma macro/sinais viajam juntas.
-  const grupos = new Map<string, Array<{ linha: Linha; cands: string[] }>>();
+  // Agrupa por MACRO (ou pelo primeiro sinal do nome), não pelo conjunto exato
+  // de candidatos. O conjunto exato é quase único por empresa — agrupar por ele
+  // fazia uma chamada por linha. A macro tem ~12 rótulos, então o lote continua
+  // estreito e a IA não volta a escolher entre 82 opções.
+  const grupos = new Map<string, { cands: Set<string>; linhas: Linha[] }>();
   for (const linha of linhas) {
     const cands = candidatosDa(linha);
     if (cands.length === 1 && cands[0] === REVISAR) {
@@ -427,17 +430,25 @@ async function main(): Promise<void> {
       auditadas.push({ ...linha, ia_categoria: null, ia_confianca: null, ia_candidatos: cands });
       continue;
     }
-    const k = cands.join("\u0001");
-    const g = grupos.get(k) ?? [];
-    g.push({ linha, cands });
+    const macros = new Map<string, number>();
+    for (const c of cands) {
+      const m = MACRO_DO_ROTULO.get(c);
+      if (m) macros.set(m, (macros.get(m) ?? 0) + 1);
+    }
+    const macro = [...macros.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const k = macro ?? `sinal:${cands[0] ?? "generico"}`;
+    const g = grupos.get(k) ?? { cands: new Set<string>(), linhas: [] };
+    for (const c of cands) g.cands.add(c);
+    g.linhas.push(linha);
     grupos.set(k, g);
   }
 
   let feitos = auditadas.length;
   for (const grupo of grupos.values()) {
-    for (let inicio = 0; inicio < grupo.length; inicio += MAX_LOTE) {
-      const fatia = grupo.slice(inicio, inicio + MAX_LOTE);
-      const estados = fatia.map(({ linha: p }) =>
+    const candsDoGrupo = [...grupo.cands].slice(0, 16);
+    for (let inicio = 0; inicio < grupo.linhas.length; inicio += MAX_LOTE) {
+      const fatia = grupo.linhas.slice(inicio, inicio + MAX_LOTE);
+      const estados = fatia.map((p) =>
         [
           `Negócio: ${p.nome}`,
           `Categoria do Google: ${p.categoria ?? "(não informada)"}`,
@@ -447,14 +458,14 @@ async function main(): Promise<void> {
           `Website: ${p.website ?? "(não tem)"}`,
         ].join("\n"),
       );
-      const respostas = await chamaLaya(estados, fatia[0].cands);
+      const respostas = await chamaLaya(estados, candsDoGrupo);
       for (let i = 0; i < fatia.length; i++) {
         const r = respostas[i];
         auditadas.push({
-          ...fatia[i].linha,
+          ...fatia[i],
           ia_categoria: r?.choice ?? null,
           ia_confianca: r?.confidence ?? null,
-          ia_candidatos: fatia[i].cands,
+          ia_candidatos: candsDoGrupo,
         });
       }
       feitos += fatia.length;

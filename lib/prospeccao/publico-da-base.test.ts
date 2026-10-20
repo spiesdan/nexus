@@ -310,6 +310,18 @@ describe("publicoDaBase — a consulta", () => {
     });
   });
 
+  it("empresa bloqueada não entra na fila — o filtro é do banco, não da tela", async () => {
+    const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
+    await publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: ["Oficina mecânica"],
+    });
+    const filtro = chamadas.find((c) => c.metodo === "eq" && c.args[0] === "bloqueado");
+    expect(filtro, "a consulta não excluiu empresa bloqueada").toBeDefined();
+    expect(filtro!.args[1]).toBe(false);
+  });
+
   it("campanha de uma UF empurra o estado para o banco", () => {
     const { cliente, chamadas } = clienteFalso([[servindo(1)]]);
     return publicoDaBase(cliente, {
