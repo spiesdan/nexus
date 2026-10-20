@@ -71,6 +71,21 @@ describe("emissor NF-e do sidecar", () => {
     expect(verProc).not.toMatch(MARCA_DO_FORNECEDOR);
   });
 
+  it("o destinatário leva enderDest a partir de extras.entrega (rejeição 726)", () => {
+    // A SEFAZ recusa a NF-e sem <enderDest>. O bloco `entrega` é o único do
+    // contrato que carrega cMun/IBGE; o mesmo endereço alimenta <dest> e
+    // <entrega>, em vez de inventar um cadastro de endereço que não existe.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/tagenderDest\s*\(/);
+    expect(src).toMatch(/'xLgr'\s*=>\s*\(string\)\(\$e\['logradouro'\]/);
+    expect(src).toMatch(/'cMun'\s*=>\s*\(string\)\(\$e\['codigo_municipio'\]/);
+  });
+
+  it("sem extras.entrega o sidecar recusa antes de abrir o certificado", () => {
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toContain("extras.entrega (endereço do destinatário) é obrigatório");
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.

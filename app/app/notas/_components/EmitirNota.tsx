@@ -513,8 +513,11 @@ export function EmitirNota({
 
               <section className="space-y-2">
                 <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("Local de entrega")}
+                  {t("Endereço do destinatário")}
                 </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t("A SEFAZ exige este endereço na NF-e; ele também é usado como local de entrega.")}
+                </p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label htmlFor="ex-ent-logradouro">{t("Logradouro")}</Label>

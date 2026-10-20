@@ -409,7 +409,19 @@ class ServicoNfe
         if (!in_array(strlen($docPedido), [11, 14], true)) {
             return 'pedido.documento (CPF com 11 ou CNPJ com 14 dígitos) é obrigatório: sem ele o XSD recusa o destinatário.';
         }
-        return $this->validarExtras();
+        $erroExtras = $this->validarExtras();
+        if ($erroExtras !== null) {
+            return $erroExtras;
+        }
+        // A NF-e modelo 55 exige o endereço do destinatário (rejeição 726).
+        // O bloco `entrega` é o único do contrato que traz os campos do TLocal
+        // (inclusive cMun/IBGE); exigir aqui evita criar a nota e só descobrir
+        // na SEFAZ. A tela já coleta esses campos.
+        $entrega = $this->extras['entrega'] ?? null;
+        if (!is_array($entrega) || $entrega === []) {
+            return 'extras.entrega (endereço do destinatário) é obrigatório para a NF-e.';
+        }
+        return null;
     }
 
     /**
@@ -719,6 +731,27 @@ class ServicoNfe
             $dest->CPF = $doc;
         }
         $make->tagdest($dest);
+
+        // A SEFAZ recusa a NF-e sem <enderDest> (rejeição 726). O endereço do
+        // destinatário vem do mesmo bloco que a tela chama de "entrega": é o
+        // único lugar do contrato que já carrega os campos do TLocal, inclusive
+        // o cMun (IBGE) que o cadastro de contatos não guarda. Sem ele a
+        // validação recusa antes de abrir o certificado; com ele, o mesmo
+        // endereço alimenta <dest>/<enderDest> e <entrega>.
+        $e = $this->extras['entrega'] ?? null;
+        if (is_array($e) && $e !== []) {
+            $cep = preg_replace('/\D/', '', (string)($e['cep'] ?? ''));
+            $make->tagenderDest((object)[
+                'xLgr' => (string)($e['logradouro'] ?? ''),
+                'nro' => (string)($e['numero'] ?? ''),
+                'xCpl' => ($x = trim((string)($e['complemento'] ?? ''))) !== '' ? $x : null,
+                'xBairro' => (string)($e['bairro'] ?? ''),
+                'cMun' => (string)($e['codigo_municipio'] ?? ''),
+                'xMun' => (string)($e['municipio'] ?? ''),
+                'UF' => strtoupper((string)($e['uf'] ?? '')),
+                'CEP' => strlen($cep) === 8 ? $cep : null,
+            ]);
+        }
     }
 
     /** Soma de vProd — a MESMA fórmula do tagprod, para o total fechar. */

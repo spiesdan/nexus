@@ -101,6 +101,20 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
 
   const escolha = resolverProvedor(cfg);
 
+  // A SEFAZ recusa a NF-e sem o endereço do destinatário (rejeição 726). O
+  // bloco `entrega` é o único do contrato que carrega os campos do TLocal,
+  // inclusive o cMun/IBGE; sem ele o sidecar recusaria depois de a nota e o
+  // job já existirem. Falhar aqui evita uma nota que nasce condenada.
+  if (escolha === "spednfe" && (!extras?.entrega || Object.keys(extras.entrega).length === 0)) {
+    throw new ApiError(
+      422,
+      "validation_failed",
+      { requestId },
+      requestId,
+      "Informe o endereço do destinatário (logradouro, número, bairro, município, código IBGE e UF) para emitir a NF-e.",
+    );
+  }
+
   const { data: nota, error } = await supabase
     .from("invoices")
     .insert({
