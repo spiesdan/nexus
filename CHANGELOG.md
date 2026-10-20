@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.32.3] — 2026-10-20
+
+### Corrigido
+
+- **Empresa nova já nasce com a categoria efetiva resolvida** A ingestão gravava só o rótulo cru do Google. Uma cafeteria classificada como
+  "Gas station" entrava na base com a categoria efetiva vazia, e o filtro/faceta
+  de Empresas voltava a mostrá-la como posto até alguém rodar um backfill manual.
+
+  Agora a inserção usa a categoria principal do provider (o termo da busca é a
+  BUSCA, não o que o estabelecimento é) e grava `categoria_canonica`,
+  `categoria_revisar` e `categoria_confianca` na mesma transação. Linha ambígua
+  nasce em revisão e fora de campanha, igual à base já existente.
+
+  A secundária que apenas repete o rótulo primário ("Gas station" em
+  `categorias`) deixou de contar como evidência independente: era ela que anulava
+  a revisão de nomes como "Branca".
+
 ## [1.32.2] — 2026-10-20
 
 ### Corrigido
@@ -5053,7 +5070,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.2...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.3...HEAD
+[1.32.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.2...v1.32.3
 [1.32.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.1...v1.32.2
 [1.32.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...v1.32.0
