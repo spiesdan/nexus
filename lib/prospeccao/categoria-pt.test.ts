@@ -216,5 +216,7 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
     expect(categoriasQueCasam("Esquadrias")).toContain("Aluminum frames supplier");
     expect(categoriasQueCasam("Material de construção")).toContain("Building materials store");
     expect(categoriasQueCasam("Clínica veterinária")).toContain("Veterinarian");
+    expect(categoriasQueCasam("Agropecuária")).toContain("Farm");
+    expect(categoriasQueCasam("Lavagem de veículo (posto)")).toContain("Car wash");
   });
 });

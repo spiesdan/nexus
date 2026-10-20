@@ -153,6 +153,11 @@ async function carregarExistentes(
       .from("business_prospects")
       .select("external_id, telefone_normalizado, nome, nome_normalizado, cidade")
       .eq("organization_id", organizationId)
+      // Linha bloqueada/descartada não bloqueia a descoberta nova: o scraper
+      // pode estar trazendo a empresa de volta com endereço e cidade corretos.
+      // Se ela continuar fora da região, a revisão de cidade bloqueia de novo.
+      .eq("bloqueado", false)
+      .neq("status_comercial", "descartado")
       .order("id", { ascending: true })
       .range(inicio, inicio + PAGINA - 1);
     if (error) throw error;
