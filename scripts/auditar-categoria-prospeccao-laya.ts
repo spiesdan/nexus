@@ -25,7 +25,7 @@ import { writeFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { CATEGORIAS_COMERCIAIS } from "@/lib/prospeccao/categorias";
-import { semAcento, traduzirCategoria } from "@/lib/prospeccao/categoria-pt";
+import { CATEGORIA_PT, semAcento, traduzirCategoria } from "@/lib/prospeccao/categoria-pt";
 
 // O servidor aceita 64 states, mas o modelo vive em 2 GB e o container
 // reinicia quando o lote aperta. 8 é o tamanho que medimos estável com o
@@ -110,7 +110,7 @@ const SINAIS: Array<[RegExp, string[]]> = [
   [/transport|log[ií]stica/i, ["Transportadora"]],
   [/mudan[cç]/i, ["Mudanças"]],
   [/t[aá]xi/i, ["Táxi"]],
-  [/pet|banho\s*e\s*tosa/i, ["Pet shop", "Banho e tosa"]],
+  [/\bpet\b|banho\s*e\s*tosa/i, ["Pet shop", "Banho e tosa"]],
   [/veterin/i, ["Clínica veterinária"]],
   [/sal[aã]o|beleza|cabelo/i, ["Salão de beleza"]],
   [/barbear/i, ["Barbearia"]],
@@ -122,7 +122,9 @@ const SINAIS: Array<[RegExp, string[]]> = [
   [/engenheir|engenharia/i, ["Engenharia", "Construtora"]],
   [/manic|pedic|unha|cabelo|est[eé]tic/i, ["Salão de beleza", "Estética", "Barbearia"]],
   [/pneu/i, ["Borracharia", "Autopeças", "Centro automotivo"]],
-  [/m[oó]ve|planejado/i, ["Marcenaria", "Madeireira"]],
+  [/\bm[oó]veis?\b|planejado/i, ["Marcenaria", "Madeireira"]],
+  [/\bagro|agropecu/i, ["Agropecuária", "Loja agrícola", "Sementes e insumos"]],
+  [/eletric|el[eé]tric/i, ["Elétrica e hidráulica", "Assistência técnica"]],
 ];
 
 interface Linha {
@@ -166,6 +168,22 @@ function alvosDa(linha: Linha): string[] {
 }
 
 /**
+ * Só o que o Google declarou e a tabela PT conhece. Rótulo desconhecido
+ * ("Electrical repair shop", "Gun shop") NÃO define macro: o token "shop"
+ * casaria com "Pet shop" e mandaria a empresa para a macro errada. Sem
+ * tradução conhecida, a única evidência é o nome.
+ */
+function alvosConhecidos(linha: Linha): string[] {
+  const alvos = new Set<string>();
+  if (linha.categoria_canonica) alvos.add(linha.categoria_canonica);
+  for (const c of [linha.categoria, ...(linha.categorias ?? [])]) {
+    const t = c?.trim();
+    if (t && Object.hasOwn(CATEGORIA_PT, t)) alvos.add(traduzirCategoria(t));
+  }
+  return [...alvos];
+}
+
+/**
  * Devolve os candidatos da empresa, do mais provável ao menos provável. Se
  * não há nenhum sinal, devolve só `revisar` — e o chamador não gasta chamada
  * de IA para confirmar que não sabe.
@@ -179,11 +197,12 @@ export function candidatosDa(linha: Linha): string[] {
   //    faria a IA escolher entre roupas e presentes uma empresa que pode ser
   //    qualquer coisa. Sem sinal específico, a linha fica em revisão.
   const GENERICO = /^(loja|comercio|store|corporate office|point of interest|establishment|service establishment|shopping mall|shopping center|local business)$/;
-  const temAlvoEspecifico = alvos.some((a) => !GENERICO.test(semAcento(a).trim()));
+  const alvosMacro = alvosConhecidos(linha);
+  const temAlvoEspecifico = alvosMacro.some((a) => !GENERICO.test(semAcento(a).trim()));
   let macro: string | null = null;
   let melhor = 0;
   if (temAlvoEspecifico) {
-    for (const alvo of alvos) {
+    for (const alvo of alvosMacro) {
       for (const r of ROTULOS) {
         const p = pontua(r, alvo);
         if (p > melhor) {
@@ -244,7 +263,7 @@ function pergunta(cands: string[]) {
   };
 }
 
-async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null, todos: boolean) {
+async function carregar(admin: SupabaseClient, organizationId: string, cidade: string | null, limite: number | null, incluirTodos: boolean) {
   const PAGINA = 1_000;
   const todos: Linha[] = [];
   for (let inicio = 0; ; inicio += PAGINA) {
@@ -257,7 +276,7 @@ async function carregar(admin: SupabaseClient, organizationId: string, cidade: s
       .eq("bloqueado", false)
       .order("id", { ascending: true })
       .range(inicio, inicio + PAGINA - 1);
-    if (!todos) q = q.eq("provider", "maps_browser");
+    if (!incluirTodos) q = q.eq("provider", "maps_browser");
     if (cidade) q = q.eq("cidade", cidade);
     const { data, error } = await q;
     if (error) throw error;
