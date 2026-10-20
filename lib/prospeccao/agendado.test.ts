@@ -174,6 +174,13 @@ function prospect(id: string, nome: string): Linha {
     do_not_contact: false,
     bloqueado: false,
     status_comercial: "novo",
+    // Categoria classificada: o tick bloqueia linha em revisão desde a 0277,
+    // inclusive em campanha sem recorte. O fixture precisa de evidência real.
+    categoria: "Auto repair shop",
+    categorias: [],
+    website: null,
+    categoria_canonica: null,
+    categoria_revisar: false,
   };
 }
 

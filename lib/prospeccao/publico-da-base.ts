@@ -27,13 +27,21 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
+import { semAcento } from "@/lib/prospeccao/categoria-pt";
+import {
+  categoriaCombinaComCampanha,
+  categoriaEfetiva,
+  categoriasAceitas,
+  type CategoriaEfetiva,
+} from "@/lib/prospeccao/categoria-efetiva";
 
 import {
   classificar,
   IndiceDeNomes,
   chaveDeNome,
 } from "@/lib/prospeccao/ja-cadastrada";
+
+export { categoriasAceitas };
 
 /** Cidade/UF da campanha: o que a tela grava em `cidades` (jsonb). */
 export interface CidadeDaCampanha {
@@ -56,6 +64,9 @@ export interface ProspectoDaBase {
   estado: string | null;
   categoria: string | null;
   categorias: string[] | null;
+  website?: string | null;
+  categoria_canonica?: string | null;
+  categoria_revisar?: boolean | null;
 }
 
 export interface LinhaDaBase extends ProspectoDaBase {
@@ -91,10 +102,6 @@ export const MAX_PAGINAS = 50;
 export const LIMITE_PADRAO = 500;
 export const LIMITE_MAXIMO = 5000;
 
-function semAcento(texto: string): string {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-}
-
 /** Chave de comparação de cidade: sem acento, sem caixa, sem espaço sobrando. */
 export function chaveDeCidade(nome: string): string {
   return semAcento(nome).replace(/\s+/g, " ");
@@ -107,12 +114,15 @@ export function chaveDeCidade(nome: string): string {
  * declarou — campanha sem estado alcança qualquer estado, que é o que o
  * operador quis dizer ao não escolher.
  *
- * Categoria: a campanha é uma lista. A empresa serve se ALGUMA das categorias
- * da campanha estiver entre as dela (`categorias`) ou for igual à `categoria`
- * singular. Empresa sem categoria não entra — e é essa recusa explícita que
- * impede a tela de prometer 5.000 e entregar 40.
+ * Categoria: usa a MESMA `categoriaEfetiva` da tela e do disparo. Não é o
+ * rótulo cru do Google: uma cafeteria dentro do posto não serve à campanha de
+ * postos, e uma empresa marcada para revisão não entra em campanha nenhuma.
  */
-export function empresaServe(empresa: ProspectoDaBase, criterio: CriterioDaBase): boolean {
+export function empresaServe(
+  empresa: ProspectoDaBase,
+  criterio: CriterioDaBase,
+  efetiva?: CategoriaEfetiva,
+): boolean {
   if (empresa.cidade === null || empresa.cidade.trim() === "") return false;
   if (!criterio.cidades.some((c) => chaveDeCidade(c.cidade) === chaveDeCidade(empresa.cidade!))) {
     return false;
@@ -125,46 +135,14 @@ export function empresaServe(empresa: ProspectoDaBase, criterio: CriterioDaBase)
     const ufDaEmpresa = empresa.estado === null ? "" : semAcento(empresa.estado);
     if (ufDaEmpresa !== ufDoCriterio) return false;
   }
+  // Campanha sem categoria é "toda a cidade" — comportamento histórico, e o
+  // teste `campanha sem categoria aceita a empresa da cidade` o fixa.
   if (criterio.categorias.length === 0) return true;
-  const daEmpresa = [
-    ...(empresa.categorias ?? []),
-    ...(empresa.categoria ? [empresa.categoria] : []),
-  ].map((c) => semAcento(c).trim());
-  const aceitas = criterio.aceitas ?? categoriasAceitas(criterio.categorias);
-  return daEmpresa.some((c) => aceitas.has(c));
-}
-
-/**
- * As categorias que a campanha aceita, nas DUAS línguas em que a base grava.
- *
- * ═══ O MESMO DEFEITO QUE O USUÁRIO APONTOU, COM O NOME ═══
- *
- * A base grava o rótulo cru da API do Google — **inglês**: "Auto repair shop",
- * "Gas station", "Tire repair shop". A campanha é montada em **português**:
- * "Oficina mecânica", "Posto de combustível", "Borracharia". Comparar as duas
- * strings direto é o mesmo erro de comparar "Salomon" com "Salomón": medido em
- * Videira, a campanha "Oficinas - SC" alcançava **1** das 1.268 empresas da
- * cidade — porque "Oficina mecânica" ≠ "Auto repair shop".
- *
- * O mapa PT↔EN já existe (`lib/prospeccao/categoria-pt.ts`) e é o que o filtro
- * da aba Empresas usa. Aqui é o mesmo mapa: o termo da campanha vira os rótulos
- * que ele descreve, e cada rótulo entra no conjunto já sem acento.
- *
- * ⚠️ NÃO há um segundo passo "tradução exata" varrendo o mapa ao contrário, e
- * isso foi medido, não assumido: a mutação que o desligou passou a suíte
- * inteira. `categoriasQueCasam` já compara por `includes` no rótulo em
- * português, e igualdade ⊂ `includes` — o passo inverso só repetiria o que o
- * primeiro devolve. É a mesma lição que o passo "tradução exata" da
- * `categoria-pt.ts` já deu uma vez: código que a mutação não derruba é código
- * que ninguém sabe se trabalha.
- */
-export function categoriasAceitas(categorias: string[]): Set<string> {
-  const aceitas = new Set<string>();
-  for (const c of categorias) {
-    aceitas.add(semAcento(c).trim());
-    for (const bruta of categoriasQueCasam(c)) aceitas.add(semAcento(bruta).trim());
-  }
-  return aceitas;
+  return categoriaCombinaComCampanha(
+    efetiva ?? categoriaEfetiva(empresa),
+    criterio.categorias,
+    criterio.aceitas,
+  );
 }
 
 /** Critério a partir da campanha, já com o estado abreviado quando é um só. */
@@ -209,7 +187,7 @@ function consultaDaBase(
   let q = supabase
     .from("business_prospects")
     .select(
-      "id, nome, telefone, cidade, estado, categoria, categorias, whatsapp_potencial, do_not_contact",
+      "id, nome, telefone, cidade, estado, categoria, categorias, website, categoria_canonica, categoria_revisar, whatsapp_potencial, do_not_contact",
     )
     .eq("organization_id", org)
     .eq("do_not_contact", false)
@@ -234,12 +212,19 @@ export interface ResultadoDaBase {
     nome: string;
     telefone: string | null;
     cidade: string | null;
+    /** Rótulo EFETIVO (a cafeteria aparece como café, não como posto). */
     categoria: string | null;
+    /** O rótulo cru do Google, para quem precisar auditar. */
+    categoria_original: string | null;
   }>;
   /** Quantas linhas da base foram lidas para chegar aí — a tela mostra, não esconde. */
   varridas: number;
   /** A varredura chegou ao fim da base, ou parou no teto de páginas? */
   completa: boolean;
+  /** Já reservadas por outra campanha — fora da fila (regra de exclusividade). */
+  em_campanha: number;
+  /** Categoria duvidosa (`revisar`) — fora da fila até alguém olhar. */
+  categoria_a_revisar: number;
   /**
    * O que SAIU da fila, com o motivo. Sem isso a tela diria "1.200 empresas" e
    * o operador não saberia que 103 delas são clientes que a loja já atende —
@@ -303,6 +288,12 @@ export async function publicoDaBase(
     limite?: number;
     /** Índice dos contatos que são empresa; sem ele, ninguém sai por cliente. */
     clientes?: IndiceDeNomes | null;
+    /**
+     * IDs já reservados por OUTRA campanha (lista fechada ou envio). O público
+     * da base não os oferece de novo — é a regra "empresa em campanha não
+     * aparece em aberto".
+     */
+    reservados?: ReadonlySet<string>;
   },
 ): Promise<ResultadoDaBase> {
   const limite = Math.min(Math.max(input.limite ?? LIMITE_PADRAO, 1), LIMITE_MAXIMO);
@@ -316,6 +307,8 @@ export async function publicoDaBase(
   const linhas: ResultadoDaBase["linhas"] = [];
   const jaClientes: ResultadoDaBase["ja_clientes"] = [];
   const paraRevisar: ResultadoDaBase["para_revisar"] = [];
+  let emCampanha = 0;
+  let categoriaARevisar = 0;
   // Duplicata interna: chave + cidade já vistas NESTA varredura. A segunda
   // ocorrência SAI — mandar duas vezes para a mesma empresa é o erro que o
   // operador vê ("recebi duas mensagens") e que nenhuma tela contava.
@@ -339,7 +332,20 @@ export async function publicoDaBase(
     if (lote.length === 0) break;
     varridas += lote.length;
     for (const e of lote) {
-      if (!empresaServe(e, criterio)) continue;
+      const efetiva = categoriaEfetiva(e);
+      // Categoria duvidosa só entra na conta se a empresa serviria à campanha
+      // por cidade/UF — senão o número assusta sem motivo. E fica fora de
+      // QUALQUER campanha, inclusive da histórica sem recorte: "sem categoria
+      // na campanha" significa "toda a cidade", não "pode apostar na dúvida".
+      if (efetiva.revisar && empresaServe(e, { ...criterio, categorias: [] }, efetiva)) {
+        categoriaARevisar += 1;
+        continue;
+      }
+      if (!empresaServe(e, criterio, efetiva)) continue;
+      if (input.reservados?.has(e.id)) {
+        emCampanha += 1;
+        continue;
+      }
 
       const chave = `${chaveDeNome(e.nome)}|${chaveDeNome(e.cidade ?? "")}`;
       const vista = vistas.get(chave);
@@ -366,7 +372,8 @@ export async function publicoDaBase(
             nome: e.nome,
             telefone: e.telefone,
             cidade: e.cidade,
-            categoria: e.categoria,
+            categoria: efetiva.rotulo,
+            categoria_original: e.categoria,
           };
           vistas.set(chave, {
             nome: e.nome,
@@ -416,7 +423,8 @@ export async function publicoDaBase(
         nome: e.nome,
         telefone: e.telefone,
         cidade: e.cidade,
-        categoria: e.categoria,
+        categoria: efetiva.rotulo,
+        categoria_original: e.categoria,
       });
       vistas.set(chave, {
         nome: e.nome,
@@ -437,6 +445,8 @@ export async function publicoDaBase(
     linhas,
     varridas,
     completa,
+    em_campanha: emCampanha,
+    categoria_a_revisar: categoriaARevisar,
     ja_clientes: jaClientes,
     duplicadas,
     para_revisar: paraRevisar,
@@ -456,6 +466,12 @@ export function resumoDaBase(r: ResultadoDaBase): string {
     );
   }
   if (r.duplicadas > 0) partes.push(`${r.duplicadas} duplicadas (fora da fila)`);
+  if (r.em_campanha > 0) {
+    partes.push(`${r.em_campanha} já estão em outra campanha (fora da fila)`);
+  }
+  if (r.categoria_a_revisar > 0) {
+    partes.push(`${r.categoria_a_revisar} com categoria a revisar (fora da fila)`);
+  }
   if (r.para_revisar.length > 0) {
     partes.push(`${r.para_revisar.length} para revisar o nome`);
   }

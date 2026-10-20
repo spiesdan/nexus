@@ -34,6 +34,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { normalizaTelefone } from "@/lib/contacts/csv";
 import { logger } from "@/lib/logger";
+import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import { mensagemDaVez } from "@/lib/prospeccao/disparo";
 import { enviarParaProspect, type ProspectParaEnvio } from "@/lib/prospeccao/envio";
 import { fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
@@ -80,6 +81,8 @@ interface CampanhaAgendada {
   publico: string | null;
   prospect_ids: string[] | null;
   contato_ids: string[] | null;
+  /** O recorte de categoria da campanha (0277) — vazio/`empresas` = sem filtro. */
+  categorias: string[] | null;
   mensagens: string[] | null;
   espaco_ms: number;
   limite_diario: number;
@@ -96,6 +99,11 @@ interface ProspectDoBanco {
   do_not_contact: boolean;
   bloqueado: boolean;
   status_comercial: string;
+  categoria: string | null;
+  categorias: string[] | null;
+  website: string | null;
+  categoria_canonica: string | null;
+  categoria_revisar: boolean | null;
 }
 
 interface EstadoDaOrg {
@@ -123,7 +131,7 @@ interface EstadoDaOrg {
 }
 
 const COLUNAS =
-  "id, organization_id, nome, publico, prospect_ids, contato_ids, mensagens, espaco_ms, " +
+  "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, espaco_ms, " +
   "limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
 
 export async function processarCampanhasAgendadas(
@@ -181,17 +189,21 @@ export async function processarCampanhasAgendadas(
       }
 
       // O ledger diz quem JÁ recebeu e quando — idempotência e cota do dia
-      // saem da MESMA leitura.
+      // saem da MESMA leitura. Desde a 0277 ele é GLOBAL por organização: um
+      // prospect enviado por OUTRA campanha também sai desta lista. Sem isso,
+      // a segunda campanha escolheria a empresa de novo e a unique global
+      // faria o tick reservar nada — a campanha ficaria presa no mesmo ponto.
       const { data: linhasEnviadas } = await admin
         .from("prospecting_sends")
-        .select("prospect_id, enviado_em")
-        .eq("organization_id", campanha.organization_id)
-        .eq("campaign_id", campanha.id);
-      const enviadas = (linhasEnviadas ?? []) as unknown as Array<{
+        .select("prospect_id, campaign_id, enviado_em")
+        .eq("organization_id", campanha.organization_id);
+      const todasEnviadas = (linhasEnviadas ?? []) as unknown as Array<{
         prospect_id: string;
+        campaign_id: string;
         enviado_em: string;
       }>;
-      const jaEnviados = new Set(enviadas.map((l) => l.prospect_id));
+      const enviadas = todasEnviadas.filter((l) => l.campaign_id === campanha.id);
+      const jaEnviados = new Set(todasEnviadas.map((l) => l.prospect_id));
       const restantes = listaFechada.filter((id) => !jaEnviados.has(id));
 
       // Não sobra ninguém → a campanha ACABA sozinha (o "pare sozinho").
@@ -283,6 +295,7 @@ export async function processarCampanhasAgendadas(
           campanha.organization_id,
           restantes.slice(i, i + MAX_PROSPECTS_POR_TICK),
           publico,
+          publico === "contatos" ? [] : (campanha.categorias ?? []),
         );
         if (escolhido) break;
       }
@@ -297,13 +310,13 @@ export async function processarCampanhasAgendadas(
       const mensagem = mensagemDaVez(mensagens, indice);
 
       // ── A RESERVA, ANTES do envio ────────────────────────────────────────
-      // O ledger é a TRAVA, não só o comprovante: a unique
-      // (campaign_id, prospect_id) com `ignoreDuplicates` faz o INSERT
-      // devolver linha para UM tick só. Sem isto, dois ticks sobrepostos — o
-      // crond NÃO espera o anterior terminar, e um tick com dezenas de
-      // campanhas passa de 60s — leriam o mesmo ledger, escolheriam o MESMO
-      // prospect e mandariam duas mensagens para a mesma empresa no mesmo
-      // minuto. É exatamente o risco que o agendamento existe para não criar.
+      // O ledger é a TRAVA, não só o comprovante: a unique GLOBAL
+      // (organization_id, prospect_id) com `ignoreDuplicates` faz o INSERT
+      // devolver linha para UM tick só — e impede que OUTRA campanha da mesma
+      // organização envie para a mesma empresa, mesmo em corrida. Sem isto,
+      // dois ticks sobrepostos — o crond NÃO espera o anterior terminar, e um
+      // tick com dezenas de campanhas passa de 60s — leriam o mesmo ledger,
+      // escolheriam o MESMO prospect e mandariam duas mensagens.
       //
       // A reserva fica MESMO quando o envio falha, de propósito: ela é o
       // registro de que a TENTATIVA aconteceu. Apagá-la faria o tick insistir
@@ -320,7 +333,7 @@ export async function processarCampanhasAgendadas(
             message_id: null,
             enviado_em: agoraIso,
           },
-          { onConflict: "campaign_id,prospect_id", ignoreDuplicates: true },
+          { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
         )
         .select("prospect_id");
       if (erroReserva) {
@@ -469,10 +482,11 @@ async function escolherDaAudiencia(
   orgId: string,
   ids: string[],
   publico: "prospects" | "contatos",
+  categorias: string[],
 ): Promise<ProspectParaEnvio | null> {
   return publico === "contatos"
     ? escolherContato(admin, orgId, ids)
-    : escolherProspect(admin, orgId, ids);
+    : escolherProspect(admin, orgId, ids, categorias);
 }
 
 /** O primeiro CONTATO da lista (na ORDEM do array) que ainda pode receber. */
@@ -515,11 +529,14 @@ async function escolherProspect(
   admin: SupabaseClient,
   orgId: string,
   ids: string[],
+  categorias: string[],
 ): Promise<ProspectParaEnvio | null> {
   if (ids.length === 0) return null;
   const { data } = await admin
     .from("business_prospects")
-    .select("id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial")
+    .select(
+      "id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial, categoria, categorias, website, categoria_canonica, categoria_revisar",
+    )
     .eq("organization_id", orgId)
     .in("id", ids);
   const porId = new Map(
@@ -533,6 +550,13 @@ async function escolherProspect(
     if (!p) continue; // prospect apagado — o tick ignora e segue
     if (p.do_not_contact || p.bloqueado) continue;
     if (p.status_comercial === "cliente") continue;
+    // A MESMA categoriaEfetiva da tela e do disparo: cafeteria dentro do posto
+    // não recebe campanha de posto, e linha em REVISÃO não recebe campanha
+    // nenhuma — nem a campanha histórica sem recorte de categoria. O recorte
+    // vazio continua sendo "toda a cidade" para as linhas classificadas.
+    const efetiva = categoriaEfetiva(p);
+    if (efetiva.revisar) continue;
+    if (categorias.length > 0 && !categoriaCombinaComCampanha(efetiva, categorias)) continue;
     const fone = p.telefone_normalizado;
     if (!fone || !/^\+\d{8,15}$/.test(fone)) continue;
     return { id, nome: p.nome ?? "(sem nome)", telefone_normalizado: fone };

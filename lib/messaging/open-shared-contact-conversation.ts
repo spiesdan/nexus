@@ -164,13 +164,41 @@ async function aplicarContexto(
   }
 }
 
+/**
+ * A sessão para ABRIR uma conversa — não para enviar.
+ *
+ * `sessaoProntaParaEnvio` é a régua do ENVIO: só WORKING não arquivada. Abrir
+ * a conversa de um contato não manda nada, e uma sessão parada/arquivada
+ * continua sendo o histórico daquele número. Sem este fallback, uma
+ * organização cuja única sessão foi arquivada recebia 404 ao abrir a conversa
+ * — e a tela dizia "sessão não encontrada" quando o problema real era
+ * "conecte o WhatsApp".
+ */
+async function sessaoParaAbrir(
+  admin: Admin,
+  organizationId: string,
+  explicita: string | null | undefined,
+): Promise<string | null> {
+  if (explicita) return explicita;
+  const pronta = await sessaoProntaParaEnvio(admin, organizationId);
+  if (pronta) return pronta;
+  const { data } = await admin
+    .from("channel_sessions")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { id?: string } | null)?.id ?? null;
+}
+
 /** Garante contato + conversa na sessão indicada; reabre conversa fechada se existir. */
 export async function openSharedContactConversation(
   admin: Admin,
   organizationId: string,
   input: OpenSharedContactInput,
 ): Promise<OpenSharedContactResult> {
-  const sessionId = input.channel_session_id ?? (await sessaoProntaParaEnvio(admin, organizationId));
+  const sessionId = await sessaoParaAbrir(admin, organizationId, input.channel_session_id);
   if (!sessionId) throw new Error("session_not_found");
   const { data: session, error: sessErr } = await admin
     .from("channel_sessions")

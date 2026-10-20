@@ -108,9 +108,20 @@ function clausulasOu(bruto: string): Filtro[] {
   }
   if (atual.trim() !== "") partes.push(atual);
   return partes.map((parte) => {
-    const i1 = parte.indexOf(".");
-    const i2 = parte.indexOf(".", i1 + 1);
-    return { op: parte.slice(i1 + 1, i2), col: parte.slice(0, i1), val: parte.slice(i2 + 1) };
+    const limpo = parte.trim();
+    // Grupo `and(a,b)` do PostgREST (0277: categoria canônica + rótulo cru).
+    if (limpo.startsWith("and(") && limpo.endsWith(")")) {
+      return { op: "and", col: "", val: clausulasOu(limpo.slice(4, -1)) };
+    }
+    const i1 = limpo.indexOf(".");
+    const i2 = limpo.indexOf(".", i1 + 1);
+    const op = limpo.slice(i1 + 1, i2);
+    const brutoValor = limpo.slice(i2 + 1);
+    return {
+      op,
+      col: limpo.slice(0, i1),
+      val: op === "is" && brutoValor === "null" ? null : brutoValor,
+    };
   });
 }
 
@@ -151,6 +162,8 @@ function makeDb(seed: Record<string, Row[]> = {}) {
       }
       case "ou":
         return clausulasOu(String(f.val)).some((c) => avaliar(r, c));
+      case "and":
+        return (f.val as Filtro[]).every((c) => avaliar(r, c));
       default:
         return false;
     }
@@ -1415,5 +1428,83 @@ describe("GET /api/v1/prospecting/mercado — lote ?cidades (B15, FASE 15)", () 
     const res = await rotaMercado.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/mercado"));
     expect(res.status).toBe(500);
     expect((await res.json()).error.code).toBe("internal_error");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 0277 — a criação de campanha recusa empresa já reservada
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("POST /api/v1/prospecting/campaigns — exclusividade da 0277", () => {
+  const CAMPANHA_EXISTENTE = {
+    id: CAMPANHA_ID,
+    organization_id: ORG_ID,
+    nome: "Oficinas - SC",
+    prospect_ids: [PROSPECT_A],
+    contato_ids: null,
+  };
+
+  function corpo(over: Row = {}): Row {
+    return {
+      nome: "Campanha nova",
+      categorias: ["Oficina mecânica"],
+      cidades: [{ cidade: "Joinville", estado: "SC" }],
+      prospect_ids: [PROSPECT_A],
+      ...over,
+    };
+  }
+
+  it("empresa em outra campanha → 409 state_conflict com quem reservou", async () => {
+    const db = makeDb({
+      business_prospects: [prospecto({ categoria: "Auto repair shop", nome: "Mecânica Aliança" })],
+      prospecting_campaigns: [CAMPANHA_EXISTENTE],
+      prospecting_sends: [],
+    });
+    session("agent", db);
+
+    const res = await rotaCampanhas.POST(
+      req("POST", corpo(), "http://localhost/api/v1/prospecting/campaigns"),
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error.code).toBe("state_conflict");
+    expect(body.error.details.conflitos[0]).toMatchObject({
+      id: PROSPECT_A,
+      motivo: "outra_campanha",
+      campanha_nome: "Oficinas - SC",
+    });
+    // Nada foi inserido: a recusa acontece ANTES do insert.
+    expect(db.tabelas.prospecting_campaigns).toHaveLength(1);
+  });
+
+  it("empresa classificada e da categoria pedida → 201", async () => {
+    const db = makeDb({
+      business_prospects: [prospecto({ categoria: "Auto repair shop", nome: "Mecânica Aliança" })],
+      prospecting_campaigns: [],
+      prospecting_sends: [],
+    });
+    session("agent", db);
+
+    const res = await rotaCampanhas.POST(
+      req("POST", corpo(), "http://localhost/api/v1/prospecting/campaigns"),
+    );
+    expect(res.status).toBe(201);
+    expect(db.tabelas.prospecting_campaigns).toHaveLength(1);
+  });
+
+  it("empresa em revisão → 409 e não deixa criar", async () => {
+    const db = makeDb({
+      business_prospects: [prospecto({ categoria: "Gas station", nome: "Branca" })],
+      prospecting_campaigns: [],
+      prospecting_sends: [],
+    });
+    session("agent", db);
+
+    const res = await rotaCampanhas.POST(
+      req("POST", corpo(), "http://localhost/api/v1/prospecting/campaigns"),
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error.details.conflitos[0].motivo).toBe("revisar");
   });
 });

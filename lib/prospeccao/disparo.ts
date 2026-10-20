@@ -87,6 +87,14 @@ export type MotivoDeRecusa =
   | "conversa_ativa"
   /** Mandamos há pouco para este número. */
   | "mensagem_recente"
+  /** A empresa já foi reservada por outra campanha (0277). */
+  | "em_outra_campanha"
+  /** A categoria da empresa está marcada para revisão humana (0277). */
+  | "categoria_revisar"
+  /** A categoria efetiva não é a da campanha (0277). */
+  | "categoria_incompativel"
+  /** O ledger global já tem envio desta campanha para a empresa (0277). */
+  | "ja_enviado"
   /** A cota do dia acabou. Não é recusa da PESSOA — é do dia. */
   | "cota_esgotada";
 
@@ -108,6 +116,14 @@ export interface CandidatoAoDisparo {
   conversaAberta: boolean;
   /** Houve outbound para este contato dentro do cooldown. */
   mensagemRecente: boolean;
+  /** Já está em `prospect_ids`/`contato_ids` de outra campanha (0277). */
+  emOutraCampanha?: boolean;
+  /** `categoria_revisar` da empresa — não mandar sem revisão humana. */
+  categoriaRevisar?: boolean;
+  /** A categoria efetiva não combina com a campanha. */
+  categoriaIncompativel?: boolean;
+  /** O ledger global já tem envio desta campanha para esta empresa. */
+  jaEnviado?: boolean;
 }
 
 export interface ParametrosDoDisparo {
@@ -176,6 +192,10 @@ export const ROTULO_DA_RECUSA: Record<MotivoDeRecusa, string> = {
   ja_cliente: "Já é cliente",
   conversa_ativa: "Já tem conversa aberta",
   mensagem_recente: "Recebeu mensagem recentemente",
+  em_outra_campanha: "Já está em outra campanha",
+  categoria_revisar: "Categoria a revisar",
+  categoria_incompativel: "Fora da categoria da campanha",
+  ja_enviado: "Já recebeu esta campanha",
   cota_esgotada: "Cota do dia esgotada",
 };
 
@@ -296,6 +316,12 @@ function motivoDaRecusa(c: CandidatoAoDisparo): MotivoDeRecusa | null {
   if (c.status_comercial === "cliente") return "ja_cliente";
   if (c.contatoBloqueado) return "contato_bloqueado";
   if (c.consentRecusado) return "consent_recusado";
+  // 0277 — a exclusividade da campanha e a categoria vêm antes do canal: não
+  // adianta o telefone ser bom se a empresa não pode entrar nesta campanha.
+  if (c.emOutraCampanha) return "em_outra_campanha";
+  if (c.categoriaRevisar) return "categoria_revisar";
+  if (c.categoriaIncompativel) return "categoria_incompativel";
+  if (c.jaEnviado) return "ja_enviado";
 
   if (!c.telefone_normalizado) return "sem_telefone";
   if (!/^\+\d{8,15}$/.test(c.telefone_normalizado)) return "telefone_invalido";

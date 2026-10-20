@@ -13,6 +13,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import { tarefaEspelhadaParaAtualizar, tarefaEspelhadaParaCriar, type ProspectDaTarefa } from "@/lib/prospeccao/tarefa";
 import { COLUNAS_DO_PROSPECT, prospectPatchSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
@@ -49,9 +50,61 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
 
   const { id } = await params;
   const supabase = await createClient();
+
+  // 0277 — corrigir/confirmar a categoria é mais que trocar `categoria`.
+  // `categoria_canonica` é o que manda na leitura; sem gravá-la, a heurística
+  // marcaria a linha como `revisar` de novo no próximo GET.
+  const dados: {
+    status_comercial?: (typeof parsed.data)["status_comercial"];
+    do_not_contact?: boolean;
+    bloqueado?: boolean;
+    categoria?: string;
+    categoria_revisar?: boolean;
+    categoria_canonica?: string | null;
+    categoria_confianca?: "alta" | "media" | "baixa" | null;
+    owner_user_id?: string | null;
+    proximo_passo?: string | null;
+  } = { ...parsed.data };
+
+  if (dados.categoria !== undefined || dados.categoria_revisar !== undefined) {
+    const { data: atual, error: errAtual } = await supabase
+      .from("business_prospects")
+      .select("nome, categoria, categorias, website, categoria_canonica, categoria_revisar")
+      .eq("id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    if (errAtual) {
+      return fail("internal_error", "Erro ao ler a categoria atual.", 500, { requestId });
+    }
+    if (!atual) return fail("not_found", "Prospect não encontrado.", 404, { requestId });
+
+    const efetiva = categoriaEfetiva(
+      atual as unknown as {
+        nome: string;
+        categoria: string | null;
+        categorias: string[] | null;
+        website: string | null;
+        categoria_canonica: string | null;
+        categoria_revisar: boolean | null;
+      },
+    );
+    if (dados.categoria !== undefined) {
+      // O rótulo escolhido pelo operador é a verdade — e ele confirmou.
+      dados.categoria_canonica = dados.categoria;
+      dados.categoria_confianca = "alta";
+      if (dados.categoria_revisar === undefined) dados.categoria_revisar = false;
+    } else if (dados.categoria_revisar === false) {
+      // "Confirmo que está certo": congela o rótulo efetivo atual.
+      dados.categoria_canonica = efetiva.rotulo;
+      dados.categoria_confianca = "alta";
+    } else if (dados.categoria_revisar === true) {
+      dados.categoria_confianca = "baixa";
+    }
+  }
+
   const { data, error } = await supabase
     .from("business_prospects")
-    .update(parsed.data)
+    .update(dados)
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
     .select(COLUNAS_DO_PROSPECT)
@@ -129,7 +182,22 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     }
   }
 
-  return ok(data, { requestId });
+  const linhaSalva = data as unknown as {
+    nome: string;
+    categoria: string | null;
+    categorias: string[] | null;
+    website: string | null;
+    categoria_canonica: string | null;
+    categoria_revisar: boolean | null;
+  } & Record<string, unknown>;
+
+  return ok(
+    {
+      ...linhaSalva,
+      categoria_efetiva: categoriaEfetiva(linhaSalva).rotulo,
+    },
+    { requestId },
+  );
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params): Promise<Response> {

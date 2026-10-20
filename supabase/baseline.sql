@@ -20119,79 +20119,6 @@ begin
 end $$;
 
 
--- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
---
--- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
--- dele — quem o empurrar para o meio desarma a cura para tudo que vier depois.
--- Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
---
--- A 0108 revogou anon numa LISTA de 8 funções, medida num banco instalado do
--- ZERO. Quem ATUALIZA tem outro estado: o `ALTER DEFAULT PRIVILEGES ... GRANT
--- ALL ON FUNCTIONS TO anon` do corpo deste arquivo grava uma entrada em
--- `pg_default_acl` que fica no catálogo PARA SEMPRE, e a partir daí toda função
--- criada em `public` nasce com EXECUTE para anon — inclusive as deste apêndice.
---
--- Medido numa VPS real (2026-08-07), comparando com o que um install fresco
--- produz: 6 definer expostas a anon e 5 a authenticated, entre elas
--- `fn_decrypt_oauth` — alcançável pela anon key, que vai para o browser.
---
--- Lista conserta o estoque e reabre no próximo `create function`. Esta varredura
--- é auto-curativa e roda DEPOIS de tudo que cria função, então cura no mesmo run
--- em que o defeito nasceria. Desfazer o ALTER DEFAULT PRIVILEGES não serve: ele
--- vem do `pg_dump` do Supabase e é reescrito a cada re-aplicação.
---
--- As duas origens de EXECUTE (a mesma lição da 0108): grant DIRETO a anon, que
--- `revoke from public` não remove; e grant a PUBLIC, do qual anon HERDA, que
--- `revoke from anon` não remove. O privilégio EFETIVO de authenticated e
--- service_role é medido ANTES e devolvido depois — tira anon sem tirar leitura.
-do $$
-declare
-  f record;
-  tinha_auth boolean;
-  tinha_service boolean;
-begin
-  if to_regrole('anon') is null then
-    return;
-  end if;
-
-  for f in
-    select p.oid, p.oid::regprocedure as assinatura
-      from pg_proc p
-      join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public'
-       and p.prosecdef
-  loop
-    tinha_auth := to_regrole('authenticated') is not null
-                  and has_function_privilege('authenticated', f.oid, 'EXECUTE');
-    tinha_service := to_regrole('service_role') is not null
-                     and has_function_privilege('service_role', f.oid, 'EXECUTE');
-
-    execute format('revoke execute on function %s from public, anon', f.assinatura);
-
-    if tinha_auth then
-      execute format('grant execute on function %s to authenticated', f.assinatura);
-    end if;
-    if tinha_service then
-      execute format('grant execute on function %s to service_role', f.assinatura);
-    end if;
-  end loop;
-end $$;
-
--- regra 2 (authenticated): as 5 que o update abriu e o install não abre. Aqui não
--- cabe varredura — `authenticated` PRECISA de EXECUTE nos helpers de RLS e em
--- `retrieve_top_k_chunks` (num install fresco ele tem). É julgamento por função,
--- e o alvo de cada linha é o valor que um install fresco produz, medido.
-revoke execute on function public.fn_audit_log_row() from authenticated;
-revoke execute on function public.fn_decrypt_oauth(bytea) from authenticated;
-revoke execute on function public.fn_encrypt_oauth(text) from authenticated;
-revoke execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) from authenticated;
-revoke execute on function public.fn_update_budget_consumption() from authenticated;
-
-grant execute on function public.fn_audit_log_row() to service_role;
-grant execute on function public.fn_decrypt_oauth(bytea) to service_role;
-grant execute on function public.fn_encrypt_oauth(text) to service_role;
-grant execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) to service_role;
-grant execute on function public.fn_update_budget_consumption() to service_role;
 
 -- ---- versão de acervo conta por MATERIAL, não por agente (migration 0205) ----
 --
@@ -21980,3 +21907,326 @@ begin
       check (contato_no_cliente is null or char_length(contato_no_cliente) <= 120);
   end if;
 end $$;
+
+
+-- ── 0277 · prospecção exclusiva e categoria efetiva ──────────────────────────
+-- Empresa/contato em uma campanha só (trigger de seleção + unique global de
+-- envio) e categoria canônica/revisar na base. Idempotente.
+
+-- 0277_prospeccao_exclusiva_e_categoria
+--
+-- O QUE MUDOU
+--
+-- 1. A EMPRESA PERTENCE A UMA CAMPANHA SÓ. Até aqui `prospecting_campaigns`
+--    guardava `prospect_ids` sem nenhuma trava: a segunda campanha podia
+--    selecionar a mesma empresa, o público da base a oferecia de novo e o
+--    disparo mandava duas mensagens — uma por campanha. O operador só descobria
+--    depois, no número do cliente.
+--
+--    Duas travas, em camadas diferentes:
+--      * TRIGGER `prospecting_campaign_reserva_unica` — a lista fechada
+--        (`prospect_ids` de prospects, `contato_ids` de contatos) não pode
+--        sobrepor a de outra campanha da mesma organização. É a trava da
+--        SELEÇÃO, que impede a empresa de entrar em duas campanhas.
+--      * UNIQUE `prospecting_sends_org_prospect_unico` — o ledger de envios
+--        passa a ser único por (organização, linha da audiência), não por
+--        campanha. É a trava do ENVIO: mesmo que uma lista antiga escape, a
+--        segunda campanha não consegue inserir o envio nem com corrida.
+--
+--    `prospecting_sends.prospect_id` guarda o id da LINHA DA AUDIÊNCIA
+--    (prospect ou contato) desde a 0274; a unique global vale para as duas.
+--
+-- 2. A CATEGORIA GANHA MEMÓRIA. `business_prospects` recebe
+--    `categoria_canonica`, `categoria_confianca` e `categoria_revisar`.
+--    O rótulo cru do Google continua sendo a evidência primária; a coluna
+--    canônica guarda só o que foi CORRIGIDO com evidência (café dentro do
+--    posto, posto de saúde, lava-jato, posto com marca classificado como
+--    oficina) e o `revisar` marca o que não dá para decidir sem humano
+--    (posto sem nome/site que confirme). A função `categoriaEfetiva` é a
+--    mesma na tela, no público e no disparo; a coluna é o cache/filtro.
+--
+-- 3. O backfill abaixo é conservador de propósito: só grava onde há sinal
+--    EXPLÍCITO no nome. "Branca" e "Ellg" não viram cafeteria nem posto por
+--    adivinhação — viram `revisar`. Quem já tem `categoria_canonica` ou
+--    revisão humana não é sobrescrito.
+--
+-- Idempotente: pode rodar de novo (o baseline aplica em install E update).
+
+-- ─── 1. Categoria efetiva ───────────────────────────────────────────────────
+
+alter table public.business_prospects
+  add column if not exists categoria_canonica text,
+  add column if not exists categoria_confianca text,
+  add column if not exists categoria_revisar boolean not null default false;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'business_prospects_categoria_confianca_check'
+  ) then
+    alter table public.business_prospects
+      add constraint business_prospects_categoria_confianca_check
+      check (
+        categoria_confianca is null
+        or categoria_confianca in ('alta', 'media', 'baixa')
+      );
+  end if;
+end $$;
+
+create index if not exists business_prospects_categoria_revisar_idx
+  on public.business_prospects (organization_id)
+  where categoria_revisar;
+
+create index if not exists business_prospects_categoria_canonica_idx
+  on public.business_prospects (organization_id, categoria_canonica)
+  where categoria_canonica is not null;
+
+comment on column public.business_prospects.categoria_canonica is
+  'Rótulo efetivo em PT quando o rótulo cru do Google foi corrigido/revisado (café no posto, posto de saúde, lava-jato, posto com marca). NULL = usar o rótulo cru traduzido.';
+comment on column public.business_prospects.categoria_confianca is
+  'alta | media | baixa — confiança da categoria efetiva. NULL = não calculada.';
+comment on column public.business_prospects.categoria_revisar is
+  'true = categoria duvidosa; NÃO entra em campanha/disparo até revisão humana.';
+
+-- Backfill: só toca linha que ainda não tem correção/ revisão. O `case` é a
+-- mesma ordem da função `lib/prospeccao/categoria-efetiva.ts`.
+update public.business_prospects
+set categoria_canonica = case
+  when categoria = 'Gas station'
+    and nome ~* '(esta[cç][aã]o[[:space:]]*caf[eé]|caf[eé]|cafeteria|coffee[[:space:]]*shop)'
+    then 'Café'
+  when categoria = 'Gas station'
+    and nome ~* '(posto[[:space:]]+de[[:space:]]+sa[uú]de|(^|[^a-z])ubs([^a-z]|$)|(^|[^a-z])usf([^a-z]|$)|unidade[[:space:]]+b[aá]sica[[:space:]]+de[[:space:]]+sa[uú]de|posto[[:space:]]+de[[:space:]]+vacina|posto[[:space:]]+de[[:space:]]+enfermagem)'
+    then 'Centro público de saúde'
+  when categoria = 'Gas station'
+    and nome ~* '(posto[[:space:]]+de[[:space:]]+atendimento|posto[[:space:]]+de[[:space:]]+coleta|posto[[:space:]]+policial|posto[[:space:]]+de[[:space:]]+assist[eê]ncia)'
+    then 'Órgão público'
+  when categoria = 'Gas station'
+    and nome ~* '(posto[[:space:]]+de[[:space:]]+molas|molas|suspens[aã]o|alinhamento)'
+    then 'Oficina mecânica'
+  when categoria = 'Gas station'
+    and nome ~* '(lava[cç][aã]o|lavagem|lava[[:space:]-]?jato)'
+    then 'Lavejão'
+  when categoria = 'Gas station' and nome ~* 'restaurante'
+    then 'Restaurante'
+  when categoria = 'Gas station' and nome ~* 'lanchonete'
+    then 'Lanchonete'
+  when categoria = 'Gas station' and nome ~* '(padaria|panificadora)'
+    then 'Padaria'
+  when categoria = 'Gas station' and nome ~* '(farm[aá]cia|drogaria)'
+    then 'Farmácia'
+  when categoria = 'Gas station' and nome ~* '(supermercado|hipermercado)'
+    then 'Supermercado'
+  when categoria = 'Gas station'
+    and nome ~* '([[:<:]]loja[[:>:]]|conveni[eê]ncia|[[:<:]]mercado[[:>:]])'
+    then 'Mercearia de bairro'
+  when categoria = 'Auto repair shop'
+    and nome ~* '(auto[[:space:]]*posto|posto[[:space:]]+(ipiranga|shell|petrobras|vibra|br)|posto[[:space:]]+de[[:space:]]+gasolina|posto[[:space:]]+de[[:space:]]+combust[ií]vel)'
+    then 'Posto de combustível'
+  else categoria_canonica
+end,
+categoria_confianca = case
+  when categoria = 'Gas station'
+    and nome ~* '(esta[cç][aã]o[[:space:]]*caf[eé]|caf[eé]|cafeteria|coffee[[:space:]]*shop)'
+    then 'alta'
+  when categoria = 'Gas station'
+    and nome ~* '(posto[[:space:]]+de[[:space:]]+sa[uú]de|(^|[^a-z])ubs([^a-z]|$)|(^|[^a-z])usf([^a-z]|$)|unidade[[:space:]]+b[aá]sica[[:space:]]+de[[:space:]]+sa[uú]de|posto[[:space:]]+de[[:space:]]+vacina|posto[[:space:]]+de[[:space:]]+enfermagem)'
+    then 'alta'
+  when categoria = 'Auto repair shop'
+    and nome ~* '(auto[[:space:]]*posto|posto[[:space:]]+(ipiranga|shell|petrobras|vibra|br)|posto[[:space:]]+de[[:space:]]+gasolina|posto[[:space:]]+de[[:space:]]+combust[ií]vel)'
+    then 'media'
+  else categoria_confianca
+end
+where categoria_canonica is null
+  and categoria_revisar = false
+  and categoria in ('Gas station', 'Auto repair shop');
+
+-- Posto sem nenhuma evidência de combustível e sem site: revisar, não adivinhar.
+update public.business_prospects
+set categoria_revisar = true,
+    categoria_confianca = 'baixa'
+where categoria = 'Gas station'
+  and categoria_canonica is null
+  and categoria_revisar = false
+  and nullif(btrim(website), '') is null
+  and nome !~* '(posto|combust[ií]vel|gasolina|etanol|diesel|gnv|ipiranga|shell|petrobras|vibra|auto[[:space:]]*posto)';
+
+-- Categoria genérica sem secundária específica: revisar.
+update public.business_prospects
+set categoria_revisar = true,
+    categoria_confianca = 'baixa'
+where categoria in (
+    'Store', 'Service', 'Establishment', 'Point of interest', 'Business',
+    'Local business', 'Corporate office', 'Organization',
+    'Association or organization', 'Non-profit organization'
+  )
+  and categoria_revisar = false
+  and categoria_canonica is null
+  and (categorias is null or cardinality(categorias) = 0);
+
+-- ─── 2. Reserva exclusiva da campanha ───────────────────────────────────────
+
+create index if not exists prospecting_campaigns_prospect_ids_gin
+  on public.prospecting_campaigns using gin (prospect_ids);
+create index if not exists prospecting_campaigns_contato_ids_gin
+  on public.prospecting_campaigns using gin (contato_ids);
+
+create or replace function public.prospecting_campaign_reserva_unica()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  conflito_id uuid;
+  conflito_nome text;
+  conflito_campo text;
+begin
+  -- A lista de PROSPECTS não pode sobrepor a de outra campanha.
+  if new.prospect_ids is not null and cardinality(new.prospect_ids) > 0 then
+    select c.id, c.nome into conflito_id, conflito_nome
+    from public.prospecting_campaigns c
+    where c.organization_id = new.organization_id
+      and c.id is distinct from new.id
+      and c.prospect_ids && new.prospect_ids
+    limit 1;
+    if conflito_id is not null then
+      raise exception 'prospect_em_outra_campanha'
+        using errcode = '23505',
+          detail = format(
+            'A empresa já está reservada na campanha %s (%s).', conflito_id, conflito_nome
+          ),
+          hint = 'Remova a empresa da outra campanha antes de adicioná-la a esta.';
+    end if;
+  end if;
+
+  -- A lista de CONTATOS (campanha de recuperação) segue a mesma regra.
+  if new.contato_ids is not null and cardinality(new.contato_ids) > 0 then
+    select c.id, c.nome into conflito_id, conflito_nome
+    from public.prospecting_campaigns c
+    where c.organization_id = new.organization_id
+      and c.id is distinct from new.id
+      and c.contato_ids && new.contato_ids
+    limit 1;
+    if conflito_id is not null then
+      raise exception 'contato_em_outra_campanha'
+        using errcode = '23505',
+          detail = format(
+            'O contato já está reservado na campanha %s (%s).', conflito_id, conflito_nome
+          ),
+          hint = 'Remova o contato da outra campanha antes de adicioná-lo a esta.';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+comment on function public.prospecting_campaign_reserva_unica() is
+  'Impede que a mesma empresa/contato seja reservado por duas campanhas da mesma organização. Trava da SELEÇÃO; o envio é travado pela unique global de prospecting_sends.';
+
+-- Trigger não é chamado pela sessão: o EXECUTE não é exigido na invocação
+-- pelo trigger, e concedê-lo a authenticated abriria uma definer volátil.
+revoke execute on function public.prospecting_campaign_reserva_unica() from public, anon, authenticated;
+grant execute on function public.prospecting_campaign_reserva_unica() to service_role;
+
+drop trigger if exists prospecting_campaign_reserva_unica on public.prospecting_campaigns;
+create trigger prospecting_campaign_reserva_unica
+  before insert or update of prospect_ids, contato_ids, organization_id
+  on public.prospecting_campaigns
+  for each row
+  execute function public.prospecting_campaign_reserva_unica();
+
+-- ─── 3. Ledger de envio único por organização ───────────────────────────────
+
+-- Se uma instalação antiga já tiver a mesma linha enviada por duas campanhas,
+-- a unique não pode ser criada. Mantém o envio MAIS ANTIGO (o primeiro contato
+-- foi o real) e remove só os duplicados do ledger — não toca em pedido,
+-- contato nem conversa.
+delete from public.prospecting_sends a
+using public.prospecting_sends b
+where a.organization_id = b.organization_id
+  and a.prospect_id = b.prospect_id
+  and (a.enviado_em, a.id) > (b.enviado_em, b.id);
+
+create unique index if not exists prospecting_sends_org_prospect_unico
+  on public.prospecting_sends (organization_id, prospect_id);
+
+comment on index public.prospecting_sends_org_prospect_unico is
+  'Uma linha da audiência só pode ser enviada uma vez por organização, em qualquer campanha. Trava do ENVIO; a da seleção é o trigger prospecting_campaign_reserva_unica.';
+
+
+-- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
+--
+-- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
+-- dele — quem o empurrar para o meio desarma a cura para tudo que vier depois.
+-- Vigiado por `tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts`.
+--
+-- A 0108 revogou anon numa LISTA de 8 funções, medida num banco instalado do
+-- ZERO. Quem ATUALIZA tem outro estado: o `ALTER DEFAULT PRIVILEGES ... GRANT
+-- ALL ON FUNCTIONS TO anon` do corpo deste arquivo grava uma entrada em
+-- `pg_default_acl` que fica no catálogo PARA SEMPRE, e a partir daí toda função
+-- criada em `public` nasce com EXECUTE para anon — inclusive as deste apêndice.
+--
+-- Medido numa VPS real (2026-08-07), comparando com o que um install fresco
+-- produz: 6 definer expostas a anon e 5 a authenticated, entre elas
+-- `fn_decrypt_oauth` — alcançável pela anon key, que vai para o browser.
+--
+-- Lista conserta o estoque e reabre no próximo `create function`. Esta varredura
+-- é auto-curativa e roda DEPOIS de tudo que cria função, então cura no mesmo run
+-- em que o defeito nasceria. Desfazer o ALTER DEFAULT PRIVILEGES não serve: ele
+-- vem do `pg_dump` do Supabase e é reescrito a cada re-aplicação.
+--
+-- As duas origens de EXECUTE (a mesma lição da 0108): grant DIRETO a anon, que
+-- `revoke from public` não remove; e grant a PUBLIC, do qual anon HERDA, que
+-- `revoke from anon` não remove. O privilégio EFETIVO de authenticated e
+-- service_role é medido ANTES e devolvido depois — tira anon sem tirar leitura.
+do $$
+declare
+  f record;
+  tinha_auth boolean;
+  tinha_service boolean;
+begin
+  if to_regrole('anon') is null then
+    return;
+  end if;
+
+  for f in
+    select p.oid, p.oid::regprocedure as assinatura
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.prosecdef
+  loop
+    tinha_auth := to_regrole('authenticated') is not null
+                  and has_function_privilege('authenticated', f.oid, 'EXECUTE');
+    tinha_service := to_regrole('service_role') is not null
+                     and has_function_privilege('service_role', f.oid, 'EXECUTE');
+
+    execute format('revoke execute on function %s from public, anon', f.assinatura);
+
+    if tinha_auth then
+      execute format('grant execute on function %s to authenticated', f.assinatura);
+    end if;
+    if tinha_service then
+      execute format('grant execute on function %s to service_role', f.assinatura);
+    end if;
+  end loop;
+end $$;
+
+-- regra 2 (authenticated): as 5 que o update abriu e o install não abre. Aqui não
+-- cabe varredura — `authenticated` PRECISA de EXECUTE nos helpers de RLS e em
+-- `retrieve_top_k_chunks` (num install fresco ele tem). É julgamento por função,
+-- e o alvo de cada linha é o valor que um install fresco produz, medido.
+revoke execute on function public.fn_audit_log_row() from authenticated;
+revoke execute on function public.fn_decrypt_oauth(bytea) from authenticated;
+revoke execute on function public.fn_encrypt_oauth(text) from authenticated;
+revoke execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) from authenticated;
+revoke execute on function public.fn_update_budget_consumption() from authenticated;
+
+grant execute on function public.fn_audit_log_row() to service_role;
+grant execute on function public.fn_decrypt_oauth(bytea) to service_role;
+grant execute on function public.fn_encrypt_oauth(text) to service_role;
+grant execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) to service_role;
+grant execute on function public.fn_update_budget_consumption() to service_role;

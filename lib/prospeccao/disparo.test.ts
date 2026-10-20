@@ -96,6 +96,25 @@ describe("validarMensagem", () => {
 });
 
 describe("planejarDisparo — quem NAO recebe", () => {
+  it("empresa em outra campanha não recebe, mesmo com telefone bom", () => {
+    const r = planejarDisparo(
+      [
+        candidato({ id: "a", emOutraCampanha: true }),
+        candidato({ id: "b", categoriaRevisar: true }),
+        candidato({ id: "c", categoriaIncompativel: true }),
+        candidato({ id: "d", jaEnviado: true }),
+      ],
+      parametros(),
+    );
+    expect(r.aprovados).toHaveLength(0);
+    expect(r.recusados.map((x) => x.motivo)).toEqual([
+      "em_outra_campanha",
+      "categoria_revisar",
+      "categoria_incompativel",
+      "ja_enviado",
+    ]);
+  });
+
   it("opt-out do prospect vem antes de qualquer duvida de canal", () => {
     // Sem telefone E com do_not_contact: o motivo tem de ser o opt-out, porque
     // essa recusa nao e um detalhe de dado, e um "sem telefone" esconderia que

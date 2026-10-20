@@ -11,6 +11,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { funisDaDescoberta } from "@/lib/prospeccao/funil-lote";
+import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
 import { campanhaCreateSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -81,6 +82,36 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const supabase = await createClient();
+
+  // 0277 — a lista fechada não pode reutilizar empresa de outra campanha nem
+  // empresa com categoria a revisar/fora do recorte. O trigger do banco é a
+  // trava final; esta checagem existe para responder QUEM e ONDE.
+  if (parsed.data.prospect_ids && parsed.data.prospect_ids.length > 0) {
+    try {
+      const conflitos = await conflitosDeReserva(supabase, {
+        organizationId: authz.org.orgId,
+        campaignId: null,
+        prospectIds: parsed.data.prospect_ids,
+        categorias: parsed.data.categorias,
+      });
+      if (conflitos.length > 0) {
+        return fail(
+          "state_conflict",
+          `Não dá para criar a campanha: ${resumoDosConflitos(conflitos)}.`,
+          409,
+          { requestId, details: { conflitos } },
+        );
+      }
+    } catch (e) {
+      logger.error("[prospecting.campaigns] reserva falhou", {
+        requestId,
+        organization_id: authz.org.orgId,
+        erro: e instanceof Error ? e.message : String(e),
+      });
+      return fail("internal_error", "Erro ao validar as empresas da campanha.", 500, { requestId });
+    }
+  }
+
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .insert({
@@ -108,6 +139,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    if (
+      error?.code === "23505" ||
+      error?.message?.includes("prospect_em_outra_campanha") ||
+      error?.message?.includes("contato_em_outra_campanha")
+    ) {
+      return fail(
+        "state_conflict",
+        "Uma ou mais empresas/contatos já estão reservados por outra campanha.",
+        409,
+        { requestId },
+      );
+    }
     logger.error("[prospecting.campaigns] falha ao criar campanha", {
       requestId,
       organization_id: authz.org.orgId,

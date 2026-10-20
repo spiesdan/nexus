@@ -2046,6 +2046,9 @@ export type Database = {
           bloqueado: boolean;
           candidato_duplicado_de: string | null;
           categoria: string | null;
+          categoria_canonica: string | null;
+          categoria_confianca: string | null;
+          categoria_revisar: boolean;
           categorias: string[];
           cep: string | null;
           cidade: string | null;
@@ -2092,6 +2095,9 @@ export type Database = {
           bloqueado?: boolean;
           candidato_duplicado_de?: string | null;
           categoria?: string | null;
+          categoria_canonica?: string | null;
+          categoria_confianca?: string | null;
+          categoria_revisar?: boolean;
           categorias?: string[];
           cep?: string | null;
           cidade?: string | null;
@@ -2138,6 +2144,9 @@ export type Database = {
           bloqueado?: boolean;
           candidato_duplicado_de?: string | null;
           categoria?: string | null;
+          categoria_canonica?: string | null;
+          categoria_confianca?: string | null;
+          categoria_revisar?: boolean;
           categorias?: string[];
           cep?: string | null;
           cidade?: string | null;

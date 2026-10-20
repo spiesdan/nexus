@@ -29,6 +29,7 @@ import { logger } from "@/lib/logger";
 import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
+import { categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import { valoresDoParametro } from "@/lib/prospeccao/parametros";
 import { COLUNAS_DO_PROSPECT, STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -73,6 +74,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const comWebsite = p.get("com_website") === "true";
   const semWebsite = p.get("sem_website") === "true";
   const comWhatsapp = p.get("com_whatsapp") === "true";
+  const soRevisar = p.get("revisar") === "true";
   const notaMin = Number(p.get("nota_min") ?? 0) || 0;
   const avalMin = Number(p.get("avaliacoes_min") ?? 0) || 0;
   // "Prospectada há": quantos dias atras a empresa foi descoberta. O dado e o
@@ -172,19 +174,30 @@ export async function GET(req: NextRequest): Promise<Response> {
       }
       const lista = [...traduzidas].slice(0, 200);
 
-      if (semTraducao.length === 0) {
-        q = q.in("categoria", lista);
-      } else {
-        // Categoria desconhecida ainda tem que filtrar. Sem este caminho,
-        // marcar uma categoria que a tabela PT↔EN não conhece junto de outra
-        // conhecida devolveria só a conhecida — em silêncio.
-        const partes = [
-          ...(lista.length > 0 ? [`categoria.in.(${lista.map(valorParaOr).join(",")})`] : []),
-          ...semTraducao.map((termo) => `categoria.ilike.${valorParaOr(`%${termo}%`)}`),
-        ];
-        q = q.or(partes.join(","));
+      // 0277 — o filtro passou a olhar a categoria EFETIVA:
+      //
+      //   * `categoria_canonica` (correção/revisão) manda quando existe. Um café
+      //     dentro do posto está gravado como "Gas station", mas a canônica é
+      //     "Café": filtrar "Posto de combustível" NÃO pode trazê-lo.
+      //   * sem canônica, o rótulo cru continua valendo (é a evidência).
+      //
+      // Antes isto era só `categoria.in.(...)`; o café aparecia como posto em
+      // toda listagem, e a campanha mandava para ele.
+      const partes: string[] = [];
+      for (const termo of categorias) {
+        partes.push(`categoria_canonica.ilike.${valorParaOr(`%${termo}%`)}`);
       }
+      if (lista.length > 0) {
+        partes.push(
+          `and(categoria_canonica.is.null,categoria.in.(${lista.map(valorParaOr).join(",")}))`,
+        );
+      }
+      for (const termo of semTraducao) {
+        partes.push(`and(categoria_canonica.is.null,categoria.ilike.${valorParaOr(`%${termo}%`)})`);
+      }
+      if (partes.length > 0) q = q.or(partes.join(","));
     }
+    if (soRevisar) q = q.eq("categoria_revisar", true);
     if (cidade) q = q.ilike("cidade", `%${cidade}%`);
     if (estado) q = q.eq("estado", estado.toUpperCase());
     if (status !== "") {
@@ -244,6 +257,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     telefone: string | null;
     email: string | null;
     status_comercial: string;
+    nome: string;
+    categoria: string | null;
+    categorias: string[] | null;
+    website: string | null;
+    categoria_canonica: string | null;
+    categoria_revisar: boolean | null;
   }[];
 
   // --- Verdades do CRM em lote (§9), service role + organization_id explícito.
@@ -327,8 +346,14 @@ export async function GET(req: NextRequest): Promise<Response> {
         statusLeadDireto === "open" ||
         (contatoId !== null && contatosComLeadAberto.has(contatoId));
       const crm = { cliente: cliente(l, contatoId), temLead, leadAberto };
+      const efetiva = categoriaEfetiva(l);
       return {
         ...l,
+        // A tela e o disparo leem o MESMO rótulo. `categoria` continua sendo o
+        // cru (auditoria); `categoria_efetiva` é o que o operador vê.
+        categoria_efetiva: efetiva.rotulo,
+        categoria_motivo: efetiva.motivo,
+        categoria_revisar: efetiva.revisar,
         ja_e_cliente: crm.cliente,
         classificacao: classificarProspect(l.status_comercial, crm),
       };

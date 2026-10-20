@@ -15,6 +15,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { indiceDeClientes } from "@/lib/prospeccao/ja-cadastrada";
+import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
 import {
   LIMITE_PADRAO,
   publicoDaBase,
@@ -71,12 +72,15 @@ export async function POST(
   if (usaBase(camp.fonte_publico) && !usaBusca(camp.fonte_publico)) {
     const adminBase = createAdminClient();
     const clientes = await indiceDeClientes(adminBase, authz.org.orgId);
+    // 0277 — a fila não oferece de novo quem já está em outra campanha.
+    const reservados = await idsReservadosPorOutras(adminBase, authz.org.orgId, camp.id);
     const publico = await publicoDaBase(adminBase, {
       organizationId: authz.org.orgId,
       cidades: camp.cidades,
       categorias: camp.categorias,
       limite: LIMITE_PADRAO,
       clientes,
+      reservados,
     });
     await audit({
       organizationId: authz.org.orgId,
@@ -90,6 +94,8 @@ export async function POST(
         ja_clientes: publico.ja_clientes.length,
         duplicadas: publico.duplicadas,
         para_revisar: publico.para_revisar.length,
+        em_campanha: publico.em_campanha,
+        categoria_a_revisar: publico.categoria_a_revisar,
       },
     });
     return ok(
@@ -101,6 +107,8 @@ export async function POST(
         ja_clientes: publico.ja_clientes,
         duplicadas: publico.duplicadas,
         para_revisar: publico.para_revisar,
+        em_campanha: publico.em_campanha,
+        categoria_a_revisar: publico.categoria_a_revisar,
         varridas: publico.varridas,
         completa: publico.completa,
         resumo: resumoDaBase(publico),

@@ -56,6 +56,8 @@ import {
   validarMensagem,
   type CandidatoAoDisparo,
 } from "@/lib/prospeccao/disparo";
+import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
+import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
 import { lerTetoDoNumero } from "@/lib/prospeccao/teto-do-numero";
 import { validateRequest } from "@/lib/schemas";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
@@ -121,6 +123,61 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const admin = createAdminClient();
+
+  // ─── A campanha que recebe o disparo (0277) ──────────────────────────────
+  // Envio real SEM campanha não existe: é a campanha que reserva a empresa,
+  // aplica o recorte de categoria e grava o ledger global. A simulação pode
+  // rodar sem — a tela de Empresas simula antes de criar a campanha.
+  const campanhaId = entrada.campaign_id ?? null;
+  if (!entrada.dry_run && campanhaId === null) {
+    return fail(
+      "validation_failed",
+      "Escolha a campanha que recebe este disparo. A empresa fica reservada nela e não pode ser mensageada por outra.",
+      422,
+      { requestId },
+    );
+  }
+
+  let campanha: {
+    id: string;
+    nome: string;
+    categorias: string[] | null;
+    prospect_ids: string[] | null;
+  } | null = null;
+  if (campanhaId !== null) {
+    const { data: c, error: errCampanha } = await admin
+      .from("prospecting_campaigns")
+      .select("id, nome, categorias, publico, prospect_ids")
+      .eq("id", campanhaId)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    if (errCampanha) {
+      return fail("internal_error", "Erro ao ler a campanha.", 500, { requestId });
+    }
+    if (!c) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
+    const linha = c as unknown as {
+      id: string;
+      nome: string;
+      categorias: string[] | null;
+      publico: string | null;
+      prospect_ids: string[] | null;
+    };
+    if (linha.publico === "contatos") {
+      return fail(
+        "validation_failed",
+        "Esta campanha é de recuperação de contatos; o disparo de empresas usa outra tela.",
+        422,
+        { requestId },
+      );
+    }
+    campanha = {
+      id: linha.id,
+      nome: linha.nome,
+      categorias: linha.categorias,
+      prospect_ids: linha.prospect_ids,
+    };
+  }
+
   // `limite` é `let` porque o TETO DO NÚMERO pode reduzi-lo mais abaixo (o
   // operador pede 50, o número em aquecimento só aceita 20 — vale o menor).
   let limite = entrada.limite ?? LIMITE_PADRAO_DIA;
@@ -147,7 +204,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { data: linhas, error: errProspects } = await admin
     .from("business_prospects")
     .select(
-      "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id",
+      "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id, categoria, categorias, website, categoria_canonica, categoria_revisar",
     )
     .eq("organization_id", orgId)
     .in("id", entrada.prospect_ids)
@@ -163,6 +220,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     whatsapp_potencial: boolean;
     status_comercial: string;
     contact_id: string | null;
+    categoria: string | null;
+    categorias: string[] | null;
+    website: string | null;
+    categoria_canonica: string | null;
+    categoria_revisar: boolean | null;
   }>;
   if (brutos.length === 0) {
     return fail("not_found", "Nenhum dos prospects pertence a esta organização.", 404, { requestId });
@@ -171,6 +233,24 @@ export async function POST(req: NextRequest): Promise<Response> {
   const contactIds = [...new Set(brutos.map((p) => p.contact_id).filter((c): c is string => !!c))];
 
   const porContato = await contextoDosContatos(admin, orgId, contactIds);
+
+  // ─── Exclusividade da campanha (0277) ────────────────────────────────────
+  // `idsReservadosPorOutras` traz a lista fechada e o ledger de TODAS as outras
+  // campanhas da organização. Se a empresa já está numa, ela não recebe por
+  // esta — e o motivo chega à tela com nome, não como erro de unique.
+  const reservadosPorOutras = await idsReservadosPorOutras(admin, orgId, campanha?.id ?? null);
+  const jaEnviadosNesta = new Set<string>();
+  if (campanha) {
+    const { data: enviadasNesta } = await admin
+      .from("prospecting_sends")
+      .select("prospect_id")
+      .eq("organization_id", orgId)
+      .eq("campaign_id", campanha.id);
+    for (const linha of (enviadasNesta ?? []) as Array<{ prospect_id: string }>) {
+      jaEnviadosNesta.add(linha.prospect_id);
+    }
+  }
+  const categoriasDaCampanha = campanha?.categorias ?? [];
 
   // ─── As DUAS cotas do dia ────────────────────────────────────────────────
   // A que o operador pede (`limite`) e o TETO DO NÚMERO — `daily_message_limit`
@@ -203,6 +283,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const candidatos: CandidatoAoDisparo[] = brutos.map((p) => {
     const ctx = p.contact_id ? porContato.get(p.contact_id) : undefined;
+    const efetiva = categoriaEfetiva(p);
+    const incompativel =
+      !efetiva.revisar &&
+      categoriasDaCampanha.length > 0 &&
+      !categoriaCombinaComCampanha(efetiva, categoriasDaCampanha);
     return {
       id: p.id,
       nome: p.nome ?? "(sem nome)",
@@ -216,6 +301,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       consentRecusado: !!ctx?.declined_at,
       conversaAberta: ctx?.conversaAberta ?? false,
       mensagemRecente: ctx?.mensagemRecente ?? false,
+      emOutraCampanha: reservadosPorOutras.has(p.id),
+      categoriaRevisar: efetiva.revisar,
+      categoriaIncompativel: incompativel,
+      jaEnviado: jaEnviadosNesta.has(p.id),
     };
   });
 
@@ -266,6 +355,113 @@ export async function POST(req: NextRequest): Promise<Response> {
       { requestId, details: { plano: resumo } },
     );
   }
+  if (plano.aprovados.length === 0) {
+    return fail(
+      "state_conflict",
+      "Nenhuma empresa da seleção pode receber agora. Nada foi enviado.",
+      409,
+      { requestId, details: { plano: resumo } },
+    );
+  }
+
+  // A campanha é obrigatória no envio real — checado acima. O `!` é o registro
+  // de que o TS não consegue ver a relação entre as duas checagens.
+  const campanhaDoEnvio = campanha!;
+
+  // ─── A RESERVA da lista, antes do envio ──────────────────────────────────
+  // A lista fechada da campanha é o que faz a empresa parar de aparecer "em
+  // aberto" para a próxima. Grava a UNIÃO com o que já estava lá; o trigger
+  // 0277 recusa sobreposição com outra campanha (corrida que a nossa leitura
+  // não pegou também cai aqui).
+  const idsAprovados = new Set(plano.aprovados.map((a) => a.id));
+  const paraReservar = brutos.map((p) => p.id).filter((id) => idsAprovados.has(id));
+  const listaAtual = new Set(campanhaDoEnvio.prospect_ids ?? []);
+  const listaNova = [...listaAtual];
+  for (const id of paraReservar) {
+    if (!listaAtual.has(id)) {
+      listaAtual.add(id);
+      listaNova.push(id);
+    }
+  }
+  if (paraReservar.length > 0) {
+    const { error: errLista } = await admin
+      .from("prospecting_campaigns")
+      .update({ prospect_ids: listaNova })
+      .eq("id", campanhaDoEnvio.id)
+      .eq("organization_id", orgId);
+    if (errLista) {
+      if (
+        errLista.code === "23505" ||
+        errLista.message.includes("prospect_em_outra_campanha") ||
+        errLista.message.includes("contato_em_outra_campanha")
+      ) {
+        return fail(
+          "state_conflict",
+          "Uma ou mais empresas já foram reservadas por outra campanha. Nada foi enviado.",
+          409,
+          { requestId, details: { plano: resumo } },
+        );
+      }
+      logger.error("[disparo] falha ao reservar a lista da campanha", {
+        requestId,
+        organization_id: orgId,
+        erro: errLista.message,
+      });
+      return fail("internal_error", "Erro ao reservar as empresas da campanha.", 500, { requestId });
+    }
+  }
+
+  // ─── A reserva do LEDGER, antes de mandar ────────────────────────────────
+  // A unique global (organization_id, prospect_id) é a trava de envio: se
+  // outra campanha reservou a mesma empresa entre a leitura e agora, o
+  // `ignoreDuplicates` devolve menos linhas e o plano encolhe. Nada é enviado
+  // sem reserva — nem duas vezes, nem por duas campanhas.
+  const agoraIso = new Date().toISOString();
+  const { data: reservadas, error: errReserva } = await admin
+    .from("prospecting_sends")
+    .upsert(
+      plano.aprovados.map((a) => ({
+        organization_id: orgId,
+        campaign_id: campanhaDoEnvio.id,
+        prospect_id: a.id,
+        mensagem_indice: a.mensagem_indice,
+        message_id: null,
+        enviado_em: agoraIso,
+      })),
+      { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
+    )
+    .select("prospect_id");
+  if (errReserva) {
+    logger.error("[disparo] falha ao reservar o ledger", {
+      requestId,
+      organization_id: orgId,
+      erro: errReserva.message,
+    });
+    return fail("internal_error", "Erro ao reservar os envios.", 500, { requestId });
+  }
+  const reservadosAgora = new Set(
+    ((reservadas ?? []) as Array<{ prospect_id: string }>).map((r) => r.prospect_id),
+  );
+  const planoReservado = {
+    ...plano,
+    aprovados: plano.aprovados.filter((a) => reservadosAgora.has(a.id)),
+  };
+  const perdidasNaCorrida = plano.aprovados.length - planoReservado.aprovados.length;
+  if (planoReservado.aprovados.length === 0) {
+    return fail(
+      "state_conflict",
+      "As empresas da seleção já foram reservadas por outro envio. Nada foi enviado.",
+      409,
+      { requestId, details: { plano: resumo } },
+    );
+  }
+  const resumoFinal = {
+    ...resumo,
+    serao_enviados: planoReservado.aprovados.length,
+    duracao_prevista_ms: planoReservado.duracaoPrevistaMs,
+    rotacao: planoReservado.aprovados.slice(0, 12).map((a) => a.mensagem_indice + 1),
+    reservadas_na_corrida: perdidasNaCorrida,
+  };
 
   const resultado = await enviarPlano({
     admin,
@@ -275,10 +471,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     sessaoId: sessao!.id,
     espacoMs,
     mensagens,
-    plano,
+    plano: planoReservado,
+    campaignId: campanhaDoEnvio.id,
   });
 
-  return ok({ plano: resumo, resultado }, { requestId });
+  return ok({ plano: resumoFinal, resultado }, { requestId });
 }
 
 interface ContextoDoContato {
@@ -398,6 +595,8 @@ interface ParamsDoEnvio {
   /** As variações de texto; cada envio pega a sua pelo `mensagem_indice`. */
   mensagens: string[];
   plano: ReturnType<typeof planejarDisparo>;
+  /** A campanha do disparo — o ledger já foi reservado com ela (0277). */
+  campaignId: string;
 }
 
 /**
@@ -441,6 +640,23 @@ async function enviarPlano(p: ParamsDoEnvio) {
     });
     if (resultado.ok) {
       enviados.push({ nome: item.nome, message_id: resultado.messageId, status: resultado.status });
+      // A reserva nasceu com `message_id` nulo; o comprovante chega depois do
+      // envio. Falhar aqui não desfaz a mensagem — só deixa o comprovante
+      // pendente, e o log diz onde procurar.
+      const { error: errComprovante } = await p.admin
+        .from("prospecting_sends")
+        .update({ message_id: resultado.messageId })
+        .eq("organization_id", p.orgId)
+        .eq("campaign_id", p.campaignId)
+        .eq("prospect_id", item.id);
+      if (errComprovante) {
+        logger.warn("disparo: envio saiu, comprovante não gravado", {
+          prospectId: item.id,
+          campaignId: p.campaignId,
+          erro: errComprovante.message,
+          requestId: p.requestId,
+        });
+      }
     } else {
       falhas.push({ nome: item.nome, erro: resultado.erro });
       logger.error("disparo: envio falhou", {

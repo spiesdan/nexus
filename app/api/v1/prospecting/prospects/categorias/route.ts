@@ -101,7 +101,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   // recortes de uma linha só (`id`/`ids`).
   let q = admin
     .from("business_prospects")
-    .select("categoria")
+    .select("categoria, categoria_canonica")
     .eq("organization_id", authz.org.orgId)
     .eq("bloqueado", false)
     .not("categoria", "is", null);
@@ -145,7 +145,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   // complexidade de uma view nova.
   const contagem = new Map<string, number>();
   for (const linha of data ?? []) {
-    const c = String((linha as { categoria?: string | null }).categoria ?? "").trim();
+    const l = linha as { categoria?: string | null; categoria_canonica?: string | null };
+    // 0277 — a faceta conta a categoria EFETIVA. O café dentro do posto deixa
+    // de inflar "Posto de combustível" e aparece em "Café"; o token devolvido
+    // (`nome`) é o mesmo que o filtro da lista entende.
+    const c = String(l.categoria_canonica?.trim() || l.categoria?.trim() || "").trim();
     if (c === "") continue;
     contagem.set(c, (contagem.get(c) ?? 0) + 1);
   }

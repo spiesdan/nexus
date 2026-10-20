@@ -79,7 +79,7 @@ describe("empresaServe — categoria nas duas línguas", () => {
     expect(empresaServe(daBase({ categoria: "Auto repair shop" }), criterio(["Oficina mecânica"]))).toBe(
       true,
     );
-    expect(empresaServe(daBase({ categoria: "Gas station" }), criterio(["Posto de combustível"]))).toBe(
+    expect(empresaServe(daBase({ categoria: "Gas station", nome: "Posto Videira" }), criterio(["Posto de combustível"]))).toBe(
       true,
     );
     expect(empresaServe(daBase({ categoria: "Tire repair shop" }), criterio(["Borracharia"]))).toBe(
@@ -96,14 +96,35 @@ describe("empresaServe — categoria nas duas línguas", () => {
   });
 
   it("categoria fora da campanha não entra — nem por resemble", () => {
-    expect(empresaServe(daBase({ categoria: "Gas station" }), criterio(["Oficina mecânica"]))).toBe(
-      false,
-    );
+    expect(
+      empresaServe(daBase({ categoria: "Gas station", nome: "Posto Videira" }), criterio(["Oficina mecânica"])),
+    ).toBe(false);
     // "Oficina mecânica" puxa a oficina; NÃO traz o catálogo inteiro
     // ("Auto parts store" é outra empresa, e a campanha não pediu autopeças).
     expect(empresaServe(daBase({ categoria: "Auto parts store" }), criterio(["Oficina mecânica"]))).toBe(
       false,
     );
+  });
+
+  it("categoria duvidosa fica fora da campanha até revisão", () => {
+    // "Branca" existe na base como Gas station, sem site e sem sinal de posto.
+    // Pode ser posto — mas a campanha não aposta.
+    expect(
+      empresaServe(daBase({ categoria: "Gas station", nome: "Branca" }), criterio(["Posto de combustível"])),
+    ).toBe(false);
+    // "Estação Café - Loja Posto Carretão II" é café, não posto.
+    expect(
+      empresaServe(
+        daBase({ categoria: "Gas station", nome: "Estação Café - Loja Posto Carretão II" }),
+        criterio(["Posto de combustível"]),
+      ),
+    ).toBe(false);
+    expect(
+      empresaServe(
+        daBase({ categoria: "Gas station", nome: "Estação Café - Loja Posto Carretão II" }),
+        criterio(["Café"]),
+      ),
+    ).toBe(true);
   });
 
   it("empresa sem categoria não entra quando a campanha tem categorias", () => {
@@ -127,7 +148,10 @@ describe("empresaServe — categoria nas duas línguas", () => {
     const cat = criterio(["Oficina mecânica", "Posto de combustível"]);
     const comSet: CriterioDaBase = { ...cat, aceitas: categoriasAceitas(cat.categorias) };
     for (const categoria of ["Auto repair shop", "Gas station", "Auto parts store"]) {
-      const e = daBase({ categoria });
+      const e = daBase({
+        categoria,
+        nome: categoria === "Gas station" ? "Posto Videira" : "Auto Peças Videira",
+      });
       expect(empresaServe(e, comSet)).toBe(empresaServe(e, cat));
     }
   });
@@ -335,6 +359,22 @@ describe("publicoDaBase — a consulta", () => {
     expect(r.completa).toBe(false);
     expect(r.varridas).toBe(MAX_PAGINAS * LIMITE_POR_PAGINA);
     expect(r.total).toBe(0);
+  });
+
+  it("linha em revisão fica fora até de campanha sem categoria", async () => {
+    // "Branca" é Gas station sem site e sem sinal de posto: o resolvedor não
+    // aposta. Campanha sem recorte é "toda a cidade", mas não é licença para
+    // mandar mensagem em cima da dúvida — a linha vai para revisão e sai.
+    const { cliente } = clienteFalso([
+      [{ ...servindo(1), nome: "Branca", categoria: "Gas station" }],
+    ]);
+    const r = await publicoDaBase(cliente, {
+      organizationId: "org",
+      cidades: [{ cidade: "Videira", estado: "SC" }],
+      categorias: [],
+    });
+    expect(r.total).toBe(0);
+    expect(r.categoria_a_revisar).toBe(1);
   });
 
   it("entre duas duplicatas vence a que tem telefone — e a ordem de leitura não decide", async () => {

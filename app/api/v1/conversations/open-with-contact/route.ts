@@ -45,7 +45,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail("not_found", "Contato não encontrado.", 404, { requestId });
     }
     if (msg === "session_not_found") {
-      return fail("not_found", "Sessão de canal não encontrada.", 404, { requestId });
+      return fail(
+        "state_conflict",
+        "Conecte o WhatsApp para abrir a conversa. A sessão do canal não está disponível.",
+        409,
+        { requestId },
+      );
     }
     if (msg === "invalid_phone") {
       return fail("validation_error", "Telefone inválido.", 422, { requestId });

@@ -272,6 +272,34 @@ export function DialogoDisparo({
   }
 
   /**
+   * A campanha é o LUGAR da reserva (0277) — a empresa que entra nela deixa de
+   * aparecer em aberto para outra. Quando a tela não trouxe uma campanha (aba
+   * Empresas), cria com o recorte do filtro. NUNCA em simulação: simular não
+   * reserva nada.
+   */
+  async function garantirCampanha(): Promise<string> {
+    if (campanhaId) return campanhaId;
+    const criada = await apiClient.post<{ data?: { id?: string } }>(
+      "/api/v1/prospecting/campaigns",
+      {
+        nome: campanhaPadrao?.nome ?? `Prospecção ${diaCurto(dataInicio)}`,
+        categorias:
+          campanhaPadrao && campanhaPadrao.categorias.length > 0
+            ? campanhaPadrao.categorias
+            : ["empresas"],
+        cidades:
+          campanhaPadrao && campanhaPadrao.cidades.length > 0
+            ? campanhaPadrao.cidades
+            : [{ cidade: "Não informada" }],
+        fonte_publico: "base",
+      },
+    );
+    const id = criada?.data?.id ?? null;
+    if (!id) throw new Error(t("Não foi possível criar a campanha do disparo."));
+    return id;
+  }
+
+  /**
    * Confirma o agendamento. A campanha é o LUGAR do relógio: quando ela já
    * existe (aba Campanhas), é PATCH; quando não (tela de Empresas), cria uma
    * campanha com o nome/categorias/cidades do filtro e agenda nela.
@@ -280,26 +308,7 @@ export function DialogoDisparo({
     setOcupado(true);
     setErro(null);
     try {
-      let id = campanhaId;
-      if (!id) {
-        const criada = await apiClient.post<{ data?: { id?: string } }>(
-          "/api/v1/prospecting/campaigns",
-          {
-            nome: campanhaPadrao?.nome ?? `Prospecção ${diaCurto(dataInicio)}`,
-            categorias:
-              campanhaPadrao && campanhaPadrao.categorias.length > 0
-                ? campanhaPadrao.categorias
-                : ["empresas"],
-            cidades:
-              campanhaPadrao && campanhaPadrao.cidades.length > 0
-                ? campanhaPadrao.cidades
-                : [{ cidade: "Não informada" }],
-            fonte_publico: "base",
-          },
-        );
-        id = criada?.data?.id ?? null;
-      }
-      if (!id) throw new Error(t("Não foi possível criar a campanha do agendamento."));
+      const id = await garantirCampanha();
 
       await apiClient.patch(`/api/v1/prospecting/campaigns/${id}`, {
         prospect_ids: ids,
@@ -325,6 +334,8 @@ export function DialogoDisparo({
     setOcupado(true);
     setErro(null);
     try {
+      // Só o envio real reserva. A simulação não cria campanha nem grava lista.
+      const id = dryRun ? campanhaId : await garantirCampanha();
       const r = (await apiClient.post<{ data?: { plano?: Plano; resultado?: ResultadoDoEnvio } }>(
         "/api/v1/prospecting/prospects/disparar",
         {
@@ -333,6 +344,7 @@ export function DialogoDisparo({
           limite: Number(limite) || 50,
           espaco_ms: espacoMs,
           dry_run: dryRun,
+          ...(id ? { campaign_id: id } : {}),
         },
       )) as { data?: { plano?: Plano; resultado?: ResultadoDoEnvio } };
       const p = r?.data?.plano ?? null;

@@ -78,6 +78,90 @@ const CLASSE_COR: Record<Classificacao, string> = {
   novo: "bg-teal-100 text-teal-800",
 };
 
+/** 0277 — o rótulo que a tela mostra é o EFETIVO, não o cru do Google. */
+function categoriaDaTela(p: Prospect): string | null {
+  return p.categoria_efetiva ?? p.categoria;
+}
+
+/**
+ * Correção/confirmação da categoria (0277).
+ *
+ * O operador vê o rótulo efetivo; quando ele está errado, este campo grava a
+ * canônica e libera a empresa das campanhas. Quando está certo, "Confirmar"
+ * limpa o `revisar` sem inventar categoria nova.
+ */
+function EditorDeCategoria({
+  prospect,
+  podeOperar,
+  onSaved,
+  t,
+}: {
+  prospect: Prospect;
+  podeOperar: boolean;
+  onSaved: () => Promise<void> | void;
+  t: (texto: string) => string;
+}) {
+  const [valor, setValor] = React.useState(() => categoriaDaTela(prospect) ?? "");
+  const [salvando, setSalvando] = React.useState(false);
+  if (!podeOperar) return null;
+
+  async function enviar(corpo: { categoria?: string; categoria_revisar?: boolean }) {
+    setSalvando(true);
+    try {
+      await apiClient.patch(`/api/v1/prospecting/prospects/${prospect.id}`, corpo);
+      toast.success(t("Categoria atualizada."));
+      await onSaved();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border border-dashed p-3">
+      <Label htmlFor="categoria-efetiva" className="text-xs">
+        {t("Categoria")}
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          id="categoria-efetiva"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          placeholder={t("Ex.: Posto de combustível")}
+          className="h-8"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={salvando || valor.trim() === ""}
+          onClick={() => void enviar({ categoria: valor.trim() })}
+        >
+          {t("Salvar")}
+        </Button>
+      </div>
+      {prospect.categoria_revisar && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-amber-700">
+          <span>
+            {t("Categoria a revisar — não entra em campanha até alguém confirmar.")}
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={salvando}
+            onClick={() => void enviar({ categoria_revisar: false })}
+          >
+            {t("Confirmar categoria")}
+          </Button>
+        </div>
+      )}
+      {prospect.categoria_motivo && (
+        <p className="text-[11px] text-muted-foreground">{prospect.categoria_motivo}</p>
+      )}
+    </div>
+  );
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const FIT_COR: Record<string, string> = {
@@ -646,7 +730,7 @@ export function EmpresasTab({
         nome: p.nome,
         latitude: p.latitude as number,
         longitude: p.longitude as number,
-        categoria: p.categoria,
+        categoria: categoriaDaTela(p),
         cidade: p.cidade,
         estado: p.estado,
         telefone: p.telefone,
@@ -742,10 +826,9 @@ export function EmpresasTab({
     norte: number;
     leste: number;
   }) {
-    const categorias = [...new Set(listaFiltrada.map((p) => p.categoria).filter(Boolean))].slice(
-      0,
-      10,
-    ) as string[];
+    const categorias = [
+      ...new Set(listaFiltrada.map((p) => categoriaDaTela(p)).filter(Boolean)),
+    ].slice(0, 10) as string[];
     if (categorias.length === 0) {
       toast.error(t("Sem categorias nos resultados para buscar na área."));
       return;
@@ -969,7 +1052,7 @@ export function EmpresasTab({
   const categoriasDaAgenda = [
     ...new Set(
       selecionadasParaAgenda
-        .map((p) => p.categoria)
+        .map((p) => categoriaDaTela(p))
         .filter((c): c is string => Boolean(c && c.trim() !== "")),
     ),
   ].slice(0, 10);
@@ -1545,7 +1628,12 @@ export function EmpresasTab({
                       )}
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground md:table-cell">
-                      {p.categoria ?? "—"}
+                      {categoriaDaTela(p) ?? "—"}
+                      {p.categoria_revisar && (
+                        <span className="ml-1 text-[10px] font-medium text-amber-600">
+                          {t("revisar")}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
                       {[p.cidade, p.estado].filter(Boolean).join("/")}
@@ -1634,7 +1722,7 @@ export function EmpresasTab({
           aberto
           onFechar={() => setDetalheId(null)}
           titulo={detalhe.nome}
-          subtitulo={[detalhe.categoria, [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")]
+          subtitulo={[categoriaDaTela(detalhe), [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")]
             .filter(Boolean)
             .join(" · ")}
           className="max-w-md"
@@ -1679,10 +1767,20 @@ export function EmpresasTab({
             )}
             {/* §13: motivo da oportunidade — fato do prospect, não fórmula. */}
             <p className="text-xs text-muted-foreground">
-              {detalhe.categoria ?? ""}
+              {categoriaDaTela(detalhe) ?? ""}
               {detalhe.cidade ? ` em ${detalhe.cidade}` : ""} ·{" "}
               {detalhe.ja_e_cliente ? t("já é cliente") : t("ainda não cadastrado como cliente")}
             </p>
+            <EditorDeCategoria
+              key={detalhe.id}
+              prospect={detalhe}
+              podeOperar={podeOperar}
+              t={t}
+              onSaved={async () => {
+                await buscar(filtros, buscaId);
+                if (detalheExtra?.id === detalhe.id) await refetchDetalheExtra(detalhe.id);
+              }}
+            />
             {!podeOperar && detalhe.proximo_passo && (
               <p className="text-xs text-muted-foreground">
                 {t("Próxima ação")}: {detalhe.proximo_passo}

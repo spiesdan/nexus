@@ -75,6 +75,10 @@ export const prospectPatchSchema = z.object({
   status_comercial: z.enum(STATUS_COMERCIAL).optional(),
   do_not_contact: z.boolean().optional(),
   bloqueado: z.boolean().optional(),
+  // Correção manual da categoria (0277): o operador confirma o rótulo que a
+  // heurística não conseguiu decidir. `categoria_revisar: false` limpa o veto.
+  categoria: z.string().trim().min(1).max(120).optional(),
+  categoria_revisar: z.boolean().optional(),
   // FASE 8 (item 16): fila — vendedor dono e próxima ação. null explícito é
   // válido (desatribuir / limpar o passo), por isso o .nullable().
   owner_user_id: z.string().uuid().nullable().optional(),
@@ -120,6 +124,12 @@ export const disparoSchema = z
     espaco_ms: z.number().int().min(0).max(60000).optional(),
     /** `false` envia de verdade. O padrão é só simular. */
     dry_run: z.boolean().default(true),
+    /**
+     * A campanha que recebe o envio (0277). Obrigatória no envio real: é ela
+     * que reserva as empresas, aplica a categoria e grava o ledger global.
+     * A simulação aceita sem — a tela de Empresas pode simular antes de criar.
+     */
+    campaign_id: z.string().uuid().optional(),
   })
   // Sem texto não há disparo — e o erro tem que sair daqui, não de um plano
   // com 500 recusas de "mensagem vazia", que não é recusa de NINGUÉM.
@@ -325,6 +335,18 @@ export const campanhaPatchSchema = z
     objetivo: z.string().trim().max(300).nullable().optional(),
     /** 0271 — trocar a fonte do público é decisão do operador, e fica registrada. */
     fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
+    /** 0277 — corrigir o recorte de uma campanha existente. */
+    categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10).optional(),
+    cidades: z
+      .array(
+        z.object({
+          cidade: z.string().trim().min(2).max(120),
+          estado: z.string().trim().max(10).optional(),
+        }),
+      )
+      .min(1)
+      .max(50)
+      .optional(),
   })
   // 0273 — o mesmo PATCH que salva o objetivo salva o relógio da campanha.
   .extend(agendamentoSchema.shape)
@@ -356,6 +378,15 @@ export interface Prospect {
   id: string;
   nome: string;
   categoria: string | null;
+  /** Categorias secundárias do Google — a evidência que corrige a primária. */
+  categorias?: string[] | null;
+  /** Correção/revisão persistida (0277). */
+  categoria_canonica?: string | null;
+  categoria_confianca?: "alta" | "media" | "baixa" | null;
+  categoria_revisar?: boolean;
+  /** Rótulo EFETIVO calculado na leitura (0277) — o que a tela mostra. */
+  categoria_efetiva?: string | null;
+  categoria_motivo?: string;
   cidade: string | null;
   estado: string | null;
   telefone: string | null;
@@ -384,7 +415,8 @@ export interface Prospect {
 }
 
 export const COLUNAS_DO_PROSPECT =
-  "id, nome, categoria, cidade, estado, telefone, email, website, whatsapp_potencial, " +
+  "id, nome, categoria, categorias, categoria_canonica, categoria_confianca, categoria_revisar, " +
+  "cidade, estado, telefone, email, website, whatsapp_potencial, " +
   "nota, total_avaliacoes, provider, status_comercial, score, contact_id, lead_id, " +
   "do_not_contact, latitude, longitude, endereco, discovered_at, owner_user_id, proximo_passo, " +
   "laya_fit, laya_fit_em";

@@ -32,6 +32,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { indiceDeClientes } from "@/lib/prospeccao/ja-cadastrada";
+import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
 import {
   LIMITE_MAXIMO,
   publicoDaBase,
@@ -96,12 +97,16 @@ export async function GET(
   // O índice de clientes só é construído quando a campanha usa a base: é a
   // leitura mais cara da rota e, em campanha de busca, não serve para nada.
   const clientes = await indiceDeClientes(admin, authz.org.orgId);
+  // 0277 — empresa já reservada por outra campanha não aparece como "em
+  // aberto" nesta. O conjunto inclui a lista fechada e o ledger global.
+  const reservados = await idsReservadosPorOutras(admin, authz.org.orgId, c.id);
   const resultado = await publicoDaBase(admin, {
     organizationId: authz.org.orgId,
     cidades: c.cidades,
     categorias: c.categorias,
     limite,
     clientes,
+    reservados,
   });
 
   await audit({
@@ -116,6 +121,8 @@ export async function GET(
       ja_clientes: resultado.ja_clientes.length,
       duplicadas: resultado.duplicadas,
       para_revisar: resultado.para_revisar.length,
+      em_campanha: resultado.em_campanha,
+      categoria_a_revisar: resultado.categoria_a_revisar,
       varridas: resultado.varridas,
       completa: resultado.completa,
     },
@@ -132,6 +139,8 @@ export async function GET(
       ja_clientes: resultado.ja_clientes,
       duplicadas: resultado.duplicadas,
       para_revisar: resultado.para_revisar,
+      em_campanha: resultado.em_campanha,
+      categoria_a_revisar: resultado.categoria_a_revisar,
       varridas: resultado.varridas,
       completa: resultado.completa,
       limite,
