@@ -67,6 +67,10 @@ describe("traduzirCategoria", () => {
     expect(traduzirCategoria("Car wash")).toBe("Lavejão");
     expect(traduzirCategoria("Pharmacy")).toBe("Farmácia");
     expect(traduzirCategoria("Building materials store")).toBe("Loja de materiais de construção");
+    expect(traduzirCategoria("Seed supplier")).toBe("Sementes e insumos");
+    expect(traduzirCategoria("Box lunch supplier")).toBe("Marmitaria");
+    expect(traduzirCategoria("Wheel store")).toBe("Loja de autopeças");
+    expect(traduzirCategoria("Urgent care center")).toBe("Clínica médica");
   });
 
   it("NENHUMA das 22 categorias medidas no banco fica em ingles", () => {
