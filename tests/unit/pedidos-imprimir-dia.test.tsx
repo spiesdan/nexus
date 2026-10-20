@@ -102,9 +102,13 @@ function montar() {
   );
 }
 
-function clicarImprimirODia() {
-  const botao = screen.getByRole("button", { name: /Imprimir o dia|Buscando o dia/ });
-  fireEvent.click(botao);
+// O "Imprimir o dia" mora dentro do menu "Imprimir" (a barra tinha dois
+// botões de mesmo peso e um aviso solto). O menu abre no `pointerdown` —
+// Radix, não `click`.
+async function clicarImprimirODia() {
+  const gatilho = screen.getByRole("button", { name: /^(Imprimir|Buscando)/ });
+  fireEvent.pointerDown(gatilho, { button: 0, ctrlKey: false, pointerId: 1 });
+  fireEvent.click(await screen.findByRole("menuitem", { name: /Imprimir o dia/ }));
 }
 
 describe("Imprimir o dia", () => {
@@ -115,7 +119,7 @@ describe("Imprimir o dia", () => {
     // que a PRIMEIRA chamada — a do botão — leva o dia.
     vi.mocked(apiClient.get).mockResolvedValue({ data: ids.map((id) => ({ id })) });
     montar();
-    clicarImprimirODia();
+    await clicarImprimirODia();
 
     const hoje = hojeEmChave();
     await waitFor(() => expect(pushMock).toHaveBeenCalledOnce());
@@ -133,7 +137,7 @@ describe("Imprimir o dia", () => {
     // e ninguém perceberia, porque o PDF sairia normalmente, só que gigante.
     vi.mocked(apiClient.get).mockResolvedValue({ data: [{ id: uuid(1) }] });
     montar();
-    clicarImprimirODia();
+    await clicarImprimirODia();
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledOnce());
     const primeira = String(vi.mocked(apiClient.get).mock.calls[0]?.[0] ?? "");
@@ -144,7 +148,7 @@ describe("Imprimir o dia", () => {
   it("dia vazio avisa e não navega", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ data: [] });
     montar();
-    clicarImprimirODia();
+    await clicarImprimirODia();
 
     await waitFor(() => expect(vi.mocked(toast.info)).toHaveBeenCalledOnce());
     expect(pushMock).not.toHaveBeenCalled();
@@ -154,7 +158,7 @@ describe("Imprimir o dia", () => {
     const ids = Array.from({ length: 55 }, (_, i) => ({ id: uuid(i) }));
     vi.mocked(apiClient.get).mockResolvedValue({ data: ids });
     montar();
-    clicarImprimirODia();
+    await clicarImprimirODia();
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledOnce());
     const destino = String(pushMock.mock.calls[0]?.[0] ?? "");
@@ -166,14 +170,15 @@ describe("Imprimir o dia", () => {
   it("erro da API não navega", async () => {
     vi.mocked(apiClient.get).mockRejectedValueOnce(new Error("rede"));
     montar();
-    clicarImprimirODia();
+    await clicarImprimirODia();
 
     await waitFor(() => expect(pushMock).not.toHaveBeenCalled());
   });
 
-  it("ordem no cabeçalho: Imprimir o dia antes de Criar pedido / orçamento", async () => {
+  it("ordem no cabeçalho: Imprimir antes de Criar pedido", async () => {
     // Pedido explícito do dono. Se alguém reordenar de volta, este teste
-    // conta a história — não é gosto, é posição pedida.
+    // conta a história — não é gosto, é posição pedida. O "Imprimir o dia"
+    // virou item do menu "Imprimir"; o que se mede é a posição do menu.
     //
     // O Criar é `asChild` e renderiza como link, não botão — por isso a ordem
     // é medida sobre os dois papéis, na ordem do DOM.
@@ -185,7 +190,7 @@ describe("Imprimir o dia", () => {
       a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
     );
     const textos = noDom.map((el) => el.textContent ?? "");
-    const iDia = textos.findIndex((t) => t.includes("Imprimir o dia"));
+    const iDia = textos.findIndex((t) => t.startsWith("Imprimir"));
     const iCriar = textos.findIndex((t) => t.includes("Criar pedido"));
     expect(iDia).toBeGreaterThanOrEqual(0);
     expect(iCriar).toBeGreaterThanOrEqual(0);

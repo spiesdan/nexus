@@ -610,38 +610,50 @@ export function OrderEditor({
             : textos.subtitulo
         }
         actions={
-          <div className="flex flex-wrap gap-2">
+          // QUATRO ações, não cinco. "Enviar por e-mail" e "Enviar por
+          // WhatsApp" viraram um menu: são a mesma decisão (gravar e abrir o
+          // canal) e, lado a lado com "Gerar pedido", davam cinco botões do
+          // mesmo peso — o primário deixava de ser o único roxo da dobra.
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Button
+              className="w-full sm:w-auto"
               onClick={() => void comEnvio("aprovado")}
               disabled={enviando}
               data-testid="gerar-pedido"
             >
               {enviando ? t("Gerando…") : textos.finalizar}
             </Button>
-            <Button variant="outline" onClick={() => setPreviaAberta(true)}>
+            <Button
+              variant="outline"
+              onClick={() => setPreviaAberta(true)}
+              className="flex-1 sm:flex-none"
+            >
               <Eye size={16} className="mr-1.5" /> {t("Visualizar")}
-            </Button>
-            {/* Os dois botões do Mercos. Aqui eles GRAVAM o pedido antes de
-                abrir o canal — ver o comentário de `enviar()`. Sem e-mail no
-                cliente, o de e-mail fica desabilitado em vez de abrir um
-                "para:" vazio. */}
-            <Button
-              variant="outline"
-              onClick={() => void comEnvio("rascunho", "email")}
-              disabled={enviando || !listaDeContatos.find((c) => c.id === contatoId)?.email}
-            >
-              {t("Enviar por e-mail")}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => void comEnvio("rascunho", "whatsapp")}
-              disabled={enviando}
-            >
-              {t("Enviar por WhatsApp")}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" disabled={enviando} className="flex-1 sm:flex-none">
+                  {t("Enviar")} <CaretDown size={14} className="ml-1.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={enviando || !listaDeContatos.find((c) => c.id === contatoId)?.email}
+                  onSelect={() => void comEnvio("rascunho", "email")}
+                >
+                  {t("Enviar por e-mail")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={enviando}
+                  onSelect={() => void comEnvio("rascunho", "whatsapp")}
+                >
+                  {t("Enviar por WhatsApp")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex-1 sm:flex-none">
                   {t("Mais opções")} <CaretDown size={14} className="ml-1.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -667,11 +679,11 @@ export function OrderEditor({
           existe depois do "Gerar pedido" — mostrá-lo aqui exigiria criar o
           rascunho no instante em que a tela abre, e é exatamente isso que
           enche a base de pedido fantasma de quem abriu, olhou e desistiu. */}
-      <Card className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-        <p className="text-sm font-medium">
+      <Card className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+        <p className="text-[13px] font-medium">
           <span className="text-muted-foreground">#</span> {t("novo")}
         </p>
-        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
           {t("Rascunho")}
         </span>
       </Card>
@@ -746,6 +758,11 @@ export function OrderEditor({
       <section id="secao-produtos" aria-label={t("Produtos")} className="space-y-3">
         <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
 
+        {/* Tabela, busca e itens vivem no MESMO cartão. Antes a seção 3 era a
+            única das quatro sem moldura: os campos flutuavam soltos entre o
+            cartão da representada e o resumo, e a página trocava de gramática
+            no meio. */}
+        <Card className="space-y-3 p-4">
         <div className="space-y-1.5">
           <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
           <Select
@@ -783,6 +800,7 @@ export function OrderEditor({
           aoMudar={mudarLinha}
           aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
         />
+        </Card>
 
         <AfinsNoPedido
           carrinho={linhas.map((l) => l.product_id)}

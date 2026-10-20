@@ -130,7 +130,7 @@ export function AssistenteAvatar({ aberto, onToggle }: AssistenteAvatarProps) {
       {mostrarDica && !aberto && (
         <div
           role="status"
-          className="absolute -top-11 right-0 w-max max-w-55 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-medium text-text shadow-lg"
+          className="absolute -top-11 right-0 hidden w-max max-w-55 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-medium text-text shadow-lg md:block"
         >
           Precisa de ajuda? Clique em mim!
           <span className="absolute -bottom-1 right-8 h-2 w-2 rotate-45 border-r border-b border-border bg-background" />
@@ -144,7 +144,10 @@ export function AssistenteAvatar({ aberto, onToggle }: AssistenteAvatarProps) {
         aria-expanded={aberto}
         title={aberto ? "Fechar ajuda" : "Abrir ajuda"}
         className={cn(
-          "group grid h-20 w-20 place-items-center overflow-hidden rounded-full border-2 border-border bg-background shadow-xl transition-transform duration-150 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95",
+          // 56px no celular: 80px de avatar + a dica em cima cobriam o campo
+          // que a pessoa estava preenchendo (Expedição → Motorista,
+          // Pedidos → valor do pedido). O tamanho cheio fica de md para cima.
+          "group grid h-14 w-14 place-items-center overflow-hidden rounded-full border-2 border-border bg-background shadow-xl transition-transform duration-150 hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95 md:h-20 md:w-20",
           pulando && "animate-[assistente-pulo_0.38s_ease]",
           aberto && "ring-2 ring-accent ring-offset-2",
         )}
