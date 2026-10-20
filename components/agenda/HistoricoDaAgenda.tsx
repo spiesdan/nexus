@@ -114,6 +114,12 @@ export function HistoricoDaAgenda({
   const grupos = React.useMemo(() => separar(agendamentos, agora), [agendamentos, agora]);
   const daAba = grupos[aba];
 
+  // Sem NENHUM agendamento, as quatro abas mostram zero e a lista mostra uma
+  // faixa de "nada marcado" — ~150px antes do calendário, que é o motivo de a
+  // pessoa ter aberto a Agenda. O aviso de agenda livre continua na tela
+  // (`EmptyAgenda`), esse sim diz o que fazer.
+  if (agendamentos.length === 0) return null;
+
   return (
     <div data-testid="historico-da-agenda" data-aba={aba} className={cn("flex min-h-0 flex-col", className)}>
       <Tabs value={aba} onValueChange={(v) => setAba(v as AbaDoHistorico)}>

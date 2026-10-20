@@ -53,9 +53,11 @@ export function CartaoDaConexaoGoogle({
     return (
       <div
         data-testid="google-nao-configurado"
-        className="rounded-lg border border-border bg-surface-elevated/50 p-3"
+        className="rounded-lg border border-border bg-surface-elevated/50 px-3 py-2"
       >
-        <p className="text-sm font-medium text-text">{t("Sincronizar com o Google ainda não está disponível")}</p>
+        <p className="text-sm font-medium text-text">
+          {t("Sincronizar com o Google ainda não está disponível")}
+        </p>
         {/*
           DUAS FRASES, porque são duas pessoas.
           
@@ -64,56 +66,60 @@ export function CartaoDaConexaoGoogle({
           a credencial se cadastra pela tela desde a migration 0201. Para quem
           não administra, o texto continua o de antes: dizer o que falta sem
           oferecer uma porta que dá em `notFound()`.
+
+          O bloco técnico (nomes das chaves e endereço de retorno) vive num
+          `<details>`: quem instala precisa dele, quem atende não — e antes ele
+          ocupava quatro linhas na primeira tela que todo self-hoster abre.
         */}
         {linkDeConfiguracao ? (
-          <p className="mt-1 text-xs leading-4 text-text-muted">
-            {t("Falta cadastrar o aplicativo do Google desta instalação. Leva um minuto e você faz por aqui mesmo.")}
+          <p className="mt-0.5 text-xs leading-4 text-text-muted">
+            {t("Falta cadastrar o aplicativo do Google desta instalação. Leva um minuto e você faz por aqui mesmo.")}{" "}
+            <a
+              href={linkDeConfiguracao}
+              data-testid="ir-configurar-google"
+              className="font-medium text-accent underline underline-offset-2 hover:text-accent-strong"
+            >
+              {t("Cadastrar as credenciais do Google")}
+            </a>
           </p>
         ) : (
-          <p className="mt-1 text-xs leading-4 text-text-muted">
-            {t("Esta instalação não tem as credenciais do Google cadastradas — não é nada que você tenha feito. Quem instalou o sistema precisa configurar")}
-            {falta.length > 0 ? (
-              <>
-                {" "}
-                <span data-testid="o-que-falta" className="font-mono text-[11px]">
-                  {falta.join(` ${t("e")} `)}
-                </span>
-              </>
-            ) : (
-              ` ${t("as credenciais")}`
-            )}
-          </p>
+          <>
+            <p className="mt-0.5 text-xs leading-4 text-text-muted">
+              {t("Não é nada que você tenha feito: quem instalou o sistema precisa habilitar a conexão. Até lá a agenda funciona normalmente, só não troca compromissos com o Google.")}
+            </p>
+            <details className="mt-1">
+              <summary className="cursor-pointer text-xs text-accent">
+                {t("Ver o que falta")}
+              </summary>
+              <div className="mt-1.5 space-y-1 text-xs leading-4 text-text-muted">
+                <p>
+                  {t("Credenciais:")}{" "}
+                  <span data-testid="o-que-falta" className="font-mono text-[11px]">
+                    {falta.length > 0 ? falta.join(` ${t("e")} `) : t("as credenciais")}
+                  </span>
+                </p>
+                {enderecoDeRetorno ? (
+                  <p>
+                    {/* ⚠️ ESTE BLOCO EXISTE PORQUE A AUSÊNCIA DELE JÁ CUSTOU UMA SESSÃO.
+                        O Google compara o endereço de retorno BYTE A BYTE, e recusa com
+                        `redirect_uri_mismatch` — um erro que aponta para o Google e não
+                        para a divergência. Quem cria a credencial no console registra o
+                        endereço do app (`http://.../`) e não o da ROTA, porque nada no
+                        produto dizia qual é. Agora diz, e dá para copiar. */}
+                    {t("E, no console do Google, registrar este endereço de retorno —")}{" "}
+                    <span className="font-medium">{t("exatamente assim")}</span>:{" "}
+                    <code
+                      data-testid="endereco-de-retorno"
+                      className="select-all break-all font-mono text-[11px] text-text"
+                    >
+                      {enderecoDeRetorno}
+                    </code>
+                  </p>
+                ) : null}
+              </div>
+            </details>
+          </>
         )}
-        {linkDeConfiguracao ? (
-          <a
-            href={linkDeConfiguracao}
-            data-testid="ir-configurar-google"
-            className="mt-2 inline-block text-xs font-medium text-accent underline underline-offset-2 hover:text-accent-strong"
-          >
-            {t("Cadastrar as credenciais do Google")}
-          </a>
-        ) : null}
-        {enderecoDeRetorno ? (
-          <p className="mt-2 text-xs leading-4 text-text-muted">
-            {/* ⚠️ ESTE BLOCO EXISTE PORQUE A AUSÊNCIA DELE JÁ CUSTOU UMA SESSÃO.
-                O Google compara o endereço de retorno BYTE A BYTE, e recusa com
-                `redirect_uri_mismatch` — um erro que aponta para o Google e não
-                para a divergência. Quem cria a credencial no console registra o
-                endereço do app (`http://.../`) e não o da ROTA, porque nada no
-                produto dizia qual é. Agora diz, e dá para copiar. */}
-            {t("E, no console do Google, registrar este endereço de retorno —")}{" "}
-            <span className="font-medium">{t("exatamente assim")}</span>:{" "}
-            <code
-              data-testid="endereco-de-retorno"
-              className="select-all break-all font-mono text-[11px] text-text"
-            >
-              {enderecoDeRetorno}
-            </code>
-          </p>
-        ) : null}
-        <p className="mt-2 text-xs leading-4 text-text-muted">
-          {t("Até lá a agenda funciona normalmente, só não troca compromissos com o Google.")}
-        </p>
       </div>
     );
   }

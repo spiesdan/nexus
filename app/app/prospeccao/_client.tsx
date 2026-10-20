@@ -345,9 +345,24 @@ export function ProspeccaoClient({
                   {t("Valem nos resultados — a busca encontra todas as empresas da região e estes filtros ficam aplicados ao abrir.")}
                 </p>
               </div>
-              <Button onClick={criar} disabled={criando}>
-                {criando ? textos.buscando : textos.buscar}
-              </Button>
+              {/* A BUSCA EM RODAPÉ FIXO. O botão ficava no fim de ~10 grupos de
+                  categorias — mais de 1.000px de rolagem entre escolher a
+                  cidade e poder buscar. Agora ele acompanha a rolagem, com a
+                  contagem do que está marcado ao lado.
+
+                  O botão fica à ESQUERDA de propósito: o canto inferior direito
+                  é do avatar do assistente, que é fixo e cobre qualquer ação
+                  ali. O `pr-20 md:pr-24` é a folga dele. */}
+              <div className="sticky bottom-0 -mb-4 flex items-center gap-3 border-t border-border bg-card py-3 pr-20 backdrop-blur md:pr-24 md:after:absolute md:after:inset-x-0 md:after:top-full md:after:h-6 md:after:bg-card md:after:content-['']">
+                <Button onClick={criar} disabled={criando}>
+                  {criando ? textos.buscando : textos.buscar}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {marcadas.length === 0
+                    ? t("Todas as categorias")
+                    : `${marcadas.length} ${marcadas.length === 1 ? t("categoria") : t("categorias")}`}
+                </p>
+              </div>
             </Card>
           ) : (
             <NexusEmptyState
