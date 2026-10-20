@@ -8,6 +8,25 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.32.2] — 2026-10-20
+
+### Corrigido
+
+- **NF-e exige e envia o endereço do destinatário** A SEFAZ recusava a NF-e com a rejeição 726 — "NF-e sem a informação de
+  endereço do destinatário". O emissor montava `<dest>` só com nome, documento e
+  `indIEDest`; o endereço existia na tela, mas não entrava no XML.
+
+  O endereço passa a sair de um único lugar: o bloco que a tela agora chama de
+  "Endereço do destinatário" (os mesmos campos que antes eram "Local de
+  entrega"). É o único bloco do contrato que já carrega os campos do `TLocal`,
+  inclusive o `cMun`/IBGE — o cadastro de contatos não guarda esse código. O
+  mesmo endereço alimenta `<dest>/<enderDest>` e `<entrega>`; quando a entrega
+  for diferente, o bloco continua sendo o endereço do destinatário.
+
+  Sem o endereço, o sidecar recusa antes de abrir o certificado, e a rota recusa
+  antes de criar a nota e o job. Antes, a nota nascia `em_emissao` e só descobria
+  a falta na SEFAZ, deixando uma nota condenada para cancelar.
+
 ## [1.32.1] — 2026-10-20
 
 ### Corrigido
@@ -5034,7 +5053,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.1...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.2...HEAD
+[1.32.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.1...v1.32.2
 [1.32.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.0...v1.32.1
 [1.32.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...v1.32.0
 [1.31.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...v1.31.6
