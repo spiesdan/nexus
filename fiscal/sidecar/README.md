@@ -113,17 +113,20 @@ Todas as rotas (exceto `/saude`) exigem `X-Fiscal-Secret`.
 - Resposta erro: `{ok:false, codigo, mensagem[, recibo]}`. `LOTE_RECEBIDO`
   significa "lote aceito, recibo pendente" — consultar o recibo é fase futura.
 
-#### `extras` (opcional)
+#### `extras` (opcional, exceto `entrega`)
 
 Espelha o `extrasFiscaisSchema` de `lib/schemas/fiscal.ts` — mesmo vocabulário,
-mesmos limites. Sem `extras` a nota sai com o que o pedido traz (como sempre).
+mesmos limites. **`extras.entrega` é obrigatório para a NF-e modelo 55**: a
+SEFAZ recusa a nota sem `<dest>/<enderDest>` (rejeição 726), e o bloco
+`entrega` é o único do contrato que carrega os campos do `TLocal`, inclusive
+o `cMun`/IBGE. Sem ele o sidecar recusa antes de abrir o certificado.
 
 | Grupo | O que vira no XML |
 |---|---|
 | `transporte` | `<transp>` (`modFrete`, default `9`), `<transp/transporta>` se houver transportador, `<transp/vol>` se houver volumes |
 | `cobranca` | `<pag>` + `<pag/detPag>` (`tPag`, `indPag`, `vPag`) e, com `parcelas > 1`, `<cobr/dup>` |
 | `adicionais` | `<infAdic>` — `infCpl` até 5000, `infAdFisco` até 2000 caracteres |
-| `entrega` | `<entrega>` (TLocal) com o endereço de entrega e o CPF/CNPJ do destinatário |
+| `entrega` | `<dest>/<enderDest>` (endereço do destinatário) e `<entrega>` (TLocal); obrigatório na NF-e |
 
 Pontos de contrato que **não** estão no pedido e por isso são INFERIDO (marcados
 assim no código):
