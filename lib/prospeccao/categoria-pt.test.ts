@@ -183,6 +183,23 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
     expect(achadas).not.toContain("Auto parts store");
   });
 
+  it("a campanha de oficina alcança o serviço de revisão e o car service", () => {
+    // O Google devolve "Auto tune up service" e "Car service" para a mesma
+    // oficina que ele chama de "Auto repair shop" em outra rua. Sem o apelido,
+    // a campanha "Oficina mecânica" perdia 29 empresas em Videira.
+    const achadas = categoriasQueCasam("Oficina mecânica");
+    expect(achadas).toContain("Auto tune up service");
+    expect(achadas).toContain("Car service");
+  });
+
+  it("a campanha de lavação alcança o car wash", () => {
+    expect(categoriasQueCasam("Lavação")).toContain("Car wash");
+  });
+
+  it("a campanha de esquadrias alcança o fornecedor de caixilharia", () => {
+    expect(categoriasQueCasam("Esquadrias")).toContain("Aluminum window supplier");
+  });
+
   it("quem digita o ingles ainda acha", () => {
     expect(categoriasQueCasam("auto repair")).toContain("Auto repair shop");
     expect(categoriasQueCasam("Gas station")).toContain("Gas station");
