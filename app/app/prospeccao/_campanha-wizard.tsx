@@ -19,9 +19,28 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { DIAS_SEMANA, DIAS_UTEIS, DiasDaSemana } from "@/components/prospeccao/DiasDaSemana";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
+
+/** Quantas caixas de mensagem a tela abre — o mesmo 3 do painel Disparo. */
+const MENSAGENS_NA_TELA = 3;
+/** O teto da rotação anti-ban (lib/schemas/prospeccao.ts, 1..5). */
+const MENSAGENS_MAX = 5;
+
+/** Uma janela do dia, em HH:MM — o mesmo shape de `lib/prospeccao/agendamento`. */
+interface Janela {
+  inicio: string;
+  fim: string;
+}
+
+/** `YYYY-MM-DD` de hoje/daqui a N dias no relógio de QUEM OPERA a tela. */
+function diaIso(diasAFrente = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + diasAFrente);
+  return d.toLocaleDateString("en-CA");
+}
 
 interface CidadeAlvo {
   cidade: string;
@@ -84,7 +103,35 @@ export function CampanhaWizard({
   const [cidadesTexto, setCidadesTexto] = React.useState("");
   const [recorrencia, setRecorrencia] = React.useState("");
   const [templateId, setTemplateId] = React.useState("__nenhum");
-  const [mensagemLivre, setMensagemLivre] = React.useState("");
+  /**
+   * AS MENSAGENS DA CAMPANHA — várias, não uma.
+   *
+   * A tela abria UM campo e o descartava: o texto não entrava no POST, então
+   * quem escrevia a abordagem aqui perdia o texto ao aprovar. O motor de
+   * disparo sempre aceitou 1..5 variações em rotação (`mensagens`), e o painel
+   * Disparo já mostrava três caixas — só este assistente não. Agora ele abre
+   * as mesmas três, grava na campanha e o Disparo nasce com elas preenchidas.
+   */
+  const [mensagens, setMensagens] = React.useState<string[]>(() =>
+    Array.from({ length: MENSAGENS_NA_TELA }, () => ""),
+  );
+  /**
+   * QUANDO A CAMPANHA PODE FALAR — período, dias e horário de funcionamento.
+   *
+   * Faltava aqui, e a falta não era cosmética: o passo "Mensagem" não tinha
+   * data nem janela, então a campanha saía sem saber quando podia mandar. O
+   * motor (`lib/prospeccao/agendado.ts`) sempre aceitou `data_inicio`,
+   * `data_fim` e `janelas` — só este assistente não perguntava. O Disparo
+   * depois abria com os padrões dele, ignorando a intenção do dono.
+   */
+  const [dataInicio, setDataInicio] = React.useState(() => diaIso());
+  const [dataFim, setDataFim] = React.useState(() => diaIso(7));
+  const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
+  const [janelas, setJanelas] = React.useState<Janela[]>([
+    { inicio: "07:00", fim: "12:00" },
+    { inicio: "13:00", fim: "19:00" },
+  ]);
+  const [limite, setLimite] = React.useState("50");
   const [aprovado, setAprovado] = React.useState(false);
   const [ocupado, setOcupado] = React.useState(false);
   const [resultado, setResultado] = React.useState<ResultadoExecucao | null>(null);
@@ -156,12 +203,45 @@ export function CampanhaWizard({
         return;
       }
     }
+    if (passo === 2) {
+      if (!periodoValido) {
+        nexusToast.error(t("A data final não pode ser anterior à inicial."));
+        return;
+      }
+      if (!janelasValidas) {
+        nexusToast.error(t("Cada janela precisa de um início antes do fim."));
+        return;
+      }
+      if (dias.length === 0) {
+        nexusToast.error(t("Escolha ao menos um dia da semana para enviar."));
+        return;
+      }
+    }
     ir(Math.min(PASSOS.length - 1, passo + 1));
   }
 
-  const template = (templates.data ?? []).find((x) => x.id === templateId) ?? null;
-  const mensagemFinal = mensagemLivre.trim() || template?.body || "";
+  const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
+  const mensagemFinal = preenchidas[0] ?? "";
   const preview = mensagemFinal ? interpolateTemplate(mensagemFinal, { name: "Maria Silva" }) : "";
+
+  /** Janela válida = HH:MM com início antes do fim. O motor recusa o resto. */
+  const janelasValidas =
+    janelas.length > 0 &&
+    janelas.every(
+      (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
+    );
+  const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
+
+  function trocarMensagem(i: number, valor: string) {
+    setMensagens((atual) => atual.map((v, j) => (j === i ? valor : v)));
+  }
+
+  /** Escolher um modelo escreve o corpo na PRIMEIRA caixa; as outras ficam. */
+  function escolherModelo(id: string) {
+    setTemplateId(id);
+    const corpo = (templates.data ?? []).find((x) => x.id === id)?.body;
+    if (corpo) trocarMensagem(0, corpo);
+  }
 
   const dadosEstimativa = estimativas?.chave === chaveCidades ? estimativas.dados : null;
 
@@ -191,7 +271,14 @@ export function CampanhaWizard({
           categorias: marcadas,
           cidades,
           fonte_publico: fontePublico,
+          ...(preenchidas.length > 0 ? { mensagens: preenchidas } : {}),
           ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
+          // O "quando": período, janelas (com os dias) e cota do dia. Sem
+          // isso o Disparo abria com os padrões dele, ignorando a intenção.
+          ...(dataInicio ? { data_inicio: dataInicio } : {}),
+          ...(dataFim ? { data_fim: dataFim } : {}),
+          janelas: janelas.map((j) => ({ ...j, dias })),
+          limite_diario: Math.min(500, Math.max(1, Number(limite) || 50)),
         },
       );
       const corpo = await apiClient.post<{ data: { buscas: number; sem_mapa: string[] } | null }>(
@@ -218,7 +305,15 @@ export function CampanhaWizard({
     setCidadesTexto("");
     setRecorrencia("");
     setTemplateId("__nenhum");
-    setMensagemLivre("");
+    setMensagens(Array.from({ length: MENSAGENS_NA_TELA }, () => ""));
+    setDataInicio(diaIso());
+    setDataFim(diaIso(7));
+    setDias(DIAS_UTEIS);
+    setJanelas([
+      { inicio: "07:00", fim: "12:00" },
+      { inicio: "13:00", fim: "19:00" },
+    ]);
+    setLimite("50");
     setAprovado(false);
     setResultado(null);
   }
@@ -367,7 +462,7 @@ export function CampanhaWizard({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="wiz-template">{t("Modelo de abordagem (opcional)")}</Label>
-            <Select value={templateId} onValueChange={setTemplateId}>
+            <Select value={templateId} onValueChange={escolherModelo}>
               <SelectTrigger id="wiz-template" className="w-full">
                 <SelectValue placeholder={t("Escrever na mão")} />
               </SelectTrigger>
@@ -381,19 +476,163 @@ export function CampanhaWizard({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="wiz-msg">{t("Mensagem de abordagem")}</Label>
-            <textarea
-              id="wiz-msg"
-              className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
-              value={mensagemLivre || template?.body || ""}
-              onChange={(e) => {
-                setMensagemLivre(e.target.value);
-                if (templateId !== "__nenhum") setTemplateId("__nenhum");
-              }}
-              placeholder={t("Olá {{primeiro_nome}}! Aqui é da …")}
-            />
+
+          <div className="space-y-2">
+            <Label>{t("Mensagens (giram nesta ordem, uma por envio)")}</Label>            {mensagens.map((m, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor={`wiz-msg-${i}`} className="text-xs font-normal text-muted-foreground">
+                    {i === 0 ? t("Mensagem 1 (sai primeiro)") : t(`Mensagem ${i + 1} (opcional)`)}
+                  </Label>
+                  {mensagens.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setMensagens((atual) => atual.filter((_, j) => j !== i))}
+                    >
+                      {t("Remover")}
+                    </Button>
+                  )}
+                </div>
+                <textarea
+                  id={`wiz-msg-${i}`}
+                  className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                  value={m}
+                  maxLength={4000}
+                  onChange={(e) => {
+                    trocarMensagem(i, e.target.value);
+                    if (templateId !== "__nenhum") setTemplateId("__nenhum");
+                  }}
+                  placeholder={i === 0 ? t("Olá {{primeiro_nome}}! Aqui é da …") : t("Outra forma de dizer a mesma coisa")}
+                />
+              </div>
+            ))}
+            {mensagens.length < MENSAGENS_MAX && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMensagens((atual) => [...atual, ""])}
+              >
+                {t("+ Variação")}
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {preenchidas.length > 1
+                ? t(
+                    `As ${preenchidas.length} mensagens se alternam: a 1ª no primeiro envio, a 2ª no segundo, e assim por diante, voltando à 1ª. Cada empresa recebe UMA.`,
+                  )
+                : t("A mesma mensagem para todas. Quem responde entra na conversa no Inbox.")}
+            </p>
           </div>
+
+          <div className="space-y-3 rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">{t("Quando enviar")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Período, dias da semana e horário de funcionamento. A campanha guarda isso; o Disparo usa quando você escolher as empresas.",
+                )}
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-inicio">{t("Começa em")}</Label>
+                <Input
+                  id="wiz-inicio"
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-fim">{t("Termina em")}</Label>
+                <Input
+                  id="wiz-fim"
+                  type="date"
+                  value={dataFim}
+                  min={dataInicio || undefined}
+                  onChange={(e) => setDataFim(e.target.value)}
+                />
+              </div>
+            </div>
+            {!periodoValido && (
+              <p className="text-xs text-destructive">
+                {t("A data final não pode ser anterior à inicial.")}
+              </p>
+            )}
+
+            <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="wizard" />
+
+            <div className="space-y-2">
+              <Label>{t("Horário de funcionamento (janelas de envio)")}</Label>
+              {janelas.map((j, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    type="time"
+                    aria-label={t(`Início da janela ${i + 1}`)}
+                    className="w-32"
+                    value={j.inicio}
+                    onChange={(e) =>
+                      setJanelas((atual) =>
+                        atual.map((v, k) => (k === i ? { ...v, inicio: e.target.value } : v)),
+                      )
+                    }
+                  />
+                  <span className="text-muted-foreground">—</span>
+                  <Input
+                    type="time"
+                    aria-label={t(`Fim da janela ${i + 1}`)}
+                    className="w-32"
+                    value={j.fim}
+                    onChange={(e) =>
+                      setJanelas((atual) =>
+                        atual.map((v, k) => (k === i ? { ...v, fim: e.target.value } : v)),
+                      )
+                    }
+                  />
+                  {janelas.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setJanelas((atual) => atual.filter((_, k) => k !== i))}
+                    >
+                      {t("Remover")}
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setJanelas((atual) => [...atual, { inicio: "08:00", fim: "18:00" }])}
+              >
+                {t("+ Janela")}
+              </Button>
+              {!janelasValidas && (
+                <p className="text-xs text-destructive">
+                  {t("Cada janela precisa de um início antes do fim.")}
+                </p>
+              )}
+            </div>
+
+            <div className="w-32 space-y-1.5">
+              <Label htmlFor="wiz-limite">{t("Máx. por dia")}</Label>
+              <Input
+                id="wiz-limite"
+                type="number"
+                min={1}
+                max={500}
+                value={limite}
+                onChange={(e) => setLimite(e.target.value)}
+              />
+            </div>
+          </div>
+
           {preview ? (
             <div className="hover-raise rounded-lg border border-border bg-surface-elevated p-3">
               <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">
@@ -423,7 +662,35 @@ export function CampanhaWizard({
             </div>
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">{t("Mensagem")}</dt>
-              <dd className="text-right">{mensagemFinal ? t("preparada") : t("sem mensagem")}</dd>
+              <dd className="text-right">
+                {preenchidas.length === 0
+                  ? t("sem mensagem")
+                  : preenchidas.length === 1
+                    ? t("1 mensagem")
+                    : `${preenchidas.length} ${t("mensagens em rotação")}`}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">{t("Período")}</dt>
+              <dd className="text-right tabular-nums">
+                {dataInicio || "—"} {t("a")} {dataFim || "—"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">{t("Horário")}</dt>
+              <dd className="text-right tabular-nums">
+                {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">{t("Dias")}</dt>
+              <dd className="text-right">
+                {dias.length === 7
+                  ? t("todos os dias")
+                  : dias
+                      .map((d) => t(DIAS_SEMANA.find((x) => x.valor === d)?.curto ?? ""))
+                      .join(", ")}
+              </dd>
             </div>
           </dl>
           <label className="flex min-h-[44px] cursor-pointer items-start gap-2 rounded-lg border p-3">
@@ -436,7 +703,7 @@ export function CampanhaWizard({
             <span>
               {t("Aprovo a execução desta campanha de descoberta.")}
               <span className="block text-xs text-muted-foreground">
-                {t("Cria uma busca por cidade. Sem envio automático de mensagens.")}
+                {t("Cria a busca por cidade. As mensagens ficam salvas na campanha e já vêm preenchidas no Disparo quando você escolher as empresas.")}
               </span>
             </span>
           </label>
