@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.32.0] — 2026-10-20
+
+### Adicionado
+
+- **Prospecção separa a categoria real do rótulo cru e trava a empresa em uma única campanha** A aba Empresas passa a resolver a **categoria efetiva** da empresa pelo nome,
+  pela categoria primária/secundária e pelo site, em vez de comparar o rótulo
+  cru que o Google gravou. Um café dentro de um posto deixa de aparecer como
+  posto; uma linha ambígua é marcada como "categoria a revisar" e fica fora de
+  qualquer campanha até alguém confirmar a classificação na tela.
+
+  A campanha ganhou uma trava de exclusividade: uma empresa ou contato que já
+  está na lista fechada de uma campanha, ou que já recebeu um envio por outra,
+  não pode ser selecionado de novo. A API responde 409 dizendo qual empresa já
+  está reservada e em qual campanha, e o público da base deixa de oferecê-la como
+  "em aberto". O disparo imediato e o tick do agendamento usam a mesma categoria
+  efetiva e o mesmo ledger de envios, então a regra vale nas duas portas.
+
+  O banco ganhou a migration 0277 com o trigger de sobreposição das listas e o
+  índice único global do ledger, aplicada também no baseline do self-host.
+
 ## [1.31.6] — 2026-10-20
 
 ### Corrigido
@@ -5002,7 +5022,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.0...HEAD
+[1.32.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.6...v1.32.0
 [1.31.6]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.5...v1.31.6
 [1.31.5]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.4...v1.31.5
 [1.31.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.31.3...v1.31.4
