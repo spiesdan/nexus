@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
+import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
 import { campanhaDeRecuperacaoSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,6 +37,33 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const supabase = await createClient();
+
+  // 0277 — a lista de contatos também é reserva exclusiva. O trigger do banco
+  // é a trava final, mas ele responde "23505"; a checagem aqui devolve QUEM já
+  // está em qual campanha, com a mesma resposta 409 da campanha de prospecção.
+  try {
+    const conflitos = await conflitosDeReserva(supabase, {
+      organizationId: authz.org.orgId,
+      campaignId: null,
+      contatoIds: parsed.data.contato_ids,
+    });
+    if (conflitos.length > 0) {
+      return fail(
+        "state_conflict",
+        `Não dá para criar a campanha de recuperação: ${resumoDosConflitos(conflitos)}.`,
+        409,
+        { requestId, details: { conflitos } },
+      );
+    }
+  } catch (e) {
+    logger.error("[prospecting.campaigns.recuperacao] reserva falhou", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: e instanceof Error ? e.message : String(e),
+    });
+    return fail("internal_error", "Erro ao validar os contatos da campanha.", 500, { requestId });
+  }
+
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .insert({
@@ -63,6 +91,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    if (
+      error?.code === "23505" ||
+      error?.message?.includes("prospect_em_outra_campanha") ||
+      error?.message?.includes("contato_em_outra_campanha")
+    ) {
+      return fail(
+        "state_conflict",
+        "Um ou mais contatos já estão reservados por outra campanha.",
+        409,
+        { requestId },
+      );
+    }
     logger.error("[prospecting.campaigns.recuperacao] falha ao criar campanha", {
       requestId,
       organization_id: authz.org.orgId,

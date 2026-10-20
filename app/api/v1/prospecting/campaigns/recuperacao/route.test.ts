@@ -22,17 +22,56 @@ let inserido: Record<string, unknown> | null = null;
 let erroDoBanco: { message: string } | null = null;
 
 function fakeClient() {
-  const q: Record<string, unknown> = {};
-  const volta = () => q;
-  q.insert = vi.fn((payload: Record<string, unknown>) => {
-    inserido = payload;
+  const tabelas: Record<string, Array<Record<string, unknown>>> = {
+    contacts: [
+      { id: CONTATO_ID, organization_id: ORG_ID, name: "Cliente", display_name: "Cliente" },
+    ],
+    prospecting_campaigns: [],
+    prospecting_sends: [],
+  };
+
+  function builder(tabela: string) {
+    const filtros: Array<{ col: string; val: unknown }> = [];
+    let modo: "select" | "insert" = "select";
+    let payload: Record<string, unknown> | null = null;
+    const q: Record<string, unknown> = {};
+    const volta = () => q;
+    q.insert = vi.fn((novo: Record<string, unknown>) => {
+      modo = "insert";
+      payload = novo;
+      inserido = novo;
+      return q;
+    });
+    q.select = vi.fn(volta);
+    q.eq = vi.fn((col: string, val: unknown) => {
+      filtros.push({ col, val });
+      return q;
+    });
+    q.in = vi.fn((col: string, val: unknown[]) => {
+      filtros.push({ col, val });
+      return q;
+    });
+    q.single = vi.fn(() =>
+      Promise.resolve(
+        erroDoBanco
+          ? { data: null, error: erroDoBanco }
+          : { data: modo === "insert" ? { id: "camp-1", ...(payload ?? {}) } : null, error: null },
+      ),
+    );
+    q.then = (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) => {
+      const linhas = (tabelas[tabela] ?? []).filter((l) =>
+        filtros.every((f) =>
+          Array.isArray(f.val)
+            ? f.val.some((x) => String(x) === String(l[f.col]))
+            : l[f.col] === f.val,
+        ),
+      );
+      return Promise.resolve({ data: linhas, error: null }).then(onF, onR);
+    };
     return q;
-  });
-  q.select = vi.fn(volta);
-  q.single = vi.fn(() =>
-    Promise.resolve(erroDoBanco ? { data: null, error: erroDoBanco } : { data: { id: "camp-1" }, error: null }),
-  );
-  return { from: vi.fn(() => q) };
+  }
+
+  return { from: vi.fn((tabela: string) => builder(tabela)) };
 }
 
 function corpo(valor: unknown): NextRequest {
@@ -120,6 +159,46 @@ describe("POST /api/v1/prospecting/campaigns/recuperacao", () => {
     expect(typeof inserido?.agendada_em).toBe("string");
     // Nunca cai no default `prospects` do banco.
     expect(inserido?.prospect_ids).toBeUndefined();
+  });
+
+  it("contato já reservado por outra campanha → 409 antes do insert", async () => {
+    // A 0277 vale também para a campanha de recuperação: o contato não pode
+    // estar em duas campanhas. A checagem devolve quem reservou, não um 500.
+    const original = fakeClient;
+    vi.mocked(createClient).mockResolvedValue({
+      from: (tabela: string) =>
+        tabela === "prospecting_campaigns"
+          ? {
+              select: () => ({
+                eq: () => ({
+                  then: (onF: (v: unknown) => unknown) =>
+                    Promise.resolve({
+                      data: [
+                        {
+                          id: "camp-antiga",
+                          organization_id: ORG_ID,
+                          nome: "Recuperação antiga",
+                          prospect_ids: null,
+                          contato_ids: [CONTATO_ID],
+                        },
+                      ],
+                      error: null,
+                    }).then(onF),
+                }),
+              }),
+            }
+          : original().from(tabela),
+    } as never);
+
+    const { POST } = await import("./route");
+    const resposta = await POST(corpo(VALIDO));
+    expect(resposta.status).toBe(409);
+    expect((await resposta.json()).error.details.conflitos[0]).toMatchObject({
+      id: CONTATO_ID,
+      motivo: "outra_campanha",
+      campanha_nome: "Recuperação antiga",
+    });
+    expect(inserido).toBeNull();
   });
 
   it("erro do banco vira 500, não 201 vazio", async () => {
