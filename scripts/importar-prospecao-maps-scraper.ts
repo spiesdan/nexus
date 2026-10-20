@@ -25,9 +25,11 @@
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import {
+  extrairDominio,
   normalizarNome,
   normalizarTelefone,
   normalizarWebsite,
@@ -73,17 +75,23 @@ const SIGLA_DA_ESTADO: Record<string, string> = {
   acre: "AC", alagoas: "AL", amapa: "AP", amazonas: "AM", bahia: "BA", ceara: "CE",
   "distrito federal": "DF", "espirito santo": "ES", goias: "GO", maranhao: "MA",
   "mato grosso": "MT", "mato grosso do sul": "MS", "minas gerais": "MG",
-  para: "PA", paraiba: "PB", parana: "PR", Pernambuco: "PE", piaui: "PI",
+  para: "PA", paraiba: "PB", parana: "PR", pernambuco: "PE", piaui: "PI",
   "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS",
   rondonia: "RO", roraima: "RR", "santa catarina": "SC", "sao paulo": "SP",
-  Sergipe: "SE", tocantins: "TO",
+  sergipe: "SE", tocantins: "TO",
 };
 
 function siglaDoEstado(valor: string | undefined): string | null {
   if (!valor) return null;
   const v = valor.trim();
   if (/^[A-Z]{2}$/.test(v)) return v;
-  return SIGLA_DA_ESTADO[v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()] ?? null;
+  const limpo = v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^(state|estado|province|provincia)\s+(of|de|do|da)\s+/, "")
+    .trim();
+  return SIGLA_DA_ESTADO[limpo] ?? null;
 }
 
 /**
@@ -97,6 +105,61 @@ function eAtendimento0800(telefone: string | null): boolean {
 
 function log(m: string): void {
   process.stderr.write(`${m}\n`);
+}
+
+interface ProspectoExistente {
+  external_id: string | null;
+  telefone_normalizado: string | null;
+  nome: string | null;
+  nome_normalizado: string | null;
+  cidade: string | null;
+}
+
+/** `google_places` grava `maps:<place_id>`; o scraper grava o id cru. */
+function semPrefixoDeProvider(valor: string): string {
+  return valor.trim().replace(/^maps:/i, "");
+}
+
+/**
+ * Filtro opcional de município. O Google devolve resultado de fora da cidade
+ * quando a busca é fraca (medido: "hortifruti em Fraiburgo" trouxe Joinville,
+ * a 200 km). Sem filtro, o import grava esses lugares como se fossem da praça.
+ * `PROSPECCAO_CIDADES` é lista separada por vírgula; vazio = não filtra.
+ */
+function cidadesPermitidas(): Set<string> | null {
+  const bruto = process.env.PROSPECCAO_CIDADES?.trim();
+  if (!bruto) return null;
+  return new Set(
+    bruto
+      .split(",")
+      .map((c) => normalizarNome(c))
+      .filter(Boolean),
+  );
+}
+
+/**
+ * Lê a base inteira em páginas de 1.000. O PostgREST corta em 1.000 por
+ * resposta mesmo com `select` — sem paginar, 3.700 dos 4.737 existentes
+ * ficariam invisíveis para o dedup e seriam reimportados.
+ */
+async function carregarExistentes(
+  admin: SupabaseClient,
+  organizationId: string,
+): Promise<ProspectoExistente[]> {
+  const PAGINA = 1_000;
+  const todos: ProspectoExistente[] = [];
+  for (let inicio = 0; ; inicio += PAGINA) {
+    const { data, error } = await admin
+      .from("business_prospects")
+      .select("external_id, telefone_normalizado, nome, nome_normalizado, cidade")
+      .eq("organization_id", organizationId)
+      .order("id", { ascending: true })
+      .range(inicio, inicio + PAGINA - 1);
+    if (error) throw error;
+    todos.push(...((data ?? []) as ProspectoExistente[]));
+    if (!data || data.length < PAGINA) break;
+  }
+  return todos;
 }
 
 function lerArgumentos(argv: string[]): { arquivo: string; confirmar: boolean } {
@@ -138,17 +201,30 @@ export function transformar(l: LinhaMaps) {
 
   const telefoneBruto = (l.phone ?? "").trim() || null;
   const telefoneNormalizado = eAtendimento0800(telefoneBruto) ? null : normalizarTelefone(telefoneBruto);
+  const website = normalizarWebsite(l.web_site ?? "");
+  const categoria = (l.category ?? "").trim() || null;
+  const categorias = Array.isArray(l.categories) ? l.categories.slice(0, 10) : [];
+  // A categoria efetiva é calculada NA IMPORTAÇÃO — não depois, num backfill
+  // que só roda quando alguém lembra. É a mesma função que a tela, a campanha
+  // e o disparo usam; gravar o resultado aqui impede que as três discordem.
+  const efetiva = categoriaEfetiva({ nome, categoria, categorias, website });
 
   return {
     nome,
     nome_normalizado: normalizarNome(nome),
-    categoria: (l.category ?? "").trim() || null,
-    categorias: Array.isArray(l.categories) ? l.categories.slice(0, 10) : [],
+    categoria,
+    categorias,
+    // `revisar` não tem categoria canônica: a linha fica visível e fora da
+    // campanha até alguém olhar. Gravar um palpite aqui seria pior que null.
+    categoria_canonica: efetiva.revisar ? null : efetiva.rotulo,
+    categoria_revisar: efetiva.revisar,
+    categoria_confianca: efetiva.confianca,
     telefone: telefoneBruto,
     // regra do repo: sem DDD nao ha numero canonico. Ver cabecalho.
     telefone_normalizado: telefoneNormalizado,
     whatsapp_potencial: whatsappPotencial(telefoneNormalizado),
-    website: normalizarWebsite(l.web_site ?? ""),
+    website,
+    dominio: extrairDominio(website),
     email: null,
     endereco,
     logradouro: (estruturado?.street ?? "").trim() || partido.logradouro,
@@ -192,9 +268,14 @@ async function main(): Promise<void> {
     if (!porPlace.has(k)) porPlace.set(k, l);
   }
 
-  const registros = [...porPlace.values()]
+  const todos = [...porPlace.values()]
     .map(transformar)
     .filter((r): r is NonNullable<typeof r> => r !== null);
+  const permitidas = cidadesPermitidas();
+  const registros = permitidas
+    ? todos.filter((r) => permitidas.has(normalizarNome(r.cidade ?? "")))
+    : todos;
+  const foraDaRegiao = todos.length - registros.length;
 
   const comFone = registros.filter((r) => r.telefone).length;
   const comNormalizado = registros.filter((r) => r.telefone_normalizado).length;
@@ -205,11 +286,21 @@ async function main(): Promise<void> {
   log(`linhas lidas ....... ${linhas.length}`);
   log(`sem place_id ....... ${semPlaceId} (descartadas: sem chave de dedup)`);
   log(`unicas ............ ${registros.length}`);
+  log(`fora da regiao .... ${foraDaRegiao} (filtro PROSPECCAO_CIDADES${permitidas ? "" : " desligado"})`);
   log(`com telefone bruto  ${comFone}`);
   log(`com tel. normaliz.  ${comNormalizado}  <- so quem ja veio com DDD`);
   log(`whatsapp potencial  ${comWhatsApp}`);
   log(`com site ........... ${comSite}`);
   log(`com cidade ........ ${comCidade}`);
+  const revisar = registros.filter((r) => r.categoria_revisar).length;
+  const porCategoria = new Map<string, number>();
+  for (const r of registros) {
+    const k = r.categoria_canonica ?? "(revisar)";
+    porCategoria.set(k, (porCategoria.get(k) ?? 0) + 1);
+  }
+  const top = [...porCategoria.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  log(`canonica .......... ${registros.length - revisar} (revisar: ${revisar})`);
+  log(`top categorias .... ${top.map(([k, v]) => `${k}=${v}`).join(" · ")}`);
 
   if (!confirmar) {
     log("");
@@ -228,16 +319,65 @@ async function main(): Promise<void> {
   // (`business_prospects_provider_id_key ... WHERE external_id IS NOT NULL`) e o
   // PostgREST nao faz on_conflict em indice parcial. Filtrar os ja existentes e
   // inserir é o caminho que nao depende dessa sutileza.
-  const { data: jaExistentes, error: errLeitura } = await admin
-    .from("business_prospects")
-    .select("external_id")
-    .eq("organization_id", organizationId)
-    .eq("provider", PROVIDER)
-    .not("external_id", "is", null);
-  if (errLeitura) throw errLeitura;
-  const existentes = new Set((jaExistentes ?? []).map((r) => r.external_id as string));
-  const novos = registros.filter((r) => r.external_id && !existentes.has(r.external_id));
-  log(`ja existentes ..... ${existentes.size}`);
+  //
+  // A leitura é de TODOS os providers, não só `maps_browser`: o mesmo lugar já
+  // pode estar na base como `google_places` (é o caso dos 4,7 mil) ou
+  // `osm_overpass`. Deduplicar só dentro do provider novo recriaria a base em
+  // duplicata — e campanha que reserva um prospect não enxerga o gêmeo.
+  const existentes = await carregarExistentes(admin, organizationId);
+  const idsExistentes = new Set<string>();
+  const fonesExistentes = new Set<string>();
+  const nomesCidadeExistentes = new Set<string>();
+  for (const e of existentes) {
+    if (e.external_id) {
+      idsExistentes.add(semPrefixoDeProvider(e.external_id));
+      idsExistentes.add(e.external_id.trim());
+    }
+    if (e.telefone_normalizado) fonesExistentes.add(e.telefone_normalizado);
+    const nn = e.nome_normalizado || normalizarNome(e.nome ?? "");
+    const cidade = normalizarNome(e.cidade ?? "");
+    if (nn && cidade) nomesCidadeExistentes.add(`${nn}|${cidade}`);
+  }
+
+  const novos: typeof registros = [];
+  const descartes = { place_id: 0, nome_cidade: 0, telefone: 0, sem_chave: 0 };
+  const vistosIds = new Set<string>();
+  const vistosNomesCidade = new Set<string>();
+  const vistosFones = new Set<string>();
+
+  for (const r of registros) {
+    if (!r.external_id) {
+      descartes.sem_chave++;
+      continue;
+    }
+    const id = semPrefixoDeProvider(r.external_id);
+    if (idsExistentes.has(id) || vistosIds.has(id)) {
+      descartes.place_id++;
+      continue;
+    }
+    const nn = r.nome_normalizado;
+    const cidade = normalizarNome(r.cidade ?? "");
+    const chaveNomeCidade = nn && cidade ? `${nn}|${cidade}` : null;
+    if (chaveNomeCidade && (nomesCidadeExistentes.has(chaveNomeCidade) || vistosNomesCidade.has(chaveNomeCidade))) {
+      descartes.nome_cidade++;
+      continue;
+    }
+    if (
+      r.telefone_normalizado &&
+      (fonesExistentes.has(r.telefone_normalizado) || vistosFones.has(r.telefone_normalizado))
+    ) {
+      descartes.telefone++;
+      continue;
+    }
+
+    novos.push(r);
+    vistosIds.add(id);
+    if (chaveNomeCidade) vistosNomesCidade.add(chaveNomeCidade);
+    if (r.telefone_normalizado) vistosFones.add(r.telefone_normalizado);
+  }
+
+  log(`ja existentes ..... ${existentes.length} (todos os providers)`);
+  log(`descartados ....... ${JSON.stringify(descartes)}`);
   log(`a inserir ......... ${novos.length}`);
 
   const LOTE = 500;
