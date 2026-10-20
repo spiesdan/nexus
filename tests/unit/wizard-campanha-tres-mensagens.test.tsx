@@ -123,6 +123,13 @@ describe("assistente de campanha — as mensagens da abordagem", () => {
       "Passando para apresentar a loja.",
       "Temos preço especial para oficinas.",
     ]);
+    // A trava anti-ban viaja junto: 60s entre duas mensagens, sempre.
+    expect(corpo.espaco_ms).toBe(60_000);
+    // E o "quando": período, janelas e cota do dia saem da tela para a campanha.
+    expect(corpo.data_inicio).toBeTruthy();
+    expect(corpo.data_fim).toBeTruthy();
+    expect(Array.isArray(corpo.janelas)).toBe(true);
+    expect((corpo.janelas as Array<{ inicio: string; fim: string }>).length).toBeGreaterThan(0);
   });
 
   it("caixa vazia não vira variação: só o que tem texto viaja", async () => {

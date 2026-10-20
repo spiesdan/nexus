@@ -279,6 +279,10 @@ export function CampanhaWizard({
           ...(dataFim ? { data_fim: dataFim } : {}),
           janelas: janelas.map((j) => ({ ...j, dias })),
           limite_diario: Math.min(500, Math.max(1, Number(limite) || 50)),
+          // 60s entre duas mensagens — o mesmo default da coluna e o piso do
+          // anti-ban (ESPACO_ANTIBAN_MS). Vai explícito para a campanha não
+          // depender do default de uma migration futura.
+          espaco_ms: 60_000,
         },
       );
       const corpo = await apiClient.post<{ data: { buscas: number; sem_mapa: string[] } | null }>(
@@ -631,6 +635,12 @@ export function CampanhaWizard({
                 onChange={(e) => setLimite(e.target.value)}
               />
             </div>
+
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "Ritmo: 1 mensagem por minuto (60s) por número — o teto anti-ban. O envio também respeita o aquecimento do WhatsApp e a cota do dia.",
+              )}
+            </p>
           </div>
 
           {preview ? (

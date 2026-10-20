@@ -14,6 +14,9 @@ Agora o passo **Mensagem** abre com **três caixas** (até cinco, pelo
 **Quando enviar**: data de início e fim, dias da semana e **horário de
 funcionamento** (as janelas de envio, com "+ Janela"), mais o teto por dia.
 
+O ritmo fica escrito na tela: **1 mensagem por minuto (60s) por número** — o
+teto anti-ban —, e a campanha grava `espaco_ms = 60000` de forma explícita.
+
 O painel **Disparo** passa a abrir com as mensagens e a agenda da campanha já
 preenchidas — antes ele mostrava três caixas vazias e os horários padrão dele,
 ignorando o que o dono tinha escolhido.
