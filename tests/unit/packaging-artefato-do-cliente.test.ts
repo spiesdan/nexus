@@ -77,10 +77,10 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler", "fiscal"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
-  it("o parser enxerga os 8 serviços de produção", () => {
+  it("o parser enxerga os 9 serviços de produção", () => {
     // Guarda do próprio instrumento: se o parser parar de enxergar os serviços,
     // todos os testes abaixo passariam vazios — verde por não ter medido nada.
     //
@@ -89,8 +89,12 @@ describe("packaging — o artefato que o cliente instala", () => {
     // executado — serviço fora do compose é serviço que não volta depois de um
     // reboot. Esta lista é o que impede o próximo serviço de ser criado do lado
     // de fora sem ninguém ver.
+    //
+    // `mercos` entrou como o nono: o navegador (Chromium/Playwright) que importa
+    // os pedidos do ERP. Ele é `image:` + `build:` ao lado, como os outros, e é o
+    // que o `pull_policy` consegue atualizar — a razão de estar nesta lista.
     expect([...servicos.keys()].sort()).toEqual(
-      ["app", "caddy", "fiscal", "redis", "scheduler", "srh", "waha", "worker"].sort(),
+      ["app", "caddy", "fiscal", "mercos", "redis", "scheduler", "srh", "waha", "worker"].sort(),
     );
   });
 
