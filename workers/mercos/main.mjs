@@ -90,15 +90,15 @@ function normalizar(linha) {
   }
 
   const cli = bruto.cliente ?? {};
+  // Razão social é o nome do cadastro. A fantasia pode ser o nome do
+  // vendedor/evento ("event PRAZO - ..."), e era ela que virava o nome do
+  // contato: pedido da TRANSGIRES nascia como "event PRAZO - TRANSGIRES".
+  // O detalhe é a fonte limpa; a lista fica só como reserva.
   const nomeLista = [bruto.fantasia_lista, bruto.razao_lista]
     .map((x) => (x ?? "").trim())
     .filter(Boolean)
     .join(" - ");
-  const nomeDetalhe = [cli.fantasia, cli.razao]
-    .map((x) => (x ?? "").trim())
-    .filter(Boolean)
-    .join(" - ");
-  const clienteNome = (nomeLista || nomeDetalhe || cli.razao || "").replace(/^-\s*/, "").trim();
+  const clienteNome = (cli.razao || cli.fantasia || nomeLista || "").replace(/^[-\u2013]\s*/, "").trim();
   if (!clienteNome) {
     return { erro: "cliente sem nome", numero: bruto.numero };
   }
@@ -118,6 +118,10 @@ function normalizar(linha) {
       status_origem: statusOrigem,
       cliente_nome: clienteNome.slice(0, 300),
       cliente_documento: cli.documento ?? null,
+      // Quem emitiu o pedido no Mercos. O detalhe traz "Vendedor"; a lista
+      // traz "emitido por". Guardamos os dois porque o detalhe pode falhar e a
+      // lista já veio na varredura.
+      vendedor: (bruto.vendedor || bruto.vendedor_lista || "").trim() || null,
       cliente: {
         razao: cli.razao ?? null,
         fantasia: cli.fantasia ?? null,

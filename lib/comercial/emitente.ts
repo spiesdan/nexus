@@ -27,6 +27,8 @@ import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 export interface LinhaComEmitente {
   created_by: string | null;
   vendedor_user_id?: string | null;
+  /** Emissor importado do canal, quando ele não é usuário do CRM. */
+  vendedor_nome?: string | null;
 }
 
 /**
@@ -44,6 +46,9 @@ export async function comNomeDoEmitente<T extends LinhaComEmitente>(
   const nomeDe = (id: string | null): string | null => (id ? (nomes.get(id) ?? null) : null);
   return linhas.map((l) => ({
     ...l,
-    emitente_nome: nomeDe(l.created_by) ?? nomeDe(l.vendedor_user_id ?? null),
+    emitente_nome:
+      nomeDe(l.created_by) ??
+      nomeDe(l.vendedor_user_id ?? null) ??
+      (l.vendedor_nome?.trim() || null),
   }));
 }

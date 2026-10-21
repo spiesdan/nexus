@@ -108,6 +108,12 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "automation_rule_runs na org A; manager B não vê, manager A vê\").",
   },
   {
+    tabela: "mercos_import_runs",
+    razao:
+      "tests/invariants/mercos-import-runs-rls.test.ts — JWT simulado e " +
+      "contagem cross-org nas duas direções (A não lê B, B não lê A).",
+  },
+  {
     tabela: "calendar_event_types",
     razao:
       "tests/invariants/agenda-rls.test.ts — `TABELAS_DA_AGENDA`, com " +

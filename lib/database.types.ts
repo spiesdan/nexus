@@ -3409,6 +3409,7 @@ export type Database = {
           total_cents: number;
           transportadora_nome: string | null;
           updated_at: string;
+          vendedor_nome: string | null;
           vendedor_user_id: string | null;
         };
         Insert: {
@@ -3440,6 +3441,7 @@ export type Database = {
           total_cents?: number;
           transportadora_nome?: string | null;
           updated_at?: string;
+          vendedor_nome?: string | null;
           vendedor_user_id?: string | null;
         };
         Update: {
@@ -3471,6 +3473,7 @@ export type Database = {
           total_cents?: number;
           transportadora_nome?: string | null;
           updated_at?: string;
+          vendedor_nome?: string | null;
           vendedor_user_id?: string | null;
         };
         Relationships: [

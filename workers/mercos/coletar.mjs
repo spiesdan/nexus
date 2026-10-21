@@ -217,6 +217,11 @@ try {
           id,
           numero: Number(linhas[iNum].match(/#(\d{3,8})/)[1]),
           status: STATUS.find((s) => linhas.some((l) => l === s)) ?? null,
+          // O cartão da lista diz "#19228 emitido por VENDEDOR JB". O detalhe
+          // também traz "Vendedor", mas ele é uma requisição a mais por pedido;
+          // guardar o da lista dá vendedor até quando o detalhe falha.
+          vendedor_lista:
+            linhas[iNum].match(/emitido por\s+(.+?)(?:\s+R\$|\s*$)/i)?.[1]?.trim() ?? null,
           razao_lista: linhas[iNum + 2] ?? null,
           fantasia_lista: linhas[iNum + 3] ?? null,
         });
@@ -431,6 +436,7 @@ try {
       status_lista: pedido.status ?? null,
       razao_lista: pedido.razao_lista ?? null,
       fantasia_lista: pedido.fantasia_lista ?? null,
+      vendedor_lista: pedido.vendedor_lista ?? null,
       total_cents: total,
       soma_itens_cents: somaItens,
       bate: somaItens === total,
