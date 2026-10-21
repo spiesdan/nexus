@@ -1,0 +1,21 @@
+# Worker do Mercos — Chromium isolado, fora do app e do worker do agente.
+#
+# A imagem oficial do Playwright já traz o Chromium na versão exata do
+# `@playwright/test` do lockfile. Instalar Chromium por cima do Alpine seria
+# maior, mais lento e sujeito a mismatch de versão — o modo de falha clássico
+# é o browser abrir e o protocolo não casar.
+FROM mcr.microsoft.com/playwright:v1.64.0-noble
+
+WORKDIR /app
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+
+# A credencial NÃO entra na imagem: vem do ambiente do serviço no compose.
+ENV NODE_ENV=production
+EXPOSE 8791
+CMD ["node", "workers/mercos/main.mjs"]

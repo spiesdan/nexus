@@ -84,6 +84,11 @@ CRONS="
 */15 * * * *|60|api/v1/cron/risk-watcher
 */30 * * * *|60|api/v1/cron/contact-phones
 17 * * * *|60|api/v1/cron/contact-proposals-watcher
+# 17:00 em Brasília = 20:00 UTC. O scheduler roda com TZ=UTC de propósito
+# (todos os outros crons foram escritos nessa régua); mudar o TZ do contêiner
+# deslocaria a agenda inteira. O import do Mercos só enfileira: o worker
+# dedicado executa, então o timeout de 600s cobre o tick, não o scrape.
+0 20 * * *|600|api/v1/cron/mercos-import
 0 12 * * *|60|api/v1/cron/lgpd-sla-watcher
 30 3 * * *|120|api/v1/cron/kb-conversations-batch
 15 4 * * *|60|api/v1/cron/sync-model-catalog

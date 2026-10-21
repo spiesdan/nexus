@@ -43,6 +43,7 @@ export default async function PedidosPage({
 
   const podeCriar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
   const podeExcluir = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
+  const podeImportar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const DIA = /^\d{4}-\d{2}-\d{2}$/;
   const INSTANTE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
@@ -117,6 +118,7 @@ export default async function PedidosPage({
       vendedorNome={vendedorNome}
       podeCriar={podeCriar}
       podeExcluir={podeExcluir}
+      podeImportar={podeImportar}
       meuId={user.id}
       textos={{
         titulo: t("Pedidos"),

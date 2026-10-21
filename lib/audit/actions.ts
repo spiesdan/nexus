@@ -552,6 +552,7 @@ export const AUDIT_ACTIONS = [
   // máquina escolheu nem quem salvou por cima.
   "catalog_product.ncm_sugerido",
 "catalog_product.ncm_lote",
+"commercial_orders.mercos_import.enqueue",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
