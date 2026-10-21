@@ -288,6 +288,15 @@ try {
       doc.querySelectorAll("script,style,noscript").forEach((e) => e.remove());
       const linhas = doc.body.innerText.split("\n").map((s) => s.trim()).filter(Boolean);
 
+      // O card da LISTA nem sempre carrega o status (medido em 21/10/2026:
+      // 24 pedidos chegaram com `status_lista` nulo). O detalhe sempre tem o
+      // badge de faturamento; ele é a fonte de verdade quando a lista falha.
+      const badgeFaturamento = doc.querySelector("#badge-status-faturamento");
+      const statusFaturamento =
+        badgeFaturamento && !/display\s*:\s*none/i.test(badgeFaturamento.getAttribute("style") || "")
+          ? badgeFaturamento.textContent.trim()
+          : null;
+
       // Rótulo -> valor é SEMPRE a linha seguinte. O bloco "Detalhes do pedido"
       // é uma lista de pares; não depende de classe nem de posição de pixel.
       const campo = (rotulo) => {
@@ -368,6 +377,7 @@ try {
           return Number(bruto.replace(/\D/g, "")) || null;
         })(),
         data_emissao: campo("Data da emissão"),
+        status_detalhe: statusFaturamento || null,
         vendedor: campo("Vendedor"),
         condicao_pagamento: campo("Cond. de pagamento"),
         valor_frete: campo("Valor do frete"),

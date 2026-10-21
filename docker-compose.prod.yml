@@ -259,6 +259,13 @@ services:
       MERCOS_EMPRESA: ${MERCOS_EMPRESA:-338282}
       MERCOS_POLL_MS: ${MERCOS_POLL_MS:-5000}
       MERCOS_SCRAPE_TIMEOUT_MS: ${MERCOS_SCRAPE_TIMEOUT_MS:-1800000}
+      # Recuperação pontual: força a coleta a partir de um número antigo.
+      # Vazio no fluxo normal (usa o maior pedido já importado).
+      MERCOS_A_PARTIR_DE: ${MERCOS_A_PARTIR_DE:-}
+      # O primeiro login de um dispositivo novo pede código por e-mail. O
+      # worker espera até 1h por ele (arquivo no volume), em vez de falhar
+      # na hora; depois disso a sessão persiste e o cron não pede mais.
+      MERCOS_CODIGO_ESPERA_MS: ${MERCOS_CODIGO_ESPERA_MS:-3600000}
       MERCOS_STORAGE_STATE: /data/mercos/state.json
       MERCOS_CODIGO_FILE: /data/mercos/codigo.txt
     volumes:

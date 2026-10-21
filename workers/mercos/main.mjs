@@ -33,6 +33,11 @@ const STATUS = {
   Expedido: "expedido",
   Aprovado: "aprovado",
   Faturado: "faturado",
+  "Parcialmente Faturado": "faturado",
+  // O detalhe do Mercos mostra "Aguardando Faturamento" quando o pedido já
+  // saiu do rascunho mas ainda não foi faturado. Na lista esse rótulo às
+  // vezes não vem; por isso o fallback abaixo.
+  "Aguardando Faturamento": "aprovado",
 };
 
 function log(evento, dados = {}) {
@@ -69,7 +74,7 @@ function dataBr(d) {
 
 function normalizar(linha) {
   const bruto = JSON.parse(linha);
-  const statusOrigem = bruto.status_lista ?? null;
+  const statusOrigem = bruto.status_lista ?? bruto.status_detalhe ?? null;
   const status = statusOrigem ? STATUS[statusOrigem] : null;
   if (!status) {
     return { erro: `status não lido na lista (${statusOrigem ?? "ausente"})`, numero: bruto.numero ?? null };
@@ -194,8 +199,17 @@ async function processar(admin, run) {
     .maybeSingle();
   if (erroUltimo) throw new Error(erroUltimo.message);
 
-  const maiorNumero = Number(ultimo?.numero ?? 0);
-  const inicio = ultimo?.created_at ? new Date(ultimo.created_at) : new Date(Date.now() - 30 * 86400000);
+  // Backfill explícito: quando um lote anterior falhou em pedidos abaixo do
+  // maior número já importado, a coleta normal nunca os revisita. O override
+  // existe só para recuperação operacional e não fica ligado por padrão.
+  const aPartirDeOverride = Number(process.env.MERCOS_A_PARTIR_DE || 0);
+  const maiorNumero = aPartirDeOverride > 0 ? aPartirDeOverride : Number(ultimo?.numero ?? 0);
+  const inicio =
+    aPartirDeOverride > 0
+      ? new Date(Date.now() - 30 * 86400000)
+      : ultimo?.created_at
+        ? new Date(ultimo.created_at)
+        : new Date(Date.now() - 30 * 86400000);
   const de = dataBr(new Date(inicio.getTime() - 86400000));
   const ate = dataBr(new Date(Date.now() + 86400000));
   const pasta = join(TMP_ROOT, run.id);
