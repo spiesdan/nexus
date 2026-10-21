@@ -161,4 +161,28 @@ describe("categoriaCombinaComCampanha", () => {
     expect(aceitas.has("auto repair shop")).toBe(true);
     expect(aceitas.has("oficina mecanica")).toBe(true);
   });
+
+  it("categoriasAceitas cobre as DUAS línguas que a base grava", () => {
+    // A empresa resolvida carrega só o PORTUGUÊS (o cru não vem junto). Se a
+    // régua da campanha tivesse só o inglês, ela ficava fora de tudo: medido em
+    // 21/10/2026, 12.856 empresas (49% da base) não eram alcançadas por
+    // campanha nenhuma.
+    expect(categoriasAceitas(["Oficina mecânica"]).has("servico de revisao e manutencao de veiculos")).toBe(true);
+    expect(categoriasAceitas(["Autopeças"]).has("loja de autopecas")).toBe(true);
+    expect(categoriasAceitas(["Ótica"]).has("optica")).toBe(true);
+  });
+
+  it("empresa resolvida (só canônica) entra na campanha — e o cru não volta", () => {
+    const resolvida = categoriaEfetiva({
+      nome: "Auto Peças Videira",
+      categoria: "Auto parts store",
+      categorias: ["Auto parts store"],
+      categoria_canonica: "Loja de autopeças",
+      categoria_revisar: false,
+    });
+    // O rótulo cru NÃO sobrevive à resolução — é o que impede o café corrigido
+    // de voltar como posto pela campanha. A régua tem que chegar pelo canônico.
+    expect(resolvida.categorias).not.toContain("Auto parts store");
+    expect(categoriaCombinaComCampanha(resolvida, ["Autopeças"])).toBe(true);
+  });
 });

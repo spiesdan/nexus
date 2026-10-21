@@ -35,12 +35,17 @@
  * `includes` no rótulo em português, e igualdade ⊂ `includes`. O passo foi
  * removido; o que a mutação não derruba é código que ninguém sabe se
  * trabalha.
+ *
+ * (Em 21/10/2026 o conjunto ganhou o lado CANÔNICO — a tradução de cada rótulo
+ * casado, não uma varredura do mapa pelo termo. É outro passo, com outro
+ * motivo: a empresa resolvida carrega só o português, e sem ele 12.856
+ * empresas (49% da base) não eram alcançadas por campanha nenhuma.)
  */
 import { describe, expect, it } from "vitest";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { categoriasQueCasam } from "@/lib/prospeccao/categoria-pt";
+import { categoriasQueCasam, traduzirCategoria } from "@/lib/prospeccao/categoria-pt";
 
 import {
   LIMITE_POR_PAGINA,
@@ -174,19 +179,22 @@ describe("categoriasAceitas — o conjunto traduzido", () => {
     expect(aceitas.has("iron ware dealer")).toBe(true);
   });
 
-  it("sem passo de 'tradução exata' — o conjunto é o que a busca devolve", () => {
-    // Trava a remoção de código morto: este conjunto é EXATAMENTE o que
-    // `categoriasQueCasam` devolve, mais o termo da campanha. Se alguém
-    // repuser o passo inverso, esta asserção reprova e a pergunta volta.
+  it("o conjunto é a busca nos DOIS lados do rótulo — cru e canônico", () => {
+    // Trava de composição: `categoriasAceitas` é EXATAMENTE o termo, o que
+    // `categoriasQueCasam` devolve e a TRADUÇÃO de cada um desses. O lado
+    // canônico (português) não é enfeite: é o rótulo que a empresa resolvida
+    // carrega, e sem ele 49% da base ficava fora de qualquer campanha.
     const aceitas = categoriasAceitas(["Loja de ferragens"]);
     const esperada = new Set(
-      ["Loja de ferragens", ...categoriasQueCasam("Loja de ferragens")].map((v) =>
-        v
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .trim(),
-      ),
+      ["Loja de ferragens", ...categoriasQueCasam("Loja de ferragens")]
+        .flatMap((v) => [v, traduzirCategoria(v)])
+        .map((v) =>
+          v
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim(),
+        ),
     );
     expect([...aceitas].sort()).toEqual([...esperada].sort());
   });
@@ -198,13 +206,18 @@ describe("categoriasAceitas — o conjunto traduzido", () => {
   it("não engole o catálogo inteiro", () => {
     // O oposto de aceitar demais também é defeito: "Oficina" sozinho (termo
     // parcial) é BUSCA na tela, mas como categoria da campanha tem que ser o
-    // rótulo que descreve. O conjunto cresceu de 3 para 5 quando a campanha
-    // passou a alcançar "Auto tune up service" e "Car service" — as duas são
-    // a mesma oficina com outro nome do Google. Continua sendo um punhado,
-    // não o catálogo.
+    // rótulo que descreve.
+    //
+    // O conjunto cresceu três vezes, sempre pelo mesmo motivo — a mesma oficina
+    // com outro nome: "Auto tune up service" e "Car service" (o Google), e
+    // depois o lado PORTUGUÊS que a empresa resolvida carrega ("Mecânico",
+    // "Serviço de revisão e manutenção de veículos"). Continua sendo um punhado,
+    // não o catálogo de 536.
     const aceitas = categoriasAceitas(["Oficina mecânica"]);
-    expect(aceitas.size).toBeLessThan(8);
+    expect(aceitas.size).toBeLessThan(20);
     expect(aceitas.has("auto parts store")).toBe(false);
+    // E não pode engolir a loja de peças em NENHUMA das duas línguas.
+    expect(aceitas.has("loja de autopeças")).toBe(false);
   });
 });
 

@@ -191,6 +191,14 @@ export async function GET(req: NextRequest): Promise<Response> {
         partes.push(
           `and(categoria_canonica.is.null,categoria.in.(${lista.map(valorParaOr).join(",")}))`,
         );
+        // A `lista` carrega as DUAS línguas: o rótulo cru (inglês) e o canônico
+        // (português) que o termo descreve. O `in` acima filtra só a coluna CRUA,
+        // e só quando não há canônica — de propósito: é o que impede o café
+        // corrigido de voltar na lista de posto. Falta o outro lado, e sem ele a
+        // tela ficava VAZIA para o termo certo: filtrar "Ótica" não achava as 234
+        // "Óptica" da base, nem "Oficina mecânica" achava o "Serviço de revisão e
+        // manutenção de veículos" — a campanha alcançava, mas a tela não mostrava.
+        partes.push(`categoria_canonica.in.(${lista.map(valorParaOr).join(",")})`);
       }
       for (const termo of semTraducao) {
         partes.push(`and(categoria_canonica.is.null,categoria.ilike.${valorParaOr(`%${termo}%`)})`);
