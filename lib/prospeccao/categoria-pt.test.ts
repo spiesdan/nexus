@@ -27,6 +27,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CATEGORIA_PT,
+  CANONICAS_DA_CATEGORIA,
   categoriasQueCasam,
   semAcento,
   traduzirCategoria,
@@ -223,11 +224,48 @@ describe("categoriasQueCasam — o defeito que MIROU", () => {
     expect(achadas).toEqual([]);
   });
 
-  it("devolve valores que EXISTEM na tabela, para o filtro casar no banco", () => {
-    // Se devolvesse uma traducao em vez da chave gravada, o `.in("categoria",
-    // ...)` na API nao encontraria NADA — e a tela ficaria vazia sem erro.
+  it("devolve valores que a base GRAVA — cru (inglês) ou canônico (português)", () => {
+    // Se devolvesse uma tradução que não está em lugar nenhum, o `.in("categoria",
+    // ...)` na API nao encontraria NADA — e a tela ficaria vazia sem erro. A
+    // base grava o rótulo em DUAS colunas: `categoria` (cru) e
+    // `categoria_canonica` (traduzido). A lista tem que sair de uma das duas.
+    const gravados = new Set([...Object.keys(CATEGORIA_PT), ...Object.values(CATEGORIA_PT)]);
     for (const achada of categoriasQueCasam("mecanica")) {
-      expect(Object.keys(CATEGORIA_PT)).toContain(achada);
+      expect(gravados).toContain(achada);
+    }
+  });
+
+  it("a oficina alcança o rótulo CANÔNICO, não só o cru do Google", () => {
+    // A empresa resolvida carrega só o português ("Serviço de revisão e
+    // manutenção de veículos"), e o cru NÃO vem junto — de propósito, para o
+    // café corrigido não voltar como posto. Sem o lado canônico na régua, 239
+    // oficinas ficavam sem campanha nenhuma.
+    expect(categoriasQueCasam("Oficina mecânica")).toContain(
+      "Serviço de revisão e manutenção de veículos",
+    );
+    expect(categoriasQueCasam("Oficina mecânica")).toContain("Mecânico");
+  });
+
+  it("'Ótica' acha a 'Óptica' — a letra que separava as duas", () => {
+    // O catálogo servido chama de "Ótica"; o Google traduz "Optician" para
+    // "Óptica". As duas grafias não casavam por substring, e as 234 óticas da
+    // base ficavam fora de qualquer campanha.
+    expect(categoriasQueCasam("Ótica")).toContain("Óptica");
+  });
+
+  it("'Autopeças' alcança 'Loja de autopeças'", () => {
+    expect(categoriasQueCasam("Autopeças")).toContain("Loja de autopeças");
+  });
+
+  it("todo rótulo do mapa canônico é REAL — nenhum inventado", () => {
+    // A régua é estreita de propósito. Um sinônimo que a tabela Google→PT não
+    // produz nunca casa com nada: vira ruído que parece conserto. Este teste o
+    // reprova na hora.
+    const canonical = new Set(Object.values(CATEGORIA_PT));
+    for (const [slug, valores] of Object.entries(CANONICAS_DA_CATEGORIA)) {
+      for (const v of valores) {
+        expect(canonical, `${slug} → "${v}"`).toContain(v);
+      }
     }
   });
 

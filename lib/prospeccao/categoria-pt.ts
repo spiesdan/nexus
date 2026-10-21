@@ -1021,12 +1021,155 @@ const APELIDOS_DE_CATEGORIA: Record<string, string[]> = {
   tintas: ["Paint store"],
 };
 
+/**
+ * OS RÓTULOS CANÔNICOS (português) QUE CADA CATEGORIA SERVIDA REPRESENTA.
+ *
+ * `APELIDOS_DE_CATEGORIA` liga a categoria ao rótulo CRU do Google (inglês).
+ * Este liga ao rótulo já TRADUZIDO — `categoria_canonica` —, que é o que a
+ * empresa carrega depois que a categoria foi resolvida. E nesse caso o rótulo
+ * cru NÃO vem junto, de propósito: é o que impede o café dentro do posto de
+ * voltar como posto na campanha.
+ *
+ * ═══ O DEFEITO QUE ISTO RESOLVE, MEDIDO ═══════════════════════════════════
+ *
+ * Em 21/10/2026 a base tinha 26.136 empresas não bloqueadas e **12.856 delas
+ * (49%) não eram alcançadas por campanha nenhuma**. Não era a fila de
+ * `categoria_revisar` (1.708 linhas — libertá-la somava 5): era a campanha
+ * comparar contra o lado INGLÊS enquanto a empresa resolvida carrega só o
+ * PORTUGUÊS. "Loja de autopeças", "Óptica", "Serviço de revisão e manutenção
+ * de veículos", "Agricultura e pecuária" — todas caíam fora.
+ *
+ * A régua aqui é ESTREITA, como em `APELIDOS_DE_CATEGORIA`: só entra o
+ * sinônimo direto, o mesmo negócio com outro nome. "Floricultura",
+ * "Explorador florestal", "Órgão público" e "Universidade" NÃO entram — não
+ * há categoria servida para eles, e inventar uma mandaria mensagem para quem
+ * não é cliente.
+ */
+export const CANONICAS_DA_CATEGORIA: Record<string, string[]> = {
+  // ─── Alimentação ───
+  lanchonete: ["Hamburger", "Fast food", "Pastelaria"],
+  padaria: ["Confeitaria"],
+  mercado: ["Mercearia", "Mercearia de bairro"],
+  hortifruti: ["Frutas e verduras"],
+  bar: ["Bar de coquetéis"],
+  restaurante: ["Restaurante familiar", "Restaurante italiano", "Restaurante buffet"],
+  // ─── Automotivo ───
+  "oficina mecanica": [
+    "Serviço de revisão e manutenção de veículos",
+    "Mecânico",
+    "Oficina de motos",
+    "Estação de inspeção veicular",
+  ],
+  borracharia: ["Loja de pneus", "Serviço de pneus", "Loja de pneus usados"],
+  funilaria: ["Funilaria e pintura", "Mecânico de funilaria", "Reparo de amassados"],
+  autopecas: ["Loja de autopeças", "Loja de acessórios para veículos"],
+  "auto eletrica": ["Elétrica automotiva"],
+  "revenda de veiculos": ["Revendedora de veículos"],
+  lavacao: ["Lavação de alta pressão"],
+  // ─── Construção ───
+  "material de construcao": ["Fornecedor de materiais de construção"],
+  vidracaria: ["Vidros e espelhos", "Vidraceiro"],
+  madeireira: ["Fornecedor de madeira", "Serraria"],
+  esquadrias: ["Fornecedor de portas"],
+  "eletrica e hidraulica": [
+    "Loja de material elétrico",
+    "Eletricista",
+    "Fornecedor de equipamentos hidráulicos",
+  ],
+  // ─── Saúde ───
+  "clinica medica": [
+    "Médico",
+    "Clínica especializada",
+    "Centro médico",
+    "Consultório médico",
+    "Clínico geral",
+  ],
+  "clinica odontologica": ["Dentista", "Cirurgião dentista"],
+  fisioterapia: ["Fisioterapeuta"],
+  laboratorio: ["Laboratório médico"],
+  farmacia: ["Drogaria"],
+  otica: ["Óptica", "Optometrista"],
+  "clinica veterinaria": ["Veterinário", "Atendimento veterinário", "Hospital veterinário"],
+  // ─── Comércio ───
+  "loja de roupas": [
+    "Loja de roupas femininas",
+    "Loja de roupas de grife",
+    "Loja de roupas infantis",
+    "Loja de roupas jovens",
+    "Loja de roupas esportivas",
+  ],
+  calcados: ["Loja de calçados"],
+  papelaria: ["Loja de papelaria"],
+  presentes: ["Loja de lembrancinhas", "Loja de presentes"],
+  // ─── Indústria ───
+  metalurgica: ["Metalurgia"],
+  marcenaria: [
+    "Móveis sob medida",
+    "Móveis planejados",
+    "Marcenaria e moveis planejados",
+    "Marcenaria sob medida",
+  ],
+  grafica: ["Impressora digital"],
+  "alimentos (industria)": ["Indústria de alimentos congelados"],
+  // ─── Serviços ───
+  contabilidade: ["Contador"],
+  advocacia: [
+    "Serviços jurídicos",
+    "Escritório de advocacia",
+    "Advogado criminal",
+    "Advogado civilista",
+    "Advogado trabalhista e previdenciário",
+  ],
+  imobiliaria: ["Corretor imobiliário"],
+  seguros: ["Corretora de seguros", "Corretor de seguros"],
+  engenharia: ["Engenheiro", "Engenheiro mecânico"],
+  // ─── Educação ───
+  escola: [
+    "Instituição pública de ensino",
+    "Instituição de ensino",
+    "Instituição particular de ensino",
+    "Ensino médio",
+    "Ensino fundamental",
+    "Educação infantil",
+    "Centro educacional",
+    "Creche",
+    "Escola elemental",
+    "Escola de ensino fundamental",
+    "Escola técnica",
+  ],
+  "curso de idiomas": ["Curso de inglês", "Escola de idiomas"],
+  academia: ["Ginásio"],
+  autoescola: ["Escola de habilitação"],
+  // ─── Transportes ───
+  transportadora: ["Serviço de transporte", "Logística"],
+  // ─── Tecnologia ───
+  "loja de informatica": ["Loja de computadores", "Loja de celulares", "Loja de eletrônicos"],
+  "assistencia tecnica": [
+    "Conserto de computadores",
+    "Assistência de celulares",
+    "Assistência de eletrodomésticos",
+    "Assistência de eletrônicos",
+  ],
+  "provedor de internet": ["Operadora de telecomunicações"],
+  // ─── Beleza ───
+  "salao de beleza": ["Cabeleireiro"],
+  estetica: ["Manicuro e pedicuro", "Depilação"],
+  // ─── Pet ───
+  "pet shop": ["Loja de répteis", "Loja de produtos para pets"],
+  // ─── Agronegócio ───
+  agropecuaria: ["Agricultura e pecuária", "Produção agrícola", "Fazenda de gado", "Fazenda", "Agricultura"],
+  "maquinas agricolas": ["Revendedora de tratores", "Fornecedor de máquinas agrícolas"],
+};
+
 export function categoriasQueCasam(termo: string): string[] {
   const t = semAcento(termo);
   if (t === "") return [];
 
   const achadas = new Set<string>();
   for (const apelido of APELIDOS_DE_CATEGORIA[t] ?? []) achadas.add(apelido);
+  // O lado canônico: a empresa resolvida carrega o rótulo em PORTUGUÊS, e sem
+  // isto a campanha comparava só o inglês e a cegava por completo.
+  for (const canonica of CANONICAS_DA_CATEGORIA[t] ?? []) achadas.add(canonica);
   const tFlex = semAcentoFlexivel(termo);
 
   for (const [gravada, pt] of Object.entries(CATEGORIA_PT)) {

@@ -952,6 +952,52 @@ describe("GET /api/v1/prospecting/prospects — filtros", () => {
     expect(res.status).toBe(200);
     expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
   });
+
+  it("a tela acha a empresa pela categoria CANÔNICA (português), não só pelo cru", async () => {
+    // O catálogo servido diz "Ótica"; o Google traduz "Optician" para "Óptica".
+    // A empresa resolvida guarda só o português, e o cru NÃO vem junto. Sem a
+    // canônica no filtro, a tela ficava VAZIA para o termo certo — a campanha
+    // alcançava a empresa, mas o operador não a encontrava para revisar.
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, categoria: "Optician", categoria_canonica: "Óptica" }),
+        prospecto({
+          id: PROSPECT_B,
+          categoria: "Auto repair shop",
+          categoria_canonica: "Oficina mecânica",
+        }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/prospects?categoria=%C3%93tica"),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+  });
+
+  it("o café corrigido NÃO volta na lista de posto (a guarda da canônica segue de pé)", async () => {
+    // O outro lado da mesma moeda: ampliar o filtro para a coluna canônica não
+    // pode ressuscitar o defeito do café dentro do posto. O cru só casa quando
+    // NÃO há canônica — e o `in` canônico nunca carrega "Gas station".
+    const CAFE = "33333333-3333-4333-8333-777777777777";
+    const db = makeDb({
+      business_prospects: [
+        prospecto({ id: CAFE, categoria: "Gas station", categoria_canonica: "Café" }),
+        prospecto({ id: PROSPECT_A, categoria: "Gas station", categoria_canonica: null }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaProspects.GET(
+      req(
+        "GET",
+        undefined,
+        "http://localhost/api/v1/prospecting/prospects?categoria=Posto+de+combust%C3%ADvel",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.map((l: Row) => l.id)).toEqual([PROSPECT_A]);
+  });
 });
 
 describe("GET /api/v1/prospecting/prospects/categorias — a contagem segue o recorte", () => {

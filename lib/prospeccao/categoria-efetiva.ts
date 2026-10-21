@@ -380,7 +380,18 @@ export function categoriasAceitas(categorias: readonly string[]): Set<string> {
   const aceitas = new Set<string>();
   for (const c of categorias) {
     aceitas.add(semAcento(c).trim());
-    for (const bruta of categoriasQueCasam(c)) aceitas.add(semAcento(bruta).trim());
+    for (const bruta of categoriasQueCasam(c)) {
+      aceitas.add(semAcento(bruta).trim());
+      // O lado PORTUGUÊS da mesma régua. `categoriasQueCasam` devolve os
+      // rótulos CRUS (inglês) porque é isso que a coluna `categoria` guarda.
+      // Mas a empresa carrega `categoria_canonica` — o rótulo já traduzido —
+      // na lista de categorias efetivas, e a empresa que teve a canônica
+      // resolvida NÃO traz o cru junto (é o que impede o café de voltar como
+      // posto). Sem esta linha a campanha via a metade inglesa e cegava na
+      // metade portuguesa: "Óptica", "Loja de autopeças" e "Serviço de
+      // revisão e manutenção de veículos" ficavam fora de qualquer campanha.
+      aceitas.add(semAcento(traduzirCategoria(bruta)).trim());
+    }
   }
   return aceitas;
 }
