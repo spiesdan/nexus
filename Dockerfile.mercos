@@ -6,6 +6,18 @@
 # é o browser abrir e o protocolo não casar.
 FROM mcr.microsoft.com/playwright:v1.64.0-noble
 
+# Procedência (doutrina de packaging, invariante 2). Sem estes rótulos a imagem
+# publicada não diz de onde veio — e o `docker image inspect` da VPS não
+# distingue uma imagem do CI de uma construída à mão no mesmo host.
+LABEL org.opencontainers.image.source="https://github.com/spiesdan/nexus" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.title="DeskcommCRM mercos"
+
+# A versão vem do CI no build (publish-image.yml passa `--build-arg`). É o que
+# faz a imagem se identificar; sem ela o host não sabe o que está rodando.
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
+
 WORKDIR /app
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
