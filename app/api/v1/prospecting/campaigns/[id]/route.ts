@@ -184,3 +184,74 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
 
   return ok(data, { requestId });
 }
+
+/**
+ * DELETE /api/v1/prospecting/campaigns/[id] — apaga a campanha.
+ *
+ * ─── O que some junto, e o que NÃO some ─────────────────────────────────────
+ *
+ * As buscas da campanha ficam (`prospecting_searches.campaign_id` é
+ * `ON DELETE SET NULL`): o resultado continua no banco, só deixa de pertencer
+ * à campanha. O LEDGER DE ENVIOS cai (`prospecting_sends` é
+ * `ON DELETE CASCADE`), e essa é a consequência que importa: a empresa que
+ * recebeu mensagem por esta campanha volta a ficar livre para outra. É a única
+ * exclusão do produto que desfaz uma reserva — por isso a confirmação na tela
+ * diz isso com todas as letras e a ação vai para o audit.
+ *
+ * Sem DELETE não havia como desfazer um rascunho/campanha criada por engano: a
+ * tela só oferecia editar. O dono da instalação pediu a exclusão da campanha
+ * "Oficinas - SC" e não achou onde — porque não existia.
+ */
+export async function DELETE(_req: NextRequest, { params }: Params): Promise<Response> {
+  const requestId = randomUUID();
+  const authz = await requireRole("agent", { requestId, resource: "prospecting_campaigns" });
+  if (!authz.ok) return authz.response;
+
+  const { id } = await params;
+  const supabase = await createClient();
+
+  // Lê antes de apagar: o nome vai para o audit (depois do delete não há linha
+  // para reconstituir de qual campanha se trata) e o 404 fica correto para id
+  // de outra organização.
+  const { data: campanha, error: erroLeitura } = await supabase
+    .from("prospecting_campaigns")
+    .select("id, nome")
+    .eq("id", id)
+    .eq("organization_id", authz.org.orgId)
+    .maybeSingle();
+  if (erroLeitura) {
+    logger.error("[prospecting.campaign] falha ao ler a campanha para excluir", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: erroLeitura.message,
+    });
+    return fail("internal_error", "Erro ao excluir a campanha.", 500, { requestId });
+  }
+  if (!campanha) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
+
+  const { error } = await supabase
+    .from("prospecting_campaigns")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", authz.org.orgId);
+  if (error) {
+    logger.error("[prospecting.campaign] falha ao excluir a campanha", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: error.message,
+    });
+    return fail("internal_error", "Erro ao excluir a campanha.", 500, { requestId });
+  }
+
+  await audit({
+    action: "prospecting_campaign.deleted",
+    actorUserId: authz.user.id,
+    organizationId: authz.org.orgId,
+    resourceType: "prospecting_campaign",
+    resourceId: id,
+    requestId,
+    metadata: { nome: (campanha as { nome: string }).nome },
+  });
+
+  return ok({ id }, { requestId });
+}

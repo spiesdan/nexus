@@ -512,6 +512,10 @@ export const AUDIT_ACTIONS = [
   "prospect.importado_arquivo",
   "prospecting_settings.updated",
   "prospecting_campaign.updated",
+  // Apagar campanha é a ÚNICA exclusão que desfaz reserva: o ledger de envios
+  // dela cai junto (FK ON DELETE CASCADE) e as empresas voltam a ficar livres
+  // para outra campanha. Quem apagou, qual campanha e quando fica registrado.
+  "prospecting_campaign.deleted",
   // Leitura do público da campanha (a tela Campaigns showing "quem ela alcança").
   // Entrada nova no audit porque CONTAR público decide se alguém vira cliente
   // próprio por engano — e o registro é o que permite reconstituir isso.
