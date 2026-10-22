@@ -52,6 +52,16 @@ export const PUBLIC_PATHS: RegExp[] = [
   // `/icon`: o navegador pede sem sessão ao avaliar a instalação.
   /^\/icone-512$/,
   /^\/manifest\.webmanifest$/,
+  // TÚNEL DO SENTRY (`next.config.ts` → `tunnelRoute`). O SDK do navegador manda
+  // os envelopes para cá e o rewrite do `withSentryConfig` repassa pro ingest.
+  // Sem esta linha o `proxy.ts` responde 307 para `/login` ANTES do rewrite, e o
+  // erro de quem ainda NÃO TEM sessão (a fachada `/login`, o `/signup`) nunca
+  // chega. O próprio `next.config.ts` avisa: "Check that the configured route
+  // will not match with your Next.js middleware". Medido em 2026-10-22:
+  // `POST /monitoring` → 307 `/login?next=%2Fmonitoring...`. O caminho é público
+  // por natureza (é encaminhador de envelope, sem dado de sessão); quem barra
+  // abuso é o rate limit do próprio Sentry, não o cookie.
+  /^\/monitoring$/,
   /^\/team\/accept-invite\/.+$/,
   /^\/account-suspended$/,
   // ORÇAMENTO PÚBLICO. O cliente não tem sessão nesta instalação: ele recebe o
