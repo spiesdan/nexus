@@ -104,12 +104,53 @@ interface ResultadoDoEnvio {
 }
 
 /**
+ * As caixas de mensagem a partir do que a campanha salvou (1..5, piso de 3).
+ *
+ * Exportada para o teste e para o efeito de sincronização usarem a MESMA
+ * régua: duas contagens diferentes fariam a tela abrir com uma caixa a menos
+ * do que a campanha tem.
+ */
+export function caixasDeMensagem(iniciais: readonly string[]): string[] {
+  const jaVem = iniciais.map((m) => (typeof m === "string" ? m : ""));
+  const total = Math.min(
+    MENSAGENS_POR_DISPARO_MAX,
+    Math.max(OPCOES_DE_MENSAGEM, jaVem.length),
+  );
+  return Array.from({ length: total }, (_, i) => jaVem[i] ?? "");
+}
+
+/** As janelas da campanha, ou o padrão de expediente quando ela não trouxe. */
+function janelasDe(agenda: { janelas?: Array<{ inicio: string; fim: string }> | null } | null | undefined) {
+  const vindas = (agenda?.janelas ?? []).filter(
+    (j) => typeof j?.inicio === "string" && typeof j?.fim === "string",
+  );
+  return vindas.length > 0
+    ? vindas.map((j) => ({ inicio: j.inicio, fim: j.fim }))
+    : [
+        { inicio: "07:00", fim: "12:00" },
+        { inicio: "13:00", fim: "19:00" },
+      ];
+}
+
+/** Os dias da campanha, ou seg–sex quando ela não trouxe. */
+function diasDe(agenda: { janelas?: Array<{ dias?: number[] }> | null } | null | undefined) {
+  const vindos = (agenda?.janelas ?? []).find((j) => (j?.dias?.length ?? 0) > 0)?.dias;
+  return vindos && vindos.length > 0 ? vindos : DIAS_UTEIS;
+}
+
+/**
  * O componente NASCE do zero a cada abertura — quem abre passa um `key` novo.
  *
  * Não é detalhe: o plano simulado é de uma SELEÇÃO. Sobreviver para a próxima
  * abertura faria a tela dizer "vão receber 312" sobre uma lista que não
- * está mais marcada, e o númeroMentiria sem parecer errado. Remontar é mais
- * barato e mais honesto que sincronizar estado dentro de efeito.
+ * está mais marcada, e o número mentiria sem parecer errado.
+ *
+ * Só o `key` não bastava: na aba Campanhas o diálogo fica MONTADO com
+ * `aberto=false` e só recebe a campanha depois do clique em "Ver público".
+ * `useState` não reinicializa com props novas, então as caixas abriam com o
+ * exemplo do placeholder e o operador digitava de novo o que já estava salvo
+ * na campanha. O efeito abaixo sincroniza quando a origem muda — sem apagar o
+ * que a pessoa digitou se ela só fechar e reabrir a mesma campanha.
  */
 export function DialogoDisparo({
   ids,
@@ -162,14 +203,9 @@ export function DialogoDisparo({
   //
   // O tamanho nasce do que a campanha trouxe (1..5), com o piso de três
   // caixas: campanha sem mensagem continua abrindo como sempre abriu.
-  const [mensagens, setMensagens] = React.useState<string[]>(() => {
-    const jaVem = mensagensIniciais.map((m) => (typeof m === "string" ? m : ""));
-    const total = Math.min(
-      MENSAGENS_POR_DISPARO_MAX,
-      Math.max(OPCOES_DE_MENSAGEM, jaVem.length),
-    );
-    return Array.from({ length: total }, (_, i) => jaVem[i] ?? "");
-  });
+  const [mensagens, setMensagens] = React.useState<string[]>(() =>
+    caixasDeMensagem(mensagensIniciais),
+  );
   const [limite, setLimite] = React.useState(() =>
     String(agendaInicial?.limite_diario ?? 50),
   );
@@ -194,25 +230,44 @@ export function DialogoDisparo({
   // As janelas do pedido do dono: "das 7 às 12, 13 às 19". Se a campanha já
   // trouxe as dela, são elas que abrem — senão o operador ajustaria de novo um
   // horário que já tinha decidido no assistente.
-  const [janelas, setJanelas] = React.useState<Janela[]>(() => {
-    const vindas = (agendaInicial?.janelas ?? []).filter(
-      (j) => typeof j?.inicio === "string" && typeof j?.fim === "string",
-    );
-    return vindas.length > 0
-      ? vindas.map((j) => ({ inicio: j.inicio, fim: j.fim }))
-      : [
-          { inicio: "07:00", fim: "12:00" },
-          { inicio: "13:00", fim: "19:00" },
-        ];
-  });
+  const [janelas, setJanelas] = React.useState<Janela[]>(() => janelasDe(agendaInicial));
   const [agendado, setAgendado] = React.useState(false);
   // Os dias da semana da campanha (seg–sex por padrão): é o "de segunda a
   // sexta" que o dono pediu, e sem ele "19/10 a 23/10 das 7 às 19" também
   // mandaria no sábado e no domingo se o período os incluísse.
-  const [dias, setDias] = React.useState<number[]>(() => {
-    const vindos = (agendaInicial?.janelas ?? []).find((j) => (j?.dias?.length ?? 0) > 0)?.dias;
-    return vindos && vindos.length > 0 ? vindos : DIAS_UTEIS;
+  const [dias, setDias] = React.useState<number[]>(() => diasDe(agendaInicial));
+
+  // ── A CAMPANHA CHEGA DEPOIS DA MONTAGEM ──────────────────────────────────
+  // Na aba Campanhas este diálogo vive montado (aberto=false) e recebe
+  // `mensagensIniciais`/`agendaInicial` só quando o operador clica em
+  // "Ver público". `useState` não reinicializa com props novas — sem esta
+  // sincronização, as caixas abriam com o placeholder e o horário padrão,
+  // como se a campanha não tivesse nada salvo.
+  //
+  // A assinatura é o conteúdo, não o objeto: `agendaInicial` é recriado a
+  // cada render do pai, e comparar por identidade zeraria o que a pessoa
+  // digitasse a cada tecla.
+  const assinaturaDaOrigem = JSON.stringify({
+    mensagens: mensagensIniciais,
+    inicio: agendaInicial?.data_inicio ?? null,
+    fim: agendaInicial?.data_fim ?? null,
+    limite: agendaInicial?.limite_diario ?? null,
+    janelas: agendaInicial?.janelas ?? null,
   });
+  const origemSincronizada = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!aberto || origemSincronizada.current === assinaturaDaOrigem) return;
+    origemSincronizada.current = assinaturaDaOrigem;
+    setMensagens(caixasDeMensagem(mensagensIniciais));
+    setLimite(String(agendaInicial?.limite_diario ?? 50));
+    setDataInicio(agendaInicial?.data_inicio || diaLocal());
+    setDataFim(agendaInicial?.data_fim || diaLocal(7));
+    setJanelas(janelasDe(agendaInicial));
+    setDias(diasDe(agendaInicial));
+    // `mensagensIniciais`/`agendaInicial` entram pela assinatura; não listar o
+    // array cru evita o efeito rodar a cada render sem mudar nada.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto, assinaturaDaOrigem]);
 
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");

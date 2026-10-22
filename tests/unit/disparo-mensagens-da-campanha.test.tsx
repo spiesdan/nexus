@@ -10,7 +10,7 @@
  * Aqui o contrato é o da TELA: veio 1..5 da campanha, a caixa aparece com o
  * texto e a contagem de variações acompanha.
  */
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DialogoDisparo } from "@/app/app/prospeccao/_disparo";
@@ -59,5 +59,74 @@ describe("Disparo — mensagens que vieram da campanha", () => {
 
     expect(screen.getAllByPlaceholderText(OPCIONAL)).toHaveLength(2);
     expect(screen.getByText(/A mesma mensagem para todas/)).toBeTruthy();
+  });
+
+  /**
+   * O caso REAL da aba Campanhas: o diálogo fica montado com `aberto=false` e
+   * só recebe a campanha quando o operador clica em "Ver público". Antes,
+   * `useState` ignorava as props que chegavam depois e a tela abria com o
+   * placeholder — o operador digitava de novo o texto que já estava salvo.
+   */
+  it("mensagens que chegam DEPOIS da montagem preenchem as caixas ao abrir", () => {
+    const { rerender } = render(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto={false}
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={[]}
+      />,
+    );
+
+    rerender(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Primeira", "Segunda"]}
+      />,
+    );
+
+    expect((screen.getByDisplayValue("Primeira") as HTMLTextAreaElement).value).toBe("Primeira");
+    expect((screen.getByDisplayValue("Segunda") as HTMLTextAreaElement).value).toBe("Segunda");
+  });
+
+  it("fechar e reabrir a MESMA campanha não apaga o que a pessoa digitou", () => {
+    const { rerender } = render(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Primeira"]}
+      />,
+    );
+
+    const caixa = screen.getByDisplayValue("Primeira") as HTMLTextAreaElement;
+    fireEvent.change(caixa, { target: { value: "Texto que a pessoa ajustou" } });
+
+    rerender(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto={false}
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Primeira"]}
+      />,
+    );
+    rerender(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Primeira"]}
+      />,
+    );
+
+    expect(
+      (screen.getByDisplayValue("Texto que a pessoa ajustou") as HTMLTextAreaElement).value,
+    ).toBe("Texto que a pessoa ajustou");
   });
 });
