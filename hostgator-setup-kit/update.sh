@@ -273,6 +273,9 @@ export SCHEDULER_IMAGE="${IMG_SCHEDULER}:${VERSAO_ALVO}"
 # o XML, e os dois em versões diferentes é o XML de um leiaute com o
 # interpretador de outro.
 export FISCAL_IMAGE="${IMG_FISCAL}:${VERSAO_ALVO}"
+# O importador do Mercos na MESMA versão dos outros: o worker grava o pedido no
+# banco e a imagem nova pode esperar coluna que a antiga não conhece.
+export MERCOS_IMAGE="${IMG_MERCOS}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
 # O segredo do sidecar tem de existir ANTES do `dc pull`, e não só antes do

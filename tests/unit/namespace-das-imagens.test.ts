@@ -63,8 +63,8 @@ const NAMESPACE_DESTE_REPO = "ghcr.io/spiesdan";
  */
 const RECADO_AO_FORK =
   "Publicando as próprias imagens? Troque o namespace em três lugares, e só neles: " +
-  "IMG_NS em hostgator-setup-kit/_common.sh, o default das três linhas `image:` de " +
-  "docker-compose.prod.yml, e as três *_IMAGE de .env.hostgator.example. Depois " +
+  "IMG_NS em hostgator-setup-kit/_common.sh, o default das linhas `image:` de " +
+  "docker-compose.prod.yml, e as *_IMAGE de .env.hostgator.example. Depois " +
   "atualize NAMESPACE_DESTE_REPO neste arquivo. Nenhum OUTRO arquivo do repo " +
   "repete esse valor — todos derivam de IMG_NS, e a catraca no fim deste arquivo " +
   "existe para que continue assim.";
@@ -80,10 +80,11 @@ function imgNs(): string {
 
 /** Os três repositórios de imagem, na ordem em que `_common.sh` os declara. */
 function reposDoKit(): string[] {
-  // `IMG_FISCAL` (o sidecar que fala com a SEFAZ) entra na lista pelo motivo do
-  // resto: imagem nossa precisa ser construída e pinada pelo CI, senão o
-  // `update.sh` não a traz e o serviço fica numa versão que ninguém atualiza.
-  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL"].map((chave) => {
+  // `IMG_FISCAL` (o sidecar que fala com a SEFAZ) e `IMG_MERCOS` (o importador
+  // de pedidos) entram na lista pelo motivo do resto: imagem nossa precisa ser
+  // construída e pinada pelo CI, senão o `update.sh` não a traz e o serviço fica
+  // numa versão que ninguém atualiza.
+  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL", "IMG_MERCOS"].map((chave) => {
     const m = COMUM.match(new RegExp(`^${chave}="\\$\\{IMG_NS\\}/([^"]+)"$`, "m"));
     if (!m?.[1]) {
       throw new Error(
@@ -142,6 +143,23 @@ describe("o default do compose diz o mesmo que o kit", () => {
       expect(m, `não achei \`${chave}=\` em .env.hostgator.example`).not.toBeNull();
       expect(m![1]).toBe(`${imgNs()}/${reposDoKit()[i]}:stable`);
     });
+  });
+});
+
+describe("o importador do Mercos também é um pino do kit", () => {
+  // Ele não entrou na lista `CHAVES` acima porque ela usa o índice para casar
+  // com `reposDoKit()`; a conferência dele fica explícita, e cobre as duas
+  // declarações independentes — o default do compose e o template do .env.
+  it("o default de MERCOS_IMAGE no compose usa o namespace de IMG_NS", () => {
+    const m = COMPOSE.match(/^\s*image: \$\{MERCOS_IMAGE:-([^}]+)\}/m);
+    expect(m, "não achei `image: ${MERCOS_IMAGE:-…}` em docker-compose.prod.yml").not.toBeNull();
+    expect(m![1]).toBe(`${imgNs()}/deskcomm-mercos:stable`);
+  });
+
+  it("o piso de MERCOS_IMAGE no .env de exemplo usa o namespace de IMG_NS", () => {
+    const m = ENV_EXEMPLO.match(/^MERCOS_IMAGE=(\S+)$/m);
+    expect(m, "não achei `MERCOS_IMAGE=` em .env.hostgator.example").not.toBeNull();
+    expect(m![1]).toBe(`${imgNs()}/deskcomm-mercos:stable`);
   });
 });
 
