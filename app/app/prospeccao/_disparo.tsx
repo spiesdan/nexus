@@ -162,6 +162,8 @@ export function DialogoDisparo({
   campanhaPadrao,
   mensagensIniciais = [],
   agendaInicial,
+  modoInicial = "agora",
+  prospectIdsDaCampanha,
 }: {
   ids: string[];
   aberto: boolean;
@@ -197,6 +199,21 @@ export function DialogoDisparo({
     limite_diario?: number | null;
     janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
   } | null;
+  /**
+   * Abre direto em "Agendar" quando a tela de controle já sabe que a lista é
+   * longa (ou que a campanha já tem relógio). O usuário ainda pode trocar para
+   * "Enviar agora" — é preferência inicial, não bloqueio.
+   */
+  modoInicial?: "agora" | "agendar";
+  /**
+   * A LISTA FECHADA que o PATCH deve guardar, quando difere de `ids`.
+   *
+   * No controle de uma campanha parcialmente enviada, `ids` são só os
+   * pendentes (o que será disparado agora), mas `prospect_ids` precisa
+   * continuar sendo a audiência COMPLETA — senão o reagendamento apaga da
+   * campanha quem já recebeu e o painel passa a mentir.
+   */
+  prospectIdsDaCampanha?: string[];
 }) {
   const t = useT();
   // As opções de texto. Só a primeira é obrigatória: campo vazio é opção que
@@ -223,7 +240,7 @@ export function DialogoDisparo({
   // ── AGENDAMENTO (0273) ──────────────────────────────────────────────────
   // "Enviar agora" continua sendo o disparo síncrono de sempre. "Agendar"
   // grava o relógio na campanha e quem manda é o cron de 1 minuto.
-  const [modo, setModo] = React.useState<"agora" | "agendar">("agora");
+  const [modo, setModo] = React.useState<"agora" | "agendar">(modoInicial);
   const [dataInicio, setDataInicio] = React.useState(
     () => agendaInicial?.data_inicio || diaLocal(),
   );
@@ -269,6 +286,13 @@ export function DialogoDisparo({
     // array cru evita o efeito rodar a cada render sem mudar nada.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aberto, assinaturaDaOrigem]);
+
+  // Cada abertura respeita a preferência da tela de origem; depois disso o
+  // operador manda. Não colocamos `modoInicial` no efeito de origem para não
+  // resetar o modo enquanto ele digita se o pai re-renderizar.
+  React.useEffect(() => {
+    if (aberto) setModo(modoInicial);
+  }, [aberto, modoInicial]);
 
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
@@ -367,7 +391,10 @@ export function DialogoDisparo({
       const id = await garantirCampanha();
 
       await apiClient.patch(`/api/v1/prospecting/campaigns/${id}`, {
-        prospect_ids: ids,
+        // `ids` é o que será disparado agora (pendentes); a lista da campanha
+        // continua sendo a audiência completa. Sem esta separação, reagendar
+        // uma campanha parcialmente enviada apagaria os já enviados.
+        prospect_ids: prospectIdsDaCampanha ?? ids,
         mensagens: preenchidas,
         janelas: janelas.map((j) => ({ ...j, dias })),
         data_inicio: dataInicio,

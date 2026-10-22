@@ -287,6 +287,28 @@ export const campanhaCreateSchema = z.object({
   });
 
 /**
+ * A PRÉVIA DO PÚBLICO — mesma régua de cidade/categoria da criação, sem criar
+ * campanha nenhuma.
+ *
+ * A tela antiga só pedia as cidades e estimava o mercado (empresas/clientes);
+ * o operador criava a campanha sem ver QUEM estava na base e só descobria o
+ * público depois, num card efêmero. Esta prévia usa `publicoDaBase` — a mesma
+ * função do disparo — e devolve as empresas reais antes do clique de criar.
+ */
+export const campanhaPreviewSchema = z.object({
+  cidades: z
+    .array(
+      z.object({
+        cidade: z.string().trim().min(2).max(120),
+        estado: z.string().trim().max(10).optional(),
+      }),
+    )
+    .min(1)
+    .max(50),
+  categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX),
+});
+
+/**
  * A CAMPANHA DE RECUPERAÇÃO (0274) — a MESMA agenda da prospecção, com outra
  * audiência.
  *

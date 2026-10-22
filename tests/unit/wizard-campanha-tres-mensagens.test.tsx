@@ -1,18 +1,18 @@
 /**
-
- * O ASSISTENTE "ENCONTRAR EMPRESAS" ABRE COM **TRÊS** MENSAGENS — E SALVA.
+ * O ASSISTENTE DE CAMPANHA — três passos, cidades selecionadas e prévia real.
  *
- * Medido na tela do dono em 2026-10-20: o passo "Mensagem" tinha UM campo, e
- * o texto nem entrava no POST da campanha. Quem escrevia a abordagem ali
- * perdia o texto ao aprovar, e o painel Disparo (que sempre aceitou 1..5
- * variações em rotação) abria vazio.
+ * O teste antigo cobrava o formulário de cinco passos com cidades digitadas
+ * ("uma por linha, Cidade/UF") e uma aprovação final com checkbox. O fluxo
+ * mudou de propósito: cidade agora é SELECIONADA da base, a prévia roda a
+ * mesma função do disparo e criar não envia — o controle da campanha é que
+ * agenda.
  *
- * Este teste cobra o contrato mínimo do pedido:
- *   1. três caixas na tela, "+ Variação" até o teto de 5;
- *   2. as mensagens PREENCHIDAS viajam no corpo do POST da campanha.
- *
- * O que ele NÃO prova: que o motor alterna. Isso é `agendado.test.ts` (o caso
- * `(d2)` fecha 1→2→3→1) e `disparo.test.ts` (a rotação do planejador).
+ * O que este teste cobra:
+ *   1. a fonte padrão é a base; não há preview para campanha só de busca;
+ *   2. sem ver as empresas, o passo 1 não abre;
+ *   3. três caixas de mensagem, "+ Variação" até 5;
+ *   4. as mensagens preenchidas e o "quando" viajam no POST da campanha;
+ *   5. criar termina com `aoConcluir(id)` — a tela navega para o controle.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -26,7 +26,11 @@ const post = vi.fn();
 vi.mock("@/lib/api/client", () => ({
   apiClient: {
     post: (...args: unknown[]) => post(...args),
-    get: vi.fn(async () => ({ data: [] })),
+    get: vi.fn(async () => ({
+      data: {
+        cidades: [{ cidade: "Canoinhas", estado: "SC", total: 12 }],
+      },
+    })),
     patch: vi.fn(),
   },
 }));
@@ -42,56 +46,102 @@ const CATEGORIAS: MacroCategoria[] = [
   },
 ];
 
+const PREVIA = {
+  base: true,
+  total: 2,
+  linhas: [
+    {
+      id: "empresa-1",
+      nome: "Oficina Silva",
+      telefone: "5547999999999",
+      cidade: "Canoinhas",
+      categoria: "Oficina",
+      categoria_original: "Oficina mecânica",
+    },
+    {
+      id: "empresa-2",
+      nome: "Auto Center Norte",
+      telefone: "5547888888888",
+      cidade: "Canoinhas",
+      categoria: "Oficina",
+      categoria_original: "Auto center",
+    },
+  ],
+  resumo: "2 empresas prontas para o disparo.",
+  limite: 500,
+  ja_clientes: [],
+  duplicadas: 0,
+  para_revisar: [],
+  em_campanha: 0,
+  categoria_a_revisar: 0,
+  varridas: 2,
+  completa: true,
+};
+
+const PLACEHOLDER_1 = "Olá {{primeiro_nome}}! Aqui é da …";
+const PLACEHOLDER_N = "Outra forma de dizer a mesma coisa";
+
 afterEach(cleanup);
 
 beforeEach(() => {
   post.mockReset();
   post.mockImplementation(async (url: string) => {
+    if (url.endsWith("/preview")) return { data: PREVIA };
     if (url.endsWith("/executar")) return { data: { buscas: 1, sem_mapa: [] } };
     return { data: { id: "campanha-1" } };
   });
 });
 
-function abrir(): void {
+function abrir(aoConcluir = vi.fn()): void {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <CampanhaWizard categorias={CATEGORIAS} aoConcluir={() => {}} />
+      <CampanhaWizard categorias={CATEGORIAS} aoConcluir={aoConcluir} />
     </QueryClientProvider>,
   );
 }
 
-/** Passa do passo 0 (segmentação) para o passo 1 e daí para o 2. */
-function irAteAsMensagens(): void {
+/**
+ * Passa do passo 0 para o 1 no fluxo da base: nome, cidade da lista,
+ * categoria, prévia e Continuar.
+ */
+async function irAteAsMensagens(): Promise<void> {
   fireEvent.change(screen.getByLabelText("Nome da campanha"), {
     target: { value: "Oficinas do Norte" },
   });
-  fireEvent.click(screen.getByText("Oficina"));
-  fireEvent.change(screen.getByLabelText("Cidades (uma por linha, Cidade/UF)"), {
-    target: { value: "Canoinhas/SC" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
-  // O passo 1 estima o mercado; mesmo sem dados, dá para continuar.
+  fireEvent.click(await screen.findByRole("button", { name: /Canoinhas\/SC/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Oficina" }));
+  fireEvent.click(screen.getByRole("button", { name: "Ver empresas" }));
+  await screen.findAllByText(/prontas para o disparo/i);
   fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
 }
 
-const PLACEHOLDER_1 = "Olá {{primeiro_nome}}! Aqui é da …";
-const PLACEHOLDER_N = "Outra forma de dizer a mesma coisa";
-
-describe("assistente de campanha — as mensagens da abordagem", () => {
-  it("abre com TRÊS caixas: a primeira obrigatória e duas variações", () => {
+describe("assistente de campanha — público e mensagens", () => {
+  it("não abre as mensagens antes de ver as empresas da base", async () => {
     abrir();
-    irAteAsMensagens();
+    fireEvent.change(screen.getByLabelText("Nome da campanha"), {
+      target: { value: "Oficinas do Norte" },
+    });
+    fireEvent.click(await screen.findByRole("button", { name: /Canoinhas\/SC/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Oficina" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
 
-    expect(screen.getByRole("textbox", { name: /Mensagem 1 \(sai primeiro\)/i })).toBeTruthy();
+    expect(screen.queryByText("Mensagens da campanha")).toBeNull();
+    expect(screen.getByText("Empresas que vão receber")).toBeTruthy();
+  });
+
+  it("abre com TRÊS caixas: a primeira obrigatória e duas variações", async () => {
+    abrir();
+    await irAteAsMensagens();
+
+    expect(screen.getByLabelText(/Mensagem 1/)).toBeTruthy();
     expect(screen.getByPlaceholderText(PLACEHOLDER_1)).toBeTruthy();
-    // As duas opcionais aparecem com o placeholder da variação.
     expect(screen.getAllByPlaceholderText(PLACEHOLDER_N)).toHaveLength(2);
   });
 
-  it("'+ Variação' acrescenta até o teto de 5 e para", () => {
+  it("'+ Variação' acrescenta até o teto de 5 e para", async () => {
     abrir();
-    irAteAsMensagens();
+    await irAteAsMensagens();
 
     const adicionar = screen.getByRole("button", { name: "+ Variação" });
     fireEvent.click(adicionar);
@@ -101,8 +151,9 @@ describe("assistente de campanha — as mensagens da abordagem", () => {
   });
 
   it("o que foi digitado nas três caixas vai no POST da campanha", async () => {
-    abrir();
-    irAteAsMensagens();
+    const aoConcluir = vi.fn();
+    abrir(aoConcluir);
+    await irAteAsMensagens();
 
     fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER_1), {
       target: { value: "Oi, tudo bem? Falo da Bill Higiene." },
@@ -111,18 +162,24 @@ describe("assistente de campanha — as mensagens da abordagem", () => {
     fireEvent.change(opcionais[0]!, { target: { value: "Passando para apresentar a loja." } });
     fireEvent.change(opcionais[1]!, { target: { value: "Temos preço especial para oficinas." } });
 
-    fireEvent.click(screen.getByRole("button", { name: "Continuar" })); // aprovação
-    fireEvent.click(screen.getByLabelText(/Aprovo a execução desta campanha/));
-    fireEvent.click(screen.getByRole("button", { name: "Aprovar e executar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Criar campanha" }));
 
-    await waitFor(() => expect(post).toHaveBeenCalled());
-    const [url, corpo] = post.mock.calls[0] as [string, Record<string, unknown>];
-    expect(url).toBe("/api/v1/prospecting/campaigns");
+    await waitFor(() => expect(aoConcluir).toHaveBeenCalledWith("campanha-1"));
+    const chamada = post.mock.calls.find(
+      ([url]) => url === "/api/v1/prospecting/campaigns",
+    ) as [string, Record<string, unknown>] | undefined;
+    expect(chamada).toBeTruthy();
+    const corpo = chamada![1];
     expect(corpo.mensagens).toEqual([
       "Oi, tudo bem? Falo da Bill Higiene.",
       "Passando para apresentar a loja.",
       "Temos preço especial para oficinas.",
     ]);
+    // A fonte padrão é a base: criar NÃO dispara busca no Google.
+    expect(corpo.fonte_publico).toBe("base");
+    expect(corpo.cidades).toEqual([{ cidade: "Canoinhas", estado: "SC" }]);
+    expect(corpo.categorias).toEqual(["oficina"]);
     // A trava anti-ban viaja junto: 60s entre duas mensagens, sempre.
     expect(corpo.espaco_ms).toBe(60_000);
     // E o "quando": período, janelas e cota do dia saem da tela para a campanha.
@@ -133,19 +190,48 @@ describe("assistente de campanha — as mensagens da abordagem", () => {
   });
 
   it("caixa vazia não vira variação: só o que tem texto viaja", async () => {
-    abrir();
-    irAteAsMensagens();
+    const aoConcluir = vi.fn();
+    abrir(aoConcluir);
+    await irAteAsMensagens();
 
     fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER_1), {
       target: { value: "Só esta mensagem." },
     });
-
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
-    fireEvent.click(screen.getByLabelText(/Aprovo a execução desta campanha/));
-    fireEvent.click(screen.getByRole("button", { name: "Aprovar e executar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Criar campanha" }));
 
-    await waitFor(() => expect(post).toHaveBeenCalled());
-    const [, corpo] = post.mock.calls[0] as [string, Record<string, unknown>];
-    expect(corpo.mensagens).toEqual(["Só esta mensagem."]);
+    await waitFor(() => expect(aoConcluir).toHaveBeenCalled());
+    const chamada = post.mock.calls.find(
+      ([url]) => url === "/api/v1/prospecting/campaigns",
+    ) as [string, Record<string, unknown>] | undefined;
+    expect(chamada![1].mensagens).toEqual(["Só esta mensagem."]);
+  });
+
+  it("fonte Google cria a campanha e inicia a busca, sem prévia da base", async () => {
+    const aoConcluir = vi.fn();
+    abrir(aoConcluir);
+
+    fireEvent.change(screen.getByLabelText("Nome da campanha"), {
+      target: { value: "Oficinas novas" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Google/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Canoinhas\/SC/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Oficina" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER_1), {
+      target: { value: "Olá! Somos a Bill Higiene." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Criar campanha" }));
+
+    await waitFor(() => expect(aoConcluir).toHaveBeenCalledWith("campanha-1"));
+    const chamada = post.mock.calls.find(
+      ([url]) => url === "/api/v1/prospecting/campaigns",
+    ) as [string, Record<string, unknown>] | undefined;
+    expect(chamada![1].fonte_publico).toBe("busca");
+    expect(
+      post.mock.calls.some(([url]) => url === "/api/v1/prospecting/campaigns/campanha-1/executar"),
+    ).toBe(true);
   });
 });
