@@ -1,129 +1,157 @@
 "use client";
+
+/**
+ * NOVA CAMPANHA — três passos: Público → Mensagens e agenda → Revisão.
+ *
+ * ═══ O DEFEITO MEDIDO ═════════════════════════════════════════════════════
+ *
+ * O assistente antigo tinha cinco passos e pedia as cidades num textarea
+ * ("uma por linha, Cidade/UF"). Quem não lembrasse a grafia exata da planilha
+ * criava uma campanha sem público; o passo "Público" mostrava uma estimativa
+ * de MERCADO, não as empresas da base; e o resultado era um card efêmero que
+ * sumia ao fechar a tela.
+ *
+ * ═══ A REGRA NOVA ════════════════════════════════════════════════════════
+ *
+ *   - a fonte padrão é a BASE (sem gastar API); Google é opção secundária;
+ *   - cidade é SELECIONADA da lista real, com a contagem de empresas;
+ *   - a prévia roda a MESMA função do disparo e mostra as empresas antes de
+ *     criar — não reserva nada;
+ *   - ao criar, o operador vai para o CONTROLE da campanha (/campanhas/[id]),
+ *     onde vê a fila e agenda o envio.
+ *
+ * O que este assistente NÃO faz: disparar. Criar e enviar eram dois atos
+ * confundidos no desenho antigo; separá-los é o que permite revisar o público
+ * e escolher entre "agora" e "agendar" sem refazer a campanha.
+ */
 import * as React from "react";
+import Link from "next/link";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
-import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusSteps } from "@/components/nexus-ui/forms/NexusSteps";
-import { NexusAiBriefing, type NexusInsight } from "@/components/nexus-ui/ai/NexusAi";
-import { useT } from "@/hooks/i18n/useT";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiClient } from "@/lib/api/client";
-import { DIAS_SEMANA, DIAS_UTEIS, DiasDaSemana } from "@/components/prospeccao/DiasDaSemana";
-import { interpolateTemplate } from "@/lib/inbox/template-vars";
+import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
+import { useT } from "@/hooks/i18n/useT";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
+import { apiClient } from "@/lib/api/client";
+import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 
-/** Quantas caixas de mensagem a tela abre — o mesmo 3 do painel Disparo. */
+/** Quantas caixas a tela abre — o mesmo 3 do painel Disparo. */
 const MENSAGENS_NA_TELA = 3;
 /** O teto da rotação anti-ban (lib/schemas/prospeccao.ts, 1..5). */
 const MENSAGENS_MAX = 5;
+/** O mesmo teto padrão da prévia no servidor (`LIMITE_PADRAO`). */
+const LIMITE_PREVIA = 500;
 
-/** Uma janela do dia, em HH:MM — o mesmo shape de `lib/prospeccao/agendamento`. */
-interface Janela {
-  inicio: string;
-  fim: string;
-}
-
-/** `YYYY-MM-DD` de hoje/daqui a N dias no relógio de QUEM OPERA a tela. */
-function diaIso(diasAFrente = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() + diasAFrente);
-  return d.toLocaleDateString("en-CA");
-}
+const PASSOS = ["Público", "Mensagens e agenda", "Revisão"];
 
 interface CidadeAlvo {
   cidade: string;
   estado?: string;
 }
 
-interface EstimativaCidade {
-  rotulo: string;
-  empresas: number;
-  clientes: number;
-  potencial: number;
+interface CidadeOpcao {
+  cidade: string;
+  estado: string | null;
+  total: number;
 }
 
-interface ResultadoExecucao {
-  buscas: number;
-  sem_mapa: string[];
+interface PreviaLinha {
+  id: string;
+  nome: string;
+  telefone: string | null;
+  cidade: string | null;
+  categoria: string | null;
+  categoria_original: string | null;
 }
 
-function parseCidades(texto: string): CidadeAlvo[] {
-  return texto
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => {
-      const partes = l.split("/").map((s) => s.trim());
-      const cidade = partes[0] ?? "";
-      const estado = partes[1];
-      return { cidade, ...(estado ? { estado: estado.toUpperCase() } : {}) };
-    })
-    .filter((c) => c.cidade.length > 0);
+interface PreviaResposta {
+  base: boolean;
+  total: number;
+  linhas: PreviaLinha[];
+  resumo: string;
+  limite: number;
+  ja_clientes: Array<{ nome: string }>;
+  duplicadas: number;
+  para_revisar: Array<{ nome: string }>;
+  em_campanha: number;
+  categoria_a_revisar: number;
+  varridas: number;
+  completa: boolean;
 }
 
-/**
- * Wizard de campanha (FASE 8): Segmentação → Público → Mensagem → Aprovação →
- * Resultado. Cria e executa a MESMA campanha de descoberta (POST + executar);
- * nada de envio em massa inventado — a mensagem é de abordagem manual, com
- * preview interpolado, e a execução só sai com aprovação explícita.
- */
+interface Janela {
+  inicio: string;
+  fim: string;
+}
+
+function diaIso(diasAFrente = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + diasAFrente);
+  return d.toLocaleDateString("en-CA");
+}
+
+function chaveDaCidade(c: CidadeAlvo): string {
+  return `${c.cidade.trim().toLowerCase()}|${(c.estado ?? "").trim().toLowerCase()}`;
+}
+
+function rotuloDaCidade(c: CidadeAlvo): string {
+  return c.estado ? `${c.cidade}/${c.estado}` : c.cidade;
+}
+
+function linhasDeMensagem(iniciais: readonly string[]): string[] {
+  const preenchidas = iniciais.map((m) => (typeof m === "string" ? m : ""));
+  const total = Math.min(MENSAGENS_MAX, Math.max(MENSAGENS_NA_TELA, preenchidas.length));
+  return Array.from({ length: total }, (_, i) => preenchidas[i] ?? "");
+}
+
 export function CampanhaWizard({
   categorias,
   aoConcluir,
+  aoCancelar,
 }: {
   categorias: MacroCategoria[];
-  aoConcluir: () => void;
+  aoConcluir: (id: string) => void;
+  aoCancelar?: () => void;
 }) {
   const t = useT();
-  const PASSOS = [t("Segmentação"), t("Público"), t("Mensagem"), t("Aprovação"), t("Resultado")];
+  const templates = useMessageTemplates();
 
   const [passo, setPasso] = React.useState(0);
   const [alcancado, setAlcancado] = React.useState(0);
   const [nome, setNome] = React.useState("");
-  const [marcadas, setMarcadas] = React.useState<string[]>([]);
-  /**
-   * De onde a campanha tira o público (0271). `busca` é o padrão histórico —
-   * fan-out no provedor ativo, gastando API. `base`: só o que já está
-   * cadastrado, sem chave e sem gastar nada, que é o caminho de quem tem a
-   * lista pronta e não quer pagar Google para ouvir de novo.
-   */
-  const [fontePublico, setFontePublico] = React.useState<"busca" | "base" | "ambas">("busca");
-  const [cidadesTexto, setCidadesTexto] = React.useState("");
-  const [recorrencia, setRecorrencia] = React.useState("");
-  const [templateId, setTemplateId] = React.useState("__nenhum");
-  /**
-   * AS MENSAGENS DA CAMPANHA — várias, não uma.
-   *
-   * A tela abria UM campo e o descartava: o texto não entrava no POST, então
-   * quem escrevia a abordagem aqui perdia o texto ao aprovar. O motor de
-   * disparo sempre aceitou 1..5 variações em rotação (`mensagens`), e o painel
-   * Disparo já mostrava três caixas — só este assistente não. Agora ele abre
-   * as mesmas três, grava na campanha e o Disparo nasce com elas preenchidas.
-   */
+  const [fonte, setFonte] = React.useState<"base" | "busca" | "ambas">("base");
+
+  // ── Cidades ──────────────────────────────────────────────────────────────
+  const [opcoes, setOpcoes] = React.useState<CidadeOpcao[] | null>(null);
+  const [carregandoOpcoes, setCarregandoOpcoes] = React.useState(true);
+  const [erroOpcoes, setErroOpcoes] = React.useState<string | null>(null);
+  const [buscaCidade, setBuscaCidade] = React.useState("");
+  const [cidadesSelecionadas, setCidadesSelecionadas] = React.useState<CidadeAlvo[]>([]);
+  const [cidadeManual, setCidadeManual] = React.useState("");
+  const [ufManual, setUfManual] = React.useState("");
+
+  // ── Categorias ───────────────────────────────────────────────────────────
+  const [buscaCategoria, setBuscaCategoria] = React.useState("");
+  const [categoriasMarcadas, setCategoriasMarcadas] = React.useState<string[]>([]);
+
+  // ── Prévia ───────────────────────────────────────────────────────────────
+  const [previa, setPrevia] = React.useState<PreviaResposta | null>(null);
+  const [previaChave, setPreviaChave] = React.useState<string | null>(null);
+  const [carregandoPrevia, setCarregandoPrevia] = React.useState(false);
+
+  // ── Mensagens e agenda ───────────────────────────────────────────────────
   const [mensagens, setMensagens] = React.useState<string[]>(() =>
-    Array.from({ length: MENSAGENS_NA_TELA }, () => ""),
+    linhasDeMensagem([""]),
   );
-  /**
-   * QUANDO A CAMPANHA PODE FALAR — período, dias e horário de funcionamento.
-   *
-   * Faltava aqui, e a falta não era cosmética: o passo "Mensagem" não tinha
-   * data nem janela, então a campanha saía sem saber quando podia mandar. O
-   * motor (`lib/prospeccao/agendado.ts`) sempre aceitou `data_inicio`,
-   * `data_fim` e `janelas` — só este assistente não perguntava. O Disparo
-   * depois abria com os padrões dele, ignorando a intenção do dono.
-   */
+  const [templateId, setTemplateId] = React.useState("__nenhum");
   const [dataInicio, setDataInicio] = React.useState(() => diaIso());
   const [dataFim, setDataFim] = React.useState(() => diaIso(7));
   const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
@@ -132,702 +160,1003 @@ export function CampanhaWizard({
     { inicio: "13:00", fim: "19:00" },
   ]);
   const [limite, setLimite] = React.useState("50");
-  const [aprovado, setAprovado] = React.useState(false);
-  const [ocupado, setOcupado] = React.useState(false);
-  const [resultado, setResultado] = React.useState<ResultadoExecucao | null>(null);
+  const [recorrencia, setRecorrencia] = React.useState("");
+  const [criando, setCriando] = React.useState(false);
 
-  const templates = useMessageTemplates();
-  const cidades = React.useMemo(() => parseCidades(cidadesTexto), [cidadesTexto]);
+  const carregarOpcoes = React.useCallback(async () => {
+    setCarregandoOpcoes(true);
+    setErroOpcoes(null);
+    try {
+      const resposta = await apiClient.get<{ data?: { cidades?: CidadeOpcao[] } }>(
+        "/api/v1/prospecting/campaigns/opcoes",
+      );
+      const lista = resposta?.data?.cidades;
+      setOpcoes(Array.isArray(lista) ? lista : []);
+    } catch (e) {
+      setOpcoes([]);
+      setErroOpcoes(e instanceof Error ? e.message : t("Não foi possível carregar as cidades."));
+      showApiError(e);
+    } finally {
+      setCarregandoOpcoes(false);
+    }
+  }, [t]);
 
-  const [estimativas, setEstimativas] = React.useState<{
-    chave: string;
-    dados: EstimativaCidade[];
-  } | null>(null);
-
-  const chaveCidades = cidades.map((c) => `${c.cidade}/${c.estado ?? ""}`).join("|");
-  const estimando = passo === 1 && cidades.length > 0 && estimativas?.chave !== chaveCidades;
-
-  // Estimativa de público: mercado real por cidade (empresas, clientes,
-  // potencial). FASE 15 (B15): as até 5 cidades viajam num pedido só
-  // (`?cidades=…`) — eram 5 requests, uma por cidade.
-  // Sem setState no corpo do efeito: a chave identifica o pedido e o loading
-  // deriva dela — sem cascata de renders.
   React.useEffect(() => {
-    if (passo !== 1 || cidades.length === 0) return;
-    const chave = cidades.map((c) => `${c.cidade}/${c.estado ?? ""}`).join("|");
-    let vivo = true;
-    (async () => {
-      try {
-        const pedidas = cidades.slice(0, 5);
-        const qs = new URLSearchParams();
-        for (const c of pedidas) qs.append("cidades", c.cidade);
-        const corpo = await apiClient.get<{
-          data: { por_cidade?: { cidade: string; empresas: number; clientes: number }[] };
-        }>(`/api/v1/prospecting/mercado?${qs.toString()}`);
-        const achou = new Map(
-          (corpo.data?.por_cidade ?? []).map((x) => [x.cidade, x] as const),
-        );
-        const partes = pedidas.map((c) => {
-          const linha = achou.get(c.cidade);
-          const empresas = linha?.empresas ?? 0;
-          const clientes = linha?.clientes ?? 0;
-          return {
-            rotulo: c.estado ? `${c.cidade}/${c.estado}` : c.cidade,
-            empresas,
-            clientes,
-            potencial: Math.max(0, empresas - clientes),
-          };
-        });
-        if (vivo) setEstimativas({ chave, dados: partes });
-      } catch {
-        if (vivo) setEstimativas({ chave, dados: [] });
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passo, chaveCidades]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void carregarOpcoes();
+  }, [carregarOpcoes]);
 
-  function ir(prox: number) {
-    setPasso(prox);
-    setAlcancado((a) => Math.max(a, prox));
+  const chaveSelecao = React.useMemo(
+    () =>
+      JSON.stringify({
+        fonte,
+        cidades: cidadesSelecionadas.map(chaveDaCidade).sort(),
+        categorias: [...categoriasMarcadas].sort(),
+      }),
+    [fonte, cidadesSelecionadas, categoriasMarcadas],
+  );
+  const previaValida = previa !== null && previaChave === chaveSelecao;
+
+  const cidadesFiltradas = React.useMemo(() => {
+    const termo = buscaCidade.trim().toLowerCase();
+    const selecionadas = new Set(cidadesSelecionadas.map(chaveDaCidade));
+    return (opcoes ?? [])
+      .filter((c) => {
+        if (!termo) return true;
+        const alvo = `${c.cidade} ${c.estado ?? ""}`.toLowerCase();
+        return alvo.includes(termo);
+      })
+      .sort((a, b) => {
+        const sa = selecionadas.has(chaveDaCidade({ cidade: a.cidade, estado: a.estado ?? undefined }));
+        const sb = selecionadas.has(chaveDaCidade({ cidade: b.cidade, estado: b.estado ?? undefined }));
+        if (sa !== sb) return sa ? -1 : 1;
+        return b.total - a.total || a.cidade.localeCompare(b.cidade, "pt-BR");
+      });
+  }, [opcoes, buscaCidade, cidadesSelecionadas]);
+
+  const gruposDeCategoria = React.useMemo(() => {
+    const termo = buscaCategoria.trim().toLowerCase();
+    return categorias
+      .map((macro) => {
+        const macroCasa = macro.macro.toLowerCase().includes(termo);
+        const subs = macro.subcategorias.filter(
+          (s) =>
+            !termo ||
+            macroCasa ||
+            s.rotulo.toLowerCase().includes(termo) ||
+            s.busca.toLowerCase().includes(termo),
+        );
+        return { macro: macro.macro, subs };
+      })
+      .filter((g) => g.subs.length > 0);
+  }, [categorias, buscaCategoria]);
+
+  const rotulosSelecionados = React.useMemo(() => {
+    const mapa = new Map<string, string>();
+    for (const macro of categorias) {
+      for (const sub of macro.subcategorias) {
+        if (!mapa.has(sub.busca)) mapa.set(sub.busca, sub.rotulo);
+      }
+    }
+    return categoriasMarcadas.map((busca) => ({ busca, rotulo: mapa.get(busca) ?? busca }));
+  }, [categorias, categoriasMarcadas]);
+
+  const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
+  const primeiraMensagem = preenchidas[0] ?? "";
+  const previewMensagem = primeiraMensagem
+    ? interpolateTemplate(primeiraMensagem, { name: "Maria Silva" })
+    : "";
+
+  const janelasValidas = janelas.filter(
+    (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
+  );
+  const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
+  const limiteNumero = Number(limite) || 50;
+
+  function alternarCidade(c: CidadeOpcao) {
+    const alvo: CidadeAlvo = { cidade: c.cidade, ...(c.estado ? { estado: c.estado } : {}) };
+    const chave = chaveDaCidade(alvo);
+    setCidadesSelecionadas((atuais) => {
+      if (atuais.some((x) => chaveDaCidade(x) === chave)) {
+        return atuais.filter((x) => chaveDaCidade(x) !== chave);
+      }
+      if (atuais.length >= 50) {
+        toast.error(t("Uma campanha pode ter no máximo 50 cidades."));
+        return atuais;
+      }
+      return [...atuais, alvo];
+    });
+  }
+
+  function removerCidade(alvo: CidadeAlvo) {
+    const chave = chaveDaCidade(alvo);
+    setCidadesSelecionadas((atuais) => atuais.filter((x) => chaveDaCidade(x) !== chave));
+  }
+
+  function adicionarCidadeManual() {
+    const cidade = cidadeManual.trim();
+    const estado = ufManual.trim().toUpperCase();
+    if (cidade.length < 2) {
+      toast.error(t("Digite o nome da cidade."));
+      return;
+    }
+    if (estado.length > 10) {
+      toast.error(t("A UF deve ter no máximo 10 caracteres."));
+      return;
+    }
+    const alvo: CidadeAlvo = { cidade, ...(estado ? { estado } : {}) };
+    const chave = chaveDaCidade(alvo);
+    if (cidadesSelecionadas.some((x) => chaveDaCidade(x) === chave)) {
+      toast.error(t("Essa cidade já está selecionada."));
+      return;
+    }
+    if (cidadesSelecionadas.length >= 50) {
+      toast.error(t("Uma campanha pode ter no máximo 50 cidades."));
+      return;
+    }
+    setCidadesSelecionadas((atuais) => [...atuais, alvo]);
+    setCidadeManual("");
+    setUfManual("");
+  }
+
+  function alternarCategoria(busca: string) {
+    setCategoriasMarcadas((atuais) =>
+      atuais.includes(busca) ? atuais.filter((b) => b !== busca) : [...atuais, busca],
+    );
+  }
+
+  async function verPrevia() {
+    if (fonte === "busca") {
+      toast.error(t("A prévia da base não se aplica a uma campanha só de busca."));
+      return;
+    }
+    if (cidadesSelecionadas.length === 0) {
+      toast.error(t("Escolha ao menos uma cidade."));
+      return;
+    }
+    if (categoriasMarcadas.length === 0) {
+      toast.error(t("Escolha ao menos uma categoria."));
+      return;
+    }
+    setCarregandoPrevia(true);
+    try {
+      const resposta = await apiClient.post<{ data?: PreviaResposta }>(
+        "/api/v1/prospecting/campaigns/preview",
+        {
+          cidades: cidadesSelecionadas,
+          categorias: categoriasMarcadas,
+        },
+      );
+      const corpo = resposta?.data;
+      if (!corpo) throw new Error(t("A prévia voltou vazia."));
+      setPrevia(corpo);
+      setPreviaChave(chaveSelecao);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setCarregandoPrevia(false);
+    }
+  }
+
+  function validarPublico(): boolean {
+    if (nome.trim().length < 2 || nome.trim().length > 120) {
+      toast.error(t("O nome da campanha precisa ter entre 2 e 120 caracteres."));
+      return false;
+    }
+    if (cidadesSelecionadas.length === 0) {
+      toast.error(t("Escolha ao menos uma cidade da lista."));
+      return false;
+    }
+    if (categoriasMarcadas.length === 0) {
+      toast.error(t("Escolha ao menos uma categoria."));
+      return false;
+    }
+    if (fonte === "base" && (!previaValida || (previa?.total ?? 0) === 0)) {
+      toast.error(t("Veja as empresas encontradas antes de continuar."));
+      return false;
+    }
+    if (fonte === "ambas" && !previaValida) {
+      toast.error(t("Veja as empresas encontradas antes de continuar."));
+      return false;
+    }
+    return true;
+  }
+
+  function validarMensagens(): boolean {
+    if (preenchidas.length === 0) {
+      toast.error(t("Escreva ao menos uma mensagem."));
+      return false;
+    }
+    if (preenchidas.some((m) => [...m].length > 4000)) {
+      toast.error(t("Cada mensagem pode ter no máximo 4000 caracteres."));
+      return false;
+    }
+    if (!periodoValido) {
+      toast.error(t("A data final não pode ser anterior à inicial."));
+      return false;
+    }
+    if (dias.length === 0) {
+      toast.error(t("Escolha ao menos um dia da semana."));
+      return false;
+    }
+    if (janelas.length === 0 || janelasValidas.length !== janelas.length) {
+      toast.error(t("Confira as janelas de horário."));
+      return false;
+    }
+    if (!Number.isFinite(limiteNumero) || limiteNumero < 1 || limiteNumero > 500) {
+      toast.error(t("O limite diário precisa ficar entre 1 e 500."));
+      return false;
+    }
+    if (recorrencia) {
+      const valor = Number(recorrencia);
+      if (!Number.isFinite(valor) || valor < 7 || valor > 365) {
+        toast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
+        return false;
+      }
+    }
+    return true;
   }
 
   function continuar() {
     if (passo === 0) {
-      if (nome.trim().length < 2 || marcadas.length === 0 || cidades.length === 0) {
-        nexusToast.error(
-          t("Nome, ao menos 1 categoria e ao menos 1 cidade (uma por linha, Cidade/UF)."),
-        );
-        return;
-      }
-      if (nome.trim().length > 120) {
-        nexusToast.error(t("O nome da campanha pode ter no máximo 120 caracteres."));
-        return;
-      }
-      const cidadeInvalida = cidades.find(
-        (c) =>
-          c.cidade.trim().length < 2 ||
-          c.cidade.trim().length > 120 ||
-          (c.estado ?? "").length > 10,
-      );
-      if (cidadeInvalida) {
-        nexusToast.error(
-          t("Cidade inválida: use Cidade/UF, com até 120 caracteres na cidade e 10 na UF."),
-        );
-        return;
-      }
-      if (recorrencia) {
-        const dias = Number(recorrencia);
-        if (!Number.isFinite(dias) || dias < 7 || dias > 365) {
-          nexusToast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
-          return;
-        }
-      }
+      if (!validarPublico()) return;
+      setAlcancado((a) => Math.max(a, 1));
+      setPasso(1);
+      return;
     }
-    if (passo === 2) {
-      if (!periodoValido) {
-        nexusToast.error(t("A data final não pode ser anterior à inicial."));
-        return;
-      }
-      if (!janelasValidas) {
-        nexusToast.error(t("Cada janela precisa de um início antes do fim."));
-        return;
-      }
-      if (dias.length === 0) {
-        nexusToast.error(t("Escolha ao menos um dia da semana para enviar."));
-        return;
-      }
+    if (passo === 1) {
+      if (!validarMensagens()) return;
+      setAlcancado((a) => Math.max(a, 2));
+      setPasso(2);
     }
-    ir(Math.min(PASSOS.length - 1, passo + 1));
   }
 
-  const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
-  const mensagemFinal = preenchidas[0] ?? "";
-  const preview = mensagemFinal ? interpolateTemplate(mensagemFinal, { name: "Maria Silva" }) : "";
-
-  /** Janela válida = HH:MM com início antes do fim. O motor recusa o resto. */
-  const janelasValidas =
-    janelas.length > 0 &&
-    janelas.every(
-      (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
-    );
-  const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
+  function voltar() {
+    setPasso((p) => Math.max(0, p - 1));
+  }
 
   function trocarMensagem(i: number, valor: string) {
-    setMensagens((atual) => atual.map((v, j) => (j === i ? valor : v)));
+    setMensagens((atuais) => atuais.map((m, j) => (j === i ? valor : m)));
+    if (templateId !== "__nenhum") setTemplateId("__nenhum");
   }
 
-  /** Escolher um modelo escreve o corpo na PRIMEIRA caixa; as outras ficam. */
   function escolherModelo(id: string) {
     setTemplateId(id);
+    if (id === "__nenhum") return;
     const corpo = (templates.data ?? []).find((x) => x.id === id)?.body;
-    if (corpo) trocarMensagem(0, corpo);
+    if (corpo) {
+      setMensagens((atuais) => atuais.map((m, j) => (j === 0 ? corpo : m)));
+    }
   }
 
-  const dadosEstimativa = estimativas?.chave === chaveCidades ? estimativas.dados : null;
+  function trocarJanela(i: number, campo: "inicio" | "fim", valor: string) {
+    setJanelas((atuais) => atuais.map((j, k) => (k === i ? { ...j, [campo]: valor } : j)));
+  }
 
-  const insights = React.useMemo<NexusInsight[]>(() => {
-    if (!dadosEstimativa || dadosEstimativa.length === 0) return [];
-    const top = [...dadosEstimativa].sort((a, b) => b.potencial - a.potencial)[0]!;
-    if (top.potencial === 0) return [];
-    return [
-      {
-        id: "potencial",
-        text: `${top.rotulo} ${t("concentra o maior potencial")}: ${top.potencial} ${t("empresas ainda não clientes.")}`,
-      },
-    ];
-  }, [dadosEstimativa, t]);
-
-  async function criarEExecutar() {
-    if (!aprovado) {
-      nexusToast.error(t("Marque a aprovação para executar."));
+  async function criar() {
+    if (!validarPublico()) {
+      setPasso(0);
       return;
     }
-    // A navegação por clique nos passos (`NexusSteps`) não passa por
-    // `continuar()`. Validar aqui é o que impede o 422 genérico de "Dados
-    // inválidos." sem dizer QUAL campo o servidor recusou.
-    if (nome.trim().length < 2 || nome.trim().length > 120) {
-      nexusToast.error(t("O nome da campanha precisa ter entre 2 e 120 caracteres."));
+    if (!validarMensagens()) {
+      setPasso(1);
       return;
     }
-    if (marcadas.length === 0) {
-      nexusToast.error(t("Escolha ao menos 1 categoria para a campanha."));
-      return;
-    }
-    if (cidades.length === 0) {
-      nexusToast.error(t("Informe ao menos 1 cidade (Cidade/UF, uma por linha)."));
-      return;
-    }
-    const cidadeInvalida = cidades.find(
-      (c) =>
-        c.cidade.trim().length < 2 ||
-        c.cidade.trim().length > 120 ||
-        (c.estado ?? "").length > 10,
-    );
-    if (cidadeInvalida) {
-      nexusToast.error(
-        t("Cidade inválida: use Cidade/UF, com até 120 caracteres na cidade e 10 na UF."),
-      );
-      return;
-    }
-    if (recorrencia) {
-      const dias = Number(recorrencia);
-      if (!Number.isFinite(dias) || dias < 7 || dias > 365) {
-        nexusToast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
-        return;
-      }
-    }
-    if (!periodoValido) {
-      nexusToast.error(t("A data final não pode ser anterior à inicial."));
-      return;
-    }
-    if (!janelasValidas || dias.length === 0) {
-      nexusToast.error(t("Confira as janelas e escolha ao menos um dia da semana."));
-      return;
-    }
-    const mensagemLonga = preenchidas.find((m) => [...m].length > 4000);
-    if (mensagemLonga) {
-      nexusToast.error(t("Cada mensagem pode ter no máximo 4000 caracteres."));
-      return;
-    }
-    setOcupado(true);
+    setCriando(true);
     try {
-      const criada = await apiClient.post<{ data: { id: string } }>(
+      const criada = await apiClient.post<{ data?: { id?: string } }>(
         "/api/v1/prospecting/campaigns",
         {
           nome: nome.trim(),
-          categorias: marcadas,
-          cidades,
-          fonte_publico: fontePublico,
-          ...(preenchidas.length > 0 ? { mensagens: preenchidas } : {}),
-          ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
-          // O "quando": período, janelas (com os dias) e cota do dia. Sem
-          // isso o Disparo abria com os padrões dele, ignorando a intenção.
-          ...(dataInicio ? { data_inicio: dataInicio } : {}),
-          ...(dataFim ? { data_fim: dataFim } : {}),
+          categorias: categoriasMarcadas,
+          cidades: cidadesSelecionadas,
+          fonte_publico: fonte,
+          mensagens: preenchidas,
+          data_inicio: dataInicio,
+          data_fim: dataFim,
           janelas: janelas.map((j) => ({ ...j, dias })),
-          limite_diario: Math.min(500, Math.max(1, Number(limite) || 50)),
-          // 60s entre duas mensagens — o mesmo default da coluna e o piso do
-          // anti-ban (ESPACO_ANTIBAN_MS). Vai explícito para a campanha não
-          // depender do default de uma migration futura.
+          limite_diario: Math.min(500, Math.max(1, limiteNumero)),
           espaco_ms: 60_000,
+          ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
         },
       );
-      const corpo = await apiClient.post<{ data: { buscas: number; sem_mapa: string[] } | null }>(
-        `/api/v1/prospecting/campaigns/${criada.data.id}/executar`,
-        {},
-      );
-      const r = corpo?.data ?? { buscas: 0, sem_mapa: [] as string[] };
-      setResultado({ buscas: r.buscas, sem_mapa: r.sem_mapa ?? [] });
-      nexusToast.success(`${r.buscas} ${t("buscas criadas")}`);
-      aoConcluir();
-      ir(4);
+      const id = criada?.data?.id;
+      if (!id) throw new Error(t("A campanha foi criada sem id."));
+
+      // A campanha de busca precisa do fan-out para produzir resultados. A
+      // de base não: o controle calcula o público na hora e só reserva quando
+      // o operador agenda. Nunca disparamos mensagem aqui.
+      if (fonte !== "base") {
+        try {
+          const execucao = await apiClient.post<{ data?: { buscas?: number; sem_mapa?: string[] } }>(
+            `/api/v1/prospecting/campaigns/${id}/executar`,
+            {},
+          );
+          const buscas = execucao?.data?.buscas ?? 0;
+          if (buscas > 0) toast.success(t(`${buscas} buscas criadas`));
+          const semMapa = execucao?.data?.sem_mapa ?? [];
+          if (semMapa.length > 0) toast.warning(t(`Sem mapa: ${semMapa.join(", ")}`));
+        } catch (e) {
+          showApiError(e);
+          toast.warning(t("A campanha foi criada. Inicie a busca pela aba Pesquisas."));
+        }
+      }
+
+      toast.success(t("Campanha criada. Agora confira o público e agende o envio."));
+      aoConcluir(id);
     } catch (e) {
       showApiError(e);
     } finally {
-      setOcupado(false);
+      setCriando(false);
     }
   }
 
-  function recomeçar() {
-    setPasso(0);
-    setAlcancado(0);
-    setNome("");
-    setMarcadas([]);
-    setCidadesTexto("");
-    setRecorrencia("");
-    setTemplateId("__nenhum");
-    setMensagens(Array.from({ length: MENSAGENS_NA_TELA }, () => ""));
-    setDataInicio(diaIso());
-    setDataFim(diaIso(7));
-    setDias(DIAS_UTEIS);
-    setJanelas([
-      { inicio: "07:00", fim: "12:00" },
-      { inicio: "13:00", fim: "19:00" },
-    ]);
-    setLimite("50");
-    setAprovado(false);
-    setResultado(null);
-  }
-
-  const opcoes = categorias.flatMap((m) =>
-    m.subcategorias.map((s) => ({ ...s, chave: `${m.macro}:${s.busca}` })),
-  );
+  const passosTraduzidos = PASSOS.map((p) => t(p));
 
   return (
-    <Card className="hover-raise space-y-4 p-4">
-      <NexusSteps steps={PASSOS} current={passo} reached={alcancado} onGo={setPasso} />
+    <Card className="space-y-4 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h3 className="text-base font-semibold">{t("Nova campanha")}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t("Escolha as cidades e categorias da sua base. Você vê as empresas antes de criar.")}
+          </p>
+        </div>
+        {aoCancelar && (
+          <Button type="button" size="sm" variant="ghost" onClick={aoCancelar} disabled={criando}>
+            {t("Cancelar")}
+          </Button>
+        )}
+      </div>
+
+      <NexusSteps
+        steps={passosTraduzidos}
+        current={passo}
+        reached={alcancado}
+        onGo={(i) => {
+          // Só volta. Avançar pelo indicador pularia a validação que o
+          // "Continuar" faz — e o 422 genérico já custou tempo demais.
+          if (i < passo) setPasso(i);
+        }}
+      />
 
       {passo === 0 && (
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
-            <Input
-              id="wiz-nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Oficinas — Norte SC"
-            />
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-medium">{t("Categorias")}</p>
-            <div className="flex flex-wrap gap-2">
-              {opcoes.map((s) => (
-                <label
-                  key={s.chave}
-                  className={`cursor-pointer rounded-full border px-2.5 py-1 text-xs ${
-                    marcadas.includes(s.busca)
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={marcadas.includes(s.busca)}
-                    onChange={() =>
-                      setMarcadas((mm) =>
-                        mm.includes(s.busca) ? mm.filter((x) => x !== s.busca) : [...mm, s.busca],
-                      )
-                    }
-                  />
-                  {s.rotulo}
-                </label>
-              ))}
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t("De onde vem o público?")}</Label>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <FonteCard
+                  ativo={fonte === "base"}
+                  titulo={t("Minha base")}
+                  descricao={t("Recomendado: empresas já cadastradas, sem gastar busca.")}
+                  onClick={() => setFonte("base")}
+                />
+                <FonteCard
+                  ativo={fonte === "busca"}
+                  titulo={t("Google")}
+                  descricao={t("Busca empresas novas nas cidades escolhidas.")}
+                  onClick={() => setFonte("busca")}
+                />
+                <FonteCard
+                  ativo={fonte === "ambas"}
+                  titulo={t("As duas")}
+                  descricao={t("Usa a base e também busca empresas novas.")}
+                  onClick={() => setFonte("ambas")}
+                />
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
             <div className="space-y-1.5">
-              <Label htmlFor="wiz-cidades">{t("Cidades (uma por linha, Cidade/UF)")}</Label>
-              <textarea
-                id="wiz-cidades"
-                className="min-h-20 w-full rounded-lg border bg-background px-3 py-2 text-sm"
-                value={cidadesTexto}
-                onChange={(e) => setCidadesTexto(e.target.value)}
-                placeholder={t("Exemplo de cidades") + ": Canoinhas/SC, Mafra/SC"}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="wiz-fonte">{t("De onde sai o público")}</Label>
-              <select
-                id="wiz-fonte"
-                className="h-9 w-full rounded-lg border bg-background px-3 text-sm"
-                value={fontePublico}
-                onChange={(e) => setFontePublico(e.target.value as typeof fontePublico)}
-              >
-                <option value="busca">
-                  {t("Buscar empresas agora (usa API do Google)")}
-                </option>
-                <option value="base">{t("Usar o que já está cadastrado (sem API)")}</option>
-                <option value="ambas">{t("Os dois")}</option>
-              </select>
-              <p className="text-xs text-muted-foreground">
-                {fontePublico === "busca"
-                  ? t(
-                      "A campanha procura empresas novas na região. Gastou API do Google e precisa de chave ativa.",
-                    )
-                  : t(
-                      "A campanha usa só as empresas que você já tem cadastradas, nas mesmas cidades e categorias. Empresas duplicadas e clientes que a loja já atende saem da fila.",
-                    )}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="wiz-rec">{t("Repetir a cada (dias, opcional)")}</Label>
+              <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
               <Input
-                id="wiz-rec"
-                type="number"
-                min={7}
-                max={365}
-                value={recorrencia}
-                onChange={(e) => setRecorrencia(e.target.value)}
-                placeholder="90"
+                id="wiz-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                maxLength={120}
+                placeholder={t("Oficinas — Norte SC")}
               />
-              <p className="text-xs text-muted-foreground">
-                {t("Só registra a intenção — o agendador automático é fase futura.")}
-              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label>{t("Cidades")}</Label>
+                {cidadesSelecionadas.length > 0 && (
+                  <Badge variant="neutral">{cidadesSelecionadas.length} {t("selecionadas")}</Badge>
+                )}
+              </div>
+              {cidadesSelecionadas.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {cidadesSelecionadas.map((c) => (
+                    <button
+                      key={chaveDaCidade(c)}
+                      type="button"
+                      onClick={() => removerCidade(c)}
+                      className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                      title={t("Remover cidade")}
+                    >
+                      {rotuloDaCidade(c)}
+                      <span aria-hidden>×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="rounded-lg border">
+                <div className="border-b p-2">
+                  <Input
+                    value={buscaCidade}
+                    onChange={(e) => setBuscaCidade(e.target.value)}
+                    placeholder={t("Filtrar cidades da base…")}
+                    aria-label={t("Filtrar cidades")}
+                  />
+                </div>
+                {carregandoOpcoes ? (
+                  <div className="space-y-2 p-3">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : erroOpcoes ? (
+                  <div className="flex items-center justify-between gap-2 p-3 text-sm text-muted-foreground">
+                    <span>{t("Não foi possível carregar as cidades.")}</span>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void carregarOpcoes()}>
+                      {t("Tentar de novo")}
+                    </Button>
+                  </div>
+                ) : cidadesFiltradas.length === 0 ? (
+                  <div className="space-y-2 p-3 text-sm text-muted-foreground">
+                    <p>
+                      {buscaCidade
+                        ? t("Nenhuma cidade da base com esse nome.")
+                        : t("Sua base ainda não tem cidades com empresas de WhatsApp.")}
+                    </p>
+                    <Button type="button" size="sm" variant="outline" asChild>
+                      <Link href="/app/prospeccao?aba=buscar">
+                        {t("Buscar empresas novas")}
+                      </Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto p-2">
+                    <div className="grid gap-1 sm:grid-cols-2">
+                      {cidadesFiltradas.map((c) => {
+                        const alvo = { cidade: c.cidade, ...(c.estado ? { estado: c.estado } : {}) };
+                        const ativa = cidadesSelecionadas.some(
+                          (x) => chaveDaCidade(x) === chaveDaCidade(alvo),
+                        );
+                        return (
+                          <button
+                            key={`${c.cidade}-${c.estado ?? ""}`}
+                            type="button"
+                            aria-pressed={ativa}
+                            onClick={() => alternarCidade(c)}
+                            className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-left text-sm ${
+                              ativa ? "border-primary bg-accent-soft" : "hover:bg-muted"
+                            }`}
+                          >
+                            <span className="truncate">{rotuloDaCidade(alvo)}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">{c.total}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {(fonte === "busca" || fonte === "ambas") && (
+                <details className="rounded-lg border p-3 text-sm">
+                  <summary className="cursor-pointer text-muted-foreground">
+                    {t("Não achou a cidade? Adicionar outra")}
+                  </summary>
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <div className="min-w-40 flex-1 space-y-1">
+                      <Label htmlFor="wiz-cidade-manual">{t("Cidade")}</Label>
+                      <Input
+                        id="wiz-cidade-manual"
+                        value={cidadeManual}
+                        onChange={(e) => setCidadeManual(e.target.value)}
+                        placeholder={t("Ex.: Canoinhas")}
+                      />
+                    </div>
+                    <div className="w-20 space-y-1">
+                      <Label htmlFor="wiz-uf-manual">{t("UF")}</Label>
+                      <Input
+                        id="wiz-uf-manual"
+                        value={ufManual}
+                        onChange={(e) => setUfManual(e.target.value)}
+                        maxLength={10}
+                        placeholder="SC"
+                      />
+                    </div>
+                    <Button type="button" size="sm" variant="outline" onClick={adicionarCidadeManual}>
+                      {t("Adicionar")}
+                    </Button>
+                  </div>
+                </details>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label>{t("Categorias")}</Label>
+                {categoriasMarcadas.length > 0 && (
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                    onClick={() => setCategoriasMarcadas([])}
+                  >
+                    {t("Limpar seleção")}
+                  </button>
+                )}
+              </div>
+              {rotulosSelecionados.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {rotulosSelecionados.map((c) => (
+                    <button
+                      key={c.busca}
+                      type="button"
+                      onClick={() => alternarCategoria(c.busca)}
+                      className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                      title={t("Remover categoria")}
+                    >
+                      {c.rotulo}
+                      <span aria-hidden>×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <Input
+                value={buscaCategoria}
+                onChange={(e) => setBuscaCategoria(e.target.value)}
+                placeholder={t("Filtrar categorias…")}
+                aria-label={t("Filtrar categorias")}
+              />
+              <div className="max-h-72 overflow-y-auto rounded-lg border p-2">
+                {gruposDeCategoria.length === 0 ? (
+                  <p className="p-2 text-sm text-muted-foreground">
+                    {t("Nenhuma categoria com esse nome.")}
+                  </p>
+                ) : (
+                  gruposDeCategoria.map((grupo) => (
+                    <div key={grupo.macro} className="mb-3 last:mb-0">
+                      <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {grupo.macro}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {grupo.subs.map((s) => {
+                          const ativa = categoriasMarcadas.includes(s.busca);
+                          return (
+                            <button
+                              key={`${grupo.macro}-${s.busca}`}
+                              type="button"
+                              aria-pressed={ativa}
+                              onClick={() => alternarCategoria(s.busca)}
+                              className={`rounded-full border px-2.5 py-1 text-xs ${
+                                ativa
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "hover:bg-muted"
+                              }`}
+                            >
+                              {s.rotulo}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
+
+          <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+            <Card className="space-y-3 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold">{t("Empresas que vão receber")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("A prévia não reserva nem envia nada.")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void verPrevia()}
+                  disabled={carregandoPrevia || fonte === "busca"}
+                >
+                  {carregandoPrevia ? t("Verificando…") : t("Ver empresas")}
+                </Button>
+              </div>
+
+              {fonte === "busca" ? (
+                <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                  {t(
+                    "A busca vai rodar no Google para as cidades escolhidas. A prévia da base não se aplica.",
+                  )}
+                </div>
+              ) : !previa ? (
+                <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                  {t("Escolha cidades e categorias e clique em Ver empresas.")}
+                </div>
+              ) : !previaValida ? (
+                <div className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                  {t("A seleção mudou. Atualize a prévia para ver o público atual.")}
+                </div>
+              ) : previa.total === 0 ? (
+                <div className="space-y-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                  <p className="font-medium">{t("Nenhuma empresa encontrada com esse recorte.")}</p>
+                  <p>
+                    {fonte === "ambas"
+                      ? t("A base não tem empresas com esse recorte; a busca no Google ainda vai rodar.")
+                      : t(
+                          "Tente menos filtros, outras cidades, ou use a busca no Google para trazer empresas novas.",
+                        )}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-end justify-between gap-2">
+                    <p className="text-2xl font-semibold tabular-nums">{previa.total}</p>
+                    <Badge variant="success">{t("prontas para o disparo")}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{previa.resumo}</p>
+                  <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+                    {previa.linhas.slice(0, 30).map((linha) => (
+                      <li key={linha.id} className="rounded-md border p-2 text-sm">
+                        <p className="truncate font-medium">{linha.nome}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[linha.cidade, linha.categoria, linha.telefone]
+                            .filter(Boolean)
+                            .join(" · ") || t("Sem detalhes")}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                  {previa.linhas.length > 30 && (
+                    <p className="text-xs text-muted-foreground">
+                      {t(`Mostrando 30 de ${previa.linhas.length}.`)}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    {previa.ja_clientes.length > 0 && (
+                      <span>{previa.ja_clientes.length} {t("já clientes")}</span>
+                    )}
+                    {previa.duplicadas > 0 && (
+                      <span>{previa.duplicadas} {t("duplicadas")}</span>
+                    )}
+                    {previa.em_campanha > 0 && (
+                      <span>{previa.em_campanha} {t("em outra campanha")}</span>
+                    )}
+                    {previa.categoria_a_revisar > 0 && (
+                      <span>{previa.categoria_a_revisar} {t("a revisar")}</span>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void verPrevia()}
+                    disabled={carregandoPrevia}
+                  >
+                    {t("Atualizar prévia")}
+                  </Button>
+                </>
+              )}
+              {fonte === "ambas" && (
+                <p className="text-xs text-muted-foreground">
+                  {t("Além da base, a campanha também vai buscar empresas novas no Google.")}
+                </p>
+              )}
+            </Card>
+          </aside>
         </div>
       )}
 
       {passo === 1 && (
-        <div className="space-y-3">
-          {cidades.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("Volte e informe ao menos 1 cidade.")}
-            </p>
-          ) : estimando || dadosEstimativa === null ? (
-            <Skeleton className="h-32 w-full" />
-          ) : dadosEstimativa.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("Não foi possível estimar agora — dá para seguir mesmo assim.")}
-            </p>
-          ) : (
-            <>
-              <ul className="divide-y rounded-lg border">
-                {dadosEstimativa.map((e) => (
-                  <li
-                    key={e.rotulo}
-                    className="flex items-center justify-between gap-2 p-3 text-sm"
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label>{t("Mensagens da campanha")}</Label>
+                <select
+                  value={templateId}
+                  onChange={(e) => escolherModelo(e.target.value)}
+                  className="h-9 max-w-56 rounded-md border bg-background px-2 text-sm"
+                  aria-label={t("Usar modelo de mensagem")}
+                >
+                  <option value="__nenhum">{t("Usar modelo…")}</option>
+                  {(templates.data ?? []).map((modelo) => (
+                    <option key={modelo.id} value={modelo.id}>
+                      {modelo.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("A primeira é obrigatória. As outras entram na rotação anti-ban.")}
+              </p>
+              {mensagens.map((m, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label htmlFor={`wiz-msg-${i}`}>
+                      {t(`Mensagem ${i + 1}`)}
+                      {i === 0 ? ` · ${t("obrigatória")}` : ` · ${t("opcional")}`}
+                    </Label>
+                    {mensagens.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setMensagens((atuais) => atuais.filter((_, j) => j !== i))
+                        }
+                      >
+                        {t("Remover")}
+                      </Button>
+                    )}
+                  </div>
+                  <textarea
+                    id={`wiz-msg-${i}`}
+                    className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                    value={m}
+                    maxLength={4000}
+                    onChange={(e) => trocarMensagem(i, e.target.value)}
+                    placeholder={
+                      i === 0
+                        ? t("Olá {{primeiro_nome}}! Aqui é da …")
+                        : t("Outra forma de dizer a mesma coisa")
+                    }
+                  />
+                </div>
+              ))}
+              {mensagens.length < MENSAGENS_MAX && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMensagens((atuais) => [...atuais, ""])}
+                >
+                  + {t("Variação")}
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-3 rounded-lg border p-3">
+              <p className="text-sm font-semibold">{t("Agenda do envio")}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="wiz-inicio">{t("Início")}</Label>
+                  <Input
+                    id="wiz-inicio"
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="wiz-fim">{t("Fim")}</Label>
+                  <Input
+                    id="wiz-fim"
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="wiz-dias" />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label>{t("Janelas de horário")}</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setJanelas((atuais) => [...atuais, { inicio: "07:00", fim: "19:00" }])}
                   >
-                    <span className="font-medium">{e.rotulo}</span>
-                    <span className="text-muted-foreground tabular-nums">
-                      {e.empresas} {t("empresas")} · {e.clientes} {t("clientes")} ·{" "}
-                      <strong className="text-text">
-                        {e.potencial} {t("potenciais")}
-                      </strong>
-                    </span>
-                  </li>
+                    + {t("Janela")}
+                  </Button>
+                </div>
+                {janelas.map((j, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={j.inicio}
+                      onChange={(e) => trocarJanela(i, "inicio", e.target.value)}
+                      aria-label={t("Início da janela")}
+                    />
+                    <span className="text-muted-foreground">–</span>
+                    <Input
+                      type="time"
+                      value={j.fim}
+                      onChange={(e) => trocarJanela(i, "fim", e.target.value)}
+                      aria-label={t("Fim da janela")}
+                    />
+                    {janelas.length > 1 && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label={t("Remover janela")}
+                        onClick={() => setJanelas((atuais) => atuais.filter((_, k) => k !== i))}
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
                 ))}
-              </ul>
-              <NexusAiBriefing
-                title={t("Leitura do potencial")}
-                insights={insights}
-                emptyText={t("Sem destaque de potencial nestas cidades.")}
-              />
-            </>
-          )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="wiz-limite">{t("Limite por dia")}</Label>
+                  <Input
+                    id="wiz-limite"
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={limite}
+                    onChange={(e) => setLimite(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
+                  <Input
+                    id="wiz-recorrencia"
+                    type="number"
+                    min={7}
+                    max={365}
+                    value={recorrencia}
+                    onChange={(e) => setRecorrencia(e.target.value)}
+                    placeholder={t("Opcional")}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("O envio é feito uma mensagem por minuto, dentro das janelas e do período.")}
+              </p>
+            </div>
+          </div>
+
+          <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+            <Card className="space-y-2 p-4">
+              <p className="text-sm font-semibold">{t("Prévia da primeira mensagem")}</p>
+              <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                {previewMensagem || t("A prévia aparece quando você escrever a primeira mensagem.")}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
+              </p>
+            </Card>
+            <Card className="space-y-2 p-4 text-sm">
+              <p className="font-semibold">{t("Resumo da agenda")}</p>
+              <p className="text-muted-foreground">
+                {t(`${preenchidas.length} mensagens em rotação`)}
+              </p>
+              <p className="text-muted-foreground">
+                {dataInicio && dataFim
+                  ? t(`de ${dataInicio} a ${dataFim}`)
+                  : t("Período aberto")}
+              </p>
+              <p className="text-muted-foreground">
+                {t(resumoDosDias(dias))} · {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
+              </p>
+              <p className="text-muted-foreground">
+                {t(`até ${limiteNumero} por dia`)}
+              </p>
+            </Card>
+          </aside>
         </div>
       )}
 
       {passo === 2 && (
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="wiz-template">{t("Modelo de abordagem (opcional)")}</Label>
-            <Select value={templateId} onValueChange={escolherModelo}>
-              <SelectTrigger id="wiz-template" className="w-full">
-                <SelectValue placeholder={t("Escrever na mão")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__nenhum">{t("Escrever na mão")}</SelectItem>
-                {(templates.data ?? []).map((x) => (
-                  <SelectItem key={x.id} value={x.id}>
-                    {x.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("Mensagens (giram nesta ordem, uma por envio)")}</Label>            {mensagens.map((m, i) => (
-              <div key={i} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor={`wiz-msg-${i}`} className="text-xs font-normal text-muted-foreground">
-                    {i === 0 ? t("Mensagem 1 (sai primeiro)") : t(`Mensagem ${i + 1} (opcional)`)}
-                  </Label>
-                  {mensagens.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setMensagens((atual) => atual.filter((_, j) => j !== i))}
-                    >
-                      {t("Remover")}
-                    </Button>
-                  )}
-                </div>
-                <textarea
-                  id={`wiz-msg-${i}`}
-                  className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
-                  value={m}
-                  maxLength={4000}
-                  onChange={(e) => {
-                    trocarMensagem(i, e.target.value);
-                    if (templateId !== "__nenhum") setTemplateId("__nenhum");
-                  }}
-                  placeholder={i === 0 ? t("Olá {{primeiro_nome}}! Aqui é da …") : t("Outra forma de dizer a mesma coisa")}
-                />
+        <div className="space-y-4">
+          <Card className="space-y-3 p-4">
+            <p className="text-sm font-semibold">{t("Revise antes de criar")}</p>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Nome")}</dt>
+                <dd className="font-medium">{nome.trim()}</dd>
               </div>
-            ))}
-            {mensagens.length < MENSAGENS_MAX && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setMensagens((atual) => [...atual, ""])}
-              >
-                {t("+ Variação")}
-              </Button>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {preenchidas.length > 1
-                ? t(
-                    `As ${preenchidas.length} mensagens se alternam: a 1ª no primeiro envio, a 2ª no segundo, e assim por diante, voltando à 1ª. Cada empresa recebe UMA.`,
-                  )
-                : t("A mesma mensagem para todas. Quem responde entra na conversa no Inbox.")}
-            </p>
-          </div>
-
-          <div className="space-y-3 rounded-lg border border-border p-3">
-            <div>
-              <p className="text-sm font-medium">{t("Quando enviar")}</p>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Período, dias da semana e horário de funcionamento. A campanha guarda isso; o Disparo usa quando você escolher as empresas.",
-                )}
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="wiz-inicio">{t("Começa em")}</Label>
-                <Input
-                  id="wiz-inicio"
-                  type="date"
-                  value={dataInicio}
-                  onChange={(e) => setDataInicio(e.target.value)}
-                />
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Fonte do público")}</dt>
+                <dd className="font-medium">
+                  {fonte === "base"
+                    ? t("Minha base")
+                    : fonte === "busca"
+                      ? t("Busca no Google")
+                      : t("Base + busca")}
+                </dd>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="wiz-fim">{t("Termina em")}</Label>
-                <Input
-                  id="wiz-fim"
-                  type="date"
-                  value={dataFim}
-                  min={dataInicio || undefined}
-                  onChange={(e) => setDataFim(e.target.value)}
-                />
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Cidades")}</dt>
+                <dd>{cidadesSelecionadas.map(rotuloDaCidade).join(", ") || "—"}</dd>
               </div>
-            </div>
-            {!periodoValido && (
-              <p className="text-xs text-destructive">
-                {t("A data final não pode ser anterior à inicial.")}
-              </p>
-            )}
-
-            <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="wizard" />
-
-            <div className="space-y-2">
-              <Label>{t("Horário de funcionamento (janelas de envio)")}</Label>
-              {janelas.map((j, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    type="time"
-                    aria-label={t(`Início da janela ${i + 1}`)}
-                    className="w-32"
-                    value={j.inicio}
-                    onChange={(e) =>
-                      setJanelas((atual) =>
-                        atual.map((v, k) => (k === i ? { ...v, inicio: e.target.value } : v)),
-                      )
-                    }
-                  />
-                  <span className="text-muted-foreground">—</span>
-                  <Input
-                    type="time"
-                    aria-label={t(`Fim da janela ${i + 1}`)}
-                    className="w-32"
-                    value={j.fim}
-                    onChange={(e) =>
-                      setJanelas((atual) =>
-                        atual.map((v, k) => (k === i ? { ...v, fim: e.target.value } : v)),
-                      )
-                    }
-                  />
-                  {janelas.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setJanelas((atual) => atual.filter((_, k) => k !== i))}
-                    >
-                      {t("Remover")}
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setJanelas((atual) => [...atual, { inicio: "08:00", fim: "18:00" }])}
-              >
-                {t("+ Janela")}
-              </Button>
-              {!janelasValidas && (
-                <p className="text-xs text-destructive">
-                  {t("Cada janela precisa de um início antes do fim.")}
-                </p>
-              )}
-            </div>
-
-            <div className="w-32 space-y-1.5">
-              <Label htmlFor="wiz-limite">{t("Máx. por dia")}</Label>
-              <Input
-                id="wiz-limite"
-                type="number"
-                min={1}
-                max={500}
-                value={limite}
-                onChange={(e) => setLimite(e.target.value)}
-              />
-            </div>
-
-            <p className="text-xs text-muted-foreground">
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Categorias")}</dt>
+                <dd>{rotulosSelecionados.map((c) => c.rotulo).join(", ") || "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Público na prévia")}</dt>
+                <dd>
+                  {fonte === "busca"
+                    ? t("Definido pela busca")
+                    : previa
+                      ? `${previa.total} ${t("empresas")}`
+                      : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Mensagens")}</dt>
+                <dd>{t(`${preenchidas.length} em rotação`)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Período")}</dt>
+                <dd>
+                  {dataInicio && dataFim
+                    ? `${dataInicio} → ${dataFim}`
+                    : t("Período aberto")}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("Dias e horários")}</dt>
+                <dd>
+                  {t(resumoDosDias(dias))} ·{" "}
+                  {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
+                </dd>
+              </div>
+            </dl>
+          </Card>
+          <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
+            <p className="font-medium">{t("Criar não envia mensagem.")}</p>
+            <p className="mt-1 opacity-90">
               {t(
-                "Ritmo: 1 mensagem por minuto (60s) por número — o teto anti-ban. O envio também respeita o aquecimento do WhatsApp e a cota do dia.",
+                "Na próxima tela você confere as empresas e escolhe entre enviar agora ou agendar. A lista de empresas só é reservada quando você agenda.",
               )}
             </p>
-          </div>
-
-          {preview ? (
-            <div className="hover-raise rounded-lg border border-border bg-surface-elevated p-3">
-              <p className="mb-1 text-xs font-medium text-muted-foreground uppercase">
-                {t("Pré-visualização")}
-              </p>
-              <p className="text-sm">{preview}</p>
-            </div>
-          ) : null}
-          <p className="text-xs text-muted-foreground">
-            {t("Abordagem manual por empresa — nunca disparo automático sem consentimento.")}
-          </p>
+          </Card>
         </div>
       )}
 
-      {passo === 3 && (
-        <div className="space-y-3 text-sm">
-          <dl className="space-y-1 rounded-lg border p-3">
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Campanha")}</dt>
-              <dd className="font-medium">{nome.trim() || "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Público")}</dt>
-              <dd className="text-right tabular-nums">
-                {marcadas.length} {t("categoria(s)")} · {cidades.length} {t("cidade(s)")}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Mensagem")}</dt>
-              <dd className="text-right">
-                {preenchidas.length === 0
-                  ? t("sem mensagem")
-                  : preenchidas.length === 1
-                    ? t("1 mensagem")
-                    : `${preenchidas.length} ${t("mensagens em rotação")}`}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Período")}</dt>
-              <dd className="text-right tabular-nums">
-                {dataInicio || "—"} {t("a")} {dataFim || "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Horário")}</dt>
-              <dd className="text-right tabular-nums">
-                {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">{t("Dias")}</dt>
-              <dd className="text-right">
-                {dias.length === 7
-                  ? t("todos os dias")
-                  : dias
-                      .map((d) => t(DIAS_SEMANA.find((x) => x.valor === d)?.curto ?? ""))
-                      .join(", ")}
-              </dd>
-            </div>
-          </dl>
-          <label className="flex min-h-[44px] cursor-pointer items-start gap-2 rounded-lg border p-3">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={aprovado}
-              onChange={(e) => setAprovado(e.target.checked)}
-            />
-            <span>
-              {t("Aprovo a execução desta campanha de descoberta.")}
-              <span className="block text-xs text-muted-foreground">
-                {t("Cria a busca por cidade. As mensagens ficam salvas na campanha e já vêm preenchidas no Disparo quando você escolher as empresas.")}
-              </span>
-            </span>
-          </label>
-          <Button disabled={ocupado || !aprovado} onClick={criarEExecutar}>
-            {ocupado ? t("Executando…") : t("Aprovar e executar")}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+        <Button type="button" variant="ghost" onClick={voltar} disabled={passo === 0 || criando}>
+          {t("Voltar")}
+        </Button>
+        {passo < 2 ? (
+          <Button type="button" onClick={continuar} disabled={criando}>
+            {t("Continuar")}
           </Button>
-        </div>
-      )}
-
-      {passo === 4 && (
-        <div className="space-y-3 text-sm">
-          {resultado ? (
-            <>
-              <p className="text-base font-medium">{`${resultado.buscas} ${t("buscas criadas")}`}</p>
-              {resultado.sem_mapa.length > 0 && (
-                <p className="text-muted-foreground">
-                  {t("Sem mapa")}: {resultado.sem_mapa.join(", ")}
-                </p>
-              )}
-              <p className="text-muted-foreground">
-                {t("Acompanhe o progresso na aba Pesquisas.")}
-              </p>
-            </>
-          ) : (
-            <p className="text-muted-foreground">{t("Nenhuma execução ainda.")}</p>
-          )}
-          <Button variant="outline" onClick={recomeçar}>
-            {t("Nova campanha")}
+        ) : (
+          <Button type="button" onClick={() => void criar()} disabled={criando}>
+            {criando ? t("Criando…") : t("Criar campanha")}
           </Button>
-        </div>
-      )}
-
-      {passo < 4 && (
-        <div className="flex items-center justify-between gap-3">
-          {passo > 0 ? (
-            <Button variant="outline" onClick={() => setPasso((p) => Math.max(0, p - 1))}>
-              {t("Voltar")}
-            </Button>
-          ) : (
-            <span />
-          )}
-          <Button onClick={continuar}>{t("Continuar")}</Button>
-        </div>
-      )}
+        )}
+      </div>
     </Card>
+  );
+}
+
+function FonteCard({
+  ativo,
+  titulo,
+  descricao,
+  onClick,
+}: {
+  ativo: boolean;
+  titulo: string;
+  descricao: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={ativo}
+      onClick={onClick}
+      className={`rounded-lg border p-3 text-left text-sm ${
+        ativo ? "border-primary bg-accent-soft" : "hover:bg-muted"
+      }`}
+    >
+      <p className="font-medium">{titulo}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{descricao}</p>
+    </button>
   );
 }
