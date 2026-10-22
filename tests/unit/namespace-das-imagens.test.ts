@@ -146,21 +146,26 @@ describe("o default do compose diz o mesmo que o kit", () => {
   });
 });
 
-describe("o importador do Mercos também é um pino do kit", () => {
-  // Ele não entrou na lista `CHAVES` acima porque ela usa o índice para casar
-  // com `reposDoKit()`; a conferência dele fica explícita, e cobre as duas
+describe("o sidecar fiscal e o importador do Mercos também são pinos do kit", () => {
+  // Não entram na lista `CHAVES` acima porque ela usa o índice para casar com
+  // `reposDoKit()`; a conferência deles fica explícita, e cobre as duas
   // declarações independentes — o default do compose e o template do .env.
-  it("o default de MERCOS_IMAGE no compose usa o namespace de IMG_NS", () => {
-    const m = COMPOSE.match(/^\s*image: \$\{MERCOS_IMAGE:-([^}]+)\}/m);
-    expect(m, "não achei `image: ${MERCOS_IMAGE:-…}` em docker-compose.prod.yml").not.toBeNull();
-    expect(m![1]).toBe(`${imgNs()}/deskcomm-mercos:stable`);
-  });
+  for (const [repo, chave] of [
+    ["deskcomm-fiscal-sidecar", "FISCAL_IMAGE"],
+    ["deskcomm-mercos", "MERCOS_IMAGE"],
+  ] as const) {
+    it(`o default de ${chave} no compose usa o namespace de IMG_NS`, () => {
+      const m = COMPOSE.match(new RegExp(`^\\s*image: \\$\\{${chave}:-([^}]+)\\}`, "m"));
+      expect(m, `não achei \`image: \${${chave}:-…}\` em docker-compose.prod.yml`).not.toBeNull();
+      expect(m![1]).toBe(`${imgNs()}/${repo}:stable`);
+    });
 
-  it("o piso de MERCOS_IMAGE no .env de exemplo usa o namespace de IMG_NS", () => {
-    const m = ENV_EXEMPLO.match(/^MERCOS_IMAGE=(\S+)$/m);
-    expect(m, "não achei `MERCOS_IMAGE=` em .env.hostgator.example").not.toBeNull();
-    expect(m![1]).toBe(`${imgNs()}/deskcomm-mercos:stable`);
-  });
+    it(`o piso de ${chave} no .env de exemplo usa o namespace de IMG_NS`, () => {
+      const m = ENV_EXEMPLO.match(new RegExp(`^${chave}=(\\S+)$`, "m"));
+      expect(m, `não achei \`${chave}=\` em .env.hostgator.example`).not.toBeNull();
+      expect(m![1]).toBe(`${imgNs()}/${repo}:stable`);
+    });
+  }
 });
 
 describe("o kit aponta para o que o CI realmente publica", () => {
