@@ -85,18 +85,22 @@ export async function listConversationsHandler(
   ctx: HandlerCtx,
   q: ListConversationsQuery,
 ): Promise<ListConversationsResult> {
-  // Fila (assigned_to=unassigned): ordena por TEMPO DE ESPERA — quem espera há
-  // mais tempo primeiro. `last_inbound_at` = última mensagem do cliente = "há
-  // quanto tempo aguarda resposta" (não `created_at`, que pode ser uma conversa
-  // antiga reaberta). Demais visões: por atividade recente (last_message_at desc).
-  // A Fila deixou de se identificar por `assigned_to=unassigned` — ela agora pede
-  // `comando`. Sem esta linha o `isQueue` ficaria PARA SEMPRE falso na aba Fila e
-  // a ordenação por tempo de espera sumiria **sem nenhum sintoma na tela**: a
-  // lista continuaria populada, só que ordenada por atividade recente, e quem
-  // espera desde ontem afundaria embaixo de quem escreveu agora.
+  // ═══ A ORDEM DO INBOX É A MESMA EM TODAS AS ABAS: MAIS RECENTE NO TOPO ═══
+  //
+  // A Fila nasceu ordenada por tempo de espera (quem aguarda há mais tempo
+  // primeiro). O efeito na tela, porém, era o oposto do que o dono espera de um
+  // inbox: uma mensagem nova entrava EMBAIXO das antigas. A leitura de "fila"
+  // como prioridade não sobreviveu ao uso real; a leitura de "inbox" venceu.
+  //
+  // Continuamos usando `last_inbound_at` na Fila — é ele que diz quando o
+  // cliente falou pela última vez, e não `created_at` (uma conversa antiga
+  // reaberta não deve parecer nova). O que mudou foi o sentido: descendente,
+  // como `last_message_at` nas demais visões. Quem espera há mais tempo
+  // continua visível pelo tempo de espera na linha; a posição não é mais a
+  // régua de prioridade.
   const isQueue = q.comando?.includes("aguardando") ?? q.assigned_to === "unassigned";
   const sortCol = isQueue ? "last_inbound_at" : "last_message_at";
-  const asc = isQueue;
+  const asc = false;
 
   let query = supabase
     .from("conversations")
