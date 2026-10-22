@@ -41,6 +41,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/types";
 import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { ESPACO_ANTIBAN_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
@@ -411,6 +412,13 @@ export function DialogoDisparo({
         onConcluido();
       }
     } catch (e) {
+      // O 409 de "ninguém pode receber" carrega o plano inteiro em `details`.
+      // Sem pintar o plano, a tela só dizia "Nenhuma empresa..." e o operador
+      // não via se era cota, categoria ou conversa aberta.
+      if (e instanceof ApiError) {
+        const planoDoErro = e.details?.plano as Plano | undefined;
+        if (planoDoErro) setPlano(planoDoErro);
+      }
       const msg = e instanceof Error ? e.message : t("Não foi possível montar o disparo.");
       setErro(msg);
     } finally {

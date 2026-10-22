@@ -202,6 +202,29 @@ export function CampanhaWizard({
         );
         return;
       }
+      if (nome.trim().length > 120) {
+        nexusToast.error(t("O nome da campanha pode ter no máximo 120 caracteres."));
+        return;
+      }
+      const cidadeInvalida = cidades.find(
+        (c) =>
+          c.cidade.trim().length < 2 ||
+          c.cidade.trim().length > 120 ||
+          (c.estado ?? "").length > 10,
+      );
+      if (cidadeInvalida) {
+        nexusToast.error(
+          t("Cidade inválida: use Cidade/UF, com até 120 caracteres na cidade e 10 na UF."),
+        );
+        return;
+      }
+      if (recorrencia) {
+        const dias = Number(recorrencia);
+        if (!Number.isFinite(dias) || dias < 7 || dias > 365) {
+          nexusToast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
+          return;
+        }
+      }
     }
     if (passo === 2) {
       if (!periodoValido) {
@@ -260,6 +283,53 @@ export function CampanhaWizard({
   async function criarEExecutar() {
     if (!aprovado) {
       nexusToast.error(t("Marque a aprovação para executar."));
+      return;
+    }
+    // A navegação por clique nos passos (`NexusSteps`) não passa por
+    // `continuar()`. Validar aqui é o que impede o 422 genérico de "Dados
+    // inválidos." sem dizer QUAL campo o servidor recusou.
+    if (nome.trim().length < 2 || nome.trim().length > 120) {
+      nexusToast.error(t("O nome da campanha precisa ter entre 2 e 120 caracteres."));
+      return;
+    }
+    if (marcadas.length === 0) {
+      nexusToast.error(t("Escolha ao menos 1 categoria para a campanha."));
+      return;
+    }
+    if (cidades.length === 0) {
+      nexusToast.error(t("Informe ao menos 1 cidade (Cidade/UF, uma por linha)."));
+      return;
+    }
+    const cidadeInvalida = cidades.find(
+      (c) =>
+        c.cidade.trim().length < 2 ||
+        c.cidade.trim().length > 120 ||
+        (c.estado ?? "").length > 10,
+    );
+    if (cidadeInvalida) {
+      nexusToast.error(
+        t("Cidade inválida: use Cidade/UF, com até 120 caracteres na cidade e 10 na UF."),
+      );
+      return;
+    }
+    if (recorrencia) {
+      const dias = Number(recorrencia);
+      if (!Number.isFinite(dias) || dias < 7 || dias > 365) {
+        nexusToast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
+        return;
+      }
+    }
+    if (!periodoValido) {
+      nexusToast.error(t("A data final não pode ser anterior à inicial."));
+      return;
+    }
+    if (!janelasValidas || dias.length === 0) {
+      nexusToast.error(t("Confira as janelas e escolha ao menos um dia da semana."));
+      return;
+    }
+    const mensagemLonga = preenchidas.find((m) => [...m].length > 4000);
+    if (mensagemLonga) {
+      nexusToast.error(t("Cada mensagem pode ter no máximo 4000 caracteres."));
       return;
     }
     setOcupado(true);

@@ -75,6 +75,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const parsed = campanhaCreateSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
+    // O 422 devolve os campos para a tela, mas o toast genérico ("Dados
+    // inválidos.") não os mostra. O log é o que permite saber QUAL campo a
+    // instalação recusou sem reproduzir o clique.
+    logger.warn("[prospecting.campaigns] payload recusado", {
+      requestId,
+      organization_id: authz.org.orgId,
+      campos: parsed.error.flatten().fieldErrors,
+    });
     return fail("validation_failed", "Dados inválidos.", 422, {
       requestId,
       details: parsed.error.flatten().fieldErrors as Record<string, unknown>,

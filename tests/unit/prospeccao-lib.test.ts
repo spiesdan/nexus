@@ -11,7 +11,11 @@ import {
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
 import { bonusDeAderencia, prioridadeAlta, scoreDeProspect, PESOS_SCORE, CORTE_ALTA_PRIORIDADE } from "@/lib/prospeccao/score";
-import { prospectPatchSchema } from "@/lib/schemas/prospeccao";
+import {
+  campanhaCreateSchema,
+  CATEGORIAS_MAX,
+  prospectPatchSchema,
+} from "@/lib/schemas/prospeccao";
 
 /**
  * A LIB DE PROSPECÇÃO — cerca do plano §§5–8, 19, 31–33.
@@ -265,5 +269,23 @@ describe("prospectPatchSchema — fila (item 16)", () => {
     expect(prospectPatchSchema.safeParse({ status_comercial: "contatado" }).success).toBe(true);
     expect(prospectPatchSchema.safeParse({ do_not_contact: true }).success).toBe(true);
     expect(prospectPatchSchema.safeParse({ status_comercial: "inventado" }).success).toBe(false);
+  });
+});
+
+describe("campanhaCreateSchema — o recorte é do operador", () => {
+  const base = {
+    nome: "Todas as categorias",
+    cidades: [{ cidade: "General Carneiro", estado: "SC" }],
+    fonte_publico: "base" as const,
+  };
+
+  it("aceita as 83 categorias que a tela oferece (o teto era 10)", () => {
+    const categorias = Array.from({ length: 83 }, (_, i) => `categoria ${i + 1}`);
+    expect(campanhaCreateSchema.safeParse({ ...base, categorias }).success).toBe(true);
+  });
+
+  it("ainda tem um teto de sanidade de payload", () => {
+    const categorias = Array.from({ length: CATEGORIAS_MAX + 1 }, (_, i) => `categoria ${i + 1}`);
+    expect(campanhaCreateSchema.safeParse({ ...base, categorias }).success).toBe(false);
   });
 });

@@ -7,8 +7,18 @@ import { MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
  * O CONTRATO DA PROSPECÇÃO — um só, lido pela tela E pelas rotas.
  */
 
+/**
+ * Teto de categorias por recorte.
+ *
+ * A tela oferece 83 chips e o operador escolhe o recorte que quiser; o limite
+ * de 10 recusava uma seleção legítima com um 422 genérico ("Dados inválidos.")
+ * que não dizia qual campo era. 200 é teto de sanidade de payload, não regra de
+ * negócio: o recorte é do operador.
+ */
+export const CATEGORIAS_MAX = 200;
+
 export const buscaCreateSchema = z.object({
-  categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10),
+  categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX),
   cidade: z.string().trim().max(120).optional(),
   estado: z.string().trim().max(10).optional(),
   pais: z.string().trim().length(2).default("BR"),
@@ -246,7 +256,7 @@ const periodoValido = (v: { data_inicio?: string | null; data_fim?: string | nul
 export const campanhaCreateSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   objetivo: z.string().trim().max(300).nullable().optional(),
-  categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10),
+  categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX),
   cidades: z
     .array(
       z.object({
@@ -336,7 +346,7 @@ export const campanhaPatchSchema = z
     /** 0271 — trocar a fonte do público é decisão do operador, e fica registrada. */
     fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
     /** 0277 — corrigir o recorte de uma campanha existente. */
-    categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(10).optional(),
+    categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX).optional(),
     cidades: z
       .array(
         z.object({
