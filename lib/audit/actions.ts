@@ -511,6 +511,11 @@ export const AUDIT_ACTIONS = [
   "lab.rodada",
   "prospect.importado_arquivo",
   "prospecting_settings.updated",
+  // O PADRÃO DE MENSAGENS POR CATEGORIA (0283). Salvar muda o texto que TODA
+  // campanha nova daquela categoria vai herdar; limpar devolve a categoria ao
+  // "escrever à mão". São dois atos diferentes e o log diz qual foi.
+  "prospecting_message_preset.saved",
+  "prospecting_message_preset.cleared",
   "prospecting_campaign.updated",
   // Apagar campanha é a ÚNICA exclusão que desfaz reserva: o ledger de envios
   // dela cai junto (FK ON DELETE CASCADE) e as empresas voltam a ficar livres

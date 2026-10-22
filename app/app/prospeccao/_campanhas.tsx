@@ -28,10 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
-import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
-import { CampanhaWizard } from "./_campanha-wizard";
 
 /**
  * Aba CAMPANHAS — lista primeiro, criação sob demanda, controle numa rota.
@@ -294,19 +292,13 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
   );
 }
 
-export function CampanhasTab({
-  categorias,
-  podeOperar,
-}: {
-  categorias: MacroCategoria[];
-  podeOperar: boolean;
-}) {
+export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
   const t = useT();
   const router = useRouter();
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
   const [vas, setVas] = React.useState<CampanhaVa[] | null>(null);
   const [erro, setErro] = React.useState(false);
-  const [criando, setCriando] = React.useState(false);
+  // Criar campanha saiu daqui: virou página própria (/app/prospeccao/nova).
   // A campanha que espera confirmação de exclusão (o diálogo é único e vive no
   // rodapé; cada card só aponta para qual delas).
   const [aExcluir, setAExcluir] = React.useState<CampanhaDescoberta | null>(null);
@@ -368,26 +360,19 @@ export function CampanhasTab({
             {t("Crie um recorte, veja as empresas e acompanhe cada envio.")}
           </p>
         </div>
-        {podeOperar && !criando && (
-          <Button type="button" size="sm" onClick={() => setCriando(true)}>
+        {podeOperar && (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => router.push("/app/prospeccao/nova")}
+          >
             <Plus size={16} aria-hidden />
             {t("Nova campanha")}
           </Button>
         )}
       </div>
 
-      {podeOperar && criando && (
-        <CampanhaWizard
-          categorias={categorias}
-          aoConcluir={(id) => {
-            setCriando(false);
-            router.push(`/app/prospeccao/campanhas/${id}`);
-          }}
-          aoCancelar={() => setCriando(false)}
-        />
-      )}
-
-      {!criando && (erro && carregando ? (
+      {erro && carregando ? (
         <NexusErrorState onRetry={() => void recarregar()} />
       ) : carregando ? (
         <div className="space-y-2" aria-live="polite">
@@ -402,7 +387,7 @@ export function CampanhasTab({
           subcopy={t("Comece por um recorte de cidades e categorias da sua base.")}
           primary={
             podeOperar
-              ? { label: t("Criar primeira campanha"), onClick: () => setCriando(true) }
+              ? { label: t("Criar primeira campanha"), onClick: () => router.push("/app/prospeccao/nova") }
               : undefined
           }
         />
@@ -597,7 +582,7 @@ export function CampanhasTab({
             );
           })}
         </ul>
-      ))}
+      )}
 
       <AlertDialog
         open={aExcluir !== null}

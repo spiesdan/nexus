@@ -35,6 +35,8 @@ const NAV_ALLOWLIST: Record<string, string> = {
     "sub-fluxo de criar agente, alcançado pelo botão dentro da lista de Agentes",
   "/app/pedidos/novo":
     "sub-fluxo de criar pedido, alcançado pelo botão dentro da lista de Pedidos",
+  "/app/prospeccao/nova":
+    "sub-fluxo de criar campanha, alcançado pelo botão Nova campanha dentro de Campanhas — tarefa com começo, meio e fim, com endereço próprio para sobreviver ao F5",
   "/app/pedidos/imprimir":
     "impressão em lote dos selecionados, alcançada pelo botão Imprimir da barra de massa (ids via URL)",
   "/app/team/invite": "sub-fluxo de convite, alcançado de dentro de Equipe",

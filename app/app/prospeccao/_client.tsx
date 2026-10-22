@@ -278,14 +278,64 @@ export function ProspeccaoClient({
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
       <Tabs value={aba} onValueChange={setAba}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
-          <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
-          <TabsTrigger value="buscar">{textos.abaBuscar}</TabsTrigger>
-          <TabsTrigger value="pesquisas">{textos.abaPesquisas}</TabsTrigger>
-          <TabsTrigger value="mercado">{textos.abaMercado}</TabsTrigger>
-          {podeGerenciar && <TabsTrigger value="config">{textos.abaConfig}</TabsTrigger>}
-        </TabsList>
+        {/*
+          DUAS SUPERFÍCIES, NÃO SEIS ABAS.
+          A tela tinha seis abas do mesmo peso — criar campanha, buscar, ver
+          pesquisas, ver empresas, mercado e configurar — e quem abria não sabia
+          por onde começar. O trabalho do dia é Campanhas (o que está rodando) e
+          Empresas (quem existe). As outras quatro são ferramentas: ficam ao
+          lado, menores, sem competir com o que se usa todo dia.
+        */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
+            <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
+          </TabsList>
+
+          <nav
+            aria-label={t("Ferramentas da prospecção")}
+            className="flex flex-wrap items-center gap-1"
+          >
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "buscar" ? "secondary" : "ghost"}
+              aria-current={aba === "buscar" ? "page" : undefined}
+              onClick={() => setAba("buscar")}
+            >
+              {textos.abaBuscar}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "pesquisas" ? "secondary" : "ghost"}
+              aria-current={aba === "pesquisas" ? "page" : undefined}
+              onClick={() => setAba("pesquisas")}
+            >
+              {textos.abaPesquisas}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "mercado" ? "secondary" : "ghost"}
+              aria-current={aba === "mercado" ? "page" : undefined}
+              onClick={() => setAba("mercado")}
+            >
+              {textos.abaMercado}
+            </Button>
+            {podeGerenciar && (
+              <Button
+                type="button"
+                size="sm"
+                variant={aba === "config" ? "secondary" : "ghost"}
+                aria-current={aba === "config" ? "page" : undefined}
+                onClick={() => setAba("config")}
+              >
+                {textos.abaConfig}
+              </Button>
+            )}
+          </nav>
+        </div>
 
         <TabsContent value="buscar" className="mt-4">
           {podeBuscar ? (
@@ -466,12 +516,12 @@ export function ProspeccaoClient({
         </TabsContent>
 
         <TabsContent value="campanhas" className="mt-4">
-          <CampanhasTab categorias={categorias} podeOperar={podeBuscar} />
+          <CampanhasTab podeOperar={podeBuscar} />
         </TabsContent>
 
         {podeGerenciar && (
           <TabsContent value="config" className="mt-4">
-            <ConfigTab />
+            <ConfigTab categorias={categorias} podeGerenciar={podeGerenciar} />
           </TabsContent>
         )}
       </Tabs>

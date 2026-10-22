@@ -42,13 +42,16 @@ import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import { apiClient } from "@/lib/api/client";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
+import {
+  presetsDaSelecao,
+  presetSugerido,
+  type PresetDeMensagens,
+} from "@/lib/prospeccao/mensagens-por-categoria";
 
 /** Quantas caixas a tela abre — o mesmo 3 do painel Disparo. */
 const MENSAGENS_NA_TELA = 3;
 /** O teto da rotação anti-ban (lib/schemas/prospeccao.ts, 1..5). */
 const MENSAGENS_MAX = 5;
-/** O mesmo teto padrão da prévia no servidor (`LIMITE_PADRAO`). */
-const LIMITE_PREVIA = 500;
 
 const PASSOS = ["Público", "Mensagens e agenda", "Revisão"];
 
@@ -152,6 +155,11 @@ export function CampanhaWizard({
     linhasDeMensagem([""]),
   );
   const [templateId, setTemplateId] = React.useState("__nenhum");
+  // Padrões salvos em Configuração › Mensagens por categoria.
+  const [presets, setPresets] = React.useState<PresetDeMensagens[]>([]);
+  const [presetsErro, setPresetsErro] = React.useState(false);
+  // De qual categoria vieram as caixas de agora. null = texto do operador.
+  const [presetAplicado, setPresetAplicado] = React.useState<string | null>(null);
   const [dataInicio, setDataInicio] = React.useState(() => diaIso());
   const [dataFim, setDataFim] = React.useState(() => diaIso(7));
   const [dias, setDias] = React.useState<number[]>(DIAS_UTEIS);
@@ -185,6 +193,32 @@ export function CampanhaWizard({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void carregarOpcoes();
   }, [carregarOpcoes]);
+
+  React.useEffect(() => {
+    let cancelado = false;
+    void (async () => {
+      try {
+        const resposta = await apiClient.get<{ data?: PresetDeMensagens[] }>(
+          "/api/v1/prospecting/mensagens-por-categoria",
+        );
+        if (!cancelado) {
+          setPresets(Array.isArray(resposta?.data) ? resposta.data : []);
+          setPresetsErro(false);
+        }
+      } catch {
+        // O padrão é conveniência, não pré-requisito: falhar aqui não pode
+        // impedir a campanha. O operador escreve o texto como antes — e a tela
+        // DIZ que não conseguiu carregar, em vez de fingir que não há padrão.
+        if (!cancelado) {
+          setPresets([]);
+          setPresetsErro(true);
+        }
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   const chaveSelecao = React.useMemo(
     () =>
@@ -240,6 +274,25 @@ export function CampanhaWizard({
     }
     return categoriasMarcadas.map((busca) => ({ busca, rotulo: mapa.get(busca) ?? busca }));
   }, [categorias, categoriasMarcadas]);
+
+  const presetsDisponiveis = React.useMemo(
+    () => presetsDaSelecao(presets, categoriasMarcadas),
+    [presets, categoriasMarcadas],
+  );
+
+  const rotuloDaCategoria = React.useCallback(
+    (busca: string) => rotulosSelecionados.find((c) => c.busca === busca)?.rotulo ?? busca,
+    [rotulosSelecionados],
+  );
+
+  // O padrão aplicado pode deixar de existir se o operador voltar e tirar a
+  // categoria da seleção. Nesse caso o texto continua na tela (é dele), mas o
+  // seletor não pode fingir que ainda aponta para uma opção inexistente.
+  const presetEmUso =
+    presetAplicado !== null &&
+    presetsDisponiveis.some((p) => p.categoria === presetAplicado)
+      ? presetAplicado
+      : null;
 
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
   const primeiraMensagem = preenchidas[0] ?? "";
@@ -397,9 +450,35 @@ export function CampanhaWizard({
     return true;
   }
 
+  /**
+   * Troca as caixas pelo padrão de uma categoria. Sobrescreve de propósito: o
+   * operador escolheu o padrão agora, e o texto anterior já não é o que ele
+   * quer. `null` = voltar a escrever do zero, sem apagar o que está na tela.
+   */
+  function aplicarPreset(preset: PresetDeMensagens | null) {
+    if (!preset) {
+      setPresetAplicado(null);
+      return;
+    }
+    setMensagens(linhasDeMensagem(preset.mensagens));
+    setTemplateId("__nenhum");
+    setPresetAplicado(preset.categoria);
+    toast.success(`${rotuloDaCategoria(preset.categoria)} · ${t("mensagens aplicadas.")}`);
+  }
+
   function continuar() {
     if (passo === 0) {
       if (!validarPublico()) return;
+      // Primeira entrada no passo 2: nasce com o padrão da categoria, se ele
+      // existir. Só quando o operador ainda não escreveu nada — texto digitado
+      // nunca é sobrescrito por padrão.
+      if (preenchidas.length === 0 && presetAplicado === null) {
+        const sugerido = presetSugerido(presets, categoriasMarcadas);
+        if (sugerido) {
+          setMensagens(linhasDeMensagem(sugerido.mensagens));
+          setPresetAplicado(sugerido.categoria);
+        }
+      }
       setAlcancado((a) => Math.max(a, 1));
       setPasso(1);
       return;
@@ -418,10 +497,12 @@ export function CampanhaWizard({
   function trocarMensagem(i: number, valor: string) {
     setMensagens((atuais) => atuais.map((m, j) => (j === i ? valor : m)));
     if (templateId !== "__nenhum") setTemplateId("__nenhum");
+    setPresetAplicado(null);
   }
 
   function escolherModelo(id: string) {
     setTemplateId(id);
+    setPresetAplicado(null);
     if (id === "__nenhum") return;
     const corpo = (templates.data ?? []).find((x) => x.id === id)?.body;
     if (corpo) {
@@ -873,6 +954,49 @@ export function CampanhaWizard({
                   ))}
                 </select>
               </div>
+              {presetsErro && (
+                <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
+                  {t(
+                    "Não foi possível carregar as mensagens salvas por categoria. Escreva o texto abaixo — a campanha funciona igual.",
+                  )}
+                </p>
+              )}
+              {presetsDisponiveis.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2">
+                  <span className="text-xs font-medium">{t("Mensagens salvas")}</span>
+                  <select
+                    value={presetEmUso ?? "__nenhum"}
+                    onChange={(e) => {
+                      const escolhido =
+                        presetsDisponiveis.find((p) => p.categoria === e.target.value) ?? null;
+                      aplicarPreset(escolhido);
+                    }}
+                    className="h-8 rounded-md border bg-background px-2 text-sm"
+                    aria-label={t("Usar as mensagens de uma categoria")}
+                  >
+                    <option value="__nenhum">{t("Escrever do zero")}</option>
+                    {presetsDisponiveis.map((p) => (
+                      <option key={p.categoria} value={p.categoria}>
+                        {rotuloDaCategoria(p.categoria)} · {p.mensagens.length}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-muted-foreground">
+                    {presetEmUso
+                      ? t("Editar aqui não altera o padrão salvo na categoria.")
+                      : t("Trocar substitui as caixas abaixo.")}
+                  </span>
+                </div>
+              )}
+              {presetsDisponiveis.length === 0 &&
+                categoriasMarcadas.length > 0 &&
+                !presetsErro && (
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "Nenhuma categoria escolhida tem mensagens salvas. Configure uma vez em Configuração › Mensagens por categoria.",
+                    )}
+                  </p>
+                )}
               <p className="text-xs text-muted-foreground">
                 {t("A primeira é obrigatória. As outras entram na rotação anti-ban.")}
               </p>
