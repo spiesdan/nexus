@@ -69,4 +69,4 @@ execFileSync(
 // reset rodou" de "recebi um banco limpo porque calhei de ser o primeiro
 // arquivo da rodada" — e passaria verde justamente na regressão que ele existe
 // para pegar (o setupFile sumir da config).
-process.env.DESKCOMM_INVARIANTS_DB_RESET = "1";
+process.env.NEXUS_INVARIANTS_DB_RESET = "1";

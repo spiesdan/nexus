@@ -13,7 +13,7 @@ import { execFileSync } from "node:child_process";
  *
  * ## As duas asserções, e por que são duas
  *
- * 1. O MARCADOR (`DESKCOMM_INVARIANTS_DB_RESET`). Só o setupFile o escreve. É o
+ * 1. O MARCADOR (`NEXUS_INVARIANTS_DB_RESET`). Só o setupFile o escreve. É o
  *    que impede a asserção 2 de passar por vacuidade: um arquivo que calha de
  *    ser o PRIMEIRO da rodada vê um banco limpo mesmo sem reset nenhum, e sob
  *    `--sequence.shuffle.files` esse arquivo pode ser este. Sem o marcador, a
@@ -74,7 +74,7 @@ describe("harness — o banco é novo a cada arquivo (issue #207)", () => {
   it("o setupFile de reset rodou nesta suíte", () => {
     // Se esta falha, `setupFiles` sumiu de vitest.db.config.ts: os 100 arquivos
     // voltaram a dividir um banco global e o veredito voltou a depender da ordem.
-    expect(process.env.DESKCOMM_INVARIANTS_DB_RESET).toBe("1");
+    expect(process.env.NEXUS_INVARIANTS_DB_RESET).toBe("1");
   });
 
   it("o banco recebido está no estado do molde — nenhuma linha de vizinho", () => {

@@ -88,7 +88,7 @@ function fazerSupabase(existente: { id: string } | null) {
  * põe no fio, e o `req.formData()` da rota o lê com o parser de produção.
  */
 function pedido(csv: string, campos: Record<string, string | null> = {}) {
-  const B = "----deskcommTesteDeImportacao";
+  const B = "----nexusTesteDeImportacao";
   const parte = (nome: string, valor: string, arquivo?: string) =>
     `--${B}\r\nContent-Disposition: form-data; name="${nome}"` +
     (arquivo ? `; filename="${arquivo}"\r\nContent-Type: text/csv` : "") +

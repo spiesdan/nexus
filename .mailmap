@@ -20,9 +20,9 @@
 # trabalho que não é dele e ninguém confere depois. Duas provas valem:
 #
 #   1. A API do GitHub associa o commit a uma conta:
-#      `gh api repos/melgarafael/DeskcommCRM/commits/<sha> --jq .author.login`
+#      `gh api repos/spiesdan/nexus/commits/<sha> --jq .author.login`
 #   2. O PR é de um handle e seus commits carregam a assinatura em questão:
-#      `gh api repos/melgarafael/DeskcommCRM/pulls/<n>/commits \
+#      `gh api repos/spiesdan/nexus/pulls/<n>/commits \
 #         --jq '[.[].commit.author.email] | unique'`
 #
 # Para conferir que este arquivo não é decorativo:

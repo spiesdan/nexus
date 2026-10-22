@@ -103,7 +103,11 @@ describe("paraEventoDoGoogle", () => {
 
     // O que amarra o evento de lá à linha daqui passa a ser o ID, que é nosso
     // por construção e que o Google preserva.
-    expect(idDeEventoDoGoogle(AGENDAMENTO).startsWith("deskcommapp")).toBe(true);
+    //
+    // O prefixo é o `SUFIXO_ICAL_UID` sem os caracteres fora de `[a-v0-9]` —
+    // o alfabeto que o Google aceita em `id`. `nexus.app` vira `neusapp`
+    // porque o `x` não existe nesse alfabeto; não é erro de digitação.
+    expect(idDeEventoDoGoogle(AGENDAMENTO).startsWith("neusapp")).toBe(true);
     expect(ehEventoNosso(idDeEventoDoGoogle(AGENDAMENTO))).toBe(true);
     // E o controle: evento de terceiro não é reconhecido como nosso.
     expect(ehEventoNosso("abc123doGoogle")).toBe(false);
@@ -115,8 +119,8 @@ describe("paraEventoDoGoogle", () => {
     // meus" sem varrer o calendário inteiro.
     const corpo = paraEventoDoGoogle(agendamento());
     expect(corpo.extendedProperties.private).toMatchObject({
-      deskcomm_org: ORG,
-      deskcomm_appointment: AGENDAMENTO,
+      nexus_org: ORG,
+      nexus_appointment: AGENDAMENTO,
     });
   });
 

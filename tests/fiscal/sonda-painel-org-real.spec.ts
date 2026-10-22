@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
  * de verdade.
  *
  * A sessão é montada por FORA: o token do GoTrue vai direto no cookie
- * `sb-deskcomm-auth` (nome canônico, de `lib/supabase/server.ts`). Digitar o
+ * `sb-nexus-auth` (nome canônico, de `lib/supabase/server.ts`). Digitar o
  * formulário foi descartado depois de medido — `pressSequentially` ENGOLE o `@`
  * do e-mail, e `fill` antes da hidratação não pega o estado do componente
  * controlado. As duas mediam o formulário, que não é a pergunta.
@@ -41,7 +41,7 @@ test("o painel na org real", async ({ page }) => {
   const expiraEm = Math.floor(Date.now() / 1000) + 3600;
   await page.context().addCookies([
     {
-      name: "sb-deskcomm-auth",
+      name: "sb-nexus-auth",
       value: valorDoCookie({
         access_token: TOKEN,
         token_type: "bearer",

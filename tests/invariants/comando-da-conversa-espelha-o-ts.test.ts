@@ -184,7 +184,7 @@ describe("comando da conversa: o banco espelha o TypeScript", () => {
       delete from channel_sessions where organization_id = '${ORG}';
       delete from organizations where id = '${ORG}';
       insert into auth.users (id, email)
-        values ('${DONO}', 'dono-espelho@deskcomm.test') on conflict (id) do nothing;
+        values ('${DONO}', 'dono-espelho@nexus.test') on conflict (id) do nothing;
       insert into organizations (id, slug, legal_name, display_name)
         values ('${ORG}', 'espelho-comando', 'Espelho LTDA', 'Espelho');
       insert into channel_sessions (id, organization_id, webhook_secret_encrypted, waha_session_name)

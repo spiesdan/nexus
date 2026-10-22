@@ -29,7 +29,7 @@ function soNumero(s: string | null): string | null {
 async function buscar(q: string): Promise<string> {
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&countrycodes=br&addressdetails=1`,
-    { headers: { "User-Agent": "DeskcommCRM-Rotas/1.0" } },
+    { headers: { "User-Agent": "Nexus-Rotas/1.0" } },
   );
   const j = (await r.json()) as { lat?: string; lon?: string; address?: { road?: string; house_number?: string } }[];
   if (!j?.length) return "ZERO";

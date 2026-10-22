@@ -1,8 +1,8 @@
 {
-  "name": "deskcomm-crm",
+  "name": "nexus",
   "version": "0.1.0",
   "private": true,
-  "description": "DeskcommCRM — sistema operacional de vendas com agentes de IA nativos e WhatsApp (WAHA). Self-hosted, multi-tenant, LGPD by-design.",
+  "description": "Nexus — sistema operacional de vendas com agentes de IA nativos e WhatsApp (WAHA). Self-hosted, multi-tenant, LGPD by-design.",
   "engines": {
     "node": ">=22"
   },

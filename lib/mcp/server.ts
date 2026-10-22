@@ -19,7 +19,7 @@ import { allTools } from "./tools";
 import { higienizarUuidsDeAterro } from "./uuid-de-aterro";
 import type { McpContext } from "./types";
 
-const SERVER_NAME = "deskcomm-crm";
+const SERVER_NAME = "nexus";
 const SERVER_VERSION = "0.1.0";
 
 function summarizeResult(result: unknown): string | undefined {

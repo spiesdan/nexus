@@ -1,4 +1,4 @@
-# README de Operação — DeskcommCRM / Nexus
+# README de Operação — Nexus / Nexus
 
 > **Este arquivo é o manual completo de operação do projeto.** Ele existe para
 > qualquer pessoa — em um MacBook, em outro PC, ou outra pessoa inteiramente —
@@ -63,7 +63,7 @@ dos containers.
 | **06/10 04:24**             | **rollback** para `v1.20.2` (não para `v1.20.0`)                                  |
 | 06/10 15:23                 | tag `v1.21.0` publicada                                                           |
 | 06/10 15:32                 | VPS faz checkout de `v1.21.0`                                                     |
-| **06/10 15:39:56**          | imagem `deskcommcrm:1.21.0` (`d97624418fa1`) construída pelo CI                   |
+| **06/10 15:39:56**          | imagem `nexus:1.21.0` (`d97624418fa1`) construída pelo CI                   |
 | 06/10 15:40                 | `update.sh` instala `v1.21.0` nas 3 imagens; containers recriados                 |
 | 06/10 ~15:40                | `502` transitório durante a janela de atualização (auto-recuperável)              |
 
@@ -188,9 +188,9 @@ Medido em 06/10/2026.
 | --------------------- | --------------------------------------------------------------------------------- |
 | Tag em produção       | **`v1.21.0`** (`9d71e1a18`)                                                       |
 | `nexus/main`          | `9d71e1a18` — **igual à tag**                                                     |
-| Imagem do app         | `ghcr.io/spiesdan/deskcommcrm:1.21.0` = `d97624418fa1` (build 06/10 15:39:56 UTC) |
-| Imagem do worker      | `ghcr.io/spiesdan/deskcomm-worker:1.21.0`                                         |
-| Imagem do scheduler   | `ghcr.io/spiesdan/deskcomm-scheduler:1.21.0`                                      |
+| Imagem do app         | `ghcr.io/spiesdan/nexus:1.21.0` = `d97624418fa1` (build 06/10 15:39:56 UTC) |
+| Imagem do worker      | `ghcr.io/spiesdan/nexus-worker:1.21.0`                                         |
+| Imagem do scheduler   | `ghcr.io/spiesdan/nexus-scheduler:1.21.0`                                      |
 | Containers do app     | todos `Up` e `healthy`                                                            |
 | Site                  | `200` · `<title>Entrar · Bill Higiene e Limpeza</title>`                          |
 | Guard na VPS          | verde em todas as 5 checagens                                                     |
@@ -215,7 +215,7 @@ Medido em 06/10/2026.
 - Os remotes `origin` (upstream histórico) e `fork` (espelho legado) foram
   **removidos** em 2026-09-27.
 - `gh` está autenticado como **`spiesdan`**.
-- Caminho nesta máquina: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM`.
+- Caminho nesta máquina: `C:\Users\Daniel\Documents\wppcrm2\Nexus`.
 
 ### 4.2 Estrutura que importa para operação
 
@@ -269,9 +269,9 @@ Medido em 06/10/2026.
 
 | Serviço     | Imagem                                                     | Papel                                   |
 | ----------- | ---------------------------------------------------------- | --------------------------------------- |
-| `app`       | `${APP_IMAGE:-ghcr.io/spiesdan/deskcommcrm:stable}`        | Next.js (UI + API)                      |
-| `worker`    | `${WORKER_IMAGE:-ghcr.io/spiesdan/deskcomm-worker:stable}` | workers de `event_log` + crons          |
-| `scheduler` | `${SCHEDULER_IMAGE:-.../deskcomm-scheduler:stable}`        | agenda o `fiscal-drain` etc.            |
+| `app`       | `${APP_IMAGE:-ghcr.io/spiesdan/nexus:stable}`        | Next.js (UI + API)                      |
+| `worker`    | `${WORKER_IMAGE:-ghcr.io/spiesdan/nexus-worker:stable}` | workers de `event_log` + crons          |
+| `scheduler` | `${SCHEDULER_IMAGE:-.../nexus-scheduler:stable}`        | agenda o `fiscal-drain` etc.            |
 | `waha`      | `devlikeapro/waha:latest-2026.7.2`                         | WhatsApp (pinned, **nunca republicar**) |
 | `redis`     | `redis:7-alpine`                                           | fila/cache                              |
 | `srh`       | `hiett/serverless-redis-http@sha256:5b0bb92...`            | HTTP do Redis, **pinned por digest**    |

@@ -151,8 +151,8 @@ describe("o sidecar fiscal e o importador do Mercos também são pinos do kit", 
   // `reposDoKit()`; a conferência deles fica explícita, e cobre as duas
   // declarações independentes — o default do compose e o template do .env.
   for (const [repo, chave] of [
-    ["deskcomm-fiscal-sidecar", "FISCAL_IMAGE"],
-    ["deskcomm-mercos", "MERCOS_IMAGE"],
+    ["nexus-fiscal-sidecar", "FISCAL_IMAGE"],
+    ["nexus-mercos", "MERCOS_IMAGE"],
   ] as const) {
     it(`o default de ${chave} no compose usa o namespace de IMG_NS`, () => {
       const m = COMPOSE.match(new RegExp(`^\\s*image: \\$\\{${chave}:-([^}]+)\\}`, "m"));

@@ -1,4 +1,4 @@
-# DeskcommCRM — stack de produção self-host (VPS HostGator).
+# Nexus — stack de produção self-host (VPS HostGator).
 # Sobe: caddy (HTTPS) → app (Next standalone) + waha + redis+srh + scheduler.
 # Só o Caddy publica portas (80/443). Todo o resto vive na rede interna.
 #
@@ -35,7 +35,7 @@ services:
     # default é quem NÃO tem APP_IMAGE no .env — avaliação, ou um .env que
     # perdeu a chave. Nenhum desses casos quer código não lançado; quem quiser o
     # topo da main pede `APP_IMAGE=…:latest` explicitamente.
-    image: ${APP_IMAGE:-ghcr.io/spiesdan/deskcommcrm:stable}
+    image: ${APP_IMAGE:-ghcr.io/spiesdan/nexus:stable}
     pull_policy: ${APP_PULL_POLICY:-always}
     restart: unless-stopped
     env_file: .env
@@ -102,7 +102,7 @@ services:
     # default): o app pinado numa release e o runtime do agente de
     # IA rodando código não lançado, sobre o banco da release. `:stable` é a
     # última release publicada — pareia com o app em vez de correr na frente.
-    image: ${WORKER_IMAGE:-ghcr.io/spiesdan/deskcomm-worker:stable}
+    image: ${WORKER_IMAGE:-ghcr.io/spiesdan/nexus-worker:stable}
     pull_policy: ${WORKER_PULL_POLICY:-always}
     build:
       context: .
@@ -200,7 +200,7 @@ services:
     # `image:` — é ela que o `dc pull` do `update.sh` traz, e sem ela este
     # serviço seria construído uma vez na VPS e nunca mais atualizado. É
     # exatamente o defeito do `worker`, que a doutrina de packaging registrou.
-    image: ${FISCAL_IMAGE:-ghcr.io/spiesdan/deskcomm-fiscal-sidecar:stable}
+    image: ${FISCAL_IMAGE:-ghcr.io/spiesdan/nexus-fiscal-sidecar:stable}
     # `always` como os outros: sem isto, um sidecar rodando a mesma tag não
     # receberia a imagem nova até alguém remover o container — e o sintoma seria
     # "a nota falha com um erro de leiaute" que ninguém liga à versão.
@@ -243,7 +243,7 @@ services:
   # no processo que atende o browser do usuário, e a credencial do ERP não
   # deve existir no ambiente do app. Sem porta publicada — só a rede interna.
   mercos:
-    image: ${MERCOS_IMAGE:-ghcr.io/spiesdan/deskcomm-mercos:stable}
+    image: ${MERCOS_IMAGE:-ghcr.io/spiesdan/nexus-mercos:stable}
     pull_policy: ${MERCOS_PULL_POLICY:-always}
     build:
       context: .
@@ -325,7 +325,7 @@ services:
     # serviço `restart: unless-stopped`, isso significa que o cron do cliente só
     # voltava se a VPS tivesse internet e o mirror do Alpine estivesse de pé,
     # justamente no momento em que a máquina está se recuperando de algo.
-    image: ${SCHEDULER_IMAGE:-ghcr.io/spiesdan/deskcomm-scheduler:stable}
+    image: ${SCHEDULER_IMAGE:-ghcr.io/spiesdan/nexus-scheduler:stable}
     pull_policy: ${SCHEDULER_PULL_POLICY:-always}
     build:
       context: .

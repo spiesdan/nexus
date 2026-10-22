@@ -16,7 +16,7 @@
 #
 # Escape para o ritual de virada de fase (loop/CHECKPOINT.md), que só dispara com
 # loop/checkpoints/G<N>.approved criado pelo dono:
-if [ "${DESKCOMM_GOV_PHASE_MERGE:-0}" = "1" ]; then
+if [ "${NEXUS_GOV_PHASE_MERGE:-0}" = "1" ]; then
   exit 0
 fi
 
@@ -35,7 +35,7 @@ done
 if [ -n "$bloqueadas" ]; then
   echo "pre-push BLOQUEADO:$bloqueadas — a main é produção e não recebe push direto." >&2
   echo "Abra uma branch e um PR; o merge acontece pelo review + CI." >&2
-  echo "Virada de fase do gov-loop: loop/CHECKPOINT.md exporta DESKCOMM_GOV_PHASE_MERGE=1." >&2
+  echo "Virada de fase do gov-loop: loop/CHECKPOINT.md exporta NEXUS_GOV_PHASE_MERGE=1." >&2
   exit 1
 fi
 

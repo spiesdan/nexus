@@ -11,7 +11,7 @@ FROM mcr.microsoft.com/playwright:v1.64.0-noble
 # distingue uma imagem do CI de uma construída à mão no mesmo host.
 LABEL org.opencontainers.image.source="https://github.com/spiesdan/nexus" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.title="DeskcommCRM mercos"
+      org.opencontainers.image.title="Nexus mercos"
 
 # A versão vem do CI no build (publish-image.yml passa `--build-arg`). É o que
 # faz a imagem se identificar; sem ela o host não sabe o que está rodando.

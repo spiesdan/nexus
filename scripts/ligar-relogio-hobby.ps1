@@ -2,7 +2,7 @@
 # Uso: .\scripts\ligar-relogio-hobby.ps1 -AppUrl https://crm-gabrielle.vercel.app
 param(
   [Parameter(Mandatory = $true)][string]$AppUrl,
-  [string]$Repo = "IanCouto/DeskcommCRM"
+  [string]$Repo = "IanCouto/Nexus"
 )
 
 $AppUrl = $AppUrl.TrimEnd("/")

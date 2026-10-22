@@ -108,27 +108,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: deskcommcrm
+          - name: nexus
             dockerfile: Dockerfile
             context: .
             grupo: node
-            title: DeskcommCRM
-          - name: deskcomm-worker
+            title: Nexus
+          - name: nexus-worker
             dockerfile: Dockerfile.worker
             context: .
             grupo: node
-            title: DeskcommCRM worker
-          - name: deskcomm-scheduler
+            title: Nexus worker
+          - name: nexus-scheduler
             dockerfile: Dockerfile.scheduler
             context: .
             grupo: node
-            title: DeskcommCRM scheduler
+            title: Nexus scheduler
           # O sidecar fiscal (PHP + sped-nfe), o ÚNICO serviço que fala com a
           # SEFAZ. Entra na matriz pelo motivo do `worker`: serviço construído na
           # VPS do cliente e nunca atualizado é serviço quebrado sem aviso — foi o
           # defeito que a doutrina de packaging registrou, e repetir aqui seria
           # construí-lo de novo.
-          - name: deskcomm-fiscal-sidecar
+          - name: nexus-fiscal-sidecar
             dockerfile: Dockerfile
             # O contexto é o PRÓPRIO diretório do sidecar, e não a raiz do
             # repositório. Motivo medido, não estética: o `Dockerfile` faz
@@ -142,24 +142,24 @@ jobs:
             # isso que o contexto virou explícito em vez de um default.
             context: fiscal/sidecar
             grupo: fiscal
-            title: DeskcommCRM fiscal sidecar
+            title: Nexus fiscal sidecar
           # O navegador que importa os pedidos do Mercos (Chromium/Playwright).
           # Entra aqui pelo mesmo motivo do `worker` e do sidecar: serviço que o
           # CI não publica é serviço que só o `build:` da VPS consegue criar — e
           # esse nunca é atualizado. A imagem é grande (traz o Chromium da versão
           # exata do lockfile), por isso ela tem cache próprio.
-          - name: deskcomm-mercos
+          - name: nexus-mercos
             dockerfile: Dockerfile.mercos
             context: .
             grupo: node
-            title: DeskcommCRM mercos
+            title: Nexus mercos
 
     steps:
       - uses: actions/checkout@v7
 
       # PAT em vez de GITHUB_TOKEN, e o motivo é medido, não gosto: os três
-      # pacotes (`deskcommcrm`, `deskcomm-worker`, `deskcomm-scheduler`) nasceram
-      # vinculados ao fork `spiesdan/DeskcommCRM`, e o token do repo
+      # pacotes (`nexus`, `nexus-worker`, `nexus-scheduler`) nasceram
+      # vinculados ao fork `spiesdan/nexus`, e o token do repo
       # (`spiesdan/nexus`) é recusado com `write_package` negado — mesmo com
       # `packages: write`. Token de usuário com `write:packages` não é
       # repo-escopado e empurra de qualquer jeito. Medido em 2026-09-24, tag
@@ -210,10 +210,10 @@ jobs:
             # Buildx`, antes de compilar coisa alguma, enquanto worker e
             # scheduler seguiram e moveram o ponteiro:
             #
-            #   deskcommcrm          1.12.0   404
-            #   deskcommcrm          stable   sha256:0235d02b…  ← 1.11.0
-            #   deskcomm-worker      stable   sha256:66c7bde4…  ← 1.12.0
-            #   deskcomm-scheduler   stable   sha256:ac6b87cc…  ← 1.12.0
+            #   nexus          1.12.0   404
+            #   nexus          stable   sha256:0235d02b…  ← 1.11.0
+            #   nexus-worker      stable   sha256:66c7bde4…  ← 1.12.0
+            #   nexus-scheduler   stable   sha256:ac6b87cc…  ← 1.12.0
             #
             # Quem instalasse por `stable` naquela janela recebia app 1.11.0 com
             # worker e scheduler 1.12.0. `fail-fast: true` não resolveria: quando
@@ -344,12 +344,12 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          tags: deskcomm-smoke:pr
+          tags: nexus-smoke:pr
           build-args: |
             APP_VERSION=smoke
           # Mesmo escopo de cache do build-and-push: as camadas são idênticas,
           # então na prática este job reaproveita aquele build em vez de repeti-lo.
-          cache-from: type=gha,scope=deskcommcrm
+          cache-from: type=gha,scope=nexus
 
       - name: O container chega a servir?
         run: |
@@ -360,7 +360,7 @@ jobs:
             -e SUPABASE_SERVICE_ROLE_KEY=chave-de-mentira \
             -e SUPABASE_DB_URL=postgres://u:p@127.0.0.1:5432/postgres \
             -e SENTRY_DSN=off \
-            deskcomm-smoke:pr
+            nexus-smoke:pr
 
           # Espera o boot; falha rápido se o processo morreu (crashloop).
           pronto=nao
@@ -406,10 +406,10 @@ jobs:
   # #488), com sonda de DIGEST — a ingênua ("a tag `stable` existe?") devolve 200
   # nas três e não prova nada, porque `stable` existe desde a 1.11.0:
   #
-  #   deskcommcrm          1.12.0   404
-  #   deskcommcrm          stable   sha256:0235d02b…   <- 1.11.0
-  #   deskcomm-worker      stable   sha256:66c7bde4…   <- 1.12.0
-  #   deskcomm-scheduler   stable   sha256:ac6b87cc…   <- 1.12.0
+  #   nexus          1.12.0   404
+  #   nexus          stable   sha256:0235d02b…   <- 1.11.0
+  #   nexus-worker      stable   sha256:66c7bde4…   <- 1.12.0
+  #   nexus-scheduler   stable   sha256:ac6b87cc…   <- 1.12.0
   #
   # Quem instalasse por `stable` naquela janela recebia app 1.11.0 com worker e
   # scheduler 1.12.0. Os três saem do mesmo repositório e compartilham código;
@@ -461,7 +461,7 @@ jobs:
           # canal deixaria de ser o mesmo manifesto que a versão.
           dono=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           numero="${VERSAO#v}"
-          for img in deskcommcrm deskcomm-worker deskcomm-scheduler deskcomm-fiscal-sidecar deskcomm-mercos; do
+          for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos; do
             echo "::group::${img}"
             docker buildx imagetools create \
               --tag "${REGISTRY}/${dono}/${img}:stable" \

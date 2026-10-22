@@ -1,4 +1,4 @@
-PROVA NA VPS — crm.deskcomm.com.br, v1.6.0, imagem bf386c19 (2026-08-26)
+PROVA NA VPS — crm.nexus.com.br, v1.6.0, imagem bf386c19 (2026-08-26)
 Caminho de produção: webhook WAHA -> ingestão -> event_log -> worker -> turno do agente
 Número sintético 5500000000042 (nenhum cliente real recebeu nada)
 

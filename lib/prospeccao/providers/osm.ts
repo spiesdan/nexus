@@ -48,7 +48,7 @@ export const ESPELHOS_RESERVA = [
   "https://overpass.kumi.systems/api/interpreter",
   "https://overpass.osm.ch/api/interpreter",
 ];
-const UA = "DeskcommCRM-Prospeccao/1.0";
+const UA = "Nexus-Prospeccao/1.0";
 
 /**
  * Teto da espera entre tentativas. Passar disso dentro de um tick trava o
@@ -366,8 +366,8 @@ export class OSMOverpassProvider implements BusinessDiscoveryProvider {
         `${NOMINATIM_PADRAO}?q=${encodeURIComponent(consulta)}&format=json&limit=1&countrycodes=br`,
         {
           headers: {
-            Referer: "https://deskcommcrm.local/prospeccao",
-            "User-Agent": "DeskcommCRM-Prospeccao/1.0",
+            Referer: "https://nexus.local/prospeccao",
+            "User-Agent": "Nexus-Prospeccao/1.0",
           },
           signal: controle.signal,
         },

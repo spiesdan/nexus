@@ -1,12 +1,12 @@
-Aqui está o **prompt completo e detalhado**, estruturado como um PRD (Product Requirements Document) técnico, para transformar o DeskcommCRM em um sistema de gestão comercial completo, inspirado no Mercos, mas mantendo e elevando tudo o que o Deskcomm já tem de diferencial (IA nativa, WhatsApp, multi-tenant, self-hosted, LGPD).
+Aqui está o **prompt completo e detalhado**, estruturado como um PRD (Product Requirements Document) técnico, para transformar o Nexus em um sistema de gestão comercial completo, inspirado no Mercos, mas mantendo e elevando tudo o que o Nexus já tem de diferencial (IA nativa, WhatsApp, multi-tenant, self-hosted, LGPD).
 
 ---
 
-# 🚀 PROMPT: DeskcommCRM → Sistema de Gestão Comercial Completo (Estilo Mercos)
+# 🚀 PROMPT: Nexus → Sistema de Gestão Comercial Completo (Estilo Mercos)
 
-> **Base de código:** `https://github.com/melgarafael/DeskcommCRM`  
+> **Base de código:** `https://github.com/spiesdan/nexus`  
 > **Stack atual:** Next.js 16 + React 19 + TypeScript + Tailwind + shadcn/ui + Supabase (Postgres + RLS + Auth + Storage + Realtime) + WAHA + Vercel AI SDK + Zod  
-> **Objetivo:** Evoluir o DeskcommCRM de "CRM de atendimento por WhatsApp com IA" para um **Sistema Operacional de Vendas completo** — do primeiro contato à entrega da mercadoria — mantendo 100% das funcionalidades existentes (WhatsApp, IA, automações, webhooks, multi-tenant, LGPD, self-host) e adicionando módulos de **pedidos comerciais, nota fiscal, expedição/logística, catálogo de produtos, dashboards executivos, recuperação de clientes, e-commerce B2B interno, e gestão de força de vendas**.
+> **Objetivo:** Evoluir o Nexus de "CRM de atendimento por WhatsApp com IA" para um **Sistema Operacional de Vendas completo** — do primeiro contato à entrega da mercadoria — mantendo 100% das funcionalidades existentes (WhatsApp, IA, automações, webhooks, multi-tenant, LGPD, self-host) e adicionando módulos de **pedidos comerciais, nota fiscal, expedição/logística, catálogo de produtos, dashboards executivos, recuperação de clientes, e-commerce B2B interno, e gestão de força de vendas**.
 
 ---
 
@@ -395,6 +395,6 @@ Todas as tabelas devem ter:
 > **Mantenha a arquitetura existente (Next.js App Router, Supabase RLS, shadcn/ui, Zod, workers).**
 > **Cada nova tabela deve seguir o padrão de multi-tenancy já estabelecido.**
 > **Cada nova tela deve ter navegação na sidebar e ser acessível por URL.**
-> **O design deve ser profissional, limpo, inspirado no Mercos — mas com a alma do Deskcomm: IA nativa, WhatsApp integrado, e automação inteligente."**
+> **O design deve ser profissional, limpo, inspirado no Mercos — mas com a alma do Nexus: IA nativa, WhatsApp integrado, e automação inteligente."**
 
 -

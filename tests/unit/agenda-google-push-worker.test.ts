@@ -95,8 +95,8 @@ beforeEach(() => {
   ];
   vi.mocked(decryptWebhookSecret).mockResolvedValue("tok-decifrado");
   vi.mocked(apenasDeMembrosAtivos).mockImplementation(async (_a, l) => [...l] as never);
-  vi.mocked(publicarNoGoogle).mockResolvedValue({ ok: true, eventoId: "deskcommabc", sequence: 1 });
-  vi.mocked(apagarNoGoogle).mockResolvedValue({ ok: true, eventoId: "deskcommabc", sequence: null });
+  vi.mocked(publicarNoGoogle).mockResolvedValue({ ok: true, eventoId: "nexusabc", sequence: 1 });
+  vi.mocked(apagarNoGoogle).mockResolvedValue({ ok: true, eventoId: "nexusabc", sequence: null });
 
   vi.mocked(createAdminClient).mockReturnValue({
     from: (tabela: string) => ({
@@ -133,7 +133,7 @@ describe("worker da ida do Google", () => {
     const r = await rodar();
     expect(publicarNoGoogle).toHaveBeenCalledTimes(1);
     expect(r.data.publicados).toBe(1);
-    expect(gravado[linha().id as string]?.google_event_id).toBe("deskcommabc");
+    expect(gravado[linha().id as string]?.google_event_id).toBe("nexusabc");
   });
 
   it("⚠️ SEM CONEXÃO não marca `google_synced_at` — senão a linha morre invisível", async () => {
@@ -154,7 +154,7 @@ describe("worker da ida do Google", () => {
   it("cancelado APAGA lá, não publica", async () => {
     // Publicar um cancelado deixaria o horário bloqueado na agenda pessoal de
     // quem atende — o efeito oposto ao pedido.
-    pendentes = [linha({ status: "cancelled", google_event_id: "deskcommabc" })];
+    pendentes = [linha({ status: "cancelled", google_event_id: "nexusabc" })];
     const r = await rodar();
     expect(apagarNoGoogle).toHaveBeenCalledTimes(1);
     expect(publicarNoGoogle).not.toHaveBeenCalled();

@@ -4,9 +4,9 @@
 
 ## Relato do dono (2026-08-28)
 
-Na VPS (`ssh hg-vps`, `deskcommcrm-app-1` @ `1.9.1`):
+Na VPS (`ssh hg-vps`, `nexus-app-1` @ `1.9.1`):
 
-- O agente **publicado** é o **Suporte Deskcomm**.
+- O agente **publicado** é o **Suporte Nexus**.
 - Quem **pega as conversas para atender** é o **Atendente Clínica Vitalis**, que está **PAUSADO**.
 - Antes, quem estava ativo era o Vitalis. Hipótese do dono: ele "impregnou" — o agente que
   um dia esteve publicado continua assumindo mesmo depois de desativado.
@@ -62,7 +62,7 @@ o que a UI diz é o que acontece na execução.
 
 ## MEDIÇÃO NA VPS (2026-08-28, banco `aws-1-us-west-2.pooler.supabase.com`)
 
-Org medida: `988371bf-b118-4090-b4f3-dc07ae9366c9` (Deskcomm Administracao Ltda).
+Org medida: `988371bf-b118-4090-b4f3-dc07ae9366c9` (Nexus Administracao Ltda).
 Sessão de canal VIVA: `66491066-1b9f-4e8e-ad9e-91052db0e66b` ("Lia", `WORKING`).
 
 ### 1. O seletor de agente está CERTO. Medido, não inferido.
@@ -71,7 +71,7 @@ Sessão de canal VIVA: `66491066-1b9f-4e8e-ad9e-91052db0e66b` ("Lia", `WORKING`)
 
 | agente | priority | `published_version_id` | arquivado |
 |---|---|---|---|
-| Suporte DeskcommCRM (`13858061`) | 1000 | **preenchido** (`99ad9c50`, v5) | não |
+| Suporte Nexus (`13858061`) | 1000 | **preenchido** (`99ad9c50`, v5) | não |
 | Vitoria - Atendente Clinica Vitalis (`726a3eb6`) | 999 | **NULL** | não |
 
 O pause fez o que promete: `published_version_id = null` + versão `superseded`.
@@ -198,9 +198,9 @@ que dois workers ainda usam como critério de "quem atende"**.
 > ferramentas, sem os funis e sem os guardrails da versão publicada.
 
 Na VPS isso está armado agora: a org tem `is_active=true` em **dois** agentes —
-`13858061` (Suporte DeskcommCRM, publicado) e `fceb2e33` ("Atendente IA", `rag_bot`,
+`13858061` (Suporte Nexus, publicado) e `fceb2e33` ("Atendente IA", `rag_bot`,
 `is_default=true`, **não publicado, tela diz "Rascunho"**). Pausar o Suporte
-DeskcommCRM entrega o atendimento ao "Atendente IA".
+Nexus entrega o atendimento ao "Atendente IA".
 
 Prova de que o worker legado está vivo em produção — log de hoje:
 ```
@@ -313,7 +313,7 @@ sessão não gaste tempo nelas de novo:
 
 ## O QUE **NÃO** ESTÁ CONSERTADO (e é do dono decidir)
 
-**A persona da Clínica Vitalis na resposta do Suporte Deskcomm não é bug de código.**
+**A persona da Clínica Vitalis na resposta do Suporte Nexus não é bug de código.**
 A memória da organização (`/app/ai/memory`) e as skills (`/app/ai/skills`) são
 deliberadamente **por organização** — a própria tela diz "Regras e aprendizados que
 TODOS os agentes de IA desta organização seguem em qualquer conversa". A org
@@ -332,7 +332,7 @@ uma lacuna de produto real, e está fora deste conserto.
 ## PROVA EM TELA (Playwright, app local em modo produção)
 
 Ambiente: `pnpm build` + `pnpm start` na 3000, Supabase local (`54321/54322`), login
-real por senha + TOTP como `e2e-admin@deskcomm.test`.
+real por senha + TOTP como `e2e-admin@nexus.test`.
 
 Cenário montado para reproduzir o mundo real da VPS:
 
@@ -395,7 +395,7 @@ defeito e é erro de fixture.
 Conserto: nome próprio por agente. Controle anexado ao commit —
 `git diff | grep -E "^[+-].*(expect|it\()"` devolve **vazio**: nenhuma asserção e
 nenhum título de caso mudaram. (O commit precisou de
-`DESKCOMM_GOV_INVARIANTS_EDIT=1`: a catraca de `tests/invariants/**` bloqueia
+`NEXUS_GOV_INVARIANTS_EDIT=1`: a catraca de `tests/invariants/**` bloqueia
 edição de invariante, e está certa em bloquear — a exceção está justificada na
 mensagem do commit.)
 
@@ -464,7 +464,7 @@ imagem **por número de versão**:
 
 ```
 git tag -l 'v*' --sort=-v:refname | head -1      # o alvo do update.sh
-APP_IMAGE=ghcr.io/melgarafael/deskcommcrm:1.9.1  # o que está lá hoje
+APP_IMAGE=ghcr.io/melgarafael/nexus:1.9.1  # o que está lá hoje
 ```
 
 Então merge do #408 **não basta**. A sequência é:
@@ -484,7 +484,7 @@ seletor do que cada VPS baixa**.
 
 | item | valor |
 |---|---|
-| árvore dona do projeto Docker | `/root/DeskcommCRM` (via label `working_dir`) |
+| árvore dona do projeto Docker | `/root/Nexus` (via label `working_dir`) |
 | versão | tag exata `v1.9.1`, commit `9507920c` |
 | domínio | responde **307** (redireciona ao login — o esperado) |
 | contêineres | `app`, `worker`, `scheduler` todos `healthy` |
@@ -629,7 +629,7 @@ enxerga código.
 |---|---|---|
 | Vitoria — Atendente Clinica Vitalis | **publicada** (`is_active=f`) | **999** |
 | Atendente IA | publicada | 0 |
-| Suporte Deskcomm | **sem `published_version_id`** | — |
+| Suporte Nexus | **sem `published_version_id`** | — |
 
 Pausar não tira do ar: quem decide é a publicação. E o agente que o dono quer no ar
 nunca teve versão publicada. Ações são dele (arquivar a Vitoria, publicar o Suporte).

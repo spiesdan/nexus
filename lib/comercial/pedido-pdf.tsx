@@ -41,7 +41,7 @@
  *
  * O EMITENTE é a loja (`organizations.display_name/legal_name` + CNPJ) —
  * nunca a marca do software (doutrina white-label: `branding.test.ts` reprova
- * "Deskcomm" em código que alcança o usuário). Este documento não leva marca
+ * "Nexus" em código que alcança o usuário). Este documento não leva marca
  * nenhuma do produto.
  */
 import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";

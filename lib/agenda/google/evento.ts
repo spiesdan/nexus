@@ -57,10 +57,10 @@ import { instanteDaParede, primeiroInstanteDoDia } from "./tempo";
  * dali, todo evento criado antes da troca de marca deixaria de ser reconhecido.
  * O sintoma seria compromisso fantasma ocupando horário, sem erro nenhum.
  */
-export const SUFIXO_ICAL_UID = "deskcomm.app";
+export const SUFIXO_ICAL_UID = "nexus.app";
 
 /** Prefixo das `extendedProperties.private` que carregam a identidade do tenant. */
-export const PREFIXO_PROPRIEDADE = "deskcomm";
+export const PREFIXO_PROPRIEDADE = "nexus";
 
 /** Versão do formato das propriedades privadas — permite migrar sem adivinhar. */
 const VERSAO_DA_PROPRIEDADE = "1";

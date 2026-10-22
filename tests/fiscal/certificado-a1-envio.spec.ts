@@ -59,7 +59,7 @@ test("enviar o certificado A1 grava o arquivo no servidor", async ({ page }) => 
       "-days",
       "2",
       "-subj",
-      "/CN=Teste Deskcomm",
+      "/CN=Teste Nexus",
     ],
     { stdio: "ignore" },
   );

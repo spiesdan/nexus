@@ -21,7 +21,7 @@ Shell já existe: `components/shell/*` (12 arquivos: Sidebar, MobileSidebar, Top
 
 1. **Lógica comercial espalhada**: `lib/comercial/`, `lib/leads/`, `lib/fiscal/`, `lib/entregas/` (1 arquivo!) — sem separação domain/application/infrastructure/ui.
 2. **Componentes duplicados**: `ui/` vs `nexus-ui/` vs `uimaxxing/`; 7 tabelas admin iguais + 26 wrappers de página sobre `ui/table` (recontado 2026-09-25 — `DataTableA/B/Old`/`TableNew` não existem, era alvo fantasma; ver `redesign-inventory.md`).
-3. **Branding**: `DEFAULT_APP_NAME="DeskcommCRM"` (`lib/branding.ts:19`); `Visitors` é design-system, não produto; `Nexus*` é namespace de código (94 matches em components) mas não white-label.
+3. **Branding**: `DEFAULT_APP_NAME="Nexus"` (`lib/branding.ts:19`); `Visitors` é design-system, não produto; `Nexus*` é namespace de código (94 matches em components) mas não white-label.
 4. **Domínios sem pasta**: `lib/crm`, `lib/sales`, `lib/finance` não existem (equivalentes: `lib/leads`, `lib/comercial`, `lib/fiscal`).
 5. **Workers**: `Dockerfile.worker` single-stage; sem `domain/` separado.
 

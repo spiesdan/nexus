@@ -1,19 +1,19 @@
-# Instincts generated from https://github.com/melgarafael/DeskcommCRM
+# Instincts generated from https://github.com/spiesdan/nexus
 # Generated: 2026-07-06T20:13:47.311Z
 # Version: 2.0
 # NOTE: This file supplements (does not replace) any existing curated instincts.
 # High-confidence manually curated instincts should be preserved alongside these.
 
 ---
-id: DeskcommCRM-commit-conventional
+id: Nexus-commit-conventional
 trigger: "when writing a commit message"
 confidence: 0.85
 domain: git
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Commit Conventional
+# Nexus Commit Conventional
 
 ## Action
 
@@ -26,15 +26,15 @@ Use conventional commit format with prefixes: fix
 - Examples: fix(supabase): compara channel_sessions.status contra WORKING (maiúsculo)
 
 ---
-id: DeskcommCRM-commit-length
+id: Nexus-commit-length
 trigger: "when writing a commit message"
 confidence: 0.6
 domain: git
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Commit Length
+# Nexus Commit Length
 
 ## Action
 
@@ -46,15 +46,15 @@ Write moderate-length commit messages (~73 characters)
 - Based on 1 commits
 
 ---
-id: DeskcommCRM-naming-files
+id: Nexus-naming-files
 trigger: "when creating a new file"
 confidence: 0.8
 domain: code-style
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Naming Files
+# Nexus Naming Files
 
 ## Action
 
@@ -66,15 +66,15 @@ Use snake_case naming convention
 - Dominant pattern: snake_case
 
 ---
-id: DeskcommCRM-import-relative
+id: Nexus-import-relative
 trigger: "when importing modules"
 confidence: 0.75
 domain: code-style
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Import Relative
+# Nexus Import Relative
 
 ## Action
 
@@ -86,15 +86,15 @@ Use relative imports for project files
 - Example: import { x } from '../lib/x'
 
 ---
-id: DeskcommCRM-export-style
+id: Nexus-export-style
 trigger: "when exporting from a module"
 confidence: 0.7
 domain: code-style
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Export Style
+# Nexus Export Style
 
 ## Action
 
@@ -106,15 +106,15 @@ Prefer named exports
 - Dominant style: named
 
 ---
-id: DeskcommCRM-test-separate
+id: Nexus-test-separate
 trigger: "when writing tests"
 confidence: 0.8
 domain: testing
 source: repo-analysis
-source_repo: https://github.com/melgarafael/DeskcommCRM
+source_repo: https://github.com/spiesdan/nexus
 ---
 
-# DeskcommCRM Test Separate
+# Nexus Test Separate
 
 ## Action
 
@@ -126,15 +126,15 @@ Place tests in the tests/ or __tests__/ directory, mirroring src structure
 - Tests live in dedicated test folders
 
 ---
-id: deskcommcrm-instinct-file-naming
+id: nexus-instinct-file-naming
 trigger: "When creating a new file"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct File Naming
+# Nexus Instinct File Naming
 
 ## Action
 
@@ -145,15 +145,15 @@ Name the file using snake_case
 - Pattern in namingConventions.files: snake_case
 
 ---
-id: deskcommcrm-instinct-function-naming
+id: nexus-instinct-function-naming
 trigger: "When defining a new function"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Function Naming
+# Nexus Instinct Function Naming
 
 ## Action
 
@@ -164,15 +164,15 @@ Name the function using camelCase
 - Pattern in namingConventions.functions: camelCase
 
 ---
-id: deskcommcrm-instinct-class-naming
+id: nexus-instinct-class-naming
 trigger: "When defining a new class"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Class Naming
+# Nexus Instinct Class Naming
 
 ## Action
 
@@ -183,15 +183,15 @@ Name the class using PascalCase
 - Pattern in namingConventions.classes: PascalCase
 
 ---
-id: deskcommcrm-instinct-constant-naming
+id: nexus-instinct-constant-naming
 trigger: "When defining a new constant"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Constant Naming
+# Nexus Instinct Constant Naming
 
 ## Action
 
@@ -202,15 +202,15 @@ Name the constant using SCREAMING_SNAKE_CASE
 - Pattern in namingConventions.constants: SCREAMING_SNAKE_CASE
 
 ---
-id: deskcommcrm-instinct-import-style
+id: nexus-instinct-import-style
 trigger: "When importing modules"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Import Style
+# Nexus Instinct Import Style
 
 ## Action
 
@@ -221,15 +221,15 @@ Use relative import paths
 - Pattern in importStyle: relative
 
 ---
-id: deskcommcrm-instinct-export-style
+id: nexus-instinct-export-style
 trigger: "When exporting modules or functions"
 confidence: 0.9
 domain: code-style
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Export Style
+# Nexus Instinct Export Style
 
 ## Action
 
@@ -240,15 +240,15 @@ Use named exports
 - Pattern in exportStyle: named
 
 ---
-id: deskcommcrm-instinct-git-commit-prefix
+id: nexus-instinct-git-commit-prefix
 trigger: "When writing a commit message for a bug fix"
 confidence: 0.9
 domain: git
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Git Commit Prefix
+# Nexus Instinct Git Commit Prefix
 
 ## Action
 
@@ -260,15 +260,15 @@ Prefix the commit message with 'fix' following conventional commit format
 - Seen in commit: fix(supabase): compara channel_sessions.status contra WORKING (maiúsculo)
 
 ---
-id: deskcommcrm-instinct-git-commit-format
+id: nexus-instinct-git-commit-format
 trigger: "When writing a commit message"
 confidence: 0.9
 domain: git
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Git Commit Format
+# Nexus Instinct Git Commit Format
 
 ## Action
 
@@ -280,15 +280,15 @@ Use the conventional commit format: <type>(<scope>): <description>
 - Seen in commit: fix(supabase): compara channel_sessions.status contra WORKING (maiúsculo)
 
 ---
-id: deskcommcrm-instinct-test-location
+id: nexus-instinct-test-location
 trigger: "When adding or updating tests"
 confidence: 0.8
 domain: testing
 source: repo-analysis
-source_repo: melgarafael/DeskcommCRM
+source_repo: spiesdan/nexus
 ---
 
-# Deskcommcrm Instinct Test Location
+# Nexus Instinct Test Location
 
 ## Action
 

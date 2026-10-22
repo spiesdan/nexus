@@ -38,10 +38,10 @@ dc_files() {
 # O nome que o docker compose dá ao projeto quando ninguém passa -p: basename do
 # diretório, minúsculo, só [a-z0-9_-] — E com os `_`/`-` do INÍCIO aparados
 # (NormalizeProjectName faz TrimLeft). Sem essa aparada, uma pasta como
-# `/root/_deskcomm` faz o kit calcular `_deskcomm` enquanto os contêineres
-# carregam `deskcomm`: a instalação deixa de se reconhecer e passa a se tratar
-# como intrusa. Medido contra o docker compose v2.38.2 em `_deskcomm`,
-# `-deskcomm`, `_-_crm` e `_123` — todos divergiam.
+# `/root/_nexus` faz o kit calcular `_nexus` enquanto os contêineres
+# carregam `nexus`: a instalação deixa de se reconhecer e passa a se tratar
+# como intrusa. Medido contra o docker compose v2.38.2 em `_nexus`,
+# `-nexus`, `_-_crm` e `_123` — todos divergiam.
 nome_do_projeto_compose() {  # nome_do_projeto_compose <diretório>
   local n
   n="$(basename "$1" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')"
@@ -56,8 +56,8 @@ nome_do_projeto_atual() {
 #
 # Duas cópias do repo na mesma VPS — o clone de produção e um de teste ao lado —
 # recebem o MESMO nome de projeto compose: o docker o deriva do basename do
-# diretório, e `/root/DeskcommCRM` e `/root/apagar6/DeskcommCRM` dão os dois
-# `deskcommcrm`. Os contêineres são UM conjunto só; os `.env` são dois. Cada
+# diretório, e `/root/Nexus` e `/root/apagar6/Nexus` dão os dois
+# `nexus`. Os contêineres são UM conjunto só; os `.env` são dois. Cada
 # `up -d` recria o parque com as credenciais da SUA árvore, e a outra fica
 # falando com um transporte que não a reconhece mais.
 #
@@ -111,17 +111,17 @@ EOF
 # qual árvore é a dona e como assumir de propósito. Parar calado deixaria o dono
 # da VPS achando que o agente atualiza, quando ele desiste a cada 5 minutos.
 #
-# `DESKCOMM_ASSUMIR_PROJETO=1` é a saída para o caso legítimo — a instalação
+# `NEXUS_ASSUMIR_PROJETO=1` é a saída para o caso legítimo — a instalação
 # mudou de pasta e os contêineres ainda apontam para a antiga. É explícita de
 # propósito: assumir por engano é justamente o defeito que esta função existe
 # para impedir.
 recusar_projeto_de_outra_arvore() {  # recusar_projeto_de_outra_arvore <como reportar>
   local alheias reportar="${1:-}"
   alheias="$(projeto_pertence_a_outra_arvore)" || return 0
-  [ "${DESKCOMM_ASSUMIR_PROJETO:-}" != "1" ] || return 0
+  [ "${NEXUS_ASSUMIR_PROJETO:-}" != "1" ] || return 0
 
   local recado
-  recado="os contêineres do projeto '$(nome_do_projeto_atual)' foram criados por outra cópia do repo ($(printf '%s' "$alheias" | tr '\n' ' ')) — esta aqui é $(printf '%s' "${PROJECT_DIR:-$PWD}"). Duas cópias com o mesmo nome de projeto disputam os MESMOS contêineres e cada uma os recria com o .env dela, o que derruba as conexões de WhatsApp e quebra as credenciais. Deixe apenas UMA no cron (crontab -e) ou, se esta é mesmo a instalação boa, rode com DESKCOMM_ASSUMIR_PROJETO=1"
+  recado="os contêineres do projeto '$(nome_do_projeto_atual)' foram criados por outra cópia do repo ($(printf '%s' "$alheias" | tr '\n' ' ')) — esta aqui é $(printf '%s' "${PROJECT_DIR:-$PWD}"). Duas cópias com o mesmo nome de projeto disputam os MESMOS contêineres e cada uma os recria com o .env dela, o que derruba as conexões de WhatsApp e quebra as credenciais. Deixe apenas UMA no cron (crontab -e) ou, se esta é mesmo a instalação boa, rode com NEXUS_ASSUMIR_PROJETO=1"
   if [ -n "$reportar" ] && command -v "$reportar" >/dev/null 2>&1; then
     "$reportar" "$recado"
   else
@@ -378,7 +378,7 @@ load_env() {
 # Vai pro diretório do projeto (onde está o compose) e carrega o .env.
 enter_project() {
   if [ -f "$COMPOSE" ]; then :;
-  elif [ -f "deskcommcrm/$COMPOSE" ]; then cd deskcommcrm;
+  elif [ -f "nexus/$COMPOSE" ]; then cd nexus;
   else die "Não achei $COMPOSE. Rode a partir da pasta do projeto."; fi
   [ -f .env ] || die "Falta o .env (rode install.sh primeiro)."
   load_env .env
@@ -633,18 +633,18 @@ garantir_segredo_do_sidecar() {
 # `publish-image.yml` digam o mesmo. Se você é um fork, é lá que está a lista do
 # que trocar junto.
 IMG_NS="ghcr.io/spiesdan"
-IMG_APP="${IMG_NS}/deskcommcrm"
-IMG_WORKER="${IMG_NS}/deskcomm-worker"
-IMG_SCHEDULER="${IMG_NS}/deskcomm-scheduler"
+IMG_APP="${IMG_NS}/nexus"
+IMG_WORKER="${IMG_NS}/nexus-worker"
+IMG_SCHEDULER="${IMG_NS}/nexus-scheduler"
 # O sidecar fiscal entra na lista pelo mesmo motivo do worker/scheduler: uma
 # imagem nossa que o `update.sh` tem de pinar na MESMA versão dos outras.
 # Sem isto ele seguiria um canal móvel e a versão da nota poderia ser
 # diferente da versão do app que a montou.
-IMG_FISCAL="${IMG_NS}/deskcomm-fiscal-sidecar"
+IMG_FISCAL="${IMG_NS}/nexus-fiscal-sidecar"
 # O importador do Mercos (Chromium/Playwright) segue a mesma regra: sem pin, ele
 # ficaria no canal móvel enquanto o app estivesse numa versão fixa — e o parque
 # instalado andaria misturado, que é o defeito que esta lista existe para evitar.
-IMG_MERCOS="${IMG_NS}/deskcomm-mercos"
+IMG_MERCOS="${IMG_NS}/nexus-mercos"
 
 # A última versão publicada (ex.: "1.2.1"), ou vazio se não deu para saber.
 #
@@ -691,16 +691,16 @@ ghcr_status() {
 
 # As TRÊS imagens existem e são públicas nesta referência?
 #
-# Perguntar pelas três juntas, e não só pela do app, é o ponto: `deskcomm-worker`
-# e `deskcomm-scheduler` nasceram depois das releases que já existem, então
-# `deskcomm-worker:1.2.1` nunca vai existir — a v1.2.1 é passado. Pinar as três
+# Perguntar pelas três juntas, e não só pela do app, é o ponto: `nexus-worker`
+# e `nexus-scheduler` nasceram depois das releases que já existem, então
+# `nexus-worker:1.2.1` nunca vai existir — a v1.2.1 é passado. Pinar as três
 # numa versão sem conferir gravaria no .env do cliente duas referências
 # impossíveis, e o kit as construiria na VPS **em silêncio**, do topo da main:
 # app de uma release + worker/scheduler de outro código. Exatamente a mistura de
 # versões que a doutrina existe para proibir, no caminho de primeira impressão.
 trio_publicado() {
   local tag="$1" i
-  for i in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+  for i in nexus nexus-worker nexus-scheduler; do
     [ "$(ghcr_status "$i" "$tag")" = "200" ] || return 1
   done
   return 0
@@ -782,7 +782,7 @@ completar_pin_ausente() {  # completar_pin_ausente [envfile]
   # e o `.env` original chega intacto do outro lado, com as customizações.
   [ -w "$envfile" ] || return 0
 
-  for par in "WORKER_IMAGE:worker:deskcomm-worker" "SCHEDULER_IMAGE:scheduler:deskcomm-scheduler"; do
+  for par in "WORKER_IMAGE:worker:nexus-worker" "SCHEDULER_IMAGE:scheduler:nexus-scheduler"; do
     chave="${par%%:*}"; svc="$(printf '%s' "$par" | cut -d: -f2)"; repo="${par##*:}"
 
     # LACUNA apenas. Valor explícito (mesmo em canal móvel) é intocável.
@@ -880,7 +880,7 @@ owner_id_by_email() {
 # primeira (o filtro remove tudo que casa com o marcador, e as duas linhas
 # casavam). Medido na VPS: depois de instalar, sobrava só o agente e o CRM ficava
 # SEM o drain de eventos — a automação inteira parada, em silêncio.
-cron_tag() { printf '# deskcomm:%s:%s' "${PROJECT_DIR:-$PWD}" "${1:?papel da linha (drain|agent)}"; }
+cron_tag() { printf '# nexus:%s:%s' "${PROJECT_DIR:-$PWD}" "${1:?papel da linha (drain|agent)}"; }
 
 # Puro (testável sem tocar no crontab real): lê o crontab atual em stdin e
 # imprime o novo. Tira as linhas DESTA instalação — pelo marcador, e também
@@ -942,7 +942,7 @@ setup_update_agent_cron() {
 
   # `cd` explícito: o agent.sh chama enter_project(), que acha o projeto pelo
   # DIRETÓRIO CORRENTE. No cron o CWD é o home do dono do crontab — sem o cd,
-  # a linha só funciona por acidente (instalação padrão em /root/deskcommcrm) e
+  # a linha só funciona por acidente (instalação padrão em /root/nexus) e
   # morre calada a cada 5 minutos em qualquer REPO_DIR customizado ou /opt.
   # A assinatura legada inclui o PROJECT_DIR: é o que distingue a linha desta
   # instalação da linha de uma vizinha, que roda o mesmo agent.sh em outra pasta.

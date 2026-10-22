@@ -1,6 +1,6 @@
 # Plano — RAG completo (feat/rag-completo)
 
-Base: `origin/main` @ 8112377a. Worktree: `/Users/rafaelmelgaco/DeskcommCRM-rag`.
+Base: `origin/main` @ 8112377a. Worktree: `/Users/rafaelmelgaco/Nexus-rag`.
 Diagnóstico completo: `/private/tmp/.../scratchpad/diagnostico-rag.md` (7 mapas + consolidação).
 
 ## A inversão que resolve quase tudo

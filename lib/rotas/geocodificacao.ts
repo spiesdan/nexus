@@ -195,7 +195,7 @@ function reservarVez(): Promise<void> {
 }
 
 function ua(): string {
-  return (process.env.GEOCODER_UA ?? "DeskcommCRM-Rotas/1.0").trim() || "DeskcommCRM-Rotas/1.0";
+  return (process.env.GEOCODER_UA ?? "Nexus-Rotas/1.0").trim() || "Nexus-Rotas/1.0";
 }
 
 export async function geocodificarEndereco(endereco: string, cidade?: string | null, uf?: string | null): Promise<ResultadoGeo> {

@@ -621,7 +621,7 @@ class ServicoNfe
             'indIntermed' => '0',
             'procEmi' => '0',
             // verProc tem maxLength 20 no XSD do leiaute 4.00. A string
-            // anterior — 'deskcomm-fiscal-sidecar/1.0', 27 caracteres — fazia
+            // anterior — 'nexus-fiscal-sidecar/1.0', 27 caracteres — fazia
             // a SEFAZ recusar TODO XML com `XML_INVALIDO`, e nenhuma nota
             // emitia em lugar nenhum. Ela carregava, ainda, o nome do
             // fornecedor num documento fiscal do cliente, que é exatamente o

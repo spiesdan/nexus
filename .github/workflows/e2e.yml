@@ -19,7 +19,7 @@ name: e2e
 # evento".
 #
 # É CHECK OBRIGATÓRIO. A régua, para reconferir em vez de acreditar nesta linha:
-#   $ gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
+#   $ gh api repos/spiesdan/nexus/branches/main/protection \
 #       --jq '.required_status_checks.contexts|join(", ")'
 #   verify, build-and-size, invariants, e2e, imagens-ok   # medido em 2026-08-14
 #
@@ -429,7 +429,7 @@ jobs:
       #      revertendo SÓ `lib/supabase/browser.ts` para a versão anterior ao
       #      #327 — e conferindo no bundle que o conserto saiu
       #      (`grep -rc realtime-token .next/static` → 0, controle positivo
-      #      `sb-deskcomm-auth` → 1):
+      #      `sb-nexus-auth` → 1):
       #
       #          com o conserto  → 1 passed
       #          sem o conserto  → 1 passed

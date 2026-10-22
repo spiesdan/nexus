@@ -1,4 +1,4 @@
-# Runbook — DeskcommCRM em VPS com CloudPanel (Nginx)
+# Runbook — Nexus em VPS com CloudPanel (Nginx)
 
 > Cenário: VPS com **CloudPanel** já instalado, com o Nginx dele ocupando as
 > portas 80 e 443. O instalador do CRM sobe um Caddy nessas mesmas portas, então
@@ -58,8 +58,8 @@ CRM que abre a tela de login e não deixa ninguém entrar.
 
 ```bash
 cd /var/www
-git clone https://github.com/melgarafael/DeskcommCRM.git DeskcommCRM
-cd /var/www/DeskcommCRM
+git clone https://github.com/spiesdan/nexus.git Nexus
+cd /var/www/Nexus
 cp .env.hostgator.example .env
 nano .env
 ```
@@ -84,18 +84,18 @@ E **descomente estas duas** (elas já vêm no arquivo de exemplo, comentadas):
 
 ```dotenv
 REVERSE_PROXY=traefik
-TRAEFIK_NETWORK=deskcommcrm_proxy
+TRAEFIK_NETWORK=nexus_proxy
 ```
 
-`deskcommcrm_proxy` não é um nome livre: é `<nome do projeto compose>_proxy`, e
-o nome do projeto é o da pasta em minúsculas. Clonando em `/var/www/DeskcommCRM`
-como acima, é `deskcommcrm` — logo, `deskcommcrm_proxy`. Clonou em outra pasta?
+`nexus_proxy` não é um nome livre: é `<nome do projeto compose>_proxy`, e
+o nome do projeto é o da pasta em minúsculas. Clonando em `/var/www/Nexus`
+como acima, é `nexus` — logo, `nexus_proxy`. Clonou em outra pasta?
 Rode `basename "$PWD" | tr '[:upper:]' '[:lower:]'` e acrescente `_proxy`.
 
 > **Por que a segunda linha é obrigatória.** Com `REVERSE_PROXY=traefik` o
 > instalador tenta descobrir a rede sozinho procurando um contêiner Traefik. Aqui
 > não há nenhum — ele não acha, e para pedindo justamente esta variável. Dizer o
-> nome de antemão evita a viagem: `deskcommcrm_proxy` é o nome que o próprio kit
+> nome de antemão evita a viagem: `nexus_proxy` é o nome que o próprio kit
 > reserva para este projeto, e ele **cria a rede** quando ela não existe.
 
 ---
@@ -103,12 +103,12 @@ Rode `basename "$PWD" | tr '[:upper:]' '[:lower:]'` e acrescente `_proxy`.
 ## Passo 2 — Rodar o instalador (até o fim, sem Ctrl+C)
 
 ```bash
-cd /var/www/DeskcommCRM
+cd /var/www/Nexus
 bash hostgator-setup-kit/install.sh --yes
 ```
 
 Com a linha do proxy externo no lugar, o instalador vai até o fim: gera os
-segredos, escreve o `.env`, cria a rede `deskcommcrm_proxy`, aplica o schema,
+segredos, escreve o `.env`, cria a rede `nexus_proxy`, aplica o schema,
 cria o primeiro admin e sobe os containers — **sem** Caddy e **sem** tocar nas
 portas 80/443.
 
@@ -140,8 +140,8 @@ A saída é uma ponte de 4 MB que fica escutando num endereço estável do host 
 repassa para o contêiner **resolvendo o nome a cada conexão**:
 
 ```bash
-docker run -d --name deskcomm-nginx-bridge --restart unless-stopped \
-  --network deskcommcrm_proxy -p 127.0.0.1:3000:3000 \
+docker run -d --name nexus-nginx-bridge --restart unless-stopped \
+  --network nexus_proxy -p 127.0.0.1:3000:3000 \
   alpine/socat tcp-listen:3000,fork,reuseaddr tcp-connect:app:3000
 ```
 
@@ -153,7 +153,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/api/v1/health
 
 `200` (ou `503`, se algum serviço opcional ainda não foi configurado) significa
 que a ponte está de pé. `000` significa que ela não subiu — veja
-`docker logs deskcomm-nginx-bridge`.
+`docker logs nexus-nginx-bridge`.
 
 > **Medido** (Docker 28.3.2): com o contêiner do app recriado e recebendo um IP
 > diferente (`172.21.0.2` → `172.21.0.4`), a resposta pelo mesmo
@@ -218,7 +218,7 @@ server {
   #
   # Os dois proxies que o kit já suporta bloqueiam esta rota: o Caddy com
   # `respond @waha_global 403` (Caddyfile) e o Traefik com o router
-  # `deskcomm-waha-block` (docker-compose.traefik.yml). Aqui é o mesmo bloqueio.
+  # `nexus-waha-block` (docker-compose.traefik.yml). Aqui é o mesmo bloqueio.
   # Quem roda o WAHA em OUTRO servidor usa a rota por tenant,
   # /api/v1/webhooks/waha/<token>, que leva um token imprevisível na URL e
   # continua pública — ela NÃO é afetada por este bloco, que é de rota exata.
@@ -286,7 +286,7 @@ curl -s -o /dev/null -w 'webhook global: %{http_code}\n' \
 ## Atualizações futuras
 
 ```bash
-cd /var/www/DeskcommCRM
+cd /var/www/Nexus
 bash hostgator-setup-kit/update.sh
 ```
 
@@ -307,10 +307,10 @@ aponta para `127.0.0.1:3000`, o IP novo do contêiner recriado não quebra nada.
 | Sintoma | Causa | O que fazer |
 |---|---|---|
 | Instalador para na varredura de portas | falta `REVERSE_PROXY=traefik` no `.env` | Passo 1 — e rode o instalador de novo do zero |
-| *"Não consegui descobrir a rede Docker do seu Traefik"* | `REVERSE_PROXY=traefik` sem `TRAEFIK_NETWORK` | acrescente `TRAEFIK_NETWORK=deskcommcrm_proxy` |
-| *"network deskcommcrm_proxy declared as external, but could not be found"* | a rede sumiu (`docker network prune`) | `docker network create deskcommcrm_proxy` |
+| *"Não consegui descobrir a rede Docker do seu Traefik"* | `REVERSE_PROXY=traefik` sem `TRAEFIK_NETWORK` | acrescente `TRAEFIK_NETWORK=nexus_proxy` |
+| *"network nexus_proxy declared as external, but could not be found"* | a rede sumiu (`docker network prune`) | `docker network create nexus_proxy` |
 | Schema trava sem output por minutos | latência com o Supabase | aguarde 5 min; confira as tabelas no dashboard |
 | Let's Encrypt falha na validação | DNS ainda não propagou | aguarde 1–2 min e tente de novo |
-| `502` no navegador | a ponte caiu | `docker start deskcomm-nginx-bridge` e veja `docker logs` |
+| `502` no navegador | a ponte caiu | `docker start nexus-nginx-bridge` e veja `docker logs` |
 | `status: degraded` no health | WhatsApp sem sessão pareada | normal — conecte em Configurações → WhatsApp |
 | `curl` do item 3 devolve algo ≠ 403 | o `location = ...` não entrou no vhost | reveja o Passo 5; é bloco de rota **exata** (`=`) |

@@ -74,14 +74,14 @@ const USERS: Array<{
   role: "admin" | "manager" | "agent" | "viewer";
   full_name: string;
 }> = [
-  { chave: "admin", email: "e2e-admin@deskcomm.test", role: "admin", full_name: "E2E Admin" },
-  { chave: "manager", email: "e2e-manager@deskcomm.test", role: "manager", full_name: "E2E Manager" },
-  { chave: "agent", email: "e2e-agent@deskcomm.test", role: "agent", full_name: "E2E Agent" },
-  { chave: "viewer", email: "e2e-viewer@deskcomm.test", role: "viewer", full_name: "E2E Viewer" },
+  { chave: "admin", email: "e2e-admin@nexus.test", role: "admin", full_name: "E2E Admin" },
+  { chave: "manager", email: "e2e-manager@nexus.test", role: "manager", full_name: "E2E Manager" },
+  { chave: "agent", email: "e2e-agent@nexus.test", role: "agent", full_name: "E2E Agent" },
+  { chave: "viewer", email: "e2e-viewer@nexus.test", role: "viewer", full_name: "E2E Viewer" },
   // Dono do servidor. Quem `seed-e2e-system-update.ts` promove a `platform_admins`
   // — nunca mais o `admin`. Role de tenant `admin` porque as telas do dono vivem
   // dentro de `/app/*` e exigem organização ativa (`resolveActiveOrg`).
-  { chave: "dono", email: "e2e-dono@deskcomm.test", role: "admin", full_name: "E2E Dono do Servidor" },
+  { chave: "dono", email: "e2e-dono@nexus.test", role: "admin", full_name: "E2E Dono do Servidor" },
 ];
 
 async function ensureOrg(): Promise<string> {

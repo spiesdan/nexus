@@ -6,7 +6,7 @@
 ## 1. Decisões (INFIDO — não reabrir sem evidência nova)
 
 1. **Dark-first MANTIDO.** `lib/theme.tsx:54-55` default `dark`;
-   `<html data-theme="dark">` no SSR; `light` gravado em `deskcomm-theme`.
+   `<html data-theme="dark">` no SSR; `light` gravado em `nexus-theme`.
    A auditoria julga linguagem (bordas/densidade/tipografia), válida nos dois temas.
 2. **`DESIGN.md` (Visitors) é referência de estilo**, não mandato de produto:
    Carbon `#181925`, Fog `#e8e8e8`, lavanda, pill 9999px onde o spec não fecha o número.

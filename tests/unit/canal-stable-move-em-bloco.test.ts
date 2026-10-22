@@ -12,10 +12,10 @@ import { describe, expect, it } from "vitest";
  * de DIGEST — a ingênua ("a tag `stable` existe?") devolve `200` nas três e não
  * prova nada, porque `stable` existe desde a 1.11.0:
  *
- *     deskcommcrm          1.12.0   404
- *     deskcommcrm          stable   sha256:0235d02b…   ← 1.11.0
- *     deskcomm-worker      stable   sha256:66c7bde4…   ← 1.12.0
- *     deskcomm-scheduler   stable   sha256:ac6b87cc…   ← 1.12.0
+ *     nexus          1.12.0   404
+ *     nexus          stable   sha256:0235d02b…   ← 1.11.0
+ *     nexus-worker      stable   sha256:66c7bde4…   ← 1.12.0
+ *     nexus-scheduler   stable   sha256:ac6b87cc…   ← 1.12.0
  *
  * Quem instalasse por `stable` naquela janela recebia **app 1.11.0 com worker e
  * scheduler 1.12.0**. Os três serviços saem do mesmo repositório e compartilham
@@ -76,11 +76,11 @@ function corpo(yml: string, nome: string): string {
 }
 
 const IMAGENS = [
-  "deskcommcrm",
-  "deskcomm-worker",
-  "deskcomm-scheduler",
-  "deskcomm-fiscal-sidecar",
-  "deskcomm-mercos",
+  "nexus",
+  "nexus-worker",
+  "nexus-scheduler",
+  "nexus-fiscal-sidecar",
+  "nexus-mercos",
 ];
 
 describe("o canal `stable` move em bloco", () => {

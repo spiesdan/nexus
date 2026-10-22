@@ -32,10 +32,10 @@ PUBLICACAO="127.0.0.1::5432"
 # os seus", a única saída hoje é inferir por porta publicada ou por prefixo de
 # nome — e foi assim que uma limpeza de containers de uma sessão passou por cima
 # dos de outra. Os labels fazem "só os meus" ser uma query:
-#   docker ps --filter label=deskcomm.worktree=$PWD
+#   docker ps --filter label=nexus.worktree=$PWD
 DONO_WORKTREE="$ROOT"
 DONO_BRANCH="$(git -C "$ROOT" branch --show-current 2>/dev/null || echo desconhecida)"
-CONTAINER="deskcomm-test-db-$$"
+CONTAINER="nexus-test-db-$$"
 # pg15 e não pg17: o piso real do baseline é pg15 (`security_invoker` em view,
 # baseline.sql:1215). O 17 vinha de 9 `GRANT … MAINTAIN` que o `pg_dump` de um
 # projeto Supabase pg17 emitiu sozinho ao serializar o ACL das tabelas
@@ -76,7 +76,7 @@ TEMPLATE="inv_baseline"
 #
 # Esta forma é idêntica nos dois: caminho completo, seis X, sem depender de como
 # cada `mktemp` interpreta `-t`.
-CARIMBO="$(mktemp "${TMPDIR:-/tmp}/deskcomm-test-db-carimbo.XXXXXX")"
+CARIMBO="$(mktemp "${TMPDIR:-/tmp}/nexus-test-db-carimbo.XXXXXX")"
 MEDIDOS=("$BASELINE" "$ROOT/tests/invariants" "$ROOT/scripts/test-db.sh" "$ROOT/vitest.db.config.ts")
 
 arvore_mexeu() {
@@ -110,9 +110,9 @@ trap cleanup EXIT
 echo "==> subindo $IMAGE como $CONTAINER (worktree $DONO_WORKTREE, branch $DONO_BRANCH)"
 docker run -d --rm --name "$CONTAINER" \
   -p "$PUBLICACAO" \
-  --label "deskcomm.harness=test-db" \
-  --label "deskcomm.worktree=$DONO_WORKTREE" \
-  --label "deskcomm.branch=$DONO_BRANCH" \
+  --label "nexus.harness=test-db" \
+  --label "nexus.worktree=$DONO_WORKTREE" \
+  --label "nexus.branch=$DONO_BRANCH" \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=postgres \
   "$IMAGE" >/dev/null
@@ -188,7 +188,7 @@ $$;
 --                       retrieve_top_k_chunks)
 --
 -- As mesmas 6, exatamente, que `select ... has_function_privilege('anon', ...)`
--- devolve no `supabase_db_deskcomm-crm` desta máquina hoje. Ou seja: o gate estava
+-- devolve no `supabase_db_nexus` desta máquina hoje. Ou seja: o gate estava
 -- verde medindo um universo onde o defeito não pode existir.
 --
 -- `revoke execute ... from public` no default também é fiel ao produto: no
@@ -246,7 +246,7 @@ create table if not exists auth.users (
 -- do Supabase; os testes simulam o JWT via set_config).
 --
 -- O CORPO ABAIXO É CÓPIA FIEL do `auth.uid()` do Supabase — conferido em
--- 2026-08-11 com `pg_get_functiondef` no `supabase_db_deskcomm-crm` (imagem
+-- 2026-08-11 com `pg_get_functiondef` no `supabase_db_nexus` (imagem
 -- supabase/postgres:17.6.1.106). A cópia importa por causa de UM detalhe que a
 -- versão anterior deste stub errava:
 --

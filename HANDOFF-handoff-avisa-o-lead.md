@@ -91,7 +91,7 @@ Checklist em `docs/doctrine/packaging.md` (12 itens). Já verificado ANTES do me
 |---|---|
 | 1 — seção no CHANGELOG | ✅ três entradas na voz de quem opera |
 | 2 — nenhuma variável nova obrigatória | ✅ `git diff ... -- .env.example` vazio |
-| 3 — o número nunca foi publicado | ✅ tag local vazia; `ghcr_status deskcommcrm 1.6.0` → 404, com controle positivo (1.5.0 → 200) e negativo (9.9.9 → 404) |
+| 3 — o número nunca foi publicado | ✅ tag local vazia; `ghcr_status nexus 1.6.0` → 404, com controle positivo (1.5.0 → 200) e negativo (9.9.9 → 404) |
 | 4 — pins upstream revisitados | ✅ **decidido: ficam** (waha 2026.7.2, redis:7-alpine, caddy:2-alpine, srh por digest). Bump de infra não entra em release corretiva |
 | 5 — tag `v1.6.0` empurrada | ✅ de `bf386c19` |
 | 6 — run de publicação verde | ✅ |

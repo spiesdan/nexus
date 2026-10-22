@@ -1,4 +1,4 @@
-# DeskcommCRM self-hosted — instalação em VPS (com agente de IA)
+# Nexus self-hosted — instalação em VPS (com agente de IA)
 
 > Sistema operacional de vendas self-hosted com agente SDR de IA integrado
 > (WhatsApp via WAHA) — pra qualquer negócio que vende conversando.
@@ -23,7 +23,7 @@
 ## 1. Clonar e configurar
 
 ```bash
-git clone https://github.com/spiesdan/nexus.git DeskcommCRM && cd DeskcommCRM
+git clone https://github.com/spiesdan/nexus.git Nexus && cd Nexus
 cp .env.hostgator.example .env   # o template de produção (o .env.example é o de dev)
 ```
 
@@ -205,9 +205,9 @@ nome da marca e a cor do botão são `__APP_NAME__` / `__ACCENT__`, e o cliente
 receberia isso literalmente. Renderize antes e aponte para o resultado:
 
 ```bash
-bash hostgator-setup-kit/marca-emails.sh --render-em /opt/deskcomm/emails
-# GOTRUE_MAILER_TEMPLATES_CONFIRMATION=/opt/deskcomm/emails/confirmation.html
-# GOTRUE_MAILER_TEMPLATES_RECOVERY=/opt/deskcomm/emails/recovery.html
+bash hostgator-setup-kit/marca-emails.sh --render-em /opt/nexus/emails
+# GOTRUE_MAILER_TEMPLATES_CONFIRMATION=/opt/nexus/emails/confirmation.html
+# GOTRUE_MAILER_TEMPLATES_RECOVERY=/opt/nexus/emails/recovery.html
 ```
 
 Num Supabase próprio não existe Management API, então este é o único caminho —
@@ -234,7 +234,7 @@ e é preciso repetir o comando quando a marca mudar.
 ## 6. Operação
 
 - **Backup diário** (do seu crontab na VPS):
-  `0 3 * * * /caminho/repo/scripts/backup-db.sh /var/backups/deskcomm`
+  `0 3 * * * /caminho/repo/scripts/backup-db.sh /var/backups/nexus`
   (restaure com
   `pg_restore --clean --no-owner -d "${SUPABASE_DB_ADMIN_URL:-$SUPABASE_DB_URL}" arquivo.dump`
   — `--clean` derruba e recria objetos, o que é trabalho de dono do banco)
