@@ -8,6 +8,21 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.33.1] — 2026-10-22
+
+### Corrigido
+
+- **Erros de tela sem sessão voltam a ser reportados** O relatório de erros do navegador passa por um caminho próprio do domínio
+  (`/monitoring`) antes de sair para o Sentry. Esse caminho estava caindo na
+  checagem de sessão do `proxy`, que respondia `307` para `/login` — então tudo
+  que quebrava ANTES do login (fachada de entrada, cadastro) era descartado em
+  silêncio.
+
+  Agora o caminho do túnel é público, como manda a própria documentação do Sentry
+  usada na configuração. Quem já instalou não precisa fazer nada: a mudança só
+  afeta o envio de relatório de erro, e um teste amarra o caminho do túnel à
+  allowlist para o defeito não voltar se a rota for renomeada.
+
 ## [1.33.0] — 2026-10-22
 
 ### Adicionado
@@ -5149,7 +5164,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.1...HEAD
+[1.33.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.4...v1.33.0
 [1.32.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.3...v1.32.4
 [1.32.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.2...v1.32.3
