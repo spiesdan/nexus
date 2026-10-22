@@ -143,6 +143,16 @@ jobs:
             context: fiscal/sidecar
             grupo: fiscal
             title: DeskcommCRM fiscal sidecar
+          # O navegador que importa os pedidos do Mercos (Chromium/Playwright).
+          # Entra aqui pelo mesmo motivo do `worker` e do sidecar: serviço que o
+          # CI não publica é serviço que só o `build:` da VPS consegue criar — e
+          # esse nunca é atualizado. A imagem é grande (traz o Chromium da versão
+          # exata do lockfile), por isso ela tem cache próprio.
+          - name: deskcomm-mercos
+            dockerfile: Dockerfile.mercos
+            context: .
+            grupo: node
+            title: DeskcommCRM mercos
 
     steps:
       - uses: actions/checkout@v7
@@ -440,7 +450,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PUSH_TOKEN }}
 
-      - name: Apontar `stable` para esta versão, nas três imagens
+      - name: Apontar `stable` para esta versão, nas quatro imagens
         env:
           VERSAO: ${{ github.ref_name }}
         run: |
@@ -451,14 +461,14 @@ jobs:
           # canal deixaria de ser o mesmo manifesto que a versão.
           dono=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           numero="${VERSAO#v}"
-          for img in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+          for img in deskcommcrm deskcomm-worker deskcomm-scheduler deskcomm-fiscal-sidecar deskcomm-mercos; do
             echo "::group::${img}"
             docker buildx imagetools create \
               --tag "${REGISTRY}/${dono}/${img}:stable" \
               "${REGISTRY}/${dono}/${img}:${numero}"
             echo "::endgroup::"
           done
-          echo "stable agora aponta para ${numero} nas três imagens"
+          echo "stable agora aponta para ${numero} nas cinco imagens"
 
   # Job de fachada: dá UM nome estável para a branch protection exigir. Sem ele,
   # o required check teria que listar as três instâncias da matriz pelo nome

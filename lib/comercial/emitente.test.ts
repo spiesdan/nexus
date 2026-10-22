@@ -49,6 +49,14 @@ describe("comNomeDoEmitente", () => {
     expect(linhas[0]?.emitente_nome).toBeNull();
   });
 
+  it("emissor do Mercos que não é usuário do CRM mantém o nome bruto", async () => {
+    nomes.mockResolvedValue(new Map());
+    const linhas = await comNomeDoEmitente([
+      { created_by: null, vendedor_user_id: null, vendedor_nome: "VENDEDOR JB" },
+    ]);
+    expect(linhas[0]?.emitente_nome).toBe("VENDEDOR JB");
+  });
+
   it("sem linhas nem sequer consulta o GoTrue", async () => {
     expect(await comNomeDoEmitente([])).toEqual([]);
     expect(nomes).not.toHaveBeenCalled();

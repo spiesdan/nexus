@@ -239,6 +239,48 @@ services:
     logging: *default-logging
     networks: [internal]
 
+  # O navegador do Mercos. Serviço separado de propósito: Chromium não cabe
+  # no processo que atende o browser do usuário, e a credencial do ERP não
+  # deve existir no ambiente do app. Sem porta publicada — só a rede interna.
+  mercos:
+    image: ${MERCOS_IMAGE:-ghcr.io/spiesdan/deskcomm-mercos:stable}
+    pull_policy: ${MERCOS_PULL_POLICY:-always}
+    build:
+      context: .
+      dockerfile: Dockerfile.mercos
+    restart: unless-stopped
+    mem_limit: 1g
+    shm_size: 512m
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      MERCOS_EMAIL: ${MERCOS_EMAIL:-}
+      MERCOS_SENHA: ${MERCOS_SENHA:-}
+      MERCOS_EMPRESA: ${MERCOS_EMPRESA:-338282}
+      MERCOS_POLL_MS: ${MERCOS_POLL_MS:-5000}
+      MERCOS_SCRAPE_TIMEOUT_MS: ${MERCOS_SCRAPE_TIMEOUT_MS:-1800000}
+      # Recuperação pontual: força a coleta a partir de um número antigo.
+      # Vazio no fluxo normal (usa o maior pedido já importado).
+      MERCOS_A_PARTIR_DE: ${MERCOS_A_PARTIR_DE:-}
+      # O primeiro login de um dispositivo novo pede código por e-mail. O
+      # worker espera até 1h por ele (arquivo no volume), em vez de falhar
+      # na hora; depois disso a sessão persiste e o cron não pede mais.
+      MERCOS_CODIGO_ESPERA_MS: ${MERCOS_CODIGO_ESPERA_MS:-3600000}
+      MERCOS_STORAGE_STATE: /data/mercos/state.json
+      MERCOS_CODIGO_FILE: /data/mercos/codigo.txt
+    volumes:
+      # A sessão do Mercos é o que evita um código de e-mail por execução.
+      # Volume nomeado: sobrevive a `down`/`up`, mas não a `down -v` (decisão).
+      - mercos-state:/data/mercos
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8791/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging: *default-logging
+    networks: [internal]
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -329,6 +371,7 @@ volumes:
   waha-media:
   caddy-data:
   caddy-config:
+  mercos-state:
 
 networks:
   internal:

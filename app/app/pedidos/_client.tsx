@@ -38,6 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ArrowsClockwise,
   CaretDown,
   Funnel,
   MagnifyingGlass,
@@ -208,6 +209,7 @@ export function PedidosClient({
   iniciais,
   podeCriar,
   podeExcluir,
+  podeImportar = false,
   meuId,
   textos,
 }: {
@@ -224,6 +226,7 @@ export function PedidosClient({
   vendedorNome?: string;
   podeCriar: boolean;
   podeExcluir: boolean;
+  podeImportar?: boolean;
   meuId: string;
   textos: Textos;
 }) {
@@ -232,6 +235,7 @@ export function PedidosClient({
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [pedidos, setPedidos] = React.useState(inicial);
+  const [importandoMercos, setImportandoMercos] = React.useState(false);
   const filtrosIniciais = React.useMemo<Filtros>(
     () => ({
       ...FILTROS_VAZIOS,
@@ -507,6 +511,93 @@ export function PedidosClient({
     await recarregar(filtros);
   }
 
+  /**
+   * O botão do Mercos só ENFILEIRA. O scrape roda no worker dedicado; aqui a
+   * tela acompanha a linha da fila e mostra o resultado. Se já existe uma
+   * execução em curso (outra aba, o cron das 17h), o servidor devolve a mesma
+   * linha em vez de abrir uma segunda — e a tela continua de onde ela está.
+   */
+  async function importarMercos() {
+    const confirmado = await confirmar({
+      title: t("Importar pedidos do Mercos agora?"),
+      description: t(
+        "O worker entra no Mercos, lê os pedidos novos e cria os que ainda não existem. Pedidos já importados são ignorados; nenhum pedido existente é sobrescrito.",
+      ),
+      confirmLabel: t("Importar pedidos Mercos"),
+    });
+    if (!confirmado) return;
+
+    setImportandoMercos(true);
+    try {
+      const inicio = await apiClient.post<{
+        data: { execucao: { id: string; status: string }; jaEstavaRodando: boolean };
+      }>("/api/v1/commercial-orders/importar-mercos", {});
+      const execucaoId = inicio.data.execucao.id;
+      if (inicio.data.jaEstavaRodando) {
+        toast.info(t("Já existe uma importação em curso; acompanhando ela."));
+      } else {
+        toast.success(t("Importação enfileirada. O worker está entrando no Mercos."));
+      }
+
+      // O scrape tem espera de 3–4s por pedido; 5 minutos cobre o caso normal
+      // e não deixa a tela presa para sempre se o worker morrer (o banco marca
+      // a execução como erro depois de 45 min; aqui só paramos de esperar).
+      const limite = Date.now() + 5 * 60_000;
+      let ultima: {
+        status: string;
+        orders_new: number;
+        orders_skipped: number;
+        items_new: number;
+        customers_new: number;
+        errors: unknown[];
+      } | null = null;
+      while (Date.now() < limite) {
+        await new Promise((r) => setTimeout(r, 2500));
+        const corpo = await apiClient.get<{
+          data: {
+            execucao: {
+              status: string;
+              orders_new: number;
+              orders_skipped: number;
+              items_new: number;
+              customers_new: number;
+              errors: unknown[];
+            } | null;
+          };
+        }>(`/api/v1/commercial-orders/importar-mercos?id=${encodeURIComponent(execucaoId)}`);
+        ultima = corpo.data.execucao;
+        if (!ultima) break;
+        if (["success", "partial", "error"].includes(ultima.status)) break;
+      }
+
+      if (!ultima) {
+        toast.info(t("A importação continua no worker. Atualize a lista em instantes."));
+      } else if (ultima.status === "success") {
+        toast.success(
+          t(
+            `${ultima.orders_new} pedido(s) novo(s), ${ultima.items_new} item(ns), ${ultima.customers_new} cliente(s) novo(s).`,
+          ),
+        );
+      } else if (ultima.status === "partial") {
+        toast.warning(
+          t(
+            `${ultima.orders_new} pedido(s) entraram, mas ${ultima.errors.length} falha(s) ficaram para conferir.`,
+          ),
+        );
+      } else if (ultima.status === "error") {
+        toast.error(t("A importação falhou. Veja o histórico da execução no log do worker."));
+      } else {
+        toast.info(t("A importação ainda está rodando. Atualize a lista em instantes."));
+      }
+      await recarregar(filtros);
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setImportandoMercos(false);
+    }
+  }
+
   function exportar() {
     const alvo = pedidos.filter((p) => selecionados.length === 0 || selecionados.includes(p.id));
     const blob = new Blob(
@@ -644,6 +735,18 @@ export function PedidosClient({
         subtitle={textos.subtitulo}
         actions={
           <>
+            {podeImportar && (
+              <Button
+                variant="outline"
+                className="bg-surface"
+                onClick={() => void importarMercos()}
+                disabled={importandoMercos}
+                title={t("Entra no Mercos e importa os pedidos que ainda não existem")}
+              >
+                <ArrowsClockwise size={16} className={importandoMercos ? "animate-spin" : ""} />
+                {importandoMercos ? t("Importando do Mercos…") : t("Importar pedidos Mercos")}
+              </Button>
+            )}
             {/* UM botão de imprimir, com o "o quê" dentro. Antes eram dois botões
                 do mesmo peso e um aviso solto ("imprimindo os 50 mais recentes
                 de 66") flutuando à direita, longe do botão que ele explicava. */}

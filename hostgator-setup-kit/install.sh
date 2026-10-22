@@ -1497,6 +1497,15 @@ esac
   envq WORKER_PULL_POLICY "$PULL_POLICY_ALVO"
   envq SCHEDULER_IMAGE "${IMG_SCHEDULER}:${TAG_ALVO}"
   envq SCHEDULER_PULL_POLICY "$PULL_POLICY_ALVO"
+  # O sidecar fiscal e o importador do Mercos na MESMA versão dos outros três:
+  # o app monta o payload e o sidecar monta o XML; o importador escreve no
+  # banco que o app lê. Deixá-los no canal móvel é o parque misturado que o
+  # `update.sh` já evita — e uma instalação NOVA nascia assim, porque `gravar_`
+  # `imagens` só roda no update.
+  envq FISCAL_IMAGE "${IMG_FISCAL}:${TAG_ALVO}"
+  envq FISCAL_PULL_POLICY "$PULL_POLICY_ALVO"
+  envq MERCOS_IMAGE "${IMG_MERCOS}:${TAG_ALVO}"
+  envq MERCOS_PULL_POLICY "$PULL_POLICY_ALVO"
   envq DOMAIN "$DOMAIN"
   envq ACME_EMAIL "$ACME_EMAIL"
   printf '# Proxy reverso: "caddy" (o kit sobe o dele nas portas 80/443) ou "traefik"\n'

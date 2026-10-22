@@ -68,12 +68,20 @@ export function toPoints(
   return pts.join(" ");
 }
 
-/** Same series as a closed area, dropped to the baseline at both ends. */
+/**
+ * Same series as a closed area, dropped to the baseline at both ends.
+ *
+ * `lastX` fecha a área no último dado em vez da borda direita do gráfico.
+ * É o que impede uma série truncada (a realizada para em HOJE) de parecer
+ * que continua até o fim do mês: sem ele, o polígono ganha um trecho reto
+ * e sombreado depois do último ponto.
+ */
 export function toArea(
   values: number[],
-  opts: { width: number; height: number; x0?: number; pad?: number },
+  opts: { width: number; height: number; x0?: number; pad?: number; lastX?: number },
 ): string {
   const line = toPoints(values, opts);
   const x0 = opts.x0 ?? 0;
-  return `${x0},${opts.height} ${line} ${x0 + opts.width},${opts.height}`;
+  const lastX = opts.lastX ?? x0 + opts.width;
+  return `${x0},${opts.height} ${line} ${lastX},${opts.height}`;
 }

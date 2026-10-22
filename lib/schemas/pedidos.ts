@@ -204,6 +204,8 @@ export interface PedidoComercial {
   /** Quem apertou "criar" (NULL em linha importada/da IA). */
   created_by: string | null;
   vendedor_user_id: string | null;
+  /** Nome do emissor no canal de origem (Mercos), mesmo sem usuário no CRM. */
+  vendedor_nome?: string | null;
   /**
    * Nome de `created_by` (ou do vendedor, quando o criador é desconhecido),
    * anexado pela rota/lista — `lib/comercial/emitente.ts`. Ausente quando não
@@ -248,6 +250,7 @@ export interface Parcela {
 /** As colunas que a lista e a rota leem — uma lista, não duas. */
 export const COLUNAS_DO_PEDIDO =
   "id, numero, contact_id, cliente_nome, cliente_documento, created_by, vendedor_user_id, " +
+  "vendedor_nome, " +
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
   "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "rastreamento, contato_no_cliente, " +

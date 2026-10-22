@@ -59,6 +59,7 @@ Fluxo canônico:
 ## 5. System of Record (decisão §1 — inegociável)
 
 NEXUS é SoR de clientes, contatos, produtos, preços, estoque, compras, pedidos, vendedores, metas, comissões, financeiro, fiscal, logística, CRM, WhatsApp, oportunidades, campanhas, IA, automações, histórico.
-- PROIBIDO: ERP Adapter/Connector, sync Mercos, importação operacional permanente.
-- Mercos = carga histórica one-shot arquivada em `docs/legacy/mercos-scrape/` (passo 8, `256ee46ef`; saiu de `scripts/`). `commercial_orders.origem='mercos'` é vestígio, não sync.
+- PROIBIDO: ERP Adapter/Connector genérico. O Mercos NÃO vira um adapter de ERP.
+- EXCEÇÃO OPERACIONAL (2026-10-21, decisão do dono): enquanto o token da API do Mercos não existe, um worker dedicado (`workers/mercos`) faz a ponte por navegador — botão na tela de Pedidos + tick diário às 17h. Ele é um scraper determinístico, não um agente LLM, e grava só pedidos/itens (e o cliente quando novo) via `fn_importar_pedido_mercos`. Quando o token chegar, a ponte por navegador sai; o contrato de dados e a tabela `mercos_import_runs` ficam.
+- Mercos = carga histórica arquivada em `docs/legacy/mercos-scrape/` (passo 8, `256ee46ef`) **mais** a ponte operacional acima. `commercial_orders.origem='mercos'` continua sendo a marca dos pedidos do ERP, não um sync genérico.
 - Integrações permitidas (complementares, nunca SoR): WhatsApp/WAHA, Meta, provedores IA, e-mail, mapas/geocode, Nuvemshop.

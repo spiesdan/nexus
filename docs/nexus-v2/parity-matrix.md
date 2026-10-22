@@ -45,7 +45,7 @@
 | Health `/api/v1/health` | ✅ | ✅ | ✅ | — | — | — | supabase+redis+waha + probe TCP no compose |
 | Docker/GHCR/stable | ✅ | ✅ | ✅ | ✅ | — | — | multi-stage, 3 imagens, imagetools; check `imagens-ok` |
 | `scripts/deploy.sh` | ✅ | ✅ | — | — | — | — | entregue `327f6a637` — `set -euo pipefail`, 9 passos, pull-first; rollback automático no kit (`agent.sh:234` `PREV_IMAGE`) |
-| Mercos/ERP sync | ❌ (sem integração) | — | — | — | — | ✅ feito | 0 adapter/sync/rota/tabela/cron (medido); kit offline arquivado em `docs/legacy/mercos-scrape/` (`256ee46ef`) — **nunca** adapter/sync |
+| Mercos/ERP sync | ⚠️ ponte browser temporária | — | — | — | — | ⚠️ exceção | Worker `workers/mercos` + `mercos_import_runs` + botão/cron 17h; scraper determinístico até o token da API. **Não** é adapter de ERP genérico. Kit histórico em `docs/legacy/mercos-scrape/` (`256ee46ef`). |
 
 **Vereditos (recontados no passo 8)**: NEXUS é System of Record
 (`commercial_orders` própria, radar/Brain derivam dela, Mercos sem sync nenhum).

@@ -77,10 +77,10 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler", "fiscal"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
-  it("o parser enxerga os 8 serviços de produção", () => {
+  it("o parser enxerga os 9 serviços de produção", () => {
     // Guarda do próprio instrumento: se o parser parar de enxergar os serviços,
     // todos os testes abaixo passariam vazios — verde por não ter medido nada.
     //
@@ -89,8 +89,12 @@ describe("packaging — o artefato que o cliente instala", () => {
     // executado — serviço fora do compose é serviço que não volta depois de um
     // reboot. Esta lista é o que impede o próximo serviço de ser criado do lado
     // de fora sem ninguém ver.
+    //
+    // `mercos` entrou como o nono: o navegador (Chromium/Playwright) que importa
+    // os pedidos do ERP. Ele é `image:` + `build:` ao lado, como os outros, e é o
+    // que o `pull_policy` consegue atualizar — a razão de estar nesta lista.
     expect([...servicos.keys()].sort()).toEqual(
-      ["app", "caddy", "fiscal", "redis", "scheduler", "srh", "waha", "worker"].sort(),
+      ["app", "caddy", "fiscal", "mercos", "redis", "scheduler", "srh", "waha", "worker"].sort(),
     );
   });
 
@@ -221,7 +225,7 @@ describe("packaging — o artefato que o cliente instala", () => {
     // O CI injeta os labels via docker/metadata-action, mas o build local do
     // docker-compose.build.yml não passa por ele. Sem LABEL no arquivo, essa
     // imagem sai sem origem nenhuma — e é justamente a que vira dívida numa VPS.
-    for (const arquivo of ["Dockerfile", "Dockerfile.worker", "Dockerfile.scheduler"]) {
+    for (const arquivo of ["Dockerfile", "Dockerfile.worker", "Dockerfile.scheduler", "Dockerfile.mercos"]) {
       const conteudo = fs.readFileSync(path.join(RAIZ, arquivo), "utf8");
       expect(conteudo, `${arquivo} sem org.opencontainers.image.source`).toContain(
         "org.opencontainers.image.source",
@@ -230,9 +234,15 @@ describe("packaging — o artefato que o cliente instala", () => {
     }
   });
 
-  it("o workflow publica as três imagens e injeta APP_VERSION", () => {
+  it("o workflow publica as cinco imagens e injeta APP_VERSION", () => {
     const wf = fs.readFileSync(path.join(RAIZ, ".github/workflows/publish-image.yml"), "utf8");
-    for (const imagem of ["deskcommcrm", "deskcomm-worker", "deskcomm-scheduler"]) {
+    for (const imagem of [
+      "deskcommcrm",
+      "deskcomm-worker",
+      "deskcomm-scheduler",
+      "deskcomm-fiscal-sidecar",
+      "deskcomm-mercos",
+    ]) {
       expect(wf, `publish-image.yml não publica '${imagem}'`).toContain(`name: ${imagem}`);
     }
     expect(wf, "publish-image.yml não passa APP_VERSION como build-arg").toContain("APP_VERSION=");

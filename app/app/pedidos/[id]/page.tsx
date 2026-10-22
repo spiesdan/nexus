@@ -62,7 +62,10 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
 
   // Nome do vendedor: auth metadata via admin, mesmo molde do dashboard. Sem
   // service role, a tela mostra o id curto — nunca vazio, nunca quebra.
-  let nomeVendedor: string | null = null;
+  // O nome bruto do canal é o piso: "VENDEDOR JB" não é usuário do CRM, mas
+  // quem tirou o pedido não pode virar UUID nem "—".
+  let nomeVendedor: string | null =
+    (pedido as unknown as PedidoComercial).vendedor_nome?.trim() || null;
   const vendedorId = (pedido as unknown as PedidoComercial).vendedor_user_id;
   if (vendedorId && isServiceRoleConfigured()) {
     try {

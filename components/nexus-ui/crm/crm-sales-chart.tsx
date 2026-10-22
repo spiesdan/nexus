@@ -417,8 +417,17 @@ export function CrmSalesChart({
     [visiveis, tetoCents, comparar?.ativo],
   );
 
-  /** Série contígua (sem null) → polyline; segmentos separados por null. */
+  /**
+   * Série contígua (sem null) → polyline; segmentos separados por null.
+   *
+   * O passo X vem de `visiveis` (o mês inteiro), NÃO de `serie.length`. A
+   * realizada é truncada em HOJE; usar o tamanho dela esticava a linha até a
+   * borda do gráfico, enquanto os círculos e o fechamento da área ficavam no
+   * dia real. O resultado era uma linha que passava dos pontos e uma área
+   * triangular sob o futuro.
+   */
   const polylinesDe = (serie: (number | null)[]): string[] => {
+    const passo = IW / Math.max(1, visiveis.length - 1);
     const saida: string[] = [];
     let atual: string[] = [];
     serie.forEach((v, i) => {
@@ -427,9 +436,7 @@ export function CrmSalesChart({
         atual = [];
         return;
       }
-      atual.push(
-        `${(i * (IW / Math.max(1, serie.length - 1))).toFixed(1)},${(IH * (1 - v)).toFixed(1)}`,
-      );
+      atual.push(`${(i * passo).toFixed(1)},${(IH * (1 - v)).toFixed(1)}`);
     });
     if (atual.length > 0) saida.push(atual.join(" "));
     return saida.filter((s) => s.includes(","));
@@ -443,10 +450,23 @@ export function CrmSalesChart({
   const linhaMesAnt = !ocultas.mesAnt && serieMesAnt ? polylinesDe(serieMesAnt)[0] ?? null : null;
   const linhaMesAno = !ocultas.mesAno && serieMesAno ? polylinesDe(serieMesAno)[0] ?? null : null;
 
-  const areaVendido =
-    !ocultas.vendido && serieVendido.length > 1 ? toArea(serieVendido, { width: IW, height: IH }) : null;
   const passoX = IW / Math.max(1, visiveis.length - 1);
   const xDoIdx = (i: number): number => i * passoX;
+  const areaVendido =
+    !ocultas.vendido && serieVendido.length > 1
+      ? toArea(serieVendido, {
+          // A largura também para no último dia realizado. `toPoints` calcula
+          // o passo por `width / (values.length - 1)`; passar a largura cheia
+          // com uma série truncada esticava os pontos até o dia 31, embora o
+          // fechamento (`lastX`) ficasse no dia 21.
+          width: xDoIdx(serieVendido.length - 1),
+          height: IH,
+          // A série para em HOJE no mês corrente. A área tem que parar no
+          // mesmo x; fechar na borda do gráfico criava um platô verde até o
+          // dia 31, como se a venda já tivesse acontecido no futuro.
+          lastX: xDoIdx(serieVendido.length - 1),
+        })
+      : null;
   const xHoje = idxHoje >= 0 ? M.left + xDoIdx(idxHoje) : null;
 
   const pontoHover = hover != null ? visiveis[hover] : null;
