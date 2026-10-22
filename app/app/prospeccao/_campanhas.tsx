@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Megaphone, PencilSimple, Trash } from "@phosphor-icons/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Megaphone, PencilSimple, Plus, Trash } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -28,20 +30,25 @@ import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
+import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
 import { CampanhaWizard } from "./_campanha-wizard";
-import { DialogoDisparo } from "./_disparo";
 
 /**
- * Aba CAMPANHAS — painel de funil (§28), não lista técnica.
+ * Aba CAMPANHAS — lista primeiro, criação sob demanda, controle numa rota.
  *
- * As DUAS campanhas do produto aparecem juntas (D2, sem terceira tabela):
- * descoberta (`prospecting_campaigns`) e venda automática
- * (`automatic_sales_campaigns`). Cada card traz Nome, Objetivo (editável no
- * lugar), Região, Categorias, os KPIs que a spec lista e o funil
- * Encontrados → Selecionados → Contatados → Responderam → Qualificados →
- * Oportunidades → Pedidos + Faturamento — tudo vindo das listas com
- * `com_funil=1` (FASE 15: era um request por campanha, agora são os dois
- * requests das listas, cada um calculando todos os funis em lote).
+ * O desenho anterior abria o assistente SEMPRE no topo da lista, com o
+ * passo a passo de cinco etapas, e o card pós-criação oferecia um público
+ * efêmero. Quem já tinha campanha via um formulário; quem acabou de criar
+ * perdia o público ao fechar a tela.
+ *
+ * Agora:
+ *   - "Nova campanha" abre o assistente de 3 passos (Público → Mensagens →
+ *     Revisão); fechou, a lista volta a ser o foco;
+ *   - o card mostra o ENVIO (enviadas/faltam) em vez de só o funil;
+ *   - "Controlar" leva à rota persistente `/app/prospeccao/campanhas/[id]`,
+ *     onde ficam a fila por cidade, as empresas e o agendamento.
+ *
+ * A venda automática continua na mesma lista (D2), com o funil dela.
  */
 interface CampanhaDescoberta {
   id: string;
@@ -56,6 +63,7 @@ interface CampanhaDescoberta {
   fonte_publico?: string | null;
   /** 0274: `prospects` (garimpagem) | `contatos` (recuperação). */
   publico?: string | null;
+  prospect_ids?: string[] | null;
   contato_ids?: string[] | null;
   /** 0273 — o relógio da campanha. Não vem na aba de venda automática. */
   janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
@@ -66,6 +74,8 @@ interface CampanhaDescoberta {
   /** 0273 — a cota do dia, que o Disparo também herda. */
   limite_diario?: number | null;
   agendada_em?: string | null;
+  /** O resumo de envio calculado pela listagem (envio real, não funil). */
+  envio?: ResumoDeEnvio | null;
   funil?: FunilDaCampanha | null;
 }
 
@@ -84,35 +94,20 @@ type CardCampanha =
   | { tipo: "descoberta"; campanha: CampanhaDescoberta }
   | { tipo: "va"; campanha: CampanhaVa };
 
-/** O que `executar` devolve quando a campanha tira o público da base (0271). */
-interface PublicoDaBase {
-  /** A campanha que vai receber a agenda (0273) — vem do `executar(id)`. */
-  campanha_id: string;
-  campanha: string;
-  linhas: Array<{ id: string; nome: string; telefone: string | null; cidade: string | null }>;
-  ja_clientes: Array<{ nome: string; igual_a: string; similaridade: number }>;
-  duplicadas: number;
-  para_revisar: Array<{ nome: string; igual_a: string; similaridade: number }>;
-  resumo: string;
-}
-
-interface RespostaDaExecucao {
-  buscas?: number;
-  sem_mapa?: string[];
-  fonte?: "base" | "busca" | "ambas";
-  campanha?: string;
-  linhas?: PublicoDaBase["linhas"];
-  ja_clientes?: PublicoDaBase["ja_clientes"];
-  duplicadas?: number;
-  para_revisar?: PublicoDaBase["para_revisar"];
-  resumo?: string;
-}
-
 /**
  * O status da campanha nunca chega cru à tela (`rascunho`/`ativa`/`concluida`
  * são vocabulário interno, não texto para o usuário).
+ *
+ * A campanha sincronamente enviada pode continuar `rascunho` no banco (o
+ * disparo não fecha o status). Quem manda no card é o ledger: 48/48 enviadas
+ * aparece como "Concluída" mesmo que a linha ainda diga rascunho.
  */
-function rotuloDaCampanha(status: string, t: (texto: string) => string): string {
+function rotuloDaCampanha(
+  status: string,
+  t: (texto: string) => string,
+  concluidaPorEnvio = false,
+): string {
+  if (concluidaPorEnvio) return t("Concluída");
   if (status === "ativa" || status === "active") return t("Ativa");
   if (status === "concluida" || status === "completed") return t("Concluída");
   if (status === "paused" || status === "pausada") return t("Pausada");
@@ -128,10 +123,6 @@ function diaCurto(iso: string): string {
 /**
  * A agenda da campanha em uma linha — `null` quando ela não está agendada (a
  * aba mistura descoberta e venda automática, e a segunda não tem relógio).
- *
- * Existe porque a pergunta "quando é que essa campanha fala?" era respondida
- * abrindo o formulário. A lista diz o relógio REAL gravado, que é o que o
- * motor lê — não o que a tela ofereceu no dia em que foi montada.
  */
 function agendaDaCampanha(
   c: CampanhaDescoberta,
@@ -263,6 +254,46 @@ function Funil({ funil }: { funil: FunilDaCampanha }) {
   );
 }
 
+function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) {
+  const t = useT();
+  if (!resumo || resumo.total === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+        {t("Público ainda não preparado.")}{" "}
+        <span className="text-foreground">{t("Abra o controle para ver as empresas.")}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+        <span className="font-medium">
+          {t(`${resumo.enviados} de ${resumo.total} enviadas`)}
+        </span>
+        <span className="text-muted-foreground">
+          {resumo.pendentes > 0 ? t(`${resumo.pendentes} faltam`) : t("Todas enviadas")}
+          {resumo.sem_confirmacao > 0
+            ? ` · ${t(`${resumo.sem_confirmacao} sem confirmação`)}`
+            : ""}
+        </span>
+      </div>
+      <div
+        className="h-2 w-full overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={resumo.percentual}
+        aria-label={t("Progresso do envio")}
+      >
+        <div
+          className="h-full rounded-full bg-success transition-[width] duration-500"
+          style={{ width: `${resumo.percentual}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function CampanhasTab({
   categorias,
   podeOperar,
@@ -271,11 +302,11 @@ export function CampanhasTab({
   podeOperar: boolean;
 }) {
   const t = useT();
+  const router = useRouter();
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
   const [vas, setVas] = React.useState<CampanhaVa[] | null>(null);
   const [erro, setErro] = React.useState(false);
-  const [publico, setPublico] = React.useState<PublicoDaBase | null>(null);
-  const [disparoAberto, setDisparoAberto] = React.useState(false);
+  const [criando, setCriando] = React.useState(false);
   // A campanha que espera confirmação de exclusão (o diálogo é único e vive no
   // rodapé; cada card só aponta para qual delas).
   const [aExcluir, setAExcluir] = React.useState<CampanhaDescoberta | null>(null);
@@ -284,7 +315,8 @@ export function CampanhasTab({
   const recarregar = React.useCallback(async () => {
     try {
       // FASE 15 (§45): o funil vem NAS listas (`com_funil=1`) — eram 2 + N
-      // requests para desenhar a aba; agora são as 2 de sempre.
+      // requests para desenhar a aba; agora são as 2 de sempre. O resumo de
+      // envio também vem na lista, numa query em lote.
       const [resDesc, resVa] = await Promise.all([
         apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns?com_funil=1"),
         apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
@@ -304,37 +336,6 @@ export function CampanhasTab({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar();
   }, [recarregar]);
-
-  async function executar(id: string) {
-    try {
-      const corpo = await apiClient.post<{ data: RespostaDaExecucao | null }>(
-        `/api/v1/prospecting/campaigns/${id}/executar`,
-        {},
-      );
-      const r = corpo?.data ?? { buscas: 0, sem_mapa: [] as string[] };
-      // Campanha da base não cria busca: devolve o público pronto, com o que
-      // saiu (clientes que a loja já atende, duplicatas) e o resto para
-      // disparar. O envio continua sendo do `disparar`, que é simulação primeiro.
-      if (r.fonte === "base") {
-        setPublico({
-          campanha_id: id,
-          campanha: r.campanha ?? "",
-          linhas: r.linhas ?? [],
-          ja_clientes: r.ja_clientes ?? [],
-          duplicadas: r.duplicadas ?? 0,
-          para_revisar: r.para_revisar ?? [],
-          resumo: r.resumo ?? "",
-        });
-        return;
-      }
-      toast.success(t(`${r.buscas} buscas criadas`));
-      if (Array.isArray(r.sem_mapa) && r.sem_mapa.length > 0)
-        toast.warning(t(`Sem mapa: ${r.sem_mapa.join(", ")}`));
-      await recarregar();
-    } catch (e) {
-      showApiError(e);
-    }
-  }
 
   async function excluir() {
     if (!aExcluir) return;
@@ -360,11 +361,33 @@ export function CampanhasTab({
 
   return (
     <div className="space-y-4">
-      {podeOperar && (
-        <CampanhaWizard categorias={categorias} aoConcluir={() => void recarregar()} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">{t("Campanhas")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("Crie um recorte, veja as empresas e acompanhe cada envio.")}
+          </p>
+        </div>
+        {podeOperar && !criando && (
+          <Button type="button" size="sm" onClick={() => setCriando(true)}>
+            <Plus size={16} aria-hidden />
+            {t("Nova campanha")}
+          </Button>
+        )}
+      </div>
+
+      {podeOperar && criando && (
+        <CampanhaWizard
+          categorias={categorias}
+          aoConcluir={(id) => {
+            setCriando(false);
+            router.push(`/app/prospeccao/campanhas/${id}`);
+          }}
+          aoCancelar={() => setCriando(false)}
+        />
       )}
 
-      {erro && carregando ? (
+      {!criando && (erro && carregando ? (
         <NexusErrorState onRetry={() => void recarregar()} />
       ) : carregando ? (
         <div className="space-y-2" aria-live="polite">
@@ -373,15 +396,24 @@ export function CampanhasTab({
           <Skeleton className="h-24 w-full" />
         </div>
       ) : cards.length === 0 ? (
-        <NexusEmptyState icon={Megaphone} headline={t("Nenhuma campanha ainda.")} />
+        <NexusEmptyState
+          icon={Megaphone}
+          headline={t("Nenhuma campanha ainda.")}
+          subcopy={t("Comece por um recorte de cidades e categorias da sua base.")}
+          primary={
+            podeOperar
+              ? { label: t("Criar primeira campanha"), onClick: () => setCriando(true) }
+              : undefined
+          }
+        />
       ) : (
         <ul className="space-y-3">
           {cards.map((card) => {
             const id = card.campanha.id;
             const funil = card.campanha.funil ?? null;
             // 0274 — campanha de recuperação: a audiência é `contacts`, não
-            // prospect. O funil de garimpagem (encontrados/contatados) não se
-            // aplica, e mostrar zeros ali seria mentir sobre a campanha.
+            // prospect. O funil de garimpagem não se aplica; o controle
+            // mostra a natureza da campanha e o envio pelo ledger.
             const recuperacao =
               card.tipo === "descoberta" && card.campanha.publico === "contatos";
             const contatoIds =
@@ -392,11 +424,16 @@ export function CampanhasTab({
                 : `/api/v1/automatic-sales/campaigns/${id}`;
             const regiao =
               card.tipo === "descoberta"
-                ? card.campanha.cidades
+                ? (card.campanha.cidades ?? [])
                     .map((c) => (c.estado ? `${c.cidade}/${c.estado}` : c.cidade))
                     .join(", ")
                 : `${card.campanha.cidade}${card.campanha.uf ? `/${card.campanha.uf}` : ""}`;
             const objetivo = card.campanha.objetivo;
+            const envio = card.tipo === "descoberta" ? (card.campanha.envio ?? null) : null;
+            const total = envio?.total ?? 0;
+            const enviados = envio?.enviados ?? 0;
+            const concluida = total > 0 && enviados >= total;
+            const status = rotuloDaCampanha(card.campanha.status, t, concluida);
             const atualizarObjetivo = (novo: string | null) => {
               if (card.tipo === "descoberta") {
                 setDescobertas((lista) =>
@@ -406,16 +443,21 @@ export function CampanhasTab({
                 setVas((lista) => (lista ?? []).map((c) => (c.id === id ? { ...c, objetivo: novo } : c)));
               }
             };
+            const agenda = card.tipo === "descoberta" ? agendaDaCampanha(card.campanha, t) : null;
+
             return (
               <li key={id}>
                 <Card className="space-y-3 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <strong className="text-sm">{card.campanha.nome}</strong>
-                    <Badge variant="secondary" className="h-5 px-2 text-xs font-normal">
+                    <Badge variant="neutral" className="h-5 px-2 text-xs font-normal">
                       {card.tipo === "descoberta" ? t("Descoberta") : t("Venda automática")}
                     </Badge>
-                    <Badge variant="outline" className="h-5 px-2 text-xs font-normal">
-                      {rotuloDaCampanha(card.campanha.status, t)}
+                    <Badge
+                      variant={concluida ? "success" : "outline"}
+                      className="h-5 px-2 text-xs font-normal"
+                    >
+                      {status}
                     </Badge>
                     {recuperacao && (
                       <Badge
@@ -441,33 +483,27 @@ export function CampanhasTab({
                           {t("Base já coletada")}
                         </Badge>
                       )}
-                    {card.tipo === "descoberta" &&
-                      podeOperar &&
-                      card.campanha.status !== "concluida" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="ml-auto"
-                          onClick={() => void executar(id)}
-                        >
-                          {card.tipo === "descoberta" &&
-                          (card.campanha.fonte_publico === "base" ||
-                            card.campanha.fonte_publico === "ambas")
-                            ? t("Ver público")
-                            : t("Executar")}
+                    <div className="ml-auto flex items-center gap-1">
+                      {card.tipo === "descoberta" && (
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/app/prospeccao/campanhas/${id}`}>
+                            {t("Controlar")}
+                            <ArrowRight size={14} aria-hidden />
+                          </Link>
                         </Button>
                       )}
-                    {card.tipo === "descoberta" && podeOperar && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        aria-label={t("Excluir campanha")}
-                        title={t("Excluir campanha")}
-                        onClick={() => setAExcluir(card.campanha)}
-                      >
-                        <Trash size={16} aria-hidden />
-                      </Button>
-                    )}
+                      {card.tipo === "descoberta" && podeOperar && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label={t("Excluir campanha")}
+                          title={t("Excluir campanha")}
+                          onClick={() => setAExcluir(card.campanha)}
+                        >
+                          <Trash size={16} aria-hidden />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <ObjetivoInline valor={objetivo} rota={rotaPatch} salvo={atualizarObjetivo} />
@@ -476,102 +512,93 @@ export function CampanhasTab({
                     {recuperacao
                       ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
                       : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
-                          card.campanha.categorias.join(", ") || "—"
+                          (card.campanha.categorias ?? []).join(", ") || "—"
                         }`}
                   </p>
 
-                  {card.tipo === "descoberta" &&
-                    (() => {
-                      const agenda = agendaDaCampanha(card.campanha, t);
-                      return agenda ? (
-                        <p className="text-xs text-muted-foreground">
-                          {t("Agenda")}: {agenda}
-                        </p>
-                      ) : null;
-                    })()}
+                  {agenda && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("Agenda")}: {agenda}
+                    </p>
+                  )}
 
-                  {recuperacao ? null : funil ? (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-                        <Kpi rotulo={t("Quantidade de prospects")} valor={String(funil.encontrados)} />
-                        <Kpi rotulo={t("Contatados")} valor={String(funil.contatados)} />
-                        <Kpi rotulo={t("Respostas")} valor={String(funil.responderam)} />
-                        <Kpi rotulo={t("Oportunidades")} valor={String(funil.oportunidades)} />
-                        <Kpi rotulo={t("Pedidos")} valor={String(funil.pedidos)} />
-                        <Kpi rotulo={t("Faturamento")} valor={comoMoeda(funil.faturamento_cents, "BRL")} />
+                  {card.tipo === "descoberta" ? (
+                    <div className="space-y-3">
+                      <BarraDeEnvio resumo={envio} />
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        <Kpi rotulo={t("Público")} valor={String(total)} />
+                        <Kpi rotulo={t("Enviadas")} valor={String(enviados)} />
+                        <Kpi rotulo={t("Faltam")} valor={String(envio?.pendentes ?? 0)} />
+                        <Kpi
+                          rotulo={t("Responderam")}
+                          valor={String(funil?.responderam ?? 0)}
+                        />
                       </div>
-                      <Funil funil={funil} />
-                    </>
-                  ) : (
-                    <div aria-live="polite">
-                      <Skeleton className="h-16 w-full" />
+                      {funil && (
+                        <details className="rounded-lg border p-3">
+                          <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                            {t("Ver funil completo")}
+                          </summary>
+                          <div className="mt-3 space-y-3">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                              <Kpi
+                                rotulo={t("Quantidade de prospects")}
+                                valor={String(funil.encontrados)}
+                              />
+                              <Kpi rotulo={t("Contatados")} valor={String(funil.contatados)} />
+                              <Kpi rotulo={t("Respostas")} valor={String(funil.responderam)} />
+                              <Kpi
+                                rotulo={t("Oportunidades")}
+                                valor={String(funil.oportunidades)}
+                              />
+                              <Kpi rotulo={t("Pedidos")} valor={String(funil.pedidos)} />
+                              <Kpi
+                                rotulo={t("Faturamento")}
+                                valor={comoMoeda(funil.faturamento_cents, "BRL")}
+                              />
+                            </div>
+                            <Funil funil={funil} />
+                          </div>
+                        </details>
+                      )}
                     </div>
+                  ) : (
+                    <>
+                      {funil ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                            <Kpi
+                              rotulo={t("Quantidade de prospects")}
+                              valor={String(funil.encontrados)}
+                            />
+                            <Kpi rotulo={t("Contatados")} valor={String(funil.contatados)} />
+                            <Kpi rotulo={t("Respostas")} valor={String(funil.responderam)} />
+                            <Kpi
+                              rotulo={t("Oportunidades")}
+                              valor={String(funil.oportunidades)}
+                            />
+                            <Kpi rotulo={t("Pedidos")} valor={String(funil.pedidos)} />
+                            <Kpi
+                              rotulo={t("Faturamento")}
+                              valor={comoMoeda(funil.faturamento_cents, "BRL")}
+                            />
+                          </div>
+                          <Funil funil={funil} />
+                        </>
+                      ) : (
+                        <div aria-live="polite">
+                          <Skeleton className="h-16 w-full" />
+                        </div>
+                      )}
+                    </>
                   )}
                 </Card>
               </li>
             );
           })}
         </ul>
-      )}
+      ))}
 
-      {/* O público da base, e o que saiu dele. A tela mostra o número E o
-          motivo: "1.200 empresas" sozinho esconde as 103 que a loja já atende. */}
-      {publico !== null && (
-        <Card className="mt-4 space-y-3 p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <strong className="text-sm">{publico.campanha}</strong>
-            <Badge variant="secondary" className="h-5 px-2 text-xs font-normal">
-              {t("Público da base")}
-            </Badge>
-          </div>
-          <p className="text-sm">{publico.resumo}</p>
-          {publico.ja_clientes.length > 0 && (
-            <details className="text-xs">
-              <summary className="cursor-pointer">
-                {t(`${publico.ja_clientes.length} já são clientes — fora da fila`)}
-              </summary>
-              <ul className="mt-1 space-y-0.5">
-                {publico.ja_clientes.slice(0, 40).map((c) => (
-                  <li key={c.nome}>
-                    {c.nome} — {t("igual a")} {c.igual_a} ({c.similaridade.toFixed(2)})
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-          {publico.para_revisar.length > 0 && (
-            <details className="text-xs">
-              <summary className="cursor-pointer">
-                {t(`${publico.para_revisar.length} com nome parecido — revise`)}
-              </summary>
-              <ul className="mt-1 space-y-0.5">
-                {publico.para_revisar.slice(0, 40).map((c) => (
-                  <li key={c.nome}>
-                    {c.nome} — {t("parecido com")} {c.igual_a} ({c.similaridade.toFixed(2)})
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              disabled={publico.linhas.length === 0}
-              onClick={() => setPublico(null)}
-            >
-              {t("Fechar")}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={publico.linhas.length === 0}
-              onClick={() => setDisparoAberto(true)}
-            >
-              {t("Preparar disparo")}
-            </Button>
-          </div>
-        </Card>
-      )}
       <AlertDialog
         open={aExcluir !== null}
         onOpenChange={(aberto) => {
@@ -605,22 +632,6 @@ export function CampanhasTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <DialogoDisparo
-        ids={publico?.linhas.map((l) => l.id) ?? []}
-        campanhaId={publico?.campanha_id ?? null}
-        mensagensIniciais={
-          descobertas?.find((c) => c.id === publico?.campanha_id)?.mensagens ?? []
-        }
-        agendaInicial={descobertas?.find((c) => c.id === publico?.campanha_id) ?? null}
-        aberto={disparoAberto}
-        onFechar={() => setDisparoAberto(false)}
-        onConcluido={() => {
-          setDisparoAberto(false);
-          setPublico(null);
-          void recarregar();
-        }}
-      />
     </div>
   );
 }

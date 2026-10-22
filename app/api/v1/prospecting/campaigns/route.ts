@@ -12,6 +12,11 @@ import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { funisDaDescoberta } from "@/lib/prospeccao/funil-lote";
 import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
+import {
+  resumirEnvios,
+  type EnvioDaCampanha,
+  type ResumoDeEnvio,
+} from "@/lib/prospeccao/resumo-de-envio";
 import { campanhaCreateSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +34,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, limite_diario",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, limite_diario",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -43,16 +48,75 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
     return fail("internal_error", "Erro ao listar campanhas.", 500, { requestId });
   }
-  const linhas = (data ?? []) as unknown as { id: string; created_at: string }[];
-  if (comFunil && linhas.length > 0) {
+  const linhas = (data ?? []) as unknown as {
+    id: string;
+    created_at: string;
+    prospect_ids?: string[] | null;
+    contato_ids?: string[] | null;
+  }[];
+
+  // ── O resumo de envio entra na LISTA, não só no painel ───────────────────
+  // O card precisa dizer "22 de 48 enviadas · 26 faltam" sem abrir a campanha.
+  // A query é uma só para as 100 campanhas (sem N+1) e o cálculo é a MESMA
+  // função pura do painel. Se o ledger falhar, a lista continua abrindo; o
+  // card mostra a fila da lista fechada e o painel é a fonte detalhada.
+  const envioPorCampanha = new Map<string, ResumoDeEnvio>();
+  const ids = linhas.map((l) => l.id);
+  if (ids.length > 0) {
+    const { data: envios, error: erroEnvios } = await supabase
+      .from("prospecting_sends")
+      .select("campaign_id, prospect_id, message_id, enviado_em")
+      .eq("organization_id", authz.org.orgId)
+      .in("campaign_id", ids);
+
+    if (erroEnvios) {
+      logger.warn("[prospecting.campaigns] resumo de envio indisponível", {
+        requestId,
+        organization_id: authz.org.orgId,
+        erro: erroEnvios.message,
+      });
+    } else {
+      const porCampanha = new Map<string, EnvioDaCampanha[]>();
+      for (const envio of (envios ?? []) as unknown as (EnvioDaCampanha & {
+        campaign_id: string;
+      })[]) {
+        const lista = porCampanha.get(envio.campaign_id) ?? [];
+        lista.push(envio);
+        porCampanha.set(envio.campaign_id, lista);
+      }
+      for (const linha of linhas) {
+        const publicoContatos = (linha as { publico?: string }).publico === "contatos";
+        const listaFechada = publicoContatos ? linha.contato_ids : linha.prospect_ids;
+        envioPorCampanha.set(
+          linha.id,
+          resumirEnvios({
+            prospectIds: listaFechada,
+            sends: porCampanha.get(linha.id) ?? [],
+          }),
+        );
+      }
+    }
+  }
+
+  const comEnvio = linhas.map((l) => ({
+    ...l,
+    envio:
+      envioPorCampanha.get(l.id) ??
+      resumirEnvios({
+        prospectIds: l.prospect_ids ?? l.contato_ids,
+        sends: [],
+      }),
+  }));
+
+  if (comFunil && comEnvio.length > 0) {
     try {
       const funis = await funisDaDescoberta(
         supabase,
         authz.org.orgId,
-        linhas.map((l) => ({ id: l.id, created_at: l.created_at })),
+        comEnvio.map((l) => ({ id: l.id, created_at: l.created_at })),
       );
       return ok(
-        linhas.map((l) => ({ ...l, funil: funis[l.id] })),
+        comEnvio.map((l) => ({ ...l, funil: funis[l.id] })),
         { requestId },
       );
     } catch (e) {
@@ -65,7 +129,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       });
     }
   }
-  return ok(data ?? [], { requestId });
+  return ok(comEnvio, { requestId });
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

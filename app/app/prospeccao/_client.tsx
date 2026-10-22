@@ -124,6 +124,23 @@ function temParametrosDeEmpresa(params: URLSearchParams): boolean {
   return false;
 }
 
+const ABAS = ["campanhas", "empresas", "buscar", "pesquisas", "mercado", "config"] as const;
+
+/**
+ * A aba inicial da Prospecção.
+ *
+ * A tela abria em "Buscar" — um formulário de Google — mesmo para quem já
+ * tinha campanha. O uso real do dono é acompanhar campanha e mandar mensagem;
+ * a busca é a exceção. Campanhas vira o padrão, e `?aba=` permite que a tela
+ * de controle volte para a lista certa.
+ */
+function abaInicial(params: URLSearchParams): string {
+  const pedida = params.get("aba");
+  if (pedida && (ABAS as readonly string[]).includes(pedida)) return pedida;
+  if (temParametrosDeEmpresa(params)) return "empresas";
+  return "campanhas";
+}
+
 export function ProspeccaoClient({
   buscasIniciais,
   categorias,
@@ -143,10 +160,16 @@ export function ProspeccaoClient({
   const paramsUrl = useSearchParams();
   // Abas controladas (B1): quem decide a aba é o estado + a URL — "Ver
   // empresas" troca de aba mesmo sem recarregar a página.
-  const [aba, setAba] = React.useState<string>(() => (temParametrosDeEmpresa(paramsUrl) ? "empresas" : "buscar"));
+  const [aba, setAba] = React.useState<string>(() => abaInicial(paramsUrl));
   React.useEffect(() => {
     // Mesma rota com query nova (Link) preserva o componente — o initializer
-    // não roda de novo, então a troca reage à URL aqui.
+    // não roda de novo, então a troca reage à URL aqui. `?aba=` tem precedência
+    // porque é o retorno explícito da tela de controle.
+    const pedida = paramsUrl.get("aba");
+    if (pedida && (ABAS as readonly string[]).includes(pedida)) {
+      setAba(pedida);
+      return;
+    }
     if (temParametrosDeEmpresa(paramsUrl)) setAba("empresas");
   }, [paramsUrl]);
   // "O que você quer encontrar?" (§36) — critérios da busca vêm junto no
@@ -256,11 +279,11 @@ export function ProspeccaoClient({
 
       <Tabs value={aba} onValueChange={setAba}>
         <TabsList className="flex-wrap">
+          <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
+          <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
           <TabsTrigger value="buscar">{textos.abaBuscar}</TabsTrigger>
           <TabsTrigger value="pesquisas">{textos.abaPesquisas}</TabsTrigger>
-          <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
           <TabsTrigger value="mercado">{textos.abaMercado}</TabsTrigger>
-          <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
           {podeGerenciar && <TabsTrigger value="config">{textos.abaConfig}</TabsTrigger>}
         </TabsList>
 
