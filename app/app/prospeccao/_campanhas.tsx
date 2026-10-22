@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Megaphone, PencilSimple } from "@phosphor-icons/react";
+import { Megaphone, PencilSimple, Trash } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -10,6 +10,16 @@ import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState"
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -266,6 +276,10 @@ export function CampanhasTab({
   const [erro, setErro] = React.useState(false);
   const [publico, setPublico] = React.useState<PublicoDaBase | null>(null);
   const [disparoAberto, setDisparoAberto] = React.useState(false);
+  // A campanha que espera confirmação de exclusão (o diálogo é único e vive no
+  // rodapé; cada card só aponta para qual delas).
+  const [aExcluir, setAExcluir] = React.useState<CampanhaDescoberta | null>(null);
+  const [excluindo, setExcluindo] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -319,6 +333,22 @@ export function CampanhasTab({
       await recarregar();
     } catch (e) {
       showApiError(e);
+    }
+  }
+
+  async function excluir() {
+    if (!aExcluir) return;
+    const alvo = aExcluir;
+    setExcluindo(true);
+    try {
+      await apiClient.delete(`/api/v1/prospecting/campaigns/${alvo.id}`);
+      toast.success(t("Campanha excluída."));
+      setAExcluir(null);
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setExcluindo(false);
     }
   }
 
@@ -427,6 +457,17 @@ export function CampanhasTab({
                             : t("Executar")}
                         </Button>
                       )}
+                    {card.tipo === "descoberta" && podeOperar && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label={t("Excluir campanha")}
+                        title={t("Excluir campanha")}
+                        onClick={() => setAExcluir(card.campanha)}
+                      >
+                        <Trash size={16} aria-hidden />
+                      </Button>
+                    )}
                   </div>
 
                   <ObjetivoInline valor={objetivo} rota={rotaPatch} salvo={atualizarObjetivo} />
@@ -531,6 +572,40 @@ export function CampanhasTab({
           </div>
         </Card>
       )}
+      <AlertDialog
+        open={aExcluir !== null}
+        onOpenChange={(aberto) => {
+          if (!aberto && !excluindo) setAExcluir(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Excluir campanha?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {aExcluir
+                ? t(
+                    `A campanha "${aExcluir.nome}" e o histórico de envios dela serão apagados. As empresas que receberam por ela voltam a ficar disponíveis para outras campanhas. As buscas continuam salvas, mas deixam de pertencer a esta campanha. Não dá para desfazer.`,
+                  )
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluindo}>{t("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={excluindo}
+              onClick={(evento) => {
+                // O AlertDialogAction fecha por padrão; segurar aberto enquanto
+                // a chamada roda evita "fechei e não sei se apagou".
+                evento.preventDefault();
+                void excluir();
+              }}
+            >
+              {excluindo ? t("Excluindo…") : t("Excluir")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DialogoDisparo
         ids={publico?.linhas.map((l) => l.id) ?? []}
         campanhaId={publico?.campanha_id ?? null}
