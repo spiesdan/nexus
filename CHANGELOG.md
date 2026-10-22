@@ -8,6 +8,68 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.33.0] — 2026-10-22
+
+### Adicionado
+
+- **Pedidos do Mercos entram sozinhos, todo dia às 17h** O histórico de pedidos deixa de depender de alguém abrir o ERP e baixar planilha.
+  Um worker dedicado entra no Mercos com a sessão da empresa, percorre os pedidos a
+  partir do maior número já importado e grava pedido, itens, **vendedor** e o
+  **vínculo com o cliente** que já existe no CRM.
+
+  Há dois jeitos de disparar, e os dois usam a mesma fila:
+
+  - o botão **Importar pedidos Mercos** na tela de Pedidos;
+  - o cron das 17h, que enfileira uma execução por organização que já tem histórico.
+
+  A fila (`mercos_import_runs`) sobrevive a restart: o tick não abre navegador nem
+  depende de o worker estar acordado no mesmo instante. Duas execuções simultâneas
+  para a mesma organização não acontecem — a segunda encontra a primeira em curso.
+
+  A sessão do Mercos fica num volume, então o login acontece uma vez. O primeiro
+  login de um dispositivo novo pede um código por e-mail: o worker espera esse
+  código até uma hora, em vez de falhar na hora.
+
+  O telefone do cliente é normalizado para E.164 (`+55DDDNÚMERO`), porque o mesmo
+  número chegava em três formatos e cada formato virava um contato diferente.
+
+  **Nada é enviado ao cliente por causa da importação** — ela só escreve no CRM.
+
+### Corrigido
+
+- **A área do gráfico de vendas para no último dia realizado** A linha da área era desenhada até a borda direita do gráfico, enquanto os pontos
+  e o fechamento paravam no último dia com dado realizado. O resultado eram dois
+  defeitos visíveis no mesmo gráfico: a linha passava por cima do futuro e uma
+  área triangular aparecia sob os dias que ainda não aconteceram.
+
+  O passo horizontal passa a vir do mês inteiro (o eixo), não do tamanho da série
+  truncada. Assim a área, os círculos e a linha terminam no mesmo dia — o último
+  com venda realizada.
+
+- **A campanha e a tela alcançam a categoria pelo rótulo em português** Metade da base não recebia campanha nenhuma. Medido em 21/10/2026: das 26.136
+  empresas não bloqueadas da instalação, **12.856 (49%)** não eram alcançadas por
+  campanha alguma. Não era a fila de `categoria_revisar` (1.708 linhas): era a
+  empresa já resolvida carregar o rótulo em PORTUGUÊS, e a régua da campanha só
+  comparar o INGLÊS.
+
+  O caso mais claro é a ótica: o catálogo chama de "Ótica"; o Google traduz
+  "Optician" para "Óptica". As duas grafias não casavam por substring, e as 234
+  óticas da base não entravam em campanha nenhuma. O mesmo buraco em "Loja de
+  autopeças" (285), "Agricultura e pecuária" (253), "Serviço de revisão e
+  manutenção de veículos" (239) e "Serviços jurídicos" (201).
+
+  Agora os DOIS lados do rótulo entram na régua: a campanha aceita o cru e o
+  canônico, e o filtro de Empresas olha a coluna canônica também — antes a tela
+  ficava vazia para o termo certo enquanto a campanha já alcançava a empresa. O
+  veto de revisão continua de pé, e o café corrigido dentro do posto segue sem
+  voltar na lista de posto.
+
+  Medido depois: empresas alcançáveis por alguma campanha sobem de 11.572 para
+  21.950; os órfãos caem de 12.856 para 2.478. O que sobra fica de fora de
+  propósito — "Indústria", "Explorador florestal", "Loja de saúde e beleza",
+  "Floricultura", "Órgão público" não têm categoria servida, e adivinhar mandaria
+  mensagem para quem não é cliente.
+
 ## [1.32.4] — 2026-10-20
 
 ### Corrigido
@@ -5087,7 +5149,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.4...HEAD
+[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...HEAD
+[1.33.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.4...v1.33.0
 [1.32.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.3...v1.32.4
 [1.32.3]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.2...v1.32.3
 [1.32.2]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.1...v1.32.2
