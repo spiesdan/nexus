@@ -51,3 +51,13 @@
 		reverse_proxy app:3000
 	}
 }
+
+# Blocos de sites adicionais desta instalação (opcional).
+#
+# O glob vazio é válido — uma instalação que não monta nada em
+# /etc/caddy/sites continua com exatamente o site do CRM acima. Quem publica um
+# site estático ao lado do CRM (ex.: a landing institucional) monta o snippet
+# por um override de compose; o domínio NÃO fica no Caddyfile base, senão toda
+# instalação self-host tentaria emitir certificado para um domínio que não é
+# dela.
+import /etc/caddy/sites/*.caddyfile

@@ -1,0 +1,14 @@
+# Override OPCIONAL: publica a landing institucional ao lado do CRM.
+#
+# Só a instalação da Bill usa este arquivo. O compose base continua sendo a
+# instalação genérica do produto: sem este override, o Caddy não monta o site,
+# o domínio billhigiene.tech não existe no roteamento e nenhuma outra instalação
+# self-host tenta emitir certificado para um domínio que não é dela.
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.landing.yml \
+#     --env-file .env up -d caddy
+services:
+  caddy:
+    volumes:
+      - ./landing:/srv/landing:ro
+      - ./landing/site.caddyfile:/etc/caddy/sites/landing.caddyfile:ro
