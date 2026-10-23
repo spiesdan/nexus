@@ -733,4 +733,101 @@ describe("processarCampanhasAgendadas", () => {
     expect(naSegunda.enviados).toBe(1);
     expect(enviar).toHaveBeenCalledTimes(1);
   });
+
+  it("(u) campanha de TEMPLATE usa o canal oficial e não manda texto", async () => {
+    // O número por QR não serve: a Meta aceita o POST e recusa a ENTREGA
+    // (131047). A escolha é por capability, e o template vai no payload.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          mensagens: [],
+          mensagem_tipo: "template",
+          template_name: "boas_vindas",
+          template_language: "pt_BR",
+          template_contract_hash: "hash-1",
+          template_values: { "1": "Maria", "2": "Belo Horizonte" },
+        }),
+      ],
+      channel_sessions: [
+        { id: "sess-qr", organization_id: "org-1", provider: "waha", status: "WORKING", archived_at: null },
+        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+      ],
+      meta_templates: [
+        {
+          organization_id: "org-1",
+          name: "boas_vindas",
+          language: "pt_BR",
+          status: "APPROVED",
+          category: "MARKETING",
+          rejected_reason: null,
+          quality_score: null,
+          parameter_format: "POSITIONAL",
+          contract_hash: "hash-1",
+          components: [{ type: "BODY", text: "Olá {{1}}, falamos de {{2}}." }],
+          synced_at: "2026-10-23T12:00:00.000Z",
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    const p = enviar.mock.calls[0]![1];
+    expect(p.sessaoId).toBe("sess-oficial");
+    expect(p.mensagem).toBe("");
+    expect(p.template).toMatchObject({
+      name: "boas_vindas",
+      language: "pt_BR",
+      contractHash: "hash-1",
+      values: { "1": "Maria", "2": "Belo Horizonte" },
+    });
+    expect(dados.prospecting_sends![0]).toMatchObject({ mensagem_indice: 0, prospect_id: "p-001" });
+  });
+
+  it("(v) campanha de TEXTO não cai no oficial: fica sem canal e registra o motivo", async () => {
+    // Antes, a primeira WORKING era usada — e texto no oficial vira 131047 na
+    // entrega. Aqui não há QR, então o tick NÃO envia e o operador vê o porquê.
+    const dados = base({
+      prospecting_campaigns: [campanha()],
+      channel_sessions: [
+        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "sem_canal_texto" }]);
+    // Canal ausente NÃO pausa: o número pode voltar. O erro fica visível.
+    expect(dados.prospecting_campaigns![0]).toMatchObject({ status: "ativa" });
+    expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("texto livre");
+  });
+
+  it("(w) template inválido PAUSA a campanha e grava o motivo visível", async () => {
+    // Sem a linha no espelho, insistir a cada minuto gastaria uma reserva por
+    // prospect e a Meta recusaria todas. O tick para e deixa o erro na tela.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          mensagem_tipo: "template",
+          template_name: "sumiu",
+          template_language: "pt_BR",
+          template_contract_hash: "hash-1",
+          template_values: {},
+        }),
+      ],
+      channel_sessions: [
+        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+      ],
+      meta_templates: [],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pausadas).toBe(1);
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "template_invalido" }]);
+    expect(dados.prospecting_campaigns![0]).toMatchObject({ status: "pausada" });
+    expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("não está no espelho");
+  });
 });

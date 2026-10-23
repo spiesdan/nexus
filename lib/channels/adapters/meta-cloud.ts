@@ -22,6 +22,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { metaContactsPayload } from "@/lib/channels/meta/contact-card";
 import { resolveMetaCreds } from "../meta/credentials";
+import { sendTemplate as enviarTemplateMeta } from "../meta/send-template";
 import type {
   ChannelAdapter,
   ChannelHealth,
@@ -38,11 +39,11 @@ function toE164Digits(raw: string): string {
 /**
  * Credencial do ambiente — o caminho de instalação de número único.
  *
- * `isConfigured()` continua olhando só o env de propósito: ele responde "dá para
- * tentar?" de forma SÍNCRONA, e a resposta certa para uma instalação que gravou a
- * credencial na sessão vem do banco. Quem sabe disso é o `send`, que é async.
- * Devolver `false` aqui com sessão configurada faria o handler gravar `queued` sem
- * motivo — por isso o `send` resolve de novo, com a sessão, antes de desistir.
+ * `isConfigured()` devolve `true` e NÃO consulta o env: a credencial também pode
+ * viver na sessão (gravada pela tela), e a checagem é síncrona. Quem confirma é o
+ * `send`/`sendTemplate` (async), que resolve a sessão primeiro e lança
+ * `meta_not_configured` quando não há nenhuma. `metaCredsFromEnv` segue exportado
+ * como `getMetaCreds` para quem ainda lê o ambiente diretamente.
  */
 import { metaCredsFromEnv } from "../meta/credentials";
 export { metaCredsFromEnv as getMetaCreds };
@@ -97,28 +98,23 @@ export const metaCloudAdapter: ChannelAdapter = {
   },
 
   /**
-   * DÍVIDA CONHECIDA, deixada de propósito — não é descuido.
+   * SEMPRE `true` — e a mudança é deliberada.
    *
-   * A credencial deste canal também pode viver na SESSÃO (a tela de "Conectar
-   * canal oficial" grava `meta_token_encrypted` desde a 0118), e `isConfigured`
-   * é síncrono: não consulta o banco. Numa instalação que conectou pela tela e
-   * não escreveu `.env`, isto devolve `false`, e o handler (`_handler.ts:370`)
-   * grava `queued` com `queued_reason: meta_not_configured` sem nunca chamar
-   * `send` — mensagem parada no inbox, sem erro, com o canal conectado.
+   * A credencial deste canal também pode viver na SESSÃO: a tela de "Conectar
+   * canal oficial" grava `meta_token_encrypted` desde a 0118, e `isConfigured`
+   * é SÍNCRONO — não consulta o banco. Devolver `false` numa instalação que
+   * conectou pela tela fazia o handler gravar `queued` com
+   * `queued_reason: meta_not_configured` sem nunca chamar `send`: mensagem
+   * parada no inbox, sem erro, com o canal conectado e funcionando.
    *
-   * O canal intermediado JÁ passou por isso e resolveu devolvendo `true` e
-   * fazendo o `send` lançar (ver `adapters/zernio.ts`). O mesmo conserto cabe
-   * aqui, mas ele muda um contrato com dois testes explícitos
-   * (`tests/unit/channel-adapter-meta.test.ts`) cuja justificativa escrita é
-   * "mesmo contrato do outro canal" — justificativa que o fork já não sustenta.
-   *
-   * Trocar contrato testado exige uma mudança própria, com os testes revistos de
-   * propósito e não de passagem. Fica registrado aqui para quem for fazê-la.
+   * O par `isConfigured() === true ⟹ há credencial` não pode mentir, então quem
+   * o fecha é o `send`: sem credencial ele LANÇA `meta_not_configured`, e o
+   * handler traduz para `queued` (estado de espera com dono), em vez de gravar
+   * `sent` sem id. É o mesmo contrato do canal intermediado — e é o que permite
+   * campanha oficial enviar usando a credencial da sessão.
    */
   isConfigured(): boolean {
-    // Síncrono por contrato. Com credencial na sessão, quem confirma é o `send`
-    // (async) — ver o comentário acima.
-    return metaCredsFromEnv() !== null;
+    return true;
   },
 
   /**
@@ -192,9 +188,15 @@ export const metaCloudAdapter: ChannelAdapter = {
       organizationId: envelope.organizationId,
       phoneNumberId: envelope.sessionRef,
     });
-    // Mesmo contrato do outro canal: sem credencial é NOOP, não exceção. A UI mostra
-    // o banner de "canal não conectado"; transformar em erro mudaria comportamento.
-    if (!creds) return { externalId: null };
+    // Sem credencial a mensagem NÃO saiu. Lançar (em vez de devolver
+    // `{externalId:null}`) é o que o handler lê como "ainda não conectado" e
+    // grava `queued`; devolver null gravaria `sent` sem id, dizendo "enviado"
+    // para algo que nunca saiu.
+    if (!creds) {
+      throw new Error(
+        "meta_not_configured: sem credencial para esta sessão. Reconecte o número oficial em Conexões.",
+      );
+    }
 
     const corpo =
       contactPayload(envelope) ??
@@ -231,5 +233,101 @@ export const metaCloudAdapter: ChannelAdapter = {
     }
 
     return { externalId: body.messages?.[0]?.id ?? null };
+  },
+
+  /**
+   * Template pelo mesmo seam — e pela credencial da SESSÃO.
+   *
+   * Antes disto o handler desviava `type:'template'` para
+   * `sendTemplateForSession`, que lê `META_PHONE_NUMBER_ID` e
+   * `META_SYSTEM_USER_TOKEN` do AMBIENTE. Numa instalação multi-número isso não
+   * é falha de envio: é a mensagem saindo pelo número errado, com o token
+   * errado, e chegando ao cliente certo — o pior desfecho possível porque
+   * ninguém percebe.
+   *
+   * A linha do espelho é lida aqui para levar `components` e `contract_hash`
+   * para `sendTemplate`, que já recusa bind obsoleto/reprovado e valor faltante
+   * ANTES de gastar uma chamada. O pré-voo do handler (`conferirDefinicao`)
+   * continua valendo: ele é a mensagem acionável; este é o payload.
+   */
+  async sendTemplate(input): Promise<{ externalId: string | null }> {
+    const creds = await resolveMetaCreds(createAdminClient(), {
+      organizationId: input.organizationId,
+      phoneNumberId: input.sessionRef,
+    });
+    if (!creds) {
+      throw new Error(
+        "meta_not_configured: sem credencial para esta sessão. Reconecte o número oficial em Conexões.",
+      );
+    }
+
+    const admin = createAdminClient();
+    let consulta = admin
+      .from("meta_templates")
+      .select("name, language, status, contract_hash, components")
+      .eq("organization_id", input.organizationId)
+      .eq("name", input.name)
+      .eq("language", input.language);
+    // Dois números da mesma organização podem ter o MESMO nome de modelo com
+    // corpos diferentes. Filtrar pela conexão é o que impede mandar o payload
+    // de um no número do outro.
+    if (input.channelSessionId) {
+      consulta = consulta.eq("channel_session_id", input.channelSessionId);
+    }
+    const { data: linha, error } = await consulta.limit(1).maybeSingle();
+    if (error) {
+      throw new Error(`template_lookup_failed: ${error.message}`);
+    }
+
+    const resultado = await enviarTemplateMeta({
+      phoneNumberId: creds.phoneNumberId,
+      token: creds.token,
+      graphVersion: creds.graphVersion,
+      to: input.to,
+      binding: {
+        name: input.name,
+        language: input.language,
+        // Vazio quando a linha sumiu: `bindingState` devolve `missing` e a
+        // mensagem diz para sincronizar, em vez de postar e receber 132000.
+        contractHash: (linha as { contract_hash?: string } | null)?.contract_hash ?? "",
+        values: input.values,
+      },
+      current: linha
+        ? {
+            name: (linha as { name: string }).name,
+            language: (linha as { language: string }).language,
+            status: (linha as { status: string }).status,
+            contractHash: (linha as { contract_hash: string }).contract_hash,
+            components: (linha as { components: unknown }).components,
+          }
+        : null,
+    });
+
+    if (!resultado.sent) {
+      switch (resultado.reason) {
+        case "missing":
+          throw new Error(
+            `meta_template_missing: o modelo ${input.name} (${input.language}) não está no espelho local. Sincronize os modelos em Conexões.`,
+          );
+        case "not_approved":
+          throw new Error(
+            `meta_template_not_approved: o modelo ${input.name} (${input.language}) não está APROVADO na Meta.`,
+          );
+        case "stale":
+          throw new Error(
+            `meta_template_stale: o modelo ${input.name} (${input.language}) mudou na Meta desde a configuração. Revise os parâmetros.`,
+          );
+        case "missing_values":
+          throw new Error(
+            `meta_template_missing_values: faltam os valores ${resultado.missing.join(", ")}.`,
+          );
+        default:
+          throw new Error(
+            `meta_${resultado.code ?? "template_error"}: ${resultado.message}`,
+          );
+      }
+    }
+
+    return { externalId: resultado.externalId };
   },
 };
