@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
   // typedRoutes moved out of experimental in Next 15.5+
   typedRoutes: true,
   experimental: {
+    // O `next upgrade --agent=security` grava esta flag para não repetir o
+    // aviso de advisory já corrigido. O upgrade em si é o pin de `next` no
+    // `package.json` (16.4.0 → 16.4.2).
+    agentUpgrade: "security",
     optimizePackageImports: ["@phosphor-icons/react", "lucide-react", "date-fns"],
     /**
      * Cache do client router (default desde o v15: `dynamic: 0` = NADA cacheado
