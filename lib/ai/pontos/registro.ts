@@ -299,6 +299,19 @@ export const PONTOS_DE_IA: readonly PontoDeIa[] = [
     registraEm: "llm_calls",
   },
 
+  {
+    id: "pedido_por_ia",
+    rotulo: "Ler pedido por foto ou texto",
+    oQueFaz:
+      "Transforma a foto, o PDF, o áudio ou o texto de um pedido na lista de produtos que o vendedor precisa adicionar.",
+    papel: "entender",
+    exige: { imagem: true },
+    emissor: "app/api/v1/commercial-orders/importar-ia/route.ts",
+    sintomaDeFalha:
+      "O botão “Adicionar com IA” não consegue ler a foto e devolve que não encontrou produtos.",
+    registraEm: "llm_calls",
+  },
+
   // ────────────────────────── Proteger a operação ──────────────────────────
   {
     id: "jailbreak_detect",

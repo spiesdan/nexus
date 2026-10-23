@@ -41,7 +41,10 @@ export default async function NovoPedidoPage() {
         .eq("organization_id", activeOrg.orgId)
         .eq("ativo", true)
         .order("nome")
-        .limit(500),
+        // O mesmo teto da rota de produtos e da importação por IA. Com 500
+        // fixos, um catálogo de 635 fazia o seletor e a conferência da IA
+        // esconderem justamente os produtos que ficaram de fora.
+        .limit(2000),
       supabase
         .from("contacts")
         .select("id, display_name, name, phone_number, email")

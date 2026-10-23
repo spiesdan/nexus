@@ -79,6 +79,10 @@ export const ApiErrorCodes = {
   invalid_state_transition: "invalid_state_transition",
   invalid_owner: "invalid_owner", // novo dono não é membro ativo agent+ da org (bulk assign, G3-04)
   trigger_kind_not_implemented: "trigger_kind_not_implemented", // publish de followup-flow com kind sem motor de enrollment (stage_change/conversation_end)
+  // Pedido por IA: os três desfechos que a tela precisa distinguir.
+  catalogo_vazio: "catalogo_vazio", // não há produto cadastrado — o próximo passo é cadastrar, não tentar outra foto
+  pedido_sem_produtos: "pedido_sem_produtos", // a leitura funcionou, mas não havia produto legível
+  leitura_do_pedido_falhou: "leitura_do_pedido_falhou", // o modelo/provider não conseguiu ler o arquivo
 
   // 415 — tipo de mídia
   unsupported_media_type: "unsupported_media_type",
