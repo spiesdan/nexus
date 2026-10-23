@@ -49,9 +49,9 @@ const RAIZ = process.cwd();
 /**
  * O slug do App da release NESTE repositório.
  *
- * Não é mais `deskcomm`: o repositório era `spiesdan/DeskcommCRM` e virou
+ * Não é mais `nexus`: o repositório era `spiesdan/nexus` e virou
  * `spiesdan/nexus`, e o App foi recriado junto. O nome ficou escrito no
- * workflow (`deskcomm-release[bot]`) enquanto o App real passou a
+ * workflow (`nexus-release[bot]`) enquanto o App real passou a
  * `nexus-release-spiesdan[bot]` — e a tag da v1.25.22 não saiu por causa
  * disso, com a guarda reportando o bot CORRETO como assinatura inválida.
  *

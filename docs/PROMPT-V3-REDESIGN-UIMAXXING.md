@@ -1,19 +1,19 @@
-# PROMPT V3 — REDESIGN COMPLETO DO DESKCOMMCRM UTILIZANDO O REGISTRY UImaxxing
+# PROMPT V3 — REDESIGN COMPLETO DO NEXUS UTILIZANDO O REGISTRY UImaxxing
 ## OBJETIVO
 
-Refatorar completamente a interface do **DeskcommCRM** utilizando os componentes reais disponibilizados pelo UImaxxing através do registry oficial:
+Refatorar completamente a interface do **Nexus** utilizando os componentes reais disponibilizados pelo UImaxxing através do registry oficial:
 
 ```bash
 npx shadcn@latest add https://uimaxx.ing/r/uimaxxing.json
 ```
 
-O objetivo deste trabalho é **usar a biblioteca de componentes do UImaxxing dentro do DeskcommCRM**.
+O objetivo deste trabalho é **usar a biblioteca de componentes do UImaxxing dentro do Nexus**.
 
 Não tratar o UImaxxing apenas como referência visual.
 
 Não criar uma implementação genérica inspirada no site.
 
-O trabalho deve utilizar os **componentes reais disponibilizados pelo registry** e adaptá-los às funcionalidades existentes do DeskcommCRM.
+O trabalho deve utilizar os **componentes reais disponibilizados pelo registry** e adaptá-los às funcionalidades existentes do Nexus.
 
 ---
 
@@ -190,14 +190,14 @@ Se o registry possuir categorias diferentes, preservar as categorias reais.
 
 ---
 
-# 6. MAPEAR COMPONENTE → DESKCOMMCRM
+# 6. MAPEAR COMPONENTE → NEXUS
 
 Para cada componente encontrado, determinar se ele possui aplicação no produto.
 
 Criar:
 
 ```text
-docs/uimaxxing-deskcommcrm-map.md
+docs/uimaxxing-nexus-map.md
 ```
 
 Formato:
@@ -205,7 +205,7 @@ Formato:
 ```text
 UImaxxing Component
         ↓
-DeskcommCRM Module
+Nexus Module
         ↓
 Tela
         ↓
@@ -271,7 +271,7 @@ Combinar com outros componentes UImaxxing.
 
 ### NOT APPLICABLE
 
-Não possui aplicação real no DeskcommCRM.
+Não possui aplicação real no Nexus.
 
 Mesmo quando classificado como `NOT APPLICABLE`, registrar o motivo.
 
@@ -1042,7 +1042,7 @@ docs/uimaxxing-components.md
 Com uma tabela:
 
 ```text
-| Component | Registry | Category | DeskcommCRM Usage | Status |
+| Component | Registry | Category | Nexus Usage | Status |
 ```
 
 Status:
@@ -1103,7 +1103,7 @@ Executar exatamente nesta ordem:
 
 ## FASE 1
 
-Auditar DeskcommCRM.
+Auditar Nexus.
 
 ## FASE 2
 
@@ -1130,7 +1130,7 @@ docs/uimaxxing-registry.md
 Mapear:
 
 ```text
-UImaxxing → DeskcommCRM
+UImaxxing → Nexus
 ```
 
 ## FASE 6
@@ -1255,7 +1255,7 @@ Uma tela somente está concluída quando:
 
 # 43. RESULTADO FINAL
 
-O resultado deve ser um DeskcommCRM completamente modernizado utilizando:
+O resultado deve ser um Nexus completamente modernizado utilizando:
 
 ```text
 UImaxxing Registry
@@ -1281,7 +1281,7 @@ Operations
 
 O ponto central deste projeto é:
 
-> **O UImaxxing não deve ser utilizado apenas como inspiração. Seus componentes reais devem ser descobertos através do registry, instalados, catalogados, avaliados e utilizados dentro do DeskcommCRM sempre que houver aplicação.**
+> **O UImaxxing não deve ser utilizado apenas como inspiração. Seus componentes reais devem ser descobertos através do registry, instalados, catalogados, avaliados e utilizados dentro do Nexus sempre que houver aplicação.**
 
 Começar obrigatoriamente executando:
 
@@ -1299,4 +1299,4 @@ Depois implementar.
 
 ---
 
-> Este é um REDESIGN COMPLETO do frontend. Não faça apenas ajustes incrementais no design atual. Todas as telas, layouts, componentes, hierarquia visual, navegação, espaçamentos, tabelas, cards, formulários, filtros, gráficos, drawers, modais e estados de interface devem ser reavaliados e, quando necessário, reconstruídos utilizando os componentes do UImaxxing Registry. Preserve funcionalidades, dados, APIs, regras de negócio, autenticação, permissões, Supabase, RLS e integrações, mas NÃO preserve a aparência atual do DeskcommCRM.
+> Este é um REDESIGN COMPLETO do frontend. Não faça apenas ajustes incrementais no design atual. Todas as telas, layouts, componentes, hierarquia visual, navegação, espaçamentos, tabelas, cards, formulários, filtros, gráficos, drawers, modais e estados de interface devem ser reavaliados e, quando necessário, reconstruídos utilizando os componentes do UImaxxing Registry. Preserve funcionalidades, dados, APIs, regras de negócio, autenticação, permissões, Supabase, RLS e integrações, mas NÃO preserve a aparência atual do Nexus.

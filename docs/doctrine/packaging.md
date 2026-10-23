@@ -1,6 +1,6 @@
 # Doutrina de Packaging e Distribuição
 
-> Lei de arquitetura para tudo que roda no disco de quem instalou o DeskcommCRM: imagens,
+> Lei de arquitetura para tudo que roda no disco de quem instalou o Nexus: imagens,
 > composes, tags e o kit de instalação. Complementa [`sistema-vivo.md`](./sistema-vivo.md) —
 > não é aspiração, é critério de aceite. Amarrada ao item 15 do Definition of Done
 > (`CLAUDE.md`).
@@ -39,7 +39,7 @@ Se a resposta for "o cliente", a peça está errada e vira imagem publicada.
 
 | | **Nosso** | **Upstream** |
 |---|---|---|
-| Exemplos | `deskcommcrm`, `deskcomm-worker` | WAHA, Redis, Caddy, `serverless-redis-http`, `postgres` |
+| Exemplos | `nexus`, `nexus-worker` | WAHA, Redis, Caddy, `serverless-redis-http`, `postgres` |
 | Quem constrói | nosso CI, uma vez por versão | terceiro, fora do nosso controle |
 | O que fazemos | publicamos com procedência e versão | **referenciamos com tag pinada** (ver ressalva) |
 | O que **nunca** fazemos | publicar da máquina de um dev | republicar, embalar ou copiar |
@@ -73,7 +73,7 @@ worker:
 
 # CERTO — imagem publicada; o build fica ao lado, como escape
 worker:
-  image: ${WORKER_IMAGE:-ghcr.io/melgarafael/deskcomm-worker:stable}
+  image: ${WORKER_IMAGE:-ghcr.io/melgarafael/nexus-worker:stable}
   build: { context: ., dockerfile: Dockerfile.worker }
 ```
 
@@ -107,7 +107,7 @@ OCI — no mínimo `source`, `revision`, `version`, `licenses` — e é constru�
   > **Ativado.** `imagens-ok` **é** required check da `main`. Medido em 2026-08-14:
   >
   > ```console
-  > $ gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
+  > $ gh api repos/spiesdan/nexus/branches/main/protection \
   >     --jq '.required_status_checks.contexts|join(", ")'
   > verify, build-and-size, invariants, e2e, imagens-ok
   > ```
@@ -142,7 +142,7 @@ seria recusar instalar por não conseguir resolver um número:
    para quem não vai rodar a entrevista. `--yes` com o template preserva esse valor.
 
 O que **nenhum** caminho faz é pinar numa versão sem antes conferir que as três imagens
-existem lá: a tag do git nasce minutos antes das imagens, e `deskcomm-worker:1.2.1` nunca
+existem lá: a tag do git nasce minutos antes das imagens, e `nexus-worker:1.2.1` nunca
 vai existir porque a v1.2.1 é anterior à criação desse pacote.
 
 - **Por quê:** três consequências de uma só causa. **(a)** A versão do cliente para de mudar
@@ -228,7 +228,7 @@ default que preserva o comportamento anterior**; se ela precisa existir, quem a 
 `GET /api/v1/health` responde a versão real da imagem em execução.
 
 > **Vale a partir da próxima release.** Nenhuma imagem já publicada carrega
-> `APP_VERSION` — medido: `docker run --rm ghcr.io/melgarafael/deskcommcrm:1.2.1 node -e
+> `APP_VERSION` — medido: `docker run --rm ghcr.io/melgarafael/nexus:1.2.1 node -e
 > 'console.log(process.env.APP_VERSION)'` → `undefined`. Todo o parque instalado hoje
 > responde `desconhecido`, que é a resposta honesta e o motivo de o fallback não ser mais
 > um número plausível. O item 9 do checklist de release reprova contra a 1.2.1 de propósito.
@@ -251,7 +251,7 @@ Só a árvore que criou os contêineres pode atualizá-los. Uma segunda cópia d
 mesma VPS **recusa** mexer, e diz por quê.
 
 - **Por quê:** `docker compose` deriva o nome do projeto do *basename* do diretório.
-  `/root/DeskcommCRM` e `/root/apagar6/DeskcommCRM` viram ambos `deskcommcrm` — um
+  `/root/Nexus` e `/root/apagar6/Nexus` viram ambos `nexus` — um
   conjunto só de contêineres, dois `.env` diferentes. Cada `up -d` recria o parque com as
   credenciais da sua árvore, e a outra passa a falar com serviços que não a reconhecem.
 - **Anti-exemplo real (medido, 2026-08):** o cron rodava o `agent.sh` das duas árvores a
@@ -271,7 +271,7 @@ mesma VPS **recusa** mexer, e diz por quê.
     --format '{{.Names}} => {{.Label "com.docker.compose.project.working_dir"}}'
   ```
 
-- **Escape:** `DESKCOMM_ASSUMIR_PROJETO=1` assume o parque de propósito. Existe para a
+- **Escape:** `NEXUS_ASSUMIR_PROJETO=1` assume o parque de propósito. Existe para a
   instalação que **mudou de pasta** de verdade; é explícito porque assumir por engano é o
   defeito que o guarda existe para impedir. Uma árvore alheia que já **não está no disco**
   não conta como rival — senão o guarda nasceria vermelho em quem só moveu a instalação.
@@ -280,8 +280,8 @@ mesma VPS **recusa** mexer, e diz por quê.
   `update.sh` chamavam o guarda; o `install.sh` não — ele é standalone de propósito (roda
   antes do clone) e tinha a própria varredura de portas, que perguntava só pelo **nome do
   projeto**. Como o nome colide justamente entre cópias irmãs, o instalador de uma aula em
-  `/root/apagar7/DeskcommCRM` concluiu "é a re-execução" ao ver o Caddy de
-  `/root/DeskcommCRM`, subiu por cima e trocou o banco da produção. O sintoma que chegou
+  `/root/apagar7/Nexus` concluiu "é a re-execução" ao ver o Caddy de
+  `/root/Nexus`, subiu por cima e trocou o banco da produção. O sintoma que chegou
   primeiro foi "minha senha parou de funcionar" — no outro banco a conta é outra —, o que
   manda a investigação para o lado errado por horas. **Nome de projeto igual não é
   identidade: só a árvore é.**
@@ -315,7 +315,7 @@ mesma VPS **recusa** mexer, e diz por quê.
   árvore (medido: sabotando só a chamada, o caso de `decide_proxy` segue ✓ e apenas a
   integração reprova).
 
-  **O escape é variável de AMBIENTE, não linha no `.env`** — `DESKCOMM_ASSUMIR_PROJETO=1
+  **O escape é variável de AMBIENTE, não linha no `.env`** — `NEXUS_ASSUMIR_PROJETO=1
   bash install.sh`. No `install.sh` o guarda roda antes de o `.env` ser carregado, então
   escrevê-lo no arquivo não desliga nada (medido: bloqueia igual). É a mesma via dos
   outros dois call sites.
@@ -398,7 +398,7 @@ do banco. É o passo que mais trava na estreia de uma imagem nova.
 [ ] 2. Nenhuma variável nova é obrigatória sem default (grep no diff de .env.example)
 [ ] 3. O número da versão NUNCA foi publicado antes:
        git tag --list 'vX.Y.Z'                     → vazio
-       ghcr_status deskcommcrm X.Y.Z               → 404
+       ghcr_status nexus X.Y.Z               → 404
 [ ] 4. Os pins upstream foram revisitados: `waha`, `srh`, `redis`, `caddy`, `postgres`.
        Bumpar ou confirmar que ficam — congelar sem revisar é como o `srh` ficou
        três versões atrás sem ninguém decidir isso
@@ -406,15 +406,15 @@ do banco. É o passo que mais trava na estreia de uma imagem nova.
 [ ] 6. O run de publicação ficou verde:
        gh run list --workflow=publish-image.yml --limit 3
 [ ] 7. As TRÊS imagens existem E são públicas nesta versão:
-       for i in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+       for i in nexus nexus-worker nexus-scheduler; do
          echo "$i: $(ghcr_status $i X.Y.Z)"; done      → 200 nas três
        403 em alguma? Torne o pacote público ANTES de seguir
 [ ] 8. A imagem reporta a versão certa:
-       docker run --rm ghcr.io/melgarafael/deskcommcrm:X.Y.Z \
+       docker run --rm ghcr.io/melgarafael/nexus:X.Y.Z \
          node -e 'console.log(process.env.APP_VERSION)'   → X.Y.Z
 [ ] 9. `gh release create vX.Y.Z` com as notas do CHANGELOG
 [ ] 10. SÓ AGORA: `stable` e X.Y.Z são o MESMO digest, nas três imagens:
-        for i in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+        for i in nexus nexus-worker nexus-scheduler; do
           for t in X.Y.Z stable; do
             echo -n "$i:$t "; docker buildx imagetools inspect \
               ghcr.io/melgarafael/$i:$t --format '{{.Manifest.Digest}}'; done; done
@@ -462,7 +462,7 @@ parque instalado** percorre, e é o único que a suíte de CI não exercita.
 
 | Camada | Artefato | Garante |
 |---|---|---|
-| CI (mecânico) | `imagens-ok` em `publish-image.yml` | imagem quebrada **reprova o merge** — é required check da `main`. Meça antes de confiar: `gh api repos/melgarafael/DeskcommCRM/branches/main/protection --jq '.required_status_checks.contexts'` |
+| CI (mecânico) | `imagens-ok` em `publish-image.yml` | imagem quebrada **reprova o merge** — é required check da `main`. Meça antes de confiar: `gh api repos/spiesdan/nexus/branches/main/protection --jq '.required_status_checks.contexts'` |
 | CI (mecânico) | `tests/unit/packaging-artefato-do-cliente.test.ts` | serviço `build:`-only, pin upstream solto, `pull_policy` trocado e versão que mente reprovam |
 | CI (mecânico) | `tests/shell/update-guard.test.sh` | atualização que não pina as três imagens reprova |
 | CI (mecânico) | `hostgator-setup-kit/test-validators.sh` | instalação que nasce em tag móvel reprova |
@@ -475,10 +475,10 @@ parque instalado** percorre, e é o único que a suíte de CI não exercita.
 ## Decisões registradas
 
 **2026-08-13 — o namespace fica em `melgarafael`.** Uma consultoria externa recomendou criar
-uma org `deskcommcrm` e migrar, sob a premissa de que o compose apontava para uma org
+uma org `nexus` e migrar, sob a premissa de que o compose apontava para uma org
 desvinculada do repo. A premissa era falsa: o compose sempre apontou para
-`ghcr.io/melgarafael/deskcommcrm`, que é o que o CI publica e o que está gravado no `.env` de
-todo cliente instalado. A string `deskcommcrm/deskcommcrm` existia num único lugar — uma URL
+`ghcr.io/melgarafael/nexus`, que é o que o CI publica e o que está gravado no `.env` de
+todo cliente instalado. A string `nexus/nexus` existia num único lugar — uma URL
 de `git clone` em `docs/deploy-selfhost/README.md`, que retornava 404. O conserto proporcional
 ao defeito foi essa linha. Racional completo no ADR.
 

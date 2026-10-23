@@ -42,9 +42,9 @@ ghcr_status() {   # $1=imagem  $2=tag  → 200 existe | 404 não existe | 403 pr
 Estado no momento em que este runbook foi escrito (2026-08-13):
 
 ```console
-$ ghcr_status deskcommcrm 1.2.1        → 200
-$ ghcr_status deskcommcrm stable       → 404   (o canal ainda não existe)
-$ ghcr_status deskcomm-worker latest   → 403   (o pacote ainda não existe)
+$ ghcr_status nexus 1.2.1        → 200
+$ ghcr_status nexus stable       → 404   (o canal ainda não existe)
+$ ghcr_status nexus-worker latest   → 403   (o pacote ainda não existe)
 ```
 
 ---
@@ -52,13 +52,13 @@ $ ghcr_status deskcomm-worker latest   → 403   (o pacote ainda não existe)
 ## 1. Merge do PR na `main`
 
 O push na `main` dispara `publish-image.yml`, que **cria** os dois pacotes novos
-(`deskcomm-worker`, `deskcomm-scheduler`) publicando `main` e `latest` neles.
+(`nexus-worker`, `nexus-scheduler`) publicando `main` e `latest` neles.
 
 **Verificação:**
 
 ```bash
 gh run list --workflow=publish-image.yml --limit 3    # o run da main ficou verde?
-ghcr_status deskcomm-worker latest                    # esperado agora: 403 (existe, privado)
+ghcr_status nexus-worker latest                    # esperado agora: 403 (existe, privado)
 ```
 
 `403` aqui é **progresso**, não erro: significa que o pacote passou a existir. `404` significa
@@ -71,7 +71,7 @@ no GHCR nasce privado, e repositório público não muda isso. Enquanto for priv
 `docker compose pull` de **toda VPS** é negado — e como `pull` de um serviço com `image:` falha
 a operação inteira, a atualização de um cliente morre depois do `git checkout` e do banco.
 
-Para cada um de `deskcomm-worker` e `deskcomm-scheduler`:
+Para cada um de `nexus-worker` e `nexus-scheduler`:
 
 > github.com/users/melgarafael/packages/container/`<pacote>`/settings → Danger Zone →
 > Change visibility → **Public**
@@ -82,7 +82,7 @@ permissão do repositório em vez de uma lista própria.
 **Verificação:**
 
 ```bash
-for i in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+for i in nexus nexus-worker nexus-scheduler; do
   echo "$i: $(ghcr_status $i latest)"
 done
 # esperado: 200 nos três
@@ -95,7 +95,7 @@ bloqueia **todos** eles até que cada um faça rebase. Depois do merge, `imagens
 `main` e todo PR novo já nasce com ele.
 
 ```bash
-gh api -X PATCH repos/melgarafael/DeskcommCRM/branches/main/protection/required_status_checks \
+gh api -X PATCH repos/spiesdan/nexus/branches/main/protection/required_status_checks \
   -f 'checks[][context]=verify' \
   -f 'checks[][context]=build-and-size' \
   -f 'checks[][context]=invariants' \
@@ -104,14 +104,14 @@ gh api -X PATCH repos/melgarafael/DeskcommCRM/branches/main/protection/required_
 ```
 
 > Use **`imagens-ok`**, não `build-and-push`. O job de build virou matriz de três imagens, e o
-> nome do check passou a ser `build-and-push (deskcommcrm, …)` — exigir cada um pelo nome faria
+> nome do check passou a ser `build-and-push (nexus, …)` — exigir cada um pelo nome faria
 > uma quarta imagem, um dia, escapar do gate em silêncio. `imagens-ok` é o job de fachada que
 > existe exatamente para dar um nome estável.
 
 **Verificação:**
 
 ```bash
-gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
+gh api repos/spiesdan/nexus/branches/main/protection \
   --jq '.required_status_checks.contexts|join(", ")'
 # esperado: verify, build-and-size, invariants, e2e, imagens-ok
 ```
@@ -131,12 +131,12 @@ não sobe. Siga o §Checklist de release da doutrina.
 **Verificação:**
 
 ```bash
-for i in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+for i in nexus nexus-worker nexus-scheduler; do
   echo "$i X.Y.Z: $(ghcr_status $i X.Y.Z)  stable: $(ghcr_status $i stable)"
 done
 # esperado: 200 em todos
 
-docker run --rm ghcr.io/melgarafael/deskcommcrm:X.Y.Z \
+docker run --rm ghcr.io/melgarafael/nexus:X.Y.Z \
   node -e 'console.log(process.env.APP_VERSION)'
 # esperado: X.Y.Z   (antes desta release, `undefined` — nenhuma imagem publicada a carrega)
 ```

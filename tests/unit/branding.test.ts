@@ -207,130 +207,16 @@ type EntradaDeMarca = {
   /** Conjunto EXATO de marcas do arquivo, como `marcasNoTexto` as normaliza. */
   marcas: string[];
 };
-
-const MARCA_CONGELADA: Record<string, EntradaDeMarca> = {
-  // ─── PROTOCOLO — contrato de fio. Renomear quebra integração alheia. ───
-  "app/api/v1/webhooks/in/[token]/route.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "header que o webhook de ENTRADA exige de quem envia. Renomear invalida a assinatura de todo integrador já configurado, e o sintoma para ele é 401 sem explicação",
-    marcas: ["x-deskcomm-signature"],
-  },
-  "lib/automation/actions/call-webhook.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "headers do webhook de SAÍDA. O receptor do cliente lê o nome exato para rotear e para conferir o HMAC; renomear faz o payload chegar e ser descartado calado",
-    marcas: ["x-deskcomm-event", "x-deskcomm-signature"],
-  },
-  "lib/automation/actions/call-webhook.test.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "é a guarda do contrato acima: este teste é o que reprova quem renomear o header. Trocar a string aqui para 'limpar a marca' desarmaria a única proteção que o contrato tem",
-    marcas: ["x-deskcomm-event", "x-deskcomm-signature", "x-deskcomm-signature"],
-  },
-  "lib/mcp/server.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "nome do servidor MCP, que o cliente (Claude Desktop e afins) grava na própria configuração. Renomear derruba as conexões já configuradas de quem usa",
-    marcas: ["deskcomm-crm"],
-  },
-  "lib/supabase/admin.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "`X-Client-Info` enviado ao Supabase — identifica o cliente nos logs e na telemetria DELES. Não é texto de interface e nunca chega ao usuário",
-    marcas: ["deskcomm-crm"],
-  },
-  "lib/nuvemshop/config.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "User-Agent exigido pela Nuvemshop, que identifica a aplicação registrada na plataforma deles. Trocar pelo nome do revendedor descreveria uma aplicação que não existe lá",
-    marcas: ["deskcommcrm"],
-  },
-  "lib/prospeccao/providers/osm.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "User-Agent e Referer exigidos pela política de uso do Nominatim/Overpass: identificam a aplicação para o controle de abuso DELES, nunca chegam ao usuário final, e UA genérico toma bloqueio. Trocar pelo nome do revendedor descreveria uma aplicação que não existe para eles",
-    marcas: ["deskcommcrm-prospeccao", "deskcommcrm-prospeccao", "deskcommcrm.local"],
-  },
-  "lib/rotas/geocodificacao.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "User-Agent exigido pela política de uso do Nominatim (mesmo caso do osm.ts da prospecção): identifica a aplicação para o controle de abuso DELES, nunca chega ao usuário final, e UA genérico toma bloqueio",
-    marcas: ["deskcommcrm-rotas", "deskcommcrm-rotas"],
-  },
-  "lib/rotas/osrm.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "User-Agent das chamadas ao OSRM (mesmo caso do osm.ts da prospecção): identifica a aplicação para o controle de abuso DELES, nunca chega ao usuário final",
-    marcas: ["deskcommcrm-rotas"],
-  },
-  "lib/agenda/google/evento.ts": {
-    categoria: "PROTOCOLO",
-    motivo:
-      "sufixo do `iCalUID` e prefixo das `extendedProperties` que GRAVAMOS dentro do Google Calendar do cliente. É por essa string que reconhecemos, meses depois, quais eventos daquela agenda vieram do CRM — e é o que impede o laço de eco. Trocar pela marca do revendedor faz todo evento já criado deixar de ser reconhecido, e o sintoma é compromisso fantasma ocupando horário, sem erro nenhum",
-    marcas: ["deskcomm", "deskcomm.app"],
-  },
-
-  // ─── INFRA — cookie/storage/contêiner. Renomear desloga ou perde estado. ───
-  "app/layout.tsx": {
-    categoria: "INFRA",
-    motivo:
-      "mesma `deskcomm-theme` de lib/theme.tsx: o `THEME_INIT_SCRIPT` a lê antes do primeiro paint para não piscar do dark-first para uma preferência light gravada. Renomear em um dos dois pontos e não no outro diverge o que o script pinta do que o provider aplica",
-    marcas: ["deskcomm-theme"],
-  },
-  "lib/theme.tsx": {
-    categoria: "INFRA",
-    motivo: "chave de localStorage do tema (dark-first desde o PROMPT V4: o layout fixa dark sem ler; a chave guarda a escolha de quem pediu light)",
-    marcas: ["deskcomm-theme"],
-  },
-  "lib/supabase/browser.ts": {
-    categoria: "INFRA",
-    motivo:
-      "nome do cookie de sessão. Renomear invalida a sessão de todo usuário logado no momento da atualização — o `update.sh` do clone viraria um logout em massa",
-    marcas: ["sb-deskcomm-auth"],
-  },
-  "lib/supabase/server.ts": {
-    categoria: "INFRA",
-    motivo: "o mesmo cookie de sessão, lido no servidor; tem de casar com o do browser",
-    marcas: ["sb-deskcomm-auth"],
-  },
-  "lib/impersonate/cookie.ts": {
-    categoria: "INFRA",
-    motivo:
-      "nome do cookie de impersonação. Renomear deixa órfã a sessão de suporte já aberta, e o operador fica preso na conta do tenant sem o cookie que o traz de volta",
-    marcas: ["deskcomm-impersonate"],
-  },
-  "lib/impersonate/cookie-edge.ts": {
-    categoria: "INFRA",
-    motivo: "o mesmo cookie de impersonação, na cópia que o middleware edge consegue importar",
-    marcas: ["deskcomm-impersonate"],
-  },
-
-  "hooks/ai/useDebugToggle.ts": {
-    categoria: "INFRA",
-    motivo:
-      "chave de localStorage do modo de depuração das citações da IA — irmã de `deskcomm-theme` em lib/theme.tsx. Não é texto de interface: renomear só faz quem já tinha o modo ligado perdê-lo, e o par leitura/escrita teria de mudar junto",
-    marcas: ["deskcomm.show_ai_citations"],
-  },
-
-  // ─── DEV — fixture de teste; não embarca. ───
-  "lib/agent-engine/agent/draft-reply.test.ts": {
-    categoria: "DEV",
-    motivo: "nome de agente numa fixture de teste ('Bot Deskcomm'); não sai da suíte",
-    marcas: ["deskcomm"],
-  },
-  "lib/system/changelog.test.ts": {
-    categoria: "DEV",
-    motivo:
-      "fixture que reproduz o CHANGELOG real, incluindo as URLs do repositório no GitHub. A marca aqui é o nome do repositório upstream, que o clone não renomeia",
-    marcas: ["deskcommcrm", "deskcommcrm", "deskcommcrm"],
-  },
-
-  // ─── PADRAO ─── NEXUS 2.0 §67: lib/branding.ts saiu da lista porque ───
-  // não contém mais /deskcomm/i (o teste "não guarda arquivo sem marca"
-  // abaixo OBRIGA a apagar a linha). O padrão é vigiado por valor em
-  // `expect(DEFAULT_APP_NAME).toBe("NEXUS")` no describe resolveBranding.
-};
+/**
+ * A allowlist está VAZIA de propósito.
+ *
+ * O nome legado foi removido do código na renomeação para Nexus. O scanner
+ * continua com `/deskcomm/i` como catraca: qualquer ocorrência que volte a
+ * aparecer em `app|components|lib|workers|hooks` reprova aqui, e a entrada
+ * precisa ser justificada com categoria e motivo. Não é mais uma lista de
+ * dívida técnica — é a proibição de reintroduzir o nome do projeto anterior.
+ */
+const MARCA_CONGELADA: Record<string, EntradaDeMarca> = {};
 
 /**
  * As raízes varridas — e a FRONTEIRA, escrita, porque foi a ausência dela que
@@ -559,14 +445,10 @@ describe("catraca de marca no que o GoTrue renderiza", () => {
     { arquivo: "supabase/config.toml", limpar: semComentariosToml },
   ];
 
-  const CONGELADO_SUPABASE: Record<string, EntradaDeMarca> = {
-    "supabase/config.toml": {
-      categoria: "DEV",
-      motivo:
-        "config do Supabase LOCAL (o `supabase start` de dev e do CI). NÃO embarca na imagem e NÃO alcança clone nenhum: um self-hoster usa um projeto na nuvem do Supabase, cuja config de auth vem do marca-emails.sh, ou um GoTrue próprio, que lê env. `project_id` ainda nomeia os contêineres locais (supabase_auth_deskcomm-crm) e os assuntos são o que a suíte local envia",
-      marcas: ["deskcomm-crm", "deskcommcrm", "deskcommcrm"],
-    },
-  };
+  // Vazio de propósito: o nome legado saiu do `supabase/config.toml` na
+  // renomeação. O scanner continua vigiando a reintrodução do nome antigo;
+  // o `project_id` e os assuntos locais agora usam o nome do produto.
+  const CONGELADO_SUPABASE: Record<string, EntradaDeMarca> = {};
 
   const encontradoAqui = new Map<string, string[]>();
   for (const { arquivo, limpar } of ALVOS) {

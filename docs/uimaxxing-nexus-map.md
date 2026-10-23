@@ -1,4 +1,4 @@
-# UImaxxing → DeskcommCRM — Mapa componente → módulo → tela → finalidade
+# UImaxxing → Nexus — Mapa componente → módulo → tela → finalidade
 
 > Todos os 60 componentes instalados avaliados. Nenhum inventado.
 > Status: USE (direto) · ADAPT (mesma estrutura, dados/labels/props do CRM) · COMBINE (com outros UImaxxing) · NOT APPLICABLE (com motivo).

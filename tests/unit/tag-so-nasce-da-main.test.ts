@@ -80,11 +80,11 @@ describe("a tag nasce no CI, e nunca do GITHUB_TOKEN", () => {
     // comparar digest em vez de código de status (issue #488).
     expect(t, "o corte não consulta mais o registro").toMatch(/ghcr\.io\/v2\//);
     for (const img of [
-      "deskcommcrm",
-      "deskcomm-worker",
-      "deskcomm-scheduler",
-      "deskcomm-fiscal-sidecar",
-      "deskcomm-mercos",
+      "nexus",
+      "nexus-worker",
+      "nexus-scheduler",
+      "nexus-fiscal-sidecar",
+      "nexus-mercos",
     ]) {
       expect(t, `a conferência não cobre ${img}`).toContain(img);
     }
@@ -110,13 +110,13 @@ describe("a tag nasce no CI, e nunca do GITHUB_TOKEN", () => {
     // E a condição que a guarda antiga NÃO tinha: só o App da release corta.
     //
     // O nome vem de `${APP_SLUG}` (o token do App) e não de um literal no
-    // arquivo. Medido em 09/10/2026: o literal era `deskcomm-release[bot]`,
+    // arquivo. Medido em 09/10/2026: o literal era `nexus-release[bot]`,
     // nome do App do repositório ANTIGO ao rename, e a tag da v1.25.22 não
     // saiu porque a guarda recusou o bot CERTO. Literal de nome de bot envelhece
     // com o repositório; o slug do token não.
     expect(t).toMatch(/APP_SLUG/);
     expect(t, "a guarda ainda compara com um nome de bot escrito à mão").not.toMatch(
-      /deskcomm-release\[bot\]/,
+      /nexus-release\[bot\]/,
     );
   });
 

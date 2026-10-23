@@ -82,7 +82,7 @@ function precisaIr(id: string): boolean {
 
 beforeAll(() => {
   sql(`
-    insert into auth.users (id, email) values ('${DONO}', 'dono-0200@deskcomm.test')
+    insert into auth.users (id, email) values ('${DONO}', 'dono-0200@nexus.test')
       on conflict (id) do nothing;
     insert into public.organizations (id, slug, display_name, legal_name)
       values ('${ORG}', 'org-0200', 'Org 0200', 'Org 0200')

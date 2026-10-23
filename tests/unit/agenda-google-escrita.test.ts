@@ -80,7 +80,7 @@ describe("publicar", () => {
      * Contrato conferido na doc oficial, não de memória:
      * https://developers.google.com/workspace/calendar/api/v3/reference/events/insert
      */
-    vi.mocked(fetch).mockResolvedValue(resposta(200, { id: "deskcommabc", sequence: 3 }));
+    vi.mocked(fetch).mockResolvedValue(resposta(200, { id: "nexusabc", sequence: 3 }));
     const r = await publicarNoGoogle("tok", "ana@clinica.com.br", AGENDAMENTO);
     expect(r.ok).toBe(true);
 
@@ -99,7 +99,7 @@ describe("publicar", () => {
     // A propriedade que o caso antigo protegia, medida onde ela agora vive.
     // Sem o id no corpo, cada rodada do cron criaria um evento novo e a agenda
     // do cliente encheria de cópias da mesma consulta.
-    vi.mocked(fetch).mockResolvedValue(resposta(200, { id: "deskcommabc" }));
+    vi.mocked(fetch).mockResolvedValue(resposta(200, { id: "nexusabc" }));
     await publicarNoGoogle("tok", "cal", AGENDAMENTO);
     const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
     const corpo = JSON.parse(String(init.body)) as { id?: string };
@@ -130,7 +130,7 @@ describe("publicar", () => {
      */
     vi.mocked(fetch)
       .mockResolvedValueOnce(resposta(409, { error: { errors: [{ reason: "duplicate" }] } }))
-      .mockResolvedValueOnce(resposta(200, { id: "deskcommabc", sequence: 1 }));
+      .mockResolvedValueOnce(resposta(200, { id: "nexusabc", sequence: 1 }));
     const r = await publicarNoGoogle("tok", "cal", AGENDAMENTO);
     expect(r.ok, "o 409 não foi tratado — o compromisso ficaria preso nele").toBe(true);
     expect(vi.mocked(fetch).mock.calls).toHaveLength(2);

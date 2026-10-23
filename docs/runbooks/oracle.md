@@ -16,7 +16,7 @@
 1. O código atual precisa estar publicado como imagem arm64:
    `commit → PR → merge na main → CI publica`. Conferir depois:
    ```bash
-   docker manifest inspect ghcr.io/melgarafael/deskcommcrm:stable \
+   docker manifest inspect ghcr.io/melgarafael/nexus:stable \
      | grep '"architecture"'
    # esperado: amd64 E arm64
    ```

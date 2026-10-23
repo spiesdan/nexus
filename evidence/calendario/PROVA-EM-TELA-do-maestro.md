@@ -2,7 +2,7 @@
 
 **Régua:** worktree `/Users/rafaelmelgaco/wt/cal-integra` (meu), `integra/w0`
 @ `90c6bb1f`, árvore limpa. App de **produção** (`next build` + `next start`) na
-3012, contra o stack isolado `deskcomm-cal` (54421). Login pelo formulário,
+3012, contra o stack isolado `nexus-cal` (54421). Login pelo formulário,
 navegação por clique.
 
 ## Os dois defeitos que eu tinha achado — MORTOS

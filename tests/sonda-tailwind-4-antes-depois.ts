@@ -28,7 +28,7 @@ import crypto from "node:crypto";
 
 const ANTES = process.env.SONDA_ANTES ?? "http://localhost:3002"; // Tailwind 3
 const DEPOIS = process.env.SONDA_DEPOIS ?? "http://localhost:3001"; // Tailwind 4
-const EMAIL = process.env.SONDA_EMAIL ?? "qa-tw4@deskcomm.local";
+const EMAIL = process.env.SONDA_EMAIL ?? "qa-tw4@nexus.local";
 const SENHA = process.env.SONDA_SENHA ?? "SenhaForte#2026tw4";
 const RAIZ = "evidence/tailwind-4";
 

@@ -325,4 +325,4 @@ Motivo: HTTP 404 em `/r/<id>.json` — são vitrines Pro (carrosséis, pôsteres
 - Total IDs no site: 112 (111 componentes + `library`)
 - Com JSON público: 60 showcase + 1 base + 10 primitivas
 - Instalados: 60 showcase + base + primitivas
-- Classificação de uso: ver `docs/uimaxxing-deskcommcrm-map.md` e `docs/uimaxxing-components.md`
+- Classificação de uso: ver `docs/uimaxxing-nexus-map.md` e `docs/uimaxxing-components.md`

@@ -18,7 +18,7 @@ O webhook WAHA tem que bater no **mesmo** deployment que a UI/`webhooks/in`.
 
 ```bash
 # Ver para onde o domínio aponta hoje
-npx vercel alias ls | findstr /i "crm-gabrielle deskcomm-crm"
+npx vercel alias ls | findstr /i "crm-gabrielle nexus"
 
 # Se ainda apontar para um deploy CLI antigo, reaponte para o da branch develop:
 npx vercel alias set <url-do-deploy-develop> crm-gabrielle.vercel.app
@@ -50,9 +50,9 @@ Se o workflow existir só em `develop`, o cron **nunca** dispara.
 
 ```bash
 # Via CLI (com permissão de secrets no repo)
-gh variable set RELOGIO_LIGADO -R SEU_USER/DeskcommCRM -b 1
-gh secret set RELOGIO_APP_URL -R SEU_USER/DeskcommCRM -b "https://crm-gabrielle.vercel.app"
-gh secret set RELOGIO_SECRET -R SEU_USER/DeskcommCRM -b "$INTERNAL_SECRET"
+gh variable set RELOGIO_LIGADO -R SEU_USER/Nexus -b 1
+gh secret set RELOGIO_APP_URL -R SEU_USER/Nexus -b "https://crm-gabrielle.vercel.app"
+gh secret set RELOGIO_SECRET -R SEU_USER/Nexus -b "$INTERNAL_SECRET"
 ```
 
 ## Opção B — cron-job.org (grátis, a cada 1 minuto)

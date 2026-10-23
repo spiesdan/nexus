@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # NEXUS 2.0 — deploy canônico (§80). VPS NUNCA builda (§69/§82).
-# Uso: NEXUS_IMAGE=ghcr.io/<dono>/deskcommcrm:<tag> ./scripts/deploy.sh
+# Uso: NEXUS_IMAGE=ghcr.io/<dono>/nexus:<tag> ./scripts/deploy.sh
 set -euo pipefail
 
 # Fonte única do kit (IMG_NS/IMG_APP/IMG_WORKER/IMG_SCHEDULER, dc() com o

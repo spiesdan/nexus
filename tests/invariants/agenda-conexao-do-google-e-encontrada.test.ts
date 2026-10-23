@@ -69,7 +69,7 @@ const DONO = "cccccccc-0201-4000-8000-000000000002";
 
 beforeAll(() => {
   sql(`
-    insert into auth.users (id, email) values ('${DONO}', 'dono-conexao@deskcomm.test')
+    insert into auth.users (id, email) values ('${DONO}', 'dono-conexao@nexus.test')
       on conflict (id) do nothing;
     insert into public.organizations (id, slug, display_name, legal_name)
       values ('${ORG}', 'org-conexao-google', 'Org Conexão', 'Org Conexão')

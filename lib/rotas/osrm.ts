@@ -32,7 +32,7 @@ async function getJson(url: string, timeoutMs = 20000): Promise<unknown> {
   const limite = setTimeout(() => controle.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "DeskcommCRM-Rotas/1.0", Accept: "application/json" },
+      headers: { "User-Agent": "Nexus-Rotas/1.0", Accept: "application/json" },
       signal: controle.signal,
     });
     if (!res.ok) throw new Error(`osrm_${res.status}`);

@@ -7,9 +7,9 @@
 #
 # ── O defeito que ele guarda, medido numa VPS de verdade ────────────────────
 #
-# `/root/DeskcommCRM` e `/root/apagar6/DeskcommCRM` — o clone de produção e um
+# `/root/Nexus` e `/root/apagar6/Nexus` — o clone de produção e um
 # de teste ao lado — têm o mesmo basename, logo o mesmo nome de projeto compose
-# (`deskcommcrm`). O cron rodava o agent.sh das DUAS a cada 5 minutos. Em
+# (`nexus`). O cron rodava o agent.sh das DUAS a cada 5 minutos. Em
 # 21/08 13:30 o clone de teste recriou o contêiner do WhatsApp com a chave do
 # .env dele; às 14:47 o app foi recriado da árvore de produção, com outra chave.
 # Resultado: `waha_create_401` em toda chamada, por três dias, nenhum número
@@ -50,8 +50,8 @@ PATH="$WORK/bin:$PATH"
 # ainda está no disco — quem apenas moveu a pasta deixa contêineres apontando
 # para um caminho morto, e travar esse caso seria um gate nascendo vermelho em
 # quem não fez nada de errado.
-PROD="$WORK/root/DeskcommCRM"
-TESTE="$WORK/root/apagar6/DeskcommCRM"
+PROD="$WORK/root/Nexus"
+TESTE="$WORK/root/apagar6/Nexus"
 MUDOU_DE_PASTA="$WORK/root/endereco-antigo"   # de propósito: NÃO é criado
 mkdir -p "$PROD" "$TESTE"
 touch "$PROD/docker-compose.prod.yml" "$TESTE/docker-compose.prod.yml"
@@ -87,8 +87,8 @@ check "a recusa ensina a saída (crontab)" grep -q "crontab" <<<"$saida"
 saida="$(guarda "$PROD" "$PROD" "$TESTE" "$PROD")"; rc=$?
 check "parque MISTO (o caso medido) é recusado" test "$rc" -ne 0
 
-saida="$(DESKCOMM_ASSUMIR_PROJETO=1 guarda "$PROD" "$TESTE")"; rc=$?
-check "DESKCOMM_ASSUMIR_PROJETO=1 é a saída explícita (rc=0)" test "$rc" -eq 0
+saida="$(NEXUS_ASSUMIR_PROJETO=1 guarda "$PROD" "$TESTE")"; rc=$?
+check "NEXUS_ASSUMIR_PROJETO=1 é a saída explícita (rc=0)" test "$rc" -eq 0
 
 # O gate não pode nascer vermelho em quem só mudou a instalação de pasta: os
 # contêineres seguem apontando para o endereço antigo, que já não existe. Aquilo

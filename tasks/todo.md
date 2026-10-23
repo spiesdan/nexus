@@ -1,4 +1,4 @@
-# DeskcommCRM — Workflow de Construção
+# Nexus — Workflow de Construção
 
 Ordem definida pelo Rafael: **PRD → Regras de Negócio → Specs → Epics → Stories → Plano com Tasks**.
 

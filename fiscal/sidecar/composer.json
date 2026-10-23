@@ -1,6 +1,6 @@
 {
-  "name": "deskcomm/fiscal-sidecar",
-  "description": "Sidecar emissor de NF-e (sped-nfe) do DeskcommCRM. Rede privada, nunca exposto.",
+  "name": "nexus/fiscal-sidecar",
+  "description": "Sidecar emissor de NF-e (sped-nfe) do Nexus. Rede privada, nunca exposto.",
   "type": "project",
   "license": "MIT",
   "require": {

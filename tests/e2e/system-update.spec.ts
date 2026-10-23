@@ -8,7 +8,7 @@
  *
  * ═══ QUEM É O DONO AQUI, E POR QUE NÃO É O `e2e-admin` ═══
  *
- * O dono do servidor desta spec é `e2e-dono@deskcomm.test`, um usuário
+ * O dono do servidor desta spec é `e2e-dono@nexus.test`, um usuário
  * DEDICADO. Antes ele era o `e2e-admin`, que 10 outras specs usam como *admin
  * de tenant* — e como nenhum seed revogava a promoção e as duas partes do job
  * `e2e` compartilham banco sem reset, a parte 2 inteira herdava um admin com

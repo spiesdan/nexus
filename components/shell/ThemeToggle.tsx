@@ -5,7 +5,7 @@ import { useTheme } from "@/lib/theme";
 
 /**
  * Alternador de tema na TopBar (§17): o produto nasce dark-first, mas a
- * chave `deskcomm-theme` e o `THEME_INIT_SCRIPT` do layout já carregavam o
+ * chave `nexus-theme` e o `THEME_INIT_SCRIPT` do layout já carregavam o
  * caminho claro — o que faltava era o botão que alcança ele. Sem consumidor
  * nenhum de `useTheme` antes deste arquivo (medido por grep), o tema claro
  * só existia pra quem abria o DevTools.

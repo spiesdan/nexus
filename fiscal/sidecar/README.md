@@ -17,7 +17,7 @@ serviço no ar, as notas ficam `pendente` (o stub honesto) — nunca "autorizada
 cd fiscal/sidecar
 cp .env.example .env   # FISCAL_SIDECAR_SECRET=openssl rand -hex 32
 docker build -t fiscal-sidecar .
-docker run -d --name fiscal --network deskcomm-net \
+docker run -d --name fiscal --network nexus-net \
   -e FISCAL_SIDECAR_SECRET=... \
   -v /srv/fiscal/certs:/certs:ro \
   -p 127.0.0.1:8080:8080 \

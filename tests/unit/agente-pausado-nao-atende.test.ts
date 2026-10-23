@@ -1,7 +1,7 @@
 /**
  * PAUSAR TEM QUE CALAR — inclusive pelo caminho legado.
  *
- * ─── O defeito, medido em produção (VPS `crm.deskcomm.com.br`, 2026-08-28) ───
+ * ─── O defeito, medido em produção (VPS `crm.nexus.com.br`, 2026-08-28) ───
  *
  * O dono pausa um agente na tela. A tela passa a mostrar **Rascunho**. E ele
  * volta a responder no WhatsApp. A cadeia tem quatro elos, todos na fonte:

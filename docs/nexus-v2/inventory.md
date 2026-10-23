@@ -90,6 +90,6 @@ Domínios top: `ai:63`, `cron:23`, `admin:21`, `conversations:19`, `leads:13`, `
 ## 9. Classificação inicial (KEEP/REFACTOR/REPLACE/REMOVE)
 
 - KEEP: `lib/comercial/radar-compras.ts`, `risk-radar.ts`, `radar-de-risco.ts`, `lib/ai/handoff/orchestrator.ts`, `lib/agent-engine/agent/*`, `lib/api/wrappers.ts`, `lib/navigation/registry.ts`, `components/shell/*`, `app/api/v1/health`, `Dockerfile`, `publish-image.yml`.
-- REFACTOR: `components/` (consolidar em Nexus Design System), `lib/branding` (trocar default DeskcommCRM→NEXUS), `Dockerfile.worker` (multi-stage), `ci.yml` (concurrency+paths), sidebar groups (→ taxonomia NEXUS §19).
+- REFACTOR: `components/` (consolidar em Nexus Design System), `lib/branding` (trocar default Nexus→NEXUS), `Dockerfile.worker` (multi-stage), `ci.yml` (concurrency+paths), sidebar groups (→ taxonomia NEXUS §19).
 - REPLACE: `scripts/deploy.sh` (criar canônico sobre hostgator-kit), `lib/nexus/graph.ts` (evoluir → Sales Brain real).
 - REMOVE: ✅ `mercos-scrape` do runtime (arquivado em `docs/legacy/`, passo 8), ✅ `DataTable*` duplicados, `tenant_id` residual, ✅ `middleware.ts` fantasma (já é `proxy.ts`).

@@ -4,7 +4,7 @@
  *
  * ═══ O ESTADO ERRADO QUE ISTO VIGIA ═══
  *
- * `scripts/seed-e2e-system-update.ts` promovia `e2e-admin@deskcomm.test` — o
+ * `scripts/seed-e2e-system-update.ts` promovia `e2e-admin@nexus.test` — o
  * admin de tenant COMPARTILHADO por 10 specs — a `platform_admins`, e nenhum
  * seed revogava. As duas partes do job `e2e` compartilham banco SEM reset, então
  * a parte 2 inteira herdava um admin promovido. Medido em 2026-08-14, no banco

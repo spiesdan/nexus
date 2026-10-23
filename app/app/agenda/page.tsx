@@ -115,7 +115,7 @@ export default async function AgendaPage() {
    * A OCUPAÇÃO QUE VEM DO GOOGLE — o que o dono cria lá e não via aqui.
    *
    * ⚠️ ESTE FIO NUNCA EXISTIU, e é o Lado B do relato: "quando marco algo pelo
-   * calendar não mostra no deskcomm". Medido na VPS: 27 linhas em
+   * calendar não mostra no nexus". Medido na VPS: 27 linhas em
    * `calendar_external_events`, entrando certo. Mas essa tabela só alimentava o
    * motor de disponibilidade (`lib/agenda/ocupados.ts`) — o horário ficava
    * bloqueado e o bloco não aparecia. O dono via a agenda vazia e o horário

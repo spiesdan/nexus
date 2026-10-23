@@ -1,6 +1,6 @@
 # UImaxxing Components — Discovery Report
 
-| Component | Registry | Category | DeskcommCRM Usage | Status |
+| Component | Registry | Category | Nexus Usage | Status |
 |---|---|---|---|---|
 | uimaxxing (base) | `https://uimaxx.ing/r/uimaxxing.json` | Stylesheet | fundação de todos | Installed |
 | settings-panel | `https://uimaxx.ing/r/settings-panel.json` | Settings & Account | /settings | Adapted |

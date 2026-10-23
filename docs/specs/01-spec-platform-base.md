@@ -11,7 +11,7 @@ regras_aplicadas: [T-01, T-02, T-03, T-04, T-05, T-06, T-07, T-08, L-04, L-06, L
 
 # Spec Técnica 01 — Plataforma Base
 
-> Spec foundational do DeskcommCRM. Define schema SQL completo, RLS policies, fluxos de auth, contratos de API REST `/api/v1/`, endpoints LGPD e onboarding de tenant. Toda spec posterior (Customer 360, WhatsApp, Pipeline, IA, Nuvemshop) **depende** desta. Divergências exigem ADR explícito.
+> Spec foundational do Nexus. Define schema SQL completo, RLS policies, fluxos de auth, contratos de API REST `/api/v1/`, endpoints LGPD e onboarding de tenant. Toda spec posterior (Customer 360, WhatsApp, Pipeline, IA, Nuvemshop) **depende** desta. Divergências exigem ADR explícito.
 
 ---
 
@@ -119,7 +119,7 @@ create trigger trg_organizations_touch
   before update on public.organizations
   for each row execute function public.fn_touch_updated_at();
 
-comment on table public.organizations is 'Tenants do DeskcommCRM. Cada linha = 1 e-commerce cliente.';
+comment on table public.organizations is 'Tenants do Nexus. Cada linha = 1 e-commerce cliente.';
 comment on column public.organizations.cnpj is 'CNPJ formatado XX.XXX.XXX/XXXX-XX. Único por tenant ativo.';
 comment on column public.organizations.status is 'active=operando | suspended=pausado por admin | redacted=LGPD store/redact aplicado | archived=cancelado.';
 ```
@@ -650,7 +650,7 @@ Supabase emite JWT default; estendemos com custom claims via Auth Hook (`auth.us
   "aud": "authenticated",
   "exp": 1745846400,
   "iat": 1745842800,
-  "email": "operador@deskcomm.com.br",
+  "email": "operador@nexus.com.br",
   "role": "authenticated",
   "aal": "aal2",
   "amr": [{"method":"password","timestamp":1745842800},{"method":"totp","timestamp":1745842810}],
@@ -1125,7 +1125,7 @@ if (process.env.UPSTASH_REDIS_REST_URL) {
     redis: Redis.fromEnv(),
     limiter: Ratelimit.slidingWindow(100, '1 s'), // B-04: 100 RPS default
     analytics: true,
-    prefix: 'deskcomm:rl',
+    prefix: 'nexus:rl',
   });
 }
 
@@ -1435,7 +1435,7 @@ commit;
 ### 9.1 CLI
 
 ```bash
-$ deskcomm tenant create \
+$ nexus tenant create \
     --legal-name "Loja Exemplo LTDA" \
     --display-name "Loja Exemplo" \
     --cnpj "12345678000190" \
@@ -1452,8 +1452,8 @@ $ deskcomm tenant create \
 Tenant criado:
   ID:    33333333-3333-3333-3333-333333333333
   Slug:  loja-exemplo
-  URL:   https://loja-exemplo.deskcomm.com (DNS pending)
-  Admin invite: https://app.deskcomm.com/invite/<jwt-1h>
+  URL:   https://loja-exemplo.nexus.com (DNS pending)
+  Admin invite: https://app.nexus.com/invite/<jwt-1h>
 
 Próximos passos:
   - Admin completa MFA enrollment
@@ -1465,7 +1465,7 @@ Próximos passos:
 
 ### 9.2 UI super-admin
 
-Wizard em `https://admin.deskcomm.com/tenants/new` com mesma sequência:
+Wizard em `https://admin.nexus.com/tenants/new` com mesma sequência:
 1. **Identidade**: legal_name, display_name, CNPJ, slug
 2. **Configurações**: timezone, locale, rate_limit_rps, ai_budget_cents
 3. **Admin inicial**: email + nome (gera invite link)
@@ -1590,7 +1590,7 @@ import pino from 'pino';
 
 export const log = pino({
   level: process.env.LOG_LEVEL ?? 'info',
-  base: { service: 'deskcomm-api', env: process.env.NODE_ENV },
+  base: { service: 'nexus-api', env: process.env.NODE_ENV },
   redact: {
     paths: ['*.password','*.token','*.api_key','*.cookie','*.cpf','req.headers.authorization'],
     censor: '[REDACTED]',
@@ -1810,7 +1810,7 @@ CPF_ENCRYPTION_KEY=             # rotação trimestral (L-07)
 RESEND_API_KEY=
 
 # Auth
-AUTH_COOKIE_DOMAIN=.deskcomm.com
+AUTH_COOKIE_DOMAIN=.nexus.com
 ```
 
 ## 15. Apêndice B — Referências cruzadas

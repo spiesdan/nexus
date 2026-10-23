@@ -18,7 +18,7 @@
  *
  * `marcaDaSaida()` é a porta certa para saída sem DOM (a mesma que o convite
  * de time e o e-mail de LGPD usam): organização → instalação → `.env` →
- * padrão, com a organização vencendo. Escrever "Deskcomm" ou pegar um hex à
+ * padrão, com a organização vencendo. Escrever "Nexus" ou pegar um hex à
  * mão aqui reprovaria `tests/unit/branding.test.ts` — este documento vai para
  * o cliente do revendedor, e o nome nele é o do negócio dele.
  */

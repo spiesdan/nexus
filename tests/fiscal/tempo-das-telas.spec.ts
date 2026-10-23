@@ -42,7 +42,7 @@ test("tempo de cada tela", async ({ page }) => {
 
   await page.context().addCookies([
     {
-      name: "sb-deskcomm-auth",
+      name: "sb-nexus-auth",
       value: `base64-${Buffer.from(
         JSON.stringify({
           access_token: TOKEN,

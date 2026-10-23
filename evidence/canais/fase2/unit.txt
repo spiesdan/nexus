@@ -1,9 +1,9 @@
 
-> deskcomm-crm@0.1.0 test:unit /Users/rafaelmelgaco/DeskcommCRM-canais
+> nexus@0.1.0 test:unit /Users/rafaelmelgaco/Nexus-canais
 > vitest run
 
 
- RUN  v4.1.10 /Users/rafaelmelgaco/DeskcommCRM-canais
+ RUN  v4.1.10 /Users/rafaelmelgaco/Nexus-canais
 
  ❯ tests/unit/evidencia-citada.test.ts (30 tests | 1 failed) 1885ms
      × docs/growth/lp-prompts-imagens.md não cita imagem fora do versionamento 85ms

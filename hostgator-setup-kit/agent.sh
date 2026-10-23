@@ -305,9 +305,9 @@ export API SECRET ERRLOG RUN_ID
 UPDATE_ARGS=()
 [ -n "$LATEST_TAG" ] && UPDATE_ARGS=(--to "$LATEST_TAG")
 set +e
-DESKCOMM_AGENT_REPORT=1 \
-DESKCOMM_AGENT_PREV_IMAGE="$PREV_IMAGE" \
-DESKCOMM_AGENT_REPORT_CMD="$(declare -f post report log_err); report" \
+NEXUS_AGENT_REPORT=1 \
+NEXUS_AGENT_PREV_IMAGE="$PREV_IMAGE" \
+NEXUS_AGENT_REPORT_CMD="$(declare -f post report log_err); report" \
   bash "$(dirname "$0")/update.sh" "${UPDATE_ARGS[@]+"${UPDATE_ARGS[@]}"}" >"$LOG" 2>&1
 RC=$?
 set -e

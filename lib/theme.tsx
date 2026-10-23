@@ -7,13 +7,13 @@ import * as React from "react";
  * do globals.css é o caminho padrão — o layout fixa `dark` antes do primeiro
  * paint (ver `THEME_INIT_SCRIPT` em `app/layout.tsx`) e o provider aplica a
  * preferência do usuário em cima depois. `light` continua válido: a chave
- * `deskcomm-theme` guarda a escolha, e quem nunca escolheu fica no dark.
+ * `nexus-theme` guarda a escolha, e quem nunca escolheu fica no dark.
  */
 
 export type Theme = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 
-const STORAGE_KEY = "deskcomm-theme";
+const STORAGE_KEY = "nexus-theme";
 
 type ThemeContextValue = {
   /** User preference. Default: `dark` (dark-first). */

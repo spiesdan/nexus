@@ -327,7 +327,7 @@ decisão registra o motivo (regra da Fase 4: sem migração por preferência).
 | `/admin/tenants/[id]/health` | MANTER | herda header/tabs do layout; segundo header duplicaria |
 | `/admin/inbox` | MANTER + limitação registrada | read-only assumido; 360px fixo = desktop-first (admin interno); mobile do tenant já coberto |
 | `/admin/forbidden`, login (5), signup, onboarding (9), 403/500/503/suspended, legal (2), accept-invite, `/` | MANTER | shells próprios; login env×DB intencional; onboarding = exceção wizard declarada |
-| `/design` | MANTER | `DeskcommCRM` no h1 é allowlist explícita do `branding.test.ts:352,388` |
+| `/design` | MANTER | `Nexus` no h1 é allowlist explícita do `branding.test.ts:352,388` |
 | `/vitrine-agenda` | MANTER | isolada + noindex de propósito |
 
 ### E.5 Deferidos com motivo (não esquecidos)

@@ -1,5 +1,5 @@
 /**
- * Importador Mercos → DeskcommCRM (fase 7).
+ * Importador Mercos → Nexus (fase 7).
  *
  * Lê a extração em %TEMP%/opencode/mercos e grava com service role:
  *   produtos-pag-*.json → catalog_products (upsert por organization_id+codigo)

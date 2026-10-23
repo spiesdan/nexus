@@ -79,7 +79,7 @@ export function idDeEventoDoGoogle(idDoAgendamento: string): string {
 /**
  * O prefixo sai do MESMO lugar que a identidade iCal, e não de um literal aqui.
  *
- * ⚠️ Eu tinha escrito `deskcomm` cravado, e `tests/unit/branding.test.ts`
+ * ⚠️ Eu tinha escrito `nexus` cravado, e `tests/unit/branding.test.ts`
  * reprovou — corretamente: numa instalação de marca própria, um literal de marca
  * no código é vazamento. Mas a saída NÃO é resolver por `branding()`: o cabeçalho
  * de `SUFIXO_ICAL_UID` já mediu por quê — se a identidade saísse da marca
@@ -257,7 +257,7 @@ export async function apagarNoGoogle(
  *
  * ⚠️ SUBSTITUI `ehIcalUidNosso`, e a troca não é cosmética.
  *
- * O reconhecimento morava no sufixo `@deskcomm.app` do `iCalUID` que mandávamos
+ * O reconhecimento morava no sufixo `@nexus.app` do `iCalUID` que mandávamos
  * junto do evento. Só que mandar `iCalUID` e `id` juntos é o que o Google
  * recusava com `400 Invalid resource id value` — medido em produção em
  * 2026-09-01, a cada 5 minutos, por horas. Tirar o uid conserta a publicação e

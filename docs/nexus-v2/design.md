@@ -48,7 +48,7 @@ CONFIGURAÇÕES
 
 ## 6. White-label (§67)
 
-Suportar logo, nome, favicon, cores, tema, empresa (`lib/branding/*` + `settings/marca`). Eliminar residual: `DeskcommCRM` (default → `NEXUS`), `Visitors` (só referência interna), nomes antigos. Produto final: **NEXUS — Plataforma Inteligente de Vendas**.
+Suportar logo, nome, favicon, cores, tema, empresa (`lib/branding/*` + `settings/marca`). Eliminar residual: `Nexus` (default → `NEXUS`), `Visitors` (só referência interna), nomes antigos. Produto final: **NEXUS — Plataforma Inteligente de Vendas**.
 
 ## 7. Critério §100
 

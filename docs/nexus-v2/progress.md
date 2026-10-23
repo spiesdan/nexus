@@ -8,7 +8,7 @@
 
 ## Estado do repositório (última medição)
 
-- Repo: `C:\Users\Daniel\Documents\wppcrm2\DeskcommCRM` · branch **`nexus-v2`**
+- Repo: `C:\Users\Daniel\Documents\wppcrm2\Nexus` · branch **`nexus-v2`**
 - HEAD: `2da983b7d release(1.15.0): a versão montada a partir dos fragmentos declarados` — **PR #8 MERGEADO e v1.15.0 PUBLICADA (2026-09-28)**: `gh pr merge 8 --merge` → `f8e29bbff`; fragmento `.changes/nexus-2-fases-0-8.md` em `b936dabc6`; corte manual do CHANGELOG (seção 1.15.0, fragmento consumido) em `2da983b7d`; tag anotada `v1.15.0` (`907bc0249`, no origin e igual à local); `publish-image` da tag **8/8 jobs ✅** (run `36454673277`: trava `a-tag-veio-da-main`, 3 builds, boot gate `imagem-do-app-sobe`, `promover-stable`); **sonda de digest: `stable` == `1.15.0` nas três imagens** — a VPS puxa na próxima rodada do agente (maior tag do origin = `v1.15.0`). `nexus-v2` fast-forward para `2da983b7d` (as duas branches estão iguais).
   **Corte MANUAL no precedente da v1.14.0 (`8dd9637a6`)**: o `release.yml` do CI está quebrado — os secrets `RELEASE_APP_ID`/`RELEASE_APP_PRIVATE_KEY` **não existem** na repo e TODO run morre em ~8s no `create-github-app-token` (medido: `36453815769`, `36453827262`, `36454669046`; todo push na `main` re-executa e re-falha — ruído pré-existente, não bloqueia nada). Para consertar de verdade falta criar o GitHub App e os 2 secrets.
   Antes: `ef09cc9ae` 3 melhorias de UI (prova visual citada abaixo em `evidence/ui-evolucao-vendas/`) · `30d414ae6` e2e do PR #8 verde (run `36359178690`) · `b5631e70e` rebalance + reporter · contenção `434d3573b`/`6ff9db071` · repo público (destravou `test:shell`).
@@ -1078,7 +1078,7 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   atualizados. Docs históricos (`docs/handoffs/`, `docs/audits/`) mantêm
   `origin/main` como citação de época. **Tags upstream removidas no
   mesmo dia** (decisão do usuário): as 52 tags da linhagem paralela do
-  `melgarafael/DeskcommCRM` (v1.15.0–v1.56.0, 4.582 commits fora do nosso
+  `spiesdan/nexus` (v1.15.0–v1.56.0, 4.582 commits fora do nosso
   histórico) foram trazidas na migração e logo apagadas do `nexus` —
   manter faria o comando de versão responder `1.56.0` (alheio ao nosso
   CHANGELOG, que para na 1.14.0) e o agente de atualização da VPS
@@ -1112,7 +1112,7 @@ Decisão INFIDO travada: **tema dark-first mantido** (§100/§14 não mandam cla
   `rate-limit` (timeout 15s), `performed-at-um-relogio-so`, `lib/ui/icons`.
 - Gates que travam entrega nova: navegação (rota nova → registry),
   `manifest-x-migrations` + apêndice no `baseline.sql` **ANTES** do bloco
-  `VARREDURA anon` (~linha 19860), branding (nunca "Deskcomm" no código de
+  `VARREDURA anon` (~linha 19860), branding (nunca "Nexus" no código de
   usuário), `lib/audit/actions.ts` para ação nova, RLS: tabela nova em
   `tests/invariants/rls-isolation.test.ts` TABLES+seed, definer em
   `AUTHENTICATED_PERMITIDO` do `hardening-definer-varredura.test.ts`.

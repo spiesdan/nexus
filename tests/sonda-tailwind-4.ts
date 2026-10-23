@@ -26,7 +26,7 @@ import { chromium, type Page } from "@playwright/test";
 import fs from "node:fs";
 
 const BASE = process.env.SONDA_BASE ?? "http://localhost:3001";
-const EMAIL = process.env.SONDA_EMAIL ?? "qa-tw4@deskcomm.local";
+const EMAIL = process.env.SONDA_EMAIL ?? "qa-tw4@nexus.local";
 const SENHA = process.env.SONDA_SENHA ?? "SenhaForte#2026tw4";
 const SAIDA = "evidence/tailwind-4";
 

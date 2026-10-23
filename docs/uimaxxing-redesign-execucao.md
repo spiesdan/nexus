@@ -2,7 +2,7 @@
 
 Prompt: `docs/PROMPT-V3-REDESIGN-UIMAXXING.md`. Backend preservado (Supabase/RLS/RBAC/Auth/APIs/workers intocados).
 
-## FASE 1 — Auditar DeskcommCRM ✅
+## FASE 1 — Auditar Nexus ✅
 - App: `app/app/*` (37 módulos), `components/ui` (22 primitivas shadcn), `components.json` (new-york, Tailwind v4, `source(none)` + `@source` restrito), `package.json` (pnpm 9.15.9, Node ≥22).
 - Shell: `AppShell` (Sidebar + TopBar + MobileDock + AssistenteFlutuante), `CommandPalette` ⌘K já existente (nav + pedidos + contatos), `MobileDock` já no padrão command-dock, `NavHub` para hubs.
 
@@ -17,7 +17,7 @@ Prompt: `docs/PROMPT-V3-REDESIGN-UIMAXXING.md`. Backend preservado (Supabase/RLS
 - 61 itens documentados (arquivo, categoria, comando, deps, estrutura, uso potencial). 51 Pro-only listados com motivo (sem JSON).
 
 ## FASE 5 — Mapa + discovery ✅
-- `docs/uimaxxing-deskcommcrm-map.md` (componente → módulo → tela → finalidade) e `docs/uimaxxing-components.md` (tabela + coverage).
+- `docs/uimaxxing-nexus-map.md` (componente → módulo → tela → finalidade) e `docs/uimaxxing-components.md` (tabela + coverage).
 
 ## FASE 6 — Design System ✅
 - `components/uimaxxing/crm/`: `CrmPageHeader`, `CrmKpi(+Grid)`, `CrmInsightCard` (ADAPT do `insight-card`, light-safe), `CrmStatusBadge`/`CrmPresenceDot` (§19/§23), `CrmLoading`/`CrmEmpty`/`CrmError`/`CrmProgress` (§42, loaders reais USE), barrel `index.ts`.

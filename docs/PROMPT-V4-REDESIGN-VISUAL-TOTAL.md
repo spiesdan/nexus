@@ -1,4 +1,4 @@
-# DESKCOMMCRM — REDESIGN VISUAL TOTAL
+# NEXUS — REDESIGN VISUAL TOTAL
 
 ## TRANSFORMAR O SISTEMA INTEIRO EM UM SaaS DARK PREMIUM NO PADRÃO VISUAL UImaxxing
 
@@ -158,7 +158,7 @@ inspecionar, entender, adaptar, compor, utilizar. Não inventar URLs/componentes
 
 ## 27. UImaxxing não é o design inteiro
 
-UImaxxing components + DeskcommCRM data + novo layout + nova hierarquia + nova
+UImaxxing components + Nexus data + novo layout + nova hierarquia + nova
 tipografia + nova navegação + nova densidade + novo sistema de cores + novo
 espaçamento = NOVO DESKCOMCRM.
 

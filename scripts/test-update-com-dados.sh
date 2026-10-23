@@ -45,7 +45,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BASELINE="$ROOT/supabase/baseline.sql"
-CONTAINER="deskcomm-update-dados-$$"
+CONTAINER="nexus-update-dados-$$"
 IMAGE="pgvector/pgvector:pg17"
 
 [ -f "$BASELINE" ] || { echo "FATAL: $BASELINE não encontrado" >&2; exit 1; }
@@ -55,7 +55,7 @@ trap cleanup EXIT
 
 echo "==> subindo $IMAGE como $CONTAINER (porta escolhida pelo daemon)"
 docker run -d --rm --name "$CONTAINER" -p "127.0.0.1::5432" \
-  --label "deskcomm.harness=update-com-dados" \
+  --label "nexus.harness=update-com-dados" \
   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres "$IMAGE" >/dev/null
 
 # `pg_isready` mente aqui: o initdb sobe um servidor temporário só em socket.

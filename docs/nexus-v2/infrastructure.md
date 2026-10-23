@@ -11,7 +11,7 @@
 | `Dockerfile.scheduler` | `alpine:3.20`+curl+tzdata, `entrypoint.sh`, `HEALTHCHECK pgrep crond` ✅ |
 | `.dockerignore` | bloqueia `node_modules,.next,.git,.env*,tests,*.log,docs` ✅ |
 | `Caddyfile` | ACME, gzip, `waha→403`, `agentrun→timeout 320s`, resto `app:3000` ✅ |
-| `docker-compose.prod.yml` | `image:${APP_IMAGE:-ghcr.io/spiesdan/deskcommcrm:stable}` `pull:always`, rede `internal`, só `caddy:80/443`, `mem_limit`, `max-size 10m` ✅ |
+| `docker-compose.prod.yml` | `image:${APP_IMAGE:-ghcr.io/spiesdan/nexus:stable}` `pull:always`, rede `internal`, só `caddy:80/443`, `mem_limit`, `max-size 10m` ✅ |
 | `build.yml` / `oracle.yml` / `traefik.yml` | override build local / ARM sem waha / proxy externo ✅ |
 
 Cache: `cache-from/type=gha` + `cache-to/type=gha,mode=max` no `publish-image.yml`. BuildKit multi-stage. Runtime enxuto.

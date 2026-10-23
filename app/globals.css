@@ -26,7 +26,7 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ─────────────────────────────────────────────────────────────────────────
-   DeskcommCRM — Design System tokens (Visitors · dark-first)
+   Nexus — Design System tokens (Visitors · dark-first)
    Source of truth: DESIGN.md (raiz do repo).
    O accent funcional é o grau 600 da rampa (#7e77f0): a lavanda do DESIGN.md
    (#918df6, que a derivação põe no grau 500) dá 2,86 contra o branco e reprova
@@ -35,7 +35,7 @@
    na Sage). O texto sobre o accent é Carbon (#181925), não branco: branco sobre
    o 600 dá 4,0 e reprova o piso de texto (4,5); Carbon dá 7+.
    Dark-first (PROMPT V4): o `<html>` nasce com `data-theme="dark"` e só sai
-   dele quando o usuário grava light em `deskcomm-theme` (app/layout.tsx e
+   dele quando o usuário grava light em `nexus-theme` (app/layout.tsx e
    lib/theme.tsx). O proto do tema escuro abaixo virou o caminho DEFAULT; o
    `:root` e o `[data-theme="light"]` continuam sendo o tema claro, e
    `extrairRegua` (lib/branding/contraste.ts) e os gates exigem os dois blocos.
@@ -892,7 +892,7 @@
    desenha para dentro da própria caixa e não depende do overflow do pai.
    Provado na tela nos três cenários (claro, escuro, reduce) —
    `evidence/wave3-pulso/`. */
-@keyframes deskcomm-card-pulse {
+@keyframes nexus-card-pulse {
   from {
     border-color: var(--color-accent);
   }
@@ -905,7 +905,7 @@
    evento (key = contador de pulsos), e é a remontagem que faz a animação
    recomeçar. Alternar classe no mesmo nó não reinicia animação em CSS. */
 .card-pulse {
-  animation: deskcomm-card-pulse var(--duration-slow) var(--ease-out) 1;
+  animation: nexus-card-pulse var(--duration-slow) var(--ease-out) 1;
   border: 2px solid transparent;
   border-radius: inherit;
   box-sizing: border-box;
