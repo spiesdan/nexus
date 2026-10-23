@@ -1250,7 +1250,7 @@ export function CampanhaWizard({
         )}
       </Card>
 
-      <div className="sticky bottom-0 z-20 -mx-6 border-t border-border bg-background/95 px-6 py-3 backdrop-blur">
+      <div className="sticky bottom-0 z-20 -mx-6 border-t border-border bg-background px-6 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3 pr-20 md:pr-24">
           <Button type="button" variant="ghost" onClick={voltar} disabled={passo === 0 || criando}>
             {t("Voltar")}

@@ -48,7 +48,7 @@ export function MobileDock() {
     // seria esconder o sintoma.
     <nav
       aria-label={t("Navegação rápida")}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <div className="flex items-stretch justify-around px-2 py-1.5">
         {itens.slice(0, 2).map((d) => (

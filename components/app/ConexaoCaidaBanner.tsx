@@ -46,10 +46,13 @@ export function ConexaoCaidaBanner({ caidas }: { caidas: ConexaoCaida[] }) {
   const precisaEscanear = caidas.some((c) => c.status === "SCAN_QR_CODE");
 
   return (
+    // Sem `backdrop-blur`: a faixa é `sticky` e sempre visível, e o filtro de
+    // fundo é o suspeito do repaint perdido no Chrome/Windows (ver TopBar).
+    // O tint de erro fica sobre o fundo do body, não sobre conteúdo rolável.
     <div
       role="alert"
       aria-live="assertive"
-      className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-error/40 bg-error-bg px-4 py-2 text-sm text-error-fg backdrop-blur"
+      className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-error/40 bg-error-bg px-4 py-2 text-sm text-error-fg"
     >
       <div className="flex items-center gap-2">
         <span aria-hidden>🔌</span>
