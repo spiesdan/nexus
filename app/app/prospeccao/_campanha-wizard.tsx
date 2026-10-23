@@ -118,11 +118,9 @@ function linhasDeMensagem(iniciais: readonly string[]): string[] {
 export function CampanhaWizard({
   categorias,
   aoConcluir,
-  aoCancelar,
 }: {
   categorias: MacroCategoria[];
   aoConcluir: (id: string) => void;
-  aoCancelar?: () => void;
 }) {
   const t = useT();
   const templates = useMessageTemplates();
@@ -151,9 +149,7 @@ export function CampanhaWizard({
   const [carregandoPrevia, setCarregandoPrevia] = React.useState(false);
 
   // ── Mensagens e agenda ───────────────────────────────────────────────────
-  const [mensagens, setMensagens] = React.useState<string[]>(() =>
-    linhasDeMensagem([""]),
-  );
+  const [mensagens, setMensagens] = React.useState<string[]>(() => linhasDeMensagem([""]));
   const [templateId, setTemplateId] = React.useState("__nenhum");
   // Padrões salvos em Configuração › Mensagens por categoria.
   const [presets, setPresets] = React.useState<PresetDeMensagens[]>([]);
@@ -241,8 +237,12 @@ export function CampanhaWizard({
         return alvo.includes(termo);
       })
       .sort((a, b) => {
-        const sa = selecionadas.has(chaveDaCidade({ cidade: a.cidade, estado: a.estado ?? undefined }));
-        const sb = selecionadas.has(chaveDaCidade({ cidade: b.cidade, estado: b.estado ?? undefined }));
+        const sa = selecionadas.has(
+          chaveDaCidade({ cidade: a.cidade, estado: a.estado ?? undefined }),
+        );
+        const sb = selecionadas.has(
+          chaveDaCidade({ cidade: b.cidade, estado: b.estado ?? undefined }),
+        );
         if (sa !== sb) return sa ? -1 : 1;
         return b.total - a.total || a.cidade.localeCompare(b.cidade, "pt-BR");
       });
@@ -289,8 +289,7 @@ export function CampanhaWizard({
   // categoria da seleção. Nesse caso o texto continua na tela (é dele), mas o
   // seletor não pode fingir que ainda aponta para uma opção inexistente.
   const presetEmUso =
-    presetAplicado !== null &&
-    presetsDisponiveis.some((p) => p.categoria === presetAplicado)
+    presetAplicado !== null && presetsDisponiveis.some((p) => p.categoria === presetAplicado)
       ? presetAplicado
       : null;
 
@@ -549,10 +548,9 @@ export function CampanhaWizard({
       // o operador agenda. Nunca disparamos mensagem aqui.
       if (fonte !== "base") {
         try {
-          const execucao = await apiClient.post<{ data?: { buscas?: number; sem_mapa?: string[] } }>(
-            `/api/v1/prospecting/campaigns/${id}/executar`,
-            {},
-          );
+          const execucao = await apiClient.post<{
+            data?: { buscas?: number; sem_mapa?: string[] };
+          }>(`/api/v1/prospecting/campaigns/${id}/executar`, {});
           const buscas = execucao?.data?.buscas ?? 0;
           if (buscas > 0) toast.success(t(`${buscas} buscas criadas`));
           const semMapa = execucao?.data?.sem_mapa ?? [];
@@ -575,687 +573,705 @@ export function CampanhaWizard({
   const passosTraduzidos = PASSOS.map((p) => t(p));
 
   return (
-    <Card className="space-y-4 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="text-base font-semibold">{t("Nova campanha")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("Escolha as cidades e categorias da sua base. Você vê as empresas antes de criar.")}
-          </p>
-        </div>
-        {aoCancelar && (
-          <Button type="button" size="sm" variant="ghost" onClick={aoCancelar} disabled={criando}>
-            {t("Cancelar")}
-          </Button>
-        )}
-      </div>
+    <div className="space-y-4">
+      <Card className="space-y-4 p-4">
+        <NexusSteps
+          steps={passosTraduzidos}
+          current={passo}
+          reached={alcancado}
+          onGo={(i) => {
+            // Só volta. Avançar pelo indicador pularia a validação que o
+            // "Continuar" faz — e o 422 genérico já custou tempo demais.
+            if (i < passo) setPasso(i);
+          }}
+        />
 
-      <NexusSteps
-        steps={passosTraduzidos}
-        current={passo}
-        reached={alcancado}
-        onGo={(i) => {
-          // Só volta. Avançar pelo indicador pularia a validação que o
-          // "Continuar" faz — e o 422 genérico já custou tempo demais.
-          if (i < passo) setPasso(i);
-        }}
-      />
-
-      {passo === 0 && (
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t("De onde vem o público?")}</Label>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <FonteCard
-                  ativo={fonte === "base"}
-                  titulo={t("Minha base")}
-                  descricao={t("Recomendado: empresas já cadastradas, sem gastar busca.")}
-                  onClick={() => setFonte("base")}
-                />
-                <FonteCard
-                  ativo={fonte === "busca"}
-                  titulo={t("Google")}
-                  descricao={t("Busca empresas novas nas cidades escolhidas.")}
-                  onClick={() => setFonte("busca")}
-                />
-                <FonteCard
-                  ativo={fonte === "ambas"}
-                  titulo={t("As duas")}
-                  descricao={t("Usa a base e também busca empresas novas.")}
-                  onClick={() => setFonte("ambas")}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
-              <Input
-                id="wiz-nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                maxLength={120}
-                placeholder={t("Oficinas — Norte SC")}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Label>{t("Cidades")}</Label>
-                {cidadesSelecionadas.length > 0 && (
-                  <Badge variant="neutral">{cidadesSelecionadas.length} {t("selecionadas")}</Badge>
-                )}
-              </div>
-              {cidadesSelecionadas.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {cidadesSelecionadas.map((c) => (
-                    <button
-                      key={chaveDaCidade(c)}
-                      type="button"
-                      onClick={() => removerCidade(c)}
-                      className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
-                      title={t("Remover cidade")}
-                    >
-                      {rotuloDaCidade(c)}
-                      <span aria-hidden>×</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="rounded-lg border">
-                <div className="border-b p-2">
-                  <Input
-                    value={buscaCidade}
-                    onChange={(e) => setBuscaCidade(e.target.value)}
-                    placeholder={t("Filtrar cidades da base…")}
-                    aria-label={t("Filtrar cidades")}
+        {passo === 0 && (
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t("De onde vem o público?")}</Label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <FonteCard
+                    ativo={fonte === "base"}
+                    titulo={t("Minha base")}
+                    descricao={t("Recomendado: empresas já cadastradas, sem gastar busca.")}
+                    onClick={() => setFonte("base")}
+                  />
+                  <FonteCard
+                    ativo={fonte === "busca"}
+                    titulo={t("Google")}
+                    descricao={t("Busca empresas novas nas cidades escolhidas.")}
+                    onClick={() => setFonte("busca")}
+                  />
+                  <FonteCard
+                    ativo={fonte === "ambas"}
+                    titulo={t("As duas")}
+                    descricao={t("Usa a base e também busca empresas novas.")}
+                    onClick={() => setFonte("ambas")}
                   />
                 </div>
-                {carregandoOpcoes ? (
-                  <div className="space-y-2 p-3">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : erroOpcoes ? (
-                  <div className="flex items-center justify-between gap-2 p-3 text-sm text-muted-foreground">
-                    <span>{t("Não foi possível carregar as cidades.")}</span>
-                    <Button type="button" size="sm" variant="outline" onClick={() => void carregarOpcoes()}>
-                      {t("Tentar de novo")}
-                    </Button>
-                  </div>
-                ) : cidadesFiltradas.length === 0 ? (
-                  <div className="space-y-2 p-3 text-sm text-muted-foreground">
-                    <p>
-                      {buscaCidade
-                        ? t("Nenhuma cidade da base com esse nome.")
-                        : t("Sua base ainda não tem cidades com empresas de WhatsApp.")}
-                    </p>
-                    <Button type="button" size="sm" variant="outline" asChild>
-                      <Link href="/app/prospeccao?aba=buscar">
-                        {t("Buscar empresas novas")}
-                      </Link>
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="max-h-64 overflow-y-auto p-2">
-                    <div className="grid gap-1 sm:grid-cols-2">
-                      {cidadesFiltradas.map((c) => {
-                        const alvo = { cidade: c.cidade, ...(c.estado ? { estado: c.estado } : {}) };
-                        const ativa = cidadesSelecionadas.some(
-                          (x) => chaveDaCidade(x) === chaveDaCidade(alvo),
-                        );
-                        return (
-                          <button
-                            key={`${c.cidade}-${c.estado ?? ""}`}
-                            type="button"
-                            aria-pressed={ativa}
-                            onClick={() => alternarCidade(c)}
-                            className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-left text-sm ${
-                              ativa ? "border-primary bg-accent-soft" : "hover:bg-muted"
-                            }`}
-                          >
-                            <span className="truncate">{rotuloDaCidade(alvo)}</span>
-                            <span className="shrink-0 text-xs text-muted-foreground">{c.total}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
-              {(fonte === "busca" || fonte === "ambas") && (
-                <details className="rounded-lg border p-3 text-sm">
-                  <summary className="cursor-pointer text-muted-foreground">
-                    {t("Não achou a cidade? Adicionar outra")}
-                  </summary>
-                  <div className="mt-2 flex flex-wrap items-end gap-2">
-                    <div className="min-w-40 flex-1 space-y-1">
-                      <Label htmlFor="wiz-cidade-manual">{t("Cidade")}</Label>
-                      <Input
-                        id="wiz-cidade-manual"
-                        value={cidadeManual}
-                        onChange={(e) => setCidadeManual(e.target.value)}
-                        placeholder={t("Ex.: Canoinhas")}
-                      />
-                    </div>
-                    <div className="w-20 space-y-1">
-                      <Label htmlFor="wiz-uf-manual">{t("UF")}</Label>
-                      <Input
-                        id="wiz-uf-manual"
-                        value={ufManual}
-                        onChange={(e) => setUfManual(e.target.value)}
-                        maxLength={10}
-                        placeholder="SC"
-                      />
-                    </div>
-                    <Button type="button" size="sm" variant="outline" onClick={adicionarCidadeManual}>
-                      {t("Adicionar")}
-                    </Button>
-                  </div>
-                </details>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Label>{t("Categorias")}</Label>
-                {categoriasMarcadas.length > 0 && (
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-                    onClick={() => setCategoriasMarcadas([])}
-                  >
-                    {t("Limpar seleção")}
-                  </button>
-                )}
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
+                <Input
+                  id="wiz-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  maxLength={120}
+                  placeholder={t("Oficinas — Norte SC")}
+                />
               </div>
-              {rotulosSelecionados.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {rotulosSelecionados.map((c) => (
-                    <button
-                      key={c.busca}
-                      type="button"
-                      onClick={() => alternarCategoria(c.busca)}
-                      className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
-                      title={t("Remover categoria")}
-                    >
-                      {c.rotulo}
-                      <span aria-hidden>×</span>
-                    </button>
-                  ))}
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label>{t("Cidades")}</Label>
+                  {cidadesSelecionadas.length > 0 && (
+                    <Badge variant="neutral">
+                      {cidadesSelecionadas.length} {t("selecionadas")}
+                    </Badge>
+                  )}
                 </div>
-              )}
-              <Input
-                value={buscaCategoria}
-                onChange={(e) => setBuscaCategoria(e.target.value)}
-                placeholder={t("Filtrar categorias…")}
-                aria-label={t("Filtrar categorias")}
-              />
-              <div className="max-h-72 overflow-y-auto rounded-lg border p-2">
-                {gruposDeCategoria.length === 0 ? (
-                  <p className="p-2 text-sm text-muted-foreground">
-                    {t("Nenhuma categoria com esse nome.")}
-                  </p>
-                ) : (
-                  gruposDeCategoria.map((grupo) => (
-                    <div key={grupo.macro} className="mb-3 last:mb-0">
-                      <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {grupo.macro}
+                {cidadesSelecionadas.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {cidadesSelecionadas.map((c) => (
+                      <button
+                        key={chaveDaCidade(c)}
+                        type="button"
+                        onClick={() => removerCidade(c)}
+                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                        title={t("Remover cidade")}
+                      >
+                        {rotuloDaCidade(c)}
+                        <span aria-hidden>×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="rounded-lg border">
+                  <div className="border-b p-2">
+                    <Input
+                      value={buscaCidade}
+                      onChange={(e) => setBuscaCidade(e.target.value)}
+                      placeholder={t("Filtrar cidades da base…")}
+                      aria-label={t("Filtrar cidades")}
+                    />
+                  </div>
+                  {carregandoOpcoes ? (
+                    <div className="space-y-2 p-3">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : erroOpcoes ? (
+                    <div className="flex items-center justify-between gap-2 p-3 text-sm text-muted-foreground">
+                      <span>{t("Não foi possível carregar as cidades.")}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void carregarOpcoes()}
+                      >
+                        {t("Tentar de novo")}
+                      </Button>
+                    </div>
+                  ) : cidadesFiltradas.length === 0 ? (
+                    <div className="space-y-2 p-3 text-sm text-muted-foreground">
+                      <p>
+                        {buscaCidade
+                          ? t("Nenhuma cidade da base com esse nome.")
+                          : t("Sua base ainda não tem cidades com empresas de WhatsApp.")}
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {grupo.subs.map((s) => {
-                          const ativa = categoriasMarcadas.includes(s.busca);
+                      <Button type="button" size="sm" variant="outline" asChild>
+                        <Link href="/app/prospeccao?aba=buscar">{t("Buscar empresas novas")}</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      <div className="grid gap-1 sm:grid-cols-2">
+                        {cidadesFiltradas.map((c) => {
+                          const alvo = {
+                            cidade: c.cidade,
+                            ...(c.estado ? { estado: c.estado } : {}),
+                          };
+                          const ativa = cidadesSelecionadas.some(
+                            (x) => chaveDaCidade(x) === chaveDaCidade(alvo),
+                          );
                           return (
                             <button
-                              key={`${grupo.macro}-${s.busca}`}
+                              key={`${c.cidade}-${c.estado ?? ""}`}
                               type="button"
                               aria-pressed={ativa}
-                              onClick={() => alternarCategoria(s.busca)}
-                              className={`rounded-full border px-2.5 py-1 text-xs ${
-                                ativa
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : "hover:bg-muted"
+                              onClick={() => alternarCidade(c)}
+                              className={`flex items-center justify-between gap-2 rounded-md border px-2.5 py-2 text-left text-sm ${
+                                ativa ? "border-primary bg-accent-soft" : "hover:bg-muted"
                               }`}
                             >
-                              {s.rotulo}
+                              <span className="truncate">{rotuloDaCidade(alvo)}</span>
+                              <span className="shrink-0 text-xs text-muted-foreground">
+                                {c.total}
+                              </span>
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                  ))
+                  )}
+                </div>
+                {(fonte === "busca" || fonte === "ambas") && (
+                  <details className="rounded-lg border p-3 text-sm">
+                    <summary className="cursor-pointer text-muted-foreground">
+                      {t("Não achou a cidade? Adicionar outra")}
+                    </summary>
+                    <div className="mt-2 flex flex-wrap items-end gap-2">
+                      <div className="min-w-40 flex-1 space-y-1">
+                        <Label htmlFor="wiz-cidade-manual">{t("Cidade")}</Label>
+                        <Input
+                          id="wiz-cidade-manual"
+                          value={cidadeManual}
+                          onChange={(e) => setCidadeManual(e.target.value)}
+                          placeholder={t("Ex.: Canoinhas")}
+                        />
+                      </div>
+                      <div className="w-20 space-y-1">
+                        <Label htmlFor="wiz-uf-manual">{t("UF")}</Label>
+                        <Input
+                          id="wiz-uf-manual"
+                          value={ufManual}
+                          onChange={(e) => setUfManual(e.target.value)}
+                          maxLength={10}
+                          placeholder="SC"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={adicionarCidadeManual}
+                      >
+                        {t("Adicionar")}
+                      </Button>
+                    </div>
+                  </details>
                 )}
               </div>
-            </div>
-          </div>
 
-          <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-            <Card className="space-y-3 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold">{t("Empresas que vão receber")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("A prévia não reserva nem envia nada.")}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void verPrevia()}
-                  disabled={carregandoPrevia || fonte === "busca"}
-                >
-                  {carregandoPrevia ? t("Verificando…") : t("Ver empresas")}
-                </Button>
-              </div>
-
-              {fonte === "busca" ? (
-                <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                  {t(
-                    "A busca vai rodar no Google para as cidades escolhidas. A prévia da base não se aplica.",
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label>{t("Categorias")}</Label>
+                  {categoriasMarcadas.length > 0 && (
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                      onClick={() => setCategoriasMarcadas([])}
+                    >
+                      {t("Limpar seleção")}
+                    </button>
                   )}
                 </div>
-              ) : !previa ? (
-                <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                  {t("Escolha cidades e categorias e clique em Ver empresas.")}
-                </div>
-              ) : !previaValida ? (
-                <div className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
-                  {t("A seleção mudou. Atualize a prévia para ver o público atual.")}
-                </div>
-              ) : previa.total === 0 ? (
-                <div className="space-y-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
-                  <p className="font-medium">{t("Nenhuma empresa encontrada com esse recorte.")}</p>
-                  <p>
-                    {fonte === "ambas"
-                      ? t("A base não tem empresas com esse recorte; a busca no Google ainda vai rodar.")
-                      : t(
-                          "Tente menos filtros, outras cidades, ou use a busca no Google para trazer empresas novas.",
-                        )}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-end justify-between gap-2">
-                    <p className="text-2xl font-semibold tabular-nums">{previa.total}</p>
-                    <Badge variant="success">{t("prontas para o disparo")}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{previa.resumo}</p>
-                  <ul className="max-h-64 space-y-1.5 overflow-y-auto">
-                    {previa.linhas.slice(0, 30).map((linha) => (
-                      <li key={linha.id} className="rounded-md border p-2 text-sm">
-                        <p className="truncate font-medium">{linha.nome}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {[linha.cidade, linha.categoria, linha.telefone]
-                            .filter(Boolean)
-                            .join(" · ") || t("Sem detalhes")}
-                        </p>
-                      </li>
+                {rotulosSelecionados.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {rotulosSelecionados.map((c) => (
+                      <button
+                        key={c.busca}
+                        type="button"
+                        onClick={() => alternarCategoria(c.busca)}
+                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                        title={t("Remover categoria")}
+                      >
+                        {c.rotulo}
+                        <span aria-hidden>×</span>
+                      </button>
                     ))}
-                  </ul>
-                  {previa.linhas.length > 30 && (
-                    <p className="text-xs text-muted-foreground">
-                      {t(`Mostrando 30 de ${previa.linhas.length}.`)}
+                  </div>
+                )}
+                <Input
+                  value={buscaCategoria}
+                  onChange={(e) => setBuscaCategoria(e.target.value)}
+                  placeholder={t("Filtrar categorias…")}
+                  aria-label={t("Filtrar categorias")}
+                />
+                <div className="max-h-72 overflow-y-auto rounded-lg border p-2">
+                  {gruposDeCategoria.length === 0 ? (
+                    <p className="p-2 text-sm text-muted-foreground">
+                      {t("Nenhuma categoria com esse nome.")}
                     </p>
+                  ) : (
+                    gruposDeCategoria.map((grupo) => (
+                      <div key={grupo.macro} className="mb-3 last:mb-0">
+                        <p className="mb-1 px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                          {grupo.macro}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {grupo.subs.map((s) => {
+                            const ativa = categoriasMarcadas.includes(s.busca);
+                            return (
+                              <button
+                                key={`${grupo.macro}-${s.busca}`}
+                                type="button"
+                                aria-pressed={ativa}
+                                onClick={() => alternarCategoria(s.busca)}
+                                className={`rounded-full border px-2.5 py-1 text-xs ${
+                                  ativa
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "hover:bg-muted"
+                                }`}
+                              >
+                                {s.rotulo}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))
                   )}
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {previa.ja_clientes.length > 0 && (
-                      <span>{previa.ja_clientes.length} {t("já clientes")}</span>
-                    )}
-                    {previa.duplicadas > 0 && (
-                      <span>{previa.duplicadas} {t("duplicadas")}</span>
-                    )}
-                    {previa.em_campanha > 0 && (
-                      <span>{previa.em_campanha} {t("em outra campanha")}</span>
-                    )}
-                    {previa.categoria_a_revisar > 0 && (
-                      <span>{previa.categoria_a_revisar} {t("a revisar")}</span>
-                    )}
+                </div>
+              </div>
+            </div>
+
+            <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+              <Card className="space-y-3 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{t("Empresas que vão receber")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("A prévia não reserva nem envia nada.")}
+                    </p>
                   </div>
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     onClick={() => void verPrevia()}
-                    disabled={carregandoPrevia}
+                    disabled={carregandoPrevia || fonte === "busca"}
                   >
-                    {t("Atualizar prévia")}
+                    {carregandoPrevia ? t("Verificando…") : t("Ver empresas")}
                   </Button>
-                </>
-              )}
-              {fonte === "ambas" && (
-                <p className="text-xs text-muted-foreground">
-                  {t("Além da base, a campanha também vai buscar empresas novas no Google.")}
-                </p>
-              )}
-            </Card>
-          </aside>
-        </div>
-      )}
+                </div>
 
-      {passo === 1 && (
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <Label>{t("Mensagens da campanha")}</Label>
-                <select
-                  value={templateId}
-                  onChange={(e) => escolherModelo(e.target.value)}
-                  className="h-9 max-w-56 rounded-md border bg-background px-2 text-sm"
-                  aria-label={t("Usar modelo de mensagem")}
-                >
-                  <option value="__nenhum">{t("Usar modelo…")}</option>
-                  {(templates.data ?? []).map((modelo) => (
-                    <option key={modelo.id} value={modelo.id}>
-                      {modelo.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {presetsErro && (
-                <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
-                  {t(
-                    "Não foi possível carregar as mensagens salvas por categoria. Escreva o texto abaixo — a campanha funciona igual.",
-                  )}
-                </p>
-              )}
-              {presetsDisponiveis.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2">
-                  <span className="text-xs font-medium">{t("Mensagens salvas")}</span>
+                {fonte === "busca" ? (
+                  <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                    {t(
+                      "A busca vai rodar no Google para as cidades escolhidas. A prévia da base não se aplica.",
+                    )}
+                  </div>
+                ) : !previa ? (
+                  <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                    {t("Escolha cidades e categorias e clique em Ver empresas.")}
+                  </div>
+                ) : !previaValida ? (
+                  <div className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                    {t("A seleção mudou. Atualize a prévia para ver o público atual.")}
+                  </div>
+                ) : previa.total === 0 ? (
+                  <div className="space-y-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                    <p className="font-medium">
+                      {t("Nenhuma empresa encontrada com esse recorte.")}
+                    </p>
+                    <p>
+                      {fonte === "ambas"
+                        ? t(
+                            "A base não tem empresas com esse recorte; a busca no Google ainda vai rodar.",
+                          )
+                        : t(
+                            "Tente menos filtros, outras cidades, ou use a busca no Google para trazer empresas novas.",
+                          )}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-2xl font-semibold tabular-nums">{previa.total}</p>
+                      <Badge variant="success">{t("prontas para o disparo")}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{previa.resumo}</p>
+                    <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+                      {previa.linhas.slice(0, 30).map((linha) => (
+                        <li key={linha.id} className="rounded-md border p-2 text-sm">
+                          <p className="truncate font-medium">{linha.nome}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {[linha.cidade, linha.categoria, linha.telefone]
+                              .filter(Boolean)
+                              .join(" · ") || t("Sem detalhes")}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                    {previa.linhas.length > 30 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t(`Mostrando 30 de ${previa.linhas.length}.`)}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {previa.ja_clientes.length > 0 && (
+                        <span>
+                          {previa.ja_clientes.length} {t("já clientes")}
+                        </span>
+                      )}
+                      {previa.duplicadas > 0 && (
+                        <span>
+                          {previa.duplicadas} {t("duplicadas")}
+                        </span>
+                      )}
+                      {previa.em_campanha > 0 && (
+                        <span>
+                          {previa.em_campanha} {t("em outra campanha")}
+                        </span>
+                      )}
+                      {previa.categoria_a_revisar > 0 && (
+                        <span>
+                          {previa.categoria_a_revisar} {t("a revisar")}
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void verPrevia()}
+                      disabled={carregandoPrevia}
+                    >
+                      {t("Atualizar prévia")}
+                    </Button>
+                  </>
+                )}
+                {fonte === "ambas" && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("Além da base, a campanha também vai buscar empresas novas no Google.")}
+                  </p>
+                )}
+              </Card>
+            </aside>
+          </div>
+        )}
+
+        {passo === 1 && (
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label>{t("Mensagens da campanha")}</Label>
                   <select
-                    value={presetEmUso ?? "__nenhum"}
-                    onChange={(e) => {
-                      const escolhido =
-                        presetsDisponiveis.find((p) => p.categoria === e.target.value) ?? null;
-                      aplicarPreset(escolhido);
-                    }}
-                    className="h-8 rounded-md border bg-background px-2 text-sm"
-                    aria-label={t("Usar as mensagens de uma categoria")}
+                    value={templateId}
+                    onChange={(e) => escolherModelo(e.target.value)}
+                    className="h-9 max-w-56 rounded-md border bg-background px-2 text-sm"
+                    aria-label={t("Usar modelo de mensagem")}
                   >
-                    <option value="__nenhum">{t("Escrever do zero")}</option>
-                    {presetsDisponiveis.map((p) => (
-                      <option key={p.categoria} value={p.categoria}>
-                        {rotuloDaCategoria(p.categoria)} · {p.mensagens.length}
+                    <option value="__nenhum">{t("Usar modelo…")}</option>
+                    {(templates.data ?? []).map((modelo) => (
+                      <option key={modelo.id} value={modelo.id}>
+                        {modelo.title}
                       </option>
                     ))}
                   </select>
-                  <span className="text-xs text-muted-foreground">
-                    {presetEmUso
-                      ? t("Editar aqui não altera o padrão salvo na categoria.")
-                      : t("Trocar substitui as caixas abaixo.")}
-                  </span>
                 </div>
-              )}
-              {presetsDisponiveis.length === 0 &&
-                categoriasMarcadas.length > 0 &&
-                !presetsErro && (
-                  <p className="text-xs text-muted-foreground">
+                {presetsErro && (
+                  <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
                     {t(
-                      "Nenhuma categoria escolhida tem mensagens salvas. Configure uma vez em Configuração › Mensagens por categoria.",
+                      "Não foi possível carregar as mensagens salvas por categoria. Escreva o texto abaixo — a campanha funciona igual.",
                     )}
                   </p>
                 )}
-              <p className="text-xs text-muted-foreground">
-                {t("A primeira é obrigatória. As outras entram na rotação anti-ban.")}
-              </p>
-              {mensagens.map((m, i) => (
-                <div key={i} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label htmlFor={`wiz-msg-${i}`}>
-                      {t(`Mensagem ${i + 1}`)}
-                      {i === 0 ? ` · ${t("obrigatória")}` : ` · ${t("opcional")}`}
-                    </Label>
-                    {mensagens.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setMensagens((atuais) => atuais.filter((_, j) => j !== i))
-                        }
-                      >
-                        {t("Remover")}
-                      </Button>
-                    )}
+                {presetsDisponiveis.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2">
+                    <span className="text-xs font-medium">{t("Mensagens salvas")}</span>
+                    <select
+                      value={presetEmUso ?? "__nenhum"}
+                      onChange={(e) => {
+                        const escolhido =
+                          presetsDisponiveis.find((p) => p.categoria === e.target.value) ?? null;
+                        aplicarPreset(escolhido);
+                      }}
+                      className="h-8 rounded-md border bg-background px-2 text-sm"
+                      aria-label={t("Usar as mensagens de uma categoria")}
+                    >
+                      <option value="__nenhum">{t("Escrever do zero")}</option>
+                      {presetsDisponiveis.map((p) => (
+                        <option key={p.categoria} value={p.categoria}>
+                          {rotuloDaCategoria(p.categoria)} · {p.mensagens.length}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-xs text-muted-foreground">
+                      {presetEmUso
+                        ? t("Editar aqui não altera o padrão salvo na categoria.")
+                        : t("Trocar substitui as caixas abaixo.")}
+                    </span>
                   </div>
-                  <textarea
-                    id={`wiz-msg-${i}`}
-                    className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
-                    value={m}
-                    maxLength={4000}
-                    onChange={(e) => trocarMensagem(i, e.target.value)}
-                    placeholder={
-                      i === 0
-                        ? t("Olá {{primeiro_nome}}! Aqui é da …")
-                        : t("Outra forma de dizer a mesma coisa")
-                    }
-                  />
-                </div>
-              ))}
-              {mensagens.length < MENSAGENS_MAX && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setMensagens((atuais) => [...atuais, ""])}
-                >
-                  + {t("Variação")}
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-3 rounded-lg border p-3">
-              <p className="text-sm font-semibold">{t("Agenda do envio")}</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-inicio">{t("Início")}</Label>
-                  <Input
-                    id="wiz-inicio"
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-fim">{t("Fim")}</Label>
-                  <Input
-                    id="wiz-fim"
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="wiz-dias" />
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label>{t("Janelas de horário")}</Label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setJanelas((atuais) => [...atuais, { inicio: "07:00", fim: "19:00" }])}
-                  >
-                    + {t("Janela")}
-                  </Button>
-                </div>
-                {janelas.map((j, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Input
-                      type="time"
-                      value={j.inicio}
-                      onChange={(e) => trocarJanela(i, "inicio", e.target.value)}
-                      aria-label={t("Início da janela")}
+                )}
+                {presetsDisponiveis.length === 0 &&
+                  categoriasMarcadas.length > 0 &&
+                  !presetsErro && (
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "Nenhuma categoria escolhida tem mensagens salvas. Configure uma vez em Configuração › Mensagens por categoria.",
+                      )}
+                    </p>
+                  )}
+                <p className="text-xs text-muted-foreground">
+                  {t("A primeira é obrigatória. As outras entram na rotação anti-ban.")}
+                </p>
+                {mensagens.map((m, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label htmlFor={`wiz-msg-${i}`}>
+                        {t(`Mensagem ${i + 1}`)}
+                        {i === 0 ? ` · ${t("obrigatória")}` : ` · ${t("opcional")}`}
+                      </Label>
+                      {mensagens.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setMensagens((atuais) => atuais.filter((_, j) => j !== i))}
+                        >
+                          {t("Remover")}
+                        </Button>
+                      )}
+                    </div>
+                    <textarea
+                      id={`wiz-msg-${i}`}
+                      className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                      value={m}
+                      maxLength={4000}
+                      onChange={(e) => trocarMensagem(i, e.target.value)}
+                      placeholder={
+                        i === 0
+                          ? t("Olá {{primeiro_nome}}! Aqui é da …")
+                          : t("Outra forma de dizer a mesma coisa")
+                      }
                     />
-                    <span className="text-muted-foreground">–</span>
-                    <Input
-                      type="time"
-                      value={j.fim}
-                      onChange={(e) => trocarJanela(i, "fim", e.target.value)}
-                      aria-label={t("Fim da janela")}
-                    />
-                    {janelas.length > 1 && (
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        aria-label={t("Remover janela")}
-                        onClick={() => setJanelas((atuais) => atuais.filter((_, k) => k !== i))}
-                      >
-                        ×
-                      </Button>
-                    )}
                   </div>
                 ))}
+                {mensagens.length < MENSAGENS_MAX && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMensagens((atuais) => [...atuais, ""])}
+                  >
+                    + {t("Variação")}
+                  </Button>
+                )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-limite">{t("Limite por dia")}</Label>
-                  <Input
-                    id="wiz-limite"
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={limite}
-                    onChange={(e) => setLimite(e.target.value)}
-                  />
+
+              <div className="space-y-3 rounded-lg border p-3">
+                <p className="text-sm font-semibold">{t("Agenda do envio")}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-inicio">{t("Início")}</Label>
+                    <Input
+                      id="wiz-inicio"
+                      type="date"
+                      value={dataInicio}
+                      onChange={(e) => setDataInicio(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-fim">{t("Fim")}</Label>
+                    <Input
+                      id="wiz-fim"
+                      type="date"
+                      value={dataFim}
+                      onChange={(e) => setDataFim(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
-                  <Input
-                    id="wiz-recorrencia"
-                    type="number"
-                    min={7}
-                    max={365}
-                    value={recorrencia}
-                    onChange={(e) => setRecorrencia(e.target.value)}
-                    placeholder={t("Opcional")}
-                  />
+                <DiasDaSemana dias={dias} onChange={setDias} idPrefixo="wiz-dias" />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>{t("Janelas de horário")}</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setJanelas((atuais) => [...atuais, { inicio: "07:00", fim: "19:00" }])
+                      }
+                    >
+                      + {t("Janela")}
+                    </Button>
+                  </div>
+                  {janelas.map((j, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={j.inicio}
+                        onChange={(e) => trocarJanela(i, "inicio", e.target.value)}
+                        aria-label={t("Início da janela")}
+                      />
+                      <span className="text-muted-foreground">–</span>
+                      <Input
+                        type="time"
+                        value={j.fim}
+                        onChange={(e) => trocarJanela(i, "fim", e.target.value)}
+                        aria-label={t("Fim da janela")}
+                      />
+                      {janelas.length > 1 && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          aria-label={t("Remover janela")}
+                          onClick={() => setJanelas((atuais) => atuais.filter((_, k) => k !== i))}
+                        >
+                          ×
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-limite">{t("Limite por dia")}</Label>
+                    <Input
+                      id="wiz-limite"
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={limite}
+                      onChange={(e) => setLimite(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
+                    <Input
+                      id="wiz-recorrencia"
+                      type="number"
+                      min={7}
+                      max={365}
+                      value={recorrencia}
+                      onChange={(e) => setRecorrencia(e.target.value)}
+                      placeholder={t("Opcional")}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("O envio é feito uma mensagem por minuto, dentro das janelas e do período.")}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t("O envio é feito uma mensagem por minuto, dentro das janelas e do período.")}
-              </p>
             </div>
-          </div>
 
-          <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-            <Card className="space-y-2 p-4">
-              <p className="text-sm font-semibold">{t("Prévia da primeira mensagem")}</p>
-              <div className="rounded-lg border bg-muted/20 p-3 text-sm">
-                {previewMensagem || t("A prévia aparece quando você escrever a primeira mensagem.")}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
-              </p>
-            </Card>
-            <Card className="space-y-2 p-4 text-sm">
-              <p className="font-semibold">{t("Resumo da agenda")}</p>
-              <p className="text-muted-foreground">
-                {t(`${preenchidas.length} mensagens em rotação`)}
-              </p>
-              <p className="text-muted-foreground">
-                {dataInicio && dataFim
-                  ? t(`de ${dataInicio} a ${dataFim}`)
-                  : t("Período aberto")}
-              </p>
-              <p className="text-muted-foreground">
-                {t(resumoDosDias(dias))} · {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
-              </p>
-              <p className="text-muted-foreground">
-                {t(`até ${limiteNumero} por dia`)}
-              </p>
-            </Card>
-          </aside>
-        </div>
-      )}
-
-      {passo === 2 && (
-        <div className="space-y-4">
-          <Card className="space-y-3 p-4">
-            <p className="text-sm font-semibold">{t("Revise antes de criar")}</p>
-            <dl className="grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Nome")}</dt>
-                <dd className="font-medium">{nome.trim()}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Fonte do público")}</dt>
-                <dd className="font-medium">
-                  {fonte === "base"
-                    ? t("Minha base")
-                    : fonte === "busca"
-                      ? t("Busca no Google")
-                      : t("Base + busca")}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Cidades")}</dt>
-                <dd>{cidadesSelecionadas.map(rotuloDaCidade).join(", ") || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Categorias")}</dt>
-                <dd>{rotulosSelecionados.map((c) => c.rotulo).join(", ") || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Público na prévia")}</dt>
-                <dd>
-                  {fonte === "busca"
-                    ? t("Definido pela busca")
-                    : previa
-                      ? `${previa.total} ${t("empresas")}`
-                      : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Mensagens")}</dt>
-                <dd>{t(`${preenchidas.length} em rotação`)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Período")}</dt>
-                <dd>
-                  {dataInicio && dataFim
-                    ? `${dataInicio} → ${dataFim}`
-                    : t("Período aberto")}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("Dias e horários")}</dt>
-                <dd>
+            <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+              <Card className="space-y-2 p-4">
+                <p className="text-sm font-semibold">{t("Prévia da primeira mensagem")}</p>
+                <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                  {previewMensagem ||
+                    t("A prévia aparece quando você escrever a primeira mensagem.")}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
+                </p>
+              </Card>
+              <Card className="space-y-2 p-4 text-sm">
+                <p className="font-semibold">{t("Resumo da agenda")}</p>
+                <p className="text-muted-foreground">
+                  {t(`${preenchidas.length} mensagens em rotação`)}
+                </p>
+                <p className="text-muted-foreground">
+                  {dataInicio && dataFim ? t(`de ${dataInicio} a ${dataFim}`) : t("Período aberto")}
+                </p>
+                <p className="text-muted-foreground">
                   {t(resumoDosDias(dias))} ·{" "}
                   {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-          <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
-            <p className="font-medium">{t("Criar não envia mensagem.")}</p>
-            <p className="mt-1 opacity-90">
-              {t(
-                "Na próxima tela você confere as empresas e escolhe entre enviar agora ou agendar. A lista de empresas só é reservada quando você agenda.",
-              )}
-            </p>
-          </Card>
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-        <Button type="button" variant="ghost" onClick={voltar} disabled={passo === 0 || criando}>
-          {t("Voltar")}
-        </Button>
-        {passo < 2 ? (
-          <Button type="button" onClick={continuar} disabled={criando}>
-            {t("Continuar")}
-          </Button>
-        ) : (
-          <Button type="button" onClick={() => void criar()} disabled={criando}>
-            {criando ? t("Criando…") : t("Criar campanha")}
-          </Button>
+                </p>
+                <p className="text-muted-foreground">{t(`até ${limiteNumero} por dia`)}</p>
+              </Card>
+            </aside>
+          </div>
         )}
+
+        {passo === 2 && (
+          <div className="space-y-4">
+            <Card className="space-y-3 p-4">
+              <p className="text-sm font-semibold">{t("Revise antes de criar")}</p>
+              <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Nome")}</dt>
+                  <dd className="font-medium">{nome.trim()}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Fonte do público")}</dt>
+                  <dd className="font-medium">
+                    {fonte === "base"
+                      ? t("Minha base")
+                      : fonte === "busca"
+                        ? t("Busca no Google")
+                        : t("Base + busca")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Cidades")}</dt>
+                  <dd>{cidadesSelecionadas.map(rotuloDaCidade).join(", ") || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Categorias")}</dt>
+                  <dd>{rotulosSelecionados.map((c) => c.rotulo).join(", ") || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Público na prévia")}</dt>
+                  <dd>
+                    {fonte === "busca"
+                      ? t("Definido pela busca")
+                      : previa
+                        ? `${previa.total} ${t("empresas")}`
+                        : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Mensagens")}</dt>
+                  <dd>{t(`${preenchidas.length} em rotação`)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Período")}</dt>
+                  <dd>
+                    {dataInicio && dataFim ? `${dataInicio} → ${dataFim}` : t("Período aberto")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Dias e horários")}</dt>
+                  <dd>
+                    {t(resumoDosDias(dias))} ·{" "}
+                    {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
+                  </dd>
+                </div>
+              </dl>
+            </Card>
+            <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
+              <p className="font-medium">{t("Criar não envia mensagem.")}</p>
+              <p className="mt-1 opacity-90">
+                {t(
+                  "Na próxima tela você confere as empresas e escolhe entre enviar agora ou agendar. A lista de empresas só é reservada quando você agenda.",
+                )}
+              </p>
+            </Card>
+          </div>
+        )}
+      </Card>
+
+      <div className="sticky bottom-0 z-20 -mx-6 border-t border-border bg-background/95 px-6 py-3 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3 pr-20 md:pr-24">
+          <Button type="button" variant="ghost" onClick={voltar} disabled={passo === 0 || criando}>
+            {t("Voltar")}
+          </Button>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-xs text-muted-foreground sm:inline">
+              {t(`Passo ${passo + 1} de ${PASSOS.length}`)}
+            </span>
+            {passo < 2 ? (
+              <Button type="button" onClick={continuar} disabled={criando}>
+                {t("Continuar")}
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => void criar()} disabled={criando}>
+                {criando ? t("Criando…") : t("Criar campanha")}
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
 

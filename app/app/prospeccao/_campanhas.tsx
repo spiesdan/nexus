@@ -3,11 +3,18 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Megaphone, PencilSimple, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowRight, ArrowsClockwise, Megaphone, PencilSimple, Trash } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import {
+  FilterActions,
+  FilterBar,
+  FilterPrimary,
+  FilterSearch,
+  FilterSelect,
+} from "@/components/filters/FilterBar";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
@@ -27,26 +34,20 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
-import { comoMoeda } from "@/lib/format/moeda";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
 
 /**
- * Aba CAMPANHAS — lista primeiro, criação sob demanda, controle numa rota.
+ * Aba CAMPANHAS — uma lista, não um dashboard.
  *
- * O desenho anterior abria o assistente SEMPRE no topo da lista, com o
- * passo a passo de cinco etapas, e o card pós-criação oferecia um público
- * efêmero. Quem já tinha campanha via um formulário; quem acabou de criar
- * perdia o público ao fechar a tela.
+ * O desenho antigo repetia, em cada card, o público, o envio, a barra de
+ * progresso, quatro KPIs e o funil. Quem tinha cinco campanhas via vinte
+ * números antes de achar o botão "Controlar". A lista agora responde só o que
+ * serve para escolher uma campanha: nome, status, recorte, andamento do envio
+ * e respostas. O funil e a fila por cidade vivem no CONTROLE da campanha.
  *
- * Agora:
- *   - "Nova campanha" abre o assistente de 3 passos (Público → Mensagens →
- *     Revisão); fechou, a lista volta a ser o foco;
- *   - o card mostra o ENVIO (enviadas/faltam) em vez de só o funil;
- *   - "Controlar" leva à rota persistente `/app/prospeccao/campanhas/[id]`,
- *     onde ficam a fila por cidade, as empresas e o agendamento.
- *
- * A venda automática continua na mesma lista (D2), com o funil dela.
+ * "Criar campanha" não mora aqui: é ação do cabeçalho da Prospecção, como
+ * "Criar pedido" é do cabeçalho de Pedidos.
  */
 interface CampanhaDescoberta {
   id: string;
@@ -89,27 +90,36 @@ interface CampanhaVa {
 }
 
 type CardCampanha =
-  | { tipo: "descoberta"; campanha: CampanhaDescoberta }
-  | { tipo: "va"; campanha: CampanhaVa };
+  { tipo: "descoberta"; campanha: CampanhaDescoberta } | { tipo: "va"; campanha: CampanhaVa };
 
-/**
- * O status da campanha nunca chega cru à tela (`rascunho`/`ativa`/`concluida`
- * são vocabulário interno, não texto para o usuário).
- *
- * A campanha sincronamente enviada pode continuar `rascunho` no banco (o
- * disparo não fecha o status). Quem manda no card é o ledger: 48/48 enviadas
- * aparece como "Concluída" mesmo que a linha ainda diga rascunho.
- */
-function rotuloDaCampanha(
-  status: string,
-  t: (texto: string) => string,
-  concluidaPorEnvio = false,
-): string {
-  if (concluidaPorEnvio) return t("Concluída");
-  if (status === "ativa" || status === "active") return t("Ativa");
-  if (status === "concluida" || status === "completed") return t("Concluída");
-  if (status === "paused" || status === "pausada") return t("Pausada");
+type ChaveStatus = "ativa" | "pausada" | "concluida" | "rascunho";
+
+/** A campanha sincronamente enviada pode continuar `rascunho` no banco. */
+function chaveDaCampanha(card: CardCampanha): ChaveStatus {
+  if (card.tipo === "descoberta") {
+    const total = card.campanha.envio?.total ?? 0;
+    const enviados = card.campanha.envio?.enviados ?? 0;
+    if (total > 0 && enviados >= total) return "concluida";
+  }
+  const status = card.campanha.status;
+  if (status === "ativa" || status === "active") return "ativa";
+  if (status === "pausada" || status === "paused") return "pausada";
+  if (status === "concluida" || status === "completed") return "concluida";
+  return "rascunho";
+}
+
+function rotuloDoStatus(chave: ChaveStatus, t: (texto: string) => string): string {
+  if (chave === "ativa") return t("Ativa");
+  if (chave === "pausada") return t("Pausada");
+  if (chave === "concluida") return t("Concluída");
   return t("Rascunho");
+}
+
+function varianteDoStatus(chave: ChaveStatus): "success" | "warning" | "neutral" | "outline" {
+  if (chave === "ativa") return "success";
+  if (chave === "pausada") return "warning";
+  if (chave === "concluida") return "success";
+  return "outline";
 }
 
 /** `2026-10-19` → `19/10` (é assim que o dono fala: "do dia 19/10 ao 23/10"). */
@@ -122,10 +132,7 @@ function diaCurto(iso: string): string {
  * A agenda da campanha em uma linha — `null` quando ela não está agendada (a
  * aba mistura descoberta e venda automática, e a segunda não tem relógio).
  */
-function agendaDaCampanha(
-  c: CampanhaDescoberta,
-  t: (texto: string) => string,
-): string | null {
+function agendaDaCampanha(c: CampanhaDescoberta, t: (texto: string) => string): string | null {
   if (!c.agendada_em) return null;
   const janelas = (c.janelas ?? []).filter((j) => j?.inicio && j?.fim);
   if (janelas.length === 0) return null;
@@ -140,16 +147,6 @@ function agendaDaCampanha(
     .filter(Boolean)
     .join(" · ");
 }
-
-const ESTAGIOS: { chave: keyof FunilDaCampanha; rotulo: (t: (s: string) => string) => string }[] = [
-  { chave: "encontrados", rotulo: (t) => t("Encontrados") },
-  { chave: "selecionados", rotulo: (t) => t("Selecionados") },
-  { chave: "contatados", rotulo: (t) => t("Contatados") },
-  { chave: "responderam", rotulo: (t) => t("Responderam") },
-  { chave: "qualificados", rotulo: (t) => t("Qualificados") },
-  { chave: "oportunidades", rotulo: (t) => t("Oportunidades") },
-  { chave: "pedidos", rotulo: (t) => t("Pedidos") },
-];
 
 function ObjetivoInline({
   valor,
@@ -176,17 +173,33 @@ function ObjetivoInline({
   }
 
   if (!editando) {
+    if (!valor) {
+      return (
+        <button
+          type="button"
+          className="inline-flex text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            setTexto("");
+            setEditando(true);
+          }}
+          title={t("Adicionar objetivo")}
+          aria-label={t("Adicionar objetivo")}
+        >
+          <PencilSimple size={12} aria-hidden />
+        </button>
+      );
+    }
     return (
       <button
         type="button"
-        className="flex items-start gap-1.5 text-left text-sm text-muted-foreground hover:text-foreground"
+        className="flex max-w-full items-start gap-1.5 text-left text-xs text-muted-foreground hover:text-foreground"
         onClick={() => {
-          setTexto(valor ?? "");
+          setTexto(valor);
           setEditando(true);
         }}
       >
-        <span>{valor || t("Sem objetivo ainda.")}</span>
-        <PencilSimple size={12} className="mt-1 shrink-0" aria-hidden />
+        <span className="truncate">{valor}</span>
+        <PencilSimple size={12} className="mt-0.5 shrink-0" aria-hidden />
         <span className="sr-only">{t("Editar objetivo")}</span>
       </button>
     );
@@ -216,67 +229,24 @@ function ObjetivoInline({
   );
 }
 
-function Kpi({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <p className="text-xs text-muted-foreground">{rotulo}</p>
-      <p className="mt-0.5 text-lg font-semibold tabular-nums">{valor}</p>
-    </div>
-  );
-}
-
-function Funil({ funil }: { funil: FunilDaCampanha }) {
-  const t = useT();
-  const maximo = Math.max(1, ...ESTAGIOS.map((e) => funil[e.chave]));
-  return (
-    <div className="space-y-1.5">
-      <p className="text-sm font-medium">{t("Funil")}</p>
-      <ul className="space-y-1.5">
-        {ESTAGIOS.map((e) => {
-          const valor = funil[e.chave];
-          return (
-            <li key={e.chave} className="flex items-center gap-3 text-sm">
-              <span className="w-32 shrink-0 text-muted-foreground">{e.rotulo(t)}</span>
-              <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                <span
-                  className="block h-full rounded-full bg-primary"
-                  style={{ width: `${Math.max(valor > 0 ? 4 : 0, (valor / maximo) * 100)}%` }}
-                />
-              </span>
-              <span className="w-12 shrink-0 text-right font-medium tabular-nums">{valor}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
 function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) {
   const t = useT();
   if (!resumo || resumo.total === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {t("Público ainda não preparado.")}{" "}
         <span className="text-foreground">{t("Abra o controle para ver as empresas.")}</span>
-      </div>
+      </p>
     );
   }
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
-        <span className="font-medium">
-          {t(`${resumo.enviados} de ${resumo.total} enviadas`)}
-        </span>
-        <span className="text-muted-foreground">
-          {resumo.pendentes > 0 ? t(`${resumo.pendentes} faltam`) : t("Todas enviadas")}
-          {resumo.sem_confirmacao > 0
-            ? ` · ${t(`${resumo.sem_confirmacao} sem confirmação`)}`
-            : ""}
-        </span>
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="font-medium">{t(`${resumo.enviados} de ${resumo.total} enviadas`)}</span>
+        <span className="text-muted-foreground">{resumo.percentual}%</span>
       </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-muted"
+        className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -288,6 +258,10 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
           style={{ width: `${resumo.percentual}%` }}
         />
       </div>
+      <p className="text-xs text-muted-foreground">
+        {resumo.pendentes > 0 ? t(`${resumo.pendentes} pendentes`) : t("Todas enviadas")}
+        {resumo.sem_confirmacao > 0 ? ` · ${t(`${resumo.sem_confirmacao} sem comprovante`)}` : ""}
+      </p>
     </div>
   );
 }
@@ -298,9 +272,12 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
   const [vas, setVas] = React.useState<CampanhaVa[] | null>(null);
   const [erro, setErro] = React.useState(false);
+  const [busca, setBusca] = React.useState("");
+  const [statusFiltro, setStatusFiltro] = React.useState("todas");
+  const [tipoFiltro, setTipoFiltro] = React.useState("todas");
   // Criar campanha saiu daqui: virou página própria (/app/prospeccao/nova).
   // A campanha que espera confirmação de exclusão (o diálogo é único e vive no
-  // rodapé; cada card só aponta para qual delas).
+  // rodapé; cada linha só aponta para qual delas).
   const [aExcluir, setAExcluir] = React.useState<CampanhaDescoberta | null>(null);
   const [excluindo, setExcluindo] = React.useState(false);
 
@@ -313,7 +290,8 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
         apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns?com_funil=1"),
         apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
       ]);
-      const listaDesc = ((resDesc as { data?: unknown } | null)?.data ?? []) as CampanhaDescoberta[];
+      const listaDesc = ((resDesc as { data?: unknown } | null)?.data ??
+        []) as CampanhaDescoberta[];
       const listaVa = ((resVa as { data?: unknown } | null)?.data ?? []) as CampanhaVa[];
       setDescobertas(Array.isArray(listaDesc) ? listaDesc : []);
       setVas(Array.isArray(listaVa) ? listaVa : []);
@@ -351,34 +329,110 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
   ];
   const carregando = descobertas === null || vas === null;
 
+  const cardsFiltrados = cards.filter((card) => {
+    if (tipoFiltro !== "todas" && card.tipo !== tipoFiltro) return false;
+    const chave = chaveDaCampanha(card);
+    if (statusFiltro !== "todas" && statusFiltro !== `${chave}s`) return false;
+
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return true;
+    const partes =
+      card.tipo === "descoberta"
+        ? [
+            card.campanha.nome,
+            card.campanha.objetivo ?? "",
+            ...(card.campanha.categorias ?? []),
+            ...(card.campanha.cidades ?? []).map((c) =>
+              [c.cidade, c.estado].filter(Boolean).join(" "),
+            ),
+          ]
+        : [
+            card.campanha.nome,
+            card.campanha.objetivo ?? "",
+            ...(card.campanha.categorias ?? []),
+            [card.campanha.cidade, card.campanha.uf].filter(Boolean).join(" "),
+          ];
+    return partes.some((v) => String(v).toLowerCase().includes(termo));
+  });
+
+  const opcoesStatus = [
+    { value: "todas", label: t("Todos os status") },
+    { value: "ativas", label: t("Ativas") },
+    { value: "rascunhos", label: t("Rascunhos") },
+    { value: "pausadas", label: t("Pausadas") },
+    { value: "concluidas", label: t("Concluídas") },
+  ];
+  const opcoesTipo = [
+    { value: "todas", label: t("Todos os tipos") },
+    { value: "descoberta", label: t("Descoberta") },
+    { value: "va", label: t("Venda automática") },
+  ];
+
+  function limparFiltros() {
+    setBusca("");
+    setStatusFiltro("todas");
+    setTipoFiltro("todas");
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">{t("Campanhas")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("Crie um recorte, veja as empresas e acompanhe cada envio.")}
-          </p>
-        </div>
-        {podeOperar && (
+    <div className="space-y-3">
+      <FilterBar>
+        <FilterPrimary>
+          <FilterSearch
+            id="campanhas-busca"
+            label={t("Buscar campanha")}
+            value={busca}
+            onChange={setBusca}
+            placeholder={t("Nome, cidade, categoria ou objetivo…")}
+          />
+          <FilterSelect
+            id="campanhas-status"
+            label={t("Status")}
+            value={statusFiltro}
+            onChange={setStatusFiltro}
+            options={opcoesStatus}
+          />
+          <FilterSelect
+            id="campanhas-tipo"
+            label={t("Tipo")}
+            value={tipoFiltro}
+            onChange={setTipoFiltro}
+            options={opcoesTipo}
+          />
+        </FilterPrimary>
+        <FilterActions>
+          <span className="text-xs text-muted-foreground" aria-live="polite">
+            {cardsFiltrados.length === cards.length
+              ? cards.length === 1
+                ? t("1 campanha")
+                : t(`${cards.length} campanhas`)
+              : t(`${cardsFiltrados.length} de ${cards.length} campanhas`)}
+          </span>
+          {(busca || statusFiltro !== "todas" || tipoFiltro !== "todas") && (
+            <Button type="button" size="sm" variant="ghost" onClick={limparFiltros}>
+              {t("Limpar filtros")}
+            </Button>
+          )}
           <Button
             type="button"
             size="sm"
-            onClick={() => router.push("/app/prospeccao/nova")}
+            variant="ghost"
+            className="ml-auto"
+            onClick={() => void recarregar()}
           >
-            <Plus size={16} aria-hidden />
-            {t("Nova campanha")}
+            <ArrowsClockwise size={14} aria-hidden />
+            {t("Atualizar")}
           </Button>
-        )}
-      </div>
+        </FilterActions>
+      </FilterBar>
 
-      {erro && carregando ? (
+      {erro && cards.length === 0 ? (
         <NexusErrorState onRetry={() => void recarregar()} />
       ) : carregando ? (
         <div className="space-y-2" aria-live="polite">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
       ) : cards.length === 0 ? (
         <NexusEmptyState
@@ -387,22 +441,30 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
           subcopy={t("Comece por um recorte de cidades e categorias da sua base.")}
           primary={
             podeOperar
-              ? { label: t("Criar primeira campanha"), onClick: () => router.push("/app/prospeccao/nova") }
+              ? {
+                  label: t("Criar primeira campanha"),
+                  onClick: () => router.push("/app/prospeccao/nova"),
+                }
               : undefined
           }
         />
+      ) : cardsFiltrados.length === 0 ? (
+        <Card className="space-y-2 p-8 text-center text-sm text-muted-foreground">
+          <p>{t("Nenhuma campanha com esse filtro.")}</p>
+          <Button type="button" size="sm" variant="outline" onClick={limparFiltros}>
+            {t("Limpar filtros")}
+          </Button>
+        </Card>
       ) : (
-        <ul className="space-y-3">
-          {cards.map((card) => {
+        <ul className="divide-y overflow-hidden rounded-lg border bg-card">
+          {cardsFiltrados.map((card) => {
             const id = card.campanha.id;
+            const chave = chaveDaCampanha(card);
+            const status = rotuloDoStatus(chave, t);
             const funil = card.campanha.funil ?? null;
-            // 0274 — campanha de recuperação: a audiência é `contacts`, não
-            // prospect. O funil de garimpagem não se aplica; o controle
-            // mostra a natureza da campanha e o envio pelo ledger.
-            const recuperacao =
-              card.tipo === "descoberta" && card.campanha.publico === "contatos";
-            const contatoIds =
-              card.tipo === "descoberta" ? (card.campanha.contato_ids ?? []) : [];
+            const respostas = funil?.responderam ?? null;
+            const recuperacao = card.tipo === "descoberta" && card.campanha.publico === "contatos";
+            const contatoIds = card.tipo === "descoberta" ? (card.campanha.contato_ids ?? []) : [];
             const rotaPatch =
               card.tipo === "descoberta"
                 ? `/api/v1/prospecting/campaigns/${id}`
@@ -413,70 +475,101 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
                     .map((c) => (c.estado ? `${c.cidade}/${c.estado}` : c.cidade))
                     .join(", ")
                 : `${card.campanha.cidade}${card.campanha.uf ? `/${card.campanha.uf}` : ""}`;
-            const objetivo = card.campanha.objetivo;
+            const categorias = (card.campanha.categorias ?? []).join(", ");
             const envio = card.tipo === "descoberta" ? (card.campanha.envio ?? null) : null;
-            const total = envio?.total ?? 0;
-            const enviados = envio?.enviados ?? 0;
-            const concluida = total > 0 && enviados >= total;
-            const status = rotuloDaCampanha(card.campanha.status, t, concluida);
+            const agenda = card.tipo === "descoberta" ? agendaDaCampanha(card.campanha, t) : null;
             const atualizarObjetivo = (novo: string | null) => {
               if (card.tipo === "descoberta") {
                 setDescobertas((lista) =>
                   (lista ?? []).map((c) => (c.id === id ? { ...c, objetivo: novo } : c)),
                 );
               } else {
-                setVas((lista) => (lista ?? []).map((c) => (c.id === id ? { ...c, objetivo: novo } : c)));
+                setVas((lista) =>
+                  (lista ?? []).map((c) => (c.id === id ? { ...c, objetivo: novo } : c)),
+                );
               }
             };
-            const agenda = card.tipo === "descoberta" ? agendaDaCampanha(card.campanha, t) : null;
+            const href =
+              card.tipo === "descoberta"
+                ? `/app/prospeccao/campanhas/${id}`
+                : "/app/venda-automatica";
 
             return (
-              <li key={id}>
-                <Card className="space-y-3 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-sm">{card.campanha.nome}</strong>
-                    <Badge variant="neutral" className="h-5 px-2 text-xs font-normal">
-                      {card.tipo === "descoberta" ? t("Descoberta") : t("Venda automática")}
-                    </Badge>
-                    <Badge
-                      variant={concluida ? "success" : "outline"}
-                      className="h-5 px-2 text-xs font-normal"
-                    >
-                      {status}
-                    </Badge>
-                    {recuperacao && (
-                      <Badge
-                        variant="outline"
-                        className="h-5 px-2 text-xs font-normal"
-                        title={t(
-                          "Audiência: clientes que já compraram e pararam — recuperação, não prospecção.",
-                        )}
-                      >
-                        {t("Recuperação")} · {contatoIds.length}
+              <li key={`${card.tipo}-${id}`} className="p-3 sm:p-4">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(11rem,0.9fr)_auto] lg:items-center">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Link href={href} className="truncate text-sm font-semibold hover:underline">
+                        {card.campanha.nome}
+                      </Link>
+                      <Badge variant="neutral" className="h-5 px-2 text-xs font-normal">
+                        {card.tipo === "descoberta" ? t("Descoberta") : t("Venda automática")}
                       </Badge>
-                    )}
-                    {card.tipo === "descoberta" &&
-                      (card.campanha.fonte_publico === "base" ||
-                        card.campanha.fonte_publico === "ambas") && (
+                      <Badge
+                        variant={varianteDoStatus(chave)}
+                        className="h-5 px-2 text-xs font-normal"
+                      >
+                        {status}
+                      </Badge>
+                      {recuperacao && (
                         <Badge
                           variant="outline"
                           className="h-5 px-2 text-xs font-normal"
                           title={t(
-                            "Usa o que já está cadastrado, sem gastar API de busca. As empresas que a loja já atende saem da fila.",
+                            "Audiência: clientes que já compraram e pararam — recuperação, não prospecção.",
                           )}
                         >
-                          {t("Base já coletada")}
+                          {t("Recuperação")} · {contatoIds.length}
                         </Badge>
                       )}
-                    <div className="ml-auto flex items-center gap-1">
-                      {card.tipo === "descoberta" && (
-                        <Button size="sm" variant="outline" asChild>
-                          <Link href={`/app/prospeccao/campanhas/${id}`}>
-                            {t("Controlar")}
-                            <ArrowRight size={14} aria-hidden />
-                          </Link>
-                        </Button>
-                      )}
+                    </div>
+
+                    <p className="truncate text-xs text-muted-foreground">
+                      {recuperacao
+                        ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
+                        : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
+                            categorias || "—"
+                          }`}
+                    </p>
+
+                    {agenda && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {t("Agenda")}: {agenda}
+                      </p>
+                    )}
+
+                    <ObjetivoInline
+                      valor={card.campanha.objetivo}
+                      rota={rotaPatch}
+                      salvo={atualizarObjetivo}
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    {card.tipo === "descoberta" ? (
+                      <BarraDeEnvio resumo={envio} />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-sm font-medium text-foreground">
+                          {funil?.contatados ?? 0}
+                        </span>{" "}
+                        {t("contatados")}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 lg:justify-end">
+                    <div className="text-right">
+                      <p className="text-sm font-semibold tabular-nums">{respostas ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">{t("respostas")}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={href}>
+                          {card.tipo === "descoberta" ? t("Controlar") : t("Abrir")}
+                          <ArrowRight size={14} aria-hidden />
+                        </Link>
+                      </Button>
                       {card.tipo === "descoberta" && podeOperar && (
                         <Button
                           size="icon"
@@ -490,94 +583,7 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
                       )}
                     </div>
                   </div>
-
-                  <ObjetivoInline valor={objetivo} rota={rotaPatch} salvo={atualizarObjetivo} />
-
-                  <p className="text-xs text-muted-foreground">
-                    {recuperacao
-                      ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
-                      : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
-                          (card.campanha.categorias ?? []).join(", ") || "—"
-                        }`}
-                  </p>
-
-                  {agenda && (
-                    <p className="text-xs text-muted-foreground">
-                      {t("Agenda")}: {agenda}
-                    </p>
-                  )}
-
-                  {card.tipo === "descoberta" ? (
-                    <div className="space-y-3">
-                      <BarraDeEnvio resumo={envio} />
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        <Kpi rotulo={t("Público")} valor={String(total)} />
-                        <Kpi rotulo={t("Enviadas")} valor={String(enviados)} />
-                        <Kpi rotulo={t("Faltam")} valor={String(envio?.pendentes ?? 0)} />
-                        <Kpi
-                          rotulo={t("Responderam")}
-                          valor={String(funil?.responderam ?? 0)}
-                        />
-                      </div>
-                      {funil && (
-                        <details className="rounded-lg border p-3">
-                          <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-                            {t("Ver funil completo")}
-                          </summary>
-                          <div className="mt-3 space-y-3">
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-                              <Kpi
-                                rotulo={t("Quantidade de prospects")}
-                                valor={String(funil.encontrados)}
-                              />
-                              <Kpi rotulo={t("Contatados")} valor={String(funil.contatados)} />
-                              <Kpi rotulo={t("Respostas")} valor={String(funil.responderam)} />
-                              <Kpi
-                                rotulo={t("Oportunidades")}
-                                valor={String(funil.oportunidades)}
-                              />
-                              <Kpi rotulo={t("Pedidos")} valor={String(funil.pedidos)} />
-                              <Kpi
-                                rotulo={t("Faturamento")}
-                                valor={comoMoeda(funil.faturamento_cents, "BRL")}
-                              />
-                            </div>
-                            <Funil funil={funil} />
-                          </div>
-                        </details>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {funil ? (
-                        <>
-                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-                            <Kpi
-                              rotulo={t("Quantidade de prospects")}
-                              valor={String(funil.encontrados)}
-                            />
-                            <Kpi rotulo={t("Contatados")} valor={String(funil.contatados)} />
-                            <Kpi rotulo={t("Respostas")} valor={String(funil.responderam)} />
-                            <Kpi
-                              rotulo={t("Oportunidades")}
-                              valor={String(funil.oportunidades)}
-                            />
-                            <Kpi rotulo={t("Pedidos")} valor={String(funil.pedidos)} />
-                            <Kpi
-                              rotulo={t("Faturamento")}
-                              valor={comoMoeda(funil.faturamento_cents, "BRL")}
-                            />
-                          </div>
-                          <Funil funil={funil} />
-                        </>
-                      ) : (
-                        <div aria-live="polite">
-                          <Skeleton className="h-16 w-full" />
-                        </div>
-                      )}
-                    </>
-                  )}
-                </Card>
+                </div>
               </li>
             );
           })}

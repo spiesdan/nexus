@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react";
 
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/i18n/useT";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 
@@ -40,13 +41,24 @@ export function NovaCampanha({ categorias }: { categorias: MacroCategoria[] }) {
 
       <NexusPageHeader
         title={t("Nova campanha")}
-        subtitle={t("Escolha as cidades e categorias da sua base. Você vê as empresas antes de criar.")}
+        subtitle={t(
+          "Escolha as cidades e categorias da sua base. Você vê as empresas antes de criar.",
+        )}
+        actions={
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => router.push("/app/prospeccao?aba=campanhas")}
+          >
+            {t("Cancelar")}
+          </Button>
+        }
       />
 
       <CampanhaWizard
         categorias={categorias}
         aoConcluir={(id) => router.push(`/app/prospeccao/campanhas/${id}`)}
-        aoCancelar={() => router.push("/app/prospeccao?aba=campanhas")}
       />
     </div>
   );

@@ -25,8 +25,8 @@ import {
   ArrowsClockwise,
   Buildings,
   CalendarBlank,
-  CheckCircle,
-  Clock,
+  DotsThree,
+  PaperPlaneTilt,
   Pause,
   Play,
   Trash,
@@ -36,9 +36,16 @@ import {
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -60,6 +67,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
@@ -140,7 +148,7 @@ interface RespostaControle {
   audiencia_ids: string[];
 }
 
-type Filtro = "todas" | "enviadas" | "faltam" | "sem_confirmacao";
+type Filtro = "todas" | "enviadas" | "pendentes" | "sem_confirmacao";
 
 function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -184,6 +192,17 @@ function situacaoDaCampanha(
   }
 }
 
+function situacaoDaEmpresa(
+  empresa: EmpresaControle,
+  t: (s: string) => string,
+): { rotulo: string; variant: "success" | "warning" | "neutral" } {
+  if (empresa.enviado) return { rotulo: t("Enviada"), variant: "success" };
+  if (empresa.sem_confirmacao) {
+    return { rotulo: t("Reserva sem comprovante"), variant: "warning" };
+  }
+  return { rotulo: t("Pendente"), variant: "neutral" };
+}
+
 function fonteRotulo(fonte: string | null, t: (s: string) => string): string {
   if (fonte === "base") return t("Base de empresas");
   if (fonte === "ambas") return t("Base + busca");
@@ -216,11 +235,13 @@ function agendamentoResumo(campanha: CampanhaControle, t: (s: string) => string)
 
 export function ControleDaCampanha({ id }: { id: string }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [dados, setDados] = React.useState<RespostaControle | null>(null);
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<string | null>(null);
   const [acao, setAcao] = React.useState<string | null>(null);
+  const [atualizadoEm, setAtualizadoEm] = React.useState<Date | null>(null);
   const [filtro, setFiltro] = React.useState<Filtro>("todas");
   const [busca, setBusca] = React.useState("");
   const [cidade, setCidade] = React.useState("todas");
@@ -239,6 +260,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
         const corpo = resposta?.data;
         if (!corpo) throw new Error(t("Resposta vazia do servidor."));
         setDados(corpo);
+        setAtualizadoEm(new Date());
         setErro(null);
       } catch (e) {
         if (!silencioso) {
@@ -273,7 +295,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
     return empresas
       .filter((e) => {
         if (filtro === "enviadas" && !e.enviado) return false;
-        if (filtro === "faltam" && e.enviado) return false;
+        if (filtro === "pendentes" && e.enviado) return false;
         if (filtro === "sem_confirmacao" && !e.sem_confirmacao) return false;
         if (cidade !== "todas" && (e.cidade?.trim() || "Sem cidade") !== cidade) return false;
         if (!termo) return true;
@@ -301,6 +323,13 @@ export function ControleDaCampanha({ id }: { id: string }) {
 
   function trocarFiltro(novo: Filtro) {
     setFiltro(novo);
+    setLimiteTabela(100);
+  }
+
+  function limparFiltros() {
+    setBusca("");
+    setCidade("todas");
+    setFiltro("todas");
     setLimiteTabela(100);
   }
 
@@ -354,14 +383,13 @@ export function ControleDaCampanha({ id }: { id: string }) {
   if (carregando && !dados) {
     return (
       <div className="space-y-4 p-4 md:p-6">
-        <Skeleton className="h-9 w-64" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-9 w-72" />
+        <Skeleton className="h-28 w-full" />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -384,12 +412,13 @@ export function ControleDaCampanha({ id }: { id: string }) {
   const percentual = dados.resumo.percentual;
   const ehContatos = dados.tipo === "contatos";
   const podeDisparar = !ehContatos && semReserva.length > 0;
-  const modoInicial = semReserva.length > 20 || Boolean(dados.campanha.agendada_em) ? "agendar" : "agora";
+  const modoInicial =
+    semReserva.length > 20 || Boolean(dados.campanha.agendada_em) ? "agendar" : "agora";
 
   return (
     <div className="space-y-5 p-4 md:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
+      <NexusPageHeader
+        navigation={
           <Link
             href="/app/prospeccao?aba=campanhas"
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
@@ -397,112 +426,112 @@ export function ControleDaCampanha({ id }: { id: string }) {
             <ArrowLeft size={14} aria-hidden />
             {t("Campanhas")}
           </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">{dados.campanha.nome}</h1>
-            <Badge variant={situacao.variant}>{situacao.rotulo}</Badge>
-            <Badge variant="neutral">{fonteRotulo(dados.campanha.fonte_publico, t)}</Badge>
-            {ehContatos && <Badge variant="info">{t("Recuperação")}</Badge>}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {t("Controle de envio, público e empresas da campanha.")}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => void carregar()}
-            disabled={carregando}
-          >
-            <ArrowsClockwise size={16} aria-hidden />
-            {t("Atualizar")}
-          </Button>
-          {(podePausar || podeRetomar) && (
+        }
+        title={dados.campanha.nome}
+        subtitle={t("Controle de envio, público e empresas da campanha.")}
+        actions={
+          <>
+            {podeDisparar && (
+              <Button type="button" onClick={() => setDisparoAberto(true)}>
+                {modoInicial === "agora" ? (
+                  <PaperPlaneTilt size={16} aria-hidden />
+                ) : (
+                  <CalendarBlank size={16} aria-hidden />
+                )}
+                {modoInicial === "agora"
+                  ? t(`Enviar agora (${semReserva.length})`)
+                  : t(`Agendar envio (${semReserva.length})`)}
+              </Button>
+            )}
             <Button
               type="button"
-              size="sm"
+              size="icon"
               variant="outline"
-              onClick={() => void alternarPausa()}
-              disabled={acao === "pausa"}
+              onClick={() => void carregar()}
+              disabled={carregando}
+              aria-label={t("Atualizar")}
+              title={t("Atualizar")}
             >
-              {podePausar ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
-              {podePausar ? t("Pausar") : t("Retomar")}
+              <ArrowsClockwise size={16} className={carregando ? "animate-spin" : ""} aria-hidden />
             </Button>
-          )}
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setExcluirAberto(true)}
-          >
-            <Trash size={16} aria-hidden />
-            {t("Excluir")}
-          </Button>
-        </div>
-      </div>
+            {(podePausar || podeRetomar) && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void alternarPausa()}
+                disabled={acao === "pausa"}
+              >
+                {podePausar ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
+                {podePausar ? t("Pausar") : t("Retomar")}
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="icon" variant="ghost" aria-label={t("Mais ações")}>
+                  <DotsThree size={20} weight="bold" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => setExcluirAberto(true)}
+                >
+                  <Trash size={16} aria-hidden />
+                  {t("Excluir campanha")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
+      />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi
-          titulo={
-            dados.previa_base && dados.resumo.enviados === 0
-              ? t("Público estimado")
-              : t("Público")
-          }
-          valor={total}
-          detalhe={
-            dados.previa_base
-              ? dados.resumo.enviados > 0
-                ? t("Calculado agora; envios já feitos aparecem abaixo")
-                : t("Calculado agora, ainda sem reserva")
-              : t("Empresas na lista da campanha")
-          }
-          tom="neutro"
-          icone={<Buildings size={18} aria-hidden />}
-        />
-        <Kpi
-          titulo={t("Enviadas")}
-          valor={enviados}
-          detalhe={t("Com comprovante de envio")}
-          tom="sucesso"
-          icone={<CheckCircle size={18} aria-hidden />}
-        />
-        <Kpi
-          titulo={t("Faltam")}
-          valor={faltam}
-          detalhe={t("Ainda sem mensagem confirmada")}
-          tom="alerta"
-          icone={<Clock size={18} aria-hidden />}
-        />
-        <Kpi
-          titulo={t("Sem confirmação")}
-          valor={dados.resumo.sem_confirmacao}
-          detalhe={t("Reserva existe, envio não confirmou")}
-          tom={dados.resumo.sem_confirmacao > 0 ? "erro" : "neutro"}
-          icone={<WarningCircle size={18} aria-hidden />}
-        />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Badge variant={situacao.variant}>{situacao.rotulo}</Badge>
+        <Badge variant="neutral">{fonteRotulo(dados.campanha.fonte_publico, t)}</Badge>
+        {ehContatos && <Badge variant="info">{t("Recuperação")}</Badge>}
       </div>
 
       <Card className="space-y-3 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-sm font-medium">{t("Progresso do envio")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t(`${enviados} de ${total} enviadas`)}
-              {faltam > 0 ? ` · ${t(`${faltam} faltam`)}` : ""}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-2xl font-semibold tabular-nums">{enviados}</span>
+              <span className="text-sm text-muted-foreground">{t(`de ${total} enviadas`)}</span>
+              {faltam > 0 ? (
+                <Badge variant="neutral">{t(`${faltam} pendentes`)}</Badge>
+              ) : (
+                <Badge variant="success">{t("Todas enviadas")}</Badge>
+              )}
+              {dados.resumo.sem_confirmacao > 0 && (
+                <Badge variant="warning">
+                  {t(`${dados.resumo.sem_confirmacao} sem comprovante`)}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {dados.previa_base
+                ? dados.resumo.enviados > 0
+                  ? t("Público calculado agora + envios já realizados.")
+                  : t("Público calculado agora, ainda sem reserva.")
+                : t(`${total} empresas na lista da campanha.`)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {podeDisparar && (
-              <Button type="button" size="sm" onClick={() => setDisparoAberto(true)}>
-                <CalendarBlank size={16} aria-hidden />
-                {t(`Agendar envio (${semReserva.length})`)}
-              </Button>
-            )}
-            {!ehContatos && !podeDisparar && faltam > 0 && (
-              <Badge variant="warning">{t("Só há reservas sem confirmação")}</Badge>
+          <div className="space-y-0.5 text-xs text-muted-foreground sm:text-right">
+            <p>
+              {dados.resumo.ultimo_envio_at
+                ? t(`Último envio em ${formatarData(dados.resumo.ultimo_envio_at)}`)
+                : t("Nenhum envio confirmado ainda")}
+            </p>
+            {atualizadoEm && (
+              <p>
+                {t(
+                  `Atualizado às ${atualizadoEm.toLocaleTimeString(tagIdioma, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}`,
+                )}
+              </p>
             )}
           </div>
         </div>
@@ -521,331 +550,411 @@ export function ControleDaCampanha({ id }: { id: string }) {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>{percentual}%</span>
-          <span>
-            {dados.resumo.ultimo_envio_at
-              ? t(`Último envio em ${formatarData(dados.resumo.ultimo_envio_at)}`)
-              : t("Nenhum envio confirmado ainda")}
-          </span>
+          <span>{fonteRotulo(dados.campanha.fonte_publico, t)}</span>
         </div>
-      </Card>
-
-      {ehContatos && (
-        <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
-          <p className="font-medium">{t("Esta é uma campanha de recuperação de contatos.")}</p>
-          <p className="mt-1 opacity-80">
+        {!ehContatos && !podeDisparar && faltam > 0 && (
+          <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
             {t(
-              "O acompanhamento e o envio são feitos pela Venda Automática. Esta tela mostra o andamento do ledger, mas não reagenda contatos por aqui.",
+              "Só há reservas sem comprovante. Confira o Inbox antes de liberar e agendar de novo.",
             )}
           </p>
-        </Card>
-      )}
-
-      {dados.previa_base && (
-        <Card className="border-warning/40 bg-warning-bg p-4 text-sm text-warning-fg">
-          <div className="flex items-start gap-2">
-            <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
-            <div className="space-y-1">
-              <p className="font-medium">
-                {dados.resumo.enviados > 0
-                  ? t("Público calculado agora + envios já realizados.")
-                  : t("Prévia do público — nada reservado ainda.")}
-              </p>
-              <p className="opacity-90">{dados.publico?.resumo}</p>
-              {dados.resumo.enviados > 0 && (
-                <p className="opacity-90">
-                  {t(
-                    "A lista desta campanha ainda não foi fechada. Os envios confirmados aparecem abaixo; o restante ainda não foi reservado.",
-                  )}
-                </p>
-              )}
-              {dados.publico?.truncado && (
-                <p className="opacity-90">
-                  {t("A prévia mostra as primeiras 500 empresas. O agendamento usará esta lista.")}
-                </p>
-              )}
-              <p className="opacity-90">
-                {t(
-                  "Ao agendar, as empresas ainda pendentes ficam reservadas para esta campanha e saem do público das outras.",
-                )}
-              </p>
-              {(dados.publico?.ja_clientes ?? 0) + (dados.publico?.duplicadas ?? 0) +
-                (dados.publico?.em_campanha ?? 0) +
-                (dados.publico?.categoria_a_revisar ?? 0) >
-                0 && (
-                <p className="opacity-90">
-                  {t("Fora da fila")}: {dados.publico?.ja_clientes ?? 0} {t("clientes")} ·{" "}
-                  {dados.publico?.duplicadas ?? 0} {t("duplicadas")} ·{" "}
-                  {dados.publico?.em_campanha ?? 0} {t("em outra campanha")} ·{" "}
-                  {dados.publico?.categoria_a_revisar ?? 0} {t("categoria a revisar")}
-                </p>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {semConfirmacao.length > 0 && (
-        <Card className="border-error/40 bg-error-bg p-4 text-sm text-error-fg">
-          <div className="flex items-start gap-2">
-            <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
-            <div>
-              <p className="font-medium">
-                {t(`${semConfirmacao.length} empresas com reserva, mas sem comprovante de envio.`)}
-              </p>
-              <p className="mt-1 opacity-90">
-                {t(
-                  "Elas não entram no novo agendamento para não duplicar mensagem. Confira no Inbox se a mensagem saiu; se não saiu, libere as reservas e agende de novo.",
-                )}
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="mt-2 border-error/40 bg-surface text-error-fg hover:bg-error-bg"
-                onClick={() => setLiberarAberto(true)}
-                disabled={acao === "liberar"}
-              >
-                {t("Liberar reservas sem confirmação")}
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {cidades.length > 0 && (
-        <Card className="space-y-3 p-4">
-          <div className="flex items-center gap-2">
-            <Buildings size={18} className="text-muted-foreground" aria-hidden />
-            <h2 className="text-sm font-semibold">{t("Por cidade")}</h2>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {cidades.map((c) => {
-              const pct = c.total > 0 ? Math.round((c.enviados / c.total) * 100) : 0;
-              return (
-                <div key={c.cidade} className="rounded-lg border p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium">{c.cidade}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {c.enviados}/{c.total}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {c.pendentes > 0
-                      ? t(`${c.pendentes} faltam`)
-                      : t("Todas enviadas")}
-                    {c.sem_confirmacao > 0
-                      ? ` · ${t(`${c.sem_confirmacao} sem confirmação`)}`
-                      : ""}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
-
-      <Card className="overflow-hidden">
-        <div className="flex flex-col gap-3 border-b p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">{t("Empresas da campanha")}</h2>
-              <Badge variant="neutral">{empresas.length}</Badge>
-            </div>
-            <div className="flex flex-wrap items-center gap-1">
-              <button
-                type="button"
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  filtro === "todas" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                }`}
-                onClick={() => trocarFiltro("todas")}
-              >
-                {t("Todas")}
-              </button>
-              <button
-                type="button"
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  filtro === "enviadas" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                }`}
-                onClick={() => trocarFiltro("enviadas")}
-              >
-                {t("Enviadas")} {enviados}
-              </button>
-              <button
-                type="button"
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  filtro === "faltam" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                }`}
-                onClick={() => trocarFiltro("faltam")}
-              >
-                {t("Faltam")} {faltam}
-              </button>
-              <button
-                type="button"
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  filtro === "sem_confirmacao"
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted"
-                }`}
-                onClick={() => trocarFiltro("sem_confirmacao")}
-              >
-                {t("Sem confirmação")} {dados.resumo.sem_confirmacao}
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              value={busca}
-              onChange={(e) => {
-                setBusca(e.target.value);
-                setLimiteTabela(100);
-              }}
-              placeholder={t("Buscar por nome, telefone ou categoria…")}
-              className="sm:max-w-sm"
-            />
-            <select
-              value={cidade}
-              onChange={(e) => {
-                setCidade(e.target.value);
-                setLimiteTabela(100);
-              }}
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-              aria-label={t("Filtrar por cidade")}
-            >
-              <option value="todas">{t("Todas as cidades")}</option>
-              {cidades.map((c) => (
-                <option key={c.cidade} value={c.cidade}>
-                  {c.cidade} ({c.total})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {empresas.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            {ehContatos
-              ? t("Nenhum contato encontrado para esta campanha.")
-              : dados.campanha.fonte_publico === "busca"
-                ? t("Nenhuma empresa encontrada ainda. A busca pode estar em andamento.")
-                : t("Nenhuma empresa no público desta campanha.")}
-          </div>
-        ) : filtradas.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            {t("Nenhuma empresa com esse filtro.")}
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader className="bg-muted/40">
-                <TableRow>
-                  <TableHead className="px-4 py-2">{t("Empresa")}</TableHead>
-                  <TableHead className="px-4 py-2">{t("Cidade")}</TableHead>
-                  <TableHead className="px-4 py-2">{t("Telefone")}</TableHead>
-                  <TableHead className="px-4 py-2">{t("Situação")}</TableHead>
-                  <TableHead className="px-4 py-2">{t("Enviada em")}</TableHead>
-                  <TableHead className="px-4 py-2">{t("Conversa")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visiveis.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell className="max-w-[260px] px-4 py-2">
-                      <p className="truncate font-medium text-foreground">{e.nome}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {e.categoria ?? t("Sem categoria")}
-                        {e.mensagem_indice !== null
-                          ? ` · ${t(`Mensagem ${e.mensagem_indice + 1}`)}`
-                          : ""}
-                      </p>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-2">
-                      {e.cidade ? `${e.cidade}${e.estado ? `/${e.estado}` : ""}` : "—"}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-2">{e.telefone ?? "—"}</TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-2">
-                      {e.enviado ? (
-                        <Badge variant="success">{t("Enviada")}</Badge>
-                      ) : e.sem_confirmacao ? (
-                        <Badge variant="warning">{t("Sem confirmação")}</Badge>
-                      ) : (
-                        <Badge variant="neutral">{t("Falta")}</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-2 text-muted-foreground">
-                      {formatarData(e.enviado_em)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap px-4 py-2">
-                      {e.conversa_id ? (
-                        <Link
-                          href={`/app/inbox?id=${e.conversa_id}`}
-                          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-                        >
-                          {t("Abrir Inbox")}
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
-              <span>{t(`Mostrando ${visiveis.length} de ${filtradas.length}`)}</span>
-              {visiveis.length < filtradas.length && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setLimiteTabela((n) => n + 100)}
-                >
-                  {t("Mostrar mais")}
-                </Button>
-              )}
-            </div>
-          </>
         )}
       </Card>
 
-      <Card className="space-y-4 p-4">
-        <details>
-          <summary className="cursor-pointer text-sm font-semibold">
-            {t("Mensagens e agenda")}
-          </summary>
-          <div className="mt-3 space-y-3">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <aside className="min-w-0 space-y-3 xl:order-2">
+          <Card className="space-y-3 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">{t("Mensagens e agenda")}</h2>
+              <Badge variant="neutral">{(dados.campanha.mensagens ?? []).length}</Badge>
+            </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {t("Agenda")}
+              </p>
+              <p className="mt-1 text-sm">{agendamentoResumo(dados.campanha, t)}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 {t("Mensagens")}
               </p>
               {(dados.campanha.mensagens ?? []).length === 0 ? (
                 <p className="mt-1 text-sm text-warning-fg">
-                  {t("Nenhuma mensagem salva. Agende pelo botão acima e escreva a primeira.")}
+                  {t("Nenhuma mensagem salva. Ao enviar ou agendar, escreva a primeira.")}
                 </p>
               ) : (
                 <ol className="mt-2 space-y-2">
                   {(dados.campanha.mensagens ?? []).map((m, i) => (
-                    <li key={i} className="rounded-lg border bg-muted/20 p-3 text-sm">
-                      <span className="mr-2 text-xs font-medium text-muted-foreground">
-                        {i + 1}
-                      </span>
-                      {m}
+                    <li key={i} className="rounded-lg border bg-muted/20 p-2.5 text-sm">
+                      <span className="text-xs font-medium text-muted-foreground">{i + 1}</span>
+                      <p className="mt-1 line-clamp-4 whitespace-pre-wrap">{m}</p>
                     </li>
                   ))}
                 </ol>
               )}
             </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t("Agenda")}
+          </Card>
+        </aside>
+
+        <div className="min-w-0 space-y-4 xl:order-1">
+          {ehContatos && (
+            <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
+              <p className="font-medium">{t("Esta é uma campanha de recuperação de contatos.")}</p>
+              <p className="mt-1 opacity-80">
+                {t(
+                  "O acompanhamento e o envio são feitos pela Venda Automática. Esta tela mostra o andamento do ledger, mas não reagenda contatos por aqui.",
+                )}
               </p>
-              <p className="mt-1 text-sm">{agendamentoResumo(dados.campanha, t)}</p>
+            </Card>
+          )}
+
+          {dados.previa_base && (
+            <Card className="border-warning/40 bg-warning-bg p-3 text-xs text-warning-fg">
+              <div className="flex items-start gap-2">
+                <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+                <div className="space-y-1">
+                  <p className="font-medium">
+                    {dados.resumo.enviados > 0
+                      ? t("Público calculado agora + envios já realizados.")
+                      : t("Prévia do público — nada reservado ainda.")}
+                  </p>
+                  <p className="opacity-90">{dados.publico?.resumo}</p>
+                  {dados.resumo.enviados > 0 && (
+                    <p className="opacity-90">
+                      {t(
+                        "A lista desta campanha ainda não foi fechada. Os envios confirmados aparecem abaixo; o restante ainda não foi reservado.",
+                      )}
+                    </p>
+                  )}
+                  {dados.publico?.truncado && (
+                    <p className="opacity-90">
+                      {t(
+                        "A prévia mostra as primeiras 500 empresas. O agendamento usará esta lista.",
+                      )}
+                    </p>
+                  )}
+                  <p className="opacity-90">
+                    {t(
+                      "Ao agendar, as empresas ainda pendentes ficam reservadas para esta campanha e saem do público das outras.",
+                    )}
+                  </p>
+                  {(dados.publico?.ja_clientes ?? 0) +
+                    (dados.publico?.duplicadas ?? 0) +
+                    (dados.publico?.em_campanha ?? 0) +
+                    (dados.publico?.categoria_a_revisar ?? 0) >
+                    0 && (
+                    <p className="opacity-90">
+                      {t("Fora da fila")}: {dados.publico?.ja_clientes ?? 0} {t("clientes")} ·{" "}
+                      {dados.publico?.duplicadas ?? 0} {t("duplicadas")} ·{" "}
+                      {dados.publico?.em_campanha ?? 0} {t("em outra campanha")} ·{" "}
+                      {dados.publico?.categoria_a_revisar ?? 0} {t("categoria a revisar")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {semConfirmacao.length > 0 && (
+            <Card className="border-error/40 bg-error-bg p-3 text-sm text-error-fg">
+              <div className="flex items-start gap-2">
+                <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+                <div>
+                  <p className="font-medium">
+                    {t(
+                      `${semConfirmacao.length} empresas com reserva, mas sem comprovante de envio.`,
+                    )}
+                  </p>
+                  <p className="mt-1 text-xs opacity-90">
+                    {t(
+                      "Elas não entram no novo agendamento para não duplicar mensagem. Confira no Inbox se a mensagem saiu; se não saiu, libere as reservas e agende de novo.",
+                    )}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 border-error/40 bg-surface text-error-fg hover:bg-error-bg"
+                    onClick={() => setLiberarAberto(true)}
+                    disabled={acao === "liberar"}
+                  >
+                    {t("Liberar reservas sem comprovante")}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {cidades.length > 0 && (
+            <Card className="space-y-2 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Buildings size={16} className="text-muted-foreground" aria-hidden />
+                  {t("Por cidade")}
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {cidades.length === 1 ? t("1 cidade") : t(`${cidades.length} cidades`)}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  aria-pressed={cidade === "todas"}
+                  onClick={() => {
+                    setCidade("todas");
+                    setLimiteTabela(100);
+                  }}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
+                    cidade === "todas"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  {t("Todas")}
+                  <span className="tabular-nums opacity-80">{empresas.length}</span>
+                </button>
+                {cidades.map((c) => {
+                  const ativa = cidade === c.cidade;
+                  return (
+                    <button
+                      key={c.cidade}
+                      type="button"
+                      aria-pressed={ativa}
+                      onClick={() => {
+                        setCidade(ativa ? "todas" : c.cidade);
+                        setLimiteTabela(100);
+                      }}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
+                        ativa
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      }`}
+                      title={
+                        c.sem_confirmacao > 0
+                          ? t(`${c.sem_confirmacao} sem comprovante nesta cidade`)
+                          : undefined
+                      }
+                    >
+                      <span>{c.cidade}</span>
+                      <span className="tabular-nums opacity-80">
+                        {c.enviados}/{c.total}
+                      </span>
+                      {c.sem_confirmacao > 0 && (
+                        <span className="opacity-80">· {c.sem_confirmacao} sem comprovante</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
+          <Card className="overflow-hidden">
+            <div className="flex flex-col gap-3 border-b p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-semibold">{t("Empresas da campanha")}</h2>
+                <Badge variant="neutral">{empresas.length}</Badge>
+                <div className="ml-auto flex flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    aria-pressed={filtro === "todas"}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      filtro === "todas" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                    onClick={() => trocarFiltro("todas")}
+                  >
+                    {t("Todas")}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={filtro === "pendentes"}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      filtro === "pendentes"
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                    onClick={() => trocarFiltro("pendentes")}
+                  >
+                    {t("Pendentes")} {faltam}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={filtro === "enviadas"}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      filtro === "enviadas"
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                    onClick={() => trocarFiltro("enviadas")}
+                  >
+                    {t("Enviadas")} {enviados}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={filtro === "sem_confirmacao"}
+                    className={`rounded-full border px-3 py-1 text-xs ${
+                      filtro === "sem_confirmacao"
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                    onClick={() => trocarFiltro("sem_confirmacao")}
+                  >
+                    {t("Sem comprovante")} {dados.resumo.sem_confirmacao}
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  value={busca}
+                  onChange={(e) => {
+                    setBusca(e.target.value);
+                    setLimiteTabela(100);
+                  }}
+                  placeholder={t("Buscar por nome, telefone ou categoria…")}
+                  className="sm:max-w-xs"
+                />
+                {(busca || cidade !== "todas" || filtro !== "todas") && (
+                  <Button type="button" size="sm" variant="ghost" onClick={limparFiltros}>
+                    {t("Limpar filtros")}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        </details>
-      </Card>
+
+            {empresas.length === 0 ? (
+              <div className="space-y-2 p-8 text-center text-sm text-muted-foreground">
+                <p>
+                  {ehContatos
+                    ? t("Nenhum contato encontrado para esta campanha.")
+                    : dados.campanha.fonte_publico === "busca"
+                      ? t("Nenhuma empresa encontrada ainda. A busca pode estar em andamento.")
+                      : t("Nenhuma empresa no público desta campanha.")}
+                </p>
+                <Button size="sm" variant="outline" asChild>
+                  <Link
+                    href={ehContatos ? "/app/venda-automatica" : "/app/prospeccao?aba=empresas"}
+                  >
+                    {ehContatos ? t("Abrir Venda Automática") : t("Ver empresas da base")}
+                  </Link>
+                </Button>
+              </div>
+            ) : filtradas.length === 0 ? (
+              <div className="space-y-2 p-8 text-center text-sm text-muted-foreground">
+                <p>{t("Nenhuma empresa com esse filtro.")}</p>
+                <Button type="button" size="sm" variant="outline" onClick={limparFiltros}>
+                  {t("Limpar filtros")}
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow>
+                        <TableHead className="px-4 py-2">{t("Empresa")}</TableHead>
+                        <TableHead className="px-4 py-2">{t("Cidade")}</TableHead>
+                        <TableHead className="px-4 py-2">{t("Situação")}</TableHead>
+                        <TableHead className="px-4 py-2">{t("Enviada em")}</TableHead>
+                        <TableHead className="px-4 py-2">{t("Conversa")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visiveis.map((e) => {
+                        const situacaoEmpresa = situacaoDaEmpresa(e, t);
+                        return (
+                          <TableRow key={e.id}>
+                            <TableCell className="max-w-[320px] px-4 py-2">
+                              <p className="truncate font-medium text-foreground">{e.nome}</p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {[e.categoria, e.telefone].filter(Boolean).join(" · ") ||
+                                  t("Sem detalhes")}
+                                {e.mensagem_indice !== null
+                                  ? ` · ${t(`Mensagem ${e.mensagem_indice + 1}`)}`
+                                  : ""}
+                              </p>
+                            </TableCell>
+                            <TableCell className="px-4 py-2 whitespace-nowrap">
+                              {e.cidade ? `${e.cidade}${e.estado ? `/${e.estado}` : ""}` : "—"}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 whitespace-nowrap">
+                              <Badge variant={situacaoEmpresa.variant}>
+                                {situacaoEmpresa.rotulo}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-4 py-2 whitespace-nowrap text-muted-foreground">
+                              {formatarData(e.enviado_em)}
+                            </TableCell>
+                            <TableCell className="px-4 py-2 whitespace-nowrap">
+                              {e.conversa_id ? (
+                                <Link
+                                  href={`/app/inbox?id=${e.conversa_id}`}
+                                  className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                                >
+                                  {t("Abrir Inbox")}
+                                </Link>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <ul className="divide-y md:hidden">
+                  {visiveis.map((e) => {
+                    const situacaoEmpresa = situacaoDaEmpresa(e, t);
+                    return (
+                      <li key={e.id} className="space-y-1.5 p-3">
+                        <p className="truncate font-medium">{e.nome}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {[e.categoria, e.telefone].filter(Boolean).join(" · ") ||
+                            t("Sem detalhes")}
+                        </p>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant={situacaoEmpresa.variant}>
+                              {situacaoEmpresa.rotulo}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {e.cidade ? `${e.cidade}${e.estado ? `/${e.estado}` : ""}` : "—"}
+                              {e.enviado_em ? ` · ${formatarData(e.enviado_em)}` : ""}
+                            </span>
+                          </div>
+                          {e.conversa_id ? (
+                            <Link
+                              href={`/app/inbox?id=${e.conversa_id}`}
+                              className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                            >
+                              {t("Abrir Inbox")}
+                            </Link>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
+                  <span>{t(`Mostrando ${visiveis.length} de ${filtradas.length}`)}</span>
+                  {visiveis.length < filtradas.length && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setLimiteTabela((n) => n + 100)}
+                    >
+                      {t("Mostrar mais")}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
+      </div>
 
       {disparoAberto && (
         <DialogoDisparo
@@ -893,7 +1002,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
       <AlertDialog open={liberarAberto} onOpenChange={setLiberarAberto}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("Liberar reservas sem confirmação?")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("Liberar reservas sem comprovante?")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t(
                 "Isto apaga apenas as reservas que não têm comprovante de envio. As mensagens confirmadas ficam intactas. Só faça isso depois de conferir no Inbox que a mensagem não saiu — liberar uma reserva cuja mensagem saiu manda de novo para a pessoa.",
@@ -915,38 +1024,5 @@ export function ControleDaCampanha({ id }: { id: string }) {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
-}
-
-function Kpi({
-  titulo,
-  valor,
-  detalhe,
-  tom,
-  icone,
-}: {
-  titulo: string;
-  valor: number;
-  detalhe: string;
-  tom: "neutro" | "sucesso" | "alerta" | "erro";
-  icone: React.ReactNode;
-}) {
-  const cor =
-    tom === "sucesso"
-      ? "text-success-fg"
-      : tom === "alerta"
-        ? "text-warning-fg"
-        : tom === "erro"
-          ? "text-error-fg"
-          : "text-foreground";
-  return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{titulo}</p>
-        <span className={cor}>{icone}</span>
-      </div>
-      <p className={`mt-2 text-2xl font-semibold tabular-nums ${cor}`}>{valor}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{detalhe}</p>
-    </Card>
   );
 }

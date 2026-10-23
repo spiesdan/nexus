@@ -54,7 +54,10 @@ async function main(): Promise<void> {
 
   // ── 1. A tela com duas superfícies ──────────────────────────────────────
   await page.goto(`${BASE}/app/prospeccao?aba=campanhas`, { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: /Nova campanha/i }).first().waitFor({ timeout: 60_000 });
+  await page
+    .getByRole("link", { name: /Criar campanha/i })
+    .first()
+    .waitFor({ timeout: 60_000 });
   await page.waitForTimeout(1_500);
   await page.screenshot({ path: path.join(OUT, "01-duas-superficies.png"), fullPage: true });
   console.info("[ok] 01 estrutura");
@@ -83,9 +86,12 @@ async function main(): Promise<void> {
     await page.locator(`#preset-msg-${i}`).fill(texto);
   }
   await page.getByRole("button", { name: /^Salvar mensagens$/ }).click();
-  await page.getByText(/Mensagens salvas para esta categoria/i).first().waitFor({
-    timeout: 30_000,
-  });
+  await page
+    .getByText(/Mensagens salvas para esta categoria/i)
+    .first()
+    .waitFor({
+      timeout: 30_000,
+    });
   await page.waitForTimeout(1_200);
   await page.screenshot({
     path: path.join(OUT, "03-config-mensagens-salvas.png"),
@@ -105,7 +111,10 @@ async function main(): Promise<void> {
     await page.locator("#wiz-nome").fill("Prova visual — padrão por categoria");
   }
   await page.getByRole("button", { name: /Mafra/i }).first().click();
-  await page.getByRole("button", { name: /^Oficina mecânica$/ }).first().click();
+  await page
+    .getByRole("button", { name: /^Oficina mecânica$/ })
+    .first()
+    .click();
 
   const previa = page.waitForResponse((r) => r.url().includes("/campaigns/preview"), {
     timeout: 60_000,
@@ -151,6 +160,39 @@ async function main(): Promise<void> {
   await page.waitForTimeout(2_500);
   await page.screenshot({ path: path.join(OUT, "05-empresas.png"), fullPage: true });
   console.info("[ok] 05 empresas");
+
+  // ── 6. Controle da campanha: resumo, mensagens e tabela ─────────────────
+  // A linha da campanha semeada tem envio real; é a que prova o estado
+  // "4 de 8" em vez do rascunho vazio.
+  await page.goto(`${BASE}/app/prospeccao?aba=campanhas`, { waitUntil: "domcontentloaded" });
+  const linhaControle = page.locator("li").filter({ hasText: "Campanha E2E Controle" }).first();
+  await linhaControle.getByRole("link", { name: /Controlar/i }).click();
+  await page.getByText("Empresas da campanha").first().waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1_500);
+  await page.screenshot({ path: path.join(OUT, "06-controle.png"), fullPage: true });
+  console.info("[ok] 06 controle");
+
+  // ── 7. O controle no celular: linha vira cartão, sem tabela espremida ──
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(OUT, "07-controle-mobile.png"), fullPage: true });
+  console.info("[ok] 07 controle mobile");
+
+  // A carteira do controle no celular: altura maior para provar os cartões
+  // (a rolagem é do `main`, então fullPage sozinho para no primeiro viewport).
+  await page.setViewportSize({ width: 390, height: 2_200 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(OUT, "08-controle-mobile-empresas.png") });
+  console.info("[ok] 08 controle mobile empresas");
+
+  // ── 9. A lista de campanhas no celular ─────────────────────────────────
+  await page.goto(`${BASE}/app/prospeccao?aba=campanhas`, { waitUntil: "domcontentloaded" });
+  await page.getByText("Campanha E2E Controle").first().waitFor({ timeout: 60_000 });
+  await page.waitForTimeout(1_000);
+  await page.screenshot({ path: path.join(OUT, "09-campanhas-mobile.png") });
+  console.info("[ok] 09 campanhas mobile");
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
 
   if (erros.length > 0) {
     throw new Error(
