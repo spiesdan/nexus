@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { LockKey, MagnifyingGlass } from "@phosphor-icons/react";
+import { LockKey, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
@@ -274,18 +274,81 @@ export function ProspeccaoClient({
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
+    <div className="min-h-full space-y-4 p-4 sm:p-6">
+      <NexusPageHeader
+        title={textos.titulo}
+        subtitle={textos.subtitulo}
+        actions={
+          podeBuscar ? (
+            <Button asChild>
+              <Link href="/app/prospeccao/nova">
+                <Plus size={16} aria-hidden />
+                {t("Criar campanha")}
+              </Link>
+            </Button>
+          ) : undefined
+        }
+      />
 
       <Tabs value={aba} onValueChange={setAba}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
-          <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
-          <TabsTrigger value="buscar">{textos.abaBuscar}</TabsTrigger>
-          <TabsTrigger value="pesquisas">{textos.abaPesquisas}</TabsTrigger>
-          <TabsTrigger value="mercado">{textos.abaMercado}</TabsTrigger>
-          {podeGerenciar && <TabsTrigger value="config">{textos.abaConfig}</TabsTrigger>}
-        </TabsList>
+        {/*
+          DUAS SUPERFÍCIES, NÃO SEIS ABAS.
+          A tela tinha seis abas do mesmo peso — criar campanha, buscar, ver
+          pesquisas, ver empresas, mercado e configurar — e quem abria não sabia
+          por onde começar. O trabalho do dia é Campanhas (o que está rodando) e
+          Empresas (quem existe). As outras quatro são ferramentas: ficam ao
+          lado, menores, sem competir com o que se usa todo dia.
+        */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="campanhas">{textos.abaCampanhas}</TabsTrigger>
+            <TabsTrigger value="empresas">{textos.abaEmpresas}</TabsTrigger>
+          </TabsList>
+
+          <nav
+            aria-label={t("Ferramentas da prospecção")}
+            className="flex flex-wrap items-center gap-1"
+          >
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "buscar" ? "secondary" : "ghost"}
+              aria-current={aba === "buscar" ? "page" : undefined}
+              onClick={() => setAba("buscar")}
+            >
+              {textos.abaBuscar}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "pesquisas" ? "secondary" : "ghost"}
+              aria-current={aba === "pesquisas" ? "page" : undefined}
+              onClick={() => setAba("pesquisas")}
+            >
+              {textos.abaPesquisas}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={aba === "mercado" ? "secondary" : "ghost"}
+              aria-current={aba === "mercado" ? "page" : undefined}
+              onClick={() => setAba("mercado")}
+            >
+              {textos.abaMercado}
+            </Button>
+            {podeGerenciar && (
+              <Button
+                type="button"
+                size="sm"
+                variant={aba === "config" ? "secondary" : "ghost"}
+                aria-current={aba === "config" ? "page" : undefined}
+                onClick={() => setAba("config")}
+              >
+                {textos.abaConfig}
+              </Button>
+            )}
+          </nav>
+        </div>
 
         <TabsContent value="buscar" className="mt-4">
           {podeBuscar ? (
@@ -295,19 +358,44 @@ export function ProspeccaoClient({
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="cidade">{textos.cidade}</Label>
-                    <Input id="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder={textos.exemploCidade} />
+                    <Input
+                      id="cidade"
+                      value={cidade}
+                      onChange={(e) => setCidade(e.target.value)}
+                      placeholder={textos.exemploCidade}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="uf">{textos.estado}</Label>
-                    <Input id="uf" value={uf} onChange={(e) => setUf(e.target.value)} placeholder="SC" maxLength={2} />
+                    <Input
+                      id="uf"
+                      value={uf}
+                      onChange={(e) => setUf(e.target.value)}
+                      placeholder="SC"
+                      maxLength={2}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="raio">{textos.raio}</Label>
-                    <Input id="raio" type="number" min={1} max={500} value={raio} onChange={(e) => setRaio(e.target.value)} />
+                    <Input
+                      id="raio"
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={raio}
+                      onChange={(e) => setRaio(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="maximo">{textos.maximo}</Label>
-                    <Input id="maximo" type="number" min={1} max={10000} value={maximo} onChange={(e) => setMaximo(e.target.value)} />
+                    <Input
+                      id="maximo"
+                      type="number"
+                      min={1}
+                      max={10000}
+                      value={maximo}
+                      onChange={(e) => setMaximo(e.target.value)}
+                    />
                   </div>
                 </div>
               </div>
@@ -365,7 +453,9 @@ export function ProspeccaoClient({
                   ))}
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  {t("Valem nos resultados — a busca encontra todas as empresas da região e estes filtros ficam aplicados ao abrir.")}
+                  {t(
+                    "Valem nos resultados — a busca encontra todas as empresas da região e estes filtros ficam aplicados ao abrir.",
+                  )}
                 </p>
               </div>
               {/* A BUSCA EM RODAPÉ FIXO. O botão ficava no fim de ~10 grupos de
@@ -401,7 +491,10 @@ export function ProspeccaoClient({
           ) : (
             <ul className="space-y-3">
               {listaBuscas.map((b) => {
-                const pct = b.total_celulas > 0 ? Math.round((b.celulas_processadas / b.total_celulas) * 100) : 0;
+                const pct =
+                  b.total_celulas > 0
+                    ? Math.round((b.celulas_processadas / b.total_celulas) * 100)
+                    : 0;
                 const ativa = b.status === "queued" || b.status === "running";
                 return (
                   <li key={b.id} className="rounded-lg border p-4">
@@ -410,19 +503,27 @@ export function ProspeccaoClient({
                       <span className="text-muted-foreground">
                         {[b.cidade, b.estado].filter(Boolean).join("/")} · {b.raio_km} km
                       </span>
-                      <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COR[b.status] ?? ""}`}>
-                        {t(ROTULO_STATUS_BUSCA[b.status as keyof typeof ROTULO_STATUS_BUSCA] ?? b.status)}
+                      <span
+                        className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COR[b.status] ?? ""}`}
+                      >
+                        {t(
+                          ROTULO_STATUS_BUSCA[b.status as keyof typeof ROTULO_STATUS_BUSCA] ??
+                            b.status,
+                        )}
                       </span>
                     </div>
                     {(ativa || b.total_celulas > 0) && (
                       <div className="mt-2">
                         <div className="h-2 overflow-hidden rounded-full bg-muted">
-                          <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                          <div
+                            className="h-full bg-primary transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {textos.progresso} {pct}% · {textos.encontradas} {b.encontradas} · {textos.novas} {b.novas} ·{" "}
-                          {textos.duplicadas} {b.duplicadas} · {textos.erros} {b.erros} ·{" "}
-                          {textos.custo}{" "}
+                          {textos.progresso} {pct}% · {textos.encontradas} {b.encontradas} ·{" "}
+                          {textos.novas} {b.novas} · {textos.duplicadas} {b.duplicadas} ·{" "}
+                          {textos.erros} {b.erros} · {textos.custo}{" "}
                           {comoMoeda(b.custo_estimado_cents, "BRL")}
                         </p>
                       </div>
@@ -435,12 +536,20 @@ export function ProspeccaoClient({
                         <Link href={hrefEmpresas(b.id)}>{textos.verEmpresas}</Link>
                       </Button>
                       {podeBuscar && b.status === "running" && (
-                        <Button size="sm" variant="outline" onClick={() => void acao(b.id, "pause")}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void acao(b.id, "pause")}
+                        >
                           {textos.pausar}
                         </Button>
                       )}
                       {podeBuscar && b.status === "paused" && (
-                        <Button size="sm" variant="outline" onClick={() => void acao(b.id, "resume")}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void acao(b.id, "resume")}
+                        >
                           {textos.continuar}
                         </Button>
                       )}
@@ -466,16 +575,15 @@ export function ProspeccaoClient({
         </TabsContent>
 
         <TabsContent value="campanhas" className="mt-4">
-          <CampanhasTab categorias={categorias} podeOperar={podeBuscar} />
+          <CampanhasTab podeOperar={podeBuscar} />
         </TabsContent>
 
         {podeGerenciar && (
           <TabsContent value="config" className="mt-4">
-            <ConfigTab />
+            <ConfigTab categorias={categorias} podeGerenciar={podeGerenciar} />
           </TabsContent>
         )}
       </Tabs>
     </div>
   );
 }
-

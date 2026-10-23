@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Mensagens por categoria — o padrão que a campanha herda sem deixar de ter cópia",
+    "subtitle": "onde o texto nasce, como chega preenchido ao assistente, e por que mudar um lado não reescreve o outro",
+    "output": "mensagens-por-categoria.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "O que o operador vê" },
+    { "id": "borda", "label": "Borda HTTP" },
+    { "id": "regra", "label": "Decisão pura" },
+    { "id": "dados", "label": "Banco" },
+    { "id": "envio", "label": "Quem envia" },
+    { "id": "volta", "label": "O laço de retorno" }
+  ],
+  "mainPath": ["config", "put", "tabela", "get", "wizard", "campanha", "dispatcher", "inbox"],
+  "nodes": [
+    { "id": "config", "lane": "humano", "col": 1, "type": "frontend", "label": "Configuração › Mensagens por categoria", "sublabel": "escolhe a categoria · até 3 variações · mostra quantas já estão configuradas" },
+    { "id": "wizard", "lane": "humano", "col": 4, "type": "frontend", "label": "Assistente — passo Mensagens", "sublabel": "seletor \"Mensagens salvas\" · nasce preenchido com o padrão da 1ª categoria escolhida" },
+    { "id": "controle", "lane": "humano", "col": 6, "type": "frontend", "label": "Controle da campanha", "sublabel": "enviadas · faltam · quem recebeu — o texto que saiu está na campanha" },
+    { "id": "inbox", "lane": "humano", "col": 7, "type": "frontend", "label": "Inbox", "sublabel": "a mensagem enviada vira conversa; responder é o próximo passo humano" },
+
+    { "id": "get", "lane": "borda", "col": 3, "type": "api", "label": "GET /prospecting/mensagens-por-categoria", "sublabel": "agent+ · service role com filtro de organization_id · lista ordenada por categoria" },
+    { "id": "put", "lane": "borda", "col": 2, "type": "api", "label": "PUT /prospecting/mensagens-por-categoria", "sublabel": "manager+ · upsert por (org, categoria) · vazio = remover o padrão" },
+    { "id": "schema", "lane": "borda", "col": 1, "type": "service", "label": "mensagensPorCategoriaSchema", "sublabel": "Zod: categoria 2..80 · até 3 mensagens de 4000 · trim antes de gravar" },
+
+    { "id": "helper", "lane": "regra", "col": 4, "type": "service", "label": "presetsDaSelecao / presetSugerido", "sublabel": "ordem das categorias escolhidas · descarta categoria sem texto · nunca sugere caixa vazia" },
+
+    { "id": "tabela", "lane": "dados", "col": 2, "type": "database", "label": "prospecting_message_presets", "sublabel": "unique (organization_id, categoria) · RLS: membro lê, gerente escreve · updated_at por trigger" },
+    { "id": "campanha", "lane": "dados", "col": 5, "type": "database", "label": "prospecting_campaigns.mensagens", "sublabel": "a CÓPIA da campanha — o que foi de fato agendado, imune a mudanças futuras no padrão" },
+    { "id": "audit", "lane": "dados", "col": 3, "type": "database", "label": "api_audit_log", "sublabel": "prospecting_message_preset.saved / .cleared · categoria no metadata (resource_id é uuid)" },
+
+    { "id": "dispatcher", "lane": "envio", "col": 6, "type": "service", "label": "dispatcher de envio", "sublabel": "rotação anti-ban entre as mensagens da CAMPANHA · interpola {{primeiro_nome}}" },
+    { "id": "fallback", "lane": "envio", "col": 5, "type": "service", "label": "categoria sem padrão", "sublabel": "o assistente abre em branco e DIZ que não há mensagem salva — falha visível, não silêncio" },
+
+    { "id": "volta", "lane": "volta", "col": 7, "type": "service", "label": "resposta do contato", "sublabel": "mensagem enviada → inbox → humano; o texto que funcionou pode voltar como novo padrão" }
+  ],
+  "edges": [
+    { "id": "e1", "from": "config", "to": "put", "label": "salvar três mensagens para uma categoria" },
+    { "id": "e2", "from": "put", "to": "schema", "label": "valida antes de tocar o banco" },
+    { "id": "e3", "from": "schema", "to": "tabela", "label": "upsert por (organization_id, categoria)" },
+    { "id": "e4", "from": "put", "to": "audit", "label": "salvar e remover são atos diferentes, com códigos diferentes" },
+    { "id": "e5", "from": "config", "to": "get", "label": "carrega o que já existe para editar" },
+    { "id": "e6", "from": "get", "to": "tabela", "label": "select filtrado pela organização ativa" },
+    { "id": "e7", "from": "tabela", "to": "wizard", "label": "a campanha nova lê os padrões ao abrir" },
+    { "id": "e8", "from": "wizard", "to": "helper", "label": "quais padrões servem à seleção de categorias" },
+    { "id": "e9", "from": "helper", "to": "wizard", "label": "o primeiro com texto vira o preenchimento inicial" },
+    { "id": "e10", "from": "wizard", "to": "fallback", "label": "nenhuma categoria escolhida tem padrão" },
+    { "id": "e11", "from": "wizard", "to": "campanha", "label": "ao criar, as mensagens viram CÓPIA da campanha" },
+    { "id": "e12", "from": "campanha", "to": "dispatcher", "label": "o envio lê a campanha, nunca a tabela de padrões" },
+    { "id": "e13", "from": "dispatcher", "to": "inbox", "label": "mensagem entregue abre a conversa" },
+    { "id": "e14", "from": "campanha", "to": "controle", "label": "enviadas e faltam por campanha" },
+    { "id": "e15", "from": "inbox", "to": "volta", "label": "o contato responde" },
+    { "id": "e16", "from": "volta", "to": "config", "label": "o texto que funcionou pode ser salvo como padrão — fecha o laço" },
+    { "id": "e17", "from": "tabela", "to": "campanha", "label": "NÃO reescreve campanhas existentes: são textos independentes de propósito" }
+  ],
+  "cards": [
+    {
+      "dot": "slate",
+      "title": "Padrão e cópia são coisas diferentes — de propósito",
+      "items": [
+        "o PADRÃO mora na categoria, na organização: salvar muda o que toda campanha NOVA daquela categoria vai dizer",
+        "a CÓPIA mora na campanha (`prospecting_campaigns.mensagens`): é o que foi agendado e enviado, e fica imune a mudanças posteriores",
+        "por isso editar a campanha não altera o padrão, e mudar o padrão não reescreve histórico — a tela diz isso no passo 2",
+        "e17 é uma não-ligação deliberada: um update em cascata apagaria a diferença entre \"o que eu quis dizer\" e \"o que eu disse\""
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "O que fecha o laço (invariante 7)",
+      "items": [
+        "o texto que funcionou no Inbox volta como novo padrão em um clique de configuração (e16) — a campanha seguinte já nasce melhor",
+        "salvar e limpar entram no log com códigos distintos, e a categoria vai no metadata para o log ser legível",
+        "categoria sem padrão não é ilha: o assistente abre em branco COM aviso (e10) e o operador escreve à mão, como antes"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Falhas visíveis",
+      "items": [
+        "GET de padrões falhou no assistente? a tela avisa e libera as caixas — o padrão é conveniência, não pré-requisito da campanha",
+        "nenhuma categoria da seleção tem padrão? a tela nomeia o caminho (Configuração › Mensagens por categoria) em vez de mostrar três caixas em branco sem explicação",
+        "quem não é gerente lê o texto e vê a razão de não poder salvar — não um botão que falha no clique"
+      ]
+    }
+  ]
+}

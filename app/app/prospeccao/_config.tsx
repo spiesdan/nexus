@@ -13,6 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { METADADOS_PROVIDERS } from "@/lib/prospeccao/providers/registro";
+import type { MacroCategoria } from "@/lib/prospeccao/categorias";
+
+import { MensagensPorCategoria } from "./_mensagens-por-categoria";
 
 /**
  * Aba CONFIG (§28 do plano) — manager+.
@@ -80,7 +83,13 @@ function centsDeReais(valor: string | undefined): number | null {
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
 }
 
-export function ConfigTab() {
+export function ConfigTab({
+  categorias,
+  podeGerenciar,
+}: {
+  categorias: MacroCategoria[];
+  podeGerenciar: boolean;
+}) {
   const t = useT();
   const [cfg, setCfg] = React.useState<Config | null>(null);
   const [erro, setErro] = React.useState(false);
@@ -201,6 +210,8 @@ export function ConfigTab() {
 
   return (
     <div className="space-y-4">
+      <MensagensPorCategoria categorias={categorias} podeEditar={podeGerenciar} />
+
       <Card className="hover-raise space-y-4 p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">

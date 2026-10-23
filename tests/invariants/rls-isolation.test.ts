@@ -422,6 +422,13 @@ beforeAll(() => {
           insert into public.prospecting_settings (organization_id)
             values (v_org);
         end if;
+        -- migration 0283 — o padrão de mensagens por categoria. A linha é a
+        -- prova comportamental: sem ela o controle positivo (a própria org lê
+        -- ≥1) não teria o que ler.
+        if not exists (select 1 from public.prospecting_message_presets where organization_id = v_org) then
+          insert into public.prospecting_message_presets (organization_id, categoria, mensagens)
+            values (v_org, 'Oficina mecânica', array['Olá da oficina']);
+        end if;
         if not exists (select 1 from public.prospecting_cache_hits where organization_id = v_org) then
           insert into public.prospecting_cache_hits (organization_id, search_id)
             values (v_org, v_search);
@@ -600,6 +607,11 @@ export const TABLES = [
   "prospect_search_results",
   "prospecting_campaigns",
   "prospecting_settings",
+  // migration 0283 — o padrão de mensagens por categoria (o texto que a
+  // campanha herda). Leitura org-scoped sem gate de papel (o `agent` semeado
+  // serve de controle positivo); escrita manager+, provada na rota PUT
+  // (`tests/api/prospecting-routes.test.ts`, 403 para agent).
+  "prospecting_message_presets",
   // migration 0273 — o ledger do disparo agendado. Mesmo molde da onda acima:
   // leitura org-scoped sem gate de papel (o `agent` semeado serve de controle
   // positivo); a ESCRITA exige `agent`+, e quem escreve de verdade é o cron com

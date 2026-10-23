@@ -35,6 +35,7 @@ import * as rotaCampanhasVa from "@/app/api/v1/automatic-sales/campaigns/route";
 import * as rotaCampanhas from "@/app/api/v1/prospecting/campaigns/route";
 import * as rotaConsumo from "@/app/api/v1/prospecting/consumo/route";
 import * as rotaMercado from "@/app/api/v1/prospecting/mercado/route";
+import * as rotaPresets from "@/app/api/v1/prospecting/mensagens-por-categoria/route";
 import * as rotaCategorias from "@/app/api/v1/prospecting/prospects/categorias/route";
 import * as rotaProspect from "@/app/api/v1/prospecting/prospects/[id]/route";
 import * as rotaProspects from "@/app/api/v1/prospecting/prospects/route";
@@ -715,6 +716,109 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "prospecting_settings.updated" }),
     );
+  });
+});
+
+
+describe("GET/PUT /api/v1/prospecting/mensagens-por-categoria — padrão por categoria (0283)", () => {
+  it("GET de viewer → 403 (o assistente de campanha é agent+)", async () => {
+    session("viewer", makeDb());
+    const res = await rotaPresets.GET();
+    expect(res.status).toBe(403);
+  });
+
+  it("GET devolve só os padrões da própria organização", async () => {
+    const db = makeDb({
+      prospecting_message_presets: [
+        { id: randomUUID(), organization_id: ORG_ID, categoria: "Oficina mecânica", mensagens: ["A", "B"] },
+        { id: randomUUID(), organization_id: OUTRO_ORG_ID, categoria: "restaurante", mensagens: ["C"] },
+      ],
+    });
+    session("agent", db);
+    const res = await rotaPresets.GET();
+    expect(res.status).toBe(200);
+    const corpo = await res.json();
+    expect(corpo.data.map((l: Row) => l.categoria)).toEqual(["Oficina mecânica"]);
+  });
+
+  it("PUT de agent → 403, sem gravação (o padrão é ato de gerente)", async () => {
+    const db = makeDb();
+    session("agent", db);
+    const res = await rotaPresets.PUT(
+      req("PUT", { categoria: "Oficina mecânica", mensagens: ["Olá"] }, "http://localhost/api/v1/prospecting/mensagens-por-categoria"),
+    );
+    expect(res.status).toBe(403);
+    expect(db.inseridos).toHaveLength(0);
+  });
+
+  it("PUT válido grava na org, descarta caixas vazias e audita saved", async () => {
+    const db = makeDb();
+    session("manager", db);
+    const res = await rotaPresets.PUT(
+      req(
+        "PUT",
+        { categoria: "Oficina mecânica", mensagens: ["  Olá da oficina  ", "", "Variação"] },
+        "http://localhost/api/v1/prospecting/mensagens-por-categoria",
+      ),
+    );
+    expect(res.status).toBe(200);
+    const linhas = db.tabelas.prospecting_message_presets ?? [];
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0]).toMatchObject({
+      organization_id: ORG_ID,
+      categoria: "Oficina mecânica",
+      mensagens: ["Olá da oficina", "Variação"],
+    });
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "prospecting_message_preset.saved",
+        organizationId: ORG_ID,
+        metadata: expect.objectContaining({ categoria: "Oficina mecânica" }),
+      }),
+    );
+  });
+
+  it("PUT com mensagens vazias limpa o padrão e audita cleared", async () => {
+    const db = makeDb({
+      prospecting_message_presets: [
+        { id: randomUUID(), organization_id: ORG_ID, categoria: "Oficina mecânica", mensagens: ["A"] },
+      ],
+    });
+    session("manager", db);
+    const res = await rotaPresets.PUT(
+      req("PUT", { categoria: "Oficina mecânica", mensagens: [] }, "http://localhost/api/v1/prospecting/mensagens-por-categoria"),
+    );
+    expect(res.status).toBe(200);
+    expect(db.tabelas.prospecting_message_presets?.[0]?.mensagens).toEqual([]);
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "prospecting_message_preset.cleared" }),
+    );
+  });
+
+  it("PUT com categoria fora da biblioteca → 422 (não cria padrão órfão)", async () => {
+    const db = makeDb();
+    session("manager", db);
+    const res = await rotaPresets.PUT(
+      req(
+        "PUT",
+        { categoria: "categoria-inventada", mensagens: ["Olá"] },
+        "http://localhost/api/v1/prospecting/mensagens-por-categoria",
+      ),
+    );
+    expect(res.status).toBe(422);
+    expect(db.inseridos).toHaveLength(0);
+  });
+
+  it("PUT com mais de três variações → 422 (a rotação anti-ban tem teto)", async () => {
+    session("manager", makeDb());
+    const res = await rotaPresets.PUT(
+      req(
+        "PUT",
+        { categoria: "Oficina mecânica", mensagens: ["1", "2", "3", "4"] },
+        "http://localhost/api/v1/prospecting/mensagens-por-categoria",
+      ),
+    );
+    expect(res.status).toBe(422);
   });
 });
 

@@ -309,6 +309,22 @@ export const campanhaPreviewSchema = z.object({
 });
 
 /**
+ * O PADRÃO DE MENSAGENS DE UMA CATEGORIA — configuração, não campanha.
+ *
+ * O operador reescrevia as mesmas três mensagens em toda campanha de "oficina
+ * mecânica", e o texto bom ficava preso na campanha antiga. Aqui a categoria é
+ * a chave (a `busca` canônica, não o rótulo traduzido) e o texto é o padrão que
+ * a campanha nova herda — sem deixar de guardar a própria cópia em `mensagens`.
+ *
+ * `mensagens: []` é válido: significa "esta categoria não tem padrão", e o
+ * assistente volta a pedir o texto à mão.
+ */
+export const mensagensPorCategoriaSchema = z.object({
+  categoria: z.string().trim().min(2).max(80),
+  mensagens: z.array(z.string().trim().max(4000)).max(3),
+});
+
+/**
  * A CAMPANHA DE RECUPERAÇÃO (0274) — a MESMA agenda da prospecção, com outra
  * audiência.
  *
