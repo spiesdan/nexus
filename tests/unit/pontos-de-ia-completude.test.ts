@@ -108,6 +108,10 @@ const FORA_DO_SEAM: Record<string, { arquivo: string; marcador: string }> = {
     // exatamente o desfecho silencioso deste buraco — não reprovaria nada.
     marcador: 'resolverModeloDoPonto("assistente"',
   },
+  pedido_por_ia: {
+    arquivo: "app/api/v1/commercial-orders/importar-ia/route.ts",
+    marcador: 'resolverModeloDoPonto(\n    "pedido_por_ia"',
+  },
 };
 
 describe("registro de pontos de IA × código", () => {

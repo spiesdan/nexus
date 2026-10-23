@@ -1,0 +1,352 @@
+/**
+ * POST /api/v1/commercial-orders/importar-ia — o "Adicionar com IA" do pedido.
+ *
+ * Recebe UMA imagem, PDF, áudio, CSV/TXT ou texto colado; devolve a lista de
+ * produtos que o modelo conseguiu ler, já casada com o catálogo da organização.
+ *
+ * ─── Por que a rota NÃO cria o pedido ───────────────────────────────────────
+ *
+ * O Mercos, no caminho feliz, chama `adicionar_itens_por_ia` e fecha o modal.
+ * Aqui a rota devolve uma PROPOSTA e o editor só acrescenta depois do clique em
+ * "Adicionar ao pedido". O motivo não é excesso de zelo: OCR de manuscrito erra
+ * nome e quantidade, e um item errado num pedido é dinheiro e estoque errados.
+ * A conferência é uma tela, não um toast.
+ *
+ * ─── Por que o catálogo não vai para o modelo ──────────────────────────────
+ *
+ * O modelo recebe só o conteúdo do pedido. O casamento nome→produto acontece
+ * no servidor com `buscarComRelaxamento`, a MESMA busca do agente. Assim o
+ * custo não cresce com o catálogo e um empate vira candidato para conferência,
+ * não um chute do modelo.
+ */
+import { randomUUID } from "node:crypto";
+
+import { generateObject, type ModelMessage } from "ai";
+import { type NextRequest } from "next/server";
+
+import { DEFAULT_BOT_MODEL } from "@/lib/ai/gateway";
+import { resolverModeloDoPonto } from "@/lib/ai/gateway-binding";
+import { checkRateLimit } from "@/lib/ai/dispatcher/rate-limit";
+import { computeCostCents } from "@/lib/ai/runtime/cost";
+import { fail, ok } from "@/lib/api/wrappers";
+import { requireRole } from "@/lib/auth/require-role";
+import {
+  casarItensComCatalogo,
+  extracaoSchema,
+  LIMITE_DE_ITENS,
+  PROMPT_DE_EXTRACAO,
+  type Extracao,
+} from "@/lib/comercial/importar-ia";
+import { detectarTipoImagem, mimeDaImagem } from "@/lib/comercial/imagem";
+import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
+import { apiTranscriptionProvider } from "@/lib/messaging/media/transcription";
+import { COLUNAS_DO_PRODUTO, type Produto } from "@/lib/schemas/produtos";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { providerDoModelo } from "@/lib/ai/log-invocation";
+
+export const dynamic = "force-dynamic";
+/** O modelo lê imagem/PDF; no self-host não há limite de função, mas o Vercel usa isto. */
+export const maxDuration = 120;
+
+const MAX_BYTES = 20 * 1024 * 1024;
+const MAX_TEXTO = 20_000;
+const MAX_PRODUTOS = 2_000;
+
+type Conteudo =
+  | { tipo: "texto"; texto: string }
+  | { tipo: "arquivo"; bytes: Buffer; mediaType: string; nome: string };
+
+async function lerConteudoDaRequisicao(
+  form: FormData,
+): Promise<{ conteudo: Conteudo } | { erro: string }> {
+  const arquivo = form.get("arquivo");
+  const texto = String(form.get("texto") ?? "").trim();
+
+  if (arquivo instanceof File) {
+    if (arquivo.size <= 0) return { erro: "O arquivo está vazio." };
+    if (arquivo.size > MAX_BYTES) {
+      return { erro: "O arquivo passa de 20 MB. Reduza a imagem ou o PDF e tente de novo." };
+    }
+
+    const bytes = Buffer.from(await arquivo.arrayBuffer());
+    const mime = (arquivo.type || "").split(";")[0]!.trim().toLowerCase();
+    const nome = arquivo.name || "arquivo";
+
+    // Imagem: o tipo sai dos BYTES, não do header que quem sobe declarou.
+    // É a mesma função do comprovante de entrega e da foto do produto.
+    const imagem = detectarTipoImagem(bytes);
+    if (imagem !== null) {
+      return { conteudo: { tipo: "arquivo", bytes, mediaType: mimeDaImagem(imagem), nome } };
+    }
+
+    const ehPdf =
+      mime === "application/pdf" || bytes.subarray(0, 5).toString("latin1") === "%PDF-";
+    if (ehPdf) {
+      return { conteudo: { tipo: "arquivo", bytes, mediaType: "application/pdf", nome } };
+    }
+
+    if (mime.startsWith("audio/")) {
+      if (!env.OPENAI_API_KEY) {
+        return {
+          erro:
+            "Para enviar áudio, configure OPENAI_API_KEY. Foto, PDF e texto funcionam sem ela.",
+        };
+      }
+      try {
+        const transcricao = await apiTranscriptionProvider({
+          apiKey: env.OPENAI_API_KEY,
+        }).transcribe(bytes, mime);
+        if (transcricao.trim() === "") {
+          return { erro: "Não consegui entender o áudio. Tente gravar de novo ou cole o texto." };
+        }
+        return { conteudo: { tipo: "texto", texto: transcricao.trim() } };
+      } catch {
+        return { erro: "Não consegui transcrever o áudio agora. Tente de novo em instantes." };
+      }
+    }
+
+    // Planilha em CSV/TXT entra como texto. XLSX/DOCX exigiria uma biblioteca
+    // que o repositório não tem (e a doutrina evita dependência só para um
+    // formato); a mensagem diz o que fazer em vez de aceitar e falhar depois.
+    const ehTexto =
+      mime.startsWith("text/") || /\.(csv|txt|tsv)$/i.test(nome);
+    if (ehTexto) {
+      const decodificado = bytes.toString("utf8").trim();
+      if (decodificado === "") return { erro: "O arquivo de texto está vazio." };
+      return { conteudo: { tipo: "texto", texto: decodificado } };
+    }
+
+    return {
+      erro:
+        "Formato não suportado. Envie foto (JPG, PNG ou WebP), PDF, áudio ou um arquivo CSV/TXT.",
+    };
+  }
+
+  if (texto === "") {
+    return { erro: "Envie uma foto, um PDF, um áudio ou cole o texto do pedido." };
+  }
+  if (texto.length > MAX_TEXTO) {
+    return { erro: `O texto passa de ${MAX_TEXTO.toLocaleString("pt-BR")} caracteres.` };
+  }
+  return { conteudo: { tipo: "texto", texto } };
+}
+
+function mensagensDoPedido(conteudo: Conteudo): ModelMessage[] {
+  if (conteudo.tipo === "texto") {
+    return [
+      {
+        role: "user",
+        content: `${PROMPT_DE_EXTRACAO}\n\n<pedido>\n${conteudo.texto}\n</pedido>`,
+      },
+    ];
+  }
+
+  return [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: PROMPT_DE_EXTRACAO },
+        { type: "file", data: conteudo.bytes, mediaType: conteudo.mediaType },
+      ],
+    },
+  ];
+}
+
+/**
+ * Telemetria em `llm_calls` — a tabela única desde a 0130.
+ *
+ * Fire-and-forget, como o resto do repo: uma falha de log não pode transformar
+ * uma leitura que deu certo em erro para o vendedor.
+ */
+function registrarUso(args: {
+  organizationId: string;
+  modelId: string;
+  origem: "binding" | "padrao";
+  inputTokens: number;
+  outputTokens: number;
+  latencyMs: number;
+}): void {
+  void (async () => {
+    try {
+      const provider = providerDoModelo(args.modelId);
+      const cost = await computeCostCents({
+        provider,
+        model: args.modelId,
+        inputTokens: args.inputTokens,
+        outputTokens: args.outputTokens,
+      });
+      const admin = createAdminClient();
+      const { error } = await admin.from("llm_calls").insert({
+        organization_id: args.organizationId,
+        purpose: "pedido_por_ia",
+        provider,
+        model: args.modelId,
+        input_tokens: args.inputTokens,
+        output_tokens: args.outputTokens,
+        cost_cents: cost,
+        latency_ms: args.latencyMs,
+        status: "ok",
+        origem_da_escolha: args.origem,
+      });
+      if (error) {
+        logger.warn("[importar-ia] falha ao registrar llm_calls", {
+          organization_id: args.organizationId,
+          motivo: error.message,
+        });
+      }
+    } catch (err) {
+      logger.warn("[importar-ia] falha ao registrar llm_calls", {
+        organization_id: args.organizationId,
+        motivo: err instanceof Error ? err.message : String(err),
+      });
+    }
+  })();
+}
+
+export async function POST(req: NextRequest): Promise<Response> {
+  const requestId = randomUUID();
+  const authz = await requireRole("agent", {
+    requestId,
+    resource: "commercial_orders",
+  });
+  if (!authz.ok) return authz.response;
+
+  const limite = await checkRateLimit(`pedido-ia:${authz.org.orgId}`, 10, 60);
+  if (!limite.allowed) {
+    return fail(
+      "rate_limited",
+      "Muitas leituras de pedido em pouco tempo. Espere um minuto e tente de novo.",
+      429,
+      { requestId, headers: { "Retry-After": "60" } },
+    );
+  }
+
+  // O multipart é lido inteiro pelo `formData()`. Recusar pelo header evita
+  // bufferizar um upload gigante só para descobrir que ele passa de 20 MB.
+  const tamanhoDeclarado = Number(req.headers.get("content-length") ?? "0");
+  if (Number.isFinite(tamanhoDeclarado) && tamanhoDeclarado > MAX_BYTES + 1_000_000) {
+    return fail(
+      "payload_too_large",
+      "O envio passa de 20 MB. Reduza a imagem, o PDF ou o áudio e tente de novo.",
+      413,
+      { requestId },
+    );
+  }
+
+  const form = await req.formData().catch(() => null);
+  if (!form) {
+    return fail("validation_failed", "Envie o pedido como formulário (arquivo ou texto).", 422, {
+      requestId,
+    });
+  }
+
+  const lido = await lerConteudoDaRequisicao(form);
+  if ("erro" in lido) {
+    return fail("validation_failed", lido.erro, 422, { requestId });
+  }
+
+  // Catálogo ANTES do modelo: se a organização ainda não cadastrou produto,
+  // não faz sentido gastar uma chamada para devolver "não achei".
+  const supabase = await createClient();
+  const { data: produtos, error: erroCatalogo } = await supabase
+    .from("catalog_products")
+    .select(COLUNAS_DO_PRODUTO)
+    .eq("organization_id", authz.org.orgId)
+    .eq("ativo", true)
+    .order("nome")
+    .limit(MAX_PRODUTOS);
+
+  if (erroCatalogo) {
+    logger.error("[importar-ia] falha ao ler catálogo", {
+      organization_id: authz.org.orgId,
+      motivo: erroCatalogo.message,
+    });
+    return fail("internal_error", "Não consegui ler o catálogo agora.", 500, { requestId });
+  }
+  if (!produtos || produtos.length === 0) {
+    return fail(
+      "catalogo_vazio",
+      "O catálogo ainda não tem produtos. Cadastre um produto antes de usar a IA.",
+      422,
+      { requestId },
+    );
+  }
+
+  const resolvido = await resolverModeloDoPonto(
+    "pedido_por_ia",
+    authz.org.orgId,
+    DEFAULT_BOT_MODEL,
+  );
+  if (!resolvido) {
+    return fail(
+      "ai_indisponivel",
+      "A IA está desligada — cadastre a chave em IA → Credenciais.",
+      503,
+      { requestId },
+    );
+  }
+
+  const inicio = Date.now();
+  let extracao: Extracao;
+  let uso: { inputTokens?: number; outputTokens?: number };
+  try {
+    const resultado = await generateObject({
+      model: resolvido.model,
+      schema: extracaoSchema,
+      messages: mensagensDoPedido(lido.conteudo),
+      temperature: 0,
+      abortSignal: AbortSignal.timeout(90_000),
+    });
+    extracao = resultado.object;
+    uso = resultado.usage;
+  } catch (err) {
+    logger.warn("[importar-ia] falha na leitura do pedido", {
+      organization_id: authz.org.orgId,
+      model_id: resolvido.modelId,
+      origem: resolvido.origem,
+      motivo: err instanceof Error ? err.message : String(err),
+    });
+    return fail(
+      "leitura_do_pedido_falhou",
+      "Não consegui ler este pedido. Tente uma foto mais nítida ou cole os itens em texto.",
+      422,
+      { requestId },
+    );
+  }
+
+  const itens = extracao.itens
+    .map((item) => ({ ...item, nome: item.nome.trim() }))
+    .filter((item) => item.nome.length > 0)
+    .slice(0, LIMITE_DE_ITENS);
+
+  if (itens.length === 0) {
+    return fail(
+      "pedido_sem_produtos",
+      "Não encontrei produtos neste pedido. Tente enquadrar melhor a foto ou colar os itens em texto.",
+      422,
+      { requestId },
+    );
+  }
+
+  const casados = casarItensComCatalogo(itens, (produtos ?? []) as unknown as Produto[]);
+
+  registrarUso({
+    organizationId: authz.org.orgId,
+    modelId: resolvido.modelId,
+    origem: resolvido.origem,
+    inputTokens: uso.inputTokens ?? 0,
+    outputTokens: uso.outputTokens ?? 0,
+    latencyMs: Date.now() - inicio,
+  });
+
+  return ok(
+    {
+      itens: casados,
+      total_extraido: itens.length,
+      modelo: { id: resolvido.modelId, origem: resolvido.origem },
+    },
+    { requestId },
+  );
+}
