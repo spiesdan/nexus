@@ -90,8 +90,13 @@ existir (ex.: CI ainda rodando e um bug bloqueando o usuário).
 APP_IMAGE=nexus-app:local docker compose \
   -f docker-compose.prod.yml -f docker-compose.build.yml --env-file .env build app
 
-APP_IMAGE=nexus-app:local APP_PULL_POLICY=never docker compose \
-  -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d app
+# O `-f docker-compose.traefik.yml` NÃO entra numa instalação servida pelo
+# `caddy` do próprio compose. Ele declara a rede `traefik` como externa; numa
+# VPS que não tem essa rede o `up` aborta com "network traefik declared as
+# external, but could not be found" (medido em 24/10/2026). Quem está atrás de
+# um Traefik externo passa os dois; quem usa o Caddy do compose passa só estes.
+APP_IMAGE=nexus-app:local docker compose \
+  -f docker-compose.prod.yml -f docker-compose.build.yml --env-file .env up -d app
 ```
 
 O `docker-compose.build.yml` também cobre `worker` e `scheduler` — troque
@@ -107,7 +112,9 @@ nenhum, revertendo o que você acabou de subir.
 
 Requisitos: >= 4 GB de RAM **ou** swap (medido: ~4min num VPS de 3.8 GB com 4 GB
 de swap) — e isto é o requisito **deste caminho de exceção**, não da operação
-normal. A régua de operação é outra, e não mudou. Ela tem três parcelas, e **duas
+normal.
+
+A régua de operação é outra, e não mudou. Ela tem três parcelas, e **duas
 são medidas e uma é herdada** — a distinção importa porque a herdada é a que
 costuma ser citada como se fosse nossa:
 
@@ -124,6 +131,21 @@ sessão pareada, VPS compartilhada com outras stacks) deu **304,5 MiB no contêi
 `waha` inteiro**, contra o `mem_limit` de 1280 MiB. Um ponto não decompõe baseline
 e sessão: para isso seriam necessários dois números pareados, e não é ensaio que
 se faça numa instalação viva.
+
+> **Construir com a stack no ar derruba a stack — medido, não temido.** Em
+> 24/10/2026, numa VPS de 8 GB com os contêineres do CRM e o Supabase rodando,
+> o build das seis imagens levou a máquina ao OOM: **11 processos mortos pelo
+> kernel**, entre eles `supabase_realtime` (**17 restarts**) e
+> `supabase_analytics`. O sintoma que ninguém vê olhando o `docker ps`: o Inbox
+> para de receber evento em tempo real enquanto o build roda.
+>
+> Duas medidas resolvem, e quem constrói na VPS deve carregar as duas:
+> `COMPOSE_PARALLEL_LIMIT=1` (um serviço por vez — em paralelo, dois
+> `next build`/`tsc` pedem ~2–3 GB cada) e **swap**: 4 GB de swapfile com
+> `vm.swappiness=10` deram a folga que faltava. Sem swap e sem serializar,
+> construir com a instalação atendendo gente é decisão consciente — faça
+> backup, avise quem opera e prefira janela de manutenção. O caminho normal
+> (imagem publicada pelo CI) não tem esse risco: o build não roda aqui.
 
 **Nada disso mexe no tier recomendado.** A régua que sustenta os 4 GB é a soma da
 stack em operação, não o WAHA isolado — e a folga existe justamente porque a
