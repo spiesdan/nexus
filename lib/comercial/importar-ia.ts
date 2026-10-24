@@ -14,6 +14,7 @@
  * depois que alguém confirma na tela (ver `_ia.tsx`). Essa é a diferença entre
  * copiar o gesto do Mercos e copiar o risco dele.
  */
+import { jsonSchema, type JSONSchema7 } from "ai";
 import { z } from "zod";
 
 import { buscarComRelaxamento, type RelacaoProduto } from "@/lib/catalogo/busca";
@@ -43,6 +44,55 @@ export const extracaoSchema = z.object({
 
 export type ItemExtraido = z.infer<typeof itemExtraidoSchema>;
 export type Extracao = z.infer<typeof extracaoSchema>;
+
+/**
+ * O MESMO contrato, escrito no dialeto que o Google aceita.
+ *
+ * `generateObject` com schema Zod manda `$schema`, `additionalProperties`,
+ * `default`, `maxItems`, `maxLength`, `minimum` e `maximum`. Em 2026-10-24,
+ * nesta instalação, com `gemini-3.6-flash`, esse corpo devolvia 400 "Request
+ * contains an invalid argument." antes de o modelo ler a foto — e a tela
+ * dizia "tente uma foto mais nítida". CONFIRMADO: tirar só o `$schema` não
+ * resolveu; tirar só o `additionalProperties` da raiz também não; o schema
+ * mínimo abaixo (tipo + `required` + propriedades) devolveu 200 e leu o
+ * pedido. Qual keyword restante era a culpada não foi isolado — por isso o
+ * schema daqui é o menor conjunto que se sabe aceito, não uma lista de
+ * "keywords proibidas".
+ *
+ * Os limites continuam valendo porque a validação é a Zod acima (`validate`):
+ * teto de 100 itens, nome de 200 caracteres e quantidade padrão 1 são
+ * conferidos LOCALMENTE, sem viajar na requisição. O schema mínimo também
+ * funciona em Anthropic/OpenAI — não é um caminho só para o Google.
+ */
+export const ESQUEMA_DE_EXTRACAO_PARA_O_MODELO: JSONSchema7 = {
+  type: "object",
+  required: ["itens"],
+  properties: {
+    itens: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["nome", "quantidade"],
+        properties: {
+          nome: { type: "string" },
+          quantidade: { type: "number" },
+        },
+      },
+    },
+  },
+};
+
+export const extracaoParaOModelo = jsonSchema<Extracao>(
+  ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
+  {
+    validate: (valor) => {
+      const resultado = extracaoSchema.safeParse(valor);
+      return resultado.success
+        ? { success: true, value: resultado.data }
+        : { success: false, error: resultado.error };
+    },
+  },
+);
 
 export type ConfiancaDoCaso = "alta" | "media" | "baixa" | "nenhuma";
 

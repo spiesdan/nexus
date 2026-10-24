@@ -33,7 +33,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import {
   casarItensComCatalogo,
-  extracaoSchema,
+  extracaoParaOModelo,
   LIMITE_DE_ITENS,
   PROMPT_DE_EXTRACAO,
   type Extracao,
@@ -295,7 +295,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const resultado = await generateObject({
       model: resolvido.model,
-      schema: extracaoSchema,
+      // Schema mínimo + validação Zod: ver o porquê em
+      // `ESQUEMA_DE_EXTRACAO_PARA_O_MODELO` (o Gemini recusa os keywords que
+      // o Zod emite e devolve 400 antes de ler a imagem).
+      schema: extracaoParaOModelo,
       messages: mensagensDoPedido(lido.conteudo),
       temperature: 0,
       // Sem teto explícito o AI SDK pede o máximo do modelo — 65.536 tokens

@@ -22,7 +22,15 @@ const createClientMock = vi.hoisted(() => vi.fn());
 const adminInsertMock = vi.hoisted(() => vi.fn());
 const computeCostMock = vi.hoisted(() => vi.fn());
 
-vi.mock("ai", () => ({ generateObject: generateObjectMock }));
+vi.mock("ai", () => ({
+  generateObject: generateObjectMock,
+  // O duplo só precisa devolver o schema que a rota passa adiante; o helper
+  // real é exercitado em `lib/comercial/importar-ia.test.ts`.
+  jsonSchema: (schema: unknown, options?: { validate?: unknown }) => ({
+    jsonSchema: schema,
+    validate: options?.validate,
+  }),
+}));
 vi.mock("@/lib/ai/gateway-binding", () => ({ resolverModeloDoPonto: resolverMock }));
 vi.mock("@/lib/ai/dispatcher/rate-limit", () => ({ checkRateLimit: rateLimitMock }));
 vi.mock("@/lib/auth/require-role", () => ({ requireRole: requireRoleMock }));

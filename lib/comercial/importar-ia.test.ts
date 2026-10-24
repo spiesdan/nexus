@@ -12,9 +12,16 @@
  * defeito que se quer impedir é o do mundo real: "5 L" não pode casar com
  * "500 ml", e "2 caixas" não pode fazer a busca desistir do produto.
  */
+import { generateObject } from "ai";
+import { MockLanguageModelV3 } from "ai/test";
 import { describe, expect, it } from "vitest";
 
-import { casarItensComCatalogo, LIMITE_DE_ITENS } from "@/lib/comercial/importar-ia";
+import {
+  casarItensComCatalogo,
+  ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
+  extracaoParaOModelo,
+  LIMITE_DE_ITENS,
+} from "@/lib/comercial/importar-ia";
 import type { Produto } from "@/lib/schemas/produtos";
 
 function produto(parcial: Partial<Produto> & Pick<Produto, "id" | "nome">): Produto {
@@ -161,5 +168,68 @@ describe("casarItensComCatalogo", () => {
       quantidade: 1,
     }));
     expect(casarItensComCatalogo(muitos, CATALOGO)).toHaveLength(LIMITE_DE_ITENS);
+  });
+});
+
+describe("schema enviado ao modelo", () => {
+  it("não leva keywords fora do subconjunto mínimo aceito pelo Gemini", () => {
+    // Medido em produção em 2026-10-24: o schema Zod completo devolvia
+    // "Request contains an invalid argument." antes de o modelo ler a foto.
+    // O mínimo (tipo + required + propriedades) devolveu 200.
+    const texto = JSON.stringify(ESQUEMA_DE_EXTRACAO_PARA_O_MODELO);
+    for (const proibido of [
+      "$schema",
+      "additionalProperties",
+      "default",
+      "maxItems",
+      "maxLength",
+      "minimum",
+      "maximum",
+    ]) {
+      expect(texto).not.toContain(`"${proibido}"`);
+    }
+  });
+
+  it("o generateObject manda exatamente esse schema ao provedor", async () => {
+    const modelo = new MockLanguageModelV3({
+      doGenerate: async () => ({
+        content: [{ type: "text", text: '{"itens":[{"nome":"AGUA 5L","quantidade":2}]}' }],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: {
+          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+          outputTokens: { total: 5, text: 5, reasoning: 0 },
+        },
+        warnings: [],
+      }),
+    });
+
+    const resultado = await generateObject({
+      model: modelo,
+      schema: extracaoParaOModelo,
+      prompt: "leia o pedido",
+    });
+
+    expect(resultado.object).toEqual({ itens: [{ nome: "AGUA 5L", quantidade: 2 }] });
+    // O corpo que o provedor recebe é o `responseFormat` abaixo. É aqui que o
+    // `$schema`/`additionalProperties` do Zod apareciam e derrubavam o Gemini.
+    expect(modelo.doGenerateCalls[0]?.responseFormat).toEqual({
+      type: "json",
+      schema: ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
+    });
+  });
+
+  it("a validação local continua aplicando o padrão de quantidade", async () => {
+    const validado = await extracaoParaOModelo.validate?.({
+      itens: [{ nome: "AGUA SANITARIA BILL 5 L" }],
+    });
+    expect(validado).toEqual({
+      success: true,
+      value: { itens: [{ nome: "AGUA SANITARIA BILL 5 L", quantidade: 1 }] },
+    });
+  });
+
+  it("a validação local recusa resposta fora do contrato", async () => {
+    const validado = await extracaoParaOModelo.validate?.({ itens: "não é lista" });
+    expect(validado?.success).toBe(false);
   });
 });
