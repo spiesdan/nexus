@@ -15,8 +15,10 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
+import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
 import { validateRequest } from "@/lib/schemas";
 import { campanhaPatchSchema } from "@/lib/schemas/prospeccao";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -25,8 +27,9 @@ type Params = { params: Promise<{ id: string }> };
 
 const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
-  "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, espaco_ms, limite_diario, " +
-  "data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at";
+  "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, mensagem_tipo, " +
+  "template_name, template_language, template_contract_hash, template_values, espaco_ms, limite_diario, " +
+  "data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -73,6 +76,91 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
   }
 
   const supabase = await createClient();
+
+  // 0284 — o bind RESULTANTE (não só o campo que veio) é conferido antes de
+  // gravar. Ativar uma campanha é prometer que o tick vai mandar: se não há
+  // canal compatível ou o modelo está obsoleto, o erro sai aqui, não na fila.
+  // Pausar/concluir, porém, precisa funcionar mesmo com o modelo quebrado — é
+  // justamente a saída de emergência de quem viu o erro na tela.
+  const mexeNoTemplate =
+    input.mensagem_tipo !== undefined ||
+    input.template_name !== undefined ||
+    input.template_language !== undefined ||
+    input.template_contract_hash !== undefined ||
+    input.template_values !== undefined;
+  const mexeNoBind = mexeNoTemplate || input.mensagens !== undefined || input.status !== undefined;
+  if (mexeNoBind) {
+    const { data: atual, error: erroAtual } = await supabase
+      .from("prospecting_campaigns")
+      .select(
+        "status, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, mensagens",
+      )
+      .eq("id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    if (erroAtual) {
+      logger.error("[prospecting.campaign] falha ao ler o bind atual", {
+        requestId,
+        organization_id: authz.org.orgId,
+        erro: erroAtual.message,
+      });
+      return fail("internal_error", "Erro ao validar a campanha.", 500, { requestId });
+    }
+    if (!atual) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
+
+    const tipo =
+      input.mensagem_tipo ??
+      ((atual as { mensagem_tipo?: string | null }).mensagem_tipo === "template"
+        ? "template"
+        : "texto");
+    const name =
+      input.template_name !== undefined
+        ? input.template_name
+        : ((atual as { template_name?: string | null }).template_name ?? null);
+    const language =
+      input.template_language !== undefined
+        ? input.template_language
+        : ((atual as { template_language?: string | null }).template_language ?? null);
+    const contractHash =
+      input.template_contract_hash !== undefined
+        ? input.template_contract_hash
+        : ((atual as { template_contract_hash?: string | null }).template_contract_hash ?? null);
+    const values =
+      input.template_values ??
+      ((atual as { template_values?: Record<string, string> | null }).template_values ?? {});
+    const statusFinal =
+      input.status ?? ((atual as { status?: string | null }).status ?? "rascunho");
+    const mensagensFinais =
+      input.mensagens ??
+      ((atual as { mensagens?: string[] | null }).mensagens ?? []);
+
+    if (statusFinal === "ativa" || mexeNoTemplate) {
+      const veredito = await validarBindDaCampanha(
+        createAdminClient(),
+        authz.org.orgId,
+        { tipo: tipo === "template" ? "template" : "texto", name, language, contractHash, values },
+        { exigirCanal: statusFinal === "ativa" },
+      );
+      if (!veredito.ok) {
+        return fail("validation_failed", veredito.erro, 422, {
+          requestId,
+          details: { codigo: veredito.codigo },
+        });
+      }
+    }
+    if (
+      statusFinal === "ativa" &&
+      tipo !== "template" &&
+      mensagensFinais.map((m) => m.trim()).filter(Boolean).length === 0
+    ) {
+      return fail(
+        "validation_failed",
+        "A campanha não tem nenhuma mensagem de texto salva. Salve ao menos uma variação antes de ativar.",
+        422,
+        { requestId },
+      );
+    }
+  }
 
   // 0277 — antes de gravar a lista/categorias, precisamos da campanha atual
   // para validar a lista RESULTANTE (o PATCH pode mudar só as categorias, ou
@@ -138,6 +226,26 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
       // um PATCH que salva o objetivo não zera as janelas nem a lista fechada.
       ...(input.prospect_ids !== undefined ? { prospect_ids: input.prospect_ids } : {}),
       ...(input.mensagens !== undefined ? { mensagens: input.mensagens } : {}),
+      // 0284 — o bind do modelo. Trocar para `texto` LIMPA o bind: campanha de
+      // texto com nome de modelo velho é o tipo de estado meio-configurado que
+      // confunde a tela e o próximo PATCH.
+      ...(input.mensagem_tipo !== undefined ? { mensagem_tipo: input.mensagem_tipo } : {}),
+      ...(input.template_name !== undefined ? { template_name: input.template_name } : {}),
+      ...(input.template_language !== undefined
+        ? { template_language: input.template_language }
+        : {}),
+      ...(input.template_contract_hash !== undefined
+        ? { template_contract_hash: input.template_contract_hash }
+        : {}),
+      ...(input.template_values !== undefined ? { template_values: input.template_values } : {}),
+      ...(input.mensagem_tipo === "texto"
+        ? {
+            template_name: null,
+            template_language: null,
+            template_contract_hash: null,
+            template_values: {},
+          }
+        : {}),
       ...(input.espaco_ms !== undefined ? { espaco_ms: input.espaco_ms } : {}),
       ...(input.limite_diario !== undefined ? { limite_diario: input.limite_diario } : {}),
       ...(input.data_inicio !== undefined ? { data_inicio: input.data_inicio } : {}),

@@ -1506,6 +1506,10 @@ esac
   envq FISCAL_PULL_POLICY "$PULL_POLICY_ALVO"
   envq MERCOS_IMAGE "${IMG_MERCOS}:${TAG_ALVO}"
   envq MERCOS_PULL_POLICY "$PULL_POLICY_ALVO"
+  # O OCR lê a foto do pedido antes de gastar IA. Mesma versão dos outros: o
+  # contrato é HTTP nosso, mas o app espera o formato que a imagem dele devolve.
+  envq OCR_IMAGE "${IMG_OCR}:${TAG_ALVO}"
+  envq OCR_PULL_POLICY "$PULL_POLICY_ALVO"
   envq DOMAIN "$DOMAIN"
   envq ACME_EMAIL "$ACME_EMAIL"
   printf '# Proxy reverso: "caddy" (o kit sobe o dele nas portas 80/443) ou "traefik"\n'
@@ -1620,6 +1624,11 @@ esac
   envq LGPD_SIGNING_KEY "$LGPD_SIGNING_KEY"
   envq WAHA_API_BASE_URL "http://waha:3000"
   envq WAHA_WEBHOOK_BASE_URL "http://app:3000"
+  # OCR do pedido: o app tenta o OCR ANTES da IA no botão "Adicionar com IA".
+  # Sem porta publicada — o endereço só resolve dentro da rede do compose.
+  # Vazio desliga (a foto volta a usar só a IA) e é o desligamento de emergência.
+  envq OCR_SERVICE_URL "http://ocr:8790"
+  envq OCR_TIMEOUT_MS "60000"
   envq WAHA_API_KEY "$WAHA_API_KEY"
   envq WAHA_API_KEY_SHA512 "$WAHA_API_KEY_SHA512"
   envq WAHA_HMAC_SECRET "$WAHA_HMAC_SECRET"

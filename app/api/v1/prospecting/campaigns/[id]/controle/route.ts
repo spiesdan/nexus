@@ -46,8 +46,9 @@ export const dynamic = "force-dynamic";
 
 const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, publico, fonte_publico, prospect_ids, " +
-  "contato_ids, mensagens, espaco_ms, limite_diario, data_inicio, data_fim, janelas, " +
-  "agendada_em, ultimo_envio_at, created_at";
+  "contato_ids, mensagens, mensagem_tipo, template_name, template_language, " +
+  "template_contract_hash, template_values, espaco_ms, limite_diario, data_inicio, data_fim, janelas, " +
+  "agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, created_at";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -65,6 +66,12 @@ interface CampanhaControle {
   prospect_ids: string[] | null;
   contato_ids: string[] | null;
   mensagens: string[] | null;
+  /** 0284 — o tipo declarado e o bind do modelo (quando houver). */
+  mensagem_tipo: string | null;
+  template_name: string | null;
+  template_language: string | null;
+  template_contract_hash: string | null;
+  template_values: Record<string, string> | null;
   espaco_ms: number | null;
   limite_diario: number | null;
   data_inicio: string | null;
@@ -72,6 +79,8 @@ interface CampanhaControle {
   janelas: unknown;
   agendada_em: string | null;
   ultimo_envio_at: string | null;
+  ultimo_erro: string | null;
+  ultimo_erro_em: string | null;
   created_at: string;
 }
 

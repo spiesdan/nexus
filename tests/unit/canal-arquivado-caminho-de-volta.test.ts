@@ -816,13 +816,21 @@ describe("metaSessionForOrg — a tela de templates não fala por um canal exclu
   it("canal oficial ativo continua sendo a sessão da org", async () => {
     makeDb({ sessions: [canalOficial({ meta_waba_id: WABA })] });
     const { metaSessionForOrg } = await import("@/lib/channels/meta/session");
-    expect(await metaSessionForOrg(ORG)).toMatchObject({ id: CANAL, wabaId: WABA });
+    expect(await metaSessionForOrg(ORG)).toMatchObject({
+      id: CANAL,
+      wabaId: WABA,
+      phoneNumberId: "999",
+    });
   });
 
   it("clone sem a migration 0106: continua achando a sessão (nada está arquivado lá)", async () => {
     makeDb({ sessions: [canalOficial({ meta_waba_id: WABA })], semColunaArquivada: true });
     const { metaSessionForOrg } = await import("@/lib/channels/meta/session");
-    expect(await metaSessionForOrg(ORG)).toMatchObject({ id: CANAL, wabaId: WABA });
+    expect(await metaSessionForOrg(ORG)).toMatchObject({
+      id: CANAL,
+      wabaId: WABA,
+      phoneNumberId: "999",
+    });
   });
 });
 

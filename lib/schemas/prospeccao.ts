@@ -141,12 +141,19 @@ export const disparoSchema = z
      */
     campaign_id: z.string().uuid().optional(),
   })
-  // Sem texto não há disparo — e o erro tem que sair daqui, não de um plano
-  // com 500 recusas de "mensagem vazia", que não é recusa de NINGUÉM.
-  .refine((v) => Boolean(v.mensagem?.trim()) || (v.mensagens?.length ?? 0) > 0, {
-    message: "Informe a mensagem (ou as variações) do disparo.",
-    path: ["mensagem"],
-  });
+  // Sem texto não há disparo — salvo quando a CAMPANHA já declara um template
+  // (0284): aí o conteúdo vem do bind salvo, e exigir `mensagens` obrigaria a
+  // tela a mandar um texto que não será usado.
+  .refine(
+    (v) =>
+      Boolean(v.mensagem?.trim()) ||
+      (v.mensagens?.length ?? 0) > 0 ||
+      v.campaign_id !== undefined,
+    {
+      message: "Informe a mensagem (ou as variações) do disparo.",
+      path: ["mensagem"],
+    },
+  );
 
 export type Disparo = z.infer<typeof disparoSchema>;
 
@@ -247,6 +254,26 @@ export const agendamentoSchema = z.object({
   agendada_em: z.string().datetime({ offset: true }).nullable().optional(),
   /** `ativa` liga o tick; `concluida` encerra; `pausada` para sem perder a agenda. */
   status: z.enum(["rascunho", "ativa", "pausada", "concluida"]).optional(),
+  /**
+   * 0284 — COMO a campanha fala. `texto` = texto livre/rotação; `template` =
+   * modelo aprovado no canal oficial. O motor escolhe a sessão pela capability
+   * do canal, nunca por `if provider`.
+   */
+  mensagem_tipo: z.enum(["texto", "template"]).optional(),
+  /** Só no tipo `template`. Nome exato, como aprovado na Meta. */
+  template_name: z.string().trim().min(1).max(512).nullable().optional(),
+  /** `pt` e `pt_BR` são modelos DISTINTOS. */
+  template_language: z.string().trim().min(2).max(16).nullable().optional(),
+  /**
+   * Hash do contrato que a tela VIU quando preencheu os valores. O servidor
+   * confere contra o espelho vigente e recusa se o modelo mudou no meio.
+   */
+  template_contract_hash: z.string().trim().min(1).max(128).nullable().optional(),
+  /**
+   * Valor por slot, chaveado pelo `slotKey` composto. Aceita os tokens
+   * `{{nome}}`, `{{primeiro_nome}}`, `{{cidade}}` e `{{categoria}}`.
+   */
+  template_values: z.record(z.string(), z.string().max(4000)).optional(),
 });
 
 /** O período só faz sentido com os dois lados — e nunca com o fim antes. */

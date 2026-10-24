@@ -40,6 +40,11 @@ function temaGravado(): Theme {
 
 function resolver(theme: Theme): ResolvedTheme {
   if (theme === "system") {
+    // `matchMedia` não existe em todo ambiente de teste/SSR; o fallback é o
+    // mesmo dark-first do produto, nunca um tema indefinido.
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return "dark";
+    }
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
   return theme;
@@ -47,19 +52,29 @@ function resolver(theme: Theme): ResolvedTheme {
 
 function aplicar(theme: ResolvedTheme) {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-theme", theme);
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+  // O `color-scheme` do CSS já cobre o caso normal; repetir aqui garante que
+  // controles nativos (select, scrollbar, autofill) acompanhem o clique mesmo
+  // antes de o CSS do tema ser recalculado.
+  root.style.colorScheme = theme;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // O primeiro render do cliente precisa ser igual ao do servidor (`dark`),
+  // senão a hidratação do ícone do alternador diverge. O efeito abaixo lê a
+  // preferência gravada e pinta o DOM antes da primeira interação.
   const [theme, setThemeEstado] = React.useState<Theme>("dark");
   const [resolvedTheme, setResolved] = React.useState<ResolvedTheme>("dark");
 
-  // Hidratação RUNTIME: o script inline do layout já pintou `dark` antes do
-  // primeiro paint; aqui aplicamos a preferência gravada — se houver.
   React.useEffect(() => {
     const inicial = temaGravado();
+    const resolvido = resolver(inicial);
     setThemeEstado(inicial);
-    setResolved(resolver(inicial));
+    setResolved(resolvido);
+    // Aplica já no primeiro efeito, sem esperar o efeito de `resolvedTheme`:
+    // é isso que evita a janela em que o `<html>` fica com o tema do SSR.
+    aplicar(resolvido);
   }, []);
 
   const setTheme = React.useCallback((proximo: Theme) => {
@@ -75,23 +90,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggle = React.useCallback(() => {
-    setThemeEstado((atual) => {
-      const proximo: Theme = atual === "dark" || (atual === "system" && resolver(atual) === "dark") ? "light" : "dark";
-      const resolvido = resolver(proximo);
-      setResolved(resolvido);
-      try {
-        window.localStorage.setItem(STORAGE_KEY, proximo);
-      } catch {
-        // Persistência opcional — falha silenciosamente.
-      }
-      aplicar(resolvido);
-      return proximo;
-    });
-  }, []);
+    // Derivado do tema EFETIVO, não do preferido: com `system`, o primeiro
+    // clique precisa ir para o oposto do que está na tela. E sem efeito
+    // colateral dentro do updater — React pode chamá-lo mais de uma vez.
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  }, [resolvedTheme, setTheme]);
 
   // Segue `prefers-color-scheme` enquanto o usuário estiver em `system`.
   React.useEffect(() => {
     if (theme !== "system") return;
+    if (typeof window.matchMedia !== "function") return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const aoMudar = () => setResolved(media.matches ? "dark" : "light");
     aoMudar();

@@ -1,0 +1,17 @@
+# Landing institucional da Bill — site estático em billhigiene.tech.
+#
+# Este arquivo é montado em /etc/caddy/sites/ pelo docker-compose.landing.yml e
+# importado pelo Caddyfile base. Servir estático com `root` + `file_server` no
+# mesmo site do CRM não funciona: o `reverse_proxy` do app capturaria a raiz.
+billhigiene.tech, www.billhigiene.tech {
+	root * /srv/landing
+	encode gzip
+	file_server
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}

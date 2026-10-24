@@ -68,6 +68,11 @@ interface CampanhaDescoberta {
   janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
   /** 0273 — as variações da rotação, na ordem. O Disparo nasce com elas. */
   mensagens?: string[] | null;
+  /** 0284 — `texto` (rotação) ou `template` (modelo aprovado no oficial). */
+  mensagem_tipo?: string | null;
+  template_name?: string | null;
+  template_language?: string | null;
+  ultimo_erro?: string | null;
   data_inicio?: string | null;
   data_fim?: string | null;
   /** 0273 — a cota do dia, que o Disparo também herda. */
@@ -511,6 +516,28 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
                       >
                         {status}
                       </Badge>
+                      {card.tipo === "descoberta" &&
+                        card.campanha.mensagem_tipo === "template" && (
+                          <Badge
+                            variant="info"
+                            className="h-5 px-2 text-xs font-normal"
+                            title={t("O conteúdo é um modelo aprovado no canal oficial.")}
+                          >
+                            {t("Modelo")}
+                            {card.campanha.template_name
+                              ? ` · ${card.campanha.template_name}`
+                              : ""}
+                          </Badge>
+                        )}
+                      {card.tipo === "descoberta" && card.campanha.ultimo_erro && (
+                        <Badge
+                          variant="warning"
+                          className="h-5 px-2 text-xs font-normal"
+                          title={card.campanha.ultimo_erro}
+                        >
+                          {t("Com erro")}
+                        </Badge>
+                      )}
                       {recuperacao && (
                         <Badge
                           variant="outline"

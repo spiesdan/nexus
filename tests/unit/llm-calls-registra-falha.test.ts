@@ -154,6 +154,20 @@ describe("a classificação separa os problemas que exigem conversas diferentes"
     expect(await codigoDe(Object.assign(new Error("x"), { statusCode: 429 }))).toBe(
       "limite_ou_saldo",
     );
+    // O texto EXATO da OpenRouter quando a conta não tem saldo para o
+    // `max_tokens` pedido. Ele não casa com "insufficient credits", e por isso
+    // caía em `erro_desconhecido` — a tela de execuções não dizia que o
+    // conserto era pagar.
+    expect(
+      await codigoDe(
+        new Error(
+          "This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 124.",
+        ),
+      ),
+    ).toBe("limite_ou_saldo");
+    expect(await codigoDe(Object.assign(new Error("x"), { statusCode: 402 }))).toBe(
+      "limite_ou_saldo",
+    );
   });
 
   it("provedor fora do ar", async () => {

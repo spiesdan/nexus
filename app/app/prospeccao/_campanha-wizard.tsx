@@ -40,7 +40,9 @@ import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao
 import { useT } from "@/hooks/i18n/useT";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import { apiClient } from "@/lib/api/client";
+import { renderTemplateBody } from "@/lib/channels/meta/render-template";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
+import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import {
   presetsDaSelecao,
@@ -94,6 +96,42 @@ interface Janela {
   inicio: string;
   fim: string;
 }
+
+/**
+ * O modelo como a TELA precisa: a chave composta do slot e o motivo da recusa.
+ * Vem de `/api/v1/prospecting/campaigns/canais`, que lê o mesmo espelho do
+ * motor — não há segunda derivação de contrato no cliente.
+ */
+interface ModeloDoCanal {
+  name: string;
+  language: string;
+  status: string;
+  category: string | null;
+  rejectedReason: string | null;
+  parameterFormat: string;
+  contractHash: string;
+  syncedAt: string;
+  slots: Array<{
+    slotKey: string;
+    key: string;
+    expects: string;
+    onde: string;
+    contexto: string;
+  }>;
+  previews: Array<{ onde: string; text: string }>;
+  components: unknown[];
+  aceito: boolean;
+  motivo: string | null;
+}
+
+interface CanaisDaCampanha {
+  pode_texto: boolean;
+  pode_template: boolean;
+  oficial_conectado: boolean;
+  templates: ModeloDoCanal[];
+}
+
+const chaveDoModelo = (m: Pick<ModeloDoCanal, "name" | "language">) => `${m.name}|${m.language}`;
 
 function diaIso(diasAFrente = 0): string {
   const d = new Date();
@@ -151,6 +189,16 @@ export function CampanhaWizard({
   // ── Mensagens e agenda ───────────────────────────────────────────────────
   const [mensagens, setMensagens] = React.useState<string[]>(() => linhasDeMensagem([""]));
   const [templateId, setTemplateId] = React.useState("__nenhum");
+
+  // ── Canal oficial e modelo aprovado (0284) ───────────────────────────────
+  // `texto` é o caminho anti-ban por QR; `template` é o único que a API
+  // oficial entrega fora da janela de 24h. A tela pergunta à API quais os
+  // canais disponíveis em vez de decidir por nome de provider.
+  const [canais, setCanais] = React.useState<CanaisDaCampanha | null>(null);
+  const [canaisErro, setCanaisErro] = React.useState<string | null>(null);
+  const [tipoMensagem, setTipoMensagem] = React.useState<"texto" | "template">("texto");
+  const [modeloChave, setModeloChave] = React.useState("");
+  const [valoresModelo, setValoresModelo] = React.useState<Record<string, string>>({});
   // Padrões salvos em Configuração › Mensagens por categoria.
   const [presets, setPresets] = React.useState<PresetDeMensagens[]>([]);
   const [presetsErro, setPresetsErro] = React.useState(false);
@@ -215,6 +263,37 @@ export function CampanhaWizard({
       cancelado = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    let cancelado = false;
+    void (async () => {
+      try {
+        const resposta = await apiClient.get<{ data?: CanaisDaCampanha }>(
+          "/api/v1/prospecting/campaigns/canais",
+        );
+        if (cancelado) return;
+        const dados = resposta?.data ?? null;
+        setCanais(dados);
+        setCanaisErro(null);
+        // Sem canal de texto e com oficial de pé, o único caminho que ENTREGA
+        // é o modelo. Escolher por omissão aqui evita uma campanha de texto que
+        // a API aceita e a Meta recusa na entrega (131047).
+        if (dados && !dados.pode_texto && dados.pode_template) {
+          setTipoMensagem("template");
+        }
+      } catch (e) {
+        if (!cancelado) {
+          setCanais(null);
+          setCanaisErro(
+            e instanceof Error ? e.message : t("Não foi possível carregar os canais."),
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [t]);
 
   const chaveSelecao = React.useMemo(
     () =>
@@ -298,6 +377,24 @@ export function CampanhaWizard({
   const previewMensagem = primeiraMensagem
     ? interpolateTemplate(primeiraMensagem, { name: "Maria Silva" })
     : "";
+
+  const modelos = canais?.templates ?? [];
+  const modeloSelecionado =
+    modelos.find((m) => chaveDoModelo(m) === modeloChave && m.aceito) ?? null;
+  const valoresComExemplo = interpolarValoresDoTemplate(valoresModelo, {
+    nome: "Maria Silva",
+    cidade: "Belo Horizonte",
+    categoria: "Oficina mecânica",
+  });
+  const previewModelo = modeloSelecionado
+    ? renderTemplateBody(modeloSelecionado.components, valoresComExemplo, {
+        name: modeloSelecionado.name,
+        language: modeloSelecionado.language,
+        parameterFormat: modeloSelecionado.parameterFormat,
+      })
+    : "";
+  const podeTexto = canais?.pode_texto ?? false;
+  const podeTemplate = canais?.pode_template ?? false;
 
   const janelasValidas = janelas.filter(
     (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
@@ -415,11 +512,24 @@ export function CampanhaWizard({
   }
 
   function validarMensagens(): boolean {
-    if (preenchidas.length === 0) {
+    if (tipoMensagem === "template") {
+      if (!modeloSelecionado) {
+        toast.error(t("Escolha um modelo aprovado para a campanha."));
+        return false;
+      }
+      const faltando = modeloSelecionado.slots.filter(
+        (s) => !(valoresModelo[s.slotKey] ?? "").trim(),
+      );
+      if (faltando.length > 0) {
+        toast.error(
+          t(`Preencha os parâmetros: ${faltando.map((s) => `{{${s.key}}}`).join(", ")}.`),
+        );
+        return false;
+      }
+    } else if (preenchidas.length === 0) {
       toast.error(t("Escreva ao menos uma mensagem."));
       return false;
-    }
-    if (preenchidas.some((m) => [...m].length > 4000)) {
+    } else if (preenchidas.some((m) => [...m].length > 4000)) {
       toast.error(t("Cada mensagem pode ter no máximo 4000 caracteres."));
       return false;
     }
@@ -509,6 +619,17 @@ export function CampanhaWizard({
     }
   }
 
+  function escolherModeloOficial(chave: string) {
+    setModeloChave(chave);
+    // Modelo novo, valores novos. Manter os valores do anterior preencheria o
+    // slot 1 com o texto que era do slot 3 — e ninguém revisaria isso.
+    setValoresModelo({});
+  }
+
+  function trocarValorDoModelo(slotKey: string, valor: string) {
+    setValoresModelo((atuais) => ({ ...atuais, [slotKey]: valor }));
+  }
+
   function trocarJanela(i: number, campo: "inicio" | "fim", valor: string) {
     setJanelas((atuais) => atuais.map((j, k) => (k === i ? { ...j, [campo]: valor } : j)));
   }
@@ -522,6 +643,10 @@ export function CampanhaWizard({
       setPasso(1);
       return;
     }
+    if (tipoMensagem === "template" && !modeloSelecionado) {
+      setPasso(1);
+      return;
+    }
     setCriando(true);
     try {
       const criada = await apiClient.post<{ data?: { id?: string } }>(
@@ -531,7 +656,18 @@ export function CampanhaWizard({
           categorias: categoriasMarcadas,
           cidades: cidadesSelecionadas,
           fonte_publico: fonte,
-          mensagens: preenchidas,
+          ...(tipoMensagem === "template" && modeloSelecionado
+            ? {
+                mensagem_tipo: "template",
+                template_name: modeloSelecionado.name,
+                template_language: modeloSelecionado.language,
+                template_contract_hash: modeloSelecionado.contractHash,
+                template_values: valoresModelo,
+              }
+            : {
+                mensagem_tipo: "texto",
+                mensagens: preenchidas,
+              }),
           data_inicio: dataInicio,
           data_fim: dataFim,
           janelas: janelas.map((j) => ({ ...j, dias })),
@@ -950,6 +1086,53 @@ export function CampanhaWizard({
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label>{t("Como a campanha fala")}</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    aria-pressed={tipoMensagem === "texto"}
+                    onClick={() => setTipoMensagem("texto")}
+                    className={`rounded-lg border p-3 text-left text-sm ${
+                      tipoMensagem === "texto" ? "border-primary bg-accent-soft" : "hover:bg-muted"
+                    }`}
+                  >
+                    <span className="block font-medium">{t("Texto livre")}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {podeTexto
+                        ? t("Variações em rotação, pelo número conectado por QR.")
+                        : t("Nenhum canal WORKING aceita texto livre agora.")}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={tipoMensagem === "template"}
+                    onClick={() => setTipoMensagem("template")}
+                    className={`rounded-lg border p-3 text-left text-sm ${
+                      tipoMensagem === "template" ? "border-primary bg-accent-soft" : "hover:bg-muted"
+                    }`}
+                  >
+                    <span className="block font-medium">{t("Modelo oficial")}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {podeTemplate
+                        ? t("Modelo aprovado — único caminho fora da janela de 24h.")
+                        : canais?.oficial_conectado
+                          ? t("Número oficial conectado, mas nenhum canal WORKING aceita modelo.")
+                          : t("Conecte um número oficial em Conexões para usar modelo.")}
+                    </span>
+                  </button>
+                </div>
+                {canaisErro && (
+                  <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
+                    {t(`Não foi possível ler os canais: ${canaisErro}`)}
+                  </p>
+                )}
+                {!canais && !canaisErro && (
+                  <p className="text-xs text-muted-foreground">{t("Lendo canais e modelos…")}</p>
+                )}
+              </div>
+
+              {tipoMensagem === "texto" ? (
+              <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Label>{t("Mensagens da campanha")}</Label>
                   <select
@@ -1055,6 +1238,99 @@ export function CampanhaWizard({
                   </Button>
                 )}
               </div>
+              ) : (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold">{t("Modelo aprovado")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          "Só modelos APROVADOS aparecem aqui. O texto e os parâmetros vêm do espelho local, sincronizado com a Meta.",
+                        )}
+                      </p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" asChild>
+                      <Link href="/app/connections">{t("Conexões")}</Link>
+                    </Button>
+                  </div>
+
+                  <select
+                    value={modeloChave}
+                    onChange={(e) => escolherModeloOficial(e.target.value)}
+                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                    aria-label={t("Escolher modelo oficial")}
+                  >
+                    <option value="">{t("Escolher um modelo…")}</option>
+                    {modelos.map((modelo) => (
+                      <option
+                        key={chaveDoModelo(modelo)}
+                        value={chaveDoModelo(modelo)}
+                        disabled={!modelo.aceito}
+                      >
+                        {modelo.name} ({modelo.language})
+                        {modelo.aceito ? "" : ` — ${modelo.motivo ?? modelo.status}`}
+                      </option>
+                    ))}
+                  </select>
+
+                  {modelos.length === 0 && (
+                    <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                      {canais?.oficial_conectado
+                        ? t(
+                            "Nenhum modelo aprovado no espelho. Sincronize os modelos em Conexões.",
+                          )
+                        : t(
+                            "Nenhum modelo disponível. Conecte um número oficial em Conexões para criar e aprovar modelos.",
+                          )}
+                    </p>
+                  )}
+
+                  {modeloSelecionado && (
+                    <>
+                      {modeloSelecionado.previews.length > 0 && (
+                        <div className="space-y-1 rounded-lg border bg-muted/20 p-3 text-sm">
+                          {modeloSelecionado.previews.map((p) => (
+                            <div key={`${p.onde}-${p.text}`}>
+                              <p className="text-xs font-medium text-muted-foreground uppercase">
+                                {p.onde}
+                              </p>
+                              <p className="whitespace-pre-wrap">{p.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          "Cada campo aceita texto fixo ou as variáveis {{nome}}, {{primeiro_nome}}, {{cidade}} e {{categoria}} — trocadas por empresa no envio.",
+                        )}
+                      </p>
+                      {modeloSelecionado.slots.map((slot) => (
+                        <div key={slot.slotKey} className="space-y-1.5">
+                          <Label htmlFor={`wiz-slot-${slot.slotKey}`}>
+                            {slot.onde} · {t("parâmetro")} {slot.key}
+                          </Label>
+                          <Input
+                            id={`wiz-slot-${slot.slotKey}`}
+                            value={valoresModelo[slot.slotKey] ?? ""}
+                            onChange={(e) => trocarValorDoModelo(slot.slotKey, e.target.value)}
+                            placeholder={slot.contexto || t("Valor do parâmetro")}
+                            maxLength={4000}
+                          />
+                        </div>
+                      ))}
+                      <div className="space-y-1 rounded-lg border bg-muted/20 p-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">
+                          {t("Prévia para uma empresa")}
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm">
+                          {previewModelo ||
+                            t("Preencha os parâmetros para ver o texto que o cliente vai ler.")}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-3 rounded-lg border p-3">
                 <p className="text-sm font-semibold">{t("Agenda do envio")}</p>
@@ -1155,19 +1431,31 @@ export function CampanhaWizard({
 
             <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
               <Card className="space-y-2 p-4">
-                <p className="text-sm font-semibold">{t("Prévia da primeira mensagem")}</p>
-                <div className="rounded-lg border bg-muted/20 p-3 text-sm">
-                  {previewMensagem ||
-                    t("A prévia aparece quando você escrever a primeira mensagem.")}
+                <p className="text-sm font-semibold">
+                  {tipoMensagem === "template"
+                    ? t("Prévia do modelo")
+                    : t("Prévia da primeira mensagem")}
+                </p>
+                <div className="whitespace-pre-wrap rounded-lg border bg-muted/20 p-3 text-sm">
+                  {(tipoMensagem === "template" ? previewModelo : previewMensagem) ||
+                    (tipoMensagem === "template"
+                      ? t("Escolha um modelo e preencha os parâmetros.")
+                      : t("A prévia aparece quando você escrever a primeira mensagem."))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
+                  {tipoMensagem === "template"
+                    ? t("As variáveis são trocadas por empresa no envio.")
+                    : t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
                 </p>
               </Card>
               <Card className="space-y-2 p-4 text-sm">
                 <p className="font-semibold">{t("Resumo da agenda")}</p>
                 <p className="text-muted-foreground">
-                  {t(`${preenchidas.length} mensagens em rotação`)}
+                  {tipoMensagem === "template"
+                    ? t(
+                        `Modelo ${modeloSelecionado?.name ?? "—"} (${modeloSelecionado?.language ?? "—"})`,
+                      )
+                    : t(`${preenchidas.length} mensagens em rotação`)}
                 </p>
                 <p className="text-muted-foreground">
                   {dataInicio && dataFim ? t(`de ${dataInicio} a ${dataFim}`) : t("Período aberto")}
@@ -1221,7 +1509,11 @@ export function CampanhaWizard({
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t("Mensagens")}</dt>
-                  <dd>{t(`${preenchidas.length} em rotação`)}</dd>
+                  <dd>
+                    {tipoMensagem === "template"
+                      ? `${modeloSelecionado?.name ?? "—"} (${modeloSelecionado?.language ?? "—"})`
+                      : t(`${preenchidas.length} em rotação`)}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t("Período")}</dt>
@@ -1250,7 +1542,7 @@ export function CampanhaWizard({
         )}
       </Card>
 
-      <div className="sticky bottom-0 z-20 -mx-6 border-t border-border bg-background/95 px-6 py-3 backdrop-blur">
+      <div className="sticky bottom-0 z-20 -mx-6 border-t border-border bg-background px-6 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3 pr-20 md:pr-24">
           <Button type="button" variant="ghost" onClick={voltar} disabled={passo === 0 || criando}>
             {t("Voltar")}

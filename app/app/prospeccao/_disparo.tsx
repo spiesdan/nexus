@@ -68,6 +68,9 @@ function diaCurto(iso: string): string {
 /** O que a rota devolve na simulação. Espelha `resumo` do `route.ts`. */
 interface Plano {
   simulacao: boolean;
+  /** 0284 — o que a rota vai mandar: texto livre ou modelo aprovado. */
+  mensagem_tipo?: "texto" | "template";
+  template?: { name: string; language: string } | null;
   pode_enviar: boolean;
   bloqueio: string | null;
   selecionados: number;
@@ -161,6 +164,9 @@ export function DialogoDisparo({
   campanhaId = null,
   campanhaPadrao,
   mensagensIniciais = [],
+  mensagemTipo = "texto",
+  templateNome = null,
+  templateIdioma = null,
   agendaInicial,
   modoInicial = "agora",
   prospectIdsDaCampanha,
@@ -188,6 +194,15 @@ export function DialogoDisparo({
    * mandava o texto genérico sem perceber que o dele tinha ficado para trás.
    */
   mensagensIniciais?: string[];
+  /**
+   * 0284 — campanha de template NÃO tem caixas de texto: o conteúdo está no
+   * modelo aprovado, e a API oficial ignora `mensagens` nesse caminho. Sem esta
+   * prop a tela abriria vazia e o botão de simular ficaria desabilitado por
+   * "nenhuma mensagem" — escondendo a campanha que está pronta.
+   */
+  mensagemTipo?: "texto" | "template";
+  templateNome?: string | null;
+  templateIdioma?: string | null;
   /**
    * O "quando" que a campanha já tem: período, janelas e cota do dia. Mesma
    * razão das mensagens — o assistente pergunta, e o Disparo não pode abrir
@@ -296,6 +311,9 @@ export function DialogoDisparo({
 
   // O que de fato vai como `mensagens`: sem vazios, sem espaço nas pontas.
   const preenchidas = mensagens.map((m) => m.trim()).filter((m) => m !== "");
+  // Template não usa as caixas — o conteúdo é o modelo aprovado. A rota lê o
+  // tipo da CAMPANHA (não do corpo), então mandar `mensagens` vazio é correto.
+  const ehTemplate = mensagemTipo === "template";
 
   // A tela fala em SEGUNDOS (é assim que se pensa em ritmo); a API, em ms. O
   // campo vazio volta ao padrão seguro em vez de virar 0 — e um 0 digitado de
@@ -317,7 +335,7 @@ export function DialogoDisparo({
   // como "todos os dias", que é o OPOSTO da intenção de quem desmarcou tudo.
   const diasValidos = dias.length > 0;
   const podeAgendar =
-    preenchidas.length > 0 &&
+    (ehTemplate || preenchidas.length > 0) &&
     ids.length > 0 &&
     janelasValidas.length === janelas.length &&
     janelas.length > 0 &&
@@ -487,6 +505,18 @@ export function DialogoDisparo({
             </button>
           </div>
 
+          {ehTemplate ? (
+            <div className="rounded-lg border border-info/40 bg-info-bg p-3 text-sm text-info-fg">
+              <p className="font-medium">
+                {t("Esta campanha envia um modelo aprovado — não há texto livre para editar aqui.")}
+              </p>
+              <p className="mt-1 opacity-90">
+                {templateNome
+                  ? t(`Modelo: ${templateNome}${templateIdioma ? ` (${templateIdioma})` : ""}.`)
+                  : t("O modelo e os parâmetros foram definidos no assistente da campanha.")}
+              </p>
+            </div>
+          ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="disparo-mensagem-0">{t("Mensagem 1 (sai primeiro)")}</Label>
@@ -538,6 +568,7 @@ export function DialogoDisparo({
                 : t("A mesma mensagem para todas. Quem responde entra na conversa no Inbox.")}
             </p>
           </div>
+          )}
 
           <div className="flex flex-wrap gap-3">
             <div className="w-28 space-y-1.5">
@@ -677,7 +708,11 @@ export function DialogoDisparo({
           )}
 
           {!plano && !resultado && modo === "agora" && (
-            <Button size="sm" disabled={preenchidas.length === 0 || ocupado} onClick={() => void chamar(true)}>
+            <Button
+              size="sm"
+              disabled={(!ehTemplate && preenchidas.length === 0) || ocupado}
+              onClick={() => void chamar(true)}
+            >
               {t("Simular envio")}
             </Button>
           )}

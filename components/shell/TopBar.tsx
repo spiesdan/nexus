@@ -13,7 +13,12 @@ export function TopBar() {
           rola por dentro — sem isso a barra seria espremida quando o espaço
           aperta. O `sticky` fica como segunda rede nas páginas que ainda rolam
           no body (banners acima da casca). */}
-      <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur md:gap-4 md:px-6 print:hidden">
+      {/* Fundo sólido, sem `backdrop-blur`: um filtro de fundo num elemento
+          `sticky` dentro de uma casca com rolagem própria é a combinação que,
+          em Chrome/Windows, deixa o conteúdo sem pintar até uma interação
+          forçar o repaint. A barra é opaca de qualquer forma, então o blur não
+          tinha o que mostrar. */}
+      <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background px-3 md:gap-4 md:px-6 print:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <MobileSidebar />
           <TenantSwitcher />

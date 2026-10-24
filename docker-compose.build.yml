@@ -38,3 +38,10 @@ services:
         APP_VERSION: ${APP_VERSION:-local}
     image: ${SCHEDULER_IMAGE:-nexus-scheduler:local}
     pull_policy: never
+
+  # O OCR tem o MESMO modo de falha do app: imagem local + `pull_policy:
+  # always` tentaria puxar a tag do GHCR e substituiria o build local em
+  # silêncio no próximo `up -d`.
+  ocr:
+    image: ${OCR_IMAGE:-nexus-ocr:local}
+    pull_policy: never

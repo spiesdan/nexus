@@ -121,12 +121,12 @@ export const viewport: Viewport = {
 };
 
 // Dark-first (PROMPT V4): o produto nasce no tema escuro e só sai dele quando o
-// usuário gravou `light` em `nexus-theme`. O script lê a chave ANTES do
-// primeiro paint (o `<html>` já sai com `data-theme="dark"` do SSR; se houver
-// preferência gravada, troca aqui mesmo para não piscar). O bloco
-// `[data-theme="dark"]` do globals.css é agora o caminho padrão, e não um
-// convidado morto de pé para a derivação de marca (ver cabeçalho dos tokens).
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('nexus-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();`;
+// usuário gravou `light` em `nexus-theme` (ou `system` com o SO claro). O script
+// lê a chave ANTES do primeiro paint (o `<html>` já sai com `data-theme="dark"`
+// do SSR; se houver preferência gravada, troca aqui mesmo para não piscar).
+// Também escreve `color-scheme` inline: o CSS só define a polaridade depois de
+// baixar, e controles nativos não podem nascer no tema errado.
+const THEME_INIT_SCRIPT = `(function(){try{var g=localStorage.getItem('nexus-theme');var tema='dark';if(g==='light'){tema='light';}else if(g==='system'){tema=(typeof window.matchMedia==='function'&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}var r=document.documentElement;r.setAttribute('data-theme',tema);r.style.colorScheme=tema;}catch(e){}})();`;
 
 /**
  * Motivos já registrados neste processo. `EstiloDaMarca` roda em TODA

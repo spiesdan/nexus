@@ -229,6 +229,22 @@ const schema = z.object({
   // atrasada é melhor que decisão segurando o cron inteiro.
   LAYA_URL: z.string().optional().default(""),
   LAYA_API_KEY: z.string().optional().default(""),
+
+  /**
+   * OCR do pedido — o serviço `ocr/` do compose, na rede interna.
+   *
+   * Vazio = DESLIGADO, e a leitura de foto cai na IA (comportamento anterior).
+   * É opcional de propósito: uma instalação que não subiu o serviço continua
+   * funcionando, só paga a chamada de modelo. Com ele no ar, a foto é lida
+   * sem gastar crédito e a IA vira fallback para manuscrito difícil.
+   *
+   * A URL não tem validação de `.url()` porque o valor vazio é o desligado e
+   * um `http://ocr:8790` só resolve dentro da rede Docker — validar aqui
+   * derrubaria o boot por um erro que só aparece em runtime.
+   */
+  OCR_SERVICE_URL: z.string().optional().default(""),
+  /** Teto de uma leitura de OCR. CPU em 2 vCPUs leva segundos; 60 s é folga. */
+  OCR_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(60_000).catch(60_000),
   /**
    * Teto de NEGÓCIOS decididos por passada do cron de risco (15 min).
    *

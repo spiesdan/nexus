@@ -1657,4 +1657,28 @@ describe("POST /api/v1/prospecting/campaigns — exclusividade da 0277", () => {
     const body = await res.json();
     expect(body.error.details.conflitos[0].motivo).toBe("revisar");
   });
+
+  it("criar já ATIVA sem canal de texto → 422, sem inserir", async () => {
+    // A ativação é a promessa de que o tick vai mandar. O PATCH já recusava
+    // sem canal; o POST com `status: ativa` também precisa recusar, senão a
+    // campanha nasce ativa e o erro só aparece no motor, depois.
+    const db = makeDb({
+      prospecting_campaigns: [],
+      channel_sessions: [],
+    });
+    session("agent", db);
+
+    const res = await rotaCampanhas.POST(
+      req(
+        "POST",
+        corpo({ status: "ativa", mensagens: ["Bom dia!"] }),
+        "http://localhost/api/v1/prospecting/campaigns",
+      ),
+    );
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body.error.code).toBe("validation_failed");
+    expect(body.error.details.codigo).toBe("sem_canal_texto");
+    expect(db.tabelas.prospecting_campaigns).toHaveLength(0);
+  });
 });

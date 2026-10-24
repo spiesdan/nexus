@@ -91,6 +91,12 @@ interface CampanhaControle {
   prospect_ids: string[] | null;
   contato_ids: string[] | null;
   mensagens: string[] | null;
+  /** 0284 — como a campanha fala, e o bind do modelo quando é o caso. */
+  mensagem_tipo: string | null;
+  template_name: string | null;
+  template_language: string | null;
+  template_contract_hash: string | null;
+  template_values: Record<string, string> | null;
   espaco_ms: number | null;
   limite_diario: number | null;
   data_inicio: string | null;
@@ -98,6 +104,8 @@ interface CampanhaControle {
   janelas: Janela[] | null;
   agendada_em: string | null;
   ultimo_envio_at: string | null;
+  ultimo_erro: string | null;
+  ultimo_erro_em: string | null;
   created_at: string;
 }
 
@@ -411,6 +419,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
   const faltam = dados.resumo.pendentes;
   const percentual = dados.resumo.percentual;
   const ehContatos = dados.tipo === "contatos";
+  const ehTemplate = dados.campanha.mensagem_tipo === "template";
   const podeDisparar = !ehContatos && semReserva.length > 0;
   const modoInicial =
     semReserva.length > 20 || Boolean(dados.campanha.agendada_em) ? "agendar" : "agora";
@@ -492,6 +501,21 @@ export function ControleDaCampanha({ id }: { id: string }) {
         {ehContatos && <Badge variant="info">{t("Recuperação")}</Badge>}
       </div>
 
+      {dados.campanha.ultimo_erro && (
+        <Card className="flex items-start gap-3 border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <WarningCircle size={18} className="mt-0.5 shrink-0 text-destructive" aria-hidden />
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium text-destructive">{t("Último erro da campanha")}</p>
+            <p className="whitespace-pre-wrap">{dados.campanha.ultimo_erro}</p>
+            {dados.campanha.ultimo_erro_em && (
+              <p className="text-xs text-muted-foreground">
+                {t(`Registrado em ${formatarData(dados.campanha.ultimo_erro_em)}`)}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Card className="space-y-3 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1">
@@ -566,7 +590,9 @@ export function ControleDaCampanha({ id }: { id: string }) {
           <Card className="space-y-3 p-4">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{t("Mensagens e agenda")}</h2>
-              <Badge variant="neutral">{(dados.campanha.mensagens ?? []).length}</Badge>
+              <Badge variant="neutral">
+                {ehTemplate ? t("Modelo") : (dados.campanha.mensagens ?? []).length}
+              </Badge>
             </div>
             <div>
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -576,9 +602,33 @@ export function ControleDaCampanha({ id }: { id: string }) {
             </div>
             <div>
               <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {t("Mensagens")}
+                {ehTemplate ? t("Modelo aprovado") : t("Mensagens")}
               </p>
-              {(dados.campanha.mensagens ?? []).length === 0 ? (
+              {ehTemplate ? (
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm font-medium">
+                    {dados.campanha.template_name ?? "—"}
+                    {dados.campanha.template_language
+                      ? ` (${dados.campanha.template_language})`
+                      : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "O texto e os parâmetros vêm do modelo aprovado no canal oficial; os valores abaixo são interpolados por empresa.",
+                    )}
+                  </p>
+                  {Object.entries(dados.campanha.template_values ?? {}).length > 0 && (
+                    <dl className="space-y-1 rounded-lg border bg-muted/20 p-2.5 text-sm">
+                      {Object.entries(dados.campanha.template_values ?? {}).map(([k, v]) => (
+                        <div key={k} className="flex gap-2">
+                          <dt className="shrink-0 font-mono text-xs text-muted-foreground">{k}</dt>
+                          <dd className="min-w-0 truncate">{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </div>
+              ) : (dados.campanha.mensagens ?? []).length === 0 ? (
                 <p className="mt-1 text-sm text-warning-fg">
                   {t("Nenhuma mensagem salva. Ao enviar ou agendar, escreva a primeira.")}
                 </p>
@@ -968,6 +1018,9 @@ export function ControleDaCampanha({ id }: { id: string }) {
           }}
           campanhaId={id}
           mensagensIniciais={dados.campanha.mensagens ?? []}
+          mensagemTipo={ehTemplate ? "template" : "texto"}
+          templateNome={dados.campanha.template_name}
+          templateIdioma={dados.campanha.template_language}
           agendaInicial={dados.campanha}
           modoInicial={modoInicial}
           prospectIdsDaCampanha={dados.audiencia_ids}

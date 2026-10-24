@@ -276,6 +276,10 @@ export FISCAL_IMAGE="${IMG_FISCAL}:${VERSAO_ALVO}"
 # O importador do Mercos na MESMA versão dos outros: o worker grava o pedido no
 # banco e a imagem nova pode esperar coluna que a antiga não conhece.
 export MERCOS_IMAGE="${IMG_MERCOS}:${VERSAO_ALVO}"
+# O OCR também: o app fala com ele por HTTP e espera o formato de resposta da
+# mesma versão. Sem este export, o serviço cairia no default `:stable` do
+# compose enquanto o resto fica pinado.
+export OCR_IMAGE="${IMG_OCR}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
 # O segredo do sidecar tem de existir ANTES do `dc pull`, e não só antes do

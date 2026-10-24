@@ -94,7 +94,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
                 Antes era só o hambúrguer num header `lg:hidden`: no desktop
                 o admin não tinha porta de busca nem de sair sem voltar pro
                 sidebar. */}
-            <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur md:gap-4 md:px-6 print:hidden">
+            <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background px-3 md:gap-4 md:px-6 print:hidden">
               <div className="flex min-w-0 items-center gap-2">
                 <Button
                   type="button"

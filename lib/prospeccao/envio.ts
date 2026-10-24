@@ -26,13 +26,35 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
 import { ApiError } from "@/lib/api/types";
 import { ensureConversation } from "@/lib/automation/start-conversation";
+import { renderizarCorpoDoTemplate } from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
+import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 
 /** O mínimo do prospect que o envio precisa. */
 export interface ProspectParaEnvio {
   id: string;
   nome: string;
   telefone_normalizado: string;
+  /** Só para interpolar `{{cidade}}` no modelo. */
+  cidade?: string | null;
+  /** Só para interpolar `{{categoria}}` no modelo. */
+  categoria?: string | null;
+}
+
+/**
+ * O bind do modelo, já resolvido contra o espelho VIGENTE.
+ *
+ * `components` viaja junto porque a campanha já leu a linha para validar o
+ * contrato; reler no envio criaria a janela em que o modelo muda entre a
+ * validação e o POST — e o texto gravado no inbox divergiria do entregue.
+ */
+export interface TemplateDoEnvio {
+  name: string;
+  language: string;
+  contractHash: string;
+  values: Record<string, string>;
+  components: unknown[];
+  parameterFormat: string;
 }
 
 export interface ParametrosDoEnvio {
@@ -43,6 +65,8 @@ export interface ParametrosDoEnvio {
   sessaoId: string;
   prospect: ProspectParaEnvio;
   mensagem: string;
+  /** Presente = o caminho é template; `mensagem` fica ignorada. */
+  template?: TemplateDoEnvio | null;
   /** O carimbo em `pacing_ledger` — o instante chega por parâmetro no tick. */
   agoraIso?: string;
 }
@@ -78,6 +102,38 @@ export async function enviarParaProspect(
     // abaixo e vira uma falha do item, sem parar a campanha.
     const conversationId = await ensureConversation(admin, p.orgId, contactId, p.sessaoId);
 
+    // ── O caminho do template ─────────────────────────────────────────────
+    // Os valores são interpolados POR PROSPECT e o corpo é renderizado com os
+    // mesmos valores. `sendMessageHandler` recebe o texto que o cliente vai ler
+    // como `body` — é o que faz os guardrails (promessa, spinning, disclosure)
+    // enxergarem o template em vez de um ponto cego.
+    let corpo = p.mensagem;
+    let templateValues: Record<string, string> | null = null;
+    if (p.template) {
+      templateValues = interpolarValoresDoTemplate(p.template.values, {
+        nome: p.prospect.nome,
+        cidade: p.prospect.cidade ?? null,
+        categoria: p.prospect.categoria ?? null,
+      });
+      corpo = renderizarCorpoDoTemplate(
+        {
+          components: p.template.components,
+          name: p.template.name,
+          language: p.template.language,
+          parameterFormat: p.template.parameterFormat,
+        },
+        templateValues,
+      ).trim();
+      if (!corpo) {
+        return {
+          ok: false,
+          erro:
+            "template_sem_texto: o modelo não tem header/corpo de texto para exibir e validar. " +
+            "Campanha por template nesta versão exige texto.",
+        };
+      }
+    }
+
     const mensagem = await sendMessageHandler(
       admin,
       {
@@ -87,8 +143,31 @@ export async function enviarParaProspect(
           : { type: "webhook_source", id: "prospecting-send" },
         requestId: p.requestId,
       },
-      { conversation_id: conversationId, type: "text", body: p.mensagem },
+      p.template && templateValues
+        ? {
+            conversation_id: conversationId,
+            type: "template",
+            body: corpo,
+            template_name: p.template.name,
+            template_language: p.template.language,
+            template_values: templateValues,
+          }
+        : { conversation_id: conversationId, type: "text", body: corpo },
     );
+
+    // O handler grava `queued` quando o canal ainda não pode falar (credencial
+    // ausente, sessão fora de WORKING) e `failed` quando a plataforma recusou.
+    // Nenhum dos dois é "enviado": contar como sucesso consumiria a reserva e
+    // limparia o erro da campanha sem nada ter chegado ao cliente.
+    if (mensagem.status !== "sent") {
+      const fila = mensagem.metadata?.queued_reason;
+      const motivo =
+        mensagem.error_message ??
+        (typeof fila === "string" && fila.length > 0
+          ? `Mensagem em fila: ${fila}.`
+          : `Mensagem não enviada (${mensagem.status}).`);
+      return { ok: false, erro: motivo };
+    }
 
     // Espaçamento GLOBAL por número: sem esta linha o tick não tem de onde ler o
     // "último envio desta sessão" — e `espacarEnvio` (memória) não sobrevive ao

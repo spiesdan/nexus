@@ -8270,6 +8270,7 @@ export type Database = {
           id: string;
           janelas: NonNullable<Json>;
           limite_diario: number;
+          mensagem_tipo: string;
           mensagens: string[];
           nome: string;
           objetivo: string | null;
@@ -8278,8 +8279,14 @@ export type Database = {
           publico: string;
           recorrencia_dias: number | null;
           status: string;
+          template_contract_hash: string | null;
+          template_language: string | null;
+          template_name: string | null;
+          template_values: NonNullable<Json>;
           ultima_execucao_at: string | null;
           ultimo_envio_at: string | null;
+          ultimo_erro: string | null;
+          ultimo_erro_em: string | null;
           updated_at: string;
         };
         Insert: {
@@ -8296,6 +8303,7 @@ export type Database = {
           id?: string;
           janelas?: NonNullable<Json>;
           limite_diario?: number;
+          mensagem_tipo?: string;
           mensagens?: string[];
           nome: string;
           objetivo?: string | null;
@@ -8304,8 +8312,14 @@ export type Database = {
           publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
+          template_contract_hash?: string | null;
+          template_language?: string | null;
+          template_name?: string | null;
+          template_values?: NonNullable<Json>;
           ultima_execucao_at?: string | null;
           ultimo_envio_at?: string | null;
+          ultimo_erro?: string | null;
+          ultimo_erro_em?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -8322,6 +8336,7 @@ export type Database = {
           id?: string;
           janelas?: NonNullable<Json>;
           limite_diario?: number;
+          mensagem_tipo?: string;
           mensagens?: string[];
           nome?: string;
           objetivo?: string | null;
@@ -8330,8 +8345,14 @@ export type Database = {
           publico?: string;
           recorrencia_dias?: number | null;
           status?: string;
+          template_contract_hash?: string | null;
+          template_language?: string | null;
+          template_name?: string | null;
+          template_values?: NonNullable<Json>;
           ultima_execucao_at?: string | null;
           ultimo_envio_at?: string | null;
+          ultimo_erro?: string | null;
+          ultimo_erro_em?: string | null;
           updated_at?: string;
         };
         Relationships: [

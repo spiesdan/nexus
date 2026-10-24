@@ -33,10 +33,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { normalizaTelefone } from "@/lib/contacts/csv";
+import {
+  avaliarTemplateParaCampanha,
+  carregarTemplateParaCampanha,
+  type TemplateParaCampanha,
+} from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
+import {
+  escolherSessaoDaCampanha,
+  type SessaoDaCampanha,
+} from "@/lib/prospeccao/canal-da-campanha";
 import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import { mensagemDaVez } from "@/lib/prospeccao/disparo";
 import { enviarParaProspect, type ProspectParaEnvio } from "@/lib/prospeccao/envio";
+import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
 import { fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
 
 import {
@@ -59,6 +69,11 @@ const MAX_PROSPECTS_POR_TICK = 200;
 export type MotivoDoPulo =
   | MotivoDeEspera
   | "sem_sessao"
+  /** Campanha de texto e nenhum canal WORKING permite texto livre. */
+  | "sem_canal_texto"
+  /** Campanha de template e nenhum canal WORKING aceita modelo aprovado. */
+  | "sem_canal_template"
+  | "template_invalido"
   | "sem_mensagem"
   | "sem_prospect_elegivel"
   | "falha_envio"
@@ -84,6 +99,12 @@ interface CampanhaAgendada {
   /** O recorte de categoria da campanha (0277) — vazio/`empresas` = sem filtro. */
   categorias: string[] | null;
   mensagens: string[] | null;
+  /** 0284 — como a campanha fala. Ausente em linha antiga = `texto`. */
+  mensagem_tipo: string | null;
+  template_name: string | null;
+  template_language: string | null;
+  template_contract_hash: string | null;
+  template_values: Record<string, string> | null;
   espaco_ms: number;
   limite_diario: number;
   data_inicio: string | null;
@@ -104,12 +125,17 @@ interface ProspectDoBanco {
   website: string | null;
   categoria_canonica: string | null;
   categoria_revisar: boolean | null;
+  cidade: string | null;
 }
 
 interface EstadoDaOrg {
   fuso: string;
-  sessaoId: string | null;
-  /** `sent_at` mais recente em `pacing_ledger` da sessão WORKING (ms). */
+  /** TODAS as sessões WORKING — o tipo da campanha escolhe uma delas. */
+  sessoes: SessaoDaCampanha[];
+}
+
+interface EstadoDaSessao {
+  /** `sent_at` mais recente em `pacing_ledger` desta sessão (ms). */
   ultimoEnvioMs: number | null;
   /**
    * O TETO DIÁRIO DO NÚMERO: `channel_sessions.daily_message_limit` ∩ o degrau
@@ -131,8 +157,9 @@ interface EstadoDaOrg {
 }
 
 const COLUNAS =
-  "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, espaco_ms, " +
-  "limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
+  "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, " +
+  "mensagem_tipo, template_name, template_language, template_contract_hash, template_values, " +
+  "espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
 
 export async function processarCampanhasAgendadas(
   admin: SupabaseClient,
@@ -158,15 +185,31 @@ export async function processarCampanhasAgendadas(
   const lista = (data ?? []) as unknown as CampanhaAgendada[];
   if (lista.length === 0) return resumo;
 
-  // O fuso e a sessão são da ORG, não da campanha: uma leitura por org, e o
-  // `ultimoEnvioMs` do estado é atualizado a cada envio para o ritmo valer
-  // entre campanhas do MESMO tick.
+  // O fuso e as sessões são da ORG; o ritmo é da SESSÃO. Uma campanha de texto
+  // e uma de template podem usar números diferentes na mesma organização — e
+  // cada número tem o seu `pacing_ledger`. Guardar o ritmo por org faria a
+  // segunda campanha achar que o primeiro número já falou, ou pior, deixaria
+  // de respeitar o espaçamento do número que ela mesma usa.
   const orgs = new Map<string, EstadoDaOrg>();
   const estadoDaOrg = async (orgId: string): Promise<EstadoDaOrg> => {
     const memo = orgs.get(orgId);
     if (memo) return memo;
-    const estado = await carregarEstadoDaOrg(admin, orgId, agoraIso);
+    const estado = await carregarEstadoDaOrg(admin, orgId);
     orgs.set(orgId, estado);
+    return estado;
+  };
+
+  const ritmos = new Map<string, EstadoDaSessao>();
+  const estadoDaSessao = async (
+    orgId: string,
+    sessao: SessaoDaCampanha,
+    fuso: string,
+  ): Promise<EstadoDaSessao> => {
+    const chave = `${orgId}:${sessao.id}`;
+    const memo = ritmos.get(chave);
+    if (memo) return memo;
+    const estado = await carregarEstadoDaSessao(admin, orgId, sessao, fuso, agoraIso);
+    ritmos.set(chave, estado);
     return estado;
   };
 
@@ -183,10 +226,28 @@ export async function processarCampanhasAgendadas(
       if (listaFechada.length === 0) continue; // nada a mandar — não é "pulo", é campanha vazia
 
       const org = await estadoDaOrg(campanha.organization_id);
-      if (!org.sessaoId) {
+      if (org.sessoes.length === 0) {
         resumo.pulados.push({ campanha: campanha.id, motivo: "sem_sessao" });
         continue;
       }
+
+      // 0284 — a campanha DECLARA como fala; o canal responde se pode. Nunca
+      // `if (provider === ...)`: a pergunta é capability (invariante 1 da
+      // doutrina de restrição de canal).
+      const tipo: TipoDaMensagem =
+        campanha.mensagem_tipo === "template" ? "template" : "texto";
+      const sessao = escolherSessaoDaCampanha(org.sessoes, tipo);
+      if (!sessao) {
+        const motivo = tipo === "template" ? "sem_canal_template" : "sem_canal_texto";
+        const erro =
+          tipo === "template"
+            ? "Nenhum canal oficial WORKING para enviar template. Conecte o número oficial em Conexões."
+            : "Nenhum canal WORKING que aceite texto livre. Conecte um número por QR ou use uma campanha por template.";
+        await registrarErroDaCampanha(admin, campanha, erro, agoraIso, false);
+        resumo.pulados.push({ campanha: campanha.id, motivo });
+        continue;
+      }
+      const ritmo = await estadoDaSessao(campanha.organization_id, sessao, org.fuso);
 
       // O ledger diz quem JÁ recebeu e quando — idempotência e cota do dia
       // saem da MESMA leitura. Desde a 0277 ele é GLOBAL por organização: um
@@ -223,8 +284,8 @@ export async function processarCampanhasAgendadas(
       // mandarem no mesmo segundo.
       const espacoMs = campanha.espaco_ms > 0 ? campanha.espaco_ms : 60_000;
       if (
-        org.ultimoEnvioMs !== null &&
-        Date.parse(agoraIso) - org.ultimoEnvioMs < espacoMs
+        ritmo.ultimoEnvioMs !== null &&
+        Date.parse(agoraIso) - ritmo.ultimoEnvioMs < espacoMs
       ) {
         resumo.pulados.push({ campanha: campanha.id, motivo: "intervalo" });
         continue;
@@ -237,7 +298,17 @@ export async function processarCampanhasAgendadas(
       const mensagens = (campanha.mensagens ?? [])
         .map((m) => (m ?? "").trim())
         .filter((m) => m !== "");
-      if (mensagens.length === 0) {
+      // Template NÃO usa a rotação de texto. A exigência de mensagem é do
+      // caminho `texto`; cobrar as duas faria a campanha de modelo parar com
+      // "sem_mensagem" mesmo tendo um modelo completo.
+      if (tipo === "texto" && mensagens.length === 0) {
+        await registrarErroDaCampanha(
+          admin,
+          campanha,
+          "A campanha não tem nenhuma mensagem de texto salva. Edite e salve ao menos uma variação.",
+          agoraIso,
+          false,
+        );
         resumo.pulados.push({ campanha: campanha.id, motivo: "sem_mensagem" });
         continue;
       }
@@ -252,8 +323,8 @@ export async function processarCampanhasAgendadas(
         espacoMs,
         enviadosHoje,
         limiteDiario: campanha.limite_diario,
-        enviadosHojeDoNumero: org.enviadosHojeDoNumero,
-        tetoDoNumero: org.tetoDoNumero,
+        enviadosHojeDoNumero: ritmo.enviadosHojeDoNumero,
+        tetoDoNumero: ritmo.tetoDoNumero,
       });
       if (!decisao.pode) {
         // PERÍODO VENCIDO: o dia de hoje passou do `data_fim` e ainda sobra
@@ -277,6 +348,57 @@ export async function processarCampanhasAgendadas(
         }
         resumo.pulados.push({ campanha: campanha.id, motivo: decisao.motivo });
         continue;
+      }
+
+      // ── O modelo, conferido ANTES de escolher quem recebe ────────────────
+      // Se o modelo mudou, foi reprovado ou perdeu um valor, a campanha para
+      // com o motivo visível. Tentar mesmo assim gastaria uma reserva por
+      // prospect e a Meta recusaria todas com 132000/132012 — a fila inteira
+      // queimada em falhas silenciosas.
+      let templateDoEnvio: {
+        name: string;
+        language: string;
+        contractHash: string;
+        values: Record<string, string>;
+        components: unknown[];
+        parameterFormat: string;
+      } | null = null;
+      if (tipo === "template") {
+        let modelo: TemplateParaCampanha | null = null;
+        try {
+          modelo = await carregarTemplateParaCampanha(
+            admin,
+            campanha.organization_id,
+            campanha.template_name ?? "",
+            campanha.template_language ?? "",
+          );
+        } catch (e) {
+          const erro = e instanceof Error ? e.message : "Falha ao ler o espelho de modelos.";
+          await registrarErroDaCampanha(admin, campanha, erro, agoraIso, false);
+          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
+          continue;
+        }
+
+        const veredito = avaliarTemplateParaCampanha(
+          modelo,
+          campanha.template_values ?? {},
+          campanha.template_contract_hash ?? "",
+        );
+        if (!veredito.ok || !veredito.template) {
+          await registrarErroDaCampanha(admin, campanha, veredito.erro, agoraIso, veredito.pausar);
+          if (veredito.pausar) resumo.pausadas++;
+          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
+          continue;
+        }
+
+        templateDoEnvio = {
+          name: veredito.template.name,
+          language: veredito.template.language,
+          contractHash: veredito.template.contractHash,
+          values: campanha.template_values ?? {},
+          components: veredito.template.components,
+          parameterFormat: veredito.template.parameterFormat,
+        };
       }
 
       // O PRIMEIRO da lista fechada que ainda não recebeu — e que passa na
@@ -305,9 +427,10 @@ export async function processarCampanhasAgendadas(
       }
 
       // A rotação CONTINUA de onde parou: o índice é o total de envios da
-      // campanha, não zero a cada tick.
-      const indice = enviadas.length % mensagens.length;
-      const mensagem = mensagemDaVez(mensagens, indice);
+      // campanha, não zero a cada tick. Template não rotaciona — é sempre o
+      // mesmo modelo, e o índice 0 mantém o ledger coerente com o que saiu.
+      const indice = tipo === "template" ? 0 : enviadas.length % mensagens.length;
+      const mensagem = tipo === "template" ? "" : mensagemDaVez(mensagens, indice);
 
       // ── A RESERVA, ANTES do envio ────────────────────────────────────────
       // O ledger é a TRAVA, não só o comprovante: a unique GLOBAL
@@ -355,12 +478,17 @@ export async function processarCampanhasAgendadas(
         orgId: campanha.organization_id,
         usuarioId: null,
         requestId: `prospecting-send:${campanha.id}`,
-        sessaoId: org.sessaoId,
+        sessaoId: sessao.id,
         prospect: escolhido,
         mensagem,
+        template: templateDoEnvio,
         agoraIso,
       });
       if (!resultado.ok) {
+        // A reserva fica (é o registro da tentativa), mas o motivo fica
+        // VISÍVEL na campanha: sem isso, uma falha de modelo/canal vira uma
+        // fila que não anda e ninguém sabe por quê.
+        await registrarErroDaCampanha(admin, campanha, resultado.erro, agoraIso, false);
         resumo.pulados.push({ campanha: campanha.id, motivo: "falha_envio" });
         logger.warn("[prospeccao.agendado] envio falhou", {
           organizationId: campanha.organization_id,
@@ -381,7 +509,14 @@ export async function processarCampanhasAgendadas(
 
       await admin
         .from("prospecting_campaigns")
-        .update({ ultimo_envio_at: agoraIso })
+        .update({
+          ultimo_envio_at: agoraIso,
+          // Um envio que saiu é a prova de que o erro anterior foi resolvido.
+          // Manter o banner antigo faria o operador caçar um problema que já
+          // não existe.
+          ultimo_erro: null,
+          ultimo_erro_em: null,
+        })
         .eq("id", campanha.id)
         .eq("organization_id", campanha.organization_id);
 
@@ -389,7 +524,7 @@ export async function processarCampanhasAgendadas(
       // trava global por número, e ela sozinha já garante UMA mensagem por
       // número em cada tick. O gasto do dia NÃO é somado aqui: quem o carrega
       // adiante é a leitura fresca do `pacing_ledger` no tick seguinte.
-      org.ultimoEnvioMs = Date.parse(agoraIso);
+      ritmo.ultimoEnvioMs = Date.parse(agoraIso);
       resumo.enviados++;
     } catch (erro) {
       resumo.pulados.push({ campanha: campanha.id, motivo: "erro" });
@@ -404,11 +539,10 @@ export async function processarCampanhasAgendadas(
   return resumo;
 }
 
-/** Fuso da org + a sessão WORKING + o ritmo, o teto do número e o que ele já gastou hoje. */
+/** Fuso da org + TODAS as sessões WORKING. A escolha é por campanha. */
 async function carregarEstadoDaOrg(
   admin: SupabaseClient,
   orgId: string,
-  agoraIso: string,
 ): Promise<EstadoDaOrg> {
   const { data: org } = await admin
     .from("organizations")
@@ -419,49 +553,83 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id, daily_message_limit")
+    .select("id, provider, daily_message_limit")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
-    .is("archived_at", null)
-    .limit(1);
-  const sessao = ((sessoes ?? []) as unknown as Array<{
-    id: string;
-    daily_message_limit: number | null;
-  }>)[0];
-  const sessaoId = sessao?.id ?? null;
+    .is("archived_at", null);
+  return { fuso, sessoes: (sessoes ?? []) as unknown as SessaoDaCampanha[] };
+}
 
-  let ultimoEnvioMs: number | null = null;
-  let tetoDoNumero = Number.POSITIVE_INFINITY;
-  let enviadosHojeDoNumero = 0;
+/**
+ * O ritmo, o teto e o gasto do dia de UMA sessão. Separado do estado da org
+ * porque a campanha de texto e a de template podem usar números diferentes.
+ */
+async function carregarEstadoDaSessao(
+  admin: SupabaseClient,
+  orgId: string,
+  sessao: SessaoDaCampanha,
+  fuso: string,
+  agoraIso: string,
+): Promise<EstadoDaSessao> {
+  // ── O teto do NÚMERO e o que ele já gastou hoje ─────────────────────────
+  // A régua (warm-up ∩ limite do CRM) e a contagem do dia moram em
+  // `teto-do-numero.ts`: o "Enviar agora" faz a MESMA pergunta, e duas
+  // cópias divergiriam — deixando a outra porta sem teto.
+  const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
+    orgId,
+    sessaoId: sessao.id,
+    agoraIso,
+    fuso,
+    limiteDoCrm: sessao.daily_message_limit ?? null,
+  });
 
-  if (sessaoId) {
-    // ── O teto do NÚMERO e o que ele já gastou hoje ─────────────────────────
-    // A régua (warm-up ∩ limite do CRM) e a contagem do dia moram em
-    // `teto-do-numero.ts`: o "Enviar agora" faz a MESMA pergunta, e duas
-    // cópias divergiriam — deixando a outra porta sem teto.
-    const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
-      orgId,
-      sessaoId,
-      agoraIso,
-      fuso,
-      limiteDoCrm: sessao?.daily_message_limit ?? null,
+  const { data: ultimo } = await admin
+    .from("pacing_ledger")
+    .select("sent_at")
+    .eq("organization_id", orgId)
+    .eq("channel_session_id", sessao.id)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sentAt = (ultimo as { sent_at?: string } | null)?.sent_at;
+  const ms = sentAt ? Date.parse(sentAt) : Number.NaN;
+
+  return {
+    ultimoEnvioMs: Number.isFinite(ms) ? ms : null,
+    tetoDoNumero: teto,
+    enviadosHojeDoNumero: enviadosHoje,
+  };
+}
+
+/**
+ * Deixa o motivo na campanha — o invariante 4 do sistema vivo ("nenhuma
+ * demanda sem próximo passo") vale também para o que NÃO saiu. `pausar` é
+ * usado para erro de configuração (modelo mudou/reprovado): insistir a cada
+ * minuto só queimaria a fila. Falta de canal NÃO pausa: o número pode voltar.
+ */
+async function registrarErroDaCampanha(
+  admin: SupabaseClient,
+  campanha: { id: string; organization_id: string },
+  erro: string,
+  agoraIso: string,
+  pausar: boolean,
+): Promise<void> {
+  const { error } = await admin
+    .from("prospecting_campaigns")
+    .update({
+      ultimo_erro: erro.slice(0, 2000),
+      ultimo_erro_em: agoraIso,
+      ...(pausar ? { status: "pausada" } : {}),
+    })
+    .eq("id", campanha.id)
+    .eq("organization_id", campanha.organization_id);
+  if (error) {
+    logger.warn("[prospeccao.agendado] não consegui registrar o erro da campanha", {
+      organizationId: campanha.organization_id,
+      campaignId: campanha.id,
+      erro: error.message,
     });
-    tetoDoNumero = teto;
-    enviadosHojeDoNumero = enviadosHoje;
-
-    const { data: ultimo } = await admin
-      .from("pacing_ledger")
-      .select("sent_at")
-      .eq("organization_id", orgId)
-      .eq("channel_session_id", sessaoId)
-      .order("sent_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const sentAt = (ultimo as { sent_at?: string } | null)?.sent_at;
-    const ms = sentAt ? Date.parse(sentAt) : Number.NaN;
-    ultimoEnvioMs = Number.isFinite(ms) ? ms : null;
   }
-  return { fuso, sessaoId, ultimoEnvioMs, tetoDoNumero, enviadosHojeDoNumero };
 }
 
 /**
@@ -515,7 +683,15 @@ async function escolherContato(
     if (!c) continue; // contato apagado — o tick ignora e segue
     const fone = c.phone_number ? normalizaTelefone(c.phone_number) : null;
     if (!fone || !/^\+\d{8,15}$/.test(fone)) continue;
-    return { id, nome: c.display_name ?? c.name ?? "(sem nome)", telefone_normalizado: fone };
+    return {
+      id,
+      nome: c.display_name ?? c.name ?? "(sem nome)",
+      telefone_normalizado: fone,
+      // Recuperação é contato, não empresa: não há cidade/categoria na ficha.
+      // O token correspondente vira vazio e o envio recusa antes de sair.
+      cidade: null,
+      categoria: null,
+    };
   }
   return null;
 }
@@ -535,7 +711,7 @@ async function escolherProspect(
   const { data } = await admin
     .from("business_prospects")
     .select(
-      "id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial, categoria, categorias, website, categoria_canonica, categoria_revisar",
+      "id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
     )
     .eq("organization_id", orgId)
     .in("id", ids);
@@ -559,7 +735,13 @@ async function escolherProspect(
     if (categorias.length > 0 && !categoriaCombinaComCampanha(efetiva, categorias)) continue;
     const fone = p.telefone_normalizado;
     if (!fone || !/^\+\d{8,15}$/.test(fone)) continue;
-    return { id, nome: p.nome ?? "(sem nome)", telefone_normalizado: fone };
+    return {
+      id,
+      nome: p.nome ?? "(sem nome)",
+      telefone_normalizado: fone,
+      cidade: (p as unknown as { cidade?: string | null }).cidade ?? null,
+      categoria: efetiva.rotulo,
+    };
   }
   return null;
 }
