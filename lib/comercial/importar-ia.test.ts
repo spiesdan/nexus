@@ -170,6 +170,49 @@ describe("casarItensComCatalogo", () => {
     }));
     expect(casarItensComCatalogo(muitos, CATALOGO)).toHaveLength(LIMITE_DE_ITENS);
   });
+
+  /**
+   * O caso que o dono reportou em 2026-10-24, com o catálogo real: "3 codigo 3"
+   * (três unidades do código 3) voltou "LIXEIRA CLICK 3L ... COD. 3513".
+   * "codigo" casava o "COD." do nome e o "3" casava o "3L".
+   */
+  it("código pedido vence nome parecido — e a quantidade não vira filtro", () => {
+    const catalogo: Produto[] = [
+      produto({
+        id: "3",
+        codigo: "3",
+        nome: "ALCOOL EM GEL 70% 430 ML COM PUMP-UP",
+        preco_cents: 1190,
+      }),
+      produto({
+        id: "lixeira-3513",
+        codigo: "3513",
+        nome: "LIXEIRA CLICK 3L POLIPROPILENO - VERMELHA COD. 3513",
+        preco_cents: 2900,
+      }),
+    ];
+
+    const item = casarItensComCatalogo([{ nome: "codigo 3", quantidade: 3 }], catalogo)[0]!;
+
+    expect(item.produto_id).toBe("3");
+    expect(item.quantidade).toBe(3);
+    expect(item.confianca).toBe("alta");
+    expect(item.candidatos.map((c) => c.produto.id)).toEqual(["3"]);
+  });
+
+  it("referência de fábrica escrita no nome também é encontrada", () => {
+    const catalogo: Produto[] = [
+      produto({
+        id: "lixeira-3513",
+        codigo: "177",
+        nome: "LIXEIRA CLICK 3L POLIPROPILENO - VERMELHA COD. 3513",
+        preco_cents: 2900,
+      }),
+    ];
+
+    const item = casarItensComCatalogo([{ nome: "cod. 3513", quantidade: 1 }], catalogo)[0]!;
+    expect(item.produto_id).toBe("lixeira-3513");
+  });
 });
 
 describe("schema enviado ao modelo", () => {

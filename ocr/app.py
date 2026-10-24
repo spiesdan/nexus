@@ -54,7 +54,9 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from PIL import Image, ImageOps
 from pydantic import BaseModel, Field
 
@@ -295,6 +297,23 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Nexus OCR", version=VERSAO, lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+def corpo_fora_do_contrato(_req: Request, _exc: RequestValidationError) -> JSONResponse:
+    """
+    Corpo fora do contrato é 422 — e o corpo recebido NÃO volta na resposta.
+
+    Medido em 2026-10-24: um POST multipart (em vez de JSON) fazia o handler
+    padrão do FastAPI serializar os bytes recebidos para descrever o erro,
+    estourar `UnicodeDecodeError` e devolver **500 com stack trace**. Além de
+    transformar erro de cliente em erro de servidor, ecoar o upload na resposta
+    é vazar conteúdo de pedido de cliente. A mensagem daqui é fixa de propósito.
+    """
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "envie JSON com o campo imagem_base64 (string base64)"},
+    )
 
 
 @app.get("/healthz")

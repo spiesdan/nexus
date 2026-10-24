@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  consertarTamanhosDoOcr,
   itemDaLinha,
   itensDeLinhasOcr,
   lerPedidoComOcr,
@@ -68,17 +69,28 @@ const CATALOGO = [
   produto({ id: "alvejante-2l", nome: "ALVEJANTE SEM CLORO BILL 2L" }),
 ];
 
-/** O que o PaddleOCR devolveu da foto manuscrita, com a confiança real. */
+/**
+ * O que o PaddleOCR devolveu da foto manuscrita em 2026-10-24, copiado da
+ * resposta do serviço na VPS — texto e confiança, sem arredondar para o que
+ * seria conveniente.
+ *
+ * A terceira linha é o defeito REAL do motor: "1L" volta "IL". Antes de
+ * `consertarTamanhosDoOcr` ela caía para confiança baixa e o vendedor tinha de
+ * procurar o álcool à mão, com o produto certo no catálogo.
+ */
 const LINHAS_DA_FOTO = [
-  { texto: "Pedido", confianca: 0.977 },
-  { texto: "2X ÁGUA SANITÁRIA BILL 5L", confianca: 0.96 },
-  // O OCR trocou os "o" por zero. É o erro REAL do motor nesta foto — e a
-  // busca do catálogo tem de sobreviver a ele.
-  { texto: "3X ÁLC00L 46% 1L", confianca: 0.906 },
-  { texto: "1X AMACIANTE 5L", confianca: 0.971 },
-  { texto: "4X ANTI MOFO 20gr", confianca: 0.956 },
-  { texto: "5X ALVEJANTE SEM CLORO 2L", confianca: 0.996 },
+  { texto: "Pedido", confianca: 0.9911383986473083 },
+  { texto: "2X ÁGUA SANITÁRIA BILL 5L", confianca: 0.9626634120941162 },
+  { texto: "3X ÁLCOOL 46% IL", confianca: 0.9153960943222046 },
+  { texto: "1X AMACIANTE 5L", confianca: 0.933899462223053 },
+  { texto: "4X ANTI MOFO 20Gr", confianca: 0.9017094373703003 },
+  { texto: "5X ALVEJANTE SEM CLORO 2L", confianca: 0.9858608841896057 },
 ];
+
+/** A mesma foto com outra troca do motor: os "o" virando zero. */
+const LINHAS_COM_ZERO_NO_LUGAR_DO_O = LINHAS_DA_FOTO.map((linha) =>
+  linha.texto.startsWith("3X") ? { ...linha, texto: "3X ÁLC00L 46% 1L" } : linha,
+);
 
 describe("separarQuantidade", () => {
   it("'2x' é quantidade; '5L' é tamanho", () => {
@@ -179,15 +191,22 @@ describe("lerPedidoComOcr", () => {
       "anti-mofo-20g",
       "alvejante-2l",
     ]);
-    // "ÁLC00L" (o OCR trocou os "o" por zero) casa como `media` — produto
-    // certo, mas a tela pede confirmação. Os outros quatro casam como `alta`.
+    // Com o "IL" consertado, as cinco linhas casam como `alta` — nenhuma fica
+    // para o vendedor procurar à mão.
     expect(leitura?.itens.map((item) => item.confianca)).toEqual([
       "alta",
-      "media",
+      "alta",
       "alta",
       "alta",
       "alta",
     ]);
+  });
+
+  it("o 'o' virando zero ainda casa, como confirmação", () => {
+    const leitura = lerPedidoComOcr({ linhas: LINHAS_COM_ZERO_NO_LUGAR_DO_O }, CATALOGO);
+    expect(leitura?.itens[1]?.produto_id).toBe("alcool-46");
+    // Produto certo, mas a tela pede confirmação em vez de pré-selecionar.
+    expect(leitura?.itens[1]?.confianca).toBe("media");
   });
 
   it("confiança baixa (manuscrito difícil) recusa e deixa a IA ler", () => {
@@ -222,5 +241,24 @@ describe("lerPedidoComOcr", () => {
       CATALOGO,
     );
     expect(leitura).toBeNull();
+  });
+});
+
+describe("consertarTamanhosDoOcr", () => {
+  it("letra confundível colada na unidade volta a ser número", () => {
+    expect(consertarTamanhosDoOcr("3X ÁLCOOL 46% IL")).toBe("3X ÁLCOOL 46% 1L");
+    expect(consertarTamanhosDoOcr("ÁGUA SANITÁRIA BILL SL")).toBe("ÁGUA SANITÁRIA BILL 5L");
+    expect(consertarTamanhosDoOcr("ÁGUA BILL lL")).toBe("ÁGUA BILL 1L");
+  });
+
+  it("não inventa texto onde a letra não é unidade", () => {
+    expect(consertarTamanhosDoOcr("SOL DA GIRANDO")).toBe("SOL DA GIRANDO");
+    expect(consertarTamanhosDoOcr("BILL HIGIENE")).toBe("BILL HIGIENE");
+    expect(consertarTamanhosDoOcr("GEL 70%")).toBe("GEL 70%");
+  });
+
+  it("tamanho já correto passa intacto", () => {
+    expect(consertarTamanhosDoOcr("AMACIANTE 5L")).toBe("AMACIANTE 5L");
+    expect(consertarTamanhosDoOcr("ALVEJANTE 2L")).toBe("ALVEJANTE 2L");
   });
 });

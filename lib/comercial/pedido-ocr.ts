@@ -139,9 +139,40 @@ export function separarQuantidade(texto: string): { quantidade: number; nome: st
   return { quantidade: 1, nome: texto };
 }
 
+/**
+ * CONSERTA O TAMANHO QUE O OCR TROCOU POR LETRA.
+ *
+ * Medido na foto de referência em 2026-10-24, com os modelos v5 mobile: a linha
+ * "3X ÁLCOOL 46% 1L" volta do PaddleOCR como "3X ÁLCOOL 46% IL" — o "1" virou
+ * "I". A busca então recebe a palavra "il", que não casa com nada, a nota do
+ * item cai para 0,5 e a linha deixa de ser pré-selecionada mesmo com o produto
+ * certo no catálogo. É a mesma família do "5L" que volta "SL".
+ *
+ * A regra é estreita de propósito: só o token que é UMA letra confundível
+ * colada numa unidade de volume ("il", "sl", "ol"). "SOL", "BILL" e "GEL" não
+ * são tocados porque a letra não está colada numa unidade — e um conserto largo
+ * aqui viraria invenção de texto, que é pior que a leitura errada.
+ */
+const DIGITO_POR_LETRA: Record<string, string> = {
+  // Só as duas confusões MEDIDAS nesta instalação. "o"→0, "z"→2 e "b"→8 são
+  // plausíveis e não estão aqui de propósito: regra sem medição inventa texto.
+  i: "1",
+  l: "1",
+  s: "5",
+};
+
+const CONFUSAO_DE_TAMANHO = /\b([ils])\s?(ml|l|lt)\b/gi;
+
+export function consertarTamanhosDoOcr(texto: string): string {
+  return texto.replace(CONFUSAO_DE_TAMANHO, (todo, letra: string, unidade: string) => {
+    const digito = DIGITO_POR_LETRA[letra.toLowerCase()];
+    return digito === undefined ? todo : `${digito}${unidade}`;
+  });
+}
+
 /** Uma linha do OCR vira item — ou `null` quando é cabeçalho/ruído. */
 export function itemDaLinha(bruta: string): ItemExtraido | null {
-  const texto = limpar(bruta);
+  const texto = consertarTamanhosDoOcr(limpar(bruta));
   if (texto.length < 3) return null;
   if (letras(texto) < 3) return null;
   if (RUIDO.test(texto)) return null;
