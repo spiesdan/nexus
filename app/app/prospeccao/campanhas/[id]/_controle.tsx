@@ -122,6 +122,10 @@ interface EmpresaControle {
   enviado_em: string | null;
   mensagem_indice: number | null;
   conversa_id: string | null;
+  /** O que o canal confirmou depois do envio. `null` = não consultado. */
+  entrega: "enviada" | "entregue" | "lida" | "falhou" | null;
+  entregue_em: string | null;
+  lida_em: string | null;
 }
 
 interface CidadeResumo {
@@ -156,7 +160,7 @@ interface RespostaControle {
   audiencia_ids: string[];
 }
 
-type Filtro = "todas" | "enviadas" | "pendentes" | "sem_confirmacao";
+type Filtro = "todas" | "enviadas" | "pendentes" | "sem_confirmacao" | "falhas";
 
 function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -203,12 +207,35 @@ function situacaoDaCampanha(
 function situacaoDaEmpresa(
   empresa: EmpresaControle,
   t: (s: string) => string,
-): { rotulo: string; variant: "success" | "warning" | "neutral" } {
-  if (empresa.enviado) return { rotulo: t("Enviada"), variant: "success" };
+): { rotulo: string; variant: "success" | "warning" | "neutral" | "error" } {
+  if (empresa.enviado) {
+    // "Enviada" deixou de ser o fim da história: o canal oficial confirma
+    // ENTREGA e LEITURA depois do POST. Mostrar o degrau é o que separa
+    // "saiu" de "chegou" — e é o que expõe o 131047 sem abrir o Inbox.
+    switch (empresa.entrega) {
+      case "lida":
+        return { rotulo: t("Lida"), variant: "success" };
+      case "entregue":
+        return { rotulo: t("Entregue"), variant: "success" };
+      case "falhou":
+        return { rotulo: t("Falhou na entrega"), variant: "error" };
+      default:
+        return { rotulo: t("Enviada"), variant: "success" };
+    }
+  }
   if (empresa.sem_confirmacao) {
     return { rotulo: t("Reserva sem comprovante"), variant: "warning" };
   }
   return { rotulo: t("Pendente"), variant: "neutral" };
+}
+
+/** A confirmação mais adiantada que o canal já deu, com o instante dela. */
+function confirmacaoDaEmpresa(
+  empresa: EmpresaControle,
+): { rotulo: string; em: string } | null {
+  if (empresa.lida_em) return { rotulo: "Lida em", em: empresa.lida_em };
+  if (empresa.entregue_em) return { rotulo: "Entregue em", em: empresa.entregue_em };
+  return null;
 }
 
 function fonteRotulo(fonte: string | null, t: (s: string) => string): string {
@@ -305,6 +332,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
         if (filtro === "enviadas" && !e.enviado) return false;
         if (filtro === "pendentes" && e.enviado) return false;
         if (filtro === "sem_confirmacao" && !e.sem_confirmacao) return false;
+        if (filtro === "falhas" && e.entrega !== "falhou") return false;
         if (cidade !== "todas" && (e.cidade?.trim() || "Sem cidade") !== cidade) return false;
         if (!termo) return true;
         return [e.nome, e.telefone, e.cidade, e.categoria]
@@ -530,6 +558,17 @@ export function ControleDaCampanha({ id }: { id: string }) {
               {dados.resumo.sem_confirmacao > 0 && (
                 <Badge variant="warning">
                   {t(`${dados.resumo.sem_confirmacao} sem comprovante`)}
+                </Badge>
+              )}
+              {dados.resumo.entregues > 0 && (
+                <Badge variant="info">{t(`${dados.resumo.entregues} entregues`)}</Badge>
+              )}
+              {dados.resumo.lidos > 0 && (
+                <Badge variant="success">{t(`${dados.resumo.lidos} lidas`)}</Badge>
+              )}
+              {dados.resumo.falhas > 0 && (
+                <Badge variant="error">
+                  {t(`${dados.resumo.falhas} falharam na entrega`)}
                 </Badge>
               )}
             </div>
@@ -851,6 +890,20 @@ export function ControleDaCampanha({ id }: { id: string }) {
                   >
                     {t("Sem comprovante")} {dados.resumo.sem_confirmacao}
                   </button>
+                  {dados.resumo.falhas > 0 && (
+                    <button
+                      type="button"
+                      aria-pressed={filtro === "falhas"}
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        filtro === "falhas"
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => trocarFiltro("falhas")}
+                    >
+                      {t("Falhas na entrega")} {dados.resumo.falhas}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -911,6 +964,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                     <TableBody>
                       {visiveis.map((e) => {
                         const situacaoEmpresa = situacaoDaEmpresa(e, t);
+                        const confirmacao = confirmacaoDaEmpresa(e);
                         return (
                           <TableRow key={e.id}>
                             <TableCell className="max-w-[320px] px-4 py-2">
@@ -932,7 +986,12 @@ export function ControleDaCampanha({ id }: { id: string }) {
                               </Badge>
                             </TableCell>
                             <TableCell className="px-4 py-2 whitespace-nowrap text-muted-foreground">
-                              {formatarData(e.enviado_em)}
+                              <span className="block">{formatarData(e.enviado_em)}</span>
+                              {confirmacao && (
+                                <span className="block text-xs">
+                                  {t(`${confirmacao.rotulo} ${formatarData(confirmacao.em)}`)}
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell className="px-4 py-2 whitespace-nowrap">
                               {e.conversa_id ? (
@@ -956,6 +1015,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                 <ul className="divide-y md:hidden">
                   {visiveis.map((e) => {
                     const situacaoEmpresa = situacaoDaEmpresa(e, t);
+                    const confirmacao = confirmacaoDaEmpresa(e);
                     return (
                       <li key={e.id} className="space-y-1.5 p-3">
                         <p className="truncate font-medium">{e.nome}</p>
@@ -971,6 +1031,9 @@ export function ControleDaCampanha({ id }: { id: string }) {
                             <span className="text-xs text-muted-foreground">
                               {e.cidade ? `${e.cidade}${e.estado ? `/${e.estado}` : ""}` : "—"}
                               {e.enviado_em ? ` · ${formatarData(e.enviado_em)}` : ""}
+                              {confirmacao
+                                ? ` · ${t(confirmacao.rotulo)} ${formatarData(confirmacao.em)}`
+                                : ""}
                             </span>
                           </div>
                           {e.conversa_id ? (

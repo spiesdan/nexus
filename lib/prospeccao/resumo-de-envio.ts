@@ -35,6 +35,38 @@ export interface EnvioDaCampanha {
   message_id: string | null;
   /** Instante da reserva; a tela de controle troca pelo `sent_at` real. */
   enviado_em: string | null;
+  /**
+   * `messages.status` do envio confirmado — o que o CANAL respondeu depois.
+   * Ausente/nulo = ninguém consultou (a lista de campanhas não precisa disso).
+   */
+  status?: string | null;
+  /** Confirmações do canal, quando a consulta trouxe `messages`. */
+  delivered_at?: string | null;
+  read_at?: string | null;
+}
+
+/** O degrau de entrega que a tela mostra por empresa. */
+export type EntregaConfirmada = "enviada" | "entregue" | "lida" | "falhou" | null;
+
+/**
+ * `messages.status` → degrau de entrega. `queued`/`sending` contam como
+ * "enviada" porque a linha do ledger JÁ tem `message_id`: o POST foi aceito.
+ */
+export function entregaDoStatus(status: string | null | undefined): EntregaConfirmada {
+  switch (status) {
+    case "delivered":
+      return "entregue";
+    case "read":
+      return "lida";
+    case "failed":
+      return "falhou";
+    case "sent":
+    case "queued":
+    case "sending":
+      return "enviada";
+    default:
+      return null;
+  }
 }
 
 export interface ResumoDeEnvio {
@@ -50,6 +82,15 @@ export interface ResumoDeEnvio {
   percentual: number;
   /** O envio confirmado mais recente. */
   ultimo_envio_at: string | null;
+  /**
+   * O que o canal confirmou DEPOIS do envio. `lidos ⊆ entregues ⊆ enviados`:
+   * ler implica ter chegado, e a tela usa isso para não mostrar número que
+   * contradiz o de cima.
+   */
+  entregues: number;
+  lidos: number;
+  /** Envios que o canal recusou na ENTREGA (ex.: 131047 no oficial). */
+  falhas: number;
 }
 
 function instante(iso: string | null | undefined): number {
@@ -76,11 +117,24 @@ export function resumirEnvios(input: {
 
   let enviados = 0;
   let semConfirmacao = 0;
+  let entregues = 0;
+  let lidos = 0;
+  let falhas = 0;
   let ultimo = 0;
   for (const s of porProspect.values()) {
     if (s.message_id) {
       enviados += 1;
       ultimo = Math.max(ultimo, instante(s.enviado_em));
+      // `lido` implica entregue: a Meta manda os dois eventos, e contar o
+      // `read` só em "lidos" faria a tela mostrar 10 lidas e 3 entregues.
+      if (s.status === "read") {
+        lidos += 1;
+        entregues += 1;
+      } else if (s.status === "delivered") {
+        entregues += 1;
+      } else if (s.status === "failed") {
+        falhas += 1;
+      }
     } else {
       semConfirmacao += 1;
     }
@@ -96,5 +150,8 @@ export function resumirEnvios(input: {
     sem_confirmacao: semConfirmacao,
     percentual,
     ultimo_envio_at: ultimo > 0 ? new Date(ultimo).toISOString() : null,
+    entregues,
+    lidos,
+    falhas,
   };
 }

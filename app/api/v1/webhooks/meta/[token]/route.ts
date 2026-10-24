@@ -22,6 +22,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { lerEnvelopeMeta } from "@/lib/channels/meta/envelope";
 import { parseMetaWebhook, verificationChallenge, verifyMetaSignature } from "@/lib/channels/meta/webhook";
+import { patchDeStatus } from "@/lib/channels/meta/status-de-entrega";
 import { ingestMetaInbound } from "@/lib/channels/meta/ingest";
 import { metaSessionByWebhookToken } from "@/lib/channels/meta/session";
 import { logger } from "@/lib/logger";
@@ -142,12 +143,64 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<NextRespons
         .eq("name", e.templateName)
         .eq("language", e.templateLanguage);
     } else {
-      await admin
+      // ── Status de entrega ────────────────────────────────────────────────
+      // Antes: `e.status === "failed" ? "failed" : "sent"`. Isso apagava
+      // `delivered`/`read` — a campanha nunca sabia se a mensagem chegou, e as
+      // colunas `delivered_at`/`read_at` (que o ingest do outro canal
+      // preenche) ficavam nulas para sempre no canal oficial.
+      //
+      // A transição é monotônica e declarada no módulo puro: um `sent`
+      // atrasado, reentregue pela Meta, não regride uma linha já lida.
+      const transicao = patchDeStatus(
+        e.status,
+        { code: e.errorCode, title: e.errorTitle },
+        now,
+      );
+      if (!transicao) {
+        // A Meta acrescenta estado sem avisar. Ignorar é o certo; ficar MUDO
+        // não é — sem esta linha, um status novo vira "nada aconteceu".
+        logger.warn("[meta.webhook] status de entrega desconhecido", {
+          request_id: requestId,
+          status: e.status,
+          external_id: e.externalId,
+        });
+        desfechos.push("status_desconhecido");
+        continue;
+      }
+
+      const { data: atualizadas, error: erroStatus } = await admin
         .from("messages")
-        .update({ status: e.status === "failed" ? "failed" : "sent", updated_at: now })
+        .update(transicao.patch)
         .eq("organization_id", session.organizationId)
-        .eq("external_id", e.externalId);
+        .eq("external_id", e.externalId)
+        .in("status", transicao.de)
+        .select("id");
+
+      if (erroStatus) {
+        logger.error("[meta.webhook] falha ao gravar status de entrega", {
+          request_id: requestId,
+          external_id: e.externalId,
+          status: e.status,
+          erro: erroStatus.message,
+        });
+        desfechos.push("status_falhou");
+        continue;
+      }
+      if (!atualizadas || atualizadas.length === 0) {
+        // Duas causas legítimas: a linha já está num estado mais adiantado
+        // (reentrega/ordem trocada) ou o `external_id` não é nosso. A segunda
+        // é a que dói — mensagem enviada por fora do CRM, ou linha não criada.
+        logger.warn("[meta.webhook] status sem linha correspondente", {
+          request_id: requestId,
+          external_id: e.externalId,
+          status: e.status,
+        });
+        desfechos.push("status_sem_linha");
+        continue;
+      }
+      desfechos.push(`status_${e.status}`);
     }
+
   }
 
   // 200 SEMPRE que a assinatura confere, inclusive para evento que não nos
