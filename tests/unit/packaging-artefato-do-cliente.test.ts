@@ -77,10 +77,10 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos", "ocr"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
-  it("o parser enxerga os 9 serviços de produção", () => {
+  it("o parser enxerga os 10 serviços de produção", () => {
     // Guarda do próprio instrumento: se o parser parar de enxergar os serviços,
     // todos os testes abaixo passariam vazios — verde por não ter medido nada.
     //
@@ -93,8 +93,23 @@ describe("packaging — o artefato que o cliente instala", () => {
     // `mercos` entrou como o nono: o navegador (Chromium/Playwright) que importa
     // os pedidos do ERP. Ele é `image:` + `build:` ao lado, como os outros, e é o
     // que o `pull_policy` consegue atualizar — a razão de estar nesta lista.
+    //
+    // `ocr` entrou como o décimo: o PaddleOCR que lê a foto do pedido antes de
+    // gastar IA. Mesmo contrato (`image:` + `build:` ao lado), e é justamente o
+    // `pull_policy` que faz uma correção do motor chegar na VPS.
     expect([...servicos.keys()].sort()).toEqual(
-      ["app", "caddy", "fiscal", "mercos", "redis", "scheduler", "srh", "waha", "worker"].sort(),
+      [
+        "app",
+        "caddy",
+        "fiscal",
+        "mercos",
+        "ocr",
+        "redis",
+        "scheduler",
+        "srh",
+        "waha",
+        "worker",
+      ].sort(),
     );
   });
 
@@ -221,20 +236,30 @@ describe("packaging — o artefato que o cliente instala", () => {
     ).toEqual([]);
   });
 
-  it("cada Dockerfile publicado declara procedência OCI e ARG APP_VERSION", () => {
+  it("cada Dockerfile publicado declara procedência OCI e uma ARG de versão", () => {
     // O CI injeta os labels via docker/metadata-action, mas o build local do
     // docker-compose.build.yml não passa por ele. Sem LABEL no arquivo, essa
     // imagem sai sem origem nenhuma — e é justamente a que vira dívida numa VPS.
-    for (const arquivo of ["Dockerfile", "Dockerfile.worker", "Dockerfile.scheduler", "Dockerfile.mercos"]) {
+    //
+    // O nome da ARG de versão muda onde o runtime não é Node: o OCR é Python e
+    // reporta a versão em `/healthz` como `OCR_VERSAO`. Prender o NOME seria
+    // vigiar a forma; o que importa é a imagem conseguir se identificar.
+    for (const [arquivo, arg] of [
+      ["Dockerfile", "APP_VERSION"],
+      ["Dockerfile.worker", "APP_VERSION"],
+      ["Dockerfile.scheduler", "APP_VERSION"],
+      ["Dockerfile.mercos", "APP_VERSION"],
+      ["ocr/Dockerfile", "OCR_VERSAO"],
+    ] as const) {
       const conteudo = fs.readFileSync(path.join(RAIZ, arquivo), "utf8");
       expect(conteudo, `${arquivo} sem org.opencontainers.image.source`).toContain(
         "org.opencontainers.image.source",
       );
-      expect(conteudo, `${arquivo} sem ARG APP_VERSION`).toMatch(/^ARG APP_VERSION/m);
+      expect(conteudo, `${arquivo} sem ARG ${arg}`).toMatch(new RegExp(`^ARG ${arg}`, "m"));
     }
   });
 
-  it("o workflow publica as cinco imagens e injeta APP_VERSION", () => {
+  it("o workflow publica as seis imagens e injeta a versão", () => {
     const wf = fs.readFileSync(path.join(RAIZ, ".github/workflows/publish-image.yml"), "utf8");
     for (const imagem of [
       "nexus",
@@ -242,10 +267,14 @@ describe("packaging — o artefato que o cliente instala", () => {
       "nexus-scheduler",
       "nexus-fiscal-sidecar",
       "nexus-mercos",
+      "nexus-ocr",
     ]) {
       expect(wf, `publish-image.yml não publica '${imagem}'`).toContain(`name: ${imagem}`);
     }
     expect(wf, "publish-image.yml não passa APP_VERSION como build-arg").toContain("APP_VERSION=");
+    // O OCR não é Node: a versão dele entra como OCR_VERSAO, que é o nome que o
+    // Dockerfile declara e o `/healthz` devolve.
+    expect(wf, "publish-image.yml não passa OCR_VERSAO como build-arg").toContain("OCR_VERSAO=");
     // A sonda prende o EFEITO (o canal `stable` passa a existir), não a forma.
     // Ela já mudou uma vez: `stable` saiu da lista de tags da matriz — onde cada
     // imagem o movia sozinha — para o job `promover-stable`, que só roda com as

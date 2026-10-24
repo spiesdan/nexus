@@ -281,6 +281,39 @@ services:
     logging: *default-logging
     networks: [internal]
 
+  # OCR do pedido — PaddleOCR 3.x em CPU, português (PP-OCRv5 latino).
+  #
+  # Serviço separado do app por dois motivos concretos:
+  #   1. o motor é Python; embarcá-lo na imagem Node faria o app crescer
+  #      ~2 GB por uma dependência usada em UMA rota;
+  #   2. o teto de memória é do OCR. Um pedido grande não pode derrubar o
+  #      processo que atende o browser do vendedor.
+  #
+  # Sem porta publicada: só a rede interna. O app chama `http://ocr:8790`
+  # quando `OCR_SERVICE_URL` está definido; sem ele, a leitura de foto cai na
+  # IA como antes. `mem_limit` medido: 543 MiB num pedido de 1000×750.
+  ocr:
+    image: ${OCR_IMAGE:-ghcr.io/spiesdan/nexus-ocr:stable}
+    pull_policy: ${OCR_PULL_POLICY:-always}
+    build:
+      context: ocr
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    mem_limit: 900m
+    environment:
+      OCR_LANG: ${OCR_LANG:-pt}
+      OCR_CPU_THREADS: ${OCR_CPU_THREADS:-2}
+    healthcheck:
+      # O modelo carrega no boot; o primeiro healthcheck só passa quando ele
+      # está pronto. `start_period` cobre a leitura do cache em disco.
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8790/healthz', timeout=3)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    logging: *default-logging
+    networks: [internal]
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped

@@ -23,6 +23,8 @@ const createClientMock = vi.hoisted(() => vi.fn());
 const adminInsertMock = vi.hoisted(() => vi.fn());
 const computeCostMock = vi.hoisted(() => vi.fn());
 const providerMock = vi.hoisted(() => vi.fn(() => "anthropic"));
+const lerComOcrMock = vi.hoisted(() => vi.fn());
+const ocrConfiguradoMock = vi.hoisted(() => vi.fn(() => false));
 
 vi.mock("ai", () => ({
   generateObject: generateObjectMock,
@@ -44,6 +46,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 vi.mock("@/lib/ai/runtime/cost", () => ({ computeCostCents: computeCostMock }));
 vi.mock("@/lib/ai/log-invocation", () => ({ providerDoModelo: providerMock }));
+vi.mock("@/lib/comercial/ocr", () => ({
+  lerComOcr: lerComOcrMock,
+  ocrConfigurado: ocrConfiguradoMock,
+}));
 
 function produto(parcial: Partial<Produto> & Pick<Produto, "id" | "nome">): Produto {
   return {
@@ -148,6 +154,8 @@ beforeEach(() => {
   computeCostMock.mockResolvedValue(0);
   adminInsertMock.mockResolvedValue({ error: null });
   providerMock.mockReturnValue("anthropic");
+  ocrConfiguradoMock.mockReturnValue(false);
+  lerComOcrMock.mockResolvedValue(null);
   generateObjectMock.mockResolvedValue({
     object: {
       itens: [{ nome: "AGUA SANITARIA BILL 5 L", quantidade: 2 }],
@@ -185,6 +193,71 @@ describe("POST /api/v1/commercial-orders/importar-ia", () => {
     expect(chamada.maxOutputTokens).toBe(8_192);
     expect(de).toHaveBeenCalledWith("catalog_products");
     expect(builder.eq).toHaveBeenCalledWith("organization_id", ORG_ID);
+  });
+
+  it("OCR bom devolve proposta sem chamar a IA — e funciona com a IA desligada", async () => {
+    // O caso que motivou o serviço: cota do provedor esgotada. Antes, a foto
+    // morria em 503. Agora o OCR lê e a IA nem é resolvida.
+    ocrConfiguradoMock.mockReturnValue(true);
+    resolverMock.mockResolvedValue(null);
+    lerComOcrMock.mockResolvedValue({
+      linhas: [
+        { texto: "2x AGUA SANITARIA BILL 5 L", confianca: 0.98 },
+        { texto: "3x ALCOOL 46% 1L", confianca: 0.97 },
+      ],
+      motor: "paddleocr",
+    });
+
+    const form = new FormData();
+    form.append("arquivo", new File([PNG], "pedido.png", { type: "image/png" }));
+
+    const { POST } = await import("./route");
+    const resposta = await POST(request(form));
+    expect(resposta.status).toBe(200);
+
+    const corpo = (await resposta.json()) as {
+      data: {
+        origem: string;
+        itens: { produto_id: string | null; quantidade: number; confianca: string }[];
+      };
+    };
+    expect(corpo.data.origem).toBe("ocr");
+    expect(corpo.data.itens[0]).toMatchObject({
+      produto_id: "agua-5l",
+      quantidade: 2,
+      confianca: "alta",
+    });
+    expect(corpo.data.itens[1]).toMatchObject({ produto_id: "alcool-46", quantidade: 3 });
+    expect(generateObjectMock).not.toHaveBeenCalled();
+    expect(resolverMock).not.toHaveBeenCalled();
+  });
+
+  it("OCR fraco cai na IA em vez de devolver meia lista", async () => {
+    ocrConfiguradoMock.mockReturnValue(true);
+    lerComOcrMock.mockResolvedValue({
+      linhas: [{ texto: "2x RABISCO ILEGIVEL", confianca: 0.4 }],
+      motor: "paddleocr",
+    });
+
+    const form = new FormData();
+    form.append("arquivo", new File([PNG], "pedido.png", { type: "image/png" }));
+
+    const { POST } = await import("./route");
+    const resposta = await POST(request(form));
+    expect(resposta.status).toBe(200);
+
+    const corpo = (await resposta.json()) as { data: { origem: string } };
+    expect(corpo.data.origem).toBe("ia");
+    expect(generateObjectMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("texto colado não passa pelo OCR: o serviço só lê imagem", async () => {
+    ocrConfiguradoMock.mockReturnValue(true);
+
+    const { POST } = await import("./route");
+    await POST(request(formDeTexto("2 agua sanitária")));
+    expect(lerComOcrMock).not.toHaveBeenCalled();
+    expect(generateObjectMock).toHaveBeenCalledTimes(1);
   });
 
   it("o schema muda com o provedor: Google mínimo, OpenAI/Anthropic fechado", async () => {

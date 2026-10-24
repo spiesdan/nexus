@@ -40,6 +40,8 @@ import {
   type Extracao,
 } from "@/lib/comercial/importar-ia";
 import { detectarTipoImagem, mimeDaImagem } from "@/lib/comercial/imagem";
+import { lerComOcr, ocrConfigurado } from "@/lib/comercial/ocr";
+import { lerPedidoComOcr } from "@/lib/comercial/pedido-ocr";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { apiTranscriptionProvider } from "@/lib/messaging/media/transcription";
@@ -276,6 +278,54 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
 
+  // ─── 1) OCR local primeiro: é grátis e não depende de provedor de IA ──────
+  //
+  // A ordem não é detalhe. Com a cota do Google esgotada, a IA responde 503;
+  // o OCR no mesmo instante lê a foto e devolve a proposta. E cada foto lida
+  // aqui é uma chamada de modelo que não sai da conta de quem instalou.
+  //
+  // O OCR só vale para IMAGEM. PDF, áudio e texto seguem para a IA: o serviço
+  // não converte PDF (e o modelo lê PDF nativamente), e áudio já é transcrito
+  // antes de chegar aqui.
+  if (
+    ocrConfigurado() &&
+    lido.conteudo.tipo === "arquivo" &&
+    lido.conteudo.mediaType.startsWith("image/")
+  ) {
+    const leitura = await lerComOcr(lido.conteudo.bytes, lido.conteudo.mediaType);
+    if (leitura !== null) {
+      const porOcr = lerPedidoComOcr(leitura, produtos as unknown as Produto[]);
+      if (porOcr !== null) {
+        logger.info("[importar-ia] pedido lido pelo OCR", {
+          organization_id: authz.org.orgId,
+          linhas: porOcr.linhas_lidas,
+          itens: porOcr.total_extraido,
+          confianca_media: porOcr.confianca_media,
+          motor: leitura.motor ?? "ocr",
+        });
+        return ok(
+          {
+            itens: porOcr.itens,
+            total_extraido: porOcr.total_extraido,
+            origem: "ocr",
+            leitura: {
+              motor: leitura.motor ?? "ocr",
+              confianca_media: porOcr.confianca_media,
+            },
+          },
+          { requestId },
+        );
+      }
+      // O OCR rodou mas não passou no portão (poucos itens reconhecidos,
+      // confiança baixa). O log diz que houve tentativa — sem ele, "por que
+      // esta foto gastou IA?" vira adivinhação.
+      logger.info("[importar-ia] OCR não passou na conferência — usando a IA", {
+        organization_id: authz.org.orgId,
+        linhas: leitura.linhas.length,
+      });
+    }
+  }
+
   const resolvido = await resolverModeloDoPonto(
     "pedido_por_ia",
     authz.org.orgId,
@@ -402,6 +452,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     {
       itens: casados,
       total_extraido: itens.length,
+      origem: "ia",
       modelo: { id: resolvido.modelId, origem: resolvido.origem },
     },
     { requestId },

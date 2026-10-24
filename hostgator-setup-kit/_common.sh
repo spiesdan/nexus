@@ -645,6 +645,11 @@ IMG_FISCAL="${IMG_NS}/nexus-fiscal-sidecar"
 # ficaria no canal móvel enquanto o app estivesse numa versão fixa — e o parque
 # instalado andaria misturado, que é o defeito que esta lista existe para evitar.
 IMG_MERCOS="${IMG_NS}/nexus-mercos"
+# O OCR do pedido (PaddleOCR, Python) segue a mesma regra: sem pin, ele fica no
+# canal móvel enquanto o app está numa versão fixa — e um `up -d` qualquer o
+# levaria sozinho para outra release. O app fala com ele por HTTP; as duas
+# pontas em versões diferentes é o mesmo parque misturado que esta lista evita.
+IMG_OCR="${IMG_NS}/nexus-ocr"
 
 # A última versão publicada (ex.: "1.2.1"), ou vazio se não deu para saber.
 #
@@ -744,7 +749,7 @@ pin_incompleto() {  # pin_incompleto [caminho do .env]
   app_tag="$(tag_da_imagem "$app_ref")"
   case "$app_tag" in latest|main|stable|"") return 0 ;; esac
 
-  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler" "FISCAL_IMAGE:fiscal" "MERCOS_IMAGE:mercos"; do
+  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler" "FISCAL_IMAGE:fiscal" "MERCOS_IMAGE:mercos" "OCR_IMAGE:ocr"; do
     chave="${par%%:*}"; svc="${par##*:}"
     img="$(valor_do_env "$envfile" "$chave")"
     if [ -z "$img" ]; then
@@ -827,6 +832,8 @@ gravar_imagens() {
   set_env_var "$envfile" FISCAL_IMAGE          "${IMG_FISCAL}:${versao}"
   set_env_var "$envfile" MERCOS_IMAGE          "${IMG_MERCOS}:${versao}"
   set_env_var "$envfile" MERCOS_PULL_POLICY    "$politica"
+  set_env_var "$envfile" OCR_IMAGE             "${IMG_OCR}:${versao}"
+  set_env_var "$envfile" OCR_PULL_POLICY       "$politica"
   set_env_var "$envfile" SCHEDULER_PULL_POLICY "$politica"
 }
 

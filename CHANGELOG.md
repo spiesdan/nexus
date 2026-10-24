@@ -16,6 +16,8 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 - **O pedido entra por foto, PDF, áudio ou texto** O botão **Adicionar com IA**, na seção de produtos do novo pedido, lê o que o cliente escreveu e propõe os itens já casados com o catálogo. A conferência é obrigatória: quantidade editável, até três candidatos por item e busca manual no catálogo; nada entra no pedido antes do clique em **Adicionar ao pedido**. O casamento usa a busca relaxada do catálogo, então "5 L" não vira "2 L" e um empate fica para a pessoa escolher. Formatos: JPG/PNG/WebP, PDF, áudio (requer `OPENAI_API_KEY`) e CSV/TXT, além de texto colado; XLSX/DOCX são recusados com a instrução de converter para CSV/PDF.
 
+- **A foto do pedido é lida na própria VPS, sem gastar crédito de IA** O botão **Adicionar com IA** passou a tentar primeiro um leitor de imagem que roda junto com o CRM — em português, em CPU, sem GPU e sem serviço externo. Quando a leitura sai confiável (ao menos um item reconhecido, a maioria casada com o catálogo e confiança alta), a proposta aparece sem nenhuma chamada de modelo; quando o manuscrito é difícil, a IA assume como antes. O catálogo **não** é embutido no leitor: o casamento continua sendo a mesma busca relaxada do agente, então produto novo passa a valer na leitura seguinte, sem retreino. Quem já instalou não precisa fazer nada — o `update.sh` traz a imagem nova. Para desligar o leitor, deixe `OCR_SERVICE_URL=` vazio no `.env`: a foto volta a usar só a IA.
+
 ## [1.33.1] — 2026-10-22
 
 ### Corrigido
