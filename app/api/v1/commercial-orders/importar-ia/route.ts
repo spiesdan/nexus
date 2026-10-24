@@ -24,6 +24,7 @@ import { randomUUID } from "node:crypto";
 import { generateObject, type ModelMessage } from "ai";
 import { type NextRequest } from "next/server";
 
+import { normalizarErro } from "@/lib/agent-engine/edge/llm/run-model-call";
 import { DEFAULT_BOT_MODEL } from "@/lib/ai/gateway";
 import { resolverModeloDoPonto } from "@/lib/ai/gateway-binding";
 import { checkRateLimit } from "@/lib/ai/dispatcher/rate-limit";
@@ -297,17 +298,66 @@ export async function POST(req: NextRequest): Promise<Response> {
       schema: extracaoSchema,
       messages: mensagensDoPedido(lido.conteudo),
       temperature: 0,
+      // Sem teto explícito o AI SDK pede o máximo do modelo — 65.536 tokens
+      // para o Claude. A OpenRouter pré-autoriza esse teto ANTES de chamar o
+      // modelo: numa conta com pouco saldo a leitura de uma foto de papel
+      // falhava com "request requires more credits" sem o modelo ter lido
+      // nada. O schema tem no máximo 100 itens (nome + quantidade), então
+      // 8.192 tokens cobrem a resposta inteira com folga e o teto deixa de
+      // ser a primeira coisa que consome o saldo de quem instalou.
+      maxOutputTokens: 8_192,
       abortSignal: AbortSignal.timeout(90_000),
     });
     extracao = resultado.object;
     uso = resultado.usage;
   } catch (err) {
+    // A régua é a MESMA do motor (`normalizarErro`), e não um balde local.
+    // Sem isso, "a conta da OpenRouter está sem saldo" virava "tente uma foto
+    // mais nítida" — a pessoa fotografa o papel de novo, de novo, enquanto o
+    // conserto é pagar. O caso foi medido nesta instalação em 2026-10-24.
+    const diagnostico = normalizarErro(err);
     logger.warn("[importar-ia] falha na leitura do pedido", {
       organization_id: authz.org.orgId,
       model_id: resolvido.modelId,
       origem: resolvido.origem,
-      motivo: err instanceof Error ? err.message : String(err),
+      error_code: diagnostico.error_code,
+      http_status: diagnostico.http_status,
+      motivo: diagnostico.error_message,
     });
+
+    if (diagnostico.error_code === "limite_ou_saldo") {
+      return fail(
+        "ai_provider_error",
+        "A IA está sem saldo no provedor. Adicione créditos na conta do provedor ou configure outra chave em IA → Credenciais.",
+        503,
+        { requestId },
+      );
+    }
+    if (diagnostico.error_code === "credencial_recusada") {
+      return fail(
+        "ai_provider_error",
+        "A chave da IA foi recusada. Confira a credencial em IA → Credenciais.",
+        503,
+        { requestId },
+      );
+    }
+    if (diagnostico.error_code === "modelo_inexistente") {
+      return fail(
+        "ai_provider_error",
+        "O modelo configurado para ler pedidos não está disponível. Escolha outro em IA → Pontos de IA.",
+        503,
+        { requestId },
+      );
+    }
+    if (diagnostico.error_code === "provedor_indisponivel") {
+      return fail(
+        "ai_provider_error",
+        "O provedor de IA não respondeu agora. Tente de novo em instantes.",
+        503,
+        { requestId },
+      );
+    }
+
     return fail(
       "leitura_do_pedido_falhou",
       "Não consegui ler este pedido. Tente uma foto mais nítida ou cole os itens em texto.",

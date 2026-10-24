@@ -165,9 +165,13 @@ describe("POST /api/v1/commercial-orders/importar-ia", () => {
 
     const chamada = generateObjectMock.mock.calls[0]?.[0] as {
       messages: { content: unknown }[];
+      maxOutputTokens: number;
     };
     const conteudo = chamada.messages[0]?.content as unknown[];
     expect(conteudo.some((p) => (p as { type?: string }).type === "file")).toBe(true);
+    // O teto é explícito para a OpenRouter não pré-autorizar o máximo do
+    // modelo (65.536) numa tarefa cuja resposta cabe em poucos milhares.
+    expect(chamada.maxOutputTokens).toBe(8_192);
     expect(de).toHaveBeenCalledWith("catalog_products");
     expect(builder.eq).toHaveBeenCalledWith("organization_id", ORG_ID);
   });
@@ -237,14 +241,49 @@ describe("POST /api/v1/commercial-orders/importar-ia", () => {
   });
 
   it("falha do modelo vira mensagem de leitura, não stack trace", async () => {
-    generateObjectMock.mockRejectedValue(new Error("provider timeout"));
+    generateObjectMock.mockRejectedValue(new Error("algo inesperado no provedor"));
 
     const { POST } = await import("./route");
     const resposta = await POST(request(formDeTexto("2 agua sanitária")));
     expect(resposta.status).toBe(422);
     const corpo = (await resposta.json()) as { error: { code: string; message: string } };
     expect(corpo.error.code).toBe("leitura_do_pedido_falhou");
-    expect(corpo.error.message).not.toContain("provider timeout");
+    expect(corpo.error.message).not.toContain("algo inesperado no provedor");
+  });
+
+  it("conta sem saldo não vira 'foto ruim' — a mensagem diz o que pagar", async () => {
+    // Texto exato da OpenRouter medido em produção em 2026-10-24. Antes, ele
+    // caía no genérico "tente uma foto mais nítida": a pessoa repetia a foto
+    // enquanto o conserto era crédito na conta.
+    generateObjectMock.mockRejectedValue(
+      Object.assign(
+        new Error(
+          "This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 124.",
+        ),
+        { statusCode: 402 },
+      ),
+    );
+
+    const { POST } = await import("./route");
+    const resposta = await POST(request(formDeTexto("2 agua sanitária")));
+    expect(resposta.status).toBe(503);
+    const corpo = (await resposta.json()) as { error: { code: string; message: string } };
+    expect(corpo.error.code).toBe("ai_provider_error");
+    expect(corpo.error.message).toContain("saldo");
+    expect(corpo.error.message).not.toContain("nítida");
+  });
+
+  it("chave recusada aponta a credencial, não o enquadramento da foto", async () => {
+    generateObjectMock.mockRejectedValue(
+      Object.assign(new Error("401 Unauthorized: invalid api key"), { statusCode: 401 }),
+    );
+
+    const { POST } = await import("./route");
+    const resposta = await POST(request(formDeTexto("2 agua sanitária")));
+    expect(resposta.status).toBe(503);
+    const corpo = (await resposta.json()) as { error: { code: string; message: string } };
+    expect(corpo.error.code).toBe("ai_provider_error");
+    expect(corpo.error.message).toContain("chave");
   });
 
   it("Content-Length acima do teto é recusado sem ler o multipart", async () => {
