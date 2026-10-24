@@ -19,6 +19,14 @@ export interface MetaWebhookSession {
   id: string;
   organizationId: string;
   wabaId: string | null;
+  /**
+   * `channel_sessions.meta_phone_number_id` — a chave da credencial por sessão.
+   *
+   * A tela de templates precisa dele para pedir o token da PRÓPRIA conexão ao
+   * `resolveMetaCreds`; sem isto, o sync só enxergava o token do ambiente e
+   * falhava numa instalação que conectou o número pela tela.
+   */
+  phoneNumberId: string | null;
 }
 
 /**
@@ -46,7 +54,7 @@ export async function metaSessionByWebhookToken(
   const base = () =>
     admin
       .from("channel_sessions")
-      .select("id, organization_id, meta_waba_id")
+      .select("id, organization_id, meta_waba_id, meta_phone_number_id")
       .eq("webhook_path_token", token)
       .eq("provider", CHANNEL_PROVIDER_META);
   const { data } = await queryTolerantToMissingArchived(
@@ -59,6 +67,7 @@ export async function metaSessionByWebhookToken(
     id: data.id,
     organizationId: data.organization_id,
     wabaId: data.meta_waba_id ?? null,
+    phoneNumberId: data.meta_phone_number_id ?? null,
   };
 }
 
@@ -69,8 +78,9 @@ export async function metaSessionByWebhookToken(
  *
  * Arquivada não conta: sem o filtro, a tela seguia nomeando a WABA de um canal
  * que o operador excluiu e o botão de sincronizar continuava puxando templates
- * dela — o token do env não foi revogado junto com o da linha, então a chamada
- * ia mesmo. "Excluído" que continua operando é a promessa quebrada.
+ * dela. Hoje o sync usa a credencial da própria linha; devolver a arquivada
+ * faria a exclusão não cortar o acesso de verdade. "Excluído" que continua
+ * operando é a promessa quebrada.
  */
 export async function metaSessionForOrg(
   organizationId: string,
@@ -79,7 +89,7 @@ export async function metaSessionForOrg(
   const base = () =>
     admin
       .from("channel_sessions")
-      .select("id, organization_id, meta_waba_id")
+      .select("id, organization_id, meta_waba_id, meta_phone_number_id")
       .eq("organization_id", organizationId)
       .eq("provider", CHANNEL_PROVIDER_META)
       .order("created_at", { ascending: true })
@@ -94,5 +104,6 @@ export async function metaSessionForOrg(
     id: data.id,
     organizationId: data.organization_id,
     wabaId: data.meta_waba_id ?? null,
+    phoneNumberId: data.meta_phone_number_id ?? null,
   };
 }

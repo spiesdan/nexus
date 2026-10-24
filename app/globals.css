@@ -735,6 +735,12 @@
 
   html {
     color-scheme: light;
+    /* O canvas é pintado pelo `html`; o `body` só propaga a cor quando o
+       `html` é transparente. Fixar as duas camadas evita a janela em que um
+       repaint atrasado mostra o branco do navegador atrás de texto claro no
+       tema escuro — que parece "site em branco" até algo forçar o repaint. */
+    background-color: var(--color-bg);
+    color: var(--color-text);
     /* Rede de segurança DE VERDADE contra scroll horizontal da PÁGINA — a
        de `main` (app/app/_components/AppShell.tsx) não bastava porque
        TopBar e Sidebar ficam FORA de `main`; qualquer estouro ali (ou em

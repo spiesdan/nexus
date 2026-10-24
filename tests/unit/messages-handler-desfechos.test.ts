@@ -32,8 +32,39 @@ const WAHA_BASE = 'http://localhost:3030';
 const signedUrl = vi.fn<() => Promise<{ data: { signedUrl: string } | null; error: { message: string } | null }>>(
   async () => ({ data: { signedUrl: 'https://signed.example/a.jpg' }, error: null }),
 );
+
+/**
+ * O adapter oficial lê o espelho por `createAdminClient()`, e o teste precisa
+ * enxergar o MESMO `templateRow` que a rota entrega ao pré-voo. O objeto é
+ * mutável porque `makeSupabase` é chamado depois (e por caso).
+ */
+const adminTemplate: { row: Row | null } = { row: null };
+
 vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: () => ({ storage: { from: () => ({ createSignedUrl: signedUrl }) } }),
+  createAdminClient: () => ({
+    storage: { from: () => ({ createSignedUrl: signedUrl }) },
+    from: (table: string) => {
+      if (table === 'meta_templates') {
+        const cadeia: Record<string, unknown> = {
+          maybeSingle: async () => ({ data: adminTemplate.row, error: null }),
+        };
+        cadeia.select = () => cadeia;
+        cadeia.eq = () => cadeia;
+        cadeia.limit = () => cadeia;
+        return cadeia;
+      }
+      // `channel_sessions`: sem token gravado, o `resolveMetaCreds` cai no env
+      // (que é o cenário destes testes).
+      const sessao: Record<string, unknown> = {
+        maybeSingle: async () => ({ data: null, error: null }),
+      };
+      sessao.select = () => sessao;
+      sessao.eq = () => sessao;
+      sessao.is = () => sessao;
+      return sessao;
+    },
+    rpc: async () => ({ data: null, error: null }),
+  }),
 }));
 // Audit é fire-and-forget e escreve em outra tabela; fora do escopo dos desfechos.
 vi.mock('@/lib/audit', () => ({ audit: vi.fn(async () => {}) }));
@@ -93,6 +124,9 @@ function makeSupabase(
   opts: { semColunaArquivada?: boolean } = {},
 ) {
   const state: { message: Row | null } = { message: null };
+  // O adapter oficial lê o espelho pelo admin client (não pelo `supabase` da
+  // rota): sem esta ponte, o payload do template não teria de onde sair.
+  adminTemplate.row = templateRow;
 
   const client = {
     from(table: string) {

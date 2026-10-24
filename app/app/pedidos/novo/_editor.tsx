@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CaretDown, Eye } from "@/lib/ui/icons";
+import { CaretDown, Eye, Sparkle } from "@/lib/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -44,6 +44,7 @@ import { precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
 import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
 import { CustomerSelector, type ContatoOpcao } from "./_cliente";
 import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "./_produtos";
+import { AdicionarComIa } from "./_ia";
 import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
@@ -174,6 +175,7 @@ export function OrderEditor({
   // produtos, detalhes) ficam todas visíveis e o estado é único. Nada de passo
   // escondendo campo — o vendedor confere o pedido inteiro antes de gerar.
   const [previaAberta, setPreviaAberta] = React.useState(false);
+  const [iaAberta, setIaAberta] = React.useState(false);
   const [ultimos, setUltimos] = React.useState<Map<string, UltimoPreco>>(new Map());
   const [historicoItens, setHistoricoItens] = React.useState<
     {
@@ -763,24 +765,36 @@ export function OrderEditor({
             cartão da representada e o resumo, e a página trocava de gramática
             no meio. */}
         <Card className="space-y-3 p-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
-          <Select
-            value={tabelaId || "__nenhuma"}
-            onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="min-w-[200px] flex-1 space-y-1.5">
+            <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
+            <Select
+              value={tabelaId || "__nenhuma"}
+              onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+            >
+              <SelectTrigger id="tabela" className="w-full">
+                <SelectValue placeholder={textos.semTabela} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
+                {tabelas.map((tb) => (
+                  <SelectItem key={tb.id} value={tb.id}>
+                    {tb.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="shrink-0"
+            onClick={() => setIaAberta(true)}
+            data-testid="adicionar-com-ia"
           >
-            <SelectTrigger id="tabela" className="w-full">
-              <SelectValue placeholder={textos.semTabela} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
-              {tabelas.map((tb) => (
-                <SelectItem key={tb.id} value={tb.id}>
-                  {tb.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Sparkle size={16} className="mr-1.5" />
+            {t("Adicionar com IA")}
+          </Button>
         </div>
 
         <ProductSearch
@@ -1100,6 +1114,16 @@ export function OrderEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AdicionarComIa
+        aberto={iaAberta}
+        aoFechar={() => setIaAberta(false)}
+        produtos={produtos}
+        tabela={tabela}
+        aoAdicionar={(itens) => {
+          for (const item of itens) adicionar(item.produto, item.quantidade);
+        }}
+      />
     </div>
   );
 }

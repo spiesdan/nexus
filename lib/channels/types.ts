@@ -294,6 +294,13 @@ export interface ChannelAdapter {
 
   sendTemplate?(input: ChannelTenantScope & {
     sessionRef: string;
+    /**
+     * A LINHA da sessão (`channel_sessions.id`), quando o chamador já a tem.
+     * É o que permite ao adapter buscar o modelo da conexão CERTA: dois números
+     * da mesma organização podem ter definições com o mesmo nome e corpos
+     * diferentes. `null` só em base anterior à 0144.
+     */
+    channelSessionId?: string | null;
     to: string;
     providerConversationId?: string | null;
     name: string;

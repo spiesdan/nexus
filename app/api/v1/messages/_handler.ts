@@ -632,6 +632,7 @@ export async function sendMessageHandler(
               await adapter.sendTemplate({
                 organizationId: ctx.organization_id,
                 sessionRef: resolveSessionRef(c.channel_sessions),
+                channelSessionId: c.channel_session_id ?? null,
                 to: chatId,
                 providerConversationId: c.provider_conversation_id,
                 name: input.template_name ?? "",

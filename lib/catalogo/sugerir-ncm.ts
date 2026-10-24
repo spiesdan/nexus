@@ -168,7 +168,7 @@ export function candidatosDeNcm(
     (p) => (frequencia.get(p) ?? 0) / Math.max(1, linhasComDescricao) <= LIMITE_DF,
   );
   if (distintivos.length === 0) return [];
-  const tokens = { palavras: distintivos, numeros: [] as string[] };
+  const tokens = { palavras: distintivos, numeros: [] as string[], codigos: [] as string[] };
 
   const pontuados: CandidatoDeNcm[] = [];
   for (const linha of linhas) {

@@ -466,7 +466,7 @@ export function ProspeccaoClient({
                   O botão fica à ESQUERDA de propósito: o canto inferior direito
                   é do avatar do assistente, que é fixo e cobre qualquer ação
                   ali. O `pr-20 md:pr-24` é a folga dele. */}
-              <div className="sticky bottom-0 -mb-4 flex items-center gap-3 border-t border-border bg-card py-3 pr-20 backdrop-blur md:pr-24 md:after:absolute md:after:inset-x-0 md:after:top-full md:after:h-6 md:after:bg-card md:after:content-['']">
+              <div className="sticky bottom-0 -mb-4 flex items-center gap-3 border-t border-border bg-card py-3 pr-20 md:pr-24 md:after:absolute md:after:inset-x-0 md:after:top-full md:after:h-6 md:after:bg-card md:after:content-['']">
                 <Button onClick={criar} disabled={criando}>
                   {criando ? textos.buscando : textos.buscar}
                 </Button>

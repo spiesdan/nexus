@@ -4,7 +4,8 @@ name: Publicar imagem Docker (GHCR)
 # Container Registry. O leigo puxa no VPS (não builda lá). Roda nos runners do
 # GitHub, então o build pesado nunca cai no VPS do usuário.
 #
-# São TRÊS imagens, e a razão de o worker e o scheduler estarem aqui é um defeito
+# São SEIS imagens (app, worker, scheduler, sidecar fiscal, mercos e ocr), e a
+# razão de o worker e o scheduler estarem aqui é um defeito
 # real: o serviço `worker` não tinha `image:` no compose de produção, só `build:`.
 # Serviço build-only é pulado por `docker compose pull` e imune a `up -d` sem
 # `--build` — ele era construído na VPS de cada cliente, no install, e NENHUM
@@ -153,6 +154,20 @@ jobs:
             context: .
             grupo: node
             title: Nexus mercos
+          # O OCR do pedido (PaddleOCR em CPU, português). Entra aqui pelo mesmo
+          # motivo do worker: imagem construída só na VPS nunca é atualizada, e
+          # uma correção do motor — ou do modelo, que é upstream — ficaria presa
+          # no código do dia da instalação.
+          #
+          # Contexto próprio (`ocr/`): a imagem é Python e não tem package.json.
+          # Com a raiz como contexto, o daemon receberia o repositório inteiro
+          # (incluindo `evidence/`) para copiar dois arquivos. O `.dockerignore`
+          # que vale é o do diretório de CONTEXTO — mesma lição do sidecar.
+          - name: nexus-ocr
+            dockerfile: ocr/Dockerfile
+            context: ocr
+            grupo: ocr
+            title: Nexus OCR
 
     steps:
       - uses: actions/checkout@v7
@@ -312,6 +327,27 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      # ─────────────────────────────────────────────────────────────────────
+      # O OCR: Python, contexto `ocr/`, e a versão entra como `OCR_VERSAO` (não
+      # `APP_VERSION`) porque é o nome que o Dockerfile dele declara e o
+      # `/healthz` devolve. O cache é próprio: as camadas do PaddlePaddle não
+      # têm nada em comum com as do Node, e um escopo compartilhado só faria
+      # uma imagem expulsar o cache da outra.
+      - name: Build e push (OCR — Python, contexto próprio)
+        if: matrix.grupo == 'ocr'
+        uses: docker/build-push-action@v7
+        with:
+          context: ocr
+          file: ocr/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            OCR_VERSAO=${{ steps.ver.outputs.value }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
   # aconteceu: `next@16.3.1` passou a resolver `@swc/helpers` por ESM, o file
   # tracing do `output: standalone` levou 2 dos 108 arquivos do pacote, e o
@@ -450,7 +486,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PUSH_TOKEN }}
 
-      - name: Apontar `stable` para esta versão, nas quatro imagens
+      - name: Apontar `stable` para esta versão, nas seis imagens
         env:
           VERSAO: ${{ github.ref_name }}
         run: |
@@ -461,14 +497,14 @@ jobs:
           # canal deixaria de ser o mesmo manifesto que a versão.
           dono=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           numero="${VERSAO#v}"
-          for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos; do
+          for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr; do
             echo "::group::${img}"
             docker buildx imagetools create \
               --tag "${REGISTRY}/${dono}/${img}:stable" \
               "${REGISTRY}/${dono}/${img}:${numero}"
             echo "::endgroup::"
           done
-          echo "stable agora aponta para ${numero} nas cinco imagens"
+          echo "stable agora aponta para ${numero} nas seis imagens"
 
   # Job de fachada: dá UM nome estável para a branch protection exigir. Sem ele,
   # o required check teria que listar as três instâncias da matriz pelo nome

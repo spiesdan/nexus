@@ -17,7 +17,9 @@ import {
   type EnvioDaCampanha,
   type ResumoDeEnvio,
 } from "@/lib/prospeccao/resumo-de-envio";
+import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
 import { campanhaCreateSchema } from "@/lib/schemas/prospeccao";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, limite_diario",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, limite_diario, ultimo_erro, ultimo_erro_em",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -155,6 +157,42 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const supabase = await createClient();
 
+  // 0284 — a campanha declara COMO fala. O bind de template é conferido contra
+  // o espelho ANTES de gravar: modelo reprovado/obsoleto/sem valor é campanha
+  // que já nasce quebrada. Rascunho pode ser salvo sem canal; ativar não.
+  const tipo = parsed.data.mensagem_tipo ?? "texto";
+  const statusFinal = parsed.data.status ?? "rascunho";
+  const bind = {
+    tipo,
+    name: parsed.data.template_name ?? null,
+    language: parsed.data.template_language ?? null,
+    contractHash: parsed.data.template_contract_hash ?? null,
+    values: parsed.data.template_values ?? {},
+  } as const;
+  if (tipo === "template" || statusFinal === "ativa") {
+    const veredito = await validarBindDaCampanha(createAdminClient(), authz.org.orgId, bind, {
+      exigirCanal: statusFinal === "ativa",
+    });
+    if (!veredito.ok) {
+      return fail("validation_failed", veredito.erro, 422, {
+        requestId,
+        details: { codigo: veredito.codigo },
+      });
+    }
+  }
+  if (
+    statusFinal === "ativa" &&
+    tipo === "texto" &&
+    (parsed.data.mensagens ?? []).map((m) => m.trim()).filter(Boolean).length === 0
+  ) {
+    return fail(
+      "validation_failed",
+      "A campanha não tem nenhuma mensagem de texto salva. Salve ao menos uma variação antes de ativar.",
+      422,
+      { requestId },
+    );
+  }
+
   // 0277 — a lista fechada não pode reutilizar empresa de outra campanha nem
   // empresa com categoria a revisar/fora do recorte. O trigger do banco é a
   // trava final; esta checagem existe para responder QUEM e ONDE.
@@ -197,7 +235,27 @@ export async function POST(req: NextRequest): Promise<Response> {
       // 0273 — a criação também aceita o agendamento; os campos ausentes ficam
       // no default da coluna (o operador que agenda pela tela usa o PATCH).
       ...(parsed.data.prospect_ids !== undefined ? { prospect_ids: parsed.data.prospect_ids } : {}),
-      ...(parsed.data.mensagens !== undefined ? { mensagens: parsed.data.mensagens } : {}),
+      ...(parsed.data.mensagens !== undefined && tipo === "texto"
+        ? { mensagens: parsed.data.mensagens }
+        : {}),
+      mensagem_tipo: tipo,
+      ...(tipo === "template"
+        ? {
+            template_name: parsed.data.template_name ?? null,
+            template_language: parsed.data.template_language ?? null,
+            template_contract_hash: parsed.data.template_contract_hash ?? null,
+            template_values: parsed.data.template_values ?? {},
+            // O caminho de template não usa a rotação de texto. Guardar as
+            // variações antigas não faz mal, mas zerar deixa a linha honesta
+            // sobre o que a campanha usa.
+            mensagens: [],
+          }
+        : {
+            template_name: null,
+            template_language: null,
+            template_contract_hash: null,
+            template_values: {},
+          }),
       ...(parsed.data.espaco_ms !== undefined ? { espaco_ms: parsed.data.espaco_ms } : {}),
       ...(parsed.data.limite_diario !== undefined ? { limite_diario: parsed.data.limite_diario } : {}),
       ...(parsed.data.data_inicio !== undefined ? { data_inicio: parsed.data.data_inicio } : {}),

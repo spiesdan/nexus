@@ -273,7 +273,7 @@ export function CargaClient({
         14/10/2026). O `-top-6` compensa o `p-6` do `main` e encosta o banner
         flush logo abaixo da TopBar. Fundo SÓLIDO (`bg-background`, sem /95):
         translúcido deixava as linhas da lista vazarem por trás ao rolar. */}
-      <div className="sticky -top-6 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background px-6 py-3 backdrop-blur">
+      <div className="sticky -top-6 z-10 -mx-6 -mt-6 space-y-3 border-b bg-background px-6 py-3">
         <Link href="/app/expedicao" className="text-sm underline underline-offset-4">
           ← {textos.voltar}
         </Link>

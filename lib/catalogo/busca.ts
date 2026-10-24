@@ -78,13 +78,44 @@ export interface TokensDaBusca {
   palavras: string[];
   /** Tokens exatos — filtram, não pontuam. */
   numeros: string[];
+  /**
+   * Números que a pessoa declarou como CÓDIGO ("código 3", "cod. 3513",
+   * "ref 3588"). Filtram pelo campo `codigo` do produto, e só por ele.
+   */
+  codigos: string[];
 }
+
+/**
+ * Marcadores que dizem "o número que vem a seguir é o código do produto".
+ *
+ * Existem porque "código" NÃO é nome de produto — e tratá-la como palavra
+ * elegia o produto errado. Medido em 2026-10-24 nesta instalação: o vendedor
+ * digitou "3 codigo 3" (três unidades do código 3) e recebeu
+ * "LIXEIRA CLICK 3L POLIPROPILENO - VERMELHA COD. 3513" com confiança ALTA:
+ * "codigo" casava o "COD." do nome por prefixo (nota 0,9) e o "3" casava o
+ * "3L" pela regra de unidade. Duas palavras de instrução viraram identidade.
+ */
+const MARCADORES_DE_CODIGO = new Set(["codigo", "codigos", "cod", "ref", "referencia"]);
 
 export function tokenizar(consulta: string): TokensDaBusca {
   const palavras: string[] = [];
   const numeros: string[] = [];
-  for (const t of normalizar(consulta).split(" ")) {
+  const codigos: string[] = [];
+  const brutos = normalizar(consulta).split(" ");
+  for (let i = 0; i < brutos.length; i += 1) {
+    const t = brutos[i] ?? "";
     if (t === "" || RUIDO.has(t)) continue;
+    // "código 3" / "cod. 3513" / "ref 3588": o número é CÓDIGO, não atributo
+    // do produto. `normalizar` já comeu o ponto e os dois-pontos, então
+    // "cod. 3513" chega aqui como dois tokens vizinhos.
+    if (MARCADORES_DE_CODIGO.has(t)) {
+      const seguinte = brutos[i + 1];
+      if (seguinte !== undefined && /^\d+$/.test(seguinte)) {
+        codigos.push(seguinte);
+        i += 1;
+      }
+      continue;
+    }
     // Apelido de balcão vira nome de catálogo ANTES de pontuar: "solupa"
     // chega aqui já como "solubill", e o empate fantasma com "girando sol"
     // nem nasce.
@@ -94,7 +125,20 @@ export function tokenizar(consulta: string): TokensDaBusca {
     if (comUnidade?.[1] !== undefined) numeros.push(comUnidade[1]);
     else palavras.push(canonico);
   }
-  return { palavras, numeros };
+  return { palavras, numeros, codigos };
+}
+
+/**
+ * Este produto é o do código pedido?
+ *
+ * Compara o campo `codigo` — e só ele. `03` e `3` são o mesmo código: cadastro
+ * antigo grava zero à esquerda e o vendedor digita sem.
+ */
+function mesmoCodigo(codigoDoProduto: string, procurado: string): boolean {
+  const doProduto = normalizar(codigoDoProduto);
+  if (doProduto === procurado) return true;
+  if (!/^\d+$/.test(doProduto) || !/^\d+$/.test(procurado)) return false;
+  return Number(doProduto) === Number(procurado);
 }
 
 /**
@@ -105,6 +149,17 @@ export function tokenizar(consulta: string): TokensDaBusca {
  */
 function temONumero(alvoNormalizado: string, numero: string): boolean {
   return new RegExp(`(^|\\s)${numero}([a-z]{1,4})?($|\\s)`).test(alvoNormalizado);
+}
+
+/**
+ * O número aparece como número SOLTO — sem sufixo de unidade?
+ *
+ * É o que separa "COD. 3513" (referência de fábrica escrita no nome) de "3L"
+ * (três litros). Para código, "3" não pode casar "3L": foi exatamente esse
+ * casamento que elegeu a lixeira quando o vendedor pediu o código 3.
+ */
+function temONumeroSolto(alvoNormalizado: string, numero: string): boolean {
+  return new RegExp(`(^|\\s)${numero}($|\\s)`).test(alvoNormalizado);
 }
 
 export interface ProdutoBuscavel {
@@ -188,7 +243,7 @@ function soComplemento(nome: string, tokens: TokensDaBusca): boolean {
   const normalizado = normalizar(nome);
   const palavrasDoLider = normalizar(lider).split(' ').filter((w) => w !== '');
   const casa = (alvo: string, q: string) =>
-    casaComPedido(alvo, { palavras: [q], numeros: [] });
+    casaComPedido(alvo, { palavras: [q], numeros: [], codigos: [] });
   const palavrasConsulta = tokens.palavras.filter((q) => q.length >= 3);
   if (palavrasConsulta.length === 0) return false;
   const apareceNoNome = (q: string) => normalizado.split(' ').some((w) => casa(w, q));
@@ -227,6 +282,9 @@ function casaComPedido(palavra: string, tokens: TokensDaBusca): boolean {
 
 export function classificarRelacao(consulta: string, produto: ProdutoBuscavel): RelacaoProduto {
   const tokens = tokenizar(consulta);
+  // Código declarado já identificou o produto (o filtro de `pontuar` é exato):
+  // não há "acessório do código 3" — é ele.
+  if (tokens.codigos.length > 0) return 'direta';
   if (tokens.palavras.length === 0) return 'direta';
   const cabeca = cabecaDoNome(produto.nome);
   // 1. O pedido nomeia a cabeça do produto: é ele, mesmo sendo acessório —
@@ -260,18 +318,50 @@ export function classificarRelacao(consulta: string, produto: ProdutoBuscavel): 
  * eliminação, porque é o que impede o 128GB de aparecer para quem pediu 256GB.
  */
 export function pontuar(produto: ProdutoBuscavel, tokens: TokensDaBusca): number | null {
-  const alvo = normalizar(
-    [produto.nome, produto.marca ?? "", produto.categoria ?? "", produto.codigo].join(" "),
+  // O CÓDIGO NÃO É ATRIBUTO DO PRODUTO.
+  //
+  // Ele entra no texto comparado SÓ quando a consulta é apenas número — "3513"
+  // sozinho, que é como o vendedor digita o código na pressa. Com palavra na
+  // consulta, o código fica de fora: senão o "5" de "água sanitária 5L" era
+  // satisfeito pelo código 5 de um produto de 2 litros, e o filtro numérico —
+  // que existe justamente para impedir essa troca — deixava passar.
+  const atributos = normalizar(
+    [produto.nome, produto.marca ?? "", produto.categoria ?? ""].join(" "),
   );
+  const alvo =
+    tokens.palavras.length === 0 ? normalizar(`${atributos} ${produto.codigo}`) : atributos;
 
-  // ── O FILTRO DURO ──────────────────────────────────────────────────────────
-  for (const n of tokens.numeros) {
-    if (!temONumero(alvo, n)) return null;
-  }
+  // ── CÓDIGO DECLARADO: é identidade, não atributo ──────────────────────────
+  //
+  // "código 3" pede o produto cujo `codigo` é 3 — e não o produto cujo NOME
+  // tem um 3 (o "3L" da lixeira). Por isso este filtro olha só o campo, e
+  // substitui o filtro numérico: os outros números da frase são QUANTIDADE
+  // ("3 codigo 3"), e filtrá-los eliminaria justamente o produto pedido.
+  //
+  // A segunda via é a referência de fábrica escrita NO NOME — "COD. 3513",
+  // "REF. 3588" —, que é como o catálogo importado do Mercos guarda o código
+  // do fornecedor. Ela vale menos que o campo (0,9 contra 1) para que, havendo
+  // os dois, o código interno ganhe; e exige o número SOLTO, porque com a
+  // regra de unidade "3" casaria "3L" de novo.
+  if (tokens.codigos.length > 0) {
+    const peloCampo = tokens.codigos.some((c) => mesmoCodigo(produto.codigo, c));
+    if (!peloCampo) {
+      const pelaReferencia = tokens.codigos.some((c) => temONumeroSolto(alvo, c));
+      if (!pelaReferencia) return null;
+      if (tokens.palavras.length === 0) return 0.9;
+    } else if (tokens.palavras.length === 0) {
+      return 1;
+    }
+  } else {
+    // ── O FILTRO DURO ────────────────────────────────────────────────────────
+    for (const n of tokens.numeros) {
+      if (!temONumero(alvo, n)) return null;
+    }
 
-  if (tokens.palavras.length === 0) {
-    // Só números, e todos casaram: é um acerto legítimo ("256", "212").
-    return tokens.numeros.length > 0 ? 1 : null;
+    if (tokens.palavras.length === 0) {
+      // Só números, e todos casaram: é um acerto legítimo ("256", "212").
+      return tokens.numeros.length > 0 ? 1 : null;
+    }
   }
 
   const doAlvo = alvo.split(" ");
@@ -406,8 +496,11 @@ function numerosQueOCatalogoConhece<T extends ProdutoBuscavel>(
   if (numeros.length === 0) return conhecidos;
 
   for (const produto of produtos) {
+    // Sem o código: ele não é atributo. Se estivesse aqui, um produto de código
+    // "2" faria a busca considerar o "2" de "2 caixas" conhecido — e o pedido
+    // "quero 2 iphone 15" deixaria de relaxar, devolvendo zero.
     const alvo = normalizar(
-      [produto.nome, produto.marca ?? "", produto.categoria ?? "", produto.codigo].join(" "),
+      [produto.nome, produto.marca ?? "", produto.categoria ?? ""].join(" "),
     );
     for (const n of numeros) {
       if (!conhecidos.has(n) && temONumero(alvo, n)) conhecidos.add(n);
@@ -468,7 +561,11 @@ export function buscarComRelaxamento<T extends ProdutoBuscavel>(
   consulta: string,
 ): BuscaRelaxada<T> {
   const tokens = tokenizar(consulta);
-  if (tokens.palavras.length === 0 && tokens.numeros.length === 0) {
+  if (
+    tokens.palavras.length === 0 &&
+    tokens.numeros.length === 0 &&
+    tokens.codigos.length === 0
+  ) {
     return { achados: [], ignorados: [] };
   }
 
@@ -489,6 +586,7 @@ export function buscarComRelaxamento<T extends ProdutoBuscavel>(
     {
       palavras: tokens.palavras,
       numeros: tokens.numeros.filter((n) => conhecidos.has(n)),
+      codigos: tokens.codigos,
     },
     consulta,
   );

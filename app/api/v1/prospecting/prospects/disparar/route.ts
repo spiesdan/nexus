@@ -56,9 +56,16 @@ import {
   validarMensagem,
   type CandidatoAoDisparo,
 } from "@/lib/prospeccao/disparo";
+import {
+  escolherSessaoDaCampanha,
+  type SessaoDaCampanha,
+} from "@/lib/prospeccao/canal-da-campanha";
 import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
+import type { TemplateDoEnvio } from "@/lib/prospeccao/envio";
+import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
 import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
 import { lerTetoDoNumero } from "@/lib/prospeccao/teto-do-numero";
+import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
 import { validateRequest } from "@/lib/schemas";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -93,6 +100,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 
+  const admin = createAdminClient();
+
   // A validação do texto é a do planejador — a mesma que o teste cobre, e a
   // mesma que a tela vai mostrar. Aqui é só para devolver 400 em vez de um
   // plano com 500 recusas de "mensagem vazia" (que não é um motivo de recusa
@@ -102,6 +111,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   // `mensagens` está pedindo rotação, e ignorar em silêncio seria pior que
   // recusar. Cada uma passa pela MESMA régua (vazia, tamanho) da mensagem
   // única — uma variação em branco sairia como bolha vazia no WhatsApp.
+  //
+  // 0284: a checagem de vazio NÃO acontece aqui, porque uma campanha de
+  // template não manda texto. Ela é feita depois de ler o tipo da campanha.
   const mensagens = (entrada.mensagens?.length
     ? entrada.mensagens
     : [entrada.mensagem ?? ""]
@@ -109,20 +121,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     .map((m) => m.trim())
     .filter((m) => m !== "")
     .slice(0, MENSAGENS_POR_DISPARO_MAX);
-  if (mensagens.length === 0) {
-    return fail("validation_failed", "Informe a mensagem (ou as variações) do disparo.", 400, {
-      requestId,
-    });
-  }
-  for (const [i, m] of mensagens.entries()) {
-    const texto = validarMensagem(m);
-    if (!texto.ok) {
-      const rotulo = mensagens.length > 1 ? `Mensagem ${i + 1}: ` : "";
-      return fail("validation_failed", `${rotulo}${texto.erro}`, 400, { requestId });
-    }
-  }
-
-  const admin = createAdminClient();
 
   // ─── A campanha que recebe o disparo (0277) ──────────────────────────────
   // Envio real SEM campanha não existe: é a campanha que reserva a empresa,
@@ -143,11 +141,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     nome: string;
     categorias: string[] | null;
     prospect_ids: string[] | null;
+    mensagem_tipo: string | null;
+    template_name: string | null;
+    template_language: string | null;
+    template_contract_hash: string | null;
+    template_values: Record<string, string> | null;
   } | null = null;
   if (campanhaId !== null) {
     const { data: c, error: errCampanha } = await admin
       .from("prospecting_campaigns")
-      .select("id, nome, categorias, publico, prospect_ids")
+      .select(
+        "id, nome, categorias, publico, prospect_ids, mensagem_tipo, template_name, template_language, template_contract_hash, template_values",
+      )
       .eq("id", campanhaId)
       .eq("organization_id", orgId)
       .maybeSingle();
@@ -161,6 +166,11 @@ export async function POST(req: NextRequest): Promise<Response> {
       categorias: string[] | null;
       publico: string | null;
       prospect_ids: string[] | null;
+      mensagem_tipo: string | null;
+      template_name: string | null;
+      template_language: string | null;
+      template_contract_hash: string | null;
+      template_values: Record<string, string> | null;
     };
     if (linha.publico === "contatos") {
       return fail(
@@ -175,7 +185,64 @@ export async function POST(req: NextRequest): Promise<Response> {
       nome: linha.nome,
       categorias: linha.categorias,
       prospect_ids: linha.prospect_ids,
+      mensagem_tipo: linha.mensagem_tipo,
+      template_name: linha.template_name,
+      template_language: linha.template_language,
+      template_contract_hash: linha.template_contract_hash,
+      template_values: linha.template_values,
     };
+  }
+
+  // ─── O tipo da mensagem e o bind do modelo (0284) ────────────────────────
+  // Sem campanha (simulação da tela de Empresas) é sempre texto. Com campanha,
+  // a declaração manda. O bind é conferido ANTES de qualquer reserva: um
+  // modelo obsoleto gastaria uma reserva por empresa e a Meta recusaria todas.
+  const tipo: TipoDaMensagem =
+    campanha?.mensagem_tipo === "template" ? "template" : "texto";
+  let templateDoEnvio: TemplateDoEnvio | null = null;
+  if (tipo === "template" && campanha) {
+    const veredito = await validarBindDaCampanha(
+      admin,
+      orgId,
+      {
+        tipo: "template",
+        name: campanha.template_name,
+        language: campanha.template_language,
+        contractHash: campanha.template_contract_hash,
+        values: campanha.template_values ?? {},
+      },
+      { exigirCanal: false },
+    );
+    if (!veredito.ok || !veredito.template) {
+      return fail("validation_failed", veredito.ok ? "Modelo inválido." : veredito.erro, 422, {
+        requestId,
+      });
+    }
+    templateDoEnvio = {
+      name: veredito.template.name,
+      language: veredito.template.language,
+      contractHash: veredito.template.contractHash,
+      values: campanha.template_values ?? {},
+      components: veredito.template.components,
+      parameterFormat: veredito.template.parameterFormat,
+    };
+  }
+
+  // A campanha de TEXTO continua exigindo ao menos uma variação. A de template
+  // não: o conteúdo está no modelo, e exigir texto faria a tela inventar um.
+  if (tipo === "texto") {
+    if (mensagens.length === 0) {
+      return fail("validation_failed", "Informe a mensagem (ou as variações) do disparo.", 400, {
+        requestId,
+      });
+    }
+    for (const [i, m] of mensagens.entries()) {
+      const texto = validarMensagem(m);
+      if (!texto.ok) {
+        const rotulo = mensagens.length > 1 ? `Mensagem ${i + 1}: ` : "";
+        return fail("validation_failed", `${rotulo}${texto.erro}`, 400, { requestId });
+      }
+    }
   }
 
   // `limite` é `let` porque o TETO DO NÚMERO pode reduzi-lo mais abaixo (o
@@ -190,21 +257,26 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, status, archived_at, daily_message_limit")
+    .select("id, provider, status, archived_at, daily_message_limit")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
-    .is("archived_at", null)
-    .limit(1);
+    .is("archived_at", null);
   if (errSessao) return fail("internal_error", "Erro ao ler as sessões.", 500, { requestId });
-  const sessao =
-    (sessoes as Array<{ id: string; daily_message_limit: number | null }> | null)?.[0] ?? null;
+  // A sessão é escolhida pela CAPABILITY, não pela ordem do banco (0284): texto
+  // livre e modelo aprovado são canais diferentes, e pegar a primeira WORKING
+  // podia pôr uma campanha de texto no número oficial — aceita pela API e
+  // recusada na entrega (131047).
+  const sessao = escolherSessaoDaCampanha(
+    (sessoes ?? []) as unknown as SessaoDaCampanha[],
+    tipo,
+  );
   const sessaoWorking = sessao !== null;
 
   // ─── Prospects + contexto ────────────────────────────────────────────────
   const { data: linhas, error: errProspects } = await admin
     .from("business_prospects")
     .select(
-      "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id, categoria, categorias, website, categoria_canonica, categoria_revisar",
+      "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
     )
     .eq("organization_id", orgId)
     .in("id", entrada.prospect_ids)
@@ -225,6 +297,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     website: string | null;
     categoria_canonica: string | null;
     categoria_revisar: boolean | null;
+    cidade: string | null;
   }>;
   if (brutos.length === 0) {
     return fail("not_found", "Nenhum dos prospects pertence a esta organização.", 404, { requestId });
@@ -313,11 +386,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     jaEnviadosHoje,
     espacoMs,
     sessaoWorking,
-    quantidadeDeMensagens: mensagens.length,
+    // Template não rotaciona: é o mesmo modelo para todos. O planejador já
+    // protege contra zero, mas declarar 1 deixa o plano honesto.
+    quantidadeDeMensagens: tipo === "template" ? 1 : mensagens.length,
   });
 
   const resumo = {
     simulacao: entrada.dry_run,
+    /** 0284 — o que vai sair: texto livre ou o modelo aprovado. */
+    mensagem_tipo: tipo,
+    template: templateDoEnvio
+      ? { name: templateDoEnvio.name, language: templateDoEnvio.language }
+      : null,
     pode_enviar: plano.podeEnviar,
     bloqueio: plano.bloqueio,
     selecionados: entrada.prospect_ids.length,
@@ -350,7 +430,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!plano.podeEnviar) {
     return fail(
       "conflict",
-      "Não há sessão de WhatsApp conectada (WORKING). Nada foi enviado.",
+      tipo === "template"
+        ? "Nenhum canal oficial WORKING que aceite template. Conecte o número oficial em Conexões. Nada foi enviado."
+        : "Nenhum canal WORKING que aceite texto livre. Conecte um número por QR ou use uma campanha por template. Nada foi enviado.",
       409,
       { requestId, details: { plano: resumo } },
     );
@@ -463,6 +545,16 @@ export async function POST(req: NextRequest): Promise<Response> {
     reservadas_na_corrida: perdidasNaCorrida,
   };
 
+  // Os dados que os tokens do modelo interpolam por empresa. `categoria` é a
+  // EFETIVA (o rótulo que a tela mostra), não o cru do Google — mandar o cru
+  // seria mandar ao cliente o nome errado do próprio negócio.
+  const dadosPorProspect = new Map(
+    brutos.map((p) => [
+      p.id,
+      { cidade: p.cidade, categoria: categoriaEfetiva(p).rotulo },
+    ]),
+  );
+
   const resultado = await enviarPlano({
     admin,
     orgId,
@@ -471,6 +563,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     sessaoId: sessao!.id,
     espacoMs,
     mensagens,
+    template: templateDoEnvio,
+    dadosPorProspect,
     plano: planoReservado,
     campaignId: campanhaDoEnvio.id,
   });
@@ -594,6 +688,10 @@ interface ParamsDoEnvio {
   espacoMs: number;
   /** As variações de texto; cada envio pega a sua pelo `mensagem_indice`. */
   mensagens: string[];
+  /** 0284 — quando presente, o envio é template e ignora `mensagens`. */
+  template: TemplateDoEnvio | null;
+  /** Cidade e categoria efetiva por prospect, para os tokens do modelo. */
+  dadosPorProspect: Map<string, { cidade: string | null; categoria: string | null }>;
   plano: ReturnType<typeof planejarDisparo>;
   /** A campanha do disparo — o ledger já foi reservado com ela (0277). */
   campaignId: string;
@@ -635,8 +733,11 @@ async function enviarPlano(p: ParamsDoEnvio) {
         id: item.id,
         nome: item.nome,
         telefone_normalizado: item.telefone_normalizado,
+        cidade: p.dadosPorProspect.get(item.id)?.cidade ?? null,
+        categoria: p.dadosPorProspect.get(item.id)?.categoria ?? null,
       },
-      mensagem: mensagemDaVez(p.mensagens, item.mensagem_indice),
+      mensagem: p.template ? "" : mensagemDaVez(p.mensagens, item.mensagem_indice),
+      template: p.template,
     });
     if (resultado.ok) {
       enviados.push({ nome: item.nome, message_id: resultado.messageId, status: resultado.status });

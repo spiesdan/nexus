@@ -6,7 +6,7 @@ name: release
 #      a seção do CHANGELOG e abre um PR de release em português dizendo o que
 #      vai sair. Nada é publicado ainda.
 #   2. VOCÊ faz merge desse PR → ele cria a tag `vX.Y.Z`, e é a tag que faz o
-#      `publish-image.yml` publicar as cinco imagens que a VPS puxa.
+#      `publish-image.yml` publicar as seis imagens que a VPS puxa.
 #
 # Quem escreve (branch, PR, tag) é o token de um GitHub App, NUNCA o
 # GITHUB_TOKEN. A razão é uma armadilha documentada pelo próprio GitHub: evento
@@ -15,7 +15,7 @@ name: release
 # erro, e NENHUMA VPS receberia a atualização. Falha silenciosa, descoberta só
 # quando um cliente tentasse atualizar.
 #
-# Por isso o ato 2 não confia: ele espera a publicação e CONFERE as cinco imagens
+# Por isso o ato 2 não confia: ele espera a publicação e CONFERE as seis imagens
 # no registro, falhando alto se não aparecerem.
 
 on:
@@ -90,7 +90,7 @@ jobs:
             cat /tmp/corte.txt
             echo '```'
             echo
-            echo "Ao fazer merge deste PR, a tag \`v${VERSAO}\` é criada automaticamente e as cinco imagens são publicadas."
+            echo "Ao fazer merge deste PR, a tag \`v${VERSAO}\` é criada automaticamente e as seis imagens são publicadas."
             echo "Se algo aqui estiver errado, **feche o PR** em vez de editar o número: corrija o fragmento e dispare o workflow de novo."
           } > /tmp/corpo.md
           gh pr create --base main --head "release/${VERSAO}" \
@@ -138,7 +138,7 @@ jobs:
           # Só a primeira condição ("o CHANGELOG anuncia versão que não tem
           # tag") deixaria QUALQUER PR cortar a release: bastaria escrever
           # `## [1.7.0]` no CHANGELOG à mão e a tag nasceria no merge dele,
-          # pulando o PR de release inteiro — e com ela as cinco imagens e o
+          # pulando o PR de release inteiro — e com ela as seis imagens e o
           # canal `stable`. Não é hipótese: medido em 2026-08-27, o PR #354
           # (RAG) já trazia uma seção de versão escrita à mão no CHANGELOG.
           #
@@ -148,7 +148,7 @@ jobs:
           #     fragmentos em .changes/: antes=4 depois=1
           #
           # A v1.11.1 foi anunciada no CHANGELOG e NUNCA virou tag. Sem tag,
-          # sem release, sem as cinco imagens, sem `stable`: nenhuma VPS a
+          # sem release, sem as seis imagens, sem `stable`: nenhuma VPS a
           # recebeu, e o workflow saiu `success` — ele só decidiu não cortar.
           #
           # A causa é uma CORRIDA, não uma forja: o PR #460 mergeou entre o
@@ -300,7 +300,7 @@ jobs:
 
       # A falha desta cadeia é silenciosa por natureza — a tag existe e ninguém
       # vê erro —, então o workflow prova a CONSEQUÊNCIA em vez de supô-la.
-      - name: As cinco imagens existem nesta versão?
+      - name: As seis imagens existem nesta versão?
         if: steps.pendente.outputs.cortar == 'sim'
         env:
           VERSAO: ${{ steps.pendente.outputs.versao }}
@@ -331,11 +331,11 @@ jobs:
           echo "esperando a publicação de v${VERSAO}…"
           for _ in $(seq 1 60); do
             faltando=""
-            for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos; do
+            for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr; do
               [ -n "$(ghcr_digest "$img" "${VERSAO}")" ] || faltando="${faltando} ${img}"
             done
             if [ -z "$faltando" ]; then
-              echo "as cinco imagens respondem em ${VERSAO}"
+              echo "as seis imagens respondem em ${VERSAO}"
               break
             fi
             sleep 30
@@ -357,7 +357,7 @@ jobs:
           divergentes=""
           for _ in $(seq 1 20); do
             divergentes=""
-            for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos; do
+            for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr; do
               d_versao=$(ghcr_digest "$img" "${VERSAO}")
               d_stable=$(ghcr_digest "$img" stable)
               echo "  ${img}: ${VERSAO}=${d_versao:-ausente} stable=${d_stable:-ausente}"
@@ -373,4 +373,4 @@ jobs:
             echo "::error::Confira o job promover-stable no run de publish-image.yml da tag v${VERSAO}."
             exit 1
           fi
-          echo "stable e ${VERSAO} são o mesmo manifesto nas cinco imagens"
+          echo "stable e ${VERSAO} são o mesmo manifesto nas seis imagens"

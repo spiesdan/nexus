@@ -11,6 +11,13 @@ import { getAdapter } from "@/lib/channels";
 const sessaoNoBanco: { token: string | null } = { token: null };
 
 /**
+ * O espelho de modelos que `sendTemplate` lê para montar o payload. `null` =
+ * modelo ausente — o adapter deve lançar `meta_template_missing`, não postar e
+ * receber 132000.
+ */
+const modeloNoBanco: { linha: Record<string, unknown> | null } = { linha: null };
+
+/**
  * Cadeia ENCADEÁVEL, não de um nível só.
  *
  * A resolução por sessão filtra `organization_id` E o identificador E
@@ -34,9 +41,21 @@ function cadeia(): Record<string, unknown> {
   return alvo;
 }
 
+/** Cadeia de `meta_templates` — filtros por org/nome/idioma/conexão são no-op. */
+function cadeiaDeModelos(): Record<string, unknown> {
+  const alvo: Record<string, unknown> = {
+    maybeSingle: async () => ({ data: modeloNoBanco.linha, error: null }),
+  };
+  alvo.select = () => alvo;
+  alvo.eq = () => alvo;
+  alvo.limit = () => alvo;
+  return alvo;
+}
+
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
-    from: () => cadeia(),
+    from: (tabela: string) =>
+      tabela === "meta_templates" ? cadeiaDeModelos() : cadeia(),
     rpc: async () => ({ data: sessaoNoBanco.token, error: null }),
   }),
 }));
@@ -69,6 +88,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   sessaoNoBanco.token = null;
+  modeloNoBanco.linha = null;
 });
 
 describe("adapter meta_cloud — endereçamento", () => {
@@ -93,10 +113,14 @@ describe("adapter meta_cloud — endereçamento", () => {
 });
 
 describe("adapter meta_cloud — configuração", () => {
-  it("sem credencial NÃO está configurado", () => {
+  it("está configurado mesmo sem env — a credencial pode viver na SESSÃO", () => {
+    // `isConfigured` é SÍNCRONO e não pode consultar o banco. Responder `false`
+    // aqui fazia o handler gravar `queued` sem nunca chamar `send`, e a
+    // mensagem ficava parada com o canal conectado pela tela. Quem confirma a
+    // credencial é o `send` (async), que lança `meta_not_configured` sem ela.
     vi.stubEnv("META_PHONE_NUMBER_ID", "");
     vi.stubEnv("META_SYSTEM_USER_TOKEN", "");
-    expect(a().isConfigured()).toBe(false);
+    expect(a().isConfigured()).toBe(true);
   });
 
   it("com credencial está configurado", () => {
@@ -104,12 +128,15 @@ describe("adapter meta_cloud — configuração", () => {
     expect(a().isConfigured()).toBe(true);
   });
 
-  it("não configurado é NOOP no envio, nunca exceção", async () => {
-    // Mesmo contrato do outro canal: a UI mostra banner, o handler grava `queued`.
+  it("sem credencial o envio LANÇA `meta_not_configured` — vira `queued`, não `sent`", async () => {
+    // Devolver `{externalId:null}` faria o handler gravar `sent` sem id: diria
+    // "enviado" para algo que nunca saiu. O prefixo é o contrato que o handler
+    // lê para traduzir em `queued_reason` (estado de espera com dono).
     vi.stubEnv("META_PHONE_NUMBER_ID", "");
     vi.stubEnv("META_SYSTEM_USER_TOKEN", "");
-    const r = await a().send({ organizationId: ORG, sessionRef: "x", to: "5531999", kind: "text", body: "oi" });
-    expect(r).toEqual({ externalId: null });
+    await expect(
+      a().send({ organizationId: ORG, sessionRef: "x", to: "5531999", kind: "text", body: "oi" }),
+    ).rejects.toThrow(/^meta_not_configured/);
   });
 
   it("os códigos carregam o nome do provider — por isso vivem no adapter", () => {
@@ -241,5 +268,113 @@ describe("credencial por sessão — o que destrava multi-tenant", () => {
 
     const [, init] = spy.mock.calls[0]!;
     expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok");
+  });
+});
+
+describe("adapter meta_cloud — template pela credencial da SESSÃO", () => {
+  function modeloAprovado() {
+    modeloNoBanco.linha = {
+      name: "boas_vindas",
+      language: "pt_BR",
+      status: "APPROVED",
+      contract_hash: "hash-1",
+      components: [{ type: "BODY", text: "Olá {{1}}, tudo bem?" }],
+    };
+  }
+
+  it("monta type:template com os componentes do espelho e devolve o wamid", async () => {
+    configurar();
+    modeloAprovado();
+    const spy = stubFetch({ messages: [{ id: "wamid.TPL" }] });
+
+    const r = await a().sendTemplate!({
+      organizationId: ORG,
+      sessionRef: "ignorado",
+      channelSessionId: "sess-oficial",
+      to: "5531998966398",
+      name: "boas_vindas",
+      language: "pt_BR",
+      values: { "1": "Maria" },
+    });
+
+    expect(r).toEqual({ externalId: "wamid.TPL" });
+    const [url, init] = spy.mock.calls[0]!;
+    expect(url).toContain("/v22.0/1103328999528818/messages");
+    const corpo = JSON.parse(init.body as string) as {
+      type: string;
+      template: {
+        name: string;
+        language: { code: string };
+        components: Array<{ type: string; parameters: Array<{ text: string }> }>;
+      };
+    };
+    expect(corpo.type).toBe("template");
+    expect(corpo.template.name).toBe("boas_vindas");
+    expect(corpo.template.language.code).toBe("pt_BR");
+    expect(corpo.template.components[0]).toMatchObject({
+      type: "body",
+      parameters: [{ type: "text", text: "Maria" }],
+    });
+  });
+
+  it("modelo fora do espelho lança ANTES do POST — não gasta chamada para receber 132000", async () => {
+    configurar();
+    const spy = stubFetch({ messages: [{ id: "não-deveria" }] });
+
+    await expect(
+      a().sendTemplate!({
+        organizationId: ORG,
+        sessionRef: "x",
+        to: "5531",
+        name: "sumiu",
+        language: "pt_BR",
+        values: { "1": "Maria" },
+      }),
+    ).rejects.toThrow(/^meta_template_missing/);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("sem credencial lança `meta_not_configured`, o mesmo contrato do envio", async () => {
+    // `isConfigured` é true; quem fecha a promessa é o send.
+    vi.stubEnv("META_PHONE_NUMBER_ID", "");
+    vi.stubEnv("META_SYSTEM_USER_TOKEN", "");
+    modeloAprovado();
+
+    await expect(
+      a().sendTemplate!({
+        organizationId: ORG,
+        sessionRef: "x",
+        to: "5531",
+        name: "boas_vindas",
+        language: "pt_BR",
+        values: { "1": "Maria" },
+      }),
+    ).rejects.toThrow(/^meta_not_configured/);
+  });
+
+  it("erro da Meta vira `meta_<code>` e preserva o details", async () => {
+    configurar();
+    modeloAprovado();
+    stubFetch(
+      {
+        error: {
+          code: 131009,
+          message: "Parameter value is not valid",
+          error_data: { details: "to: número em formato inválido" },
+        },
+      },
+      false,
+    );
+
+    await expect(
+      a().sendTemplate!({
+        organizationId: ORG,
+        sessionRef: "x",
+        to: "+5531",
+        name: "boas_vindas",
+        language: "pt_BR",
+        values: { "1": "Maria" },
+      }),
+    ).rejects.toThrow(/meta_131009.*formato inválido/);
   });
 });

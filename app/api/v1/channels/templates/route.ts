@@ -14,6 +14,11 @@ import type { NextRequest, NextResponse } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import {
+  metaCredsFromEnv,
+  resolveMetaCreds,
+  type MetaCredentials,
+} from "@/lib/channels/meta/credentials";
 import { metaSessionForOrg } from "@/lib/channels/meta/session";
 import { normalizeRejectedReason } from "@/lib/channels/meta/webhook";
 import { deriveTemplateContract, describeAddress } from "@/lib/channels/meta/template-contract";
@@ -155,15 +160,33 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     return fail("invalid_request", "no_meta_channel", 400, { requestId });
   }
 
-  const token = process.env.META_SYSTEM_USER_TOKEN ?? "";
-  if (!token) return fail("invalid_request", "missing_meta_token", 400, { requestId });
+  // A credencial vem da SESSÃO primeiro — a mesma regra do envio. O token do
+  // ambiente continua como fallback explícito de instalação de número único,
+  // mas uma conexão feita pela tela não pode depender de ele existir.
+  let creds: MetaCredentials | null;
+  try {
+    creds = sessao.phoneNumberId
+      ? await resolveMetaCreds(createAdminClient(), {
+          organizationId: r.orgId,
+          phoneNumberId: sessao.phoneNumberId,
+        })
+      : metaCredsFromEnv();
+  } catch (err) {
+    return fail(
+      "internal_error",
+      err instanceof Error ? err.message : "meta_creds_lookup_failed",
+      502,
+      { requestId },
+    );
+  }
+  if (!creds) return fail("invalid_request", "missing_meta_token", 400, { requestId });
 
   try {
     const counts = await syncTemplates({
       organizationId: r.orgId,
       wabaId: sessao.wabaId,
-      token,
-      graphVersion: process.env.META_GRAPH_VERSION ?? "v22.0",
+      token: creds.token,
+      graphVersion: creds.graphVersion,
     });
     return ok(counts);
   } catch (err) {
