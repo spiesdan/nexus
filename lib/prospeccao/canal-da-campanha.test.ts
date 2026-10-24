@@ -1,14 +1,36 @@
 import { describe, expect, it } from "vitest";
 
+import { CHANNEL_CAPABILITIES, type ChannelProvider } from "@/lib/channels";
+
 import {
   canalAceitaTipo,
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "./canal-da-campanha";
 
-const oficial: SessaoDaCampanha = { id: "oficial", provider: "meta_cloud" };
-const qr: SessaoDaCampanha = { id: "qr", provider: "waha" };
-const intermediado: SessaoDaCampanha = { id: "zernio", provider: "zernio" };
+/**
+ * As fixtures saem da MATRIZ, não de literais: o lint de canal
+ * (`scripts/lint-channels.ts`) proíbe nomear provider fora de `lib/channels/`,
+ * e teste co-locado em `lib/` entra na varredura. Montar as sessões pelo que
+ * elas PERMITEM é a mesma pergunta que o módulo faz — e mantém o teste sem
+ * depender de qual provider é qual.
+ */
+const PROVIDERS = Object.keys(CHANNEL_CAPABILITIES) as ChannelProvider[];
+const falaTextoLivre = (p: ChannelProvider) =>
+  CHANNEL_CAPABILITIES[p].freeformOutsideWindow;
+const exigeTemplate = (p: ChannelProvider) =>
+  CHANNEL_CAPABILITIES[p].requiresTemplates;
+
+const QR = PROVIDERS.find((p) => falaTextoLivre(p) && !exigeTemplate(p))!;
+const OFICIAIS = PROVIDERS.filter((p) => exigeTemplate(p) && !falaTextoLivre(p));
+const [OFICIAL, INTERMEDIADO] = OFICIAIS;
+
+const oficial: SessaoDaCampanha = { id: "oficial", provider: OFICIAL };
+const qr: SessaoDaCampanha = { id: "qr", provider: QR };
+const intermediado: SessaoDaCampanha = {
+  id: "intermediado",
+  provider: INTERMEDIADO,
+};
 
 describe("escolherSessaoDaCampanha", () => {
   it("texto livre PULA o oficial e escolhe o número por QR", () => {

@@ -14,6 +14,7 @@
  */
 import {
   capabilitiesOf,
+  CHANNEL_CAPABILITIES,
   DEFAULT_CHANNEL_PROVIDER,
   type ChannelProvider,
 } from "@/lib/channels";
@@ -27,8 +28,11 @@ export interface SessaoDaCampanha {
 }
 
 function providerSeguro(provider: string | null | undefined): ChannelProvider {
-  if (provider === "waha" || provider === "meta_cloud" || provider === "zernio") {
-    return provider;
+  // A coluna chega como texto. Validar contra a MATRIZ é o que a converte em
+  // `ChannelProvider` sem escrever nome de provider aqui — e um valor que a
+  // matriz não conhece NÃO herda o default de outro canal (fail-closed).
+  if (provider && Object.hasOwn(CHANNEL_CAPABILITIES, provider)) {
+    return provider as ChannelProvider;
   }
   // Linha antiga/teste sem a coluna: o default da coluna é o canal conservador.
   return DEFAULT_CHANNEL_PROVIDER;

@@ -1,8 +1,30 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { CHANNEL_CAPABILITIES, type ChannelProvider } from "@/lib/channels";
+
 import type { ParametrosDoEnvio } from "./envio";
 import { processarCampanhasAgendadas } from "./agendado";
+
+/**
+ * As linhas de `channel_sessions` saem da MATRIZ de capabilities, não de
+ * literais: o lint de canal proíbe nomear provider fora de `lib/channels/`, e
+ * teste co-locado em `lib/` entra na varredura. O tick escolhe por capability —
+ * a fixture fala a mesma língua.
+ */
+const PROVIDERS = Object.keys(CHANNEL_CAPABILITIES) as ChannelProvider[];
+const SESSOES = {
+  qr: PROVIDERS.find(
+    (p) =>
+      CHANNEL_CAPABILITIES[p].freeformOutsideWindow &&
+      !CHANNEL_CAPABILITIES[p].requiresTemplates,
+  )!,
+  oficial: PROVIDERS.find(
+    (p) =>
+      CHANNEL_CAPABILITIES[p].requiresTemplates &&
+      !CHANNEL_CAPABILITIES[p].freeformOutsideWindow,
+  )!,
+};
 
 /**
  * ADMIN FALSO — um mini-PostgREST por tabela (filtros, ordem, limite, update,
@@ -749,8 +771,8 @@ describe("processarCampanhasAgendadas", () => {
         }),
       ],
       channel_sessions: [
-        { id: "sess-qr", organization_id: "org-1", provider: "waha", status: "WORKING", archived_at: null },
-        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+        { id: "sess-qr", organization_id: "org-1", provider: SESSOES.qr, status: "WORKING", archived_at: null },
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
       ],
       meta_templates: [
         {
@@ -790,7 +812,7 @@ describe("processarCampanhasAgendadas", () => {
     const dados = base({
       prospecting_campaigns: [campanha()],
       channel_sessions: [
-        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
       ],
     });
     const enviar = senderFalso();
@@ -817,7 +839,7 @@ describe("processarCampanhasAgendadas", () => {
         }),
       ],
       channel_sessions: [
-        { id: "sess-oficial", organization_id: "org-1", provider: "meta_cloud", status: "WORKING", archived_at: null },
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
       ],
       meta_templates: [],
     });

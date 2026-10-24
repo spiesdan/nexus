@@ -14,7 +14,7 @@
  * (`listarTemplatesParaCampanha`) — não há segunda derivação de contrato.
  *
  * Nenhum nome de provider atravessa a resposta: a tela pergunta "pode texto?" e
- * "pode modelo?", não "é WAHA ou Meta?".
+ * "pode modelo?", não "de qual provider é?".
  */
 import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
