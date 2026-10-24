@@ -8,6 +8,10 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+### Corrigido
+
+- **A leitura de pedido por IA volta a funcionar com o Gemini** O schema completo gerado pelo Zod era recusado pelo Google com 400 antes de o modelo ler a foto — a tela pedia "uma foto mais nítida" quando o problema era o formato da requisição. O schema agora é mínimo para o Google e fechado para OpenAI/Anthropic/OpenRouter, com a mesma validação local. A correção também limita a resposta a 8.192 tokens e traduz saldo, chave, modelo e provedor fora do ar em mensagens que dizem o que fazer.
+
 ### Adicionado
 
 - **O pedido entra por foto, PDF, áudio ou texto** O botão **Adicionar com IA**, na seção de produtos do novo pedido, lê o que o cliente escreveu e propõe os itens já casados com o catálogo. A conferência é obrigatória: quantidade editável, até três candidatos por item e busca manual no catálogo; nada entra no pedido antes do clique em **Adicionar ao pedido**. O casamento usa a busca relaxada do catálogo, então "5 L" não vira "2 L" e um empate fica para a pessoa escolher. Formatos: JPG/PNG/WebP, PDF, áudio (requer `OPENAI_API_KEY`) e CSV/TXT, além de texto colado; XLSX/DOCX são recusados com a instrução de converter para CSV/PDF.
