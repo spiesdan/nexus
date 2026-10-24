@@ -47,8 +47,28 @@ Com o modelo correto, a foto manuscrita sai inteira e sem o erro de antes:
 
 | Foto | Tempo | Pico | Resultado |
 |---|---|---|---|
-| `pedido-manuscrito.png` | 2,1 s | 716 MiB | 6/6 linhas, 0,902–0,991 |
+| a foto de referência acima | 2,1 s | 716 MiB | 6/6 linhas, 0,902–0,991 |
 | pedido impresso de teste | ~2 s | — | 6/6 linhas, confiança ≥0,995 |
+
+## Prova na tela
+
+![Proposta montada só pelo OCR](evidence/mercos-ia/12-ocr-proposta.png)
+
+Capturado em 2026-10-24, com o serviço rodando na VPS e o catálogo real da
+instalação (1.000 produtos). O log da rota confirma a origem e o custo:
+
+```
+[importar-ia] pedido lido pelo OCR  linhas=6 itens=5 confianca_media=0.94 motor=paddleocr
+llm_calls na janela: 0
+```
+
+A tela mostra os três desfechos do casamento, de propósito:
+
+- **ÁGUA SANITÁRIA BILL 5L** — `Encontrado`, produto e quantidade já preenchidos;
+- **ÁLCOOL 46% IL** — `Escolha o produto`: o OCR leu `1L` como `IL`, o número não
+  casa e a busca **não** pré-seleciona um produto de outra medida;
+- **AMACIANTE 5L** — `Confira`: três produtos empatados em 100%, e empate não
+  escolhe sozinho.
 
 ## "Treinar com os nossos produtos"
 
