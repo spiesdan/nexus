@@ -129,12 +129,20 @@ def carregar_motor() -> Any:
                 text_recognition_model_name=MODELO_RECONHECIMENTO,
                 cpu_threads=CPU_THREADS,
             )
-        except Exception:
-            # O caminho normal é o de cima. Este existe para uma troca de
-            # biblioteca que renomeie o modelo: aí o serviço ainda sobe, e o
-            # `/healthz` mostra qual motor respondeu. Perder a leitura do
-            # pedido é pior que gastar memória.
-            _motor = PaddleOCR(**base, lang=LANG, cpu_threads=CPU_THREADS)
+        except TypeError:
+            # Só o parâmetro de DESEMPENHO é opcional. Se `cpu_threads` sumir
+            # numa versão futura, o serviço segue com o padrão da biblioteca.
+            #
+            # Não há fallback para "sem nome de modelo": ele carregaria o
+            # default (v6 medium no 3.7.0) e voltaria a morrer de OOM no
+            # primeiro pedido — falha silenciosa, por requisição, em vez de
+            # falha alta no build e no boot. Modelo errado não é degradação
+            # aceitável; é o defeito que este arquivo existe para impedir.
+            _motor = PaddleOCR(
+                **base,
+                text_detection_model_name=MODELO_DETECCAO,
+                text_recognition_model_name=MODELO_RECONHECIMENTO,
+            )
         return _motor
 
 
