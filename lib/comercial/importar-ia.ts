@@ -61,8 +61,7 @@ export type Extracao = z.infer<typeof extracaoSchema>;
  *
  * Os limites continuam valendo porque a validação é a Zod acima (`validate`):
  * teto de 100 itens, nome de 200 caracteres e quantidade padrão 1 são
- * conferidos LOCALMENTE, sem viajar na requisição. O schema mínimo também
- * funciona em Anthropic/OpenAI — não é um caminho só para o Google.
+ * conferidos LOCALMENTE, sem viajar na requisição.
  */
 export const ESQUEMA_DE_EXTRACAO_PARA_O_MODELO: JSONSchema7 = {
   type: "object",
@@ -82,16 +81,46 @@ export const ESQUEMA_DE_EXTRACAO_PARA_O_MODELO: JSONSchema7 = {
   },
 };
 
+function validarExtracao(valor: unknown) {
+  const resultado = extracaoSchema.safeParse(valor);
+  return resultado.success
+    ? { success: true as const, value: resultado.data }
+    : { success: false as const, error: resultado.error };
+}
+
+/** O schema do Google: o mínimo que devolveu 200 (ver o comentário acima). */
 export const extracaoParaOModelo = jsonSchema<Extracao>(
   ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
-  {
-    validate: (valor) => {
-      const resultado = extracaoSchema.safeParse(valor);
-      return resultado.success
-        ? { success: true, value: resultado.data }
-        : { success: false, error: resultado.error };
-    },
-  },
+  { validate: validarExtracao },
+);
+
+/**
+ * O schema dos demais provedores, fechado.
+ *
+ * OpenAI em modo estrito exige `additionalProperties: false` em TODO objeto;
+ * sem isso a chamada é recusada antes de ler a imagem. O Gemini recusa o
+ * schema completo, então a rota escolhe pelo provedor: Google usa o mínimo,
+ * todo o resto usa este. Anthropic aceita os dois; OpenRouter repassa o
+ * schema ao provedor de baixo, e o fechado é o que serve para OpenAI.
+ */
+function fecharObjetos(schema: JSONSchema7): JSONSchema7 {
+  const copia = structuredClone(schema);
+  const fechar = (no: JSONSchema7) => {
+    if (no.type === "object") no.additionalProperties = false;
+    for (const filho of Object.values(no.properties ?? {})) {
+      if (filho !== null && typeof filho === "object") fechar(filho as JSONSchema7);
+    }
+    if (no.items !== undefined && !Array.isArray(no.items)) {
+      fechar(no.items as JSONSchema7);
+    }
+  };
+  fechar(copia);
+  return copia;
+}
+
+export const extracaoParaOModeloFechado = jsonSchema<Extracao>(
+  fecharObjetos(ESQUEMA_DE_EXTRACAO_PARA_O_MODELO),
+  { validate: validarExtracao },
 );
 
 export type ConfiancaDoCaso = "alta" | "media" | "baixa" | "nenhuma";

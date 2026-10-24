@@ -10,6 +10,7 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ESQUEMA_DE_EXTRACAO_PARA_O_MODELO } from "@/lib/comercial/importar-ia";
 import type { Produto } from "@/lib/schemas/produtos";
 
 const ORG_ID = "33333333-3333-4333-8333-333333333333";
@@ -21,6 +22,7 @@ const requireRoleMock = vi.hoisted(() => vi.fn());
 const createClientMock = vi.hoisted(() => vi.fn());
 const adminInsertMock = vi.hoisted(() => vi.fn());
 const computeCostMock = vi.hoisted(() => vi.fn());
+const providerMock = vi.hoisted(() => vi.fn(() => "anthropic"));
 
 vi.mock("ai", () => ({
   generateObject: generateObjectMock,
@@ -41,7 +43,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 vi.mock("@/lib/ai/runtime/cost", () => ({ computeCostCents: computeCostMock }));
-vi.mock("@/lib/ai/log-invocation", () => ({ providerDoModelo: () => "anthropic" }));
+vi.mock("@/lib/ai/log-invocation", () => ({ providerDoModelo: providerMock }));
 
 function produto(parcial: Partial<Produto> & Pick<Produto, "id" | "nome">): Produto {
   return {
@@ -145,6 +147,7 @@ beforeEach(() => {
   } as never);
   computeCostMock.mockResolvedValue(0);
   adminInsertMock.mockResolvedValue({ error: null });
+  providerMock.mockReturnValue("anthropic");
   generateObjectMock.mockResolvedValue({
     object: {
       itens: [{ nome: "AGUA SANITARIA BILL 5 L", quantidade: 2 }],
@@ -182,6 +185,25 @@ describe("POST /api/v1/commercial-orders/importar-ia", () => {
     expect(chamada.maxOutputTokens).toBe(8_192);
     expect(de).toHaveBeenCalledWith("catalog_products");
     expect(builder.eq).toHaveBeenCalledWith("organization_id", ORG_ID);
+  });
+
+  it("o schema muda com o provedor: Google mínimo, OpenAI/Anthropic fechado", async () => {
+    providerMock.mockReturnValue("google");
+    const { POST } = await import("./route");
+
+    await POST(request(formDeTexto("2 agua sanitária")));
+    const chamadaGoogle = generateObjectMock.mock.calls[0]?.[0] as {
+      schema: { jsonSchema: unknown };
+    };
+    expect(chamadaGoogle.schema.jsonSchema).toEqual(ESQUEMA_DE_EXTRACAO_PARA_O_MODELO);
+
+    generateObjectMock.mockClear();
+    providerMock.mockReturnValue("openai");
+    await POST(request(formDeTexto("2 agua sanitária")));
+    const chamadaOpenai = generateObjectMock.mock.calls[0]?.[0] as {
+      schema: { jsonSchema: { additionalProperties?: boolean } };
+    };
+    expect(chamadaOpenai.schema.jsonSchema.additionalProperties).toBe(false);
   });
 
   it("texto colado não vira arquivo e é fechado em <pedido>", async () => {

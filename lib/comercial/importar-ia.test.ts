@@ -20,6 +20,7 @@ import {
   casarItensComCatalogo,
   ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
   extracaoParaOModelo,
+  extracaoParaOModeloFechado,
   LIMITE_DE_ITENS,
 } from "@/lib/comercial/importar-ia";
 import type { Produto } from "@/lib/schemas/produtos";
@@ -215,6 +216,18 @@ describe("schema enviado ao modelo", () => {
     expect(modelo.doGenerateCalls[0]?.responseFormat).toEqual({
       type: "json",
       schema: ESQUEMA_DE_EXTRACAO_PARA_O_MODELO,
+    });
+  });
+
+  it("o schema dos demais provedores fecha todos os objetos", () => {
+    // OpenAI em modo estrito recusa objeto sem `additionalProperties: false`.
+    expect(extracaoParaOModeloFechado.jsonSchema).toMatchObject({
+      additionalProperties: false,
+      properties: {
+        itens: {
+          items: { additionalProperties: false },
+        },
+      },
     });
   });
 
