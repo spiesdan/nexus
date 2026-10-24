@@ -20,6 +20,7 @@ agente-papeis-operador.spec.ts
 auditoria-aceite-11-itens.spec.ts
 auth.spec.ts
 automacao-diz-a-verdade.spec.ts
+campanha-controle-entrega.spec.ts
 capacidades-do-agente.spec.ts
 central-de-avisos-capacidades.spec.ts
 compras-do-rascunho-ao-estoque.spec.ts
