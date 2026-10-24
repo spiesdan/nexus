@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resumirEnvios, type EnvioDaCampanha } from "@/lib/prospeccao/resumo-de-envio";
+import {
+  entregaDoStatus,
+  resumirEnvios,
+  type EnvioDaCampanha,
+} from "@/lib/prospeccao/resumo-de-envio";
 
 /**
  * A conta que a tela de controle mostra.
@@ -72,5 +76,61 @@ describe("resumirEnvios", () => {
     expect(r.pendentes).toBe(0);
     expect(r.percentual).toBe(0);
     expect(r.ultimo_envio_at).toBeNull();
+  });
+});
+
+describe("o degrau de entrega que o canal confirmou", () => {
+  it("conta lido como entregue também — 10 lidas e 3 entregues seria contradição", () => {
+    const r = resumirEnvios({
+      sends: [
+        { prospect_id: "a", message_id: "m1", enviado_em: null, status: "read" },
+        { prospect_id: "b", message_id: "m2", enviado_em: null, status: "delivered" },
+        { prospect_id: "c", message_id: "m3", enviado_em: null, status: "failed" },
+        { prospect_id: "d", message_id: "m4", enviado_em: null, status: "sent" },
+      ],
+    });
+
+    expect(r.enviados).toBe(4);
+    expect(r.entregues).toBe(2);
+    expect(r.lidos).toBe(1);
+    expect(r.falhas).toBe(1);
+  });
+
+  it("reserva sem comprovante não entra em nenhum degrau de entrega", () => {
+    const r = resumirEnvios({ sends: [{ prospect_id: "a", message_id: null, enviado_em: null }] });
+
+    expect(r.enviados).toBe(0);
+    expect(r.entregues).toBe(0);
+    expect(r.lidos).toBe(0);
+    expect(r.falhas).toBe(0);
+    expect(r.sem_confirmacao).toBe(1);
+  });
+
+  it("quem não consultou `messages` não vira falha nem entrega", () => {
+    const r = resumirEnvios({ sends: [{ prospect_id: "a", message_id: "m1", enviado_em: null }] });
+
+    expect(r.enviados).toBe(1);
+    expect(r.entregues).toBe(0);
+    expect(r.lidos).toBe(0);
+    expect(r.falhas).toBe(0);
+  });
+});
+
+describe("entregaDoStatus", () => {
+  it.each([
+    ["read", "lida"],
+    ["delivered", "entregue"],
+    ["failed", "falhou"],
+    ["sent", "enviada"],
+    ["queued", "enviada"],
+    ["sending", "enviada"],
+  ] as const)("%s → %s", (status, esperado) => {
+    expect(entregaDoStatus(status)).toBe(esperado);
+  });
+
+  it("status que o produto não conhece devolve null em vez de inventar degrau", () => {
+    expect(entregaDoStatus("deleted")).toBeNull();
+    expect(entregaDoStatus(null)).toBeNull();
+    expect(entregaDoStatus(undefined)).toBeNull();
   });
 });

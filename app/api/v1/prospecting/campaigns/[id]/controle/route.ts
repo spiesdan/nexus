@@ -39,7 +39,7 @@ import {
   type CidadeDaCampanha,
 } from "@/lib/prospeccao/publico-da-base";
 import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
-import { resumirEnvios, type EnvioDaCampanha } from "@/lib/prospeccao/resumo-de-envio";
+import { resumirEnvios, entregaDoStatus, type EnvioDaCampanha, type EntregaConfirmada } from "@/lib/prospeccao/resumo-de-envio";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +100,14 @@ interface EmpresaControle {
   enviado_em: string | null;
   mensagem_indice: number | null;
   conversa_id: string | null;
+  /**
+   * O que o CANAL confirmou depois do envio (`messages.status`). `null` quando
+   * a linha de mensagem não pôde ser lida — a lista continua valendo.
+   */
+  entrega: EntregaConfirmada;
+  /** Instantes que o webhook do canal gravou. */
+  entregue_em: string | null;
+  lida_em: string | null;
 }
 
 interface LinhaProspect {
@@ -124,6 +132,23 @@ interface LinhaMensagem {
   id: string;
   conversation_id: string;
   sent_at: string | null;
+  /** O que o canal respondeu — a campanha mostra este degrau. */
+  status: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+}
+
+/** O degrau de entrega de uma linha do ledger, pronto para a resposta. */
+function entregaDaMensagem(msg: LinhaMensagem | null | undefined): {
+  entrega: EntregaConfirmada;
+  entregue_em: string | null;
+  lida_em: string | null;
+} {
+  return {
+    entrega: entregaDoStatus(msg?.status),
+    entregue_em: msg?.delivered_at ?? null,
+    lida_em: msg?.read_at ?? null,
+  };
 }
 
 interface EnvioLinha extends EnvioDaCampanha {
@@ -180,7 +205,7 @@ async function buscarMensagens(
   for (let i = 0; i < validos.length; i += LOTE) {
     const { data, error } = await admin
       .from("messages")
-      .select("id, conversation_id, sent_at")
+      .select("id, conversation_id, sent_at, status, delivered_at, read_at")
       .eq("organization_id", organizationId)
       .in("id", validos.slice(i, i + LOTE));
     if (error) throw new Error(`mensagens_indisponiveis: ${error.message}`);
@@ -314,6 +339,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
           enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
           mensagem_indice: envio?.mensagem_indice ?? null,
           conversa_id: msg?.conversation_id ?? null,
+          ...entregaDaMensagem(msg),
         };
       });
       // A campanha pode ter enviado pelo "Enviar agora" sem gravar
@@ -342,6 +368,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
               enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
               mensagem_indice: envio?.mensagem_indice ?? null,
               conversa_id: msg?.conversation_id ?? null,
+              ...entregaDaMensagem(msg),
             };
           }),
         );
@@ -387,6 +414,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
             enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
             mensagem_indice: envio?.mensagem_indice ?? null,
             conversa_id: msg?.conversation_id ?? null,
+            ...entregaDaMensagem(msg),
           };
         });
       } else {
@@ -408,6 +436,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
             enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
             mensagem_indice: envio?.mensagem_indice ?? null,
             conversa_id: msg?.conversation_id ?? null,
+            ...entregaDaMensagem(msg),
           };
         });
       }
@@ -424,7 +453,18 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
   const resumo = resumirEnvios({
     prospectIds: lista,
-    sends: envios,
+    // O degrau de entrega vem de `messages` (o canal confirma depois do POST).
+    // `envios` sozinho não sabe se a mensagem chegou — o ledger guarda só o
+    // comprovante de que ela saiu.
+    sends: envios.map((e) => {
+      const msg = e.message_id ? mensagens.get(e.message_id) : null;
+      return {
+        ...e,
+        status: msg?.status ?? null,
+        delivered_at: msg?.delivered_at ?? null,
+        read_at: msg?.read_at ?? null,
+      };
+    }),
     totalFallback: previaBase ? empresas.length : 0,
   });
 
