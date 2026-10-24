@@ -299,8 +299,19 @@ services:
       context: ocr
       dockerfile: Dockerfile
     restart: unless-stopped
-    mem_limit: 900m
+    # Teto MEDIDO, não chutado. Os modelos mobile (v5) têm pico de 716 MiB na
+    # foto de referência a 960 px; 1024m deixa ~300 MiB de folga para uma foto
+    # quadrada ou um pedido com muitas linhas.
+    #
+    # O valor anterior (900m) matava o serviço: o default do PaddleOCR 3.7 é o
+    # PP-OCRv6 medium, que passa de 900 MiB no predict e faz o cgroup matar o
+    # `uvicorn` no meio do pedido — o container reiniciava e o app via
+    # "fetch failed". O app.py fixa os modelos mobile; este teto é a segunda
+    # metade da correção.
+    mem_limit: 1024m
     environment:
+      # Idioma DECLARADO em /healthz. Não escolhe modelo: o reconhecedor é o
+      # `latin_PP-OCRv5_mobile_rec`, que cobre pt/es/fr/de. Ver ocr/app.py.
       OCR_LANG: ${OCR_LANG:-pt}
       OCR_CPU_THREADS: ${OCR_CPU_THREADS:-2}
     healthcheck:

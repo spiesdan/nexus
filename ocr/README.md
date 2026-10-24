@@ -13,21 +13,42 @@ foto → ocr/ (PaddleOCR) → linhas + confiança → catálogo (busca relaxada)
 
 ## Motor
 
-- **PaddleOCR 3.7.0** + **PaddlePaddle 3.3.1**, CPU, `lang="pt"`.
-- Modelo latino do **PP-OCRv5** (`latin_PP-OCRv5_mobile_rec`), Apache 2.0.
+- **PaddleOCR 3.7.0** + **PaddlePaddle 3.3.1**, CPU.
+- Modelos **nomeados**: `PP-OCRv5_mobile_det` + `latin_PP-OCRv5_mobile_rec`
+  (latino, português incluso), Apache 2.0.
 - Sem GPU, sem serviço externo, sem chave de API.
 - Modelos baixados **no build** da imagem (o primeiro pedido não espera download).
 
+### Por que os modelos são nomeados, e não o default
+
+`PaddleOCR(lang="pt")` no 3.7.0 resolve para **PP-OCRv6 medium**, não para o
+mobile. Medido na VPS em 2026-10-24: o `predict` passou de 900 MiB e o cgroup
+matou o `uvicorn` (`Exited with code 137`, `Memory cgroup out of memory` no
+dmesg). O container voltava saudável — o `/healthz` responde antes de qualquer
+foto — e morria no primeiro pedido real.
+
 ### Medido nesta VPS (2 vCPU, sem GPU)
 
-| Foto | Tempo | RAM | Resultado |
-|---|---|---|---|
-| `evidence/mercos-ia/pedido-manuscrito.png` (1000×750) | 7,9 s | 543 MiB | 5/5 linhas, confiança 0,906–0,996 |
-| pedido impresso de teste | 6,4 s | 543 MiB | 6/6 linhas, confiança ≥0,995 |
+Foto de referência: `evidence/mercos-ia/pedido-manuscrito.png`.
 
-O único erro real na foto manuscrita foi `ÁLCOOL` → `ÁLC00L` (zero no lugar do
-"o"). A busca do catálogo casou mesmo assim, como `média` — a tela pede
-confirmação, que é o comportamento correto.
+| Lado maior | Tempo | Pico de RAM | Resultado |
+|---|---|---|---|
+| **960 px** | **2,1 s** | **716 MiB** | **6/6 linhas, confiança 0,902–0,991** |
+| 1280 px | 2,3 s | 900 MiB | 6/6, mas `1X` virou `IX` |
+| 1600 px | 3,0 s | 1071 MiB | 6/6, mesmo `IX` |
+| 2000 px | 4,3 s | 1418 MiB | 6/6 |
+
+960 px é o limite nativo do detector: acima disso a leitura não melhora e o
+pico de memória quadruplica. O teto do serviço no compose é **1024m**, que deixa
+~300 MiB de folga sobre o pior caso medido.
+
+Com o modelo correto, a foto manuscrita sai inteira e sem o erro de antes:
+`ÁLCOOL 46%` é lido como `ÁLCOOL`, e não mais `ÁLC00L`.
+
+| Foto | Tempo | Pico | Resultado |
+|---|---|---|---|
+| `pedido-manuscrito.png` | 2,1 s | 716 MiB | 6/6 linhas, 0,902–0,991 |
+| pedido impresso de teste | ~2 s | — | 6/6 linhas, confiança ≥0,995 |
 
 ## "Treinar com os nossos produtos"
 
@@ -51,9 +72,12 @@ POST /ocr
   "texto": "...",
   "motor": "paddleocr",
   "lang": "pt",
-  "duracao_ms": 7860
+  "duracao_ms": 2100
 }
 ```
+
+`lang` é o idioma **declarado** (env `OCR_LANG`), não um seletor de modelo: o
+reconhecedor `latin_PP-OCRv5_mobile_rec` cobre pt/es/fr/de.
 
 ```http
 GET /healthz

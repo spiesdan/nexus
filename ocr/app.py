@@ -15,8 +15,19 @@ retreino — e o OCR passaria a errar o que não está no catálogo.
 ═══ Por que PaddleOCR ═════════════════════════════════════════════════════════
 
 PP-OCRv5 tem modelo latino oficial (português incluso), roda em CPU, é Apache
-2.0 e não exige GPU. O `lang="pt"` resolve para o `latin_PP-OCRv5_mobile_rec`,
-que é o menor modelo com acento português.
+2.0 e não exige GPU.
+
+Os modelos são NOMEADOS, nunca herdados do default. Medido em 2026-10-24: o
+`PaddleOCR(lang="pt")` do 3.7.0 resolve para `PP-OCRv6_medium_det` +
+`PP-OCRv6_medium_rec`, e o `predict` passa de 900 MiB — o cgroup matava o
+`uvicorn` no meio do pedido (`Memory cgroup out of memory`, dmesg da VPS). Com
+`PP-OCRv5_mobile_det` + `latin_PP-OCRv5_mobile_rec` o pico é 716 MiB na foto de
+referência, a leitura sai melhor (6/6 linhas, 0,896–0,995, `ÁLCOOL` correto) e
+o tempo cai de 7,9 s para 2,1 s.
+
+`lang` não entra no construtor: com modelo nomeado o PaddleOCR o ignora (e
+avisa). `OCR_LANG` continua sendo o idioma DECLARADO em `/healthz` — o modelo
+latino cobre pt/es/fr/de, então ele não escolhe modelo.
 
 ═══ Contrato ═════════════════════════════════════════════════════════════════
 
@@ -51,14 +62,28 @@ from pydantic import BaseModel, Field
 # evita que um upload grande vire memória do processo de OCR.
 MAX_BYTES = 20 * 1024 * 1024
 
-# Acima disso o modelo não ganha precisão (ele redimensiona internamente para
-# ~960 px no lado maior) e só gasta RAM e tempo. Uma foto de celular de 12 MP
-# cai para 2.000 px sem perder nada que o OCR consiga ler.
-MAX_LADO_PX = 2000
+# Acima disso o modelo não ganha precisão e só gasta RAM e tempo. O detector
+# do PP-OCRv5 trabalha com o lado maior em 960 px; subir a foto além disso
+# aumenta o pico de memória sem melhorar a leitura. Medido na foto de
+# referência (2026-10-24), com os modelos mobile:
+#
+#   lado   pico     tempo    leitura
+#    960   716 MiB   2,1 s    6/6 linhas, 0,902–0,991
+#   1280   900 MiB   2,3 s    6/6, mas "1X" virou "IX"
+#   1600  1071 MiB   3,0 s    6/6, mesmo "IX"
+#   2000  1418 MiB   4,3 s    6/6
+#
+# 960 é o ponto em que a leitura é melhor E o pico cabe no teto do serviço.
+MAX_LADO_PX = 960
 
 LANG = os.getenv("OCR_LANG", "pt")
 CPU_THREADS = int(os.getenv("OCR_CPU_THREADS", "2"))
 VERSAO = os.getenv("OCR_VERSAO", "local")
+
+# Modelos FIXOS, não o default da biblioteca. O comentário do topo tem a
+# medição: o default do 3.7.0 é o v6 medium, que estoura o teto de memória.
+MODELO_DETECCAO = "PP-OCRv5_mobile_det"
+MODELO_RECONHECIMENTO = "latin_PP-OCRv5_mobile_rec"
 
 _motor: Any = None
 _trava = threading.Lock()
@@ -82,7 +107,6 @@ def carregar_motor() -> Any:
         from paddleocr import PaddleOCR
 
         base: dict[str, Any] = {
-            "lang": LANG,
             # Nenhum dos três é necessário para uma foto de papel apoiada:
             # orientação de documento e unwarping custam tempo e RAM, e a
             # orientação de linha confunde manuscrito em bloco.
@@ -99,9 +123,18 @@ def carregar_motor() -> Any:
             "enable_mkldnn": False,
         }
         try:
-            _motor = PaddleOCR(**base, cpu_threads=CPU_THREADS)
+            _motor = PaddleOCR(
+                **base,
+                text_detection_model_name=MODELO_DETECCAO,
+                text_recognition_model_name=MODELO_RECONHECIMENTO,
+                cpu_threads=CPU_THREADS,
+            )
         except Exception:
-            _motor = PaddleOCR(**base)
+            # O caminho normal é o de cima. Este existe para uma troca de
+            # biblioteca que renomeie o modelo: aí o serviço ainda sobe, e o
+            # `/healthz` mostra qual motor respondeu. Perder a leitura do
+            # pedido é pior que gastar memória.
+            _motor = PaddleOCR(**base, lang=LANG, cpu_threads=CPU_THREADS)
         return _motor
 
 

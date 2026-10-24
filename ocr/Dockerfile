@@ -60,6 +60,12 @@ COPY app.py ./
 #   - o primeiro "Adicionar com IA" não espera ~100 MB de download;
 #   - o container sobe sem depender de rede de saída (VPS com firewall).
 # O cache fica em ~/.paddlex e viaja na camada da imagem.
+#
+# Quais modelos: os que o `carregar_motor` NOMEIA (v5 mobile det + latin
+# mobile rec). Se um dia essa chamada deixar de nomear, o default da
+# biblioteca entra no lugar — e no 3.7.0 ele é o v6 medium, que não cabe no
+# teto de memória do serviço. É por isso que o build baixa daqui em vez de
+# deixar para o primeiro pedido: o erro aparece no CI, não na VPS do cliente.
 RUN python -c "from app import carregar_motor; carregar_motor()"
 
 EXPOSE 8790
