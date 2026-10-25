@@ -105,6 +105,32 @@ compose de produção (é o escape que faz a instalação sobreviver a um regist
 fora do ar), mas é o override que traz o `pull_policy: never`; sem ele o
 `up -d` volta a buscar a imagem publicada.
 
+### Instalação que NÃO alcança o GHCR — use o script
+
+Quando a instalação **não tem credencial do registry** (é o caso da VPS de
+`crm.billhigiene.tech`), o caminho não é decorar os comandos acima: é
+
+```bash
+scripts/deploy-build-local.sh <sha-da-main>
+```
+
+Ele faz checkout do commit, etiqueta as seis imagens no `.env`, constrói com
+`COMPOSE_PARALLEL_LIMIT=1`, sobe e **só termina com rc 0 se os seis serviços
+fecharem `healthy`**. O que ele carrega e que os comandos à mão não carregam:
+
+- **piso de memória** antes do build — aborta no começo, não no meio;
+- **rollback do `.env`** se qualquer passo falhar (as tags são gravadas antes do
+  build, então um build quebrado deixaria o `.env` apontando para imagem
+  inexistente e o próximo `up -d` falharia);
+- **recusa em rodar com alteração não commitada** (`NEXUS_FORCE=1` descarta) —
+  `git checkout -f` apaga hotfix de plantão sem perguntar;
+- **`docker-compose.traefik.yml` fora do `up`** por padrão; quem tem Traefik
+  externo passa `NEXUS_TRAEFIK=1`.
+
+Antes de 2026-10-24 este script vivia só em `/root`, fora do git — o mesmo
+problema que ele corrige: conhecimento que some quando a máquina é
+reconstruída.
+
 **Isto é dívida, não um caminho paralelo.** A imagem existe só no disco daquela
 VPS: não está no registry, não está no git, e qualquer `docker compose up -d`
 sem `APP_PULL_POLICY=never` a substitui pela do GHCR — silenciosamente, sem erro
