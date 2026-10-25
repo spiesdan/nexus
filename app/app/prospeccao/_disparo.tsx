@@ -758,9 +758,13 @@ export function DialogoDisparo({
 
               {!plano.pode_enviar && (
                 <p className="rounded-lg bg-amber-500/15 p-2 text-xs">
-                  {t(
-                    "Não há número de WhatsApp conectado. Escaneie o QR Code em Conexões para liberar o envio.",
-                  )}
+                  {plano.bloqueio === "numero_qualidade_red"
+                    ? t(
+                        "O número oficial está com qualidade RED na Meta. O envio fica bloqueado até a qualidade voltar para GREEN — revise o conteúdo e o público dos últimos envios.",
+                      )
+                    : t(
+                        "Não há número de WhatsApp conectado. Escaneie o QR Code em Conexões para liberar o envio.",
+                      )}
                 </p>
               )}
 

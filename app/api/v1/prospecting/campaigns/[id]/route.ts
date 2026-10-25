@@ -38,7 +38,8 @@ const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
   "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, mensagem_tipo, " +
   "template_name, template_language, template_contract_hash, template_values, templates_por_categoria, " +
-  "espaco_ms, limite_diario, data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em";
+  "espaco_ms, limite_diario, data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, " +
+  "pausa_motivo, pausa_em";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -358,6 +359,10 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
       ...(input.janelas !== undefined ? { janelas: input.janelas } : {}),
       ...(input.agendada_em !== undefined ? { agendada_em: input.agendada_em } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
+      // 0286 — retomar é uma PESSOA dizendo "pode voltar". O motivo da pausa
+      // automática morre junto: deixá-lo na linha faria o controle continuar
+      // anunciando a causa depois de a campanha já estar andando.
+      ...(input.status === "ativa" ? { pausa_motivo: null, pausa_em: null } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

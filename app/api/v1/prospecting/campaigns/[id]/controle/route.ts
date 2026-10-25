@@ -48,7 +48,7 @@ const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, publico, fonte_publico, prospect_ids, " +
   "contato_ids, mensagens, mensagem_tipo, template_name, template_language, " +
   "template_contract_hash, template_values, espaco_ms, limite_diario, data_inicio, data_fim, janelas, " +
-  "agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, created_at";
+  "agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, pausa_motivo, pausa_em, created_at";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -81,6 +81,9 @@ interface CampanhaControle {
   ultimo_envio_at: string | null;
   ultimo_erro: string | null;
   ultimo_erro_em: string | null;
+  /** 0286 — por que a campanha foi pausada automaticamente (nulo = pausa humana). */
+  pausa_motivo: string | null;
+  pausa_em: string | null;
   created_at: string;
 }
 

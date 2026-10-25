@@ -3058,6 +3058,7 @@ export type Database = {
           is_warmup_complete: boolean | null;
           last_health_check_at: string | null;
           last_status_change_at: string;
+          messaging_limit: string | null;
           meta_phone_number_id: string | null;
           meta_token_encrypted: string | null;
           meta_waba_id: string | null;
@@ -3065,6 +3066,8 @@ export type Database = {
           organization_id: string;
           phone_number: string | null;
           provider: string;
+          quality_rating: string | null;
+          quality_updated_at: string | null;
           status: string;
           status_reason: string | null;
           updated_at: string;
@@ -3088,6 +3091,7 @@ export type Database = {
           is_warmup_complete?: never;
           last_health_check_at?: string | null;
           last_status_change_at?: string;
+          messaging_limit?: string | null;
           meta_phone_number_id?: string | null;
           meta_token_encrypted?: string | null;
           meta_waba_id?: string | null;
@@ -3095,6 +3099,8 @@ export type Database = {
           organization_id: string;
           phone_number?: string | null;
           provider?: string;
+          quality_rating?: string | null;
+          quality_updated_at?: string | null;
           status?: string;
           status_reason?: string | null;
           updated_at?: string;
@@ -3118,6 +3124,7 @@ export type Database = {
           is_warmup_complete?: never;
           last_health_check_at?: string | null;
           last_status_change_at?: string;
+          messaging_limit?: string | null;
           meta_phone_number_id?: string | null;
           meta_token_encrypted?: string | null;
           meta_waba_id?: string | null;
@@ -3125,6 +3132,8 @@ export type Database = {
           organization_id?: string;
           phone_number?: string | null;
           provider?: string;
+          quality_rating?: string | null;
+          quality_updated_at?: string | null;
           status?: string;
           status_reason?: string | null;
           updated_at?: string;
@@ -8275,6 +8284,8 @@ export type Database = {
           nome: string;
           objetivo: string | null;
           organization_id: string;
+          pausa_em: string | null;
+          pausa_motivo: string | null;
           prospect_ids: string[];
           publico: string;
           recorrencia_dias: number | null;
@@ -8309,6 +8320,8 @@ export type Database = {
           nome: string;
           objetivo?: string | null;
           organization_id: string;
+          pausa_em?: string | null;
+          pausa_motivo?: string | null;
           prospect_ids?: string[];
           publico?: string;
           recorrencia_dias?: number | null;
@@ -8343,6 +8356,8 @@ export type Database = {
           nome?: string;
           objetivo?: string | null;
           organization_id?: string;
+          pausa_em?: string | null;
+          pausa_motivo?: string | null;
           prospect_ids?: string[];
           publico?: string;
           recorrencia_dias?: number | null;

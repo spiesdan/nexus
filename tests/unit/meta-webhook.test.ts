@@ -190,6 +190,58 @@ describe("parseMetaWebhook", () => {
     });
   });
 
+  it("0286 — phone_number_quality_update vira evento com número e limite", () => {
+    const [e] = parseMetaWebhook({
+      object: "whatsapp_business_account",
+      entry: [
+        {
+          id: "w",
+          changes: [
+            {
+              field: "phone_number_quality_update",
+              value: {
+                display_phone_number: "5511999999999",
+                event: "THROUGHPUT_DOWNGRADE",
+                current_limit: "TIER_2K",
+                old_limit: "TIER_10K",
+                max_daily_conversations_per_business: "TIER_2K",
+              },
+            },
+          ],
+        },
+      ],
+    });
+    // O evento fala de LIMITE, não da nota GREEN/YELLOW/RED: quem lê não pode
+    // confundir os dois, senão uma queda de qualidade fica invisível.
+    expect(e).toMatchObject({
+      kind: "phone_quality",
+      displayPhoneNumber: "5511999999999",
+      event: "THROUGHPUT_DOWNGRADE",
+      currentLimit: "TIER_2K",
+      oldLimit: "TIER_10K",
+      maxDailyConversationsPerBusiness: "TIER_2K",
+    });
+  });
+
+  it("phone_number_quality_update sem número é descartado — não há sessão para amarrar", () => {
+    expect(
+      parseMetaWebhook({
+        object: "whatsapp_business_account",
+        entry: [
+          {
+            id: "w",
+            changes: [
+              {
+                field: "phone_number_quality_update",
+                value: { event: "THROUGHPUT_DOWNGRADE", current_limit: "TIER_2K" },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
   it("campo desconhecido é IGNORADO, não erro — senão a Meta re-entrega em loop", () => {
     const eventos = parseMetaWebhook({
       object: "whatsapp_business_account",

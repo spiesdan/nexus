@@ -318,6 +318,20 @@ export interface ChannelHealth {
   status: string | null;
   /** Detalhe do erro, para o corpo do aviso. Nunca credencial. */
   detail: string | null;
+  /**
+   * Qualidade do NÚMERO na plataforma (GREEN/YELLOW/RED/UNKNOWN), quando o
+   * canal a expõe. `null`/ausente = este canal não responde essa pergunta.
+   *
+   * Mora no contrato de saúde, e não num método próprio, porque é lida na
+   * MESMA chamada que já responde "a credencial presta": separar criaria uma
+   * segunda rodada de rede para uma pergunta que a primeira já trouxe.
+   */
+  qualityRating?: string | null;
+  /**
+   * Degrau de limite de mensagens do portfólio, quando a plataforma informa
+   * (ex.: `TIER_2K`). Null/ausente = não informado por este canal.
+   */
+  messagingLimit?: string | null;
 }
 
 /** Definição aprovada, na forma NEUTRA — sem o vocabulário de nenhum provider. */

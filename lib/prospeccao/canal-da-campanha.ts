@@ -18,6 +18,7 @@ import {
   DEFAULT_CHANNEL_PROVIDER,
   type ChannelProvider,
 } from "@/lib/channels";
+import { normalizarQualidade } from "@/lib/channels/number-quality";
 
 import type { TipoDaMensagem } from "./mensagem-da-campanha";
 
@@ -25,6 +26,13 @@ export interface SessaoDaCampanha {
   id: string;
   provider?: string | null;
   daily_message_limit?: number | null;
+  /**
+   * Última qualidade lida da plataforma (`GREEN`/`YELLOW`/`RED`/`UNKNOWN`).
+   * `null`/ausente = o canal não responde essa pergunta — é o caso de TODO
+   * número por QR: a Meta não publica nota de qualidade para número pareado
+   * fora da API oficial.
+   */
+  quality_rating?: string | null;
 }
 
 function providerSeguro(provider: string | null | undefined): ChannelProvider {
@@ -56,15 +64,49 @@ export function providerAceitaTipo(
 }
 
 /**
- * A primeira sessão compatível, na ordem em que o banco devolveu.
+ * A sessão está com a qualidade do NÚMERO em RED?
  *
- * `null` é um estado legítimo e visível: não há canal conectado que fale deste
- * jeito. O tick registra o motivo na campanha (`ultimo_erro`) em vez de tentar
- * por um canal que a plataforma vai recusar.
+ * Só o canal oficial tem nota — número por QR vem sem `quality_rating`, e
+ * `normalizarQualidade(null)` devolve `null`, nunca `RED`. Ou seja: este gate
+ * não alcança o caminho não oficial, nem por acidente. Lá a proteção é outra
+ * (aquecimento + espaçamento + teto diário), porque a Meta simplesmente não
+ * expõe reputação de número pareado por QR.
+ */
+export function sessaoComQualidadeRuim(sessao: SessaoDaCampanha): boolean {
+  return normalizarQualidade(sessao.quality_rating) === "RED";
+}
+
+/**
+ * A primeira sessão compatível com o tipo E sem qualidade RED.
+ *
+ * Pular a sessão RED (em vez de escolher a primeira compatível e parar) é o que
+ * permite a organização com dois números oficiais continuar falando pelo
+ * saudável. Quando TODAS as compatíveis estão em RED, a escolha devolve `null`
+ * e o chamador pausa com motivo — em vez de seguir por um número que a
+ * plataforma já sinalizou.
  */
 export function escolherSessaoDaCampanha(
   sessoes: readonly SessaoDaCampanha[],
   tipo: TipoDaMensagem,
 ): SessaoDaCampanha | null {
-  return sessoes.find((s) => canalAceitaTipo(s, tipo)) ?? null;
+  return sessoes.find((s) => canalAceitaTipo(s, tipo) && !sessaoComQualidadeRuim(s)) ?? null;
+}
+
+/**
+ * Havia sessão compatível, e ela foi recusada SÓ pela qualidade?
+ *
+ * É o que distingue "não há canal para este tipo" (o operador precisa conectar
+ * um número) de "o canal existe e está sinalizado" (o operador precisa corrigir
+ * o conteúdo e esperar a qualidade voltar). Dois problemas, dois próximos
+ * passos — dizer o primeiro quando o defeito é o segundo manda a pessoa
+ * consertar o que não está quebrado.
+ */
+export function bloqueadaPorQualidade(
+  sessoes: readonly SessaoDaCampanha[],
+  tipo: TipoDaMensagem,
+): boolean {
+  return (
+    sessoes.some((s) => canalAceitaTipo(s, tipo)) &&
+    sessoes.every((s) => !canalAceitaTipo(s, tipo) || sessaoComQualidadeRuim(s))
+  );
 }

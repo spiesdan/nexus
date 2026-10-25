@@ -112,6 +112,9 @@ interface CampanhaControle {
   ultimo_envio_at: string | null;
   ultimo_erro: string | null;
   ultimo_erro_em: string | null;
+  /** 0286 — por que a campanha parou sozinha (nulo = pausa feita por pessoa). */
+  pausa_motivo: string | null;
+  pausa_em: string | null;
   created_at: string;
 }
 
@@ -542,7 +545,30 @@ export function ControleDaCampanha({ id }: { id: string }) {
         {ehContatos && <Badge variant="info">{t("Recuperação")}</Badge>}
       </div>
 
-      {dados.campanha.ultimo_erro && (
+      {dados.campanha.pausa_motivo && (
+        <Card className="flex items-start gap-3 border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+          <Pause size={18} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium text-amber-700 dark:text-amber-400">
+              {t("Campanha pausada automaticamente")}
+            </p>
+            <p className="whitespace-pre-wrap">{dados.campanha.pausa_motivo}</p>
+            {dados.campanha.pausa_em && (
+              <p className="text-xs text-muted-foreground">
+                {t(`Pausada em ${formatarData(dados.campanha.pausa_em)}`)}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {t("Retomar a campanha limpa este aviso.")}
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {/* O mesmo texto aparece em `ultimo_erro` quando a pausa veio do tick;
+          repetir dois cartões idênticos só empurraria o resto da tela para
+          baixo. Quando os textos diferem, os dois são informação. */}
+      {dados.campanha.ultimo_erro && dados.campanha.ultimo_erro !== dados.campanha.pausa_motivo && (
         <Card className="flex items-start gap-3 border-destructive/40 bg-destructive/5 p-4 text-sm">
           <WarningCircle size={18} className="mt-0.5 shrink-0 text-destructive" aria-hidden />
           <div className="min-w-0 space-y-1">

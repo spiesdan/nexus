@@ -40,6 +40,7 @@ import {
 } from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
 import {
+  bloqueadaPorQualidade,
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
@@ -82,6 +83,8 @@ export type MotivoDoPulo =
   | "sem_canal_texto"
   /** Campanha de template e nenhum canal WORKING aceita modelo aprovado. */
   | "sem_canal_template"
+  /** 0286 — o canal existe, mas o número oficial está com qualidade RED. */
+  | "numero_qualidade_red"
   | "template_invalido"
   /** 0285 — a categoria do prospect não tem modelo configurado na campanha. */
   | "template_da_categoria_ausente"
@@ -251,6 +254,19 @@ export async function processarCampanhasAgendadas(
         campanha.mensagem_tipo === "template" ? "template" : "texto";
       const sessao = escolherSessaoDaCampanha(org.sessoes, tipo);
       if (!sessao) {
+        // 0286 — dois desfechos diferentes, dois próximos passos diferentes.
+        // Se o canal existe e foi recusado pela qualidade, o problema não é
+        // conexão: é reputação. Dizer "conecte um número" aqui mandaria o
+        // operador refazer uma conexão que já está de pé.
+        if (bloqueadaPorQualidade(org.sessoes, tipo)) {
+          const erro =
+            "O número oficial está com qualidade RED na Meta. A campanha foi pausada para não piorar a avaliação do número. " +
+            "Revise o conteúdo e o público dos últimos envios; quando a qualidade voltar para GREEN, retome a campanha.";
+          await registrarErroDaCampanha(admin, campanha, erro, agoraIso, true);
+          resumo.pausadas++;
+          resumo.pulados.push({ campanha: campanha.id, motivo: "numero_qualidade_red" });
+          continue;
+        }
         const motivo = tipo === "template" ? "sem_canal_template" : "sem_canal_texto";
         const erro =
           tipo === "template"
@@ -606,7 +622,7 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id, provider, daily_message_limit")
+    .select("id, provider, daily_message_limit, quality_rating")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -657,8 +673,16 @@ async function carregarEstadoDaSessao(
 /**
  * Deixa o motivo na campanha — o invariante 4 do sistema vivo ("nenhuma
  * demanda sem próximo passo") vale também para o que NÃO saiu. `pausar` é
- * usado para erro de configuração (modelo mudou/reprovado): insistir a cada
- * minuto só queimaria a fila. Falta de canal NÃO pausa: o número pode voltar.
+ * usado para erro de configuração (modelo mudou/reprovado, número em RED):
+ * insistir a cada minuto só queimaria a fila. Falta de canal NÃO pausa: o
+ * número pode voltar.
+ *
+ * Quando pausa, grava também `pausa_motivo`/`pausa_em` (0286). São colunas
+ * separadas de `ultimo_erro` porque respondem a outra pergunta: `ultimo_erro`
+ * é "o que deu errado na última tentativa", `pausa_motivo` é "por que esta
+ * campanha está parada". O controle mostra a segunda em destaque — e é ela que
+ * o PATCH de retomada zera, senão o aviso continuaria na tela depois de a
+ * campanha voltar a andar.
  */
 async function registrarErroDaCampanha(
   admin: SupabaseClient,
@@ -667,12 +691,13 @@ async function registrarErroDaCampanha(
   agoraIso: string,
   pausar: boolean,
 ): Promise<void> {
+  const texto = erro.slice(0, 2000);
   const { error } = await admin
     .from("prospecting_campaigns")
     .update({
-      ultimo_erro: erro.slice(0, 2000),
+      ultimo_erro: texto,
       ultimo_erro_em: agoraIso,
-      ...(pausar ? { status: "pausada" } : {}),
+      ...(pausar ? { status: "pausada", pausa_motivo: texto, pausa_em: agoraIso } : {}),
     })
     .eq("id", campanha.id)
     .eq("organization_id", campanha.organization_id);

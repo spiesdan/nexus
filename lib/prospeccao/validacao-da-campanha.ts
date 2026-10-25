@@ -18,6 +18,7 @@ import {
 } from "@/lib/channels/templates/para-campanha";
 
 import {
+  bloqueadaPorQualidade,
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "./canal-da-campanha";
@@ -43,7 +44,7 @@ export async function sessoesWorkingDaOrg(
 ): Promise<SessaoDaCampanha[]> {
   const { data, error } = await admin
     .from("channel_sessions")
-    .select("id, provider, daily_message_limit")
+    .select("id, provider, daily_message_limit, quality_rating")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -105,6 +106,18 @@ export async function validarBindDaCampanha(
 
   const sessao = escolherSessaoDaCampanha(sessoes, bind.tipo);
   if (!sessao) {
+    // 0286 — mesmo par de desfechos do tick: canal ausente x número em RED.
+    // Ativar uma campanha num número sinalizado é prometer um envio que o tick
+    // vai pausar no minuto seguinte; o erro sai aqui, com o próximo passo certo.
+    if (bloqueadaPorQualidade(sessoes, bind.tipo)) {
+      return {
+        ok: false,
+        codigo: "numero_qualidade_red",
+        erro:
+          "O número oficial está com qualidade RED na Meta. Revise o conteúdo e o público dos últimos envios; " +
+          "quando a qualidade voltar para GREEN, ative a campanha.",
+      };
+    }
     return {
       ok: false,
       codigo: bind.tipo === "template" ? "sem_canal_template" : "sem_canal_texto",

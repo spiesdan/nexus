@@ -123,13 +123,15 @@ export const metaCloudAdapter: ChannelAdapter = {
    * Sem este método o cron de saúde PULAVA a sessão (`if (!adapter.checkHealth)
    * continue`), sem log e sem contador: token vencido, número suspenso ou
    * permissão removida viravam silêncio absoluto com a tela dizendo
-   * "conectado". E este canal não tem sequer o empurrão que o intermediado tem
-   * — `lib/channels/meta/webhook.ts` só trata `messages` e status de template,
-   * não `account_update` nem `phone_number_quality_update`.
+   * "conectado". A 0286 acrescentou o webhook `phone_number_quality_update`,
+   * mas ele fala de LIMITE/throughput — a nota de qualidade (GREEN/YELLOW/RED)
+   * continua vindo só daqui, nesta chamada.
    *
    * Reusa a MESMA chamada da validação de credencial: `GET /{phone_number_id}`.
    * O `sessionRef` deste canal É o `phone_number_id` (ver `resolveSessionRef`),
-   * então ele já é a chave da consulta.
+   * então ele já é a chave da consulta. A resposta traz `quality_rating` e o
+   * degrau de limite do portfólio — os dois alimentam `channel_sessions` e o
+   * gate de qualidade da campanha (`lib/channels/number-quality.ts`).
    *
    * `error` no corpo com HTTP 200 é comportamento real da Graph API, por isso a
    * checagem olha os dois. Erro de rede devolve `reachable: false` sem status:
@@ -147,7 +149,7 @@ export const metaCloudAdapter: ChannelAdapter = {
     const version = process.env.META_GRAPH_VERSION ?? "v22.0";
     try {
       const res = await fetch(
-        `https://graph.facebook.com/${version}/${input.sessionRef}?fields=display_phone_number,quality_rating`,
+        `https://graph.facebook.com/${version}/${input.sessionRef}?fields=display_phone_number,quality_rating,whatsapp_business_manager_messaging_limit`,
         {
           headers: { Authorization: `Bearer ${creds.token}` },
           // Teto de espera: um endpoint que pendura a conexão penduraria o cron
@@ -157,6 +159,8 @@ export const metaCloudAdapter: ChannelAdapter = {
       );
       const body = (await res.json().catch(() => ({}))) as {
         error?: { message?: string; code?: number };
+        quality_rating?: unknown;
+        whatsapp_business_manager_messaging_limit?: unknown;
       };
 
       if (res.status === 401 || res.status === 403) {
@@ -168,7 +172,19 @@ export const metaCloudAdapter: ChannelAdapter = {
         // justamente a falha calada sem aviso.
         return { reachable: true, status: "FAILED", detail: (body.error?.message ?? "").slice(0, 200) || null };
       }
-      return { reachable: true, status: "WORKING", detail: null };
+      // A qualidade já vinha na resposta e era descartada: o `fields` acima a
+      // pede desde a primeira versão. Devolvê-la é o que permite a 0286 pausar
+      // a campanha em RED em vez de seguir disparando por um número sinalizado.
+      return {
+        reachable: true,
+        status: "WORKING",
+        detail: null,
+        qualityRating: typeof body.quality_rating === "string" ? body.quality_rating : null,
+        messagingLimit:
+          typeof body.whatsapp_business_manager_messaging_limit === "string"
+            ? body.whatsapp_business_manager_messaging_limit
+            : null,
+      };
     } catch (err) {
       const detail = err instanceof Error ? err.message : "erro_desconhecido";
       return { reachable: false, status: null, detail: detail.slice(0, 200) };

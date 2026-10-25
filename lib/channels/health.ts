@@ -30,6 +30,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { normalizarQualidade, sincronizarQualidadeDoNumero } from "./number-quality";
+
 /** Único estado em que mensagem entra e sai. Contrato do CRM (uppercase). */
 export const STATUS_SAUDAVEL = "WORKING";
 
@@ -84,6 +86,13 @@ export interface SaudeObservada {
   reachable: boolean;
   status: string | null;
   detail: string | null;
+  /**
+   * Qualidade do número na plataforma, quando o canal a informa. Lida na mesma
+   * chamada de saúde (0286); ausente = este canal não responde essa pergunta.
+   */
+  qualityRating?: string | null;
+  /** Degrau de limite do portfólio, quando informado pelo canal. */
+  messagingLimit?: string | null;
 }
 
 /**
@@ -239,6 +248,21 @@ export async function sincronizarSaudeDaConexao(
    */
   origem: "varredura" | "empurrao" = "varredura",
 ): Promise<"avisado" | "ja_avisado" | "resolvido" | "sem_mudanca"> {
+  // A qualidade do número é um eixo PRÓPRIO: ela não muda o status da conexão
+  // (o número segue `WORKING` em RED) e tem consequência própria — pausar as
+  // campanhas por modelo. Roda antes do status porque o `return` antecipado de
+  // "tudo certo" engoliria a pior notícia do canal.
+  if (saude.qualityRating !== undefined || saude.messagingLimit !== undefined) {
+    await sincronizarQualidadeDoNumero(admin, {
+      organizationId: sessao.organization_id,
+      sessaoId: sessao.id,
+      apelido,
+      qualidade: normalizarQualidade(saude.qualityRating) ?? null,
+      limite: saude.messagingLimit ?? null,
+      agoraIso: new Date().toISOString(),
+    });
+  }
+
   const aviso = avisoDaConexao(saude, apelido);
 
   const { data: linha } = await admin

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CHANNEL_CAPABILITIES, type ChannelProvider } from "@/lib/channels";
 
 import {
+  bloqueadaPorQualidade,
   canalAceitaTipo,
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
@@ -63,5 +64,45 @@ describe("escolherSessaoDaCampanha", () => {
   it("provider desconhecido também cai no default, em vez de explodir", () => {
     expect(canalAceitaTipo({ id: "x", provider: "provider_novo" }, "texto")).toBe(true);
     expect(canalAceitaTipo({ id: "x", provider: "provider_novo" }, "template")).toBe(false);
+  });
+});
+
+describe("0286 — a qualidade do número veta o canal", () => {
+  const emRed = (s: SessaoDaCampanha): SessaoDaCampanha => ({
+    ...s,
+    quality_rating: "RED",
+  });
+
+  it("template PULA o oficial em RED e usa o oficial saudável", () => {
+    // Dois números oficiais: o saudável segura a operação. Escolher o primeiro
+    // compatível (o RED) pausaria a campanha sem necessidade.
+    const saudavel: SessaoDaCampanha = { id: "oficial-bom", provider: OFICIAL };
+    expect(escolherSessaoDaCampanha([emRed(oficial), saudavel], "template")).toBe(saudavel);
+  });
+
+  it("todos os oficiais em RED devolvem null, e o motivo é a qualidade", () => {
+    const sessoes = [emRed(oficial), emRed(intermediado)];
+    expect(escolherSessaoDaCampanha(sessoes, "template")).toBeNull();
+    expect(bloqueadaPorQualidade(sessoes, "template")).toBe(true);
+  });
+
+  it("YELLOW continua enviando — só RED pausa", () => {
+    const amarelo: SessaoDaCampanha = { ...oficial, quality_rating: "YELLOW" };
+    expect(escolherSessaoDaCampanha([amarelo], "template")).toBe(amarelo);
+    expect(bloqueadaPorQualidade([amarelo], "template")).toBe(false);
+  });
+
+  it("o caminho por QR não é alcançado pelo gate: sem nota, nunca RED", () => {
+    // A Meta não publica qualidade de número pareado por QR. `null` tem de
+    // continuar sendo "não sei", não "ruim" — senão o gate pararia o único
+    // canal que a instalação tem.
+    expect(escolherSessaoDaCampanha([qr], "texto")).toBe(qr);
+    expect(bloqueadaPorQualidade([qr], "texto")).toBe(false);
+  });
+
+  it("canal ausente não é confundido com canal em RED", () => {
+    expect(escolherSessaoDaCampanha([qr], "template")).toBeNull();
+    expect(bloqueadaPorQualidade([qr], "template")).toBe(false);
+    expect(bloqueadaPorQualidade([], "template")).toBe(false);
   });
 });

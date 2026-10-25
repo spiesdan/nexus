@@ -209,7 +209,29 @@ describe("canal oficial direto", () => {
 
   it("número responde → está de pé", async () => {
     globalThis.fetch = respondeCom({ display_phone_number: "+595..." });
-    expect(await saude()).toEqual({ reachable: true, status: "WORKING", detail: null });
+    expect(await saude()).toEqual({
+      reachable: true,
+      status: "WORKING",
+      detail: null,
+      qualityRating: null,
+      messagingLimit: null,
+    });
+  });
+
+  it("0286 — a qualidade vem na MESMA chamada, sem uma segunda rodada de rede", async () => {
+    // A Graph já devolvia `quality_rating` e o adapter descartava. Quem lê a
+    // saúde precisa da nota para pausar a campanha antes de piorar o número.
+    globalThis.fetch = respondeCom({
+      display_phone_number: "+595...",
+      quality_rating: "RED",
+      whatsapp_business_manager_messaging_limit: "TIER_2K",
+    });
+    expect(await saude()).toMatchObject({
+      reachable: true,
+      status: "WORKING",
+      qualityRating: "RED",
+      messagingLimit: "TIER_2K",
+    });
   });
 
   it("token recusado → FAILED", async () => {

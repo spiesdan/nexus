@@ -23208,6 +23208,43 @@ alter table public.prospecting_campaigns
 comment on column public.prospecting_campaigns.templates_por_categoria is
   'Binds de modelo por categoria: [{categoria, name, language, contract_hash, values}]. A categoria é a chave canônica de prospecting_campaigns.categorias. Vazio = usa o bind legado (0284). Categoria sem bind pausa a campanha em vez de mandar o modelo errado.';
 
+-- ---- 0286 — qualidade do NÚMERO e pausa automática da campanha ----
+--
+-- Apêndice idempotente: o self-host que JÁ instalou recebe isto pelo update.sh.
+-- `channel_sessions.quality_rating` é o último valor lido da Graph API; RED
+-- pausa as campanhas por modelo da organização (com `pausa_motivo` visível no
+-- controle), em vez de seguir disparando por um número que a plataforma já
+-- sinalizou. `messaging_limit` guarda o degrau do PORTFÓLIO informado pelo
+-- webhook `phone_number_quality_update`.
+alter table public.channel_sessions
+  add column if not exists quality_rating text,
+  add column if not exists quality_updated_at timestamptz,
+  add column if not exists messaging_limit text;
+
+alter table public.channel_sessions
+  drop constraint if exists channel_sessions_quality_rating_valido;
+alter table public.channel_sessions
+  add constraint channel_sessions_quality_rating_valido
+  check (
+    quality_rating is null
+    or quality_rating in ('GREEN', 'YELLOW', 'RED', 'UNKNOWN')
+  );
+
+alter table public.prospecting_campaigns
+  add column if not exists pausa_motivo text,
+  add column if not exists pausa_em timestamptz;
+
+comment on column public.channel_sessions.quality_rating is
+  'Última qualidade do número lida na plataforma: GREEN/YELLOW/RED/UNKNOWN. RED pausa as campanhas por modelo desta organização (0286).';
+comment on column public.channel_sessions.quality_updated_at is
+  'Quando quality_rating foi lido por último. Sem data, um RED antigo pareceria atual.';
+comment on column public.channel_sessions.messaging_limit is
+  'Degrau de limite informado pela plataforma (TIER_50 … TIER_UNLIMITED). O limite é do PORTFÓLIO e compartilhado entre números.';
+comment on column public.prospecting_campaigns.pausa_motivo is
+  'Por que a campanha foi pausada automaticamente (qualidade do número, limite reduzido, modelo com problema). Nulo = pausa feita por uma pessoa.';
+comment on column public.prospecting_campaigns.pausa_em is
+  'Quando a pausa automática aconteceu. Zera junto com pausa_motivo quando alguém retoma a campanha.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

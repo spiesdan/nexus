@@ -100,7 +100,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       ? {
           callbackUrl: `${base}/api/v1/webhooks/meta/${data.webhook_path_token}`,
           verifyToken: process.env.META_WEBHOOK_VERIFY_TOKEN ?? null,
-          fields: ["messages", "message_template_status_update"],
+          // 0286 — `phone_number_quality_update` avisa mudança de LIMITE do
+          // portfólio (a nota GREEN/YELLOW/RED vem da chamada de saúde, não
+          // daqui). Sem assinar o campo, a queda de limite fica invisível.
+          fields: ["messages", "message_template_status_update", "phone_number_quality_update"],
         }
       : null,
   });

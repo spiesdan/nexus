@@ -37,6 +37,7 @@ import {
   type TemplateContract,
 } from "@/lib/channels/meta/template-contract";
 import { normalizeRejectedReason } from "@/lib/channels/meta/webhook";
+import { normalizarQualidade, type QualidadeDoNumero } from "@/lib/channels/number-quality";
 
 /** Só estes slots viram string no payload. Mídia/estruturado ficam de fora. */
 const SLOTS_DE_TEXTO = new Set(["text", "url_suffix", "coupon_code"]);
@@ -68,6 +69,12 @@ export interface TemplateParaCampanha {
   slots: SlotParaCampanha[];
   previews: PreviewParaCampanha[];
   components: unknown[];
+  /**
+   * Nota de qualidade na Meta — `GREEN`/`YELLOW`/`RED`/`UNKNOWN`, ou `null`
+   * quando o espelho ainda não a recebeu. `RED` bloqueia o uso na campanha
+   * (item 1 da 0286): a Meta pausa e depois desabilita modelo nesse estado.
+   */
+  qualityScore: QualidadeDoNumero | null;
   /** Pode ser escolhido numa campanha AGORA? */
   aceito: boolean;
   /** Por que não, em uma frase que o operador entende. */
@@ -126,10 +133,17 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
   });
   const naoTextuais = contrato.slots.filter((s) => !SLOTS_DE_TEXTO.has(s.expects));
   const aprovado = linha.status === "APPROVED";
+  const qualidade = normalizarQualidade(linha.quality_score);
 
   let motivo: string | null = null;
   if (!aprovado) {
     motivo = `Este modelo está ${linha.status} na Meta — só um modelo APROVADO pode ser enviado.`;
+  } else if (qualidade === "RED") {
+    // A Meta ainda aceita enviar em RED, e é justamente por isso que a decisão
+    // não pode ficar só do lado dela: o próximo passo documentado é pausar o
+    // modelo (3h → 6h → desabilitar) e, se repetir, penalizar o número.
+    motivo =
+      "Este modelo está com qualidade baixa (RED) na Meta. Corrija o conteúdo e o público dos últimos envios antes de usar — a plataforma pausa e depois desabilita modelos nesse estado, e a reputação do número vai junto.";
   } else if (naoTextuais.length > 0) {
     const tipos = [...new Set(naoTextuais.map((s) => s.expects))].join(", ");
     motivo = `Este modelo tem slot de ${tipos}. Campanha por template, nesta versão, aceita só texto, sufixo de URL e cupom — use o inbox para enviar mídia.`;
@@ -144,6 +158,7 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
     parameterFormat: contrato.parameterFormat,
     contractHash: linha.contract_hash,
     syncedAt: linha.synced_at,
+    qualityScore: qualidade,
     slots: contrato.slots.map((s) => ({
       slotKey: slotKey(s.address, s.key),
       key: s.key,
@@ -153,7 +168,7 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
     })),
     previews: previewsDeTexto(linha.components),
     components: Array.isArray(linha.components) ? (linha.components as unknown[]) : [],
-    aceito: aprovado && naoTextuais.length === 0,
+    aceito: aprovado && naoTextuais.length === 0 && qualidade !== "RED",
     motivo,
   };
 }
@@ -199,7 +214,11 @@ export async function carregarTemplateParaCampanha(
 export interface VereditoDoTemplate {
   ok: boolean;
   /** Código estável para log/teste; não é texto de tela. */
-  codigo: BindingState | "media_nao_suportada" | "missing_values";
+  codigo:
+    | BindingState
+    | "media_nao_suportada"
+    | "missing_values"
+    | "quality_red";
   /** Frase acionável para `ultimo_erro`/toast. */
   erro: string;
   /** `true` = a campanha não pode continuar sozinha; o tick pausa. */
@@ -259,6 +278,18 @@ export function avaliarTemplateParaCampanha(
       codigo: estado,
       erro: `O modelo ${alvo} mudou na Meta desde que esta campanha foi configurada. Revise os valores dos parâmetros antes de retomar.`,
       pausar: true,
+    };
+  }
+  if (template.qualityScore === "RED") {
+    // RED não bloqueia o envio na Meta — bloqueia AQUI. Continuar mandando é o
+    // que transforma um modelo rebaixado num número rebaixado, e o custo dessa
+    // decisão não é do modelo: é da linha da empresa.
+    return {
+      ok: false,
+      codigo: "quality_red",
+      erro: `O modelo ${alvo} está com qualidade baixa (RED) na Meta. Corrija o conteúdo e o público dos últimos envios; a campanha fica pausada até o modelo voltar a uma qualidade aceitável e você retomá-la.`,
+      pausar: true,
+      template,
     };
   }
 

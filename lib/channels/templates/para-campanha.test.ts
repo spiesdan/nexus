@@ -83,6 +83,7 @@ function template(extra: Partial<TemplateParaCampanha> = {}): TemplateParaCampan
     ],
     previews: [{ onde: "corpo", text: COMPONENTES_TEXTO[0]!.text }],
     components: COMPONENTES_TEXTO,
+    qualityScore: null,
     aceito: true,
     motivo: null,
     ...extra,
@@ -137,6 +138,17 @@ describe("listarTemplatesParaCampanha", () => {
     expect(m!.slots.map((s) => s.slotKey)).toEqual(["header:1", "1"]);
   });
 
+  it("modelo em RED não é aceito, e o motivo diz por quê", async () => {
+    const [m] = await listarTemplatesParaCampanha(
+      db([{ ...LINHA_APROVADA, quality_score: "RED" }]),
+      "org-1",
+    );
+
+    expect(m!.aceito).toBe(false);
+    expect(m!.qualityScore).toBe("RED");
+    expect(m!.motivo).toContain("RED");
+  });
+
   it("filtra pela CONEXÃO quando o chamador sabe qual é", async () => {
     const outra = { ...LINHA_APROVADA, channel_session_id: "sess-outra", name: "outro" };
     const modelos = await listarTemplatesParaCampanha(db([LINHA_APROVADA, outra]), "org-1", {
@@ -181,6 +193,12 @@ describe("avaliarTemplateParaCampanha", () => {
       "hash-antigo",
     );
     expect(v).toMatchObject({ ok: false, codigo: "not_approved", pausar: true });
+  });
+
+  it("modelo em RED pausa: o envio não é barrado pela Meta, é barrado aqui", () => {
+    const v = avaliarTemplateParaCampanha(template({ qualityScore: "RED" }), valores, "hash-1");
+    expect(v).toMatchObject({ ok: false, codigo: "quality_red", pausar: true });
+    expect(v.erro).toContain("RED");
   });
 
   it("hash divergente pausa: o modelo mudou na Meta desde a configuração", () => {

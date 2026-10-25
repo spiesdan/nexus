@@ -57,6 +57,7 @@ import {
   type CandidatoAoDisparo,
 } from "@/lib/prospeccao/disparo";
 import {
+  bloqueadaPorQualidade,
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
@@ -314,7 +315,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, provider, status, archived_at, daily_message_limit")
+    .select("id, provider, status, archived_at, daily_message_limit, quality_rating")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -322,12 +323,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   // A sessão é escolhida pela CAPABILITY, não pela ordem do banco (0284): texto
   // livre e modelo aprovado são canais diferentes, e pegar a primeira WORKING
   // podia pôr uma campanha de texto no número oficial — aceita pela API e
-  // recusada na entrega (131047).
+  // recusada na entrega (131047). A 0286 acrescenta o veto por QUALIDADE: um
+  // número em RED existe, é compatível, e mesmo assim não deve receber.
   const sessao = escolherSessaoDaCampanha(
     (sessoes ?? []) as unknown as SessaoDaCampanha[],
     tipo,
   );
   const sessaoWorking = sessao !== null;
+  // `null` por falta de canal ou por qualidade RED são problemas diferentes —
+  // e o operador precisa saber qual dos dois está olhando.
+  const bloqueadaPorQualidadeAgora =
+    !sessao && bloqueadaPorQualidade((sessoes ?? []) as unknown as SessaoDaCampanha[], tipo);
 
   // ─── Prospects + contexto ────────────────────────────────────────────────
   const { data: linhas, error: errProspects } = await admin
@@ -471,7 +477,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       language: b.language,
     })),
     pode_enviar: plano.podeEnviar,
-    bloqueio: plano.bloqueio,
+    bloqueio: bloqueadaPorQualidadeAgora ? "numero_qualidade_red" : plano.bloqueio,
     selecionados: entrada.prospect_ids.length,
     encontrados: brutos.length,
     serao_enviados: plano.aprovados.length,
@@ -502,9 +508,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!plano.podeEnviar) {
     return fail(
       "conflict",
-      tipo === "template"
-        ? "Nenhum canal oficial WORKING que aceite template. Conecte o número oficial em Conexões. Nada foi enviado."
-        : "Nenhum canal WORKING que aceite texto livre. Conecte um número por QR ou use uma campanha por template. Nada foi enviado.",
+      bloqueadaPorQualidadeAgora
+        ? "O número oficial está com qualidade RED na Meta. O envio foi recusado para não piorar a avaliação do número. Revise o conteúdo e o público dos últimos envios; quando a qualidade voltar para GREEN, envie de novo. Nada foi enviado."
+        : tipo === "template"
+          ? "Nenhum canal oficial WORKING que aceite template. Conecte o número oficial em Conexões. Nada foi enviado."
+          : "Nenhum canal WORKING que aceite texto livre. Conecte um número por QR ou use uma campanha por template. Nada foi enviado.",
       409,
       { requestId, details: { plano: resumo } },
     );

@@ -76,6 +76,8 @@ interface CampanhaDescoberta {
   /** 0285 — um modelo por categoria. Vazio = bind único legado (0284). */
   templates_por_categoria?: unknown;
   ultimo_erro?: string | null;
+  /** 0286 — motivo da pausa automática (qualidade do número, limite, modelo). */
+  pausa_motivo?: string | null;
   data_inicio?: string | null;
   data_fim?: string | null;
   /** 0273 — a cota do dia, que o Disparo também herda. */
@@ -538,6 +540,15 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
                                 : ""}
                           </Badge>
                         )}
+                      {card.tipo === "descoberta" && card.campanha.pausa_motivo && (
+                        <Badge
+                          variant="warning"
+                          className="h-5 px-2 text-xs font-normal"
+                          title={card.campanha.pausa_motivo}
+                        >
+                          {t("Pausa automática")}
+                        </Badge>
+                      )}
                       {card.tipo === "descoberta" && card.campanha.ultimo_erro && (
                         <Badge
                           variant="warning"

@@ -136,7 +136,39 @@ export interface MessageStatusEvent {
   errorTitle: string | null;
 }
 
-export type MetaWebhookEvent = TemplateStatusEvent | MessageStatusEvent | InboundMessageEvent;
+/**
+ * O limite de mensagens do PORTFÓLIO mudou (ou o número entrou em onboarding).
+ *
+ * ⚠️ Este webhook NÃO traz a nota GREEN/YELLOW/RED — ele fala de limite e
+ * throughput. A nota vem de `GET /{phone-number-id}?fields=quality_rating`, que
+ * o cron de saúde já pede (`checkHealth`). Confundir os dois foi um erro de
+ * leitura da documentação: limitar-se ao webhook deixaria a queda de qualidade
+ * invisível, porque ela não gera este evento.
+ *
+ * O limite é do portfólio e compartilhado entre números: um número sozinho pode
+ * consumir a cota de todos. Uma QUEDA é penalidade — sobe sozinho quem entrega
+ * bem.
+ */
+export interface PhoneQualityEvent {
+  kind: "phone_quality";
+  wabaId: string;
+  /** Número no formato de exibição (só dígitos, com DDI). */
+  displayPhoneNumber: string;
+  /** `ONBOARDING` | `THROUGHPUT_UPGRADE` | … — vocabulário aberto. */
+  event: string;
+  /** `TIER_50` … `TIER_UNLIMITED`; campo novo da Meta (v24+). */
+  currentLimit: string | null;
+  /** Campo legado, que sai em fev/2026 — ainda vem em várias WABAs. */
+  oldLimit: string | null;
+  /** Versão nova do limite (v24+), quando presente. */
+  maxDailyConversationsPerBusiness: string | null;
+}
+
+export type MetaWebhookEvent =
+  | TemplateStatusEvent
+  | MessageStatusEvent
+  | InboundMessageEvent
+  | PhoneQualityEvent;
 
 /**
  * O formato do fio mora em `./envelope.ts`, onde é um schema Zod — e o tipo
@@ -188,6 +220,25 @@ export function parseMetaWebhook(envelope: MetaWebhookEnvelope): MetaWebhookEven
           templateLanguage: language,
           event: str(v.event) ?? "UNKNOWN",
           reason: normalizeRejectedReason(v.reason),
+        });
+        continue;
+      }
+
+      // O limite do portfólio mudou (ou o número entrou em onboarding). Não é
+      // a nota de qualidade — é o teto de destinatários por 24h, compartilhado
+      // entre todos os números da empresa. Uma QUEDA aqui é penalidade, e a
+      // 0286 usa isso para pausar as campanhas por modelo.
+      if (change.field === "phone_number_quality_update") {
+        const numero = str(v.display_phone_number);
+        if (!numero) continue; // sem número não há sessão para amarrar
+        out.push({
+          kind: "phone_quality",
+          wabaId,
+          displayPhoneNumber: numero,
+          event: str(v.event) ?? "UNKNOWN",
+          currentLimit: str(v.current_limit),
+          oldLimit: str(v.old_limit),
+          maxDailyConversationsPerBusiness: str(v.max_daily_conversations_per_business),
         });
         continue;
       }

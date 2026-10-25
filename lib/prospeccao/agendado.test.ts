@@ -842,6 +842,59 @@ describe("processarCampanhasAgendadas", () => {
     expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("texto livre");
   });
 
+  it("(v2) número oficial em RED PAUSA a campanha de template — e diz por quê", async () => {
+    // A Meta ainda aceita o envio em RED; é justamente por isso que a decisão
+    // não pode ser dela. Seguir mandando piora a nota do número e, depois,
+    // desabilita os modelos. O tick para sozinho e deixa o motivo na tela.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          mensagens: [],
+          mensagem_tipo: "template",
+          template_name: "boas_vindas",
+          template_language: "pt_BR",
+          template_contract_hash: "hash-1",
+          template_values: { "1": "Maria" },
+        }),
+      ],
+      channel_sessions: [
+        {
+          id: "sess-oficial",
+          organization_id: "org-1",
+          provider: SESSOES.oficial,
+          status: "WORKING",
+          archived_at: null,
+          quality_rating: "RED",
+        },
+      ],
+      meta_templates: [
+        {
+          organization_id: "org-1",
+          name: "boas_vindas",
+          language: "pt_BR",
+          status: "APPROVED",
+          category: "MARKETING",
+          rejected_reason: null,
+          quality_score: null,
+          parameter_format: "POSITIONAL",
+          contract_hash: "hash-1",
+          components: [{ type: "BODY", text: "Olá {{1}}." }],
+          synced_at: "2026-10-23T12:00:00.000Z",
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pausadas).toBe(1);
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "numero_qualidade_red" }]);
+    expect(dados.prospecting_campaigns![0]).toMatchObject({
+      status: "pausada",
+      pausa_motivo: expect.stringContaining("RED"),
+    });
+  });
+
   it("(w) template inválido PAUSA a campanha e grava o motivo visível", async () => {
     // Sem a linha no espelho, insistir a cada minuto gastaria uma reserva por
     // prospect e a Meta recusaria todas. O tick para e deixa o erro na tela.

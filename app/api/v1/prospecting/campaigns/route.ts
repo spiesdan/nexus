@@ -40,7 +40,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, templates_por_categoria, limite_diario, ultimo_erro, ultimo_erro_em",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, templates_por_categoria, limite_diario, ultimo_erro, ultimo_erro_em, pausa_motivo",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })

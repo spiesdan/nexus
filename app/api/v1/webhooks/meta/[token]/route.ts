@@ -25,6 +25,7 @@ import { parseMetaWebhook, verificationChallenge, verifyMetaSignature } from "@/
 import { patchDeStatus } from "@/lib/channels/meta/status-de-entrega";
 import { ingestMetaInbound } from "@/lib/channels/meta/ingest";
 import { metaSessionByWebhookToken } from "@/lib/channels/meta/session";
+import { sincronizarQualidadeDoNumero } from "@/lib/channels/number-quality";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -131,6 +132,50 @@ export async function POST(req: NextRequest, ctx: RouteCtx): Promise<NextRespons
           phone_number_id: e.phoneNumberId,
         });
       }
+      continue;
+    }
+
+    if (e.kind === "phone_quality") {
+      // O limite é do PORTFÓLIO, mas a coluna é por sessão: achar a sessão do
+      // número pelo `display_phone_number` evita carimbar o número errado
+      // quando a WABA tem mais de um. Se não achar (formato diferente), a
+      // sessão do token é a melhor resposta — o token amarra UMA conexão.
+      const digitos = (v: string | null | undefined) => (v ?? "").replace(/\D/g, "");
+      const alvo = digitos(e.displayPhoneNumber);
+      const { data: candidatas } = await admin
+        .from("channel_sessions")
+        .select("id, display_name, phone_number, quality_rating")
+        .eq("organization_id", session.organizationId)
+        .is("archived_at", null);
+      const linha = ((candidatas ?? []) as Array<{
+        id: string;
+        display_name: string | null;
+        phone_number: string | null;
+      }>).find((s) => alvo.length > 0 && digitos(s.phone_number) === alvo);
+      const alvoId = linha?.id ?? session.id;
+      const apelido = linha?.display_name ?? linha?.phone_number ?? "sem nome";
+
+      // `quality_rating` NÃO vem neste evento — só limite/throughput. A nota
+      // fica como está; a próxima rodada do cron de saúde a atualiza.
+      const r = await sincronizarQualidadeDoNumero(admin, {
+        organizationId: session.organizationId,
+        sessaoId: alvoId,
+        apelido,
+        limite: e.maxDailyConversationsPerBusiness ?? e.currentLimit,
+        agoraIso: now,
+      });
+      desfechos.push(
+        r.campanhasPausadas > 0 ? "phone_quality_pausou" : "phone_quality",
+      );
+      logger.warn("[meta.webhook] limite do portfólio mudou", {
+        request_id: requestId,
+        organization_id: session.organizationId,
+        display_phone_number: e.displayPhoneNumber,
+        evento: e.event,
+        limite_anterior: e.oldLimit,
+        limite: e.maxDailyConversationsPerBusiness ?? e.currentLimit,
+        campanhas_pausadas: r.campanhasPausadas,
+      });
       continue;
     }
 
