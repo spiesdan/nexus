@@ -167,6 +167,7 @@ export function DialogoDisparo({
   mensagemTipo = "texto",
   templateNome = null,
   templateIdioma = null,
+  templatesPorCategoria = [],
   agendaInicial,
   modoInicial = "agora",
   prospectIdsDaCampanha,
@@ -203,6 +204,12 @@ export function DialogoDisparo({
   mensagemTipo?: "texto" | "template";
   templateNome?: string | null;
   templateIdioma?: string | null;
+  /**
+   * 0285 — os modelos por categoria da campanha. A lista é para o operador VER
+   * que restaurante sai com outro modelo; a escolha por empresa continua sendo
+   * do servidor, pela categoria efetiva do prospect.
+   */
+  templatesPorCategoria?: Array<{ categoria: string; name: string; language: string }>;
   /**
    * O "quando" que a campanha já tem: período, janelas e cota do dia. Mesma
    * razão das mensagens — o assistente pergunta, e o Disparo não pode abrir
@@ -511,10 +518,24 @@ export function DialogoDisparo({
                 {t("Esta campanha envia um modelo aprovado — não há texto livre para editar aqui.")}
               </p>
               <p className="mt-1 opacity-90">
-                {templateNome
-                  ? t(`Modelo: ${templateNome}${templateIdioma ? ` (${templateIdioma})` : ""}.`)
-                  : t("O modelo e os parâmetros foram definidos no assistente da campanha.")}
+                {templatesPorCategoria.length > 0
+                  ? t("Cada categoria sai com o próprio modelo:")
+                  : templateNome
+                    ? t(
+                        `Modelo: ${templateNome}${templateIdioma ? ` (${templateIdioma})` : ""}.`,
+                      )
+                    : t("O modelo e os parâmetros foram definidos no assistente da campanha.")}
               </p>
+              {templatesPorCategoria.length > 0 && (
+                <ul className="mt-1 space-y-0.5 opacity-90">
+                  {templatesPorCategoria.map((m) => (
+                    <li key={m.categoria}>
+                      <span className="font-medium">{m.categoria}:</span> {m.name}
+                      {m.language ? ` (${m.language})` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ) : (
           <div className="space-y-3">

@@ -39,6 +39,13 @@ export interface ProspectParaEnvio {
   cidade?: string | null;
   /** Só para interpolar `{{categoria}}` no modelo. */
   categoria?: string | null;
+  /**
+   * 0285 — a categoria DA CAMPANHA que casou com esta empresa (a chave do bind
+   * em `templates_por_categoria`). `null` quando não há recorte/curinga; nesse
+   * caso o motor usa o bind legado. Field opcional para não afetar os demais
+   * chamadores do envio.
+   */
+  categoria_campanha?: string | null;
 }
 
 /**

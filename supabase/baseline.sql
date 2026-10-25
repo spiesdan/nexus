@@ -23189,6 +23189,25 @@ comment on column public.prospecting_campaigns.ultimo_erro is
 comment on column public.prospecting_campaigns.ultimo_erro_em is
   'Quando o último erro foi registrado.';
 
+-- ─── 0285 · modelo por categoria (templates_por_categoria) ─────────────────
+-- Apêndice idempotente da migration 0285. Uma campanha pode cobrir oficina,
+-- posto e restaurante; o texto que serve para um não serve para outro. A
+-- coluna guarda um bind por categoria canônica da campanha:
+-- [{categoria, name, language, contract_hash, values}]. Array vazio = bind
+-- legado da 0284 (campanha antiga ou sem recorte). Categoria sem bind pausa a
+-- campanha com erro visível — o motor nunca cai no modelo de outra categoria.
+alter table public.prospecting_campaigns
+  add column if not exists templates_por_categoria jsonb not null default '[]'::jsonb;
+
+alter table public.prospecting_campaigns
+  drop constraint if exists prospecting_campaigns_templates_por_categoria_array;
+alter table public.prospecting_campaigns
+  add constraint prospecting_campaigns_templates_por_categoria_array
+  check (jsonb_typeof(templates_por_categoria) = 'array');
+
+comment on column public.prospecting_campaigns.templates_por_categoria is
+  'Binds de modelo por categoria: [{categoria, name, language, contract_hash, values}]. A categoria é a chave canônica de prospecting_campaigns.categorias. Vazio = usa o bind legado (0284). Categoria sem bind pausa a campanha em vez de mandar o modelo errado.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

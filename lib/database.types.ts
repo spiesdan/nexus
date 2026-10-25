@@ -8283,6 +8283,7 @@ export type Database = {
           template_language: string | null;
           template_name: string | null;
           template_values: NonNullable<Json>;
+          templates_por_categoria: NonNullable<Json>;
           ultima_execucao_at: string | null;
           ultimo_envio_at: string | null;
           ultimo_erro: string | null;
@@ -8316,6 +8317,7 @@ export type Database = {
           template_language?: string | null;
           template_name?: string | null;
           template_values?: NonNullable<Json>;
+          templates_por_categoria?: NonNullable<Json>;
           ultima_execucao_at?: string | null;
           ultimo_envio_at?: string | null;
           ultimo_erro?: string | null;
@@ -8349,6 +8351,7 @@ export type Database = {
           template_language?: string | null;
           template_name?: string | null;
           template_values?: NonNullable<Json>;
+          templates_por_categoria?: NonNullable<Json>;
           ultima_execucao_at?: string | null;
           ultimo_envio_at?: string | null;
           ultimo_erro?: string | null;

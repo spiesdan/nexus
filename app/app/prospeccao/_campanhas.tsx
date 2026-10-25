@@ -36,6 +36,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
+import { lerTemplatesPorCategoria } from "@/lib/prospeccao/templates-por-categoria";
 
 /**
  * Aba CAMPANHAS — uma lista, não um dashboard.
@@ -72,6 +73,8 @@ interface CampanhaDescoberta {
   mensagem_tipo?: string | null;
   template_name?: string | null;
   template_language?: string | null;
+  /** 0285 — um modelo por categoria. Vazio = bind único legado (0284). */
+  templates_por_categoria?: unknown;
   ultimo_erro?: string | null;
   data_inicio?: string | null;
   data_fim?: string | null;
@@ -483,6 +486,10 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
             const categorias = (card.campanha.categorias ?? []).join(", ");
             const envio = card.tipo === "descoberta" ? (card.campanha.envio ?? null) : null;
             const agenda = card.tipo === "descoberta" ? agendaDaCampanha(card.campanha, t) : null;
+            const bindsDoCard =
+              card.tipo === "descoberta" && card.campanha.mensagem_tipo === "template"
+                ? lerTemplatesPorCategoria(card.campanha.templates_por_categoria)
+                : [];
             const atualizarObjetivo = (novo: string | null) => {
               if (card.tipo === "descoberta") {
                 setDescobertas((lista) =>
@@ -524,9 +531,11 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
                             title={t("O conteúdo é um modelo aprovado no canal oficial.")}
                           >
                             {t("Modelo")}
-                            {card.campanha.template_name
-                              ? ` · ${card.campanha.template_name}`
-                              : ""}
+                            {bindsDoCard.length > 1
+                              ? ` · ${bindsDoCard.length} ${t("categorias")}`
+                              : card.campanha.template_name
+                                ? ` · ${card.campanha.template_name}`
+                                : ""}
                           </Badge>
                         )}
                       {card.tipo === "descoberta" && card.campanha.ultimo_erro && (

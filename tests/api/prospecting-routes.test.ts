@@ -1681,4 +1681,37 @@ describe("POST /api/v1/prospecting/campaigns — exclusividade da 0277", () => {
     expect(body.error.details.codigo).toBe("sem_canal_texto");
     expect(db.tabelas.prospecting_campaigns).toHaveLength(0);
   });
+
+  it("modelo por categoria sem cobertura → 422 nomeando a categoria que falta", async () => {
+    // A 0285 recusa a campanha antes de gravar: um recorte de duas categorias
+    // com modelo só para uma mandaria o texto de oficina para o posto. O erro
+    // nomeia a categoria, para o operador saber o que configurar.
+    const db = makeDb({ prospecting_campaigns: [] });
+    session("agent", db);
+
+    const res = await rotaCampanhas.POST(
+      req(
+        "POST",
+        corpo({
+          categorias: ["Oficina mecânica", "Posto de combustível"],
+          mensagem_tipo: "template",
+          templates_por_categoria: [
+            {
+              categoria: "Oficina mecânica",
+              name: "modelo_oficina",
+              language: "pt_BR",
+              contract_hash: "hash-oficina",
+              values: {},
+            },
+          ],
+        }),
+        "http://localhost/api/v1/prospecting/campaigns",
+      ),
+    );
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body.error.details.codigo).toBe("template_da_categoria_ausente");
+    expect(body.error.details.categorias).toEqual(["Posto de combustível"]);
+    expect(db.tabelas.prospecting_campaigns).toHaveLength(0);
+  });
 });

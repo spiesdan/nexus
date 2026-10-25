@@ -17,7 +17,11 @@ import {
   type EnvioDaCampanha,
   type ResumoDeEnvio,
 } from "@/lib/prospeccao/resumo-de-envio";
-import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
+import { categoriasSemModelo } from "@/lib/prospeccao/templates-por-categoria";
+import {
+  validarBindDaCampanha,
+  validarTemplatesDaCampanha,
+} from "@/lib/prospeccao/validacao-da-campanha";
 import { campanhaCreateSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -36,7 +40,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_campaigns")
     .select(
-      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, limite_diario, ultimo_erro, ultimo_erro_em",
+      "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, created_at, fonte_publico, publico, prospect_ids, contato_ids, janelas, data_inicio, data_fim, agendada_em, mensagens, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, templates_por_categoria, limite_diario, ultimo_erro, ultimo_erro_em",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -160,16 +164,43 @@ export async function POST(req: NextRequest): Promise<Response> {
   // 0284 — a campanha declara COMO fala. O bind de template é conferido contra
   // o espelho ANTES de gravar: modelo reprovado/obsoleto/sem valor é campanha
   // que já nasce quebrada. Rascunho pode ser salvo sem canal; ativar não.
+  //
+  // 0285 — com um modelo por categoria, TODOS os binds são conferidos e a
+  // cobertura é exigida: categoria escolhida sem modelo é recusada na borda,
+  // não descoberta no tick com a empresa já reservada.
   const tipo = parsed.data.mensagem_tipo ?? "texto";
   const statusFinal = parsed.data.status ?? "rascunho";
-  const bind = {
-    tipo,
-    name: parsed.data.template_name ?? null,
-    language: parsed.data.template_language ?? null,
-    contractHash: parsed.data.template_contract_hash ?? null,
-    values: parsed.data.template_values ?? {},
-  } as const;
-  if (tipo === "template" || statusFinal === "ativa") {
+  const mappings = tipo === "template" ? (parsed.data.templates_por_categoria ?? []) : [];
+  const bindPadrao = mappings[0] ?? null;
+  const name = parsed.data.template_name ?? bindPadrao?.name ?? null;
+  const language = parsed.data.template_language ?? bindPadrao?.language ?? null;
+  const contractHash = parsed.data.template_contract_hash ?? bindPadrao?.contract_hash ?? null;
+  const values = parsed.data.template_values ?? bindPadrao?.values ?? {};
+  const bind = { tipo, name, language, contractHash, values } as const;
+
+  if (tipo === "template" && mappings.length > 0) {
+    const semModelo = categoriasSemModelo(mappings, parsed.data.categorias);
+    if (semModelo.length > 0) {
+      return fail(
+        "validation_failed",
+        `Escolha um modelo para: ${semModelo.join(", ")}. Todas as categorias da campanha precisam de um modelo próprio.`,
+        422,
+        { requestId, details: { codigo: "template_da_categoria_ausente", categorias: semModelo } },
+      );
+    }
+    const veredito = await validarTemplatesDaCampanha(
+      createAdminClient(),
+      authz.org.orgId,
+      mappings,
+      { exigirCanal: statusFinal === "ativa" },
+    );
+    if (!veredito.ok) {
+      return fail("validation_failed", veredito.erro, 422, {
+        requestId,
+        details: { codigo: veredito.codigo },
+      });
+    }
+  } else if (tipo === "template" || statusFinal === "ativa") {
     const veredito = await validarBindDaCampanha(createAdminClient(), authz.org.orgId, bind, {
       exigirCanal: statusFinal === "ativa",
     });
@@ -241,10 +272,11 @@ export async function POST(req: NextRequest): Promise<Response> {
       mensagem_tipo: tipo,
       ...(tipo === "template"
         ? {
-            template_name: parsed.data.template_name ?? null,
-            template_language: parsed.data.template_language ?? null,
-            template_contract_hash: parsed.data.template_contract_hash ?? null,
-            template_values: parsed.data.template_values ?? {},
+            template_name: name,
+            template_language: language,
+            template_contract_hash: contractHash,
+            template_values: values,
+            templates_por_categoria: mappings,
             // O caminho de template não usa a rotação de texto. Guardar as
             // variações antigas não faz mal, mas zerar deixa a linha honesta
             // sobre o que a campanha usa.
@@ -255,6 +287,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             template_language: null,
             template_contract_hash: null,
             template_values: {},
+            templates_por_categoria: [],
           }),
       ...(parsed.data.espaco_ms !== undefined ? { espaco_ms: parsed.data.espaco_ms } : {}),
       ...(parsed.data.limite_diario !== undefined ? { limite_diario: parsed.data.limite_diario } : {}),

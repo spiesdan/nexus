@@ -15,7 +15,16 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
-import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
+import {
+  categoriasSemModelo,
+  chaveDaCategoria,
+  lerTemplatesPorCategoria,
+  type TemplateDaCategoria,
+} from "@/lib/prospeccao/templates-por-categoria";
+import {
+  validarBindDaCampanha,
+  validarTemplatesDaCampanha,
+} from "@/lib/prospeccao/validacao-da-campanha";
 import { validateRequest } from "@/lib/schemas";
 import { campanhaPatchSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -28,8 +37,8 @@ type Params = { params: Promise<{ id: string }> };
 const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
   "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, mensagem_tipo, " +
-  "template_name, template_language, template_contract_hash, template_values, espaco_ms, limite_diario, " +
-  "data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em";
+  "template_name, template_language, template_contract_hash, template_values, templates_por_categoria, " +
+  "espaco_ms, limite_diario, data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -87,13 +96,28 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     input.template_name !== undefined ||
     input.template_language !== undefined ||
     input.template_contract_hash !== undefined ||
-    input.template_values !== undefined;
-  const mexeNoBind = mexeNoTemplate || input.mensagens !== undefined || input.status !== undefined;
+    input.template_values !== undefined ||
+    input.templates_por_categoria !== undefined;
+  const mexeNoBind =
+    mexeNoTemplate ||
+    input.mensagens !== undefined ||
+    input.status !== undefined ||
+    input.categorias !== undefined;
+  /** O que o UPDATE grava em `templates_por_categoria` (null = não tocar). */
+  let mappingsParaGravar: TemplateDaCategoria[] | null = null;
+  /** O bind legado RESULTANTE, derivado do primeiro mapeamento se preciso. */
+  let legadoParaGravar: {
+    name: string | null;
+    language: string | null;
+    contractHash: string | null;
+    values: Record<string, string>;
+  } | null = null;
+
   if (mexeNoBind) {
     const { data: atual, error: erroAtual } = await supabase
       .from("prospecting_campaigns")
       .select(
-        "status, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, mensagens",
+        "status, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, templates_por_categoria, mensagens, categorias",
       )
       .eq("id", id)
       .eq("organization_id", authz.org.orgId)
@@ -108,44 +132,101 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     }
     if (!atual) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
 
+    const atualTipado = atual as {
+      status?: string | null;
+      mensagem_tipo?: string | null;
+      template_name?: string | null;
+      template_language?: string | null;
+      template_contract_hash?: string | null;
+      template_values?: Record<string, string> | null;
+      templates_por_categoria?: unknown;
+      mensagens?: string[] | null;
+      categorias?: string[] | null;
+    };
     const tipo =
       input.mensagem_tipo ??
-      ((atual as { mensagem_tipo?: string | null }).mensagem_tipo === "template"
-        ? "template"
-        : "texto");
+      (atualTipado.mensagem_tipo === "template" ? "template" : "texto");
+    const categoriasResultantes = input.categorias ?? atualTipado.categorias ?? [];
+
+    // 0285 — o mapeamento RESULTANTE. Trocar para texto zera; remover uma
+    // categoria sem tocar no mapeamento descarta o bind órfão dela (o modelo
+    // daquela categoria não é mais alcançável e ficaria como configuração
+    // fantasma na tela).
+    let mappings: TemplateDaCategoria[] =
+      tipo !== "template"
+        ? []
+        : input.templates_por_categoria !== undefined
+          ? input.templates_por_categoria
+          : lerTemplatesPorCategoria(atualTipado.templates_por_categoria);
+    if (
+      tipo === "template" &&
+      input.templates_por_categoria === undefined &&
+      input.categorias !== undefined
+    ) {
+      const selecionadas = new Set(categoriasResultantes.map(chaveDaCategoria));
+      mappings = mappings.filter((b) => selecionadas.has(chaveDaCategoria(b.categoria)));
+    }
+
+    const bindPadrao = mappings[0] ?? null;
     const name =
       input.template_name !== undefined
         ? input.template_name
-        : ((atual as { template_name?: string | null }).template_name ?? null);
+        : (bindPadrao?.name ?? atualTipado.template_name ?? null);
     const language =
       input.template_language !== undefined
         ? input.template_language
-        : ((atual as { template_language?: string | null }).template_language ?? null);
+        : (bindPadrao?.language ?? atualTipado.template_language ?? null);
     const contractHash =
       input.template_contract_hash !== undefined
         ? input.template_contract_hash
-        : ((atual as { template_contract_hash?: string | null }).template_contract_hash ?? null);
+        : (bindPadrao?.contract_hash ?? atualTipado.template_contract_hash ?? null);
     const values =
       input.template_values ??
-      ((atual as { template_values?: Record<string, string> | null }).template_values ?? {});
-    const statusFinal =
-      input.status ?? ((atual as { status?: string | null }).status ?? "rascunho");
-    const mensagensFinais =
-      input.mensagens ??
-      ((atual as { mensagens?: string[] | null }).mensagens ?? []);
+      bindPadrao?.values ??
+      atualTipado.template_values ??
+      {};
+    const statusFinal = input.status ?? (atualTipado.status ?? "rascunho");
+    const mensagensFinais = input.mensagens ?? (atualTipado.mensagens ?? []);
 
-    if (statusFinal === "ativa" || mexeNoTemplate) {
-      const veredito = await validarBindDaCampanha(
-        createAdminClient(),
-        authz.org.orgId,
-        { tipo: tipo === "template" ? "template" : "texto", name, language, contractHash, values },
-        { exigirCanal: statusFinal === "ativa" },
-      );
-      if (!veredito.ok) {
-        return fail("validation_failed", veredito.erro, 422, {
-          requestId,
-          details: { codigo: veredito.codigo },
-        });
+    if (statusFinal === "ativa" || mexeNoTemplate || input.categorias !== undefined) {
+      if (tipo === "template" && mappings.length > 0) {
+        const semModelo = categoriasSemModelo(mappings, categoriasResultantes);
+        if (semModelo.length > 0) {
+          return fail(
+            "validation_failed",
+            `Escolha um modelo para: ${semModelo.join(", ")}. Todas as categorias da campanha precisam de um modelo próprio.`,
+            422,
+            {
+              requestId,
+              details: { codigo: "template_da_categoria_ausente", categorias: semModelo },
+            },
+          );
+        }
+        const veredito = await validarTemplatesDaCampanha(
+          createAdminClient(),
+          authz.org.orgId,
+          mappings,
+          { exigirCanal: statusFinal === "ativa" },
+        );
+        if (!veredito.ok) {
+          return fail("validation_failed", veredito.erro, 422, {
+            requestId,
+            details: { codigo: veredito.codigo },
+          });
+        }
+      } else {
+        const veredito = await validarBindDaCampanha(
+          createAdminClient(),
+          authz.org.orgId,
+          { tipo: tipo === "template" ? "template" : "texto", name, language, contractHash, values },
+          { exigirCanal: statusFinal === "ativa" },
+        );
+        if (!veredito.ok) {
+          return fail("validation_failed", veredito.erro, 422, {
+            requestId,
+            details: { codigo: veredito.codigo },
+          });
+        }
       }
     }
     if (
@@ -159,6 +240,16 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
         422,
         { requestId },
       );
+    }
+
+    mappingsParaGravar = tipo === "template" ? mappings : [];
+    if (tipo === "template" && mappings.length > 0) {
+      legadoParaGravar = {
+        name,
+        language,
+        contractHash,
+        values: values as Record<string, string>,
+      };
     }
   }
 
@@ -238,6 +329,17 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
         ? { template_contract_hash: input.template_contract_hash }
         : {}),
       ...(input.template_values !== undefined ? { template_values: input.template_values } : {}),
+      // 0285 — o bind legado RESULTANTE. Quando o mapeamento por categoria
+      // existe, o primeiro é o padrão: mantém a constraint da 0284 satisfeita
+      // e cobre o curinga histórico sem uma segunda configuração na tela.
+      ...(legadoParaGravar
+        ? {
+            template_name: legadoParaGravar.name,
+            template_language: legadoParaGravar.language,
+            template_contract_hash: legadoParaGravar.contractHash,
+            template_values: legadoParaGravar.values,
+          }
+        : {}),
       ...(input.mensagem_tipo === "texto"
         ? {
             template_name: null,
@@ -245,6 +347,9 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
             template_contract_hash: null,
             template_values: {},
           }
+        : {}),
+      ...(mappingsParaGravar !== null
+        ? { templates_por_categoria: mappingsParaGravar }
         : {}),
       ...(input.espaco_ms !== undefined ? { espaco_ms: input.espaco_ms } : {}),
       ...(input.limite_diario !== undefined ? { limite_diario: input.limite_diario } : {}),

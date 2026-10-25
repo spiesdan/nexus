@@ -281,6 +281,23 @@ function senderFalso() {
   );
 }
 
+/** Uma linha APROVADA no espelho de modelos, com o contrato que o bind declara. */
+function modeloNoEspelho(name: string, contractHash: string): Linha {
+  return {
+    organization_id: "org-1",
+    name,
+    language: "pt_BR",
+    status: "APPROVED",
+    category: "MARKETING",
+    rejected_reason: null,
+    quality_score: null,
+    parameter_format: "POSITIONAL",
+    contract_hash: contractHash,
+    components: [{ type: "BODY", text: "Olá {{1}}." }],
+    synced_at: "2026-10-23T12:00:00.000Z",
+  };
+}
+
 describe("processarCampanhasAgendadas", () => {
   beforeEach(() => {
     reservaRecusada = false;
@@ -851,5 +868,90 @@ describe("processarCampanhasAgendadas", () => {
     expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "template_invalido" }]);
     expect(dados.prospecting_campaigns![0]).toMatchObject({ status: "pausada" });
     expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("não está no espelho");
+  });
+
+  it("(x) o modelo é escolhido pela CATEGORIA da empresa, não pelo bind legado", async () => {
+    // A campanha cobre oficina e tem um modelo POR CATEGORIA. O bind legado
+    // aponta para outro modelo de propósito: se o motor ignorasse o mapeamento,
+    // a oficina receberia o texto errado — e o teste reprovaria.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          categorias: ["Oficina mecânica"],
+          mensagens: [],
+          mensagem_tipo: "template",
+          template_name: "legado_errado",
+          template_language: "pt_BR",
+          template_contract_hash: "hash-legado",
+          template_values: {},
+          templates_por_categoria: [
+            {
+              categoria: "Oficina mecânica",
+              name: "modelo_oficina",
+              language: "pt_BR",
+              contract_hash: "hash-oficina",
+              values: { "1": "Maria" },
+            },
+          ],
+        }),
+      ],
+      channel_sessions: [
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
+      ],
+      meta_templates: [
+        modeloNoEspelho("modelo_oficina", "hash-oficina"),
+        modeloNoEspelho("legado_errado", "hash-legado"),
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    expect(enviar.mock.calls[0]![1].template).toMatchObject({
+      name: "modelo_oficina",
+      contractHash: "hash-oficina",
+      values: { "1": "Maria" },
+    });
+  });
+
+  it("(y) categoria sem modelo PAUSA — nunca manda o modelo de outra categoria", async () => {
+    // Mandar o texto de posto para uma oficina é pior que não mandar. A
+    // campanha para com o motivo visível na tela.
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          categorias: ["Oficina mecânica"],
+          mensagens: [],
+          mensagem_tipo: "template",
+          template_name: "modelo_posto",
+          template_language: "pt_BR",
+          template_contract_hash: "hash-posto",
+          template_values: {},
+          templates_por_categoria: [
+            {
+              categoria: "Posto de combustível",
+              name: "modelo_posto",
+              language: "pt_BR",
+              contract_hash: "hash-posto",
+              values: {},
+            },
+          ],
+        }),
+      ],
+      channel_sessions: [
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
+      ],
+      meta_templates: [modeloNoEspelho("modelo_posto", "hash-posto")],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pausadas).toBe(1);
+    expect(resumo.pulados).toEqual([
+      { campanha: "camp-1", motivo: "template_da_categoria_ausente" },
+    ]);
+    expect(dados.prospecting_campaigns![0]).toMatchObject({ status: "pausada" });
+    expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("não tem modelo");
   });
 });

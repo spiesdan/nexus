@@ -43,10 +43,19 @@ import {
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
-import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
+import {
+  categoriaCombinaComCampanha,
+  categoriaDaCampanhaQueCombina,
+  categoriaEfetiva,
+} from "@/lib/prospeccao/categoria-efetiva";
 import { mensagemDaVez } from "@/lib/prospeccao/disparo";
 import { enviarParaProspect, type ProspectParaEnvio } from "@/lib/prospeccao/envio";
 import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
+import {
+  lerTemplatesPorCategoria,
+  templateDaCategoria,
+  type TemplateDaCategoria,
+} from "@/lib/prospeccao/templates-por-categoria";
 import { fusoSeguro, relogioNoFuso } from "@/lib/venda-automatica/janela";
 
 import {
@@ -74,6 +83,8 @@ export type MotivoDoPulo =
   /** Campanha de template e nenhum canal WORKING aceita modelo aprovado. */
   | "sem_canal_template"
   | "template_invalido"
+  /** 0285 — a categoria do prospect não tem modelo configurado na campanha. */
+  | "template_da_categoria_ausente"
   | "sem_mensagem"
   | "sem_prospect_elegivel"
   | "falha_envio"
@@ -105,6 +116,8 @@ interface CampanhaAgendada {
   template_language: string | null;
   template_contract_hash: string | null;
   template_values: Record<string, string> | null;
+  /** 0285 — um bind por categoria. Vazio = bind legado (0284). */
+  templates_por_categoria: unknown;
   espaco_ms: number;
   limite_diario: number;
   data_inicio: string | null;
@@ -159,7 +172,7 @@ interface EstadoDaSessao {
 const COLUNAS =
   "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, " +
   "mensagem_tipo, template_name, template_language, template_contract_hash, template_values, " +
-  "espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
+  "templates_por_categoria, espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
 
 export async function processarCampanhasAgendadas(
   admin: SupabaseClient,
@@ -350,57 +363,12 @@ export async function processarCampanhasAgendadas(
         continue;
       }
 
-      // ── O modelo, conferido ANTES de escolher quem recebe ────────────────
-      // Se o modelo mudou, foi reprovado ou perdeu um valor, a campanha para
-      // com o motivo visível. Tentar mesmo assim gastaria uma reserva por
-      // prospect e a Meta recusaria todas com 132000/132012 — a fila inteira
-      // queimada em falhas silenciosas.
-      let templateDoEnvio: {
-        name: string;
-        language: string;
-        contractHash: string;
-        values: Record<string, string>;
-        components: unknown[];
-        parameterFormat: string;
-      } | null = null;
-      if (tipo === "template") {
-        let modelo: TemplateParaCampanha | null = null;
-        try {
-          modelo = await carregarTemplateParaCampanha(
-            admin,
-            campanha.organization_id,
-            campanha.template_name ?? "",
-            campanha.template_language ?? "",
-          );
-        } catch (e) {
-          const erro = e instanceof Error ? e.message : "Falha ao ler o espelho de modelos.";
-          await registrarErroDaCampanha(admin, campanha, erro, agoraIso, false);
-          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
-          continue;
-        }
-
-        const veredito = avaliarTemplateParaCampanha(
-          modelo,
-          campanha.template_values ?? {},
-          campanha.template_contract_hash ?? "",
-        );
-        if (!veredito.ok || !veredito.template) {
-          await registrarErroDaCampanha(admin, campanha, veredito.erro, agoraIso, veredito.pausar);
-          if (veredito.pausar) resumo.pausadas++;
-          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
-          continue;
-        }
-
-        templateDoEnvio = {
-          name: veredito.template.name,
-          language: veredito.template.language,
-          contractHash: veredito.template.contractHash,
-          values: campanha.template_values ?? {},
-          components: veredito.template.components,
-          parameterFormat: veredito.template.parameterFormat,
-        };
-      }
-
+      // ── O modelo, conferido DEPOIS de escolher quem recebe (0285) ────────
+      // Com um modelo por categoria, só dá para saber QUAL bind validar
+      // depois de escolher a empresa: a categoria efetiva dela decide o
+      // modelo. A validação continua ANTES da reserva — modelo inválido não
+      // gasta uma linha do ledger por prospect.
+      //
       // O PRIMEIRO da lista fechada que ainda não recebeu — e que passa na
       // elegibilidade (sem telefone/opt-out/bloqueado/cliente, na prospecção;
       // sem telefone, na recuperação). Sem a elegibilidade, o agendamento
@@ -424,6 +392,91 @@ export async function processarCampanhasAgendadas(
       if (!escolhido) {
         resumo.pulados.push({ campanha: campanha.id, motivo: "sem_prospect_elegivel" });
         continue;
+      }
+
+      // ── O bind da categoria da empresa (0285) ───────────────────────────
+      // `templates_por_categoria` vazio é a campanha da 0284: um modelo só.
+      // Com mapeamento, categoria sem bind NÃO cai no modelo de outra
+      // categoria — a campanha pausa com o motivo visível, porque mandar o
+      // texto errado é pior que não mandar.
+      const binds = lerTemplatesPorCategoria(campanha.templates_por_categoria);
+      let bindDoEnvio: TemplateDaCategoria | null = null;
+      if (tipo === "template") {
+        const categoriaDaEmpresa = escolhido.categoria_campanha ?? null;
+        if (binds.length > 0 && categoriaDaEmpresa !== null) {
+          bindDoEnvio = templateDaCategoria(binds, categoriaDaEmpresa);
+          if (!bindDoEnvio) {
+            await registrarErroDaCampanha(
+              admin,
+              campanha,
+              `A categoria "${categoriaDaEmpresa}" não tem modelo configurado nesta campanha. Edite a campanha e escolha o modelo dessa categoria.`,
+              agoraIso,
+              true,
+            );
+            resumo.pausadas++;
+            resumo.pulados.push({
+              campanha: campanha.id,
+              motivo: "template_da_categoria_ausente",
+            });
+            continue;
+          }
+        } else {
+          // Recorte vazio ou curinga histórico "empresas": o bind legado é o
+          // padrão declarado pela campanha (0284), de propósito.
+          bindDoEnvio = {
+            categoria: "",
+            name: campanha.template_name ?? "",
+            language: campanha.template_language ?? "",
+            contract_hash: campanha.template_contract_hash ?? "",
+            values: campanha.template_values ?? {},
+          };
+        }
+      }
+
+      let templateDoEnvio: {
+        name: string;
+        language: string;
+        contractHash: string;
+        values: Record<string, string>;
+        components: unknown[];
+        parameterFormat: string;
+      } | null = null;
+      if (tipo === "template" && bindDoEnvio) {
+        let modelo: TemplateParaCampanha | null = null;
+        try {
+          modelo = await carregarTemplateParaCampanha(
+            admin,
+            campanha.organization_id,
+            bindDoEnvio.name,
+            bindDoEnvio.language,
+          );
+        } catch (e) {
+          const erro = e instanceof Error ? e.message : "Falha ao ler o espelho de modelos.";
+          await registrarErroDaCampanha(admin, campanha, erro, agoraIso, false);
+          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
+          continue;
+        }
+
+        const veredito = avaliarTemplateParaCampanha(
+          modelo,
+          bindDoEnvio.values,
+          bindDoEnvio.contract_hash,
+        );
+        if (!veredito.ok || !veredito.template) {
+          await registrarErroDaCampanha(admin, campanha, veredito.erro, agoraIso, veredito.pausar);
+          if (veredito.pausar) resumo.pausadas++;
+          resumo.pulados.push({ campanha: campanha.id, motivo: "template_invalido" });
+          continue;
+        }
+
+        templateDoEnvio = {
+          name: veredito.template.name,
+          language: veredito.template.language,
+          contractHash: veredito.template.contractHash,
+          values: bindDoEnvio.values,
+          components: veredito.template.components,
+          parameterFormat: veredito.template.parameterFormat,
+        };
       }
 
       // A rotação CONTINUA de onde parou: o índice é o total de envios da
@@ -741,6 +794,9 @@ async function escolherProspect(
       telefone_normalizado: fone,
       cidade: (p as unknown as { cidade?: string | null }).cidade ?? null,
       categoria: efetiva.rotulo,
+      // 0285 — qual categoria do recorte casou. O motor usa esta chave para
+      // escolher o modelo, e a ordem é a da campanha (determinística).
+      categoria_campanha: categoriaDaCampanhaQueCombina(efetiva, categorias),
     };
   }
   return null;

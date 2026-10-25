@@ -60,12 +60,20 @@ import {
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
-import { categoriaCombinaComCampanha, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
+import { categoriaCombinaComCampanha, categoriaDaCampanhaQueCombina, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import type { TemplateDoEnvio } from "@/lib/prospeccao/envio";
 import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
 import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
+import {
+  categoriasSemModelo,
+  chaveDaCategoria,
+  lerTemplatesPorCategoria,
+} from "@/lib/prospeccao/templates-por-categoria";
 import { lerTetoDoNumero } from "@/lib/prospeccao/teto-do-numero";
-import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
+import {
+  validarBindDaCampanha,
+  validarTemplatesDaCampanha,
+} from "@/lib/prospeccao/validacao-da-campanha";
 import { validateRequest } from "@/lib/schemas";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -146,12 +154,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     template_language: string | null;
     template_contract_hash: string | null;
     template_values: Record<string, string> | null;
+    templates_por_categoria: unknown;
   } | null = null;
   if (campanhaId !== null) {
     const { data: c, error: errCampanha } = await admin
       .from("prospecting_campaigns")
       .select(
-        "id, nome, categorias, publico, prospect_ids, mensagem_tipo, template_name, template_language, template_contract_hash, template_values",
+        "id, nome, categorias, publico, prospect_ids, mensagem_tipo, template_name, template_language, template_contract_hash, template_values, templates_por_categoria",
       )
       .eq("id", campanhaId)
       .eq("organization_id", orgId)
@@ -171,6 +180,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       template_language: string | null;
       template_contract_hash: string | null;
       template_values: Record<string, string> | null;
+      templates_por_categoria: unknown;
     };
     if (linha.publico === "contatos") {
       return fail(
@@ -190,42 +200,89 @@ export async function POST(req: NextRequest): Promise<Response> {
       template_language: linha.template_language,
       template_contract_hash: linha.template_contract_hash,
       template_values: linha.template_values,
+      templates_por_categoria: linha.templates_por_categoria,
     };
   }
 
-  // ─── O tipo da mensagem e o bind do modelo (0284) ────────────────────────
+  // ─── O tipo da mensagem e o bind do modelo (0284/0285) ──────────────────
   // Sem campanha (simulação da tela de Empresas) é sempre texto. Com campanha,
   // a declaração manda. O bind é conferido ANTES de qualquer reserva: um
   // modelo obsoleto gastaria uma reserva por empresa e a Meta recusaria todas.
+  //
+  // Com `templates_por_categoria`, TODOS os modelos são conferidos e a
+  // cobertura das categorias é exigida. O modelo de cada empresa é escolhido
+  // no envio, pela categoria efetiva — não há fallback para o modelo de outra
+  // categoria.
   const tipo: TipoDaMensagem =
     campanha?.mensagem_tipo === "template" ? "template" : "texto";
   let templateDoEnvio: TemplateDoEnvio | null = null;
+  const templatesPorCategoria = new Map<string, TemplateDoEnvio>();
+  const binds = campanha ? lerTemplatesPorCategoria(campanha.templates_por_categoria) : [];
   if (tipo === "template" && campanha) {
-    const veredito = await validarBindDaCampanha(
-      admin,
-      orgId,
-      {
-        tipo: "template",
-        name: campanha.template_name,
-        language: campanha.template_language,
-        contractHash: campanha.template_contract_hash,
-        values: campanha.template_values ?? {},
-      },
-      { exigirCanal: false },
-    );
-    if (!veredito.ok || !veredito.template) {
-      return fail("validation_failed", veredito.ok ? "Modelo inválido." : veredito.erro, 422, {
-        requestId,
+    if (binds.length > 0) {
+      const semModelo = categoriasSemModelo(binds, campanha.categorias ?? []);
+      if (semModelo.length > 0) {
+        return fail(
+          "validation_failed",
+          `A campanha não tem modelo para: ${semModelo.join(", ")}. Edite a campanha e configure todas as categorias.`,
+          422,
+          { requestId },
+        );
+      }
+      const veredito = await validarTemplatesDaCampanha(admin, orgId, binds, {
+        exigirCanal: false,
       });
+      if (!veredito.ok) {
+        return fail("validation_failed", veredito.erro, 422, { requestId });
+      }
+      for (const t of veredito.templates) {
+        templatesPorCategoria.set(chaveDaCategoria(t.categoria), {
+          name: t.name,
+          language: t.language,
+          contractHash: t.contractHash,
+          values: t.values,
+          components: t.components,
+          parameterFormat: t.parameterFormat,
+        });
+      }
+      // O primeiro mapeamento é o bind PADRÃO: cobre o curinga histórico e
+      // mantém o resumo da simulação com um modelo nomeado.
+      const primeiro = veredito.templates[0]!;
+      templateDoEnvio = {
+        name: primeiro.name,
+        language: primeiro.language,
+        contractHash: primeiro.contractHash,
+        values: primeiro.values,
+        components: primeiro.components,
+        parameterFormat: primeiro.parameterFormat,
+      };
+    } else {
+      const veredito = await validarBindDaCampanha(
+        admin,
+        orgId,
+        {
+          tipo: "template",
+          name: campanha.template_name,
+          language: campanha.template_language,
+          contractHash: campanha.template_contract_hash,
+          values: campanha.template_values ?? {},
+        },
+        { exigirCanal: false },
+      );
+      if (!veredito.ok || !veredito.template) {
+        return fail("validation_failed", veredito.ok ? "Modelo inválido." : veredito.erro, 422, {
+          requestId,
+        });
+      }
+      templateDoEnvio = {
+        name: veredito.template.name,
+        language: veredito.template.language,
+        contractHash: veredito.template.contractHash,
+        values: campanha.template_values ?? {},
+        components: veredito.template.components,
+        parameterFormat: veredito.template.parameterFormat,
+      };
     }
-    templateDoEnvio = {
-      name: veredito.template.name,
-      language: veredito.template.language,
-      contractHash: veredito.template.contractHash,
-      values: campanha.template_values ?? {},
-      components: veredito.template.components,
-      parameterFormat: veredito.template.parameterFormat,
-    };
   }
 
   // A campanha de TEXTO continua exigindo ao menos uma variação. A de template
@@ -324,6 +381,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
   }
   const categoriasDaCampanha = campanha?.categorias ?? [];
+  /**
+   * 0285 — a categoria DA CAMPANHA que casou com cada empresa. É a chave usada
+   * para escolher o modelo no envio; `null` significa recorte vazio/curinga e
+   * usa o bind legado.
+   */
+  const categoriaDaCampanhaPorProspect = new Map(
+    brutos.map((p) => [p.id, categoriaDaCampanhaQueCombina(categoriaEfetiva(p), categoriasDaCampanha)]),
+  );
 
   // ─── As DUAS cotas do dia ────────────────────────────────────────────────
   // A que o operador pede (`limite`) e o TETO DO NÚMERO — `daily_message_limit`
@@ -398,6 +463,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     template: templateDoEnvio
       ? { name: templateDoEnvio.name, language: templateDoEnvio.language }
       : null,
+    // 0285 — a simulação mostra o modelo de cada categoria. Sem isso, o
+    // operador revisa "Modelo: x" e não vê que restaurante sairia com outro.
+    templates_por_categoria: binds.map((b) => ({
+      categoria: b.categoria,
+      name: b.name,
+      language: b.language,
+    })),
     pode_enviar: plano.podeEnviar,
     bloqueio: plano.bloqueio,
     selecionados: entrada.prospect_ids.length,
@@ -551,7 +623,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   const dadosPorProspect = new Map(
     brutos.map((p) => [
       p.id,
-      { cidade: p.cidade, categoria: categoriaEfetiva(p).rotulo },
+      {
+        cidade: p.cidade,
+        categoria: categoriaEfetiva(p).rotulo,
+        categoria_campanha: categoriaDaCampanhaPorProspect.get(p.id) ?? null,
+      },
     ]),
   );
 
@@ -564,6 +640,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     espacoMs,
     mensagens,
     template: templateDoEnvio,
+    templatesPorCategoria,
     dadosPorProspect,
     plano: planoReservado,
     campaignId: campanhaDoEnvio.id,
@@ -690,8 +767,13 @@ interface ParamsDoEnvio {
   mensagens: string[];
   /** 0284 — quando presente, o envio é template e ignora `mensagens`. */
   template: TemplateDoEnvio | null;
+  /** 0285 — modelo por categoria; vazio = o bind único acima vale para todos. */
+  templatesPorCategoria: Map<string, TemplateDoEnvio>;
   /** Cidade e categoria efetiva por prospect, para os tokens do modelo. */
-  dadosPorProspect: Map<string, { cidade: string | null; categoria: string | null }>;
+  dadosPorProspect: Map<
+    string,
+    { cidade: string | null; categoria: string | null; categoria_campanha: string | null }
+  >;
   plano: ReturnType<typeof planejarDisparo>;
   /** A campanha do disparo — o ledger já foi reservado com ela (0277). */
   campaignId: string;
@@ -721,6 +803,24 @@ async function enviarPlano(p: ParamsDoEnvio) {
   for (const item of p.plano.aprovados) {
     await esperar(p.sessaoId, p.espacoMs);
 
+    // 0285 — o modelo é escolhido POR EMPRESA, pela categoria da campanha que
+    // casou com ela. Sem recorte/curinga, vale o bind padrão. Categoria sem
+    // modelo não cai no modelo de outra categoria: falha nomeada, e a empresa
+    // não recebe o texto errado.
+    const dadosDoProspect = p.dadosPorProspect.get(item.id);
+    const categoriaDaCampanha = dadosDoProspect?.categoria_campanha ?? null;
+    const templateDoItem =
+      p.templatesPorCategoria.size > 0 && categoriaDaCampanha
+        ? (p.templatesPorCategoria.get(chaveDaCategoria(categoriaDaCampanha)) ?? null)
+        : p.template;
+    if (p.templatesPorCategoria.size > 0 && categoriaDaCampanha && !templateDoItem) {
+      falhas.push({
+        nome: item.nome,
+        erro: `A categoria "${categoriaDaCampanha}" não tem modelo configurado.`,
+      });
+      continue;
+    }
+
     // O envio é compartilhado com o AGENDAMENTO (`lib/prospeccao/envio.ts`):
     // upsert do contato → conversa → `sendMessageHandler`. Um segundo caminho
     // de envio no produto é onde os guardrails divergem e o número queima.
@@ -733,11 +833,11 @@ async function enviarPlano(p: ParamsDoEnvio) {
         id: item.id,
         nome: item.nome,
         telefone_normalizado: item.telefone_normalizado,
-        cidade: p.dadosPorProspect.get(item.id)?.cidade ?? null,
-        categoria: p.dadosPorProspect.get(item.id)?.categoria ?? null,
+        cidade: dadosDoProspect?.cidade ?? null,
+        categoria: dadosDoProspect?.categoria ?? null,
       },
-      mensagem: p.template ? "" : mensagemDaVez(p.mensagens, item.mensagem_indice),
-      template: p.template,
+      mensagem: templateDoItem ? "" : mensagemDaVez(p.mensagens, item.mensagem_indice),
+      template: templateDoItem,
     });
     if (resultado.ok) {
       enviados.push({ nome: item.nome, message_id: resultado.messageId, status: resultado.status });

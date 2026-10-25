@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   categoriaCombinaComCampanha,
+  categoriaDaCampanhaQueCombina,
   categoriaEfetiva,
   categoriasAceitas,
 } from "@/lib/prospeccao/categoria-efetiva";
@@ -184,5 +185,45 @@ describe("categoriaCombinaComCampanha", () => {
     // de voltar como posto pela campanha. A régua tem que chegar pelo canônico.
     expect(resolvida.categorias).not.toContain("Auto parts store");
     expect(categoriaCombinaComCampanha(resolvida, ["Autopeças"])).toBe(true);
+  });
+});
+
+describe("categoriaDaCampanhaQueCombina — qual modelo usar (0285)", () => {
+  const oficina = categoriaEfetiva({
+    nome: "Mecânica Videira",
+    categoria: "Auto repair shop",
+    categorias: [],
+  });
+
+  it("devolve a categoria da campanha que casou, na ordem da campanha", () => {
+    expect(
+      categoriaDaCampanhaQueCombina(oficina, ["Restaurante", "Oficina mecânica"]),
+    ).toBe("Oficina mecânica");
+  });
+
+  it("empresa que casa com duas usa a PRIMEIRA — determinístico e explicável", () => {
+    expect(
+      categoriaDaCampanhaQueCombina(oficina, ["Oficina mecânica", "Auto repair shop"]),
+    ).toBe("Oficina mecânica");
+  });
+
+  it("recorte vazio e curinga histórico não têm categoria — usam o bind legado", () => {
+    expect(categoriaDaCampanhaQueCombina(oficina, [])).toBeNull();
+    expect(categoriaDaCampanhaQueCombina(oficina, ["empresas"])).toBeNull();
+  });
+
+  it("curinga junto de uma categoria real não esconde a categoria que casou", () => {
+    expect(
+      categoriaDaCampanhaQueCombina(oficina, ["empresas", "Oficina mecânica"]),
+    ).toBe("Oficina mecânica");
+  });
+
+  it("linha em revisão não recebe modelo nenhum", () => {
+    const revisar = categoriaEfetiva({
+      nome: "Branca",
+      categoria: "Gas station",
+      categorias: [],
+    });
+    expect(categoriaDaCampanhaQueCombina(revisar, ["Posto de combustível"])).toBeNull();
   });
 });

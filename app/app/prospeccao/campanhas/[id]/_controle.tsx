@@ -71,6 +71,10 @@ import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
+import {
+  lerTemplatesPorCategoria,
+  type TemplateDaCategoria,
+} from "@/lib/prospeccao/templates-por-categoria";
 import { DialogoDisparo } from "../../_disparo";
 
 interface Janela {
@@ -97,6 +101,8 @@ interface CampanhaControle {
   template_language: string | null;
   template_contract_hash: string | null;
   template_values: Record<string, string> | null;
+  /** 0285 — um modelo por categoria. Vazio = bind único legado (0284). */
+  templates_por_categoria?: unknown;
   espaco_ms: number | null;
   limite_diario: number | null;
   data_inicio: string | null;
@@ -448,6 +454,13 @@ export function ControleDaCampanha({ id }: { id: string }) {
   const percentual = dados.resumo.percentual;
   const ehContatos = dados.tipo === "contatos";
   const ehTemplate = dados.campanha.mensagem_tipo === "template";
+  /**
+   * 0285 — os modelos por categoria. O array vazio é campanha antiga (ou sem
+   * recorte): a tela cai no bind único da 0284, do mesmo jeito que o motor.
+   */
+  const binds: TemplateDaCategoria[] = lerTemplatesPorCategoria(
+    dados.campanha.templates_por_categoria,
+  );
   const podeDisparar = !ehContatos && semReserva.length > 0;
   const modoInicial =
     semReserva.length > 20 || Boolean(dados.campanha.agendada_em) ? "agendar" : "agora";
@@ -630,7 +643,11 @@ export function ControleDaCampanha({ id }: { id: string }) {
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{t("Mensagens e agenda")}</h2>
               <Badge variant="neutral">
-                {ehTemplate ? t("Modelo") : (dados.campanha.mensagens ?? []).length}
+                {ehTemplate
+                  ? binds.length > 1
+                    ? t(`${binds.length} modelos`)
+                    : t("Modelo")
+                  : (dados.campanha.mensagens ?? []).length}
               </Badge>
             </div>
             <div>
@@ -644,29 +661,58 @@ export function ControleDaCampanha({ id }: { id: string }) {
                 {ehTemplate ? t("Modelo aprovado") : t("Mensagens")}
               </p>
               {ehTemplate ? (
-                <div className="mt-2 space-y-2">
-                  <p className="text-sm font-medium">
-                    {dados.campanha.template_name ?? "—"}
-                    {dados.campanha.template_language
-                      ? ` (${dados.campanha.template_language})`
-                      : ""}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      "O texto e os parâmetros vêm do modelo aprovado no canal oficial; os valores abaixo são interpolados por empresa.",
-                    )}
-                  </p>
-                  {Object.entries(dados.campanha.template_values ?? {}).length > 0 && (
-                    <dl className="space-y-1 rounded-lg border bg-muted/20 p-2.5 text-sm">
-                      {Object.entries(dados.campanha.template_values ?? {}).map(([k, v]) => (
-                        <div key={k} className="flex gap-2">
-                          <dt className="shrink-0 font-mono text-xs text-muted-foreground">{k}</dt>
-                          <dd className="min-w-0 truncate">{v}</dd>
-                        </div>
+                binds.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "Cada categoria usa o próprio modelo aprovado. O texto e os parâmetros são interpolados por empresa.",
+                      )}
+                    </p>
+                    <ul className="space-y-1.5">
+                      {binds.map((bind) => (
+                        <li
+                          key={bind.categoria}
+                          className="rounded-lg border bg-muted/20 p-2.5 text-sm"
+                        >
+                          <p className="font-medium">{bind.categoria}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {bind.name}
+                            {bind.language ? ` (${bind.language})` : ""}
+                            {Object.keys(bind.values).length > 0
+                              ? ` · ${Object.keys(bind.values).length} ${t("parâmetros")}`
+                              : ""}
+                          </p>
+                        </li>
                       ))}
-                    </dl>
-                  )}
-                </div>
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-sm font-medium">
+                      {dados.campanha.template_name ?? "—"}
+                      {dados.campanha.template_language
+                        ? ` (${dados.campanha.template_language})`
+                        : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "O texto e os parâmetros vêm do modelo aprovado no canal oficial; os valores abaixo são interpolados por empresa.",
+                      )}
+                    </p>
+                    {Object.entries(dados.campanha.template_values ?? {}).length > 0 && (
+                      <dl className="space-y-1 rounded-lg border bg-muted/20 p-2.5 text-sm">
+                        {Object.entries(dados.campanha.template_values ?? {}).map(([k, v]) => (
+                          <div key={k} className="flex gap-2">
+                            <dt className="shrink-0 font-mono text-xs text-muted-foreground">
+                              {k}
+                            </dt>
+                            <dd className="min-w-0 truncate">{v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+                )
               ) : (dados.campanha.mensagens ?? []).length === 0 ? (
                 <p className="mt-1 text-sm text-warning-fg">
                   {t("Nenhuma mensagem salva. Ao enviar ou agendar, escreva a primeira.")}
@@ -1084,6 +1130,11 @@ export function ControleDaCampanha({ id }: { id: string }) {
           mensagemTipo={ehTemplate ? "template" : "texto"}
           templateNome={dados.campanha.template_name}
           templateIdioma={dados.campanha.template_language}
+          templatesPorCategoria={binds.map((b) => ({
+            categoria: b.categoria,
+            name: b.name,
+            language: b.language,
+          }))}
           agendaInicial={dados.campanha}
           modoInicial={modoInicial}
           prospectIdsDaCampanha={dados.audiencia_ids}

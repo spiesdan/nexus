@@ -415,3 +415,36 @@ export function categoriaCombinaComCampanha(
   const aceitas = aceitasDaCampanha ?? categoriasAceitas(uteis);
   return efetiva.categorias.some((c) => aceitas.has(semAcento(c).trim()));
 }
+
+/**
+ * QUAL categoria DA CAMPANHA casou com a empresa (0285).
+ *
+ * `categoriaCombinaComCampanha` responde "pode receber?". Esta responde "qual
+ * modelo usar?" — e as duas precisam concordar. A ordem percorrida é a ordem
+ * da campanha (a mesma que o operador viu no assistente), então uma empresa
+ * que casa com duas categorias usa o modelo da PRIMEIRA: determinístico e
+ * explicável, em vez de "o que o banco devolveu primeiro".
+ *
+ * `null` significa "sem categoria própria": recorte vazio, curinga histórico
+ * "empresas" ou linha em revisão. Nesses casos o motor usa o bind legado
+ * (0284), de propósito — não é fallback silencioso para o modelo de OUTRA
+ * categoria.
+ */
+export function categoriaDaCampanhaQueCombina(
+  efetiva: CategoriaEfetiva,
+  categoriasDaCampanha: readonly string[],
+): string | null {
+  if (efetiva.revisar) return null;
+  for (const categoria of categoriasDaCampanha) {
+    const util = categoria.trim();
+    if (!util) continue;
+    // O curinga histórico não é uma categoria comercial: não tem bind próprio.
+    // `continue`, não `return null`: se a campanha carrega o curinga E uma
+    // categoria de verdade, a empresa ainda pode casar com a segunda — parar
+    // aqui jogaria todo mundo no bind legado e mandaria o texto errado.
+    if (semAcento(util) === "empresas") continue;
+    const aceitas = categoriasAceitas([util]);
+    if (efetiva.categorias.some((c) => aceitas.has(semAcento(c).trim()))) return util;
+  }
+  return null;
+}

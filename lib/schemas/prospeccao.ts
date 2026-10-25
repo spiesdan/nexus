@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Classificacao } from "@/lib/prospeccao/classificacao";
+import { semAcento } from "@/lib/prospeccao/categoria-pt";
 import { MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 
 /**
@@ -222,6 +223,35 @@ export const janelaDoDiaSchema = z
     path: ["fim"],
   });
 
+/**
+ * O BIND DE UM MODELO PARA UMA CATEGORIA (0285).
+ *
+ * `categoria` é a chave canônica da campanha (o `busca` da biblioteca), não o
+ * rótulo traduzido. É a mesma string que o motor compara com a categoria
+ * efetiva da empresa. Duplicata é recusada: duas entradas para a mesma
+ * categoria fariam "qual modelo sai?" depender da ordem do array.
+ */
+export const templateDaCategoriaSchema = z.object({
+  categoria: z.string().trim().min(2).max(80),
+  name: z.string().trim().min(1).max(512),
+  language: z.string().trim().min(2).max(16),
+  contract_hash: z.string().trim().min(1).max(128),
+  values: z.record(z.string(), z.string().max(4000)).default({}),
+});
+
+export const templatesPorCategoriaSchema = z
+  .array(templateDaCategoriaSchema)
+  .max(CATEGORIAS_MAX)
+  .refine(
+    (lista) => {
+      // A MESMA régua do lookup (`chaveDaCategoria`): acento e caixa não podem
+      // criar duas entradas que o motor trataria como uma só.
+      const vistas = new Set(lista.map((b) => semAcento(b.categoria).trim().toLowerCase()));
+      return vistas.size === lista.length;
+    },
+    { message: "Cada categoria pode ter só um modelo." },
+  );
+
 export const agendamentoSchema = z.object({
   /**
    * A LISTA FECHADA escolhida na tela — o tick manda só para ela.
@@ -274,6 +304,12 @@ export const agendamentoSchema = z.object({
    * `{{nome}}`, `{{primeiro_nome}}`, `{{cidade}}` e `{{categoria}}`.
    */
   template_values: z.record(z.string(), z.string().max(4000)).optional(),
+  /**
+   * 0285 — um modelo por categoria da campanha. Vazio/ausente = bind único
+   * legado (0284). Quando presente, o motor NÃO cai no modelo de outra
+   * categoria: categoria sem bind pausa a campanha com erro visível.
+   */
+  templates_por_categoria: templatesPorCategoriaSchema.optional(),
 });
 
 /** O período só faz sentido com os dois lados — e nunca com o fim antes. */
