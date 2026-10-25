@@ -381,7 +381,7 @@ function temClassName(dir: string): boolean {
  *  2. Linha com `aria-hidden` é pulada. São ícones decorativos, que o próprio
  *     axe não submete à regra `color-contrast` por não serem texto.
  */
-describe("Tailwind 4 — alpha em cor de texto agora PINTA, então precisa passar no contraste", () => {
+describe("Tailwind 4 — cor de texto precisa passar no contraste, com ou sem alpha", () => {
   const MINIMO_AA = 4.5;
   /** Fundos de página, por nome de token (sem o prefixo `--color-`). */
   const FUNDOS_DE_PAGINA = ["surface", "bg", "surface-elevated"];
@@ -538,5 +538,43 @@ describe("Tailwind 4 — alpha em cor de texto agora PINTA, então precisa passa
       [...new Set(reprovados)].sort(),
       "o alpha PINTA no v4: ou tire o `/NN` (restaura o que a produção já mostra) ou use um alpha que passe",
     ).toEqual([]);
+  });
+
+  it("os tokens de TEXTO alcançam AA sobre todo fundo de página, nos dois temas", () => {
+    // Sem alpha, o par ainda pode reprovar — e reprovou: `--color-text-muted`
+    // era `#8b8b8b` no escuro e media **4.44:1** sobre
+    // `--color-surface-elevated` (`#262626`), abaixo do piso de 4.5 para texto
+    // normal. Não é detalhe de uma tela: é o `Badge variant="neutral"`, o chip
+    // clicável do Contexto e todo texto secundário com fundo elevado. O
+    // `rbac-roles` reprovou no noturno de 24/10/2026 com a conta do axe no
+    // relatório (fg `#8b8b8b`, bg `#262626`, 12px normal) — e a correção certa
+    // é o TOKEN, não um `text-text` local que só esconde o par defeituoso.
+    //
+    // `text-subtle` fica de fora de propósito: ele é decoração (divisor, ícone
+    // desligado), não texto que se lê.
+    const TOKENS_DE_TEXTO = ["text", "text-muted"];
+    const reprovados: string[] = [];
+    for (const tema of ["claro", "escuro"] as const) {
+      for (const token of TOKENS_DE_TEXTO) {
+        const cor = corDoToken(token, tema);
+        if (!cor) {
+          // "não sei medir" nunca vira verde: vira linha no relatório.
+          reprovados.push(`${token} [${tema}] → o token não resolve para um hex`);
+          continue;
+        }
+        for (const nomeFundo of FUNDOS_DE_PAGINA) {
+          const bg = corDoToken(nomeFundo, tema);
+          if (!bg) {
+            reprovados.push(`${token} sobre ${nomeFundo} [${tema}] → fundo não resolve para hex`);
+            continue;
+          }
+          const r = contraste(cor, bg);
+          if (r < MINIMO_AA) {
+            reprovados.push(`${token} sobre --color-${nomeFundo} (${tema}) → ${r.toFixed(2)}:1`);
+          }
+        }
+      }
+    }
+    expect(reprovados, "texto abaixo de AA: corrija o token, não o uso local").toEqual([]);
   });
 });

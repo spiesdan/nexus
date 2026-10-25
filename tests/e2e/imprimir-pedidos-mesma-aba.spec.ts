@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { execNpx } from "./utils/npx";
 
 test.setTimeout(120_000);
 
@@ -18,7 +19,24 @@ test.setTimeout(120_000);
  *    navegação cobra), mas responde 307 no servidor para
  *    `/api/v1/commercial-orders/pdf` — o HTML daquela rota, com o breadcrumb
  *    "Pedidos > Imprimir", não chega ao papel nem ao histórico da aba.
+ *
+ * ─── A impressão só existe COM pedido ───────────────────────────────────────
+ *
+ * Sem ids o botão monta `?ids=` vazio, e aí a rota intermediária faz o que foi
+ * desenhada para fazer nesse caso: renderiza a tela vazia em vez de
+ * redirecionar (é o caminho que `responsividade-nas-rotas` mede). O sintoma é
+ * `waitForResponse` do PDF estourando 60s com a aba parada em
+ * `/app/pedidos/imprimir` — que lê como "o botão não navegou".
+ *
+ * Até 24/10/2026 esta spec passava porque `recompra-radar` roda antes dela na
+ * suíte e deixa pedidos no banco: precondição por ORDEM de suíte. Rodando
+ * sozinha — como no noturno, onde ela foi a primeira a falhar — o banco estava
+ * limpo. O seed é idempotente e é o mesmo que a spec irmã usa.
  */
+test.beforeAll(() => {
+  execNpx(["tsx", "scripts/seed-e2e-recompra.ts"], { stdio: "inherit" });
+});
+
 test("Imprimir pedidos entrega o PDF na MESMA aba, sem página intermediária", async ({
   page,
   context,
@@ -49,7 +67,18 @@ test("Imprimir pedidos entrega o PDF na MESMA aba, sem página intermediária", 
     .waitForEvent("download", { timeout: 60_000 })
     .catch(() => null);
 
-  const botao = page.getByRole("link", { name: "Imprimir pedidos" });
+  // O item vive DENTRO do menu "Imprimir": em 19/10/2026 (`c2abeb48f`) os dois
+  // botões de mesmo peso viraram um só, com o "o quê" dentro. O Radix não monta
+  // o conteúdo de um menu fechado, então sem abrir o menu o link não existe no
+  // DOM — era por isso que esta spec esperava 60s por um elemento que nunca ia
+  // aparecer, e o motivo de ela estar vermelha desde aquela data.
+  await page.getByRole("button", { name: "Imprimir", exact: true }).click();
+  // `menuitem`, não `link`: o Radix dá `role="menuitem"` ao item do menu, mesmo
+  // quando o `asChild` clona um `<a href>` para dentro dele. É o papel que o
+  // leitor de tela anuncia — procurar por `link` aqui era procurar um elemento
+  // que o menu nunca expõe.
+  const botao = page.getByRole("menuitem", { name: "Imprimir pedidos" });
+  await expect(botao).toBeVisible();
   expect(await botao.getAttribute("target"), "sem target=_blank").toBeNull();
   await botao.click();
 

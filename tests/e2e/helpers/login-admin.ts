@@ -45,6 +45,20 @@ export interface CredsE2E {
   default_agent_id?: string;
   /** `mcp_agent` + versão criados por `scripts/seed-e2e-capacidades.ts`. */
   capacidades?: { agent_id: string; version_id: string };
+  /**
+   * O cenário da agenda, escrito por `scripts/seed-e2e-agenda.ts`: tipo de
+   * atendimento, jornada publicada e contato. Cada spec que precisa dele roda
+   * o seed por si (é idempotente) — o CI não o roda em passo próprio.
+   */
+  agenda?: {
+    tipo_id: string;
+    tipo_slug: string;
+    tipo_nome: string;
+    dono_user_id: string;
+    contato_id: string;
+    contato_nome: string;
+    fuso: string;
+  };
 }
 
 export function lerCreds(): CredsE2E {

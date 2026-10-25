@@ -402,7 +402,16 @@
 
   /* Text (dark) */
   --color-text: #f4f4f4;
-  --color-text-muted: #8b8b8b;
+  /* #8b8b8b media 4.44:1 sobre `--color-surface-elevated` (#262626) — abaixo do
+     piso AA de 4.5 para texto normal, e é onde vive todo `Badge variant="neutral"`
+     e todo chip com fundo elevado. Foi assim que o `rbac-roles` reprovou no
+     noturno de 24/10/2026, com a conta no relatório do axe (fg #8b8b8b, bg
+     #262626). #909090 dá 4.74:1 no mesmo fundo e 5.34:1 sobre `--color-surface`;
+     o degrau é imperceptível a olho e devolve o par ao piso. A rampa
+     `--color-neutral-300` continua #8b8b8b de propósito: ela é paleta, este é o
+     token semântico de texto secundário. O par está travado em
+     `tests/unit/tailwind-tokens.test.ts`. */
+  --color-text-muted: #909090;
   --color-text-subtle: #5e5e5e;
 
   /* Borders (dark) */

@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { irParaASemanaDoCompromisso } from "./helpers/agenda-semana-integra";
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { execNpx } from "./utils/npx";
 
 /**
  * A PROVA NA TELA DO PRODUTO — e ela existe porque a outra estava na tela errada.
@@ -22,16 +24,104 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
 const ESPERA = 60_000;
 test.describe.configure({ mode: "serial", timeout: 180_000 });
 
+/**
+ * Cria UM compromisso pelo caminho da API, com a sessão já aberta, e devolve o
+ * instante e o id do que criou.
+ *
+ * Por que isto passou a ser necessário: `HistoricoDaAgenda` devolve `null`
+ * quando não há agendamento nenhum — decisão registrada no próprio componente
+ * (as quatro abas zeradas + a faixa de "nada marcado" empurrariam o calendário
+ * para baixo, que é o motivo de a pessoa ter aberto a Agenda). A spec afirmava
+ * o contrário, "aparece mesmo sem dado", e ficou vermelha quando a decisão
+ * entrou: o teste estava velho, não a tela.
+ *
+ * O horário NÃO é fixo, e isso é o que impede a spec de virar um caso de uso
+ * único: cada corrida consome a vaga que escolheu, então um `10:00 de amanhã`
+ * cravado passaria na primeira execução e reprovaria com 422
+ * (`agenda_horario_indisponivel`) em todas as seguintes — inclusive no CI, que
+ * compartilha o banco com outras specs de agenda. A pergunta "qual é o primeiro
+ * horário livre?" é feita à rota que a TELA usa, então o que a spec marca é o
+ * que o produto oferece.
+ *
+ * O `owner_user_id` NÃO é enfeite: a jornada publicada pelo seed é do atendente
+ * (`users.agent`), e a rota recusa com 422 de disponibilidade quando o dono do
+ * compromisso não publicou horário.
+ */
+async function criarUmAgendamento(page: Page): Promise<{ id: string; instante: string }> {
+  const { agenda } = lerCreds();
+  if (!agenda?.tipo_id || !agenda.dono_user_id) {
+    throw new Error(
+      "`.e2e-creds.json` sem o bloco `agenda` — rode `scripts/seed-e2e-agenda.ts` antes.",
+    );
+  }
+
+  const de = new Date();
+  const ate = new Date(de.getTime() + 14 * 86_400_000);
+  const busca = new URLSearchParams({
+    event_type_id: agenda.tipo_id,
+    owner_user_id: agenda.dono_user_id,
+    de: de.toISOString(),
+    ate: ate.toISOString(),
+  });
+  const respostaDosHorarios = await page.request.get(`/api/v1/agenda/horarios-livres?${busca}`);
+  if (!respostaDosHorarios.ok()) {
+    throw new Error(
+      `GET /agenda/horarios-livres → ${respostaDosHorarios.status()}: ` +
+        `${await respostaDosHorarios.text()}`,
+    );
+  }
+  const corpo = (await respostaDosHorarios.json()) as {
+    data?: { slots?: Array<{ inicio: string }> };
+    slots?: Array<{ inicio: string }>;
+  };
+  const slots = (corpo.data ?? corpo).slots ?? [];
+  const primeiro = slots[0];
+  if (!primeiro) {
+    throw new Error(
+      "a rota não ofereceu nenhum horário livre em 14 dias — o seed da agenda não publicou jornada",
+    );
+  }
+  const instante = primeiro.inicio;
+
+  const r = await page.request.post("/api/v1/agenda/agendamentos", {
+    data: {
+      event_type_id: agenda.tipo_id,
+      starts_at: instante,
+      owner_user_id: agenda.dono_user_id,
+      title: "Compromisso do histórico",
+    },
+  });
+  if (r.status() !== 201) {
+    throw new Error(`POST /agenda/agendamentos → ${r.status()}: ${await r.text()}`);
+  }
+  const criado = (await r.json()) as { data?: { id?: string }; id?: string };
+  const id = (criado.data ?? criado).id;
+  if (!id) throw new Error(`POST /agenda/agendamentos não devolveu id: ${JSON.stringify(criado)}`);
+  return { id, instante };
+}
+
 test.describe("a Agenda como o dono do produto a usa", () => {
   let page: Page;
+  /** O que a spec criou, para apagar no fim: cada corrida não pode consumir vaga. */
+  let criado: { id: string; instante: string } | null = null;
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(240_000);
+    // O seed é idempotente e cada spec que precisa dele o chama por si — a
+    // regra do repo para não depender da ordem em que a outra rodou.
+    execNpx(["tsx", "scripts/seed-e2e-agenda.ts"], { stdio: "inherit" });
     page = await browser.newPage();
     await loginComoAdmin(page, lerCreds());
   });
 
   test.afterAll(async () => {
+    if (criado) {
+      // LIMPEZA, como as irmãs: sem isto cada corrida consome uma vaga da agenda.
+      const apagou = await page.request.delete("/api/v1/agenda/agendamentos", {
+        data: { id: criado.id, reason: "limpeza da spec da tela do produto" },
+      });
+      expect(apagou.ok(), `a spec não conseguiu cancelar o que criou (${apagou.status()})`).toBe(true);
+    }
     await page.close();
   });
 
@@ -118,8 +208,21 @@ test.describe("a Agenda como o dono do produto a usa", () => {
   });
 
   test("o histórico está NA TELA DO PRODUTO, com as quatro abas", async () => {
-    // Estava provado só na vitrine. Aqui ele aparece mesmo sem dado: as abas com
-    // contador zero respondem "não há nada" sem gastar um clique.
+    // Estava provado só na vitrine. O cenário agora CRIA o compromisso: com
+    // zero agendamento o componente devolve `null` de propósito (ver
+    // `criarUmAgendamento` acima) — e a spec antiga, que exigia o histórico no
+    // vazio, era a metade errada da mudança.
+    criado = await criarUmAgendamento(page);
+    await page.goto("/app/agenda");
+    await expect(page.getByTestId("tela-agenda")).toBeVisible({ timeout: ESPERA });
+
+    // A grade — e o `useAgendamentos` que alimenta o histórico — é escopada ao
+    // período VISÍVEL (`recorteDaGrade`). Marcar por API não escolhe a semana:
+    // o primeiro horário livre pode cair na seguinte, e sem navegar até ela o
+    // histórico recebe lista vazia e devolve `null` — a falha leria "o
+    // histórico não existe", que é a acusação errada.
+    await irParaASemanaDoCompromisso(page, criado.instante);
+
     const hist = page.getByTestId("historico-da-agenda");
     await expect(hist).toBeVisible({ timeout: ESPERA });
     for (const aba of ["proximos", "aguardando", "passados", "cancelados"]) {
@@ -158,6 +261,13 @@ test.describe("a Agenda como o dono do produto a usa", () => {
     // ⚠️ Isto estava provado só em `agenda-kit-visual`, que roda contra
     // `/vitrine-agenda` — página de demonstração com dado de mentira. A vitrine
     // prova o DESENHO; ela não prova que a tela que o cliente abre desenha.
+    //
+    // A página é COMPARTILHADA entre os casos (`serial`, um `page` só) e o caso
+    // anterior navega até a semana do compromisso que criou. A régua do agora
+    // só existe na coluna de HOJE (`ehHoje && <ReguaDoAgora>`), então sem
+    // voltar para a semana corrente este caso reprova acusando "sem régua" —
+    // quando o que faltava era a tela estar na semana certa.
+    await page.getByRole("button", { name: "Hoje", exact: true }).click();
     await expect(page.getByTestId("grade-da-agenda")).toBeVisible({ timeout: ESPERA });
 
     const alternador = page.getByTestId("alternador-de-visao");
