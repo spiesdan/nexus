@@ -42,6 +42,7 @@ export function UserMenu() {
             size="icon"
             className="rounded-full"
             aria-label={t("Menu do usuário")}
+            title={user.full_name ?? user.email}
           >
             <Avatar className="h-8 w-8">
               {user.avatar_url && <AvatarImage src={user.avatar_url} alt="" />}

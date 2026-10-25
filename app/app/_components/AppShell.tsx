@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { MobileDock } from "@/components/shell/MobileDock";
 import { TopBar } from "@/components/shell/TopBar";
-import { Breadcrumb } from "@/components/shell/Breadcrumb";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
+import { useT } from "@/hooks/i18n/useT";
 import { useInboundMessageAlerts } from "@/hooks/notifications/useInboundMessageAlerts";
 import { useCrmAlerts } from "@/hooks/notifications/useCrmAlerts";
 import { useNotifyOpenFromServiceWorker } from "@/lib/notifications/notify_open";
@@ -18,8 +18,18 @@ export function AppShell({ sidebarCollapsed, children }: AppShellProps) {
   useInboundMessageAlerts();
   useCrmAlerts();
   useNotifyOpenFromServiceWorker();
+  const t = useT();
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Primeiro alvo do Tab. A casca tem TopBar + Sidebar antes do conteúdo, e
+          sem este atalho quem navega por teclado atravessa a navegação inteira
+          em TODA tela. `focus:not-sr-only` o revela só quando recebe foco. */}
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-md"
+      >
+        {t("Pular para o conteúdo")}
+      </a>
       {/*
         Casca travada no viewport: `h-screen overflow-hidden` em vez de
         `min-h-screen`. Antes a casca crescia com o conteúdo e a rolagem era do
@@ -57,13 +67,19 @@ export function AppShell({ sidebarCollapsed, children }: AppShellProps) {
       <div className="flex h-screen min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
         {/* `pb-24 md:pb-6`: o dock mobile é fixo e cobriria o fim do conteúdo.
-            O `main` virou coluna flex para o Breadcrumb (§17) ocupar uma faixa
-            própria sem empurrar o wrapper de conteúdo abaixo do viewport: o
-            wrapper é `flex-1 min-h-0`, então as páginas com `h-full` enchem
-            exatamente o que sobra — mesmo quando a trilha não renderiza (um
-            nível só) e mesmo quando ela aparece (dois ou mais). */}
-        <main className="flex min-h-0 flex-1 flex-col overflow-auto p-6 pb-24 md:pb-6">
-          <Breadcrumb />
+            A trilha de navegação NÃO mora mais aqui: ela subiu para a TopBar
+            (`components/shell/TopBar.tsx`), que era onde havia espaço vazio e
+            é o lugar em que "onde estou" se lê junto de "para onde vou". Com
+            isso o `main` perdeu a faixa fixa de ~28px que a trilha reservava em
+            toda página de dois níveis ou mais. `id`/`tabIndex` existem para o
+            atalho "Pular para o conteúdo" conseguir mover o FOCO, não só a
+            rolagem; `focus:outline-hidden` evita o anel no contêiner inteiro
+            depois do salto. */}
+        <main
+          id="conteudo"
+          tabIndex={-1}
+          className="flex min-h-0 flex-1 flex-col overflow-auto p-6 pb-24 focus:outline-hidden md:pb-6"
+        >
           <div className="min-h-0 flex-1">{children}</div>
         </main>
       </div>

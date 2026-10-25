@@ -36,18 +36,22 @@ export function NotificationCenter() {
   const { data, isLoading } = useAgentInbox("open");
   const count = data?.open_count ?? 0;
   const itens = (data?.items ?? []).slice(0, MAX_NO_PAINEL);
+  // Um rótulo, dois consumidores: o leitor de tela (aria-label) e o tooltip
+  // nativo (title). Antes só o primeiro existia — quem usa mouse via um sino
+  // sem nome até passar o cursor e esperar o painel abrir.
+  const rotulo =
+    count > 0
+      ? `${t("Central de avisos")} — ${count} ${t("em aberto")}`
+      : t("Central de avisos");
 
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={
-            count > 0
-              ? `${t("Central de avisos")} — ${count} ${t("em aberto")}`
-              : t("Central de avisos")
-          }
+          aria-label={rotulo}
           aria-expanded={aberto}
+          title={rotulo}
           data-testid="alerts-bell"
           className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:h-9 lg:w-9"
         >

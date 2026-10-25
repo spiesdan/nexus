@@ -42,7 +42,11 @@ export function TenantSwitcher() {
           >
             {[...(active?.name ?? "?")][0]?.toUpperCase()}
           </span>
-          <span className="max-w-[160px] truncate">{active?.name ?? "Selecionar org"}</span>
+          {/* O nome só a partir de `sm`: no mobile ele empurrava a busca e o
+              bloco de ações para fora da largura de 390px. A inicial continua
+              dizendo qual empresa está ativa, e o menu aberto mostra o nome
+              inteiro. */}
+          <span className="hidden max-w-[160px] truncate sm:inline">{active?.name ?? "Selecionar org"}</span>
           <CaretDown size={12} aria-hidden />
         </Button>
       </DropdownMenuTrigger>

@@ -77,7 +77,12 @@ export function Breadcrumb() {
       // saía no papel ("Pedidos > Imprimir") junto com o documento — o
       // Sidebar e a TopBar já carregam a mesma marca desde o começo
       // (AppShell.tsx, TopBar.tsx); este era o único bloco do shell sem.
-      className="mb-4 hidden items-center gap-1 text-xs text-muted-foreground md:flex print:hidden"
+      // A trilha agora vive DENTRO da TopBar (ver `TopBar.tsx`): quem decide
+      // quando ela aparece é o contêiner dela (`hidden md:flex`), não a própria
+      // trilha. Por isso saíram o `mb-4` (era o respiro da faixa dentro do
+      // `main`) e o `hidden md:flex` — mantê-los aqui esconderia a trilha duas
+      // vezes e a deixaria sem largura para encolher ao lado da busca.
+      className="flex min-w-0 flex-1 items-center gap-1 text-xs text-muted-foreground print:hidden"
     >
       {migalhas.map((m, i) => (
         <Fragment key={m.href ?? `${m.label}-${i}`}>
