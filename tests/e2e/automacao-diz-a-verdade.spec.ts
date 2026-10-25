@@ -165,22 +165,40 @@ test.describe("a automação conta o que aconteceu de verdade", () => {
       const seletorDeNumero = editor.getByRole("combobox").filter({ hasText: /Escolha o número/ });
       await seletorDeNumero.click();
 
-      // O primeiro número HABILITADO, não o primeiro da lista.
+      // O número é escolhido PELO NOME — e não "o primeiro habilitado".
       //
       // A tela desabilita quem não está `WORKING` (correto — mandar por número
       // desconectado é o defeito que aquele `disabled` evita), e o banco do CI é
       // compartilhado entre as duas partes do job: outras specs deixam sessões
-      // em `STARTING`/`FAILED`, e a ordem não é garantida. `.first()` pegava uma
-      // dessas e o clique expirava em `aria-disabled="true"` — medido no CI.
+      // em `STARTING`/`FAILED`, e a ordem não é garantida. Por isso a versão
+      // anterior pegava o primeiro HABILITADO em vez do primeiro da lista.
       //
-      // Escolher o primeiro habilitado é o que uma pessoa faria, e não depende
-      // de quem mais semeou número neste banco.
-      const numeros = page.locator('[role="option"]:not([aria-disabled="true"])');
+      // ═══ O que o "primeiro habilitado" passou a pegar, e não é este canal ═══
+      //
+      // Desde a spec de controle de entrega (`campanha-controle-entrega`, #239),
+      // o rig tem DOIS canais `WORKING` na mesma organização: o WAHA deste seed
+      // (`Número conectado (E2E)`) e a sessão do canal OFICIAL que
+      // `seed-e2e-campanha-entrega.ts` cria (`E2E Entrega`). Os dois aparecem
+      // habilitados aqui, e o "primeiro" é o oficial — ele nasce antes, e o
+      // transporte dele NÃO está configurado no rig (`META_*` ausentes).
+      //
+      // Medido no full de 24/10/2026 na branch do noturno (run 40147954140) e
+      // reproduzido local: a mensagem ficava `queued` com
+      // `queued_reason: meta_not_configured`, o run virava `adiado` e a aba
+      // Atividade dizia "Aguardando envio". A asserção de "Falhou" reprovava
+      // medindo OUTRO estado — um canal que espera configuração, não um
+      // transporte fora do ar. O cenário desta spec é o segundo:
+      // `WAHA_API_BASE_URL` aponta para uma porta morta.
+      //
+      // Escolher pelo nome mantém a propriedade que importava (só clica no que
+      // está habilitado) e torna a premissa explícita: é o número do seed, com
+      // transporte configurado e fora do ar.
+      const numeroDoSeed = page.getByRole("option", { name: "Número conectado (E2E)" });
       await expect(
-        numeros.first(),
-        "nenhum número de WhatsApp WORKING — rode scripts/seed-e2e-numero-conectado.ts",
+        numeroDoSeed,
+        "o número do seed não está habilitado — rode scripts/seed-e2e-numero-conectado.ts",
       ).toBeVisible({ timeout: 10_000 });
-      await numeros.first().click();
+      await numeroDoSeed.click();
 
       await editor.getByRole("textbox").last().fill(`Olá {{nome}}, vi que você se cadastrou.`);
 
