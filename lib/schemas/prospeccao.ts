@@ -402,13 +402,25 @@ export const mensagensPorCategoriaSchema = z.object({
 export const campanhaDeRecuperacaoSchema = z
   .object({
     nome: z.string().trim().min(2).max(120),
-    /** A lista fechada do radar. */
+    objetivo: z.string().trim().max(300).nullable().optional(),
+    /** A lista fechada da prévia de inativos (o radar é a mesma fonte). */
     contato_ids: z.array(z.string().uuid()).min(1).max(10_000),
+    /**
+     * COMO a campanha fala — o mesmo contrato da prospecção (0284).
+     * `texto` rotaciona as variações; `template` usa um modelo aprovado, que é
+     * o único caminho que ENTREGA fora da janela de 24h. Cliente inativo quase
+     * sempre está fora dela, então este não é um caminho opcional de luxo.
+     */
+    mensagem_tipo: z.enum(["texto", "template"]).optional(),
     /** As variações (1..5) da rotação anti-ban — a mesma régua do disparo. */
     mensagens: z
       .array(z.string().trim().min(1).max(4000))
-      .min(1)
-      .max(MENSAGENS_POR_DISPARO_MAX),
+      .max(MENSAGENS_POR_DISPARO_MAX)
+      .optional(),
+    template_name: z.string().trim().min(1).max(512).nullable().optional(),
+    template_language: z.string().trim().min(2).max(16).nullable().optional(),
+    template_contract_hash: z.string().trim().min(1).max(128).nullable().optional(),
+    template_values: z.record(z.string(), z.string().max(4000)).optional(),
     espaco_ms: z.number().int().min(1000).max(ESPACO_MAXIMO_MS).optional(),
     limite_diario: z.number().int().min(1).max(500).optional(),
     data_inicio: z
@@ -426,7 +438,43 @@ export const campanhaDeRecuperacaoSchema = z
   .refine(periodoValido, {
     message: "A data final não pode ser anterior à inicial.",
     path: ["data_fim"],
+  })
+  // Texto exige ao menos uma variação; template exige o bind completo. A
+  // mesma régua da prospecção: campanha ativa sem conteúdo é fila parada.
+  .superRefine((v, ctx) => {
+    if (v.mensagem_tipo === "template") {
+      const faltando = [
+        !v.template_name ? "template_name" : null,
+        !v.template_language ? "template_language" : null,
+        !v.template_contract_hash ? "template_contract_hash" : null,
+      ].filter((x): x is string => x !== null);
+      if (faltando.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Escolha o modelo oficial e recarregue a lista se o hash não aparecer.",
+          path: ["mensagem_tipo"],
+        });
+      }
+      return;
+    }
+    if ((v.mensagens ?? []).length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Escreva ao menos uma mensagem.",
+        path: ["mensagens"],
+      });
+    }
   });
+
+/**
+ * A PRÉVIA DA AUDIÊNCIA INATIVA — X dias sem compra, sem criar campanha.
+ *
+ * Não recebe cidade nem categoria: o recorte é o histórico de compra, não a
+ * garimpagem. `dias_sem_compra` é o "X" que o operador escolhe na tela.
+ */
+export const inativosPreviewSchema = z.object({
+  dias_sem_compra: z.number().int().min(1).max(3650),
+});
 
 /** A fonte do público é um botão da tela de campanha, não campo de texto. */
 export type FonteDoPublico = NonNullable<

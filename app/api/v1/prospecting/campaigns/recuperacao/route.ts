@@ -6,7 +6,9 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
+import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
 import { campanhaDeRecuperacaoSchema } from "@/lib/schemas/prospeccao";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -37,6 +39,32 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const supabase = await createClient();
+
+  // 0284 — o mesmo contrato da prospecção: a campanha DECLARA como fala e o
+  // bind é conferido contra o espelho ANTES de gravar. Cliente inativo está
+  // quase sempre fora da janela de 24h; um modelo reprovado aqui só apareceria
+  // no tick, com a lista já reservada.
+  const tipo = parsed.data.mensagem_tipo ?? "texto";
+  if (tipo === "template") {
+    const veredito = await validarBindDaCampanha(
+      createAdminClient(),
+      authz.org.orgId,
+      {
+        tipo,
+        name: parsed.data.template_name ?? null,
+        language: parsed.data.template_language ?? null,
+        contractHash: parsed.data.template_contract_hash ?? null,
+        values: parsed.data.template_values ?? {},
+      },
+      { exigirCanal: true },
+    );
+    if (!veredito.ok) {
+      return fail("validation_failed", veredito.erro, 422, {
+        requestId,
+        details: { codigo: veredito.codigo },
+      });
+    }
+  }
 
   // 0277 — a lista de contatos também é reserva exclusiva. O trigger do banco
   // é a trava final, mas ele responde "23505"; a checagem aqui devolve QUEM já
@@ -69,13 +97,29 @@ export async function POST(req: NextRequest): Promise<Response> {
     .insert({
       organization_id: authz.org.orgId,
       nome: parsed.data.nome,
+      objetivo: parsed.data.objetivo ?? null,
       // A audiência de contatos não tem recorte geográfico nem categoria: as
       // duas colunas existem para a garimpagem e ficam vazias de propósito.
       categorias: [],
       cidades: [],
       publico: "contatos",
       contato_ids: parsed.data.contato_ids,
-      mensagens: parsed.data.mensagens,
+      mensagem_tipo: tipo,
+      ...(tipo === "template"
+        ? {
+            mensagens: [],
+            template_name: parsed.data.template_name ?? null,
+            template_language: parsed.data.template_language ?? null,
+            template_contract_hash: parsed.data.template_contract_hash ?? null,
+            template_values: parsed.data.template_values ?? {},
+          }
+        : {
+            mensagens: parsed.data.mensagens ?? [],
+            template_name: null,
+            template_language: null,
+            template_contract_hash: null,
+            template_values: {},
+          }),
       ...(parsed.data.espaco_ms !== undefined ? { espaco_ms: parsed.data.espaco_ms } : {}),
       ...(parsed.data.limite_diario !== undefined
         ? { limite_diario: parsed.data.limite_diario }

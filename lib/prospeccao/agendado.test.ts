@@ -812,6 +812,78 @@ describe("processarCampanhasAgendadas", () => {
     expect(enviar.mock.calls[0]![1].prospect.nome).toBe("Com fone");
   });
 
+  it("(r2) contato com STOP, opt-out ou mesclado é pulado pelo tick", async () => {
+    const contato = (id: string, extra: Linha) => ({
+      id,
+      organization_id: "org-1",
+      name: id,
+      display_name: null,
+      phone_number: "+5549999998888",
+      is_blocked: false,
+      is_anonymized: false,
+      is_merged_into: null,
+      consent: null,
+      ...extra,
+    });
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          publico: "contatos",
+          contato_ids: ["c-001", "c-002", "c-003", "c-004", "c-005"],
+          prospect_ids: [],
+        }),
+      ],
+      contacts: [
+        contato("c-001", { is_blocked: true }),
+        contato("c-002", { consent: { marketing: { declined_at: "2026-01-01T00:00:00.000Z" } } }),
+        contato("c-003", { is_anonymized: true }),
+        contato("c-004", { is_merged_into: "c-005" }),
+        contato("c-005", {}),
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    // STOP é irrevogável; recusa de marketing, anonimização e merge tiram a
+    // linha da lista. Só o contato limpo recebe.
+    expect(resumo.enviados).toBe(1);
+    expect(enviar.mock.calls[0]![1].prospect.id).toBe("c-005");
+  });
+
+  it("(r3) recuperação com muitos contatos lê em FATIAS — 500 UUIDs estouram a URL", async () => {
+    const ids = Array.from({ length: 150 }, (_, i) => `c-${String(i).padStart(3, "0")}`);
+    const dados = base({
+      prospecting_campaigns: [
+        campanha({
+          publico: "contatos",
+          contato_ids: ids,
+          prospect_ids: [],
+          limite_diario: 1,
+        }),
+      ],
+      contacts: ids.map((id) => ({
+        id,
+        organization_id: "org-1",
+        name: id,
+        display_name: null,
+        phone_number: "+5549999998888",
+      })),
+    });
+    const admin = criarAdmin(dados);
+    const fromOriginal = admin.from.bind(admin);
+    let consultasDeContatos = 0;
+    (admin as unknown as { from: (t: string) => unknown }).from = (t: string) => {
+      if (t === "contacts") consultasDeContatos++;
+      return fromOriginal(t);
+    };
+
+    const resumo = await processarCampanhasAgendadas(admin, DENTRO, senderFalso());
+
+    expect(resumo.enviados).toBe(1);
+    // 150 ids / 100 por fatia = 2 leituras, não uma URL de ~5,5 KB.
+    expect(consultasDeContatos).toBe(2);
+  });
+
   it("(s) recuperação sem contatos não cai para prospect_ids", async () => {
     const dados = base({
       prospecting_campaigns: [
