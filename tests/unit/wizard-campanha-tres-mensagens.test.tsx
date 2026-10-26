@@ -299,13 +299,42 @@ describe("assistente de campanha — público e mensagens", () => {
     expect(corpo.fonte_publico).toBe("base");
     expect(corpo.cidades).toEqual([{ cidade: "Canoinhas", estado: "SC" }]);
     expect(corpo.categorias).toEqual(["oficina"]);
-    // A trava anti-ban viaja junto: 60s entre duas mensagens, sempre.
+    // A trava anti-ban viaja junto: o padrão é 60s entre duas mensagens e a tela
+    // deixa o operador mudar (o teste do campo está logo abaixo).
     expect(corpo.espaco_ms).toBe(60_000);
     // E o "quando": período, janelas e cota do dia saem da tela para a campanha.
     expect(corpo.data_inicio).toBeTruthy();
     expect(corpo.data_fim).toBeTruthy();
     expect(Array.isArray(corpo.janelas)).toBe(true);
     expect((corpo.janelas as Array<{ inicio: string; fim: string }>).length).toBeGreaterThan(0);
+  });
+
+  it("o intervalo entre mensagens é escolhido na criação e vira o ritmo da campanha", async () => {
+    const aoConcluir = vi.fn();
+    abrir(aoConcluir);
+    await irAteAsMensagens();
+
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER_1), {
+      target: { value: "Oi, tudo bem? Falo da Bill Higiene." },
+    });
+
+    // Nasce em 60s — o padrão seguro — e o campo fica na mesma etapa do limite.
+    const campo = screen.getByLabelText("Intervalo entre mensagens (s)") as HTMLInputElement;
+    expect(campo.value).toBe("60");
+
+    fireEvent.change(campo, { target: { value: "120" } });
+    // O resumo mostra o que VAI SER GRAVADO, não o que foi digitado: é isso que
+    // o operador confere antes de criar.
+    expect(screen.getAllByText(/uma mensagem a cada 2 min/).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Criar campanha" }));
+
+    await waitFor(() => expect(aoConcluir).toHaveBeenCalledWith("campanha-1"));
+    const chamada = post.mock.calls.find(
+      ([url]) => url === "/api/v1/prospecting/campaigns",
+    ) as [string, Record<string, unknown>] | undefined;
+    expect(chamada?.[1].espaco_ms).toBe(120_000);
   });
 
   it("caixa vazia não vira variação: só o que tem texto viaja", async () => {

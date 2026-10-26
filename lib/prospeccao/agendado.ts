@@ -88,6 +88,8 @@ export type MotivoDoPulo =
   | "template_invalido"
   /** 0285 — a categoria do prospect não tem modelo configurado na campanha. */
   | "template_da_categoria_ausente"
+  /** 0288 — um "Enviar agora" está segurando o número (lease de disparo). */
+  | "disparo_manual"
   | "sem_mensagem"
   | "sem_prospect_elegivel"
   | "falha_envio"
@@ -170,6 +172,13 @@ interface EstadoDaSessao {
    * passada seguinte.
    */
   enviadosHojeDoNumero: number;
+  /**
+   * 0288 — o NÚMERO está reservado por um "Enviar agora" agora. O ritmo do lote
+   * e o do tick são calculados em portas diferentes; somados, davam uma mensagem
+   * a cada ~40s num número configurado para 2min (60s do tick + 120s do lote).
+   * Enquanto o lease vale, o tick espera a vez.
+   */
+  disparoManualEmAndamento: boolean;
 }
 
 const COLUNAS =
@@ -312,6 +321,16 @@ export async function processarCampanhasAgendadas(
       // `espaco_ms`, a org inteira espera. É isto que impede duas campanhas de
       // mandarem no mesmo segundo.
       const espacoMs = campanha.espaco_ms > 0 ? campanha.espaco_ms : 60_000;
+
+      // 0288 — o número está reservado por um "Enviar agora". O lote já respeita
+      // o próprio intervalo; o tick falando entre duas mensagens dele é a mesma
+      // rajada, só que em duas portas. Este pulo é o que faz o ritmo da tela ser
+      // o ritmo real.
+      if (ritmo.disparoManualEmAndamento) {
+        resumo.pulados.push({ campanha: campanha.id, motivo: "disparo_manual" });
+        continue;
+      }
+
       if (
         ritmo.ultimoEnvioMs !== null &&
         Date.parse(agoraIso) - ritmo.ultimoEnvioMs < espacoMs
@@ -622,7 +641,7 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id, provider, daily_message_limit, quality_rating")
+    .select("id, provider, daily_message_limit, quality_rating, dispatch_locked_until")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -663,10 +682,16 @@ async function carregarEstadoDaSessao(
   const sentAt = (ultimo as { sent_at?: string } | null)?.sent_at;
   const ms = sentAt ? Date.parse(sentAt) : Number.NaN;
 
+  // Lease de disparo (0288): texto ISO comparado como instante, nunca `> null`.
+  const trava = sessao.dispatch_locked_until;
+  const disparoManualEmAndamento =
+    typeof trava === "string" && Date.parse(trava) > Date.parse(agoraIso);
+
   return {
     ultimoEnvioMs: Number.isFinite(ms) ? ms : null,
     tetoDoNumero: teto,
     enviadosHojeDoNumero: enviadosHoje,
+    disparoManualEmAndamento,
   };
 }
 

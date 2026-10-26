@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import type { Classificacao } from "@/lib/prospeccao/classificacao";
 import { semAcento } from "@/lib/prospeccao/categoria-pt";
-import { MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
+import { ESPACO_MAXIMO_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 
 /**
  * O CONTRATO DA PROSPECÇÃO — um só, lido pela tela E pelas rotas.
@@ -132,7 +132,7 @@ export const disparoSchema = z
     /** Cota do dia. O teto real é `TETO_DIARIO` do planejador. */
     limite: z.number().int().min(1).max(500).optional(),
     /** Intervalo mínimo entre dois envios, em ms. */
-    espaco_ms: z.number().int().min(0).max(60000).optional(),
+    espaco_ms: z.number().int().min(0).max(ESPACO_MAXIMO_MS).optional(),
     /** `false` envia de verdade. O padrão é só simular. */
     dry_run: z.boolean().default(true),
     /**
@@ -267,7 +267,7 @@ export const agendamentoSchema = z.object({
     .min(1)
     .max(MENSAGENS_POR_DISPARO_MAX)
     .optional(),
-  espaco_ms: z.number().int().min(1000).max(60000).optional(),
+  espaco_ms: z.number().int().min(1000).max(ESPACO_MAXIMO_MS).optional(),
   limite_diario: z.number().int().min(1).max(500).optional(),
   data_inicio: z
     .string()
@@ -409,7 +409,7 @@ export const campanhaDeRecuperacaoSchema = z
       .array(z.string().trim().min(1).max(4000))
       .min(1)
       .max(MENSAGENS_POR_DISPARO_MAX),
-    espaco_ms: z.number().int().min(1000).max(60000).optional(),
+    espaco_ms: z.number().int().min(1000).max(ESPACO_MAXIMO_MS).optional(),
     limite_diario: z.number().int().min(1).max(500).optional(),
     data_inicio: z
       .string()

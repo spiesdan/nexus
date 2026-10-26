@@ -21682,11 +21682,18 @@ alter table public.prospecting_campaigns
 alter table public.prospecting_campaigns
   add column if not exists ultimo_envio_at timestamptz;
 
+-- 0287 — o TETO do intervalo subiu de 60s para 10min (o mesmo
+-- `KNOB_BOUNDS.intervalMaxMs` do Console de knobs). O bloco abaixo já carrega
+-- o vocabulário final; a migration 0287 só existe para quem já instalou. O piso
+-- de 1s continua. 60s segue sendo o PADRÃO da tela.
 alter table public.prospecting_campaigns
   drop constraint if exists prospecting_campaigns_espaco_faixa;
 alter table public.prospecting_campaigns
   add constraint prospecting_campaigns_espaco_faixa
-  check (espaco_ms >= 1000 and espaco_ms <= 60000);
+  check (espaco_ms >= 1000 and espaco_ms <= 600000);
+
+comment on column public.prospecting_campaigns.espaco_ms is
+  'Intervalo mínimo entre duas mensagens da campanha, em ms (1s..10min). 60s é o padrão anti-ban; mais que isso é o ritmo que o aquecimento do número aguenta. O tick roda 1×/min, então o valor efetivo é arredondado para cima em minutos.';
 
 alter table public.prospecting_campaigns
   drop constraint if exists prospecting_campaigns_limite_faixa;
@@ -23244,6 +23251,22 @@ comment on column public.prospecting_campaigns.pausa_motivo is
   'Por que a campanha foi pausada automaticamente (qualidade do número, limite reduzido, modelo com problema). Nulo = pausa feita por uma pessoa.';
 comment on column public.prospecting_campaigns.pausa_em is
   'Quando a pausa automática aconteceu. Zera junto com pausa_motivo quando alguém retoma a campanha.';
+
+-- ---- 0288 — trava de disparo por número (lease) ----
+--
+-- Apêndice idempotente. O ritmo do "Enviar agora" vivia só em memória
+-- (`_ultimoEnvio`): dois cliques simultâneos passavam juntos e o número mandava
+-- ~3 mensagens por minuto. `dispatch_locked_until` reserva o NÚMERO por um
+-- lease com TTL proporcional ao plano; `dispatch_lock_token` garante que só o
+-- dono libera. Nenhuma função nova, nenhuma policy nova.
+alter table public.channel_sessions
+  add column if not exists dispatch_locked_until timestamptz,
+  add column if not exists dispatch_lock_token text;
+
+comment on column public.channel_sessions.dispatch_locked_until is
+  'Até quando este número está reservado para um disparo em lote (lease). Nulo ou vencido = livre. O TTL acompanha o plano (intervalo × quantidade), então uma requisição que morre não trava o número para sempre.';
+comment on column public.channel_sessions.dispatch_lock_token is
+  'Dono do lease de disparo. A liberação só vale para quem tem o token — quem perdeu a trava por TTL não destrava o disparo de outro.';
 
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --

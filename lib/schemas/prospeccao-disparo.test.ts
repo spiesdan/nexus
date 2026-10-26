@@ -61,8 +61,9 @@ describe("disparoSchema", () => {
     expect(disparoSchema.safeParse({ ...BASE, limite: 500 }).success).toBe(true);
   });
 
-  it("limita o intervalo entre envios a 60s", () => {
-    expect(disparoSchema.safeParse({ ...BASE, espaco_ms: 60001 }).success).toBe(false);
+  it("limita o intervalo entre envios a 10min — o teto do Console de knobs", () => {
+    expect(disparoSchema.safeParse({ ...BASE, espaco_ms: 600_001 }).success).toBe(false);
+    expect(disparoSchema.safeParse({ ...BASE, espaco_ms: 600_000 }).success).toBe(true);
     expect(disparoSchema.safeParse({ ...BASE, espaco_ms: 0 }).success).toBe(true);
   });
 

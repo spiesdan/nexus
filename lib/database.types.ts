@@ -3052,6 +3052,8 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           daily_message_limit: number;
+          dispatch_lock_token: string | null;
+          dispatch_locked_until: string | null;
           display_name: string | null;
           engine: string;
           id: string;
@@ -3085,6 +3087,8 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           daily_message_limit?: number;
+          dispatch_lock_token?: string | null;
+          dispatch_locked_until?: string | null;
           display_name?: string | null;
           engine?: string;
           id?: string;
@@ -3118,6 +3122,8 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           daily_message_limit?: number;
+          dispatch_lock_token?: string | null;
+          dispatch_locked_until?: string | null;
           display_name?: string | null;
           engine?: string;
           id?: string;

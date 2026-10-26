@@ -71,6 +71,7 @@ import {
   lerTemplatesPorCategoria,
 } from "@/lib/prospeccao/templates-por-categoria";
 import { lerTetoDoNumero } from "@/lib/prospeccao/teto-do-numero";
+import { soltarDisparo, travarDisparo, validadeDaTrava } from "@/lib/prospeccao/trava-de-disparo";
 import {
   validarBindDaCampanha,
   validarTemplatesDaCampanha,
@@ -78,6 +79,8 @@ import {
 import { validateRequest } from "@/lib/schemas";
 import { disparoSchema } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { tagDeIdioma } from "@/lib/i18n/datas";
+import { IDIOMA_PADRAO } from "@/lib/i18n/idiomas";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -407,18 +410,16 @@ export async function POST(req: NextRequest): Promise<Response> {
   // verdade (o `channel_session_warmup` não tem escritor — ver
   // `lib/automation/throttle.ts`), e o dia começa na meia-noite LOCAL, igual ao
   // `sentToday` que o agente vê.
+  // O fuso da organização serve às duas réguas que dependem de "que dia é hoje"
+  // (`lerTetoDoNumero`) e à mensagem da trava ocupada. Uma leitura só.
+  const fusoDoEnvio = await lerFusoDaOrganizacao(admin, orgId);
   let jaEnviadosHoje = 0;
   if (sessao) {
-    const { data: org } = await admin
-      .from("organizations")
-      .select("timezone")
-      .eq("id", orgId)
-      .maybeSingle();
     const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
       orgId,
       sessaoId: sessao.id,
       agoraIso: new Date().toISOString(),
-      fuso: (org as { timezone?: string | null } | null)?.timezone ?? null,
+      fuso: fusoDoEnvio,
       limiteDoCrm: sessao.daily_message_limit,
     });
     jaEnviadosHoje = enviadosHoje;
@@ -530,131 +531,172 @@ export async function POST(req: NextRequest): Promise<Response> {
   // de que o TS não consegue ver a relação entre as duas checagens.
   const campanhaDoEnvio = campanha!;
 
-  // ─── A RESERVA da lista, antes do envio ──────────────────────────────────
-  // A lista fechada da campanha é o que faz a empresa parar de aparecer "em
-  // aberto" para a próxima. Grava a UNIÃO com o que já estava lá; o trigger
-  // 0277 recusa sobreposição com outra campanha (corrida que a nossa leitura
-  // não pegou também cai aqui).
-  const idsAprovados = new Set(plano.aprovados.map((a) => a.id));
-  const paraReservar = brutos.map((p) => p.id).filter((id) => idsAprovados.has(id));
-  const listaAtual = new Set(campanhaDoEnvio.prospect_ids ?? []);
-  const listaNova = [...listaAtual];
-  for (const id of paraReservar) {
-    if (!listaAtual.has(id)) {
-      listaAtual.add(id);
-      listaNova.push(id);
-    }
-  }
-  if (paraReservar.length > 0) {
-    const { error: errLista } = await admin
-      .from("prospecting_campaigns")
-      .update({ prospect_ids: listaNova })
-      .eq("id", campanhaDoEnvio.id)
-      .eq("organization_id", orgId);
-    if (errLista) {
-      if (
-        errLista.code === "23505" ||
-        errLista.message.includes("prospect_em_outra_campanha") ||
-        errLista.message.includes("contato_em_outra_campanha")
-      ) {
-        return fail(
-          "state_conflict",
-          "Uma ou mais empresas já foram reservadas por outra campanha. Nada foi enviado.",
-          409,
-          { requestId, details: { plano: resumo } },
-        );
-      }
-      logger.error("[disparo] falha ao reservar a lista da campanha", {
-        requestId,
-        organization_id: orgId,
-        erro: errLista.message,
-      });
-      return fail("internal_error", "Erro ao reservar as empresas da campanha.", 500, { requestId });
-    }
-  }
-
-  // ─── A reserva do LEDGER, antes de mandar ────────────────────────────────
-  // A unique global (organization_id, prospect_id) é a trava de envio: se
-  // outra campanha reservou a mesma empresa entre a leitura e agora, o
-  // `ignoreDuplicates` devolve menos linhas e o plano encolhe. Nada é enviado
-  // sem reserva — nem duas vezes, nem por duas campanhas.
-  const agoraIso = new Date().toISOString();
-  const { data: reservadas, error: errReserva } = await admin
-    .from("prospecting_sends")
-    .upsert(
-      plano.aprovados.map((a) => ({
-        organization_id: orgId,
-        campaign_id: campanhaDoEnvio.id,
-        prospect_id: a.id,
-        mensagem_indice: a.mensagem_indice,
-        message_id: null,
-        enviado_em: agoraIso,
-      })),
-      { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
-    )
-    .select("prospect_id");
-  if (errReserva) {
-    logger.error("[disparo] falha ao reservar o ledger", {
-      requestId,
-      organization_id: orgId,
-      erro: errReserva.message,
-    });
-    return fail("internal_error", "Erro ao reservar os envios.", 500, { requestId });
-  }
-  const reservadosAgora = new Set(
-    ((reservadas ?? []) as Array<{ prospect_id: string }>).map((r) => r.prospect_id),
-  );
-  const planoReservado = {
-    ...plano,
-    aprovados: plano.aprovados.filter((a) => reservadosAgora.has(a.id)),
-  };
-  const perdidasNaCorrida = plano.aprovados.length - planoReservado.aprovados.length;
-  if (planoReservado.aprovados.length === 0) {
+  // ─── A TRAVA do NÚMERO, antes de reservar ────────────────────────────────
+  // Um "Enviar agora" por número, de cada vez (0288). O ritmo do plano mora num
+  // `Map` de memória, que só enxerga o próprio processo e só funciona para UMA
+  // requisição por vez: três cliques simultâneos leem o "último envio" antes de
+  // qualquer um gravar e as três mandam juntas. Medido em 26/10/2026: ~3
+  // mensagens por minuto com a tela prometendo 2 min.
+  //
+  // A trava vem ANTES da reserva do ledger de propósito: reservar e depois ser
+  // recusado deixaria as empresas marcadas como enviadas (`prospecting_sends` é
+  // único por organização) sem nunca terem recebido — e nenhuma campanha
+  // conseguiria mandar para elas depois.
+  const validadeMs = validadeDaTrava(espacoMs, plano.aprovados.length);
+  const trava = await travarDisparo(admin, { orgId, sessaoId: sessao!.id, validadeMs });
+  if (!trava.ok) {
     return fail(
-      "state_conflict",
-      "As empresas da seleção já foram reservadas por outro envio. Nada foi enviado.",
+      "conflict",
+      trava.ocupadaAte
+        ? `Este número já está enviando outro lote (até ${horaNoFuso(trava.ocupadaAte, fusoDoEnvio)}). Espere esse envio terminar para não mandar duas mensagens no mesmo minuto. Nada foi enviado agora.`
+        : "Este número já está enviando outro lote neste momento. Espere esse envio terminar para não mandar duas mensagens no mesmo minuto. Nada foi enviado agora.",
       409,
-      { requestId, details: { plano: resumo } },
+      { requestId, details: { plano: resumo, ocupado_ate: trava.ocupadaAte } },
     );
   }
-  const resumoFinal = {
-    ...resumo,
-    serao_enviados: planoReservado.aprovados.length,
-    duracao_prevista_ms: planoReservado.duracaoPrevistaMs,
-    rotacao: planoReservado.aprovados.slice(0, 12).map((a) => a.mensagem_indice + 1),
-    reservadas_na_corrida: perdidasNaCorrida,
-  };
 
-  // Os dados que os tokens do modelo interpolam por empresa. `categoria` é a
-  // EFETIVA (o rótulo que a tela mostra), não o cru do Google — mandar o cru
-  // seria mandar ao cliente o nome errado do próprio negócio.
-  const dadosPorProspect = new Map(
-    brutos.map((p) => [
-      p.id,
-      {
-        cidade: p.cidade,
-        categoria: categoriaEfetiva(p).rotulo,
-        categoria_campanha: categoriaDaCampanhaPorProspect.get(p.id) ?? null,
-      },
-    ]),
-  );
+  try {
+    // ─── A RESERVA da lista, antes do envio ──────────────────────────────────
+    // A lista fechada da campanha é o que faz a empresa parar de aparecer "em
+    // aberto" para a próxima. Grava a UNIÃO com o que já estava lá; o trigger
+    // 0277 recusa sobreposição com outra campanha (corrida que a nossa leitura
+    // não pegou também cai aqui).
+    const idsAprovados = new Set(plano.aprovados.map((a) => a.id));
+    const paraReservar = brutos.map((p) => p.id).filter((id) => idsAprovados.has(id));
+    const listaAtual = new Set(campanhaDoEnvio.prospect_ids ?? []);
+    const listaNova = [...listaAtual];
+    for (const id of paraReservar) {
+      if (!listaAtual.has(id)) {
+        listaAtual.add(id);
+        listaNova.push(id);
+      }
+    }
+    if (paraReservar.length > 0) {
+      const { error: errLista } = await admin
+        .from("prospecting_campaigns")
+        .update({ prospect_ids: listaNova })
+        .eq("id", campanhaDoEnvio.id)
+        .eq("organization_id", orgId);
+      if (errLista) {
+        if (
+          errLista.code === "23505" ||
+          errLista.message.includes("prospect_em_outra_campanha") ||
+          errLista.message.includes("contato_em_outra_campanha")
+        ) {
+          return fail(
+            "state_conflict",
+            "Uma ou mais empresas já foram reservadas por outra campanha. Nada foi enviado.",
+            409,
+            { requestId, details: { plano: resumo } },
+          );
+        }
+        logger.error("[disparo] falha ao reservar a lista da campanha", {
+          requestId,
+          organization_id: orgId,
+          erro: errLista.message,
+        });
+        return fail("internal_error", "Erro ao reservar as empresas da campanha.", 500, { requestId });
+      }
+    }
 
-  const resultado = await enviarPlano({
-    admin,
-    orgId,
-    usuarioId,
-    requestId,
-    sessaoId: sessao!.id,
-    espacoMs,
-    mensagens,
-    template: templateDoEnvio,
-    templatesPorCategoria,
-    dadosPorProspect,
-    plano: planoReservado,
-    campaignId: campanhaDoEnvio.id,
-  });
+    // ─── A reserva do LEDGER, antes de mandar ────────────────────────────────
+    // A unique global (organization_id, prospect_id) é a trava de envio: se
+    // outra campanha reservou a mesma empresa entre a leitura e agora, o
+    // `ignoreDuplicates` devolve menos linhas e o plano encolhe. Nada é enviado
+    // sem reserva — nem duas vezes, nem por duas campanhas.
+    const agoraIso = new Date().toISOString();
+    const { data: reservadas, error: errReserva } = await admin
+      .from("prospecting_sends")
+      .upsert(
+        plano.aprovados.map((a) => ({
+          organization_id: orgId,
+          campaign_id: campanhaDoEnvio.id,
+          prospect_id: a.id,
+          mensagem_indice: a.mensagem_indice,
+          message_id: null,
+          enviado_em: agoraIso,
+        })),
+        { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
+      )
+      .select("prospect_id");
+    if (errReserva) {
+      logger.error("[disparo] falha ao reservar o ledger", {
+        requestId,
+        organization_id: orgId,
+        erro: errReserva.message,
+      });
+      return fail("internal_error", "Erro ao reservar os envios.", 500, { requestId });
+    }
+    const reservadosAgora = new Set(
+      ((reservadas ?? []) as Array<{ prospect_id: string }>).map((r) => r.prospect_id),
+    );
+    const planoReservado = {
+      ...plano,
+      aprovados: plano.aprovados.filter((a) => reservadosAgora.has(a.id)),
+    };
+    const perdidasNaCorrida = plano.aprovados.length - planoReservado.aprovados.length;
+    if (planoReservado.aprovados.length === 0) {
+      return fail(
+        "state_conflict",
+        "As empresas da seleção já foram reservadas por outro envio. Nada foi enviado.",
+        409,
+        { requestId, details: { plano: resumo } },
+      );
+    }
+    const resumoFinal = {
+      ...resumo,
+      serao_enviados: planoReservado.aprovados.length,
+      duracao_prevista_ms: planoReservado.duracaoPrevistaMs,
+      rotacao: planoReservado.aprovados.slice(0, 12).map((a) => a.mensagem_indice + 1),
+      reservadas_na_corrida: perdidasNaCorrida,
+    };
 
-  return ok({ plano: resumoFinal, resultado }, { requestId });
+    // Os dados que os tokens do modelo interpolam por empresa. `categoria` é a
+    // EFETIVA (o rótulo que a tela mostra), não o cru do Google — mandar o cru
+    // seria mandar ao cliente o nome errado do próprio negócio.
+    const dadosPorProspect = new Map(
+      brutos.map((p) => [
+        p.id,
+        {
+          cidade: p.cidade,
+          categoria: categoriaEfetiva(p).rotulo,
+          categoria_campanha: categoriaDaCampanhaPorProspect.get(p.id) ?? null,
+        },
+      ]),
+    );
+
+    // O tick do agendamento e um disparo anterior também falam por este número.
+    // `pacing_ledger` é a memória DURÁVEL do último envio (o `Map` acima morre no
+    // restart): sem esta leitura, o primeiro item do lote sairia no mesmo minuto
+    // em que o tick acabou de falar — a rajada que a trava existe para evitar, só
+    // que entre as duas portas do disparo.
+    const ultimoDoNumero = await lerUltimoEnvioDoNumero(admin, orgId, sessao!.id);
+    if (ultimoDoNumero !== null) {
+      _ultimoEnvio.set(sessao!.id, Math.max(_ultimoEnvio.get(sessao!.id) ?? 0, ultimoDoNumero));
+    }
+
+    const resultado = await enviarPlano({
+      admin,
+      orgId,
+      usuarioId,
+      requestId,
+      sessaoId: sessao!.id,
+      espacoMs,
+      mensagens,
+      template: templateDoEnvio,
+      templatesPorCategoria,
+      dadosPorProspect,
+      plano: planoReservado,
+      campaignId: campanhaDoEnvio.id,
+    });
+
+    return ok({ plano: resumoFinal, resultado }, { requestId });
+  } finally {
+    // Solta SEMPRE — inclusive nos 409 de reserva e nos erros. O lease vence
+    // sozinho no pior caso, mas deixar o número travado por minutos depois de um
+    // erro é o tipo de coisa que só aparece quando o operador precisa enviar.
+    await soltarDisparo(admin, { orgId, sessaoId: sessao!.id, token: trava.trava.token });
+  }
 }
 
 interface ContextoDoContato {
@@ -740,6 +782,68 @@ function contarPorMotivo(recusas: Array<{ motivo: keyof typeof ROTULO_DA_RECUSA 
     rotulo: ROTULO_DA_RECUSA[motivo as keyof typeof ROTULO_DA_RECUSA] ?? motivo,
     total,
   }));
+}
+
+/**
+ * O fuso da organização — a régua de "que dia é hoje" das cotas e o horário que
+ * a mensagem de trava ocupada mostra. Não lança: sem fuso, o dia cai no UTC do
+ * banco, que é conservador para a cota (nunca a libera cedo) e legível na tela.
+ */
+async function lerFusoDaOrganizacao(
+  admin: ReturnType<typeof createAdminClient>,
+  orgId: string,
+): Promise<string | null> {
+  const { data } = await admin
+    .from("organizations")
+    .select("timezone")
+    .eq("id", orgId)
+    .maybeSingle();
+  return (data as { timezone?: string | null } | null)?.timezone ?? null;
+}
+
+/**
+ * "até 14:32" no fuso da organização — nunca em UTC de servidor.
+ *
+ * O idioma vem de `tagDeIdioma` e não de um "pt-BR" escrito aqui: a data segue
+ * quem lê (`tests/unit/i18n-a-data-segue-o-idioma.test.ts`). A mensagem da rota
+ * é do servidor, então usa o idioma padrão do produto.
+ */
+function horaNoFuso(iso: string, fuso: string | null): string {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return "mais tarde";
+  const idioma = tagDeIdioma(IDIOMA_PADRAO);
+  const opcoes: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+  try {
+    return data.toLocaleTimeString(idioma, { ...opcoes, timeZone: fuso ?? undefined });
+  } catch {
+    // Fuso inválido no banco não pode virar 500 no meio da recusa.
+    return data.toLocaleTimeString(idioma, opcoes);
+  }
+}
+
+/**
+ * O último envio DESTE número, de qualquer porta (campanha, tick, agente).
+ *
+ * O ritmo do lote é um `Map` de memória, então um deploy no meio da campanha o
+ * zera. Ler `pacing_ledger` antes do primeiro item faz o lote esperar o intervalo
+ * que a tela promete, em vez de falar por cima do tick que acabou de mandar.
+ */
+async function lerUltimoEnvioDoNumero(
+  admin: ReturnType<typeof createAdminClient>,
+  orgId: string,
+  sessaoId: string,
+): Promise<number | null> {
+  const { data } = await admin
+    .from("pacing_ledger")
+    .select("sent_at")
+    .eq("organization_id", orgId)
+    .eq("channel_session_id", sessaoId)
+    .order("sent_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const iso = (data as { sent_at?: string } | null)?.sent_at;
+  const ms = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isFinite(ms) ? ms : null;
 }
 
 /**

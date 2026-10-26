@@ -11,6 +11,7 @@ import {
   whatsappPotencial,
 } from "@/lib/prospeccao/normalizacao";
 import { bonusDeAderencia, prioridadeAlta, scoreDeProspect, PESOS_SCORE, CORTE_ALTA_PRIORIDADE } from "@/lib/prospeccao/score";
+import { ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import {
   campanhaCreateSchema,
   CATEGORIAS_MAX,
@@ -287,5 +288,21 @@ describe("campanhaCreateSchema — o recorte é do operador", () => {
   it("ainda tem um teto de sanidade de payload", () => {
     const categorias = Array.from({ length: CATEGORIAS_MAX + 1 }, (_, i) => `categoria ${i + 1}`);
     expect(campanhaCreateSchema.safeParse({ ...base, categorias }).success).toBe(false);
+  });
+
+  /**
+   * 0287 — o ritmo de 2 minutos.
+   *
+   * O CHECK do banco e o schema da rota precisam aceitar o MESMO valor: quando
+   * um aceita e o outro não, a tela salva (schema) e o banco recusa, ou o
+   * contrário — e o operador recebe um 500 sem campo. O número que o teste
+   * usa é o que a campanha em produção roda hoje.
+   */
+  it("aceita 2min entre mensagens — o ritmo de quem está aquecendo o número", () => {
+    const comCategoria = { ...base, categorias: ["oficina mecanica"] };
+    expect(ESPACO_MAXIMO_MS).toBe(600_000);
+    expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: 120_000 }).success).toBe(true);
+    expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: ESPACO_MAXIMO_MS }).success).toBe(true);
+    expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: ESPACO_MAXIMO_MS + 1 }).success).toBe(false);
   });
 });

@@ -33,6 +33,12 @@ export interface SessaoDaCampanha {
    * fora da API oficial.
    */
   quality_rating?: string | null;
+  /**
+   * 0288 — até quando um "Enviar agora" segura este número (lease de disparo).
+   * Enquanto vale, o tick não fala por ele: o lote e o tick somados davam uma
+   * mensagem a cada ~40s num número que prometeu 2min.
+   */
+  dispatch_locked_until?: string | null;
 }
 
 function providerSeguro(provider: string | null | undefined): ChannelProvider {

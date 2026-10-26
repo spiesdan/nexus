@@ -43,6 +43,7 @@ import { apiClient } from "@/lib/api/client";
 import { renderTemplateBody } from "@/lib/channels/meta/render-template";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
+import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import {
   presetsDaSelecao,
@@ -224,6 +225,13 @@ export function CampanhaWizard({
     { inicio: "13:00", fim: "19:00" },
   ]);
   const [limite, setLimite] = React.useState("50");
+  /**
+   * O intervalo entre duas mensagens da campanha, em SEGUNDOS — o mesmo campo e
+   * a mesma unidade do "Enviar agora" (`_disparo.tsx`). Nasce no ritmo padrão
+   * anti-ban (60s) e é a campanha que manda: o tick usa este número, e é ele que
+   * aparece no resumo para o operador conferir antes de criar.
+   */
+  const [espaco, setEspaco] = React.useState(String(ESPACO_ANTIBAN_MS / 1000));
   const [recorrencia, setRecorrencia] = React.useState("");
   const [criando, setCriando] = React.useState(false);
 
@@ -467,6 +475,17 @@ export function CampanhaWizard({
   );
   const periodoValido = !dataInicio || !dataFim || dataFim >= dataInicio;
   const limiteNumero = Number(limite) || 50;
+  // Arredonda e prende na faixa do servidor (1s..10min) ANTES de mostrar o
+  // resumo: o operador tem que ver o que vai ser gravado, não o que digitou.
+  const espacoSegundos = Math.min(
+    ESPACO_MAXIMO_MS / 1000,
+    Math.max(1, Math.round(Number(espaco) || ESPACO_ANTIBAN_MS / 1000)),
+  );
+  const espacoMs = espacoSegundos * 1000;
+  const rotuloDoIntervalo =
+    espacoSegundos >= 60 && espacoSegundos % 60 === 0
+      ? `${espacoSegundos / 60} min`
+      : `${espacoSegundos}s`;
 
   function alternarCidade(c: CidadeOpcao) {
     const alvo: CidadeAlvo = { cidade: c.cidade, ...(c.estado ? { estado: c.estado } : {}) };
@@ -634,6 +653,17 @@ export function CampanhaWizard({
       toast.error(t("O limite diário precisa ficar entre 1 e 500."));
       return false;
     }
+    // O mesmo teto do schema (`ESPACO_MAXIMO_MS`): acima de 10min não é mais
+    // disparo em lote, é envio manual. Recusar aqui evita o 422 genérico.
+    const segundosDigitados = Number(espaco);
+    if (
+      !Number.isFinite(segundosDigitados) ||
+      segundosDigitados < 1 ||
+      segundosDigitados > ESPACO_MAXIMO_MS / 1000
+    ) {
+      toast.error(t("O intervalo entre mensagens precisa ficar entre 1s e 10min."));
+      return false;
+    }
     if (recorrencia) {
       const valor = Number(recorrencia);
       if (!Number.isFinite(valor) || valor < 7 || valor > 365) {
@@ -796,7 +826,7 @@ export function CampanhaWizard({
           data_fim: dataFim,
           janelas: janelas.map((j) => ({ ...j, dias })),
           limite_diario: Math.min(500, Math.max(1, limiteNumero)),
-          espaco_ms: 60_000,
+          espaco_ms: espacoMs,
           ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
         },
       );
@@ -1610,7 +1640,7 @@ export function CampanhaWizard({
                     </div>
                   ))}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="wiz-limite">{t("Limite por dia")}</Label>
                     <Input
@@ -1621,6 +1651,22 @@ export function CampanhaWizard({
                       value={limite}
                       onChange={(e) => setLimite(e.target.value)}
                     />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-espaco">{t("Intervalo entre mensagens (s)")}</Label>
+                    <Input
+                      id="wiz-espaco"
+                      type="number"
+                      min={1}
+                      max={ESPACO_MAXIMO_MS / 1000}
+                      step={1}
+                      value={espaco}
+                      onChange={(e) => setEspaco(e.target.value)}
+                      aria-describedby="wiz-espaco-ajuda"
+                    />
+                    <p id="wiz-espaco-ajuda" className="text-[11px] text-muted-foreground">
+                      {t("60s é o padrão seguro. Número em aquecimento: 120s ou mais.")}
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
@@ -1636,7 +1682,9 @@ export function CampanhaWizard({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("O envio é feito uma mensagem por minuto, dentro das janelas e do período.")}
+                  {t(
+                    `O envio é feito uma mensagem a cada ${rotuloDoIntervalo}, dentro das janelas e do período.`,
+                  )}
                 </p>
               </div>
             </div>
@@ -1682,6 +1730,9 @@ export function CampanhaWizard({
                   {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
                 </p>
                 <p className="text-muted-foreground">{t(`até ${limiteNumero} por dia`)}</p>
+                <p className="text-muted-foreground">
+                  {t(`uma mensagem a cada ${rotuloDoIntervalo}`)}
+                </p>
               </Card>
             </aside>
           </div>
@@ -1754,6 +1805,12 @@ export function CampanhaWizard({
                   <dd>
                     {t(resumoDosDias(dias))} ·{" "}
                     {janelas.map((j) => `${j.inicio}–${j.fim}`).join(" · ")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Ritmo do envio")}</dt>
+                  <dd>
+                    {t(`1 mensagem a cada ${rotuloDoIntervalo}, até ${limiteNumero} por dia`)}
                   </dd>
                 </div>
               </dl>

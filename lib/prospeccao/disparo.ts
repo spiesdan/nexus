@@ -39,6 +39,8 @@
  * API contam a mesma história.
  */
 
+import { KNOB_BOUNDS } from "@/lib/agent-engine/pacing/defaults";
+
 /** Teto de mensagens novas por dia. Acima disso o número queima. */
 export const TETO_DIARIO = 500;
 
@@ -56,9 +58,25 @@ export const ESPACO_PADRAO_MS = 1200;
  * quem nunca falou com a gente, em poucos minutos, é o padrão que derruba um
  * número. Com 60s, 50 mensagens levam 50 minutos — e é isso que se quer
  * quando o número é o ativo da empresa. Este é o padrão da TELA; a API
- * continua aceitando qualquer valor até 60s.
+ * aceita qualquer valor até `ESPACO_MAXIMO_MS`.
  */
 export const ESPACO_ANTIBAN_MS = 60_000;
+
+/**
+ * O TETO do intervalo entre duas mensagens: 10 minutos.
+ *
+ * O motivo de existir é o inverso do motivo do piso. O piso protege o número
+ * de uma rajada; o teto protege a CAMPANHA de virar uma goteira que nunca
+ * termina — e protege a operação de digitar "2" querendo dizer "2 minutos" e
+ * receber 2 segundos. Entre 60s e 10min o operador escolhe o ritmo que o
+ * aquecimento do número aguenta; acima disso não é mais um disparo, é um
+ * envio manual.
+ *
+ * A fonte do número é o MESMO teto que o Console de knobs aceita
+ * (`KNOB_BOUNDS.intervalMaxMs`) — duas constantes para a mesma pergunta
+ * divergem, e a tela prometeria um valor que a outra ponta recusa.
+ */
+export const ESPACO_MAXIMO_MS = KNOB_BOUNDS.intervalMaxMs;
 
 /** Acima disto o WhatsApp costuma truncar, e o texto já não é uma conversa. */
 export const TAMANHO_MAXIMO_MENSAGEM = 1000;

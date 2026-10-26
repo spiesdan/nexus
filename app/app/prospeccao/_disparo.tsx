@@ -43,7 +43,7 @@ import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
-import { ESPACO_ANTIBAN_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
+import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 import { useT } from "@/hooks/i18n/useT";
 
 /** Uma janela do dia, em HH:MM — o mesmo shape de `lib/prospeccao/agendamento`. */
@@ -328,12 +328,12 @@ export function DialogoDisparo({
   // testando.
   const segundos = espaco.trim() === "" ? SEGUNDOS_PADRAO : Number(espaco);
   const espacoMs = Number.isFinite(segundos)
-    ? Math.min(60000, Math.max(0, Math.round(segundos * 1000)))
-    : 60000;
+    ? Math.min(ESPACO_MAXIMO_MS, Math.max(0, Math.round(segundos * 1000)))
+    : ESPACO_ANTIBAN_MS;
 
   // O agendamento tem piso de 1s (o CHECK do banco é 1000ms). No "Enviar
   // agora" o 0 continua valendo — é a saída de emergência de quem testa.
-  const espacoMsAgendado = Math.min(60000, Math.max(1000, espacoMs));
+  const espacoMsAgendado = Math.min(ESPACO_MAXIMO_MS, Math.max(1000, espacoMs));
   const janelasValidas = janelas.filter(
     (j) => /^\d{2}:\d{2}$/.test(j.inicio) && /^\d{2}:\d{2}$/.test(j.fim) && j.inicio < j.fim,
   );
@@ -609,7 +609,7 @@ export function DialogoDisparo({
                 id="disparo-espaco"
                 type="number"
                 min={0}
-                max={60}
+                max={ESPACO_MAXIMO_MS / 1000}
                 value={espaco}
                 onChange={(e) => setEspaco(e.target.value)}
               />
@@ -618,7 +618,7 @@ export function DialogoDisparo({
 
           <p className="text-xs text-muted-foreground">
             {t(
-              "Espera esse tempo entre uma mensagem e a seguinte. 60s é o ritmo que não queima o número — apertar aqui é mais rápido hoje e mais curto amanhã.",
+              "Espera esse tempo entre uma mensagem e a seguinte — de 1s a 10min. 60s é o ritmo que não queima o número; mais devagar é mais seguro e a campanha leva mais tempo.",
             )}
           </p>
 

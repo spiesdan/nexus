@@ -426,6 +426,47 @@ describe("processarCampanhasAgendadas", () => {
     expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "intervalo" }]);
   });
 
+  it("(f2) 'Enviar agora' segurando o número faz o tick esperar a vez (0288)", async () => {
+    // O lote a 2min E o tick a 1min davam uma mensagem a cada ~40s no mesmo
+    // número. O lease diz que o número é do lote; o tick não fala por cima.
+    const dados = base({
+      prospecting_campaigns: [campanha()],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          dispatch_locked_until: new Date(Date.parse(DENTRO) + 10 * 60_000).toISOString(),
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "disparo_manual" }]);
+  });
+
+  it("(f3) lease VENCIDO não segura o tick — quem morreu no meio não trava o número", async () => {
+    const dados = base({
+      prospecting_campaigns: [campanha()],
+      channel_sessions: [
+        {
+          id: "sess-1",
+          organization_id: "org-1",
+          status: "WORKING",
+          archived_at: null,
+          dispatch_locked_until: new Date(Date.parse(DENTRO) - 60_000).toISOString(),
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).toHaveBeenCalledTimes(1);
+  });
+
   it("(g) sem prospect restante, a campanha conclui sozinha", async () => {
     const dados = base({
       prospecting_campaigns: [campanha()],
