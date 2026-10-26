@@ -763,10 +763,10 @@ export function ControleDaCampanha({ id }: { id: string }) {
         <div className="min-w-0 space-y-4 xl:order-1">
           {ehContatos && (
             <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
-              <p className="font-medium">{t("Esta é uma campanha de recuperação de contatos.")}</p>
+              <p className="font-medium">{t("Esta é uma campanha de recuperação de clientes.")}</p>
               <p className="mt-1 opacity-80">
                 {t(
-                  "O acompanhamento e o envio são feitos pela Venda Automática. Esta tela mostra o andamento do ledger, mas não reagenda contatos por aqui.",
+                  "O envio é feito pelo agendador da campanha, respeitando janelas, limite diário e intervalo anti-ban. Esta tela mostra o andamento do ledger; para mudar o público, crie outra campanha no assistente.",
                 )}
               </p>
             </Card>
@@ -1061,9 +1061,9 @@ export function ControleDaCampanha({ id }: { id: string }) {
                 </p>
                 <Button size="sm" variant="outline" asChild>
                   <Link
-                    href={ehContatos ? "/app/venda-automatica" : "/app/prospeccao?aba=empresas"}
+                    href={ehContatos ? "/app/radar" : "/app/prospeccao?aba=empresas"}
                   >
-                    {ehContatos ? t("Abrir Venda Automática") : t("Ver empresas da base")}
+                    {ehContatos ? t("Ver clientes no Radar") : t("Ver empresas da base")}
                   </Link>
                 </Button>
               </div>

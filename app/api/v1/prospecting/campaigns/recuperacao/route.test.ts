@@ -10,10 +10,15 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requireRole } from "@/lib/auth/require-role";
+import { validarBindDaCampanha } from "@/lib/prospeccao/validacao-da-campanha";
 import { createClient } from "@/lib/supabase/server";
 
 vi.mock("@/lib/auth/require-role", () => ({ requireRole: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
+vi.mock("@/lib/prospeccao/validacao-da-campanha", () => ({
+  validarBindDaCampanha: vi.fn(),
+}));
 
 const ORG_ID = "22222222-2222-4222-8222-222222222222";
 const CONTATO_ID = "33333333-3333-4333-8333-333333333333";
@@ -95,6 +100,12 @@ const VALIDO = {
 beforeEach(() => {
   inserido = null;
   erroDoBanco = null;
+  vi.mocked(validarBindDaCampanha).mockReset();
+  vi.mocked(validarBindDaCampanha).mockResolvedValue({
+    ok: true,
+    template: null,
+    sessao: null,
+  } as never);
   vi.mocked(requireRole).mockResolvedValue({
     ok: true,
     org: { orgId: ORG_ID },
@@ -206,5 +217,76 @@ describe("POST /api/v1/prospecting/campaigns/recuperacao", () => {
     const { POST } = await import("./route");
     const resposta = await POST(corpo(VALIDO));
     expect(resposta.status).toBe(500);
+  });
+
+  it("modelo fora da janela de 24h: grava o bind único e zera as mensagens", async () => {
+    const { POST } = await import("./route");
+    const resposta = await POST(
+      corpo({
+        ...VALIDO,
+        mensagens: undefined,
+        mensagem_tipo: "template",
+        template_name: "recuperacao",
+        template_language: "pt_BR",
+        template_contract_hash: "hash-1",
+        template_values: { "1": "Maria" },
+      }),
+    );
+    expect(resposta.status).toBe(201);
+
+    expect(validarBindDaCampanha).toHaveBeenCalledWith(
+      expect.anything(),
+      ORG_ID,
+      {
+        tipo: "template",
+        name: "recuperacao",
+        language: "pt_BR",
+        contractHash: "hash-1",
+        values: { "1": "Maria" },
+      },
+      { exigirCanal: true },
+    );
+    expect(inserido).toMatchObject({
+      publico: "contatos",
+      mensagem_tipo: "template",
+      mensagens: [],
+      template_name: "recuperacao",
+      template_language: "pt_BR",
+      template_contract_hash: "hash-1",
+      template_values: { "1": "Maria" },
+      status: "ativa",
+    });
+  });
+
+  it("modelo reprovado ou sem canal é 422 antes do insert", async () => {
+    vi.mocked(validarBindDaCampanha).mockResolvedValue({
+      ok: false,
+      erro: "Nenhum canal oficial WORKING aceita este modelo.",
+      codigo: "canal_indisponivel",
+    } as never);
+    const { POST } = await import("./route");
+    const resposta = await POST(
+      corpo({
+        ...VALIDO,
+        mensagens: undefined,
+        mensagem_tipo: "template",
+        template_name: "recuperacao",
+        template_language: "pt_BR",
+        template_contract_hash: "hash-1",
+      }),
+    );
+    expect(resposta.status).toBe(422);
+    expect((await resposta.json()).error.details.codigo).toBe("canal_indisponivel");
+    expect(inserido).toBeNull();
+  });
+
+  it("template sem o bind completo é 422 sem consultar o espelho", async () => {
+    const { POST } = await import("./route");
+    const resposta = await POST(
+      corpo({ ...VALIDO, mensagens: undefined, mensagem_tipo: "template" }),
+    );
+    expect(resposta.status).toBe(422);
+    expect(validarBindDaCampanha).not.toHaveBeenCalled();
+    expect(inserido).toBeNull();
   });
 });

@@ -33,6 +33,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { normalizaTelefone } from "@/lib/contacts/csv";
+import { contatoPodeReceber } from "@/lib/comercial/inativos";
+import { porFatias } from "@/lib/db/por-fatias";
 import {
   avaliarTemplateParaCampanha,
   carregarTemplateParaCampanha,
@@ -786,23 +788,39 @@ async function escolherContato(
   ids: string[],
 ): Promise<ProspectParaEnvio | null> {
   if (ids.length === 0) return null;
-  const { data } = await admin
-    .from("contacts")
-    .select("id, name, display_name, phone_number")
-    .eq("organization_id", orgId)
-    .in("id", ids);
+  // 500 UUIDs numa única query string dão 18.499 bytes e o PostgREST responde
+  // `414 URI too long` — o motor veria "sem contato" e a campanha pararia com
+  // o banco são. A mesma fatia de 100 que o Radar e a prévia já usam.
+  const { linhas: contatosLidos } = await porFatias(ids, async (fatia) => {
+    const r = await admin
+      .from("contacts")
+      .select(
+        "id, name, display_name, phone_number, is_blocked, is_anonymized, is_merged_into, consent",
+      )
+      .eq("organization_id", orgId)
+      .in("id", fatia);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
   const porId = new Map(
-    ((data ?? []) as unknown as Array<{
+    (contatosLidos as unknown as Array<{
       id: string;
       name: string | null;
       display_name: string | null;
       phone_number: string | null;
+      is_blocked: boolean;
+      is_anonymized: boolean;
+      is_merged_into: string | null;
+      consent: { marketing?: { declined_at?: string | null } | null } | null;
     }>).map((c) => [c.id, c]),
   );
 
   for (const id of ids) {
     const c = porId.get(id);
     if (!c) continue; // contato apagado — o tick ignora e segue
+    // Veto de contato (regra dura nº 2): STOP, recusa de marketing, anonimizado
+    // ou mesclado. A mesma régua da prévia e da Venda Automática; um bulk que
+    // ignorasse `is_blocked` mandaria para quem já pediu para sair.
+    if (!contatoPodeReceber(c)) continue;
     const fone = c.phone_number ? normalizaTelefone(c.phone_number) : null;
     if (!fone || !/^\+\d{8,15}$/.test(fone)) continue;
     return {
