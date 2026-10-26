@@ -8,6 +8,164 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.34.0] — 2026-10-26
+
+### Adicionado
+
+- **A campanha ganhou tela de controle — quem já recebeu, quem falta e quem ainda pode entrar** Depois de criar uma campanha de prospecção, não havia onde acompanhar o envio:
+  o público aparecia num card que sumia ao fechar a tela, e a lista mostrava o
+  funil (encontradas, contatadas) sem responder à pergunta do dia — quantas
+  mensagens saíram e quantas faltam.
+
+  Agora cada campanha tem uma tela própria, que sobrevive ao F5, com:
+
+  - a fila de envio: enviadas, sem confirmação e pendentes, e a empresa de cada
+    linha com o botão para abrir a conversa certa no Inbox;
+  - as empresas da região que ainda podem entrar, sem reservar nada;
+  - o agendamento a partir dali, mantendo a audiência completa da campanha
+    mesmo quando só os pendentes vão receber;
+  - a liberação manual das reservas que ficaram sem comprovante de envio — as
+    que saíram nunca são tocadas.
+
+  O card da lista passa a mostrar "enviadas · faltam" e o botão Controlar. Na
+  criação, o assistente encurtou para três passos e a cidade é escolhida da lista
+  real da base, com a contagem de empresas: a prévia mostra as empresas de
+  verdade antes de criar a campanha, em vez de uma estimativa de mercado.
+
+  A aba inicial da Prospecção passa a ser Campanhas — a busca vira a exceção.
+
+  Quem já instalou não precisa fazer nada.
+
+- **As três mensagens da campanha passaram a morar na categoria** Toda campanha nova começava com três caixas em branco. Quem dispara para
+  oficina mecânica toda semana reescrevia o mesmo texto — e o texto bom de uma
+  campanha antiga ficava preso nela, sem lugar para ver, corrigir ou reaproveitar.
+
+  Agora a Prospecção tem **Mensagens por categoria**, dentro de Configuração:
+  escolhe-se a categoria (oficina mecânica, restaurante, o que for) e escreve-se
+  até três variações. O assistente de campanha nasce preenchido com o padrão da
+  primeira categoria escolhida, e permite trocar para o padrão de outra categoria
+  selecionada — ou voltar a escrever do zero.
+
+  São dois textos diferentes de propósito: o **padrão** pertence à categoria e
+  muda o que toda campanha nova daquela categoria vai dizer; a **campanha** guarda
+  a própria cópia. Editar uma campanha não altera o padrão, e mudar o padrão não
+  reescreve o que já saiu. A tela diz isso em vez de deixar o operador descobrir.
+
+  Quem pode o quê: qualquer membro lê o texto; gerente ou superior salva — o
+  padrão decide o que a próxima campanha vai dizer. Salvar e remover ficam no log
+  de auditoria.
+
+  Quem já instalou precisa atualizar: a tabela nova
+  (`prospecting_message_presets`) entra pelo `update.sh`, e categorias sem padrão
+  continuam pedindo o texto à mão, como antes.
+
+- **O pedido entra por foto, PDF, áudio ou texto** O botão **Adicionar com IA**, na seção de produtos do novo pedido, lê o que o
+  cliente escreveu e propõe os itens já casados com o catálogo. A conferência é
+  obrigatória: quantidade editável, até três candidatos por item e busca manual
+  no catálogo; nada entra no pedido antes do clique em **Adicionar ao pedido**. O
+  casamento usa a busca relaxada do catálogo, então "5 L" não vira "2 L" e um
+  empate fica para a pessoa escolher. Formatos: JPG/PNG/WebP, PDF, áudio (requer
+  `OPENAI_API_KEY`) e CSV/TXT, além de texto colado; XLSX/DOCX são recusados com
+  a instrução de converter para CSV/PDF.
+
+- **A foto do pedido é lida na própria VPS, sem gastar crédito de IA** O botão **Adicionar com IA** passou a tentar primeiro um leitor de imagem que
+  roda junto com o CRM — em português, em CPU, sem GPU e sem serviço externo.
+  Quando a leitura sai confiável (ao menos um item reconhecido, a maioria casada
+  com o catálogo e confiança alta), a proposta aparece sem nenhuma chamada de
+  modelo; quando o manuscrito é difícil, a IA assume como antes. O catálogo
+  **não** é embutido no leitor: o casamento continua sendo a mesma busca relaxada
+  do agente, então produto novo passa a valer na leitura seguinte, sem retreino.
+  Quem já instalou não precisa fazer nada — o `update.sh` traz a imagem nova.
+  Para desligar o leitor, deixe `OCR_SERVICE_URL=` vazio no `.env`: a foto volta a
+  usar só a IA.
+
+### Alterado
+
+- **A Expedição virou fila de cargas, e a ficha da carga ganhou subtelas** A tela de Expedição empilhava três trabalhos no mesmo lugar: a lista de cargas,
+  a montagem de uma carga nova e a ficha inteira da carga aberta — com abas que
+  não sobreviviam a um F5 e um menu lateral que competia com o mapa.
+
+  Agora a lista é só a fila de cargas, com o essencial de cada uma. Montar carga
+  ganhou endereço próprio (`/app/expedicao/nova`): são três passos — a
+  transportadora, os pedidos e a conferência —, e o assistente sobrevive a
+  recarregar a página no meio.
+
+  A ficha da carga virou quatro subtelas com endereço: **Paradas**, **Rota**,
+  **Fechamento** e **Motorista**. Dá para mandar o link da subtela para outra
+  pessoa, e o F5 fica onde estava. Os links antigos (`?aba=rota`, `#fechamento`)
+  continuam funcionando: redirecionam para a subtela certa, então favorito salvo
+  e mensagem trocada no WhatsApp não quebram.
+
+  O "Próximo passo" da carga deixou de ser um painel fixo na lateral e virou uma
+  faixa curta no topo de Paradas — a mesma informação, sem tirar espaço do que se
+  está conferindo.
+
+  Nada muda no que já foi criado: cargas, paradas, romaneio e fechamento ficam
+  como estão. Quem já instalou não precisa fazer nada — a atualização é de tela.
+
+- **A Prospecção ficou com duas superfícies e a criação virou uma página** A tela tinha seis abas do mesmo peso — Encontrar empresas, Pesquisas,
+  Empresas, Mercado, Campanhas e Configuração — e abria em "Buscar", um
+  formulário de Google. Quem entrava todo dia para acompanhar disparo caía num
+  lugar que não era o do trabalho.
+
+  Agora a Prospecção tem **duas** superfícies: **Campanhas**, que é o padrão, e
+  **Empresas**. As outras quatro continuam existindo, mas como ferramentas ao
+  lado — menores, sem competir com o que se usa todo dia.
+
+  A criação de campanha saiu do modal dentro da lista e ganhou endereço próprio
+  (`/app/prospeccao/nova`): sobrevive ao F5 no meio do assistente, pode ser
+  mandada por link, e não divide a tela com campanhas que continuam clicáveis
+  atrás. O passo 2 do assistente passou a nascer preenchido com o padrão da
+  categoria (ver “As três mensagens da campanha passaram a morar na categoria”).
+
+  Nada muda no que já foi criado: campanhas antigas, envios e reservas ficam como
+  estão. Quem já instalou não precisa fazer nada — a atualização é de tela.
+
+### Corrigido
+
+- **Campanha criada por engano agora pode ser excluída** A aba Campanhas não tinha como apagar uma campanha: só editar. Quem criava uma
+  campanha errada — cidade, categoria ou recorte trocado — ficava com ela no funil
+  para sempre, e não havia caminho na tela para desfazer.
+
+  Agora cada campanha de descoberta tem o botão de excluir, com confirmação que
+  diz o que vai junto: o histórico de envios daquela campanha é apagado e as
+  empresas que receberam por ela voltam a ficar disponíveis para outras
+  campanhas. As buscas feitas continuam salvas, mas deixam de pertencer à
+  campanha excluída.
+
+  Quem já instalou não precisa fazer nada.
+
+- **O disparo abre com as mensagens que já estão na campanha** A tela de disparo abria com três caixas em branco (com o texto de exemplo)
+  mesmo quando a campanha já tinha as mensagens salvas. Quem preparava o envio
+  pela aba Campanhas tinha que digitar tudo de novo — ou pior, mandava sem o
+  texto que havia escrito.
+
+  Agora o painel abre com as variações da campanha já preenchidas, junto com o
+  teto diário e as janelas de horário que ela tiver. Se você fechar e reabrir a
+  mesma campanha, o que você digitou continua lá; a sincronização só acontece
+  quando a campanha muda de verdade.
+
+  Quem já instalou não precisa fazer nada.
+
+- **A Fila do Inbox abre pela mensagem mais recente** A aba Fila ordenava por tempo de espera: quem aguardava há mais tempo aparecia
+  primeiro. Na prática, a mensagem nova entrava embaixo das antigas — o contrário
+  do que se espera de um inbox, e o motivo de conversa recém-chegada passar
+  despercebida.
+
+  Agora a Fila usa a mesma régua das outras abas: a mais recente no topo,
+  continuando a contar pela última mensagem do cliente (e não pela criação da
+  conversa, para que uma conversa antiga reaberta não pareça nova). O tempo de
+  espera continua visível na linha, mas deixa de definir a posição.
+
+  Quem já instalou não precisa fazer nada.
+
+- **A leitura de pedido por IA volta a funcionar com o Gemini** O schema completo gerado pelo Zod era recusado pelo Google com 400 antes de o
+  modelo ler a foto — a tela pedia "uma foto mais nítida" quando o problema era o
+  formato da requisição. O schema agora é mínimo para o Google e fechado para
+  OpenAI/Anthropic/OpenRouter, com a mesma validação local. A correção também
+  limita a resposta a 8.192 tokens e traduz saldo, chave, modelo e provedor fora
+  do ar em mensagens que dizem o que fazer.
+
 ## [1.33.1] — 2026-10-22
 
 ### Corrigido
@@ -5164,7 +5322,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.34.0...HEAD
+[1.34.0]: https://github.com/spiesdan/nexus/compare/v1.33.1...v1.34.0
 [1.33.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.4...v1.33.0
 [1.32.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.3...v1.32.4
