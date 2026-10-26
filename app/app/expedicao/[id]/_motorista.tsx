@@ -19,6 +19,8 @@ import {
 } from "@/lib/entregas/outbox";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { MOTIVOS_DEVOLUCAO, ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from "@/lib/schemas/expedicao";
+import { CaretRight, Check, Clock } from "@/lib/ui/icons";
+import { cn } from "@/lib/utils";
 
 import type { RotaCarregada } from "./_roteirizador";
 
@@ -94,7 +96,11 @@ export function ModoMotorista({
       });
       setFila(pendentesDaCarga(cargaId));
       if (r.enviados > 0) {
-        toast.success(`${r.enviados} ${t("entrega(s) sincronizada(s)")}`);
+        toast.success(
+          `${r.enviados} ${
+            r.enviados === 1 ? t("entrega sincronizada") : t("entregas sincronizadas")
+          }`,
+        );
         await recarregar();
         aoMudar();
       }
@@ -138,6 +144,7 @@ export function ModoMotorista({
     p.pedidos.some((x) => ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x))),
   );
   const feitas = rota.paradas.length - pendentes.length;
+  const pctFeito = rota.paradas.length > 0 ? Math.round((feitas / rota.paradas.length) * 100) : 0;
   const proxima = pendentes[0] ?? null;
   const versaoNova = versaoVista != null && rota.carga.rota_versao > versaoVista;
 
@@ -236,170 +243,351 @@ export function ModoMotorista({
         : null;
 
   return (
-    <div className="mx-auto max-w-md space-y-3">
-      <Card className="hover-raise p-3">
-        <div className="flex items-center justify-between text-sm">
-          <strong>
-            {feitas}/{rota.paradas.length} {t("entregas")}
-          </strong>
-          <span className="text-muted-foreground">
-            {rota.paradas.length > 0 ? Math.round((feitas / rota.paradas.length) * 100) : 0}% {t("concluído")}
-          </span>
-        </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+    <div className="mx-auto max-w-xl space-y-3.5 pb-8">
+      {/* ── O placar do dia ─────────────────────────────────────────────────
+          Na cabine, o número que importa é "quantas faltam" — não a lista de
+          indicadores. O anel e a barra dizem a mesma coisa em duas leituras:
+          de relance (anel) e no detalhe (barra). */}
+      <Card className="overflow-hidden p-0">
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              {t("Rota de hoje")}
+            </p>
+            <p className="mt-0.5 flex items-baseline gap-1.5">
+              <span className="text-3xl leading-none font-semibold text-text tabular-nums">
+                {feitas}
+              </span>
+              <span className="text-sm text-muted-foreground tabular-nums">
+                / {rota.paradas.length} {t("entregas")}
+              </span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {pendentes.length === 0
+                ? t("Tudo concluído.")
+                : pendentes.length === 1
+                  ? t("Falta 1 parada.")
+                  : `${pendentes.length} ${t("paradas pela frente.")}`}
+            </p>
+          </div>
           <div
-            className="h-full bg-green-600"
-            style={{ width: `${rota.paradas.length > 0 ? (feitas / rota.paradas.length) * 100 : 0}%` }}
+            aria-hidden
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full"
+            style={{
+              background: `conic-gradient(var(--color-success) ${pctFeito}%, var(--color-border) 0)`,
+            }}
+          >
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-surface text-xs font-semibold text-text tabular-nums">
+              {pctFeito}%
+            </span>
+          </div>
+        </div>
+        <div
+          className="h-1.5 w-full bg-muted"
+          role="progressbar"
+          aria-label={t("Entregas concluídas")}
+          aria-valuemin={0}
+          aria-valuemax={rota.paradas.length}
+          aria-valuenow={feitas}
+        >
+          <div
+            className="h-full bg-success transition-[width] duration-300"
+            style={{ width: `${pctFeito}%` }}
           />
         </div>
       </Card>
 
       {fila.length > 0 && (
-        <Card className="hover-raise border-amber-500 p-3 text-sm">
-          <p>
-            ⏳ {fila.length} {t("aguardando envio (sem internet)")}
-          </p>
-          <Button size="sm" className="mt-2 w-full" disabled={sincronizando} onClick={() => void sincronizar()}>
-            {sincronizando ? t("Enviando…") : t("Sincronizar agora")}
-          </Button>
+        <Card className="overflow-hidden border-warning/40 p-0">
+          <div className="flex items-start gap-2.5 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <p className="min-w-0 flex-1">
+              {fila.length} {t("aguardando envio (sem internet)")}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 shrink-0 border-warning/40 text-warning-fg"
+              disabled={sincronizando}
+              onClick={() => void sincronizar()}
+            >
+              {sincronizando ? t("Enviando…") : t("Sincronizar")}
+            </Button>
+          </div>
         </Card>
       )}
 
-      {versaoNova && (        <Card className="hover-raise border-orange-500 p-3 text-sm">
-          <p>{t("A rota foi alterada no painel de expedição. Nova sequência disponível.")}</p>
-          <div className="mt-2 flex gap-2">
-            <Button size="sm" onClick={() => { setVersaoVista(rota.carga.rota_versao); void recarregar(); }}>
-              {t("Aplicar")}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setVersaoVista(rota.carga.rota_versao)}>
-              {t("Manter atual")}
-            </Button>
+      {versaoNova && (
+        <Card className="overflow-hidden border-info/40 p-0">
+          <div className="space-y-2 bg-info-bg px-4 py-3 text-sm text-info-fg">
+            <p>{t("A rota foi alterada no painel de expedição. Nova sequência disponível.")}</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-info/40 text-info-fg"
+                onClick={() => {
+                  setVersaoVista(rota.carga.rota_versao);
+                  void recarregar();
+                }}
+              >
+                {t("Aplicar")}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-info-fg"
+                onClick={() => setVersaoVista(rota.carga.rota_versao)}
+              >
+                {t("Manter atual")}
+              </Button>
+            </div>
           </div>
         </Card>
       )}
 
       {rota.carga.status === "montando" && podeOperar && (
-        <Button className="w-full" onClick={() => void transicao("iniciar")}>
+        <Button className="h-11 w-full" onClick={() => void transicao("iniciar")}>
           {t("Iniciar rota")}
         </Button>
       )}
 
       {proxima ? (
-        <Card className="hover-raise space-y-2 p-4">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("PRÓXIMA ENTREGA")}</p>
-          <p className="text-lg font-bold">{proxima.cliente}</p>
-          {proxima.endereco && <p className="text-sm">{proxima.endereco}</p>}
-          {proxima.fone && <p className="text-sm">{proxima.fone}</p>}
-          <div className="text-sm">
-            {proxima.pedidos.map((x) => (
-              <p key={x.order_id}>
-                {numeroDoPedido(x.numero)} · {comoMoeda(x.total_cents, "BRL")}
-              </p>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            {navegarHref && (
-              <Button asChild>
-                <a href={navegarHref} target="_blank" rel="noopener noreferrer">
-                  {t("Navegar")}
-                </a>
-              </Button>
-            )}
-            {podeOperar && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const alvo = proxima.pedidos.find((x) => ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)));
-                  if (alvo) void desfecho(alvo.order_id, "em_atendimento");
-                }}
-              >
-                {t("Cheguei")}
-              </Button>
-            )}
-          </div>
-          {podeOperar && (
-            <>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => {
-                  const alvo = proxima.pedidos.find((x) => ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)));
-                  if (alvo) void desfecho(alvo.order_id, "entregue");
-                }}
-              >
-                {t("Marcar como entregue")}
-              </Button>
-              {!motivoAberto ? (
-                <Button className="w-full" variant="ghost" onClick={() => setMotivoAberto(true)}>
-                  {t("Não entregue")}
-                </Button>
+        <Card className="overflow-hidden p-0">
+          <header className="flex items-center justify-between gap-2 border-b border-border bg-accent-soft px-4 py-2">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent uppercase">
+              {t("Próxima entrega")} · {t("parada")}{" "}
+              {rota.paradas.findIndex((p) => p.chave === proxima.chave) + 1} {t("de")}{" "}
+              {rota.paradas.length}
+            </p>
+            <span className="shrink-0 text-[11px] font-medium text-accent tabular-nums">
+              {proxima.pedidos.length}{" "}
+              {proxima.pedidos.length === 1 ? t("pedido") : t("pedidos")}
+            </span>
+          </header>
+
+          <div className="space-y-3 p-4">
+            <div>
+              <p className="text-xl leading-tight font-semibold text-text">{proxima.cliente}</p>
+              {proxima.endereco ? (
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                  {proxima.endereco}
+                </p>
               ) : (
-                <div className="space-y-2 rounded-2xl border p-2">
-                  <select
-                    className="w-full rounded-lg border bg-background px-2 py-1.5 text-sm"
-                    value={motivo}
-                    onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
-                  >
-                    {MOTIVOS_DEVOLUCAO.map((m) => (
-                      <option key={m} value={m}>
-                        {ROTULO_MOTIVO_DEVOLUCAO[m]}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        const alvo = proxima.pedidos.find((x) =>
-                          ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
-                        );
-                        if (alvo) void desfecho(alvo.order_id, "devolvido");
-                      }}
-                    >
-                      {t("Confirmar")}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setMotivoAberto(false)}>
-                      {t("Voltar")}
-                    </Button>
-                  </div>
-                </div>
+                <p className="mt-1 text-sm text-warning-fg">{t("Sem endereço cadastrado.")}</p>
               )}
-            </>
-          )}
+              {proxima.fone && (
+                <a
+                  href={`tel:${proxima.fone.replace(/[^\d+]/g, "")}`}
+                  className="mt-1 inline-block text-sm font-medium text-accent underline underline-offset-4"
+                >
+                  {proxima.fone}
+                </a>
+              )}
+            </div>
+
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/60 text-sm">
+              {proxima.pedidos.map((x) => (
+                <li key={x.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
+                  <span className="font-medium tabular-nums">{numeroDoPedido(x.numero)}</span>
+                  <span className="font-medium tabular-nums">{comoMoeda(x.total_cents, "BRL")}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* `flex` + `flex-1`, não `grid-cols-2`: quando a parada não tem
+                coordenada o "Navegar" não existe e o "Cheguei" ficava sozinho
+                na metade esquerda, com um buraco ao lado. */}
+            <div className="flex gap-2">
+              {navegarHref && (
+                <Button asChild className="h-11 flex-1">
+                  <a href={navegarHref} target="_blank" rel="noopener noreferrer">
+                    {t("Navegar")}
+                  </a>
+                </Button>
+              )}
+              {podeOperar && (
+                <Button
+                  className="h-11 flex-1"
+                  variant="outline"
+                  onClick={() => {
+                    const alvo = proxima.pedidos.find((x) =>
+                      ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+                    );
+                    if (alvo) void desfecho(alvo.order_id, "em_atendimento");
+                  }}
+                >
+                  {t("Cheguei")}
+                </Button>
+              )}
+            </div>
+
+            {podeOperar && (
+              <>
+                {/* Verde sólido: o desfecho positivo é A ação da cabine e, em
+                    contorno sobre `success-bg`, lia como botão desabilitado. */}
+                <Button
+                  className="h-12 w-full bg-success text-accent-fg hover:bg-success/90"
+                  onClick={() => {
+                    const alvo = proxima.pedidos.find((x) =>
+                      ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+                    );
+                    if (alvo) void desfecho(alvo.order_id, "entregue");
+                  }}
+                >
+                  <Check className="h-4 w-4" aria-hidden />
+                  {t("Marcar como entregue")}
+                </Button>
+
+                {!motivoAberto ? (
+                  <Button
+                    className="w-full text-muted-foreground"
+                    variant="ghost"
+                    onClick={() => setMotivoAberto(true)}
+                  >
+                    {t("Não entregue")}
+                  </Button>
+                ) : (
+                  <div className="space-y-2 rounded-xl border border-error/30 bg-error-bg/60 p-2.5">
+                    <select
+                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm"
+                      value={motivo}
+                      onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
+                      aria-label={t("Motivo")}
+                    >
+                      {MOTIVOS_DEVOLUCAO.map((m) => (
+                        <option key={m} value={m}>
+                          {ROTULO_MOTIVO_DEVOLUCAO[m]}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-9 flex-1"
+                        onClick={() => {
+                          const alvo = proxima.pedidos.find((x) =>
+                            ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+                          );
+                          if (alvo) void desfecho(alvo.order_id, "devolvido");
+                        }}
+                      >
+                        {t("Confirmar")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9"
+                        onClick={() => setMotivoAberto(false)}
+                      >
+                        {t("Voltar")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </Card>
       ) : (
-        <Card className="hover-raise p-4 text-center text-sm">
-          <p className="font-semibold">{t("Todas as paradas concluídas.")}</p>
-          {podeOperar && rota.carga.status === "em_rota" && (
-            <Button className="mt-2 w-full" onClick={() => void transicao("finalizar")}>
-              {t("Finalizar rota")}
-            </Button>
-          )}
+        <Card className="overflow-hidden p-0">
+          <div className="space-y-3 bg-success-bg px-4 py-5 text-center">
+            <Check className="mx-auto h-7 w-7 text-success-fg" aria-hidden />
+            <p className="text-sm font-semibold text-success-fg">
+              {t("Todas as paradas concluídas.")}
+            </p>
+            {podeOperar && rota.carga.status === "em_rota" && (
+              <Button className="h-11 w-full" onClick={() => void transicao("finalizar")}>
+                {t("Finalizar rota")}
+              </Button>
+            )}
+          </div>
         </Card>
       )}
 
-      {/* Lista compacta */}
-      <Card className="hover-raise p-2">
-        <ul className="divide-y text-sm">
+      {/* ── O roteiro inteiro, para conferir de relance ───────────────────── */}
+      <Card className="overflow-hidden p-0">
+        <header className="flex items-baseline justify-between gap-2 border-b border-border px-4 py-2">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Roteiro")}
+          </p>
+          <p className="text-[11px] text-text-subtle tabular-nums">
+            {rota.paradas.length} {rota.paradas.length === 1 ? t("parada") : t("paradas")}
+          </p>
+        </header>
+        <ol className="divide-y divide-border text-sm">
           {rota.paradas.map((p, i) => {
             const temPendente = p.pedidos.some((x) => mapaFila.has(x.order_id));
             const feito = p.pedidos.every((x) => statusDe(x) === "entregue") && !temPendente;
             const atual = p.chave === proxima?.chave;
             return (
-              <li key={p.chave} className={`flex items-center gap-2 px-2 py-1.5 ${atual ? "font-bold" : ""}`}>
-                <span>{feito ? "✓" : temPendente ? "⏳" : atual ? "→" : `${i + 1}`}</span>
-                <span className="truncate">{p.cliente}</span>
+              <li
+                key={p.chave}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2.5",
+                  atual && "bg-accent-soft/60",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
+                    feito
+                      ? "bg-success-bg text-success-fg"
+                      : temPendente
+                        ? "bg-warning-bg text-warning-fg"
+                        : atual
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {feito ? (
+                    <Check className="h-3.5 w-3.5" aria-hidden />
+                  ) : temPendente ? (
+                    <Clock className="h-3.5 w-3.5" aria-hidden />
+                  ) : atual ? (
+                    <CaretRight className="h-3.5 w-3.5" aria-hidden />
+                  ) : (
+                    i + 1
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate",
+                    feito ? "text-muted-foreground line-through decoration-border" : "text-text",
+                    atual && "font-medium",
+                  )}
+                >
+                  {p.cliente}
+                </span>
+                {atual && (
+                  <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-semibold tracking-wide text-accent-foreground uppercase">
+                    {t("agora")}
+                  </span>
+                )}
               </li>
             );
           })}
-        </ul>
+        </ol>
       </Card>
 
       {rota.carga.status === "em_rota" && (
-        <Button className="w-full" variant={rastreando ? "destructive" : "outline"} onClick={() => (rastreando ? pararRastreio() : iniciarRastreio())}>
-          {rastreando ? t("Parar rastreio") : t("Iniciar rastreio GPS")}
-        </Button>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-text">{t("Rastreio GPS")}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {rastreando ? t("Ligado — só durante esta rota.") : t("Desligado.")}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant={rastreando ? "destructive" : "outline"}
+            className="h-9 shrink-0"
+            onClick={() => (rastreando ? pararRastreio() : iniciarRastreio())}
+          >
+            {rastreando ? t("Parar") : t("Ligar")}
+          </Button>
+        </div>
       )}
     </div>
   );
