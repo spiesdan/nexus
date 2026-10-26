@@ -2,21 +2,20 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
-import { documentoNormalizado, vincularPorDocumento } from "@/lib/expedicao/buscar-embarcavel";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { COLUNAS_DA_CARGA, type Carga } from "@/lib/schemas/expedicao";
-import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
 
-import { ExpedicaoClient } from "./_client";
+import { ExpedicaoClient, type ProgressoDaCarga } from "./_client";
 
 export const dynamic = "force-dynamic";
 
 /**
- * A EXPEDIÇÃO — cargas do transporte próprio (ATT.txt Fase 3).
+ * A EXPEDIÇÃO — a fila de cargas do transporte próprio (ATT.txt Fase 3).
  *
- * A lista de cargas + os pedidos embarcáveis (aprovado/faturado) para montar
- * a próxima. Criar carga é `agent` para cima.
+ * Montar a próxima carga é uma TELA, não uma coluna ao lado da fila:
+ * `/app/expedicao/nova`. Aqui só entra o que a operação precisa ver de
+ * relance — o que está na rua, o que está na doca e o que já fechou.
  */
 export default async function ExpedicaoPage() {
   const user = await requireAuth();
@@ -27,98 +26,58 @@ export default async function ExpedicaoPage() {
   const podeCriar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
 
   const supabase = await createClient();
-  const [{ data: cargas }, { data: embarcaveis }] = await Promise.all([
+  const [{ data: cargas }, { data: fila }] = await Promise.all([
     supabase
       .from("shipments")
       .select(COLUNAS_DA_CARGA)
       .eq("organization_id", activeOrg.orgId)
       .order("created_at", { ascending: false })
       .limit(200),
+    // Só o suficiente para o número e o valor da faixa de situação. A lista
+    // de pedidos (com cliente, cidade e busca) vive em `/nova`.
     supabase
       .from("commercial_orders")
-      .select(COLUNAS_DO_PEDIDO)
+      .select("id, total_cents")
       .eq("organization_id", activeOrg.orgId)
-      // Só aprovado/faturado: quem embarcou virou `expedido` e saiu da fila
-      // sozinho (a rota avança no POST da carga).
       .in("status", ["aprovado", "faturado"])
-      .order("created_at", { ascending: false })
       .limit(200),
   ]);
 
-  // A CIDADE DE CADA PEDIDO, para o filtro de cidade.
-  //
-  // O endereço de entrega é digitado por pedido e boa parte da base não tem
-  // (medido: 107 dos 109 pedidos abertos desta instalação). O cadastro do
-  // cliente tem cidade/UF preenchidos em 3.200 dos 12.605 contatos — ou seja,
-  // uma fonte complementar, não a principal. As duas juntas é o que faz o
-  // filtro achar alguém; só o endereço não acha quase ninguém.
-  const pedidos = (embarcaveis ?? []) as unknown as PedidoComercial[];
-  const idsDeContato = [
-    ...new Set(pedidos.map((p) => p.contact_id).filter((v): v is string => Boolean(v))),
-  ];
-
-  // QUEM NÃO TEM CONTATO VINCULADO — o caso dos pedidos importados, que trazem
-  // o CNPJ no pedido mas não o vínculo com o cadastro. Sem esta segunda busca,
-  // 101 dos 109 pedidos aprovados/faturados ficavam sem cidade nenhuma e o
-  // filtro "Canoinhas" devolvia zero com 32 pedidos de Canoinhas na fila.
-  const documentosSemContato = [
-    ...new Set(
-      pedidos
-        .filter((p) => !p.contact_id)
-        .map((p) => documentoNormalizado(p.cliente_documento))
-        // Só CNPJ: `contacts.cnpj` guarda 14 dígitos, e CPF do pedido nunca
-        // casaria com a coluna de lá — buscá-lo só aumentaria o `in`.
-        .filter((doc) => doc.length === 14),
-    ),
-  ];
-
-  const { data: contatosPorId } = idsDeContato.length
+  /**
+   * O ANDAMENTO DE CADA CARGA.
+   *
+   * A lista de cargas não carrega os itens, e sem isto toda linha dizia só
+   * "Em rota" — o mesmo rótulo para a carga com uma parada entregue e para a
+   * que não saiu da primeira. O servidor resolve numa consulta só; o cliente
+   * usa para a barra de progresso e para o indicador "Paradas a entregar".
+   */
+  const idsDasCargas = (cargas ?? []).map((c) => (c as unknown as { id: string }).id);
+  const { data: itensDasCargas } = idsDasCargas.length
     ? await supabase
-        .from("contacts")
-        .select("id, cidade, uf")
+        .from("shipment_orders")
+        .select("shipment_id, status")
         .eq("organization_id", activeOrg.orgId)
-        .in("id", idsDeContato)
-    : { data: [] as { id: string; cidade: string | null; uf: string | null }[] };
-  const { data: contatosPorDocumento } = documentosSemContato.length
-    ? await supabase
-        .from("contacts")
-        .select("id, cnpj, cidade, uf")
-        .eq("organization_id", activeOrg.orgId)
-        .in("cnpj", documentosSemContato)
-    : { data: [] as { id: string; cnpj: string | null; cidade: string | null; uf: string | null }[] };
+        .in("shipment_id", idsDasCargas)
+    : { data: [] as { shipment_id: string; status: string }[] };
 
-  const cidadePorContato: Record<string, string> = {};
-  const idPorDocumento: Record<string, string> = {};
-
-  for (const c of (contatosPorId ?? []) as { id: string; cidade: string | null; uf: string | null }[]) {
-    const texto = [c.cidade, c.uf].filter(Boolean).join("/");
-    if (texto) cidadePorContato[c.id] = texto;
-  }
-  for (const c of (contatosPorDocumento ?? []) as {
-    id: string;
-    cnpj: string | null;
-    cidade: string | null;
-    uf: string | null;
-  }[]) {
-    const texto = [c.cidade, c.uf].filter(Boolean).join("/");
-    if (texto) cidadePorContato[c.id] = texto;
-    const doc = documentoNormalizado(c.cnpj);
-    // Cadastro duplicado pelo mesmo CNPJ: fica o que tem cidade. Sem esta
-    // regra, o último lido (possivelmente o duplicado vazio) venceria e a
-    // cidade sumiria de novo.
-    if (doc && (cidadePorContato[c.id] || !idPorDocumento[doc])) idPorDocumento[doc] = c.id;
+  const progresso: Record<string, ProgressoDaCarga> = {};
+  for (const item of (itensDasCargas ?? []) as { shipment_id: string; status: string }[]) {
+    const p = (progresso[item.shipment_id] ??= { total: 0, entregues: 0, devolvidos: 0 });
+    p.total += 1;
+    if (item.status === "entregue") p.entregues += 1;
+    else if (item.status === "devolvido") p.devolvidos += 1;
   }
 
-  // O pedido importado fica com o contato que o documento achou, em memória e
-  // só para leitura: o filtro lê a cidade por `contact_id`, e a linha passa a
-  // mostrar a cidade do cadastro como as demais.
-  const pedidosComContato = vincularPorDocumento(pedidos, idPorDocumento);
+  const pedidosNaFila = (fila ?? []) as { id: string; total_cents: number | null }[];
 
   return (
     <ExpedicaoClient
       inicial={(cargas ?? []) as unknown as Carga[]}
-      embarcaveis={pedidosComContato}
-      cidadePorContato={cidadePorContato}
+      fila={{
+        total: pedidosNaFila.length,
+        valor: pedidosNaFila.reduce((soma, p) => soma + (p.total_cents || 0), 0),
+      }}
+      progresso={progresso}
       podeCriar={podeCriar}
       textos={{
         titulo: t("Expedição"),
@@ -127,22 +86,7 @@ export default async function ExpedicaoPage() {
         cargas: t("Cargas"),
         vazias: t("Nenhuma carga ainda"),
         embarcaveis: t("Aguardando embarque"),
-        nenhumEmbarcavel: t("Nenhum pedido aprovado aguardando embarque."),
-        buscarPedido: t("Buscar por número, cliente, cidade ou CNPJ"),
-        buscaSemResultado: t("Nenhum pedido encontrado com esse termo."),
-        filtrarCidade: t("Cidade"),
-        filtrarDe: t("De"),
-        filtrarAte: t("Até"),
-        semCidade: t("{n} pedido(s) sem cidade no cadastro"),
-        selecionados: t("Na carga"),
-        // O i18n deste projeto traduz frase inteira e não interpola — por isso
-        // `{a}`/`{de}` são trocados à mão em `_client.tsx`, e não por `t()`.
-        mostrando: t("{a} de {de} pedidos"),
-        placa: t("Placa"),
-        veiculo: t("Veículo"),
-        motorista: t("Motorista"),
-        criar: t("Criar carga"),
-        verRomaneio: t("Romaneio + fechamento"),
+        verRomaneio: t("Romaneio (PDF)"),
       }}
     />
   );

@@ -70,9 +70,9 @@ test("na nova carga, a busca acha o pedido por número, cliente e cidade", async
     `não consegui semear os pedidos: ${JSON.stringify(semeados.saopaulo)}`,
   ).toBeTruthy();
 
-  // 2. A tela. O painel "Nova carga" já vem aberto quando o papel pode criar —
-  //    não é botão que abre.
-  await page.goto("/app/expedicao");
+  // 2. A tela. Nova carga é uma SUBTELA: a busca não convive com a fila de
+  //    cargas, então o teste entra direto no endereço em vez de rolar a lista.
+  await page.goto("/app/expedicao/nova");
 
   const busca = page.getByTestId("carga-busca");
   await expect(busca, "o campo de busca não apareceu na nova carga").toBeVisible({
@@ -96,8 +96,11 @@ test("na nova carga, a busca acha o pedido por número, cliente e cidade", async
     "o pedido semeado não está na fila da expedição — o teste não mediria a busca",
   ).toBeVisible();
 
-  // 4. Por número cru — o que a pessoa digita ouvindo no telefone.
-  await busca.fill(String(nSP));
+  // 4. Pelo número como ele aparece na tela. O número CRU sozinho casa por
+  //    substring de propósito ("18" acha "18558"), então num banco acumulado
+  //    "8" traria 18, 28 e 80. A forma formatada — a que a pessoa lê no
+  //    romaneio — identifica um pedido só.
+  await busca.fill(`PED-${String(nSP).padStart(4, "0")}`);
   await expect(
     page.getByTestId(`carga-pedido-${nSP}`),
     "não achou pelo número do pedido",
