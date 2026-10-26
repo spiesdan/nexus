@@ -471,8 +471,20 @@ describe("processarCampanhasAgendadas", () => {
     const dados = base({
       prospecting_campaigns: [campanha()],
       prospecting_sends: [
-        { organization_id: "org-1", campaign_id: "camp-1", prospect_id: "p-001", enviado_em: DENTRO },
-        { organization_id: "org-1", campaign_id: "camp-1", prospect_id: "p-002", enviado_em: DENTRO },
+        {
+          organization_id: "org-1",
+          campaign_id: "camp-1",
+          prospect_id: "p-001",
+          enviado_em: DENTRO,
+          message_id: "msg-1",
+        },
+        {
+          organization_id: "org-1",
+          campaign_id: "camp-1",
+          prospect_id: "p-002",
+          enviado_em: DENTRO,
+          message_id: "msg-2",
+        },
       ],
     });
     const enviar = senderFalso();
@@ -481,6 +493,41 @@ describe("processarCampanhasAgendadas", () => {
     expect(enviar).not.toHaveBeenCalled();
     expect(resumo.concluidas).toBe(1);
     expect(dados.prospecting_campaigns![0]!.status).toBe("concluida");
+  });
+
+  it("(g2) reserva sem comprovante NÃO conclui a campanha — o lote ainda vai falar", async () => {
+    // Medido em 26/10/2026: o "Enviar agora" reservou 28 empresas a 2min, e o
+    // tick seguinte viu "nenhum prospect restante" e marcou `concluida` com 23
+    // mensagens ainda na fila. Além do selo errado, `concluida` bloqueia o
+    // reagendamento: um lote que morresse no meio ficaria sem saída.
+    const dados = base({
+      prospecting_campaigns: [campanha()],
+      prospecting_sends: [
+        {
+          organization_id: "org-1",
+          campaign_id: "camp-1",
+          prospect_id: "p-001",
+          enviado_em: DENTRO,
+          message_id: "msg-1",
+        },
+        {
+          organization_id: "org-1",
+          campaign_id: "camp-1",
+          prospect_id: "p-002",
+          enviado_em: DENTRO,
+          message_id: null,
+        },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.concluidas).toBe(0);
+    expect(dados.prospecting_campaigns![0]!.status).toBe("ativa");
+    expect(resumo.pulados).toEqual([
+      { campanha: "camp-1", motivo: "aguardando_comprovante" },
+    ]);
   });
 
   it("(h) tick overlapado que perde a reserva NÃO envia", async () => {

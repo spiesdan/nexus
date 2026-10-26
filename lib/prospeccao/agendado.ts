@@ -90,6 +90,11 @@ export type MotivoDoPulo =
   | "template_da_categoria_ausente"
   /** 0288 — um "Enviar agora" está segurando o número (lease de disparo). */
   | "disparo_manual"
+  /**
+   * A lista acabou, mas há reserva sem comprovante: o lote está em voo ou o
+   * envio falhou. Não é "concluída" — a mensagem ainda não chegou.
+   */
+  | "aguardando_comprovante"
   | "sem_mensagem"
   | "sem_prospect_elegivel"
   | "falha_envio"
@@ -294,25 +299,39 @@ export async function processarCampanhasAgendadas(
       // faria o tick reservar nada — a campanha ficaria presa no mesmo ponto.
       const { data: linhasEnviadas } = await admin
         .from("prospecting_sends")
-        .select("prospect_id, campaign_id, enviado_em")
+        .select("prospect_id, campaign_id, enviado_em, message_id")
         .eq("organization_id", campanha.organization_id);
       const todasEnviadas = (linhasEnviadas ?? []) as unknown as Array<{
         prospect_id: string;
         campaign_id: string;
         enviado_em: string;
+        message_id: string | null;
       }>;
       const enviadas = todasEnviadas.filter((l) => l.campaign_id === campanha.id);
       const jaEnviados = new Set(todasEnviadas.map((l) => l.prospect_id));
       const restantes = listaFechada.filter((id) => !jaEnviados.has(id));
 
-      // Não sobra ninguém → a campanha ACABA sozinha (o "pare sozinho").
-      if (restantes.length === 0) {
+      // Reserva sem comprovante não é envio. O ledger nasce com `message_id`
+      // nulo e o comprovante chega DEPOIS de cada mensagem — num "Enviar agora"
+      // longo (28 empresas × 2 min), a campanha ficava `concluida` com 23
+      // mensagens ainda na fila. Pior que o selo errado: `concluida` bloqueia o
+      // reagendamento, então um lote que morresse no meio deixaria a campanha
+      // sem saída. Concluir exige prova de envio de TODAS.
+      const semComprovante = enviadas.filter((l) => !l.message_id).length;
+
+      // Não sobra ninguém → a campanha ACABA sozinha (o "pare sozinho") —
+      // desde que ninguém esteja esperando comprovante.
+      if (restantes.length === 0 && semComprovante === 0) {
         await admin
           .from("prospecting_campaigns")
           .update({ status: "concluida" })
           .eq("id", campanha.id)
           .eq("organization_id", campanha.organization_id);
         resumo.concluidas++;
+        continue;
+      }
+      if (restantes.length === 0) {
+        resumo.pulados.push({ campanha: campanha.id, motivo: "aguardando_comprovante" });
         continue;
       }
 
