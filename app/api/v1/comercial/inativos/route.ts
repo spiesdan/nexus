@@ -3,15 +3,19 @@
  *
  * `?dias=60`: sem compra há ao menos N dias. Só quem JÁ comprou (cancelado
  * não conta como compra); ordenado por score de recuperação.
+ *
+ * A consulta mora em `lib/comercial/inativos.ts` porque a prévia da campanha de
+ * recuperação faz a MESMA pergunta. Duas cópias divergiriam no primeiro filtro
+ * novo (opt-out, contato mesclado) e uma delas mandaria para quem pediu STOP.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { classificarInativo } from "@/lib/comercial/inatividade";
+import { logger } from "@/lib/logger";
+import { listarInativos } from "@/lib/comercial/inativos";
 import { createClient } from "@/lib/supabase/server";
-import { porFatias } from "@/lib/db/por-fatias";
 
 export const dynamic = "force-dynamic";
 
@@ -24,91 +28,20 @@ export async function GET(req: NextRequest): Promise<Response> {
     3650,
     Math.max(1, Number(req.nextUrl.searchParams.get("dias") ?? 60) || 60),
   );
-  const corte = new Date(Date.now() - dias * 86400000).toISOString();
 
   const supabase = await createClient();
-
-  // Última compra por contato (cancelado não é compra). Sem RPC nova: duas
-  // queries simples e o join em código — volume de PME, não de marketplace.
-  const { data: pedidos, error: erroPedidos } = await supabase
-    .from("commercial_orders")
-    .select("contact_id, total_cents, created_at")
-    .eq("organization_id", authz.org.orgId)
-    .neq("status", "cancelado")
-    .not("contact_id", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(5000);
-
-  if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
-
-  const porContato = new Map<string, { ultima: string; total: number; qtd: number }>();
-  for (const p of (pedidos ?? []) as unknown as {
-    contact_id: string;
-    total_cents: number;
-    created_at: string;
-  }[]) {
-    const atual = porContato.get(p.contact_id);
-    if (!atual) {
-      porContato.set(p.contact_id, { ultima: p.created_at, total: p.total_cents, qtd: 1 });
-    } else {
-      atual.total += p.total_cents;
-      atual.qtd += 1;
-    }
+  try {
+    const resultado = await listarInativos(supabase, {
+      organizationId: authz.org.orgId,
+      dias,
+    });
+    return ok(resultado.lista, { requestId });
+  } catch (e) {
+    logger.error("[comercial.inativos] falha ao listar inativos", {
+      requestId,
+      organization_id: authz.org.orgId,
+      erro: e instanceof Error ? e.message : String(e),
+    });
+    return fail("internal_error", "Erro ao listar os clientes inativos.", 500, { requestId });
   }
-
-  const inativos: string[] = [];
-  for (const [contactId, v] of porContato) {
-    if (v.ultima < corte) inativos.push(contactId);
-  }
-  if (inativos.length === 0) return ok([], { requestId });
-
-  // Os ids vão em FATIAS de 100: medido na VPS, 500 UUIDs numa única URL dão
-  // 18.499 bytes e o PostgREST responde `414 URI too long` — que esta rota
-  // devolvia como **500**, com o banco são. Era esse o erro da aba Radar.
-  const { linhas: contatosLidos, falhas } = await porFatias(
-    inativos.slice(0, 500),
-    async (fatia) => {
-      const r = await supabase
-        .from("contacts")
-        .select("id, display_name, name, phone_number")
-        .eq("organization_id", authz.org.orgId)
-        .in("id", fatia);
-      return { linhas: (r.data ?? []) as never[], erro: r.error };
-    },
-  );
-  // Todas as fatias falharam: aí sim não há o que mostrar. Uma só falhar é
-  // perda de pedaço, não motivo para responder 500.
-  if (falhas > 0 && contatosLidos.length === 0) {
-    return fail("internal_error", "Erro ao ler os contatos.", 500, { requestId });
-  }
-  const contatos = contatosLidos;
-
-  const agora = Date.now();
-  const lista = (
-    (contatos ?? []) as unknown as {
-      id: string;
-      display_name: string | null;
-      name: string | null;
-      phone_number: string | null;
-    }[]
-  )
-    .map((c) => {
-      const v = porContato.get(c.id);
-      if (!v) return null;
-      const diasSem = Math.floor((agora - new Date(v.ultima).getTime()) / 86400000);
-      return classificarInativo(
-        {
-          contact_id: c.id,
-          nome: c.display_name ?? c.name ?? c.phone_number ?? "Sem nome",
-          telefone: c.phone_number,
-        },
-        diasSem,
-        v.total,
-        v.qtd,
-      );
-    })
-    .filter((x): x is NonNullable<typeof x> => x !== null)
-    .sort((a, b) => b.score - a.score);
-
-  return ok(lista, { requestId });
 }

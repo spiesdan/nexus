@@ -45,6 +45,7 @@ import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
+import { comoMoeda } from "@/lib/format/moeda";
 import {
   presetsDaSelecao,
   presetSugerido,
@@ -91,6 +92,38 @@ interface PreviaResposta {
   categoria_a_revisar: number;
   varridas: number;
   completa: boolean;
+}
+
+/**
+ * A PRÉVIA DA AUDIÊNCIA INATIVA — quem comprava e parou, com o "X dias" que o
+ * operador escolheu. `elegivel` já cruza telefone E reserva de outra campanha:
+ * a tela só promete o que o POST aceita.
+ */
+interface InativoDaPrevia {
+  contact_id: string;
+  nome: string;
+  telefone: string | null;
+  dias_sem_compra: number;
+  total_historico_cents: number;
+  qtd_pedidos: number;
+  faixa: "atencao" | "morno" | "frio";
+  score: number;
+  com_telefone: boolean;
+  em_campanha: boolean;
+  elegivel: boolean;
+}
+
+interface PreviaInativos {
+  dias_sem_compra: number;
+  total: number;
+  com_telefone: number;
+  sem_telefone: number;
+  em_campanha: number;
+  elegiveis: number;
+  varridos: number;
+  completa: boolean;
+  resumo: string;
+  linhas: InativoDaPrevia[];
 }
 
 interface Janela {
@@ -169,6 +202,18 @@ export function CampanhaWizard({
   const [nome, setNome] = React.useState("");
   const [fonte, setFonte] = React.useState<"base" | "busca" | "ambas">("base");
 
+  // ── Audiência ────────────────────────────────────────────────────────────
+  /**
+   * O que a campanha faz. `empresas` é a garimpagem de sempre; `inativos` é a
+   * recuperação de quem JÁ comprou e parou. As duas terminam no mesmo motor e
+   * no mesmo assistente — o que muda é de onde sai a lista.
+   */
+  const [publicoAlvo, setPublicoAlvo] = React.useState<"empresas" | "inativos">("empresas");
+  const [diasInatividade, setDiasInatividade] = React.useState("90");
+  const [previaInativos, setPreviaInativos] = React.useState<PreviaInativos | null>(null);
+  const [previaInativosDias, setPreviaInativosDias] = React.useState<number | null>(null);
+  const [carregandoInativos, setCarregandoInativos] = React.useState(false);
+
   // ── Cidades ──────────────────────────────────────────────────────────────
   const [opcoes, setOpcoes] = React.useState<CidadeOpcao[] | null>(null);
   const [carregandoOpcoes, setCarregandoOpcoes] = React.useState(true);
@@ -206,6 +251,15 @@ export function CampanhaWizard({
   const [modelosPorCategoria, setModelosPorCategoria] = React.useState<
     Record<string, { chave: string; valores: Record<string, string> }>
   >({});
+  /**
+   * O bind ÚNICO da campanha de recuperação. Cliente não tem categoria de
+   * garimpagem, então não há "um modelo por categoria": há um modelo, e o
+   * motor o usa como bind legado (`templates_por_categoria` vazio).
+   */
+  const [modeloUnico, setModeloUnico] = React.useState<{
+    chave: string;
+    valores: Record<string, string>;
+  }>({ chave: "", valores: {} });
   /**
    * Qual categoria está com os parâmetros abertos. Uma por vez: um recorte de
    * 30 categorias não pode renderizar 30 formulários de slot — e o operador
@@ -331,6 +385,19 @@ export function CampanhaWizard({
   );
   const previaValida = previa !== null && previaChave === chaveSelecao;
 
+  /**
+   * A prévia inativa vale para o "X" que está no campo AGORA. Mudar de 90 para
+   * 60 dias sem pedir de novo deixaria a tela prometendo um público que não é
+   * o do recorte escolhido — o mesmo defeito que a prévia da base já evita.
+   */
+  const previaInativaValida =
+    previaInativos !== null &&
+    previaInativosDias === (Number(diasInatividade) || 0);
+  const contatosElegiveis = React.useMemo(
+    () => (previaInativos?.linhas ?? []).filter((l) => l.elegivel),
+    [previaInativos],
+  );
+
   const cidadesFiltradas = React.useMemo(() => {
     const termo = buscaCidade.trim().toLowerCase();
     const selecionadas = new Set(cidadesSelecionadas.map(chaveDaCidade));
@@ -433,6 +500,25 @@ export function CampanhaWizard({
     ];
   });
 
+  /** O modelo único da campanha de recuperação (sem categoria). */
+  function modeloUnicoDaCampanha(): ModeloDoCanal | null {
+    if (!modeloUnico.chave) return null;
+    return modelos.find((m) => chaveDoModelo(m) === modeloUnico.chave && m.aceito) ?? null;
+  }
+  const modeloDoUnico = modeloUnicoDaCampanha();
+  const valoresDoUnicoComExemplo = interpolarValoresDoTemplate(modeloUnico.valores, {
+    nome: "Maria Silva",
+    cidade: null,
+    categoria: null,
+  });
+  const previewModeloUnico = modeloDoUnico
+    ? renderTemplateBody(modeloDoUnico.components, valoresDoUnicoComExemplo, {
+        name: modeloDoUnico.name,
+        language: modeloDoUnico.language,
+        parameterFormat: modeloDoUnico.parameterFormat,
+      })
+    : "";
+
   /** A categoria que a prévia lateral ilustra: a primeira configurada. */
   const categoriaDaPrevia =
     categoriasMarcadas.find((busca) => modeloDaCategoria(busca) !== null) ?? null;
@@ -454,6 +540,8 @@ export function CampanhaWizard({
         parameterFormat: modeloDaPrevia.parameterFormat,
       })
     : "";
+  /** O que a lateral mostra no modo modelo: o bind único ou o da categoria. */
+  const previewModeloEmUso = publicoAlvo === "inativos" ? previewModeloUnico : previewModelo;
   const podeTexto = canais?.pode_texto ?? false;
   const podeTemplate = canais?.pode_template ?? false;
 
@@ -572,10 +660,55 @@ export function CampanhaWizard({
     }
   }
 
+  /**
+   * A prévia dos inativos pergunta ao servidor quem comprava e parou há X dias.
+   * Ela NÃO reserva contato: o POST da campanha é quem fecha a lista, e só os
+   * `elegivel` daqui viajam. Sem isso, a tela prometeria gente sem telefone ou
+   * já reservada por outra campanha — e o operador descobriria no 409.
+   */
+  async function verInativos() {
+    const dias = Number(diasInatividade);
+    if (!Number.isFinite(dias) || dias < 1 || dias > 3650) {
+      toast.error(t("Informe entre 1 e 3650 dias sem compra."));
+      return;
+    }
+    setCarregandoInativos(true);
+    try {
+      const resposta = await apiClient.post<{ data?: PreviaInativos }>(
+        "/api/v1/prospecting/campaigns/recuperacao/preview",
+        { dias_sem_compra: Math.round(dias) },
+      );
+      const corpo = resposta?.data;
+      if (!corpo) throw new Error(t("A prévia voltou vazia."));
+      setPreviaInativos(corpo);
+      setPreviaInativosDias(corpo.dias_sem_compra);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setCarregandoInativos(false);
+    }
+  }
+
   function validarPublico(): boolean {
     if (nome.trim().length < 2 || nome.trim().length > 120) {
       toast.error(t("O nome da campanha precisa ter entre 2 e 120 caracteres."));
       return false;
+    }
+    if (publicoAlvo === "inativos") {
+      const dias = Number(diasInatividade);
+      if (!Number.isFinite(dias) || dias < 1 || dias > 3650) {
+        toast.error(t("Informe entre 1 e 3650 dias sem compra."));
+        return false;
+      }
+      if (!previaInativaValida) {
+        toast.error(t("Veja os clientes inativos antes de continuar."));
+        return false;
+      }
+      if (contatosElegiveis.length === 0) {
+        toast.error(t("Nenhum cliente inativo pode receber esta campanha agora."));
+        return false;
+      }
+      return true;
     }
     if (cidadesSelecionadas.length === 0) {
       toast.error(t("Escolha ao menos uma cidade da lista."));
@@ -598,6 +731,27 @@ export function CampanhaWizard({
 
   function validarMensagens(): boolean {
     if (modoEfetivo === "template") {
+      if (publicoAlvo === "inativos") {
+        const modelo = modeloUnicoDaCampanha();
+        if (!modelo) {
+          toast.error(t("Escolha o modelo oficial da campanha."));
+          return false;
+        }
+        const faltando = modelo.slots.filter(
+          (s) => !(modeloUnico.valores[s.slotKey] ?? "").trim(),
+        );
+        if (faltando.length > 0) {
+          toast.error(
+            t(
+              `Preencha os parâmetros do modelo: ${faltando
+                .map((s) => `{{${s.key}}}`)
+                .join(", ")}.`,
+            ),
+          );
+          return false;
+        }
+        return validarAgenda();
+      }
       const semModelo = categoriasMarcadas.filter(
         (busca) => modeloDaCategoria(busca) === null,
       );
@@ -637,6 +791,11 @@ export function CampanhaWizard({
       toast.error(t("Cada mensagem pode ter no máximo 4000 caracteres."));
       return false;
     }
+    return validarAgenda();
+  }
+
+  /** As travas da agenda valem igual para garimpo e recuperação. */
+  function validarAgenda(): boolean {
     if (!periodoValido) {
       toast.error(t("A data final não pode ser anterior à inicial."));
       return false;
@@ -664,7 +823,7 @@ export function CampanhaWizard({
       toast.error(t("O intervalo entre mensagens precisa ficar entre 1s e 10min."));
       return false;
     }
-    if (recorrencia) {
+    if (recorrencia && publicoAlvo === "empresas") {
       const valor = Number(recorrencia);
       if (!Number.isFinite(valor) || valor < 7 || valor > 365) {
         toast.error(t("A recorrência precisa ficar entre 7 e 365 dias."));
@@ -695,8 +854,9 @@ export function CampanhaWizard({
       if (!validarPublico()) return;
       // Primeira entrada no passo 2: nasce com o padrão da categoria, se ele
       // existir. Só quando o operador ainda não escreveu nada — texto digitado
-      // nunca é sobrescrito por padrão.
-      if (preenchidas.length === 0 && presetAplicado === null) {
+      // nunca é sobrescrito por padrão. A recuperação não tem categoria, então
+      // não há padrão a sugerir.
+      if (publicoAlvo === "empresas" && preenchidas.length === 0 && presetAplicado === null) {
         const sugerido = presetSugerido(presets, categoriasMarcadas);
         if (sugerido) {
           setMensagens(linhasDeMensagem(sugerido.mensagens));
@@ -759,6 +919,22 @@ export function CampanhaWizard({
   }
 
   /**
+   * O modelo ÚNICO da recuperação. Trocar de modelo zera os valores pelo mesmo
+   * motivo do modelo por categoria: o slot 1 novo não pode herdar o texto do
+   * slot 1 antigo sem ninguém revisar.
+   */
+  function escolherModeloUnico(chave: string) {
+    setModeloUnico((atual) => (atual.chave === chave ? atual : { chave, valores: {} }));
+  }
+
+  function trocarValorDoUnico(slotKey: string, valor: string) {
+    setModeloUnico((atual) => ({
+      ...atual,
+      valores: { ...atual.valores, [slotKey]: valor },
+    }));
+  }
+
+  /**
    * Replica o modelo e os valores de uma categoria para as demais.
    *
    * É o atalho para o caso comum (o mesmo modelo serve para oficina, posto e
@@ -793,12 +969,62 @@ export function CampanhaWizard({
       setPasso(1);
       return;
     }
-    if (modoEfetivo === "template" && bindsSelecionados.length !== categoriasMarcadas.length) {
+    if (
+      publicoAlvo === "empresas" &&
+      modoEfetivo === "template" &&
+      bindsSelecionados.length !== categoriasMarcadas.length
+    ) {
       setPasso(1);
       return;
     }
     setCriando(true);
     try {
+      const agenda = {
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        janelas: janelas.map((j) => ({ ...j, dias })),
+        limite_diario: Math.min(500, Math.max(1, limiteNumero)),
+        espaco_ms: espacoMs,
+      };
+
+      /**
+       * A RECUPERAÇÃO usa a rota própria: a audiência é `contatos` e o
+       * recorte é o histórico de compra, não cidade/categoria. Ela nasce
+       * ATIVA e agendada — o formulário É a agenda — e leva só os contatos
+       * `elegivel` da prévia (telefone válido e fora de outra campanha).
+       */
+      if (publicoAlvo === "inativos") {
+        const modelo = modeloUnicoDaCampanha();
+        const criada = await apiClient.post<{ data?: { id?: string } }>(
+          "/api/v1/prospecting/campaigns/recuperacao",
+          {
+            nome: nome.trim(),
+            contato_ids: contatosElegiveis.map((l) => l.contact_id),
+            ...(modoEfetivo === "template" && modelo
+              ? {
+                  mensagem_tipo: "template",
+                  template_name: modelo.name,
+                  template_language: modelo.language,
+                  template_contract_hash: modelo.contractHash,
+                  template_values: modeloUnico.valores,
+                }
+              : { mensagem_tipo: "texto", mensagens: preenchidas }),
+            ...agenda,
+          },
+        );
+        const id = criada?.data?.id;
+        if (!id) throw new Error(t("A campanha foi criada sem id."));
+
+        // O tick do motor já a encontra agendada: nada de "executar" aqui.
+        toast.success(
+          t(
+            "Campanha de recuperação criada e agendada. Acompanhe o envio no controle.",
+          ),
+        );
+        aoConcluir(id);
+        return;
+      }
+
       const criada = await apiClient.post<{ data?: { id?: string } }>(
         "/api/v1/prospecting/campaigns",
         {
@@ -822,11 +1048,7 @@ export function CampanhaWizard({
                 mensagem_tipo: "texto",
                 mensagens: preenchidas,
               }),
-          data_inicio: dataInicio,
-          data_fim: dataFim,
-          janelas: janelas.map((j) => ({ ...j, dias })),
-          limite_diario: Math.min(500, Math.max(1, limiteNumero)),
-          espaco_ms: espacoMs,
+          ...agenda,
           ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
         },
       );
@@ -879,6 +1101,69 @@ export function CampanhaWizard({
         {passo === 0 && (
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-4">
+              {/* O QUE a campanha faz — a primeira decisão da tela. */}
+              <div className="space-y-2">
+                <Label>{t("O que a campanha faz?")}</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <FonteCard
+                    ativo={publicoAlvo === "empresas"}
+                    titulo={t("Prospectar empresas")}
+                    descricao={t("Garimpa empresas que ainda não são clientes.")}
+                    onClick={() => setPublicoAlvo("empresas")}
+                  />
+                  <FonteCard
+                    ativo={publicoAlvo === "inativos"}
+                    titulo={t("Recuperar clientes inativos")}
+                    descricao={t("Quem já comprou e parou de comprar há X dias.")}
+                    onClick={() => setPublicoAlvo("inativos")}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
+                <Input
+                  id="wiz-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  maxLength={120}
+                  placeholder={
+                    publicoAlvo === "inativos"
+                      ? t("Recuperação — clientes sem compra há 90 dias")
+                      : t("Oficinas — Norte SC")
+                  }
+                />
+              </div>
+
+              {publicoAlvo === "inativos" ? (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="wiz-dias-inativo">
+                      {t("Sem comprar há pelo menos (dias)")}
+                    </Label>
+                    <Input
+                      id="wiz-dias-inativo"
+                      type="number"
+                      min={1}
+                      max={3650}
+                      value={diasInatividade}
+                      onChange={(e) => setDiasInatividade(e.target.value)}
+                      aria-describedby="wiz-dias-inativo-ajuda"
+                    />
+                    <p id="wiz-dias-inativo-ajuda" className="text-xs text-muted-foreground">
+                      {t(
+                        "Conta a partir da última compra. Pedido cancelado não é compra.",
+                      )}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "A campanha usa o mesmo motor da prospecção: mensagens em rotação, janelas, limite diário e intervalo anti-ban.",
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <>
               <div className="space-y-2">
                 <Label>{t("De onde vem o público?")}</Label>
                 <div className="grid gap-2 sm:grid-cols-3">
@@ -901,17 +1186,6 @@ export function CampanhaWizard({
                     onClick={() => setFonte("ambas")}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="wiz-nome">{t("Nome da campanha")}</Label>
-                <Input
-                  id="wiz-nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  maxLength={120}
-                  placeholder={t("Oficinas — Norte SC")}
-                />
               </div>
 
               <div className="space-y-2">
@@ -1118,9 +1392,120 @@ export function CampanhaWizard({
                   )}
                 </div>
               </div>
+                </>
+              )}
             </div>
 
             <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+              {publicoAlvo === "inativos" ? (
+                <Card className="space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold">{t("Clientes que vão receber")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("A prévia não reserva nem envia nada.")}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void verInativos()}
+                      disabled={carregandoInativos}
+                    >
+                      {carregandoInativos ? t("Verificando…") : t("Ver clientes")}
+                    </Button>
+                  </div>
+
+                  {!previaInativos ? (
+                    <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                      {t(
+                        "Escolha há quantos dias o cliente não compra e clique em Ver clientes.",
+                      )}
+                    </div>
+                  ) : !previaInativaValida ? (
+                    <div className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                      {t("O recorte de dias mudou. Atualize a prévia para ver o público atual.")}
+                    </div>
+                  ) : contatosElegiveis.length === 0 ? (
+                    <div className="space-y-2 rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm text-warning-fg">
+                      <p className="font-medium">
+                        {t("Nenhum cliente inativo pode receber esta campanha agora.")}
+                      </p>
+                      <p>
+                        {t(
+                          `São ${previaInativos.total} sem compra no período, mas ${
+                            previaInativos.sem_telefone
+                          } sem WhatsApp e ${previaInativos.em_campanha} em outra campanha.`,
+                        )}
+                      </p>
+                      <p>
+                        {t(
+                          "Tente um período maior ou espere as outras campanhas terminarem.",
+                        )}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-end justify-between gap-2">
+                        <p className="text-2xl font-semibold tabular-nums">
+                          {previaInativos.elegiveis}
+                        </p>
+                        <Badge variant="success">{t("prontos para o disparo")}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{previaInativos.resumo}</p>
+                      <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+                        {contatosElegiveis.slice(0, 30).map((linha) => (
+                          <li key={linha.contact_id} className="rounded-md border p-2 text-sm">
+                            <p className="truncate font-medium">{linha.nome}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {[
+                                `${linha.dias_sem_compra} ${t("dias sem comprar")}`,
+                                `${linha.qtd_pedidos} ${t("pedidos")}`,
+                                comoMoeda(linha.total_historico_cents, "BRL"),
+                                linha.telefone ?? t("sem WhatsApp"),
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                      {contatosElegiveis.length > 30 && (
+                        <p className="text-xs text-muted-foreground">
+                          {t(`Mostrando 30 de ${contatosElegiveis.length}.`)}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        {previaInativos.sem_telefone > 0 && (
+                          <span>
+                            {previaInativos.sem_telefone} {t("sem WhatsApp")}
+                          </span>
+                        )}
+                        {previaInativos.em_campanha > 0 && (
+                          <span>
+                            {previaInativos.em_campanha} {t("em outra campanha")}
+                          </span>
+                        )}
+                        {!previaInativos.completa && (
+                          <span>
+                            {t("lista limitada a 500 clientes por campanha")}
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void verInativos()}
+                        disabled={carregandoInativos}
+                      >
+                        {t("Atualizar prévia")}
+                      </Button>
+                    </>
+                  )}
+                </Card>
+              ) : (
               <Card className="space-y-3 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <div>
@@ -1232,6 +1617,7 @@ export function CampanhaWizard({
                   </p>
                 )}
               </Card>
+              )}
             </aside>
           </div>
         )}
@@ -1319,7 +1705,7 @@ export function CampanhaWizard({
                     ))}
                   </select>
                 </div>
-                {presetsErro && (
+                {presetsErro && publicoAlvo === "empresas" && (
                   <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
                     {t(
                       "Não foi possível carregar as mensagens salvas por categoria. Escreva o texto abaixo — a campanha funciona igual.",
@@ -1408,6 +1794,109 @@ export function CampanhaWizard({
                   </Button>
                 )}
               </div>
+              ) : publicoAlvo === "inativos" ? (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold">{t("Modelo aprovado")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          "Um modelo só: cliente não tem categoria de garimpagem. O texto e os parâmetros vêm do espelho local, sincronizado com a Meta.",
+                        )}
+                      </p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" asChild>
+                      <Link href="/app/connections">{t("Conexões")}</Link>
+                    </Button>
+                  </div>
+
+                  {modelos.length === 0 && (
+                    <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                      {canais?.oficial_conectado
+                        ? t(
+                            "Nenhum modelo aprovado no espelho. Sincronize os modelos em Conexões.",
+                          )
+                        : t(
+                            "Nenhum modelo disponível. Conecte um número oficial em Conexões para criar e aprovar modelos.",
+                          )}
+                    </p>
+                  )}
+
+                  <div className="space-y-2 rounded-lg border p-2.5">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="wiz-modelo-unico">{t("Modelo da campanha")}</Label>
+                      <select
+                        id="wiz-modelo-unico"
+                        value={modeloUnico.chave}
+                        onChange={(e) => escolherModeloUnico(e.target.value)}
+                        className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                        aria-label={t("Escolher modelo oficial")}
+                      >
+                        <option value="">{t("Escolher um modelo…")}</option>
+                        {modelos.map((modelo) => (
+                          <option
+                            key={chaveDoModelo(modelo)}
+                            value={chaveDoModelo(modelo)}
+                            disabled={!modelo.aceito}
+                          >
+                            {modelo.name} ({modelo.language})
+                            {modelo.aceito ? "" : ` — ${modelo.motivo ?? modelo.status}`}
+                          </option>
+                        ))}
+                      </select>
+                      {!modeloDoUnico && (
+                        <p className="text-xs text-muted-foreground">
+                          {t("Sem modelo — a campanha não pode ser ativada sem ele.")}
+                        </p>
+                      )}
+                    </div>
+
+                    {modeloDoUnico && (
+                      <div className="space-y-2 border-t pt-2">
+                        {modeloDoUnico.previews.length > 0 && (
+                          <div className="space-y-1 rounded-lg border bg-muted/20 p-3 text-sm">
+                            {modeloDoUnico.previews.map((p) => (
+                              <div key={`${p.onde}-${p.text}`}>
+                                <p className="text-xs font-medium text-muted-foreground uppercase">
+                                  {p.onde}
+                                </p>
+                                <p className="whitespace-pre-wrap">{p.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            "Cada campo aceita texto fixo ou as variáveis {{nome}} e {{primeiro_nome}} — trocadas por cliente no envio.",
+                          )}
+                        </p>
+                        {modeloDoUnico.slots.map((slot) => (
+                            <div key={slot.slotKey} className="space-y-1.5">
+                              <Label htmlFor={`wiz-slot-unico-${slot.slotKey}`}>
+                                {slot.onde} · {t("parâmetro")} {slot.key}
+                              </Label>
+                              <Input
+                                id={`wiz-slot-unico-${slot.slotKey}`}
+                                value={modeloUnico.valores[slot.slotKey] ?? ""}
+                                onChange={(e) => trocarValorDoUnico(slot.slotKey, e.target.value)}
+                                placeholder={slot.contexto || t("Valor do parâmetro")}
+                                maxLength={4000}
+                              />
+                            </div>
+                          ))}
+                        <div className="space-y-1 rounded-lg border bg-muted/20 p-3">
+                          <p className="text-xs font-medium text-muted-foreground uppercase">
+                            {t("Prévia para um cliente")}
+                          </p>
+                          <p className="whitespace-pre-wrap text-sm">
+                            {previewModeloUnico ||
+                              t("Preencha os parâmetros para ver o texto que o cliente vai ler.")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-3 rounded-lg border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1640,7 +2129,9 @@ export function CampanhaWizard({
                     </div>
                   ))}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div
+                  className={`grid gap-3 ${publicoAlvo === "inativos" ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}
+                >
                   <div className="space-y-1.5">
                     <Label htmlFor="wiz-limite">{t("Limite por dia")}</Label>
                     <Input
@@ -1668,18 +2159,20 @@ export function CampanhaWizard({
                       {t("60s é o padrão seguro. Número em aquecimento: 120s ou mais.")}
                     </p>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
-                    <Input
-                      id="wiz-recorrencia"
-                      type="number"
-                      min={7}
-                      max={365}
-                      value={recorrencia}
-                      onChange={(e) => setRecorrencia(e.target.value)}
-                      placeholder={t("Opcional")}
-                    />
-                  </div>
+                  {publicoAlvo === "empresas" && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="wiz-recorrencia">{t("Repetir a cada (dias)")}</Label>
+                      <Input
+                        id="wiz-recorrencia"
+                        type="number"
+                        min={7}
+                        max={365}
+                        value={recorrencia}
+                        onChange={(e) => setRecorrencia(e.target.value)}
+                        placeholder={t("Opcional")}
+                      />
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t(
@@ -1697,19 +2190,24 @@ export function CampanhaWizard({
                     : t("Prévia da primeira mensagem")}
                 </p>
                 <div className="whitespace-pre-wrap rounded-lg border bg-muted/20 p-3 text-sm">
-                  {(modoEfetivo === "template" ? previewModelo : previewMensagem) ||
+                  {(modoEfetivo === "template" ? previewModeloEmUso : previewMensagem) ||
                     (modoEfetivo === "template"
                       ? t("Escolha um modelo e preencha os parâmetros.")
                       : t("A prévia aparece quando você escrever a primeira mensagem."))}
                 </div>
-                {modoEfetivo === "template" && categoriaDaPrevia && rotulosSelecionados.length > 1 && (
+                {modoEfetivo === "template" &&
+                  publicoAlvo === "empresas" &&
+                  categoriaDaPrevia &&
+                  rotulosSelecionados.length > 1 && (
                   <p className="text-xs text-muted-foreground">
                     {t(`Exemplo da categoria ${rotuloDaCategoria(categoriaDaPrevia)}.`)}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
                   {modoEfetivo === "template"
-                    ? t("As variáveis são trocadas por empresa no envio.")
+                    ? publicoAlvo === "inativos"
+                      ? t("As variáveis são trocadas por cliente no envio.")
+                      : t("As variáveis são trocadas por empresa no envio.")
                     : t("A variável {{primeiro_nome}} é trocada pelo primeiro nome do contato.")}
                 </p>
               </Card>
@@ -1717,9 +2215,13 @@ export function CampanhaWizard({
                 <p className="font-semibold">{t("Resumo da agenda")}</p>
                 <p className="text-muted-foreground">
                   {modoEfetivo === "template"
-                    ? bindsSelecionados.length > 0
-                      ? t(`${bindsSelecionados.length} modelos — um por categoria`)
-                      : t("Escolha um modelo para cada categoria")
+                    ? publicoAlvo === "inativos"
+                      ? modeloDoUnico
+                        ? t("1 modelo aprovado")
+                        : t("Escolha o modelo oficial")
+                      : bindsSelecionados.length > 0
+                        ? t(`${bindsSelecionados.length} modelos — um por categoria`)
+                        : t("Escolha um modelo para cada categoria")
                     : t(`${preenchidas.length} mensagens em rotação`)}
                 </p>
                 <p className="text-muted-foreground">
@@ -1747,50 +2249,85 @@ export function CampanhaWizard({
                   <dt className="text-xs text-muted-foreground">{t("Nome")}</dt>
                   <dd className="font-medium">{nome.trim()}</dd>
                 </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">{t("Fonte do público")}</dt>
-                  <dd className="font-medium">
-                    {fonte === "base"
-                      ? t("Minha base")
-                      : fonte === "busca"
-                        ? t("Busca no Google")
-                        : t("Base + busca")}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">{t("Cidades")}</dt>
-                  <dd>{cidadesSelecionadas.map(rotuloDaCidade).join(", ") || "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">{t("Categorias")}</dt>
-                  <dd>{rotulosSelecionados.map((c) => c.rotulo).join(", ") || "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">{t("Público na prévia")}</dt>
-                  <dd>
-                    {fonte === "busca"
-                      ? t("Definido pela busca")
-                      : previa
-                        ? `${previa.total} ${t("empresas")}`
-                        : "—"}
-                  </dd>
-                </div>
+                {publicoAlvo === "inativos" ? (
+                  <>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Público")}</dt>
+                      <dd className="font-medium">
+                        {t(`Clientes sem compra há ${previaInativos?.dias_sem_compra ?? 0}+ dias`)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Clientes na prévia")}</dt>
+                      <dd>
+                        {t(`${contatosElegiveis.length} prontos para receber`)}
+                        {(previaInativos?.sem_telefone ?? 0) + (previaInativos?.em_campanha ?? 0) >
+                        0
+                          ? ` · ${t(
+                              `fora da lista: ${previaInativos?.sem_telefone ?? 0} sem WhatsApp e ${
+                                previaInativos?.em_campanha ?? 0
+                              } em outra campanha`,
+                            )}`
+                          : ""}
+                      </dd>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Fonte do público")}</dt>
+                      <dd className="font-medium">
+                        {fonte === "base"
+                          ? t("Minha base")
+                          : fonte === "busca"
+                            ? t("Busca no Google")
+                            : t("Base + busca")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Cidades")}</dt>
+                      <dd>{cidadesSelecionadas.map(rotuloDaCidade).join(", ") || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Categorias")}</dt>
+                      <dd>{rotulosSelecionados.map((c) => c.rotulo).join(", ") || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">{t("Público na prévia")}</dt>
+                      <dd>
+                        {fonte === "busca"
+                          ? t("Definido pela busca")
+                          : previa
+                            ? `${previa.total} ${t("empresas")}`
+                            : "—"}
+                      </dd>
+                    </div>
+                  </>
+                )}
                 <div>
                   <dt className="text-xs text-muted-foreground">
-                    {modoEfetivo === "template" ? t("Modelos por categoria") : t("Mensagens")}
+                    {modoEfetivo === "template"
+                      ? publicoAlvo === "inativos"
+                        ? t("Modelo")
+                        : t("Modelos por categoria")
+                      : t("Mensagens")}
                   </dt>
                   <dd>
                     {modoEfetivo === "template"
-                      ? rotulosSelecionados
-                          .map(({ busca, rotulo }) => {
-                            const modelo = modeloDaCategoria(busca);
-                            return `${rotulo}: ${
-                              modelo
-                                ? `${modelo.name} (${modelo.language})`
-                                : t("sem modelo")
-                            }`;
-                          })
-                          .join(" · ")
+                      ? publicoAlvo === "inativos"
+                        ? modeloDoUnico
+                          ? `${modeloDoUnico.name} (${modeloDoUnico.language})`
+                          : t("sem modelo")
+                        : rotulosSelecionados
+                            .map(({ busca, rotulo }) => {
+                              const modelo = modeloDaCategoria(busca);
+                              return `${rotulo}: ${
+                                modelo
+                                  ? `${modelo.name} (${modelo.language})`
+                                  : t("sem modelo")
+                              }`;
+                            })
+                            .join(" · ")
                       : t(`${preenchidas.length} em rotação`)}
                   </dd>
                 </div>
@@ -1816,11 +2353,19 @@ export function CampanhaWizard({
               </dl>
             </Card>
             <Card className="border-info/40 bg-info-bg p-4 text-sm text-info-fg">
-              <p className="font-medium">{t("Criar não envia mensagem.")}</p>
+              <p className="font-medium">
+                {publicoAlvo === "inativos"
+                  ? t("Criar já agenda a recuperação.")
+                  : t("Criar não envia mensagem.")}
+              </p>
               <p className="mt-1 opacity-90">
-                {t(
-                  "Na próxima tela você confere as empresas e escolhe entre enviar agora ou agendar. A lista de empresas só é reservada quando você agenda.",
-                )}
+                {publicoAlvo === "inativos"
+                  ? t(
+                      "A campanha nasce ativa e a lista de clientes é reservada para ela. O envio respeita as janelas, o limite diário e o intervalo anti-ban — acompanhe pelo controle da campanha.",
+                    )
+                  : t(
+                      "Na próxima tela você confere as empresas e escolhe entre enviar agora ou agendar. A lista de empresas só é reservada quando você agenda.",
+                    )}
               </p>
             </Card>
           </div>
@@ -1846,7 +2391,11 @@ export function CampanhaWizard({
               </Button>
             ) : (
               <Button type="button" onClick={() => void criar()} disabled={criando}>
-                {criando ? t("Criando…") : t("Criar campanha")}
+                {criando
+                  ? t("Criando…")
+                  : publicoAlvo === "inativos"
+                    ? t("Criar e agendar")
+                    : t("Criar campanha")}
               </Button>
             )}
           </div>
