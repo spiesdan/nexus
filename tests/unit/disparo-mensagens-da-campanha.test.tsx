@@ -130,3 +130,66 @@ describe("Disparo — mensagens que vieram da campanha", () => {
     ).toBe("Texto que a pessoa ajustou");
   });
 });
+
+/**
+ * O RITMO DA CAMPANHA CHEGA AO DISPARO (0287).
+ *
+ * A campanha passou a declarar o intervalo entre mensagens na criação. Se o
+ * "Enviar agora" ignorasse esse número, o operador que escolheu 2min na tela de
+ * criação receberia 60s aqui — e mandaria no dobro da velocidade que escolheu.
+ */
+describe("Disparo — o intervalo que a campanha já tem", () => {
+  it("o campo abre com o intervalo da campanha, não com o padrão", () => {
+    render(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Oi"]}
+        agendaInicial={{ espaco_ms: 120_000 }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Intervalo (s)") as HTMLInputElement).value).toBe("120");
+  });
+
+  it("sem intervalo salvo, o padrão continua sendo o anti-ban", () => {
+    render(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Oi"]}
+      />,
+    );
+
+    expect((screen.getByLabelText("Intervalo (s)") as HTMLInputElement).value).toBe("60");
+  });
+
+  it("campanha que chega DEPOIS da montagem também manda o intervalo", () => {
+    const { rerender } = render(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto={false}
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={[]}
+      />,
+    );
+
+    rerender(
+      <DialogoDisparo
+        ids={["prospect-1"]}
+        aberto
+        onFechar={() => {}}
+        onConcluido={() => {}}
+        mensagensIniciais={["Oi"]}
+        agendaInicial={{ espaco_ms: 180_000 }}
+      />,
+    );
+
+    expect((screen.getByLabelText("Intervalo (s)") as HTMLInputElement).value).toBe("180");
+  });
+});

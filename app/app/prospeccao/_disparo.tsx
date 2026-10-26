@@ -101,6 +101,18 @@ const OPCOES_DE_MENSAGEM = 3;
 /** O padrão do campo de intervalo, em segundos — a fonte é o anti-ban. */
 const SEGUNDOS_PADRAO = ESPACO_ANTIBAN_MS / 1000;
 
+/**
+ * O intervalo que o campo mostra: o da CAMPANHA quando ela já tem um, o padrão
+ * anti-ban quando não. Sem isto, abrir "Enviar agora" numa campanha de 2min
+ * oferecia 60s — e o operador que confia na tela mandava no dobro da velocidade
+ * que escolheu na criação.
+ */
+function segundosDoIntervalo(ms: number | null | undefined): string {
+  const bruto = typeof ms === "number" && Number.isFinite(ms) ? ms : ESPACO_ANTIBAN_MS;
+  const preso = Math.min(ESPACO_MAXIMO_MS, Math.max(1000, bruto));
+  return String(Math.round(preso / 1000));
+}
+
 interface ResultadoDoEnvio {
   enviados: number;
   falhas: number;
@@ -219,6 +231,8 @@ export function DialogoDisparo({
     data_inicio?: string | null;
     data_fim?: string | null;
     limite_diario?: number | null;
+    /** 0287 — o ritmo que a campanha já tem, para o campo abrir com ele. */
+    espaco_ms?: number | null;
     janelas?: Array<{ inicio: string; fim: string; dias?: number[] }> | null;
   } | null;
   /**
@@ -253,7 +267,7 @@ export function DialogoDisparo({
   // na hora); disparo frio em massa é outra coisa, e é aqui que o número
   // queima. Quem quiser mais rápido muda o campo — mas o padrão seguro é o
   // que sai da caixa.
-  const [espaco, setEspaco] = React.useState(String(SEGUNDOS_PADRAO));
+  const [espaco, setEspaco] = React.useState(() => segundosDoIntervalo(agendaInicial?.espaco_ms));
   const [plano, setPlano] = React.useState<Plano | null>(null);
   const [resultado, setResultado] = React.useState<ResultadoDoEnvio | null>(null);
   const [ocupado, setOcupado] = React.useState(false);
@@ -292,6 +306,7 @@ export function DialogoDisparo({
     inicio: agendaInicial?.data_inicio ?? null,
     fim: agendaInicial?.data_fim ?? null,
     limite: agendaInicial?.limite_diario ?? null,
+    espaco: agendaInicial?.espaco_ms ?? null,
     janelas: agendaInicial?.janelas ?? null,
   });
   const origemSincronizada = React.useRef<string | null>(null);
@@ -300,6 +315,7 @@ export function DialogoDisparo({
     origemSincronizada.current = assinaturaDaOrigem;
     setMensagens(caixasDeMensagem(mensagensIniciais));
     setLimite(String(agendaInicial?.limite_diario ?? 50));
+    setEspaco(segundosDoIntervalo(agendaInicial?.espaco_ms));
     setDataInicio(agendaInicial?.data_inicio || diaLocal());
     setDataFim(agendaInicial?.data_fim || diaLocal(7));
     setJanelas(janelasDe(agendaInicial));
