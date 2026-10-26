@@ -89,12 +89,11 @@ test("jornada 5 (financeiro) — faturar gera título, receber baixa e conciliar
   });
   await linha.getByRole("button", { name: "Detalhe" }).click();
   await page.getByLabel("Valor recebido").fill("49,90");
-  // O assistente flutuante é fixo no canto inferior direito (z-40) e, com a
-  // linha expandida, cai POR CIMA do botão: `click` falha no hit-test e
-  // `force:true` ainda dispara nas coordenadas — o avatar abre o diálogo e o
-  // "Receber" nunca recebe o evento (medido). `dispatchEvent` entrega o
-  // clique direto no botão, é o caminho honesto aqui.
-  await page.getByRole("button", { name: "Receber", exact: true }).dispatchEvent("click");
+  // O assistente não mora mais no canto inferior direito: o gatilho subiu
+  // para a TopBar e o painel abre à direita, abaixo dela. O "Receber" da
+  // linha expandida deixou de ter um avatar fixo por cima, então o clique
+  // normal da Playwright (com hit-test) é o caminho honesto.
+  await page.getByRole("button", { name: "Receber", exact: true }).click();
 
   const toast = page
     .locator("[data-sonner-toast]")

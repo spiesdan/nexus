@@ -156,16 +156,11 @@
      curto (perto da base) + queda longa (distância): o olho lê profundidade
      real em vez de um halo. Tinta fria (24,25,37) para casar com o canvas
      cinza-frio. Espelhado idêntico em `[data-theme="light"]`. */
-  --shadow-xs:
-    rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
-  --shadow-sm:
-    rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
-  --shadow-md:
-    rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
-  --shadow-lg:
-    rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
-  --shadow-xl:
-    rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
+  --shadow-xs: rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
+  --shadow-sm: rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
+  --shadow-md: rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
+  --shadow-lg: rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
+  --shadow-xl: rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
 
   /* Density — Aerada */
   --density-row: 56px;
@@ -348,16 +343,11 @@
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
-  --shadow-xs:
-    rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
-  --shadow-sm:
-    rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
-  --shadow-md:
-    rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
-  --shadow-lg:
-    rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
-  --shadow-xl:
-    rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
+  --shadow-xs: rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, rgba(24, 25, 37, 0.04) 0px 0px 0px 1px;
+  --shadow-sm: rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, rgba(24, 25, 37, 0.07) 0px 2px 6px -1px;
+  --shadow-md: rgba(24, 25, 37, 0.07) 0px 2px 4px -1px, rgba(24, 25, 37, 0.1) 0px 6px 14px -3px;
+  --shadow-lg: rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
+  --shadow-xl: rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
   --background: var(--color-bg);
   --foreground: var(--color-text);
   --card: var(--color-surface);
@@ -1041,6 +1031,34 @@
   }
   100% {
     scale: 1 1;
+  }
+}
+
+/* ---- Assistente de ajuda · a entrada do painel lateral ------------------
+   O painel de IA do assistente é uma aba de cima a baixo (ver
+   `components/assistente/AssistentePainel.tsx`). Ele entra deslizando 12px da
+   direita: o movimento diz de ONDE ele veio, o que um aparecimento seco não
+   diz. Curto (180ms) e sem `infinite` — abrir o painel nunca é espera.
+   `prefers-reduced-motion` desliga o percurso e mantém o destino, como no
+   `.card-pulse`: quem desligou animação recebe o painel no lugar certo. */
+@keyframes assistente-painel-entra {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.assistente-painel-entra {
+  animation: assistente-painel-entra 180ms var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistente-painel-entra {
+    animation: none;
   }
 }
 

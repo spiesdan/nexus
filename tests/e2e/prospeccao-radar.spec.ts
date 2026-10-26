@@ -57,14 +57,10 @@ test("radar: novos prospects com as 3 ações — fila, abrir e conversa", async
   await page.getByRole("button", { name: "Prospecção", exact: true }).click();
   await card.scrollIntoViewIfNeeded();
 
-  // A dica do assistente flutuante ("Precisa de ajuda?…") nasce aos 2s e some
-  // aos 10s do mount — dentro dessa janela ela cobre o botão "Adicionar à
-  // fila" da evidência. Dispensar o nó não toca em nada do que a foto prova.
-  await page.evaluate(() => {
-    document.querySelectorAll('[role="status"]').forEach((el) => {
-      if (el.textContent?.includes("Precisa de ajuda")) el.remove();
-    });
-  });
+  // O assistente saiu do canto inferior direito e virou um painel lateral
+  // (gatilho na TopBar): nada mais cobre o botão "Adicionar à fila" nesta
+  // evidência. O antigo trabalho de dispensar a dica em balão morreu junto
+  // com o balão.
 
   await saudavel(page);
   await page.screenshot({

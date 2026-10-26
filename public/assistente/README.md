@@ -1,44 +1,41 @@
-# Avatar do assistente de ajuda: o bloub
+# Marca do assistente: o símbolo do Grok Bot
 
-O rosto do ajudante é o **bloub** — a bolota do x.ai recriada em SVG por
-[jeremy-prt/bloub](https://github.com/jeremy-prt/bloub), **licença MIT**
-(`components/assistente/bloub/LICENCA-bLoub.txt`), renderizada por um motor
-próprio que mora versionado no repo:
+O gatilho da TopBar e o cabeçalho do painel usam o **símbolo do Grok Bot**
+(xAI) redesenhado em SVG — `components/assistente/IconeAssistente.tsx`: uma
+bola cheia com dois olhos de cápsula **vazados** (`fillRule="evenodd"`),
+chapada em `currentColor`.
 
-- `components/assistente/bloub/` — a engine portada sem framework nem
-  dependência externa (máquina de estados, expressões, silhueta, olhos,
-  anéis e partículas) + a regra de olhar (`gaze.ts`) + o desenho
-  (`BloubBot.tsx`);
-- `components/assistente/AssistenteAvatar.tsx` — dirige o rosto conforme
-  mouse, clique e chat (olhar contínuo, `attentif` com o chat aberto,
-  `wink`/`heureux` no clique);
-- `components/assistente/bloub/bloub.test.ts` e `gaze.test.ts` — quebram no
-  CI se os nomes que o componente usa sumirem da engine.
+- Medidas tiradas do material de lançamento do produto
+  (`x.ai/news/introducing-grok-bot`, imagem OG) e conferidas com o ícone do
+  app para macOS: mesma bola, mesmos dois olhos.
+- Sem fundo, sombra ou gradiente: é um ícone, não um mascote — herda a cor do
+  botão (cinza em repouso, texto no hover, branco no `bg-accent` do painel).
+- Os olhos são **buracos**, não tinta: aparecem como o fundo em qualquer
+  superfície (TopBar, cabeçalho colorido, claro/escuro).
+- `aria-hidden` no SVG; o nome acessível vem do botão ("Abrir/Fechar
+  assistente").
 
-Nada é baixado em runtime: funciona offline e no self-host.
+## O que ficou de fora
 
-## Por dentro
+O rosto animado do **bloub** (engine portada em
+`components/assistente/bloub/`, licença MIT em `LICENCA-bLoub.txt`) não é mais
+renderizado: olhos que seguem o cursor e expressões faziam o ajudante parecer
+um mascote no meio de ícones de linha. A engine **continua no repo**, com
+`bloub.test.ts`/`gaze.test.ts` guardando a portagem — histórico. Se ela não
+voltar, apagar a pasta e os dois testes numa limpeza; nada depende dela.
 
-A engine é uma função **pura do tempo** (`sample(t)`): o componente só
-mantém um relógio de `requestAnimationFrame`, aponta o olhar para o cursor e
-desenha o frame em SVG. Isso significa que a mesma data devolve a mesma
-imagem — o que torna o rosto testável sem DOM.
+## O pulo
 
-Com `prefers-reduced-motion` ou ponteiro grosseiro o loop nem nasce: o botão
-renderiza uma imagem fixa (`sample(0)`), sem olhar que segue.
+O clique no gatilho remonta o SVG (`key={pulos}`) para reanimar
+`assistente-pulo` (0,38s, em `app/globals.css`). Com `prefers-reduced-motion`
+o pulo não roda (`motion-reduce:animate-none`) e o painel entra direto.
 
-## Trocar de rosto
+## Trocar a marca
 
-1. Atualize a engine em `components/assistente/bloub/` a partir do upstream
-   (os arquivos são portados quase literais; `pnpm vitest run
-   components/assistente/bloub` mostra se a portagem ainda fecha).
-2. Se mudarem os nomes de estado/expressão que `AssistenteAvatar.tsx`
-   chama, ajuste lá — o teste da guarda aponta o que faltou.
-3. Rebuild/redeploy.
+`IconeAssistente.tsx` é o único lugar a mudar: um `<path>` com a bola e os
+olhos. O `viewBox` é 24×24 e o desenho ocupa o quadrado inteiro — `tamanho` é
+o tamanho desenhado, sem padding interno.
 
-## Notas
-
-- O botão e a bolota leem as cores do tema (`--color-bg`/`--color-text`),
-  então o rosto acompanha claro/escuro sozinho.
-- Sem fallback: a fonte é módulo versionado e determinístico, não há estado
-  externo que "recuse" em runtime.
+> Marca de terceiro. Para uso interno/experimental tudo bem; se o produto for
+> vendido com essa cara, o caminho é desenhar um mark próprio com a mesma
+> geometria.

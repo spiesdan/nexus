@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Loader2, Send, X } from "lucide-react";
 import { useT } from "@/hooks/i18n/useT";
 import { cn } from "@/lib/utils";
+import { IconeAssistente } from "./IconeAssistente";
 import { responder, SUGESTOES_INICIAIS, type LinkDeAjuda, type RespostaDeAjuda } from "./respostas";
 
 interface PropostaUI {
@@ -34,9 +35,14 @@ const novaId = () => proximoId++;
 const AVISO_IA_DESLIGADA =
   "IA desligada aqui — respondendo no modo básico. Para eu gerar pedidos e notas, cadastre a chave em IA → Credenciais.";
 
-async function lerEnvelope(res: Response): Promise<{ data?: unknown; code?: string; message?: string }> {
+async function lerEnvelope(
+  res: Response,
+): Promise<{ data?: unknown; code?: string; message?: string }> {
   try {
-    const corpo = (await res.json()) as { data?: unknown; error?: { code?: string; message?: string } };
+    const corpo = (await res.json()) as {
+      data?: unknown;
+      error?: { code?: string; message?: string };
+    };
     if (!res.ok) return { code: corpo.error?.code, message: corpo.error?.message };
     return { data: corpo.data };
   } catch {
@@ -50,7 +56,11 @@ export interface ContextoDaPagina {
 }
 
 /**
- * Janela do assistente — painel ancorado no canto, não modal.
+ * Janela do assistente — o CONTEÚDO do painel lateral, não um modal.
+ *
+ * O posicionamento (aba de cima a baixo, à direita, abaixo da TopBar) é do
+ * `AssistentePainel`; aqui fica só a coluna: cabeçalho, histórico e campo de
+ * pergunta, cada um com a altura que a coluna inteira permitir (`h-full`).
  *
  * Dois cérebros, uma cara: com chave de IA configurada, fala com
  * `/api/v1/assistente/chat` (consulta de verdade, propõe ações); sem chave ou
@@ -107,7 +117,10 @@ export function AssistenteChat({
   const enviar = async (pergunta: string) => {
     const limpa = pergunta.trim();
     if (!limpa || ocupado) return;
-    const comUsuario: Mensagem[] = [...mensagens, { id: novaId(), de: "user", texto: limpa, links: [] }];
+    const comUsuario: Mensagem[] = [
+      ...mensagens,
+      { id: novaId(), de: "user", texto: limpa, links: [] },
+    ];
     setMensagens(comUsuario);
     setTexto("");
     setOcupado(true);
@@ -115,7 +128,10 @@ export function AssistenteChat({
       const res = await fetch("/api/v1/assistente/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ mensagens: historicoParaIA(comUsuario), ...(contexto ? { contexto } : {}) }),
+        body: JSON.stringify({
+          mensagens: historicoParaIA(comUsuario),
+          ...(contexto ? { contexto } : {}),
+        }),
       });
       const env = await lerEnvelope(res);
       if (!res.ok || !env.data) {
@@ -124,7 +140,13 @@ export function AssistenteChat({
       const dados = env.data as {
         resposta: string;
         atividade: AtividadeUI[];
-        propostas: { id: string; acao: string; titulo: string; resumo: string; payload: Record<string, unknown> }[];
+        propostas: {
+          id: string;
+          acao: string;
+          titulo: string;
+          resumo: string;
+          payload: Record<string, unknown>;
+        }[];
       };
       setMensagens((atual) => [
         ...atual,
@@ -159,7 +181,10 @@ export function AssistenteChat({
     setMensagens((atual) =>
       atual.map((m) =>
         m.id === msgId
-          ? { ...m, propostas: m.propostas?.map((p) => (p.id === propostaId ? { ...p, estado } : p)) }
+          ? {
+              ...m,
+              propostas: m.propostas?.map((p) => (p.id === propostaId ? { ...p, estado } : p)),
+            }
           : m,
       ),
     );
@@ -179,7 +204,10 @@ export function AssistenteChat({
       }
       const feito = env.data as { mensagem: string; link: LinkDeAjuda };
       marcarProposta(msgId, proposta.id, "ok");
-      setMensagens((atual) => [...atual, { id: novaId(), de: "bot", texto: `✅ ${feito.mensagem}`, links: [feito.link] }]);
+      setMensagens((atual) => [
+        ...atual,
+        { id: novaId(), de: "bot", texto: `✅ ${feito.mensagem}`, links: [feito.link] },
+      ]);
     } catch (err) {
       marcarProposta(msgId, proposta.id, "erro");
       setMensagens((atual) => [
@@ -198,29 +226,36 @@ export function AssistenteChat({
     <div
       role="dialog"
       aria-label="Assistente"
-      className="flex h-105 w-[calc(100vw-3rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl"
+      id="assistente-painel"
+      className="flex h-full w-full flex-col overflow-hidden bg-background"
     >
       <div className="flex items-center gap-2.5 border-b border-border bg-accent px-4 py-3 text-accent-foreground">
-        <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full bg-background/20 text-lg leading-none">
-          ✦
-        </span>
+        {/* A mesma marca do gatilho da TopBar: o painel abre debaixo dele, e o
+            cabeçalho confirma de onde veio. `currentColor` = o texto do
+            `bg-accent`; sem badge atrás, senão vira círculo dentro de círculo. */}
+        <IconeAssistente tamanho={22} className="shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">Assistente</p>
           <p className="flex items-center gap-1.5 text-xs opacity-80">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> {ocupado ? t("pensando…") : t("online agora")}
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />{" "}
+            {ocupado ? t("pensando…") : t("online agora")}
           </p>
         </div>
         <button
           type="button"
           onClick={onFechar}
-          aria-label="Fechar assistente"
+          aria-label="Fechar painel do assistente"
           className="rounded-md p-1.5 opacity-80 transition hover:bg-background/15 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div ref={listaRef} className="flex-1 space-y-3 overflow-y-auto bg-muted/40 p-3.5" aria-live="polite">
+      <div
+        ref={listaRef}
+        className="flex-1 space-y-3 overflow-y-auto bg-muted/40 p-3.5"
+        aria-live="polite"
+      >
         {mensagens.map((m) => (
           <div key={m.id} className={cn("flex", m.de === "user" ? "justify-end" : "justify-start")}>
             <div
@@ -244,9 +279,12 @@ export function AssistenteChat({
               {m.propostas?.map(
                 (p) =>
                   p.estado !== "descartada" && (
-                    <div key={p.id} className="mt-2 rounded-xl border border-accent/40 bg-accent/5 p-2.5">
+                    <div
+                      key={p.id}
+                      className="mt-2 rounded-xl border border-accent/40 bg-accent/5 p-2.5"
+                    >
                       <p className="text-xs font-semibold">{p.titulo}</p>
-                      <p className="mt-1 whitespace-pre-line text-xs text-text-muted">{p.resumo}</p>
+                      <p className="mt-1 text-xs whitespace-pre-line text-text-muted">{p.resumo}</p>
                       {p.estado === "pendente" && (
                         <div className="mt-2 flex gap-1.5">
                           <button
@@ -276,7 +314,9 @@ export function AssistenteChat({
                         </p>
                       )}
                       {p.estado === "erro" && (
-                        <p className="mt-2 text-xs font-medium text-red-600">{t("Falhou — nada foi alterado.")}</p>
+                        <p className="mt-2 text-xs font-medium text-red-600">
+                          {t("Falhou — nada foi alterado.")}
+                        </p>
                       )}
                     </div>
                   ),

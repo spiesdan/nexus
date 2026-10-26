@@ -34,7 +34,8 @@ function onde(achou: RegExp): string[] {
 
 describe("itens 1-2 — visual legado e componentes antigos não voltam", () => {
   it("nenhum arquivo importa os primitivos mortos da Fase 1", () => {
-    const legado = /from ["']@\/components\/(uimaxxing|ui\/(gradient-button|orb-button|pill-button|typing-field|select-menu))/;
+    const legado =
+      /from ["']@\/components\/(uimaxxing|ui\/(gradient-button|orb-button|pill-button|typing-field|select-menu))/;
     expect(onde(legado)).toEqual([]);
   });
 
@@ -53,7 +54,9 @@ describe("itens 1-2 — visual legado e componentes antigos não voltam", () => 
   it("`window.confirm(` só aparece na documentação do substituto", () => {
     // O ConfirmacaoProvider cita a chamada antiga no JSDoc (linha 17) para
     // explicar a troca; nenhum outro arquivo pode sequer referenciá-la.
-    expect(onde(/window\.confirm\(/)).toEqual(["components/nexus-ui/forms/ConfirmacaoProvider.tsx"]);
+    expect(onde(/window\.confirm\(/)).toEqual([
+      "components/nexus-ui/forms/ConfirmacaoProvider.tsx",
+    ]);
   });
 
   it("`sonner` cru só nas 3 portas documentadas", () => {
@@ -110,13 +113,12 @@ describe("itens 10-11 — espaçamento e cores sem literais fora da escala", () 
 
 describe("item 8 — animação só do catálogo (§16: nunca atrase o usuário)", () => {
   it("nenhuma `animate-` fora do catálogo Tailwind nem keyframe arbitrário", () => {
-    // Exceção declarada: o avatar do assistente tem um keyframe próprio em
-    // `globals.css` (`assistente-pulo` 0.38s) — curto, sutil e do produto (o
-    // FAB flutuante); a regra existe para keyframe arbitrário NÃO virar
+    // Exceção declarada: o avatar do assistente (gatilho da TopBar) tem um
+    // keyframe próprio em `globals.css` (`assistente-pulo` 0.38s) — curto,
+    // sutil e do produto; a regra existe para keyframe arbitrário NÃO virar
     // padrão em novas telas.
     const comKeyframeProprio = new Set(["components/assistente/AssistenteAvatar.tsx"]);
-    const catalogo =
-      /^(none|spin|ping|pulse|bounce|fade|slide|zoom|accordion|in|out)(-[a-z]+)*$/;
+    const catalogo = /^(none|spin|ping|pulse|bounce|fade|slide|zoom|accordion|in|out)(-[a-z]+)*$/;
     const culpados: string[] = [];
     for (const rel of arquivos) {
       if (comKeyframeProprio.has(rel)) continue;
