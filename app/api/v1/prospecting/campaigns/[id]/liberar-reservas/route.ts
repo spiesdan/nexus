@@ -17,6 +17,18 @@
  *
  * Não é automático de propósito: liberar uma reserva cuja mensagem saiu é
  * mandar de novo para a pessoa. A confirmação humana é a trava.
+ *
+ * ─── E NÃO LIBERA COM LOTE EM VOO (0288) ───────────────────────────────────
+ *
+ * Reserva sem `message_id` tem DUAS causas: (a) o lote morreu no meio, e a
+ * reserva é órfã; (b) o lote está rodando e aquela empresa ainda espera a vez —
+ * uma a cada intervalo. A tela distinguia as duas, a rota não: durante um lote
+ * de 28 empresas a 2 min (~1h), liberar apagaria 27 reservas que iam sair, e o
+ * scheduler poderia reservá-las de novo — mensagem duplicada.
+ *
+ * Por isso a rota recusa (409) enquanto o número tem lease ativo. O botão da
+ * tela fica desabilitado com o horário de liberação; quando o lease vence ou o
+ * lote termina, a mesma ação funciona e aí só sobram as órfãs de verdade.
  */
 import { randomUUID } from "node:crypto";
 
@@ -27,6 +39,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { disparoEmAndamento } from "@/lib/prospeccao/trava-de-disparo";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +72,25 @@ export async function POST(_req: NextRequest, { params }: Params): Promise<Respo
     return fail("internal_error", "Erro ao abrir a campanha.", 500, { requestId });
   }
   if (!campanha) return fail("not_found", "Campanha não encontrada.", 404, { requestId });
+
+  // ═══ A TRAVA CONTRA O CLIQUE NO MEIO DO LOTE ═══════════════════════════════
+  //
+  // Durante um "Enviar agora" longo, as reservas ficam sem `message_id` enquanto
+  // esperam a vez (uma a cada intervalo). Liberar nesse instante apagaria
+  // justamente as reservas que o lote ainda vai usar: o scheduler poderia
+  // reservar as mesmas empresas e a pessoa receberia duas mensagens.
+  //
+  // O operador não perde a saída — ele espera o lote terminar (o aviso na tela
+  // diz até quando) e libera o que sobrar, que aí sim é órfão de verdade.
+  const disparo = await disparoEmAndamento(admin, { orgId: authz.org.orgId });
+  if (disparo.ativo) {
+    return fail(
+      "state_conflict",
+      "O número está enviando um lote agora. Espere terminar para liberar as reservas.",
+      409,
+      { requestId, details: { disparo_ate: disparo.ate } },
+    );
+  }
 
   const { data, error } = await admin
     .from("prospecting_sends")

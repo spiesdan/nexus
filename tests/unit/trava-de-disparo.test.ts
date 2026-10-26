@@ -16,6 +16,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   TETO_DA_TRAVA_MS,
+  disparoEmAndamento,
   soltarDisparo,
   travarDisparo,
   validadeDaTrava,
@@ -70,6 +71,19 @@ function fakeDb(linha: LinhaDoSessao, opcoes: { erroNoUpdate?: boolean } = {}) {
           const atual = l[coluna];
           return typeof atual === "string" && atual < valor;
         });
+        return builder;
+      },
+      gt(coluna: keyof LinhaDoSessao, valor: string) {
+        filtros.push((l) => {
+          const atual = l[coluna];
+          return typeof atual === "string" && atual > valor;
+        });
+        return builder;
+      },
+      order(_coluna: keyof LinhaDoSessao, _opcoes?: { ascending?: boolean }) {
+        return builder;
+      },
+      limit(_n: number) {
         return builder;
       },
       maybeSingle(): Promise<Resposta> {
@@ -218,5 +232,41 @@ describe("soltarDisparo", () => {
 
     expect(estado.dispatch_lock_token).toBe("dono-novo");
     expect(estado.dispatch_locked_until).toBe("2026-10-26T15:20:00.000Z");
+  });
+});
+
+/**
+ * A LEITURA QUE A TELA USA PARA NÃO GRITAR "ÓRFÃ" NO MEIO DO LOTE.
+ *
+ * Medido em 26/10/2026: durante um "Enviar agora" de 28 empresas a 2 min, a tela
+ * de controle mostrava "27 empresas com reserva, mas sem comprovante" com o
+ * botão de liberar habilitado. Clicar ali apagaria as reservas que o lote ainda
+ * ia usar — e o scheduler poderia reservá-las de novo, duplicando a mensagem.
+ */
+describe("disparoEmAndamento", () => {
+  it("reconhece o lease ativo e devolve até quando", async () => {
+    const estado = linha({ dispatch_locked_until: "2026-10-26T15:58:00.000Z" });
+    const { db } = fakeDb(estado);
+
+    const r = await disparoEmAndamento(db, { orgId: ORG, agora: AGORA });
+
+    expect(r).toEqual({ ativo: true, ate: "2026-10-26T15:58:00.000Z" });
+  });
+
+  it("lease VENCIDO não conta como disparo em andamento", async () => {
+    const estado = linha({ dispatch_locked_until: "2026-10-26T14:59:00.000Z" });
+    const { db } = fakeDb(estado);
+
+    const r = await disparoEmAndamento(db, { orgId: ORG, agora: AGORA });
+
+    expect(r).toEqual({ ativo: false, ate: null });
+  });
+
+  it("sem lease, não há lote em voo", async () => {
+    const { db } = fakeDb(linha());
+
+    const r = await disparoEmAndamento(db, { orgId: ORG, agora: AGORA });
+
+    expect(r.ativo).toBe(false);
   });
 });

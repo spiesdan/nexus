@@ -151,6 +151,36 @@ export async function travarDisparo(
 }
 
 /**
+ * O número está sendo usado por um lote AGORA?
+ *
+ * A tela de controle precisa disto para não gritar "27 reservas sem
+ * comprovante" no meio de um lote que está, de fato, mandando uma mensagem a
+ * cada 2 min. Sem esta leitura, o operador vê o aviso de reserva órfã enquanto
+ * as mensagens estão na fila — e o botão "liberar" apagaria justamente as
+ * reservas que ainda vão sair (duplicando mensagem para quem receber depois).
+ *
+ * Não lança: erro de leitura devolve "sem disparo em andamento". Na dúvida, a
+ * tela volta ao comportamento antigo (avisar), que é conservador.
+ */
+export async function disparoEmAndamento(
+  admin: SupabaseClient,
+  p: { orgId: string; agora?: Date },
+): Promise<{ ativo: boolean; ate: string | null }> {
+  const agora = (p.agora ?? new Date()).toISOString();
+  const { data, error } = await admin
+    .from("channel_sessions")
+    .select("dispatch_locked_until")
+    .eq("organization_id", p.orgId)
+    .gt("dispatch_locked_until", agora)
+    .order("dispatch_locked_until", { ascending: false })
+    .limit(1);
+  if (error) return { ativo: false, ate: null };
+  const ate = (data?.[0] as { dispatch_locked_until?: string | null } | undefined)
+    ?.dispatch_locked_until ?? null;
+  return { ativo: ate !== null, ate };
+}
+
+/**
  * Solta a trava — só se ainda for do dono.
  *
  * Falhar aqui não derruba o disparo (as mensagens já saíram); o lease vence

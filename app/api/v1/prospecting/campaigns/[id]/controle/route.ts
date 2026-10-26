@@ -40,6 +40,7 @@ import {
 } from "@/lib/prospeccao/publico-da-base";
 import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
 import { resumirEnvios, entregaDoStatus, type EnvioDaCampanha, type EntregaConfirmada } from "@/lib/prospeccao/resumo-de-envio";
+import { disparoEmAndamento } from "@/lib/prospeccao/trava-de-disparo";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -507,6 +508,12 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     cidades.set(chave, atual);
   }
 
+  // O aviso de "reserva sem comprovante" só é órfão quando NÃO há lote em voo.
+  // Durante um "Enviar agora" longo (28 empresas × 2 min ≈ 1h), as reservas
+  // ficam sem `message_id` legitimamente — a tela precisa dizer que estão na
+  // fila, não sugerir que morreram.
+  const disparo = await disparoEmAndamento(admin, { orgId: authz.org.orgId });
+
   return ok(
     {
       campanha,
@@ -520,6 +527,9 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
       publico: publicoPreview,
       /** O público completo que o PATCH de agendamento deve guardar. */
       audiencia_ids: empresas.map((e) => e.id),
+      /** 0288 — o número está com um lote em voo até este instante. */
+      disparo_em_andamento: disparo.ativo,
+      disparo_ate: disparo.ate,
     },
     { requestId },
   );

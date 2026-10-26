@@ -167,6 +167,9 @@ interface RespostaControle {
   previa_base: boolean;
   publico: PublicoPreview | null;
   audiencia_ids: string[];
+  /** 0288 — o número está com um lote em voo (reservas sem comprovante são fila, não órfãs). */
+  disparo_em_andamento?: boolean;
+  disparo_ate?: string | null;
 }
 
 type Filtro = "todas" | "enviadas" | "pendentes" | "sem_confirmacao" | "falhas";
@@ -817,30 +820,81 @@ export function ControleDaCampanha({ id }: { id: string }) {
           )}
 
           {semConfirmacao.length > 0 && (
-            <Card className="border-error/40 bg-error-bg p-3 text-sm text-error-fg">
+            <Card
+              className={
+                dados.disparo_em_andamento
+                  ? "border-border bg-surface p-3 text-sm"
+                  : "border-error/40 bg-error-bg p-3 text-sm text-error-fg"
+              }
+            >
               <div className="flex items-start gap-2">
-                <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+                <WarningCircle
+                  size={18}
+                  className={
+                    dados.disparo_em_andamento
+                      ? "mt-0.5 shrink-0 text-muted-foreground"
+                      : "mt-0.5 shrink-0"
+                  }
+                  aria-hidden
+                />
                 <div>
-                  <p className="font-medium">
-                    {t(
-                      `${semConfirmacao.length} empresas com reserva, mas sem comprovante de envio.`,
-                    )}
-                  </p>
-                  <p className="mt-1 text-xs opacity-90">
-                    {t(
-                      "Elas não entram no novo agendamento para não duplicar mensagem. Confira no Inbox se a mensagem saiu; se não saiu, libere as reservas e agende de novo.",
-                    )}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 border-error/40 bg-surface text-error-fg hover:bg-error-bg"
-                    onClick={() => setLiberarAberto(true)}
-                    disabled={acao === "liberar"}
-                  >
-                    {t("Liberar reservas sem comprovante")}
-                  </Button>
+                  {dados.disparo_em_andamento ? (
+                    <>
+                      {/* Lote em voo: a reserva sem comprovante é a VEZ na fila,
+                          não um envio que morreu. O botão fica travado porque
+                          liberar agora apagaria reservas que ainda vão sair. */}
+                      <p className="font-medium">
+                        {t(
+                          `${semConfirmacao.length} empresas na fila do envio em andamento.`,
+                        )}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t(
+                          "O número está mandando uma mensagem por vez; cada reserva recebe o comprovante quando a mensagem sai. Não há nada a liberar agora.",
+                        )}
+                        {dados.disparo_ate
+                          ? ` ${t("O lote usa o número até")} ${new Date(
+                              dados.disparo_ate,
+                            ).toLocaleTimeString(tagIdioma, {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}.`
+                          : ""}
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        disabled
+                      >
+                        {t("Liberar reservas sem comprovante")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium">
+                        {t(
+                          `${semConfirmacao.length} empresas com reserva, mas sem comprovante de envio.`,
+                        )}
+                      </p>
+                      <p className="mt-1 text-xs opacity-90">
+                        {t(
+                          "Elas não entram no novo agendamento para não duplicar mensagem. Confira no Inbox se a mensagem saiu; se não saiu, libere as reservas e agende de novo.",
+                        )}
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 border-error/40 bg-surface text-error-fg hover:bg-error-bg"
+                        onClick={() => setLiberarAberto(true)}
+                        disabled={acao === "liberar"}
+                      >
+                        {t("Liberar reservas sem comprovante")}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </Card>
