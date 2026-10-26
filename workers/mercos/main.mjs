@@ -17,6 +17,8 @@ import { spawn } from "node:child_process";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { STATUS } from "./status.mjs";
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const EMAIL = process.env.MERCOS_EMAIL || "";
@@ -25,20 +27,6 @@ const EMPRESA = process.env.MERCOS_EMPRESA || "338282";
 const POLL_MS = Number(process.env.MERCOS_POLL_MS || "5000");
 const SCRAPE_TIMEOUT_MS = Number(process.env.MERCOS_SCRAPE_TIMEOUT_MS || "1800000");
 const TMP_ROOT = process.env.MERCOS_TMP_DIR || "/tmp/mercos";
-
-const STATUS = {
-  Concluído: "entregue",
-  "Em orçamento": "rascunho",
-  Cancelado: "cancelado",
-  Expedido: "expedido",
-  Aprovado: "aprovado",
-  Faturado: "faturado",
-  "Parcialmente Faturado": "faturado",
-  // O detalhe do Mercos mostra "Aguardando Faturamento" quando o pedido já
-  // saiu do rascunho mas ainda não foi faturado. Na lista esse rótulo às
-  // vezes não vem; por isso o fallback abaixo.
-  "Aguardando Faturamento": "aprovado",
-};
 
 function log(evento, dados = {}) {
   process.stdout.write(
