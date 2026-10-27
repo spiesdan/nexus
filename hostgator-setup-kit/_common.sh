@@ -818,23 +818,51 @@ completar_pin_ausente() {  # completar_pin_ausente [envfile]
 #
 #   gravar_imagens .env 1.2.1   → pinado,  pull_policy=missing
 #   gravar_imagens .env latest  → canal,   pull_policy=always
+#
+# GRAVA **E EXPORTA**. As duas coisas, sempre, porque o `docker compose` lê o
+# AMBIENTE antes do `.env` — e o `enter_project` já exportou o valor ANTIGO via
+# `load_env`. Gravar só no arquivo deixava a política velha mandando no `pull`.
+#
+# Medido em 27/10/2026, na atualização desta VPS para a v1.35.1: o `.env` tinha
+# `APP_PULL_POLICY=never` (herança de um deploy por build local), o
+# `gravar_imagens` escreveu `missing`, mas o ambiente ainda dizia `never`. O
+# `dc pull` então respondeu
+#
+#   Image ghcr.io/spiesdan/nexus:1.35.1 Skipped
+#
+# — sem motivo, que é a assinatura de `pull_policy: never` — e não baixou a
+# imagem do app. O `up -d` seguinte morreu em
+#
+#   Error response from daemon: No such image: ghcr.io/spiesdan/nexus:1.35.1
+#
+# e a atualização inteira foi desfeita pelo rollback do agente. O worker subiu
+# porque a política dele já era `missing`; só o app ficou para trás. Ou seja: a
+# falha dependia do que um deploy ANTERIOR deixou no `.env`, e por isso não
+# aparecia em instalação limpa.
 gravar_imagens() {
-  local envfile="$1" versao="$2" politica
+  local envfile="$1" versao="$2" politica par chave valor
   case "$versao" in
     latest|main|stable) politica="always" ;;
     *)                  politica="missing" ;;
   esac
-  set_env_var "$envfile" APP_IMAGE             "${IMG_APP}:${versao}"
-  set_env_var "$envfile" APP_PULL_POLICY       "$politica"
-  set_env_var "$envfile" WORKER_IMAGE          "${IMG_WORKER}:${versao}"
-  set_env_var "$envfile" WORKER_PULL_POLICY    "$politica"
-  set_env_var "$envfile" SCHEDULER_IMAGE       "${IMG_SCHEDULER}:${versao}"
-  set_env_var "$envfile" FISCAL_IMAGE          "${IMG_FISCAL}:${versao}"
-  set_env_var "$envfile" MERCOS_IMAGE          "${IMG_MERCOS}:${versao}"
-  set_env_var "$envfile" MERCOS_PULL_POLICY    "$politica"
-  set_env_var "$envfile" OCR_IMAGE             "${IMG_OCR}:${versao}"
-  set_env_var "$envfile" OCR_PULL_POLICY       "$politica"
-  set_env_var "$envfile" SCHEDULER_PULL_POLICY "$politica"
+  for par in \
+    "APP_IMAGE=${IMG_APP}:${versao}" \
+    "APP_PULL_POLICY=${politica}" \
+    "WORKER_IMAGE=${IMG_WORKER}:${versao}" \
+    "WORKER_PULL_POLICY=${politica}" \
+    "SCHEDULER_IMAGE=${IMG_SCHEDULER}:${versao}" \
+    "FISCAL_IMAGE=${IMG_FISCAL}:${versao}" \
+    "MERCOS_IMAGE=${IMG_MERCOS}:${versao}" \
+    "MERCOS_PULL_POLICY=${politica}" \
+    "OCR_IMAGE=${IMG_OCR}:${versao}" \
+    "OCR_PULL_POLICY=${politica}" \
+    "SCHEDULER_PULL_POLICY=${politica}"
+  do
+    chave="${par%%=*}"
+    valor="${par#*=}"
+    set_env_var "$envfile" "$chave" "$valor"
+    export "$chave=$valor"
+  done
 }
 
 # Grava (ou reescreve) uma chave no .env — sem duplicar linha se ela já existe.

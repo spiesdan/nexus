@@ -337,6 +337,38 @@ EOF
 ) || fail=1
 rm -rf "$TMP"
 
+echo "gravar_imagens: a política nova vence o ambiente exportado"
+# O `update.sh` faz `enter_project` → `load_env`, que EXPORTA o `.env` ANTIGO. O
+# compose lê o ambiente ANTES do arquivo, então gravar só no `.env` não bastava:
+# a política velha continuava mandando no `pull`. Medido em 27/10/2026, na
+# atualização da VPS para a v1.35.1 — o app saiu `Skipped` no `dc pull` e o
+# `up -d` morreu em "No such image", desfazendo a atualização. Este caso falha
+# se `gravar_imagens` voltar a escrever sem exportar.
+TMP_IMG="$(mktemp -d)"
+printf 'APP_PULL_POLICY=never\nWORKER_PULL_POLICY=never\n' > "$TMP_IMG/.env"
+( load_env "$TMP_IMG/.env" >/dev/null 2>&1
+  gravar_imagens "$TMP_IMG/.env" 9.9.9 >/dev/null
+  ok=1
+  for chave in APP_PULL_POLICY WORKER_PULL_POLICY SCHEDULER_PULL_POLICY \
+               MERCOS_PULL_POLICY OCR_PULL_POLICY; do
+    if [ "$(eval "printf '%s' \"\${$chave:-}\"")" != "missing" ]; then
+      printf '  ✗ %s não foi exportada com a política nova\n' "$chave"
+      ok=0
+    fi
+  done
+  if [ "${APP_IMAGE:-}" != "${IMG_APP}:9.9.9" ]; then
+    printf '  ✗ APP_IMAGE não foi exportada com a versão nova\n'
+    ok=0
+  fi
+  if [ "$(valor_no_env "$TMP_IMG/.env" APP_PULL_POLICY)" != "missing" ]; then
+    printf '  ✗ APP_PULL_POLICY não foi gravada no .env\n'
+    ok=0
+  fi
+  [ "$ok" = 1 ] && printf '  ✓ política nova vale no ambiente e no arquivo\n'
+  exit $((1 - ok))
+) || fail=1
+rm -rf "$TMP_IMG"
+
 echo "credenciais do provisionamento (sb_carrega_credenciais)"
 # Este bloco existe porque a leitura já foi feita com `eval`, e com `eval` ela
 # EXECUTAVA o conteúdo: o provisionamento imprime `CHAVE='valor'` sem escapar a
