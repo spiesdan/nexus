@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.1] — 2026-10-27
+
+### Corrigido
+
+- **Instalador volta a reconhecer as imagens publicadas e a pinar a versão** O `install.sh` consulta o GHCR para saber se as imagens da versão já estão
+  publicadas e, só então, grava no `.env` a referência fixa — em vez de deixar o
+  serviço num canal móvel. Essa consulta ainda perguntava pelo dono **anterior**
+  ao rename das imagens, então respondia "não existe" para tudo, mesmo com as seis
+  imagens publicadas.
+
+  O efeito era silencioso e no caminho de quem instala: a instalação caía em
+  `latest` (canal móvel) e nenhum serviço ficava preso à versão, contrariando a
+  regra de que app, worker, scheduler, sidecar fiscal, Mercos e OCR andam juntos.
+  Não havia erro — só um aviso dizendo que as imagens "ainda não estavam
+  publicadas".
+
+  O dono agora sai de `IMG_NS`, a mesma fonte única que monta as referências que o
+  compose usa, e o runbook de packaging deixou de ensinar o dono antigo nas
+  verificações manuais.
+
 ## [1.35.0] — 2026-10-26
 
 ### Adicionado
@@ -5356,7 +5376,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.1...HEAD
+[1.35.1]: https://github.com/spiesdan/nexus/compare/v1.35.0...v1.35.1
 [1.35.0]: https://github.com/spiesdan/nexus/compare/v1.34.0...v1.35.0
 [1.34.0]: https://github.com/spiesdan/nexus/compare/v1.33.1...v1.34.0
 [1.33.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...v1.33.1
