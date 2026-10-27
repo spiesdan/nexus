@@ -31,11 +31,11 @@ procurada — o que faz qualquer checagem ingênua aprovar tudo.
 ```bash
 ghcr_status() {   # $1=imagem  $2=tag  → 200 existe | 404 não existe | 403 privado
   local t
-  t=$(curl -s "https://ghcr.io/token?scope=repository:melgarafael/$1:pull&service=ghcr.io" \
+  t=$(curl -s "https://ghcr.io/token?scope=repository:spiesdan/$1:pull&service=ghcr.io" \
       | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
   curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $t" \
     -H 'Accept: application/vnd.oci.image.index.v1+json' \
-    "https://ghcr.io/v2/melgarafael/$1/manifests/$2"
+    "https://ghcr.io/v2/spiesdan/$1/manifests/$2"
 }
 ```
 
@@ -73,7 +73,7 @@ a operação inteira, a atualização de um cliente morre depois do `git checkou
 
 Para cada um de `nexus-worker` e `nexus-scheduler`:
 
-> github.com/users/melgarafael/packages/container/`<pacote>`/settings → Danger Zone →
+> github.com/users/spiesdan/packages/container/`<pacote>`/settings → Danger Zone →
 > Change visibility → **Public**
 
 Enquanto estiver aqui, ligue também **Inherit access from repository**, para o pacote seguir a
@@ -136,7 +136,7 @@ for i in nexus nexus-worker nexus-scheduler; do
 done
 # esperado: 200 em todos
 
-docker run --rm ghcr.io/melgarafael/nexus:X.Y.Z \
+docker run --rm ghcr.io/spiesdan/nexus:X.Y.Z \
   node -e 'console.log(process.env.APP_VERSION)'
 # esperado: X.Y.Z   (antes desta release, `undefined` — nenhuma imagem publicada a carrega)
 ```

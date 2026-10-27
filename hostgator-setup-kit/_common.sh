@@ -683,15 +683,21 @@ ultima_versao_publicada() {
 # mão, o `docker compose pull` de toda VPS é negado — e como `pull` de serviço
 # com `image:` falha a operação inteira, a instalação morre no passo de subir.
 ghcr_status() {
-  local img="$1" tag="$2" tok
+  local img="$1" tag="$2" tok dono
+  # O dono sai de IMG_NS (a fonte única do namespace), nunca de literal. Foi um
+  # literal que deixou esta sonda perguntando por um dono que não existe mais
+  # depois do rename: todo `trio_publicado` devolvia falso e o install caía no
+  # canal móvel sem pinar versão nenhuma — enquanto as imagens de verdade
+  # estavam no dono novo.
+  dono="${IMG_NS#*/}"
   tok="$(curl -fsS --max-time 6 \
-          "https://ghcr.io/token?scope=repository:melgarafael/${img}:pull&service=ghcr.io" 2>/dev/null \
+          "https://ghcr.io/token?scope=repository:${dono}/${img}:pull&service=ghcr.io" 2>/dev/null \
         | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')" || true
   if [ -z "$tok" ]; then printf '000'; return 0; fi
   curl -s -o /dev/null --max-time 6 -w '%{http_code}' \
     -H "Authorization: Bearer $tok" \
     -H 'Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json' \
-    "https://ghcr.io/v2/melgarafael/${img}/manifests/${tag}" 2>/dev/null || printf '000'
+    "https://ghcr.io/v2/${dono}/${img}/manifests/${tag}" 2>/dev/null || printf '000'
 }
 
 # As TRÊS imagens existem e são públicas nesta referência?
