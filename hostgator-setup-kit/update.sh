@@ -62,6 +62,20 @@ image_desatualizada() {
   # imagem do UPSTREAM, e um `.env` sem APP_IMAGE comparava o digest local
   # contra um registry que não é o dele.
   local img="${APP_IMAGE:-${IMG_APP}:latest}" local_d remote_d
+  # Referência que NÃO aponta para o nosso registro não tem como ser comparada:
+  # é ID nu de build local, ou `nexus:local-<sha>` do deploy por commit. O
+  # `buildx imagetools inspect` RECUSA um ID de 64 hex ("invalid repository
+  # name"), o script conclui "sem como consultar → não forçar" e passa a
+  # responder "já está na versão mais recente" para sempre.
+  #
+  # Medido em 27/10/2026: depois de um rollback, a instalação ficou com
+  # `APP_IMAGE=<id>` no `.env` e o `update.sh` virou um no-op — a tela dizia
+  # "nada a atualizar" com o app numa imagem local. Imagem local não é release
+  # publicada: quando o alvo é uma tag do registro, ela está desatualizada.
+  case "$img" in
+    "${IMG_NS}"/*) : ;;
+    *) return 0 ;;
+  esac
   local_d="$(docker image inspect "$img" --format '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}' 2>/dev/null | sed 's/.*@//')"
   [ -z "$local_d" ] && return 0                 # nem baixada ainda → atualizar
   remote_d="$(docker buildx imagetools inspect "$img" 2>/dev/null | awk '/^Digest:/{print $2; exit}')"

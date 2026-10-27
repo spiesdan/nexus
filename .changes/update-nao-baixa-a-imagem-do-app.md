@@ -19,6 +19,16 @@ então pulava a imagem do app (`Skipped`, sem motivo), e o `up -d` morria em
 `missing`; só o app ficava para trás.
 
 Agora a gravação da política também exporta o valor novo, então o `pull` sempre
-enxerga o que acabou de ser decidido. Quem já instalou não precisa fazer nada: a
-próxima atualização passa a funcionar — e a que falhou deixou o `.env` com a
-política certa, então basta rodar de novo.
+enxerga o que acabou de ser decidido.
+
+A segunda metade do mesmo defeito aparecia logo depois: o rollback deixa o
+`.env` apontando para o ID da imagem local (64 caracteres). O `update.sh`
+comparava esse ID com o registro, o `docker buildx imagetools inspect` recusa um
+ID, e o script concluía "não consegui consultar, não forço" — respondendo "você
+já está na versão mais recente" para sempre, com o app preso numa imagem local.
+Agora referência que não aponta para o registro é tratada como desatualizada
+quando o alvo é uma tag publicada: imagem local não é release.
+
+Quem já instalou não precisa fazer nada: a próxima atualização passa a
+funcionar — e a que falhou deixou o `.env` com a política certa, então basta
+rodar de novo.

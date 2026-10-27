@@ -83,6 +83,12 @@ case " $* " in
   # devolver algo: com PREV_IMAGE vazio o rollback nem seria tentado, e o teste
   # do agente passaria mesmo com o defeito de volta.
   *" images "*) printf 'sha256:deadbeef\n' ;;
+  # Instalação que voltou para uma imagem LOCAL — o `.env` aponta para o ID de
+  # 64 hex. A imagem TEM RepoDigest (o buildx etiqueta até build local) e o
+  # `buildx imagetools inspect` RECUSA o ID. É o estado medido em 27/10/2026
+  # depois de um rollback; sem tratar, o update virava no-op para sempre.
+  *" image inspect "*) [ -n "${DUBLE_IMAGEM_LOCAL:-}" ] && printf 'nexus@sha256:deadbeef\n' ;;
+  *" buildx imagetools inspect "*) [ -n "${DUBLE_IMAGEM_LOCAL:-}" ] && { printf 'ERROR: invalid repository name\n' >&2; exit 1; } ;;
 esac
 exit 0
 STUB
@@ -249,6 +255,24 @@ check "o scheduler herda a política da tag imutável" \
   grep -q '^SCHEDULER_PULL_POLICY=missing$' .env
 check "nenhuma das chaves novas duplicou" \
   test "$(grep -cE '^(WORKER|SCHEDULER)_(IMAGE|PULL_POLICY)=' .env)" -eq 4
+
+echo "── 4c. Instalação que voltou para imagem LOCAL ainda atualiza"
+# Estado medido na VPS em 27/10/2026: o rollback do agente deixou `APP_IMAGE`
+# com o ID de 64 hex da imagem local. O `docker buildx imagetools inspect`
+# RECUSA um ID, o script caía em "sem como consultar → não forçar" e passava a
+# responder "já está na versão mais recente" para sempre — com o app numa
+# imagem local e o banco já na versão nova. Imagem local não é release
+# publicada: quando o alvo é uma tag do registro, ela está desatualizada.
+git checkout --quiet v1.1.0
+set_env_missing
+grep -v '^APP_IMAGE=' .env > .env.t
+echo 'APP_IMAGE=ad957b7a3e8b07a8a889d9265d7ce9b30284c59e51f2ea90bb3d9e24a5f72f8d' >> .env.t
+mv .env.t .env
+DUBLE_IMAGEM_LOCAL=1 run_update --to v1.1.0
+check "não responde 'já está na versão mais recente'" \
+  bash -c '! grep -q "já está na versão mais recente" "$1"' _ "$OUTFILE"
+check "passou da guarda e rodou o backup" test -f "$BACKUP_MARK"
+check "regravou a tag por cima do ID local" grep -q "^APP_IMAGE=${NS}/nexus:1.1.0$" .env
 
 # ── Clone RASO: a topologia que o install.sh realmente entrega ───────────────
 # `install.sh` instala com `git clone --depth 1`. Num repositório raso o
