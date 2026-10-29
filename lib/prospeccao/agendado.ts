@@ -848,15 +848,26 @@ async function escolherProspect(
   categorias: string[],
 ): Promise<ProspectParaEnvio | null> {
   if (ids.length === 0) return null;
-  const { data } = await admin
-    .from("business_prospects")
-    .select(
-      "id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
-    )
-    .eq("organization_id", orgId)
-    .in("id", ids);
+  // Mesma fatia de 100 do caminho de contatos (e do Radar): o tick chama esta
+  // função com até 200 ids, ~7,4 KB de query string — colado no limite que já
+  // devolveu `414 URI too long` em 400. Fatia é o que mantém o motor longe dele.
+  const { linhas, falhas } = await porFatias(ids, async (fatia) => {
+    const r = await admin
+      .from("business_prospects")
+      .select(
+        "id, nome, telefone_normalizado, do_not_contact, bloqueado, status_comercial, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
+      )
+      .eq("organization_id", orgId)
+      .in("id", fatia);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
+  // Todas as fatias falhando é falha de leitura, não "ninguém elegível": sem o
+  // throw o tick pausaria a campanha com o banco são (o defeito do 414 de novo).
+  if (falhas > 0 && linhas.length === 0) {
+    throw new Error("prospects_indisponiveis: todas as fatias falharam");
+  }
   const porId = new Map(
-    ((data ?? []) as unknown as ProspectDoBanco[]).map((p) => [p.id, p]),
+    (linhas as unknown as ProspectDoBanco[]).map((p) => [p.id, p]),
   );
 
   // A ORDEM é a de `ids` (o array da campanha). O resultado do PostgREST não

@@ -34,6 +34,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { porFatias } from "@/lib/db/por-fatias";
 import { traduzirCategoria } from "@/lib/prospeccao/categoria-pt";
 import { STATUS_COMERCIAL } from "@/lib/schemas/prospeccao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -98,53 +99,74 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   // Os MESMOS filtros da lista, menos `categoria` (ver o cabeçalho) e os
-  // recortes de uma linha só (`id`/`ids`).
-  let q = admin
-    .from("business_prospects")
-    .select("categoria, categoria_canonica")
-    .eq("organization_id", authz.org.orgId)
-    .eq("bloqueado", false)
-    .not("categoria", "is", null);
-  if (idsDaBusca) q = q.in("id", idsDaBusca);
-  if (cidade) q = q.ilike("cidade", `%${cidade}%`);
-  if (estado) q = q.eq("estado", estado.toUpperCase());
-  if (status !== "") {
-    const statuses = status
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s !== "" && (STATUS_COMERCIAL as readonly string[]).includes(s));
-    if (statuses.length > 0) q = q.in("status_comercial", statuses);
-  }
-  if (origem) q = q.eq("provider", origem);
-  // `.filter(..., "not.is", null)` e não `.not(...)`: com o select de UMA
-  // coluna, o builder tipado do Supabase estoura a profundidade de
-  // instanciação (TS2589). A semântica no PostgREST é a mesma.
-  if (comTelefone) q = q.filter("telefone_normalizado", "not.is", null);
-  if (comWebsite) q = q.filter("website", "not.is", null);
-  if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
-  if (notaMin > 0) q = q.gte("nota", notaMin);
-  if (diasAtras > 0) {
-    const desde = new Date(Date.now() - diasAtras * 86_400_000).toISOString();
-    q = q.gte("discovered_at", desde);
-  }
-  if (soSemCliente) q = q.is("contact_id", null);
-  if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
-  // A busca textual da lista olha nome/telefone/cidade/website — o mesmo
-  // `or` aqui mantém a contagem respondendo ao que está digitado na tela.
-  if (termo) {
-    q = q.or(
-      `nome.ilike.%${termo}%,telefone.ilike.%${termo}%,cidade.ilike.%${termo}%,website.ilike.%${termo}%`,
-    );
-  }
+  // recortes de uma linha só (`id`/`ids`). O recorte por ids vira uma função
+  // porque ele é aplicado em FATIAS: `busca_id` pode trazer 2.000 ids, e 500
+  // já bastam para o PostgREST responder `414 URI too long`.
+  const montar = (fatia?: string[]) => {
+    let q = admin
+      .from("business_prospects")
+      .select("categoria, categoria_canonica")
+      .eq("organization_id", authz.org.orgId)
+      .eq("bloqueado", false)
+      .not("categoria", "is", null);
+    if (fatia) q = q.in("id", fatia);
+    if (cidade) q = q.ilike("cidade", `%${cidade}%`);
+    if (estado) q = q.eq("estado", estado.toUpperCase());
+    if (status !== "") {
+      const statuses = status
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s !== "" && (STATUS_COMERCIAL as readonly string[]).includes(s));
+      if (statuses.length > 0) q = q.in("status_comercial", statuses);
+    }
+    if (origem) q = q.eq("provider", origem);
+    // `.filter(..., "not.is", null)` e não `.not(...)`: com o select de UMA
+    // coluna, o builder tipado do Supabase estoura a profundidade de
+    // instanciação (TS2589). A semântica no PostgREST é a mesma.
+    if (comTelefone) q = q.filter("telefone_normalizado", "not.is", null);
+    if (comWebsite) q = q.filter("website", "not.is", null);
+    if (comWhatsapp) q = q.eq("whatsapp_potencial", true);
+    if (notaMin > 0) q = q.gte("nota", notaMin);
+    if (diasAtras > 0) {
+      const desde = new Date(Date.now() - diasAtras * 86_400_000).toISOString();
+      q = q.gte("discovered_at", desde);
+    }
+    if (soSemCliente) q = q.is("contact_id", null);
+    if (minhaFila) q = q.eq("owner_user_id", authz.user.id);
+    // A busca textual da lista olha nome/telefone/cidade/website — o mesmo
+    // `or` aqui mantém a contagem respondendo ao que está digitado na tela.
+    if (termo) {
+      q = q.or(
+        `nome.ilike.%${termo}%,telefone.ilike.%${termo}%,cidade.ilike.%${termo}%,website.ilike.%${termo}%`,
+      );
+    }
+    return q;
+  };
 
-  const { data, error } = await q.limit(20_000);
-  if (error) return fail("internal_error", "Erro ao ler as categorias.", 500, { requestId });
+  let linhas: Array<{ categoria?: string | null; categoria_canonica?: string | null }> = [];
+  if (idsDaBusca) {
+    const { linhas: lidas, falhas } = await porFatias(idsDaBusca, async (fatia) => {
+      const { data, error } = await montar(fatia).limit(20_000);
+      return {
+        linhas: (data ?? []) as never[],
+        erro: error ?? undefined,
+      };
+    });
+    if (falhas > 0 && lidas.length === 0) {
+      return fail("internal_error", "Erro ao ler as categorias.", 500, { requestId });
+    }
+    linhas = lidas as unknown as typeof linhas;
+  } else {
+    const { data, error } = await montar().limit(20_000);
+    if (error) return fail("internal_error", "Erro ao ler as categorias.", 500, { requestId });
+    linhas = (data ?? []) as unknown as typeof linhas;
+  }
 
   // A contagem sai aqui em vez de um group-by no PostgREST: ele não devolve
   // agregado por campo sem view, e trazer 20k linhas é barato contra a
   // complexidade de uma view nova.
   const contagem = new Map<string, number>();
-  for (const linha of data ?? []) {
+  for (const linha of linhas) {
     const l = linha as { categoria?: string | null; categoria_canonica?: string | null };
     // 0277 — a faceta conta a categoria EFETIVA. O café dentro do posto deixa
     // de inflar "Posto de combustível" e aparece em "Café"; o token devolvido

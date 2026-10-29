@@ -19,6 +19,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { contaComoVenda } from "@/lib/comercial/dashboard";
+import { porFatias } from "@/lib/db/por-fatias";
 import { calcularFunil, type FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { StatusComercial } from "@/lib/schemas/prospeccao";
 import {
@@ -96,30 +97,41 @@ export async function funisDaDescoberta(
   // 2) resultados → prospects por campanha.
   const prospectsDaCampanha = new Map<string, Set<string>>();
   for (const c of campanhas) prospectsDaCampanha.set(c.id, new Set());
-  const { data: resultados, error: errResultados } = await supabase
-    .from("prospect_search_results")
-    .select("prospect_id, search_id")
-    .eq("organization_id", org)
-    .in("search_id", idsBusca)
-    .limit(10000 * n);
-  if (errResultados) throw new Error(errResultados.message);
-  for (const r of (resultados ?? []) as { prospect_id: string; search_id: string }[]) {
+  // As listas abaixo crescem com a base da campanha (até 10.000 resultados).
+  // Vão em fatias de 100: uma URL com 500 UUIDs já volta `414 URI too long`.
+  const { linhas: resultados, falhas: falhasResultados } = await porFatias(
+    idsBusca,
+    async (fatia) => {
+      const r = await supabase
+        .from("prospect_search_results")
+        .select("prospect_id, search_id")
+        .eq("organization_id", org)
+        .in("search_id", fatia)
+        .limit(10000 * n);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    },
+  );
+  if (falhasResultados > 0) throw new Error("resultados_indisponiveis: falha ao ler em fatias");
+  for (const r of resultados as { prospect_id: string; search_id: string }[]) {
     const campanhaId = campanhaDaBusca.get(r.search_id);
     if (campanhaId) prospectsDaCampanha.get(campanhaId)?.add(r.prospect_id);
   }
 
-  // 3) prospects da união (uma query só).
+  // 3) prospects da união (uma leitura em fatias).
   const todosIds = [...new Set([...prospectsDaCampanha.values()].flatMap((s) => [...s]))];
   const porId = new Map<string, ProspectDaCampanha>();
   if (todosIds.length > 0) {
-    const { data, error: errProspects } = await supabase
-      .from("business_prospects")
-      .select("id, status_comercial, owner_user_id, contact_id, lead_id")
-      .eq("organization_id", org)
-      .in("id", todosIds)
-      .limit(10000 * n);
-    if (errProspects) throw new Error(errProspects.message);
-    for (const p of (data ?? []) as unknown as ProspectDaCampanha[]) porId.set(p.id, p);
+    const { linhas, falhas } = await porFatias(todosIds, async (fatia) => {
+      const r = await supabase
+        .from("business_prospects")
+        .select("id, status_comercial, owner_user_id, contact_id, lead_id")
+        .eq("organization_id", org)
+        .in("id", fatia)
+        .limit(10000 * n);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    if (falhas > 0) throw new Error("prospects_indisponiveis: falha ao ler em fatias");
+    for (const p of linhas as unknown as ProspectDaCampanha[]) porId.set(p.id, p);
   }
 
   const linhasPorCampanha = new Map<string, ProspectDaCampanha[]>();
@@ -146,13 +158,16 @@ export async function funisDaDescoberta(
   const statusDoLead = new Map<string, string>();
   const contatoDoLead = new Map<string, string>();
   if (todosLeads.size > 0) {
-    const { data: leads, error: errLeads } = await supabase
-      .from("crm_leads")
-      .select("id, contact_id, status")
-      .eq("organization_id", org)
-      .in("id", [...todosLeads]);
-    if (errLeads) throw new Error(errLeads.message);
-    for (const l of (leads ?? []) as { id: string; contact_id: string | null; status: string }[]) {
+    const { linhas: leads, falhas } = await porFatias([...todosLeads], async (fatia) => {
+      const r = await supabase
+        .from("crm_leads")
+        .select("id, contact_id, status")
+        .eq("organization_id", org)
+        .in("id", fatia);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    if (falhas > 0) throw new Error("leads_indisponiveis: falha ao ler em fatias");
+    for (const l of leads as { id: string; contact_id: string | null; status: string }[]) {
       statusDoLead.set(l.id, l.status);
       if (l.contact_id) contatoDoLead.set(l.id, l.contact_id);
     }
@@ -176,15 +191,18 @@ export async function funisDaDescoberta(
   let pedidosLinha: { contact_id: string; total_cents: number; status: string; created_at: string }[] = [];
   if (todosContatos.size > 0) {
     const desdeIso = campanhas.map((c) => c.created_at).sort()[0];
-    const { data, error: errPedidos } = await supabase
-      .from("commercial_orders")
-      .select("contact_id, total_cents, status, created_at")
-      .eq("organization_id", org)
-      .in("contact_id", [...todosContatos])
-      .gte("created_at", desdeIso)
-      .limit(5000 * n);
-    if (errPedidos) throw new Error(errPedidos.message);
-    pedidosLinha = (data ?? []) as unknown as typeof pedidosLinha;
+    const { linhas, falhas } = await porFatias([...todosContatos], async (fatia) => {
+      const r = await supabase
+        .from("commercial_orders")
+        .select("contact_id, total_cents, status, created_at")
+        .eq("organization_id", org)
+        .in("contact_id", fatia)
+        .gte("created_at", desdeIso)
+        .limit(5000 * n);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    if (falhas > 0) throw new Error("pedidos_indisponiveis: falha ao ler em fatias");
+    pedidosLinha = linhas as unknown as typeof pedidosLinha;
   }
 
   for (const c of campanhas) {
@@ -250,14 +268,17 @@ export async function funisDaVendaAutomatica(
   }
   const contatoDoLead = new Map<string, string>();
   if (todosLeads.size > 0) {
-    const { data: leads, error: errLeads } = await supabase
-      .from("crm_leads")
-      .select("id, contact_id")
-      .eq("organization_id", org)
-      .in("id", [...todosLeads])
-      .limit(10000 * n);
-    if (errLeads) throw new Error(errLeads.message);
-    for (const l of (leads ?? []) as { id: string; contact_id: string | null }[]) {
+    const { linhas: leads, falhas } = await porFatias([...todosLeads], async (fatia) => {
+      const r = await supabase
+        .from("crm_leads")
+        .select("id, contact_id")
+        .eq("organization_id", org)
+        .in("id", fatia)
+        .limit(10000 * n);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    if (falhas > 0) throw new Error("leads_indisponiveis: falha ao ler em fatias");
+    for (const l of leads as { id: string; contact_id: string | null }[]) {
       if (l.contact_id) contatoDoLead.set(l.id, l.contact_id);
     }
   }
@@ -276,15 +297,18 @@ export async function funisDaVendaAutomatica(
   let pedidosLinha: { contact_id: string; total_cents: number; status: string; created_at: string }[] = [];
   if (todosContatos.size > 0) {
     const desdeIso = campanhas.map((c) => c.created_at).sort()[0];
-    const { data, error: errPedidos } = await supabase
-      .from("commercial_orders")
-      .select("contact_id, total_cents, status, created_at")
-      .eq("organization_id", org)
-      .in("contact_id", [...todosContatos])
-      .gte("created_at", desdeIso)
-      .limit(5000 * n);
-    if (errPedidos) throw new Error(errPedidos.message);
-    pedidosLinha = (data ?? []) as unknown as typeof pedidosLinha;
+    const { linhas, falhas } = await porFatias([...todosContatos], async (fatia) => {
+      const r = await supabase
+        .from("commercial_orders")
+        .select("contact_id, total_cents, status, created_at")
+        .eq("organization_id", org)
+        .in("contact_id", fatia)
+        .gte("created_at", desdeIso)
+        .limit(5000 * n);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    if (falhas > 0) throw new Error("pedidos_indisponiveis: falha ao ler em fatias");
+    pedidosLinha = linhas as unknown as typeof pedidosLinha;
   }
 
   for (const c of campanhas) {

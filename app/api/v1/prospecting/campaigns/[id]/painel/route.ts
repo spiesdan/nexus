@@ -18,6 +18,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { contaComoVenda } from "@/lib/comercial/dashboard";
+import { porFatias } from "@/lib/db/por-fatias";
 import { calcularFunil, type FunilDaCampanha } from "@/lib/prospeccao/funil";
 import type { StatusComercial } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
@@ -68,34 +69,45 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   const idsBusca = (buscas ?? []).map((b) => (b as { id: string }).id);
   let prospects: ProspectLinha[] = [];
   if (idsBusca.length > 0) {
-    const { data: resultados } = await supabase
-      .from("prospect_search_results")
-      .select("prospect_id")
-      .eq("organization_id", org)
-      .in("search_id", idsBusca)
-      .limit(10000);
-    const idsProspect = [...new Set((resultados ?? []).map((r) => (r as { prospect_id: string }).prospect_id))];
-    if (idsProspect.length > 0) {
-      const { data: linhas } = await supabase
-        .from("business_prospects")
-        .select("status_comercial, owner_user_id, contact_id, lead_id")
+    // As três leituras abaixo levam listas que crescem com a campanha (até
+    // 10.000 prospects). Em fatias de 100: 500 UUIDs numa URL já devolvem
+    // `414 URI too long` do PostgREST e o funil inteiro vira 500 na tela.
+    const { linhas: resultados } = await porFatias(idsBusca, async (fatia) => {
+      const r = await supabase
+        .from("prospect_search_results")
+        .select("prospect_id")
         .eq("organization_id", org)
-        .in("id", idsProspect)
+        .in("search_id", fatia)
         .limit(10000);
-      prospects = (linhas ?? []) as unknown as ProspectLinha[];
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    const idsProspect = [
+      ...new Set((resultados as { prospect_id: string }[]).map((r) => r.prospect_id)),
+    ];
+    if (idsProspect.length > 0) {
+      const { linhas } = await porFatias(idsProspect, async (fatia) => {
+        const r = await supabase
+          .from("business_prospects")
+          .select("status_comercial, owner_user_id, contact_id, lead_id")
+          .eq("organization_id", org)
+          .in("id", fatia)
+          .limit(10000);
+        return { linhas: (r.data ?? []) as never[], erro: r.error };
+      });
+      prospects = linhas as unknown as ProspectLinha[];
     }
   }
 
   const idsLead = [...new Set(prospects.map((p) => p.lead_id).filter((v): v is string => !!v))];
-  const { data: leads } =
-    idsLead.length > 0
-      ? await supabase
-          .from("crm_leads")
-          .select("id, contact_id, status")
-          .eq("organization_id", org)
-          .in("id", idsLead)
-      : { data: [] };
-  const linhasLead = (leads ?? []) as { contact_id: string | null; status: string }[];
+  const { linhas: leads } = await porFatias(idsLead, async (fatia) => {
+    const r = await supabase
+      .from("crm_leads")
+      .select("id, contact_id, status")
+      .eq("organization_id", org)
+      .in("id", fatia);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
+  const linhasLead = leads as { contact_id: string | null; status: string }[];
   const oportunidades = linhasLead.filter((l) => l.status === "open").length;
 
   const contatos = [
@@ -109,14 +121,17 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   let pedidos = 0;
   let faturamento = 0;
   if (contatos.length > 0) {
-    const { data: pedidosLinhas } = await supabase
-      .from("commercial_orders")
-      .select("total_cents, status, created_at")
-      .eq("organization_id", org)
-      .in("contact_id", contatos)
-      .gte("created_at", (campanha as { created_at: string }).created_at)
-      .limit(5000);
-    for (const linha of (pedidosLinhas ?? []) as { total_cents: number; status: string }[]) {
+    const { linhas: pedidosLinhas } = await porFatias(contatos, async (fatia) => {
+      const r = await supabase
+        .from("commercial_orders")
+        .select("total_cents, status, created_at")
+        .eq("organization_id", org)
+        .in("contact_id", fatia)
+        .gte("created_at", (campanha as { created_at: string }).created_at)
+        .limit(5000);
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    });
+    for (const linha of pedidosLinhas as { total_cents: number; status: string }[]) {
       if (contaComoVenda(linha.status)) {
         pedidos++;
         faturamento += linha.total_cents;
