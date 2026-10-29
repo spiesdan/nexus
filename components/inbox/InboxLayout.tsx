@@ -464,7 +464,14 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             <>
               <ConversationHeader conversation={selectedConversation} />
               <div className="min-h-0 flex-1 overflow-hidden">
-                <ChatThread conversationId={selectedConversation.id} onResponder={setRespondendo} />
+                {/* `key` remonta o thread por conversa: âncoras de rolagem,
+                    "estou no fim" e contador de novidades começam do zero sem
+                    um efeito de reset (ver comentário em ChatThread). */}
+                <ChatThread
+                  key={selectedConversation.id}
+                  conversationId={selectedConversation.id}
+                  onResponder={setRespondendo}
+                />
               </div>
               <RetentionNotice conversationId={selectedConversation.id} />
               {motivoDaJanela && (

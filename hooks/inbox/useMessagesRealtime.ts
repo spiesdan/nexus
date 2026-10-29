@@ -80,9 +80,14 @@ export function useMessagesRealtime(conversationId: string | null) {
    * está OLHANDO a conversa enquanto responde. Com o canal morto e a aba em
    * foco, a resposta do cliente não aparecia até o F5.
    *
-   * A assinatura é a contagem de mensagens mais o id da mais recente — a
-   * contagem sozinha não flagraria uma mensagem que chega e outra que sai da
-   * primeira página no mesmo intervalo.
+   * A assinatura é a contagem de mensagens mais o id da mensagem mais ANTIGA
+   * da primeira página (o topo do que está carregado). A escolha é deliberada:
+   *
+   *   · uma mensagem que ENTRA desloca a janela para o lado novo, e o id do
+   *     topo muda mesmo que a contagem fique igual no mesmo intervalo;
+   *   · a mensagem otimista do próprio atendente entra no OUTRO extremo e não
+   *     mexe no topo — usá-la na assinatura faria o envio legítimo virar
+   *     "divergência" sempre que o canal não ecoasse de volta.
    */
   const seguranca = useRefetchDeSeguranca<{ pages: MessagesResponse[] }>({
     queryKey,
