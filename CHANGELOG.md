@@ -8,63 +8,6 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
-## [1.35.2] — 2026-10-28
-
-### Alterado
-
-- **O Radar vira seis telas, uma por pergunta** O Radar era uma página só, com sete blocos empilhados e cinco botões que
-  rolavam até eles. Para chegar em "quem está esfriando" era preciso atravessar
-  KPIs, gráficos, categorias, saúde da carteira, oportunidades, recompra,
-  recuperação e demandas — e nenhum botão dizia onde a pessoa estava, porque não
-  havia onde estar: tudo era a mesma página.
-
-  Agora cada pergunta tem endereço próprio, como já acontece na ficha da carga da
-  Expedição:
-
-  - **Visão geral** — como está a carteira e o que fazer hoje;
-  - **Categorias** — quem contatar, separado por motivo, com a próxima ação;
-  - **Oportunidades** — quem já comprou e está no ponto de comprar de novo;
-  - **Risco de demandas** — demandas abertas que esfriaram sem resposta;
-  - **Recuperação** — quem comprava e parou, por prioridade;
-  - **Prospecção** — quem podemos vender hoje, antes do primeiro pedido.
-
-  O recorte (busca, vendedor, cidade, período, nível) acompanha a navegação: quem
-  filtra uma cidade e troca de tela continua na cidade, e o endereço guarda o
-  recorte para o F5 e para mandar a alguém. Os números da visão geral levam para
-  a lista já recortada — clicar em "Em risco" abre as oportunidades naquela
-  situação, em vez de só rolar a tela.
-
-  Os links antigos continuam funcionando: `/app/recuperacao` e os endereços com
-  `#radar-recuperacao`, `#radar-demandas` e `#radar-prospeccao` caem nas telas
-  novas. Quem já instalou não precisa fazer nada.
-
-### Corrigido
-
-- **A lista do Inbox segue a ordem do WhatsApp** A lista do Inbox não parecia ordenada por tempo, e a conversa não se comportava
-  como no WhatsApp. Eram três defeitos independentes, e o primeiro escondia os
-  outros dois.
-
-  A régua da lista não era a régua da linha: a aba Fila ordenava por entrada e a
-  linha mostrava a hora da última mensagem, então a resposta do atendente adiantava
-  a hora exibida sem mudar a posição — um item com 14:32 aparecia acima de outro
-  com 14:35. Agora todas as abas ordenam pela última mensagem, com desempate
-  estável, e o tempo de espera continua na linha como rótulo, sem fingir que
-  define prioridade.
-
-  O carimbo da conversa andava para trás: uma mensagem antiga que chegava depois
-  (fila do WhatsApp após reconexão, nova tentativa do webhook, importação de
-  histórico) levava a conversa para o passado e trocava a prévia por um texto
-  velho. O banco passa a só avançar as datas e a prévia só é substituída pela
-  mensagem mais nova, e a entrada de mensagens usa o horário do provedor.
-
-  A conversa abria no topo e não acompanhava o que chegava. Agora abre no fim,
-  acompanha mensagem nova quando você já está no fim, preserva a posição ao
-  carregar as antigas e oferece "ir para o fim" com contador quando você rolou
-  para cima. Mensagem repetida não vira bolha duplicada, e trocar de conversa não
-  herda a rolagem da anterior.
-
-  Nada a fazer na instalação: a atualização aplica a mudança de banco sozinha.
-
 ## [1.35.1] — 2026-10-27
 
 ### Corrigido
@@ -5433,8 +5376,7 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.2...HEAD
-[1.35.2]: https://github.com/spiesdan/nexus/compare/v1.35.1...v1.35.2
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.1...HEAD
 [1.35.1]: https://github.com/spiesdan/nexus/compare/v1.35.0...v1.35.1
 [1.35.0]: https://github.com/spiesdan/nexus/compare/v1.34.0...v1.35.0
 [1.34.0]: https://github.com/spiesdan/nexus/compare/v1.33.1...v1.34.0
