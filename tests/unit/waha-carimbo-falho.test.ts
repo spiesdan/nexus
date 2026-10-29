@@ -92,6 +92,25 @@ describe("carimbo da conversa que falha", () => {
     expect(JSON.stringify(aviso.args)).not.toContain("oi, tudo bem?");
   });
 
+  /**
+   * A HORA DO CARIMBO É A DO WHATSAPP.
+   *
+   * `messages.sent_at` sempre usou o timestamp do provider; o carimbo da
+   * conversa usava `new Date()` do webhook. Em entrega atrasada os dois
+   * divergem por minutos ou horas, e como `last_message_at` é a régua da lista,
+   * a conversa subia para o topo com uma mensagem ANTIGA — a "ordem de tempo"
+   * quebrada que o dono relatou. `[DISCRIMINA]`: antes do conserto, `p_at` era
+   * o instante do teste e esta asserção ficava vermelha.
+   */
+  it("[DISCRIMINA] carimba a conversa com a hora da mensagem, não com a do webhook", async () => {
+    const { admin, chamadas } = adminQueFalhaEm("nenhuma-rpc-falha-aqui");
+
+    await dispatchWahaEvent(admin as never, SESSION as never, ENVELOPE, "req-1");
+
+    const carimbo = chamadas.find((c) => c.fn === "fn_mark_conversation_message");
+    expect(carimbo?.args.p_at).toBe(new Date(1_760_000_000 * 1000).toISOString());
+  });
+
   it("não emite o aviso quando o carimbo dá certo", async () => {
     // O CONTROLE que impede o teste de passar por acidente: se o aviso saísse em
     // toda mensagem, as asserções acima passariam igual e não estariam provando

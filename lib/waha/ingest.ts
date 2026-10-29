@@ -653,6 +653,21 @@ async function handleInbound(
   if (!conversationId) return;
 
   const now = new Date().toISOString();
+  /**
+   * A HORA DA MENSAGEM É A DO WHATSAPP, NÃO A DO WEBHOOK — e vale para os DOIS
+   * lugares que a leem.
+   *
+   * `messages.sent_at` já usava o timestamp do provider. O carimbo da conversa
+   * usava `now` (o instante em que o webhook chegou). Em entrega atrasada — a
+   * fila do WhatsApp reenviando depois de uma reconexão, ou um retry do WAHA —
+   * os dois divergem por minutos ou horas: a mensagem entra no passado do fio e
+   * a conversa sobe para o TOPO da lista como se fosse a mais recente.
+   *
+   * É a assinatura de "as conversas estão fora de ordem de tempo": a ordem da
+   * lista segue `last_message_at`, e ele estava sendo escrito com um relógio
+   * que não é o da mensagem. Uma verdade só, calculada uma vez.
+   */
+  const sentAt = p.timestamp ? new Date(p.timestamp * 1000).toISOString() : now;
   const { data: insertedMessage, error: insertErr } = await admin
     .from("messages")
     .insert({
@@ -669,7 +684,7 @@ async function handleInbound(
       media_url: mediaUrlOf(p),
       media_mime: mediaMimeOf(p),
       sent_via: "external_device",
-      sent_at: p.timestamp ? new Date(p.timestamp * 1000).toISOString() : now,
+      sent_at: sentAt,
       delivered_at: now,
       metadata: { raw_type: p.type, ack_name: p.ackName },
     })
@@ -719,7 +734,7 @@ async function handleInbound(
     return;
   }
 
-  await markConversation(admin, session.organization_id, conversationId, "inbound", previewFromMessage(p), now);
+  await markConversation(admin, session.organization_id, conversationId, "inbound", previewFromMessage(p), sentAt);
 
   await audit({
     action: "message.received",
@@ -881,6 +896,8 @@ async function handleOutboundFromUserPhone(
   if (!conversationId) return;
 
   const now = new Date().toISOString();
+  // Mesma regra do inbound: a hora da mensagem manda no fio E na lista.
+  const sentAt = p.timestamp ? new Date(p.timestamp * 1000).toISOString() : now;
   const { data: insertedOutbound, error: insertErr } = await admin
     .from("messages")
     .insert({
@@ -897,7 +914,7 @@ async function handleOutboundFromUserPhone(
       media_url: mediaUrlOf(p),
       media_mime: mediaMimeOf(p),
       sent_via: "external_device",
-      sent_at: p.timestamp ? new Date(p.timestamp * 1000).toISOString() : now,
+      sent_at: sentAt,
       metadata: { raw_type: p.type, fromMe: true },
     })
     .select("id")
@@ -916,7 +933,7 @@ async function handleOutboundFromUserPhone(
     return;
   }
 
-  await markConversation(admin, session.organization_id, conversationId, "outbound", previewFromMessage(p), now);
+  await markConversation(admin, session.organization_id, conversationId, "outbound", previewFromMessage(p), sentAt);
 
   // Ver `silenciarBotPorRetomadaHumana` — um humano acabou de responder direto pelo
   // WhatsApp dele, fora do composer/IA; dá a ele uma janela curta de controle da

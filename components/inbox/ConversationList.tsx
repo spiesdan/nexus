@@ -11,7 +11,8 @@ import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 
 import { ConversationListItem } from "./ConversationListItem";
-import { EmptyInbox } from "@/components/empty";
+import { EmptyInbox, EmptyFilterResults } from "@/components/empty";
+import { ordenarConversas } from "@/lib/inbox/ordem-da-conversa";
 import type {
   ConversationsFilters,
   ConversationWithContact,
@@ -52,11 +53,15 @@ export function ConversationList({
   const canais = useChannelSessions().data ?? [];
   const maisDeUmCanal = canais.length > 1;
 
-  // Fila (G5-03): a lista já vem ordenada por tempo de espera (server), então a
-  // posição é o índice na lista visível. Só mostramos posição/espera nessa visão.
-  // A Fila deixou de mandar `assigned_to=unassigned` (agora pede `comando`), e
-  // sem esta linha a numeração "1º, 2º…" e o tempo de espera sumiriam da única
-  // visão em que servem para alguma coisa — sem erro nenhum, só sumiriam.
+  // Fila: mostra "Aguardando há…" na linha.
+  //
+  // ⚠️ A POSIÇÃO ("1º, 2º…") SAIU DAQUI, e a razão é a mesma que unificou a
+  // ordenação. A numeração era o índice da lista quando a lista era ordenada
+  // por tempo de espera; hoje ela ordena por `last_message_at`, como todas as
+  // abas. Manter o número faria o "1º" apontar para a conversa mais RECENTE —
+  // o oposto do que a palavra promete — e o atendente leria prioridade onde
+  // não há. O que a Fila promete continua visível e verdadeiro: há quanto tempo
+  // cada conversa espera.
   const isQueue =
     filters.comando?.includes("aguardando") ?? filters.assigned_to === "unassigned";
   // Uma leitura por lista, compartilhada por todas as linhas (react-query dedupa
@@ -65,7 +70,16 @@ export function ConversationList({
 
   const items = useMemo(() => {
     const all: ConversationWithContact[] = q.data?.pages.flatMap((p) => p.data) ?? [];
-    return clientFilter ? all.filter(clientFilter) : all;
+    // A ORDEM É RECALCULADA AQUI, e não herdada da concatenação das páginas.
+    //
+    // Ordem e hora mostrada na linha têm de ser a MESMA pergunta: a linha
+    // imprime `last_message_at`, então é por ele que a lista se ordena — em
+    // todas as abas. A definição (e o motivo) vive em
+    // `lib/inbox/ordem-da-conversa.ts`; aqui só se aplica, depois de juntar as
+    // páginas, para que uma refetch fora de sequência ou a borda sobreposta de
+    // duas páginas não apareça como "lista desordenada".
+    const ordenadas = ordenarConversas(all);
+    return clientFilter ? ordenadas.filter(clientFilter) : ordenadas;
   }, [q.data, clientFilter]);
 
   // Notify parent of currently-visible IDs (for j/k nav). Must use effect
@@ -124,9 +138,21 @@ export function ConversationList({
   }
 
   if (items.length === 0) {
+    /**
+     * LISTA VAZIA PORQUE NÃO HÁ CONVERSA ≠ LISTA VAZIA PORQUE O FILTRO NÃO
+     * ACHOU NADA.
+     *
+     * O estado vazio dizia "Sem conversas por aqui — quando chegarem mensagens,
+     * elas aparecem aqui em tempo real" mesmo com a busca preenchida e 300
+     * conversas carregadas. O atendente conclui que a caixa está vazia e para de
+     * procurar; a saída é o outro texto, que manda ajustar o filtro.
+     */
+    const filtrando = Boolean(
+      filters.search?.trim() || filters.tag || filters.channel_session_id || clientFilter,
+    );
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <EmptyInbox />
+        {filtrando ? <EmptyFilterResults /> : <EmptyInbox />}
       </div>
     );
   }
@@ -134,13 +160,13 @@ export function ConversationList({
   return (
     <div className="flex h-full flex-col">
       <div className="flex-1 overflow-y-auto">
-        {items.map((c, i) => (
+        {items.map((c) => (
           <ConversationListItem
             key={c.id}
             conversation={c}
             isSelected={c.id === selectedId}
             onSelect={onSelect}
-            queuePosition={isQueue ? i + 1 : undefined}
+            mostrarEspera={isQueue}
             mostrarCanal={maisDeUmCanal}
             mostrarAtendente={mostrarAtendente}
             automaticoDaOrg={automaticoDaOrg.data}

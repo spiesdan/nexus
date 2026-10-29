@@ -20,8 +20,16 @@ interface Props {
   conversation: ConversationWithContact;
   isSelected: boolean;
   onSelect: (id: string) => void;
-  /** Posição 1-based na fila (G5-03). Presente só na visão Fila. */
-  queuePosition?: number;
+  /**
+   * Mostrar "Aguardando há…" — só na visão Fila.
+   *
+   * O que NÃO existe mais aqui é a posição ("1º, 2º…"). Ela era o índice de uma
+   * lista ordenada por tempo de espera; a lista passou a ordenar por
+   * `last_message_at` em todas as abas (o mesmo relógio que a linha imprime), e
+   * o número passaria a prometer uma prioridade que a ordem não entrega. O
+   * tempo de espera continua — esse é verdadeiro em qualquer ordenação.
+   */
+  mostrarEspera?: boolean;
   /**
    * Mostrar POR ONDE a conversa entrou.
    *
@@ -108,7 +116,7 @@ export function ConversationListItem({
   conversation,
   isSelected,
   onSelect,
-  queuePosition,
+  mostrarEspera,
   mostrarCanal,
   mostrarAtendente,
   automaticoDaOrg,
@@ -189,14 +197,8 @@ export function ConversationListItem({
       </div>
 
       <div className="min-w-0 flex-1">
-        {queuePosition !== undefined && (
+        {mostrarEspera && (
           <div className="mb-1 flex items-center gap-1.5">
-            <span
-              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/10 px-1 text-[10px] font-medium text-primary tabular-nums"
-              aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
-            >
-              {queuePosition}º
-            </span>
             <span className="text-xs font-semibold text-error-fg">
               {waitingLabel(conversation, t, localeDaData)}
             </span>

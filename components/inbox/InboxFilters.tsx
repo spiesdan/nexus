@@ -1,6 +1,6 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -123,16 +123,28 @@ export function InboxFilters({ value, onChange }: Props) {
     !ASSUNTOS_CURADOS.some((c) => c.tag === value.tag) &&
     !vocabulario.includes(value.tag);
 
-  // Debounce search input → propagate to parent.
+  /**
+   * Debounce da busca → pai.
+   *
+   * ⚠️ O `value` lido aqui é o de um REF, e não o capturado no render. A versão
+   * anterior fechava sobre o `value` do instante da digitação: quem digitava e
+   * trocava de aba em menos de 250ms via a aba VOLTAR, porque o timer disparava
+   * depois com o `tab` antigo no objeto. Estado que chega por callback não pode
+   * ser reconstruído de uma foto velha.
+   */
+  const valorAtual = useRef(value);
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (searchInput !== value.search) {
-        onChange({ ...value, search: searchInput });
+    valorAtual.current = value;
+  }, [value]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== valorAtual.current.search) {
+        onChange({ ...valorAtual.current, search: searchInput });
       }
     }, 250);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
+    return () => clearTimeout(timer);
+  }, [searchInput, onChange]);
 
   return (
     // `.list-top` da referência: 16px de respiro, filete embaixo, grade com

@@ -13,8 +13,9 @@
  * some junto com ele o único controle capaz de desfazer um filtro que continua
  * valendo — inbox filtrado, às vezes vazio, sem nada na tela dizendo por quê.
  */
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { InboxFilters, visibleInboxTabs, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
 import type * as CanaisModule from "@/hooks/channels/useChannelSessions";
@@ -175,5 +176,56 @@ describe("InboxFilters — seletor de número e o filtro órfão", () => {
       <InboxFilters value={{ ...VALUE, channel_session_id: "canal-1" }} onChange={() => {}} />,
     );
     expect(screen.queryByText("Número removido")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * A BUSCA ATRASADA NÃO PODE DESFAZER A TROCA DE ABA.
+ *
+ * O debounce fechava sobre o `value` do instante da digitação. Quem digitava e
+ * clicava em "Todas" em menos de 250ms via a aba VOLTAR: o timer disparava
+ * depois carregando o `tab` antigo no objeto enviado ao pai. Aqui o caso é
+ * reproduzido com timers falsos — com o código anterior, o último `onChange`
+ * chega com `tab: "unassigned"` e o teste fica vermelho.
+ */
+function Harness({ espiar }: { espiar: (v: InboxFiltersValue) => void }) {
+  const [v, setV] = useState<InboxFiltersValue>({
+    tab: "unassigned",
+    search: "",
+    onlyUnread: false,
+  });
+  return (
+    <InboxFilters
+      value={v}
+      onChange={(proximo) => {
+        setV(proximo);
+        espiar(proximo);
+      }}
+    />
+  );
+}
+
+describe("InboxFilters — busca com debounce", () => {
+  it("[DISCRIMINA] digitar e trocar de aba antes do debounce não devolve a aba antiga", () => {
+    vi.useFakeTimers();
+    setOrg("manager", "all");
+    const espiar = vi.fn();
+    render(<Harness espiar={espiar} />);
+
+    fireEvent.change(screen.getByLabelText("Buscar conversas"), {
+      target: { value: "maria" },
+    });
+    // Radix ativa a aba no `mousedown` (activationMode automático); um `click`
+    // solto não a seleciona em jsdom.
+    fireEvent.mouseDown(screen.getByRole("tab", { name: /Todas/ }), { button: 0 });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(espiar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tab: "all", search: "maria" }),
+    );
+    vi.useRealTimers();
   });
 });

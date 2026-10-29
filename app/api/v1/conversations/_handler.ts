@@ -87,19 +87,25 @@ export async function listConversationsHandler(
 ): Promise<ListConversationsResult> {
   // ═══ A ORDEM DO INBOX É A MESMA EM TODAS AS ABAS: MAIS RECENTE NO TOPO ═══
   //
-  // A Fila nasceu ordenada por tempo de espera (quem aguarda há mais tempo
-  // primeiro). O efeito na tela, porém, era o oposto do que o dono espera de um
-  // inbox: uma mensagem nova entrava EMBAIXO das antigas. A leitura de "fila"
-  // como prioridade não sobreviveu ao uso real; a leitura de "inbox" venceu.
+  // E a régua é UMA: `last_message_at` — a última mensagem, de qualquer lado.
   //
-  // Continuamos usando `last_inbound_at` na Fila — é ele que diz quando o
-  // cliente falou pela última vez, e não `created_at` (uma conversa antiga
-  // reaberta não deve parecer nova). O que mudou foi o sentido: descendente,
-  // como `last_message_at` nas demais visões. Quem espera há mais tempo
-  // continua visível pelo tempo de espera na linha; a posição não é mais a
-  // régua de prioridade.
-  const isQueue = q.comando?.includes("aguardando") ?? q.assigned_to === "unassigned";
-  const sortCol = isQueue ? "last_inbound_at" : "last_message_at";
+  // A Fila nasceu ordenada por tempo de espera e depois foi para
+  // `last_inbound_at` descendente. As duas versões tinham o mesmo defeito, e
+  // ele não está no sentido da seta: a LINHA mostra `last_message_at`. Ordenar
+  // por outro relógio faz a lista parecer fora de ordem na tela — a resposta do
+  // atendente adianta a hora exibida sem mexer no `last_inbound_at`, então um
+  // item com "14:32" aparece acima de outro com "14:35". Foi o relato do dono:
+  // "as mensagens não estão em ordem de tempo".
+  //
+  // O que a aba Fila precisa (quem espera há mais tempo) continua visível: o
+  // tempo de espera é rótulo da linha, e a posição deixou de fingir ser
+  // prioridade. WhatsApp ordena por última mensagem em todas as visões, e é a
+  // gramática que o atendente já sabe ler.
+  //
+  // `id` como desempate e não a ordem de chegada do PostgREST: duas conversas
+  // do mesmo instante manteriam posição estável entre refetches, e o cursor
+  // continua andando sem pular nem repetir linha.
+  const sortCol = "last_message_at";
   const asc = false;
 
   let query = supabase
