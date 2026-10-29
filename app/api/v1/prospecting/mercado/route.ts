@@ -20,6 +20,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
+import { porFatias } from "@/lib/db/por-fatias";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
@@ -139,18 +140,25 @@ export async function GET(req: NextRequest): Promise<Response> {
   );
 
   // Telefones de prospects que batem com comprador sem vínculo formal —
-  // UMA query de contacts, compartilhada (no lote: união das cidades).
+  // UMA leitura de contacts, compartilhada (no lote: união das cidades), em
+  // fatias: 10.000 telefones numa query string não passam do gateway.
   const fonesProspects = [...new Set(linhas.map((l) => l.telefone_normalizado).filter(Boolean))] as string[];
   let clientesExtras = 0;
   if (fonesProspects.length > 0) {
-    const { data: contatos } = await supabase
-      .from("contacts")
-      .select("id, phone_number")
-      .eq("organization_id", org)
-      .in("phone_number", fonesProspects.map((f) => canonicalPhoneBR(f)))
-      .limit(5000);
+    const { linhas: contatos } = await porFatias(
+      fonesProspects.map((f) => canonicalPhoneBR(f)),
+      async (fatia) => {
+        const r = await supabase
+          .from("contacts")
+          .select("id, phone_number")
+          .eq("organization_id", org)
+          .in("phone_number", fatia)
+          .limit(5000);
+        return { linhas: (r.data ?? []) as never[], erro: r.error };
+      },
+    );
     const idsCompradores = new Set(
-      ((contatos ?? []) as { id: string }[]).map((c) => c.id).filter((id) => contatosClientes.has(id)),
+      (contatos as { id: string }[]).map((c) => c.id).filter((id) => contatosClientes.has(id)),
     );
     clientesExtras = idsCompradores.size;
   }

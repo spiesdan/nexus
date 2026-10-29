@@ -29,6 +29,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { porFatias } from "@/lib/db/por-fatias";
 import { logger } from "@/lib/logger";
 import { indiceDeClientes } from "@/lib/prospeccao/ja-cadastrada";
 import {
@@ -159,9 +160,24 @@ interface EnvioLinha extends EnvioDaCampanha {
   mensagem_indice: number | null;
 }
 
-const LOTE = 400;
-/** `message_id` é o id de `messages`; só vale consultar o que parece uuid. */
+/**
+ * As leituras da audiência vão em FATIAS de 100 (`porFatias`).
+ *
+ * Era `LOTE = 400`: 400 UUIDs viram ~15 KB de query string, o PostgREST
+ * responde `414 URI too long` e a tela inteira morria em "Não foi possível
+ * abrir a campanha" — com o banco são e uma campanha de 500 empresas já
+ * gravada. 100 ids dão ~3,8 KB, o mesmo número medido em `lib/db/por-fatias.ts`.
+ */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A primeira mensagem de erro das fatias — o chamador transforma em 500. */
+function mensagemDaFalha(erro: unknown, padrao: string): string {
+  if (erro && typeof erro === "object" && "message" in erro) {
+    const msg = (erro as { message?: unknown }).message;
+    if (typeof msg === "string" && msg) return msg;
+  }
+  return padrao;
+}
 
 async function buscarProspects(
   admin: ReturnType<typeof createAdminClient>,
@@ -169,15 +185,20 @@ async function buscarProspects(
   ids: string[],
 ): Promise<Map<string, LinhaProspect>> {
   const mapa = new Map<string, LinhaProspect>();
-  for (let i = 0; i < ids.length; i += LOTE) {
+  let primeiroErro: unknown = null;
+  const { linhas, falhas } = await porFatias(ids, async (fatia) => {
     const { data, error } = await admin
       .from("business_prospects")
       .select("id, nome, telefone, cidade, estado, categoria, categoria_canonica, status_comercial")
       .eq("organization_id", organizationId)
-      .in("id", ids.slice(i, i + LOTE));
-    if (error) throw new Error(`prospects_indisponiveis: ${error.message}`);
-    for (const linha of (data ?? []) as unknown as LinhaProspect[]) mapa.set(linha.id, linha);
+      .in("id", fatia);
+    if (error && !primeiroErro) primeiroErro = error;
+    return { linhas: (data ?? []) as unknown as LinhaProspect[], erro: error ?? undefined };
+  });
+  if (falhas > 0) {
+    throw new Error(`prospects_indisponiveis: ${mensagemDaFalha(primeiroErro, "falha ao ler em fatias")}`);
   }
+  for (const linha of linhas) mapa.set(linha.id, linha);
   return mapa;
 }
 
@@ -187,15 +208,20 @@ async function buscarContatos(
   ids: string[],
 ): Promise<Map<string, LinhaContato>> {
   const mapa = new Map<string, LinhaContato>();
-  for (let i = 0; i < ids.length; i += LOTE) {
+  let primeiroErro: unknown = null;
+  const { linhas, falhas } = await porFatias(ids, async (fatia) => {
     const { data, error } = await admin
       .from("contacts")
       .select("id, name, display_name, phone_number")
       .eq("organization_id", organizationId)
-      .in("id", ids.slice(i, i + LOTE));
-    if (error) throw new Error(`contatos_indisponiveis: ${error.message}`);
-    for (const linha of (data ?? []) as unknown as LinhaContato[]) mapa.set(linha.id, linha);
+      .in("id", fatia);
+    if (error && !primeiroErro) primeiroErro = error;
+    return { linhas: (data ?? []) as unknown as LinhaContato[], erro: error ?? undefined };
+  });
+  if (falhas > 0) {
+    throw new Error(`contatos_indisponiveis: ${mensagemDaFalha(primeiroErro, "falha ao ler em fatias")}`);
   }
+  for (const linha of linhas) mapa.set(linha.id, linha);
   return mapa;
 }
 
@@ -206,15 +232,20 @@ async function buscarMensagens(
 ): Promise<Map<string, LinhaMensagem>> {
   const mapa = new Map<string, LinhaMensagem>();
   const validos = [...new Set(messageIds.filter((id) => UUID.test(id)))];
-  for (let i = 0; i < validos.length; i += LOTE) {
+  let primeiroErro: unknown = null;
+  const { linhas, falhas } = await porFatias(validos, async (fatia) => {
     const { data, error } = await admin
       .from("messages")
       .select("id, conversation_id, sent_at, status, delivered_at, read_at")
       .eq("organization_id", organizationId)
-      .in("id", validos.slice(i, i + LOTE));
-    if (error) throw new Error(`mensagens_indisponiveis: ${error.message}`);
-    for (const linha of (data ?? []) as unknown as LinhaMensagem[]) mapa.set(linha.id, linha);
+      .in("id", fatia);
+    if (error && !primeiroErro) primeiroErro = error;
+    return { linhas: (data ?? []) as unknown as LinhaMensagem[], erro: error ?? undefined };
+  });
+  if (falhas > 0) {
+    throw new Error(`mensagens_indisponiveis: ${mensagemDaFalha(primeiroErro, "falha ao ler em fatias")}`);
   }
+  for (const linha of linhas) mapa.set(linha.id, linha);
   return mapa;
 }
 
