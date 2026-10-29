@@ -45,8 +45,8 @@ test("abas canônicas: 6 telas em ui/tabs + sub-nav do tenant com href", async (
   await saudavel(page);
   await page.screenshot({ path: "evidence/fase5-tabs-unicas/1-produtos-abas-desktop.png" });
 
-  // 2. radar - categorias
-  await page.goto("/app/radar");
+  // 2. radar - categorias (subtela própria desde que a landing foi fatiada)
+  await page.goto("/app/radar/categorias");
   const categorias = page.getByRole("tablist", { name: "Categorias" });
   await expect(categorias).toBeVisible({ timeout: 15_000 });
   await categorias.getByRole("tab", { name: /^Oportunidade/ }).click();

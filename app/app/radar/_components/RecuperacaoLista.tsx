@@ -31,10 +31,11 @@ const FAIXA_VARIANT: Record<FaixaDeInatividade, "info" | "warning" | "error"> = 
 
 /**
  * Seção "Recuperação de clientes" do Radar — era a página /app/recuperacao,
- * movida para cá na fusão (S100). O título (h2) e o link de âncora
- * `#radar-recuperacao` vivem em `../_tabs`; aqui ficam subtítulo, filtro e
- * lista, com estados na mesma régua das listas vizinhas (Skeleton, erro com
- * retry, cards de vazio/sem base já existentes).
+ * movida para cá na fusão (S100) e depois para a tela própria
+ * `/app/radar/recuperacao`. O título (h2) e a explicação vivem em
+ * `secoes/Recuperacao.tsx`; aqui ficam filtro e lista, com estados na mesma
+ * régua das listas vizinhas (Skeleton, erro com retry, cards de vazio/sem base
+ * já existentes).
  */
 export function RecuperacaoLista({ temBase }: { temBase: boolean }) {
   const t = useT();

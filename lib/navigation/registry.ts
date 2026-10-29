@@ -504,8 +504,9 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // alerta do Dashboard ("clientes sumidos"), o briefing de indicadores e o
     // ⌘K. A rota virou REDIRECIONAMENTO na fusão com o Radar (S100): o href
     // fica como está porque `navegacao-completude` exige href ∈ rota em disco
-    // (match exato) — e é o redirect que entrega o usuário em
-    // `#radar-recuperacao`.
+    // (match exato) — e é o redirect que entrega o usuário na tela
+    // `/app/radar/recuperacao` (antes, na âncora `#radar-recuperacao` da
+    // landing do Radar).
     href: "/app/recuperacao",
     label: "Recuperação",
     description: "Quem comprava e parou, por ordem de prioridade — com ação direta.",
