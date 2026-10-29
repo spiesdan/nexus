@@ -24,6 +24,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { FATIA_DE_IDS } from "@/lib/db/por-fatias";
 import {
   categoriaCombinaComCampanha,
   categoriaEfetiva,
@@ -67,7 +68,15 @@ interface ContatoDaReserva {
   display_name: string | null;
 }
 
-const LOTE = 400;
+/**
+ * O lote segue a régua de `lib/db/por-fatias.ts`: 100 ids ≈ 3,8 KB de URL.
+ *
+ * Era 400 — e 400 UUIDs viram ~15 KB de query string. O PostgREST respondia
+ * `414 URI too long`, a reserva lançava, e criar campanha com 500 empresas
+ * morria num 500 ("Erro ao validar as empresas da campanha") com o banco são.
+ * O número não mora aqui: importa o mesmo `FATIA_DE_IDS` que o resto do repo.
+ */
+const LOTE = FATIA_DE_IDS;
 
 function lotes<T>(itens: T[], tamanho: number): T[][] {
   const saida: T[][] = [];
