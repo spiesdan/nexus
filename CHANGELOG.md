@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.4] — 2026-10-29
+
+### Corrigido
+
+- **Abrir a campanha e ler a base grande deixam de estourar a URL** Com a campanha de 500 empresas finalmente criada, a tela de controle abria em
+  "Não foi possível abrir a campanha": a rota `/campanhas/[id]/controle` ainda
+  mandava 400 UUIDs numa consulta só (`LOTE = 400`) e o PostgREST respondia
+  `414 URI too long`. O mesmo defeito que a 1.35.3 corrigiu na criação continuava
+  vivo nas leituras da audiência.
+
+  Agora todas as leituras de lista de ids do caminho da campanha usam a fatia
+  canônica de 100 (`lib/db/por-fatias.ts`): controle, painel, disparo, agendador,
+  funil em lote, aba Empresas (busca e categorias) e mercado. Uma campanha de 500
+  empresas abre, mostra a fila e o agendador consegue escolher quem recebe.
+
+  Um gate novo (`tests/unit/audiencia-em-fatias.test.ts`) reprova o retorno do
+  lote local de 400 nos arquivos da audiência.
+
 ## [1.35.3] — 2026-10-29
 
 ### Corrigido
@@ -5446,7 +5464,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.4...HEAD
+[1.35.4]: https://github.com/spiesdan/nexus/compare/v1.35.3...v1.35.4
 [1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
 [1.35.2]: https://github.com/spiesdan/nexus/compare/v1.35.1...v1.35.2
 [1.35.1]: https://github.com/spiesdan/nexus/compare/v1.35.0...v1.35.1
