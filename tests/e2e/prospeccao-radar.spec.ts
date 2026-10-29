@@ -5,12 +5,12 @@ import { lerCreds, loginComoDono, type CredsE2E } from "./helpers/login-admin";
 import { execNpx } from "./utils/npx";
 
 /**
- * Radar → seção "Novos prospects" (spec 19, FASE 11, §30) — a seção que o B17
+ * Radar → tela "Prospecção" (spec 19, FASE 11, §30) — a seção que o B17
  * apontava como sem spec própria. O que esta prova de ponta a ponta:
  *
- *  1. a seção existe na página única do Radar SEM clique intermediário (o
- *     molde das outras seções — esconder atrás de aba quebraria os e2e
- *     `recompra-radar`/`risk-radar`, por isso a rolagem);
+ *  1. a tela tem endereço próprio (`/app/radar/prospeccao`) e é alcançada
+ *     pela navegação da seção — desde que a landing do Radar foi fatiada,
+ *     cada tarefa é uma tela, como na ficha da carga da Expedição;
  *  2. o prospect semeado NUNCA abordado (`status=novo`, sem dono) cai no
  *     recorte `status=novo,nao_analisado` que a rota responde;
  *  3. as 3 ações do §30 batem: **Adicionar à fila** vira meu (o botão some),
@@ -39,9 +39,12 @@ test.beforeAll(() => {
 
 test("radar: novos prospects com as 3 ações — fila, abrir e conversa", async ({ page }) => {
   await loginComoDono(page, creds);
-  await page.goto("/app/radar");
 
-  // A seção nasce visível na página única (o botão "Prospecção" só rola).
+  // Entra pelo Radar (a porta do menu) e navega até a seção, como a pessoa faz.
+  await page.goto("/app/radar");
+  await page.getByRole("link", { name: "Prospecção" }).click();
+  await page.waitForURL(/\/app\/radar\/prospeccao/);
+
   const secao = page.locator("#radar-prospeccao");
   await expect(secao.getByRole("heading", { name: "Novos prospects" })).toBeVisible({
     timeout: 20_000,
@@ -51,10 +54,8 @@ test("radar: novos prospects com as 3 ações — fila, abrir e conversa", async
   const card = secao.locator("li", { hasText: NOME_PROSPECT });
   await expect(card).toBeVisible({ timeout: 20_000 });
 
-  // O botão da seção ROLA até ela (sem trocar de conteúdo) — e é assim que um
-  // usuário chega aqui. A evidência sai já com a seção em vista: o app rola em
-  // contêiner interno, então `fullPage` não desce e o corte fica no topo.
-  await page.getByRole("button", { name: "Prospecção", exact: true }).click();
+  // A evidência sai já com a seção em vista: o app rola em contêiner interno,
+  // então `fullPage` não desce e o corte ficaria no topo.
   await card.scrollIntoViewIfNeeded();
 
   // O assistente saiu do canto inferior direito e virou um painel lateral
@@ -81,7 +82,7 @@ test("radar: novos prospects com as 3 ações — fila, abrir e conversa", async
   expect(id).toBeTruthy();
 
   // ---- Ação 3: Iniciar conversa → Inbox com a conversa recém-aberta ----
-  await page.goto("/app/radar");
+  await page.goto("/app/radar/prospeccao");
   const cardDeVolta = secao.locator("li", { hasText: NOME_PROSPECT });
   await expect(cardDeVolta).toBeVisible({ timeout: 20_000 });
   await cardDeVolta.getByRole("button", { name: "Iniciar conversa" }).click();

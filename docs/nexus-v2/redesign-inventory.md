@@ -67,7 +67,7 @@ Sinais medidos no tenant: 18/80 rotas importam algo de `nexus-ui`; 9 usam
 | `/app/financeiro` | CONSOLIDAR ✅ | 4 `<table>` cruas→`ui/table`+`NexusDataTable` (erros/empty por aba), `NexusPageHeader`, 6 abas com Títulos (`679b65fb3`) |
 | `/app/kanban` | CONSOLIDAR | é lista de funis; duplica `/settings/tenant/pipelines` |
 | `/app/metrics` | REDIRECT→`/indicadores` | fusão na 4g: virou a seção `#desempenho` (`f13ca808d`); rota mantida como redirect com `#` |
-| `/app/recuperacao` | REDIRECT→`/radar` | fusão na 4f: virou a seção `#radar-recuperacao` (`b60fe1a1f`); rota mantida como redirect com `#` |
+| `/app/recuperacao` | REDIRECT→`/radar/recuperacao` | fusão na 4f: virou a seção `#radar-recuperacao` (`b60fe1a1f`); com o Radar fatiado em seis telas a recuperação ganhou endereço próprio, e a rota mantém o redirect |
 | `/app/inbox/[id]` | CONSOLIDAR | rota-resolver (push) — **manter**, não é UI |
 | `/app/leads/[id]` | CONSOLIDAR | rota-resolver (permalinks radar/webhooks) — **manter** |
 | `/app/settings/canal-oficial` | REMOVER* | stub redirect → `connections?aba=oficial` |

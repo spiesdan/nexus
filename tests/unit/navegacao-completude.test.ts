@@ -37,6 +37,16 @@ const NAV_ALLOWLIST: Record<string, string> = {
     "sub-fluxo de criar pedido, alcançado pelo botão dentro da lista de Pedidos",
   "/app/expedicao/nova":
     "sub-fluxo de montar carga, alcançado pelo botão Nova carga da lista de Expedição — tarefa com começo, meio e fim, com endereço próprio para sobreviver ao F5 e ser enviada a quem vai separar",
+  "/app/radar/categorias":
+    "subtela do Radar, alcançada pela navegação da própria seção — o board por categoria (risco, recompra, oportunidade, follow-up, perda, cobrança) com a próxima ação. Tela de trabalho, não destino de menu: a porta é o Radar",
+  "/app/radar/oportunidades":
+    "subtela do Radar, alcançada pela navegação da própria seção ou pelos KPIs da visão geral (o número leva à lista já recortada) — ranking de recompra e a lista completa de alertas",
+  "/app/radar/risco":
+    "subtela do Radar, alcançada pela navegação da própria seção — demandas abertas que esfriaram sem próximo passo; antes vivia numa âncora da landing do Radar",
+  "/app/radar/recuperacao":
+    "subtela do Radar, alcançada pela navegação da própria seção e pelo redirect de /app/recuperacao — quem comprava e parou; antes vivia na âncora #radar-recuperacao",
+  "/app/radar/prospeccao":
+    "subtela do Radar, alcançada pela navegação da própria seção — novos prospects com as três ações da aba Empresas; antes vivia numa âncora da landing do Radar",
   "/app/prospeccao/nova":
     "sub-fluxo de criar campanha, alcançado pelo botão Nova campanha dentro de Campanhas — tarefa com começo, meio e fim, com endereço próprio para sobreviver ao F5",
   "/app/pedidos/imprimir":

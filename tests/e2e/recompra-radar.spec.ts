@@ -40,9 +40,13 @@ test.beforeAll(() => {
 test("recompra atrasada aparece com atraso e link para os pedidos", async ({ page }) => {
   const creds = lerCreds();
   await entrar(page, creds);
-  await page.goto("/app/radar");
+  // A lista clássica de recompra é uma TELA do Radar desde que a landing foi
+  // fatiada (a antiga seção rolada vivia em /app/radar).
+  await page.goto("/app/radar/oportunidades");
 
-  await expect(page.getByRole("button", { name: /recompra/i }).first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Todos os alertas de recompra" })).toBeVisible({
+    timeout: 20_000,
+  });
   await expect(page.getByText("Mercado E2E Recompra", { exact: false }).first()).toBeVisible({ timeout: 20_000 });
   // O filtro "Situação" tem <option>Recompra atrasada</option> (hidden) ANTES do
   // selo no DOM — sem o filtro por visível, o `.first()` casa a option e o
