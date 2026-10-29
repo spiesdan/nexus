@@ -23268,6 +23268,56 @@ comment on column public.channel_sessions.dispatch_locked_until is
 comment on column public.channel_sessions.dispatch_lock_token is
   'Dono do lease de disparo. A liberação só vale para quem tem o token — quem perdeu a trava por TTL não destrava o disparo de outro.';
 
+-- ---- 0289 — o carimbo da conversa não anda para trás ----
+--
+-- Apêndice idempotente. `fn_mark_conversation_message` escrevia
+-- `last_message_at = p_at` sem comparar: em reentrega atrasada (fila do
+-- WhatsApp depois de reconexão, retry do webhook, backfill de histórico) a
+-- mensagem é antiga e o carimbo levava a conversa para o PASSADO — a lista,
+-- que ordena por `last_message_at`, aparecia "fora de ordem de tempo"; a
+-- prévia era trocada por um texto velho. Agora as três colunas de tempo só
+-- avançam (`greatest`) e a prévia só é substituída pela mensagem mais nova.
+-- Contadores de não-lidas não mudam. `create or replace`, mesmos grants: o
+-- bloco da varredura anon abaixo preserva service_role.
+create or replace function public.fn_mark_conversation_message(
+  p_conv uuid, p_direction text, p_preview text, p_at timestamptz
+) returns void language plpgsql security definer set search_path = public as $$
+begin
+  update public.conversations set
+    -- CASE avaliado sobre a linha ANTIGA (é assim que o UPDATE do Postgres
+    -- funciona): as três colunas de tempo enxergam o valor anterior mesmo
+    -- estando no mesmo SET.
+    last_message_preview = case
+      when last_message_at is null or p_at >= last_message_at then p_preview
+      else last_message_preview
+    end,
+    last_message_at  = greatest(last_message_at,  p_at),
+    last_inbound_at  = case
+      when p_direction = 'inbound'  then greatest(last_inbound_at,  p_at)
+      else last_inbound_at
+    end,
+    last_outbound_at = case
+      when p_direction = 'outbound' then greatest(last_outbound_at, p_at)
+      else last_outbound_at
+    end,
+    unread_count_for_assignee = case
+      when p_direction = 'inbound'  then unread_count_for_assignee + 1
+      when p_direction = 'outbound' then 0
+      else unread_count_for_assignee
+    end,
+    updated_at = now()
+  where id = p_conv;
+
+  update public.contacts c
+     set last_activity_at = greatest(coalesce(c.last_activity_at, '-infinity'::timestamptz), p_at)
+    from public.conversations v
+   where v.id = p_conv
+     and c.id = v.contact_id;
+end; $$;
+
+comment on function public.fn_mark_conversation_message is
+  'Atualiza agregados da conversa (inbound incrementa unread; outbound zera), carimba contacts.last_activity_at e NUNCA deixa last_message_at/last_inbound_at/last_outbound_at andarem para trás — reentrega atrasada não reordena a lista.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

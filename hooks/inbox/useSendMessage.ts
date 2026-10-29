@@ -79,12 +79,19 @@ export function useSendMessage() {
       qc.setQueryData<InfiniteData<MessagesPage>>(queryKey, (old) => {
         if (!old) return old;
         const pages = [...old.pages];
+        // A mensagem nova entra na PRIMEIRA página, não na última.
+        //
+        // `pages[0]` é a página das mensagens MAIS RECENTES (a consulta
+        // pagina para o passado); a última é a mais antiga. A versão anterior
+        // empurrava o otimista para o fim do array de páginas — e numa
+        // conversa em que a pessoa já tinha carregado o histórico ele nascia
+        // no meio do passado. `mergeThreadItems` reordena, então o texto
+        // aparecia no lugar certo; o que ficava errado era a posição na
+        // estrutura, que a invalidação seguinte precisa respeitar.
         if (pages.length > 0) {
-          const lastIdx = pages.length - 1;
-          const lastPage = pages[lastIdx]!;
-          pages[lastIdx] = {
-            ...lastPage,
-            data: [...lastPage.data, tempMsg],
+          pages[0] = {
+            ...pages[0]!,
+            data: [...pages[0]!.data, tempMsg],
           };
         }
         return { ...old, pages };
