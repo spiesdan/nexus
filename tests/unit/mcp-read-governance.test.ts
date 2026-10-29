@@ -48,7 +48,7 @@ const QUEUE_ROWS = [
   { id: CONV_MID, last_inbound_at: new Date(now - 10 * 60_000).toISOString() },
 ];
 
-/** Ordem canônica do inbox (G5-03): last_inbound_at ASC, id ASC. */
+/** Ordem de ESPERA da fila (G5-03): last_inbound_at ASC, id ASC. */
 function inboxOrder(rows: Array<{ id: string; last_inbound_at: string }>): string[] {
   return [...rows]
     .sort(
@@ -165,7 +165,7 @@ function convRow(over: Record<string, unknown>): Record<string, unknown> {
   };
 }
 
-/** Resolver de conversas: getQueuePositions (select "id") devolve a fila na ordem do inbox. */
+/** Resolver de conversas: getQueuePositions (select "id") devolve a fila na ordem de espera. */
 function convResolver(single: Record<string, unknown> | null): Resolver {
   return (q) => {
     if (q.table === "conversations" && q.select === "id") {
@@ -273,11 +273,11 @@ describe("crm_get_conversation — governança + shape", () => {
 });
 
 // ---------------------------------------------------------------------------
-// crm_list_conversations — coerência da queue_position com o inbox (G5-03)
+// crm_list_conversations — coerência da queue_position com a ORDEM DE ESPERA (G5-03)
 // ---------------------------------------------------------------------------
 
-describe("crm_list_conversations — coerência queue_position ↔ inbox", () => {
-  it("as 3 conversas na fila recebem a posição da ordem do inbox (last_inbound_at ASC, id ASC)", async () => {
+describe("crm_list_conversations — coerência queue_position ↔ ordem de espera", () => {
+  it("as 3 conversas na fila recebem a posição da ordem de espera (last_inbound_at ASC, id ASC)", async () => {
     // Handler de list retorna as 3 conversas da fila.
     const rows = QUEUE_ROWS.map((r) =>
       convRow({ id: r.id, status: "open", assigned_to_user_id: null, last_inbound_at: r.last_inbound_at }),
@@ -296,7 +296,7 @@ describe("crm_list_conversations — coerência queue_position ↔ inbox", () =>
     const posById = new Map(res.conversations.map((c) => [c.id as string, c.queue_position]));
     const expectedOrder = inboxOrder(QUEUE_ROWS); // independente do tool
 
-    // Cada conversa: a posição da tool bate com a posição na ordem do inbox.
+    // Cada conversa: a posição da tool bate com a posição na ordem de espera.
     for (let i = 0; i < expectedOrder.length; i++) {
       expect(posById.get(expectedOrder[i]!)).toBe(i + 1);
     }

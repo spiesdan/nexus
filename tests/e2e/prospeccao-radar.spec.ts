@@ -41,8 +41,15 @@ test("radar: novos prospects com as 3 ações — fila, abrir e conversa", async
   await loginComoDono(page, creds);
 
   // Entra pelo Radar (a porta do menu) e navega até a seção, como a pessoa faz.
+  // O seletor é o da NAVEGAÇÃO DA SEÇÃO, não `getByRole("link", { name:
+  // "Prospecção" })`: a sidebar tem um link `/app/prospeccao` com o mesmo rótulo,
+  // e o modo estrito do Playwright resolvia dois elementos (medido no e2e da
+  // main, 2026-10-28).
   await page.goto("/app/radar");
-  await page.getByRole("link", { name: "Prospecção" }).click();
+  await page
+    .getByRole("navigation", { name: "Seções do radar" })
+    .getByRole("link", { name: "Prospecção" })
+    .click();
   await page.waitForURL(/\/app\/radar\/prospeccao/);
 
   const secao = page.locator("#radar-prospeccao");
