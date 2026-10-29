@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.3] — 2026-10-29
+
+### Corrigido
+
+- **Campanha com muitas empresas deixa de falhar ao validar a reserva** Criar uma campanha com centenas de empresas morria em "Erro ao validar as
+  empresas da campanha" (500) mesmo com o banco são. A checagem de reserva
+  mandava 400 UUIDs numa única consulta ao PostgREST — ~15 KB de URL — e o
+  gateway respondia `414 URI too long`; a rota transformava isso no 500 genérico.
+
+  A consulta agora usa a mesma fatia de 100 de `lib/db/por-fatias.ts` (~3,8 KB),
+  nas duas leituras da reserva (empresas e contatos). Campanha de 500 empresas
+  volta a ser validada.
+
 ## [1.35.2] — 2026-10-29
 
 ### Alterado
@@ -5433,7 +5446,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.3...HEAD
+[1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
 [1.35.2]: https://github.com/spiesdan/nexus/compare/v1.35.1...v1.35.2
 [1.35.1]: https://github.com/spiesdan/nexus/compare/v1.35.0...v1.35.1
 [1.35.0]: https://github.com/spiesdan/nexus/compare/v1.34.0...v1.35.0
