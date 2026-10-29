@@ -81,17 +81,22 @@ test.describe("G5-03 — fila com posição + atribuição", () => {
     if (erroSilencio) throw new Error(`não consegui escalar a conversa: ${erroSilencio.message}`);
   });
 
-  test("conversa aparece na Fila com posição → worker atribui → move para Minhas", async ({
+  test("conversa aparece na Fila com o tempo de espera → worker atribui → move para Minhas", async ({
     page,
   }) => {
     const q = creds.queue!;
     await login(page, creds.users.agent!.email, creds.password);
     await page.goto("/app/inbox?filter=unassigned");
 
-    // (1) Na Fila: a conversa aparece com posição (Nº) + "Aguardando há X".
+    // (1) Na Fila: a conversa aparece com "Aguardando há X".
+    //
+    // O selo de POSIÇÃO ("1º, 2º…") saiu de propósito: a lista passou a ordenar
+    // por `last_message_at` em todas as abas (a mesma hora que a linha imprime),
+    // e o número passaria a prometer prioridade que a ordem não entrega — o "1º"
+    // apontaria para a conversa mais recente. O que a Fila promete continua
+    // verdadeiro e verificável: há quanto tempo cada conversa espera.
     const queueItem = page.getByRole("button").filter({ hasText: q.contact_name });
     await expect(queueItem).toBeVisible({ timeout: 15_000 });
-    await expect(queueItem.getByText(/^\d+º$/)).toBeVisible();
     await expect(queueItem.getByText(/Aguardando/)).toBeVisible();
     await page.screenshot({
       path: path.join(EVIDENCE, "G5-03-queue.png"),
