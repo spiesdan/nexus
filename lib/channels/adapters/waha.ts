@@ -124,7 +124,14 @@ export const wahaAdapter: ChannelAdapter = {
     if (!client) return { reachable: false, status: null, detail: "transporte_nao_configurado" };
     try {
       const r = await client.getSessionQr(input.sessionRef);
-      return { reachable: true, status: r.status ?? null, detail: null };
+      return {
+        reachable: true,
+        status: r.status ?? null,
+        detail: null,
+        // Vem na MESMA resposta que o estado — ver `ChannelHealth`. Quando o
+        // transporte não informa, é `null`: "sem restrição conhecida".
+        restricaoDeAlcance: r.restricaoDeAlcance ?? null,
+      };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "erro_desconhecido";
       const http = statusHttpDoErroWaha(msg);

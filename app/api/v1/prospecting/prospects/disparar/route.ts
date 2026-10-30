@@ -62,10 +62,8 @@ import {
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
-import {
-  restricaoAtivaDaSessao,
-  textoDaRestricao,
-} from "@/lib/prospeccao/restricao-do-whatsapp";
+import { restricaoDeAlcanceDaSessao } from "@/lib/channels/restricao-de-alcance";
+import { textoDaRestricao } from "@/lib/prospeccao/restricao-do-whatsapp";
 import { categoriaCombinaComCampanha, categoriaDaCampanhaQueCombina, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import type { TemplateDoEnvio } from "@/lib/prospeccao/envio";
 import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
@@ -323,7 +321,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, provider, status, archived_at, daily_message_limit, quality_rating, waha_session_name")
+    .select("id, provider, status, archived_at, daily_message_limit, quality_rating")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -443,7 +441,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   // silêncio como o tick faz. O texto é o mesmo (`textoDaRestricao`), porque
   // duas redações para a mesma proibição divergiriam.
   if (sessao) {
-    const restricao = await restricaoAtivaDaSessao(sessao);
+    const restricao = await restricaoDeAlcanceDaSessao({
+      admin,
+      channelSessionId: sessao.id,
+    });
     if (restricao) {
       return fail(
         "whatsapp_restrito",

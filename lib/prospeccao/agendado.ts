@@ -35,6 +35,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizaTelefone } from "@/lib/contacts/csv";
 import { contatoPodeReceber } from "@/lib/comercial/inativos";
 import { porFatias } from "@/lib/db/por-fatias";
+import { restricaoDeAlcanceDaSessao } from "@/lib/channels/restricao-de-alcance";
 import {
   avaliarTemplateParaCampanha,
   carregarTemplateParaCampanha,
@@ -69,7 +70,6 @@ import {
 } from "./agendamento";
 import { lerTetoDoNumero } from "./teto-do-numero";
 import {
-  restricaoAtivaDaSessao,
   restricaoAtingeO,
   textoDaRestricao,
   type RestricaoDeAlcance,
@@ -257,7 +257,11 @@ export async function processarCampanhasAgendadas(
     sessao: SessaoDaCampanha,
   ): Promise<RestricaoDeAlcance | null> => {
     if (restricoes.has(sessao.id)) return restricoes.get(sessao.id) ?? null;
-    const restricao = await restricaoAtivaDaSessao(sessao, Date.parse(agoraIso));
+    const restricao = await restricaoDeAlcanceDaSessao({
+      admin,
+      channelSessionId: sessao.id,
+      agoraMs: Date.parse(agoraIso),
+    });
     restricoes.set(sessao.id, restricao);
     return restricao;
   };
@@ -718,7 +722,7 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id, provider, daily_message_limit, quality_rating, dispatch_locked_until, waha_session_name")
+    .select("id, provider, daily_message_limit, quality_rating, dispatch_locked_until")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
