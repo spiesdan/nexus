@@ -39,6 +39,11 @@ export interface SessaoDaCampanha {
    * mensagem a cada ~40s num número que prometeu 2min.
    */
   dispatch_locked_until?: string | null;
+  /**
+   * O nome da sessão no transporte (só o canal por QR tem). É por ele que se
+   * pergunta a RESTRIÇÃO DE ALCANCE — ver `restricao-do-whatsapp.ts`.
+   */
+  waha_session_name?: string | null;
 }
 
 function providerSeguro(provider: string | null | undefined): ChannelProvider {

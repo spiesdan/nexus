@@ -62,6 +62,10 @@ import {
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
+import {
+  restricaoAtivaDaSessao,
+  textoDaRestricao,
+} from "@/lib/prospeccao/restricao-do-whatsapp";
 import { categoriaCombinaComCampanha, categoriaDaCampanhaQueCombina, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import type { TemplateDoEnvio } from "@/lib/prospeccao/envio";
 import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
@@ -319,7 +323,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, provider, status, archived_at, daily_message_limit, quality_rating")
+    .select("id, provider, status, archived_at, daily_message_limit, quality_rating, waha_session_name")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -432,6 +436,27 @@ export async function POST(req: NextRequest): Promise<Response> {
   // O fuso da organização serve às duas réguas que dependem de "que dia é hoje"
   // (`lerTetoDoNumero`) e à mensagem da trava ocupada. Uma leitura só.
   const fusoDoEnvio = await lerFusoDaOrganizacao(admin, orgId);
+
+  // ─── A restrição de ALCANCE do WhatsApp ──────────────────────────────────
+  // A outra porta do disparo. Esta é MANUAL: o operador clicou e está olhando,
+  // então a resposta certa é RECUSAR com o motivo e o prazo — não pular em
+  // silêncio como o tick faz. O texto é o mesmo (`textoDaRestricao`), porque
+  // duas redações para a mesma proibição divergiriam.
+  if (sessao) {
+    const restricao = await restricaoAtivaDaSessao(sessao);
+    if (restricao) {
+      return fail(
+        "whatsapp_restrito",
+        textoDaRestricao(
+          restricao,
+          restricao.terminaEm === null ? null : horaNoFuso(restricao.terminaEm, fusoDoEnvio),
+        ),
+        409,
+        { requestId },
+      );
+    }
+  }
+
   let jaEnviadosHoje = 0;
   if (sessao) {
     const { teto, enviadosHoje } = await lerTetoDoNumero(admin, {
