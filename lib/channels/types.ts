@@ -6,8 +6,9 @@
 import type { SendMessageInput } from "@/lib/schemas";
 import type { FetchedMedia } from "@/lib/messaging/media/types";
 import type { OutboundMedia } from "@/lib/waha/media-send";
+import type { RestricaoDeAlcance } from "@/lib/waha/client";
 
-export type { OutboundMedia };
+export type { OutboundMedia, RestricaoDeAlcance };
 
 export type ChannelProvider = "waha" | "meta_cloud" | "zernio";
 
@@ -332,6 +333,18 @@ export interface ChannelHealth {
    * (ex.: `TIER_2K`). Null/ausente = não informado por este canal.
    */
   messagingLimit?: string | null;
+  /**
+   * Restrição temporária para ABRIR conversa nova (`reachout`), quando a
+   * plataforma aplica uma a este aparelho. Null/ausente = sem restrição
+   * conhecida — ou canal que não tem aparelho vinculado a restringir.
+   *
+   * Mora aqui pelo mesmo motivo do `qualityRating`: vem na MESMA resposta que
+   * já diz se o canal está de pé, e separar custaria uma segunda rodada de rede
+   * para uma pergunta que a primeira já trouxe. Quem consome pede
+   * `restricaoDeAlcanceDaSessao` (`lib/channels/restricao-de-alcance.ts`) em vez
+   * de perguntar ao transporte por conta própria.
+   */
+  restricaoDeAlcance?: RestricaoDeAlcance | null;
 }
 
 /** Definição aprovada, na forma NEUTRA — sem o vocabulário de nenhum provider. */
