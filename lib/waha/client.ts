@@ -87,6 +87,73 @@ export interface WahaClientOpts {
   tetoMs?: number;
 }
 
+/**
+ * A restrição de ALCANCE que o WhatsApp aplica ao aparelho vinculado.
+ *
+ * ─── O que é, e o que NÃO é ─────────────────────────────────────────────────
+ *
+ * O WAHA devolve isto em `me.reachoutTimelock` de toda sessão. `reachout` é
+ * "iniciar conversa": enquanto a restrição vale, o aparelho vinculado não
+ * consegue ABRIR conversa nova — e é por isso que ele existe num produto de
+ * prospecção, que é só isso. Conversa que já existe continua funcionando, e é
+ * exatamente essa a diferença que a campanha precisa respeitar: recuperação
+ * (público `contatos`) pode seguir; disparo frio (`prospects`) não.
+ *
+ * ─── Por que o CRM precisa enxergar isto ────────────────────────────────────
+ *
+ * Medido em 30/10/2026: a campanha mandou 2 mensagens, o WhatsApp gravou
+ * `RESTRICT_ALL_COMPANIONS` com prazo de 6 horas e, 3 segundos depois, removeu
+ * o aparelho (`401 conflict/device_removed`). O produto não conhecia o sinal —
+ * `grep -r reachoutTimelock` não achava nada — então o tick continuou mandando
+ * para o mesmo número sempre que ele reconectava, e cada tentativa durante a
+ * restrição é justamente o que faz a plataforma derrubar de novo. O operador
+ * via só "conexão caiu", sem causa e sem prazo.
+ *
+ * ─── O prazo vem em SEGUNDOS ────────────────────────────────────────────────
+ *
+ * `timeEnforcementEnds` é epoch em segundos (1793389802 = 30/10/2026 19:50 UTC).
+ * A conversão aceita milissegundos também porque a unidade já mudou entre
+ * versões do WAHA, e um prazo lido como ms viraria uma data em 1970 — que é
+ * "já expirou" e desligaria a proteção em silêncio.
+ */
+export interface RestricaoDeAlcance {
+  /** `RESTRICT_ALL_COMPANIONS`, `WEB_COMPANION_ONLY`, `DEFAULT`… */
+  tipo: string;
+  /** Quando expira, em ISO. `null` = o servidor não informou o prazo. */
+  terminaEm: string | null;
+}
+
+/** Converte `timeEnforcementEnds` (s ou ms) em ISO. `null` se não der para ler. */
+function instanteDaRestricao(valor: unknown): string | null {
+  const n = typeof valor === "string" ? Number(valor) : typeof valor === "number" ? valor : Number.NaN;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  // 1e12 ms ≈ ano 2001; qualquer coisa abaixo disso é segundo.
+  const ms = n > 1e12 ? n : n * 1000;
+  const data = new Date(ms);
+  return Number.isNaN(data.getTime()) ? null : data.toISOString();
+}
+
+/**
+ * Lê a restrição de alcance do corpo de `GET /api/sessions/{name}`.
+ *
+ * `null` = não há restrição ativa (ou o transporte não sabe responder). Nunca
+ * lança: quem chama é um tick de 60 segundos, e um payload inesperado não pode
+ * derrubar a prospecção inteira por causa de um campo acessório.
+ */
+export function lerRestricaoDeAlcance(info: unknown): RestricaoDeAlcance | null {
+  const me = (info as { me?: unknown } | null | undefined)?.me;
+  const trava = (me as { reachoutTimelock?: unknown } | null | undefined)?.reachoutTimelock;
+  if (!trava || typeof trava !== "object") return null;
+  const campos = trava as {
+    isActive?: unknown;
+    enforcementType?: unknown;
+    timeEnforcementEnds?: unknown;
+  };
+  if (campos.isActive !== true) return null;
+  const tipo = typeof campos.enforcementType === "string" ? campos.enforcementType : "DESCONHECIDO";
+  return { tipo, terminaEm: instanteDaRestricao(campos.timeEnforcementEnds) };
+}
+
 export class WahaClient {
   private readonly tetoMs: number;
 
@@ -315,12 +382,29 @@ export class WahaClient {
     }
   }
 
-  async getSessionQr(name: string): Promise<{ qr?: string; status: string }> {
+  /**
+   * Estado da sessão no transporte — e, junto, a restrição de alcance que o
+   * WhatsApp aplicou a ela.
+   *
+   * A restrição vem na MESMA resposta (`me.reachoutTimelock`). Duas chamadas
+   * para a mesma pergunta custariam uma rodada de rede a mais e poderiam
+   * discordar entre si por alguns segundos — justamente na janela em que a
+   * decisão de mandar ou não precisa ser firme.
+   */
+  async getSessionQr(name: string): Promise<{
+    qr?: string;
+    status: string;
+    restricaoDeAlcance?: RestricaoDeAlcance | null;
+  }> {
     const res = await this.fetchComTeto(`${this.baseUrl}/api/sessions/${encodeURIComponent(name)}`, {
       headers: { "X-Api-Key": this.apiKey },
     });
     if (!res.ok) throw new Error(`waha_${res.status}`);
-    return (await res.json()) as { qr?: string; status: string };
+    const corpo = (await res.json()) as unknown;
+    return {
+      ...(corpo as { qr?: string; status: string }),
+      restricaoDeAlcance: lerRestricaoDeAlcance(corpo),
+    };
   }
 
   /**

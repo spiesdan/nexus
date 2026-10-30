@@ -68,6 +68,12 @@ import {
   type MotivoDeEspera,
 } from "./agendamento";
 import { lerTetoDoNumero } from "./teto-do-numero";
+import {
+  restricaoAtivaDaSessao,
+  restricaoAtingeO,
+  textoDaRestricao,
+  type RestricaoDeAlcance,
+} from "./restricao-do-whatsapp";
 
 /** Teto de campanhas por tick — o tick tem 60s, não é varredura ilimitada. */
 const MAX_CAMPANHAS = 200;
@@ -81,6 +87,12 @@ const MAX_PROSPECTS_POR_TICK = 200;
 export type MotivoDoPulo =
   | MotivoDeEspera
   | "sem_sessao"
+  /**
+   * O WhatsApp restringiu o número para ABRIR conversa nova (timelock de
+   * alcance). Vale só para disparo frio — recuperação de quem já conversa
+   * segue. Ver `restricao-do-whatsapp.ts`.
+   */
+  | "restricao_do_whatsapp"
   /** Campanha de texto e nenhum canal WORKING permite texto livre. */
   | "sem_canal_texto"
   /** Campanha de template e nenhum canal WORKING aceita modelo aprovado. */
@@ -232,6 +244,24 @@ export async function processarCampanhasAgendadas(
   };
 
   const ritmos = new Map<string, EstadoDaSessao>();
+  /**
+   * A restrição de alcance, uma consulta por sessão por tick.
+   *
+   * O tick roda a cada 60s e pode ter várias campanhas na mesma organização;
+   * sem o memo, cada campanha faria a mesma pergunta ao transporte. `null` é
+   * uma resposta legítima ("não há restrição ativa") e por isso também fica
+   * guardada.
+   */
+  const restricoes = new Map<string, RestricaoDeAlcance | null>();
+  const restricaoDaSessao = async (
+    sessao: SessaoDaCampanha,
+  ): Promise<RestricaoDeAlcance | null> => {
+    if (restricoes.has(sessao.id)) return restricoes.get(sessao.id) ?? null;
+    const restricao = await restricaoAtivaDaSessao(sessao, Date.parse(agoraIso));
+    restricoes.set(sessao.id, restricao);
+    return restricao;
+  };
+
   const estadoDaSessao = async (
     orgId: string,
     sessao: SessaoDaCampanha,
@@ -292,6 +322,32 @@ export async function processarCampanhasAgendadas(
         resumo.pulados.push({ campanha: campanha.id, motivo });
         continue;
       }
+      // A restrição de ALCANCE do WhatsApp: o número não pode ABRIR conversa
+      // nova enquanto ela vale. Fica antes de qualquer conta de cota porque é
+      // uma proibição do outro lado, não um limite nosso — mandar durante ela é
+      // o que faz a plataforma remover o aparelho vinculado (medido em
+      // 30/10/2026: 3 segundos entre a restrição e o `device_removed`).
+      // Recuperação (`publico: "contatos"`) fala com quem já conversa, então
+      // não é atingida: a restrição é de "reachout", não de mensagem.
+      if (restricaoAtingeO(publico)) {
+        const restricao = await restricaoDaSessao(sessao);
+        if (restricao) {
+          const horaLocal =
+            restricao.terminaEm === null
+              ? null
+              : relogioNoFuso(restricao.terminaEm, org.fuso).hora;
+          await registrarErroDaCampanha(
+            admin,
+            campanha,
+            textoDaRestricao(restricao, horaLocal),
+            agoraIso,
+            false,
+          );
+          resumo.pulados.push({ campanha: campanha.id, motivo: "restricao_do_whatsapp" });
+          continue;
+        }
+      }
+
       const ritmo = await estadoDaSessao(campanha.organization_id, sessao, org.fuso);
 
       // O ledger diz quem JÁ recebeu e quando — idempotência e cota do dia
@@ -662,7 +718,7 @@ async function carregarEstadoDaOrg(
 
   const { data: sessoes } = await admin
     .from("channel_sessions")
-    .select("id, provider, daily_message_limit, quality_rating, dispatch_locked_until")
+    .select("id, provider, daily_message_limit, quality_rating, dispatch_locked_until, waha_session_name")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);

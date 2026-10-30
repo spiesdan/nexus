@@ -71,6 +71,11 @@ export const ApiErrorCodes = {
   next_action_absent: "next_action_absent", // decisão sobre proposta que não existe (mais) [wave 4]
   next_action_changed: "next_action_changed", // o agente reescreveu a proposta entre o render e o clique
   channel_archived: "channel_archived", // ação sobre canal que o usuário excluiu (a linha só sobrevive como âncora das FKs)
+  // O WhatsApp restringiu o número para ABRIR conversa nova (timelock de alcance).
+  // Não é falha nossa nem do canal: é proibição temporária do outro lado, com
+  // prazo. 409 porque o pedido está correto e o estado é que não permite — o
+  // mesmo motivo pelo qual a campanha automática se cala sozinha até o prazo.
+  whatsapp_restrito: "whatsapp_restrito",
   knowledge_source_type_in_use: "knowledge_source_type_in_use", // já existe fonte ATIVA daquele tipo para o agente (índice ai_knowledge_sources_unique_per_agent)
 
   // 422 — semântica
