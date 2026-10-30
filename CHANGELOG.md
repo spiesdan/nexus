@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.6] — 2026-10-30
+
+### Corrigido
+
+- **A restrição do WhatsApp é lida pelo canal, não pela campanha** A 1.35.5 fez a campanha parar quando o WhatsApp restringe o número para abrir
+  conversa, mas a leitura do sinal ficou dentro da prospecção: ela conhecia o
+  nome da coluna do identificador da sessão e falava com o transporte por conta
+  própria. O gate que protege a doutrina de canais (`lint:channels`) reprovou — a
+  regra é que **nenhuma feature nomeia um provider**, e por isso o `ci` da `main`
+  ficou vermelho.
+
+  A leitura mudou de casa: agora é o canal que responde
+  (`lib/channels/restricao-de-alcance.ts`), pela mesma porta que o resto do
+  produto usa, e a restrição viaja junto do estado de saúde — na mesma resposta
+  que já diz se o canal está de pé, sem uma segunda ida à rede. A prospecção ficou
+  só com a política: quem a restrição atinge e o que o operador lê.
+
+  O comportamento que o operador vê não mudou: a campanha continua pulando com
+  `restricao_do_whatsapp` até o prazo e o "Enviar agora" continua recusando com
+  `409 whatsapp_restrito`. O que muda é que o próximo canal que tiver restrição de
+  alcance não vai precisar de código novo na campanha.
+
 ## [1.35.5] — 2026-10-30
 
 ### Corrigido
@@ -5492,7 +5514,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.6...HEAD
+[1.35.6]: https://github.com/spiesdan/nexus/compare/v1.35.5...v1.35.6
 [1.35.5]: https://github.com/spiesdan/nexus/compare/v1.35.4...v1.35.5
 [1.35.4]: https://github.com/spiesdan/nexus/compare/v1.35.3...v1.35.4
 [1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
