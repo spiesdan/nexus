@@ -8,6 +8,34 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.5] — 2026-10-30
+
+### Corrigido
+
+- **A campanha para sozinha quando o WhatsApp restringe o número para abrir conversa** Em 30/10/2026 a campanha mandou duas mensagens, o WhatsApp gravou
+  `RESTRICT_ALL_COMPANIONS` com prazo de seis horas e, **três segundos depois**,
+  removeu o aparelho vinculado (`401 conflict/device_removed`). A restrição vinha
+  no payload da sessão desde o primeiro instante (`me.reachoutTimelock`) e o
+  produto não a lia: `grep -r reachoutTimelock` não achava nada. O resultado era o
+  pior ciclo possível — o número reconectava, o tick voltava a mandar, e mandar
+  durante a restrição é exatamente o que faz o WhatsApp derrubar de novo. O
+  operador via "a conexão caiu", sem causa e sem prazo.
+
+  Agora o motor lê o timelock antes de cada disparo e se cala enquanto ele vale,
+  com o prazo no fuso da organização na mensagem da campanha — e volta sozinho
+  quando expira, sem recriar, reagendar ou reconectar nada. O "Enviar agora" da
+  tela de Empresas recusa com `409 whatsapp_restrito` e a mesma frase, em vez de
+  falhar em silêncio.
+
+  A restrição é de **abrir conversa** (`reachout`), não de mensagem: só o disparo
+  frio (`publico: "prospects"`) é atingido. Recuperação de quem já conversa com a
+  empresa (`publico: "contatos"`) continua enviando — parar as duas tiraria do
+  operador uma operação que o WhatsApp não restringiu.
+
+  Se o transporte não responder, a campanha segue: o envio em si já falha quando
+  o número está fora, e transformar oscilação de rede em campanha parada
+  congelaria a operação inteira.
+
 ## [1.35.4] — 2026-10-29
 
 ### Corrigido
@@ -5464,7 +5492,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.4...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.5...HEAD
+[1.35.5]: https://github.com/spiesdan/nexus/compare/v1.35.4...v1.35.5
 [1.35.4]: https://github.com/spiesdan/nexus/compare/v1.35.3...v1.35.4
 [1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
 [1.35.2]: https://github.com/spiesdan/nexus/compare/v1.35.1...v1.35.2
