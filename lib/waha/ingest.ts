@@ -983,6 +983,27 @@ async function handleOutboundFromUserPhone(
   }
 }
 
+/**
+ * O motivo legível de um ack negativo — o que o operador vê no tooltip da bolha.
+ *
+ * `ackName` é o nome que o WAHA dá ao degrau (`ERROR`, `SERVER`, `DEVICE`…) e
+ * é o dado que sempre existe. Versões mais novas podem anexar o erro cru da
+ * plataforma em `error`; o schema é loose justamente para não descartar o
+ * evento inteiro por causa de um campo acessório, então lemos com cuidado.
+ */
+function motivoDoAckDeErro(p: WahaPayload): string {
+  const nome = typeof p.ackName === "string" && p.ackName.trim() ? p.ackName.trim() : "ERROR";
+  const bruto = (p as { error?: unknown }).error;
+  const detalhe =
+    typeof bruto === "string"
+      ? bruto
+      : bruto && typeof bruto === "object"
+        ? JSON.stringify(bruto)
+        : "";
+  const sufixo = detalhe ? `: ${detalhe.slice(0, 300)}` : ".";
+  return `O WhatsApp recusou a entrega (${nome})${sufixo}`;
+}
+
 async function handleAck(admin: Admin, session: Session, p: WahaPayload): Promise<void> {
   if (!p.id) return;
   const ack = p.ack ?? 0;
@@ -992,6 +1013,19 @@ async function handleAck(admin: Admin, session: Session, p: WahaPayload): Promis
   const update: Record<string, unknown> = { ack, status };
   if (ack >= 2) update.delivered_at = now;
   if (ack >= 3) update.read_at = now;
+  if (ack < 0) {
+    // O ack negativo é a ÚNICA prova de que o WhatsApp recusou. Sem gravar o
+    // motivo, a bolha vira "Falhou" sem decir por quê e o operador caça o
+    // problema no lugar errado. O 463 (conta restrita) chega aqui.
+    update.error_code = "whatsapp_ack_error";
+    update.error_message = motivoDoAckDeErro(p);
+  } else {
+    // Um ack positivo DEPOIS de um erro (mensagem que saiu atrasada) cura o
+    // registro. Sem isto, a linha ficaria "failed" para sempre com um erro
+    // que o próprio canal já desmentiu.
+    update.error_code = null;
+    update.error_message = null;
+  }
 
   // O ack do WAHA 2026.x vem como `{fromMe}_{chatId}_{bareId}`. O NOWEB grava
   // `external_id` = bareId (id interno), o WEBJS grava o `_serialized` completo.

@@ -105,5 +105,10 @@ export function ackToStatus(ack: number | null | undefined): Message["status"] {
   if (ack >= 3) return "read";
   if (ack >= 2) return "delivered";
   if (ack >= 1) return "sent";
+  // `-1` é o ack de ERRO do WhatsApp (o `ackName: "ERROR"`). Antes caía no
+  // mesmo ramo do zero e virava `sending` — a mensagem que o WhatsApp recusou
+  // (463, por exemplo) ficava para sempre com cara de "a caminho", e a tela
+  // nunca tinha como mostrar que ela não saiu.
+  if (ack < 0) return "failed";
   return "sending";
 }

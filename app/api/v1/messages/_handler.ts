@@ -526,6 +526,11 @@ export async function sendMessageHandler(
   // (`conversations.channel_session_id` é NOT NULL com FK ON DELETE RESTRICT),
   // e ainda assim mantido para não trocar o desfecho desse ramo defensivo.
   const adapter = getAdapter(c.channel_sessions?.provider ?? DEFAULT_CHANNEL_PROVIDER);
+  // Aceite do transporte ≠ aceite do WhatsApp. No canal por QR o POST volta
+  // com id mesmo quando a plataforma recusa (463); nesse caso o desfecho real
+  // só chega no ack. Gravar `sent` aqui era o que deixava o inbox verde para
+  // uma mensagem que nunca existiu no celular do cliente.
+  const aguardandoAck = adapter.confirmaEntregaPorAck === true;
   const chatId = adapter.resolveRecipient({
     isGroup: c.is_group,
     groupChatId: c.group_chat_id,
@@ -723,7 +728,9 @@ export async function sendMessageHandler(
       const { data: updated } = await supabase
         .from("messages")
         .update({
-          status: "sent",
+          // `sending` = o transporte aceitou e o canal ainda não confirmou.
+          // Quem promove para `sent` é o ack positivo (handleAck).
+          status: aguardandoAck ? "sending" : "sent",
           external_id: externalId,
           ack: 0,
           // Colunas só do template — é o que responde custo e conformidade de

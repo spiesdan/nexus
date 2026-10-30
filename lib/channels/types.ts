@@ -159,6 +159,22 @@ export interface ChannelAdapter {
   isConfigured(): boolean;
   /** externalId null = canal não configurado (noop) ou resposta sem id reconhecível. */
   send(envelope: OutboundEnvelope): Promise<{ externalId: string | null }>;
+
+  /**
+   * O canal só confirma que a mensagem saiu DEPOIS do envio, por ack?
+   *
+   * Quando true, o handler grava `sending` no aceite do pedido e promove a
+   * `sent` apenas quando o ack positivo chega. É o que separa "o transporte
+   * aceitou" de "o WhatsApp aceitou" — no canal por QR o aceite do transporte
+   * acontece mesmo quando a plataforma recusa (463), e marcar `sent` ali é
+   * dizer que a mensagem existe no celular do cliente quando ela não existe.
+   *
+   * OPCIONAL: canais cujo `send` já devolve o desfecho da plataforma (e que
+   * atualizam por webhook de status) continuam gravando `sent` no aceite.
+   * Testar a presença evita perguntar QUAL provider é — proibido fora deste
+   * diretório.
+   */
+  readonly confirmaEntregaPorAck?: boolean;
   /**
    * Códigos que o chamador grava em `metadata`/`error_code`. Vivem NO ADAPTER
    * porque carregam nome de provider, e o lint da Task 7 proíbe esse nome fora

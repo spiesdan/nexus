@@ -406,7 +406,9 @@ describe("a thread do provider atravessa os três elos até o transporte", () =>
     );
     const msg = await sendMessageHandler(supabase, ctx, texto());
 
-    expect(msg.status).toBe("sent");
+    // O canal por QR responde com id antes do ack: `sending` é o desfecho
+    // correto aqui — `sent` só quando o WhatsApp confirmar.
+    expect(msg.status).toBe("sending");
     expect(msg.external_id).toBe("TEXT1");
   });
 });

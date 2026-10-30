@@ -39,7 +39,13 @@ import {
   type CidadeDaCampanha,
 } from "@/lib/prospeccao/publico-da-base";
 import { idsReservadosPorOutras } from "@/lib/prospeccao/reserva-de-campanha";
-import { resumirEnvios, entregaDoStatus, type EnvioDaCampanha, type EntregaConfirmada } from "@/lib/prospeccao/resumo-de-envio";
+import {
+  resumirEnvios,
+  entregaDoStatus,
+  confirmada,
+  type EnvioDaCampanha,
+  type EntregaConfirmada,
+} from "@/lib/prospeccao/resumo-de-envio";
 import { disparoEmAndamento } from "@/lib/prospeccao/trava-de-disparo";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -138,8 +144,12 @@ interface LinhaMensagem {
   sent_at: string | null;
   /** O que o canal respondeu — a campanha mostra este degrau. */
   status: string | null;
+  /** Confirmação do WhatsApp: 2 = entregue, 3+ = lida, < 0 = erro. */
+  ack: number | null;
   delivered_at: string | null;
   read_at: string | null;
+  /** Motivo da recusa, quando o WhatsApp deu um (ex.: 463, conta restrita). */
+  error_message: string | null;
 }
 
 /** O degrau de entrega de uma linha do ledger, pronto para a resposta. */
@@ -147,12 +157,29 @@ function entregaDaMensagem(msg: LinhaMensagem | null | undefined): {
   entrega: EntregaConfirmada;
   entregue_em: string | null;
   lida_em: string | null;
+  motivo_da_falha: string | null;
 } {
+  const entrega = entregaDoStatus(msg?.status, msg?.ack);
   return {
-    entrega: entregaDoStatus(msg?.status),
+    entrega,
     entregue_em: msg?.delivered_at ?? null,
     lida_em: msg?.read_at ?? null,
+    motivo_da_falha: entrega === "falhou" ? (msg?.error_message ?? null) : null,
   };
+}
+
+/**
+ * A empresa tem linha no ledger e o WhatsApp NÃO confirmou (e também não
+ * recusou) — inclui a reserva sem comprovante e a mensagem que o transporte
+ * aceitou sem ack. É o grupo que a tela não pode chamar de "enviada".
+ */
+function semConfirmacaoDoEnvio(
+  envio: EnvioLinha | undefined,
+  msg: LinhaMensagem | null | undefined,
+): boolean {
+  if (!envio) return false;
+  const degrau = entregaDoStatus(msg?.status, msg?.ack);
+  return !confirmada(degrau) && degrau !== "falhou";
 }
 
 interface EnvioLinha extends EnvioDaCampanha {
@@ -209,7 +236,7 @@ async function buscarMensagens(
   for (let i = 0; i < validos.length; i += LOTE) {
     const { data, error } = await admin
       .from("messages")
-      .select("id, conversation_id, sent_at, status, delivered_at, read_at")
+      .select("id, conversation_id, sent_at, status, ack, delivered_at, read_at, error_message")
       .eq("organization_id", organizationId)
       .in("id", validos.slice(i, i + LOTE));
     if (error) throw new Error(`mensagens_indisponiveis: ${error.message}`);
@@ -339,7 +366,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
           categoria: linha.categoria,
           status_comercial: null,
           enviado: Boolean(envio?.message_id),
-          sem_confirmacao: Boolean(envio && !envio.message_id),
+          sem_confirmacao: semConfirmacaoDoEnvio(envio, msg),
           enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
           mensagem_indice: envio?.mensagem_indice ?? null,
           conversa_id: msg?.conversation_id ?? null,
@@ -368,7 +395,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
               categoria: p?.categoria_canonica ?? p?.categoria ?? null,
               status_comercial: p?.status_comercial ?? null,
               enviado: Boolean(envio?.message_id),
-              sem_confirmacao: Boolean(envio && !envio.message_id),
+              sem_confirmacao: semConfirmacaoDoEnvio(envio, msg),
               enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
               mensagem_indice: envio?.mensagem_indice ?? null,
               conversa_id: msg?.conversation_id ?? null,
@@ -414,7 +441,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
             categoria: "Recuperação",
             status_comercial: null,
             enviado: Boolean(envio?.message_id),
-            sem_confirmacao: Boolean(envio && !envio.message_id),
+            sem_confirmacao: semConfirmacaoDoEnvio(envio, msg),
             enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
             mensagem_indice: envio?.mensagem_indice ?? null,
             conversa_id: msg?.conversation_id ?? null,
@@ -436,7 +463,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
             categoria: p?.categoria_canonica ?? p?.categoria ?? null,
             status_comercial: p?.status_comercial ?? null,
             enviado: Boolean(envio?.message_id),
-            sem_confirmacao: Boolean(envio && !envio.message_id),
+            sem_confirmacao: semConfirmacaoDoEnvio(envio, msg),
             enviado_em: msg?.sent_at ?? envio?.enviado_em ?? null,
             mensagem_indice: envio?.mensagem_indice ?? null,
             conversa_id: msg?.conversation_id ?? null,
@@ -458,13 +485,14 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   const resumo = resumirEnvios({
     prospectIds: lista,
     // O degrau de entrega vem de `messages` (o canal confirma depois do POST).
-    // `envios` sozinho não sabe se a mensagem chegou — o ledger guarda só o
-    // comprovante de que ela saiu.
+    // `envios` sozinho só sabe que o transporte aceitou — e aceite não é
+    // entrega: o `ack` é o que prova que o WhatsApp recebeu a mensagem.
     sends: envios.map((e) => {
       const msg = e.message_id ? mensagens.get(e.message_id) : null;
       return {
         ...e,
         status: msg?.status ?? null,
+        ack: msg?.ack ?? null,
         delivered_at: msg?.delivered_at ?? null,
         read_at: msg?.read_at ?? null,
       };
@@ -474,9 +502,11 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
   // O `enviado_em` do ledger é o instante da RESERVA. O horário que o dono
   // reconhece é o `messages.sent_at`; quando ele existe, ele manda no card.
+  // Só entra aqui o que o WhatsApp confirmou: carimbar "último envio" com uma
+  // mensagem recusada era a mesma mentira do contador.
   let ultimoEnvioReal = 0;
   for (const e of empresas) {
-    if (!e.enviado || !e.enviado_em) continue;
+    if (!confirmada(e.entrega) || !e.enviado_em) continue;
     const ms = Date.parse(e.enviado_em);
     if (Number.isFinite(ms)) ultimoEnvioReal = Math.max(ultimoEnvioReal, ms);
   }
@@ -486,6 +516,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
 
   // A quebra por cidade é a leitura que o operador usa para decidir onde
   // reforçar. "Sem cidade" é um grupo explícito, não um buraco na tabela.
+  // `enviados` aqui é confirmado pelo WhatsApp, não aceito pelo transporte.
   const cidades = new Map<
     string,
     { cidade: string; total: number; enviados: number; pendentes: number; sem_confirmacao: number }
@@ -500,11 +531,9 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
       sem_confirmacao: 0,
     };
     atual.total += 1;
-    if (e.enviado) atual.enviados += 1;
-    else {
-      atual.pendentes += 1;
-      if (e.sem_confirmacao) atual.sem_confirmacao += 1;
-    }
+    if (confirmada(e.entrega)) atual.enviados += 1;
+    if (!e.enviado && !e.sem_confirmacao) atual.pendentes += 1;
+    if (e.sem_confirmacao) atual.sem_confirmacao += 1;
     cidades.set(chave, atual);
   }
 

@@ -7,11 +7,16 @@
  * O card da aba Campanhas é um resumo; esta rota é o lugar persistente. A
  * divisão é de propósito:
  *
- *   - enviadas: ledger com `message_id` (comprovante);
- *   - faltam: total da lista fechada (ou do público calculado) menos enviadas;
- *   - sem confirmação: linha do ledger sem `message_id` — a reserva existe,
- *     mas o envio não confirmou. Fica separado porque a ação é diferente:
- *     conferir no Inbox antes de reenviar, não sair disparando de novo.
+ *   - confirmadas: o WhatsApp confirmou o recebimento (ack ≥ 1, entregue ou
+ *     lida). É o número exibido como "enviadas" — o que o dono confere no
+ *     celular;
+ *   - aceitas: o transporte aceitou o pedido (`message_id`). NÃO é entrega: no
+ *     WhatsApp por QR o POST volta com id mesmo quando a plataforma recusa
+ *     depois (erro 463);
+ *   - faltam: total da lista fechada (ou do público calculado) menos aceitas;
+ *   - sem confirmação: linha do ledger cujo desfecho o WhatsApp ainda não deu
+ *     — inclui a reserva sem comprovante. Fica separado porque a ação é
+ *     diferente: conferir no Inbox antes de reenviar, não sair disparando.
  *
  * O botão de agendar manda só quem ainda NÃO tem linha no ledger. As reservas
  * sem comprovante ficam de fora para não duplicar mensagem; o aviso na tela
@@ -131,10 +136,15 @@ interface EmpresaControle {
   enviado_em: string | null;
   mensagem_indice: number | null;
   conversa_id: string | null;
-  /** O que o canal confirmou depois do envio. `null` = não consultado. */
-  entrega: "enviada" | "entregue" | "lida" | "falhou" | null;
+  /**
+   * O que o canal confirmou depois do envio. `null` = ninguém consultou;
+   * `pendente` = o transporte aceitou e o WhatsApp ainda não falou nada.
+   */
+  entrega: "enviada" | "entregue" | "lida" | "falhou" | "pendente" | null;
   entregue_em: string | null;
   lida_em: string | null;
+  /** Motivo da recusa do WhatsApp (ex.: conta restrita), quando houve. */
+  motivo_da_falha: string | null;
 }
 
 interface CidadeResumo {
@@ -220,20 +230,24 @@ function situacaoDaEmpresa(
   empresa: EmpresaControle,
   t: (s: string) => string,
 ): { rotulo: string; variant: "success" | "warning" | "neutral" | "error" } {
+  // O degrau do WhatsApp manda. Só depois dele a linha do ledger importa — e
+  // ela importa como "aceita", nunca como "enviada": `message_id` prova que o
+  // transporte recebeu o pedido, não que a mensagem chegou.
+  switch (empresa.entrega) {
+    case "lida":
+      return { rotulo: t("Lida"), variant: "success" };
+    case "entregue":
+      return { rotulo: t("Entregue"), variant: "success" };
+    case "enviada":
+      return { rotulo: t("Enviada"), variant: "success" };
+    case "falhou":
+      return { rotulo: t("Falhou na entrega"), variant: "error" };
+  }
   if (empresa.enviado) {
-    // "Enviada" deixou de ser o fim da história: o canal oficial confirma
-    // ENTREGA e LEITURA depois do POST. Mostrar o degrau é o que separa
-    // "saiu" de "chegou" — e é o que expõe o 131047 sem abrir o Inbox.
-    switch (empresa.entrega) {
-      case "lida":
-        return { rotulo: t("Lida"), variant: "success" };
-      case "entregue":
-        return { rotulo: t("Entregue"), variant: "success" };
-      case "falhou":
-        return { rotulo: t("Falhou na entrega"), variant: "error" };
-      default:
-        return { rotulo: t("Enviada"), variant: "success" };
-    }
+    // Aceita pelo transporte, sem confirmação do WhatsApp. Antes esta linha
+    // saía verde como "Enviada" — era o defeito que enchia o inbox de
+    // mensagens que o celular do cliente nunca recebeu.
+    return { rotulo: t("Sem confirmação"), variant: "warning" };
   }
   if (empresa.sem_confirmacao) {
     return { rotulo: t("Reserva sem comprovante"), variant: "warning" };
@@ -326,23 +340,34 @@ export function ControleDaCampanha({ id }: { id: string }) {
   }, [carregar]);
 
   const status = dados?.campanha.status;
-  const pendentes = dados?.resumo.pendentes ?? 0;
+  // "Em aberto" = falta disparar, há reserva sem comprovante ou aceita sem
+  // ack. O poll precisa continuar nos dois últimos: o ack do WhatsApp chega
+  // DEPOIS do envio, e parar de atualizar esconderia a confirmação.
+  const emAberto =
+    (dados?.resumo.pendentes ?? 0) +
+    (dados?.resumo.sem_comprovante ?? 0) +
+    (dados?.resumo.sem_confirmacao ?? 0);
   React.useEffect(() => {
     if (status !== "ativa" && status !== "pausada") return;
-    if (pendentes <= 0) return;
+    if (emAberto <= 0) return;
     const timer = setInterval(() => void carregar(true), 15_000);
     return () => clearInterval(timer);
-  }, [status, pendentes, carregar]);
+  }, [status, emAberto, carregar]);
 
   const empresas = dados?.empresas ?? [];
   const cidades = dados?.por_cidade ?? [];
 
   const filtradas = React.useMemo(() => {
     const termo = busca.trim().toLowerCase();
+    const confirmada = (e: EmpresaControle) =>
+      e.entrega === "enviada" || e.entrega === "entregue" || e.entrega === "lida";
     return empresas
       .filter((e) => {
-        if (filtro === "enviadas" && !e.enviado) return false;
-        if (filtro === "pendentes" && e.enviado) return false;
+        // "Enviadas" agora é só o que o WhatsApp confirmou. A mensagem aceita
+        // pelo transporte sem ack aparece em "Sem confirmação", que é onde o
+        // operador precisa olhar antes de reenviar.
+        if (filtro === "enviadas" && !confirmada(e)) return false;
+        if (filtro === "pendentes" && (e.enviado || e.sem_confirmacao)) return false;
         if (filtro === "sem_confirmacao" && !e.sem_confirmacao) return false;
         if (filtro === "falhas" && e.entrega !== "falhou") return false;
         if (cidade !== "todas" && (e.cidade?.trim() || "Sem cidade") !== cidade) return false;
@@ -353,7 +378,9 @@ export function ControleDaCampanha({ id }: { id: string }) {
       })
       .sort((a, b) => {
         // Quem falta primeiro: é a ação. Dentro do grupo, nome.
-        if (a.enviado !== b.enviado) return a.enviado ? 1 : -1;
+        const ca = confirmada(a);
+        const cb = confirmada(b);
+        if (ca !== cb) return ca ? 1 : -1;
         return a.nome.localeCompare(b.nome, "pt-BR");
       });
   }, [empresas, filtro, busca, cidade]);
@@ -364,9 +391,12 @@ export function ControleDaCampanha({ id }: { id: string }) {
     () => empresas.filter((e) => !e.enviado && !e.sem_confirmacao),
     [empresas],
   );
-  const semConfirmacao = empresas.filter((e) => e.sem_confirmacao);
+  // A reserva sem comprovante é o caso que o botão "liberar" consegue tratar
+  // (só solta linha SEM `message_id`). A aceita sem ack tem comprovante e não
+  // é liberável — por isso fica fora deste card e aparece no badge do resumo.
+  const semConfirmacao = empresas.filter((e) => e.sem_confirmacao && !e.enviado);
   const situacao = dados ? situacaoDaCampanha(dados.campanha, dados.resumo) : null;
-  const podePausar = dados?.campanha.status === "ativa" && (dados?.resumo.pendentes ?? 0) > 0;
+  const podePausar = dados?.campanha.status === "ativa" && emAberto > 0;
   const podeRetomar = dados?.campanha.status === "pausada";
 
   function trocarFiltro(novo: Filtro) {
@@ -591,15 +621,25 @@ export function ControleDaCampanha({ id }: { id: string }) {
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className="text-2xl font-semibold tabular-nums">{enviados}</span>
-              <span className="text-sm text-muted-foreground">{t(`de ${total} enviadas`)}</span>
+              <span className="text-sm text-muted-foreground">{t(`de ${total} confirmadas`)}</span>
               {faltam > 0 ? (
                 <Badge variant="neutral">{t(`${faltam} pendentes`)}</Badge>
               ) : (
-                <Badge variant="success">{t("Todas enviadas")}</Badge>
+                <Badge variant="success">{t("Nada pendente")}</Badge>
+              )}
+              {dados.resumo.aceitas > dados.resumo.enviados && (
+                <Badge variant="info">
+                  {t(`${dados.resumo.aceitas} aceitas pelo canal`)}
+                </Badge>
               )}
               {dados.resumo.sem_confirmacao > 0 && (
                 <Badge variant="warning">
-                  {t(`${dados.resumo.sem_confirmacao} sem comprovante`)}
+                  {t(`${dados.resumo.sem_confirmacao} sem confirmação`)}
+                </Badge>
+              )}
+              {dados.resumo.sem_comprovante > 0 && (
+                <Badge variant="warning">
+                  {t(`${dados.resumo.sem_comprovante} sem comprovante`)}
                 </Badge>
               )}
               {dados.resumo.entregues > 0 && (
@@ -610,22 +650,29 @@ export function ControleDaCampanha({ id }: { id: string }) {
               )}
               {dados.resumo.falhas > 0 && (
                 <Badge variant="error">
-                  {t(`${dados.resumo.falhas} falharam na entrega`)}
+                  {t(`${dados.resumo.falhas} recusadas pelo WhatsApp`)}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
               {dados.previa_base
-                ? dados.resumo.enviados > 0
+                ? dados.resumo.aceitas > 0
                   ? t("Público calculado agora + envios já realizados.")
                   : t("Público calculado agora, ainda sem reserva.")
                 : t(`${total} empresas na lista da campanha.`)}
             </p>
+            {dados.resumo.aceitas > dados.resumo.enviados && (
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "«Confirmadas» é o que o WhatsApp confirmou. «Aceitas» é só o que o transporte recebeu — pode não ter chegado ao celular.",
+                )}
+              </p>
+            )}
           </div>
           <div className="space-y-0.5 text-xs text-muted-foreground sm:text-right">
             <p>
               {dados.resumo.ultimo_envio_at
-                ? t(`Último envio em ${formatarData(dados.resumo.ultimo_envio_at)}`)
+                ? t(`Última confirmação em ${formatarData(dados.resumo.ultimo_envio_at)}`)
                 : t("Nenhum envio confirmado ainda")}
             </p>
             {atualizadoEm && (
@@ -778,7 +825,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                 <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
                 <div className="space-y-1">
                   <p className="font-medium">
-                    {dados.resumo.enviados > 0
+                    {dados.resumo.aceitas > 0
                       ? t("Público calculado agora + envios já realizados.")
                       : t("Prévia do público — nada reservado ainda.")}
                   </p>
@@ -946,7 +993,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                       }`}
                       title={
                         c.sem_confirmacao > 0
-                          ? t(`${c.sem_confirmacao} sem comprovante nesta cidade`)
+                          ? t(`${c.sem_confirmacao} sem confirmação nesta cidade`)
                           : undefined
                       }
                     >
@@ -955,7 +1002,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                         {c.enviados}/{c.total}
                       </span>
                       {c.sem_confirmacao > 0 && (
-                        <span className="opacity-80">· {c.sem_confirmacao} sem comprovante</span>
+                        <span className="opacity-80">· {c.sem_confirmacao} sem confirmação</span>
                       )}
                     </button>
                   );
@@ -1110,6 +1157,14 @@ export function ControleDaCampanha({ id }: { id: string }) {
                               <Badge variant={situacaoEmpresa.variant}>
                                 {situacaoEmpresa.rotulo}
                               </Badge>
+                              {e.motivo_da_falha && (
+                                <span
+                                  className="mt-0.5 block max-w-[220px] truncate text-xs text-destructive"
+                                  title={e.motivo_da_falha}
+                                >
+                                  {e.motivo_da_falha}
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell className="px-4 py-2 whitespace-nowrap text-muted-foreground">
                               <span className="block">{formatarData(e.enviado_em)}</span>
