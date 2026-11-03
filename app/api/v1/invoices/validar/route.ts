@@ -125,6 +125,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       natureza_operacao: (em.natureza_operacao as string) ?? "",
       cfop_padrao: (em.cfop_padrao as string) ?? "",
       emitente_documento: em.emitente_documento ?? null,
+      razao_social: em.razao_social ?? null,
       ie: em.ie ?? null,
       crt: (em.crt as string) ?? "1",
       logradouro: em.logradouro ?? null,

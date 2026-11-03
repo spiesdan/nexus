@@ -19,6 +19,7 @@ function contexto(
       natureza_operacao: "Venda",
       cfop_padrao: "5102",
       emitente_documento: "35233142000183",
+      razao_social: "Empresa Teste LTDA",
       ie: "123456789",
       crt: "3",
       logradouro: null,

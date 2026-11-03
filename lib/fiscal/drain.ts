@@ -186,6 +186,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         natureza_operacao: (em.natureza_operacao as string) ?? "",
         cfop_padrao: (em.cfop_padrao as string) ?? "",
         emitente_documento: em.emitente_documento ?? null,
+        razao_social: (em.razao_social as string | null) ?? null,
         ie: em.ie ?? null,
         crt: (em.crt as string) ?? "1",
         logradouro: em.logradouro ?? null,

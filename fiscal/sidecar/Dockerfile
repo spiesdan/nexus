@@ -30,6 +30,19 @@ RUN composer install --no-dev --prefer-dist --no-interaction
 COPY public/ ./public/
 COPY src/ ./src/
 
+# ─── OpenSSL: o certificado A1 legado precisa do provedor `legacy` ──────────
+#
+# Uma parte das ACs brasileiras cifra o PKCS#12 do A1 com RC2-40-CBC, que no
+# OpenSSL 3 saiu do provedor padrão. Sem carregar o `legacy`, o PHP falha ao
+# abrir o certificado com `digital envelope routines::unsupported` — e a nota
+# morre com "Impossivel ler o certificado", mesmo com o arquivo no volume e a
+# senha certa. O comentário completo está em `openssl-legacy.cnf`.
+#
+# Vai na IMAGEM, e não no compose: é assim que a correção chega em quem já
+# instalou, sem pedir edição de arquivo na VPS (doutrina de packaging).
+COPY openssl-legacy.cnf /etc/ssl/nexus-openssl.cnf
+ENV OPENSSL_CONF=/etc/ssl/nexus-openssl.cnf
+
 # /certs é VOLUME do operador (o .pfx A1 entra por SCP, nunca por upload web).
 VOLUME ["/certs"]
 

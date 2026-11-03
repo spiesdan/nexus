@@ -591,6 +591,12 @@ class ServicoNfe
         $vNF = round($vProd + $frete, 2);
 
         $make->taginfNFe((object)['versao' => '4.00']);
+        // idDest é FUNÇÃO do destino, não escolha de quem chama: 1 = operação
+        // interna, 2 = interestadual, 3 = exterior. Fixo em '1' (como era até
+        // 03/11/2026), toda venda SC→PR saía declarada como interna e a SEFAZ
+        // rejeita (a chave e o CFOP contam a mesma história, e aqui contavam
+        // histórias diferentes).
+        $idDest = $this->idDestino();
         $make->tagide((object)[
             'cUF' => $this->codigoUf((string)($c['uf'] ?? '')),
             // Nulos de propósito: o Make gera um cNF válido (Keys::random —
@@ -604,7 +610,7 @@ class ServicoNfe
             // Nulo: o Make datat no fuso da UF, não no do servidor.
             'dhEmi' => null,
             'tpNF' => '1',
-            'idDest' => '1',
+            'idDest' => $idDest,
             'cMunFG' => (string)($c['codigo_municipio'] ?? ''),
             'tpImp' => '1',
             'tpEmis' => '1',
@@ -670,7 +676,7 @@ class ServicoNfe
                 'cEAN' => 'SEM GTIN',
                 'xProd' => (string)$item['descricao'],
                 'NCM' => preg_replace('/\D/', '', (string)($item['ncm'] ?? '00000000')),
-                'CFOP' => (string)($item['cfop'] ?? $c['cfop'] ?? '5102'),
+                'CFOP' => $this->cfopParaDestino((string)($item['cfop'] ?? $c['cfop'] ?? '5102')),
                 'uCom' => (string)($item['unidade'] ?? 'UN'),
                 'qCom' => $this->moeda($qtd, 4),
                 'vUnCom' => $this->moeda($unitLiquido),
@@ -972,6 +978,65 @@ class ServicoNfe
     private function moeda(float $v, int $casas = 2): string
     {
         return number_format($v, $casas, '.', '');
+    }
+
+    /**
+     * UF de destino — o `extras.entrega` é obrigatório (`validar()`), então ela
+     * sempre existe antes da montagem. A UF do emitente vem da config.
+     */
+    private function ufDestino(): string
+    {
+        $e = $this->extras['entrega'] ?? [];
+        return strtoupper(trim((string)(is_array($e) ? ($e['uf'] ?? '') : '')));
+    }
+
+    /**
+     * idDest do `<ide>`: 1 interna, 2 interestadual, 3 exterior.
+     *
+     * O produto vende para fora do estado (SC→PR, SC→RS…) e o campo estava
+     * FIXO em '1'. Isso não é preferência: a SEFAZ compara idDest com a UF do
+     * destinatário e recusa a nota quando não batem. Venda interestadual é
+     * `2`, ponto — quem sabe o destino é o endereço de entrega, não uma
+     * constante no código.
+     */
+    private function idDestino(): string
+    {
+        $emitente = strtoupper(trim((string)($this->config['uf'] ?? '')));
+        $destino = $this->ufDestino();
+        // `validar()` já exige UF de 2 letras no emitente e na entrega; sem
+        // destino legível não há como afirmar interestadual, e o valor do
+        // leiaute para "dentro do estado" é o único seguro.
+        if (preg_match('/^[A-Z]{2}$/', $destino) !== 1) {
+            return '1';
+        }
+        return $destino === $emitente ? '1' : '2';
+    }
+
+    /**
+     * CFOP com o primeiro dígito coerente com o destino.
+     *
+     * 5xxx = operação dentro do estado; 6xxx = operação interestadual; o resto
+     * dos dígitos descreve a operação (5102/6102 = venda de mercadoria). Com o
+     * default `5102` fixo, uma venda SC→PR saía com CFOP de operação interna —
+     * e a SEFAZ recusa essa combinação.
+     *
+     * O que muda é SÓ o primeiro dígito, e só quando ele é 5 ou 6: 1/2/3 são
+     * entradas e 7 é exterior, que não são o caso desta venda e não podem ser
+     * "corrigidos" por conta própria. CFOP com formato inesperado passa
+     * intacto — validar formato não é papel desta função.
+     */
+    private function cfopParaDestino(string $cfop): string
+    {
+        $digitos = preg_replace('/\D/', '', $cfop);
+        if (strlen((string)$digitos) !== 4) {
+            return (string)$digitos;
+        }
+        $primeiro = $digitos[0];
+        if ($primeiro !== '5' && $primeiro !== '6') {
+            return $digitos;
+        }
+        $esperado = $this->idDestino() === '2' ? '6' : '5';
+        return $esperado . substr($digitos, 1);
     }
 
     private function codigoUf(string $uf): string

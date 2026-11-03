@@ -1,0 +1,49 @@
+# OpenSSL do sidecar — default + LEGACY.
+#
+# ─── Por que este arquivo existe ─────────────────────────────────────────────
+#
+# Certificado A1 brasileiro é um PKCS#12, e uma parte das autoridades
+# certificadoras ainda cifra o conteúdo com **RC2-40-CBC** (PBE-SHA1-RC2-40).
+# No OpenSSL 3 esse algoritmo saiu do provedor padrão e foi para o `legacy`.
+#
+# O PHP 8.x da imagem usa o OpenSSL do sistema (3.5 no Debian trixie). Sem este
+# arquivo, `openssl_pkcs12_read()` — o que o sped-nfe usa em
+# `Certificate::readPfx` — falha com:
+#
+#   error:0308010C:digital envelope routines::unsupported
+#
+# e a emissão morre em "Impossivel ler o certificado", com o arquivo no volume,
+# a senha certa e o certificado válido. Foi exatamente o que aconteceu na
+# instalação em 03/11/2026: upload OK, metadados vazios, primeira NF-e em erro.
+#
+# ─── Por que não converter o .pfx ────────────────────────────────────────────
+#
+# Converter exigiria a senha do cliente e reescrever o arquivo dele. Na
+# renovação anual o operador sobe outro .pfx legado e o problema volta — melhor
+# aceitar o formato que a AC emitiu do que pedir trabalho manual a cada troca.
+#
+# ─── Por que ativar TAMBÉM o default ────────────────────────────────────────
+#
+# Quando qualquer provedor é ativado explicitamente, o default deixa de ser
+# implícito. Ativar só o `legacy` derrubaria TLS, SHA-2 e RSA — inclusive a
+# conexão HTTPS com a SEFAZ. Os dois andam juntos.
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1
+
+# Os mesmos padrões do openssl.cnf da distribuição: sem esta seção o OpenSSL
+# cai no default da biblioteca, que é mais frouxo que o da imagem.
+[system_default_sect]
+MinProtocol = TLSv1.2
+CipherString = DEFAULT@SECLEVEL=2
