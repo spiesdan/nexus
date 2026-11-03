@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.6] — 2026-11-03
+
+### Corrigido
+
+- **DANFE passa a existir — o pacote estava como "sugestão" e nunca foi instalado** O endpoint do DANFE respondia **422 "DANFE_INDISPONIVEL"** para toda nota. Não
+  era falta de código: o `fiscal/sidecar` chamava `NFePHP\DA\NFe\Danfe` desde o
+  começo, mas o pacote `nfephp-org/sped-da` estava em **`suggest`** no
+  `composer.json` — e `suggest` não é instalado. A imagem saía sem ele, e a rota
+  nunca conseguia gerar um PDF.
+
+  Agora o pacote está em `require` e entra no build. O layout é o 4.00 padrão
+  (canhoto, código de barras, chave, duplicatas, impostos), medido com um
+  `nfeProc` real: 65 KB de PDF, uma página. `tests/unit/fiscal-danfe.test.ts`
+  passa a reprovar a volta para `suggest`.
+
+  O que o DANFE **ainda não** mostra, e depende de dado que não existe na
+  instalação:
+
+  - **valor aproximado dos tributos** (Lei da Transparência): o XML não leva
+    `vTotTrib` e a tabela `fiscal_ibpt` está vazia — o bloco sai zerado;
+  - **IBS/CBS** da reforma: o leiaute renderizado é o anterior a esses campos.
+
 ## [1.38.5] — 2026-11-03
 
 ### Corrigido
@@ -5929,7 +5951,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.6...HEAD
+[1.38.6]: https://github.com/spiesdan/nexus/compare/v1.38.5...v1.38.6
 [1.38.5]: https://github.com/spiesdan/nexus/compare/v1.38.4...v1.38.5
 [1.38.4]: https://github.com/spiesdan/nexus/compare/v1.38.3...v1.38.4
 [1.38.3]: https://github.com/spiesdan/nexus/compare/v1.38.2...v1.38.3
