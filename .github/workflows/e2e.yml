@@ -512,9 +512,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Versão FIXA, não `latest`. O v3.0.0 (publicado em 02/11/2026) recusa
+      # `[inbucket]` no `supabase/config.toml` — "no longer supported. Use
+      # [local_smtp] instead" — e `supabase start` morre antes de qualquer
+      # teste: o `e2e` da main ficou vermelho sem uma linha de produto mudar.
+      # Um runner que puxa a CLI mais nova a cada rodada transforma release de
+      # terceiro em quebra do nosso CI, então fica no último 2.x que este
+      # `config.toml` conhece. Migrar para o v3 é tarefa própria, com o
+      # `config.toml` convertido — não é efeito colateral de um PR de produto.
       - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.122.1
 
       # O pull das imagens do Supabase é anônimo por padrão — e o GHCR limita
       # pulls anônimos por IP (`toomanyrequests` derrubou 3 rodadas seguidas em

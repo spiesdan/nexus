@@ -349,6 +349,32 @@ não validada**. É exatamente o que a Etapa 0 do plano registra como bloqueada.
 
 ---
 
+## 12.1 Evidência visual
+
+As 13 telas do módulo e o estado de "nota inexistente" foram capturados no app
+real, com banco do baseline e sessão autenticada. São estas, e cada uma é
+citada aqui para que o repositório não carregue prova que ninguém consulta:
+
+- `evidence/fiscal-entrada/01-visao-geral.png`
+- `evidence/fiscal-entrada/02-todas-as-notas.png`
+- `evidence/fiscal-entrada/03-pendentes.png`
+- `evidence/fiscal-entrada/04-xml.png`
+- `evidence/fiscal-entrada/05-resumos.png`
+- `evidence/fiscal-entrada/06-manifestacoes.png`
+- `evidence/fiscal-entrada/07-fornecedores.png`
+- `evidence/fiscal-entrada/08-produtos.png`
+- `evidence/fiscal-entrada/09-eventos.png`
+- `evidence/fiscal-entrada/10-relatorios.png`
+- `evidence/fiscal-entrada/11-sincronizacoes.png`
+- `evidence/fiscal-entrada/12-configuracoes.png`
+- `evidence/fiscal-entrada/13-navegacao-do-modulo.png`
+- `evidence/fiscal-entrada/14-nota-inexistente-404.png`
+
+O e2e que as produz é `tests/e2e/notas-fiscais-modulo.spec.ts`, listado na parte
+2 da suíte (`critical`/`full`) do `e2e.yml`.
+
+---
+
 ## 13. Estado final, em uma frase
 
 O módulo está **completo em código, banco, automação, telas e testes** e
