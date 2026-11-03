@@ -32,6 +32,7 @@ import {
   CheckCircle,
   FileText,
   MagnifyingGlass,
+  MapPin,
   Package,
   Truck,
   Warning,
@@ -48,11 +49,19 @@ interface Textos {
   verRomaneio: string;
 }
 
-/** Quantas paradas a carga tem e quantas já tiveram desfecho. */
+/** Quantas paradas a carga tem, quantas já tiveram desfecho e para onde ela vai. */
 export interface ProgressoDaCarga {
   total: number;
   entregues: number;
   devolvidos: number;
+  /**
+   * Cidades da rota, na ordem das paradas e sem repetir. É a primeira coisa
+   * que a operação pergunta ("essa é a carga de Canoinhas ou a de Mafra?") e
+   * era a única que a linha não respondia.
+   */
+  cidades: string[];
+  /** Paradas cujo endereço não resolve cidade — dito, não escondido. */
+  semCidade: number;
 }
 
 type FiltroDeCargas = "todas" | "em_rota" | "montando" | "concluidas" | "canceladas";
@@ -193,8 +202,11 @@ export function ExpedicaoClient({
       })
       .filter((c) => {
         if (!termo) return true;
+        // Cidade entra na busca: "canoinhas" tem de achar a carga que vai
+        // para lá, não só o pedido na fila de embarque.
+        const cidades = (progresso[c.id]?.cidades ?? []).join(" ");
         return chaveDeBusca(
-          `${numeroDaCarga(c.numero)} ${c.placa ?? ""} ${c.veiculo_tipo ?? ""} ${c.motorista_nome ?? ""}`,
+          `${numeroDaCarga(c.numero)} ${c.placa ?? ""} ${c.veiculo_tipo ?? ""} ${c.motorista_nome ?? ""} ${cidades}`,
         ).includes(termo);
       })
       .sort((a, b) => {
@@ -202,7 +214,7 @@ export function ExpedicaoClient({
           ORDEM_DO_STATUS[a.status as StatusDaCarga] - ORDEM_DO_STATUS[b.status as StatusDaCarga];
         return porStatus !== 0 ? porStatus : (b.created_at ?? "").localeCompare(a.created_at ?? "");
       });
-  }, [inicial, filtroCargas, buscaCarga]);
+  }, [inicial, filtroCargas, buscaCarga, progresso]);
 
   const emRotaFiltradas = cargasFiltradas.filter((c) => c.status === "em_rota");
   const montandoFiltradas = cargasFiltradas.filter((c) => c.status === "montando");
@@ -534,7 +546,15 @@ export function ExpedicaoClient({
                         <LinhaDaCarga
                           key={c.id}
                           carga={c}
-                          progresso={progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0 }}
+                          progresso={
+                            progresso[c.id] ?? {
+                              total: 0,
+                              entregues: 0,
+                              devolvidos: 0,
+                              cidades: [],
+                              semCidade: 0,
+                            }
+                          }
                           concluindo={concluindoId === c.id}
                           aoConcluir={concluirCarga}
                           textos={textos}
@@ -600,7 +620,15 @@ function GrupoDaFila({
           <LinhaDaCarga
             key={c.id}
             carga={c}
-            progresso={progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0 }}
+            progresso={
+              progresso[c.id] ?? {
+                total: 0,
+                entregues: 0,
+                devolvidos: 0,
+                cidades: [],
+                semCidade: 0,
+              }
+            }
             concluindo={concluindoId === c.id}
             aoConcluir={aoConcluir}
             textos={textos}
@@ -673,6 +701,21 @@ function LinhaDaCarga({
             {veiculoETripulacao || t("Sem veículo ou motorista definido")}
           </p>
         </div>
+
+        {progresso.cidades.length > 0 && (
+          <p
+            className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground"
+            title={progresso.cidades.join(" · ")}
+          >
+            <MapPin size={11} aria-hidden className="shrink-0" />
+            <span className="truncate">{progresso.cidades.join(" · ")}</span>
+            {progresso.semCidade > 0 && (
+              <span className="shrink-0 text-text-subtle">
+                · {progresso.semCidade} {t("sem cidade")}
+              </span>
+            )}
+          </p>
+        )}
 
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5">

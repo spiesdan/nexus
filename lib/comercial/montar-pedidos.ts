@@ -23,6 +23,7 @@
  *   falta de um dado de cortesia.
  */
 import { isServiceRoleConfigured } from "@/lib/audit";
+import { documentoDoCadastro } from "@/lib/contacts/documento-do-cadastro";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO } from "@/lib/schemas/pedidos";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -170,7 +171,7 @@ async function carregarClientes(
   const { data } = await supabase
     .from("contacts")
     .select(
-      "id, display_name, name, tipo_pessoa, fantasia, ie, cnpj, phone_number, email, logradouro, numero_end, complemento, bairro, cidade, uf, cep",
+      "id, display_name, name, tipo_pessoa, fantasia, ie, cnpj, source_metadata, phone_number, email, logradouro, numero_end, complemento, bairro, cidade, uf, cep",
     )
     .eq("organization_id", organizationId)
     .in("id", ids);
@@ -187,6 +188,8 @@ interface RegistroDoContato {
   fantasia: string | null;
   ie: string | null;
   cnpj: string | null;
+  /** O CPF de quem veio do Mercos mora aqui, não em `cnpj`. */
+  source_metadata: unknown;
   phone_number: string | null;
   email: string | null;
   logradouro: string | null;
@@ -214,7 +217,11 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
     email: null,
   };
   if (!contato) return base;
-  const documento = contato.cnpj ?? linha.cliente_documento;
+  // O cadastro inteiro, não só a coluna `cnpj`: o Mercos guarda o CPF em
+  // `source_metadata.mercos.documento` e deixa `cnpj` NULL. Antes, o impresso
+  // de 832 pedidos desses clientes saía com o CPF do snapshot ou sem documento
+  // nenhum, embora o cadastro o tivesse.
+  const documento = documentoDoCadastro(contato)?.digitos ?? linha.cliente_documento;
   return {
     nome: contato.display_name ?? contato.name ?? linha.cliente_nome,
     fantasia: contato.fantasia,

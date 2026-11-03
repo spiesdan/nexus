@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAXIMO_PEDIDOS_NO_LOTE, idsDoLote } from "./ids-do-lote";
+import { MAXIMO_PEDIDOS_NO_LOTE, emLotes, idsDoLote } from "./ids-do-lote";
 
 const A = "00000000-0000-4000-8000-00000000000a";
 const B = "00000000-0000-4000-8000-00000000000b";
@@ -38,5 +38,21 @@ describe("idsDoLote", () => {
       (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
     );
     expect(idsDoLote(muitos.join(",")).length).toBe(MAXIMO_PEDIDOS_NO_LOTE);
+  });
+});
+
+describe("emLotes", () => {
+  it("fatia no teto preservando a ordem das paradas", () => {
+    const ids = Array.from({ length: MAXIMO_PEDIDOS_NO_LOTE + 2 }, (_, i) =>
+      `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+    );
+    const lotes = emLotes(ids);
+    expect(lotes.map((l) => l.length)).toEqual([MAXIMO_PEDIDOS_NO_LOTE, 2]);
+    expect(lotes.flat()).toEqual(ids);
+  });
+
+  it("lote que cabe não é fatiado", () => {
+    expect(emLotes([A, B, C])).toEqual([[A, B, C]]);
+    expect(emLotes([])).toEqual([]);
   });
 });

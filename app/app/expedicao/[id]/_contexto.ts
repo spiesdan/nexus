@@ -45,6 +45,9 @@ export async function contextoDaCarga(id: string) {
       // O fechamento saiu do papel: o PDF é só romaneio agora. O nome do
       // botão diz isso para ninguém procurar o fechamento no impresso.
       romaneio: t("Romaneio (PDF)"),
+      // O romaneio é a folha de quem dirige. O documento de cada pedido é o
+      // que o galpão usa para separar a mercadoria — sem sair da carga.
+      imprimirPedidos: t("Imprimir pedidos"),
       totalMercadorias: t("Total em mercadorias"),
       aCobrar: t("A cobrar na entrega"),
       paradasConcluidas: t("Paradas concluídas"),
