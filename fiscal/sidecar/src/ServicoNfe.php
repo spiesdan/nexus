@@ -617,7 +617,14 @@ class ServicoNfe
             'cDV' => null,
             'tpAmb' => (string)$tpAmb,
             'finNFe' => '1',
-            'indFinal' => '1',
+            // indFinal 0 = NÃO consumidor final (destinatário contribuinte do
+            // ICMS, que compra para revender/industrializar); 1 = consumidor
+            // final. Era fixo em 1 para toda venda, inclusive para empresa com
+            // IE — o indicador não é escolha da tela, sai do cadastro:
+            // `indicador_ie` 1 é contribuinte, e é o mesmo campo que alimenta
+            // o `indIEDest`. Sem IE (2 isento / 9 não contribuinte), a operação
+            // é com consumidor final.
+            'indFinal' => ((string)($p['indicador_ie'] ?? '9') === '1') ? '0' : '1',
             // indPres 9 = não presencial, outros. indPag NÃO entra aqui: no
             // leiaute 4.00 ele só existe dentro de detPag (o XSD tem um único
             // indPag, filho de detPag) — em ide ele rejeita.
