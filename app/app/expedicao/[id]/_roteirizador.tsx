@@ -263,6 +263,8 @@ export function Roteirizador({
   async function geocodificarTudo() {
     setTrabalhando("geo");
     setProgressoGeo(t("Localizando…"));
+    let localizadas = 0;
+    let semResultado = 0;
     try {
       for (;;) {
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
@@ -270,13 +272,34 @@ export function Roteirizador({
           {},
         );
         const d = corpo.data;
+        localizadas += d.estados.filter((e) => e.estado === "ok").length;
+        semResultado += d.estados.filter((e) => e.estado !== "ok").length;
         setProgressoGeo(
           d.restantes > 0 ? t(`Faltam ${d.restantes}…`) : t("Pronto."),
         );
         await recarregar();
-        if (d.restantes <= 0) break;
+        // Um lote sem estado nenhum não é "faltam N": é a rota sem alvo (sem
+        // endereço ou contato fora do alcance). Sem esta saída, `restantes > 0`
+        // com `estados` vazio girava para sempre.
+        if (d.restantes <= 0 || d.estados.length === 0) break;
       }
-      toast.success(t("Geocodificação concluída."));
+      if (localizadas > 0 && semResultado === 0) {
+        toast.success(`${localizadas} ${t("parada(s) localizada(s) no mapa.")}`);
+      } else if (localizadas > 0) {
+        toast.warning(
+          `${localizadas} ${t("localizada(s)")}, ${semResultado} ${t("sem resultado. Corrija o endereço ou marque no mapa.")}`,
+        );
+      } else if (semResultado > 0) {
+        // O toast antigo dizia "Geocodificação concluída" mesmo quando nada foi
+        // encontrado — o operador clicava, nada mudava e parecia botão morto.
+        toast.warning(t("Nenhuma parada localizada. Corrija o endereço ou marque no mapa."));
+      } else {
+        toast.info(
+          semCoord.length > 0
+            ? t("As paradas desta carga estão sem endereço. Corrija o cadastro ou marque no mapa.")
+            : t("Todas as paradas desta carga já estão no mapa."),
+        );
+      }
     } catch (e) {
       showApiError(e);
     } finally {
