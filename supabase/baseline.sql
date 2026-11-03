@@ -23709,6 +23709,63 @@ create trigger trg_fiscal_document_items_updated_at
   before update on public.fiscal_document_items
   for each row execute function public.fn_set_updated_at();
 
+-- ---- 0291 — numeração da NF-e (contador por emitente) ----
+--
+-- Apêndice idempotente da migration 0291. O `nNF` deixa de ser o número do
+-- pedido: sem isso, todo pedido que não vira nota abre um buraco na sequência
+-- da série, e a SEFAZ cobra inutilização por cada um.
+alter table public.fiscal_settings
+  add column if not exists proximo_numero integer;
+
+alter table public.fiscal_settings
+  drop constraint if exists fiscal_settings_proximo_numero_check;
+alter table public.fiscal_settings
+  add constraint fiscal_settings_proximo_numero_check
+  check (proximo_numero is null or (proximo_numero >= 1 and proximo_numero <= 999999999));
+
+comment on column public.fiscal_settings.proximo_numero is
+  'Próximo número de NF-e a reservar nesta série. Nulo = não configurado, e a emissão recusa em vez de adivinhar. Quem migra de outro sistema informa o último número emitido + 1.';
+
+create or replace function public.fn_reservar_numero_nfe(p_organization_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_numero integer;
+begin
+  update public.fiscal_settings
+     set proximo_numero = proximo_numero + 1,
+         updated_at = now()
+   where organization_id = p_organization_id
+     and proximo_numero is not null
+  returning proximo_numero - 1 into v_numero;
+  return v_numero;
+end;
+$$;
+
+create or replace function public.fn_devolver_numero_nfe(p_organization_id uuid, p_numero integer)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.fiscal_settings
+     set proximo_numero = p_numero,
+         updated_at = now()
+   where organization_id = p_organization_id
+     and proximo_numero = p_numero + 1;
+  return found;
+end;
+$$;
+
+revoke all on function public.fn_reservar_numero_nfe(uuid) from public, anon, authenticated;
+revoke all on function public.fn_devolver_numero_nfe(uuid, integer) from public, anon, authenticated;
+grant execute on function public.fn_reservar_numero_nfe(uuid) to service_role;
+grant execute on function public.fn_devolver_numero_nfe(uuid, integer) to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
