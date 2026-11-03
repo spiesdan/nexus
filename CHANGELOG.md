@@ -8,6 +8,27 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.1] — 2026-11-03
+
+### Corrigido
+
+- **Mapa da rota mostra as paradas: o endereço vem do cadastro do cliente** O mapa da Expedição abria vazio e o botão **Geocodificar** não movia um pino.
+
+  A parada da rota nascia só com o `endereço de entrega` do **pedido** — um campo
+  opcional, que o operador preenche apenas quando a entrega é em outro ponto. Nesta
+  instalação, nenhum dos 28 pedidos das cargas abertas tinha esse campo, embora 25
+  deles tivessem a rua no **cadastro do cliente**. Sem endereço, a geocodificação
+  não tinha alvo: o botão respondia "concluída" sem localizar nada.
+
+  Agora o endereço do pedido continua vencendo quando existe (é o ponto que o
+  operador escolheu), e o cadastro entra quando ele falta — o mesmo endereço que o
+  romaneio já usava. Cliente sem endereço nenhum continua sem pino, de propósito:
+  pino em lugar errado é pior que pino nenhum.
+
+  O retorno do botão também parou de mentir: ele diz quantas paradas foram
+  localizadas, quantas ficaram sem resultado e, quando não há nenhuma, manda
+  corrigir o endereço ou marcar no mapa.
+
 ## [1.38.0] — 2026-11-03
 
 ### Adicionado
@@ -5789,7 +5810,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.1...HEAD
+[1.38.1]: https://github.com/spiesdan/nexus/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/spiesdan/nexus/compare/v1.37.0...v1.38.0
 [1.37.0]: https://github.com/spiesdan/nexus/compare/v1.36.3...v1.37.0
 [1.36.3]: https://github.com/spiesdan/nexus/compare/v1.36.2...v1.36.3
