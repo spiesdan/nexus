@@ -8,6 +8,29 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.36.2] — 2026-11-03
+
+### Adicionado
+
+- **Romaneio separado por cidade, com o nome do cliente que está no cadastro** O romaneio agora imprime a carga **separada por cidade**: cada cidade abre um
+  bloco com o nome dela e quantas paradas tem, e as paradas daquela cidade vêm
+  juntas. A ordem entre os blocos continua sendo a da rota — o primeiro bloco é o
+  da parada mais cedo da sequência —, e a numeração é redistribuída para o papel
+  ser lido de cima para baixo, sem "1, 5, 9, 2".
+
+  Parada cujo cadastro não tem cidade vai para um bloco próprio, no fim,
+  identificado como **"Cidade não informada"** — em vez de entrar calada num
+  grupo qualquer.
+
+  O nome do cliente no papel passou a ser o do **cadastro**, não o que ficou
+  congelado no pedido na importação. Isso é o que faz o pedido renomeado sair com
+  o nome certo sem ninguém reimportar nada. Medido: 109 dos 393 pedidos abertos
+  desta instalação tinham o nome do pedido diferente do cadastro do cliente.
+
+  Nada muda na separação de itens, no total da carga ou na assinatura por parada.
+  O romaneio da carga 022 — 22 paradas e 50 itens, agora com 7 blocos de cidade —
+  continua em **duas folhas**.
+
 ## [1.36.1] — 2026-11-03
 
 ### Corrigido
@@ -5633,7 +5656,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.2...HEAD
+[1.36.2]: https://github.com/spiesdan/nexus/compare/v1.36.1...v1.36.2
 [1.36.1]: https://github.com/spiesdan/nexus/compare/v1.36.0...v1.36.1
 [1.36.0]: https://github.com/spiesdan/nexus/compare/v1.35.5...v1.36.0
 [1.35.5]: https://github.com/spiesdan/nexus/compare/v1.35.4...v1.35.5
