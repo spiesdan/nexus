@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatarDistancia, formatarDuracao, haversineM, ordenarPorDistanciaDaOrigem, vizinhoMaisProximo } from "./roteamento";
+import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta, ordenarPorDistanciaDaOrigem, vizinhoMaisProximo } from "./roteamento";
 
 describe("roteamento", () => {
   it("haversine mede Canoinhas–Três Barras na ordem de grandeza certa", () => {
@@ -50,5 +50,21 @@ describe("roteamento", () => {
     expect(formatarDistancia(800)).toBe("800 m");
     expect(formatarDuracao(5520)).toBe("1h32");
     expect(formatarDuracao(480)).toBe("8 min");
+  });
+
+  it("a ordem proposta cobre TODAS as paradas — o PATCH recusa lista parcial", () => {
+    // Medido na carga 22: 21 de 22 paradas com coordenada. Sem as que ficaram
+    // sem mapa, a lista sumia com ela na tela e o "Salvar ordem" respondia
+    // "a ordem precisa cobrir todas as paradas exatamente uma vez".
+    const ordem = ordemCompleta(["a", "b"], ["c", "d"]);
+    expect(ordem).toEqual(["a", "b", "c", "d"]);
+    expect(new Set(ordem).size).toBe(ordem.length);
+  });
+
+  it("chave repetida entre as duas listas não duplica a parada", () => {
+    // O servidor promete não repetir, mas duplicar aqui significaria uma
+    // parada contada duas vezes na sequência gravada.
+    expect(ordemCompleta(["a", "b"], ["b"])).toEqual(["a", "b"]);
+    expect(ordemCompleta([], ["a", "b"])).toEqual(["a", "b"]);
   });
 });

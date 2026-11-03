@@ -90,6 +90,24 @@ export function vizinhoMaisProximo(pontos: Coordenada[], retornar: boolean): num
   return ordem;
 }
 
+/**
+ * A ORDEM COMPLETA — as paradas roteirizadas e as que ficaram sem mapa.
+ *
+ * O cálculo do servidor só devolve posição para quem tem coordenada; as
+ * demais voltam em `nao_roteirizaveis`. A tela precisa das duas listas: o
+ * PATCH /rota/ordem recusa cobertura parcial ("a ordem precisa cobrir todas
+ * as paradas"), então usar só a primeira metade sumia com as paradas sem
+ * mapa da lista E fazia o "Salvar ordem" falhar depois de otimizar.
+ *
+ * Quem não tem coordenada vai para o FIM, na ordem em que o servidor as
+ * devolveu: é onde a operação as trata — corrigir o endereço ou marcar no
+ * mapa — sem contaminar a sequência calculada.
+ */
+export function ordemCompleta(ordem: readonly string[], naoRoteirizaveis: readonly string[]): string[] {
+  const vistas = new Set(ordem);
+  return [...ordem, ...naoRoteirizaveis.filter((c) => !vistas.has(c))];
+}
+
 /** "42,8 km" / "1h32" — o resumo da rota fala como gente. */
 export function formatarDistancia(metros: number): string {
   if (metros < 1000) return `${Math.round(metros)} m`;
