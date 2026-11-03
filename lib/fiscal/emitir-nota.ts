@@ -1,10 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError } from "@/lib/api/types";
+import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
 import {
   COLUNAS_DA_NOTA,
-  STATUS_FATURAVEL,
+  statusFaturavel,
   type ConfigFiscalSalva,
   type ExtrasFiscais,
 } from "@/lib/schemas/fiscal";
@@ -65,24 +66,27 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
 
   const { data: pedido } = await supabase
     .from("commercial_orders")
-    .select("id, numero, cliente_nome, cliente_documento, total_cents, frete_cents, status")
+    .select("id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status")
     .eq("id", orderId)
     .eq("organization_id", orgId)
     .maybeSingle();
   const ped = pedido as unknown as {
     id: string;
     numero: number;
+    cliente_nome: string;
+    cliente_documento: string | null;
+    contact_id: string | null;
     total_cents: number;
     status: string;
   } | null;
   if (!ped) throw new ApiError(404, "not_found", { requestId }, requestId, "Pedido não encontrado.");
-  if (!(STATUS_FATURAVEL as readonly string[]).includes(ped.status)) {
+  if (!statusFaturavel(ped.status)) {
     throw new ApiError(
       422,
       "validation_failed",
       { requestId },
       requestId,
-      `Pedido está "${ped.status}" — só faturado vira nota.`,
+      `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
     );
   }
 
@@ -101,19 +105,53 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
 
   const escolha = resolverProvedor(cfg);
 
-  // A SEFAZ recusa a NF-e sem o endereço do destinatário (rejeição 726). O
-  // bloco `entrega` é o único do contrato que carrega os campos do TLocal,
-  // inclusive o cMun/IBGE; sem ele o sidecar recusaria depois de a nota e o
-  // job já existirem. Falhar aqui evita uma nota que nasce condenada.
-  if (escolha === "spednfe" && (!extras?.entrega || Object.keys(extras.entrega).length === 0)) {
+  // O DESTINATÁRIO vem do cadastro do cliente — não de uma segunda digitação.
+  //
+  // Antes isto exigia o endereço inteiro digitado em "Dados adicionais" mesmo
+  // com o cliente cadastrado, e a nota levava do pedido só `cliente_nome` e
+  // `cliente_documento` (fotos do dia da importação). Agora nome e documento
+  // saem do contato e o TLocal é montado das colunas do cadastro, com o cMun
+  // resolvido de cidade/UF (`municipioIbge`) — o código IBGE que o contato não
+  // guarda e que era o motivo real do formulário manual.
+  //
+  // O que a pessoa digitou em `extras.entrega` vence o cadastro: quem digitou
+  // tinha um motivo (endereço de entrega diferente do cobrança, por exemplo).
+  const destinatario = await carregarDestinatario(supabase, orgId, ped);
+  const entrega = extras?.entrega ?? destinatario.entrega;
+
+  // A SEFAZ recusa a NF-e sem o endereço do destinatário (rejeição 726), e o
+  // bloco `entrega` é o único do contrato que carrega o TLocal inteiro. Falhar
+  // aqui evita uma nota que nasce condenada; e a mensagem NOMEIA o que falta,
+  // em vez de pedir "o endereço" de novo a quem já cadastrou o cliente.
+  if (escolha === "spednfe" && !entrega) {
+    const falta = destinatario.faltando.length > 0
+      ? `O cadastro do cliente precisa de ajuste: ${destinatario.faltando.join(", ")}.`
+      : "O endereço do destinatário está incompleto.";
     throw new ApiError(
       422,
       "validation_failed",
       { requestId },
       requestId,
-      "Informe o endereço do destinatário (logradouro, número, bairro, município, código IBGE e UF) para emitir a NF-e.",
+      `${falta} Complete o cadastro do cliente ou informe o endereço em "Dados adicionais da emissão".`,
     );
   }
+  // O TLocal exige o documento do destinatário; sem ele o payload recusaria
+  // depois de a nota e o job já existirem.
+  if (escolha === "spednfe" && entrega && !destinatario.documento) {
+    throw new ApiError(
+      422,
+      "validation_failed",
+      { requestId },
+      requestId,
+      "O cadastro do cliente não tem CPF/CNPJ. É obrigatório na NF-e — complete o cadastro antes de emitir.",
+    );
+  }
+
+  // O que vai gravado NA NOTA: o que a pessoa digitou + a entrega resolvida
+  // (do cadastro quando ela não digitou). O drain lê daqui, então reemitir
+  // reusa a mesma decisão em vez de recalcular.
+  const extrasDaNota: ExtrasFiscais | null =
+    extras || entrega ? { ...(extras ?? {}), ...(entrega ? { entrega } : {}) } : null;
 
   const { data: nota, error } = await supabase
     .from("invoices")
@@ -127,7 +165,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
       status: "em_emissao",
       provedor: escolha,
       erro: null,
-      extras_fiscais: extras ?? null,
+      extras_fiscais: extrasDaNota,
       total_cents: ped.total_cents,
       created_by: userId,
     })

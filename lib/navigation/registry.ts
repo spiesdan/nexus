@@ -509,7 +509,7 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     // "Emitir NF-e" e pelo ⌘K.
     href: "/app/notas",
     label: "Emitir NF-e",
-    description: "Emita a partir do pedido faturado e acompanhe o status na SEFAZ.",
+    description: "Emita a partir do pedido faturado ou expedido e acompanhe o status na SEFAZ.",
     icon: Archive,
     group: "fiscal",
   },

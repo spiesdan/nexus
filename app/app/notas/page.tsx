@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import {
   COLUNAS_DA_NOTA,
+  STATUS_FATURAVEL,
   type CartaDeCorrecao,
   type ConfigFiscalSalva,
   type CfopEquivalenteSalvo,
@@ -18,6 +19,7 @@ import {
   type Pagavel,
 } from "@/lib/schemas/fiscal-entrada";
 import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
+import { montarDestinatario, type ContatoFiscal } from "@/lib/fiscal/destinatario-da-nota";
 import { createClient } from "@/lib/supabase/server";
 import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,7 +103,7 @@ export default async function NotasPage({
       .from("commercial_orders")
       .select(COLUNAS_DO_PEDIDO)
       .eq("organization_id", activeOrg.orgId)
-      .eq("status", "faturado")
+      .in("status", [...STATUS_FATURAVEL])
       .order("created_at", { ascending: false })
       .limit(200),
     supabase
@@ -134,6 +136,31 @@ export default async function NotasPage({
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
+
+  // DESTINATÁRIO PRONTO PARA A TELA — o mesmo resolvedor que o servidor usa ao
+  // emitir (nome, CPF/CNPJ, TLocal com cMun do IBGE). A tela confere e corrige
+  // em vez de redigitar; e o que ela mostrar é o que vai sair na nota, porque
+  // `emitirNota` chama a mesma função. Busca os contatos em UMA query: um
+  // pedido por contato, 200 pedidos não podem virar 200 consultas.
+  const faturadosLista = (faturados ?? []) as unknown as PedidoComercial[];
+  const idsDosContatos = [
+    ...new Set(faturadosLista.map((p) => p.contact_id).filter((v): v is string => !!v)),
+  ];
+  const contatosPorId = new Map<string, ContatoFiscal>();
+  if (idsDosContatos.length > 0) {
+    const { data: contatos } = await supabase
+      .from("contacts")
+      .select("id, name, display_name, cnpj, ie, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
+      .eq("organization_id", activeOrg.orgId)
+      .in("id", idsDosContatos);
+    for (const c of (contatos ?? []) as unknown as ContatoFiscal[]) {
+      contatosPorId.set(c.id, c);
+    }
+  }
+  const faturadosComDestinatario = faturadosLista.map((p) => ({
+    ...p,
+    destinatario: montarDestinatario(p, p.contact_id ? (contatosPorId.get(p.contact_id) ?? null) : null),
+  }));
 
   // Pessoa da grade (Odivix): nome do cliente via pedido de origem. Pedidos
   // que saíram de "faturado" depois da emissão entram no mapa extra.
@@ -185,15 +212,15 @@ export default async function NotasPage({
 
   const textos = {
     titulo: t("Notas fiscais"),
-    subtitulo: t("Emita a partir do pedido faturado e acompanhe o status."),
+    subtitulo: t("Emita a partir do pedido faturado ou expedido e acompanhe o status."),
     abas: t("Abas das notas fiscais"),
     emitir: t("Emitir nota"),
-    subtituloEmitir: t("Gerar a NF-e a partir do pedido já faturado."),
-    escolherPedido: t("Pedido faturado"),
+    subtituloEmitir: t("Gerar a NF-e a partir do pedido que já foi faturado, expedido ou entregue."),
+    escolherPedido: t("Pedido faturado ou expedido"),
     selecione: t("Selecione…"),
     notas: t("Notas"),
     vazias: t("Nenhuma nota ainda"),
-    semFaturados: t("Nenhum pedido faturado aguardando nota."),
+    semFaturados: t("Nenhum pedido faturado ou expedido aguardando nota."),
     semConfig: t("Configure os dados fiscais abaixo antes de emitir."),
     config: t("Configuração fiscal"),
     serie: t("Série"),
@@ -420,7 +447,7 @@ export default async function NotasPage({
         {podeEmitir && (
           <TabsContent value="emitir" className="mt-4">
             <EmitirNota
-              faturados={(faturados ?? []) as unknown as PedidoComercial[]}
+              faturados={faturadosComDestinatario}
               configInicial={config as unknown as Parameters<typeof EmitirNota>[0]["configInicial"]}
               textos={textos}
             />

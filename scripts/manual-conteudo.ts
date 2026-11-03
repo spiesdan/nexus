@@ -204,12 +204,12 @@ export const TELAS_MANUAL: TelaManual[] = [
     rota: "/app/notas",
     titulo: "Notas fiscais",
     resumo:
-      "A área fiscal: emitir a NF-e a partir do pedido faturado, acompanhar o status na SEFAZ e cuidar das entradas e do SPED.",
+      "A área fiscal: emitir a NF-e a partir do pedido faturado ou expedido, acompanhar o status na SEFAZ e cuidar das entradas e do SPED.",
     itens: [
       "Escolha a aba: Notas, Entradas, Emitir nota, Ações fiscais, SPED Fiscal ou Configuração fiscal.",
       "Em Notas, leia os totais (Total, Autorizadas, Pendentes, Com erro), busque a nota e filtre por período (Este ano, Este mês, Últimos 30 dias, Todo o período).",
       "No detalhe da nota, use Cancelar nota, Tentar de novo, Baixar XML, Ver DANFE e Ver pedido, e confira o Histórico fiscal.",
-      "Em Emitir nota, escolha o pedido faturado e gere a NF-e; se faltar configuração, a tela diz o que falta.",
+      "Em Emitir nota, escolha o pedido faturado ou expedido e gere a NF-e; se faltar configuração, a tela diz o que falta.",
       "Em Entradas, use “Buscar na SEFAZ”, “Manifestar”, “Importar (estoque + pagar)” e “Ignorar”.",
       "Em Ações fiscais, faça inutilização de numeração e Carta de Correção; em SPED Fiscal, monte os CFOPs equivalentes e gere o arquivo. Emitir é de atendente para cima, configurar é de gerente.",
     ],

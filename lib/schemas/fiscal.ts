@@ -342,8 +342,22 @@ export const COLUNAS_DA_NOTA =
   "id, order_id, serie, numero, chave_acesso, protocolo, sefaz_cstat, sefaz_xmotivo, " +
   "status, provedor, erro, total_cents, created_at";
 
-/** Só pedido faturado vira nota: antes disso é intenção, não fato fiscal. */
-export const STATUS_FATURAVEL = ["faturado"] as const;
+/**
+ * Os status do pedido que já são fato comercial e podem virar nota.
+ *
+ * `faturado` é o caminho normal. `expedido` e `entregue` entraram em 2026-11-03
+ * porque a mercadoria sai antes da nota em parte da rotina: a expedição leva o
+ * pedido para `expedido` ao embarcar e para `entregue` quando a rota termina —
+ * e sem eles quem emite a NF-e depois da saída ficava travado num pedido que já
+ * existe de verdade. Antes disso (`rascunho`, `em_analise`, `aprovado`) ainda é
+ * intenção, não fato fiscal.
+ */
+export const STATUS_FATURAVEL = ["faturado", "expedido", "entregue"] as const;
+
+/** Uma pergunta só, usada pela emissão, pela pré-validação e pelo assistente. */
+export function statusFaturavel(status: string): boolean {
+  return (STATUS_FATURAVEL as readonly string[]).includes(status);
+}
 
 export function identificacaoDaNota(serie: string, numero: number | null): string {
   return numero === null ? `Série ${serie} · sem número (pendente)` : `${numero}/${serie}`;

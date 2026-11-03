@@ -11,6 +11,16 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
@@ -34,6 +44,8 @@ import {
   CheckCircle,
   FileText,
   MapPin,
+  PencilSimple,
+  Plus,
   Receipt,
   Trash,
   Truck,
@@ -70,6 +82,16 @@ interface Textos {
   motivo: string;
   confirmar: string;
   cancelar: string;
+}
+
+/** Um pedido da fila de embarque, para o diálogo "Adicionar pedido". */
+interface Elegivel {
+  id: string;
+  numero: number;
+  cliente_nome: string;
+  cidade: string | null;
+  total_cents: number;
+  status: string;
 }
 
 interface Detalhe {
@@ -291,6 +313,95 @@ export function CargaClient({
       router.push("/app/expedicao");
     } catch (e) {
       showApiError(e);
+    }
+  }
+
+  // ── Editar a carga em montagem ─────────────────────────────────────────
+  // Placa/veículo/motorista e "mais um pedido na doca" são a mesma pergunta:
+  // "a carga ainda pode mudar?". A resposta é o status `montando` — depois que
+  // o caminhão saiu, a lista de paradas é a que o motorista já recebeu.
+  const [addAberto, setAddAberto] = React.useState(false);
+  const [elegiveis, setElegiveis] = React.useState<Elegivel[] | null>(null);
+  const [buscaElegivel, setBuscaElegivel] = React.useState("");
+  const [selecionados, setSelecionados] = React.useState<Set<string>>(new Set());
+  const [salvandoAdd, setSalvandoAdd] = React.useState(false);
+
+  const [veiculoAberto, setVeiculoAberto] = React.useState(false);
+  const [placa, setPlaca] = React.useState("");
+  const [veiculoTipo, setVeiculoTipo] = React.useState("");
+  const [motoristaNome, setMotoristaNome] = React.useState("");
+  const [salvandoVeiculo, setSalvandoVeiculo] = React.useState(false);
+
+  async function abrirAdicionar() {
+    setAddAberto(true);
+    setBuscaElegivel("");
+    setSelecionados(new Set());
+    setElegiveis(null);
+    try {
+      const corpo = await apiClient.get<{ data: { pedidos: Elegivel[] } }>(
+        `/api/v1/shipments/${cargaId}/orders`,
+      );
+      setElegiveis(corpo?.data?.pedidos ?? []);
+    } catch (e) {
+      setElegiveis([]);
+      showApiError(e);
+    }
+  }
+
+  function alternarSelecionado(id: string) {
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+  }
+
+  async function adicionarPedidos() {
+    if (selecionados.size === 0) return;
+    setSalvandoAdd(true);
+    try {
+      const res = await apiClient.post<{ data: { adicionados: unknown[] } }>(
+        `/api/v1/shipments/${cargaId}/orders`,
+        { order_ids: [...selecionados] },
+      );
+      const quantos = res?.data?.adicionados?.length ?? selecionados.size;
+      toast.success(
+        quantos === 1
+          ? t("Pedido posto na carga.")
+          : `${quantos} ${t("pedidos postos na carga.")}`,
+      );
+      setAddAberto(false);
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setSalvandoAdd(false);
+    }
+  }
+
+  function abrirVeiculo() {
+    setPlaca(carga.placa ?? "");
+    setVeiculoTipo(carga.veiculo_tipo ?? "");
+    setMotoristaNome(carga.motorista_nome ?? "");
+    setVeiculoAberto(true);
+  }
+
+  async function salvarVeiculo() {
+    setSalvandoVeiculo(true);
+    try {
+      await apiClient.patch(`/api/v1/shipments/${cargaId}`, {
+        placa: placa.trim().toUpperCase() || null,
+        veiculo_tipo: veiculoTipo.trim() || null,
+        motorista_nome: motoristaNome.trim() || null,
+      });
+      toast.success(t("Veículo e motorista atualizados."));
+      setVeiculoAberto(false);
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setSalvandoVeiculo(false);
     }
   }
 
@@ -573,6 +684,18 @@ export function CargaClient({
                   }
                 >
                   {textos.concluir}
+                </Button>
+              )}
+              {podeOperar && carga.status === "montando" && (
+                <Button variant="outline" size="sm" onClick={() => void abrirAdicionar()}>
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  {t("Adicionar pedido")}
+                </Button>
+              )}
+              {podeOperar && (carga.status === "montando" || carga.status === "em_rota") && (
+                <Button variant="ghost" size="sm" onClick={abrirVeiculo}>
+                  <PencilSimple className="h-3.5 w-3.5" aria-hidden />
+                  {t("Veículo")}
                 </Button>
               )}
               <Button variant="outline" size="sm" asChild>
@@ -1088,6 +1211,149 @@ export function CargaClient({
       {secao === "fechamento" && (
         <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
       )}
+
+      {/* ADICIONAR PEDIDO — a fila de embarque sem os que já estão em alguma
+          carga. Busca e seleção múltipla: a doca costuma pôr mais de um. */}
+      <Dialog open={addAberto} onOpenChange={setAddAberto}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t("Adicionar pedido à carga")}</DialogTitle>
+            <DialogDescription>
+              {t("Só pedido aprovado ou faturado que ainda não está em outra carga.")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Input
+              value={buscaElegivel}
+              onChange={(e) => setBuscaElegivel(e.target.value)}
+              placeholder={t("Buscar por número ou cliente…")}
+              aria-label={t("Buscar pedido")}
+            />
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border">
+              {elegiveis === null ? (
+                <p className="p-4 text-sm text-muted-foreground">{t("Carregando…")}</p>
+              ) : (
+                (() => {
+                  const termo = buscaElegivel.trim().toLowerCase();
+                  const lista = elegiveis.filter(
+                    (p) =>
+                      termo === "" ||
+                      String(p.numero).includes(termo) ||
+                      (p.cliente_nome ?? "").toLowerCase().includes(termo) ||
+                      (p.cidade ?? "").toLowerCase().includes(termo),
+                  );
+                  if (lista.length === 0) {
+                    return (
+                      <p className="p-4 text-sm text-muted-foreground">
+                        {t("Nenhum pedido aguardando embarque.")}
+                      </p>
+                    );
+                  }
+                  return (
+                    <ul className="divide-y divide-border">
+                      {lista.map((p) => (
+                        <li key={p.id}>
+                          <label className="flex cursor-pointer items-start gap-3 p-2.5 hover:bg-muted/40">
+                            <input
+                              type="checkbox"
+                              className="mt-1"
+                              checked={selecionados.has(p.id)}
+                              onChange={() => alternarSelecionado(p.id)}
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-baseline justify-between gap-2">
+                                <span className="truncate text-sm font-medium text-text">
+                                  {numeroDoPedido(p.numero)} · {p.cliente_nome}
+                                </span>
+                                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                                  {comoMoeda(p.total_cents, "BRL")}
+                                </span>
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {p.cidade ?? t("Cidade não informada")}
+                              </span>
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAddAberto(false)}>
+              {t("Cancelar")}
+            </Button>
+            <Button
+              onClick={() => void adicionarPedidos()}
+              disabled={salvandoAdd || selecionados.size === 0}
+            >
+              {salvandoAdd
+                ? t("Adicionando…")
+                : selecionados.size === 1
+                  ? t("Adicionar 1 pedido")
+                  : `${t("Adicionar")} ${selecionados.size} ${t("pedidos")}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* VEÍCULO E MOTORISTA — o cabeçalho mostra "Placa · tipo · nome" e até
+          aqui não havia onde corrigir: a carga nascia com o que foi digitado na
+          montagem, e trocar o motorista exigia recriar a carga. */}
+      <Dialog open={veiculoAberto} onOpenChange={setVeiculoAberto}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Veículo e motorista")}</DialogTitle>
+            <DialogDescription>
+              {t("Vale para o cabeçalho, o romaneio e o modo motorista.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="carga-placa">{t("Placa")}</Label>
+              <Input
+                id="carga-placa"
+                maxLength={10}
+                value={placa}
+                onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                placeholder="ABC1D23"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="carga-veiculo">{t("Veículo")}</Label>
+              <Input
+                id="carga-veiculo"
+                maxLength={60}
+                value={veiculoTipo}
+                onChange={(e) => setVeiculoTipo(e.target.value)}
+                placeholder={t("Ex.: Fiorino branca")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="carga-motorista">{t("Motorista")}</Label>
+              <Input
+                id="carga-motorista"
+                maxLength={120}
+                value={motoristaNome}
+                onChange={(e) => setMotoristaNome(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setVeiculoAberto(false)}>
+              {t("Cancelar")}
+            </Button>
+            <Button onClick={() => void salvarVeiculo()} disabled={salvandoVeiculo}>
+              {salvandoVeiculo ? t("Salvando…") : t("Salvar")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

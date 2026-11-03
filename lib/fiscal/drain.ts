@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
+import { carregarDestinatario } from "./destinatario-da-nota";
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
@@ -99,7 +100,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   const { data: pedido } = await admin
     .from("commercial_orders")
-    .select("id, numero, cliente_nome, cliente_documento, total_cents, frete_cents")
+    .select("id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents")
     .eq("id", nota.order_id)
     .maybeSingle();
   const ped = pedido as unknown as {
@@ -107,6 +108,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     numero: number;
     cliente_nome: string;
     cliente_documento: string | null;
+    contact_id: string | null;
     total_cents: number;
     frete_cents: number;
   } | null;
@@ -114,6 +116,19 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     await finalizar(admin, job, nota, "erro", "Pedido da nota sumiu.", null);
     return { saidas: "concluido", destino: "erro" };
   }
+
+  // O destinatário é lido AGORA, do cadastro — não da foto que o pedido
+  // congelou na importação. Nome e documento do contato vencem os do pedido, e
+  // o endereço vem do cadastro quando a nota não trouxe um (notas antigas, ou
+  // emissão sem endereço digitado). Emissão que já gravou `entrega` na nota é
+  // respeitada: o que foi decidido na hora da emissão não se reescreve.
+  const destinatario = await carregarDestinatario(admin, nota.organization_id, ped);
+  const entrega = nota.extras_fiscais?.entrega ?? destinatario.entrega;
+  const extras: ExtrasFiscais | null = entrega
+    ? { ...(nota.extras_fiscais ?? {}), entrega }
+    : nota.extras_fiscais;
+  const nomeDestinatario = destinatario.nome || ped.cliente_nome;
+  const documentoDestinatario = destinatario.documento ?? ped.cliente_documento;
 
   let resultado: ResultadoDeEmissao;
   if (escolha === "spednfe") {
@@ -186,11 +201,13 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       senhaCertificado: ctx.senhaCertificado ?? "",
       pedido: {
         numero: ped.numero,
-        nome: ped.cliente_nome,
-        documento: ped.cliente_documento,
+        nome: nomeDestinatario,
+        documento: documentoDestinatario,
+        ie: destinatario.ie,
+        indicador_ie: destinatario.indicador_ie,
         frete_cents: ped.frete_cents,
       },
-      extras: nota.extras_fiscais,
+      extras,
       itens: (
         (itensDb ?? []) as unknown as {
           produto_codigo: string;
@@ -215,8 +232,8 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     resultado = await provedorStub.emitir({
       order_id: ped.id,
       numero: ped.numero,
-      cliente_nome: ped.cliente_nome,
-      cliente_documento: ped.cliente_documento,
+      cliente_nome: nomeDestinatario,
+      cliente_documento: documentoDestinatario,
       total_cents: ped.total_cents,
     });
     // Stub é homologação declarada: volta para pendente com o motivo, em vez

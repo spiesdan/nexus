@@ -1,0 +1,159 @@
+/**
+ * A EMISSÃO E O STATUS DO PEDIDO — quem pode virar nota.
+ *
+ * A regra nasceu estreita ("só faturado vira nota") e ficou espalhada em dois
+ * lugares com textos diferentes: `lib/fiscal/emitir-nota.ts` e
+ * `app/api/v1/invoices/validar/route.ts`. O pedido do dono em 2026-11-03 foi
+ * emitir também depois da saída da mercadoria — e a expedição leva o pedido
+ * para `expedido` ao embarcar e para `entregue` quando a rota termina. Antes
+ * disso, quem faturava depois da entrega ficava travado num pedido real.
+ *
+ * O que este arquivo mede é a DECISÃO, com banco de mentira: o teste que
+ * importa é "aprovado recusa" e "expedido/entregue emitem", não a aritmética
+ * fiscal, que tem teste próprio no sidecar.
+ */
+import { describe, expect, it } from "vitest";
+
+import { ApiError } from "@/lib/api/types";
+import { emitirNota } from "@/lib/fiscal/emitir-nota";
+import { statusFaturavel } from "@/lib/schemas/fiscal";
+
+const PEDIDO_ID = "33333333-3333-4333-8333-333333333333";
+const ORG_ID = "22222222-2222-4222-8222-222222222222";
+const USUARIO_ID = "11111111-1111-4111-8111-111111111111";
+
+const NOTA = {
+  id: "nota-1",
+  order_id: PEDIDO_ID,
+  serie: "1",
+  status: "em_emissao",
+  provedor: "stub",
+  total_cents: 1000,
+};
+
+interface Resultado {
+  data: unknown;
+  error: unknown;
+}
+
+/**
+ * Uma corrente do PostgREST falsa: todo método de filtro devolve a si mesma e
+ * o terminal devolve o resultado. O `then` existe porque `insert(...)` é
+ * aguardado direto (sem `.select()`), como na chamada real.
+ */
+function corrente(resultado: Resultado) {
+  const b: Record<string, unknown> = {};
+  for (const metodo of ["select", "eq", "neq", "in", "order", "limit"]) {
+    b[metodo] = () => b;
+  }
+  b.maybeSingle = async () => resultado;
+  b.single = async () => resultado;
+  b.then = (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
+    Promise.resolve(resultado).then(ok, falha);
+  return b;
+}
+
+/** O banco da emissão: config, pedido com o status em teste e nenhuma nota viva. */
+function bancoFalso(status: string) {
+  const escritas: string[] = [];
+
+  const from = (tabela: string) => {
+    if (tabela === "fiscal_settings") {
+      return corrente({
+        data: {
+          serie: "1",
+          natureza_operacao: "Venda de mercadoria",
+          cfop_padrao: "5102",
+          emitente_documento: "12345678000199",
+          provedor: "stub",
+        },
+        error: null,
+      });
+    }
+    if (tabela === "commercial_orders") {
+      return corrente({
+        data: {
+          id: PEDIDO_ID,
+          numero: 7,
+          cliente_nome: "Cliente",
+          cliente_documento: null,
+          total_cents: 1000,
+          frete_cents: 0,
+          status,
+        },
+        error: null,
+      });
+    }
+    if (tabela === "invoices") {
+      const leitura = corrente({ data: null, error: null });
+      const escrita = corrente({ data: NOTA, error: null });
+      return {
+        ...leitura,
+        insert: (valor: unknown) => {
+          escritas.push(`invoices.insert ${JSON.stringify(valor)}`);
+          return escrita;
+        },
+      };
+    }
+    return {
+      insert: (valor: unknown) => {
+        escritas.push(`${tabela}.insert ${JSON.stringify(valor)}`);
+        return corrente({ data: null, error: null });
+      },
+    };
+  };
+
+  return { from, escritas };
+}
+
+function emitir(status: string) {
+  const banco = bancoFalso(status);
+  return {
+    banco,
+    promessa: emitirNota({
+      supabase: banco as never,
+      admin: banco as never,
+      orgId: ORG_ID,
+      userId: USUARIO_ID,
+      requestId: "req-1",
+      orderId: PEDIDO_ID,
+    }),
+  };
+}
+
+describe("status do pedido que vira nota", () => {
+  it("faturado, expedido e entregue são faturáveis", () => {
+    expect(statusFaturavel("faturado")).toBe(true);
+    expect(statusFaturavel("expedido")).toBe(true);
+    expect(statusFaturavel("entregue")).toBe(true);
+  });
+
+  it("intenção e desfecho não viram nota", () => {
+    for (const status of ["rascunho", "em_analise", "aprovado", "cancelado"]) {
+      expect(statusFaturavel(status), status).toBe(false);
+    }
+  });
+});
+
+describe("emitirNota", () => {
+  it("emite para pedido expedido — a mercadoria saiu antes da nota", async () => {
+    const { banco, promessa } = emitir("expedido");
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+    expect(banco.escritas.some((e) => e.startsWith("invoices.insert"))).toBe(true);
+  });
+
+  it("emite para pedido entregue", async () => {
+    const { promessa } = emitir("entregue");
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+  });
+
+  it("recusa pedido aprovado e nomeia o que vale", async () => {
+    const { banco, promessa } = emitir("aprovado");
+    const erro = await promessa.catch((e: unknown) => e);
+    expect(erro).toBeInstanceOf(ApiError);
+    expect((erro as ApiError).status).toBe(422);
+    expect((erro as ApiError).message).toContain("faturado, expedido ou entregue");
+    // A recusa acontece ANTES de qualquer escrita: nenhuma nota nasce condenada.
+    expect(banco.escritas).toEqual([]);
+  });
+});

@@ -25,10 +25,18 @@ import {
   type ModalidadeDeFrete,
 } from "@/lib/schemas/fiscal";
 import { type PedidoComercial } from "@/lib/schemas/pedidos";
+import type { DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { Receipt } from "@/lib/ui/icons";
 
 import type { Textos } from "./textos";
+
+/**
+ * Faturado + o destinatário já resolvido do cadastro (nome, CPF/CNPJ e o
+ * TLocal com cMun do IBGE). Vem pronto do servidor: a tela não recalcula a
+ * regra, só preenche e deixa corrigir.
+ */
+export type PedidoFaturavel = PedidoComercial & { destinatario?: DestinatarioDaNota };
 
 type Transporte = NonNullable<ExtrasFiscais["transporte"]>;
 type Cobranca = NonNullable<ExtrasFiscais["cobranca"]>;
@@ -183,15 +191,15 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
 
 /**
  * Aba "Emitir" — uma tarefa por tela, como nos emissores dedicados: escolhe
- * o pedido faturado, vê o resumo (cliente + valor), valida e emite. O
- * resultado cai na grade (aba Notas) via refresh.
+ * o pedido faturável (faturado, expedido ou entregue), vê o resumo (cliente +
+ * valor), valida e emite. O resultado cai na grade (aba Notas) via refresh.
  */
 export function EmitirNota({
   faturados,
   configInicial,
   textos,
 }: {
-  faturados: PedidoComercial[];
+  faturados: PedidoFaturavel[];
   configInicial: ConfigFiscalSalva | null;
   textos: Textos;
 }) {
@@ -210,9 +218,33 @@ export function EmitirNota({
 
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
 
+  /**
+   * Trocar de pedido troca o endereço de entrega — manter o do cliente anterior
+   * seria o pior erro possível nesta tela (NF-e com a entrega de outro
+   * cliente). O que o cadastro tem preenche; o que ele não tem fica vazio, para
+   * completar aqui. Corrigir na tela continua valendo: o que for digitado
+   * vence o cadastro na emissão.
+   */
+  function escolherPedido(id: string) {
+    setPedidoId(id);
+    setPendencias(null);
+    const entrega = faturados.find((p) => p.id === id)?.destinatario?.entrega ?? null;
+    setExtras((atual) => ({
+      ...atual,
+      entregaLogradouro: entrega?.logradouro ?? "",
+      entregaNumero: entrega?.numero ?? "",
+      entregaComplemento: entrega?.complemento ?? "",
+      entregaBairro: entrega?.bairro ?? "",
+      entregaMunicipio: entrega?.municipio ?? "",
+      entregaCodigoMunicipio: entrega?.codigo_municipio ?? "",
+      entregaUf: entrega?.uf ?? "",
+      entregaCep: entrega?.cep ?? "",
+    }));
+  }
+
   async function emitir() {
     if (!pedidoId) {
-      toast.error(t("Escolha o pedido faturado."));
+      toast.error(t("Escolha o pedido faturado ou expedido."));
       return;
     }
     // Os extras são conferidos aqui e não na rota: quem aciona o botão precisa
@@ -286,10 +318,7 @@ export function EmitirNota({
               id="pedido-nota"
               className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
               value={pedidoId}
-              onChange={(e) => {
-                setPedidoId(e.target.value);
-                setPendencias(null);
-              }}
+              onChange={(e) => escolherPedido(e.target.value)}
             >
               <option value="">{textos.selecione}</option>
               {faturados.map((p) => (
@@ -308,8 +337,11 @@ export function EmitirNota({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{textos.cliente}</p>
-                <p className="truncate font-medium" title={escolhido.cliente_nome}>
-                  {escolhido.cliente_nome}
+                <p
+                  className="truncate font-medium"
+                  title={escolhido.destinatario?.nome || escolhido.cliente_nome}
+                >
+                  {escolhido.destinatario?.nome || escolhido.cliente_nome}
                 </p>
               </div>
               <div>
@@ -518,6 +550,18 @@ export function EmitirNota({
                 <p className="text-xs text-muted-foreground">
                   {t("A SEFAZ exige este endereço na NF-e; ele também é usado como local de entrega.")}
                 </p>
+                {escolhido?.destinatario &&
+                  (escolhido.destinatario.entrega ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("Preenchido com o cadastro do cliente. Pode corrigir aqui — vale o que estiver nesta tela.")}
+                    </p>
+                  ) : (
+                    <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
+                      {t("Falta no cadastro do cliente:")}{" "}
+                      {escolhido.destinatario.faltando.join(", ") || t("endereço completo")}.{" "}
+                      {t("Dá para completar aqui ou no cadastro do cliente.")}
+                    </p>
+                  ))}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label htmlFor="ex-ent-logradouro">{t("Logradouro")}</Label>

@@ -11,7 +11,9 @@ import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { carregarContextoSped, montarPayloadSped } from "@/lib/fiscal/sped-payload";
+import { statusFaturavel } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -46,14 +48,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     contact_id: string | null;
   } | null;
   if (!ped) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
-  if (ped.status !== "faturado") {
+  if (!statusFaturavel(ped.status)) {
     return ok(
       {
         ok: false,
         pendencias: [
           {
             campo: "status",
-            mensagem: `Pedido está "${ped.status}" — só faturado vira nota.`,
+            mensagem: `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
             onde: `/app/pedidos/${ped.id}`,
           },
         ],
@@ -63,29 +65,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const pendencias: { campo: string; mensagem: string; onde: string }[] = [];
-  if (ped.contact_id) {
-    const { data: contato } = await supabase
-      .from("contacts")
-      .select("logradouro, numero_end, bairro, cidade, uf, cep")
-      .eq("id", ped.contact_id)
-      .maybeSingle();
-    const c = (contato ?? {}) as Record<string, string | null>;
-    for (const [campo, rotulo] of [
-      ["logradouro", "endereço"],
-      ["numero_end", "número"],
-      ["bairro", "bairro"],
-      ["cidade", "município"],
-      ["uf", "UF"],
-      ["cep", "CEP"],
-    ] as const) {
-      if (!c[campo]) {
-        pendencias.push({
-          campo: `cliente.${campo}`,
-          mensagem: `Cliente sem ${rotulo}`,
-          onde: `/app/contacts/${ped.contact_id}`,
-        });
-      }
-    }
+  // O MESMO resolvedor da emissão. Antes esta pré-validação exigia CEP e olhava
+  // as colunas soltas do contato: divergia do que a emissão faz — bloqueava
+  // pedido emissível (CEP é opcional no TLocal) e deixava passar cidade que não
+  // resolve no IBGE. Agora o que a tela mostra é o que o drain vai usar.
+  const destinatario = await carregarDestinatario(supabase, authz.org.orgId, ped);
+  for (const falta of destinatario.faltando) {
+    pendencias.push({
+      campo: "cliente",
+      mensagem: `Cliente: ajuste ${falta}`,
+      onde: ped.contact_id ? `/app/contacts/${ped.contact_id}` : "/app/contacts",
+    });
   }
 
   const ctx = await carregarContextoSped(authz.org.orgId);
@@ -153,8 +143,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     ctx.orgId,
     {
       numero: ped.numero,
-      nome: ped.cliente_nome,
-      documento: ped.cliente_documento,
+      nome: destinatario.nome || ped.cliente_nome,
+      documento: destinatario.documento ?? ped.cliente_documento,
+      ie: destinatario.ie,
+      indicador_ie: destinatario.indicador_ie,
       frete_cents: ped.frete_cents,
     },
     (
