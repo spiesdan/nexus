@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { cidadesDaCarga } from "@/lib/expedicao/cidades-da-carga";
+import { carregarContatosDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
 import { COLUNAS_DA_CARGA, type Carga } from "@/lib/schemas/expedicao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -55,17 +57,71 @@ export default async function ExpedicaoPage() {
   const { data: itensDasCargas } = idsDasCargas.length
     ? await supabase
         .from("shipment_orders")
-        .select("shipment_id, status")
+        .select("shipment_id, order_id, status, sequencia")
         .eq("organization_id", activeOrg.orgId)
         .in("shipment_id", idsDasCargas)
-    : { data: [] as { shipment_id: string; status: string }[] };
+        .order("sequencia")
+    : { data: [] as { shipment_id: string; order_id: string; status: string; sequencia: number }[] };
+  const itens = (itensDasCargas ?? []) as {
+    shipment_id: string;
+    order_id: string;
+    status: string;
+    sequencia: number;
+  }[];
+
+  /**
+   * PARA ONDE CADA CARGA VAI — os nomes das cidades, na ordem da rota.
+   *
+   * A linha da carga dizia placa, status e "3/7 paradas", mas não dizia se
+   * aquela carga é a de Canoinhas ou a de Mafra — a primeira coisa que o
+   * despachante pergunta. A cidade sai do MESMO resolvedor do romaneio
+   * (`cidadeDaEntrega`): endereço do pedido primeiro, cadastro depois. Duas
+   * consultas para todas as cargas, não duas por carga.
+   */
+  const pedidosDasCargas = itens.length
+    ? (
+        await supabase
+          .from("commercial_orders")
+          .select("id, contact_id, cliente_documento, endereco_entrega")
+          .eq("organization_id", activeOrg.orgId)
+          .in("id", [...new Set(itens.map((i) => i.order_id))])
+      ).data
+    : [];
+  const contatosDasCargas = await carregarContatosDaEntrega(
+    supabase,
+    activeOrg.orgId,
+    (pedidosDasCargas ?? []) as unknown as Parameters<typeof carregarContatosDaEntrega>[2],
+  );
+  const pedidoPorId = new Map(
+    ((pedidosDasCargas ?? []) as unknown as {
+      id: string;
+      contact_id: string | null;
+      cliente_documento: string | null;
+      endereco_entrega: string | null;
+    }[]).map((p) => [p.id, p]),
+  );
 
   const progresso: Record<string, ProgressoDaCarga> = {};
-  for (const item of (itensDasCargas ?? []) as { shipment_id: string; status: string }[]) {
-    const p = (progresso[item.shipment_id] ??= { total: 0, entregues: 0, devolvidos: 0 });
+  for (const item of itens) {
+    const p = (progresso[item.shipment_id] ??= {
+      total: 0,
+      entregues: 0,
+      devolvidos: 0,
+      cidades: [],
+      semCidade: 0,
+    });
     p.total += 1;
     if (item.status === "entregue") p.entregues += 1;
     else if (item.status === "devolvido") p.devolvidos += 1;
+  }
+  for (const [shipmentId, p] of Object.entries(progresso)) {
+    const daCarga = cidadesDaCarga(
+      itens.filter((i) => i.shipment_id === shipmentId),
+      pedidoPorId,
+      contatosDasCargas,
+    );
+    p.cidades = daCarga.cidades;
+    p.semCidade = daCarga.semCidade;
   }
 
   const pedidosNaFila = (fila ?? []) as { id: string; total_cents: number | null }[];
