@@ -8,6 +8,52 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.2] — 2026-11-03
+
+### Corrigido
+
+- **Calcular a ordem da carga volta a responder — e localiza os endereços no mesmo clique** Na tela de expedição, **"Ordenar por distância"** e **"Otimizar por ruas"**
+  nasciam desabilitados em toda carga nova, com a legenda "Otimizar desativado:
+  nenhuma parada localizada". Sem coordenada nenhuma, o botão não fazia nada — e
+  não dizia o que fazer. As três cargas abertas hoje estavam assim: 0 paradas no
+  mapa, 27 com endereço no cadastro.
+
+  Duas causas, as duas corrigidas:
+
+  - **O clique não tinha saída.** Agora o cálculo localiza os endereços da carga
+    antes de ordenar, mostrando o progresso, e só desiste com o motivo escrito
+    ("sem endereço não há ordem — corrija o cadastro ou marque no mapa"). O botão
+    nunca fica morto.
+  - **A parada sem mapa sumia da lista.** A proposta do servidor só traz quem tem
+    coordenada; as demais voltam separadas. A tela mostrava só a primeira metade
+    e o **"Salvar ordem"** era recusado ("a ordem precisa cobrir todas as paradas
+    exatamente uma vez") depois de otimizar. Agora as paradas sem mapa ficam no
+    fim da lista, com o aviso de quantas são.
+
+  O endereço de cada parada continua vindo do pedido quando ele tem um, senão do
+  cadastro do cliente — nunca de um ponto inventado.
+
+- **NF-e emite: certificado A1 legado abre, nome da empresa sai no DANFE e o CFOP acompanha o destino** A primeira nota fiscal real desta instalação parou em **erro**, com a mensagem
+  "Impossivel ler o certificado: digital envelope routines::unsupported" — e o
+  arquivo estava no volume, a senha gravada e o certificado válido por mais 358
+  dias. Nada disso era o problema: o certificado foi emitido com cifra **RC2-40**,
+  que o OpenSSL 3 tirou do provedor padrão. A imagem passou a carregar também o
+  provedor **legacy**, então o certificado abre e continua abrindo na renovação
+  anual, sem converter arquivo nem pedir senha nova ao operador.
+
+  Três defeitos que só apareceriam **depois** de o certificado abrir também foram
+  corrigidos, medidos no XML montado com os dados reais deste pedido:
+
+  - o emitente ia com o **CNPJ no lugar da razão social** (`<xNome>`), e era isso
+    que sairia impresso no DANFE; agora sai o nome do cadastro da organização;
+  - toda venda era declarada como **operação interna** (`idDest` fixo em 1) mesmo
+    com destinatário em outro estado; agora o destino vem do endereço de entrega;
+  - o **CFOP** era sempre `5102`; numa venda SC→PR ele passou a sair `6102`, que é
+    o mesmo código de operação para venda interestadual.
+
+  O que não mudou: NCM, alíquota e CSOSN continuam vindo do cadastro, e item sem
+  NCM continua recusando a emissão em vez de chutar imposto.
+
 ## [1.38.1] — 2026-11-03
 
 ### Corrigido
@@ -5810,7 +5856,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.2...HEAD
+[1.38.2]: https://github.com/spiesdan/nexus/compare/v1.38.1...v1.38.2
 [1.38.1]: https://github.com/spiesdan/nexus/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/spiesdan/nexus/compare/v1.37.0...v1.38.0
 [1.37.0]: https://github.com/spiesdan/nexus/compare/v1.36.3...v1.37.0
