@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.7] — 2026-11-03
+
+### Alterado
+
+- **DANFE leva o logo da empresa, e logo quebrado não derruba o documento** O DANFE saía só com o nome do emitente: o `sped-da` aceita imagem, mas ninguém
+  mandava nenhuma. Agora a rota busca o logo que a **própria organização** subiu
+  (`settings.branding.logo_path`, bucket público de logos) e manda em base64 para
+  o sidecar — é o logo do emitente, nunca a marca de quem revende o produto.
+
+  Duas correções vieram junto, as duas medidas:
+
+  - a imagem `php:8.3-cli` instala `gd` **sem** JPEG (`docker-php-ext-install gd`
+    não habilita `imagejpeg`), e o `sped-da` converte o logo com ela — sem
+    `--with-jpeg` o DANFE morria em "Call to undefined function imagejpeg".
+    Agora o build configura o gd com JPEG e WebP;
+  - se a imagem ainda assim não puder ser processada (formato exótico, arquivo
+    trocado), o DANFE sai **sem** logo em vez de não sair: o documento fiscal é o
+    que importa, o logo é enfeite.
+
+  Sem logo configurado, o resultado é o de antes — o layout centraliza os dados do
+  emitente no espaço da imagem.
+
 ## [1.38.6] — 2026-11-03
 
 ### Corrigido
@@ -5951,7 +5973,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.6...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.7...HEAD
+[1.38.7]: https://github.com/spiesdan/nexus/compare/v1.38.6...v1.38.7
 [1.38.6]: https://github.com/spiesdan/nexus/compare/v1.38.5...v1.38.6
 [1.38.5]: https://github.com/spiesdan/nexus/compare/v1.38.4...v1.38.5
 [1.38.4]: https://github.com/spiesdan/nexus/compare/v1.38.3...v1.38.4
