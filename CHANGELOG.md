@@ -8,6 +8,76 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.37.0] — 2026-11-03
+
+### Adicionado
+
+- **Dá para editar a carga em montagem — mais um pedido na doca e trocar o veículo** A carga nascia com os pedidos escolhidos na montagem e não mudava mais: pedido
+  que chegava depois do romaneio impresso só entrava excluindo a carga inteira e
+  montando outra, e **trocar a placa ou o motorista exigia recriar a carga**.
+
+  Na ficha da carga, enquanto ela está em **montagem**:
+
+  - **Adicionar pedido** abre a fila de embarque já sem os pedidos que estão em
+    outra carga — busca por número, cliente ou cidade, e seleção de vários de uma
+    vez, porque a doca costuma pôr mais de um. O pedido entra no fim da sequência
+    e o cliente dele recebe o mesmo aviso de embarque dos outros.
+  - **Veículo** corrige placa, veículo e motorista. Vale para o cabeçalho, o
+    romaneio e o modo motorista — o motorista não vê mais a placa antiga. Esta
+    correção continua disponível **em rota**: placa digitada errada ou motorista
+    trocado no último minuto não podem exigir recriar a viagem.
+
+  Já **a lista de paradas** só aceita pedido novo em montagem: depois que a carga
+  sai, a sequência é a que a rota já leu e o motorista já recebeu. Pedido que está
+  em outra carga também não entra — a tela avisa em vez de duplicar a parada.
+
+- **Nota fiscal também para pedido expedido ou entregue** O sistema só deixava emitir NF-e para pedido em `faturado`. Agora **expedido** e
+  **entregue** também emitem — o caso de quem manda a mercadoria primeiro e fatura
+  depois.
+
+  A expedição já levava o pedido para `expedido` ao embarcar e para `entregue`
+  quando a rota terminava, então esse pedido ficava travado sem nota até alguém
+  "voltar" o status. A regra agora vive num lugar só (`statusFaturavel`), usada
+  pela emissão, pela pré-validação e pelo assistente — os três não podem divergir.
+
+  O que **não** muda: `rascunho`, `em_analise`, `aprovado` e `cancelado` continuam
+  recusando a emissão. Antes disso é intenção, não fato fiscal.
+
+  Na tela de Notas, a aba *Emitir* passa a listar os pedidos faturados, expedidos e
+  entregues que ainda não têm nota.
+
+### Alterado
+
+- **NF-e puxa nome, CPF/CNPJ, endereço e inscrição estadual do cadastro do cliente** Emitir NF-e pedia o **endereço inteiro do destinatário digitado à mão**, mesmo
+  com o cliente cadastrado — e a nota levava do pedido só o nome e o documento,
+  que são a foto do dia da importação. Cliente renomeado saía com o nome velho;
+  quem tinha endereço no cadastro redigitava; e o **código IBGE do município**
+  não existia em lugar nenhum, que era a razão real do formulário manual.
+
+  Agora o destinatário sai do **cadastro do cliente**:
+
+  - **nome** — o do contato (o do pedido fica só como reserva);
+  - **CPF/CNPJ** — o do contato, com a mesma reserva;
+  - **endereço** — logradouro, número, complemento, bairro, cidade, UF e CEP das
+    colunas do cadastro, com o **código IBGE resolvido de cidade/UF** contra a
+    tabela oficial do IBGE (5.571 municípios, versionada no repositório — não é
+    consulta em tempo de execução, então funciona em VPS sem saída para a internet);
+  - **inscrição estadual** — o `indIEDest` da NF-e passou a vir do cadastro:
+    cliente com IE sai como contribuinte (1, com a IE no XML), "ISENTO" sai como
+    isento (2) e sem IE como não contribuinte (9). Antes o emissor gravava 9 para
+    todo mundo, então cliente contribuinte saía classificado errado.
+
+  Na tela de emissão, o endereço aparece **preenchido** ao escolher o pedido —
+  e continua editável: o que for digitado ali vence o cadastro. Quando o cadastro
+  não fecha o endereço, a tela diz **o que falta** (logradouro, número, bairro,
+  cidade/UF, UF ou CPF/CNPJ) e a emissão recusa com o mesmo nome, em vez de pedir
+  "o endereço" de novo a quem já cadastrou o cliente.
+
+  Cidade escrita como o cadastro escreve ("Mafra", "MAFRA", "Mafra, Santa
+  Catarina") resolve no mesmo município. Cidade com homônimo em outro estado e
+  sem UF cadastrada **não é escolhida no chute**: a emissão pede a UF, porque
+  município errado é rejeição na SEFAZ.
+
 ## [1.36.3] — 2026-11-03
 
 ### Adicionado
@@ -5671,7 +5741,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.37.0...HEAD
+[1.37.0]: https://github.com/spiesdan/nexus/compare/v1.36.3...v1.37.0
 [1.36.3]: https://github.com/spiesdan/nexus/compare/v1.36.2...v1.36.3
 [1.36.2]: https://github.com/spiesdan/nexus/compare/v1.36.1...v1.36.2
 [1.36.1]: https://github.com/spiesdan/nexus/compare/v1.36.0...v1.36.1
