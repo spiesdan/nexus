@@ -8,6 +8,44 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.3] — 2026-11-03
+
+### Corrigido
+
+- **O endereço de entrega aparece na lista da expedição, não só no balão do mapa** A ordem de entrega mostrava cliente e número do pedido — e nenhuma rua. O
+  endereço existia, mas só dentro do balão do mapa: quem lia a lista para separar
+  a carga ou passar a rota ao motorista não tinha para onde olhar.
+
+  Agora cada parada traz o endereço embaixo do número do pedido, com o texto
+  inteiro no tooltip (a linha é truncada na largura da coluna). O endereço é o do
+  **pedido** quando ele tem um; senão o do cadastro do cliente — a mesma regra da
+  rota, nunca um ponto inventado. Sem nenhum dos dois, a linha diz o que fazer:
+  "Sem endereço — corrija o cadastro ou marque no mapa."
+
+- **O número da NF-e vem de um contador, e não do número do pedido** O `nNF` da nota era o número do **pedido**. Os dois andam juntos só enquanto
+  todo pedido vira nota — e nem todo vira: cancelado, bonificação, amostra, ou
+  simplesmente um que ninguém faturou. Cada um desses abre um buraco na sequência
+  da série, e a SEFAZ cobra inutilização por cada buraco.
+
+  Agora existe um contador por emitente, em **Notas → Configuração fiscal**, no
+  campo **Próximo número da NF-e**. Quem vem de outro sistema informa o último
+  número emitido **+ 1** e a sequência continua de lá. A reserva é atômica no banco
+  (`update ... returning`), então duas emissões simultâneas nunca recebem o mesmo
+  número.
+
+  Decisões que o código toma, todas visíveis:
+
+  - **sem número configurado, a nota não sai** — a recusa nomeia o campo. Adivinhar
+    aqui queima faixa fiscal de verdade, e não há como desfazer;
+  - **falha antes da SEFAZ devolve o número** (certificado, validação, XML): a
+    sequência continua de onde parou em vez de abrir buraco;
+  - **rejeição da SEFAZ e tempo esgotado consomem o número**: depois de enviar,
+    reusar pode duplicar nota. O número fica no relatório de puladas para
+    inutilização.
+
+  A tela mostra o número em uso na nota **antes** da transmissão, para ninguém
+  ficar com "sem número" enquanto uma faixa já foi consumida.
+
 ## [1.38.2] — 2026-11-03
 
 ### Corrigido
@@ -5856,7 +5894,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.3...HEAD
+[1.38.3]: https://github.com/spiesdan/nexus/compare/v1.38.2...v1.38.3
 [1.38.2]: https://github.com/spiesdan/nexus/compare/v1.38.1...v1.38.2
 [1.38.1]: https://github.com/spiesdan/nexus/compare/v1.38.0...v1.38.1
 [1.38.0]: https://github.com/spiesdan/nexus/compare/v1.37.0...v1.38.0
