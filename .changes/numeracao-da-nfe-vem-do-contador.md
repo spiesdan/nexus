@@ -9,9 +9,9 @@ todo pedido vira nota — e nem todo vira: cancelado, bonificação, amostra, ou
 simplesmente um que ninguém faturou. Cada um desses abre um buraco na sequência
 da série, e a SEFAZ cobra inutilização por cada buraco.
 
-Agora existe um contador por emitente, em **Notas → Configuração fiscal →
-"Próximo número da NF-e"**. Quem vem de outro sistema informa o último número
-emitido **+ 1** e a sequência continua de lá. A reserva é atômica no banco
+Agora existe um contador por emitente, em **Notas → Configuração fiscal**, no
+campo **Próximo número da NF-e**. Quem vem de outro sistema informa o último
+número emitido **+ 1** e a sequência continua de lá. A reserva é atômica no banco
 (`update ... returning`), então duas emissões simultâneas nunca recebem o mesmo
 número.
 
