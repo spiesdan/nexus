@@ -153,4 +153,56 @@ describe("renderRomaneioPdf", () => {
     expect(buf.subarray(0, 5).toString("ascii")).toBe("%PDF-");
     expect(buf.length).toBeGreaterThan(2000);
   });
+
+  /**
+   * O ORÇAMENTO DE PÁGINAS — o defeito que este teste tranca.
+   *
+   * A carga 022 (22 paradas, 50 itens) saía em CINCO folhas: uma linha por
+   * item mais um bloco de assinatura com respiro, por parada. Romaneio de
+   * cinco páginas não é romaneio — o motorista confere na última enquanto
+   * entrega. O dono pediu uma folha, no máximo duas.
+   *
+   * Conta páginas pelo marcador do PDF (não há parser de PDF entre as
+   * dependências): `/Type /Page` aparece uma vez por folha. O teto é 2, não 1,
+   * de propósito — uma carga maior tem que continuar cabendo sem virar
+   * caderno, e o teste não deve quebrar a cada item novo.
+   */
+  it("carga grande (22 paradas, 50 itens) cabe em no máximo 2 páginas", async () => {
+    const nomes = [
+      "BILL COMERCIO DE ESTOPAS - PATRICIA DE FATIMA DA SILVA",
+      "AUTO POSTO NOEROGER LTDA - EPP",
+      "JZ COMERCIO DE MOVEIS E DECORACOES LTDA",
+      "CRIATIVISIUM SERRALHERIA - MARCOS FABIO DE ALMEIDA",
+    ];
+    const qtds = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 5, 8, 8];
+    let seq = 0;
+    const paradas = qtds.map((quantos, i) => {
+      const itens = Array.from({ length: quantos }, () => {
+        seq += 1;
+        return {
+          codigo: String(seq),
+          nome: `PRODUTO DE LIMPEZA E HIGIENE ${seq} 5L`,
+          quantidade: 2,
+        };
+      });
+      return {
+        sequencia: i + 1,
+        numero: 19000 + i,
+        cliente_nome: nomes[i % nomes.length]!,
+        endereco_entrega: `RUA DAS FLORES, ${100 + i}, SALA 2 — CENTRO, MAFRA/SC, 89300000`,
+        total_cents: 19500,
+        status: "na_carga",
+        itens,
+      };
+    });
+    expect(paradas.reduce((s, p) => s + p.itens.length, 0)).toBe(50);
+
+    const buf = await renderRomaneioPdf(
+      { nome: "Bill Higiene e Limpeza" },
+      { numero: 22, placa: null, veiculo_tipo: null, motorista_nome: null, paradas },
+    );
+    const paginas = (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+    expect(paginas).toBeGreaterThan(0);
+    expect(paginas).toBeLessThanOrEqual(2);
+  });
 }, 60000);

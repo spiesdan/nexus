@@ -6,6 +6,24 @@
  * os itens repetidos (o mesmo produto em 2+ pedidos): quem separa pega as
  * 2 estopas de uma vez em vez de voltar buscar depois. Mesma doutrina do
  * PDF de pedido: identidade da loja, nunca do software.
+ *
+ * ─── POR QUE O LAYOUT É DENSO ────────────────────────────────────────────────
+ *
+ * A carga 022 (22 paradas, 50 itens) saía em CINCO páginas. Medido: cada
+ * parada gastava ~90pt porque o checklist tinha uma linha por item E um bloco
+ * de assinatura com 18pt de respiro — 22 × 90 = quase duas páginas só nisso,
+ * mais o resumo de separação. Um romaneio de cinco folhas não é um romaneio:
+ * é um caderno, e o motorista confere na última página enquanto entrega.
+ *
+ * O que mudou, sem tirar nenhuma informação:
+ * - os itens de uma parada correm em linha (flexWrap) com o par de caixas
+ *   colado ao item — antes cada item abria uma linha inteira;
+ * - a assinatura virou uma linha fina (antes era um bloco com borda e 18pt);
+ * - endereço ausente não gasta linha: entra como marca curta na linha do
+ *   pedido (a ausência continua visível, que é o que importa);
+ * - cabeçalho e resumo de separação perderam o respiro decorativo.
+ *
+ * `wrap={false}` por parada: uma parada nunca parte no meio entre duas folhas.
  */
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
@@ -13,66 +31,62 @@ import React from "react";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
 
 const styles = StyleSheet.create({
-  page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", color: "#1f2937" },
-  header: { borderBottom: "2pt solid #1e3a5f", paddingBottom: 10, marginBottom: 14 },
-  emitente: { fontSize: 14, fontWeight: "bold", color: "#1e3a5f" },
-  tituloLinha: {
+  page: { padding: 18, fontSize: 8, fontFamily: "Helvetica", color: "#1f2937" },
+  header: {
+    borderBottom: "1.5pt solid #1e3a5f",
+    paddingBottom: 3,
+    marginBottom: 3,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    marginBottom: 12,
   },
-  numero: { fontSize: 16, fontWeight: "bold" },
-  info: { fontSize: 10, color: "#4b5563" },
-  linha: { flexDirection: "row", marginBottom: 2 },
-  rotulo: { width: 110, color: "#6b7280" },
-  valor: { flex: 1 },
-  tabelaCab: {
+  emitente: { fontSize: 12, fontWeight: "bold", color: "#1e3a5f" },
+  info: { fontSize: 7.5, color: "#4b5563", textAlign: "right" },
+  resumoLinha: {
     flexDirection: "row",
+    justifyContent: "space-between",
     backgroundColor: "#1e3a5f",
     color: "#ffffff",
-    fontSize: 9,
+    fontSize: 7.5,
     fontWeight: "bold",
-    padding: 5,
+    paddingVertical: 1.5,
+    paddingHorizontal: 5,
   },
-  tabelaLinha: { fontSize: 9, padding: 6, borderBottom: "0.5pt solid #e5e7eb" },
-  seqLinha: { flexDirection: "row", marginBottom: 3 },
-  seqNum: { width: 28, fontSize: 14, fontWeight: "bold", color: "#1e3a5f" },
-  seqCorpo: { flex: 1 },
-  endereco: { fontSize: 9, color: "#4b5563", marginTop: 2 },
-  checkTitulo: { fontSize: 9, fontWeight: "bold", marginTop: 6, marginBottom: 3 },
-  checkLegenda: { fontSize: 7, color: "#6b7280", marginBottom: 3 },
-  checkLinha: { flexDirection: "row", marginBottom: 2, fontSize: 9 },
-  checkBox: { width: 20 },
-  checkQtd: { width: 64 },
-  checkNome: { flex: 1 },
   separacao: {
-    border: "1pt solid #1e3a5f",
-    borderRadius: 4,
-    padding: 8,
-    marginTop: 8,
-    marginBottom: 10,
+    border: "0.5pt solid #1e3a5f",
+    borderRadius: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 5,
+    marginTop: 2,
+    marginBottom: 3,
   },
-  blocoTitulo: { fontSize: 11, fontWeight: "bold", color: "#1e3a5f", marginBottom: 2 },
-  sepQtd: { width: 56, fontWeight: "bold" },
-  sepPedidos: { fontSize: 8, color: "#6b7280", marginLeft: 6 },
-  assinatura: {
-    marginTop: 8,
-    paddingTop: 18,
-    borderTop: "0.5pt solid #9ca3af",
-    width: "60%",
-    fontSize: 8,
-    color: "#6b7280",
+  blocoTitulo: { fontSize: 8, fontWeight: "bold", color: "#1e3a5f", marginBottom: 1 },
+  legenda: { fontSize: 6.5, color: "#6b7280", marginTop: 2, marginBottom: 1 },
+  fluxoItens: { flexDirection: "row", flexWrap: "wrap", marginTop: 1 },
+  itemCheck: { fontSize: 7.5, marginRight: 9, marginBottom: 0.5 },
+  sepItem: { fontSize: 7.5, marginRight: 9, marginBottom: 0.5 },
+  sepPedidos: { fontSize: 6.5, color: "#6b7280" },
+  parada: {
+    borderBottom: "0.5pt solid #e5e7eb",
+    paddingVertical: 1.5,
   },
+  paradaTopo: { flexDirection: "row", alignItems: "baseline" },
+  seqNum: { width: 18, fontSize: 9.5, fontWeight: "bold", color: "#1e3a5f" },
+  pedido: { fontSize: 7.5, fontWeight: "bold", marginRight: 4 },
+  cliente: { flex: 1, fontSize: 7.5 },
+  semEndereco: { fontSize: 6.5, color: "#b45309", marginLeft: 4 },
+  valor: { fontSize: 7.5, fontWeight: "bold", marginLeft: 6 },
+  endereco: { fontSize: 7, color: "#4b5563", marginLeft: 18, marginBottom: 1 },
+  assinatura: { fontSize: 6.5, color: "#6b7280", marginBottom: 1 },
   rodape: {
     position: "absolute",
-    bottom: 24,
-    left: 36,
-    right: 36,
-    fontSize: 8,
+    bottom: 9,
+    left: 18,
+    right: 18,
+    fontSize: 6.5,
     color: "#9ca3af",
     borderTop: "0.5pt solid #e5e7eb",
-    paddingTop: 4,
+    paddingTop: 3,
     flexDirection: "row",
     justifyContent: "space-between",
   },
@@ -105,6 +119,10 @@ export interface RomaneioDados {
 
 function moeda(cents: number): string {
   return `R$ ${(cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+}
+
+function numeroDoPedido(numero: number): string {
+  return `PED-${String(numero).padStart(4, "0")}`;
 }
 
 /**
@@ -218,85 +236,80 @@ function ConteudoRomaneio({
   const paradas = ordenarParadasDoRomaneio(carga.paradas);
   const total = paradas.reduce((s, p) => s + p.total_cents, 0);
   const repetidos = agruparItensRepetidos(paradas);
+  const totalItens = paradas.reduce((s, p) => s + (p.itens?.length ?? 0), 0);
   return (
     <View>
-        <View style={styles.header}>
-          <Text style={styles.emitente}>{emitente.nome}</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.emitente}>{emitente.nome}</Text>
+        <Text style={styles.info}>
+          {[carga.placa, carga.veiculo_tipo, carga.motorista_nome].filter(Boolean).join(" · ") ||
+            "Sem veículo definido"}
+        </Text>
+      </View>
 
-        <View style={styles.tituloLinha}>
-          <Text style={styles.numero}>Romaneio — {numeroDaCarga(carga.numero)}</Text>
-          <Text style={styles.info}>
-            {[carga.placa, carga.veiculo_tipo, carga.motorista_nome].filter(Boolean).join(" · ") ||
-              "Sem veículo definido"}
-          </Text>
-        </View>
+      <View style={styles.resumoLinha}>
+        <Text>
+          Romaneio — {numeroDaCarga(carga.numero)} · {paradas.length} paradas · {totalItens} itens
+        </Text>
+        <Text>{moeda(total)}</Text>
+      </View>
 
-        <View style={styles.tabelaCab}>
-          <Text>Ordem de entrega ({paradas.length} paradas · {moeda(total)})</Text>
-        </View>
-
-        {repetidos.length > 0 && (
-          <View style={styles.separacao}>
-            <Text style={styles.blocoTitulo}>Separação — leve tudo de uma vez</Text>
-            <Text style={styles.checkLegenda}>
-              Itens que se repetem em mais de um pedido: separe o total agora para não voltar buscar depois.
-            </Text>
+      {repetidos.length > 0 && (
+        <View style={styles.separacao}>
+          <Text style={styles.blocoTitulo}>Separação — leve tudo de uma vez</Text>
+          <View style={styles.fluxoItens}>
             {repetidos.map((r, i) => (
-              <View key={`${r.codigo}-${r.nome}-${i}`} style={styles.checkLinha}>
-                <Text style={styles.checkBox}>[ ]</Text>
-                <Text style={styles.sepQtd}>{r.quantidade_total} un.</Text>
-                <Text style={styles.checkNome}>
-                  {r.codigo ? `${r.codigo} — ` : ""}
-                  {r.nome}
+              <Text key={`${r.codigo}-${r.nome}-${i}`} style={styles.sepItem}>
+                [ ] {r.quantidade_total} un. {r.codigo ? `${r.codigo} — ` : ""}
+                {r.nome}
+                <Text style={styles.sepPedidos}>
+                  {"  "}
+                  {r.pedidos.map(numeroDoPedido).join(" · ")}
                 </Text>
-                <Text style={styles.sepPedidos}>{r.pedidos.map((n) => `PED-${String(n).padStart(4, "0")}`).join(" · ")}</Text>
-              </View>
+              </Text>
             ))}
           </View>
-        )}
+        </View>
+      )}
 
-        {paradas.map((p) => {
-          const itens = p.itens ?? [];
-          const qtdTotal = itens.reduce((s, i) => s + i.quantidade, 0);
-          return (
-          <View key={`${p.sequencia}-${p.numero}`} style={styles.tabelaLinha} wrap={false}>
-            <View style={styles.seqLinha}>
+      {/* A legenda das duas caixas sai UMA vez, não por parada: repetir em
+          cada uma custava uma linha × 22 e era o segundo maior desperdício
+          do layout antigo. */}
+      <Text style={styles.legenda}>
+        Por parada: [ ] carregado · [ ] entregue · assinatura do recebedor depois dos itens.
+      </Text>
+
+      {paradas.map((p) => {
+        const itens = p.itens ?? [];
+        return (
+          <View key={`${p.sequencia}-${p.numero}`} style={styles.parada} wrap={false}>
+            <View style={styles.paradaTopo}>
               <Text style={styles.seqNum}>{p.sequencia}</Text>
-              <View style={styles.seqCorpo}>
-                <View style={styles.linha}>
-                  <Text style={styles.rotulo}>Pedido</Text>
-                  <Text style={styles.valor}>
-                    PED-{String(p.numero).padStart(4, "0")} · {p.cliente_nome} · {moeda(p.total_cents)}
-                  </Text>
-                </View>
-                <Text style={styles.endereco}>{p.endereco_entrega ?? "Endereço não informado"}</Text>
-                {itens.length > 0 && (
-                  <View>
-                    <Text style={styles.checkTitulo}>
-                      Checklist — {itens.length} {itens.length === 1 ? "item" : "itens"} · {qtdTotal} un.
-                    </Text>
-                    <Text style={styles.checkLegenda}>1ª caixa = carregado · 2ª caixa = entregue</Text>
-                    {itens.map((it, idx) => (
-                      <View key={`${it.codigo}-${idx}`} style={styles.checkLinha}>
-                        <Text style={styles.checkBox}>[ ]</Text>
-                        <Text style={styles.checkBox}>[ ]</Text>
-                        <Text style={styles.checkQtd}>{it.quantidade} un.</Text>
-                        <Text style={styles.checkNome}>
-                          {it.codigo ? `${it.codigo} — ` : ""}{it.nome}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                <View style={styles.assinatura}>
-                  <Text>Assinatura do recebedor</Text>
-                </View>
-              </View>
+              <Text style={styles.pedido}>{numeroDoPedido(p.numero)}</Text>
+              <Text style={styles.cliente}>
+                {p.cliente_nome}
+                {!p.endereco_entrega && <Text style={styles.semEndereco}> · sem endereço</Text>}
+              </Text>
+              <Text style={styles.valor}>{moeda(p.total_cents)}</Text>
+            </View>
+            {p.endereco_entrega && <Text style={styles.endereco}>{p.endereco_entrega}</Text>}
+            <View style={styles.fluxoItens}>
+              {itens.map((it, idx) => (
+                <Text key={`${it.codigo}-${idx}`} style={styles.itemCheck}>
+                  [ ] [ ] {it.quantidade} un. {it.codigo ? `${it.codigo} — ` : ""}
+                  {it.nome}
+                </Text>
+              ))}
+              {/* `wrap={false}`: a linha de assinatura nunca parte no meio —
+                  "Assinatura do recebedor:" numa linha e os traços na outra
+                  não é canhoto, é borrão. */}
+              <Text style={styles.assinatura} wrap={false}>
+                Assinatura do recebedor: ______________________________
+              </Text>
             </View>
           </View>
-          );
-        })}
+        );
+      })}
     </View>
   );
 }
