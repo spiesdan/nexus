@@ -308,10 +308,19 @@ export function Roteirizador({
       let origem: { endereco: string } | { latitude: number; longitude: number } | null = null;
       const txt = origemTexto.trim();
       if (txt === "@gps") {
-        const pos = await new Promise<GeolocationPosition>((ok, falha) =>
-          navigator.geolocation.getCurrentPosition(ok, falha, { timeout: 10000 }),
-        );
-        origem = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        // GPS é conveniência, não caminho único. Se o navegador negar a
+        // permissão (ou não houver sinal), a tela volta para o campo de texto
+        // com a mensagem certa: digitar o endereço continua valendo.
+        try {
+          const pos = await new Promise<GeolocationPosition>((ok, falha) =>
+            navigator.geolocation.getCurrentPosition(ok, falha, { timeout: 10000 }),
+          );
+          origem = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        } catch {
+          setOrigemTexto(rota?.carga.origem_endereco ?? "");
+          toast.error(t("Não consegui pegar sua posição. Digite o endereço da origem."));
+          return;
+        }
       } else if (txt) {
         origem = { endereco: txt };
       }
@@ -621,7 +630,7 @@ export function Roteirizador({
                       className="h-9"
                       value={origemTexto}
                       onChange={(e) => setOrigemTexto(e.target.value)}
-                      placeholder={t("Ex.: Rua Caetano Costa, 425, Canoinhas")}
+                      placeholder={t("Ex.: Rua Antônio Liller, 585, Canoinhas")}
                     />
                     {/* Empilhado, não lado a lado: na coluna de 340px o botão
                         comia o campo e o endereço aparecia cortado em
@@ -637,7 +646,9 @@ export function Roteirizador({
                     </Button>
                   </div>
                   <p className="text-[11px] text-text-subtle">
-                    {t("Vazio começa na primeira entrega.")}
+                    {rota.carga.origem_endereco
+                      ? t("Padrão: a sede da empresa. Pode digitar outro endereço.")
+                      : t("Vazio começa na primeira entrega.")}
                   </p>
                 </div>
               </li>
