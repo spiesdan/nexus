@@ -13,10 +13,8 @@
     "ext-soap": "*",
     "ext-xml": "*",
     "ext-zip": "*",
-    "nfephp-org/sped-nfe": "^5.0"
-  },
-  "suggest": {
-    "nfephp-org/sped-da": "Geração do DANFE em PDF (endpoint /danfe; sem ele, o endpoint responde DANFE_INDISPONIVEL)"
+    "nfephp-org/sped-nfe": "^5.0",
+    "nfephp-org/sped-da": "^1.1"
   },
   "autoload": {
     "psr-4": { "FiscalSidecar\\": "src/" }
