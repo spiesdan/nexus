@@ -5,6 +5,7 @@
  * N+1. O frontend NUNCA decide quem pertence à carga nem as coordenadas —
  * tudo sai daqui, validado no backend (a rota confia no banco, não no body).
  */
+import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { agruparParadas, type ItemDaCargaParaParada, type ParadaDaRota } from "@/lib/rotas/paradas";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -141,8 +142,29 @@ export async function carregarCargaComParadas(
     };
   });
 
+  // PONTO DE PARTIDA — a sede da empresa, sempre que ninguém escolheu outro.
+  //
+  // A carga nasce sem origem, e sem origem a otimização por distância nem
+  // roda ("Ordem por distância precisa da origem") e o campo abre vazio para
+  // quem só quer mandar o motorista embora. A operação é sempre a mesma: sai
+  // da empresa. Então o padrão é a sede, lida de `organizations` — dado do
+  // dono, não um endereço escrito no código.
+  //
+  // Continua editável, e o que o operador confirmar (PATCH /rota/ordem) vence
+  // este padrão, porque aí `origem_endereco` deixa de ser vazio.
+  const c = carga as unknown as CargaRota;
+  if (!(c.origem_endereco ?? "").trim()) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("logradouro, numero_end, complemento, bairro, cidade, uf, cep")
+      .eq("id", orgId)
+      .maybeSingle();
+    const sede = enderecoEmLinha(org ?? null);
+    if (sede) c.origem_endereco = sede;
+  }
+
   return {
-    carga: carga as unknown as CargaRota,
+    carga: c,
     itens: paraParada,
     paradas: agruparParadas(paraParada),
   };
