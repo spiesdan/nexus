@@ -30,6 +30,8 @@ export interface PedidoComEndereco {
 export interface ContatoDaEntrega extends EnderecoEstruturado {
   id: string;
   cnpj?: string | null;
+  name?: string | null;
+  display_name?: string | null;
 }
 
 export type ContatosDaEntrega = {
@@ -50,15 +52,67 @@ export function enderecoDaEntrega(
   const escrito = (pedido.endereco_entrega ?? "").trim();
   if (escrito) return escrito;
 
+  return enderecoEmLinha(contatoDaEntrega(pedido, contatos) ?? null) || null;
+}
+
+/**
+ * O CONTATO DONO DA ENTREGA — vínculo primeiro, CNPJ depois.
+ *
+ * Existe como função própria porque o nome e a cidade da parada têm que sair
+ * do MESMO contato que o endereço. Resolver cada um por um caminho era como o
+ * romaneio dizia "BILL COMERCIO DE ESTOPAS - PATRICIA..." (o nome congelado
+ * no pedido, de quando ele foi importado) para um cadastro que já se chamava
+ * "PATRICIA DE FATIMA DA SILVA" — medido: 109 dos 393 pedidos abertos têm o
+ * nome do pedido diferente do cadastro.
+ */
+export function contatoDaEntrega(
+  pedido: PedidoComEndereco,
+  contatos: ContatosDaEntrega,
+): ContatoDaEntrega | undefined {
   const porId = pedido.contact_id ? contatos.porId.get(pedido.contact_id) : undefined;
   const cnpj = cnpjDoPedido(pedido.cliente_documento);
-  const contato = porId ?? (cnpj ? contatos.porDocumento.get(cnpj) : undefined);
+  return porId ?? (cnpj ? contatos.porDocumento.get(cnpj) : undefined);
+}
 
-  return enderecoEmLinha(contato ?? null) || null;
+/**
+ * O NOME QUE O PAPEL MOSTRA — o do cadastro, não o congelado no pedido.
+ *
+ * Quem muda o nome do cliente muda no cadastro (foi o que o dono fez no
+ * 19341). `commercial_orders.cliente_nome` é foto do dia da importação e
+ * envelhece: 109 dos 393 pedidos abertos já divergiam. O pedido fica como
+ * reserva para quando não há vínculo nem CNPJ que levem a um contato.
+ */
+export function nomeDaEntrega(
+  pedido: PedidoComEndereco & { cliente_nome?: string | null },
+  contatos: ContatosDaEntrega,
+): string {
+  const contato = contatoDaEntrega(pedido, contatos);
+  const doCadastro = (contato?.display_name ?? contato?.name ?? "").trim();
+  if (doCadastro) return doCadastro;
+  return (pedido.cliente_nome ?? "").trim();
+}
+
+/**
+ * A CIDADE DA PARADA, para separar a carga por cidade.
+ *
+ * Sai do mesmo contato do endereço. O `uf` do cadastro é o que fecha
+ * "MAFRA/SC"; quando ele falta, a cidade vai sozinha. Há cadastro com a cidade
+ * escrita por extenso ("Mafra, Santa Catarina") — a parte antes da vírgula é a
+ * cidade, e o resto não vira UF por adivinhação.
+ */
+export function cidadeDaEntrega(
+  pedido: PedidoComEndereco,
+  contatos: ContatosDaEntrega,
+): string | null {
+  const contato = contatoDaEntrega(pedido, contatos);
+  const bruta = ((contato?.cidade ?? "").split(",")[0] ?? "").replace(/\s+/g, " ").trim();
+  if (!bruta) return null;
+  const uf = (contato?.uf ?? "").trim().toUpperCase();
+  return uf.length === 2 ? `${bruta}/${uf}` : bruta;
 }
 
 const COLUNAS_DO_CONTATO =
-  "id, cnpj, logradouro, numero_end, complemento, bairro, cidade, uf, cep";
+  "id, cnpj, name, display_name, logradouro, numero_end, complemento, bairro, cidade, uf, cep";
 
 /**
  * Carrega os contatos que podem resolver o endereço de uma lista de pedidos:

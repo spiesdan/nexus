@@ -12,7 +12,12 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
-import { carregarContatosDaEntrega, enderecoDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
+import {
+  carregarContatosDaEntrega,
+  cidadeDaEntrega,
+  enderecoDaEntrega,
+  nomeDaEntrega,
+} from "@/lib/expedicao/endereco-da-entrega";
 import { cargaPatchSchema, COLUNAS_DA_CARGA } from "@/lib/schemas/expedicao";
 import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +63,20 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
     // Resolver aqui é o que faz a parada mostrar o destino — e o mapa abrir.
     const contatos = await carregarContatosDaEntrega(supabase, orgId, linhas);
     pedidos = Object.fromEntries(
-      linhas.map((p) => [p.id, { ...p, endereco_entrega: enderecoDaEntrega(p, contatos) }]),
+      linhas.map((p) => [
+        p.id,
+        {
+          ...p,
+          // A ficha da carga mostra o mesmo que o papel: nome do cadastro e
+          // endereço resolvido, não a foto congelada no pedido.
+          cliente_nome: nomeDaEntrega(
+            { ...p, cliente_nome: p.cliente_nome as string | null },
+            contatos,
+          ),
+          endereco_entrega: enderecoDaEntrega(p, contatos),
+          cidade_entrega: cidadeDaEntrega(p, contatos),
+        },
+      ]),
     );
   }
   const { data: provas } = await supabase

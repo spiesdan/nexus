@@ -14,7 +14,12 @@ import {
   STATUS_EMBARCAVEIS,
   STATUS_NA_CARGA,
 } from "@/lib/schemas/expedicao";
-import { agruparItensRepetidos, ordenarParadasDoRomaneio, renderRomaneioPdf } from "@/lib/comercial/romaneio-pdf";
+import {
+  agruparItensRepetidos,
+  agruparParadasPorCidade,
+  ordenarParadasDoRomaneio,
+  renderRomaneioPdf,
+} from "@/lib/comercial/romaneio-pdf";
 import { numeroDoPedidoPdf } from "@/lib/comercial/pedido-pdf";
 
 /**
@@ -101,6 +106,53 @@ describe("embarque", () => {
   });
 });
 
+describe("agruparParadasPorCidade", () => {
+  const parada = (sequencia: number, cidade: string | null) => ({
+    sequencia,
+    numero: 19000 + sequencia,
+    cliente_nome: `CLIENTE ${sequencia}`,
+    endereco_entrega: null,
+    total_cents: 1000,
+    status: "na_carga",
+    cidade,
+  });
+
+  it("separa por cidade mantendo a ordem da rota entre os grupos", () => {
+    const grupos = agruparParadasPorCidade([
+      parada(1, "MAFRA/SC"),
+      parada(2, "CANOINHAS/SC"),
+      parada(3, "Mafra/SC"),
+      parada(4, "CANOINHAS/SC"),
+    ]);
+    expect(grupos.map((g) => g.rotulo)).toEqual(["MAFRA/SC", "CANOINHAS/SC"]);
+    expect(grupos[0]!.paradas.map((p) => p.sequencia)).toEqual([1, 3]);
+    expect(grupos[1]!.paradas.map((p) => p.sequencia)).toEqual([2, 4]);
+  });
+
+  it("Mafra e Mafra/SC são a mesma cidade, e o rótulo sobe para a forma com UF", () => {
+    const grupos = agruparParadasPorCidade([
+      parada(1, "Mafra"),
+      parada(2, "MAFRA/SC"),
+      parada(3, "Mafra, Santa Catarina"),
+    ]);
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0]!.rotulo).toBe("MAFRA/SC");
+    expect(grupos[0]!.paradas.map((p) => p.sequencia)).toEqual([1, 2, 3]);
+  });
+
+  it("cidade é comparada sem acento e sem caixa; o rótulo é o primeiro visto", () => {
+    const grupos = agruparParadasPorCidade([parada(1, "São Bento do Sul/SC"), parada(2, "SAO BENTO DO SUL/SC")]);
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0]!.rotulo).toBe("São Bento do Sul/SC");
+  });
+
+  it("parada sem cidade vai para o último grupo, com nome próprio", () => {
+    const grupos = agruparParadasPorCidade([parada(1, null), parada(2, "MAFRA/SC")]);
+    expect(grupos.map((g) => g.rotulo)).toEqual(["MAFRA/SC", "Cidade não informada"]);
+    expect(grupos[1]!.paradas).toHaveLength(1);
+  });
+});
+
 describe("renderRomaneioPdf", () => {
   it("gera PDF válido com paradas e assinatura", async () => {
     const buf = await renderRomaneioPdf(
@@ -174,6 +226,14 @@ describe("renderRomaneioPdf", () => {
       "JZ COMERCIO DE MOVEIS E DECORACOES LTDA",
       "CRIATIVISIUM SERRALHERIA - MARCOS FABIO DE ALMEIDA",
     ];
+    const cidades = [
+      "MAFRA/SC",
+      "CANOINHAS/SC",
+      "CAMPO DO TENENTE/PR",
+      "CURITIBANOS/SC",
+      "RIO NEGRINHO/SC",
+      "IRATI/PR",
+    ];
     const qtds = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 3, 3, 5, 8, 8];
     let seq = 0;
     const paradas = qtds.map((quantos, i) => {
@@ -190,6 +250,9 @@ describe("renderRomaneioPdf", () => {
         numero: 19000 + i,
         cliente_nome: nomes[i % nomes.length]!,
         endereco_entrega: `RUA DAS FLORES, ${100 + i}, SALA 2 — CENTRO, MAFRA/SC, 89300000`,
+        // Seis cidades de verdade, como na carga 022: o cabeçalho de grupo
+        // entra no orçamento de páginas deste teste.
+        cidade: cidades[i % cidades.length]!,
         total_cents: 19500,
         status: "na_carga",
         itens,
