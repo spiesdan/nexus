@@ -8,6 +8,27 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.5] — 2026-11-03
+
+### Corrigido
+
+- **Atualização não diz "já está na versão mais recente" com o parque na versão antiga — e limpa imagens** Dois defeitos que se encontraram no meio de uma atualização real, em 03/11/2026:
+
+  1. **O disco encheu** (96%, 56 GB em imagens antigas). O `docker pull` da versão
+     nova morreu com "no space left on device" **depois** de gravar a versão no
+     `.env` e depois de baixar a imagem do app — mas antes de baixar worker,
+     mercos e ocr.
+  2. **A atualização seguinte disse "Você já está na versão mais recente"**, com
+     os seis contêineres rodando a versão anterior. A checagem comparava só a
+     imagem do app com o registro; ela estava baixada, então "em dia". A única
+     saída era `--force`, que ninguém adivinha.
+
+  Agora a checagem compara o **parque inteiro**: se qualquer imagem que o compose
+  espera não está entre as que estão rodando, a atualização acontece. E, ao final
+  de uma atualização bem-sucedida, saem as imagens que nenhum contêiner usa — a
+  versão no ar fica, e a anterior continua no registro para um `--force` de
+  rollback.
+
 ## [1.38.4] — 2026-11-03
 
 ### Corrigido
@@ -5908,7 +5929,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.4...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.5...HEAD
+[1.38.5]: https://github.com/spiesdan/nexus/compare/v1.38.4...v1.38.5
 [1.38.4]: https://github.com/spiesdan/nexus/compare/v1.38.3...v1.38.4
 [1.38.3]: https://github.com/spiesdan/nexus/compare/v1.38.2...v1.38.3
 [1.38.2]: https://github.com/spiesdan/nexus/compare/v1.38.1...v1.38.2
