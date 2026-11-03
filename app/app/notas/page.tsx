@@ -150,7 +150,7 @@ export default async function NotasPage({
   if (idsDosContatos.length > 0) {
     const { data: contatos } = await supabase
       .from("contacts")
-      .select("id, name, display_name, cnpj, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
+      .select("id, name, display_name, cnpj, ie, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
       .eq("organization_id", activeOrg.orgId)
       .in("id", idsDosContatos);
     for (const c of (contatos ?? []) as unknown as ContatoFiscal[]) {
