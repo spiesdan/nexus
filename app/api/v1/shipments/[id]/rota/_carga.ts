@@ -90,8 +90,13 @@ export async function carregarCargaComParadas(
     display_name: string | null;
     name: string | null;
     phone_number: string | null;
+    logradouro: string | null;
+    numero_end: string | null;
+    complemento: string | null;
+    bairro: string | null;
     cidade: string | null;
     uf: string | null;
+    cep: string | null;
     latitude: number | null;
     longitude: number | null;
     geo_status: string | null;
@@ -100,7 +105,9 @@ export async function carregarCargaComParadas(
   if (idsContatos.length > 0) {
     const { data: contatos } = await supabase
       .from("contacts")
-      .select("id, display_name, name, phone_number, cidade, uf, latitude, longitude, geo_status, geo_fonte")
+      .select(
+        "id, display_name, name, phone_number, logradouro, numero_end, complemento, bairro, cidade, uf, cep, latitude, longitude, geo_status, geo_fonte",
+      )
       .eq("organization_id", orgId)
       .in("id", idsContatos);
     porContato = new Map(
@@ -109,8 +116,13 @@ export async function carregarCargaComParadas(
         display_name: string | null;
         name: string | null;
         phone_number: string | null;
+        logradouro: string | null;
+        numero_end: string | null;
+        complemento: string | null;
+        bairro: string | null;
         cidade: string | null;
         uf: string | null;
+        cep: string | null;
         latitude: number | null;
         longitude: number | null;
         geo_status: string | null;
@@ -133,7 +145,17 @@ export async function carregarCargaComParadas(
       contact_id: p?.contact_id ?? null,
       contato_nome: c ? (c.display_name ?? c.name) : null,
       fone: c?.phone_number ?? null,
-      endereco_entrega: p?.endereco_entrega ?? null,
+      // O ENDEREÇO DA PARADA — o do PEDIDO quando o operador escolheu outro
+      // ponto de entrega, senão o do CADASTRO.
+      //
+      // Antes daqui saía só `endereco_entrega` do pedido. Nesta instalação
+      // nenhum dos pedidos das cargas abertas tinha esse campo preenchido
+      // (0 de 28), embora 25 dos 28 tivessem a rua no cadastro — então a
+      // parada ia para o mapa sem endereço, a geocodificação não tinha alvo
+      // ("Geocodificação concluída" sem mover um pino) e o mapa ficava vazio.
+      // O cadastro é o dado que o cliente deu; a ausência do snapshot do
+      // pedido não significa "cliente sem endereço".
+      endereco_entrega: p?.endereco_entrega?.trim() || enderecoEmLinha(c) || null,
       latitude: c?.latitude ?? null,
       longitude: c?.longitude ?? null,
       geo_status: c?.geo_status ?? "pendente",
