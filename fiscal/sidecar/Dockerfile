@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libwebp-dev \
     unzip \
+  && docker-php-ext-configure gd --with-jpeg --with-webp \
   && docker-php-ext-install -j$(nproc) soap mbstring dom xml zip gd \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 

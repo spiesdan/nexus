@@ -32,4 +32,27 @@ describe("DANFE do sidecar", () => {
     const php = fs.readFileSync(path.join(RAIZ, "fiscal", "sidecar", "src", "ServicoNfe.php"), "utf8");
     expect(php).toContain("NFePHP\\DA\\NFe\\Danfe");
   });
+
+  it("a imagem tem GD com JPEG — o logo do emitente é convertido para JPEG", () => {
+    // Medido: `docker-php-ext-install gd` sozinho NÃO habilita `imagejpeg`, e o
+    // `sped-da` converte o logo com ela. Sem o configure, gerar DANFE com logo
+    // morria em "Call to undefined function imagejpeg".
+    const dockerfile = fs.readFileSync(path.join(RAIZ, "fiscal", "sidecar", "Dockerfile"), "utf8");
+    expect(dockerfile).toContain("docker-php-ext-configure gd --with-jpeg");
+  });
+
+  it("logo quebrado não derruba o documento: há fallback sem logo", () => {
+    const php = fs.readFileSync(path.join(RAIZ, "fiscal", "sidecar", "src", "ServicoNfe.php"), "utf8");
+    expect(php).toContain("catch (\\Throwable $e)");
+    expect(php).toMatch(/render\(''\)/);
+  });
+
+  it("a rota do app manda o logo do emitente quando existe", () => {
+    const rota = fs.readFileSync(
+      path.join(RAIZ, "app", "api", "v1", "invoices", "[id]", "danfe", "route.ts"),
+      "utf8",
+    );
+    expect(rota).toContain("logo_base64");
+    expect(rota).toContain("logo_path");
+  });
 });
