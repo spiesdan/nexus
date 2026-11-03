@@ -5,7 +5,7 @@ import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
 import {
   COLUNAS_DA_NOTA,
-  STATUS_FATURAVEL,
+  statusFaturavel,
   type ConfigFiscalSalva,
   type ExtrasFiscais,
 } from "@/lib/schemas/fiscal";
@@ -80,13 +80,13 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     status: string;
   } | null;
   if (!ped) throw new ApiError(404, "not_found", { requestId }, requestId, "Pedido não encontrado.");
-  if (!(STATUS_FATURAVEL as readonly string[]).includes(ped.status)) {
+  if (!statusFaturavel(ped.status)) {
     throw new ApiError(
       422,
       "validation_failed",
       { requestId },
       requestId,
-      `Pedido está "${ped.status}" — só faturado vira nota.`,
+      `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
     );
   }
 

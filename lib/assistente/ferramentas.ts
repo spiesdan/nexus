@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { listaAgendamentos } from "@/lib/agenda/consulta";
 import { precoDeVitrine } from "@/lib/schemas/produtos";
-import { STATUS_FATURAVEL } from "@/lib/schemas/fiscal";
+import { statusFaturavel } from "@/lib/schemas/fiscal";
 import { responder } from "@/components/assistente/respostas";
 import { reais, type AssistenteCtx } from "./contexto";
 
@@ -217,13 +217,13 @@ const diagnosticarNota = (ctx: AssistenteCtx) =>
       if (!ped) return { erro: "não achei esse pedido. Confira o número." };
 
       const checklist: { item: string; ok: boolean; detalhe: string }[] = [];
-      const faturavel = (STATUS_FATURAVEL as readonly string[]).includes(ped.status);
+      const faturavel = statusFaturavel(ped.status);
       checklist.push({
-        item: "pedido faturado",
+        item: "pedido faturável",
         ok: faturavel,
         detalhe: faturavel
           ? `está "${ped.status}"`
-          : `está "${ped.status}" — só pedido faturado vira nota; aprove/fature na tela do pedido`,
+          : `está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota; aprove/fature na tela do pedido`,
       });
 
       const { data: config } = await ctx.supabase

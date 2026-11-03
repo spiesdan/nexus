@@ -191,8 +191,8 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
 
 /**
  * Aba "Emitir" — uma tarefa por tela, como nos emissores dedicados: escolhe
- * o pedido faturado, vê o resumo (cliente + valor), valida e emite. O
- * resultado cai na grade (aba Notas) via refresh.
+ * o pedido faturável (faturado, expedido ou entregue), vê o resumo (cliente +
+ * valor), valida e emite. O resultado cai na grade (aba Notas) via refresh.
  */
 export function EmitirNota({
   faturados,
@@ -244,7 +244,7 @@ export function EmitirNota({
 
   async function emitir() {
     if (!pedidoId) {
-      toast.error(t("Escolha o pedido faturado."));
+      toast.error(t("Escolha o pedido faturado ou expedido."));
       return;
     }
     // Os extras são conferidos aqui e não na rota: quem aciona o botão precisa

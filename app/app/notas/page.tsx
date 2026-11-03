@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import {
   COLUNAS_DA_NOTA,
+  STATUS_FATURAVEL,
   type CartaDeCorrecao,
   type ConfigFiscalSalva,
   type CfopEquivalenteSalvo,
@@ -102,7 +103,7 @@ export default async function NotasPage({
       .from("commercial_orders")
       .select(COLUNAS_DO_PEDIDO)
       .eq("organization_id", activeOrg.orgId)
-      .eq("status", "faturado")
+      .in("status", [...STATUS_FATURAVEL])
       .order("created_at", { ascending: false })
       .limit(200),
     supabase
@@ -211,15 +212,15 @@ export default async function NotasPage({
 
   const textos = {
     titulo: t("Notas fiscais"),
-    subtitulo: t("Emita a partir do pedido faturado e acompanhe o status."),
+    subtitulo: t("Emita a partir do pedido faturado ou expedido e acompanhe o status."),
     abas: t("Abas das notas fiscais"),
     emitir: t("Emitir nota"),
-    subtituloEmitir: t("Gerar a NF-e a partir do pedido já faturado."),
-    escolherPedido: t("Pedido faturado"),
+    subtituloEmitir: t("Gerar a NF-e a partir do pedido que já foi faturado, expedido ou entregue."),
+    escolherPedido: t("Pedido faturado ou expedido"),
     selecione: t("Selecione…"),
     notas: t("Notas"),
     vazias: t("Nenhuma nota ainda"),
-    semFaturados: t("Nenhum pedido faturado aguardando nota."),
+    semFaturados: t("Nenhum pedido faturado ou expedido aguardando nota."),
     semConfig: t("Configure os dados fiscais abaixo antes de emitir."),
     config: t("Configuração fiscal"),
     serie: t("Série"),

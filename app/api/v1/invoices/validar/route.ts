@@ -13,6 +13,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { carregarContextoSped, montarPayloadSped } from "@/lib/fiscal/sped-payload";
+import { statusFaturavel } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -47,14 +48,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     contact_id: string | null;
   } | null;
   if (!ped) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
-  if (ped.status !== "faturado") {
+  if (!statusFaturavel(ped.status)) {
     return ok(
       {
         ok: false,
         pendencias: [
           {
             campo: "status",
-            mensagem: `Pedido está "${ped.status}" — só faturado vira nota.`,
+            mensagem: `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
             onde: `/app/pedidos/${ped.id}`,
           },
         ],
