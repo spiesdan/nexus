@@ -289,6 +289,43 @@ class ServicoEntrada
             }
             return '';
         };
+        // Caminho de tags aninhadas (protNFe > infProt > nProt). `$primeiro` só
+        // olha filho direto, e o protocolo não é filho direto de nada óbvio.
+        $caminho = function (array $tags) use ($dom): string {
+            $no = $dom->documentElement;
+            foreach ($tags as $tag) {
+                if (!$no instanceof \DOMElement) {
+                    return '';
+                }
+                $achado = null;
+                foreach ($no->childNodes as $f) {
+                    if ($f instanceof \DOMElement && $f->tagName === $tag) {
+                        $achado = $f;
+                        break;
+                    }
+                }
+                if ($achado === null) {
+                    return '';
+                }
+                $no = $achado;
+            }
+            return $no instanceof \DOMElement ? trim($no->nodeValue ?? '') : '';
+        };
+        // Endereço do emitente: <enderEmit> é um grupo de filhos diretos, e o
+        // mesmo conjunto de tags (xLgr, nro…) aparece em <enderDest>. Buscar
+        // pelo grupo, não pela tag solta, evita pegar o endereço de entrega.
+        $doEndereco = function (string $tag) use ($dom): string {
+            $e = $dom->getElementsByTagName('enderEmit')->item(0);
+            if (!($e instanceof \DOMElement)) {
+                return '';
+            }
+            foreach ($e->childNodes as $f) {
+                if ($f instanceof \DOMElement && $f->tagName === $tag) {
+                    return trim($f->nodeValue ?? '');
+                }
+            }
+            return '';
+        };
         $itens = [];
         foreach ($dom->getElementsByTagName('det') as $det) {
             /** @var \DOMElement $det */
@@ -312,6 +349,44 @@ class ServicoEntrada
             };
             $qtd = (float)str_replace(',', '.', $campo('qCom'));
             $unit = $this->reaisParaCents($campo('vUnCom')) / 100;
+
+            // Impostos do item: a SEFAZ agrupa por tributo (ICMS00, IPITrib,
+            // PISAliq…), então o valor mora dois níveis abaixo de <imposto>.
+            // Buscar por tag no descendente cobre todos os CST/CSOSN sem
+            // enumerar os ~20 grupos do leiaute — e devolve 0 quando o grupo
+            // não existe (Simples sem IPI, por exemplo), que é o valor certo.
+            $imposto = null;
+            foreach ($det->childNodes as $f) {
+                if ($f instanceof \DOMElement && $f->tagName === 'imposto') {
+                    $imposto = $f;
+                    break;
+                }
+            }
+            $tributoCents = function (string $grupo, string $valor) use ($imposto): int {
+                if ($imposto === null) {
+                    return 0;
+                }
+                $g = $imposto->getElementsByTagName($grupo)->item(0);
+                if (!$g instanceof \DOMElement) {
+                    return 0;
+                }
+                $v = $g->getElementsByTagName($valor)->item(0);
+                return $v === null ? 0 : $this->reaisParaCents(trim($v->nodeValue ?? ''));
+            };
+            $cst = '';
+            if ($imposto !== null) {
+                $grupoIcms = $imposto->getElementsByTagName('ICMS')->item(0);
+                if ($grupoIcms instanceof \DOMElement) {
+                    foreach (['CST', 'CSOSN'] as $tag) {
+                        $n = $grupoIcms->getElementsByTagName($tag)->item(0);
+                        if ($n !== null) {
+                            $cst = trim($n->nodeValue ?? '');
+                            break;
+                        }
+                    }
+                }
+            }
+
             $itens[] = [
                 'codigo' => $campo('cProd'),
                 'ean' => $campo('cEAN') !== 'SEM GTIN' ? $campo('cEAN') : null,
@@ -322,6 +397,11 @@ class ServicoEntrada
                 'quantidade' => $qtd,
                 'preco_cents' => (int)round($unit * 100),
                 'total_cents' => $this->reaisParaCents($campo('vProd')),
+                'icms_cents' => $tributoCents('ICMS', 'vICMS'),
+                'ipi_cents' => $tributoCents('IPI', 'vIPI'),
+                'pis_cents' => $tributoCents('PIS', 'vPIS'),
+                'cofins_cents' => $tributoCents('COFINS', 'vCOFINS'),
+                'cst' => $cst !== '' ? $cst : null,
             ];
         }
         $cobranca = [];
@@ -354,6 +434,37 @@ class ServicoEntrada
             'xml' => $xml,
             'itens' => $itens,
             'cobranca' => $cobranca,
+            // O que a spec 21 precisa e o parser antigo jogava fora: totais,
+            // endereço do emitente e protocolo de autorização. Sem eles as
+            // abas Impostos/Totais e o relatório fiscal não têm dado.
+            'natureza_operacao' => $primeiro('ide', 'natOp') !== '' ? $primeiro('ide', 'natOp') : null,
+            'protocolo' => $caminho(['protNFe', 'infProt', 'nProt']) !== ''
+                ? $caminho(['protNFe', 'infProt', 'nProt'])
+                : null,
+            'endereco' => [
+                'logradouro' => $doEndereco('xLgr'),
+                'numero' => $doEndereco('nro'),
+                'complemento' => $doEndereco('xCpl'),
+                'bairro' => $doEndereco('xBairro'),
+                'municipio' => $doEndereco('xMun'),
+                'codigo_municipio' => $doEndereco('cMun'),
+                'uf' => $doEndereco('UF'),
+                'cep' => $doEndereco('CEP'),
+                'pais' => $doEndereco('xPais'),
+                'telefone' => $doEndereco('fone'),
+            ],
+            'totais' => [
+                'produtos_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vProd')),
+                'frete_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vFrete')),
+                'seguro_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vSeg')),
+                'desconto_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vDesc')),
+                'outras_despesas_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vOutro')),
+                'icms_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vICMS')),
+                'ipi_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vIPI')),
+                'pis_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vPIS')),
+                'cofins_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vCOFINS')),
+                'total_cents' => $this->reaisParaCents($primeiro('ICMSTot', 'vNF')),
+            ],
         ];
     }
 
@@ -370,6 +481,12 @@ class ServicoEntrada
             'chave' => $this->texto($dom, 'chNFe'),
             'tp_evento' => $this->texto($dom, 'tpEvento'),
             'desc_evento' => $this->texto($dom, 'descEvento') !== '' ? $this->texto($dom, 'descEvento') : $this->texto($dom, 'xEvento'),
+            // Quando o evento aconteceu e a sequência (CC-e usa nSeqEvento
+            // para ordenar as cartas); o protocolo é o que a tela mostra como
+            // comprovante. Sem isso o histórico fica sem data nem recibo.
+            'dh_evento' => $this->texto($dom, 'dhEvento') !== '' ? $this->texto($dom, 'dhEvento') : null,
+            'sequencia' => (int)$this->texto($dom, 'nSeqEvento') ?: null,
+            'protocolo' => $this->texto($dom, 'nProt') !== '' ? $this->texto($dom, 'nProt') : null,
             'xml' => $tipo === 'procEv' ? $xml : null,
             'emitente_cnpj' => '',
             'emitente_nome' => '',
@@ -379,12 +496,62 @@ class ServicoEntrada
         ];
     }
 
+    /**
+     * Metadados do A1 sem revelar o arquivo nem a senha.
+     *
+     * O app grava `sha256`, autor e data no upload, mas `titular` e `validade`
+     * só existem DENTRO do PKCS#12 — abrir é trabalho do PHP, que já tem o
+     * certificado no volume `/certs` e o `openssl` do runtime. A tela usa isso
+     * para avisar "vence em N dias" sem nunca devolver o `.pfx`.
+     *
+     * `CN` de e-CNPJ costuma vir como "RAZAO SOCIAL:CNPJ"; o CNPJ sai por
+     * regex de 14 dígitos. e-CPF (11 dígitos) simplesmente não casa — e a
+     * ausência de CNPJ é resposta válida, não erro.
+     *
+     * @return array<string,mixed>
+     */
+    public function metadados(): array
+    {
+        if ($this->certPath === '' || $this->certSenha === '' || strpos($this->certPath, '/certs/') !== 0) {
+            return ['ok' => false, 'codigo' => 'CERT_NAO_LIDO', 'mensagem' => 'Arquivo de certificado não legível no volume /certs ou senha vazia.'];
+        }
+        $pfx = @file_get_contents($this->certPath);
+        if ($pfx === false) {
+            return ['ok' => false, 'codigo' => 'CERT_NAO_LIDO', 'mensagem' => 'Arquivo de certificado não legível no volume /certs.'];
+        }
+        $certs = [];
+        if (!@openssl_pkcs12_read($pfx, $certs, $this->certSenha) || empty($certs['cert'])) {
+            return ['ok' => false, 'codigo' => 'CERT_ILEGIVEL', 'mensagem' => 'Não consegui abrir o PKCS#12 — senha incorreta ou arquivo corrompido.'];
+        }
+        $parsed = @openssl_x509_parse($certs['cert']);
+        if ($parsed === false) {
+            return ['ok' => false, 'codigo' => 'CERT_ILEGIVEL', 'mensagem' => 'O certificado abriu, mas o conteúdo não pôde ser lido.'];
+        }
+        $subject = is_array($parsed['subject'] ?? null) ? $parsed['subject'] : [];
+        $titular = trim((string)($subject['CN'] ?? ''));
+        if ($titular === '') {
+            $titular = trim((string)($subject['O'] ?? ''));
+        }
+        $cnpj = null;
+        if (preg_match('/(\d{14})/', $titular, $m) === 1) {
+            $cnpj = $m[1];
+        }
+        $validade = isset($parsed['validTo_time_t']) ? gmdate('Y-m-d\TH:i:s\Z', (int)$parsed['validTo_time_t']) : null;
+        $inicio = isset($parsed['validFrom_time_t']) ? gmdate('Y-m-d\TH:i:s\Z', (int)$parsed['validFrom_time_t']) : null;
+        return [
+            'ok' => true,
+            'titular' => $titular !== '' ? $titular : null,
+            'cnpj' => $cnpj,
+            'validade' => $validade,
+            'inicio' => $inicio,
+        ];
+    }
+
     private function texto(\DOMDocument $dom, string $tag): string
     {
         $n = $dom->getElementsByTagName($tag)->item(0);
         return $n === null ? '' : trim($n->nodeValue ?? '');
     }
-
     private function reaisParaCents(string $v): int
     {
         $v = trim(str_replace(',', '.', $v));

@@ -67,6 +67,7 @@ meu-dia-alertas.spec.ts
 pedido-idempotencia.spec.ts
 mfa-opcional.spec.ts
 navegacao.spec.ts
+notas-fiscais-modulo.spec.ts
 notificacoes-diz-o-que-falta.spec.ts
 olhar-telas-do-epico.spec.ts
 password-recovery.spec.ts

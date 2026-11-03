@@ -13,6 +13,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
+import { registrarMetadadosDoCertificado } from "@/lib/fiscal/certificado-metadados";
 import { configFiscalSchema, type ConfigFiscalSalva } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -23,7 +24,8 @@ export const dynamic = "force-dynamic";
 const COLUNAS =
   "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, logradouro, " +
   "numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, " +
-  "certificado_path, updated_at";
+  "certificado_path, updated_at, entrada_ativa, frequencia_minutos, " +
+  "manifestacao_automatica, ultima_sincronizacao, ultimo_cstat, ultimo_motivo";
 
 export async function GET(_req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
@@ -118,6 +120,12 @@ export async function PUT(req: NextRequest): Promise<Response> {
   // Nenhum caminho do produto manda `null` de proposito para apagar o
   // certificado; apagar e o que o botao de remover faz, e ele nao e este.
   const { certificado_path: _ignoradoNoPut, ...restoSemCaminho } = resto;
+  const {
+    entrada_ativa: entradaAtivaPedida,
+    frequencia_minutos: frequenciaPedida,
+    manifestacao_automatica: manifestacaoPedida,
+    ...restoDaEntrada
+  } = restoSemCaminho;
 
   // A LEITURA USA O MESMO CLIENTE QUE GRAVOU.
   //
@@ -133,7 +141,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
   const admin = createAdminClient();
   const { data: antes, error: erroAntes } = await admin
     .from("fiscal_settings")
-    .select("certificado_path")
+    .select("certificado_path, entrada_ativa, frequencia_minutos, manifestacao_automatica")
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
   if (erroAntes) {
@@ -145,11 +153,18 @@ export async function PUT(req: NextRequest): Promise<Response> {
     .upsert(
       {
         organization_id: authz.org.orgId,
-        ...restoSemCaminho,
+        ...restoDaEntrada,
         // Reaposta o que JA ESTAVA GRAVADO. `?? null` cobre a instalacao que
         // nunca teve certificado -- nesse caso e `null` de verdade, e gravar
         // `null` e o comportamento certo.
         certificado_path: antes?.certificado_path ?? null,
+        // Mesma armadilha do certificado: a tela de emissão não manda os
+        // campos de entrada, e um default no lugar deles desligaria a
+        // sincronização automática toda vez que alguém salvasse a série.
+        entrada_ativa: entradaAtivaPedida ?? antes?.entrada_ativa ?? false,
+        frequencia_minutos: frequenciaPedida ?? antes?.frequencia_minutos ?? 60,
+        manifestacao_automatica:
+          manifestacaoPedida ?? antes?.manifestacao_automatica ?? false,
         ...(senhaCifrada !== undefined ? { certificado_senha_encrypted: senhaCifrada } : {}),
       },
       { onConflict: "organization_id" },
@@ -159,6 +174,13 @@ export async function PUT(req: NextRequest): Promise<Response> {
 
   if (error || !data) {
     return fail("internal_error", "Erro ao salvar a configuração.", 500, { requestId });
+  }
+
+  // Agora que a senha está persistida (cifrada) e o `.pfx` já está no volume,
+  // o sidecar consegue abrir o PKCS#12 e dizer titular/CNPJ/validade. A tela
+  // usa isso para avisar vencimento; falhar aqui não invalida o certificado.
+  if (certificado_senha) {
+    await registrarMetadadosDoCertificado(authz.org.orgId, certificado_senha);
   }
 
   await audit({

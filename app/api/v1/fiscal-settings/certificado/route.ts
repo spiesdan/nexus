@@ -27,6 +27,7 @@
  * começam com `0x30 0x82`, e é isso que a rota exige. Ver `lib/fiscal/certificado.ts`.
  */
 import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { chmod, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -40,6 +41,8 @@ import {
   DIRETORIO_DE_CERTIFICADOS_NO_HOST,
   NOME_DO_CERTIFICADO,
 } from "@/lib/fiscal/certificado";
+import { registrarMetadadosDoCertificado } from "@/lib/fiscal/certificado-metadados";
+import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -124,6 +127,33 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
+  // Metadados do A1: hash, autor e data. O arquivo continua fora do banco —
+  // esta linha só permite avisar vencimento e detectar troca silenciosa no
+  // volume. Titular/validade vêm do sidecar (`/certificado/metadados`), que é
+  // quem consegue abrir o PKCS#12.
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  const agora = new Date().toISOString();
+  await admin
+    .from("fiscal_certificates")
+    .update({ revogado_em: agora })
+    .eq("organization_id", authz.org.orgId)
+    .is("revogado_em", null);
+  const { error: erroMetadados } = await admin.from("fiscal_certificates").insert({
+    organization_id: authz.org.orgId,
+    arquivo: NOME_DO_CERTIFICADO,
+    sha256,
+    enviado_por: authz.user.id,
+    enviado_em: agora,
+  });
+
+  // Troca de certificado com a senha já salva: dá para abrir o PKCS#12 agora e
+  // preencher titular/CNPJ/validade. No primeiro envio a senha ainda não
+  // existe (ela vem no PUT da config), que completa o metadado em seguida.
+  const contexto = await carregarContextoSped(authz.org.orgId).catch(() => null);
+  if (contexto?.senhaCertificado) {
+    await registrarMetadadosDoCertificado(authz.org.orgId, contexto.senhaCertificado);
+  }
+
   await audit({
     organizationId: authz.org.orgId,
     actorUserId: authz.user.id,
@@ -137,6 +167,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     {
       certificado_path: NOME_DO_CERTIFICADO,
       bytes: destino.tamanho,
+      metadados_registrados: !erroMetadados,
     },
     { requestId },
   );

@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Database = {
   graphql_public: {
@@ -2067,6 +2073,8 @@ export type Database = {
           id: string;
           last_verified_at: string | null;
           latitude: number | null;
+          laya_fit: string | null;
+          laya_fit_em: string | null;
           lead_id: string | null;
           logradouro: string | null;
           longitude: number | null;
@@ -2080,6 +2088,9 @@ export type Database = {
           provider: string;
           proximo_passo: string | null;
           score: number;
+          site_detalhes: NonNullable<Json>;
+          site_situacao: string | null;
+          site_verificado_em: string | null;
           source: string | null;
           source_url: string | null;
           status_comercial: string;
@@ -2116,6 +2127,8 @@ export type Database = {
           id?: string;
           last_verified_at?: string | null;
           latitude?: number | null;
+          laya_fit?: string | null;
+          laya_fit_em?: string | null;
           lead_id?: string | null;
           logradouro?: string | null;
           longitude?: number | null;
@@ -2129,6 +2142,9 @@ export type Database = {
           provider: string;
           proximo_passo?: string | null;
           score?: number;
+          site_detalhes?: NonNullable<Json>;
+          site_situacao?: string | null;
+          site_verificado_em?: string | null;
           source?: string | null;
           source_url?: string | null;
           status_comercial?: string;
@@ -2165,6 +2181,8 @@ export type Database = {
           id?: string;
           last_verified_at?: string | null;
           latitude?: number | null;
+          laya_fit?: string | null;
+          laya_fit_em?: string | null;
           lead_id?: string | null;
           logradouro?: string | null;
           longitude?: number | null;
@@ -2178,6 +2196,9 @@ export type Database = {
           provider?: string;
           proximo_passo?: string | null;
           score?: number;
+          site_detalhes?: NonNullable<Json>;
+          site_situacao?: string | null;
+          site_verificado_em?: string | null;
           source?: string | null;
           source_url?: string | null;
           status_comercial?: string;
@@ -3396,6 +3417,7 @@ export type Database = {
       };
       commercial_orders: {
         Row: {
+          chave_sincronizacao: string | null;
           cliente_documento: string | null;
           cliente_nome: string;
           condicao_pagamento: string | null;
@@ -3406,6 +3428,8 @@ export type Database = {
           desconto_cents: number;
           desconto_pct: number | null;
           endereco_entrega: string | null;
+          exige_nf: boolean;
+          forma_pagamento: string | null;
           frete_cents: number;
           id: string;
           modalidade_frete: string;
@@ -3428,6 +3452,7 @@ export type Database = {
           vendedor_user_id: string | null;
         };
         Insert: {
+          chave_sincronizacao?: string | null;
           cliente_documento?: string | null;
           cliente_nome: string;
           condicao_pagamento?: string | null;
@@ -3438,6 +3463,8 @@ export type Database = {
           desconto_cents?: number;
           desconto_pct?: number | null;
           endereco_entrega?: string | null;
+          exige_nf?: boolean;
+          forma_pagamento?: string | null;
           frete_cents?: number;
           id?: string;
           modalidade_frete?: string;
@@ -3460,6 +3487,7 @@ export type Database = {
           vendedor_user_id?: string | null;
         };
         Update: {
+          chave_sincronizacao?: string | null;
           cliente_documento?: string | null;
           cliente_nome?: string;
           condicao_pagamento?: string | null;
@@ -3470,6 +3498,8 @@ export type Database = {
           desconto_cents?: number;
           desconto_pct?: number | null;
           endereco_entrega?: string | null;
+          exige_nf?: boolean;
+          forma_pagamento?: string | null;
           frete_cents?: number;
           id?: string;
           modalidade_frete?: string;
@@ -5298,6 +5328,7 @@ export type Database = {
           updated_at: string;
           valor_original_cents: number;
           vencimento: string;
+          vencimento_depende_de_nf: boolean;
         };
         Insert: {
           contact_id?: string | null;
@@ -5315,6 +5346,7 @@ export type Database = {
           updated_at?: string;
           valor_original_cents: number;
           vencimento: string;
+          vencimento_depende_de_nf?: boolean;
         };
         Update: {
           contact_id?: string | null;
@@ -5332,6 +5364,7 @@ export type Database = {
           updated_at?: string;
           valor_original_cents?: number;
           vencimento?: string;
+          vencimento_depende_de_nf?: boolean;
         };
         Relationships: [
           {
@@ -5357,6 +5390,59 @@ export type Database = {
           },
           {
             foreignKeyName: "financial_receivables_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_certificates: {
+        Row: {
+          arquivo: string;
+          cnpj: string | null;
+          created_at: string;
+          enviado_em: string;
+          enviado_por: string | null;
+          id: string;
+          organization_id: string;
+          revogado_em: string | null;
+          sha256: string | null;
+          titular: string | null;
+          updated_at: string;
+          validade: string | null;
+        };
+        Insert: {
+          arquivo?: string;
+          cnpj?: string | null;
+          created_at?: string;
+          enviado_em?: string;
+          enviado_por?: string | null;
+          id?: string;
+          organization_id: string;
+          revogado_em?: string | null;
+          sha256?: string | null;
+          titular?: string | null;
+          updated_at?: string;
+          validade?: string | null;
+        };
+        Update: {
+          arquivo?: string;
+          cnpj?: string | null;
+          created_at?: string;
+          enviado_em?: string;
+          enviado_por?: string | null;
+          id?: string;
+          organization_id?: string;
+          revogado_em?: string | null;
+          sha256?: string | null;
+          titular?: string | null;
+          updated_at?: string;
+          validade?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_certificates_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -5399,21 +5485,228 @@ export type Database = {
           },
         ];
       };
-      fiscal_entrada_cursor: {
+      fiscal_document_events: {
+        Row: {
+          chave: string;
+          created_at: string;
+          descricao: string | null;
+          dh_evento: string | null;
+          entrada_id: string | null;
+          id: string;
+          nsu: number;
+          organization_id: string;
+          protocolo: string | null;
+          sequencia: number | null;
+          tipo: string;
+          tp_evento: string;
+          xml: string | null;
+        };
+        Insert: {
+          chave: string;
+          created_at?: string;
+          descricao?: string | null;
+          dh_evento?: string | null;
+          entrada_id?: string | null;
+          id?: string;
+          nsu?: number;
+          organization_id: string;
+          protocolo?: string | null;
+          sequencia?: number | null;
+          tipo: string;
+          tp_evento?: string;
+          xml?: string | null;
+        };
+        Update: {
+          chave?: string;
+          created_at?: string;
+          descricao?: string | null;
+          dh_evento?: string | null;
+          entrada_id?: string | null;
+          id?: string;
+          nsu?: number;
+          organization_id?: string;
+          protocolo?: string | null;
+          sequencia?: number | null;
+          tipo?: string;
+          tp_evento?: string;
+          xml?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_document_events_entrada_id_fkey";
+            columns: ["entrada_id"];
+            isOneToOne: false;
+            referencedRelation: "fiscal_entradas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_document_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_document_items: {
+        Row: {
+          associado_em: string | null;
+          associado_por: string | null;
+          cfop: string | null;
+          codigo: string;
+          cofins_cents: number;
+          created_at: string;
+          cst: string | null;
+          descricao: string;
+          ean: string | null;
+          entrada_id: string;
+          icms_cents: number;
+          id: string;
+          ipi_cents: number;
+          ncm: string | null;
+          numero_item: number;
+          organization_id: string;
+          pis_cents: number;
+          produto_id: string | null;
+          quantidade: number;
+          unidade: string | null;
+          updated_at: string;
+          valor_total_cents: number;
+          valor_unitario_cents: number;
+        };
+        Insert: {
+          associado_em?: string | null;
+          associado_por?: string | null;
+          cfop?: string | null;
+          codigo: string;
+          cofins_cents?: number;
+          created_at?: string;
+          cst?: string | null;
+          descricao: string;
+          ean?: string | null;
+          entrada_id: string;
+          icms_cents?: number;
+          id?: string;
+          ipi_cents?: number;
+          ncm?: string | null;
+          numero_item: number;
+          organization_id: string;
+          pis_cents?: number;
+          produto_id?: string | null;
+          quantidade?: number;
+          unidade?: string | null;
+          updated_at?: string;
+          valor_total_cents?: number;
+          valor_unitario_cents?: number;
+        };
+        Update: {
+          associado_em?: string | null;
+          associado_por?: string | null;
+          cfop?: string | null;
+          codigo?: string;
+          cofins_cents?: number;
+          created_at?: string;
+          cst?: string | null;
+          descricao?: string;
+          ean?: string | null;
+          entrada_id?: string;
+          icms_cents?: number;
+          id?: string;
+          ipi_cents?: number;
+          ncm?: string | null;
+          numero_item?: number;
+          organization_id?: string;
+          pis_cents?: number;
+          produto_id?: string | null;
+          quantidade?: number;
+          unidade?: string | null;
+          updated_at?: string;
+          valor_total_cents?: number;
+          valor_unitario_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_document_items_entrada_id_fkey";
+            columns: ["entrada_id"];
+            isOneToOne: false;
+            referencedRelation: "fiscal_entradas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_document_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_document_items_produto_id_fkey";
+            columns: ["produto_id"];
+            isOneToOne: false;
+            referencedRelation: "catalog_products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_emitidas_cursor: {
         Row: {
           atualizado_em: string;
+          max_nsu: number;
           organization_id: string;
           ult_nsu: number;
         };
         Insert: {
           atualizado_em?: string;
+          max_nsu?: number;
           organization_id: string;
           ult_nsu?: number;
         };
         Update: {
           atualizado_em?: string;
+          max_nsu?: number;
           organization_id?: string;
           ult_nsu?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_emitidas_cursor_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_entrada_cursor: {
+        Row: {
+          atualizado_em: string;
+          locked_by: string | null;
+          locked_until: string | null;
+          max_nsu: number;
+          organization_id: string;
+          proxima_tentativa: string | null;
+          ult_nsu: number;
+          ultimo_erro: string | null;
+        };
+        Insert: {
+          atualizado_em?: string;
+          locked_by?: string | null;
+          locked_until?: string | null;
+          max_nsu?: number;
+          organization_id: string;
+          proxima_tentativa?: string | null;
+          ult_nsu?: number;
+          ultimo_erro?: string | null;
+        };
+        Update: {
+          atualizado_em?: string;
+          locked_by?: string | null;
+          locked_until?: string | null;
+          max_nsu?: number;
+          organization_id?: string;
+          proxima_tentativa?: string | null;
+          ult_nsu?: number;
+          ultimo_erro?: string | null;
         };
         Relationships: [
           {
@@ -5429,10 +5722,14 @@ export type Database = {
         Row: {
           chave: string;
           cobranca_json: NonNullable<Json>;
+          conferencia_status: string;
+          conferida_em: string | null;
+          conferida_por: string | null;
           contact_id: string | null;
           created_at: string;
           created_by: string | null;
           dh_emi: string | null;
+          dh_entrada: string | null;
           emitente_cnpj: string;
           emitente_ie: string | null;
           emitente_nome: string;
@@ -5442,11 +5739,18 @@ export type Database = {
           itens_json: NonNullable<Json>;
           manifestacao: string | null;
           manifestada_em: string | null;
+          natureza_operacao: string | null;
           nsu: number;
           numero: number | null;
+          observacoes: string | null;
           organization_id: string;
+          protocolo: string | null;
           serie: string | null;
+          situacao_fiscal: string;
           status: string;
+          supplier_id: string | null;
+          tipo_documento: string | null;
+          totais_json: NonNullable<Json>;
           updated_at: string;
           valor_total_cents: number;
           xml: string | null;
@@ -5454,10 +5758,14 @@ export type Database = {
         Insert: {
           chave: string;
           cobranca_json?: NonNullable<Json>;
+          conferencia_status?: string;
+          conferida_em?: string | null;
+          conferida_por?: string | null;
           contact_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           dh_emi?: string | null;
+          dh_entrada?: string | null;
           emitente_cnpj: string;
           emitente_ie?: string | null;
           emitente_nome: string;
@@ -5467,11 +5775,18 @@ export type Database = {
           itens_json?: NonNullable<Json>;
           manifestacao?: string | null;
           manifestada_em?: string | null;
+          natureza_operacao?: string | null;
           nsu: number;
           numero?: number | null;
+          observacoes?: string | null;
           organization_id: string;
+          protocolo?: string | null;
           serie?: string | null;
+          situacao_fiscal?: string;
           status?: string;
+          supplier_id?: string | null;
+          tipo_documento?: string | null;
+          totais_json?: NonNullable<Json>;
           updated_at?: string;
           valor_total_cents?: number;
           xml?: string | null;
@@ -5479,10 +5794,14 @@ export type Database = {
         Update: {
           chave?: string;
           cobranca_json?: NonNullable<Json>;
+          conferencia_status?: string;
+          conferida_em?: string | null;
+          conferida_por?: string | null;
           contact_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           dh_emi?: string | null;
+          dh_entrada?: string | null;
           emitente_cnpj?: string;
           emitente_ie?: string | null;
           emitente_nome?: string;
@@ -5492,11 +5811,18 @@ export type Database = {
           itens_json?: NonNullable<Json>;
           manifestacao?: string | null;
           manifestada_em?: string | null;
+          natureza_operacao?: string | null;
           nsu?: number;
           numero?: number | null;
+          observacoes?: string | null;
           organization_id?: string;
+          protocolo?: string | null;
           serie?: string | null;
+          situacao_fiscal?: string;
           status?: string;
+          supplier_id?: string | null;
+          tipo_documento?: string | null;
+          totais_json?: NonNullable<Json>;
           updated_at?: string;
           valor_total_cents?: number;
           xml?: string | null;
@@ -5514,6 +5840,13 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_entradas_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
             referencedColumns: ["id"];
           },
         ];
@@ -5565,6 +5898,77 @@ export type Database = {
           },
           {
             foreignKeyName: "fiscal_events_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_ibpt: {
+        Row: {
+          chave: string | null;
+          codigo: string;
+          created_at: string;
+          descricao: string | null;
+          estadual: number;
+          ex: string;
+          fonte: string | null;
+          id: string;
+          importados_federal: number;
+          municipal: number;
+          nacional_federal: number;
+          organization_id: string;
+          tipo: string;
+          uf: string;
+          updated_at: string;
+          versao: string | null;
+          vigencia_fim: string | null;
+          vigencia_inicio: string;
+        };
+        Insert: {
+          chave?: string | null;
+          codigo: string;
+          created_at?: string;
+          descricao?: string | null;
+          estadual?: number;
+          ex?: string;
+          fonte?: string | null;
+          id?: string;
+          importados_federal?: number;
+          municipal?: number;
+          nacional_federal?: number;
+          organization_id: string;
+          tipo?: string;
+          uf: string;
+          updated_at?: string;
+          versao?: string | null;
+          vigencia_fim?: string | null;
+          vigencia_inicio: string;
+        };
+        Update: {
+          chave?: string | null;
+          codigo?: string;
+          created_at?: string;
+          descricao?: string | null;
+          estadual?: number;
+          ex?: string;
+          fonte?: string | null;
+          id?: string;
+          importados_federal?: number;
+          municipal?: number;
+          nacional_federal?: number;
+          organization_id?: string;
+          tipo?: string;
+          uf?: string;
+          updated_at?: string;
+          versao?: string | null;
+          vigencia_fim?: string | null;
+          vigencia_inicio?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_ibpt_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -5688,6 +6092,63 @@ export type Database = {
           },
         ];
       };
+      fiscal_manifestations: {
+        Row: {
+          created_at: string;
+          cstat: string | null;
+          entrada_id: string;
+          evento: string;
+          id: string;
+          justificativa: string | null;
+          mensagem: string | null;
+          organization_id: string;
+          protocolo: string | null;
+          resultado: string;
+          usuario_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          cstat?: string | null;
+          entrada_id: string;
+          evento: string;
+          id?: string;
+          justificativa?: string | null;
+          mensagem?: string | null;
+          organization_id: string;
+          protocolo?: string | null;
+          resultado: string;
+          usuario_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          cstat?: string | null;
+          entrada_id?: string;
+          evento?: string;
+          id?: string;
+          justificativa?: string | null;
+          mensagem?: string | null;
+          organization_id?: string;
+          protocolo?: string | null;
+          resultado?: string;
+          usuario_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_manifestations_entrada_id_fkey";
+            columns: ["entrada_id"];
+            isOneToOne: false;
+            referencedRelation: "fiscal_entradas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_manifestations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       fiscal_settings: {
         Row: {
           ambiente: string;
@@ -5700,8 +6161,11 @@ export type Database = {
           created_at: string;
           crt: string;
           emitente_documento: string | null;
+          entrada_ativa: boolean;
+          frequencia_minutos: number;
           ie: string | null;
           logradouro: string | null;
+          manifestacao_automatica: boolean;
           municipio: string | null;
           natureza_operacao: string;
           numero_end: string | null;
@@ -5709,6 +6173,9 @@ export type Database = {
           provedor: string;
           serie: string;
           uf: string | null;
+          ultima_sincronizacao: string | null;
+          ultimo_cstat: string | null;
+          ultimo_motivo: string | null;
           updated_at: string;
         };
         Insert: {
@@ -5722,8 +6189,11 @@ export type Database = {
           created_at?: string;
           crt?: string;
           emitente_documento?: string | null;
+          entrada_ativa?: boolean;
+          frequencia_minutos?: number;
           ie?: string | null;
           logradouro?: string | null;
+          manifestacao_automatica?: boolean;
           municipio?: string | null;
           natureza_operacao?: string;
           numero_end?: string | null;
@@ -5731,6 +6201,9 @@ export type Database = {
           provedor?: string;
           serie?: string;
           uf?: string | null;
+          ultima_sincronizacao?: string | null;
+          ultimo_cstat?: string | null;
+          ultimo_motivo?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -5744,8 +6217,11 @@ export type Database = {
           created_at?: string;
           crt?: string;
           emitente_documento?: string | null;
+          entrada_ativa?: boolean;
+          frequencia_minutos?: number;
           ie?: string | null;
           logradouro?: string | null;
+          manifestacao_automatica?: boolean;
           municipio?: string | null;
           natureza_operacao?: string;
           numero_end?: string | null;
@@ -5753,6 +6229,9 @@ export type Database = {
           provedor?: string;
           serie?: string;
           uf?: string | null;
+          ultima_sincronizacao?: string | null;
+          ultimo_cstat?: string | null;
+          ultimo_motivo?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -5760,6 +6239,74 @@ export type Database = {
             foreignKeyName: "fiscal_settings_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_sync_logs: {
+        Row: {
+          created_at: string;
+          cstat: string | null;
+          docs_encontrados: number;
+          docs_erro: number;
+          docs_importados: number;
+          finalizado_em: string | null;
+          id: string;
+          iniciado_em: string;
+          max_nsu: number | null;
+          mensagem: string | null;
+          nsu_final: number | null;
+          nsu_inicial: number | null;
+          organization_id: string;
+          origem: string;
+          request_id: string | null;
+          resultado: string;
+          usuario_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          cstat?: string | null;
+          docs_encontrados?: number;
+          docs_erro?: number;
+          docs_importados?: number;
+          finalizado_em?: string | null;
+          id?: string;
+          iniciado_em?: string;
+          max_nsu?: number | null;
+          mensagem?: string | null;
+          nsu_final?: number | null;
+          nsu_inicial?: number | null;
+          organization_id: string;
+          origem: string;
+          request_id?: string | null;
+          resultado?: string;
+          usuario_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          cstat?: string | null;
+          docs_encontrados?: number;
+          docs_erro?: number;
+          docs_importados?: number;
+          finalizado_em?: string | null;
+          id?: string;
+          iniciado_em?: string;
+          max_nsu?: number | null;
+          mensagem?: string | null;
+          nsu_final?: number | null;
+          nsu_inicial?: number | null;
+          organization_id?: string;
+          origem?: string;
+          request_id?: string | null;
+          resultado?: string;
+          usuario_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_sync_logs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
@@ -6547,12 +7094,69 @@ export type Database = {
           },
         ];
       };
+      lab_avaliacoes: {
+        Row: {
+          achados: NonNullable<Json>;
+          campanha_id: string | null;
+          campanha_nome: string;
+          config_hash: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          nota: number | null;
+          organization_id: string;
+          persona: string;
+          resumo: string;
+          rodada_em: string;
+          transcricao: NonNullable<Json>;
+        };
+        Insert: {
+          achados?: NonNullable<Json>;
+          campanha_id?: string | null;
+          campanha_nome?: string;
+          config_hash?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          nota?: number | null;
+          organization_id: string;
+          persona: string;
+          resumo?: string;
+          rodada_em?: string;
+          transcricao?: NonNullable<Json>;
+        };
+        Update: {
+          achados?: NonNullable<Json>;
+          campanha_id?: string | null;
+          campanha_nome?: string;
+          config_hash?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          nota?: number | null;
+          organization_id?: string;
+          persona?: string;
+          resumo?: string;
+          rodada_em?: string;
+          transcricao?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lab_avaliacoes_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       lead_checkpoints: {
         Row: {
           commitments: NonNullable<Json>;
           contact_id: string;
           created_at: string;
           declaracao: Json | null;
+          foco_produto: Json | null;
           id: string;
           job_id: string | null;
           next_action: string | null;
@@ -6566,6 +7170,7 @@ export type Database = {
           contact_id: string;
           created_at?: string;
           declaracao?: Json | null;
+          foco_produto?: Json | null;
           id?: string;
           job_id?: string | null;
           next_action?: string | null;
@@ -6579,6 +7184,7 @@ export type Database = {
           contact_id?: string;
           created_at?: string;
           declaracao?: Json | null;
+          foco_produto?: Json | null;
           id?: string;
           job_id?: string | null;
           next_action?: string | null;
@@ -6943,6 +7549,68 @@ export type Database = {
           },
           {
             foreignKeyName: "llm_calls_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      mercos_import_runs: {
+        Row: {
+          created_at: string;
+          customers_new: number;
+          errors: NonNullable<Json>;
+          finished_at: string | null;
+          id: string;
+          items_new: number;
+          orders_new: number;
+          orders_skipped: number;
+          organization_id: string;
+          origem: string;
+          requested_by: string | null;
+          started_at: string | null;
+          status: string;
+          summary: NonNullable<Json>;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          customers_new?: number;
+          errors?: NonNullable<Json>;
+          finished_at?: string | null;
+          id?: string;
+          items_new?: number;
+          orders_new?: number;
+          orders_skipped?: number;
+          organization_id: string;
+          origem?: string;
+          requested_by?: string | null;
+          started_at?: string | null;
+          status?: string;
+          summary?: NonNullable<Json>;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          customers_new?: number;
+          errors?: NonNullable<Json>;
+          finished_at?: string | null;
+          id?: string;
+          items_new?: number;
+          orders_new?: number;
+          orders_skipped?: number;
+          organization_id?: string;
+          origem?: string;
+          requested_by?: string | null;
+          started_at?: string | null;
+          status?: string;
+          summary?: NonNullable<Json>;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mercos_import_runs_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -7361,6 +8029,77 @@ export type Database = {
           },
         ];
       };
+      operational_alerts: {
+        Row: {
+          acao_recomendada: string | null;
+          chave: string;
+          created_at: string;
+          descricao: string | null;
+          href: string | null;
+          id: string;
+          motivo_resolucao: string | null;
+          organization_id: string;
+          origem_id: string | null;
+          origem_tipo: string;
+          prioridade: string;
+          reaberturas: number;
+          repeticoes: number;
+          resolvido_em: string | null;
+          resolvido_por: string | null;
+          status: string;
+          titulo: string;
+          updated_at: string;
+        };
+        Insert: {
+          acao_recomendada?: string | null;
+          chave: string;
+          created_at?: string;
+          descricao?: string | null;
+          href?: string | null;
+          id?: string;
+          motivo_resolucao?: string | null;
+          organization_id: string;
+          origem_id?: string | null;
+          origem_tipo: string;
+          prioridade?: string;
+          reaberturas?: number;
+          repeticoes?: number;
+          resolvido_em?: string | null;
+          resolvido_por?: string | null;
+          status?: string;
+          titulo: string;
+          updated_at?: string;
+        };
+        Update: {
+          acao_recomendada?: string | null;
+          chave?: string;
+          created_at?: string;
+          descricao?: string | null;
+          href?: string | null;
+          id?: string;
+          motivo_resolucao?: string | null;
+          organization_id?: string;
+          origem_id?: string | null;
+          origem_tipo?: string;
+          prioridade?: string;
+          reaberturas?: number;
+          repeticoes?: number;
+          resolvido_em?: string | null;
+          resolvido_por?: string | null;
+          status?: string;
+          titulo?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "operational_alerts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       orders: {
         Row: {
           contact_id: string | null;
@@ -7596,8 +8335,8 @@ export type Database = {
           bairro: string | null;
           cep: string | null;
           cidade: string | null;
-          complemento: string | null;
           cnpj: string | null;
+          complemento: string | null;
           created_at: string;
           created_by: string | null;
           display_name: string;
@@ -7629,8 +8368,8 @@ export type Database = {
           bairro?: string | null;
           cep?: string | null;
           cidade?: string | null;
-          complemento?: string | null;
           cnpj?: string | null;
+          complemento?: string | null;
           created_at?: string;
           created_by?: string | null;
           display_name: string;
@@ -7662,8 +8401,8 @@ export type Database = {
           bairro?: string | null;
           cep?: string | null;
           cidade?: string | null;
-          complemento?: string | null;
           cnpj?: string | null;
+          complemento?: string | null;
           created_at?: string;
           created_by?: string | null;
           display_name?: string;
@@ -8389,6 +9128,41 @@ export type Database = {
           },
         ];
       };
+      prospecting_message_presets: {
+        Row: {
+          categoria: string;
+          created_at: string;
+          id: string;
+          mensagens: string[];
+          organization_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          categoria: string;
+          created_at?: string;
+          id?: string;
+          mensagens?: string[];
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          categoria?: string;
+          created_at?: string;
+          id?: string;
+          mensagens?: string[];
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_message_presets_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       prospecting_searches: {
         Row: {
           campaign_id: string | null;
@@ -8547,13 +9321,6 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "prospecting_sends_prospect_id_fkey";
-            columns: ["prospect_id"];
-            isOneToOne: false;
-            referencedRelation: "business_prospects";
             referencedColumns: ["id"];
           },
         ];
@@ -9006,7 +9773,7 @@ export type Database = {
           entradas_cents: number;
           esperado_cents: number;
           id: string;
-          linhas: Json;
+          linhas: NonNullable<Json>;
           liquido_cents: number;
           observacao: string | null;
           organization_id: string;
@@ -9023,7 +9790,7 @@ export type Database = {
           entradas_cents?: number;
           esperado_cents?: number;
           id?: string;
-          linhas: Json;
+          linhas?: NonNullable<Json>;
           liquido_cents?: number;
           observacao?: string | null;
           organization_id: string;
@@ -9040,7 +9807,7 @@ export type Database = {
           entradas_cents?: number;
           esperado_cents?: number;
           id?: string;
-          linhas?: Json;
+          linhas?: NonNullable<Json>;
           liquido_cents?: number;
           observacao?: string | null;
           organization_id?: string;
@@ -9522,11 +10289,16 @@ export type Database = {
           cnpj: string | null;
           created_at: string;
           email: string | null;
+          endereco_json: NonNullable<Json>;
           id: string;
+          ie: string | null;
           nome: string;
           observacoes: string | null;
           organization_id: string;
           telefone: string | null;
+          total_comprado_cents: number;
+          total_notas: number;
+          ultima_nota_em: string | null;
           updated_at: string;
         };
         Insert: {
@@ -9534,11 +10306,16 @@ export type Database = {
           cnpj?: string | null;
           created_at?: string;
           email?: string | null;
+          endereco_json?: NonNullable<Json>;
           id?: string;
+          ie?: string | null;
           nome: string;
           observacoes?: string | null;
           organization_id: string;
           telefone?: string | null;
+          total_comprado_cents?: number;
+          total_notas?: number;
+          ultima_nota_em?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -9546,11 +10323,16 @@ export type Database = {
           cnpj?: string | null;
           created_at?: string;
           email?: string | null;
+          endereco_json?: NonNullable<Json>;
           id?: string;
+          ie?: string | null;
           nome?: string;
           observacoes?: string | null;
           organization_id?: string;
           telefone?: string | null;
+          total_comprado_cents?: number;
+          total_notas?: number;
+          ultima_nota_em?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -9723,6 +10505,7 @@ export type Database = {
           organization_id: string;
           revoked_at: string | null;
           role: string;
+          setor: string | null;
           updated_at: string;
           user_id: string;
         };
@@ -9736,6 +10519,7 @@ export type Database = {
           organization_id: string;
           revoked_at?: string | null;
           role: string;
+          setor?: string | null;
           updated_at?: string;
           user_id: string;
         };
@@ -9749,6 +10533,7 @@ export type Database = {
           organization_id?: string;
           revoked_at?: string | null;
           role?: string;
+          setor?: string | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -10113,6 +10898,50 @@ export type Database = {
           },
         ];
       };
+      operational_alerts_insistentes: {
+        Row: {
+          chave: string | null;
+          id: string | null;
+          organization_id: string | null;
+          origem_id: string | null;
+          origem_tipo: string | null;
+          reaberturas: number | null;
+          reaperturas_por_fechamento: number | null;
+          titulo: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          chave?: string | null;
+          id?: string | null;
+          organization_id?: string | null;
+          origem_id?: string | null;
+          origem_tipo?: string | null;
+          reaberturas?: number | null;
+          reaperturas_por_fechamento?: never;
+          titulo?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          chave?: string | null;
+          id?: string | null;
+          organization_id?: string | null;
+          origem_id?: string | null;
+          origem_tipo?: string | null;
+          reaberturas?: number | null;
+          reaperturas_por_fechamento?: never;
+          titulo?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "operational_alerts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       activate_kb_version: {
@@ -10121,6 +10950,10 @@ export type Database = {
       };
       comando_da_conversa: {
         Args: { c: Database["public"]["Tables"]["conversations"]["Row"] };
+        Returns: string;
+      };
+      decrypt_cpf: {
+        Args: { p_contact_id: string; p_organization_id: string };
         Returns: string;
       };
       emit_event: {
@@ -10134,6 +10967,7 @@ export type Database = {
         };
         Returns: string;
       };
+      encrypt_cpf: { Args: { p_plaintext: string }; Returns: string };
       fn_agent_tool_usage: {
         Args: {
           p_agent_id: string;
@@ -10233,6 +11067,32 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      fn_claim_mercos_import_run: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          customers_new: number;
+          errors: NonNullable<Json>;
+          finished_at: string | null;
+          id: string;
+          items_new: number;
+          orders_new: number;
+          orders_skipped: number;
+          organization_id: string;
+          origem: string;
+          requested_by: string | null;
+          started_at: string | null;
+          status: string;
+          summary: NonNullable<Json>;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "mercos_import_runs";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       fn_comando_da_conversa: {
         Args: {
           p_agora: string;
@@ -10325,6 +11185,10 @@ export type Database = {
         Returns: number;
       };
       fn_gasto_de_ia_do_mes: { Args: { p_org: string }; Returns: number };
+      fn_importar_pedido_mercos: {
+        Args: { p_org: string; p_pedido: Json };
+        Returns: Json;
+      };
       fn_is_platform_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
@@ -11034,7 +11898,10 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -11055,8 +11922,10 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -11129,7 +11998,8 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }

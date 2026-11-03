@@ -228,8 +228,8 @@ clique — nunca do zero. `aviso: AGUARDAR_1H` (cStat 137/656) = parar por
 Cada documento: `{nsu, tipo, chave, emitente_cnpj, emitente_nome,
 emitente_ie, numero, serie, dh_emi, valor_cents, xml, itens[], cobranca[]}`.
 `tipo: resumo` (só capa, sem XML — precisa manifestar) · `completa`
-(XML + itens + duplicatas) · `evento` (cancelamento, CC-e… — só avança o
-cursor, o app não importa evento).
+(XML + itens + duplicatas) · `evento` (cancelamento, CC-e…), que a 0290
+persiste em `fiscal_document_events` e projeta em `situacao_fiscal`.
 
 ### POST /manifestar
 
@@ -239,3 +239,10 @@ confirmação · `210210` ciência · `210220` desconhecimento · `210240`
 operação não realizada (exige justificativa 15+). Sem o XML completo não
 há itens — e sem itens não há entrada no estoque: manifestar é o passo
 que libera a importação.
+
+### POST /certificado/metadados
+
+`{certificado_arquivo, certificado_senha}` → `{ok, titular, cnpj, validade,
+inicio}`. Não chama a SEFAZ: abre o PKCS#12 do volume `/certs` com
+`openssl_pkcs12_read` e devolve só o que a tela pode mostrar. O arquivo e a
+senha nunca voltam na resposta. Serve para o aviso de vencimento do A1.

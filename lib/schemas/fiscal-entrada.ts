@@ -31,6 +31,17 @@ export const ROTULO_DA_MANIFESTACAO: Record<string, string> = {
   nao_realizada: "Não realizada",
 };
 
+/** Código da SEFAZ → nome que a coluna `fiscal_manifestations.evento` aceita. */
+export const NOME_DO_EVENTO: Record<
+  EventoManifestacao,
+  "ciencia" | "confirmacao" | "desconhecimento" | "nao_realizada"
+> = {
+  "210210": "ciencia",
+  "210200": "confirmacao",
+  "210220": "desconhecimento",
+  "210240": "nao_realizada",
+};
+
 export const manifestarEntradaSchema = z.object({
   evento: z.enum(EVENTOS_MANIFESTACAO),
   justificativa: z.string().trim().max(255).optional(),
@@ -48,6 +59,12 @@ export const itemEntradaSchema = z.object({
   quantidade: z.number(),
   preco_cents: z.number().int(),
   total_cents: z.number().int(),
+  /** 0290 — impostos do item. Ausentes em XML antigo/resumo. */
+  icms_cents: z.number().int().optional(),
+  ipi_cents: z.number().int().optional(),
+  pis_cents: z.number().int().optional(),
+  cofins_cents: z.number().int().optional(),
+  cst: z.string().optional(),
 });
 
 export type ItemEntrada = z.infer<typeof itemEntradaSchema>;
@@ -59,6 +76,38 @@ export const duplicataEntradaSchema = z.object({
 });
 
 export type DuplicataEntrada = z.infer<typeof duplicataEntradaSchema>;
+
+/** Conferência: o portão que separa "chegou" de "pode mexer no estoque". */
+export const STATUS_DA_CONFERENCIA = [
+  "pendente",
+  "em_conferencia",
+  "aprovada",
+  "rejeitada",
+] as const;
+export type StatusDaConferencia = (typeof STATUS_DA_CONFERENCIA)[number];
+
+export const ROTULO_DA_CONFERENCIA: Record<StatusDaConferencia, string> = {
+  pendente: "Pendente",
+  em_conferencia: "Em conferência",
+  aprovada: "Aprovada",
+  rejeitada: "Rejeitada",
+};
+
+/** Situação do documento na SEFAZ (não confundir com o status da importação). */
+export const SITUACOES_FISCAIS = [
+  "autorizada",
+  "cancelada",
+  "denegada",
+  "desconhecida",
+] as const;
+export type SituacaoFiscal = (typeof SITUACOES_FISCAIS)[number];
+
+export const ROTULO_DA_SITUACAO: Record<SituacaoFiscal, string> = {
+  autorizada: "Autorizada",
+  cancelada: "Cancelada",
+  denegada: "Denegada",
+  desconhecida: "Desconhecida",
+};
 
 export interface EntradaFiscal {
   id: string;
@@ -81,6 +130,33 @@ export interface EntradaFiscal {
   estoque_processado_em: string | null;
   financeiro_processado_em: string | null;
   created_at: string;
+  /** 0290 — vínculo com o fornecedor; nulo até a sincronização resolver o CNPJ. */
+  supplier_id: string | null;
+  tipo_documento: "resumo" | "completa" | null;
+  situacao_fiscal: SituacaoFiscal;
+  protocolo: string | null;
+  dh_entrada: string | null;
+  natureza_operacao: string | null;
+  totais_json: TotaisDaNota;
+  conferencia_status: StatusDaConferencia;
+  conferida_por: string | null;
+  conferida_em: string | null;
+  observacoes: string | null;
+}
+
+/** O `ICMSTot` do XML, em centavos. Ausente = o documento é resumo. */
+export interface TotaisDaNota {
+  produtos_cents?: number;
+  frete_cents?: number;
+  seguro_cents?: number;
+  desconto_cents?: number;
+  outras_despesas_cents?: number;
+  impostos_cents?: number;
+  icms_cents?: number;
+  ipi_cents?: number;
+  pis_cents?: number;
+  cofins_cents?: number;
+  total_cents?: number;
 }
 
 export interface Pagavel {
@@ -102,7 +178,9 @@ export interface Pagavel {
 export const COLUNAS_DA_ENTRADA =
   "id, chave, nsu, emitente_cnpj, emitente_nome, emitente_ie, numero, serie, dh_emi, " +
   "valor_total_cents, xml, itens_json, cobranca_json, manifestacao, manifestada_em, " +
-  "status, contact_id, estoque_processado_em, financeiro_processado_em, created_at";
+  "status, contact_id, estoque_processado_em, financeiro_processado_em, created_at, " +
+  "supplier_id, tipo_documento, situacao_fiscal, protocolo, dh_entrada, natureza_operacao, " +
+  "totais_json, conferencia_status, conferida_por, conferida_em, observacoes";
 
 export const COLUNAS_DO_PAGAVEL =
   "id, entrada_id, contact_id, fornecedor_nome, fornecedor_cnpj, parcela_n, total_parcelas, " +

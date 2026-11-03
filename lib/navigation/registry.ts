@@ -491,13 +491,116 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "vendas",
   },
   {
-    // ATT.txt Fase 3: fiscal. §19 a única porta rolável do grupo FISCAL.
-    href: "/app/notas",
+    // A PORTA do módulo de notas fiscais. A entrada de NF-e (§21 da spec) tem
+    // treze telas próprias; esta é a visão geral delas. Emitir continua em
+    // `/app/notas`, alcançável pelo card abaixo, pelo ⌘K e pelo link do
+    // cabeçalho — a dobra medida não comporta duas portas roláveis de fiscal.
+    href: "/app/fiscal",
     label: "Notas fiscais",
+    description:
+      "Receba as NF-e emitidas contra o CNPJ, manifeste, confira e importe para estoque e financeiro.",
+    icon: Receipt,
+    group: "fiscal",
+    sidebar: true,
+  },
+  {
+    // Emissão: a tela que já existia, agora como destino do mesmo grupo. Sem
+    // sidebar — a porta rolável é a visão geral acima; aqui se chega pelo link
+    // "Emitir NF-e" e pelo ⌘K.
+    href: "/app/notas",
+    label: "Emitir NF-e",
     description: "Emita a partir do pedido faturado e acompanhe o status na SEFAZ.",
     icon: Archive,
     group: "fiscal",
-    sidebar: true,
+  },
+  {
+    href: "/app/fiscal/notas",
+    label: "Todas as notas de entrada",
+    description: "O inventário completo das NF-e recebidas, com filtro por emitente, CNPJ e chave.",
+    icon: FileText,
+    group: "fiscal",
+    section: "Recebimento",
+  },
+  {
+    href: "/app/fiscal/pendentes",
+    label: "Pendentes de conferência",
+    description: "A fila que precisa zerar: notas que chegaram e ainda não foram aprovadas.",
+    icon: ListChecks,
+    group: "fiscal",
+    section: "Recebimento",
+  },
+  {
+    href: "/app/fiscal/xml",
+    label: "XML recebidos",
+    description: "Notas com o XML completo disponível para download e importação.",
+    icon: FileText,
+    group: "fiscal",
+    section: "Recebimento",
+  },
+  {
+    href: "/app/fiscal/resumos",
+    label: "Resumos de notas",
+    description: "Notas que a SEFAZ já sinalizou mas ainda não têm XML completo — o que falta manifestar.",
+    icon: ClipboardText,
+    group: "fiscal",
+    section: "Recebimento",
+  },
+  {
+    href: "/app/fiscal/manifestacoes",
+    label: "Manifestação do destinatário",
+    description: "Ciência, confirmação, recusa e não realizada, com protocolo e retorno da SEFAZ.",
+    icon: ClipboardText,
+    group: "fiscal",
+    section: "Recebimento",
+  },
+  {
+    href: "/app/fiscal/fornecedores",
+    label: "Fornecedores das notas",
+    description: "Quem emitiu as NF-e, com IE, volume comprado e a última nota.",
+    icon: Users,
+    group: "fiscal",
+    section: "Cadastros",
+  },
+  {
+    href: "/app/fiscal/produtos",
+    label: "Produtos das notas",
+    description: "Os itens recebidos, com NCM, CFOP, quantidade e impostos.",
+    icon: Package,
+    group: "fiscal",
+    section: "Cadastros",
+  },
+  {
+    href: "/app/fiscal/eventos",
+    label: "Cancelamentos e eventos",
+    description: "Cancelamentos, cartas de correção e manifestações recebidas pela distribuição.",
+    icon: ClockCounterClockwise,
+    group: "fiscal",
+    section: "Cadastros",
+  },
+  {
+    href: "/app/fiscal/relatorios",
+    label: "Relatórios de entradas",
+    description: "Compras, impostos e pendências do período, com a mesma soma do banco.",
+    icon: ChartBar,
+    group: "fiscal",
+    section: "Fechamento",
+  },
+  {
+    href: "/app/fiscal/sincronizacoes",
+    label: "Histórico de sincronização",
+    description: "Cada consulta à SEFAZ, com NSU de saída, de chegada e o motivo da falha.",
+    icon: ClockCounterClockwise,
+    group: "fiscal",
+    section: "Fechamento",
+  },
+  {
+    href: "/app/fiscal/configuracoes",
+    label: "Configurações fiscais",
+    description: "CNPJ, UF, certificado A1 e o ritmo da sincronização de notas de entrada.",
+    icon: ScalesSimple,
+    group: "fiscal",
+    section: "Fechamento",
+    minRole: "manager",
   },
   {
     // ATT.txt Fase 4: recuperação. §19 não a lista — SEM sidebar; a porta é o

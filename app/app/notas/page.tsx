@@ -412,6 +412,7 @@ export default async function NotasPage({
             pagaveisIniciais={(pagaveis ?? []) as unknown as Pagavel[]}
             podeSincronizar={podeEmitir}
             podeImportar={podeConfigurar}
+            podeConferir={podeConfigurar}
             textos={textos}
           />
         </TabsContent>

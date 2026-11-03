@@ -67,6 +67,12 @@ CRONS="
 */5 * * * *|90|api/v1/cron/prospecting-fit
 * * * * *|60|api/v1/cron/automatic-sales
 */2 * * * *|120|api/v1/cron/fiscal-drain
+# ENTRADA de NF-e: o tick roda a cada 5 min, mas quem decide se consulta é
+# `fiscal_settings.frequencia_minutos` (default 60) + o backoff de 656 gravado
+# em `fiscal_entrada_cursor.proxima_tentativa`. O tick curto existe para a
+# frequência configurada ser respeitada de verdade; o cursor impede consulta
+# repetida e o bloqueio por consumo indevido.
+*/5 * * * *|120|api/v1/cron/fiscal-entradas-sync
 */5 * * * *|25|api/v1/cron/storage-redaction?limit=50
 */5 * * * *|25|api/v1/cron/snooze-watcher
 */10 * * * *|60|api/v1/cron/meu-dia-alertas

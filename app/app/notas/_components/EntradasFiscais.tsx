@@ -22,11 +22,14 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
+  ROTULO_DA_CONFERENCIA,
   ROTULO_DA_ENTRADA,
+  ROTULO_DA_SITUACAO,
   STATUS_DA_ENTRADA,
   identificacaoDaEntrada,
   type EntradaFiscal,
   type Pagavel,
+  type StatusDaConferencia,
   type StatusDaEntrada,
 } from "@/lib/schemas/fiscal-entrada";
 import { DownloadSimple, FileText, MagnifyingGlass, X } from "@/lib/ui/icons";
@@ -41,6 +44,16 @@ const VARIANTE_STATUS: Record<
   manifestada: "neutral",
   importada: "success",
   ignorada: "warning",
+};
+
+const VARIANTE_CONFERENCIA: Record<
+  StatusDaConferencia,
+  NonNullable<React.ComponentProps<typeof Badge>["variant"]>
+> = {
+  pendente: "warning",
+  em_conferencia: "info",
+  aprovada: "success",
+  rejeitada: "error",
 };
 
 const ROTULO_PAGAVEL: Record<string, string> = {
@@ -68,12 +81,15 @@ export function EntradasFiscais({
   pagaveisIniciais,
   podeSincronizar,
   podeImportar,
+  podeConferir,
   textos,
 }: {
   inicial: EntradaFiscal[];
   pagaveisIniciais: Pagavel[];
   podeSincronizar: boolean;
   podeImportar: boolean;
+  /** Gerente: aprova/rejeita a conferência (o portão do estoque). */
+  podeConferir: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -268,9 +284,22 @@ export function EntradasFiscais({
                         {comoMoeda(e.valor_total_cents, "BRL")}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={VARIANTE_STATUS[e.status]}>
-                          {ROTULO_DA_ENTRADA[e.status]}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <Badge variant={VARIANTE_STATUS[e.status]}>
+                            {ROTULO_DA_ENTRADA[e.status]}
+                          </Badge>
+                          <Badge
+                            variant={VARIANTE_CONFERENCIA[e.conferencia_status]}
+                            className="text-[10px]"
+                          >
+                            {ROTULO_DA_CONFERENCIA[e.conferencia_status]}
+                          </Badge>
+                          {e.situacao_fiscal !== "desconhecida" && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {ROTULO_DA_SITUACAO[e.situacao_fiscal]}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <button
@@ -385,7 +414,12 @@ export function EntradasFiscais({
                                       aria-label={textos.manifestar}
                                       className="h-8 rounded-md border bg-background px-2 text-xs"
                                     >
-                                      {EVENTOS.map((ev) => (
+                                      {EVENTOS.filter(
+                                        // Ciência é rotina (agent). Os outros três
+                                        // declaram operação e exigem gerente — a
+                                        // rota recusa e a policy também.
+                                        (ev) => ev.codigo === "210210" || podeConferir,
+                                      ).map((ev) => (
                                         <option key={ev.codigo} value={ev.codigo}>
                                           {ev.rotulo}
                                         </option>
@@ -418,13 +452,77 @@ export function EntradasFiscais({
                                     </Button>
                                   </>
                                 )}
+                              {podeConferir &&
+                                temXml &&
+                                e.status !== "importada" &&
+                                e.status !== "ignorada" && (
+                                  <>
+                                    {e.conferencia_status === "aprovada" ? (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        disabled={agindo === e.id + "conferencia"}
+                                        onClick={() =>
+                                          void acao(
+                                            e.id,
+                                            "conferencia",
+                                            { decisao: "reabrir" },
+                                            t("Conferência reaberta."),
+                                          )
+                                        }
+                                      >
+                                        {t("Reabrir conferência")}
+                                      </Button>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          disabled={agindo === e.id + "conferencia"}
+                                          onClick={() =>
+                                            void acao(
+                                              e.id,
+                                              "conferencia",
+                                              { decisao: "aprovar" },
+                                              t("Conferência aprovada."),
+                                            )
+                                          }
+                                        >
+                                          {t("Aprovar conferência")}
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          disabled={agindo === e.id + "conferencia"}
+                                          onClick={() =>
+                                            void acao(
+                                              e.id,
+                                              "conferencia",
+                                              { decisao: "rejeitar" },
+                                              t("Conferência rejeitada."),
+                                            )
+                                          }
+                                        >
+                                          {t("Rejeitar")}
+                                        </Button>
+                                      </>
+                                    )}
+                                  </>
+                                )}
                               {podeImportar &&
                                 temXml &&
                                 e.status !== "importada" &&
                                 e.status !== "ignorada" && (
                                   <Button
                                     size="sm"
-                                    disabled={agindo === e.id + "importar"}
+                                    disabled={
+                                      agindo === e.id + "importar" ||
+                                      e.conferencia_status !== "aprovada"
+                                    }
+                                    title={
+                                      e.conferencia_status === "aprovada"
+                                        ? undefined
+                                        : t("Aprove a conferência antes de mover estoque.")
+                                    }
                                     onClick={() =>
                                       void acao(e.id, "importar", {}, textos.importadaOk)
                                     }

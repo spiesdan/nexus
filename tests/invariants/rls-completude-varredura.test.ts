@@ -168,6 +168,40 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "manager da org A NÃO lê linhas da org B (0 rows)\") prova isolamento " +
       "com `countAs` real, além do self-read do agent.",
   },
+  {
+    tabela: "fiscal_certificates",
+    razao:
+      "tests/invariants/fiscal-entrada-modulo-0290.test.ts — `countAs` do " +
+      "agent B contra a org A (0 linhas) e `writeCountAs` provando que o " +
+      "agent não troca o certificado (manager troca).",
+  },
+  {
+    tabela: "fiscal_document_items",
+    razao:
+      "tests/invariants/fiscal-entrada-modulo-0290.test.ts — leitura " +
+      "cross-org com `countAs` (A lê 1, B lê 0) e INSERT do agent recusado " +
+      "(escrita é do sync, via service_role).",
+  },
+  {
+    tabela: "fiscal_document_events",
+    razao:
+      "tests/invariants/fiscal-entrada-modulo-0290.test.ts — mesmo par " +
+      "`countAs`/`writeCountAs`, e o replay por (org, chave, NSU) não duplica.",
+  },
+  {
+    tabela: "fiscal_manifestations",
+    razao:
+      "tests/invariants/fiscal-entrada-modulo-0290.test.ts — isolamento " +
+      "cross-org e a regra de papel na policy: ciência do agent passa, " +
+      "confirmação do agent não (manager passa).",
+  },
+  {
+    tabela: "fiscal_sync_logs",
+    razao:
+      "tests/invariants/fiscal-entrada-modulo-0290.test.ts — `countAs` " +
+      "cross-org (B lê 0 da org A) e `writeCountAs` do agent recusado: o log " +
+      "é escrito pelo serviço, não pelo navegador.",
+  },
 ];
 
 /**

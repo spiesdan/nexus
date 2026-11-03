@@ -49,6 +49,20 @@ export function ConfigFiscal({
   const [provedor, setProvedor] = React.useState(configInicial?.provedor ?? "stub");
   const [certPath, setCertPath] = React.useState(configInicial?.certificado_path ?? "");
   const [certSenha, setCertSenha] = React.useState("");
+  // ── Recebimento de NF-e (entrada) — 0290 ────────────────────────────────
+  // Estes três campos vivem em `fiscal_settings` porque a sincronização é da
+  // MESMA configuração fiscal da emissão. A tela de emissão não os inventa:
+  // ela os reapresenta para que quem configura o CNPJ também decida se quer
+  // receber notas automaticamente.
+  const [entradaAtiva, setEntradaAtiva] = React.useState(
+    configInicial?.entrada_ativa ?? false,
+  );
+  const [frequencia, setFrequencia] = React.useState(
+    String(configInicial?.frequencia_minutos ?? 60),
+  );
+  const [manifestacaoAuto, setManifestacaoAuto] = React.useState(
+    configInicial?.manifestacao_automatica ?? false,
+  );
   const [salvandoConfig, setSalvandoConfig] = React.useState(false);
   const [enviandoCert, setEnviandoCert] = React.useState(false);
   /**
@@ -129,6 +143,9 @@ export function ConfigFiscal({
         cep: cep.trim() === "" ? null : cep.trim(),
         ambiente,
         provedor,
+        entrada_ativa: entradaAtiva,
+        frequencia_minutos: Math.min(1440, Math.max(1, Number(frequencia) || 60)),
+        manifestacao_automatica: manifestacaoAuto,
         // `certificado_path` NÃO é enviado aqui, de propósito. Ele é do
         // servidor: a rota de upload grava o arquivo e o caminho, juntos. Este
         // formulário já aceitou texto livre nesse campo, e foi assim que a
@@ -353,6 +370,57 @@ export function ConfigFiscal({
               autoComplete="off"
             />
           </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-3">
+        <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          {t("Recebimento de NF-e (entrada)")}
+        </legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={entradaAtiva}
+              onChange={(e) => setEntradaAtiva(e.target.checked)}
+            />
+            <span>
+              <span className="block font-medium">{t("Buscar notas automaticamente")}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t(
+                  "Consulta a distribuição DF-e no intervalo abaixo. Desligado, só o botão Sincronizar busca.",
+                )}
+              </span>
+            </span>
+          </label>
+          <div className="space-y-1.5">
+            <Label htmlFor="frequencia-entrada">{t("Intervalo entre buscas (minutos)")}</Label>
+            <Input
+              id="frequencia-entrada"
+              type="number"
+              min={1}
+              max={1440}
+              value={frequencia}
+              onChange={(e) => setFrequencia(e.target.value)}
+            />
+          </div>
+          <label className="flex items-start gap-2 text-sm sm:col-span-2">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={manifestacaoAuto}
+              onChange={(e) => setManifestacaoAuto(e.target.checked)}
+            />
+            <span>
+              <span className="block font-medium">{t("Manifestar ciência automaticamente")}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t(
+                  "Só a ciência (210210) é automática. Confirmação, desconhecimento e não realizada continuam exigindo decisão de um gerente — a spec 21 §12 proíbe manifestar sozinho.",
+                )}
+              </span>
+            </span>
+          </label>
         </div>
       </fieldset>
 
