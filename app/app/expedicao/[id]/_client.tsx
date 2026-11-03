@@ -64,6 +64,7 @@ interface Textos {
   /** Rótulo curto da subtela — o título longo vive dentro dela. */
   rota: string;
   romaneio: string;
+  imprimirPedidos: string;
   totalMercadorias: string;
   aCobrar: string;
   paradasConcluidas: string;
@@ -706,6 +707,17 @@ export function CargaClient({
                 >
                   <FileText className="h-3.5 w-3.5" aria-hidden />
                   {textos.romaneio}
+                </Link>
+              </Button>
+              {/* O romaneio é a folha de quem dirige; este é o documento de
+                  cada pedido, na ordem das paradas — o que o galpão separa.
+                  Mesma aba, de propósito: é o contrato do impresso de pedidos
+                  (tests/e2e/imprimir-pedidos-mesma-aba), e o visor do navegador
+                  é o destino. A página intermediária responde 307 no servidor. */}
+              <Button variant="ghost" size="sm" asChild>
+                <Link href={`/app/pedidos/imprimir?carga=${carga.id}`}>
+                  <Receipt className="h-3.5 w-3.5" aria-hidden />
+                  {textos.imprimirPedidos}
                 </Link>
               </Button>
               {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (

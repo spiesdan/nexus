@@ -44,3 +44,22 @@ export function idsDoLote(bruto: string | null | undefined): string[] {
   }
   return ids;
 }
+
+/**
+ * Um lote grande, fatiado no mesmo teto e NA ORDEM recebida.
+ *
+ * Existe para a impressão da CARGA: ela não escolhe pedidos, então o número não
+ * passou pela barra de massa e pode passar de 50. Fatiar é o que permite
+ * imprimir a carga inteira sem mentir sobre o resto — o teto continua valendo
+ * por arquivo, e cada fatia vira uma folha de papel que o operador abre.
+ *
+ * Ordem preservada porque a da carga é a ordem das paradas: o papel tem de sair
+ * na ordem em que o motorista entrega.
+ */
+export function emLotes(ids: readonly string[]): string[][] {
+  const lotes: string[][] = [];
+  for (let i = 0; i < ids.length; i += MAXIMO_PEDIDOS_NO_LOTE) {
+    lotes.push(ids.slice(i, i + MAXIMO_PEDIDOS_NO_LOTE));
+  }
+  return lotes;
+}
