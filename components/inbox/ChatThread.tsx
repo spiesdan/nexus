@@ -18,7 +18,7 @@ import { useDeleteNote } from "@/hooks/inbox/useDeleteNote";
 import { useDebugToggle } from "@/hooks/ai/useDebugToggle";
 import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 import { ROLE_RANK } from "@/lib/auth/types";
-import { CaretDown } from "@/lib/ui/icons";
+import { ArrowDown } from "@/lib/ui/icons";
 import type { Message, Note } from "@/lib/types/messaging";
 
 interface Props {
@@ -474,7 +474,7 @@ export function ChatThread({ conversationId, onResponder }: Props) {
           data-testid="ir-para-o-fim"
           className="absolute right-6 bottom-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors hover:bg-muted"
         >
-          <CaretDown size={16} aria-hidden />
+          <ArrowDown size={16} aria-hidden />
           {novasAbaixo > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground tabular-nums">
               {novasAbaixo > 99 ? "99+" : novasAbaixo}

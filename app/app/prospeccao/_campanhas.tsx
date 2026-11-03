@@ -252,7 +252,7 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="font-medium">{t(`${resumo.enviados} de ${resumo.total} enviadas`)}</span>
+        <span className="font-medium">{t(`${resumo.enviados} de ${resumo.total} confirmadas`)}</span>
         <span className="text-muted-foreground">{resumo.percentual}%</span>
       </div>
       <div
@@ -268,9 +268,19 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
           style={{ width: `${resumo.percentual}%` }}
         />
       </div>
+      {/*
+        O número grande é o que o WhatsApp CONFIRMOU. "Aceitas" é só o que o
+        transporte recebeu — no disparo por QR isso acontece mesmo quando a
+        plataforma recusa depois. Mostrar os dois é o que impede o card de
+        prometer entrega que não existiu.
+      */}
       <p className="text-xs text-muted-foreground">
-        {resumo.pendentes > 0 ? t(`${resumo.pendentes} pendentes`) : t("Todas enviadas")}
-        {resumo.sem_confirmacao > 0 ? ` · ${t(`${resumo.sem_confirmacao} sem comprovante`)}` : ""}
+        {resumo.pendentes > 0 ? t(`${resumo.pendentes} pendentes`) : t("Nada pendente")}
+        {resumo.aceitas > resumo.enviados ? ` · ${t(`${resumo.aceitas} aceitas pelo canal`)}` : ""}
+        {resumo.sem_confirmacao > 0
+          ? ` · ${t(`${resumo.sem_confirmacao} sem confirmação`)}`
+          : ""}
+        {resumo.falhas > 0 ? ` · ${t(`${resumo.falhas} recusadas`)}` : ""}
       </p>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { ArrowBendUpLeft, Check, Checks, WarningOctagon } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, Check, Checks, Clock, WarningOctagon } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
@@ -22,19 +22,43 @@ interface Props {
   citada?: Message | null;
 }
 
-function AckIndicator({ status, t }: { status: string; t: (texto: string) => string }) {
-  if (status === "read") {
+function AckIndicator({
+  status,
+  ack,
+  t,
+}: {
+  status: string;
+  ack: number | null;
+  t: (texto: string) => string;
+}) {
+  // O ack do WhatsApp manda mais que o status local: `sent` gravado no aceite
+  // do transporte não prova que a mensagem chegou (foi o bug do 463, em que o
+  // inbox mostrava verde e o celular do cliente não tinha nada).
+  const grau = typeof ack === "number" ? ack : null;
+  if (status === "read" || (grau !== null && grau >= 3)) {
     return <Checks size={12} weight="bold" className="text-blue-400" aria-label={t("Lida")} />;
   }
-  if (status === "delivered") {
+  if (status === "delivered" || (grau !== null && grau >= 2)) {
     return (
       <Checks size={12} weight="bold" className="text-current/70" aria-label={t("Entregue")} />
     );
   }
-  if (status === "sent") {
+  if (grau !== null && grau >= 1) {
     return <Check size={12} weight="bold" className="text-current/70" aria-label={t("Enviada")} />;
   }
-  return null;
+  // Ainda sem confirmação do WhatsApp (o transporte aceitou ou nem isso). O
+  // relógio é honesto: a mensagem saiu do CRM, mas ninguém confirmou que ela
+  // existe no aparelho do destinatário.
+  return (
+    <span title={t("O WhatsApp ainda não confirmou esta mensagem")} className="inline-flex">
+      <Clock
+        size={12}
+        weight="bold"
+        className="text-current/50"
+        aria-label={t("Aguardando confirmação do WhatsApp")}
+      />
+    </span>
+  );
 }
 
 export function MessageBubble({ message, debugCitations, onResponder, citada }: Props) {
@@ -196,7 +220,9 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
           )}
           <span>{time}</span>
           {showCitationButton && <CitationButton citations={citations} messageId={message.id} />}
-          {isOutbound && !isFailed && <AckIndicator status={message.status} t={t} />}
+          {isOutbound && !isFailed && (
+            <AckIndicator status={message.status} ack={message.ack} t={t} />
+          )}
           {isFailed && (
             // Provider local: o painel do inbox não tem TooltipProvider ancestral e
             // este Tooltip só monta em mensagem failed — sem o provider, abrir uma

@@ -215,7 +215,10 @@ describe('eco do próprio envio na janela em que a linha ainda não tem external
     const sobrou = messages.find((m) => m.external_id === BARE || m.external_id === COMPOSTO)!;
     expect(sobrou.sent_by_user_id).toBe(USER);
     expect(sobrou.sent_via).toBe('user');
-    expect(sobrou.status).toBe('sent');
+    // `sending`, não `sent`: o WAHA devolveu o id, mas quem confirma a entrega
+    // é o ack do WhatsApp. Marcar `sent` aqui era o que deixava verde uma
+    // mensagem que a plataforma recusou depois (erro 463).
+    expect(sobrou.status).toBe('sending');
   });
 
   it('sem eco nenhum, nada é removido e o envio segue normal', async () => {
@@ -229,7 +232,8 @@ describe('eco do próprio envio na janela em que a linha ainda não tem external
 
     expect(messages).toHaveLength(1);
     expect(messages[0]!.external_id).toBe(BARE);
-    expect(messages[0]!.status).toBe('sent');
+    // Aceite do transporte: o WhatsApp ainda não confirmou (isso é o ack).
+    expect(messages[0]!.status).toBe('sending');
   });
 });
 

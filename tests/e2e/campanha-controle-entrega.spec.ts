@@ -59,7 +59,7 @@ test("o controle separa enviada, entregue, lida e falha na entrega", async ({ pa
   // Três envios confirmados; dois chegaram (um deles foi lido) e um falhou.
   await expect(page.getByText("2 entregues")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("1 lidas")).toBeVisible();
-  await expect(page.getByText("1 falharam na entrega")).toBeVisible();
+  await expect(page.getByText("1 recusadas pelo WhatsApp")).toBeVisible();
 
   // ── O degrau por empresa ───────────────────────────────────────────────────
   // `exact` porque "Entregue em <data>" é outro nó: sem ele, a asserção passaria

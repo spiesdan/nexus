@@ -41,6 +41,14 @@ describe("desfechoDoEnvio — o run conta o que aconteceu com a mensagem", () =>
     expect(desfechoDoEnvio("send_whatsapp_message", { id: "m1", status: s }).status).toBe("success");
   });
 
+  it("aceite do transporte (`sending`) é sucesso — a confirmação chega no ack", () => {
+    // No canal por QR o handler grava `sending` no aceite. Tratar isto como
+    // falha acenderia a Central para toda mensagem que saiu normalmente.
+    expect(desfechoDoEnvio("send_whatsapp_message", { id: "m1", status: "sending" }).status).toBe(
+      "success",
+    );
+  });
+
   it("O DEFEITO: mensagem em falha NÃO vira sucesso", () => {
     const d = desfechoDoEnvio("send_whatsapp_message", {
       id: "m1",

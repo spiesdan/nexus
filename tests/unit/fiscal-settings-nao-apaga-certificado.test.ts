@@ -55,16 +55,20 @@ describe("PUT /fiscal-settings nao apaga o certificado", () => {
     expect(corpo, "o upsert ainda recebe o `resto` cru, com certificado_path").not.toContain(
       "...resto,",
     );
-    expect(corpo, "o upsert deveria usar o corpo sem o caminho").toContain("...restoSemCaminho,");
+    expect(corpo, "o upsert deveria usar o corpo sem o caminho").toContain("...restoDaEntrada,");
   });
 
   it("o `certificado_path` e retirado do corpo antes do `upsert`", () => {
     const s = fonte();
     // A linha que faz a omissao. Sem ela, o teste acima passaria por acaso —
-    // `restoSemCaminho` nao viria de lugar nenhum.
+    // `restoDaEntrada` nao viria de lugar nenhum.
     expect(s).toMatch(
       /const\s*\{\s*certificado_path\s*:\s*_\w+\s*,\s*\.\.\.restoSemCaminho\s*\}\s*=\s*resto/,
     );
+    // Os campos de entrada saem do mesmo spread e voltam explicitamente: o
+    // PUT da emissao nao os manda, e um default no lugar deles desligaria a
+    // sincronizacao automatica a cada save da serie.
+    expect(s).toMatch(/\.\.\.restoDaEntrada/);
   });
 
   it("a senha cifrada continua sendo enviada", () => {

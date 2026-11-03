@@ -268,6 +268,20 @@ export const configFiscalSchema = z.object({
    * nunca a devolve. String vazia = mantém a atual; null = não mexe.
    */
   certificado_senha: z.string().max(200).nullable().optional(),
+  // ── Entrada (0290) ──────────────────────────────────────────────────────
+  /**
+   * Liga a sincronização automática de NF-e de entrada. Ausente = mantém o
+   * que está gravado (o PUT da tela de emissão não manda este campo, e um
+   * default aqui desligaria a entrada toda vez que alguém salvasse a série).
+   */
+  entrada_ativa: z.boolean().optional(),
+  /** Intervalo mínimo entre sincronizações automáticas, em minutos. */
+  frequencia_minutos: z.number().int().min(1).max(1440).optional(),
+  /**
+   * Manifestar sozinho é proibido pela spec 21 §12. O campo existe para o
+   * operador LIGAR conscientemente; o default do banco é falso.
+   */
+  manifestacao_automatica: z.boolean().optional(),
 });
 
 export type ConfigFiscal = z.infer<typeof configFiscalSchema>;
@@ -299,6 +313,13 @@ export interface ConfigFiscalSalva {
    * lia o texto. Quem responde isto é o servidor, com um `stat`.
    */
   certificado_presente?: boolean;
+  // ── Entrada (0290) ──────────────────────────────────────────────────────
+  entrada_ativa?: boolean;
+  frequencia_minutos?: number;
+  manifestacao_automatica?: boolean;
+  ultima_sincronizacao?: string | null;
+  ultimo_cstat?: string | null;
+  ultimo_motivo?: string | null;
 }
 
 export interface NotaFiscal {

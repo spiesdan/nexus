@@ -7,7 +7,7 @@
  * documento presumido.
  */
 
-import type { DuplicataEntrada, ItemEntrada } from "@/lib/schemas/fiscal-entrada";
+import type { DuplicataEntrada, ItemEntrada, TotaisDaNota } from "@/lib/schemas/fiscal-entrada";
 
 export interface DocumentoSefaz {
   nsu: string;
@@ -25,6 +25,17 @@ export interface DocumentoSefaz {
   cobranca: DuplicataEntrada[];
   tp_evento?: string;
   desc_evento?: string;
+  /** 0290 — totais do ICMSTot. Só o XML completo traz. */
+  totais?: TotaisDaNota;
+  /** 0290 — endereço do emitente como veio no XML (snapshot). */
+  endereco?: Record<string, string | null>;
+  /** 0290 — protocolo de autorização (nProt) quando o XML completo traz. */
+  protocolo?: string | null;
+  /** 0290 — natureza da operação (natOp). */
+  natureza_operacao?: string | null;
+  /** 0290 — evento: quando aconteceu e a sequência da CC-e. */
+  dh_evento?: string | null;
+  sequencia?: number | null;
 }
 
 export interface ResultadoDistribuicao {
@@ -200,5 +211,68 @@ export async function manifestarNaSefaz(
     manifestacao: corpo.manifestacao ?? null,
     cstat: corpo.cstat ?? null,
     protocolo: corpo.protocolo ?? null,
+  };
+}
+
+export interface MetadadosDoCertificado {
+  ok: boolean;
+  titular: string | null;
+  cnpj: string | null;
+  validade: string | null;
+  inicio: string | null;
+  erro: string | null;
+}
+
+/**
+ * Abre o PKCS#12 no sidecar e devolve só o que a tela pode mostrar.
+ *
+ * `titular` e `validade` não existem fora do `.pfx`; o app não tem runtime para
+ * abrir o formato, e o sidecar — que já lê o arquivo do volume para assinar
+ * nota — é quem tem. Serve para o aviso de vencimento, não para autenticar.
+ */
+export async function lerMetadadosDoCertificado(
+  ctx: Pick<ContextoEntrada, "caminhoDoCertificado" | "certificadoPath" | "senhaCertificado">,
+): Promise<MetadadosDoCertificado> {
+  const corpo =
+    (await chamarSidecar<{
+      ok: boolean;
+      titular?: string | null;
+      cnpj?: string | null;
+      validade?: string | null;
+      inicio?: string | null;
+      codigo?: string;
+      mensagem?: string;
+    }>("/certificado/metadados", {
+      certificado_arquivo: ctx.caminhoDoCertificado ?? ctx.certificadoPath,
+      certificado_senha: ctx.senhaCertificado,
+    })) ?? null;
+
+  if (!corpo) {
+    return {
+      ok: false,
+      titular: null,
+      cnpj: null,
+      validade: null,
+      inicio: null,
+      erro: "Sidecar fiscal inalcançável ou fora do contrato.",
+    };
+  }
+  if (!corpo.ok) {
+    return {
+      ok: false,
+      titular: null,
+      cnpj: null,
+      validade: null,
+      inicio: null,
+      erro: `Sidecar [${corpo.codigo ?? "?"}]: ${corpo.mensagem ?? "sem motivo"}`,
+    };
+  }
+  return {
+    ok: true,
+    titular: corpo.titular ?? null,
+    cnpj: corpo.cnpj ?? null,
+    validade: corpo.validade ?? null,
+    inicio: corpo.inicio ?? null,
+    erro: null,
   };
 }

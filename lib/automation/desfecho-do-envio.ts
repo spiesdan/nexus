@@ -40,8 +40,16 @@ export interface MensagemEnviada {
   metadata?: Record<string, unknown> | null;
 }
 
-/** Estados em que a mensagem SAIU. `sent` é o que o adapter confirma. */
-const SAIU = new Set(["sent", "delivered", "read"]);
+/**
+ * Estados em que a mensagem SAIU do nosso lado.
+ *
+ * `sending` entra aqui: no canal por QR o transporte aceita o pedido e devolve
+ * id ANTES de o WhatsApp confirmar — o desfecho real chega no ack e atualiza a
+ * linha. Para a automação, o que importa é que o envio não morreu; marcar
+ * `sending` como falha abriria um alarme na Central para cada mensagem que
+ * saiu normalmente. Quem afirma entrega é o inbox, pelo ack — não este status.
+ */
+const SAIU = new Set(["sending", "sent", "delivered", "read"]);
 
 
 /**

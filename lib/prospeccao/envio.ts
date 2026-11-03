@@ -166,7 +166,11 @@ export async function enviarParaProspect(
     // ausente, sessão fora de WORKING) e `failed` quando a plataforma recusou.
     // Nenhum dos dois é "enviado": contar como sucesso consumiria a reserva e
     // limparia o erro da campanha sem nada ter chegado ao cliente.
-    if (mensagem.status !== "sent") {
+    //
+    // `sending` É aceite: no canal por QR o transporte devolve o id antes de o
+    // WhatsApp confirmar, e a confirmação chega no ack. Tratar `sending` como
+    // falha faria a campanha desistir de uma mensagem que saiu.
+    if (mensagem.status !== "sent" && mensagem.status !== "sending") {
       const fila = mensagem.metadata?.queued_reason;
       const motivo =
         mensagem.error_message ??

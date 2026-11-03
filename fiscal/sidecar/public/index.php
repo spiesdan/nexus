@@ -15,6 +15,8 @@
  *   POST /danfe    → {ok:true, pdf_base64} | {ok:false, codigo, mensagem}
  *   POST /distribuicao → {ok:true, ultNSU, maxNSU, documentos[]} | {ok:false, codigo, mensagem}
  *   POST /manifestar   → {ok:true, cstat, manifestacao} | {ok:false, codigo, mensagem}
+ *   POST /certificado/metadados → {ok:true, titular, cnpj, validade, inicio}
+ *                     | {ok:false, codigo, mensagem}
  */
 
 declare(strict_types=1);
@@ -117,4 +119,12 @@ if ($metodo === 'POST' && $rota === '/manifestar') {
     responder($r['ok'] ? 200 : 422, $r);
 }
 
-    responder(404, ['ok' => false, 'codigo' => 'ROTA_DESCONHECIDA', 'mensagem' => 'Use GET /saude, POST /emitir, POST /cancelar, POST /carta-correcao, POST /inutilizar, POST /danfe, POST /distribuicao ou POST /manifestar.']);
+if ($metodo === 'POST' && $rota === '/certificado/metadados') {
+    // Não chama a SEFAZ: abre o PKCS#12 do volume e devolve só o que a tela
+    // pode mostrar (titular, CNPJ, validade). O arquivo e a senha nunca saem.
+    $servico = new ServicoEntrada(lerCorpo());
+    $r = $servico->metadados();
+    responder($r['ok'] ? 200 : 422, $r);
+}
+
+    responder(404, ['ok' => false, 'codigo' => 'ROTA_DESCONHECIDA', 'mensagem' => 'Use GET /saude, POST /emitir, POST /cancelar, POST /carta-correcao, POST /inutilizar, POST /danfe, POST /distribuicao, POST /manifestar ou POST /certificado/metadados.']);

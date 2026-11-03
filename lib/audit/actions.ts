@@ -499,6 +499,13 @@ export const AUDIT_ACTIONS = [
   "fiscal_entrada.manifestada",
   "fiscal_entrada.importada",
   "fiscal_entrada.ignorada",
+  // Conferência (migration 0290): o portão que libera (ou barra) estoque.
+  // Aprovar/rejeitar/reabrir são atos gerenciais com autor e data.
+  "fiscal_entrada.conferencia_aprovar",
+  "fiscal_entrada.conferencia_rejeitar",
+  "fiscal_entrada.conferencia_reabrir",
+  "fiscal_entrada.item_associado",
+  "fiscal_entrada.item_desassociado",
   "pagavel.created",
   // Prospecção (migration 0220). Busca criada/pausada/cancelada e importação
   // em lote para o CRM — dinheiro futuro, rastro presente.

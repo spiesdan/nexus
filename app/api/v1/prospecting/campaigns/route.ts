@@ -28,6 +28,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+/** `message_id` é o id de `messages`; só vale consultar o que parece uuid. */
+const UUID_DE_MENSAGEM = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Teto por consulta: `.in()` vira query string e histórico longo estoura a URL. */
+const LOTE_DE_MENSAGENS = 200;
+
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "prospecting_campaigns" });
@@ -82,12 +87,46 @@ export async function GET(req: NextRequest): Promise<Response> {
         erro: erroEnvios.message,
       });
     } else {
+      // O card precisa do degrau REAL: `message_id` só prova que o transporte
+      // aceitou o pedido. Sem consultar `messages`, toda campanha apareceria
+      // com zero confirmadas — ou, pior, com todas "enviadas" como antes.
+      // Em lotes porque `.in()` vira URL e um histórico longo estoura o limite.
+      const porMensagem = new Map<string, { status: string | null; ack: number | null }>();
+      const idsMensagem = [
+        ...new Set(
+          ((envios ?? []) as { message_id: string | null }[])
+            .map((e) => e.message_id)
+            .filter((v): v is string => typeof v === "string" && UUID_DE_MENSAGEM.test(v)),
+        ),
+      ];
+      for (let i = 0; i < idsMensagem.length; i += LOTE_DE_MENSAGENS) {
+        const { data: msgs, error: erroMsgs } = await supabase
+          .from("messages")
+          .select("id, status, ack")
+          .eq("organization_id", authz.org.orgId)
+          .in("id", idsMensagem.slice(i, i + LOTE_DE_MENSAGENS));
+        if (erroMsgs) {
+          // Sem a confirmação o card subconta — nunca superconta. É o lado
+          // certo para errar: "não sabemos" é honesto, "enviada" não é.
+          logger.warn("[prospecting.campaigns] confirmação de entrega indisponível", {
+            requestId,
+            organization_id: authz.org.orgId,
+            erro: erroMsgs.message,
+          });
+          break;
+        }
+        for (const m of (msgs ?? []) as { id: string; status: string | null; ack: number | null }[]) {
+          porMensagem.set(m.id, { status: m.status, ack: m.ack });
+        }
+      }
+
       const porCampanha = new Map<string, EnvioDaCampanha[]>();
       for (const envio of (envios ?? []) as unknown as (EnvioDaCampanha & {
         campaign_id: string;
       })[]) {
+        const msg = envio.message_id ? porMensagem.get(envio.message_id) : null;
         const lista = porCampanha.get(envio.campaign_id) ?? [];
-        lista.push(envio);
+        lista.push({ ...envio, status: msg?.status ?? null, ack: msg?.ack ?? null });
         porCampanha.set(envio.campaign_id, lista);
       }
       for (const linha of linhas) {

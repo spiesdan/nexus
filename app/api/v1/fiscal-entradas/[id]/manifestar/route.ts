@@ -18,6 +18,7 @@ import { resolverProvedor } from "@/lib/fiscal/provedor";
 import {
   COLUNAS_DA_ENTRADA,
   manifestarEntradaSchema,
+  NOME_DO_EVENTO,
   type EntradaFiscal,
 } from "@/lib/schemas/fiscal-entrada";
 import { createClient } from "@/lib/supabase/server";
@@ -39,6 +40,14 @@ export async function POST(
       requestId,
       details: parsed.error.flatten().fieldErrors as Record<string, unknown>,
     });
+  }
+  // Decisão da spec 21 §12: ciência é rotina (agent); confirmação,
+  // desconhecimento e não-realizada são atos declarativos com consequência
+  // contábil (manager). A policy de `fiscal_manifestations` repete a regra,
+  // então um INSERT direto no PostgREST não fura.
+  if (parsed.data.evento !== "210210") {
+    const gerente = await requireRole("manager", { requestId, resource: "fiscal-entradas" });
+    if (!gerente.ok) return gerente.response;
   }
   if (parsed.data.evento === "210240" && (parsed.data.justificativa ?? "").trim().length < 15) {
     return fail(
@@ -119,10 +128,34 @@ export async function POST(
     parsed.data.justificativa,
   );
   if (!resultado.ok) {
+    // A tentativa que falhou também é histórico: sem esta linha, a tela de
+    // manifestações mostraria só os sucessos e o operador não saberia que a
+    // SEFAZ recusou.
+    await supabase.from("fiscal_manifestations").insert({
+      organization_id: authz.org.orgId,
+      entrada_id: id,
+      evento: NOME_DO_EVENTO[parsed.data.evento],
+      justificativa: parsed.data.justificativa ?? null,
+      cstat: resultado.cstat,
+      resultado: "erro",
+      mensagem: resultado.erro ?? "SEFAZ inalcançável.",
+      usuario_id: authz.user.id,
+    });
     return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, {
       requestId,
     });
   }
+
+  await supabase.from("fiscal_manifestations").insert({
+    organization_id: authz.org.orgId,
+    entrada_id: id,
+    evento: NOME_DO_EVENTO[parsed.data.evento],
+    justificativa: parsed.data.justificativa ?? null,
+    protocolo: resultado.protocolo,
+    cstat: resultado.cstat,
+    resultado: "sucesso",
+    usuario_id: authz.user.id,
+  });
 
   await supabase
     .from("fiscal_entradas")

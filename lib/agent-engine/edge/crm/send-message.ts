@@ -186,8 +186,9 @@ async function reconcile(
       await updateLedger(db, idempotencyKey, 'failed', messageId, 'handler marcou a mensagem como failed');
       return { kind: 'failed', idempotencyKey, crmMessageId: messageId };
     default:
-      // status desconhecido (ex.: delivered em replay tardio = já saiu) — trate
-      // como aceito: a mensagem existe sob custódia do CRM.
+      // status desconhecido (ex.: `sending` no canal por QR, que é aceite do
+      // transporte esperando ack; `delivered` em replay tardio = já saiu) —
+      // trate como aceito: a mensagem existe sob custódia do CRM.
       await updateLedger(db, idempotencyKey, 'accepted', messageId, null);
       return { kind: 'sent', idempotencyKey, crmMessageId: messageId };
   }

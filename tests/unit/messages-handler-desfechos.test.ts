@@ -280,7 +280,7 @@ describe('sendMessageHandler — os 6 desfechos do envio', () => {
   // externo — por qual endpoint a mensagem saiu. Isso não é "sequência de
   // chamadas internas": é o que de fato deixa o processo, e o refactor das
   // Tasks 4b–4d tem que preservá-lo (o adapter WAHA fala com o mesmo WAHA).
-  it('4. com media_storage_path: sent + external_id + ack 0, pelo endpoint de mídia', async () => {
+  it('4. com media_storage_path: sending + external_id + ack 0, pelo endpoint de mídia', async () => {
     wahaConfigured(true);
     const fetchMock = vi.fn(async (..._args: unknown[]) => Response.json({ id: { _serialized: 'MEDIA1' } }));
     vi.stubGlobal('fetch', fetchMock);
@@ -291,7 +291,9 @@ describe('sendMessageHandler — os 6 desfechos do envio', () => {
       textInput({ type: 'image', body: undefined, media_storage_path: `${ORG}/${CONV}/a.jpg`, media_mime: 'image/jpeg' }),
     );
 
-    expect(msg.status).toBe('sent');
+    // `sending`, não `sent`: o WAHA aceitou o pedido, mas a confirmação do
+    // WhatsApp chega no ack — marcar `sent` aqui era o bug do 463.
+    expect(msg.status).toBe('sending');
     expect(msg.external_id).toBe('MEDIA1');
     expect(msg.ack).toBe(0);
     expect(msg.error_code).toBeNull();
@@ -300,14 +302,14 @@ describe('sendMessageHandler — os 6 desfechos do envio', () => {
     );
   });
 
-  it('5. texto puro: sent + external_id + ack 0, pelo endpoint de texto', async () => {
+  it('5. texto puro: sending + external_id + ack 0, pelo endpoint de texto', async () => {
     wahaConfigured(true);
     const fetchMock = vi.fn(async (..._args: unknown[]) => Response.json({ key: { id: 'TEXT1' } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const msg = await sendMessageHandler(makeSupabase(conversationRow()), ctx, textInput());
 
-    expect(msg.status).toBe('sent');
+    expect(msg.status).toBe('sending');
     expect(msg.external_id).toBe('TEXT1');
     expect(msg.ack).toBe(0);
     expect(msg.error_code).toBeNull();
@@ -542,7 +544,9 @@ describe('sendMessageHandler — os 6 desfechos do envio', () => {
       textInput(),
     );
 
-    expect(msg.status).toBe('sent');
+    // O envio segue normalmente: id do transporte gravado e a linha aguardando
+    // o ack do WhatsApp — nunca `sent` no aceite.
+    expect(msg.status).toBe('sending');
     expect(msg.external_id).toBe('TEXT9');
   });
 });

@@ -9,40 +9,89 @@ import {
 /**
  * A conta que a tela de controle mostra.
  *
- * O defeito original não era só visual: a lista de campanhas exibia o funil de
- * descoberta (`encontrados/contatados`) e não tinha o número que o operador usa
- * para decidir — quantas já saíram e quantas faltam. O ledger tem três estados
- * (enviado, reservado sem comprovante e ainda não reservado) e os três precisam
- * aparecer sem se misturar.
+ * O defeito medido em 30/10/2026 não era de arredondamento: a campanha exibia
+ * "90 enviadas" com 22 confirmações do WhatsApp. As outras 68 tinham apenas o
+ * aceite do transporte (`message_id`), gravado antes do desfecho real — e 37
+ * delas foram recusadas com o erro 463. A régua aqui separa os quatro degraus
+ * do ledger porque só um deles significa "chegou ao celular do cliente".
  */
 
-function envio(prospect_id: string, message_id: string | null, enviado_em: string | null = null): EnvioDaCampanha {
-  return { prospect_id, message_id, enviado_em };
+function envio(
+  prospect_id: string,
+  message_id: string | null,
+  extras: Partial<EnvioDaCampanha> = {},
+): EnvioDaCampanha {
+  return { prospect_id, message_id, enviado_em: null, ...extras };
 }
 
 describe("resumirEnvios", () => {
-  it("conta enviados pelo comprovante, não pela existência da reserva", () => {
+  it("aceite do transporte não vira 'enviada'", () => {
     const r = resumirEnvios({
       prospectIds: ["a", "b", "c"],
-      sends: [envio("a", "msg-1", "2026-10-22T12:00:00.000Z"), envio("b", null)],
+      sends: [
+        envio("a", "msg-1", { enviado_em: "2026-10-22T12:00:00.000Z" }),
+        envio("b", null),
+      ],
     });
 
     expect(r.total).toBe(3);
-    expect(r.enviados).toBe(1);
-    expect(r.pendentes).toBe(2);
-    expect(r.sem_confirmacao).toBe(1);
-    expect(r.percentual).toBe(33);
-    expect(r.ultimo_envio_at).toBe("2026-10-22T12:00:00.000Z");
+    // A linha de "a" foi aceita (tem comprovante) mas ninguém confirmou.
+    expect(r.aceitas).toBe(1);
+    expect(r.enviados).toBe(0);
+    // "a" (aceita sem ack) e "b" (reserva) estão as duas sem confirmação.
+    expect(r.sem_confirmacao).toBe(2);
+    // "b" é reserva sem comprovante; "c" ainda nem foi reservado.
+    expect(r.sem_comprovante).toBe(1);
+    expect(r.pendentes).toBe(1);
+    expect(r.percentual).toBe(0);
+    // O "último envio" é o último CONFIRMADO — nada confirmado, nada a exibir.
+    expect(r.ultimo_envio_at).toBeNull();
   });
 
-  it("sem lista fechada, o ledger é o tamanho da fila", () => {
+  it("conta como enviada só o que o WhatsApp confirmou (ack ≥ 1)", () => {
     const r = resumirEnvios({
-      sends: [envio("a", "msg-1", "2026-10-22T12:00:00.000Z"), envio("b", "msg-2", "2026-10-22T12:01:00.000Z")],
+      sends: [
+        envio("a", "m1", { status: "sent", ack: 1 }),
+        envio("b", "m2", { status: "delivered", ack: 2 }),
+        envio("c", "m3", { status: "read", ack: 3 }),
+        envio("d", "m4", { status: "sent", ack: 0 }),
+        envio("e", "m5", { status: "sending", ack: 0 }),
+        envio("f", "m6", { status: "failed", ack: -1 }),
+      ],
     });
 
-    expect(r.total).toBe(2);
+    expect(r.total).toBe(6);
+    expect(r.aceitas).toBe(6);
+    expect(r.enviados).toBe(3);
+    expect(r.entregues).toBe(2); // delivered + read
+    expect(r.lidos).toBe(1);
+    expect(r.falhas).toBe(1);
+    expect(r.sem_confirmacao).toBe(2); // ack 0 dos dois
+    expect(r.percentual).toBe(50);
+  });
+
+  it("o ack manda mais que o status: sent com ack negativo é falha (o 463)", () => {
+    const r = resumirEnvios({
+      sends: [envio("a", "m1", { status: "sent", ack: -1 })],
+    });
+
+    expect(r.enviados).toBe(0);
+    expect(r.falhas).toBe(1);
+    expect(r.sem_confirmacao).toBe(0);
+  });
+
+  it("campanha inteira confirmada fecha em 100%", () => {
+    const r = resumirEnvios({
+      prospectIds: ["a", "b"],
+      sends: [
+        envio("a", "m1", { status: "delivered", ack: 2, enviado_em: "2026-10-22T12:00:00.000Z" }),
+        envio("b", "m2", { status: "read", ack: 3, enviado_em: "2026-10-22T12:01:00.000Z" }),
+      ],
+    });
+
     expect(r.enviados).toBe(2);
     expect(r.pendentes).toBe(0);
+    expect(r.sem_confirmacao).toBe(0);
     expect(r.percentual).toBe(100);
     expect(r.ultimo_envio_at).toBe("2026-10-22T12:01:00.000Z");
   });
@@ -59,13 +108,18 @@ describe("resumirEnvios", () => {
   it("não conta a mesma empresa duas vezes se o ledger vier duplicado", () => {
     const r = resumirEnvios({
       prospectIds: ["a", "b"],
-      sends: [envio("a", "msg-1"), envio("a", "msg-1"), envio("b", null)],
+      sends: [
+        envio("a", "msg-1", { status: "delivered", ack: 2 }),
+        envio("a", "msg-1", { status: "delivered", ack: 2 }),
+        envio("b", null),
+      ],
     });
 
     expect(r.total).toBe(2);
+    expect(r.aceitas).toBe(1);
     expect(r.enviados).toBe(1);
-    expect(r.pendentes).toBe(1);
     expect(r.sem_confirmacao).toBe(1);
+    expect(r.pendentes).toBe(0);
   });
 
   it("campanha vazia não divide por zero nem inventa 100%", () => {
@@ -77,55 +131,42 @@ describe("resumirEnvios", () => {
     expect(r.percentual).toBe(0);
     expect(r.ultimo_envio_at).toBeNull();
   });
-});
 
-describe("o degrau de entrega que o canal confirmou", () => {
-  it("conta lido como entregue também — 10 lidas e 3 entregues seria contradição", () => {
+  it("as contas fecham: ninguém fica sem degrau", () => {
     const r = resumirEnvios({
+      prospectIds: ["a", "b", "c", "d", "e"],
       sends: [
-        { prospect_id: "a", message_id: "m1", enviado_em: null, status: "read" },
-        { prospect_id: "b", message_id: "m2", enviado_em: null, status: "delivered" },
-        { prospect_id: "c", message_id: "m3", enviado_em: null, status: "failed" },
-        { prospect_id: "d", message_id: "m4", enviado_em: null, status: "sent" },
+        envio("a", "m1", { status: "read", ack: 3 }),
+        envio("b", "m2", { status: "sent", ack: 0 }),
+        envio("c", "m3", { status: "failed", ack: -1 }),
+        envio("d", null),
       ],
     });
 
-    expect(r.enviados).toBe(4);
-    expect(r.entregues).toBe(2);
-    expect(r.lidos).toBe(1);
-    expect(r.falhas).toBe(1);
-  });
-
-  it("reserva sem comprovante não entra em nenhum degrau de entrega", () => {
-    const r = resumirEnvios({ sends: [{ prospect_id: "a", message_id: null, enviado_em: null }] });
-
-    expect(r.enviados).toBe(0);
-    expect(r.entregues).toBe(0);
-    expect(r.lidos).toBe(0);
-    expect(r.falhas).toBe(0);
-    expect(r.sem_confirmacao).toBe(1);
-  });
-
-  it("quem não consultou `messages` não vira falha nem entrega", () => {
-    const r = resumirEnvios({ sends: [{ prospect_id: "a", message_id: "m1", enviado_em: null }] });
-
-    expect(r.enviados).toBe(1);
-    expect(r.entregues).toBe(0);
-    expect(r.lidos).toBe(0);
-    expect(r.falhas).toBe(0);
+    // Toda empresa da lista está num e só num degrau do trabalho...
+    expect(r.total).toBe(r.pendentes + r.aceitas + r.sem_comprovante);
+    // ...e "sem confirmação" junta aceita-sem-ack e reserva sem comprovante.
+    expect(r.total).toBe(r.pendentes + r.enviados + r.sem_confirmacao + r.falhas);
   });
 });
 
 describe("entregaDoStatus", () => {
   it.each([
-    ["read", "lida"],
-    ["delivered", "entregue"],
-    ["failed", "falhou"],
-    ["sent", "enviada"],
-    ["queued", "enviada"],
-    ["sending", "enviada"],
-  ] as const)("%s → %s", (status, esperado) => {
-    expect(entregaDoStatus(status)).toBe(esperado);
+    ["read", 3, "lida"],
+    ["delivered", 2, "entregue"],
+    ["sent", 1, "enviada"],
+    ["sent", 0, "pendente"],
+    ["sending", 0, "pendente"],
+    ["queued", null, "pendente"],
+    ["failed", -1, "falhou"],
+    ["sent", -1, "falhou"],
+  ] as const)("%s com ack %s → %s", (status, ack, esperado) => {
+    expect(entregaDoStatus(status, ack)).toBe(esperado);
+  });
+
+  it("o ack sozinho já dá o degrau quando o status local está atrasado", () => {
+    expect(entregaDoStatus("sent", 2)).toBe("entregue");
+    expect(entregaDoStatus("sent", 3)).toBe("lida");
   });
 
   it("status que o produto não conhece devolve null em vez de inventar degrau", () => {

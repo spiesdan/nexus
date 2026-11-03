@@ -2,10 +2,16 @@
  * GET  /api/v1/fiscal-entradas — entradas da organização ativa.
  * POST /api/v1/fiscal-entradas — sincroniza com a SEFAZ (distribuição DF-e).
  *
- * A sincronização é UMA rodada curta (o sidecar faz até 3 consultas): o
- * cursor (ultNSU) mora em `fiscal_entrada_cursor` e cada clique continua
- * de onde parou — nunca do zero, para a SEFAZ não bloquear o CNPJ (656).
- * Resumo vira linha `nova`; XML completo só chega depois de manifestar.
+ * A sincronização NÃO mora mais nesta rota: ela é `sincronizarEntrada()`
+ * (`lib/fiscal/entrada-sync.ts`), a MESMA função que o cron chama. Aqui só
+ * resolvemos o ator (guard), traduzimos o resultado em status HTTP e auditamos.
+ *
+ * O que mudou de comportamento, e por quê:
+ *   - o cursor só avança até o último NSU persistido (antes avançava mesmo com
+ *     insert falhando — nota perdida para sempre);
+ *   - duas execuções concorrentes não consultam a SEFAZ em paralelo (lease no
+ *     cursor; a perdedora recebe 409);
+ *   - cada execução grava `fiscal_sync_logs`, inclusive a que falhou.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -13,41 +19,92 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
-import { buscarNaSefaz, type ContextoEntrada, type DocumentoSefaz } from "@/lib/fiscal/entrada";
-import { motivoDeNaoBaixar } from "@/lib/fiscal/eventos";
-import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
-import { resolverProvedor } from "@/lib/fiscal/provedor";
-import { COLUNAS_DA_ENTRADA, STATUS_DA_ENTRADA } from "@/lib/schemas/fiscal-entrada";
+import { sincronizarEntrada } from "@/lib/fiscal/entrada-sync";
+import {
+  COLUNAS_DA_ENTRADA,
+  SITUACOES_FISCAIS,
+  STATUS_DA_CONFERENCIA,
+  STATUS_DA_ENTRADA,
+} from "@/lib/schemas/fiscal-entrada";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const LIMITE_PADRAO = 100;
+const LIMITE_MAXIMO = 200;
+
+function inteiro(valor: string | null, queda: number, min: number, max: number): number {
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return queda;
+  return Math.min(max, Math.max(min, Math.trunc(n)));
+}
 
 export async function GET(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "fiscal-entradas" });
   if (!authz.ok) return authz.response;
 
-  const status = req.nextUrl.searchParams.get("status")?.trim() ?? "";
+  const p = req.nextUrl.searchParams;
+  const status = (p.get("status") ?? "").trim();
+  const conferencia = (p.get("conferencia") ?? "").trim();
+  const situacao = (p.get("situacao") ?? "").trim();
+  const fornecedor = (p.get("fornecedor") ?? "").trim();
+  const de = (p.get("de") ?? "").trim();
+  const ate = (p.get("ate") ?? "").trim();
+  const busca = (p.get("busca") ?? "").trim();
+  const limite = inteiro(p.get("limite"), LIMITE_PADRAO, 1, LIMITE_MAXIMO);
+  const offset = inteiro(p.get("offset"), 0, 0, 1_000_000);
+  const ordenar = (p.get("ordenar") ?? "dh_emi").trim();
+  const direcao = (p.get("direcao") ?? "desc").trim() === "asc";
+
   const supabase = await createClient();
   let q = supabase
     .from("fiscal_entradas")
-    .select(COLUNAS_DA_ENTRADA)
+    .select(COLUNAS_DA_ENTRADA, { count: "exact" })
     .eq("organization_id", authz.org.orgId);
 
   if (status !== "" && (STATUS_DA_ENTRADA as readonly string[]).includes(status)) {
     q = q.eq("status", status);
   }
+  if (
+    conferencia !== "" &&
+    (STATUS_DA_CONFERENCIA as readonly string[]).includes(conferencia)
+  ) {
+    q = q.eq("conferencia_status", conferencia);
+  }
+  if (situacao !== "" && (SITUACOES_FISCAIS as readonly string[]).includes(situacao)) {
+    q = q.eq("situacao_fiscal", situacao);
+  }
+  if (fornecedor !== "") q = q.eq("supplier_id", fornecedor);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(de)) q = q.gte("dh_emi", `${de}T00:00:00.000Z`);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(ate)) q = q.lte("dh_emi", `${ate}T23:59:59.999Z`);
 
-  const { data, error } = await q
-    .order("dh_emi", { ascending: false, nullsFirst: false })
-    .limit(200);
+  if (busca !== "") {
+    // `,` e `%` são sintaxe do filtro `or` do PostgREST: deixá-los no texto
+    // livre muda a consulta (ou a quebra). Trocar por espaço mantém a busca
+    // previsível sem abrir mão de achar por nome/CNPJ/chave/número.
+    const texto = busca.replace(/[%,()]/g, " ").trim();
+    const digitos = texto.replace(/\D/g, "");
+    const partes = [`emitente_nome.ilike.%${texto}%`];
+    if (digitos !== "") {
+      partes.push(`chave.ilike.%${digitos}%`, `emitente_cnpj.ilike.%${digitos}%`);
+      if (/^\d{1,9}$/.test(digitos)) partes.push(`numero.eq.${Number(digitos)}`);
+    }
+    q = q.or(partes.join(","));
+  }
+
+  const coluna =
+    ordenar === "valor" ? "valor_total_cents" : ordenar === "created_at" ? "created_at" : "dh_emi";
+
+  const { data, error, count } = await q
+    .order(coluna, { ascending: direcao, nullsFirst: false })
+    .range(offset, offset + limite - 1);
   if (error) return fail("internal_error", "Erro ao listar as entradas.", 500, { requestId });
-  return ok(data ?? [], { requestId });
-}
-
-function soDigitos(v: string | null): string {
-  return (v ?? "").replace(/\D/g, "");
+  return ok(data ?? [], {
+    requestId,
+    meta: { total: count ?? null, has_more: (count ?? 0) > offset + (data?.length ?? 0) },
+  });
 }
 
 export async function POST(_req: NextRequest): Promise<Response> {
@@ -55,123 +112,34 @@ export async function POST(_req: NextRequest): Promise<Response> {
   const authz = await requireRole("agent", { requestId, resource: "fiscal-entradas" });
   if (!authz.ok) return authz.response;
 
-  const supabase = await createClient();
+  // Service role DEPOIS do guard: o sync grava em tabelas cuja escrita é só
+  // service_role (log/item/evento), e o `organization_id` vem do guard — nunca
+  // do body. É o mesmo caminho do cron, o que elimina a divergência entre
+  // sincronização manual e automática.
+  const admin = createAdminClient();
+  const resultado = await sincronizarEntrada({
+    admin,
+    organizationId: authz.org.orgId,
+    usuarioId: authz.user.id,
+    origem: "manual",
+    requestId,
+  });
 
-  const { data: cfgRaw } = await supabase
-    .from("fiscal_settings")
-    .select("provedor")
-    .eq("organization_id", authz.org.orgId)
-    .maybeSingle();
-  const cfg = cfgRaw as unknown as { provedor?: string | null } | null;
-  if (resolverProvedor({ provedor: cfg?.provedor ?? null }) !== "spednfe") {
-    return fail(
-      "validation_failed",
-      "Sem emissor fiscal com certificado (Notas → Configuração fiscal, provedor sped-nfe). Sem ele, não há como falar com a SEFAZ.",
-      422,
-      { requestId },
-    );
-  }
-
-  const ctx = await carregarContextoSped(authz.org.orgId);
-  // O mesmo portão do download: CNPJ, UF, certificado, senha — e o ambiente.
-  // Homologação não distribui DF-e de terceiro; sincronizar ali sempre voltava
-  // "0 nova(s)" com aviso de pausa, que a tela lia como defeito da busca.
-  const bloqueio = ctx ? motivoDeNaoBaixar(ctx) : "Sem configuração fiscal para a organização.";
-  if (!ctx || bloqueio) {
-    return fail("fiscal_nao_configurado", `Sincronização não executada: ${bloqueio}`, 422, {
+  if (resultado.codigo === "lock") {
+    return fail("state_conflict", resultado.motivo ?? "Sincronização em andamento.", 409, {
       requestId,
     });
   }
-  const cnpj = soDigitos(ctx.emitente.emitente_documento);
-  // O portão já garantiu os quatro; o `??` existe só para o tipo, porque a
-  // checagem mora em outra função e o TypeScript não a propaga.
-  const entrada: ContextoEntrada = {
-    ambiente: ctx.emitente.ambiente,
-    cnpj,
-    razao: ctx.emitente.emitente_documento ?? cnpj,
-    ie: ctx.emitente.ie ?? "",
-    uf: (ctx.emitente.uf ?? "").trim().toUpperCase(),
-    certificadoPath: ctx.emitente.certificado_path ?? "",
-    // O sidecar valida que o caminho esta dentro de `/certs/`, e o
-    // `certificado_path` do banco e so o NOME. Sem este campo o caminho
-    // montado aqui seria recusado com "deve estar dentro de /certs/" e a
-    // // nota apareceria como "nao transmitida", sem dizer que o caminho
-    // esta errado.
-    caminhoDoCertificado: caminhoDoCertificadoNoSidecar(ctx.orgId),
-    senhaCertificado: ctx.senhaCertificado ?? "",
-  };
-
-  const { data: cursor } = await supabase
-    .from("fiscal_entrada_cursor")
-    .select("ult_nsu")
-    .eq("organization_id", authz.org.orgId)
-    .maybeSingle();
-  const de = (cursor as unknown as { ult_nsu?: number | string } | null)?.ult_nsu ?? 0;
-
-  const resultado = await buscarNaSefaz(entrada, Number(de));
-  if (!resultado.ok) {
-    return fail("upstream_unavailable", resultado.erro ?? "SEFAZ inalcançável.", 502, {
+  if (resultado.codigo === "config") {
+    return fail("fiscal_nao_configurado", resultado.motivo ?? "Fiscal não configurado.", 422, {
       requestId,
     });
   }
-
-  let novas = 0;
-  let atualizadas = 0;
-  const candidatas = resultado.documentos.filter(
-    (d) => (d.tipo === "resumo" || d.tipo === "completa") && /^\d{44}$/.test(d.chave),
-  );
-  if (candidatas.length > 0) {
-    const chaves = candidatas.map((d) => d.chave);
-    const { data: existentes } = await supabase
-      .from("fiscal_entradas")
-      .select("chave, xml")
-      .eq("organization_id", authz.org.orgId)
-      .in("chave", chaves);
-    const mapa = new Map(
-      ((existentes ?? []) as unknown as { chave: string; xml: string | null }[]).map((e) => [
-        e.chave,
-        e,
-      ]),
-    );
-    for (const d of candidatas) {
-      const atual = mapa.get(d.chave);
-      if (!atual) {
-        const { error } = await supabase
-          .from("fiscal_entradas")
-          .insert(linhaDe(d, authz.org.orgId, authz.user.id));
-        if (!error) novas++;
-      } else if (!atual.xml && d.tipo === "completa" && d.xml) {
-        // O resumo virou XML completo (manifestou entre uma sincronização e
-        // outra): promove a linha, sem duplicar.
-        const { error } = await supabase
-          .from("fiscal_entradas")
-          .update({
-            xml: d.xml,
-            itens_json: d.itens,
-            cobranca_json: d.cobranca,
-            numero: d.numero,
-            serie: d.serie,
-            dh_emi: d.dh_emi,
-            valor_total_cents: d.valor_cents,
-            status: "manifestada",
-          })
-          .eq("organization_id", authz.org.orgId)
-          .eq("chave", d.chave);
-        if (!error) atualizadas++;
-      }
-    }
+  if (!resultado.ok && resultado.importados + resultado.atualizados === 0) {
+    return fail("upstream_unavailable", resultado.motivo ?? "SEFAZ inalcançável.", 502, {
+      requestId,
+    });
   }
-
-  await supabase
-    .from("fiscal_entrada_cursor")
-    .upsert(
-      {
-        organization_id: authz.org.orgId,
-        ult_nsu: resultado.ultNSU,
-        atualizado_em: new Date().toISOString(),
-      },
-      { onConflict: "organization_id" },
-    );
 
   await audit({
     organizationId: authz.org.orgId,
@@ -184,37 +152,15 @@ export async function POST(_req: NextRequest): Promise<Response> {
 
   return ok(
     {
-      novas,
-      atualizadas,
-      ultNSU: resultado.ultNSU,
-      maxNSU: resultado.maxNSU,
+      novas: resultado.importados,
+      atualizadas: resultado.atualizados,
+      erros: resultado.erros,
+      ultNSU: resultado.nsuFinal,
+      maxNSU: resultado.maxNsu,
       aviso: resultado.aviso,
       cstat: resultado.cstat,
+      proximaTentativa: resultado.proximaTentativa,
     },
     { requestId },
   );
-}
-
-function linhaDe(
-  d: DocumentoSefaz,
-  organizationId: string,
-  userId: string,
-): Record<string, unknown> {
-  return {
-    organization_id: organizationId,
-    chave: d.chave,
-    nsu: Number(d.nsu) || 0,
-    emitente_cnpj: d.emitente_cnpj,
-    emitente_nome: d.emitente_nome || "Emitente desconhecido",
-    emitente_ie: d.emitente_ie || null,
-    numero: d.numero,
-    serie: d.serie,
-    dh_emi: d.dh_emi,
-    valor_total_cents: d.valor_cents,
-    xml: d.xml,
-    itens_json: d.itens,
-    cobranca_json: d.cobranca,
-    status: d.tipo === "completa" ? "manifestada" : "nova",
-    created_by: userId,
-  };
 }

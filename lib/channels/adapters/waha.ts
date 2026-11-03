@@ -41,6 +41,11 @@ export function statusHttpDoErroWaha(msg: string): number | null {
 export const wahaAdapter: ChannelAdapter = {
   provider: "waha",
 
+  // O NOWEB aceita o `sendText` e devolve um id ANTES de o WhatsApp confirmar.
+  // Se a plataforma recusa depois (463, conta restrita), o desfecho chega só
+  // como ack `-1` — então o aceite do transporte não pode virar `sent`.
+  confirmaEntregaPorAck: true,
+
   resolveRecipient(input: RecipientInput): string | null {
     return resolveWahaChatId(input);
   },
