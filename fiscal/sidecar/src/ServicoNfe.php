@@ -409,6 +409,12 @@ class ServicoNfe
         if (!in_array(strlen($docPedido), [11, 14], true)) {
             return 'pedido.documento (CPF com 11 ou CNPJ com 14 dígitos) é obrigatório: sem ele o XSD recusa o destinatário.';
         }
+        // indIEDest 1 (contribuinte ICMS) sem IE é XML inválido: recusar aqui
+        // nomeia o campo, em vez de deixar o XSD quebrar com o certificado aberto.
+        if ((string)($this->pedido['indicador_ie'] ?? '9') === '1'
+            && preg_replace('/[^0-9A-Za-z]/', '', (string)($this->pedido['ie'] ?? '')) === '') {
+            return 'pedido.ie é obrigatório quando indicador_ie = 1 (contribuinte ICMS).';
+        }
         $erroExtras = $this->validarExtras();
         if ($erroExtras !== null) {
             return $erroExtras;
@@ -721,10 +727,22 @@ class ServicoNfe
     {
         $p = $this->pedido;
         $doc = preg_replace('/\D/', '', (string)($p['documento'] ?? ''));
+        // indIEDest vem do cadastro do cliente, não é fixo: 1 = contribuinte
+        // ICMS (IE vai no XML), 2 = isento, 9 = não contribuinte. Antes era '9'
+        // para todo mundo, então cliente com IE cadastrada saía classificado
+        // como não contribuinte.
+        $indicador = (string)($p['indicador_ie'] ?? '9');
+        if (!in_array($indicador, ['1', '2', '9'], true)) {
+            $indicador = '9';
+        }
+        $ie = preg_replace('/[^0-9A-Za-z]/', '', (string)($p['ie'] ?? ''));
         $dest = (object)[
             'xNome' => trim((string)($p['nome'] ?? '')),
-            'indIEDest' => '9',
+            'indIEDest' => $indicador,
         ];
+        if ($indicador === '1' && $ie !== '') {
+            $dest->IE = $ie;
+        }
         if (strlen($doc) === 14) {
             $dest->CNPJ = $doc;
         } elseif (strlen($doc) === 11) {

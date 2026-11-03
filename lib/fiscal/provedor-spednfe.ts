@@ -15,7 +15,15 @@ export interface EntradaSpedNfe {
   /** Só para montar o caminho do certificado no formato que o sidecar exige. */
   organizationId: string;
   senhaCertificado: string;
-  pedido: { numero: number; nome: string; documento: string | null; frete_cents: number };
+  pedido: {
+    numero: number;
+    nome: string;
+    documento: string | null;
+    /** IE do destinatário (cadastro) + `indIEDest` do leiaute. */
+    ie?: string | null;
+    indicador_ie?: string | null;
+    frete_cents: number;
+  };
   itens: ItemSped[];
   /** Grupos da emissão gravados na nota (0257); null/ausente = sem extras. */
   extras?: ExtrasFiscais | null;

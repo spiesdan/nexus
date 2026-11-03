@@ -71,7 +71,19 @@ export function montarPayloadSped(
    * consulta.
    */
   organizationId: string,
-  pedido: { numero: number; nome: string; documento: string | null; frete_cents: number },
+  pedido: {
+    numero: number;
+    nome: string;
+    documento: string | null;
+    /**
+     * IE do destinatário e o `indIEDest` que ela implica (1 com IE, 2 isento,
+     * 9 não contribuinte). Vêm do cadastro; ausente = 9, que é o valor do
+     * leiaute para "não contribuinte".
+     */
+    ie?: string | null;
+    indicador_ie?: string | null;
+    frete_cents: number;
+  },
   itens: ItemSped[],
   extras?: ExtrasFiscais | null,
 ): ProntoSped | FaltaSped {
@@ -135,6 +147,8 @@ export function montarPayloadSped(
         numero_nota: pedido.numero,
         nome: pedido.nome,
         documento: pedido.documento,
+        ie: pedido.ie ?? null,
+        indicador_ie: pedido.indicador_ie ?? "9",
         frete_cents: pedido.frete_cents,
       },
       itens: itens.map((i) => ({
