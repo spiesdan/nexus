@@ -17,6 +17,21 @@ export interface EmitenteSped {
   natureza_operacao: string;
   cfop_padrao: string;
   emitente_documento: string | null;
+  /**
+   * Razão social do emitente — vai em `<emit><xNome>` e é o que sai impresso no
+   * DANFE. Vem de `organizations.legal_name`, NUNCA do CNPJ.
+   *
+   * ─── O defeito que este campo corrige ─────────────────────────────────────
+   *
+   * O payload mandava `razao: emitente.emitente_documento`, porque
+   * `fiscal_settings` não tem coluna de nome. Resultado medido na primeira
+   * NF-e real (03/11/2026): o DANFE sairia com
+   * `35.233.142/0001-83` no lugar do nome da empresa.
+   *
+   * O nome existe — `organizations.legal_name` é NOT NULL — e é a mesma razão
+   * social que o relatório de LGPD usa como controlador. O que faltava era ler.
+   */
+  razao_social: string | null;
   ie: string | null;
   crt: string;
   logradouro: string | null;
@@ -89,6 +104,13 @@ export function montarPayloadSped(
 ): ProntoSped | FaltaSped {
   if (!emitente.emitente_documento)
     return { ok: false, falta: "CNPJ do emitente (configuração fiscal)" };
+  // A razão social é o `<xNome>` do emitente: sem ela o DANFE sai com o CNPJ
+  // no lugar do nome. Não há default seguro — o valor mora no cadastro da
+  // organização (`legal_name`), e presumir qualquer coisa imprime documento
+  // fiscal errado. Recusar nomeia o campo.
+  if (!emitente.razao_social?.trim()) {
+    return { ok: false, falta: "Razão social do emitente (cadastro da organização)" };
+  }
   if (!emitente.ie) return { ok: false, falta: "Inscrição Estadual (configuração fiscal)" };
   if (!emitente.uf) return { ok: false, falta: "UF do emitente (configuração fiscal)" };
   if (!emitente.codigo_municipio) {
@@ -128,7 +150,7 @@ export function montarPayloadSped(
         ambiente: emitente.ambiente,
         serie: emitente.serie,
         cnpj: emitente.emitente_documento,
-        razao: emitente.emitente_documento,
+        razao: emitente.razao_social.trim(),
         ie: emitente.ie,
         crt: emitente.crt,
         natureza: emitente.natureza_operacao,
@@ -184,15 +206,22 @@ export interface ContextoSped {
 /** Lê config + senha (decifrada) com admin client. Fonte confiável: org do JWT. */
 export async function carregarContextoSped(orgId: string): Promise<ContextoSped | null> {
   const admin = createAdminClient();
-  const { data } = await admin
-    .from("fiscal_settings")
-    .select(
-      "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, " +
-        "logradouro, numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, " +
-        "certificado_path, certificado_senha_encrypted",
-    )
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  const [{ data }, { data: org }] = await Promise.all([
+    admin
+      .from("fiscal_settings")
+      .select(
+        "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, " +
+          "logradouro, numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, " +
+          "certificado_path, certificado_senha_encrypted",
+      )
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    // A razão social do emitente NÃO mora em `fiscal_settings`: mora no
+    // cadastro da organização. É ela que vai no `<xNome>` do `<emit>` e sai
+    // impressa no DANFE (a primeira NF-e real saiu com o CNPJ no lugar do
+    // nome, porque o payload usava `emitente_documento`).
+    admin.from("organizations").select("legal_name, display_name").eq("id", orgId).maybeSingle(),
+  ]);
   if (!data) return null;
   const cfg = data as unknown as Record<string, unknown> & {
     certificado_senha_encrypted: string | null;
@@ -202,5 +231,13 @@ export async function carregarContextoSped(orgId: string): Promise<ContextoSped 
     senha = await decryptWebhookSecret(admin, cfg.certificado_senha_encrypted);
   }
   const { certificado_senha_encrypted: _, ...emitente } = cfg;
-  return { emitente: emitente as unknown as EmitenteSped, senhaCertificado: senha, orgId };
+  const nomes = org as unknown as { legal_name: string | null; display_name: string | null } | null;
+  return {
+    emitente: {
+      ...(emitente as unknown as EmitenteSped),
+      razao_social: nomes?.legal_name?.trim() || nomes?.display_name?.trim() || null,
+    },
+    senhaCertificado: senha,
+    orgId,
+  };
 }

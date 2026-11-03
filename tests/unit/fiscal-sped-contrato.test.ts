@@ -14,6 +14,7 @@ const EMITENTE: EmitenteSped = {
   natureza_operacao: "Venda",
   cfop_padrao: "5102",
   emitente_documento: "12345678000190",
+  razao_social: "Água Sanitária do Zé LTDA",
   ie: "123456789",
   crt: "1",
   logradouro: "Rua A",
@@ -63,6 +64,33 @@ describe("montarPayloadSped", () => {
       expect(r.payload.certificado_arquivo).toBe(CERT_DO_SIDECAR);
       expect((r.payload.itens[0] as { unidade: string }).unidade).toBe("UN");
     }
+  });
+
+  it("o emitente leva a RAZÃO SOCIAL no xNome — nunca o CNPJ", () => {
+    // A 1ª NF-e real sairia com `35.233.142/0001-83` impresso no lugar do nome
+    // da empresa, porque `razao` recebia `emitente_documento`. O nome existe no
+    // cadastro da organização; é ele que vai ao DANFE.
+    const r = montarPayloadSped(EMITENTE, "senha", ORG, PEDIDO, [ITEM]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.payload.config.razao).toBe("Água Sanitária do Zé LTDA");
+      expect(r.payload.config.razao).not.toBe(EMITENTE.emitente_documento);
+    }
+  });
+
+  it("sem razão social recusa — não imprime CNPJ como nome", () => {
+    expect(
+      montarPayloadSped({ ...EMITENTE, razao_social: null }, "s", ORG, PEDIDO, [ITEM]),
+    ).toEqual({
+      ok: false,
+      falta: "Razão social do emitente (cadastro da organização)",
+    });
+    expect(
+      montarPayloadSped({ ...EMITENTE, razao_social: "   " }, "s", ORG, PEDIDO, [ITEM]),
+    ).toEqual({
+      ok: false,
+      falta: "Razão social do emitente (cadastro da organização)",
+    });
   });
 
   it("nomeia o NCM ausente em vez de presumir", () => {

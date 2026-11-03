@@ -107,6 +107,12 @@ Todas as rotas (exceto `/saude`) exigem `X-Fiscal-Secret`.
 
 - CRT 1 usa `csosn` (default `102`); CRT 2/3 exige por item `cst` + `aliquota_pct`
   — sem isso, 422 em vez de alíquota chutada.
+- `config.razao` é a **razão social** do emitente (`organizations.legal_name`), não
+  o CNPJ: é ela que sai no `<emit><xNome>` e no DANFE.
+- `idDest` e o primeiro dígito do CFOP são **derivados** da UF do emitente contra
+  a UF de `extras.entrega`: mesma UF → `idDest=1` e CFOP `5xxx`; UFs diferentes →
+  `idDest=2` e CFOP `6xxx`. Não são campos do payload — venda interestadual
+  declarada como interna é rejeitada pela SEFAZ.
 - `pedido.nome` (2+ caracteres) e `pedido.documento` (11 ou 14 dígitos) são
   obrigatórios: `<dest>` é um `xs:choice` no XSD — sem CPF/CNPJ o XML não fecha.
 - Resposta ok: `{ok, chave, protocolo, numero, serie, xml, cstat, xmotivo}`.

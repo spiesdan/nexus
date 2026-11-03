@@ -86,6 +86,27 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toContain("extras.entrega (endereço do destinatário) é obrigatório");
   });
 
+  it("idDest é derivado do destino — SC→PR não sai como operação interna", () => {
+    // Medido na 1ª NF-e real (03/11/2026): o pedido era SC→PR e o `<ide>` ia
+    // com `idDest` FIXO em '1' (interna). A SEFAZ compara idDest com a UF do
+    // destinatário; a nota seria rejeitada depois de já ter consumido número.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).not.toMatch(/'idDest'\s*=>\s*'1'/);
+    expect(src).toMatch(/'idDest'\s*=>\s*\$idDest/);
+    expect(src).toMatch(/private function idDestino\(\): string/);
+    // A UF de destino vem do endereço de entrega, não de constante.
+    expect(src).toMatch(/private function ufDestino\(\): string[\s\S]{0,300}\$this->extras\['entrega'\]/);
+  });
+
+  it("CFOP troca o primeiro dígito 5↔6 conforme o destino", () => {
+    // Default `5102` fixo fazia toda venda interestadual sair com CFOP de
+    // operação interna. O código da operação (102) é do cadastro; só o dígito
+    // que diz "dentro/fora do estado" muda.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/'CFOP'\s*=>\s*\$this->cfopParaDestino\(/);
+    expect(src).toMatch(/private function cfopParaDestino\(string \$cfop\): string/);
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.
