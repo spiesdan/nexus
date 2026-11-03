@@ -231,11 +231,17 @@ export async function carregarContextoSped(orgId: string): Promise<ContextoSped 
     senha = await decryptWebhookSecret(admin, cfg.certificado_senha_encrypted);
   }
   const { certificado_senha_encrypted: _, ...emitente } = cfg;
-  const nomes = org as unknown as { legal_name: string | null; display_name: string | null } | null;
+  // `organizations.display_name` é outro conceito (nome da instalação/tenant) e
+  // tem cadeia própria; fica fora da regra de rótulo de contato por isso.
+  const organizacao = org as unknown as {
+    legal_name: string | null;
+    display_name: string | null;
+  } | null;
   return {
     emitente: {
       ...(emitente as unknown as EmitenteSped),
-      razao_social: nomes?.legal_name?.trim() || nomes?.display_name?.trim() || null,
+      razao_social:
+        organizacao?.legal_name?.trim() || organizacao?.display_name?.trim() || null,
     },
     senhaCertificado: senha,
     orgId,
