@@ -69,10 +69,28 @@ image_desatualizada() {
   [ "$local_d" != "$remote_d" ]
 }
 
+# O PARQUE, e não só a imagem do APP.
+#
+# `image_desatualizada` compara o digest da imagem do app com o registro: basta
+# ela estar baixada para responder "em dia". Numa atualização que morreu no meio
+# do pull (disco cheio, rede), o `.env` já aponta para a versão nova, a imagem
+# do app já veio — e worker/mercos/ocr continuam na antiga. Medido em
+# 03/11/2026: o script disse "Você já está na versão mais recente (v1.38.4)"
+# com os seis contêineres rodando 1.38.3. A saída era `--force`, que ninguém
+# adivinha; a comparação abaixo fecha isso sozinha.
+parque_desatualizado() {
+  local esperada rodando
+  rodando="$(docker ps --format '{{.Image}}' 2>/dev/null | sort -u)"
+  for esperada in $(dc config --images 2>/dev/null | grep "^${IMG_NS}/" | sort -u); do
+    printf '%s\n' "$rodando" | grep -qx -- "$esperada" || return 0
+  done
+  return 1
+}
+
 MESMA_TAG=""
 [ "$CURRENT_TAG" = "$TARGET_TAG" ] && MESMA_TAG=1
 
-if [ -n "$MESMA_TAG" ] && [ -z "$FORCE" ] && ! image_desatualizada; then
+if [ -n "$MESMA_TAG" ] && [ -z "$FORCE" ] && ! image_desatualizada && ! parque_desatualizado; then
   c_grn "✓ Você já está na versão mais recente ($TARGET_TAG). Nada a atualizar."
   exit 0
 fi
@@ -390,7 +408,27 @@ else
   exit 1
 fi
 
-# ── 7. Automações (cron do drain de eventos; o da tela já subiu no bloco 0) ──
+# ── 7. Espaço em disco: cada release deixa seis imagens novas ────────────────
+# Sem esta limpeza o pull da release seguinte morre com "no space left on
+# device". Medido em 03/11/2026: 96% do disco e 56 GB em imagens antigas — o
+# deploy parou no meio, com o .env em 1.38.4 e o parque em 1.38.3. Só saem as
+# imagens que NENHUM contêiner em execução usa; a versão no ar fica (e a
+# anterior continua no registro, para `--force` voltar quando alguém pedir).
+limpar_imagens_antigas() {
+  local usadas id repo
+  usadas="$(docker ps -q 2>/dev/null | xargs -r docker inspect -f '{{.Image}}' 2>/dev/null | sort -u)"
+  docker images --format '{{.ID}} {{.Repository}}:{{.Tag}}' 2>/dev/null \
+    | grep "^.*${IMG_NS}/" \
+    | while read -r id repo; do
+        printf '%s\n' "$usadas" | grep -qx -- "$id" && continue
+        docker rmi "$id" >/dev/null 2>&1 || true
+      done || true
+  docker builder prune -f >/dev/null 2>&1 || true
+}
+limpar_imagens_antigas
+c_grn "✓ imagens antigas removidas (o disco não enche na próxima atualização)"
+
+# ── 8. Automações (cron do drain de eventos; o da tela já subiu no bloco 0) ──
 step "Conferindo as automações"
 ensure_encryption_key .env
 setup_event_log_drain_cron
