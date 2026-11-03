@@ -76,7 +76,7 @@ function captura(page: Page, nome: string) {
 test("o retorno marcado pelo agente aparece no Radar e na linha do tempo", async ({ page }) => {
   await login(page, creds.users.manager!.email);
 
-  await page.goto("/app/radar");
+  await page.goto("/app/radar/risco");
   await expect(page.getByRole("heading", { name: "Radar de risco" })).toBeVisible();
 
   const linha = page.locator('[data-testid="radar-item"]', { hasText: creds.retorno.lead_title });

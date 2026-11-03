@@ -13,19 +13,21 @@ test.setTimeout(300_000);
  * - **pedido**: semeado como `aprovado` — é o gatilho da fila "Aguardando
  *   embarque" de `/app/expedicao` (o POST da carga é quem avança o pedido
  *   para `expedido`);
- * - **carga**: formulário "Nova carga" da lista (placa/veículo/motorista +
- *   checkbox do pedido) → redirect para a ficha;
+ * - **carga**: botão "Nova carga" da lista abre a SUBTELA
+ *   `/app/expedicao/nova` (placa/veículo/motorista + checkbox do pedido) →
+ *   redirect para a ficha;
  * - **romaneio**: no produto é um PDF (`/api/v1/shipments/[id]/romaneio`),
  *   não uma página — o passo é provado pelo link "Romaneio e fechamento
  *   (PDF)" na ficha;
- * - **rota**: a ficha tem a seção "Mapa da rota" + "Ordem de entrega", e o
- *   passo operacional é "Sair para rota" (bloqueado até TODOS os pedidos
- *   separados — a régua "Faltam separar N pedidos" fica na tela);
+ * - **rota**: a ficha tem a subtela "/rota" ("Mapa da rota" + "Ordem de
+ *   entrega"), e o passo operacional é "Sair para rota" (bloqueado até TODOS
+ *   os pedidos separados — a régua "Faltam separar N pedidos" fica nas
+ *   paradas);
  * - **entrega**: botão "Entregue" por parada → card "Paradas concluídas"
  *   sobe para 1/1 → "Concluir carga" destrava → status "Concluída".
  *
- * "Romaneio" como página e "rota" como subrota não existem no produto — a
- * ficha/áudio do §86 é atendida pelo PDF e pela seção, respectivamente.
+ * "Romaneio" como página não existe no produto (§86 atendido pelo PDF); rota,
+ * fechamento e motorista SÃO subtelas da carga.
  */
 test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluído", async ({ page }) => {
   const carimbo = Date.now();
@@ -36,15 +38,21 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   const pedido = await semearPedido(page, cliente, { produtoId });
   const numero = rotuloDoPedido(pedido.numero);
 
-  // 1. Fila de embarque: o pedido aprovado aparece em "Aguardando embarque".
+  // 1. A lista mostra a situação em números — o pedido em si vive na subtela.
   await page.goto("/app/expedicao");
   await expect(page.getByRole("heading", { level: 1, name: /^expedição$/i })).toBeVisible({
     timeout: 20_000,
   });
   await expect(page.getByText("Aguardando embarque", { exact: true })).toBeVisible();
-  await expect(page.getByText(numero).first()).toBeVisible();
 
-  // 2. Carga nova — placa no formato do produto (ABC1D23) e o pedido marcado.
+  // 2. Carga nova — o botão abre a subtela; a fila da lista não monta carga.
+  await page.getByRole("link", { name: "Nova carga" }).click();
+  await page.waitForURL(/\/app\/expedicao\/nova$/, { timeout: 20_000 });
+  await expect(page.getByTestId(`carga-pedido-${pedido.numero}`)).toBeVisible({
+    timeout: 20_000,
+  });
+
+  // Placa no formato do produto (ABC1D23) e o pedido marcado.
   await page.locator("#placa").fill("ABC1D23");
   await page.locator("#veiculo").fill("HR");
   await page.locator("#motorista").fill(`Motorista ${carimbo}`);

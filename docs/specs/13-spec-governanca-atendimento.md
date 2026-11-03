@@ -339,11 +339,19 @@ a migration `20260716120000_0030_config_rls_role_policies.sql` aplica
   `postgres_changes` de `conversations` (G4-01/02, RLS visibility-aware) entrega
   o change ao novo dono, que vê a conversa surgir em "Minhas" com o unread badge.
   Não construímos um sistema de notificação novo (fora de escopo).
-- **Fila com posição/espera** (G5-03): a visão Fila (`assigned_to=unassigned`)
-  ordena por `last_inbound_at` ASC (quem espera há mais tempo primeiro); posição =
-  índice na lista ordenada; "aguardando há X" derivado de `last_inbound_at`. A
-  contagem da fila casa com `counts.unassigned` (mesmo predicado: sem dono +
-  status `open`).
+- **Fila com espera** (G5-03): a visão Fila (`assigned_to=unassigned`) ordena pela
+  última mensagem, como todas as abas do inbox, e mostra "aguardando há X" derivado
+  de `last_inbound_at`. A contagem da fila casa com `counts.unassigned` (mesmo
+  predicado: sem dono + status `open`).
+
+  A **posição numerada** ("1º, 2º…") saiu em 2026-10-28, e a razão é a mesma que
+  unificou a ordenação: enquanto a lista ordenava por tempo de espera, o índice da
+  lista era a posição, e o número dizia a verdade. Com a lista ordenando por
+  `last_message_at` — a mesma hora que a linha imprime —, o "1º" passaria a apontar
+  para a conversa mais RECENTE, ou seja, o oposto do que a palavra promete; o
+  atendente leria prioridade onde não há. Quem espera há mais tempo continua
+  visível e medível: o rótulo de espera na linha e o `queue_position` que a tool
+  MCP devolve (1 = maior espera), calculado por `lib/routing/queue.ts`.
 
 > Origem das decisões deste documento (§3.5 defaults, §4 matriz, §5 roteamento):
 > decisões do dono, 2026-07-16, inbox INB-01/INB-02 (`loop/inbox.items.md`).
@@ -526,7 +534,7 @@ de governança implementado lá além das próprias specs — nada a anotar.
 | Claim UI §9.1/§9.3: botão "Eu cuido" + tratamento de 409 | implementado | botão "Assumir" em `components/inbox/ConversationHeader.tsx:55-68` (render se `isOpen`, `:36`); hook `hooks/inbox/useClaimConversation.ts:15-29` (409 → `showApiError` + `invalidateQueries` `:21-24`) | — (sem o Dialog de confirmação da §9.1 — claim é 1 clique; desvio de UX, não de mecânica) |
 | Release (soltar conversa — par do claim, base do `reason=release` da spec 13 §3) | implementado | `app/api/v1/conversations/[id]/release/route.ts:47-53` (UPDATE limpa assignee, filtro `assigned_to_user_id = caller`), `:61` (409 se não é o dono); botão "Liberar" `components/inbox/ConversationHeader.tsx:70-78` | — |
 | `<ReassignDialog>` (transferir para outro atendente — §3 estrutura de pastas, §14) | ausente | nenhum componente/endpoint de reassign: `components/kanban/`+`components/inbox/` não têm o arquivo (`ls components/inbox components/kanban`); único caminho de troca de dono é claim com `expected_assignee` (`claim/route.ts:69-76`), que é takeover pelo próprio caller, não atribuição a terceiro | **G3-01** (desc.: "habilita o ReassignDialog de verdade") |
-| `<UnassignedQueueAlert>` §8.3 (alerta de contagem "N conversas sem responsável") | parcial | componente de alerta não existe; o que há: aba "Não atribuídos" no inbox `components/inbox/InboxFilters.tsx:17,92-94` mapeada para filtro `assigned_to: "unassigned", status: "open"` em `components/inbox/InboxLayout.tsx:22-23`; índice parcial da fila `supabase/baseline.sql:2380` (`idx_conversations_open_unassigned`) | **G5-03** (fila visível com posição + notificação); **G4-02** (visões minhas/fila/todas) |
+| `<UnassignedQueueAlert>` §8.3 (alerta de contagem "N conversas sem responsável") | parcial | componente de alerta não existe; o que há: aba "Não atribuídos" no inbox `components/inbox/InboxFilters.tsx:17,92-94` mapeada para filtro `assigned_to: "unassigned", status: "open"` em `components/inbox/InboxLayout.tsx:22-23`; índice parcial da fila `supabase/baseline.sql:2380` (`idx_conversations_open_unassigned`) | **G5-03** (fila visível com espera + notificação); **G4-02** (visões minhas/fila/todas) |
 | Round-robin de não-atribuídas (AT-03, §8.3 "worker server-side") | parcial | round-robin existe SÓ no caminho do handoff MCP: `lib/mcp/tools/handoff.ts:37` (`pickRoundRobinAssignee`), invocado em `:106`; não há worker de roteamento geral consumindo `event_log` (handlers registrados: `lib/event-log/register-handlers.ts:20-25` — nenhum de routing) | **G5-02** (desc.: "AT-03 de verdade") |
 | `<AttendantStatusToggle>` §8.1 (online/busy/offline + pinned) | ausente | nenhum componente/hook de presença de atendente em `components/`/`hooks/` (`grep -r "AttendantStatusToggle\|useAgentStatus\|useHeartbeat"` → 0); sem tabela de disponibilidade no schema (`grep -c attendant_availability supabase/baseline.sql` → 0) | **G5-01** (desc.: "persiste o AttendantStatusToggle da spec 04 §8"); painel em **G5-04** |
 | Heartbeat 60s + auto-offline 15min §8.2 (AT-08) + worker server-side 90s | ausente | mesma evidência da linha anterior — não há `hooks/presence/`, endpoint de heartbeat nem cron (`app/api/v1/cron/` tem só agent-dispatcher, lgpd-sla-watcher, kb-conversations-batch, storage-redaction) | **G5-01** (schema/API de disponibilidade) |

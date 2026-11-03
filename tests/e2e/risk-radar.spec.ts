@@ -48,8 +48,12 @@ async function login(page: Page, email: string): Promise<void> {
 }
 
 async function gotoRadar(page: Page): Promise<void> {
+  // Entra pelo menu (a porta real), e o risco é uma subtela com endereço
+  // próprio — o clique na navegação da seção é o que a pessoa faz.
   await page.getByRole("link", { name: "Radar" }).click();
-  await page.waitForURL(/\/app\/radar/);
+  await page.waitForURL(/\/app\/radar(\/|$)/);
+  await page.getByRole("link", { name: "Risco de demandas" }).click();
+  await page.waitForURL(/\/app\/radar\/risco/);
   await expect(page.getByRole("heading", { name: "Radar de risco" })).toBeVisible();
 }
 

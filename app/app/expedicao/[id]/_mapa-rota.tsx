@@ -63,6 +63,7 @@ export function MapaRota({
   pinoPendente,
   aoClicarMapa,
   aoAcaoParada,
+  sobreposicao,
 }: {
   paradas: PontoParadaMapa[];
   /** GeoJSON [lng,lat] da rota planejada. */
@@ -77,6 +78,14 @@ export function MapaRota({
   pinoPendente: { lat: number; lng: number } | null;
   aoClicarMapa: (lat: number, lng: number) => void;
   aoAcaoParada: (chave: string, acao: "cheguei" | "entregue") => void;
+  // Conteúdo flutuante sobre o mapa (distância, tempo, legenda). Fica DENTRO
+  // do contêiner do mapa para não escorregar para cima da legenda abaixo dele;
+  // `pointer-events-none` no invólucro garante que o mapa continue clicável.
+  // Em `//` e não em JSDoc de propósito: o leitor de stacking context
+  // (tests/unit/leaflet-isolado-em-contexto-de-stack.test.ts) remove comentários
+  // por regex e um bloco `/** ... */` aqui fazia a remoção engolir o
+  // `ref={refCaixa}` mais abaixo, reprovando o teste sem defeito nenhum.
+  sobreposicao?: React.ReactNode;
 }) {
   const t = useT();
   const refCaixa = React.useRef<HTMLDivElement>(null);
@@ -86,7 +95,6 @@ export function MapaRota({
   // despacham pelo ref, que a atribuição abaixo liga na função real.
   const refRedesenhar = React.useRef<(m: MapaLeaflet) => void>(() => undefined);
   const refProps = React.useRef({ paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada });
-  const [semMapa, setSemMapa] = React.useState<string[]>([]);
 
   // Props frescas para os callbacks do Leaflet (mapa vive fora do React).
   // Em efeito, não no render: escrever ref no render quebra a atualização.
@@ -151,7 +159,6 @@ export function MapaRota({
         return camada;
       };
       const comCoord = ps.filter((p) => p.lat != null && p.lng != null);
-      setSemMapa(ps.filter((p) => p.lat == null || p.lng == null).map((p) => p.cliente));
 
       if (geo.length > 1) {
         por(
@@ -311,25 +318,52 @@ export function MapaRota({
           `relative` está declarado porque `z-index` só vale em elemento
           POSICIONADO. O Leaflet já põe `position: relative` inline no container
           ao montar (medido), então `z-0` funcionaria sozinho — mas depender
-          disso é depender de detalhe de runtime de terceiro. */}
+          disso é depender de detalhe de runtime de terceiro.
 
-      <div
-        ref={refCaixa}
-        className="relative isolate z-0 overflow-hidden rounded-2xl border bg-muted"
-        style={{ height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }}
-      />
-      <p className="text-xs text-muted-foreground">
-        {modoMarcar
-          ? pinoPendente
-            ? t("Arraste o alfinete para ajustar e confirme abaixo.")
-            : t("Clique no mapa para soltar o alfinete.")
-          : geometria.length > 1
-            ? t("Rota pelas ruas (OSRM). Linha cinza tracejada = já percorrido.")
-            : t("Geometria da rua ainda não calculada — otimize a rota.")}
-      </p>
-      {semMapa.length > 0 && (
+          O aviso de "nenhuma parada no mapa" logo abaixo do contêiner existe
+          porque um retângulo cinza não diz se o mapa falhou, se os endereços
+          não têm coordenada ou se a carga está vazia. Ele é
+          `pointer-events-none`: o clique para soltar o alfinete continua indo
+          para o mapa. */}
+
+      <div className="relative">
+        <div
+          ref={refCaixa}
+          className="relative isolate z-0 overflow-hidden rounded-2xl border bg-muted"
+          style={{ height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }}
+        />
+        {paradas.every((p) => p.lat == null || p.lng == null) &&
+          !origem &&
+          !motorista &&
+          !pinoPendente && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6">
+              <div className="max-w-xs rounded-xl border border-border bg-background/95 px-4 py-3 text-center shadow-xs backdrop-blur">
+                <p className="text-sm font-medium text-text">{t("Nenhuma parada no mapa")}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {t("Geocodifique os endereços ou marque a posição no mapa para desenhar a rota.")}
+                </p>
+              </div>
+            </div>
+          )}
+        {sobreposicao ? (
+          // No celular a faixa fica no alto à direita: embaixo ela cobria a
+          // atribuição do OpenStreetMap, que o Leaflet ancora no canto
+          // inferior direito e não dá para mover. Do `lg` em diante há
+          // largura para ela voltar ao canto inferior esquerdo.
+          <div className="pointer-events-none absolute top-3 right-3 z-10 flex max-w-[75%] flex-col items-end gap-1.5 lg:inset-x-3 lg:top-auto lg:bottom-3 lg:max-w-none lg:flex-row lg:flex-wrap lg:items-end">
+            {sobreposicao}
+          </div>
+        ) : null}
+      </div>
+      {modoMarcar && (
+        // O mapa só fala do que é dele: o alfinete. O estado da rota (ruas,
+        // aproximada, sem cálculo) e as paradas sem localização vivem na
+        // legenda de quem chamou — antes eles apareciam aqui E lá embaixo,
+        // duas vezes a mesma frase.
         <p className="text-xs text-muted-foreground">
-          {t("Sem localização")}: {semMapa.join(", ")}
+          {pinoPendente
+            ? t("Arraste o alfinete para ajustar e confirme abaixo.")
+            : t("Clique no mapa para soltar o alfinete.")}
         </p>
       )}
     </div>

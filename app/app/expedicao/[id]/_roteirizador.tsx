@@ -8,6 +8,7 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +16,8 @@ import { apiClient } from "@/lib/api/client";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { formatarDistancia, formatarDuracao, haversineM } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/browser";
+import { CaretDown, CaretUp, MapPin } from "@/lib/ui/icons";
+import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 
@@ -196,6 +199,7 @@ export function Roteirizador({
     .filter((p): p is ParadaRotaApi => !!p);
   const comCoord = paradasOrdenadas.filter((p) => p.latitude != null && p.longitude != null);
   const semCoord = paradasOrdenadas.filter((p) => p.latitude == null || p.longitude == null);
+  const totalClientes = new Set(rota.paradas.map((p) => p.contact_id ?? p.chave)).size;
   // Planejador vale montando E em rota (reotimizar no meio do caminho é
   // operação normal — o motorista confirma a nova sequência no app).
   const editavel = podeOperar && (rota.carga.status === "montando" || rota.carga.status === "em_rota");
@@ -452,228 +456,421 @@ export function Roteirizador({
 
   return (
     <div className="space-y-4">
-      {/* RESUMO */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{t("Entregas")}</p>
-          <p className="text-lg font-bold">
-            {paradasOrdenadas.length} · {rota.paradas.length > 0 ? new Set(rota.paradas.map((p) => p.contact_id ?? p.chave)).size : 0} {t("clientes")}
+      {/* ── Cabeçalho da seção ───────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Rota")}
           </p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{t("Distância")}</p>
-          <p className="text-lg font-bold">{distanciaM != null ? formatarDistancia(distanciaM) : "—"}</p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{t("Tempo estimado")}</p>
-          <p className="text-lg font-bold">{duracaoTotalS != null ? formatarDuracao(duracaoTotalS) : "—"}</p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{t("Valor")}</p>
-          <p className="text-lg font-bold">{comoMoeda(valorTotal, "BRL")}</p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{t("Cálculo")}</p>
-          <p className="text-lg font-bold">
-            {provedorRota ? (provedorRota.ruas ? t("Pelas ruas") : t("Aproximado")) : "—"}
+          <h2 className="text-base font-medium text-text">{t("Mapa e ordem de entrega")}</h2>
+          <p className="text-xs text-muted-foreground">
+            {t("A ordem da lista é a ordem da rua. Use as setas para ajustar.")}
           </p>
-          {modoEfetivo && (
-            <p className="text-xs text-muted-foreground">
-              {modoEfetivo === "distancia" ? t("por distância da base") : t("caminho mais curto")}
-            </p>
-          )}
-        </Card>
-      </div>
-      {realizado && (
-        <Card className="hover-raise p-3 text-sm">
-          <span className="text-muted-foreground">{t("Realizado")}: </span>
-          <strong>
-            {realizado.km} · {realizado.tempo}
-          </strong>
-          {distanciaM != null && (
-            <span className="text-muted-foreground"> {t("vs planejado")} {formatarDistancia(distanciaM)}</span>
-          )}
-        </Card>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-[55%_45%]">
-        {/* MAPA */}
-        <div>
-          <MapaRota
-            paradas={pontosMapa}
-            geometria={geometria}
-            origem={origemMapa}
-            motorista={motorista}
-            rastro={rastro}
-            modoMarcar={marcarPara !== null}
-            pinoPendente={pinoPendente}
-            aoClicarMapa={(lat, lng) => {
-              if (marcarPara) setPinoPendente({ lat, lng });
-            }}
-            aoAcaoParada={(chave, acao) => void acaoParada(chave, acao)}
-          />
-          {marcarPara && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-warning/40 bg-warning-bg p-2 text-sm text-warning-fg">
-              <span>
-                {pinoPendente ? t("Alfinete no lugar? Confirme para valer.") : t("Clique no mapa para soltar o alfinete.")}
-              </span>
-              <span className="ml-auto flex gap-2">
-                <Button size="sm" onClick={() => void confirmarPino()} disabled={!pinoPendente || trabalhando !== null}>
-                  {t("Confirmar posição")}
-                </Button>
-                <Button size="sm" variant="outline" onClick={cancelarPino}>
-                  {t("Cancelar")}
-                </Button>
-              </span>
-            </div>
-          )}
         </div>
+        <Badge variant={provedorRota?.ruas ? "success" : provedorRota ? "warning" : "neutral"}>
+          {provedorRota
+            ? provedorRota.ruas
+              ? t("Pelas ruas")
+              : t("Ordem aproximada")
+            : t("Sem rota calculada")}
+        </Badge>
+      </div>
 
-        {/* PAINEL */}
-        <div className="min-w-0 space-y-3">
-          {editavel && (
-            <Card className="hover-raise space-y-2 p-3">
-              <p className="text-sm font-semibold">{t("Origem da rota")}</p>
-              <div className="flex gap-2">
-                <Input
-                  value={origemTexto}
-                  onChange={(e) => setOrigemTexto(e.target.value)}
-                  placeholder={t("Ex.: Rua Caetano Costa, 425, Canoinhas")}
+      {/* ── O mapa é o herói da seção ───────────────────────────────────────
+          Os números que importam ficam sobre ele, para não haver uma faixa de
+          cartões entre a pessoa e o desenho da rota. */}
+      <div className="min-w-0">
+        <MapaRota
+          altura="min(46vh, 430px)"
+          paradas={pontosMapa}
+          geometria={geometria}
+          origem={origemMapa}
+          motorista={motorista}
+          rastro={rastro}
+          modoMarcar={marcarPara !== null}
+          pinoPendente={pinoPendente}
+          aoClicarMapa={(lat, lng) => {
+            if (marcarPara) setPinoPendente({ lat, lng });
+          }}
+          aoAcaoParada={(chave, acao) => void acaoParada(chave, acao)}
+          sobreposicao={
+            <>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/95 px-2 py-1 text-[11px] font-medium text-text shadow-xs backdrop-blur">
+                <strong className="tabular-nums">{paradasOrdenadas.length}</strong>
+                {paradasOrdenadas.length === 1 ? t("entrega") : t("entregas")}
+                <span className="text-muted-foreground">
+                  · {totalClientes} {totalClientes === 1 ? t("cliente") : t("clientes")}
+                </span>
+              </span>
+              {/* Sem rota calculada, "Distância —" e "Tempo —" ocupam o mapa
+                  para não dizer nada. O selo do cabeçalho já informa que a rota
+                  não foi calculada; aqui só entra o que tem número. */}
+              {distanciaM != null && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/95 px-2 py-1 text-[11px] font-medium text-text shadow-xs backdrop-blur">
+                  <span className="text-muted-foreground">{t("Distância")}</span>
+                  <strong className="tabular-nums">{formatarDistancia(distanciaM)}</strong>
+                </span>
+              )}
+              {duracaoTotalS != null && (
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/95 px-2 py-1 text-[11px] font-medium text-text shadow-xs backdrop-blur">
+                  <span className="text-muted-foreground">{t("Tempo")}</span>
+                  <strong className="tabular-nums">{formatarDuracao(duracaoTotalS)}</strong>
+                </span>
+              )}
+              <span className="hidden items-center gap-1.5 rounded-lg border border-border/60 bg-background/95 px-2 py-1 text-[11px] font-medium text-text shadow-xs backdrop-blur sm:inline-flex">
+                <span className="text-muted-foreground">{t("Mercadorias")}</span>
+                <strong className="tabular-nums">{comoMoeda(valorTotal, "BRL")}</strong>
+              </span>
+            </>
+          }
+        />
+
+        {marcarPara && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-warning/40 bg-warning-bg p-2.5 text-sm text-warning-fg">
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+            <span>
+              {pinoPendente
+                ? t("Alfinete no lugar? Confirme para valer.")
+                : t("Clique no mapa para soltar o alfinete.")}
+            </span>
+            <span className="ml-auto flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => void confirmarPino()}
+                disabled={!pinoPendente || trabalhando !== null}
+              >
+                {t("Confirmar posição")}
+              </Button>
+              <Button size="sm" variant="outline" onClick={cancelarPino}>
+                {t("Cancelar")}
+              </Button>
+            </span>
+          </div>
+        )}
+
+        {/* Legenda do que o mapa está desenhando + planejado × realizado.
+            Sem rota calculada a linha não aparece: o selo do cabeçalho já diz
+            "Sem rota calculada" e dizia a mesma coisa duas vezes. */}
+        {(provedorRota || realizado) && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-0.5 text-[11px] text-muted-foreground">
+            {provedorRota && (
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-1.5 w-1.5 shrink-0 rounded-full",
+                    provedorRota.ruas ? "bg-success" : "bg-warning",
+                  )}
                 />
-                <Button size="sm" variant="outline" onClick={usarMinhaPosicao}>
-                  {t("Minha posição")}
-                </Button>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <label className="flex items-center gap-1">
-                  <input type="checkbox" checked={retornar} onChange={(e) => setRetornar(e.target.checked)} />
-                  {t("Retornar à origem")}
-                </label>
-                <label className="flex items-center gap-1">
-                  {t("Parada")}
-                  <input
-                    type="number"
-                    min={0}
-                    max={120}
-                    value={tempoParada}
-                    onChange={(e) => setTempoParada(Number(e.target.value))}
-                    className="w-14 rounded-lg border bg-background px-1 py-0.5 text-sm"
-                  />
-                  {t("min")}
-                </label>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => void geocodificarTudo()} disabled={trabalhando !== null}>
-                  {t("Geocodificar")}
-                </Button>
-                <Button size="sm" onClick={() => void otimizar("distancia")} disabled={trabalhando !== null || comCoord.length === 0}>
-                  {trabalhando === "otimizar" ? t("Calculando…") : t("Ordenar por distância")}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => void otimizar("tsp")} disabled={trabalhando !== null || comCoord.length === 0}>
-                  {t("Otimizar por ruas")}
-                </Button>
-                {(proposta || ordemMudou || configMudou) && (
-                  <Button size="sm" variant="outline" onClick={() => void salvarOrdem()} disabled={trabalhando !== null}>
-                    {t("Salvar ordem")}
-                  </Button>
+                {provedorRota.ruas
+                  ? t("Pelas ruas (OSRM)")
+                  : t("Aproximado — sem serviço de ruas")}
+                {modoEfetivo
+                  ? ` · ${modoEfetivo === "distancia" ? t("por distância da base") : t("caminho mais curto")}`
+                  : ""}
+              </span>
+            )}
+            {realizado && (
+              <span className={cn(provedorRota && "sm:ml-auto")}>
+                {t("Realizado")}{" "}
+                <strong className="font-medium text-text tabular-nums">
+                  {realizado.km} · {realizado.tempo}
+                </strong>
+                {distanciaM != null && (
+                  <>
+                    {" · "}
+                    {t("vs planejado")} {formatarDistancia(distanciaM)}
+                  </>
                 )}
-              </div>
-              {comCoord.length === 0 && (
-                <p className="text-xs text-orange-600">
-                  {t("Otimizar desativado: nenhuma parada localizada. Geocodifique ou marque no mapa.")}
-                </p>
-              )}
-              {progressoGeo && <p className="text-xs text-muted-foreground">{progressoGeo}</p>}
-              {proposta && !proposta.ruas && (
-                <p className="text-xs text-orange-600">
-                  {t("Sem ruas no momento: ordem aproximada. Tente de novo mais tarde.")}
-                </p>
-              )}
-            </Card>
-          )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
-          <div>
-            <p className="mb-1 text-sm font-semibold">
-              {t("Paradas")} ({paradasOrdenadas.length})
-            </p>
-            <ul className="space-y-1.5">
-              {paradasOrdenadas.map((p, i) => (
-                <li key={p.chave} className="rounded-lg border p-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{p.cliente}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {p.pedidos.map((x) => numeroDoPedido(x.numero)).join(" · ")} — {comoMoeda(p.total_cents, "BRL")}
-                      </p>
-                    </div>
-                    {editavel && (
-                      <span className="flex shrink-0 gap-0.5">
-                        <Button size="sm" variant="ghost" onClick={() => mover(p.chave, -1)} disabled={i === 0} aria-label={t("Subir")}>
-                          ↑
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => mover(p.chave, 1)}
-                          disabled={i === paradasOrdenadas.length - 1}
-                          aria-label={t("Descer")}
-                        >
-                          ↓
-                        </Button>
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                    <span
-                      className={
-                        p.geo_status === "ok"
-                          ? "text-green-700"
-                          : p.geo_status === "pendente"
-                            ? "text-muted-foreground"
-                            : "text-orange-600"
-                      }
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+        {/* ── O planejamento, em três passos ────────────────────────────── */}
+        {editavel && (
+          <Card className="overflow-hidden p-0">
+            <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  {t("Planejamento")}
+                </p>
+                <p className="text-sm font-medium text-text">{t("Planejar rota")}</p>
+              </div>
+              <Badge variant={proposta ? "info" : "neutral"}>
+                {proposta ? t("Não salva") : t("Salva")}
+              </Badge>
+            </header>
+
+            <ol className="divide-y divide-border">
+              {/* 1 — de onde a rota sai */}
+              <li className="flex gap-3 p-3.5">
+                <Passo numero={1} />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <label
+                    htmlFor="rota-origem"
+                    className="block text-xs font-medium text-text"
+                  >
+                    {t("Origem da rota")}
+                  </label>
+                  <div className="flex flex-col gap-1.5">
+                    <Input
+                      id="rota-origem"
+                      className="h-9"
+                      value={origemTexto}
+                      onChange={(e) => setOrigemTexto(e.target.value)}
+                      placeholder={t("Ex.: Rua Caetano Costa, 425, Canoinhas")}
+                    />
+                    {/* Empilhado, não lado a lado: na coluna de 340px o botão
+                        comia o campo e o endereço aparecia cortado em
+                        "Ex.: Rua Caetano Co…". */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={usarMinhaPosicao}
                     >
-                      ⚑ {ROTULO_GEO[p.geo_status] ?? p.geo_status}
-                      {p.geo_status === "ok" && p.geo_fonte === "nominatim:rua" ? ` ${t("(rua aproximada)")}` : ""}
+                      <MapPin className="h-3.5 w-3.5" aria-hidden />
+                      {t("Minha posição")}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-text-subtle">
+                    {t("Vazio começa na primeira entrega.")}
+                  </p>
+                </div>
+              </li>
+
+              {/* 2 — o cálculo */}
+              <li className="flex gap-3 p-3.5">
+                <Passo numero={2} />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-xs font-medium text-text">{t("Calcular a ordem")}</p>
+                  <div className="grid gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => void otimizar("distancia")}
+                      disabled={trabalhando !== null || comCoord.length === 0}
+                    >
+                      {trabalhando === "otimizar" ? t("Calculando…") : t("Ordenar por distância")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void otimizar("tsp")}
+                      disabled={trabalhando !== null || comCoord.length === 0}
+                    >
+                      {t("Otimizar por ruas")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => void geocodificarTudo()}
+                      disabled={trabalhando !== null}
+                    >
+                      <MapPin className="h-3.5 w-3.5" aria-hidden />
+                      {t("Geocodificar")}
+                    </Button>
+                  </div>
+                  {comCoord.length === 0 && (
+                    <p className="text-[11px] text-warning-fg">
+                      {t("Otimizar desativado: nenhuma parada localizada. Geocodifique ou marque no mapa.")}
+                    </p>
+                  )}
+                  {progressoGeo && (
+                    <p className="text-[11px] text-muted-foreground">{progressoGeo}</p>
+                  )}
+                  {proposta && !proposta.ruas && (
+                    <p className="text-[11px] text-warning-fg">
+                      {t("Sem ruas no momento: ordem aproximada. Tente de novo mais tarde.")}
+                    </p>
+                  )}
+                </div>
+              </li>
+
+              {/* 3 — ajustes e gravação */}
+              <li className="flex gap-3 p-3.5">
+                <Passo numero={3} />
+                <div className="min-w-0 flex-1 space-y-2.5">
+                  <p className="text-xs font-medium text-text">{t("Ajustes e gravação")}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-accent"
+                        checked={retornar}
+                        onChange={(e) => setRetornar(e.target.checked)}
+                      />
+                      {t("Retornar à origem")}
+                    </label>
+                    <label className="flex items-center gap-1.5">
+                      {t("Parada")}
+                      <input
+                        type="number"
+                        min={0}
+                        max={120}
+                        value={tempoParada}
+                        onChange={(e) => setTempoParada(Number(e.target.value))}
+                        className="h-7 w-14 rounded-md border border-border bg-surface px-1.5 text-center text-xs text-text tabular-nums"
+                      />
+                      {t("min")}
+                    </label>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => void salvarOrdem()}
+                    disabled={trabalhando !== null || !(proposta || ordemMudou || configMudou)}
+                  >
+                    {trabalhando === "salvar" ? t("Salvando…") : t("Salvar ordem")}
+                  </Button>
+                  <p className="text-[11px] text-text-subtle">
+                    {proposta || ordemMudou || configMudou
+                      ? t("A ordem e os ajustes serão gravados na carga.")
+                      : t("Nada mudou desde a última gravação.")}
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </Card>
+        )}
+
+        {/* ── A ordem de entrega ────────────────────────────────────────── */}
+        <Card className="min-w-0 overflow-hidden p-0">
+          <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-border px-3.5 py-2.5">
+            <p className="text-sm font-medium text-text">
+              {t("Ordem de entrega")}{" "}
+              <span className="font-normal text-muted-foreground tabular-nums">
+                ({paradasOrdenadas.length})
+              </span>
+            </p>
+            <p className="text-[11px] text-text-subtle">{t("A ordem da lista é a ordem da rua.")}</p>
+          </header>
+
+          <ol className="divide-y divide-border">
+            {paradasOrdenadas.map((p, i) => (
+              <li key={p.chave} className="flex items-start gap-2.5 px-3.5 py-3">
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
+                    i === 0 ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground",
+                  )}
+                  aria-label={`${t("Parada")} ${i + 1}`}
+                >
+                  {i + 1}
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-text">
+                      {p.cliente}
+                    </p>
+                    <p className="shrink-0 text-xs font-medium text-text tabular-nums">
+                      {comoMoeda(p.total_cents, "BRL")}
+                    </p>
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground tabular-nums">
+                    {p.pedidos.map((x) => numeroDoPedido(x.numero)).join(" · ")}
+                  </p>
+
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1",
+                        p.geo_status === "ok"
+                          ? "text-success-fg"
+                          : p.geo_status === "pendente"
+                            ? "text-text-subtle"
+                            : "text-warning-fg",
+                      )}
+                    >
+                      <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                      {ROTULO_GEO[p.geo_status] ?? p.geo_status}
+                      {p.geo_status === "ok" && p.geo_fonte === "nominatim:rua"
+                        ? ` ${t("(rua aproximada)")}`
+                        : ""}
                     </span>
                     {podeOperar && p.contact_id && p.geo_status !== "ok" && (
                       <>
                         <button
                           type="button"
-                          className="underline underline-offset-2"
+                          className="text-muted-foreground underline underline-offset-2 hover:text-text"
                           onClick={() => void geocodificarTudo()}
                         >
                           {t("Tentar de novo")}
                         </button>
                         <button
                           type="button"
-                          className="underline underline-offset-2"
+                          className="text-muted-foreground underline underline-offset-2 hover:text-text"
                           onClick={() => alternarMarcar(p.contact_id as string)}
                         >
                           {marcarPara === p.contact_id ? t("Cancelar marcação") : t("Marcar no mapa")}
                         </button>
                         {p.contact_id && (
-                          <Link href={`/app/contacts/${p.contact_id}`} className="underline underline-offset-2">
+                          <Link
+                            href={`/app/contacts/${p.contact_id}`}
+                            className="text-muted-foreground underline underline-offset-2 hover:text-text"
+                          >
                             {t("Corrigir endereço")}
                           </Link>
                         )}
                       </>
                     )}
                   </div>
-                </li>
-              ))}
-            </ul>
-            {semCoord.length > 0 && (
-              <p className="mt-1 text-xs text-orange-600">
-                {t(`${semCoord.length} parada(s) fora do cálculo — sem localização.`)}
-              </p>
-            )}
-          </div>
-        </div>
+                </div>
+
+                {editavel && (
+                  <div className="flex shrink-0 flex-col items-center gap-0.5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => mover(p.chave, -1)}
+                      disabled={i === 0}
+                      aria-label={t("Subir")}
+                    >
+                      <CaretUp className="h-3.5 w-3.5" aria-hidden />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => mover(p.chave, 1)}
+                      disabled={i === paradasOrdenadas.length - 1}
+                      aria-label={t("Descer")}
+                    >
+                      <CaretDown className="h-3.5 w-3.5" aria-hidden />
+                    </Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+
+          {semCoord.length > 0 && (
+            <p className="border-t border-border bg-warning-bg px-3.5 py-2 text-xs text-warning-fg">
+              {semCoord.length}{" "}
+              {semCoord.length === 1
+                ? t("parada fora do cálculo — sem localização.")
+                : t("paradas fora do cálculo — sem localização.")}
+            </p>
+          )}
+        </Card>
       </div>
     </div>
   );
 }
+
+/** Círculo numerado do planejador — a etapa em que a pessoa está. */
+function Passo({ numero }: { numero: number }) {
+  return (
+    <span
+      aria-hidden
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground tabular-nums"
+    >
+      {numero}
+    </span>
+  );
+}
+

@@ -25,6 +25,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { FATIA_DE_IDS, porFatias } from "@/lib/db/por-fatias";
 import { logger } from "@/lib/logger";
 import { classificarProspect } from "@/lib/prospeccao/classificacao";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
@@ -135,13 +136,21 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   // Os MESMOS filtros nas duas queries (contagem exata + página) — a
   // contagem tem que responder pela mesma recorte que a lista.
-  const montar = (colunas: string, opts?: { count?: "exact"; head?: boolean }) => {
+  const montar = (
+    colunas: string,
+    opts?: { count?: "exact"; head?: boolean },
+    fatia?: string[],
+  ) => {
     let q = supabase
       .from("business_prospects")
       .select(colunas, opts)
       .eq("organization_id", authz.org.orgId)
       .eq("bloqueado", false);
-    if (buscaId) q = q.in("id", idsDaBusca);
+    // `busca_id` pode trazer até 2.000 vínculos — acima da fatia de 100 ele é
+    // lido em partes (ver `usaFatias` abaixo). Aqui entra a fatia ou, quando a
+    // lista cabe, a lista inteira.
+    if (fatia) q = q.in("id", fatia);
+    else if (buscaId) q = q.in("id", idsDaBusca);
     if (soId) q = q.eq("id", soId);
     if (idsSelecao.length > 0) q = q.in("id", idsSelecao);
     // ═══ CATEGORIA: o termo chega em PORTUGUÊS, o banco guarda em INGLÊS ═══
@@ -239,26 +248,13 @@ export async function GET(req: NextRequest): Promise<Response> {
     return q;
   };
 
-  const [contagem, listaRes] = await Promise.all([
-    montar(COLUNAS_DO_PROSPECT, { count: "exact", head: true }),
-    // Ordem estável ANTES do range: score desc com id como desempate — sem
-    // ela o Postgrest devolve páginas em ordem arbitrária e o offset repete
-    // ou pula linha (B3/FASE 15).
-    montar(COLUNAS_DO_PROSPECT)
-      .order("score", { ascending: false })
-      .order("id", { ascending: true })
-      .range(offset, offset + limite - 1),
-  ]);
-  if (contagem.error || listaRes.error) {
-    logger.error("[prospecting.prospects] falha ao listar prospects", {
-      requestId,
-      organization_id: authz.org.orgId,
-      erro: (contagem.error ?? listaRes.error)?.message ?? "sem erro capturado",
-    });
-    return fail("internal_error", "Erro ao listar prospects.", 500, { requestId });
-  }
-
-  const linhas = (listaRes.data ?? []) as unknown as {
+  // "Ver empresas" de uma busca com centenas de resultados não cabe numa URL:
+  // 500 UUIDs dão 18.499 bytes e o PostgREST responde `414 URI too long` — a
+  // aba mostrava "Erro ao listar prospects" com o banco são. Acima da fatia de
+  // 100, as linhas do recorte são lidas em partes e a página é montada aqui,
+  // com a MESMA ordem do banco (score desc, id asc).
+  const usaFatias = buscaId !== "" && idsDaBusca.length > FATIA_DE_IDS;
+  type LinhaDaLista = {
     id: string;
     contact_id: string | null;
     lead_id: string | null;
@@ -271,7 +267,50 @@ export async function GET(req: NextRequest): Promise<Response> {
     website: string | null;
     categoria_canonica: string | null;
     categoria_revisar: boolean | null;
-  }[];
+    score?: number | null;
+  };
+  let linhas: LinhaDaLista[] = [];
+  let total = 0;
+  if (usaFatias) {
+    const { linhas: todas, falhas } = await porFatias(idsDaBusca, async (fatia) => {
+      const { data, error } = await montar(COLUNAS_DO_PROSPECT, undefined, fatia);
+      return { linhas: (data ?? []) as never[], erro: error ?? undefined };
+    });
+    if (falhas > 0 && todas.length === 0) {
+      logger.error("[prospecting.prospects] falha ao listar prospects em fatias", {
+        requestId,
+        organization_id: authz.org.orgId,
+        falhas,
+      });
+      return fail("internal_error", "Erro ao listar prospects.", 500, { requestId });
+    }
+    const ordenadas = (todas as unknown as LinhaDaLista[]).sort(
+      (a, b) => (b.score ?? 0) - (a.score ?? 0) || a.id.localeCompare(b.id),
+    );
+    total = ordenadas.length;
+    linhas = ordenadas.slice(offset, offset + limite);
+  } else {
+    const [contagem, listaRes] = await Promise.all([
+      montar(COLUNAS_DO_PROSPECT, { count: "exact", head: true }),
+      // Ordem estável ANTES do range: score desc com id como desempate — sem
+      // ela o Postgrest devolve páginas em ordem arbitrária e o offset repete
+      // ou pula linha (B3/FASE 15).
+      montar(COLUNAS_DO_PROSPECT)
+        .order("score", { ascending: false })
+        .order("id", { ascending: true })
+        .range(offset, offset + limite - 1),
+    ]);
+    if (contagem.error || listaRes.error) {
+      logger.error("[prospecting.prospects] falha ao listar prospects", {
+        requestId,
+        organization_id: authz.org.orgId,
+        erro: (contagem.error ?? listaRes.error)?.message ?? "sem erro capturado",
+      });
+      return fail("internal_error", "Erro ao listar prospects.", 500, { requestId });
+    }
+    linhas = (listaRes.data ?? []) as unknown as LinhaDaLista[];
+    total = contagem.count ?? linhas.length;
+  }
 
   // --- Verdades do CRM em lote (§9), service role + organization_id explícito.
   const fones = [...new Set(linhas.map((l) => l.telefone).filter(Boolean))] as string[];
@@ -343,7 +382,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   const cliente = (l: (typeof linhas)[number], contatoId: string | null): boolean =>
     Boolean(l.contact_id) || contatoId !== null;
 
-  const total = contagem.count ?? linhas.length;
   return ok(
     linhas.map((l) => {
       const contatoId = contatoDaLinha(l);

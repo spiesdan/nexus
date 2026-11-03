@@ -72,7 +72,10 @@ export function Briefing({ necessarioDia }: { necessarioDia: number | null }) {
       text: `${parados} ${t("cliente(s) sem comprar há 60 dias ou mais.")}`,
       actionLabel: t("Recuperar"),
       onAction: () => {
-        window.location.href = "/app/radar#radar-recuperacao";
+        // Endereço direto: a recuperação é uma tela do Radar desde que a
+        // landing foi fatiada (o `#radar-recuperacao` antigo ainda é aceito
+        // pelo shell, mas quem gera o link já manda para o lugar certo).
+        window.location.href = "/app/radar/recuperacao";
       },
     });
   }

@@ -45,6 +45,7 @@ import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { jitterMs } from "@/lib/automation/throttle";
+import { porFatias } from "@/lib/db/por-fatias";
 import { enviarParaProspect } from "@/lib/prospeccao/envio";
 import {
   ESPACO_PADRAO_MS,
@@ -61,10 +62,8 @@ import {
   escolherSessaoDaCampanha,
   type SessaoDaCampanha,
 } from "@/lib/prospeccao/canal-da-campanha";
-import {
-  restricaoAtivaDaSessao,
-  textoDaRestricao,
-} from "@/lib/prospeccao/restricao-do-whatsapp";
+import { restricaoDeAlcanceDaSessao } from "@/lib/channels/restricao-de-alcance";
+import { textoDaRestricao } from "@/lib/prospeccao/restricao-do-whatsapp";
 import { categoriaCombinaComCampanha, categoriaDaCampanhaQueCombina, categoriaEfetiva } from "@/lib/prospeccao/categoria-efetiva";
 import type { TemplateDoEnvio } from "@/lib/prospeccao/envio";
 import type { TipoDaMensagem } from "@/lib/prospeccao/mensagem-da-campanha";
@@ -322,7 +321,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // é só `WORKING` não arquivada.
   const { data: sessoes, error: errSessao } = await admin
     .from("channel_sessions")
-    .select("id, provider, status, archived_at, daily_message_limit, quality_rating, waha_session_name")
+    .select("id, provider, status, archived_at, daily_message_limit, quality_rating")
     .eq("organization_id", orgId)
     .eq("status", "WORKING")
     .is("archived_at", null);
@@ -343,15 +342,33 @@ export async function POST(req: NextRequest): Promise<Response> {
     !sessao && bloqueadaPorQualidade((sessoes ?? []) as unknown as SessaoDaCampanha[], tipo);
 
   // ─── Prospects + contexto ────────────────────────────────────────────────
-  const { data: linhas, error: errProspects } = await admin
-    .from("business_prospects")
-    .select(
-      "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
-    )
-    .eq("organization_id", orgId)
-    .in("id", entrada.prospect_ids)
-    .limit(2000);
-  if (errProspects) return fail("internal_error", "Erro ao ler os prospects.", 500, { requestId });
+  // `prospect_ids` aceita até 2.000 (o teto do disparo em lote). Em fatias de
+  // 100: 500 UUIDs numa URL dão 18.499 bytes e o PostgREST responde
+  // `414 URI too long` — a tela via "Erro ao ler os prospects" com o banco são.
+  let erroProspects: unknown = null;
+  const { linhas, falhas: falhasProspects } = await porFatias(
+    entrada.prospect_ids,
+    async (fatia) => {
+      const r = await admin
+        .from("business_prospects")
+        .select(
+          "id, nome, telefone_normalizado, do_not_contact, bloqueado, whatsapp_potencial, status_comercial, contact_id, categoria, categorias, website, categoria_canonica, categoria_revisar, cidade",
+        )
+        .eq("organization_id", orgId)
+        .in("id", fatia)
+        .limit(2000);
+      if (r.error && !erroProspects) erroProspects = r.error;
+      return { linhas: (r.data ?? []) as never[], erro: r.error };
+    },
+  );
+  if (falhasProspects > 0) {
+    logger.error("[prospecting.disparar] falha ao ler os prospects", {
+      requestId,
+      organization_id: orgId,
+      erro: erroProspects,
+    });
+    return fail("internal_error", "Erro ao ler os prospects.", 500, { requestId });
+  }
 
   const brutos = (linhas ?? []) as Array<{
     id: string;
@@ -424,7 +441,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   // silêncio como o tick faz. O texto é o mesmo (`textoDaRestricao`), porque
   // duas redações para a mesma proibição divergiriam.
   if (sessao) {
-    const restricao = await restricaoAtivaDaSessao(sessao);
+    const restricao = await restricaoDeAlcanceDaSessao({
+      admin,
+      channelSessionId: sessao.id,
+    });
     if (restricao) {
       return fail(
         "whatsapp_restrito",
@@ -746,18 +766,20 @@ async function contextoDosContatos(
   const saida = new Map<string, ContextoDoContato>();
   if (contactIds.length === 0) return saida;
 
-  const { data: contatos } = await admin
-    .from("contacts")
-    .select("id, is_blocked, consent")
-    .eq("organization_id", orgId)
-    .in("id", contactIds)
-    .limit(2000);
-  const linhas = (contatos ?? []) as Array<{
+  const { linhas: contatos } = await porFatias(contactIds, async (fatia) => {
+    const r = await admin
+      .from("contacts")
+      .select("id, is_blocked, consent")
+      .eq("organization_id", orgId)
+      .in("id", fatia)
+      .limit(2000);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
+  for (const c of contatos as Array<{
     id: string;
     is_blocked: boolean;
     consent: { marketing?: { declined_at?: string | null } | null } | null;
-  }>;
-  for (const c of linhas) {
+  }>) {
     saida.set(c.id, {
       is_blocked: c.is_blocked,
       declined_at: c.consent?.marketing?.declined_at ?? null,
@@ -767,29 +789,35 @@ async function contextoDosContatos(
   }
   if (saida.size === 0) return saida;
 
-  const { data: conversas } = await admin
-    .from("conversations")
-    .select("contact_id, status")
-    .eq("organization_id", orgId)
-    .in("contact_id", contactIds)
-    .in("status", STATUS_DE_CONVERSA_ABERTA)
-    .limit(5000);
-  for (const cv of (conversas ?? []) as Array<{ contact_id: string | null }>) {
+  const { linhas: conversas } = await porFatias(contactIds, async (fatia) => {
+    const r = await admin
+      .from("conversations")
+      .select("contact_id, status")
+      .eq("organization_id", orgId)
+      .in("contact_id", fatia)
+      .in("status", STATUS_DE_CONVERSA_ABERTA)
+      .limit(5000);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
+  for (const cv of conversas as Array<{ contact_id: string | null }>) {
     if (!cv.contact_id) continue;
     const c = saida.get(cv.contact_id);
     if (c) c.conversaAberta = true;
   }
 
   const desde = new Date(Date.now() - COOLDOWN_HORAS * 3_600_000).toISOString();
-  const { data: recentes } = await admin
-    .from("messages")
-    .select("contact_id")
-    .eq("organization_id", orgId)
-    .eq("direction", "outbound")
-    .in("contact_id", contactIds)
-    .gte("created_at", desde)
-    .limit(5000);
-  for (const m of (recentes ?? []) as Array<{ contact_id: string | null }>) {
+  const { linhas: recentes } = await porFatias(contactIds, async (fatia) => {
+    const r = await admin
+      .from("messages")
+      .select("contact_id")
+      .eq("organization_id", orgId)
+      .eq("direction", "outbound")
+      .in("contact_id", fatia)
+      .gte("created_at", desde)
+      .limit(5000);
+    return { linhas: (r.data ?? []) as never[], erro: r.error };
+  });
+  for (const m of recentes as Array<{ contact_id: string | null }>) {
     if (!m.contact_id) continue;
     const c = saida.get(m.contact_id);
     if (c) c.mensagemRecente = true;

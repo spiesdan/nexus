@@ -1,28 +1,18 @@
 /**
- * A RESTRIÇÃO DE ALCANCE DO WHATSAPP — por que a campanha precisa parar
- * sozinha, e por quanto tempo.
+ * A RESTRIÇÃO DE ALCANCE — a POLÍTICA: quem ela atinge e o que o operador lê.
  *
- * ═══ O que aconteceu, medido em 30/10/2026 ══════════════════════════════════
+ * A leitura do estado mora em `lib/channels/restricao-de-alcance.ts`, porque
+ * descobrir a restrição exige nomear o provider (coluna do identificador da
+ * sessão, transporte) e feature não faz isso. Aqui ficam só as duas perguntas
+ * que são do PRODUTO:
  *
- * A campanha mandou duas mensagens (13:49 e 13:50 UTC, ambas entregues). Três
- * segundos depois, o WAHA registrou:
- *
- *     reachout timelock restriction set
- *       enforcementType: "RESTRICT_ALL_COMPANIONS"
- *       timeEnforcementEnds: 2026-10-30T19:50:04Z      ← 6 horas
- *     stream errored out  code:"401"  conflict/device_removed
- *
- * A restrição já estava no payload da sessão desde o primeiro segundo, e o
- * produto não a lia (`grep -r reachoutTimelock` não achava nada). Consequência:
- * toda vez que o número reconectava, o tick voltava a mandar — e mandar DURANTE
- * a restrição é exatamente o comportamento que faz a plataforma derrubar o
- * aparelho de novo. O operador via "a conexão caiu", sem causa e sem prazo, e
- * reconectava para cair outra vez.
+ *   1. esta campanha é atingida?
+ *   2. o que dizer para quem está olhando?
  *
  * ═══ Por que só o disparo FRIO para ═════════════════════════════════════════
  *
- * `reachout` é "abrir conversa". Conversa que já existe continua funcionando —
- * e é isso que o WhatsApp cobra. Então:
+ * A restrição é de `reachout` — "abrir conversa". Conversa que já existe
+ * continua funcionando, e é isso que a plataforma cobra. Então:
  *
  *   - campanha de prospecção (`publico: "prospects"`) = conversa nova → PARA;
  *   - campanha de recuperação (`publico: "contatos"`) = conversa existente →
@@ -31,16 +21,16 @@
  * Parar as duas seria mais simples e estaria errado: tiraria do operador a
  * recuperação de clientes por causa de uma restrição que não a atinge.
  *
- * ═══ Falhar ABERTO é a escolha certa aqui ═══════════════════════════════════
+ * ═══ O incidente que originou isto, medido em 30/10/2026 ═══════════════════
  *
- * Se o transporte não responder, `restricaoAtivaDaSessao` devolve `null` e a
- * campanha segue. Não é descuido: o caminho de envio já falha sozinho quando o
- * número está fora, e transformar "não deu para perguntar" em "campanha
- * parada" faria uma oscilação de rede de dois segundos congelar a operação
- * inteira. A restrição só bloqueia quando é POSITIVA e com prazo no futuro.
+ * A campanha mandou duas mensagens (13:49 e 13:50 UTC, ambas entregues). Três
+ * segundos depois o transporte registrou a restrição com prazo de 6 horas e
+ * removeu o aparelho vinculado (`401 conflict/device_removed`). O produto não
+ * conhecia o sinal, então o tick voltava a mandar a cada reconexão — e mandar
+ * durante a restrição é exatamente o que faz a plataforma derrubar de novo. O
+ * operador via "a conexão caiu", sem causa e sem prazo.
  */
-import { CHANNEL_PROVIDER_WAHA } from "@/lib/channels/capabilities";
-import { getWahaClient, type RestricaoDeAlcance } from "@/lib/waha/client";
+import type { RestricaoDeAlcance } from "@/lib/channels/restricao-de-alcance";
 
 export type { RestricaoDeAlcance };
 
@@ -49,48 +39,6 @@ export function restricaoAtingeO(publico: string): boolean {
   // `contatos` = recuperação de quem já conversa com a empresa. Qualquer outro
   // valor é prospecção — o default do produto quando a coluna é nula.
   return publico !== "contatos";
-}
-
-/** Só o canal por QR tem aparelho vinculado a restringir. */
-function temAparelhoVinculado(sessao: { provider?: string | null }): boolean {
-  return sessao.provider === CHANNEL_PROVIDER_WAHA;
-}
-
-/**
- * A restrição ativa AGORA nesta sessão, ou `null`.
- *
- * Consulta o transporte na hora — não o banco. O estado gravado tem a idade da
- * última varredura (5 min no melhor caso), e a janela entre "restrição gravada"
- * e "aparelho removido" foi de 3 SEGUNDOS no incidente que originou este
- * arquivo. Uma decisão tomada com dado de 5 minutos atrás não protege nada.
- */
-export async function restricaoAtivaDaSessao(
-  sessao: {
-    provider?: string | null;
-    waha_session_name?: string | null;
-  },
-  agoraMs: number = Date.now(),
-): Promise<RestricaoDeAlcance | null> {
-  if (!temAparelhoVinculado(sessao)) return null;
-  const nome = sessao.waha_session_name;
-  if (!nome) return null;
-
-  const client = getWahaClient();
-  if (!client) return null;
-
-  try {
-    const estado = await client.getSessionQr(nome);
-    const restricao = estado.restricaoDeAlcance ?? null;
-    if (!restricao) return null;
-    // Sem prazo informado não dá para dizer "já passou" — e mandar durante a
-    // restrição é o que derruba o número. Trata como ativa.
-    if (restricao.terminaEm === null) return restricao;
-    return Date.parse(restricao.terminaEm) > agoraMs ? restricao : null;
-  } catch {
-    // Não deu para perguntar. Segue: o envio em si falha se o número estiver
-    // fora, e congelar a operação por uma oscilação de rede é pior.
-    return null;
-  }
 }
 
 /**

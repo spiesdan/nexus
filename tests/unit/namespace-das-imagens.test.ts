@@ -194,6 +194,26 @@ describe("o kit aponta para o que o CI realmente publica", () => {
   });
 });
 
+describe("a sonda do GHCR pergunta ao dono que o kit publica", () => {
+  // Defeito medido no rename: `IMG_NS` passou a `ghcr.io/spiesdan`, mas
+  // `ghcr_status()` continuou com o dono antigo em literal. A sonda perguntava
+  // por um pacote que não existe, `trio_publicado()` devolvia falso SEMPRE e o
+  // install caía em `latest` — canal móvel, sem pinar versão — com um aviso
+  // dizendo que as imagens "ainda não estavam publicadas". Silencioso, e no
+  // caminho de quem instala.
+  it("ghcr_status deriva o dono de IMG_NS, em vez de fixar um literal", () => {
+    const m = COMUM.match(/^ghcr_status\(\) \{\n([\s\S]*?)^\}/m);
+    expect(m, "não achei a função ghcr_status em hostgator-setup-kit/_common.sh").not.toBeNull();
+    const corpo = m![1];
+
+    expect(corpo).toMatch(/dono="\$\{IMG_NS#[^}]+\}"/);
+    expect(corpo).toContain("repository:${dono}/${img}:pull");
+    expect(corpo).toContain("https://ghcr.io/v2/${dono}/${img}/manifests/${tag}");
+    // O dono antigo é o literal que causou o defeito: não pode voltar.
+    expect(corpo).not.toContain("melgarafael");
+  });
+});
+
 /**
  * A catraca que mantém a elegância do #397 de pé.
  *

@@ -209,6 +209,48 @@ describe("conflitosDeReserva — os quatro motivos, sem chutar categoria", () =>
     });
   });
 
+  it("500 empresas saem em fatias de 100 — nenhuma consulta estoura a URL", async () => {
+    const ids = Array.from(
+      { length: 500 },
+      (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+    );
+    const tamanhos: number[] = [];
+    const admin = {
+      from(tabela: string) {
+        const b = {
+          select() {
+            return b;
+          },
+          eq() {
+            return b;
+          },
+          in(_col: string, val: unknown[]) {
+            if (tabela === "business_prospects") tamanhos.push(val.length);
+            return b;
+          },
+          then(onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) {
+            const data =
+              tabela === "business_prospects" ? ids.map((id) => prospect({ id })) : [];
+            return Promise.resolve({ data, error: null }).then(onF, onR);
+          },
+        };
+        return b;
+      },
+    } as unknown as SupabaseClient;
+
+    const conflitos = await conflitosDeReserva(admin, {
+      organizationId: ORG,
+      campaignId: null,
+      prospectIds: ids,
+      categorias: ["Oficina mecânica"],
+    });
+
+    // 400 ids eram ~15 KB e o PostgREST respondia 414 URI too long; a fatia
+    // canônica de 100 fica em ~3,8 KB.
+    expect(tamanhos).toEqual([100, 100, 100, 100, 100]);
+    expect(conflitos).toEqual([]);
+  });
+
   it("o resumo conta por motivo — a borda não vaza nome de empresa", () => {
     const texto = resumoDosConflitos([
       { id: "1", nome: "A", motivo: "outra_campanha" },

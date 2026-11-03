@@ -35,6 +35,7 @@ import * as React from "react";
 
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -62,7 +63,13 @@ import {
   type LinhaDoCaixa,
 } from "@/lib/comercial/fechamento-carga";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
-import { ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from "@/lib/schemas/expedicao";
+import {
+  ROTULO_MOTIVO_DEVOLUCAO,
+  ROTULO_NA_CARGA,
+  type MotivoDevolucao,
+  type StatusNaCarga,
+} from "@/lib/schemas/expedicao";
+import { cn } from "@/lib/utils";
 
 interface ParadaDaTela {
   shipment_order_id: string;
@@ -172,6 +179,8 @@ export function FechamentoCarga({
   }, [cargaId]);
 
   React.useEffect(() => {
+    // Sincronização com o servidor (a fonte da verdade), não estado derivado.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void carregar();
   }, [carregar]);
 
@@ -247,29 +256,29 @@ export function FechamentoCarga({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-base font-medium text-text">{t("Fechamento de caixa")}</h2>
-        {gravado?.conferido_em && (
+      {/* ── Cabeçalho da seção ───────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Caixa")}
+          </p>
+          <h2 className="text-base font-medium text-text">{t("Fechamento de caixa")}</h2>
           <p className="text-xs text-muted-foreground">
+            {t("As oito linhas do romaneio — com a conta feita na hora.")}
+          </p>
+        </div>
+        {gravado?.conferido_em ? (
+          <Badge variant={gravado.conta.bate ? "success" : "warning"}>
             {t("Conferido em")} {dataHora(gravado.conferido_em)}
             {gravado.conferente_nome ? ` · ${gravado.conferente_nome}` : ""}
-          </p>
-        )}
-        {gravado && (
-          <p
-            className={`ml-auto text-sm font-semibold tabular-nums ${gravado.conta.bate ? "text-emerald-600" : "text-amber-600"}`}
-          >
-            {gravado.conta.bate
-              ? t("O caixa bateu.")
-              : gravado.conta.diferenca_cents > 0
-                ? `${t("Sobra de")} ${comoMoeda(gravado.conta.diferenca_cents, "BRL")}`
-                : `${t("Falta de")} ${comoMoeda(Math.abs(gravado.conta.diferenca_cents), "BRL")}`}
-          </p>
+          </Badge>
+        ) : (
+          <Badge variant="neutral">{t("Ainda não conferido")}</Badge>
         )}
       </div>
 
-      {/* RESUMO FINANCEIRO — as mesmas cinco linhas do PDF, lidas do servidor. */}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      {/* ── Resumo financeiro — a fita do PDF, lida do servidor ───────────── */}
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-xs lg:grid-cols-5">
         {(
           [
             [t("Total faturado"), resumo.totalFaturado],
@@ -278,220 +287,392 @@ export function FechamentoCarga({
             [t("Devolvido"), resumo.devolvido],
           ] as [string, number][]
         ).map(([rotulo, valor]) => (
-          <Card key={rotulo} className="hover-raise p-3">
-            <p className="text-xs tracking-wide text-muted-foreground uppercase">{rotulo}</p>
-            <p className="text-lg font-semibold tabular-nums">{comoMoeda(valor, "BRL")}</p>
-          </Card>
-        ))}
-        <Card className="hover-raise p-3">
-          <p className="text-xs tracking-wide text-muted-foreground uppercase">{t("Volumes")}</p>
-          <p className="text-lg font-semibold tabular-nums">
-            {resumo.volumes} {t("un.")}
-          </p>
-        </Card>
-      </div>
-
-      {/* COBRANÇA POR PARADA — a tabela do PDF, com o ☐ virando checkbox. */}
-      <Card className="hover-raise p-4">
-        <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">
-          {t("COBRANÇA POR PARADA")} · {resumo.concluidas} {t("concluídas")} · {resumo.pendentes}{" "}
-          {t("pendentes")} · {conferidos.size}/{dados.paradas.length} {t("conferidas")}
-        </p>
-        {dados.paradas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("Nenhum pedido embarcado.")}</p>
-        ) : (
-          <div className="overflow-x-auto rounded-3xl border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-12 text-center" title={t("Conferido")}>
-                    ☐
-                  </TableHead>
-                  <TableHead>{t("Seq")}</TableHead>
-                  <TableHead>{t("Pedido")}</TableHead>
-                  <TableHead>{t("Cliente")}</TableHead>
-                  <TableHead>{t("Condição")}</TableHead>
-                  <TableHead>{t("Situação")}</TableHead>
-                  <TableHead className="text-right">{t("Vol.")}</TableHead>
-                  <TableHead className="text-right">{t("Total")}</TableHead>
-                  <TableHead className="text-right">{t("A cobrar")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dados.paradas.map((p) => (
-                  <TableRow key={p.shipment_order_id}>
-                    <TableCell className="text-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 accent-current"
-                        checked={conferidos.has(p.shipment_order_id)}
-                        disabled={!podeFechar}
-                        onChange={() => alternar(p.shipment_order_id)}
-                        aria-label={`${t("Conferido")}: ${numeroDoPedido(p.numero)}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-bold text-primary">{p.sequencia}</TableCell>
-                    <TableCell className="tabular-nums">{numeroDoPedido(p.numero)}</TableCell>
-                    <TableCell className="font-medium">{p.cliente_nome}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {p.condicao?.trim() ? p.condicao : "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{p.situacao}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {p.volumes > 0 ? p.volumes : "—"}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {comoMoeda(p.total_cents, "BRL")}
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {p.a_cobrar_cents > 0 ? comoMoeda(p.a_cobrar_cents, "BRL") : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
-
-      {/* A COBRAR POR CONDIÇÃO — prepare troco e maquininha, como no PDF. */}
-      {dados.por_condicao.length > 0 && (
-        <Card className="hover-raise p-4">
-          <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">
-            {t("A COBRAR POR CONDIÇÃO")}
-          </p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-            {dados.por_condicao.map((g) => (
-              <li key={g.condicao}>
-                <span className="text-muted-foreground">{g.condicao}: </span>
-                <strong className="tabular-nums">{comoMoeda(g.valor_cents, "BRL")}</strong>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {/* CONFERÊNCIA DE CAIXA — as oito linhas do PDF, agora com a conta feita. */}
-      <Card className="hover-raise space-y-3 p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground">
-          {t("CONFERÊNCIA DE CAIXA")}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {LINHAS_DO_CAIXA.map((l) => (
-            <div key={l.chave} className="space-y-1">
-              <Label htmlFor={`caixa-${l.chave}`}>
-                {l.entrada ? t(l.rotulo) : `${t(l.rotulo)} (−)`}
-              </Label>
-              <Input
-                id={`caixa-${l.chave}`}
-                inputMode="decimal"
-                placeholder="0,00"
-                className="text-right tabular-nums"
-                value={valores[l.chave] ?? ""}
-                disabled={!podeFechar}
-                onChange={(e) => mudou(l.chave, e.target.value)}
-                aria-label={l.rotulo}
-              />
-            </div>
-          ))}
-        </div>
-        <dl className="grid gap-2 rounded-2xl border p-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("Entradas")}</dt>
-            <dd className="font-semibold tabular-nums">{comoMoeda(previa.entradas_cents, "BRL")}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("Saídas")}</dt>
-            <dd className="font-semibold tabular-nums">{comoMoeda(previa.saidas_cents, "BRL")}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("Total líquido entregue ao caixa")}</dt>
-            <dd className="text-base font-semibold tabular-nums">
-              {comoMoeda(previa.liquido_cents, "BRL")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">
-              {t("Diferença")} ({t("esperado")} {comoMoeda(previa.esperado_cents, "BRL")})
+          <div key={rotulo} className="min-w-0 bg-surface px-3.5 py-3">
+            <dt className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              {rotulo}
             </dt>
-            <dd
-              className={`text-base font-semibold tabular-nums ${previa.bate ? "text-emerald-600" : "text-amber-600"}`}
-            >
-              {previa.bate
-                ? t("Bateu.")
-                : previa.diferenca_cents > 0
-                  ? `${t("Sobra")} ${comoMoeda(previa.diferenca_cents, "BRL")}`
-                  : `${t("Falta")} ${comoMoeda(Math.abs(previa.diferenca_cents), "BRL")}`}
+            <dd className="mt-0.5 truncate text-lg font-semibold text-text tabular-nums">
+              {comoMoeda(valor, "BRL")}
             </dd>
           </div>
-        </dl>
-        {avisosPrevios.length > 0 && (
-          <ul className="space-y-1 text-sm">
-            {avisosPrevios.map((a, i) => (
-              <li key={i} className={a.nivel === "erro" ? "font-medium text-red-600" : "text-amber-600"}>
-                {a.texto}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+        ))}
+        <div className="col-span-2 min-w-0 bg-surface px-3.5 py-3 lg:col-span-1">
+          <dt className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            {t("Volumes")}
+          </dt>
+          <dd className="mt-0.5 text-lg font-semibold text-text tabular-nums">
+            {resumo.volumes}{" "}
+            <span className="text-xs font-normal text-muted-foreground">{t("un.")}</span>
+          </dd>
+        </div>
+      </dl>
 
-      {/* OCORRÊNCIAS E DEVOLUÇÕES — o que o PDF listava no verso. */}
-      {devolvidas.length > 0 && (
-        <Card className="hover-raise p-4">
-          <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">
-            {t("OCORRÊNCIAS E DEVOLUÇÕES")}
-          </p>
-          <ul className="space-y-1 text-sm">
-            {devolvidas.map((p) => (
-              <li key={p.shipment_order_id}>
-                {numeroDoPedido(p.numero)} · {p.cliente_nome} ·{" "}
-                {(ROTULO_MOTIVO_DEVOLUCAO[p.motivo as MotivoDevolucao] ?? p.motivo ?? t("sem motivo registrado"))}{" "}
-                · {comoMoeda(p.total_cents, "BRL")}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {/* QUEM CONFERIU — a assinatura do papel, em nome e hora gravados. */}
-      {podeFechar && (
-        <Card className="hover-raise space-y-3 p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label htmlFor="fechamento-conferente">{t("Conferente / caixa")}</Label>
-              <Input
-                id="fechamento-conferente"
-                value={conferente}
-                maxLength={120}
-                onChange={(e) => setConferente(e.target.value)}
-                placeholder={t("Quem recebeu e contou")}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="fechamento-obs">{t("Observação")}</Label>
-              <Textarea
-                id="fechamento-obs"
-                value={observacao}
-                maxLength={2000}
-                rows={2}
-                onChange={(e) => setObservacao(e.target.value)}
-                placeholder={t("O que ficou pendente, se ficou")}
-              />
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => void salvar()} disabled={salvando || temErro}>
-              {salvando ? t("Gravando...") : t("Gravar fechamento")}
-            </Button>
-            {!temErro && (
-              <p className="text-xs text-muted-foreground">
-                {t("Gravar não dá baixa nos pedidos — só registra a conferência.")}
+      {/* A folha de conferência NÃO fica ao lado: com a coluna de contexto
+          aberta, a tabela do romaneio (9 colunas, ~600px) não caberia e a
+          situação/valores ficavam atrás de um scroll horizontal silencioso.
+          Empilhada, cada bloco usa a largura inteira da ficha. */}
+      <div className="space-y-4">
+        {/* ── O que veio de cada parada ────────────────────────────────────── */}
+        <div className="min-w-0 space-y-4">
+          <Card className="overflow-hidden p-0">
+            <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  {t("Cobrança por parada")}
+                </p>
+                <p className="text-sm font-medium text-text">
+                  {resumo.concluidas} {resumo.concluidas === 1 ? t("concluída") : t("concluídas")}
+                  <span className="font-normal text-muted-foreground">
+                    {" · "}
+                    {resumo.pendentes} {resumo.pendentes === 1 ? t("pendente") : t("pendentes")}
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {conferidos.size}/{dados.paradas.length}{" "}
+                {conferidos.size === 1 ? t("conferida") : t("conferidas")}
               </p>
+            </header>
+
+            {dados.paradas.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">{t("Nenhum pedido embarcado.")}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-10 text-center">
+                        <span aria-hidden>☐</span>
+                        <span className="sr-only">{t("Conferido")}</span>
+                      </TableHead>
+                      <TableHead className="hidden w-10 md:table-cell">{t("Seq")}</TableHead>
+                      <TableHead>{t("Pedido")}</TableHead>
+                      <TableHead>{t("Cliente")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Condição")}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t("Situação")}</TableHead>
+                      <TableHead className="hidden text-right md:table-cell">{t("Vol.")}</TableHead>
+                      <TableHead className="text-right">{t("Total")}</TableHead>
+                      <TableHead className="hidden text-right md:table-cell">{t("A cobrar")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dados.paradas.map((p) => (
+                      <TableRow key={p.shipment_order_id}>
+                        <TableCell className="text-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 accent-accent"
+                            checked={conferidos.has(p.shipment_order_id)}
+                            disabled={!podeFechar}
+                            onChange={() => alternar(p.shipment_order_id)}
+                            aria-label={`${t("Conferido")}: ${numeroDoPedido(p.numero)}`}
+                          />
+                        </TableCell>
+                        <TableCell className="hidden font-semibold text-accent tabular-nums md:table-cell">
+                          {p.sequencia}
+                        </TableCell>
+                        <TableCell className="tabular-nums whitespace-nowrap">
+                          {numeroDoPedido(p.numero)}
+                        </TableCell>
+                        <TableCell className="font-medium">{p.cliente_nome}</TableCell>
+                        <TableCell className="hidden text-muted-foreground md:table-cell">
+                          {p.condicao?.trim() ? p.condicao : "—"}
+                        </TableCell>
+                        <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
+                          {ROTULO_NA_CARGA[p.situacao as StatusNaCarga] ?? p.situacao}
+                        </TableCell>
+                        <TableCell className="hidden text-right tabular-nums md:table-cell">
+                          {p.volumes > 0 ? p.volumes : "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {comoMoeda(p.total_cents, "BRL")}
+                        </TableCell>
+                        <TableCell className="hidden text-right font-medium tabular-nums md:table-cell">
+                          {p.a_cobrar_cents > 0 ? comoMoeda(p.a_cobrar_cents, "BRL") : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
-          </div>
-        </Card>
-      )}
+          </Card>
+
+          {/* A cobrar por condição — prepare troco e maquininha. */}
+          {dados.por_condicao.length > 0 && (
+            <Card className="flex flex-wrap items-baseline gap-x-5 gap-y-1 px-3.5 py-3">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {t("A cobrar por condição")}
+              </p>
+              {dados.por_condicao.map((g) => (
+                <p key={g.condicao} className="text-sm">
+                  <span className="text-muted-foreground">{g.condicao}: </span>
+                  <strong className="tabular-nums">{comoMoeda(g.valor_cents, "BRL")}</strong>
+                </p>
+              ))}
+            </Card>
+          )}
+
+          {/* Ocorrências e devoluções — o verso do romaneio. */}
+          {devolvidas.length > 0 && (
+            <Card className="overflow-hidden p-0">
+              <header className="border-b border-border bg-warning-bg px-3.5 py-2.5">
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-warning-fg uppercase">
+                  {t("Ocorrências e devoluções")}
+                </p>
+              </header>
+              <ul className="divide-y divide-border text-sm">
+                {devolvidas.map((p) => (
+                  <li
+                    key={p.shipment_order_id}
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-3.5 py-2"
+                  >
+                    <span className="font-medium tabular-nums">{numeroDoPedido(p.numero)}</span>
+                    <span className="min-w-0 truncate text-muted-foreground">{p.cliente_nome}</span>
+                    <span className="text-xs text-warning-fg">
+                      {ROTULO_MOTIVO_DEVOLUCAO[p.motivo as MotivoDevolucao] ??
+                        p.motivo ??
+                        t("sem motivo registrado")}
+                    </span>
+                    <span className="ml-auto tabular-nums">{comoMoeda(p.total_cents, "BRL")}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </div>
+
+        {/* ── A folha de conferência: as oito linhas contadas ──────────────── */}
+        <div className="min-w-0">
+          <Card className="overflow-hidden p-0">
+            <header className="flex items-start justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  {t("Conferência")}
+                </p>
+                <p className="text-sm font-medium text-text">{t("Caixa contado")}</p>
+              </div>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {conferidos.size}/{dados.paradas.length}
+              </span>
+            </header>
+
+            <div className="space-y-4 p-3.5">
+              {/* Entradas e saídas lado a lado: a folha do romaneio é uma
+                  tabela, não uma lista comprida. */}
+              <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Entradas")}
+                    </p>
+                    <p className="text-xs font-semibold text-text tabular-nums">
+                      {comoMoeda(previa.entradas_cents, "BRL")}
+                    </p>
+                  </div>
+                  {LINHAS_DO_CAIXA.filter((l) => l.entrada).map((l) => (
+                    <div key={l.chave} className="flex items-center gap-2">
+                      <Label
+                        htmlFor={`caixa-${l.chave}`}
+                        className="min-w-0 flex-1 text-xs leading-tight font-normal text-muted-foreground"
+                      >
+                        {t(l.rotulo)}
+                      </Label>
+                      <div className="relative w-28 shrink-0">
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] text-text-subtle"
+                        >
+                          R$
+                        </span>
+                        <Input
+                          id={`caixa-${l.chave}`}
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          className="h-8 pl-6 text-right text-xs tabular-nums"
+                          value={valores[l.chave] ?? ""}
+                          disabled={!podeFechar}
+                          onChange={(e) => mudou(l.chave, e.target.value)}
+                          aria-label={l.rotulo}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Saídas")}
+                    </p>
+                    <p className="text-xs font-semibold text-text tabular-nums">
+                      {comoMoeda(previa.saidas_cents, "BRL")}
+                    </p>
+                  </div>
+                  {LINHAS_DO_CAIXA.filter((l) => !l.entrada).map((l) => (
+                    <div key={l.chave} className="flex items-center gap-2">
+                      <Label
+                        htmlFor={`caixa-${l.chave}`}
+                        className="min-w-0 flex-1 text-xs leading-tight font-normal text-muted-foreground"
+                      >
+                        {t(l.rotulo)}
+                      </Label>
+                      <div className="relative w-28 shrink-0">
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] text-text-subtle"
+                        >
+                          R$
+                        </span>
+                        <Input
+                          id={`caixa-${l.chave}`}
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          className="h-8 pl-6 text-right text-xs tabular-nums"
+                          value={valores[l.chave] ?? ""}
+                          disabled={!podeFechar}
+                          onChange={(e) => mudou(l.chave, e.target.value)}
+                          aria-label={l.rotulo}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* A conta, na hora — prévia do que o servidor vai confirmar. */}
+              <dl className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+                <div className="min-w-0 bg-surface px-3.5 py-2.5">
+                  <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    {t("Total líquido entregue ao caixa")}
+                  </dt>
+                  <dd className="mt-0.5 text-lg font-semibold text-text tabular-nums">
+                    {comoMoeda(previa.liquido_cents, "BRL")}
+                  </dd>
+                </div>
+                <div className="min-w-0 bg-surface px-3.5 py-2.5">
+                  <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    {t("Esperado")}
+                  </dt>
+                  <dd className="mt-0.5 text-lg font-semibold text-text tabular-nums">
+                    {comoMoeda(previa.esperado_cents, "BRL")}
+                  </dd>
+                </div>
+                <div
+                  className={cn(
+                    "min-w-0 px-3.5 py-2.5",
+                    previa.bate ? "bg-success-bg" : "bg-warning-bg",
+                  )}
+                >
+                  <dt
+                    className={cn(
+                      "text-[10px] font-semibold tracking-[0.12em] uppercase",
+                      previa.bate ? "text-success-fg" : "text-warning-fg",
+                    )}
+                  >
+                    {previa.bate ? t("O caixa bateu.") : t("Diferença")}
+                  </dt>
+                  <dd
+                    className={cn(
+                      "mt-0.5 text-lg font-semibold tabular-nums",
+                      previa.bate ? "text-success-fg" : "text-warning-fg",
+                    )}
+                  >
+                    {previa.bate
+                      ? comoMoeda(0, "BRL")
+                      : previa.diferenca_cents > 0
+                        ? `${t("Sobra")} ${comoMoeda(previa.diferenca_cents, "BRL")}`
+                        : `${t("Falta")} ${comoMoeda(Math.abs(previa.diferenca_cents), "BRL")}`}
+                  </dd>
+                </div>
+              </dl>
+
+              {avisosPrevios.length > 0 && (
+                <ul className="space-y-1 text-xs">
+                  {avisosPrevios.map((a, i) => (
+                    <li
+                      key={i}
+                      className={
+                        a.nivel === "erro" ? "font-medium text-error-fg" : "text-warning-fg"
+                      }
+                    >
+                      {a.texto}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* A assinatura do papel, em nome e hora gravados. */}
+              {podeFechar && (
+                <div className="space-y-2.5 border-t border-border pt-3">
+                  <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                    {t("Quem conferiu")}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="fechamento-conferente" className="text-xs">
+                        {t("Conferente / caixa")}
+                      </Label>
+                      <Input
+                        id="fechamento-conferente"
+                        className="h-9"
+                        value={conferente}
+                        maxLength={120}
+                        onChange={(e) => setConferente(e.target.value)}
+                        placeholder={t("Quem recebeu e contou")}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="fechamento-obs" className="text-xs">
+                        {t("Observação")}
+                      </Label>
+                      <Textarea
+                        id="fechamento-obs"
+                        className="min-h-16"
+                        value={observacao}
+                        maxLength={2000}
+                        rows={2}
+                        onChange={(e) => setObservacao(e.target.value)}
+                        placeholder={t("O que ficou pendente, se ficou")}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <Button
+                      className="w-full sm:w-auto"
+                      onClick={() => void salvar()}
+                      disabled={salvando || temErro}
+                    >
+                      {salvando ? t("Gravando...") : t("Gravar fechamento")}
+                    </Button>
+                    {!temErro && (
+                      <p className="text-[11px] leading-relaxed text-text-subtle">
+                        {t("Gravar não dá baixa nos pedidos — só registra a conferência.")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {gravado && (
+                <p
+                  className={cn(
+                    "rounded-lg px-2.5 py-2 text-xs font-medium",
+                    gravado.conta.bate ? "bg-success-bg text-success-fg" : "bg-warning-bg text-warning-fg",
+                  )}
+                >
+                  {t("Gravado")}:{" "}
+                  {gravado.conta.bate
+                    ? t("O caixa bateu.")
+                    : gravado.conta.diferenca_cents > 0
+                      ? `${t("Sobra de")} ${comoMoeda(gravado.conta.diferenca_cents, "BRL")}`
+                      : `${t("Falta de")} ${comoMoeda(Math.abs(gravado.conta.diferenca_cents), "BRL")}`}
+                </p>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

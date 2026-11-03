@@ -8,6 +8,334 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.35.5] — 2026-10-30
+
+### Corrigido
+
+- **A campanha para sozinha quando o WhatsApp restringe o número para abrir conversa** Em 30/10/2026 a campanha mandou duas mensagens, o WhatsApp gravou
+  `RESTRICT_ALL_COMPANIONS` com prazo de seis horas e, **três segundos depois**,
+  removeu o aparelho vinculado (`401 conflict/device_removed`). A restrição vinha
+  no payload da sessão desde o primeiro instante (`me.reachoutTimelock`) e o
+  produto não a lia: `grep -r reachoutTimelock` não achava nada. O resultado era o
+  pior ciclo possível — o número reconectava, o tick voltava a mandar, e mandar
+  durante a restrição é exatamente o que faz o WhatsApp derrubar de novo. O
+  operador via "a conexão caiu", sem causa e sem prazo.
+
+  Agora o motor lê o timelock antes de cada disparo e se cala enquanto ele vale,
+  com o prazo no fuso da organização na mensagem da campanha — e volta sozinho
+  quando expira, sem recriar, reagendar ou reconectar nada. O "Enviar agora" da
+  tela de Empresas recusa com `409 whatsapp_restrito` e a mesma frase, em vez de
+  falhar em silêncio.
+
+  A restrição é de **abrir conversa** (`reachout`), não de mensagem: só o disparo
+  frio (`publico: "prospects"`) é atingido. Recuperação de quem já conversa com a
+  empresa (`publico: "contatos"`) continua enviando — parar as duas tiraria do
+  operador uma operação que o WhatsApp não restringiu.
+
+  Se o transporte não responder, a campanha segue: o envio em si já falha quando
+  o número está fora, e transformar oscilação de rede em campanha parada
+  congelaria a operação inteira.
+
+## [1.35.4] — 2026-10-29
+
+### Corrigido
+
+- **Abrir a campanha e ler a base grande deixam de estourar a URL** Com a campanha de 500 empresas finalmente criada, a tela de controle abria em
+  "Não foi possível abrir a campanha": a rota `/campanhas/[id]/controle` ainda
+  mandava 400 UUIDs numa consulta só (`LOTE = 400`) e o PostgREST respondia
+  `414 URI too long`. O mesmo defeito que a 1.35.3 corrigiu na criação continuava
+  vivo nas leituras da audiência.
+
+  Agora todas as leituras de lista de ids do caminho da campanha usam a fatia
+  canônica de 100 (`lib/db/por-fatias.ts`): controle, painel, disparo, agendador,
+  funil em lote, aba Empresas (busca e categorias) e mercado. Uma campanha de 500
+  empresas abre, mostra a fila e o agendador consegue escolher quem recebe.
+
+  Um gate novo (`tests/unit/audiencia-em-fatias.test.ts`) reprova o retorno do
+  lote local de 400 nos arquivos da audiência.
+
+## [1.35.3] — 2026-10-29
+
+### Corrigido
+
+- **Campanha com muitas empresas deixa de falhar ao validar a reserva** Criar uma campanha com centenas de empresas morria em "Erro ao validar as
+  empresas da campanha" (500) mesmo com o banco são. A checagem de reserva
+  mandava 400 UUIDs numa única consulta ao PostgREST — ~15 KB de URL — e o
+  gateway respondia `414 URI too long`; a rota transformava isso no 500 genérico.
+
+  A consulta agora usa a mesma fatia de 100 de `lib/db/por-fatias.ts` (~3,8 KB),
+  nas duas leituras da reserva (empresas e contatos). Campanha de 500 empresas
+  volta a ser validada.
+
+## [1.35.2] — 2026-10-29
+
+### Alterado
+
+- **O Radar vira seis telas, uma por pergunta** O Radar era uma página só, com sete blocos empilhados e cinco botões que
+  rolavam até eles. Para chegar em "quem está esfriando" era preciso atravessar
+  KPIs, gráficos, categorias, saúde da carteira, oportunidades, recompra,
+  recuperação e demandas — e nenhum botão dizia onde a pessoa estava, porque não
+  havia onde estar: tudo era a mesma página.
+
+  Agora cada pergunta tem endereço próprio, como já acontece na ficha da carga da
+  Expedição:
+
+  - **Visão geral** — como está a carteira e o que fazer hoje;
+  - **Categorias** — quem contatar, separado por motivo, com a próxima ação;
+  - **Oportunidades** — quem já comprou e está no ponto de comprar de novo;
+  - **Risco de demandas** — demandas abertas que esfriaram sem resposta;
+  - **Recuperação** — quem comprava e parou, por prioridade;
+  - **Prospecção** — quem podemos vender hoje, antes do primeiro pedido.
+
+  O recorte (busca, vendedor, cidade, período, nível) acompanha a navegação: quem
+  filtra uma cidade e troca de tela continua na cidade, e o endereço guarda o
+  recorte para o F5 e para mandar a alguém. Os números da visão geral levam para
+  a lista já recortada — clicar em "Em risco" abre as oportunidades naquela
+  situação, em vez de só rolar a tela.
+
+  Os links antigos continuam funcionando: `/app/recuperacao` e os endereços com
+  `#radar-recuperacao`, `#radar-demandas` e `#radar-prospeccao` caem nas telas
+  novas. Quem já instalou não precisa fazer nada.
+
+### Corrigido
+
+- **A lista do Inbox segue a ordem do WhatsApp** A lista do Inbox não parecia ordenada por tempo, e a conversa não se comportava
+  como no WhatsApp. Eram três defeitos independentes, e o primeiro escondia os
+  outros dois.
+
+  A régua da lista não era a régua da linha: a aba Fila ordenava por entrada e a
+  linha mostrava a hora da última mensagem, então a resposta do atendente adiantava
+  a hora exibida sem mudar a posição — um item com 14:32 aparecia acima de outro
+  com 14:35. Agora todas as abas ordenam pela última mensagem, com desempate
+  estável, e o tempo de espera continua na linha como rótulo, sem fingir que
+  define prioridade.
+
+  O carimbo da conversa andava para trás: uma mensagem antiga que chegava depois
+  (fila do WhatsApp após reconexão, nova tentativa do webhook, importação de
+  histórico) levava a conversa para o passado e trocava a prévia por um texto
+  velho. O banco passa a só avançar as datas e a prévia só é substituída pela
+  mensagem mais nova, e a entrada de mensagens usa o horário do provedor.
+
+  A conversa abria no topo e não acompanhava o que chegava. Agora abre no fim,
+  acompanha mensagem nova quando você já está no fim, preserva a posição ao
+  carregar as antigas e oferece "ir para o fim" com contador quando você rolou
+  para cima. Mensagem repetida não vira bolha duplicada, e trocar de conversa não
+  herda a rolagem da anterior.
+
+  Nada a fazer na instalação: a atualização aplica a mudança de banco sozinha.
+
+## [1.35.1] — 2026-10-27
+
+### Corrigido
+
+- **Instalador volta a reconhecer as imagens publicadas e a pinar a versão** O `install.sh` consulta o GHCR para saber se as imagens da versão já estão
+  publicadas e, só então, grava no `.env` a referência fixa — em vez de deixar o
+  serviço num canal móvel. Essa consulta ainda perguntava pelo dono **anterior**
+  ao rename das imagens, então respondia "não existe" para tudo, mesmo com as seis
+  imagens publicadas.
+
+  O efeito era silencioso e no caminho de quem instala: a instalação caía em
+  `latest` (canal móvel) e nenhum serviço ficava preso à versão, contrariando a
+  regra de que app, worker, scheduler, sidecar fiscal, Mercos e OCR andam juntos.
+  Não havia erro — só um aviso dizendo que as imagens "ainda não estavam
+  publicadas".
+
+  O dono agora sai de `IMG_NS`, a mesma fonte única que monta as referências que o
+  compose usa, e o runbook de packaging deixou de ensinar o dono antigo nas
+  verificações manuais.
+
+## [1.35.0] — 2026-10-26
+
+### Adicionado
+
+- **Campanha de recuperação para clientes que pararam de comprar** A Prospecção só sabia garimpar empresas novas. Quem já era cliente e parou de
+  comprar ficava no Radar, esperando alguém abrir a lista e mandar mensagem à mão
+  — uma conversa por vez, sem agenda e sem controle.
+
+  Agora o assistente de campanha pergunta o que a campanha faz. A opção
+  **Recuperar clientes inativos** monta o público por histórico de compra: quem
+  comprou e não compra há pelo menos X dias (o operador escolhe o X). Antes de
+  criar, a tela mostra a lista de verdade — quantos clientes, quantos têm
+  WhatsApp, quanto já compraram e quem ficou de fora por estar em outra campanha.
+
+  A campanha roda no mesmo motor da prospecção, com as mesmas garantias:
+
+  - três mensagens em rotação (até cinco variações), com as mesmas janelas,
+    período, limite diário e intervalo anti-ban;
+  - texto livre pelo número conectado por QR ou modelo oficial aprovado — que é
+    o único caminho para entregar fora da janela de 24h, onde o cliente inativo
+    quase sempre está;
+  - a lista é reservada na criação e nasce **ativa e agendada**: o assistente é a
+    agenda inteira, e o controle da campanha mostra o que saiu e o que falta.
+
+  Quem pediu para sair não entra. Contato bloqueado (STOP), que recusou marketing,
+  anonimizado ou mesclado é descartado antes da prévia e de novo no envio — a
+  mesma regra que a Venda Automática já aplicava.
+
+  O Radar e a prévia da campanha passam a ler a mesma consulta: um filtro novo
+  vale para os dois no mesmo dia, em vez de um deles continuar mandando para quem
+  pediu para sair.
+
+  Quem já instalou não precisa fazer nada.
+
+## [1.34.0] — 2026-10-26
+
+### Adicionado
+
+- **A campanha ganhou tela de controle — quem já recebeu, quem falta e quem ainda pode entrar** Depois de criar uma campanha de prospecção, não havia onde acompanhar o envio:
+  o público aparecia num card que sumia ao fechar a tela, e a lista mostrava o
+  funil (encontradas, contatadas) sem responder à pergunta do dia — quantas
+  mensagens saíram e quantas faltam.
+
+  Agora cada campanha tem uma tela própria, que sobrevive ao F5, com:
+
+  - a fila de envio: enviadas, sem confirmação e pendentes, e a empresa de cada
+    linha com o botão para abrir a conversa certa no Inbox;
+  - as empresas da região que ainda podem entrar, sem reservar nada;
+  - o agendamento a partir dali, mantendo a audiência completa da campanha
+    mesmo quando só os pendentes vão receber;
+  - a liberação manual das reservas que ficaram sem comprovante de envio — as
+    que saíram nunca são tocadas.
+
+  O card da lista passa a mostrar "enviadas · faltam" e o botão Controlar. Na
+  criação, o assistente encurtou para três passos e a cidade é escolhida da lista
+  real da base, com a contagem de empresas: a prévia mostra as empresas de
+  verdade antes de criar a campanha, em vez de uma estimativa de mercado.
+
+  A aba inicial da Prospecção passa a ser Campanhas — a busca vira a exceção.
+
+  Quem já instalou não precisa fazer nada.
+
+- **As três mensagens da campanha passaram a morar na categoria** Toda campanha nova começava com três caixas em branco. Quem dispara para
+  oficina mecânica toda semana reescrevia o mesmo texto — e o texto bom de uma
+  campanha antiga ficava preso nela, sem lugar para ver, corrigir ou reaproveitar.
+
+  Agora a Prospecção tem **Mensagens por categoria**, dentro de Configuração:
+  escolhe-se a categoria (oficina mecânica, restaurante, o que for) e escreve-se
+  até três variações. O assistente de campanha nasce preenchido com o padrão da
+  primeira categoria escolhida, e permite trocar para o padrão de outra categoria
+  selecionada — ou voltar a escrever do zero.
+
+  São dois textos diferentes de propósito: o **padrão** pertence à categoria e
+  muda o que toda campanha nova daquela categoria vai dizer; a **campanha** guarda
+  a própria cópia. Editar uma campanha não altera o padrão, e mudar o padrão não
+  reescreve o que já saiu. A tela diz isso em vez de deixar o operador descobrir.
+
+  Quem pode o quê: qualquer membro lê o texto; gerente ou superior salva — o
+  padrão decide o que a próxima campanha vai dizer. Salvar e remover ficam no log
+  de auditoria.
+
+  Quem já instalou precisa atualizar: a tabela nova
+  (`prospecting_message_presets`) entra pelo `update.sh`, e categorias sem padrão
+  continuam pedindo o texto à mão, como antes.
+
+- **O pedido entra por foto, PDF, áudio ou texto** O botão **Adicionar com IA**, na seção de produtos do novo pedido, lê o que o
+  cliente escreveu e propõe os itens já casados com o catálogo. A conferência é
+  obrigatória: quantidade editável, até três candidatos por item e busca manual
+  no catálogo; nada entra no pedido antes do clique em **Adicionar ao pedido**. O
+  casamento usa a busca relaxada do catálogo, então "5 L" não vira "2 L" e um
+  empate fica para a pessoa escolher. Formatos: JPG/PNG/WebP, PDF, áudio (requer
+  `OPENAI_API_KEY`) e CSV/TXT, além de texto colado; XLSX/DOCX são recusados com
+  a instrução de converter para CSV/PDF.
+
+- **A foto do pedido é lida na própria VPS, sem gastar crédito de IA** O botão **Adicionar com IA** passou a tentar primeiro um leitor de imagem que
+  roda junto com o CRM — em português, em CPU, sem GPU e sem serviço externo.
+  Quando a leitura sai confiável (ao menos um item reconhecido, a maioria casada
+  com o catálogo e confiança alta), a proposta aparece sem nenhuma chamada de
+  modelo; quando o manuscrito é difícil, a IA assume como antes. O catálogo
+  **não** é embutido no leitor: o casamento continua sendo a mesma busca relaxada
+  do agente, então produto novo passa a valer na leitura seguinte, sem retreino.
+  Quem já instalou não precisa fazer nada — o `update.sh` traz a imagem nova.
+  Para desligar o leitor, deixe `OCR_SERVICE_URL=` vazio no `.env`: a foto volta a
+  usar só a IA.
+
+### Alterado
+
+- **A Expedição virou fila de cargas, e a ficha da carga ganhou subtelas** A tela de Expedição empilhava três trabalhos no mesmo lugar: a lista de cargas,
+  a montagem de uma carga nova e a ficha inteira da carga aberta — com abas que
+  não sobreviviam a um F5 e um menu lateral que competia com o mapa.
+
+  Agora a lista é só a fila de cargas, com o essencial de cada uma. Montar carga
+  ganhou endereço próprio (`/app/expedicao/nova`): são três passos — a
+  transportadora, os pedidos e a conferência —, e o assistente sobrevive a
+  recarregar a página no meio.
+
+  A ficha da carga virou quatro subtelas com endereço: **Paradas**, **Rota**,
+  **Fechamento** e **Motorista**. Dá para mandar o link da subtela para outra
+  pessoa, e o F5 fica onde estava. Os links antigos (`?aba=rota`, `#fechamento`)
+  continuam funcionando: redirecionam para a subtela certa, então favorito salvo
+  e mensagem trocada no WhatsApp não quebram.
+
+  O "Próximo passo" da carga deixou de ser um painel fixo na lateral e virou uma
+  faixa curta no topo de Paradas — a mesma informação, sem tirar espaço do que se
+  está conferindo.
+
+  Nada muda no que já foi criado: cargas, paradas, romaneio e fechamento ficam
+  como estão. Quem já instalou não precisa fazer nada — a atualização é de tela.
+
+- **A Prospecção ficou com duas superfícies e a criação virou uma página** A tela tinha seis abas do mesmo peso — Encontrar empresas, Pesquisas,
+  Empresas, Mercado, Campanhas e Configuração — e abria em "Buscar", um
+  formulário de Google. Quem entrava todo dia para acompanhar disparo caía num
+  lugar que não era o do trabalho.
+
+  Agora a Prospecção tem **duas** superfícies: **Campanhas**, que é o padrão, e
+  **Empresas**. As outras quatro continuam existindo, mas como ferramentas ao
+  lado — menores, sem competir com o que se usa todo dia.
+
+  A criação de campanha saiu do modal dentro da lista e ganhou endereço próprio
+  (`/app/prospeccao/nova`): sobrevive ao F5 no meio do assistente, pode ser
+  mandada por link, e não divide a tela com campanhas que continuam clicáveis
+  atrás. O passo 2 do assistente passou a nascer preenchido com o padrão da
+  categoria (ver “As três mensagens da campanha passaram a morar na categoria”).
+
+  Nada muda no que já foi criado: campanhas antigas, envios e reservas ficam como
+  estão. Quem já instalou não precisa fazer nada — a atualização é de tela.
+
+### Corrigido
+
+- **Campanha criada por engano agora pode ser excluída** A aba Campanhas não tinha como apagar uma campanha: só editar. Quem criava uma
+  campanha errada — cidade, categoria ou recorte trocado — ficava com ela no funil
+  para sempre, e não havia caminho na tela para desfazer.
+
+  Agora cada campanha de descoberta tem o botão de excluir, com confirmação que
+  diz o que vai junto: o histórico de envios daquela campanha é apagado e as
+  empresas que receberam por ela voltam a ficar disponíveis para outras
+  campanhas. As buscas feitas continuam salvas, mas deixam de pertencer à
+  campanha excluída.
+
+  Quem já instalou não precisa fazer nada.
+
+- **O disparo abre com as mensagens que já estão na campanha** A tela de disparo abria com três caixas em branco (com o texto de exemplo)
+  mesmo quando a campanha já tinha as mensagens salvas. Quem preparava o envio
+  pela aba Campanhas tinha que digitar tudo de novo — ou pior, mandava sem o
+  texto que havia escrito.
+
+  Agora o painel abre com as variações da campanha já preenchidas, junto com o
+  teto diário e as janelas de horário que ela tiver. Se você fechar e reabrir a
+  mesma campanha, o que você digitou continua lá; a sincronização só acontece
+  quando a campanha muda de verdade.
+
+  Quem já instalou não precisa fazer nada.
+
+- **A Fila do Inbox abre pela mensagem mais recente** A aba Fila ordenava por tempo de espera: quem aguardava há mais tempo aparecia
+  primeiro. Na prática, a mensagem nova entrava embaixo das antigas — o contrário
+  do que se espera de um inbox, e o motivo de conversa recém-chegada passar
+  despercebida.
+
+  Agora a Fila usa a mesma régua das outras abas: a mais recente no topo,
+  continuando a contar pela última mensagem do cliente (e não pela criação da
+  conversa, para que uma conversa antiga reaberta não pareça nova). O tempo de
+  espera continua visível na linha, mas deixa de definir a posição.
+
+  Quem já instalou não precisa fazer nada.
+
+- **A leitura de pedido por IA volta a funcionar com o Gemini** O schema completo gerado pelo Zod era recusado pelo Google com 400 antes de o
+  modelo ler a foto — a tela pedia "uma foto mais nítida" quando o problema era o
+  formato da requisição. O schema agora é mínimo para o Google e fechado para
+  OpenAI/Anthropic/OpenRouter, com a mesma validação local. A correção também
+  limita a resposta a 8.192 tokens e traduz saldo, chave, modelo e provedor fora
+  do ar em mensagens que dizem o que fazer.
+
 ## [1.33.1] — 2026-10-22
 
 ### Corrigido
@@ -5164,7 +5492,14 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.5...HEAD
+[1.35.5]: https://github.com/spiesdan/nexus/compare/v1.35.4...v1.35.5
+[1.35.4]: https://github.com/spiesdan/nexus/compare/v1.35.3...v1.35.4
+[1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
+[1.35.2]: https://github.com/spiesdan/nexus/compare/v1.35.1...v1.35.2
+[1.35.1]: https://github.com/spiesdan/nexus/compare/v1.35.0...v1.35.1
+[1.35.0]: https://github.com/spiesdan/nexus/compare/v1.34.0...v1.35.0
+[1.34.0]: https://github.com/spiesdan/nexus/compare/v1.33.1...v1.34.0
 [1.33.1]: https://github.com/melgarafael/DeskcommCRM/compare/v1.33.0...v1.33.1
 [1.33.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.4...v1.33.0
 [1.32.4]: https://github.com/melgarafael/DeskcommCRM/compare/v1.32.3...v1.32.4
