@@ -858,6 +858,23 @@ export function Roteirizador({
                     {p.pedidos.map((x) => numeroDoPedido(x.numero)).join(" · ")}
                   </p>
 
+                  {/* O ENDEREÇO DA PARADA, na lista.
+                      Ele existia só no balão do mapa: quem lia a ordem para
+                      separar/entregar via o cliente e o número do pedido, e
+                      nada de rua. O `endereco` do backend é o do PEDIDO quando
+                      ele tem um, senão o do cadastro — nunca um ponto
+                      inventado; quando não há nenhum, a linha diz o que fazer
+                      em vez de ficar vazia. */}
+                  <p
+                    className={cn(
+                      "truncate text-[11px]",
+                      p.endereco ? "text-text-subtle" : "text-warning-fg",
+                    )}
+                    title={p.endereco ?? undefined}
+                  >
+                    {p.endereco ?? t("Sem endereço — corrija o cadastro ou marque no mapa.")}
+                  </p>
+
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
                     <span
                       className={cn(
