@@ -20,3 +20,10 @@ Nenhuma informação saiu do papel:
 
 O que não muda: a ordem de entrega, o resumo de separação dos itens repetidos, o
 total da carga e a identificação da empresa.
+
+O endereço de entrega também passou a ser resolvido de verdade. O romaneio (e a
+ficha da carga) liam só o endereço digitado no pedido; quando ele está vazio — o
+caso dos pedidos importados — a parada saía como "sem endereço" mesmo com o
+cliente cadastrado. Medido na carga 022: 0 de 22 pedidos tinham o campo, e 21
+tinham endereço no cadastro. Agora vale o endereço do pedido quando existe e, na
+falta dele, o do cliente (achado pelo vínculo ou pelo CNPJ do pedido).

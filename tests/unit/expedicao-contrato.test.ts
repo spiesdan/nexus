@@ -189,7 +189,7 @@ describe("renderRomaneioPdf", () => {
         sequencia: i + 1,
         numero: 19000 + i,
         cliente_nome: nomes[i % nomes.length]!,
-        endereco_entrega: null,
+        endereco_entrega: `RUA DAS FLORES, ${100 + i}, SALA 2 — CENTRO, MAFRA/SC, 89300000`,
         total_cents: 19500,
         status: "na_carga",
         itens,

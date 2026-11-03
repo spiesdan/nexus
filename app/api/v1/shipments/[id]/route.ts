@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
+import { carregarContatosDaEntrega, enderecoDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
 import { cargaPatchSchema, COLUNAS_DA_CARGA } from "@/lib/schemas/expedicao";
 import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { createClient } from "@/lib/supabase/server";
@@ -42,11 +43,22 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
   if (ids.length > 0) {
     const { data } = await supabase
       .from("commercial_orders")
-      .select("id, numero, cliente_nome, endereco_entrega, total_cents, status")
+      .select(
+        "id, numero, cliente_nome, endereco_entrega, contact_id, cliente_documento, total_cents, status",
+      )
       .eq("organization_id", orgId)
       .in("id", ids);
+    const linhas = (data ?? []) as unknown as (Record<string, unknown> & {
+      id: string;
+      endereco_entrega: string | null;
+      contact_id: string | null;
+      cliente_documento: string | null;
+    })[];
+    // O pedido raramente guarda o endereço; o cadastro do cliente quase sempre.
+    // Resolver aqui é o que faz a parada mostrar o destino — e o mapa abrir.
+    const contatos = await carregarContatosDaEntrega(supabase, orgId, linhas);
     pedidos = Object.fromEntries(
-      ((data ?? []) as unknown as { id: string }[]).map((p) => [p.id, p]),
+      linhas.map((p) => [p.id, { ...p, endereco_entrega: enderecoDaEntrega(p, contatos) }]),
     );
   }
   const { data: provas } = await supabase

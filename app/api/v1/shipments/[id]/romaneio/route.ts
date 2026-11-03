@@ -16,6 +16,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { carregarContatosDaEntrega, enderecoDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
 import { renderRomaneioPdf } from "@/lib/comercial/romaneio-pdf";
 import { createClient } from "@/lib/supabase/server";
@@ -62,6 +63,8 @@ export async function GET(
     numero: number;
     cliente_nome: string;
     endereco_entrega: string | null;
+    contact_id: string | null;
+    cliente_documento: string | null;
     total_cents: number;
   }
   const pedidos: Record<string, LinhaPedido> = {};
@@ -73,7 +76,7 @@ export async function GET(
     const [{ data }, { data: itensPedidos }] = await Promise.all([
       supabase
         .from("commercial_orders")
-        .select("id, numero, cliente_nome, endereco_entrega, total_cents")
+        .select("id, numero, cliente_nome, endereco_entrega, contact_id, cliente_documento, total_cents")
         .eq("organization_id", authz.org.orgId)
         .in("id", ids),
       supabase
@@ -94,6 +97,15 @@ export async function GET(
       itensPorPedido[it.order_id] = lista;
     }
   }
+
+  // O endereço de entrega raramente está no pedido (medido na carga 022: 0 de
+  // 22) e quase sempre está no cadastro do cliente (21 de 22). Resolver aqui é
+  // o que impede o papel de dizer "sem endereço" para quem tem endereço.
+  const contatos = await carregarContatosDaEntrega(
+    supabase,
+    authz.org.orgId,
+    Object.values(pedidos),
+  );
 
   const c = carga as unknown as {
     numero: number;
@@ -118,7 +130,7 @@ export async function GET(
           sequencia: i.sequencia,
           numero: ped?.numero ?? 0,
           cliente_nome: ped?.cliente_nome ?? "—",
-          endereco_entrega: ped?.endereco_entrega ?? null,
+          endereco_entrega: ped ? enderecoDaEntrega(ped, contatos) : null,
           total_cents: ped?.total_cents ?? 0,
           status: i.status,
           itens: itensPorPedido[i.order_id] ?? [],
