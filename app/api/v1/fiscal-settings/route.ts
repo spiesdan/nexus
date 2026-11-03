@@ -22,7 +22,7 @@ import { encryptWebhookSecret } from "@/lib/webhooks/secrets";
 export const dynamic = "force-dynamic";
 
 const COLUNAS =
-  "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, logradouro, " +
+  "serie, proximo_numero, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, logradouro, " +
   "numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, " +
   "certificado_path, updated_at, entrada_ativa, frequencia_minutos, " +
   "manifestacao_automatica, ultima_sincronizacao, ultimo_cstat, ultimo_motivo";
@@ -124,6 +124,7 @@ export async function PUT(req: NextRequest): Promise<Response> {
     entrada_ativa: entradaAtivaPedida,
     frequencia_minutos: frequenciaPedida,
     manifestacao_automatica: manifestacaoPedida,
+    proximo_numero: proximoNumeroPedido,
     ...restoDaEntrada
   } = restoSemCaminho;
 
@@ -141,7 +142,9 @@ export async function PUT(req: NextRequest): Promise<Response> {
   const admin = createAdminClient();
   const { data: antes, error: erroAntes } = await admin
     .from("fiscal_settings")
-    .select("certificado_path, entrada_ativa, frequencia_minutos, manifestacao_automatica")
+    .select(
+      "certificado_path, entrada_ativa, frequencia_minutos, manifestacao_automatica, proximo_numero",
+    )
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
   if (erroAntes) {
@@ -165,6 +168,10 @@ export async function PUT(req: NextRequest): Promise<Response> {
         frequencia_minutos: frequenciaPedida ?? antes?.frequencia_minutos ?? 60,
         manifestacao_automatica:
           manifestacaoPedida ?? antes?.manifestacao_automatica ?? false,
+        // Mesma armadilha, e aqui ela custa dinheiro fiscal: sem esta linha o
+        // ON CONFLICT gravaria o DEFAULT (nulo) e apagaria o contador toda vez
+        // que alguém salvasse a série — a próxima nota voltaria a recusar.
+        proximo_numero: proximoNumeroPedido ?? antes?.proximo_numero ?? null,
         ...(senhaCifrada !== undefined ? { certificado_senha_encrypted: senhaCifrada } : {}),
       },
       { onConflict: "organization_id" },

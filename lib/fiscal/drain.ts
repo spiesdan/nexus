@@ -5,6 +5,7 @@ import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { carregarDestinatario } from "./destinatario-da-nota";
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
+import { devolverNumeroDaNota, falhouAntesDaSefaz, reservarNumeroDaNota } from "./numeracao";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped } from "./sped-payload";
 
@@ -131,6 +132,9 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   const documentoDestinatario = destinatario.documento ?? ped.cliente_documento;
 
   let resultado: ResultadoDeEmissao;
+  // Número reservado nesta tentativa (0391). Fica fora do bloco para que a
+  // devolução, depois do retorno da SEFAZ, saiba qual número desfazer.
+  let numeroDaNota: number | null = null;
   if (escolha === "spednfe") {
     await evento(admin, nota.organization_id, nota.id, "enviada", { status: "em_emissao" });
     const ctx = await carregarContextoSped(nota.organization_id);
@@ -175,6 +179,27 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         fiscais[p.id] = p;
       }
     }
+    // O NÚMERO DA NOTA VEM DO CONTADOR, NÃO DO PEDIDO.
+    //
+    // Antes daqui saía `ped.numero`. Pedido que não vira nota abre buraco na
+    // sequência da série, e a SEFAZ cobra inutilização por cada buraco. A
+    // reserva é atômica (função de banco): duas emissões simultâneas nunca
+    // recebem o mesmo número.
+    const reserva = await reservarNumeroDaNota(admin, nota.organization_id);
+    if (!reserva.ok) {
+      await finalizar(admin, job, nota, "erro", reserva.falta, null);
+      return { saidas: "concluido", destino: "erro" };
+    }
+    const numeroReservado = reserva.numero;
+    numeroDaNota = numeroReservado;
+    // A nota passa a mostrar o número em uso ANTES da transmissão: se a SEFAZ
+    // demorar ou cair, a tela diz qual número está em jogo, em vez de "sem
+    // número" enquanto uma faixa já foi consumida.
+    await admin
+      .from("invoices")
+      .update({ numero: numeroReservado, updated_at: new Date().toISOString() })
+      .eq("id", nota.id);
+
     const em = ctx.emitente as unknown as Record<string, string | null>;
     resultado = await emitirViaSpedNfe({
       // Só para montar o caminho do certificado no formato que o sidecar exige
@@ -201,7 +226,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       },
       senhaCertificado: ctx.senhaCertificado ?? "",
       pedido: {
-        numero: ped.numero,
+        numero: numeroReservado,
         nome: nomeDestinatario,
         documento: documentoDestinatario,
         ie: destinatario.ie,
@@ -252,6 +277,16 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .update({ status: "concluido", updated_at: new Date().toISOString() })
       .eq("id", job.id);
     return { saidas: "concluido", destino: "pendente" };
+  }
+
+  // Número consumido sem ter saído daqui: devolve, para a sequência continuar
+  // de onde parou (certificado, validação, configuração — nada transmitido).
+  if (numeroDaNota !== null && falhouAntesDaSefaz(resultado)) {
+    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota);
+  } else if (numeroDaNota !== null && resultado.numero == null) {
+    // A SEFAZ respondeu mas não repetiu o número: o da reserva é o que foi
+    // transmitido, e é ele que fica gravado.
+    resultado = { ...resultado, numero: numeroDaNota };
   }
 
   if (resultado.status === "autorizada") {

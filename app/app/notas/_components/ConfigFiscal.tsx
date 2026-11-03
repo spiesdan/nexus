@@ -31,6 +31,11 @@ export function ConfigFiscal({
   const t = useT();
   const router = useRouter();
   const [serie, setSerie] = React.useState(configInicial?.serie ?? "1");
+  // O contador da série (0291). Vazio = não configurado, e a emissão recusa
+  // com o motivo escrito — adivinhar número queima faixa fiscal de verdade.
+  const [proximoNumero, setProximoNumero] = React.useState(
+    configInicial?.proximo_numero != null ? String(configInicial.proximo_numero) : "",
+  );
   const [natureza, setNatureza] = React.useState(
     configInicial?.natureza_operacao ?? "Venda de mercadoria",
   );
@@ -129,6 +134,7 @@ export function ConfigFiscal({
     try {
       await apiClient.put("/api/v1/fiscal-settings", {
         serie: serie.trim() || "1",
+        proximo_numero: proximoNumero.trim() === "" ? null : Number(proximoNumero),
         natureza_operacao: natureza.trim() || "Venda de mercadoria",
         cfop_padrao: cfop.trim() || "5102",
         emitente_documento: documento.trim() === "" ? null : documento.trim(),
@@ -185,6 +191,21 @@ export function ConfigFiscal({
           <div className="space-y-1.5">
             <Label htmlFor="serie">{textos.serie}</Label>
             <Input id="serie" value={serie} onChange={(e) => setSerie(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="proximo-numero">{t("Próximo número da NF-e")}</Label>
+            <Input
+              id="proximo-numero"
+              inputMode="numeric"
+              placeholder={t("Ex.: 1942")}
+              value={proximoNumero}
+              onChange={(e) => setProximoNumero(e.target.value.replace(/\D/g, ""))}
+            />
+            <p className="text-[11px] text-text-subtle">
+              {t(
+                "O número que a próxima nota vai usar. Quem vem de outro sistema põe o último número emitido + 1 — a sequência continua de lá. Vazio = a emissão recusa.",
+              )}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="crt">CRT</Label>

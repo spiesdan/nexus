@@ -239,6 +239,12 @@ export type NotaCreate = z.infer<typeof notaCreateSchema>;
 
 export const configFiscalSchema = z.object({
   serie: z.string().trim().min(1).max(10).default("1"),
+  /**
+   * Próximo número de NF-e a reservar (0291). Nulo = não configurado, e a
+   * emissão recusa nomeando o campo — adivinhar aqui queima faixa fiscal.
+   * Quem migra de outro sistema informa o último número emitido + 1.
+   */
+  proximo_numero: z.number().int().min(1).max(999999999).nullable().optional(),
   natureza_operacao: z.string().trim().min(2).max(120).default("Venda de mercadoria"),
   cfop_padrao: z
     .string()
@@ -289,6 +295,8 @@ export type ConfigFiscal = z.infer<typeof configFiscalSchema>;
 /** A config como a tela lê (sem a senha — ela nunca volta do servidor). */
 export interface ConfigFiscalSalva {
   serie: string;
+  /** Próximo número de NF-e a reservar (0291); nulo = não configurado. */
+  proximo_numero?: number | null;
   natureza_operacao: string;
   cfop_padrao: string;
   emitente_documento: string | null;
