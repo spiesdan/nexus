@@ -445,6 +445,10 @@ export const AUDIT_ACTIONS = [
   "operational_alert.updated",
   "shipment_order.status",
   "shipment_order.removed",
+  // Pedido que entrou na carga DEPOIS de ela montada: a doca não para, e
+  // antes disto a única saída era excluir a carga e montar outra. Separado de
+  // `shipment.created` porque é outro fato: a carga já existia.
+  "shipment_order.added",
   // Separação (migration 0240). Conferência antes da rota: quem separou
   // e quando, por item — o romaneio diz o que deveria ir, isto diz o que foi.
   "shipment_order.separado",
