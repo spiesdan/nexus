@@ -102,7 +102,8 @@ if ($metodo === 'POST' && $rota === '/danfe') {
     if ($xml === '') {
         responder(422, ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => 'Campo xml é obrigatório.']);
     }
-    $r = ServicoNfe::danfe($xml);
+    $logo = (string)($corpo['logo_base64'] ?? '');
+    $r = ServicoNfe::danfe($xml, $logo);
     responder($r['ok'] ? 200 : 422, $r);
 }
 

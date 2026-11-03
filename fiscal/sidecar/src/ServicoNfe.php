@@ -351,8 +351,12 @@ class ServicoNfe
         }
     }
 
-    /** @return array<string,mixed> */
-    public static function danfe(string $xml): array
+    /**
+     * @param string $logoBase64 PNG/JPEG do emitente já em base64 (sem prefixo).
+     *   O `sped-da` aceita `data://text/plain;base64,...`; vazio = sem logo.
+     * @return array<string,mixed>
+     */
+    public static function danfe(string $xml, string $logoBase64 = ''): array
     {
         if (!class_exists('NFePHP\\DA\\NFe\\Danfe')) {
             return ['ok' => false, 'codigo' => 'DANFE_INDISPONIVEL', 'mensagem' => 'Pacote sped-da não instalado. Rode composer require nfephp-org/sped-da.'];
@@ -360,7 +364,22 @@ class ServicoNfe
         try {
             $danfe = new \NFePHP\DA\NFe\Danfe($xml);
             $danfe->debugMode(false);
-            $pdf = $danfe->render();
+            // Sem logo o DANFE sai igual (o layout reserva o espaço e centraliza
+            // os dados do emitente). Com logo, é o do EMITENTE — o arquivo que a
+            // própria organização subiu, nunca a marca de quem revende o produto.
+            $logo = $logoBase64 !== '' ? 'data://text/plain;base64,' . $logoBase64 : '';
+            try {
+                $pdf = $danfe->render($logo);
+            } catch (\Throwable $e) {
+                // O DANFE é o documento; o logo é enfeite. Se a imagem não puder
+                // ser processada (formato exótico, GD sem suporte), sai sem logo
+                // em vez de não sair. Medido: `imagejpeg` ausente na imagem sem
+                // `--with-jpeg` derrubava a geração inteira.
+                if ($logo === '') {
+                    throw $e;
+                }
+                $pdf = $danfe->render('');
+            }
             return ['ok' => true, 'pdf_base64' => base64_encode($pdf)];
         } catch (\Throwable $e) {
             return ['ok' => false, 'codigo' => 'EXCECAO', 'mensagem' => substr($e->getMessage(), 0, 500)];
