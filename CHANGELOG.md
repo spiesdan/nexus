@@ -8,6 +8,119 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.36.0] — 2026-11-03
+
+### Adicionado
+
+- **Notas de compra entram pela SEFAZ e só viram estoque depois da conferência** O sistema passa a receber **NF-e de entrada** — a nota do fornecedor — em vez de
+  esperar alguém baixar o XML e subir à mão. A distribuição DF-e da SEFAZ é
+  consultada pelo certificado A1 da empresa, e cada documento que chega fica
+  guardado com o XML original, os itens, os impostos e o histórico de eventos
+  (cancelamento e carta de correção inclusive).
+
+  O que muda na rotina de quem compra:
+
+  - **Recebimento automático.** Em *Fiscal → Configurações* você liga o
+    recebimento, define de quanto em quanto tempo ele consulta a SEFAZ e, se
+    quiser, a manifestação automática (a ciência da operação). O `scheduler` já
+    entrega o ciclo pronto — não há cron para instalar.
+  - **Conferência antes de mover estoque.** A nota chega como **pendente**. Nada
+    de estoque, produto ou conta a pagar se move até alguém aprovar a conferência.
+    É um portão, não um aviso: a importação recusa nota não aprovada.
+  - **Associação item a item.** Cada item da nota pode ser apontado para um
+    produto do seu catálogo, com busca. Essa escolha vence o casamento por código
+    do fornecedor — e continua valendo quando a nota é ressincronizada.
+  - **13 telas em *Fiscal*** — visão geral com alertas (certificado vencendo,
+    erro 656, última sincronização), notas, pendentes de conferência, XMLs,
+    resumos, manifestações, fornecedores, produtos, eventos, relatórios e o
+    histórico de cada sincronização.
+  - **Relatórios de entrada.** Compras por período, por fornecedor, por mês,
+    produtos mais comprados e impostos — calculados sobre as notas já gravadas.
+
+  A segurança do cursor foi refeita junto: uma falha de gravação **não** avança o
+  NSU, então uma nota não se perde por erro passageiro; duas sincronizações
+  simultâneas não se atropelam (uma espera a outra), e o erro 656 da SEFAZ entra
+  em espera de uma hora em vez de insistir.
+
+  O módulo chega **desligado** e sem efeito sobre quem já usa o sistema: nada
+  muda até você enviar o certificado A1 e ativar o recebimento. A comunicação com
+  a SEFAZ depende das suas credenciais (certificado, CNPJ, IE e UF) — sem elas a
+  tela de configuração avisa o que falta e nenhuma consulta é feita.
+
+- **Campanha de recuperação para clientes que pararam de comprar** A Prospecção só sabia garimpar empresas novas. Quem já era cliente e parou de
+  comprar ficava no Radar, esperando alguém abrir a lista e mandar mensagem à mão
+  — uma conversa por vez, sem agenda e sem controle.
+
+  Agora o assistente de campanha pergunta o que a campanha faz. A opção
+  **Recuperar clientes inativos** monta o público por histórico de compra: quem
+  comprou e não compra há pelo menos X dias (o operador escolhe o X). Antes de
+  criar, a tela mostra a lista de verdade — quantos clientes, quantos têm
+  WhatsApp, quanto já compraram e quem ficou de fora por estar em outra campanha.
+
+  A campanha roda no mesmo motor da prospecção, com as mesmas garantias:
+
+  - três mensagens em rotação (até cinco variações), com as mesmas janelas,
+    período, limite diário e intervalo anti-ban;
+  - texto livre pelo número conectado por QR ou modelo oficial aprovado — que é
+    o único caminho para entregar fora da janela de 24h, onde o cliente inativo
+    quase sempre está;
+  - a lista é reservada na criação e nasce **ativa e agendada**: o assistente é a
+    agenda inteira, e o controle da campanha mostra o que saiu e o que falta.
+
+  Quem pediu para sair não entra. Contato bloqueado (STOP), que recusou marketing,
+  anonimizado ou mesclado é descartado antes da prévia e de novo no envio — a
+  mesma regra que a Venda Automática já aplicava.
+
+  O Radar e a prévia da campanha passam a ler a mesma consulta: um filtro novo
+  vale para os dois no mesmo dia, em vez de um deles continuar mandando para quem
+  pediu para sair.
+
+  Quem já instalou não precisa fazer nada.
+
+### Corrigido
+
+- **A mensagem só aparece como enviada quando o WhatsApp confirma** O inbox dava a mensagem por enviada no instante em que o pedido saía do CRM.
+  No WhatsApp conectado por QR isso acontece antes da confirmação da plataforma —
+  e ela pode recusar depois, por exemplo quando o número está restrito. A tela
+  mostrava o tique verde para uma mensagem que nunca chegou ao celular do
+  cliente, e não havia como descobrir isso olhando o sistema.
+
+  Agora a bolha é honesta em cada degrau:
+
+  - **relógio** — saiu do CRM, o WhatsApp ainda não confirmou;
+  - **um tique** — a plataforma recebeu a mensagem;
+  - **dois tiques** — chegou ao aparelho;
+  - **dois tiques azuis** — foi lida;
+  - **falhou** — a plataforma recusou, com o motivo no tooltip.
+
+  O mesmo critério vale para o que já estava no histórico: mensagem antiga marcada
+  como enviada, mas sem confirmação, também passa a aparecer como pendente.
+
+  A campanha de prospecção usa a mesma régua. Antes ela somava como "enviadas"
+  todas as mensagens que o transporte aceitou; agora separa o que o WhatsApp
+  confirmou do que ainda está sem resposta — e o número que o dono lê na tela é o
+  que ele consegue conferir no celular.
+
+  Quem já instalou não precisa fazer nada.
+
+- **A restrição do WhatsApp é lida pelo canal, não pela campanha** A 1.35.5 fez a campanha parar quando o WhatsApp restringe o número para abrir
+  conversa, mas a leitura do sinal ficou dentro da prospecção: ela conhecia o
+  nome da coluna do identificador da sessão e falava com o transporte por conta
+  própria. O gate que protege a doutrina de canais (`lint:channels`) reprovou — a
+  regra é que **nenhuma feature nomeia um provider**, e por isso o `ci` da `main`
+  ficou vermelho.
+
+  A leitura mudou de casa: agora é o canal que responde
+  (`lib/channels/restricao-de-alcance.ts`), pela mesma porta que o resto do
+  produto usa, e a restrição viaja junto do estado de saúde — na mesma resposta
+  que já diz se o canal está de pé, sem uma segunda ida à rede. A prospecção ficou
+  só com a política: quem a restrição atinge e o que o operador lê.
+
+  O comportamento que o operador vê não mudou: a campanha continua pulando com
+  `restricao_do_whatsapp` até o prazo e o "Enviar agora" continua recusando com
+  `409 whatsapp_restrito`. O que muda é que o próximo canal que tiver restrição de
+  alcance não vai precisar de código novo na campanha.
+
 ## [1.35.5] — 2026-10-30
 
 ### Corrigido
@@ -5492,7 +5605,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.35.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.0...HEAD
+[1.36.0]: https://github.com/spiesdan/nexus/compare/v1.35.5...v1.36.0
 [1.35.5]: https://github.com/spiesdan/nexus/compare/v1.35.4...v1.35.5
 [1.35.4]: https://github.com/spiesdan/nexus/compare/v1.35.3...v1.35.4
 [1.35.3]: https://github.com/spiesdan/nexus/compare/v1.35.2...v1.35.3
