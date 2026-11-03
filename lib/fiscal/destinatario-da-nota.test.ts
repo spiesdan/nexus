@@ -144,6 +144,18 @@ describe("montarDestinatario", () => {
     expect(d.faltando).toContain("cidade/UF (ou o código IBGE do município)");
   });
 
+  it("cliente com só CPF no Mercos: o documento sai do cadastro, não do pedido", () => {
+    // O pedido 19341 é o caso real: `contacts.cnpj` vazio e o CPF em
+    // `source_metadata.mercos.documento`. Antes, a nota pedia CPF/CNPJ a um
+    // cliente que tem CPF — só que guardado no lugar que ninguém lia.
+    const d = montarDestinatario(
+      { cliente_nome: "WANDERLEI MACHADO", cliente_documento: null },
+      { ...WANDERLEI, cnpj: null, source_metadata: { mercos: { documento: "42040906991" } } },
+    );
+    expect(d.documento).toBe("42040906991");
+    expect(d.faltando).not.toContain("CPF/CNPJ");
+  });
+
   it("campo acima de 60 caracteres é nomeado, não cortado", () => {
     const d = montarDestinatario(
       { cliente_nome: "ENDEREÇO LONGO" },

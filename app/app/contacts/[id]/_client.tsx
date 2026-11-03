@@ -24,7 +24,10 @@ import { PropostasDeDado } from "@/components/contacts/PropostasDeDado";
 import { ConversaNoDossie } from "@/components/kanban/ConversaNoDossie";
 import { phoneForDisplay } from "@/lib/channels/phone-variants";
 import { enderecoEmLinha } from "@/components/contacts/EnderecoFields";
-import { formatarCnpj } from "@/lib/brasil/cnpj";
+import {
+  documentoDoCadastro,
+  formatarDocumento,
+} from "@/lib/contacts/documento-do-cadastro";
 import { Cabecalho360 } from "./_cabecalho360";
 import { ProdutosDoContato } from "./_produtos";
 import { OportunidadesDoContato } from "./_oportunidades";
@@ -146,11 +149,14 @@ export function ContactDetailClient({ contactId }: Props) {
                 <div>
                   <dt className="text-xs text-muted-foreground uppercase">{t("Documento")}</dt>
                   <dd className="mt-1">
-                    {contact.cnpj
-                      ? `CNPJ ${formatarCnpj(contact.cnpj)}`
-                      : contact.cpf_hash
-                        ? "CPF ●●● (LGPD)"
-                        : "—"}
+                    {(() => {
+                      // O cadastro inteiro: cliente do Mercos com CPF tem
+                      // `cnpj` NULL e o documento em `source_metadata`. Ler só
+                      // a coluna mostrava "—" para 907 clientes que TÊM CPF.
+                      const documento = documentoDoCadastro(contact);
+                      if (documento) return `${documento.tipo} ${formatarDocumento(documento)}`;
+                      return contact.cpf_hash ? "CPF ●●● (LGPD)" : "—";
+                    })()}
                   </dd>
                 </div>
                 {contact.fantasia && (

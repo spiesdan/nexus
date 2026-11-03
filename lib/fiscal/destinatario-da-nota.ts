@@ -22,6 +22,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 
+import { documentoDoCadastro } from "@/lib/contacts/documento-do-cadastro";
+
 import { municipioIbge } from "./municipio-ibge";
 
 export type LocalDeEntrega = NonNullable<ExtrasFiscais["entrega"]>;
@@ -37,6 +39,9 @@ export interface ContatoFiscal {
   name?: string | null;
   display_name?: string | null;
   cnpj?: string | null;
+  tipo_pessoa?: string | null;
+  /** Onde o Mercos deixa o CPF de quem não tem CNPJ (`mercos.documento`). */
+  source_metadata?: unknown;
   /** Inscrição Estadual do cliente — é ela que decide o `indIEDest`. */
   ie?: string | null;
   logradouro?: string | null;
@@ -67,7 +72,8 @@ export interface DestinatarioDaNota {
 }
 
 const COLUNAS_DO_CONTATO =
-  "id, name, display_name, cnpj, ie, logradouro, numero_end, complemento, bairro, cidade, uf, cep";
+  "id, name, display_name, cnpj, tipo_pessoa, source_metadata, ie, logradouro, numero_end, " +
+  "complemento, bairro, cidade, uf, cep";
 
 function texto(v: string | null | undefined): string {
   return (v ?? "").trim().replace(/\s+/g, " ");
@@ -108,7 +114,12 @@ export function montarDestinatario(
   contato: ContatoFiscal | null | undefined,
 ): DestinatarioDaNota {
   const nome = texto(contato?.display_name) || texto(contato?.name) || texto(pedido.cliente_nome);
-  const documento = documentoFiscal(contato?.cnpj) ?? documentoFiscal(pedido.cliente_documento);
+  // O documento vem do cadastro inteiro, não só da coluna `cnpj`: o
+  // importador do Mercos deixa o CPF em `source_metadata.mercos.documento` e
+  // deixa `cnpj` NULL (907 contatos nesta instalação). Sem esta leitura, a nota
+  // pedia CPF a um cliente que tem CPF — o pedido 19341 é o caso.
+  const documento =
+    documentoDoCadastro(contato)?.digitos ?? documentoFiscal(pedido.cliente_documento);
   const { ie, indicador: indicador_ie } = indicadorIe(contato?.ie);
 
   const faltando: string[] = [];
@@ -160,8 +171,14 @@ export function montarDestinatario(
 }
 
 /**
- * Carrega o contato do pedido (vínculo primeiro, CNPJ depois — mesmo caminho
- * dos importados que o romaneio usa) e monta o destinatário.
+ * Carrega o contato do pedido (vínculo primeiro, documento depois — mesmo
+ * caminho dos importados que o romaneio usa) e monta o destinatário.
+ *
+ * A busca por documento só alcança a coluna `cnpj`: o CPF que o Mercos deixa em
+ * `source_metadata.mercos.documento` não é alcançável por igualdade (o metadado
+ * guarda máscara, e filtrar caminho JSON faria uma consulta por emissão). São
+ * 4 pedidos nesta instalação nessa situação, e todos têm o documento no próprio
+ * snapshot — a nota sai com ele; o endereço é o que falta, e a tela diz isso.
  */
 export async function carregarDestinatario(
   supabase: SupabaseClient,
@@ -181,13 +198,13 @@ export async function carregarDestinatario(
   }
 
   if (!contato) {
-    const cnpj = documentoFiscal(pedido.cliente_documento);
-    if (cnpj) {
+    const documento = documentoFiscal(pedido.cliente_documento);
+    if (documento) {
       const { data } = await supabase
         .from("contacts")
         .select(COLUNAS_DO_CONTATO)
         .eq("organization_id", organizationId)
-        .eq("cnpj", cnpj)
+        .eq("cnpj", documento)
         .maybeSingle();
       contato = (data as unknown as ContatoFiscal) ?? null;
     }
