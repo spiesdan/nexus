@@ -75,6 +75,19 @@ const styles = StyleSheet.create({
   pedido: { fontSize: 7.5, fontWeight: "bold", marginRight: 4 },
   cliente: { flex: 1, fontSize: 7.5 },
   semEndereco: { fontSize: 6.5, color: "#b45309", marginLeft: 4 },
+  cidade: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    backgroundColor: "#eef2f7",
+    borderLeft: "2pt solid #1e3a5f",
+    paddingVertical: 1.5,
+    paddingHorizontal: 4,
+    marginTop: 3,
+    marginBottom: 1,
+  },
+  cidadeNome: { fontSize: 8, fontWeight: "bold", color: "#1e3a5f" },
+  cidadeQtd: { fontSize: 6.5, color: "#4b5563" },
   valor: { fontSize: 7.5, fontWeight: "bold", marginLeft: 6 },
   endereco: { fontSize: 7, color: "#4b5563", marginLeft: 18, marginBottom: 1 },
   assinatura: { fontSize: 6.5, color: "#6b7280", marginBottom: 1 },
@@ -105,6 +118,8 @@ export interface ParadaDoRomaneio {
   endereco_entrega: string | null;
   total_cents: number;
   status: string;
+  /** Cidade da entrega ("MAFRA/SC"), para separar a carga por cidade. */
+  cidade?: string | null;
   /** Itens do pedido para o checklist de carregamento (opcional p/ compat). */
   itens?: ItemDaParada[];
 }
@@ -132,6 +147,57 @@ function numeroDoPedido(numero: number): string {
  */
 export function ordenarParadasDoRomaneio(paradas: ParadaDoRomaneio[]): ParadaDoRomaneio[] {
   return [...paradas].sort((a, b) => a.sequencia - b.sequencia || a.numero - b.numero);
+}
+
+export interface GrupoDeCidade {
+  /** Rótulo como veio do cadastro ("MAFRA/SC"); null = sem cidade. */
+  cidade: string | null;
+  /** Título impresso (o rótulo, ou "Cidade não informada"). */
+  rotulo: string;
+  paradas: ParadaDoRomaneio[];
+}
+
+/**
+ * A CARGA SEPARADA POR CIDADE — o motorista descarrega uma cidade de cada vez.
+ *
+ * Ordem dos grupos: a da ROTA, não alfabética. O primeiro grupo é o da parada
+ * mais cedo da sequência, e assim por diante — quem montou a rota continua
+ * mandando; a cidade é o que agrupa, não o que reordena o dia. Dentro do
+ * grupo, sequência.
+ *
+ * Cidade é comparada pelo NOME, sem acento e sem caixa ("Mafra" = "MAFRA" =
+ * "Mafra/SC"), porque o cadastro tem as três formas — e um cadastro com a
+ * cidade por extenso não pode virar um grupo sozinho ao lado dos outros. O
+ * rótulo impresso é o primeiro que apareceu, promovido para a forma com UF
+ * assim que alguma parada do grupo tiver UF. Parada sem cidade vai para o
+ * fim, num grupo próprio: esconder essas paradas num grupo qualquer faria o
+ * motorista passar por elas sem saber por quê.
+ */
+export function agruparParadasPorCidade(paradas: ParadaDoRomaneio[]): GrupoDeCidade[] {
+  const norm = (v: string): string =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  const chaveDe = (rotulo: string): string => norm(rotulo.split(/[,/]/)[0] ?? rotulo);
+  const grupos = new Map<string, GrupoDeCidade>();
+  for (const p of ordenarParadasDoRomaneio(paradas)) {
+    const rotulo = (p.cidade ?? "").trim();
+    const chave = rotulo ? chaveDe(rotulo) : "";
+    const existente = grupos.get(chave);
+    if (existente) {
+      existente.paradas.push(p);
+      if (existente.cidade && !existente.rotulo.includes("/") && rotulo.includes("/")) {
+        existente.cidade = rotulo;
+        existente.rotulo = rotulo;
+      }
+    } else {
+      grupos.set(chave, {
+        cidade: rotulo || null,
+        rotulo: rotulo || "Cidade não informada",
+        paradas: [p],
+      });
+    }
+  }
+  const valores = [...grupos.values()];
+  return [...valores.filter((g) => g.cidade), ...valores.filter((g) => !g.cidade)];
 }
 
 export interface ItemRepetido {
@@ -237,6 +303,14 @@ function ConteudoRomaneio({
   const total = paradas.reduce((s, p) => s + p.total_cents, 0);
   const repetidos = agruparItensRepetidos(paradas);
   const totalItens = paradas.reduce((s, p) => s + (p.itens?.length ?? 0), 0);
+  const grupos = agruparParadasPorCidade(paradas);
+  // A numeração é REDISTRIBUÍDA na ordem em que o papel é lido. Manter o número
+  // da rota original imprimiria "1, 5, 9, 2, 3" — o motorista conferiria uma
+  // lista que parece fora de ordem. A rota continua sendo a ordem; a cidade é
+  // o que a agrupa.
+  const ordemDaParada = new Map<ParadaDoRomaneio, number>();
+  let n = 0;
+  for (const g of grupos) for (const p of g.paradas) ordemDaParada.set(p, ++n);
   return (
     <View>
       <View style={styles.header}>
@@ -279,37 +353,49 @@ function ConteudoRomaneio({
         Por parada: [ ] carregado · [ ] entregue · assinatura do recebedor depois dos itens.
       </Text>
 
-      {paradas.map((p) => {
-        const itens = p.itens ?? [];
-        return (
-          <View key={`${p.sequencia}-${p.numero}`} style={styles.parada} wrap={false}>
-            <View style={styles.paradaTopo}>
-              <Text style={styles.seqNum}>{p.sequencia}</Text>
-              <Text style={styles.pedido}>{numeroDoPedido(p.numero)}</Text>
-              <Text style={styles.cliente}>
-                {p.cliente_nome}
-                {!p.endereco_entrega && <Text style={styles.semEndereco}> · sem endereço</Text>}
-              </Text>
-              <Text style={styles.valor}>{moeda(p.total_cents)}</Text>
-            </View>
-            {p.endereco_entrega && <Text style={styles.endereco}>{p.endereco_entrega}</Text>}
-            <View style={styles.fluxoItens}>
-              {itens.map((it, idx) => (
-                <Text key={`${it.codigo}-${idx}`} style={styles.itemCheck}>
-                  [ ] [ ] {it.quantidade} un. {it.codigo ? `${it.codigo} — ` : ""}
-                  {it.nome}
-                </Text>
-              ))}
-              {/* `wrap={false}`: a linha de assinatura nunca parte no meio —
-                  "Assinatura do recebedor:" numa linha e os traços na outra
-                  não é canhoto, é borrão. */}
-              <Text style={styles.assinatura} wrap={false}>
-                Assinatura do recebedor: ______________________________
-              </Text>
-            </View>
+      {grupos.map((g) => (
+        <View key={`cidade-${g.rotulo}`}>
+          <View style={styles.cidade} wrap={false}>
+            <Text style={styles.cidadeNome}>{g.rotulo}</Text>
+            <Text style={styles.cidadeQtd}>
+              {g.paradas.length} {g.paradas.length === 1 ? "parada" : "paradas"}
+            </Text>
           </View>
-        );
-      })}
+          {g.paradas.map((p) => {
+            const itens = p.itens ?? [];
+            return (
+              <View key={`${p.sequencia}-${p.numero}`} style={styles.parada} wrap={false}>
+                <View style={styles.paradaTopo}>
+                  <Text style={styles.seqNum}>{ordemDaParada.get(p) ?? p.sequencia}</Text>
+                  <Text style={styles.pedido}>{numeroDoPedido(p.numero)}</Text>
+                  <Text style={styles.cliente}>
+                    {p.cliente_nome}
+                    {!p.endereco_entrega && (
+                      <Text style={styles.semEndereco}> · sem endereço</Text>
+                    )}
+                  </Text>
+                  <Text style={styles.valor}>{moeda(p.total_cents)}</Text>
+                </View>
+                {p.endereco_entrega && <Text style={styles.endereco}>{p.endereco_entrega}</Text>}
+                <View style={styles.fluxoItens}>
+                  {itens.map((it, idx) => (
+                    <Text key={`${it.codigo}-${idx}`} style={styles.itemCheck}>
+                      [ ] [ ] {it.quantidade} un. {it.codigo ? `${it.codigo} — ` : ""}
+                      {it.nome}
+                    </Text>
+                  ))}
+                  {/* `wrap={false}`: a linha de assinatura nunca parte no meio —
+                      "Assinatura do recebedor:" numa linha e os traços na outra
+                      não é canhoto, é borrão. */}
+                  <Text style={styles.assinatura} wrap={false}>
+                    Assinatura do recebedor: ______________________________
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }

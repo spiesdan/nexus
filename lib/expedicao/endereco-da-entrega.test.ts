@@ -10,7 +10,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   cnpjDoPedido,
+  cidadeDaEntrega,
   enderecoDaEntrega,
+  nomeDaEntrega,
   type ContatoDaEntrega,
   type ContatosDaEntrega,
 } from "./endereco-da-entrega";
@@ -20,6 +22,8 @@ const CNPJ = "12.345.678/0001-99";
 const contato: ContatoDaEntrega = {
   id: "c1",
   cnpj: "12345678000199",
+  name: "PATRICIA DE FATIMA DA SILVA",
+  display_name: "PATRICIA DE FATIMA DA SILVA",
   logradouro: "Rua das Flores",
   numero_end: "10",
   complemento: "Sala 2",
@@ -77,5 +81,47 @@ describe("enderecoDaEntrega", () => {
   it("sem nada em lugar nenhum devolve null (a tela decide o texto)", () => {
     expect(enderecoDaEntrega({ endereco_entrega: "   " }, mapa())).toBeNull();
     expect(enderecoDaEntrega({ contact_id: "nao-existe" }, mapa([contato]))).toBeNull();
+  });
+});
+
+describe("nomeDaEntrega", () => {
+  it("vence o nome congelado no pedido quando o cadastro foi renomeado", () => {
+    // O caso real do 19341: o pedido ficou com o nome da importação.
+    const linha = nomeDaEntrega(
+      { cliente_nome: "BILL COMERCIO DE ESTOPAS - PATRICIA DE FATIMA DA SILVA", contact_id: "c1" },
+      mapa([contato]),
+    );
+    expect(linha).toBe("PATRICIA DE FATIMA DA SILVA");
+  });
+
+  it("prefere display_name e cai para name", () => {
+    const soName = { ...contato, display_name: null };
+    expect(nomeDaEntrega({ contact_id: "c1" }, mapa([soName]))).toBe("PATRICIA DE FATIMA DA SILVA");
+  });
+
+  it("sem contato, mantém o nome do pedido", () => {
+    expect(
+      nomeDaEntrega({ cliente_nome: "  CLIENTE DO PEDIDO  ", contact_id: "nao-existe" }, mapa([contato])),
+    ).toBe("CLIENTE DO PEDIDO");
+  });
+
+  it("sem contato e sem nome no pedido devolve string vazia (a tela decide)", () => {
+    expect(nomeDaEntrega({ cliente_nome: null }, mapa())).toBe("");
+  });
+});
+
+describe("cidadeDaEntrega", () => {
+  it("cidade + UF do cadastro viram o rótulo do grupo", () => {
+    expect(cidadeDaEntrega({ contact_id: "c1" }, mapa([contato]))).toBe("Mafra/SC");
+  });
+
+  it("cidade por extenso não vira UF por adivinhação", () => {
+    const extenso = { ...contato, cidade: "Mafra, Santa Catarina", uf: null };
+    expect(cidadeDaEntrega({ contact_id: "c1" }, mapa([extenso]))).toBe("Mafra");
+  });
+
+  it("sem cidade no cadastro não inventa grupo", () => {
+    const semCidade = { ...contato, cidade: null, uf: "SC" };
+    expect(cidadeDaEntrega({ contact_id: "c1" }, mapa([semCidade]))).toBeNull();
   });
 });

@@ -16,7 +16,12 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { carregarContatosDaEntrega, enderecoDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
+import {
+  carregarContatosDaEntrega,
+  cidadeDaEntrega,
+  enderecoDaEntrega,
+  nomeDaEntrega,
+} from "@/lib/expedicao/endereco-da-entrega";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
 import { renderRomaneioPdf } from "@/lib/comercial/romaneio-pdf";
 import { createClient } from "@/lib/supabase/server";
@@ -129,8 +134,12 @@ export async function GET(
         return {
           sequencia: i.sequencia,
           numero: ped?.numero ?? 0,
-          cliente_nome: ped?.cliente_nome ?? "—",
+          // Nome e cidade saem do MESMO contato que o endereço: o nome
+          // congelado no pedido envelhece (109 de 393 pedidos abertos já
+          // divergiam do cadastro) e a cidade é o que agrupa a folha.
+          cliente_nome: ped ? nomeDaEntrega(ped, contatos) || "—" : "—",
           endereco_entrega: ped ? enderecoDaEntrega(ped, contatos) : null,
+          cidade: ped ? cidadeDaEntrega(ped, contatos) : null,
           total_cents: ped?.total_cents ?? 0,
           status: i.status,
           itens: itensPorPedido[i.order_id] ?? [],
