@@ -8,6 +8,54 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.0] — 2026-11-03
+
+### Adicionado
+
+- **A fila da expedição diz para quais cidades cada carga vai** Cada linha da expedição mostrava placa, motorista e "3/7 paradas" — mas não
+  dizia se aquela carga é a de Canoinhas ou a de Mafra, que é a primeira coisa que
+  o despachante pergunta ao olhar a mesa.
+
+  Agora a linha mostra as **cidades da rota**, na ordem das paradas e sem repetir
+  ("Canoinhas/SC · Mafra/SC · Três Barras/SC"). A cidade sai do mesmo resolvedor
+  do romaneio — endereço de entrega do pedido primeiro, cadastro do cliente
+  depois —, então a linha da carga e o papel que o motorista leva não discordam.
+  Parada cujo endereço não resolve cidade é **contada** na linha ("1 sem cidade")
+  em vez de sumir do resumo.
+
+  A busca da expedição também passou a achar por cidade: digitar "canoinhas"
+  encontra a carga que vai para lá, não só o pedido na fila de embarque.
+
+- **Imprimir os pedidos de uma carga direto da expedição** A expedição já imprimia o romaneio — a folha de quem dirige. Os documentos dos
+  pedidos não: quem separa a mercadoria no galpão tinha de voltar até Pedidos e
+  marcar um por um.
+
+  Agora a ficha da carga tem o botão **Imprimir pedidos**, que abre o mesmo
+  impresso da tela de Pedidos com os pedidos daquela carga — na ordem das
+  paradas, que é a ordem em que o motorista vai entregar.
+
+  Carga com mais de 50 pedidos (o teto de um arquivo de impressão) não imprime 50
+  e esconde o resto: a tela diz quantos são e entrega um botão por lote, também na
+  ordem das paradas.
+
+### Corrigido
+
+- **CPF do cliente do Mercos passa a aparecer no cadastro e na NF-e** Cliente que entrou pelo Mercos com **CPF** ficava sem documento visível no
+  sistema: a ficha mostrava "Documento: —", a nota dizia que o cadastro não tinha
+  CPF/CNPJ e o impresso saía sem documento — para um cliente que **tem** CPF.
+
+  A causa é onde o CPF fica guardado. O Mercos manda o documento no cadastro e a
+  coluna `cnpj` guarda só CNPJ; o CPF fica em `source_metadata.mercos.documento`,
+  que nada lia. Medido nesta instalação em 03/11/2026: **917 contatos com CPF**
+  (907 deles com a coluna vazia) e 832 pedidos desses clientes.
+
+  Agora o documento do cadastro é lido do lugar certo, em um resolvedor só
+  (`documentoDoCadastro`), usado pela ficha do cliente, pela NF-e (destinatário,
+  pré-validação e emissão), pelo romaneio e pelo impresso do pedido. A coluna
+  `cnpj` continua tendo prioridade: correção feita à mão no cadastro vale.
+
+  Nada muda para quem tem CNPJ — o caminho é o mesmo de antes.
+
 ## [1.37.0] — 2026-11-03
 
 ### Adicionado
@@ -5741,7 +5789,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.37.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.0...HEAD
+[1.38.0]: https://github.com/spiesdan/nexus/compare/v1.37.0...v1.38.0
 [1.37.0]: https://github.com/spiesdan/nexus/compare/v1.36.3...v1.37.0
 [1.36.3]: https://github.com/spiesdan/nexus/compare/v1.36.2...v1.36.3
 [1.36.2]: https://github.com/spiesdan/nexus/compare/v1.36.1...v1.36.2
