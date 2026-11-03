@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
-import { formatarDistancia, formatarDuracao, haversineM } from "@/lib/rotas/roteamento";
+import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/browser";
 import { CaretDown, CaretUp, MapPin } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
@@ -116,7 +116,10 @@ export function Roteirizador({
   const [rastro, setRastro] = React.useState<[number, number][]>([]);
   const [motorista, setMotorista] = React.useState<{ lat: number; lng: number } | null>(null);
 
-  const recarregar = React.useCallback(async () => {
+  // Devolve a rota lida para quem precisa do estado NOVO no mesmo clique
+  // (o cálculo da ordem geocodifica antes e não pode decidir pelo render
+  // anterior — a closure de `comCoord` ficaria velha).
+  const recarregar = React.useCallback(async (): Promise<RotaCarregada | null> => {
     try {
       const corpo = await apiClient.get<{ data: RotaCarregada }>(`/api/v1/shipments/${cargaId}/rota`);
       const d = corpo.data;
@@ -131,8 +134,10 @@ export function Roteirizador({
       setRetornar(d.carga.retornar_origem);
       setTempoParada(d.carga.tempo_parada_min);
       if (d.ultima_posicao) setMotorista({ lat: d.ultima_posicao.latitude, lng: d.ultima_posicao.longitude });
+      return d;
     } catch (e) {
       showApiError(e);
+      return null;
     }
   }, [cargaId]);
 
@@ -260,11 +265,24 @@ export function Roteirizador({
       : null;
   if (realizado && tempoRealizado != null) realizado = { ...realizado, tempo: formatarDuracao(tempoRealizado) };
 
-  async function geocodificarTudo() {
-    setTrabalhando("geo");
+  /**
+   * Localiza os endereços desta carga no servidor, lote a lote.
+   *
+   * Devolve quantas paradas FICARAM com coordenada — é esse número que o
+   * cálculo da ordem usa para decidir se pode continuar. Devolver `void`
+   * obrigava quem chama a reler o render anterior, que ainda não tinha as
+   * coordenadas recém-gravadas.
+   *
+   * `rotulo` é o estado de "trabalhando" a manter enquanto roda: chamado de
+   * dentro do cálculo da ordem ele é `"otimizar"`, para os botões não voltarem
+   * a ficar clicáveis no meio da operação.
+   */
+  async function geocodificarTudo(rotulo = "geo"): Promise<number> {
+    setTrabalhando(rotulo);
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
     let semResultado = 0;
+    let ultima: RotaCarregada | null = null;
     try {
       for (;;) {
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
@@ -277,12 +295,14 @@ export function Roteirizador({
         setProgressoGeo(
           d.restantes > 0 ? t(`Faltam ${d.restantes}…`) : t("Pronto."),
         );
-        await recarregar();
+        ultima = (await recarregar()) ?? ultima;
         // Um lote sem estado nenhum não é "faltam N": é a rota sem alvo (sem
         // endereço ou contato fora do alcance). Sem esta saída, `restantes > 0`
         // com `estados` vazio girava para sempre.
         if (d.restantes <= 0 || d.estados.length === 0) break;
       }
+      const paradas = ultima?.paradas ?? [];
+      const noMapa = paradas.filter((p) => p.latitude != null && p.longitude != null).length;
       if (localizadas > 0 && semResultado === 0) {
         toast.success(`${localizadas} ${t("parada(s) localizada(s) no mapa.")}`);
       } else if (localizadas > 0) {
@@ -295,13 +315,15 @@ export function Roteirizador({
         toast.warning(t("Nenhuma parada localizada. Corrija o endereço ou marque no mapa."));
       } else {
         toast.info(
-          semCoord.length > 0
+          noMapa < paradas.length
             ? t("As paradas desta carga estão sem endereço. Corrija o cadastro ou marque no mapa.")
             : t("Todas as paradas desta carga já estão no mapa."),
         );
       }
+      return noMapa;
     } catch (e) {
       showApiError(e);
+      return ultima?.paradas.filter((p) => p.latitude != null && p.longitude != null).length ?? 0;
     } finally {
       setTrabalhando(null);
       setProgressoGeo(null);
@@ -327,6 +349,25 @@ export function Roteirizador({
       return;
     setTrabalhando("otimizar");
     try {
+      // SEM NENHUMA PARADA NO MAPA, o clique não pode morrer. Era o que
+      // acontecia: os dois botões nasciam desabilitados ("Otimizar desativado:
+      // nenhuma parada localizada") e quem abria uma carga nova tinha de
+      // descobrir sozinho que precisava clicar em "Geocodificar" antes — a
+      // carga 22 chegou a 0 de 22 localizadas sem que o cálculo explicasse
+      // por quê. Agora o cálculo localiza primeiro, com progresso, e só
+      // desiste com o motivo escrito.
+      if (comCoord.length === 0) {
+        const noMapa = await geocodificarTudo("otimizar");
+        if (noMapa === 0) {
+          toast.error(
+            t("Nenhuma parada localizada — sem endereço não há ordem. Corrija o cadastro ou marque no mapa."),
+          );
+          return;
+        }
+        // O `finally` da localização devolve o estado; o cálculo continua
+        // ocupado até responder, senão o botão reabre no meio da operação.
+        setTrabalhando("otimizar");
+      }
       // Minha posição como origem: resolve o GPS antes de pedir a proposta.
       let origem: { endereco: string } | { latitude: number; longitude: number } | null = null;
       const txt = origemTexto.trim();
@@ -355,7 +396,11 @@ export function Roteirizador({
       });
       const p = corpo.data;
       setProposta(p);
-      setOrdem(p.ordem);
+      // A proposta só traz as paradas COM coordenada. Jogar fora as demais
+      // sumia com elas da lista e fazia o "Salvar ordem" ser recusado ("a
+      // ordem precisa cobrir todas as paradas"): elas vão para o fim, que é
+      // onde a operação as trata — sem mapa, rota manual.
+      setOrdem(ordemCompleta(p.ordem, p.nao_roteirizaveis));
       if (!p.ruas) toast.warning(t("Serviço de ruas fora do ar — ordem aproximada (linha reta ×1,3)."));
       else toast.success(t("Rota otimizada. Confira e salve."));
     } catch (e) {
@@ -685,7 +730,7 @@ export function Roteirizador({
                     <Button
                       size="sm"
                       onClick={() => void otimizar("distancia")}
-                      disabled={trabalhando !== null || comCoord.length === 0}
+                      disabled={trabalhando !== null || paradasOrdenadas.length === 0}
                     >
                       {trabalhando === "otimizar" ? t("Calculando…") : t("Ordenar por distância")}
                     </Button>
@@ -693,7 +738,7 @@ export function Roteirizador({
                       size="sm"
                       variant="outline"
                       onClick={() => void otimizar("tsp")}
-                      disabled={trabalhando !== null || comCoord.length === 0}
+                      disabled={trabalhando !== null || paradasOrdenadas.length === 0}
                     >
                       {t("Otimizar por ruas")}
                     </Button>
@@ -704,12 +749,17 @@ export function Roteirizador({
                       disabled={trabalhando !== null}
                     >
                       <MapPin className="h-3.5 w-3.5" aria-hidden />
-                      {t("Geocodificar")}
+                      {trabalhando === "geo" ? t("Localizando…") : t("Geocodificar")}
                     </Button>
                   </div>
-                  {comCoord.length === 0 && (
+                  {comCoord.length === 0 && paradasOrdenadas.length > 0 && (
+                    <p className="text-[11px] text-text-subtle">
+                      {t("Ainda sem parada no mapa: ao calcular, localizamos os endereços primeiro.")}
+                    </p>
+                  )}
+                  {comCoord.length > 0 && semCoord.length > 0 && (
                     <p className="text-[11px] text-warning-fg">
-                      {t("Otimizar desativado: nenhuma parada localizada. Geocodifique ou marque no mapa.")}
+                      {`${semCoord.length} ${t("parada(s) sem mapa ficam no fim da lista.")}`}
                     </p>
                   )}
                   {progressoGeo && (
