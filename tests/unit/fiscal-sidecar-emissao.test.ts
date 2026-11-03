@@ -107,6 +107,14 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toMatch(/private function cfopParaDestino\(string \$cfop\): string/);
   });
 
+  it("indFinal segue o cadastro do destinatário — empresa com IE não é consumidora final", () => {
+    // Era `'1'` fixo para toda venda. O indicador não é escolha da tela: sai do
+    // mesmo campo que alimenta o `indIEDest` (indicador_ie 1 = contribuinte).
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).not.toMatch(/'indFinal'\s*=>\s*'1',/);
+    expect(src).toMatch(/'indFinal'\s*=>.*\$p\['indicador_ie'\]/);
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.
