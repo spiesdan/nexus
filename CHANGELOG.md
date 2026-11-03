@@ -8,6 +8,21 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.36.3] — 2026-11-03
+
+### Adicionado
+
+- **Ponto de partida da rota vem da sede da empresa, sempre** A tela de rota abria com o campo de origem **vazio**, e sem origem a otimização
+  por distância nem roda — a mensagem era "Ordem por distância precisa da origem
+  (a base)" para quem só queria mandar o motorista embora.
+
+  Agora o padrão é a **sede da empresa**, lida do cadastro da organização (o mesmo
+  endereço que sai no romaneio e nos documentos). Continua editável, e o que o
+  operador confirmar na tela vence o padrão — a sede é o começo, não uma trava.
+
+  Se o cadastro da organização não tiver endereço, nada muda: o campo continua
+  vazio, em vez de a rota sair de um lugar inventado.
+
 ## [1.36.2] — 2026-11-03
 
 ### Adicionado
@@ -5656,7 +5671,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.36.3...HEAD
+[1.36.3]: https://github.com/spiesdan/nexus/compare/v1.36.2...v1.36.3
 [1.36.2]: https://github.com/spiesdan/nexus/compare/v1.36.1...v1.36.2
 [1.36.1]: https://github.com/spiesdan/nexus/compare/v1.36.0...v1.36.1
 [1.36.0]: https://github.com/spiesdan/nexus/compare/v1.35.5...v1.36.0
