@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.4] — 2026-11-03
+
+### Corrigido
+
+- **indFinal segue o cadastro do destinatário — empresa com IE não é consumidora final** O `<ide>` saía com **`indFinal` fixo em 1** (consumidor final) para toda venda,
+  inclusive para empresa contribuinte do ICMS com Inscrição Estadual. O indicador
+  não é escolha da tela: ele diz se a operação é com consumidor final ou não, e a
+  informação já está no cadastro do destinatário.
+
+  Agora ele segue o **mesmo campo que alimenta o `indIEDest`**: `indicador_ie` 1
+  (contribuinte com IE) declara `indFinal` 0; isento e não contribuinte continuam
+  como consumidor final. Nenhum dado novo é pedido — a fonte é a mesma do
+  `indIEDest`, que já vinha do cadastro desde a correção do destino.
+
 ## [1.38.3] — 2026-11-03
 
 ### Corrigido
@@ -5894,7 +5908,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.4...HEAD
+[1.38.4]: https://github.com/spiesdan/nexus/compare/v1.38.3...v1.38.4
 [1.38.3]: https://github.com/spiesdan/nexus/compare/v1.38.2...v1.38.3
 [1.38.2]: https://github.com/spiesdan/nexus/compare/v1.38.1...v1.38.2
 [1.38.1]: https://github.com/spiesdan/nexus/compare/v1.38.0...v1.38.1
