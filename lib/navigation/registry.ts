@@ -491,27 +491,26 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "vendas",
   },
   {
-    // A PORTA do módulo de notas fiscais. A entrada de NF-e (§21 da spec) tem
-    // treze telas próprias; esta é a visão geral delas. Emitir continua em
-    // `/app/notas`, alcançável pelo card abaixo, pelo ⌘K e pelo link do
-    // cabeçalho — a dobra medida não comporta duas portas roláveis de fiscal.
+    // MÓDULO DE ENTRADA: as treze telas de NF-e recebidas. Fica no ⌘K e no
+    // cabeçalho de `/app/notas`; a porta do sidebar é a EMISSÃO, abaixo — foi
+    // o que o cliente procurou em "Notas fiscais" e não achou (o clique caía
+    // aqui, no recebimento, que estava vazio).
     href: "/app/fiscal",
-    label: "Notas fiscais",
+    label: "NF-e recebidas",
     description:
       "Receba as NF-e emitidas contra o CNPJ, manifeste, confira e importe para estoque e financeiro.",
     icon: Receipt,
     group: "fiscal",
-    sidebar: true,
   },
   {
-    // Emissão: a tela que já existia, agora como destino do mesmo grupo. Sem
-    // sidebar — a porta rolável é a visão geral acima; aqui se chega pelo link
-    // "Emitir NF-e" e pelo ⌘K.
+    // EMISSÃO: a porta do sidebar. É o uso diário — emitir, acompanhar a
+    // SEFAZ, baixar XML/DANFE — e o recebimento é visita ocasional.
     href: "/app/notas",
-    label: "Emitir NF-e",
-    description: "Emita a partir do pedido faturado ou expedido e acompanhe o status na SEFAZ.",
+    label: "Notas fiscais",
+    description: "Emita, acompanhe o status na SEFAZ e baixe XML e DANFE.",
     icon: Archive,
     group: "fiscal",
+    sidebar: true,
   },
   {
     href: "/app/fiscal/notas",

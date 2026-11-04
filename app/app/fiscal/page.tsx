@@ -126,7 +126,7 @@ export default async function FiscalVisaoGeralPage() {
   return (
     <div className="space-y-6">
       <NexusPageHeader
-        title="Notas fiscais"
+        title="NF-e recebidas"
         subtitle="As NF-e que emitiram contra o CNPJ da empresa — recebidas pela SEFAZ, conferidas e importadas."
         actions={podeOperar ? <BotaoSincronizar /> : undefined}
       />

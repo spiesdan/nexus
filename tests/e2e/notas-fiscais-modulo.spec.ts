@@ -16,7 +16,7 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
  */
 
 const TELAS = [
-  { rota: "/app/fiscal", titulo: "Notas fiscais", arquivo: "01-visao-geral" },
+  { rota: "/app/fiscal", titulo: "NF-e recebidas", arquivo: "01-visao-geral" },
   { rota: "/app/fiscal/notas", titulo: "Todas as notas", arquivo: "02-todas-as-notas" },
   {
     rota: "/app/fiscal/pendentes",
