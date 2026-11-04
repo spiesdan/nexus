@@ -129,6 +129,16 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toMatch(/'CST'\s*=>\s*'53'/);
   });
 
+  it("a validação usa o XSD PL_010 — o PL_009 não conhece IBSCBS", () => {
+    // Medido na 1ª emissão com IBS/CBS: `signNFe` validava contra PL_009_V4 e
+    // recusava o XML inteiro ("IBSCBS: This element is not expected"). O XSD
+    // PL_010_V1.30 aceita o grupo (a única falta que acusa é a assinatura, que
+    // o signNFe acrescenta).
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).not.toContain("'schemes' => 'PL_009_V4'");
+    expect(src).toContain("'schemes' => 'PL_010_V1.30'");
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.
