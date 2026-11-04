@@ -183,9 +183,34 @@ export function ConfigFiscal({
         </p>
       )}
 
+      {/* O QUE FALTA PARA EMITIR, em uma linha. A tela tem cinco blocos e o
+          que impede a nota ficava espalhado entre eles — a pessoa preenchia,
+          salvava e só descobria o que faltava ao tentar emitir. */}
+      <div className="flex flex-wrap gap-1.5">
+        {[
+          { ok: documento.trim() !== "", rotulo: t("CNPJ") },
+          { ok: ie.trim() !== "", rotulo: t("IE") },
+          { ok: codMun.trim() !== "", rotulo: t("IBGE") },
+          { ok: certPath !== "", rotulo: t("Certificado") },
+          { ok: proximoNumero.trim() !== "", rotulo: t("Numeração") },
+        ].map((item) => (
+          <span
+            key={item.rotulo}
+            className={
+              item.ok
+                ? "inline-flex items-center gap-1 rounded-full border border-success/40 bg-success-bg px-2 py-0.5 text-[11px] font-medium text-success-fg"
+                : "inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning-bg px-2 py-0.5 text-[11px] font-medium text-warning-fg"
+            }
+          >
+            <span aria-hidden>{item.ok ? "✓" : "!"}</span>
+            {item.rotulo}
+          </span>
+        ))}
+      </div>
+
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {textos.emitente}
+          <span className="mr-1.5 text-accent">1</span> {textos.emitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -233,7 +258,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {textos.enderecoEmitente}
+          <span className="mr-1.5 text-accent">2</span> {textos.enderecoEmitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -288,7 +313,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {textos.emissaoSefaz}
+          <span className="mr-1.5 text-accent">3</span> {textos.emissaoSefaz}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -328,7 +353,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {textos.certificado}
+          <span className="mr-1.5 text-accent">4</span> {textos.certificado}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -396,7 +421,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {t("Recebimento de NF-e (entrada)")}
+          <span className="mr-1.5 text-accent">5</span> {t("Recebimento de NF-e (entrada)")}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="flex items-start gap-2 text-sm">
@@ -445,7 +470,13 @@ export function ConfigFiscal({
         </div>
       </fieldset>
 
-      <div className="flex justify-end">
+      {/* Barra fixa: o formulário tem cinco blocos, e o botão de salvar ficava
+          no fim de todos eles — quem mexia no primeiro campo tinha de rolar a
+          tela inteira para gravar. */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur sm:-mx-5 sm:px-5">
+        <p className="text-[11px] text-text-subtle">
+          {t("As alterações só valem depois de salvar.")}
+        </p>
         <Button onClick={() => void salvarConfig()} disabled={salvandoConfig}>
           {salvandoConfig ? t("Salvando…") : textos.salvarConfig}
         </Button>
