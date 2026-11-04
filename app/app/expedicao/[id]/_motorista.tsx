@@ -317,7 +317,10 @@ export function ModoMotorista({
       {/* ── O placar do dia ─────────────────────────────────────────────────
           Na cabine, o número que importa é "quantas faltam" — não a lista de
           indicadores. O anel e a barra dizem a mesma coisa em duas leituras:
-          de relance (anel) e no detalhe (barra). */}
+          de relance (anel) e no detalhe (barra).
+          Na tela cheia ele NÃO entra: o pill flutuante sobre o mapa já diz
+          `feitas/total` e a %, e cada pixel da folha é altura de mapa. */}
+      {!imersivo && (
       <Card className="overflow-hidden p-0">
         <div className="flex items-center justify-between gap-3 px-4 py-3.5">
           <div className="min-w-0">
@@ -366,6 +369,7 @@ export function ModoMotorista({
           />
         </div>
       </Card>
+      )}
 
       {fila.length > 0 && (
         <Card className="overflow-hidden border-warning/40 p-0">
@@ -576,7 +580,10 @@ export function ModoMotorista({
         </Card>
       )}
 
-      {/* ── O roteiro inteiro, para conferir de relance ───────────────────── */}
+      {/* ── O roteiro inteiro, para conferir de relance ─────────────────────
+          Na cabine ele é o conteúdo do "Roteiro" (a folha aberta); fechada, a
+          folha mostra só a próxima entrega. */}
+      {(folhaAberta || !imersivo) && (
       <Card className="overflow-hidden p-0">
         <header className="flex items-baseline justify-between gap-2 border-b border-border px-4 py-2">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -640,6 +647,7 @@ export function ModoMotorista({
           })}
         </ol>
       </Card>
+      )}
 
       {rota.carga.status === "em_rota" && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
