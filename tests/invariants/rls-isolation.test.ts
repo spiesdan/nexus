@@ -314,6 +314,12 @@ beforeAll(() => {
           insert into public.fiscal_events (organization_id, invoice_id, tipo)
             values (v_org, v_inv, 'criada');
         end if;
+        -- 0294 — o vínculo pedido↔nota do agrupamento. É ele que decide quais
+        -- itens entram na nota; vazar linha daqui mostra o pedido do vizinho.
+        if not exists (select 1 from public.invoice_orders where organization_id = v_org) then
+          insert into public.invoice_orders (invoice_id, order_id, organization_id)
+            values (v_inv, v_ord, v_org);
+        end if;
 
         -- migration 0235 — inutilização + CFOP equivalente.
         if not exists (select 1 from public.fiscal_inutilizacoes where organization_id = v_org) then
@@ -584,6 +590,7 @@ export const TABLES = [
   "product_images",
   "fiscal_settings",
   "invoices",
+  "invoice_orders",
   "fiscal_jobs",
   "fiscal_events",
   "fiscal_inutilizacoes",
