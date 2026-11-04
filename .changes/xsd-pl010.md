@@ -4,8 +4,8 @@ secao: corrigido
 titulo: A validação do XML passa a usar o XSD do PL_010, o único que conhece IBS/CBS
 ---
 
-A primeira emissão depois de incluir o IBS/CBS foi recusada pelo **próprio
-sidecar**, antes de sair para a SEFAZ:
+A primeira emissão depois de incluir o IBS/CBS foi recusada pelo próprio
+**sidecar**, antes de sair para a SEFAZ:
 
 ```
 XML_INVALIDO: Element 'IBSCBS': This element is not expected.
