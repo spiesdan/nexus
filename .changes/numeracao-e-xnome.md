@@ -30,3 +30,7 @@ histórico da nota com a chave e o protocolo — o que permite reconstruí-la em
 de reemitir e duplicar a faixa.
 
 Quem já instalou: **não precisa fazer nada**.
+
+Na tela de Notas, a coluna **Ambiente** passou a mostrar só **Produção** — o aviso
+"(vale de verdade)" ocupava a coluna inteira sem dizer nada que "Produção" já
+não diga.
