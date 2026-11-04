@@ -224,8 +224,23 @@ export type ExtrasFiscais = z.infer<typeof extrasFiscaisSchema>;
 export type ExtrasFiscaisGravados = ExtrasFiscais | null | undefined;
 
 export const notaCreateSchema = z.object({
-  /** O pedido que origina a nota. Sem pedido, sem nota (avulsa é fase futura). */
-  order_id: z.string().uuid(),
+  /**
+   * O pedido que origina a nota. Sem pedido, sem nota (avulsa é fase futura).
+   *
+   * Opcional quando `order_ids` vem preenchido: o primeiro pedido continua
+   * sendo o `order_id` da nota (compatibilidade com tudo que lê uma nota por
+   * pedido), e os demais entram em `invoice_orders`.
+   */
+  order_id: z.string().uuid().optional(),
+  /**
+   * AGRUPAMENTO — vários pedidos do MESMO cliente numa NF-e só.
+   *
+   * Cliente que tirou 3 pedidos no mês quer 1 nota, não 3. A NF-e aceita
+   * vários itens por documento; o que ela NÃO aceita é um destinatário
+   * diferente por item, e por isso a emissão recusa pedidos de clientes
+   * distintos (a regra mora em `emitirNota`, não aqui).
+   */
+  order_ids: z.array(z.string().uuid()).min(1).max(50).optional(),
   /**
    * Grupos da emissão que não vêm do pedido (0257). Opcionais: sem extras a
    * nota sai com o que o pedido traz, como sempre. Ao escolher extras a
@@ -236,6 +251,11 @@ export const notaCreateSchema = z.object({
 });
 
 export type NotaCreate = z.infer<typeof notaCreateSchema>;
+
+/** O pedido principal da nota: `order_ids` quando veio agrupada. */
+export function pedidoPrincipalDaNota(entrada: NotaCreate): string | null {
+  return entrada.order_ids?.[0] ?? entrada.order_id ?? null;
+}
 
 export const configFiscalSchema = z.object({
   serie: z.string().trim().min(1).max(10).default("1"),

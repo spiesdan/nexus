@@ -23851,6 +23851,45 @@ revoke all on function public.fn_devolver_numero_nfe(uuid, integer) from public,
 grant execute on function public.fn_reservar_numero_nfe(uuid) to service_role;
 grant execute on function public.fn_devolver_numero_nfe(uuid, integer) to service_role;
 
+-- ---- 0294 — agrupamento de pedidos numa nota só ----
+--
+-- Cliente que tirou três pedidos no mês quer UMA nota. `invoices.order_id`
+-- continua sendo o pedido principal; esta tabela guarda TODOS os pedidos da
+-- nota — é o que o drain lê para somar os itens e o que impede um pedido de
+-- entrar em duas notas vivas.
+
+create table if not exists public.invoice_orders (
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  order_id uuid not null references public.commercial_orders(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (invoice_id, order_id)
+);
+
+create index if not exists invoice_orders_org_pedido_idx
+  on public.invoice_orders (organization_id, order_id);
+
+comment on table public.invoice_orders is
+  'Pedidos que compõem a nota. Uma linha por pedido; `invoices.order_id` guarda o principal. Agrupamento de pedidos do mesmo cliente numa NF-e só (0294).';
+
+insert into public.invoice_orders (invoice_id, order_id, organization_id, created_at)
+select i.id, i.order_id, i.organization_id, i.created_at
+  from public.invoices i
+ where i.order_id is not null
+on conflict (invoice_id, order_id) do nothing;
+
+alter table public.invoice_orders enable row level security;
+
+drop policy if exists invoice_orders_select on public.invoice_orders;
+create policy invoice_orders_select on public.invoice_orders
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+revoke all on public.invoice_orders from anon;
+grant select on public.invoice_orders to authenticated;
+grant all on public.invoice_orders to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

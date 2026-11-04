@@ -18,6 +18,7 @@ import { emitirNota } from "@/lib/fiscal/emitir-nota";
 import {
   COLUNAS_DA_NOTA,
   notaCreateSchema,
+  pedidoPrincipalDaNota,
   STATUS_DA_NOTA,
 } from "@/lib/schemas/fiscal";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -74,7 +75,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       orgId: authz.org.orgId,
       userId: authz.user.id,
       requestId,
-      orderId: parsed.data.order_id,
+      orderId: pedidoPrincipalDaNota(parsed.data),
+      orderIds: parsed.data.order_ids ?? null,
       extras: parsed.data.extras ?? null,
     });
 

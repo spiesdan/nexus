@@ -27,7 +27,17 @@ export interface EmitirNotaInput {
   orgId: string;
   userId: string;
   requestId: string;
-  orderId: string;
+  /** O pedido principal (compatibilidade). `null` exige `orderIds`. */
+  orderId: string | null;
+  /**
+   * AGRUPAMENTO: vários pedidos do MESMO cliente numa NF-e só.
+   *
+   * Cliente que tirou três pedidos no mês quer uma nota, não três. A NF-e
+   * aceita vários itens por documento — o que ela não aceita é destinatário
+   * diferente por item. Por isso a emissão recusa pedidos de clientes
+   * distintos em vez de gerar uma nota fiscal errada.
+   */
+  orderIds?: string[] | null;
   /**
    * Extras da emissão (0257), já validados pelo `notaCreateSchema`. Gravam
    * NA NOTA: o drain os lê de lá, então reemitir reusa o que a pessoa
@@ -46,7 +56,7 @@ export interface NotaEmitida {
 }
 
 export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
-  const { supabase, admin, orgId, userId, requestId, orderId, extras } = input;
+  const { supabase, admin, orgId, userId, requestId, orderId, orderIds, extras } = input;
 
   const { data: config } = await supabase
     .from("fiscal_settings")
@@ -64,44 +74,87 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   }
   const cfg = config as unknown as ConfigFiscalSalva & { provedor: string };
 
-  const { data: pedido } = await supabase
+  const ids = [...new Set((orderIds?.length ? orderIds : orderId ? [orderId] : []).filter(Boolean))];
+  if (ids.length === 0) {
+    throw new ApiError(422, "validation_failed", { requestId }, requestId, "Escolha o pedido faturado ou expedido.");
+  }
+
+  const { data: pedidos, error: erroPedidos } = await supabase
     .from("commercial_orders")
     .select("id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status")
-    .eq("id", orderId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  const ped = pedido as unknown as {
+    .in("id", ids)
+    .eq("organization_id", orgId);
+  type PedidoDaNota = {
     id: string;
     numero: number;
     cliente_nome: string;
     cliente_documento: string | null;
     contact_id: string | null;
     total_cents: number;
+    frete_cents: number;
     status: string;
-  } | null;
-  if (!ped) throw new ApiError(404, "not_found", { requestId }, requestId, "Pedido não encontrado.");
-  if (!statusFaturavel(ped.status)) {
+  };
+  const lista = (pedidos ?? []) as unknown as PedidoDaNota[];
+  if (erroPedidos || lista.length !== ids.length) {
+    throw new ApiError(404, "not_found", { requestId }, requestId, "Pedido não encontrado.");
+  }
+  // A ordem escolhida manda: o primeiro da lista é o pedido principal da nota.
+  lista.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+  const ped = lista[0]!;
+
+  for (const p of lista) {
+    if (!statusFaturavel(p.status)) {
+      throw new ApiError(
+        422,
+        "validation_failed",
+        { requestId },
+        requestId,
+        `O pedido ${p.numero} está "${p.status}" — só pedido faturado, expedido ou entregue vira nota.`,
+      );
+    }
+  }
+
+  // ─── AGRUPAR SÓ O QUE PODE IR NA MESMA NOTA ──────────────────────────────
+  //
+  // Uma NF-e tem UM destinatário. Juntar pedidos de clientes diferentes
+  // ("agrupar" por engano, ou por engano de tela) produziria um documento que
+  // a SEFAZ aceita e o fisco contesta: a mercadoria de um cliente amparada
+  // pela nota de outro. A comparação é pelo contato do cadastro; sem contato,
+  // pelo documento — que é o que a nota vai levar de qualquer jeito.
+  const chaveDoDestinatario = (p: PedidoDaNota): string =>
+    p.contact_id ?? p.cliente_documento ?? `pedido:${p.id}`;
+  const clienteDosPedidos = new Set(lista.map(chaveDoDestinatario));
+  if (clienteDosPedidos.size > 1) {
     throw new ApiError(
       422,
       "validation_failed",
       { requestId },
       requestId,
-      `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
+      "Só é possível agrupar pedidos do mesmo cliente numa nota — os pedidos escolhidos são de clientes diferentes.",
     );
   }
 
   // Um pedido, uma nota viva: segunda via nasce de reimpressão, não de nova
-  // emissão (que duplicaria o fato fiscal).
-  const { data: existente } = await supabase
+  // emissão (que duplicaria o fato fiscal). A checagem cobre os dois jeitos de
+  // o pedido estar numa nota — a coluna antiga e o vínculo do agrupamento.
+  const { data: vinculados } = await supabase
+    .from("invoice_orders")
+    .select("order_id, invoices!inner(status)")
+    .in("order_id", ids)
+    .eq("organization_id", orgId)
+    .neq("invoices.status", "cancelada");
+  const { data: porColuna } = await supabase
     .from("invoices")
     .select("id, status")
     .eq("organization_id", orgId)
-    .eq("order_id", ped.id)
-    .neq("status", "cancelada")
-    .maybeSingle();
-  if (existente) {
-    throw new ApiError(409, "conflict", { requestId }, requestId, "Este pedido já tem nota (não cancelada).");
+    .in("order_id", ids)
+    .neq("status", "cancelada");
+  const jaTemNota = (vinculados?.length ?? 0) > 0 || (porColuna?.length ?? 0) > 0;
+  if (jaTemNota) {
+    throw new ApiError(409, "conflict", { requestId }, requestId, "Um destes pedidos já tem nota (não cancelada).");
   }
+
+  const totalCents = lista.reduce((soma, p) => soma + p.total_cents, 0);
 
   const escolha = resolverProvedor(cfg);
 
@@ -166,7 +219,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
       provedor: escolha,
       erro: null,
       extras_fiscais: extrasDaNota,
-      total_cents: ped.total_cents,
+      total_cents: totalCents,
       created_by: userId,
     })
     .select(COLUNAS_DA_NOTA)
@@ -175,6 +228,31 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     throw new ApiError(500, "internal_error", { requestId }, requestId, "Erro ao registrar a nota.");
   }
   const notaId = (nota as unknown as { id: string }).id;
+
+  // ─── OS VÍNCULOS DO AGRUPAMENTO ──────────────────────────────────────────
+  //
+  // `invoices.order_id` guarda o pedido principal (tudo que já existia continua
+  // lendo uma nota por pedido). `invoice_orders` guarda TODOS — é o que permite
+  // o drain somar os itens dos três pedidos e o que impede o mesmo pedido de
+  // entrar em duas notas vivas.
+  const { error: erroVinculos } = await supabase.from("invoice_orders").insert(
+    lista.map((p) => ({
+      invoice_id: notaId,
+      order_id: p.id,
+      organization_id: orgId,
+    })),
+  );
+  if (erroVinculos) {
+    // A nota já nasceu: sem os vínculos ela sairia só com o pedido principal,
+    // calada. Melhor derrubar a emissão e dizer o que aconteceu.
+    throw new ApiError(
+      500,
+      "internal_error",
+      { requestId },
+      requestId,
+      "Nota criada, mas os pedidos agrupados não foram vinculados. Cancele a nota e tente de novo.",
+    );
+  }
 
   const { error: erroJob } = await supabase.from("fiscal_jobs").insert({
     organization_id: orgId,

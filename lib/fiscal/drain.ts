@@ -119,6 +119,36 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     return { saidas: "concluido", destino: "erro" };
   }
 
+  // ─── OS PEDIDOS DA NOTA (pode ser mais de um) ─────────────────────────────
+  //
+  // Cliente que agrupou três pedidos tem UMA nota com os itens dos três. Os
+  // vínculos vivem em `invoice_orders`; notas emitidas antes do agrupamento
+  // existir não têm linha lá e caem no `order_id` da própria nota.
+  const { data: vinculos } = await admin
+    .from("invoice_orders")
+    .select("order_id")
+    .eq("invoice_id", nota.id)
+    .eq("organization_id", nota.organization_id);
+  const idsDosPedidos = (vinculos ?? []).length
+    ? (vinculos as unknown as { order_id: string }[]).map((v) => v.order_id)
+    : [ped.id];
+
+  // O frete da nota é a SOMA dos pedidos agrupados — cobrar o frete de um só
+  // quando a carga tem três seria diferença de dinheiro no documento fiscal.
+  let freteDaNota = ped.frete_cents ?? 0;
+  if (idsDosPedidos.length > 1) {
+    const { data: fretes } = await admin
+      .from("commercial_orders")
+      .select("id, frete_cents")
+      .in("id", idsDosPedidos)
+      .eq("organization_id", nota.organization_id);
+    freteDaNota = ((fretes ?? []) as unknown as { frete_cents: number | null }[]).reduce(
+      (soma, f) => soma + (f.frete_cents ?? 0),
+      0,
+    );
+  }
+  const pedidoDaNota = { ...ped, frete_cents: freteDaNota };
+
   // O destinatário é lido AGORA, do cadastro — não da foto que o pedido
   // congelou na importação. Nome e documento do contato vencem os do pedido, e
   // o endereço vem do cadastro quando a nota não trouxe um (notas antigas, ou
@@ -155,7 +185,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .select(
         "produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
       )
-      .eq("order_id", ped.id)
+      .in("order_id", idsDosPedidos)
       .eq("organization_id", nota.organization_id)
       .order("posicao");
     const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
@@ -232,7 +262,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         documento: documentoDestinatario,
         ie: destinatario.ie,
         indicador_ie: destinatario.indicador_ie,
-        frete_cents: ped.frete_cents,
+        frete_cents: pedidoDaNota.frete_cents,
       },
       extras,
       itens: (
