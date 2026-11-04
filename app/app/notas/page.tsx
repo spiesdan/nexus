@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
@@ -24,6 +25,8 @@ import { createClient } from "@/lib/supabase/server";
 import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { Button } from "@/components/ui/button";
+import { Warning } from "@/lib/ui/icons";
 
 import { GradeNotas } from "./_components/GradeNotas";
 import { EntradasFiscais } from "./_components/EntradasFiscais";
@@ -109,8 +112,9 @@ export default async function NotasPage({
     supabase
       .from("fiscal_settings")
       .select(
-        "serie, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, logradouro, " +
-          "numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, certificado_path",
+        "serie, proximo_numero, natureza_operacao, cfop_padrao, emitente_documento, ie, crt, logradouro, " +
+          "numero_end, bairro, municipio, codigo_municipio, uf, cep, ambiente, provedor, certificado_path, " +
+          "entrada_ativa, frequencia_minutos, manifestacao_automatica",
       )
       .eq("organization_id", activeOrg.orgId)
       .maybeSingle(),
@@ -403,9 +407,133 @@ export default async function NotasPage({
     config: textos.config,
   };
 
+  // ── O ESTADO DA EMISSÃO, EM UMA FAIXA ────────────────────────────────────
+  //
+  // A tela abria direto na grade e nada dizia o que impedia a primeira nota.
+  // Medido nesta instalação: numeração vazia, certificado recém-corrigido e
+  // zero notas autorizadas — três informações que estavam em abas diferentes,
+  // e a pessoa tinha de descobrir sozinha qual olhar primeiro. A faixa ordena
+  // pelo que desbloqueia: configuração → numeração → certificado → notas.
+  const notasLista = (notas ?? []) as unknown as NotaFiscal[];
+  const autorizadas = notasLista.filter((n) => n.status === "autorizada").length;
+  const comErro = notasLista.filter((n) => n.status === "erro" || n.status === "denegada").length;
+  const emFila = notasLista.filter(
+    (n) => n.status === "pendente" || n.status === "em_emissao",
+  ).length;
+  const comNotaViva = new Set(
+    notasLista.filter((n) => n.status !== "cancelada").map((n) => n.order_id),
+  );
+  const aguardandoNota = faturadosComDestinatario.filter((p) => !comNotaViva.has(p.id)).length;
+  const cfg = config as unknown as ConfigFiscalSalva | null;
+  const certificadoPresente = await certificadoPresenteNoServidor(activeOrg.orgId);
+  const pendenciasDaEmissao: { chave: string; texto: string; cta: string; href: string }[] = [];
+  if (!cfg) {
+    pendenciasDaEmissao.push({
+      chave: "sem-config",
+      texto: t("A configuração fiscal nunca foi preenchida — nenhuma nota pode sair."),
+      cta: t("Configurar"),
+      href: "?aba=config",
+    });
+  } else {
+    if (!cfg.proximo_numero) {
+      pendenciasDaEmissao.push({
+        chave: "sem-numeracao",
+        texto: t(
+          "Numeração sem próximo número: a emissão fica bloqueada até você informar o último número do sistema anterior + 1.",
+        ),
+        cta: t("Informar número"),
+        href: "?aba=config",
+      });
+    }
+    if (!certificadoPresente) {
+      pendenciasDaEmissao.push({
+        chave: "sem-certificado",
+        texto: t("Certificado A1 ausente no servidor — a SEFAZ recusa sem ele."),
+        cta: t("Enviar certificado"),
+        href: "?aba=config",
+      });
+    }
+  }
+
   return (
     <div className="flex h-full flex-col gap-4 p-6">
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
+
+      {/* A situação em quatro números. "A emitir" é porta para a aba de
+          emissão; os outros três dizem onde a operação está. */}
+      <div
+        className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-4"
+        aria-label={t("Situação das notas fiscais")}
+      >
+        <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
+          <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            {t("A emitir")}
+          </p>
+          <p className="mt-0.5 flex items-baseline gap-2">
+            {podeEmitir ? (
+              <Link
+                href="?aba=emitir"
+                className="text-2xl font-semibold text-text tabular-nums underline-offset-4 hover:underline"
+              >
+                {aguardandoNota}
+              </Link>
+            ) : (
+              <span className="text-2xl font-semibold text-text tabular-nums">{aguardandoNota}</span>
+            )}
+            <span className="truncate text-[11px] text-muted-foreground">
+              {aguardandoNota === 1 ? t("pedido aguardando nota") : t("pedidos aguardando nota")}
+            </span>
+          </p>
+        </div>
+        <div className="border-b border-border px-3.5 py-3 sm:border-r sm:border-b-0">
+          <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            {t("Autorizadas")}
+          </p>
+          <p className="mt-0.5 text-2xl font-semibold text-success-fg tabular-nums">{autorizadas}</p>
+          <p className="mt-1 text-[11px] text-text-subtle">{t("com protocolo da SEFAZ")}</p>
+        </div>
+        <div className="border-r border-border px-3.5 py-3">
+          <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            {t("Com erro")}
+          </p>
+          <p
+            className={`mt-0.5 text-2xl font-semibold tabular-nums ${comErro > 0 ? "text-error-fg" : "text-text"}`}
+          >
+            {comErro}
+          </p>
+          <p className="mt-1 text-[11px] text-text-subtle">
+            {comErro > 0 ? t("veja o motivo na grade") : t("nenhuma rejeitada")}
+          </p>
+        </div>
+        <div className="px-3.5 py-3">
+          <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            {t("Na fila")}
+          </p>
+          <p className="mt-0.5 text-2xl font-semibold text-text tabular-nums">{emFila}</p>
+          <p className="mt-1 text-[11px] text-text-subtle">
+            {emFila > 0 ? t("aguardando o emissor") : t("fila vazia")}
+          </p>
+        </div>
+      </div>
+
+      {/* O que impede a emissão, na ordem em que desbloqueia. Some da tela
+          quando não há pendência — aviso que fica para sempre vira paisagem. */}
+      {pendenciasDaEmissao.length > 0 && podeConfigurar && (
+        <ul className="space-y-2">
+          {pendenciasDaEmissao.map((p) => (
+            <li
+              key={p.chave}
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-warning/40 bg-warning-bg px-3.5 py-2.5"
+            >
+              <Warning size={16} className="shrink-0 text-warning-fg" aria-hidden />
+              <p className="min-w-0 flex-1 text-xs leading-relaxed text-warning-fg">{p.texto}</p>
+              <Button asChild size="sm" variant="outline">
+                <Link href={p.href}>{p.cta}</Link>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* `key` = o `?aba=` só troca de verdade se a `Tabs` REMONTAR: ela é
           uncontrolled (`defaultValue` vale só no mount), e a navegação
@@ -413,10 +541,20 @@ export default async function NotasPage({
           faz para `?aba=notas`) reconcilia sem remontar — a URL muda e a aba
           fica onde estava. A tecla força o mount novo com o valor da URL. */}
       <Tabs key={abaInicial} defaultValue={abaInicial} className="flex flex-1 flex-col">
-        <TabsList aria-label={textos.abas}>
+        <TabsList aria-label={textos.abas} className="w-full justify-start overflow-x-auto">
           {abasVisiveis.map((a) => (
             <TabsTrigger key={a} value={a}>
               {rotuloAba[a]}
+              {a === "notas" && notasLista.length > 0 && (
+                <span className="ml-1.5 text-[11px] text-text-subtle tabular-nums">
+                  {notasLista.length}
+                </span>
+              )}
+              {a === "emitir" && aguardandoNota > 0 && (
+                <span className="ml-1.5 text-[11px] text-text-subtle tabular-nums">
+                  {aguardandoNota}
+                </span>
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -495,7 +633,7 @@ export default async function NotasPage({
                 // o defeito inteiro. E a correção na API sozinha não chegava
                 // aqui: esta página lê o banco direto, não passa pela rota.
                 // Uma função, duas pontas que chamam.
-                certificado_presente: await certificadoPresenteNoServidor(activeOrg.orgId),
+                certificado_presente: certificadoPresente,
               }}
               textos={textos}
             />
