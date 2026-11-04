@@ -22,6 +22,7 @@ import { MOTIVOS_DEVOLUCAO, ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from
 import { CaretRight, Check, Clock } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
+import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 import type { RotaCarregada } from "./_roteirizador";
 
 function posicaoAtual(timeoutMs = 10000): Promise<GeolocationPosition> {
@@ -45,10 +46,17 @@ function posicaoAtual(timeoutMs = 10000): Promise<GeolocationPosition> {
 export function ModoMotorista({
   cargaId,
   podeOperar,
+  imersivo = false,
   aoMudar,
 }: {
   cargaId: string;
   podeOperar: boolean;
+  /**
+   * Login de ENTREGADOR (0292): o mapa ocupa a tela inteira, como um app de
+   * navegação, e os cartões sobem por cima dele numa folha. No painel
+   * (`imersivo=false`) o desenho é o de sempre: mapa no topo, coluna abaixo.
+   */
+  imersivo?: boolean;
   aoMudar: () => void;
 }) {
   const t = useT();
@@ -59,6 +67,10 @@ export function ModoMotorista({
   const [motivo, setMotivo] = React.useState<MotivoDevolucao>("cliente_ausente");
   const [fila, setFila] = React.useState<DesfechoPendente[]>(() => pendentesDaCarga(cargaId));
   const [sincronizando, setSincronizando] = React.useState(false);
+  // Folha da cabine: fechada mostra a próxima entrega; aberta, o roteiro.
+  const [folhaAberta, setFolhaAberta] = React.useState(false);
+  // Última posição do GPS — o "você está aqui" do mapa, como num app de mapas.
+  const [minhaPosicao, setMinhaPosicao] = React.useState<{ lat: number; lng: number } | null>(null);
   const refVigia = React.useRef<number | null>(null);
 
   const recarregar = React.useCallback(async () => {
@@ -213,6 +225,7 @@ export function ModoMotorista({
         if (agora - ultimoEnvio < 15000 && !moveu) return;
         ultimoEnvio = agora;
         ultimaPos = { lat, lng };
+        setMinhaPosicao({ lat, lng });
         void apiClient
           .post(`/api/v1/shipments/${cargaId}/rota/posicao`, {
             latitude: lat,
@@ -242,12 +255,72 @@ export function ModoMotorista({
         ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(proxima.endereco)}`
         : null;
 
-  return (
-    <div className="mx-auto max-w-xl space-y-3.5 pb-8">
+  // O MAPA É O HERÓI — como no app de navegação. Ele fica no topo, colado na
+  // tela (`sticky`), e os cartões rolam por cima: o motorista vê a rota e a
+  // próxima parada sem perder o desenho.
+  const pontosDoMapa: PontoParadaMapa[] = rota.paradas.map((p, i) => {
+    const sts = p.pedidos.map((x) => x.status);
+    const estado: PontoParadaMapa["estado"] = sts.every((x) => x === "entregue")
+      ? "entregue"
+      : sts.some((x) => x === "devolvido")
+        ? "problema"
+        : p.chave === proxima?.chave
+          ? "proxima"
+          : "pendente";
+    return {
+      chave: p.chave,
+      cliente: p.cliente,
+      contact_id: p.contact_id,
+      endereco: p.endereco,
+      fone: p.fone,
+      lat: p.latitude,
+      lng: p.longitude,
+      ordem: i + 1,
+      estado,
+      pedidos: p.pedidos.map((x) => ({
+        order_id: x.order_id,
+        numero: x.numero,
+        total_cents: x.total_cents,
+        status: x.status,
+      })),
+    };
+  });
+  const origemDoMapa =
+    rota.carga.origem_lat != null && rota.carga.origem_lng != null
+      ? {
+          lat: rota.carga.origem_lat,
+          lng: rota.carga.origem_lng,
+          endereco: rota.carga.origem_endereco,
+        }
+      : null;
+
+  const mapa = (altura: string, cheio: boolean) => (
+    <MapaRota
+      altura={altura}
+      imersivo={cheio}
+      paradas={pontosDoMapa}
+      geometria={rota.carga.rota_geojson?.geometria ?? []}
+      origem={origemDoMapa}
+      motorista={minhaPosicao}
+      rastro={[]}
+      modoMarcar={false}
+      pinoPendente={null}
+      aoClicarMapa={() => undefined}
+      aoAcaoParada={() => undefined}
+    />
+  );
+
+  // O MESMO conteúdo nos dois desenhos: no painel é uma coluna embaixo do mapa;
+  // no celular do entregador é a folha que sobe por cima dele.
+  const cartoes = (
+    <>
       {/* ── O placar do dia ─────────────────────────────────────────────────
           Na cabine, o número que importa é "quantas faltam" — não a lista de
           indicadores. O anel e a barra dizem a mesma coisa em duas leituras:
-          de relance (anel) e no detalhe (barra). */}
+          de relance (anel) e no detalhe (barra).
+          Na tela cheia ele NÃO entra: o pill flutuante sobre o mapa já diz
+          `feitas/total` e a %, e cada pixel da folha é altura de mapa. */}
+      {!imersivo && (
       <Card className="overflow-hidden p-0">
         <div className="flex items-center justify-between gap-3 px-4 py-3.5">
           <div className="min-w-0">
@@ -296,6 +369,7 @@ export function ModoMotorista({
           />
         </div>
       </Card>
+      )}
 
       {fila.length > 0 && (
         <Card className="overflow-hidden border-warning/40 p-0">
@@ -506,7 +580,10 @@ export function ModoMotorista({
         </Card>
       )}
 
-      {/* ── O roteiro inteiro, para conferir de relance ───────────────────── */}
+      {/* ── O roteiro inteiro, para conferir de relance ─────────────────────
+          Na cabine ele é o conteúdo do "Roteiro" (a folha aberta); fechada, a
+          folha mostra só a próxima entrega. */}
+      {(folhaAberta || !imersivo) && (
       <Card className="overflow-hidden p-0">
         <header className="flex items-baseline justify-between gap-2 border-b border-border px-4 py-2">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -570,6 +647,7 @@ export function ModoMotorista({
           })}
         </ol>
       </Card>
+      )}
 
       {rota.carga.status === "em_rota" && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
@@ -589,6 +667,90 @@ export function ModoMotorista({
           </Button>
         </div>
       )}
+    </>
+  );
+
+  if (!imersivo) {
+    return (
+      <div className="mx-auto max-w-xl space-y-3.5 pb-8">
+        <div className="sticky top-0 z-10">{mapa("40dvh", false)}</div>
+        {cartoes}
+      </div>
+    );
+  }
+
+  /*
+   * A CABINE, TELA CHEIA (0292) — o mapa é o aplicativo.
+   *
+   * O celular fica preso na vertical, no suporte do painel: o que precisa
+   * caber é o desenho da rota e a próxima parada. Por isso o mapa ocupa
+   * `100%` da altura e os cartões vivem numa folha que sobe do rodapé —
+   * exatamente o desenho do app de navegação, com a ação ao alcance do dedo.
+   *
+   * A folha tem duas posições: fechada (próxima entrega + ações) e aberta
+   * (o roteiro inteiro). Ela rola por dentro; o mapa nunca sai do lugar.
+   */
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-muted">
+      <div className="absolute inset-0">{mapa("100%", true)}</div>
+
+      {/* Placar flutuante — o único número que importa em movimento. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center px-2.5 pt-2.5">
+        <div className="pointer-events-auto flex max-w-full items-center gap-2.5 rounded-full border border-border bg-background/95 px-3 py-1.5 shadow-lg backdrop-blur">
+          <span className="text-xs font-semibold text-text tabular-nums">
+            {feitas}/{rota.paradas.length}
+          </span>
+          <span
+            aria-hidden
+            className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"
+          >
+            <span
+              className="block h-full bg-success transition-[width] duration-300"
+              style={{ width: `${pctFeito}%` }}
+            />
+          </span>
+          <span className="text-[11px] text-muted-foreground tabular-nums">{pctFeito}%</span>
+          <button
+            type="button"
+            onClick={() => setFolhaAberta((v) => !v)}
+            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-accent"
+            aria-expanded={folhaAberta}
+          >
+            {folhaAberta ? t("Fechar") : t("Roteiro")}
+          </button>
+        </div>
+      </div>
+
+      {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
+      <div className="absolute inset-x-0 bottom-0 z-20">
+        <div
+          className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-[0_-10px_30px_rgba(0,0,0,0.18)] ${
+            folhaAberta ? "max-h-[78dvh]" : "max-h-[58dvh]"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setFolhaAberta((v) => !v)}
+            aria-label={folhaAberta ? t("Recolher") : t("Expandir")}
+            className="mx-auto flex w-full shrink-0 justify-center py-1.5"
+          >
+            <span aria-hidden className="h-1 w-10 rounded-full bg-border" />
+          </button>
+          <div
+            className="min-h-0 flex-1 space-y-2.5 overflow-y-auto overscroll-contain px-3"
+            // `env()` não é escolha de espaçamento: é o inset do iOS. Por isso
+            // vai em estilo, e não como classe fora da escala.
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            {cartoes}
+          </div>
+          {/* O Leaflet ancora a atribuição no canto inferior direito; a folha
+              cobre esse canto, então o crédito do OpenStreetMap sobe para cá. */}
+          <p className="shrink-0 border-t border-border px-3 py-1 text-right text-[9px] text-text-subtle">
+            © OpenStreetMap
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

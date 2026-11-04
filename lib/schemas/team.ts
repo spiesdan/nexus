@@ -26,6 +26,12 @@ export const inviteMemberSchema = z.object({
       z.object({
         email: z.string().email(),
         role: z.enum(ROLES),
+        /**
+         * Convite de ENTREGADOR (0292): o membro entra com o role escolhido
+         * (normalmente `agent`, que é o que as policies de `shipments` exigem)
+         * e a flag só esconde a casca e manda a home para a expedição.
+         */
+        motorista: z.boolean().optional(),
       }),
     )
     .min(1)
@@ -42,6 +48,17 @@ export const changeRoleSchema = z.object({
   role: z.enum(ROLES),
 });
 export type ChangeRoleInput = z.infer<typeof changeRoleSchema>;
+
+/**
+ * Modo entregador (0292) — liga/desliga a experiência de cabine.
+ *
+ * Não é role: não concede nem retira permissão. `false` devolve o menu e a
+ * home normais; `true` esconde a casca e abre a expedição.
+ */
+export const changeMotoristaSchema = z.object({
+  motorista: z.boolean(),
+});
+export type ChangeMotoristaInput = z.infer<typeof changeMotoristaSchema>;
 
 /**
  * Ramal do atendente (0266): texto livre até 60, `null` limpa.

@@ -8,6 +8,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useTeamMembers, type TeamMember } from "@/hooks/team/useTeamMembers";
 import { useChangeRole } from "@/hooks/team/useChangeRole";
 import { useRevokeMember } from "@/hooks/team/useRevokeMember";
+import { useMotoristaMember } from "@/hooks/team/useMotoristaMember";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +57,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
   const { data, isLoading, isError } = useTeamMembers();
   const changeRole = useChangeRole();
   const revoke = useRevokeMember();
+  const motorista = useMotoristaMember();
 
   const [revokeDialog, setRevokeDialog] = useState<TeamMember | null>(null);
 
@@ -80,6 +82,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                 <TableHead>{t("Membro")}</TableHead>
                 <TableHead>{t("Setor")}</TableHead>
                 <TableHead>{t("Papel")}</TableHead>
+                <TableHead>{t("Modo entregador")}</TableHead>
                 <TableHead>{t("Status")}</TableHead>
                 <TableHead>{t("Última atividade")}</TableHead>
                 {canManage ? <TableHead className="w-[80px]" /> : null}
@@ -137,6 +140,15 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                     )}
                   </TableCell>
                   <TableCell>
+                    {m.motorista ? (
+                      <Badge variant="outline" title={t("Entra direto na expedição, sem menu.")}>
+                        {t("Entregador")}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {m.accepted_at ? (
                       <Badge variant="default">{t("Aceito")}</Badge>
                     ) : (
@@ -158,6 +170,18 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                motorista.mutate({
+                                  userId: m.user_id,
+                                  motorista: !m.motorista,
+                                })
+                              }
+                            >
+                              {m.motorista
+                                ? t("Desligar modo entregador")
+                                : t("Ligar modo entregador")}
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => setRevokeDialog(m)}

@@ -6,6 +6,8 @@ export interface TeamMember {
   user_id: string;
   role: string;
   setor: string | null;
+  /** Modo entregador (0292): casca sem menu, home na expedição. */
+  motorista?: boolean;
   invited_at: string | null;
   accepted_at: string | null;
   revoked_at: string | null;

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { isMfaEnrolled, loadAuthUser, requiresMfa, resolveActiveOrg } from "@/lib/auth/server";
 import { DEFAULT_VISIBILITY_MODE, type VisibilityMode } from "@/lib/auth/types";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
@@ -30,6 +30,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
 
   let activeOrg = await resolveActiveOrg(user);
+
+  /*
+   * ENTREGADOR (0292) — a casca esconde o menu, mas esconder não é barrar:
+   * quem digitar `/app/inbox` na barra de endereços cairia na tela com a
+   * sidebar fora. `proxy.ts` publica `x-pathname` em toda requisição, então o
+   * servidor decide aqui, antes de a página renderizar — sem piscar e sem
+   * carregar dados de uma tela que a pessoa não usa.
+   *
+   * A exceção é a própria expedição (o destino), e as páginas de auth/convite
+   * que não passam por este layout.
+   */
+  if (activeOrg?.motorista) {
+    const caminho = (await headers()).get("x-pathname") ?? "";
+    if (caminho.startsWith("/app") && !caminho.startsWith("/app/expedicao")) {
+      redirect("/app/expedicao");
+    }
+  }
 
   /**
    * A cor desta organização, serializada, ou `null` quando ela não tem uma.
@@ -179,7 +196,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // `window.confirm`. Precisa do IdiomaProvider acima (a dialog usa `useT`).
   const shell = (
     <ConfirmacaoProvider>
-      <AppShell sidebarCollapsed={collapsed}>{children}</AppShell>
+      <AppShell sidebarCollapsed={collapsed} motorista={activeOrg?.motorista === true}>
+        {children}
+      </AppShell>
     </ConfirmacaoProvider>
   );
 

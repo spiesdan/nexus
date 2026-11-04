@@ -28,7 +28,12 @@ export default async function NovaCargaPage() {
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
 
-  const podeCriar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
+  // Entregador não monta carga: ele dirige. Sem esta linha, digitar
+  // `/app/expedicao/nova` abriria a bancada de separação para quem só deveria
+  // ver a rota (0292).
+  const podeCriar =
+    !activeOrg.motorista &&
+    (user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent);
   if (!podeCriar) redirect("/app/expedicao");
 
   const supabase = await createClient();

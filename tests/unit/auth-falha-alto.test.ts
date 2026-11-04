@@ -116,7 +116,15 @@ describe("loadAuthUser — falha de permissão não vira 'sem organização'", (
       // `locale` é o idioma padrão da organização, que entra na membership para
       // a resolução do idioma da sessão não precisar de uma segunda consulta.
       // Aqui vem `null` porque o dublê não devolve a coluna.
-      { organization_id: "o1", organization_name: "Acme", role: "admin", locale: null },
+      {
+        organization_id: "o1",
+        organization_name: "Acme",
+        role: "admin",
+        locale: null,
+        // Modo entregador (0292): o dublê não devolve a coluna, e ausente é
+        // `false` — quem não é entregador continua vendo o menu.
+        motorista: false,
+      },
     ]);
   });
 });

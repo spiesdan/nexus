@@ -22,6 +22,12 @@ export interface InviteEmailOptions {
   orgName: string;
   acceptUrl: string;
   role: string;
+  /**
+   * Convite de ENTREGADOR (0292). A pessoa precisa saber, antes de aceitar,
+   * que a conta dela abre direto na expedição — senão o primeiro login parece
+   * "sistema errado" e ela procura o menu que não existe.
+   */
+  motorista?: boolean;
   expiresAt: Date;
   /** A marca de quem convidou. Obrigatória — sem ela o e-mail não tem dono. */
   marca: MarcaDeSaida;
@@ -71,6 +77,14 @@ export function buildInviteEmail(opts: InviteEmailOptions): {
       ${escapeHtml(opts.inviterName)} convidou você como
       <strong>${escapeHtml(opts.role)}</strong> no ${escapeHtml(marca)}.
     </p>
+    ${
+      opts.motorista
+        ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.5">
+      Ao entrar, você vai direto para a <strong>expedição</strong> — a tela das suas
+      entregas, com o mapa da rota.
+    </p>`
+        : ""
+    }
     <p style="margin:24px 0">
       <a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 24px;background:${opts.marca.accent};color:${opts.marca.accentFg};border-radius:6px;text-decoration:none;font-weight:600">
         Aceitar convite
@@ -89,6 +103,9 @@ export function buildInviteEmail(opts: InviteEmailOptions): {
 
   const text = [
     `Você foi convidado para a ${opts.orgName} como ${opts.role} no ${marca}.`,
+    ...(opts.motorista
+      ? ["", "Ao entrar, você vai direto para a expedição — a tela das suas entregas, com o mapa da rota."]
+      : []),
     "",
     `Aceitar: ${opts.acceptUrl}`,
     "",

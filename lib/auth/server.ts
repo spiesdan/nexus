@@ -21,6 +21,8 @@ const ACTIVE_ORG_COOKIE = "active_org";
 interface RawMembershipRow {
   organization_id: string;
   role: string;
+  /** Login de entregador (0292): esconde o menu, não concede nada. */
+  motorista?: boolean | null;
   /** Só para ORDENAR — a lista decide qual organização fica ativa sem cookie. */
   accepted_at?: string | null;
   organizations: OrgJoin | OrgJoin[] | null;
@@ -202,7 +204,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // de quem foi convidado para várias no mesmo lote).
   const promessaMembros = supabase
     .from("user_organizations")
-    .select("organization_id, role, accepted_at, organizations(display_name, locale)")
+    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale)")
     .eq("user_id", user.id)
     .is("revoked_at", null)
     .order("accepted_at", { ascending: true, nullsFirst: true })
@@ -261,6 +263,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
       organization_id: row.organization_id,
       organization_name: org?.display_name ?? "—",
       role: row.role as Role,
+      motorista: row.motorista === true,
       locale: org?.locale ?? null,
     };
   });
@@ -307,7 +310,12 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
   const store = await cookies();
   const ativo = escolherMembroAtivo(authUser.organizations, store.get(ACTIVE_ORG_COOKIE)?.value);
   if (!ativo) return null;
-  return { orgId: ativo.organization_id, name: ativo.organization_name, role: ativo.role };
+  return {
+    orgId: ativo.organization_id,
+    name: ativo.organization_name,
+    role: ativo.role,
+    motorista: ativo.motorista === true,
+  };
 }
 
 /**

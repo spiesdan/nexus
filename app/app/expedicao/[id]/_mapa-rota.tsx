@@ -64,6 +64,7 @@ export function MapaRota({
   aoClicarMapa,
   aoAcaoParada,
   sobreposicao,
+  imersivo = false,
 }: {
   paradas: PontoParadaMapa[];
   /** GeoJSON [lng,lat] da rota planejada. */
@@ -86,11 +87,17 @@ export function MapaRota({
   // por regex e um bloco `/** ... */` aqui fazia a remoção engolir o
   // `ref={refCaixa}` mais abaixo, reprovando o teste sem defeito nenhum.
   sobreposicao?: React.ReactNode;
+  /**
+   * Tela cheia (0292 — cabine do entregador): sem canto arredondado nem borda,
+   * porque o mapa é o fundo da tela e não um cartão dentro dela.
+   */
+  imersivo?: boolean;
 }) {
   const t = useT();
   const refCaixa = React.useRef<HTMLDivElement>(null);
   const refMapa = React.useRef<MapaLeaflet | null>(null);
   const refCamadas = React.useRef<Layer[]>([]);
+  const refObservador = React.useRef<ResizeObserver | null>(null);
   // O desenho mora depois dos efeitos (regra do lint): os efeitos iniciais
   // despacham pelo ref, que a atribuição abaixo liga na função real.
   const refRedesenhar = React.useRef<(m: MapaLeaflet) => void>(() => undefined);
@@ -129,12 +136,30 @@ export function MapaRota({
       });
       refMapa.current = mapa;
       refRedesenhar.current(mapa);
+      /*
+       * O celular MUDA de tamanho com a tela em uso: a barra do navegador
+       * recolhe ao rolar, o teclado abre, o aparelho gira. Sem avisar o
+       * Leaflet, ele segue desenhando no tamanho de quando nasceu e sobra
+       * faixa cinza. O `ResizeObserver` avisa nos dois desenhos (painel e
+       * cabine em tela cheia); é barato e não mexe em camada nenhuma.
+       */
+      const caixa = refCaixa.current;
+      const observador =
+        typeof ResizeObserver === "undefined"
+          ? null
+          : new ResizeObserver(() => {
+              if (refMapa.current) refMapa.current.invalidateSize();
+            });
+      if (caixa && observador) observador.observe(caixa);
+      refObservador.current = observador;
     })();
     return () => {
       // StrictMode monta/desmonta em dev: sem remover, a segunda montagem
       // herda o contêiner inicializado ("map container is already
       // initialized") e o mapa nasce morto — clique nenhum funciona.
       cancelado = true;
+      refObservador.current?.disconnect();
+      refObservador.current = null;
       refMapa.current?.remove();
       refMapa.current = null;
     };
@@ -326,10 +351,12 @@ export function MapaRota({
           `pointer-events-none`: o clique para soltar o alfinete continua indo
           para o mapa. */}
 
-      <div className="relative">
+      <div className={imersivo ? "relative h-full" : "relative"}>
         <div
           ref={refCaixa}
-          className="relative isolate z-0 overflow-hidden rounded-2xl border bg-muted"
+          className={`relative isolate z-0 overflow-hidden bg-muted ${
+            imersivo ? "h-full" : "rounded-2xl border"
+          }`}
           style={{ height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }}
         />
         {paradas.every((p) => p.lat == null || p.lng == null) &&
