@@ -74,6 +74,12 @@ if ($metodo === 'POST' && $rota === '/emitir') {
     responder($r['ok'] ? 200 : 422, $r);
 }
 
+if ($metodo === 'POST' && $rota === '/previa') {
+    $servico = new ServicoNfe(lerCorpo());
+    $r = $servico->previa();
+    responder($r['ok'] ? 200 : 422, $r);
+}
+
 if ($metodo === 'POST' && $rota === '/cancelar') {
     $corpo = lerCorpo();
     // O certificado chega no mesmo envelope do /emitir (o TS monta igual).

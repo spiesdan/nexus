@@ -99,8 +99,9 @@ class ServicoNfe
                 return ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => 'Montagem do XML não produziu nada (Make::render sem saída).'];
             }
             try {
-                // signNFe assina E valida contra schemes/PL_009_V4/nfe_v4.00.xsd:
-                // XML fora do leiaute volta como exceção nomeando o campo.
+                // signNFe assina E valida contra schemes/PL_010_V1.30/nfe_v4.00.xsd
+                // (o PL_010 é o que tem IBS/CBS): XML fora do leiaute volta como
+                // exceção nomeando o campo.
                 $xmlAssinado = $tools->signNFe($xml);
             } catch (\Throwable $e) {
                 return ['ok' => false, 'codigo' => 'XML_INVALIDO', 'mensagem' => $this->resumir([$e->getMessage()])];
@@ -611,7 +612,7 @@ class ServicoNfe
             'crt' => (string)($c['crt'] ?? ''),
             // O campo é `schemes` (plural) no config.schema e define qual pasta
             // de XSD o signNFe() usa. PL_009_V4 é a que acompanha a v5.x.
-            'schemes' => 'PL_009_V4',
+            'schemes' => 'PL_010_V1.30',
             'versao' => '4.00',
         ]);
     }
