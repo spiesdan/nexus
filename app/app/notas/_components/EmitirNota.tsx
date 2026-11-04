@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -204,6 +205,7 @@ export function EmitirNota({
   textos: Textos;
 }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [pedidoId, setPedidoId] = React.useState("");
   /**
@@ -378,7 +380,7 @@ export function EmitirNota({
                     <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-muted/40">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-border"
+                        className="h-4 w-4 rounded-md border-border"
                         checked={agrupados.includes(p.id)}
                         onChange={(e) =>
                           setAgrupados((atual) =>
@@ -388,7 +390,7 @@ export function EmitirNota({
                       />
                       <span className="tabular-nums">{numeroDoPedido(p.numero)}</span>
                       <span className="text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                        {new Date(p.created_at).toLocaleDateString(tagIdioma)}
                       </span>
                       <span className="ml-auto tabular-nums">{comoMoeda(p.total_cents, p.moeda)}</span>
                     </label>
