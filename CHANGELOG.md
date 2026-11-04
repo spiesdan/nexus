@@ -8,6 +8,21 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.9] — 2026-11-04
+
+### Alterado
+
+- **Configuração fiscal mostra o que falta para emitir e salva de qualquer ponto da tela** A configuração é a tela mais longa da área fiscal — cinco blocos — e não dizia
+  se estava completa. Quem preenchia CNPJ e IE salvava e só descobria a falta do
+  número ou do certificado ao tentar emitir, em outra aba.
+
+  - **checklist no topo**: CNPJ · IE · IBGE · Certificado · Numeração, verde
+    quando preenchido e âmbar quando falta;
+  - **blocos numerados** (1 emitente, 2 endereço, 3 emissão, 4 certificado,
+    5 entrada), para orientar a leitura de cima para baixo;
+  - **barra de salvar fixa**: o botão estava no fim dos cinco blocos, e mexer no
+    primeiro campo obrigava a rolar a tela inteira para gravar.
+
 ## [1.38.8] — 2026-11-04
 
 ### Corrigido
@@ -6005,7 +6020,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.8...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.9...HEAD
+[1.38.9]: https://github.com/spiesdan/nexus/compare/v1.38.8...v1.38.9
 [1.38.8]: https://github.com/spiesdan/nexus/compare/v1.38.7...v1.38.8
 [1.38.7]: https://github.com/spiesdan/nexus/compare/v1.38.6...v1.38.7
 [1.38.6]: https://github.com/spiesdan/nexus/compare/v1.38.5...v1.38.6
