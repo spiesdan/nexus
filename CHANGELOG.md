@@ -8,6 +8,27 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.14] — 2026-11-04
+
+### Corrigido
+
+- **"Notas fiscais" no menu leva à emissão — antes caía no módulo de notas recebidas** O item **Notas fiscais** do menu abria `/app/fiscal`, o módulo de NF-e
+  **recebidas** (notas de fornecedor). Nesta instalação esse módulo está vazio, e
+  a nota emitida — autorizada, número 4576 — ficava em `/app/notas`, uma rota que
+  não tinha porta no menu: só se chegava por "Gerar NF-e" no pedido ou pelo ⌘K.
+  Resultado: a pessoa clicava em "Notas fiscais", não via nota nenhuma e concluía
+  que a emissão não tinha acontecido.
+
+  O que mudou:
+
+  - o item do menu passa a apontar para **`/app/notas`** (emitir, acompanhar a
+    SEFAZ, XML e DANFE);
+  - o módulo de recebimento vira **"NF-e recebidas"** no ⌘K e no próprio
+    cabeçalho (título da tela), sem perder as treze telas;
+  - a faixa de subtelas do módulo fiscal ganha **"Emitir NF-e"** no começo;
+  - o orçamento de dobra do menu continua em 18 portas — a troca é de porta, não
+    de tamanho.
+
 ## [1.38.13] — 2026-11-04
 
 ### Corrigido
@@ -6102,7 +6123,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.13...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.14...HEAD
+[1.38.14]: https://github.com/spiesdan/nexus/compare/v1.38.13...v1.38.14
 [1.38.13]: https://github.com/spiesdan/nexus/compare/v1.38.12...v1.38.13
 [1.38.12]: https://github.com/spiesdan/nexus/compare/v1.38.11...v1.38.12
 [1.38.11]: https://github.com/spiesdan/nexus/compare/v1.38.10...v1.38.11
