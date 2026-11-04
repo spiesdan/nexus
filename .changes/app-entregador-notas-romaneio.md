@@ -6,9 +6,8 @@ titulo: Agrupar pedidos numa nota só, e as telas de Notas e do entregador repen
 
 **Cliente que tirou três pedidos no mês quer uma nota, não três.** Na aba
 *Emitir nota*, ao escolher um pedido, aparece a lista dos outros pedidos
-daquele mesmo cliente: marque os que entram e saia **uma NF-e com os itens de
-todos**. Só pedidos do mesmo cliente podem ser agrupados — a nota tem um
-destinatário só.
+daquele mesmo cliente: marque os que entram e saia **uma NF-e com os itens de todos**.
+Só pedidos do mesmo cliente podem ser agrupados — a nota tem um destinatário só.
 
 O que já era verdade continua: um pedido não entra em duas notas vivas, e o
 frete da nota é a soma dos pedidos agrupados.
