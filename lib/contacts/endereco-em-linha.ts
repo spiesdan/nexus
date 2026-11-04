@@ -25,7 +25,15 @@ export interface EnderecoEstruturado {
 }
 
 function limpo(v: string | null | undefined): string {
-  return (v ?? "").trim().replace(/\s+/g, " ");
+  // "NULL" literal do export do WP/Mercos ("RUA BRASIL, 183, NULL"). É ausência
+  // disfarçada de texto, e ia para a tela, o romaneio e o mapa: medido em 87
+  // cadastros desta instalação (51 na rua, 36 no bairro).
+  return (v ?? "")
+    .replace(/\bNULL\b\.?/gi, " ")
+    .replace(/\s+/g, " ")
+    // Separador que sobrou do "NULL" removido ("RUA X, 132,"): sem isto o
+    // número repetido não é reconhecido e a linha sai "132,, 132".
+    .replace(/^[\s,\-–]+|[\s,\-–]+$/g, "");
 }
 
 /**
