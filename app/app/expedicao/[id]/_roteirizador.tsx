@@ -60,7 +60,7 @@ export interface RotaCarregada {
   ultima_posicao: { latitude: number; longitude: number; em: string } | null;
 }
 
-interface Proposta {
+export interface PropostaRota {
   ordem: string[];
   origem: { lat: number; lng: number; endereco: string | null } | null;
   retornar_origem: boolean;
@@ -105,7 +105,7 @@ export function Roteirizador({
   const confirmar = useConfirmar();
   const [rota, setRota] = React.useState<RotaCarregada | null>(null);
   const [ordem, setOrdem] = React.useState<string[]>([]);
-  const [proposta, setProposta] = React.useState<Proposta | null>(null);
+  const [proposta, setProposta] = React.useState<PropostaRota | null>(null);
   const [origemTexto, setOrigemTexto] = React.useState("");
   const [retornar, setRetornar] = React.useState(false);
   const [tempoParada, setTempoParada] = React.useState(8);
@@ -388,7 +388,7 @@ export function Roteirizador({
       } else if (txt) {
         origem = { endereco: txt };
       }
-      const corpo = await apiClient.post<{ data: Proposta }>(`/api/v1/shipments/${cargaId}/rota/otimizar`, {
+      const corpo = await apiClient.post<{ data: PropostaRota }>(`/api/v1/shipments/${cargaId}/rota/otimizar`, {
         origem,
         retornar_origem: retornar,
         tempo_parada_min: tempoParada,

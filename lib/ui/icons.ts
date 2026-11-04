@@ -137,6 +137,8 @@ export {
   ArrowsOutSimple,
   // expedição (o caminhão da entrega, não a seta genérica de fluxo)
   Truck,
+  // cabine do entregador: "centralizar em mim", o gesto do app de mapa
+  Crosshair,
   // compras/estoque (carrinho do fornecedor, caixa do produto)
   ShoppingCart,
   Package,

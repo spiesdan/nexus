@@ -51,6 +51,10 @@ const SIMBOLO_ESTADO: Record<PontoParadaMapa["estado"], string> = {
  * MAPA DA ROTA — Leaflet de verdade: geometria pelas ruas (OSRM), marcadores
  * numerados com estado (número + símbolo + cor + tooltip, nunca só cor),
  * origem, motorista ao vivo, rastro realizado e modo "marcar no mapa".
+ *
+ * Na CABINE (0292) ele é o aplicativo: ocupa a tela toda, não tem botão de
+ * zoom (o gesto é pinça, como em qualquer app de mapa) e a posição do
+ * motorista é o ponto azul de sempre — anel branco, sem caminhãozinho.
  */
 export function MapaRota({
   paradas,
@@ -65,6 +69,8 @@ export function MapaRota({
   aoAcaoParada,
   sobreposicao,
   imersivo = false,
+  seguir = false,
+  aoArrastar,
 }: {
   paradas: PontoParadaMapa[];
   /** GeoJSON [lng,lat] da rota planejada. */
@@ -92,6 +98,15 @@ export function MapaRota({
    * porque o mapa é o fundo da tela e não um cartão dentro dela.
    */
   imersivo?: boolean;
+  /**
+   * Modo "seguindo você": a cada posição nova do GPS o mapa centraliza no
+   * motorista, no zoom de rua. É o comportamento de app de navegação — e é
+   * DESLIGADO quando o dedo arrasta o mapa, senão o mapa briga com quem olha
+   * outra parte da rota.
+   */
+  seguir?: boolean;
+  /** O dedo arrastou o mapa: quem chamou desliga o modo "seguindo você". */
+  aoArrastar?: () => void;
 }) {
   const t = useT();
   const refCaixa = React.useRef<HTMLDivElement>(null);
@@ -101,79 +116,19 @@ export function MapaRota({
   // O desenho mora depois dos efeitos (regra do lint): os efeitos iniciais
   // despacham pelo ref, que a atribuição abaixo liga na função real.
   const refRedesenhar = React.useRef<(m: MapaLeaflet) => void>(() => undefined);
-  const refProps = React.useRef({ paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada });
+  const refProps = React.useRef({ paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar });
+  // Quem já arrastou o mapa não quer ser reenquadrado a cada dado novo. Vive em
+  // ref porque o Leaflet (fora do React) escreve aqui.
+  const refArrastou = React.useRef(false);
 
   // Props frescas para os callbacks do Leaflet (mapa vive fora do React).
   // Em efeito, não no render: escrever ref no render quebra a atualização.
   React.useEffect(() => {
-    refProps.current = { paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada };
+    refProps.current = { paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar };
   });
 
-  // Mapa nasce uma vez; camadas são redesenhadas a cada mudança.
-  React.useEffect(() => {
-    let cancelado = false;
-    (async () => {
-      const L = (await import("leaflet")).default;
-      if (cancelado || !refCaixa.current || refMapa.current) return;
-      const mapa: MapaLeaflet = L.map(refCaixa.current).setView([-26.17, -50.39], 11);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(mapa);
-      mapa.on("click", (e: { latlng: { lat: number; lng: number } }) => {
-        if (refProps.current.modoMarcar) refProps.current.aoClicarMapa(e.latlng.lat, e.latlng.lng);
-      });
-      // Botões dentro do popup: delegação no abrir (o popup é DOM do Leaflet).
-      mapa.on("popupopen", (e: { popup: { getElement: () => HTMLElement | undefined } }) => {
-        const el = e.popup.getElement();
-        const btn = el?.querySelector<HTMLButtonElement>("button[data-chave][data-acao]");
-        if (btn && !btn.dataset.ligado) {
-          btn.dataset.ligado = "1";
-          btn.addEventListener("click", () => {
-            refProps.current.aoAcaoParada(btn.dataset.chave ?? "", (btn.dataset.acao ?? "cheguei") as "cheguei" | "entregue");
-          });
-        }
-      });
-      refMapa.current = mapa;
-      refRedesenhar.current(mapa);
-      /*
-       * O celular MUDA de tamanho com a tela em uso: a barra do navegador
-       * recolhe ao rolar, o teclado abre, o aparelho gira. Sem avisar o
-       * Leaflet, ele segue desenhando no tamanho de quando nasceu e sobra
-       * faixa cinza. O `ResizeObserver` avisa nos dois desenhos (painel e
-       * cabine em tela cheia); é barato e não mexe em camada nenhuma.
-       */
-      const caixa = refCaixa.current;
-      const observador =
-        typeof ResizeObserver === "undefined"
-          ? null
-          : new ResizeObserver(() => {
-              if (refMapa.current) refMapa.current.invalidateSize();
-            });
-      if (caixa && observador) observador.observe(caixa);
-      refObservador.current = observador;
-    })();
-    return () => {
-      // StrictMode monta/desmonta em dev: sem remover, a segunda montagem
-      // herda o contêiner inicializado ("map container is already
-      // initialized") e o mapa nasce morto — clique nenhum funciona.
-      cancelado = true;
-      refObservador.current?.disconnect();
-      refObservador.current = null;
-      refMapa.current?.remove();
-      refMapa.current = null;
-    };
-  }, []);
-
-  // Redesenha quando os dados mudam (mapa já existe) — o pino pendente
-  // incluso: sem ele, o clique não desenharia o alfinete.
-  React.useEffect(() => {
-    const m = refMapa.current;
-    if (m) refRedesenhar.current(m);
-  }, [paradas, geometria, origem, motorista, rastro, pinoPendente]);
-
   function redesenharCamadas(m: MapaLeaflet) {
-    const { paradas: ps, geometria: geo, origem: ori, motorista: mot, rastro: ras, pinoPendente: pino } = refProps.current;
+    const { paradas: ps, geometria: geo, origem: ori, motorista: mot, rastro: ras, pinoPendente: pino, seguir: seguindo } = refProps.current;
     void import("leaflet").then(({ default: L }) => {
       // Limpa só as camadas de dados (o tile fica): lista própria, sem
       // fuçar `options` do Leaflet.
@@ -185,13 +140,16 @@ export function MapaRota({
       };
       const comCoord = ps.filter((p) => p.lat != null && p.lng != null);
 
+      // ─── A ROTA COM CONTORNO BRANCO ────────────────────────────────────────
+      //
+      // Duas polilinhas: uma branca mais grossa embaixo, a colorida em cima.
+      // É o desenho de app de navegação (o contorno separa a linha do mapa em
+      // rua clara, onde uma linha fina colorida some). Antes era uma linha só,
+      // de 4px, que desaparecia sobre o bege do OSM.
       if (geo.length > 1) {
-        por(
-          L.polyline(
-            geo.map((c) => [c[1] as number, c[0] as number]),
-            { color: "#7c3aed", weight: 4, opacity: 0.85 },
-          ),
-        ).addTo(m);
+        const pontos = geo.map((c) => [c[1] as number, c[0] as number] as [number, number]);
+        por(L.polyline(pontos, { color: "#ffffff", weight: 9, opacity: 0.95, lineCap: "round", lineJoin: "round" })).addTo(m);
+        por(L.polyline(pontos, { color: "#7c3aed", weight: 5, opacity: 0.95, lineCap: "round", lineJoin: "round" })).addTo(m);
       }
       if (ras.length > 1) {
         por(L.polyline(ras, { color: "#6b7280", weight: 3, opacity: 0.7, dashArray: "6 6" })).addTo(m);
@@ -249,13 +207,33 @@ export function MapaRota({
           );
       }
       if (mot) {
+        // ─── "VOCÊ ESTÁ AQUI", COMO NUM APP DE MAPA ──────────────────────────
+        //
+        // Círculo de precisão + ponto azul com anel branco. O emoji de caminhão
+        // que estava aqui não dizia ONDE no terreno a pessoa está: o ícone tem
+        // 30px e a âncora no centro, então em zoom de rua ele cobria meia
+        // quadra. O ponto pequeno e o círculo são a convenção que o motorista
+        // já conhece do mapa que usa no dia a dia.
+        por(
+          L.circle([mot.lat, mot.lng], {
+            radius: 60,
+            color: "#2563eb",
+            weight: 1,
+            opacity: 0.45,
+            fillColor: "#2563eb",
+            fillOpacity: 0.12,
+            interactive: false,
+          }),
+        ).addTo(m);
         por(
           L.marker([mot.lat, mot.lng], {
+            interactive: false,
+            zIndexOffset: 1000,
             icon: L.divIcon({
               className: "",
-              html: `<div title="${esc(t("Motorista"))}" style="background:#fff;border-radius:9999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:17px;border:3px solid #2563eb">🚚</div>`,
-              iconSize: [30, 30],
-              iconAnchor: [15, 15],
+              html: `<div title="${esc(t("Você está aqui"))}" style="width:18px;height:18px;border-radius:9999px;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(37,99,235,0.35),0 1px 4px rgba(0,0,0,0.4)"></div>`,
+              iconSize: [18, 18],
+              iconAnchor: [9, 9],
             }),
           }),
         ).addTo(m);
@@ -286,17 +264,154 @@ export function MapaRota({
         ...(ori ? [[ori.lat, ori.lng] as [number, number]] : []),
         ...(mot ? [[mot.lat, mot.lng] as [number, number]] : []),
       ];
-      if (todos.length > 0) m.fitBounds(L.latLngBounds(todos), { padding: [30, 30] });
+      // ─── QUEM MANDA NO ENQUADRAMENTO ───────────────────────────────────────
+      //
+      // 1. "seguindo você" ligado → centraliza no motorista, zoom de rua. É o
+      //    modo de navegação: a cada ping o mapa acompanha.
+      // 2. ninguém arrastou ainda → enquadra a rota inteira (o primeiro olhar
+      //    precisa mostrar o dia, não só a esquina).
+      // 3. arrastou → NÃO mexe. Antes cada atualização de GPS reenquadrava a
+      //    rota e o mapa puxava o dedo de volta; quem quisesse conferir um
+      //    trecho não conseguia.
+      if (seguindo && mot) {
+        m.setView([mot.lat, mot.lng], Math.max(m.getZoom(), 15), { animate: true });
+      } else if (!refArrastou.current && todos.length > 0) {
+        m.fitBounds(L.latLngBounds(todos), { padding: [30, 30] });
+      }
     });
   }
 
-  // Liga o despacho na função real (em efeito: escrever ref é sincronização).
+  // ─── O DESPACHO VEM ANTES DA CRIAÇÃO DO MAPA, E ISSO É DE PROPÓSITO ───────
+  //
+  // Efeitos rodam na ordem em que aparecem. Este TEM de vir antes do efeito que
+  // cria o mapa: quando ele era declarado depois, o mapa nascia chamando o
+  // `refRedesenhar` ainda VAZIO (uma função no-op) e só desenhava porque o
+  // `await import("leaflet")` cede o turno e deixava os efeitos seguintes
+  // rodarem antes. Correção acidental: bastava um dia o import vir do cache de
+  // módulo para o mapa abrir sem pino, sem rota e sem "você está aqui".
   React.useEffect(() => {
     refRedesenhar.current = (m: MapaLeaflet) => redesenharCamadas(m);
   });
 
+  // Mapa nasce uma vez; camadas são redesenhadas a cada mudança.
+  React.useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelado || !refCaixa.current || refMapa.current) return;
+      const mapa: MapaLeaflet = L.map(refCaixa.current, {
+        // Na cabine o zoom é PINÇA — é o gesto de todo app de mapa no celular,
+        // e um par de botões flutuando sobre a rota só tapa o desenho. No
+        // painel, onde se usa mouse, o controle continua onde sempre esteve.
+        zoomControl: false,
+      }).setView([-26.17, -50.39], 11);
+      if (!refProps.current.imersivo) L.control.zoom({ position: "topleft" }).addTo(mapa);
+      // ─── A URL SEM `{s}` NÃO É DETALHE ─────────────────────────────────────
+      //
+      // O padrão antigo (`{s}.tile.openstreetmap.org`) resolve TRÊS nomes DNS
+      // (a/b/c) no celular. A própria OSM recomenda o domínio único desde que
+      // desativou o balanceamento por subdomínio: uma conexão reaproveitada é
+      // mais rápida que três handshakes numa rede móvel. Medido no Pixel 7 em
+      // 04/11/2026: os tiles de `a.` e `b.` voltavam `ERR_ABORTED` no primeiro
+      // desenho, e a cabine abria com o mapa pela metade.
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+        minZoom: 3,
+      }).addTo(mapa);
+      mapa.on("click", (e: { latlng: { lat: number; lng: number } }) => {
+        if (refProps.current.modoMarcar) refProps.current.aoClicarMapa(e.latlng.lat, e.latlng.lng);
+      });
+      // Arrastar o dedo é o pedido de "para de me seguir": sem isto, o próximo
+      // ping do GPS puxaria o mapa de volta e o motorista não conseguiria olhar
+      // um trecho da rota.
+      mapa.on("dragstart", () => {
+        refArrastou.current = true;
+        refProps.current.aoArrastar?.();
+      });
+      // Botões dentro do popup: delegação no abrir (o popup é DOM do Leaflet).
+      mapa.on("popupopen", (e: { popup: { getElement: () => HTMLElement | undefined } }) => {
+        const el = e.popup.getElement();
+        const btn = el?.querySelector<HTMLButtonElement>("button[data-chave][data-acao]");
+        if (btn && !btn.dataset.ligado) {
+          btn.dataset.ligado = "1";
+          btn.addEventListener("click", () => {
+            refProps.current.aoAcaoParada(btn.dataset.chave ?? "", (btn.dataset.acao ?? "cheguei") as "cheguei" | "entregue");
+          });
+        }
+      });
+      refMapa.current = mapa;
+      refRedesenhar.current(mapa);
+      /*
+       * O celular MUDA de tamanho com a tela em uso: a barra do navegador
+       * recolhe ao rolar, o teclado abre, o aparelho gira. Sem avisar o
+       * Leaflet, ele segue desenhando no tamanho de quando nasceu e sobra
+       * faixa cinza. O `ResizeObserver` avisa nos dois desenhos (painel e
+       * cabine em tela cheia); é barato e não mexe em camada nenhuma.
+       *
+       * E, quando a caixa SAI DO ZERO, as camadas são redesenhadas. Sem isso
+       * o `fitBounds` calculado com altura 0 escolhe um zoom absurdamente
+       * próximo (a caixa cabia "nada"), e o mapa abre num quarteirão só mesmo
+       * depois de ganhar 795px. Só o primeiro crescimento dispara: reaproveitar
+       * todo resize refaria o enquadramento quando o teclado abre e apagaria o
+       * zoom que a pessoa escolheu.
+       */
+      let jaTinhaTamanho = false;
+      const caixa = refCaixa.current;
+      const observador =
+        typeof ResizeObserver === "undefined"
+          ? null
+          : new ResizeObserver(() => {
+              const m = refMapa.current;
+              if (!m) return;
+              m.invalidateSize();
+              const agora = m.getSize();
+              const tem = agora.x > 0 && agora.y > 0;
+              if (!jaTinhaTamanho && tem) {
+                jaTinhaTamanho = true;
+                refRedesenhar.current(m);
+              }
+            });
+      if (caixa && observador) observador.observe(caixa);
+      refObservador.current = observador;
+    })();
+    return () => {
+      // StrictMode monta/desmonta em dev: sem remover, a segunda montagem
+      // herda o contêiner inicializado ("map container is already
+      // initialized") e o mapa nasce morto — clique nenhum funciona.
+      cancelado = true;
+      refObservador.current?.disconnect();
+      refObservador.current = null;
+      refMapa.current?.remove();
+      refMapa.current = null;
+    };
+  }, []);
+
+  // Redesenha quando os dados mudam (mapa já existe) — o pino pendente
+  // incluso: sem ele, o clique não desenharia o alfinete.
+  React.useEffect(() => {
+    const m = refMapa.current;
+    if (m) refRedesenhar.current(m);
+  }, [paradas, geometria, origem, motorista, rastro, pinoPendente]);
+
+
   return (
-    <div className="space-y-2">
+    // ─── A ALTURA DA CABINE: A CAUSA DO MAPA INVISÍVEL ─────────────────────
+    //
+    // Este invólucro era `space-y-2` nos DOIS desenhos. Em tela cheia ele fica
+    // dentro de um `absolute inset-0` (altura definida), mas `space-y-2` não
+    // tem altura própria: o filho é `h-full`, e 100% de `auto` é zero. O
+    // Leaflet nascia com 795px de pai e 0px de caixa, baixava três tiles,
+    // abortava o resto e desenhava tudo fora da vista.
+    //
+    // Medido em 04/11/2026 no Pixel 7 contra produção:
+    //   `.leaflet-container` → { largura: 412, altura: 0 }
+    //   tiles no DOM: 3 · carregados: 3 · abortados: 3
+    // No painel nunca apareceu porque lá a altura é explícita (`40dvh`).
+    //
+    // Em tela cheia o mapa herda a altura por `absolute inset-0` — o caminho
+    // que não depende de `height: 100%` resolver contra `auto`.
+    <div className={imersivo ? "relative h-full w-full" : "space-y-2"}>
       {/* STACKING CONTEXT PRÓPRIO PARA O LEAFLET.
 
           O Leaflet escreve z-index nos próprios panes, em pixels, na MESMA pilha
@@ -351,13 +466,17 @@ export function MapaRota({
           `pointer-events-none`: o clique para soltar o alfinete continua indo
           para o mapa. */}
 
-      <div className={imersivo ? "relative h-full" : "relative"}>
+      <div className={imersivo ? "absolute inset-0" : "relative"}>
         <div
           ref={refCaixa}
           className={`relative isolate z-0 overflow-hidden bg-muted ${
-            imersivo ? "h-full" : "rounded-2xl border"
+            imersivo ? "h-full w-full" : "rounded-2xl border"
           }`}
-          style={{ height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }}
+          style={
+            imersivo
+              ? { cursor: modoMarcar ? "crosshair" : undefined }
+              : { height: altura ?? "50vh", cursor: modoMarcar ? "crosshair" : undefined }
+          }
         />
         {paradas.every((p) => p.lat == null || p.lng == null) &&
           !origem &&

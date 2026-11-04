@@ -226,7 +226,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div data-marca-org="" className="contents">
         <EstiloDaMarcaDaOrganizacao css={cssDaOrganizacao} />
         <ImpersonateBanner impersonating={impersonating} />
-        <ConexaoCaidaBanner caidas={conexoesCaidas} />
+        {/*
+          A faixa "WhatsApp desconectado" NÃO aparece para o entregador (0292).
+
+          Ela existe para quem pode religar o número, e leva a /app/conexoes —
+          que a guarda do layout manda ele de volta para a expedição. Era um
+          aviso que só sabia apontar para o lugar de onde a pessoa vinha, e
+          comia ~40px da altura do mapa, que na cabine é o produto inteiro.
+        */}
+        {activeOrg?.motorista ? null : <ConexaoCaidaBanner caidas={conexoesCaidas} />}
         {needsMfaGate ? (
           // Gate always mounted for MFA-required roles; it latches the blocking
           // decision client-side so the enroll Server Action's revalidation
