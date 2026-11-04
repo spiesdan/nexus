@@ -414,6 +414,19 @@ class ServicoNfe
 
     private function validar(): ?string
     {
+        // Responsável técnico: obrigatório (rejeição 972) e com CNPJ diferente
+        // do emitente (776). Lido do ambiente do sidecar, porque é dado do
+        // fornecedor do software — não do cadastro fiscal da empresa.
+        $respCnpj = preg_replace('/\D/', '', (string)getenv('FISCAL_RESP_TEC_CNPJ'));
+        if (strlen($respCnpj) !== 14) {
+            return 'FISCAL_RESP_TEC_CNPJ ausente ou inválido: a SEFAZ exige o responsável técnico (rejeição 972).';
+        }
+        if ($respCnpj === preg_replace('/\D/', '', (string)($this->config['cnpj'] ?? ''))) {
+            return 'FISCAL_RESP_TEC_CNPJ não pode ser o mesmo CNPJ do emitente (rejeição 776).';
+        }
+        if (trim((string)getenv('FISCAL_RESP_TEC_CONTATO')) === '' || trim((string)getenv('FISCAL_RESP_TEC_EMAIL')) === '') {
+            return 'FISCAL_RESP_TEC_CONTATO e FISCAL_RESP_TEC_EMAIL são obrigatórios junto do responsável técnico.';
+        }
         foreach (['cnpj', 'razao', 'ie', 'crt', 'serie'] as $campo) {
             if (empty($this->config[$campo])) {
                 return 'config.' . $campo . ' é obrigatório.';
@@ -786,6 +799,7 @@ class ServicoNfe
         $this->montarPagamento($make, $vNF);
         $this->montarAdicionais($make);
         $this->montarEntrega($make);
+        $this->montarRespTecnico($make);
     }
 
     /**
@@ -990,6 +1004,21 @@ class ServicoNfe
                 'vDup' => $this->moeda($cents / 100),
             ]);
         }
+    }
+
+    /** infRespTec — obrigatório desde a NT 2018.005 (rejeição 972). */
+    private function montarRespTecnico(Make $make): void
+    {
+        $cnpj = preg_replace('/\D/', '', (string)getenv('FISCAL_RESP_TEC_CNPJ'));
+        if (strlen($cnpj) !== 14) {
+            return;
+        }
+        $make->taginfRespTec((object)[
+            'CNPJ' => $cnpj,
+            'xContato' => mb_substr(trim((string)getenv('FISCAL_RESP_TEC_CONTATO')), 0, 60),
+            'email' => mb_substr(trim((string)getenv('FISCAL_RESP_TEC_EMAIL')), 0, 60),
+            'fone' => substr(preg_replace('/\D/', '', (string)getenv('FISCAL_RESP_TEC_FONE')), 0, 11),
+        ]);
     }
 
     /** infAdic (infAdFisco + infCpl). Só emite se houver texto. */
