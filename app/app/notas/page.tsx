@@ -462,7 +462,7 @@ export default async function NotasPage({
       {/* A situação em quatro números. "A emitir" é porta para a aba de
           emissão; os outros três dizem onde a operação está. */}
       <div
-        className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-4"
+        className="grid shrink-0 grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4"
         aria-label={t("Situação das notas fiscais")}
       >
         <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
@@ -473,14 +473,14 @@ export default async function NotasPage({
             {podeEmitir ? (
               <Link
                 href="?aba=emitir"
-                className="text-2xl font-semibold text-text tabular-nums underline-offset-4 hover:underline"
+                className="shrink-0 text-2xl font-semibold text-text tabular-nums underline-offset-4 hover:underline"
               >
                 {aguardandoNota}
               </Link>
             ) : (
-              <span className="text-2xl font-semibold text-text tabular-nums">{aguardandoNota}</span>
+              <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">{aguardandoNota}</span>
             )}
-            <span className="truncate text-[11px] text-muted-foreground">
+            <span className="min-w-0 truncate text-[11px] text-muted-foreground">
               {aguardandoNota === 1 ? t("pedido aguardando nota") : t("pedidos aguardando nota")}
             </span>
           </p>
@@ -519,7 +519,7 @@ export default async function NotasPage({
       {/* O que impede a emissão, na ordem em que desbloqueia. Some da tela
           quando não há pendência — aviso que fica para sempre vira paisagem. */}
       {pendenciasDaEmissao.length > 0 && podeConfigurar && (
-        <ul className="space-y-2">
+        <ul className="shrink-0 space-y-2">
           {pendenciasDaEmissao.map((p) => (
             <li
               key={p.chave}
