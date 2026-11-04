@@ -188,9 +188,33 @@ class ServicoNfe
         return $n === null ? '' : trim($n->nodeValue ?? '');
     }
 
-    /** Mensagens de erro do Make: as 5 primeiras, curtas o bastante para a UI. */
-    private function resumir(array $erros): string
+    /**
+     * Corta um texto no limite do XSD do leiaute 4.00.
+     *
+     * ─── Por que existe ────────────────────────────────────────────────────
+     *
+     * Em 04/11/2026 a nota 4578 (pedido 19415) foi recusada inteira:
+     *
+     *   XML_INVALIDO: Element '{...}xNome': [facet 'maxLength']
+     *   The value has a length of '62'; this exceeds the allowed maximum of '60'.
+     *
+     * O nome do destinatário no cadastro tinha 62 caracteres
+     * ("ADGON MADEIRAS - ADGON INDUSTRIA E COMERCIO DE MADEIRAS EIRELI") e o
+     * leiaute aceita no máximo 60. A SEFAZ recusa o XML INTEIRO por causa de um
+     * campo, e o recado que chega na tela é sobre XML — não sobre o cadastro
+     * que precisa ser revisto.
+     *
+     * O corte é o comportamento esperado em documento fiscal: o campo tem
+     * tamanho fixo e a razão social completa continua no cadastro. Recusar
+     * seria pior — obrigaria quem emite a encurtar o nome do cliente.
+     */
+    private function limitar(string $valor, int $limite): string
     {
+        return mb_substr(trim($valor), 0, $limite);
+    }
+
+    /** Mensagens de erro do Make: as 5 primeiras, curtas o bastante para a UI. */
+    private function resumir(array $erros): string    {
         $limpo = array_values(array_filter(array_map(static fn($e) => trim((string)$e), $erros)));
         return mb_substr(implode(' | ', array_slice($limpo, 0, 5)), 0, 500);
     }
@@ -697,17 +721,17 @@ class ServicoNfe
             'verProc' => 'fiscal-sidecar/1.0',
         ]);
         $make->tagemit((object)[
-            'xNome' => (string)$c['razao'],
+            'xNome' => $this->limitar((string)$c['razao'], 60),
             'CNPJ' => preg_replace('/\D/', '', (string)$c['cnpj']),
             'IE' => preg_replace('/\D/', '', (string)$c['ie']),
             'CRT' => (string)$c['crt'],
         ]);
         $make->tagenderEmit((object)[
-            'xLgr' => (string)($c['logradouro'] ?? ''),
+            'xLgr' => $this->limitar((string)($c['logradouro'] ?? ''), 60),
             'nro' => (string)($c['numero_end'] ?? 'S/N'),
-            'xBairro' => (string)($c['bairro'] ?? ''),
+            'xBairro' => $this->limitar((string)($c['bairro'] ?? ''), 60),
             'cMun' => (string)($c['codigo_municipio'] ?? ''),
-            'xMun' => (string)($c['municipio'] ?? ''),
+            'xMun' => $this->limitar((string)($c['municipio'] ?? ''), 60),
             'UF' => strtoupper(trim((string)($c['uf'] ?? ''))),
             'CEP' => preg_replace('/\D/', '', (string)($c['cep'] ?? '')),
         ]);
@@ -729,7 +753,7 @@ class ServicoNfe
                 'item' => $n,
                 'cProd' => (string)$item['codigo'],
                 'cEAN' => 'SEM GTIN',
-                'xProd' => (string)$item['descricao'],
+                'xProd' => $this->limitar((string)$item['descricao'], 120),
                 'NCM' => preg_replace('/\D/', '', (string)($item['ncm'] ?? '00000000')),
                 'CFOP' => $this->cfopParaDestino((string)($item['cfop'] ?? $c['cfop'] ?? '5102')),
                 'uCom' => (string)($item['unidade'] ?? 'UN'),
@@ -822,7 +846,7 @@ class ServicoNfe
         }
         $ie = preg_replace('/[^0-9A-Za-z]/', '', (string)($p['ie'] ?? ''));
         $dest = (object)[
-            'xNome' => trim((string)($p['nome'] ?? '')),
+            'xNome' => $this->limitar((string)($p['nome'] ?? ''), 60),
             'indIEDest' => $indicador,
         ];
         if ($indicador === '1' && $ie !== '') {
@@ -845,12 +869,12 @@ class ServicoNfe
         if (is_array($e) && $e !== []) {
             $cep = preg_replace('/\D/', '', (string)($e['cep'] ?? ''));
             $make->tagenderDest((object)[
-                'xLgr' => (string)($e['logradouro'] ?? ''),
+                'xLgr' => $this->limitar((string)($e['logradouro'] ?? ''), 60),
                 'nro' => (string)($e['numero'] ?? ''),
-                'xCpl' => ($x = trim((string)($e['complemento'] ?? ''))) !== '' ? $x : null,
-                'xBairro' => (string)($e['bairro'] ?? ''),
+                'xCpl' => ($x = $this->limitar((string)($e['complemento'] ?? ''), 60)) !== '' ? $x : null,
+                'xBairro' => $this->limitar((string)($e['bairro'] ?? ''), 60),
                 'cMun' => (string)($e['codigo_municipio'] ?? ''),
-                'xMun' => (string)($e['municipio'] ?? ''),
+                'xMun' => $this->limitar((string)($e['municipio'] ?? ''), 60),
                 'UF' => strtoupper((string)($e['uf'] ?? '')),
                 'CEP' => strlen($cep) === 8 ? $cep : null,
             ]);
@@ -1059,13 +1083,13 @@ class ServicoNfe
         $make->tagentrega((object)[
             'CPF' => strlen($doc) === 11 ? $doc : null,
             'CNPJ' => strlen($doc) === 14 ? $doc : null,
-            'xNome' => $nome !== '' ? mb_substr($nome, 0, 60) : null,
-            'xLgr' => (string)($e['logradouro'] ?? ''),
+            'xNome' => $nome !== '' ? $this->limitar($nome, 60) : null,
+            'xLgr' => $this->limitar((string)($e['logradouro'] ?? ''), 60),
             'nro' => (string)($e['numero'] ?? ''),
-            'xCpl' => ($x = trim((string)($e['complemento'] ?? ''))) !== '' ? $x : null,
-            'xBairro' => (string)($e['bairro'] ?? ''),
+            'xCpl' => ($x = $this->limitar((string)($e['complemento'] ?? ''), 60)) !== '' ? $x : null,
+            'xBairro' => $this->limitar((string)($e['bairro'] ?? ''), 60),
             'cMun' => (string)($e['codigo_municipio'] ?? ''),
-            'xMun' => (string)($e['municipio'] ?? ''),
+            'xMun' => $this->limitar((string)($e['municipio'] ?? ''), 60),
             'UF' => strtoupper((string)($e['uf'] ?? '')),
             'CEP' => strlen($cep) === 8 ? $cep : null,
         ]);

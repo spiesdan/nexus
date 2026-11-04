@@ -23773,6 +23773,123 @@ alter table public.user_organizations
 comment on column public.user_organizations.motorista is
   'Login de entregador: a casca esconde o menu, a home vai para a expedição e a lista mostra só cargas em rota. NÃO concede permissão — o acesso continua sendo o role.';
 
+-- ---- 0293 — numeração da NF-e não entrega o mesmo número duas vezes ----
+--
+-- Medido em 04/11/2026: a nota do pedido 19415 foi AUTORIZADA pela SEFAZ com
+-- `nNF` 4577 e ficou invisível — `invoices` em `em_emissao`, sem número, sem
+-- chave, sem protocolo. O 4577 já pertencia a outra nota (falha local, sem
+-- NCM) que DEVOLVEU o número ao contador mas continuou com ele na linha; a
+-- emissão seguinte reservou o mesmo número e o UPDATE final morreu no índice
+-- `invoices_org_serie_numero_key`, com o erro descartado.
+--
+-- A reserva agora pula todo número que alguma nota da organização/série já
+-- carrega. Cancelada também conta: a SEFAZ não aceita reutilizar número de
+-- nota cancelada — o caminho é inutilizar a faixa.
+
+create or replace function public.fn_reservar_numero_nfe(p_organization_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_numero integer;
+  v_serie text;
+  v_voltas integer := 0;
+begin
+  loop
+    update public.fiscal_settings
+       set proximo_numero = proximo_numero + 1,
+           updated_at = now()
+     where organization_id = p_organization_id
+       and proximo_numero is not null
+    returning proximo_numero - 1, serie into v_numero, v_serie;
+
+    if v_numero is null then
+      return null;
+    end if;
+
+    if not exists (
+      select 1
+        from public.invoices i
+       where i.organization_id = p_organization_id
+         and i.serie = v_serie
+         and i.numero = v_numero
+    ) then
+      return v_numero;
+    end if;
+
+    v_voltas := v_voltas + 1;
+    if v_voltas >= 10000 then
+      return null;
+    end if;
+  end loop;
+end;
+$$;
+
+create or replace function public.fn_devolver_numero_nfe(p_organization_id uuid, p_numero integer)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.fiscal_settings
+     set proximo_numero = p_numero,
+         updated_at = now()
+   where organization_id = p_organization_id
+     and proximo_numero = p_numero + 1;
+  return found;
+end;
+$$;
+
+comment on function public.fn_reservar_numero_nfe(uuid) is
+  'Reserva o próximo número de NF-e da série, pulando números que alguma nota da organização já carrega. Nulo = numeração não configurada.';
+
+revoke all on function public.fn_reservar_numero_nfe(uuid) from public, anon, authenticated;
+revoke all on function public.fn_devolver_numero_nfe(uuid, integer) from public, anon, authenticated;
+grant execute on function public.fn_reservar_numero_nfe(uuid) to service_role;
+grant execute on function public.fn_devolver_numero_nfe(uuid, integer) to service_role;
+
+-- ---- 0294 — agrupamento de pedidos numa nota só ----
+--
+-- Cliente que tirou três pedidos no mês quer UMA nota. `invoices.order_id`
+-- continua sendo o pedido principal; esta tabela guarda TODOS os pedidos da
+-- nota — é o que o drain lê para somar os itens e o que impede um pedido de
+-- entrar em duas notas vivas.
+
+create table if not exists public.invoice_orders (
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  order_id uuid not null references public.commercial_orders(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (invoice_id, order_id)
+);
+
+create index if not exists invoice_orders_org_pedido_idx
+  on public.invoice_orders (organization_id, order_id);
+
+comment on table public.invoice_orders is
+  'Pedidos que compõem a nota. Uma linha por pedido; `invoices.order_id` guarda o principal. Agrupamento de pedidos do mesmo cliente numa NF-e só (0294).';
+
+insert into public.invoice_orders (invoice_id, order_id, organization_id, created_at)
+select i.id, i.order_id, i.organization_id, i.created_at
+  from public.invoices i
+ where i.order_id is not null
+on conflict (invoice_id, order_id) do nothing;
+
+alter table public.invoice_orders enable row level security;
+
+drop policy if exists invoice_orders_select on public.invoice_orders;
+create policy invoice_orders_select on public.invoice_orders
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+revoke all on public.invoice_orders from anon;
+grant select on public.invoice_orders to authenticated;
+grant all on public.invoice_orders to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

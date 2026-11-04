@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { carregarDestinatario } from "./destinatario-da-nota";
 import { destinoAposFalha, eRetentavel } from "./fila";
@@ -118,6 +119,36 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     return { saidas: "concluido", destino: "erro" };
   }
 
+  // ─── OS PEDIDOS DA NOTA (pode ser mais de um) ─────────────────────────────
+  //
+  // Cliente que agrupou três pedidos tem UMA nota com os itens dos três. Os
+  // vínculos vivem em `invoice_orders`; notas emitidas antes do agrupamento
+  // existir não têm linha lá e caem no `order_id` da própria nota.
+  const { data: vinculos } = await admin
+    .from("invoice_orders")
+    .select("order_id")
+    .eq("invoice_id", nota.id)
+    .eq("organization_id", nota.organization_id);
+  const idsDosPedidos = (vinculos ?? []).length
+    ? (vinculos as unknown as { order_id: string }[]).map((v) => v.order_id)
+    : [ped.id];
+
+  // O frete da nota é a SOMA dos pedidos agrupados — cobrar o frete de um só
+  // quando a carga tem três seria diferença de dinheiro no documento fiscal.
+  let freteDaNota = ped.frete_cents ?? 0;
+  if (idsDosPedidos.length > 1) {
+    const { data: fretes } = await admin
+      .from("commercial_orders")
+      .select("id, frete_cents")
+      .in("id", idsDosPedidos)
+      .eq("organization_id", nota.organization_id);
+    freteDaNota = ((fretes ?? []) as unknown as { frete_cents: number | null }[]).reduce(
+      (soma, f) => soma + (f.frete_cents ?? 0),
+      0,
+    );
+  }
+  const pedidoDaNota = { ...ped, frete_cents: freteDaNota };
+
   // O destinatário é lido AGORA, do cadastro — não da foto que o pedido
   // congelou na importação. Nome e documento do contato vencem os do pedido, e
   // o endereço vem do cadastro quando a nota não trouxe um (notas antigas, ou
@@ -154,7 +185,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .select(
         "produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
       )
-      .eq("order_id", ped.id)
+      .in("order_id", idsDosPedidos)
       .eq("organization_id", nota.organization_id)
       .order("posicao");
     const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
@@ -231,7 +262,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         documento: documentoDestinatario,
         ie: destinatario.ie,
         indicador_ie: destinatario.indicador_ie,
-        frete_cents: ped.frete_cents,
+        frete_cents: pedidoDaNota.frete_cents,
       },
       extras,
       itens: (
@@ -281,8 +312,10 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   // Número consumido sem ter saído daqui: devolve, para a sequência continuar
   // de onde parou (certificado, validação, configuração — nada transmitido).
+  // A devolução desfaz as DUAS metades (contador e linha da nota); ver
+  // `devolverNumeroDaNota`.
   if (numeroDaNota !== null && falhouAntesDaSefaz(resultado)) {
-    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota);
+    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota, nota.id);
   } else if (numeroDaNota !== null && resultado.numero == null) {
     // A SEFAZ respondeu mas não repetiu o número: o da reserva é o que foi
     // transmitido, e é ele que fica gravado.
@@ -347,7 +380,7 @@ async function finalizar(
   mensagem: string | null,
   resultado: ResultadoDeEmissao | null,
 ): Promise<void> {
-  await admin
+  const { error: erroDoRegistro } = await admin
     .from("invoices")
     .update({
       status,
@@ -373,6 +406,40 @@ async function finalizar(
       xml: resultado?.xml ?? null,
     },
   );
+
+  // ─── A NOTA AUTORIZADA NÃO PODE SUMIR NUM ERRO DE GRAVAÇÃO ────────────────
+  //
+  // Medido em 04/11/2026: o UPDATE da nota 4577 (pedido 19415) bateu no índice
+  // único `invoices_org_serie_numero_key` — o número havia sido entregue a
+  // duas notas — e o erro foi DESCARTADO. A SEFAZ tinha autorizado a nota; a
+  // tela seguiu dizendo "Emitindo", sem número, chave nem protocolo, e o
+  // `fiscal_jobs` marcou o trabalho como concluído. A nota existia no fisco e
+  // não existia aqui.
+  //
+  // O erro agora tem dois lugares visíveis: o log (com chave e protocolo, o
+  // que basta para reconstruir a nota à mão) e um evento `erro` na própria
+  // nota. Reemitir é a resposta ERRADA — o número já foi usado na SEFAZ.
+  if (erroDoRegistro) {
+    logger.error("fiscal: nota não gravada depois do retorno da SEFAZ", {
+      invoice_id: nota.id,
+      organization_id: nota.organization_id,
+      status,
+      chave_acesso: resultado?.chave_acesso ?? null,
+      protocolo: resultado?.protocolo ?? null,
+      erro: erroDoRegistro.message.slice(0, 300),
+    });
+    await evento(admin, nota.organization_id, nota.id, "erro", {
+      status: "registro_falhou",
+      protocolo: resultado?.protocolo ?? null,
+      mensagem:
+        `A SEFAZ respondeu "${status}"` +
+        (resultado?.protocolo ? ` (protocolo ${resultado.protocolo})` : "") +
+        (resultado?.chave_acesso ? `, chave ${resultado.chave_acesso}` : "") +
+        `, mas o registro local falhou: ${erroDoRegistro.message}. ` +
+        "NÃO REEMITA — o número já foi usado na SEFAZ.",
+      xml: null,
+    });
+  }
   await admin
     .from("fiscal_jobs")
     .update({

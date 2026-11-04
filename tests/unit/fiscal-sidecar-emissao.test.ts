@@ -77,8 +77,33 @@ describe("emissor NF-e do sidecar", () => {
     // <entrega>, em vez de inventar um cadastro de endereço que não existe.
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
     expect(src).toMatch(/tagenderDest\s*\(/);
-    expect(src).toMatch(/'xLgr'\s*=>\s*\(string\)\(\$e\['logradouro'\]/);
+    expect(src).toMatch(/'xLgr'\s*=>\s*\$this->limitar\(\(string\)\(\$e\['logradouro'\]/);
     expect(src).toMatch(/'cMun'\s*=>\s*\(string\)\(\$e\['codigo_municipio'\]/);
+  });
+
+  it("todo texto que o XSD limita passa pelo corte (xNome de 62 travou a 4578)", () => {
+    // Medido em 04/11/2026, na nota 4578 (pedido 19415):
+    //
+    //   XML_INVALIDO: Element '{...}xNome': [facet 'maxLength']
+    //   The value has a length of '62'; this exceeds the allowed maximum of '60'.
+    //
+    // O nome do destinatário vinha do cadastro com 62 caracteres. A SEFAZ
+    // recusa o XML INTEIRO por um campo — a nota não sai e o recado na tela
+    // fala de XML, não do cadastro.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+
+    // O corte existe e é multibyte (nome com acento não pode partir no meio).
+    expect(src).toMatch(/private function limitar\(string \$valor, int \$limite\): string\s*\{\s*return mb_substr\(/);
+
+    // Emitente (60), destinatário (60) e produto (120) — os três limites do
+    // leiaute que recebem texto livre do cadastro.
+    expect(src).toMatch(/'xNome'\s*=>\s*\$this->limitar\(\(string\)\$c\['razao'\], 60\)/);
+    expect(src).toMatch(/'xNome'\s*=>\s*\$this->limitar\(\(string\)\(\$p\['nome'\] \?\? ''\), 60\)/);
+    expect(src).toMatch(/'xProd'\s*=>\s*\$this->limitar\(\(string\)\$item\['descricao'\], 120\)/);
+
+    // E nenhum campo de texto pode voltar a ir cru para o Make.
+    expect(src).not.toMatch(/'xNome'\s*=>\s*trim\(/);
+    expect(src).not.toMatch(/'xProd'\s*=>\s*\(string\)\$item\['descricao'\]/);
   });
 
   it("sem extras.entrega o sidecar recusa antes de abrir o certificado", () => {

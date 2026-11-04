@@ -80,6 +80,8 @@ export function ModoMotorista({
   const [organizando, setOrganizando] = React.useState<"tsp" | "distancia" | null>(null);
   const confirmar = useConfirmar();
   const refVigia = React.useRef<number | null>(null);
+  // true = a posição do watch também vai para o servidor (botão de rastreio).
+  const refPublicando = React.useRef(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -137,30 +139,52 @@ export function ModoMotorista({
     void recarregar();
   }, [recarregar]);
 
-  // Desliga o rastreio ao sair da tela (privacidade §32).
+  // ─── UM WATCH SÓ: O PONTO AZUL SEMPRE, A PUBLICAÇÃO SÓ COM O RASTREIO ────
+  //
+  // Antes havia dois caminhos: uma leitura ÚNICA ao abrir (o ponto aparecia e
+  // congelava) e um segundo `watchPosition` que só nascia quando o motorista
+  // achava o botão "Ligar rastreio" — que mora dentro da folha. Na cabine o
+  // mapa parecia não ter GPS: o ponto não andava com o carro.
+  //
+  // Agora há UM watch, vivo enquanto a tela existir. Ele mantém o ponto azul
+  // andando. Publicar posição para o servidor continua sendo decisão explícita
+  // (§32) — é o que `refPublicando` liga e desliga, e o único trecho que fala
+  // com a API.
   React.useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    let ultimoEnvio = 0;
+    let ultimaPos: { lat: number; lng: number } | null = null;
+    refVigia.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setMinhaPosicao({ lat, lng });
+        if (!refPublicando.current) return;
+        // 15s ou meia quadra: o escritório acompanha sem transformar o celular
+        // do motorista num transmissor de bateria.
+        const agora = Date.now();
+        const moveu =
+          !ultimaPos ||
+          Math.abs(ultimaPos.lat - lat) + Math.abs(ultimaPos.lng - lng) > 0.0005;
+        if (agora - ultimoEnvio < 15000 && !moveu) return;
+        ultimoEnvio = agora;
+        ultimaPos = { lat, lng };
+        void apiClient
+          .post(`/api/v1/shipments/${cargaId}/rota/posicao`, {
+            latitude: lat,
+            longitude: lng,
+            precisao_m: pos.coords.accuracy ?? null,
+          })
+          .catch(() => undefined);
+      },
+      () => undefined,
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
+    );
     return () => {
       if (refVigia.current != null) navigator.geolocation.clearWatch(refVigia.current);
+      refVigia.current = null;
     };
-  }, []);
-
-  // ─── O PONTO AZUL APARECE SEM NINGUÉM APERTAR NADA ────────────────────────
-  //
-  // App de mapa já abre sabendo onde você está. Aqui a leitura é LOCAL: ela só
-  // desenha o ponto, NÃO manda posição para o servidor — publicar posição
-  // continua sendo o botão "Ligar" (§32, privacidade). Negou a permissão? Segue
-  // sem o ponto, sem toast: o motorista abriu a tela para ver a rota.
-  React.useEffect(() => {
-    let vivo = true;
-    posicaoAtual(8000)
-      .then((pos) => {
-        if (vivo) setMinhaPosicao({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      })
-      .catch(() => undefined);
-    return () => {
-      vivo = false;
-    };
-  }, []);
+  }, [cargaId]);
 
   /** O gesto de "onde estou": recentraliza no ponto azul e volta a seguir. */
   async function centralizarEmMim() {
@@ -335,38 +359,19 @@ export function ModoMotorista({
       toast.error(t("GPS indisponível neste aparelho."));
       return;
     }
-    let ultimoEnvio = 0;
-    let ultimaPos: { lat: number; lng: number } | null = null;
-    refVigia.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const agora = Date.now();
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        const moveu =
-          !ultimaPos || Math.abs(ultimaPos.lat - lat) + Math.abs(ultimaPos.lng - lng) > 0.0005;
-        if (agora - ultimoEnvio < 15000 && !moveu) return;
-        ultimoEnvio = agora;
-        ultimaPos = { lat, lng };
-        setMinhaPosicao({ lat, lng });
-        void apiClient
-          .post(`/api/v1/shipments/${cargaId}/rota/posicao`, {
-            latitude: lat,
-            longitude: lng,
-            precisao_m: pos.coords.accuracy ?? null,
-          })
-          .catch(() => undefined);
-      },
-      () => toast.error(t("GPS negado ou indisponível.")),
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
-    );
+    // O watch já está de pé (efeito de montagem); ligar o rastreio só passa a
+    // PUBLICAR as posições que ele já entrega. Dois watches disputando o GPS é
+    // como a leitura piora e a bateria acaba mais rápido.
+    refPublicando.current = true;
     setRastreando(true);
     setSeguir(true);
     toast.success(t("Rastreio ligado — só durante esta rota."));
   }
 
   function pararRastreio() {
-    if (refVigia.current != null) navigator.geolocation.clearWatch(refVigia.current);
-    refVigia.current = null;
+    // Para de publicar, mas o ponto azul continua andando: apagar o mapa de
+    // quem está dirigindo não é "encerrar o rastreio", é cegar o motorista.
+    refPublicando.current = false;
     setRastreando(false);
     toast.success(t("GPS encerrado."));
   }

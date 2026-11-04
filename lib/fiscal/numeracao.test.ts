@@ -22,8 +22,38 @@ import type { ResultadoDeEmissao } from "./provedor";
 
 type Rpc = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
 
-function adminFalso(rpc: Rpc) {
-  return { rpc } as unknown as Parameters<typeof reservarNumeroDaNota>[0];
+/** Fila de operações registradas no "banco" falso. */
+type Operacao = { tabela: string; acao: string; valores: Record<string, unknown>; filtros: [string, unknown][] };
+
+/**
+ * Admin falso que sustenta as duas metades da devolução: o `rpc` do contador e
+ * o `update` da linha da nota. Sem a segunda, o teste não veria o defeito de
+ * 04/11/2026 — número devolvido ao contador e ainda preso na nota.
+ */
+function adminFalso(rpc: Rpc, operacoes: Operacao[] = []) {
+  const encadeavel = (tabela: string, acao: string, valores: Record<string, unknown> = {}) => {
+    const op: Operacao = { tabela, acao, valores, filtros: [] };
+    const alvo = {
+      update: (v: Record<string, unknown>) => encadeavel(tabela, "update", v),
+      eq: (coluna: string, valor: unknown) => {
+        op.filtros.push([coluna, valor]);
+        return alvo;
+      },
+      neq: (coluna: string, valor: unknown) => {
+        op.filtros.push([`neq:${coluna}`, valor]);
+        return alvo;
+      },
+      then: (ok: (v: unknown) => unknown) => {
+        operacoes.push(op);
+        return Promise.resolve({ data: null, error: null }).then(ok);
+      },
+    };
+    return alvo;
+  };
+  return {
+    rpc,
+    from: (tabela: string) => encadeavel(tabela, "select"),
+  } as unknown as Parameters<typeof reservarNumeroDaNota>[0];
 }
 
 function resultado(parcial: Partial<ResultadoDeEmissao>): ResultadoDeEmissao {
@@ -73,18 +103,42 @@ describe("reservarNumeroDaNota", () => {
 });
 
 describe("devolverNumeroDaNota", () => {
-  it("devolve true só quando o banco confirma que a faixa voltou", async () => {
+  it("devolve true só quando o banco confirma que a faixa voltou — e limpa o número da nota", async () => {
+    const operacoes: Operacao[] = [];
     const admin = adminFalso(async (fn, args) => {
       expect(fn).toBe("fn_devolver_numero_nfe");
       expect(args).toEqual({ p_organization_id: "org-1", p_numero: 1942 });
       return { data: true, error: null };
-    });
-    await expect(devolverNumeroDaNota(admin, "org-1", 1942)).resolves.toBe(true);
+    }, operacoes);
+
+    await expect(devolverNumeroDaNota(admin, "org-1", 1942, "nota-1")).resolves.toBe(true);
+
+    // ─── A SEGUNDA METADE, E O DEFEITO QUE ELA CONSERTA ────────────────────
+    //
+    // Em 04/11/2026 a devolução desfez só o contador. A nota continuou com
+    // `numero = 1942`, a emissão seguinte reservou o mesmo número, a SEFAZ
+    // autorizou e o UPDATE final morreu no índice único — a nota autorizada
+    // ficou invisível. Aqui as duas metades têm de acontecer juntas.
+    const limpeza = operacoes.find((o) => o.tabela === "invoices" && o.acao === "update");
+    expect(limpeza, "a devolução não limpou o número da nota").toBeDefined();
+    expect(limpeza!.valores).toMatchObject({ numero: null });
+    expect(limpeza!.filtros).toContainEqual(["id", "nota-1"]);
+    // Nunca limpa o número de nota AUTORIZADA: ali o número já foi para a SEFAZ.
+    expect(limpeza!.filtros).toContainEqual(["neq:status", "autorizada"]);
   });
 
-  it("número já seguido por outro não volta (false, sem exceção)", async () => {
-    const admin = adminFalso(async () => ({ data: false, error: null }));
-    await expect(devolverNumeroDaNota(admin, "org-1", 1942)).resolves.toBe(false);
+  it("número já seguido por outro não volta — e a nota mantém o número", async () => {
+    const operacoes: Operacao[] = [];
+    const admin = adminFalso(async () => ({ data: false, error: null }), operacoes);
+    await expect(devolverNumeroDaNota(admin, "org-1", 1942, "nota-1")).resolves.toBe(false);
+    expect(operacoes.filter((o) => o.tabela === "invoices")).toHaveLength(0);
+  });
+
+  it("erro do banco na devolução também não limpa a nota", async () => {
+    const operacoes: Operacao[] = [];
+    const admin = adminFalso(async () => ({ data: null, error: { message: "sem permissão" } }), operacoes);
+    await expect(devolverNumeroDaNota(admin, "org-1", 1942, "nota-1")).resolves.toBe(false);
+    expect(operacoes.filter((o) => o.tabela === "invoices")).toHaveLength(0);
   });
 });
 

@@ -11,7 +11,6 @@ import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +22,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -30,10 +35,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api/client";
 import { ROTULO_DA_NOTA, type NotaFiscal, type StatusDaNota } from "@/lib/schemas/fiscal";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
+  CaretDown,
   DownloadSimple,
   FileText,
   MagnifyingGlass,
@@ -149,14 +156,23 @@ export function GradeNotas({
     return numero.includes(b) || chave.includes(b) || protocolo.includes(b) || pessoa.includes(b);
   });
 
-  const totalCents = inicial.reduce((a, n) => a + n.total_cents, 0);
-  const autorizadasCents = inicial
-    .filter((n) => n.status === "autorizada")
-    .reduce((a, n) => a + n.total_cents, 0);
-  const pendentes = inicial.filter(
-    (n) => n.status === "pendente" || n.status === "em_emissao",
-  ).length;
-  const comErro = inicial.filter((n) => n.status === "erro" || n.status === "denegada").length;
+  /**
+   * As SITUAÇÕES como filtro — a contagem e o filtro são a mesma pergunta.
+   *
+   * Antes havia um seletor de status e, acima dele, quatro cartões com os
+   * mesmos números. Quem abre a tela quer "ver as com erro", não escolher
+   * "erro" numa lista suspensa. Só aparece a situação que existe: chip de
+   * filtro que devolve lista vazia é ruído.
+   */
+  const chips = [
+    { valor: "", rotulo: textos.todos, contagem: inicial.length },
+    { valor: "autorizada", rotulo: textos.autorizada, contagem: inicial.filter((n) => n.status === "autorizada").length },
+    { valor: "em_emissao", rotulo: textos.emitindo, contagem: inicial.filter((n) => n.status === "em_emissao").length },
+    { valor: "pendente", rotulo: textos.pendente, contagem: inicial.filter((n) => n.status === "pendente").length },
+    { valor: "cancelada", rotulo: textos.cancelada, contagem: inicial.filter((n) => n.status === "cancelada").length },
+    { valor: "erro", rotulo: textos.erro, contagem: inicial.filter((n) => n.status === "erro").length },
+    { valor: "denegada", rotulo: textos.denegada, contagem: inicial.filter((n) => n.status === "denegada").length },
+  ].filter((c) => c.valor === "" || c.contagem > 0);
   const somaVisiveis = visiveis.reduce((a, n) => a + n.total_cents, 0);
 
   const rotuloPeriodo =
@@ -357,76 +373,17 @@ export function GradeNotas({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{textos.total}</p>
-          <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-            {comoMoeda(totalCents, "BRL")}
-          </p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{textos.autorizadas}</p>
-          <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
-            {comoMoeda(autorizadasCents, "BRL")}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-            {inicial.filter((n) => n.status === "autorizada").length} {textos.notas}
-          </p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{textos.pendentes}</p>
-          <p className="mt-1 text-2xl font-semibold text-text tabular-nums">{pendentes}</p>
-        </Card>
-        <Card className="hover-raise p-3">
-          <p className="text-xs text-muted-foreground">{textos.comErro}</p>
-          <p className="mt-1 text-2xl font-semibold text-text tabular-nums">{comErro}</p>
-        </Card>
-      </div>
+      {/* ── A BARRA DE TRABALHO ──────────────────────────────────────────────
+          Saíram os quatro cartões de resumo: os mesmos números já estão no topo
+          da página, e repeti-los aqui empurrava a lista para baixo. No lugar,
+          uma faixa só — busca, período, modelo, exportar — e, embaixo, as
+          SITUAÇÕES como filtro (a contagem e o filtro eram a mesma pergunta em
+          dois controles diferentes: um seletor e um cartão).
 
-      <h2 className="flex items-center gap-2 text-base font-medium text-text">
-        {textos.notas}
-        <Badge variant="neutral">{visiveis.length}</Badge>
-      </h2>
-
-      <>
+          O total do período fica à direita da faixa, colado no que ele soma. */}
+      <div className="space-y-2.5 rounded-2xl border border-border bg-surface p-3">
         <div className="flex flex-wrap items-center gap-2">
-          {podeEmitir && (
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/app/notas?aba=emitir">
-                <Plus size={14} />
-                {textos.emitir}
-              </Link>
-            </Button>
-          )}
-          <Button size="sm" variant="outline" onClick={exportarCsv}>
-            <DownloadSimple size={14} />
-            {textos.exportarCsv}
-          </Button>
-          {podeEmitir && (
-            <Button size="sm" variant="outline" onClick={() => setImportarXmlAberto(true)}>
-              <UploadSimple size={14} />
-              {textos.importarXmls}
-            </Button>
-          )}
-          <select
-            aria-label={textos.modelo}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-            value={modeloXml}
-            onChange={(e) => setModeloXml(e.target.value)}
-          >
-            <option value="">
-              {textos.modelo}: {textos.todos}
-            </option>
-            <option value="55">{textos.modeloNfe}</option>
-            <option value="65">{textos.modeloNfce}</option>
-          </select>
-          {podeEmitir && (
-            <Button size="sm" variant="outline" onClick={exportarXmls}>
-              <FileText size={14} />
-              {textos.exportaXmls}
-            </Button>
-          )}
-          <div className="relative min-w-52 flex-1">
+          <div className="relative min-w-56 flex-1">
             <MagnifyingGlass
               size={16}
               className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
@@ -436,12 +393,13 @@ export function GradeNotas({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder={textos.buscarNota}
-              className="pl-9"
+              className="h-10 rounded-xl pl-9"
             />
           </div>
+
           <select
             aria-label={textos.data}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+            className="h-10 rounded-xl border border-border bg-background px-3 text-sm"
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value)}
           >
@@ -450,21 +408,83 @@ export function GradeNotas({
             <option value="30">{textos.ultimos30}</option>
             <option value="tudo">{textos.tudo}</option>
           </select>
+
           <select
-            aria-label={textos.status}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
-            value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
+            aria-label={textos.modelo}
+            className="h-10 rounded-xl border border-border bg-background px-3 text-sm"
+            value={modeloXml}
+            onChange={(e) => setModeloXml(e.target.value)}
           >
-            <option value="">{textos.todos}</option>
-            <option value="pendente">{textos.pendente}</option>
-            <option value="em_emissao">{textos.emitindo}</option>
-            <option value="autorizada">{textos.autorizada}</option>
-            <option value="denegada">{textos.denegada}</option>
-            <option value="cancelada">{textos.cancelada}</option>
-            <option value="erro">{textos.erro}</option>
+            <option value="">
+              {textos.modelo}: {textos.todos}
+            </option>
+            <option value="55">{textos.modeloNfe}</option>
+            <option value="65">{textos.modeloNfce}</option>
           </select>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="h-10 rounded-xl">
+                <DownloadSimple size={14} />
+                {t("Exportar")}
+                <CaretDown size={13} className="ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={exportarCsv}>{textos.exportarCsv}</DropdownMenuItem>
+              {podeEmitir && (
+                <DropdownMenuItem onSelect={exportarXmls}>{textos.exportaXmls}</DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {podeEmitir && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 rounded-xl"
+              onClick={() => setImportarXmlAberto(true)}
+            >
+              <UploadSimple size={14} />
+              {textos.importarXmls}
+            </Button>
+          )}
+
+          {podeEmitir && (
+            <Button size="sm" className="h-10 rounded-xl" asChild>
+              <Link href="/app/notas?aba=emitir">
+                <Plus size={14} />
+                {textos.emitir}
+              </Link>
+            </Button>
+          )}
         </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {chips.map((c) => (
+            <button
+              key={c.valor || "todas"}
+              type="button"
+              onClick={() => setFiltroStatus(c.valor)}
+              aria-pressed={filtroStatus === c.valor}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                filtroStatus === c.valor
+                  ? "border-accent-600/50 bg-accent-soft text-accent"
+                  : "border-border text-muted-foreground hover:border-border-strong hover:text-text",
+              )}
+            >
+              {c.rotulo}
+              <span className="tabular-nums opacity-70">{c.contagem}</span>
+            </button>
+          ))}
+
+          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+            {visiveis.length} {textos.notas} ·{" "}
+            <strong className="font-semibold text-text">{comoMoeda(somaVisiveis, "BRL")}</strong>
+          </span>
+        </div>
+      </div>
 
         {progressoXml && (
           <div className="space-y-1">
@@ -664,7 +684,6 @@ export function GradeNotas({
             </p>
           </>
         )}
-      </>
 
       {cartaPara && (
         <Dialog

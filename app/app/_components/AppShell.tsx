@@ -1,5 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { MobileDock } from "@/components/shell/MobileDock";
 import { TopBar } from "@/components/shell/TopBar";
@@ -9,6 +10,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useInboundMessageAlerts } from "@/hooks/notifications/useInboundMessageAlerts";
 import { useCrmAlerts } from "@/hooks/notifications/useCrmAlerts";
 import { useNotifyOpenFromServiceWorker } from "@/lib/notifications/notify_open";
+import { SignOut } from "@/lib/ui/icons";
 
 interface AppShellProps {
   sidebarCollapsed: boolean;
@@ -26,24 +28,54 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
   useCrmAlerts();
   useNotifyOpenFromServiceWorker();
   const t = useT();
+  const caminho = usePathname();
+
   if (motorista) {
+    // A CABINE (`/app/expedicao/[id]/motorista`) NÃO tem barra: o mapa vai de
+    // borda a borda, como num app de navegação, e o que precisa de toque
+    // (placar, recentralizar, sair) flutua por cima dele. Fora da cabine — a
+    // lista de cargas — a barra sólida continua, porque ali há o que ler.
+    const naCabine = /^\/app\/expedicao\/[^/]+\/motorista/.test(caminho ?? "");
+
     return (
       <AssistenteProvider>
-        <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
-          <header className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-            <p className="text-sm font-semibold text-text">{t("Minhas entregas")}</p>
-            <form action="/api/auth/signout" method="post">
-              <button
-                type="submit"
-                className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-text"
-              >
-                {t("Sair")}
-              </button>
-            </form>
-          </header>
-          <main id="conteudo" className="min-h-0 flex-1 overflow-auto">
+        <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background">
+          {!naCabine && (
+            <header className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+              <p className="text-sm font-semibold text-text">{t("Minhas entregas")}</p>
+              <form action="/api/auth/signout" method="post">
+                <button
+                  type="submit"
+                  className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-text"
+                >
+                  {t("Sair")}
+                </button>
+              </form>
+            </header>
+          )}
+          <main
+            id="conteudo"
+            className={naCabine ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-auto"}
+          >
             {children}
           </main>
+          {/*
+            Na cabine, sair continua a um toque: um botão redondo translúcido
+            no canto, sobre o mapa. Sessão sem saída é armadilha — e é a única
+            coisa da casca antiga que o entregador realmente usava.
+          */}
+          {naCabine && (
+            <form action="/api/auth/signout" method="post" className="absolute top-3 right-3 z-30">
+              <button
+                type="submit"
+                aria-label={t("Sair")}
+                title={t("Sair")}
+                className="grid h-10 w-10 place-items-center rounded-full border border-border/60 bg-background/90 text-muted-foreground shadow-lg backdrop-blur transition hover:text-text active:scale-95"
+              >
+                <SignOut size={17} aria-hidden />
+              </button>
+            </form>
+          )}
         </div>
       </AssistenteProvider>
     );

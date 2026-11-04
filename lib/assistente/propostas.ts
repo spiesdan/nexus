@@ -11,7 +11,7 @@ import { emitirNota } from "@/lib/fiscal/emitir-nota";
 import { COLUNAS_DA_TAREFA, tarefaCreateSchema } from "@/lib/schemas/tarefas";
 import { createLeadSchema } from "@/lib/schemas/leads";
 import { contactCreateSchema } from "@/lib/schemas/contacts";
-import { notaCreateSchema } from "@/lib/schemas/fiscal";
+import { notaCreateSchema, pedidoPrincipalDaNota } from "@/lib/schemas/fiscal";
 import { pedidoCreateSchema } from "@/lib/schemas/pedidos";
 import { precoDeVitrine } from "@/lib/schemas/produtos";
 import { reais, type AssistenteCtx } from "./contexto";
@@ -173,7 +173,8 @@ async function executarNota(
     orgId: ctx.organizationId,
     userId: ctx.userId,
     requestId: ctx.requestId,
-    orderId: payload.order_id,
+    orderId: pedidoPrincipalDaNota(payload),
+    orderIds: payload.order_ids ?? null,
     extras: payload.extras ?? null,
   });
   await audit({

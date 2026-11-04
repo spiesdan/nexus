@@ -255,7 +255,7 @@ export default async function NotasPage({
     codMun: t("IBGE do município"),
     ambiente: t("Ambiente"),
     homologacao: t("Homologação (testes)"),
-    producao: t("Produção (vale de verdade)"),
+    producao: t("Produção"),
     provedorFiscal: t("Emissor"),
     provedorStub: t("Rascunho (sem emissor)"),
     provedorSped: t("sped-nfe (sidecar)"),
