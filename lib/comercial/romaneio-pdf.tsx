@@ -1,22 +1,26 @@
 /**
- * O ROMANEIO DE CARGA — o papel que o MOTORISTA usa na rua.
+ * O ROMANEIO DE CARGA — o papel que o motorista leva.
  *
- * ─── O que mudou, e por quê ─────────────────────────────────────────────────
+ * ─── A ESTRUTURA É A DO ODVIX, QUE A OPERAÇÃO JÁ CONHECE ────────────────────
  *
- * O romaneio era um documento de escritório impresso para quem dirige: trazia
- * o resumo de separação (que é do depósito, não da rua), o valor de cada
- * parada (que o motorista não cobra), dois quadradinhos por item sem dizer o
- * que cada um marcava, e fonte de 7,5pt — ilegível no sol, dentro da cabine.
+ * O dono da operação pediu para copiar o romaneio do sistema que ele usava.
+ * Lá o papel é assim, e nesta ordem:
  *
- * A pergunta que este papel responde é uma só: **para quem entrego, onde, e o
- * que tem na caixa**. Tudo que não responde isso saiu. O que ficou ganhou
- * tamanho: número da parada, nome do cliente e endereço são o que se lê de
- * relance; itens vêm com UM quadradinho para marcar a entrega.
+ *   1. cabeçalho: empresa à esquerda, "Romaneio Nº" ao centro, contato à direita;
+ *   2. uma faixa de dados: Data · Nº Docs · Descrição (as cidades) · totais;
+ *   3. a tabela de PEDIDOS que compõem a carga (origem, nº, emissão, cliente,
+ *      condição de pagamento);
+ *   4. a tabela de PRODUTOS consolidada — o que carregar, com quantidade,
+ *      valor unitário, valor total e peso;
+ *   5. os totais no rodapé.
  *
- * O que NÃO saiu: a ordem das paradas (a rota manda), o agrupamento por cidade
- * (descarrega uma cidade de cada vez) e a linha de assinatura de quem recebeu
- * (é a prova de entrega). A separação por cidade continua calculada aqui —
- * `agruparItensRepetidos` segue exportada para quem separa a carga no galpão.
+ * O que NÃO veio de lá, de propósito: o endereço de entrega em cada pedido.
+ * O Odvix não faz rota — ele é ERP de balcão; aqui o papel é de quem dirige, e
+ * sem endereço o motorista não entrega. Ele entra como segunda linha do
+ * cliente, discreto, sem quebrar a tabela.
+ *
+ * Os pesos só aparecem quando existem: no Odvix a carga saía com "0,000 Kg" em
+ * toda linha, e coluna inteira de zero é ruído, não informação.
  */
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
@@ -24,63 +28,77 @@ import React from "react";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
 
 const styles = StyleSheet.create({
-  page: { padding: 22, fontSize: 9.5, fontFamily: "Helvetica", color: "#111827" },
+  page: { padding: 22, fontSize: 9, fontFamily: "Helvetica", color: "#1f2937" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    borderBottom: "1.5pt solid #1e3a5f",
-    paddingBottom: 4,
-    marginBottom: 6,
+    borderBottom: "1pt solid #d1d5db",
+    paddingBottom: 5,
+    marginBottom: 5,
   },
-  emitente: { fontSize: 13, fontWeight: "bold", color: "#1e3a5f" },
-  titulo: { fontSize: 15, fontWeight: "bold", color: "#1e3a5f", textAlign: "right" },
-  info: { fontSize: 8.5, color: "#4b5563", textAlign: "right" },
+  emitente: { fontSize: 15, fontWeight: "bold", color: "#1e3a5f" },
+  titulo: { fontSize: 13, fontWeight: "bold", color: "#6b7280" },
+  contato: { fontSize: 7.5, color: "#4b5563", textAlign: "right", lineHeight: 1.35 },
   faixa: {
+    backgroundColor: "#f3f4f6",
+    borderTop: "0.5pt solid #d1d5db",
+    borderBottom: "0.5pt solid #d1d5db",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginBottom: 7,
+  },
+  linhaDados: { flexDirection: "row", flexWrap: "wrap", marginBottom: 2 },
+  campo: { flexDirection: "row", marginRight: 18 },
+  rotulo: { fontSize: 8, color: "#6b7280", marginRight: 3 },
+  valor: { fontSize: 8.5, fontWeight: "bold", color: "#111827" },
+  secao: {
+    fontSize: 8,
+    fontWeight: "bold",
+    letterSpacing: 0.4,
+    color: "#1e3a5f",
+    marginTop: 6,
+    marginBottom: 3,
+    textTransform: "uppercase",
+  },
+  cabecalhoTabela: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#1e3a5f",
+    backgroundColor: "#5b9bd5",
     color: "#ffffff",
-    fontSize: 9.5,
+    fontSize: 7.5,
     fontWeight: "bold",
     paddingVertical: 3,
-    paddingHorizontal: 7,
-    borderRadius: 2,
-    marginBottom: 6,
+    paddingHorizontal: 3,
   },
-  cidade: {
+  cabecalhoProdutos: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    backgroundColor: "#eef2f7",
-    borderLeft: "2.5pt solid #1e3a5f",
-    paddingVertical: 1.5,
-    paddingHorizontal: 6,
-    marginTop: 5,
-    marginBottom: 2,
-  },
-  cidadeNome: { fontSize: 10, fontWeight: "bold", color: "#1e3a5f" },
-  cidadeQtd: { fontSize: 8, color: "#4b5563" },
-  parada: {
-    borderBottom: "0.5pt solid #e5e7eb",
-    paddingTop: 3,
-    paddingBottom: 3,
-  },
-  paradaTopo: { flexDirection: "row", alignItems: "baseline" },
-  seqNum: {
-    width: 17,
-    fontSize: 11,
+    backgroundColor: "#a11b6a",
+    color: "#ffffff",
+    fontSize: 7.5,
     fontWeight: "bold",
-    color: "#1e3a5f",
-    marginRight: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+    marginTop: 8,
   },
-  cliente: { flex: 1, fontSize: 10.5, fontWeight: "bold" },
-  pedido: { fontSize: 8, color: "#6b7280" },
-  endereco: { fontSize: 9, color: "#374151", marginLeft: 20, marginTop: 1 },
-  semEndereco: { fontSize: 9, color: "#b45309", marginLeft: 20, marginTop: 1 },
-  fluxo: { flexDirection: "row", flexWrap: "wrap", marginLeft: 20, marginTop: 2 },
-  item: { fontSize: 9, marginRight: 12, marginBottom: 1 },
-  assinatura: { fontSize: 8.5, color: "#6b7280", marginLeft: 20, marginTop: 2 },
+  linhaTabela: {
+    flexDirection: "row",
+    borderBottom: "0.5pt solid #e5e7eb",
+    paddingVertical: 2.5,
+    paddingHorizontal: 3,
+  },
+  linhaAlternada: { backgroundColor: "#fafafa" },
+  celula: { fontSize: 8 },
+  celulaForte: { fontSize: 8, fontWeight: "bold" },
+  endereco: { fontSize: 7, color: "#6b7280", marginTop: 0.5 },
+  rodapeTotais: {
+    flexDirection: "row",
+    borderTop: "1pt solid #a11b6a",
+    marginTop: 10,
+    paddingTop: 5,
+  },
+  totalBloco: { flex: 1 },
+  totalRotulo: { fontSize: 7.5, color: "#6b7280" },
+  totalValor: { fontSize: 10, fontWeight: "bold", color: "#111827", marginTop: 1 },
   rodape: {
     position: "absolute",
     bottom: 9,
@@ -99,6 +117,10 @@ export interface ItemDaParada {
   codigo: string;
   nome: string;
   quantidade: number;
+  /** Preço unitário em centavos, quando o pedido tem (o romaneio do Odvix mostra). */
+  preco_unit_cents?: number | null;
+  /** Peso bruto unitário em kg, quando o cadastro do produto tem. */
+  peso_kg?: number | null;
 }
 
 export interface ParadaDoRomaneio {
@@ -110,6 +132,10 @@ export interface ParadaDoRomaneio {
   status: string;
   /** Cidade da entrega ("MAFRA/SC"), para separar a carga por cidade. */
   cidade?: string | null;
+  /** Condição de pagamento do pedido ("AVISTA", "30 DIAS"…). */
+  condicao_pagamento?: string | null;
+  /** Data de emissão do pedido (ISO). */
+  emissao?: string | null;
   /** Itens do pedido para o checklist de carregamento (opcional p/ compat). */
   itens?: ItemDaParada[];
 }
@@ -120,18 +146,27 @@ export interface RomaneioDados {
   veiculo_tipo: string | null;
   motorista_nome: string | null;
   paradas: ParadaDoRomaneio[];
+  /** Contato do emitente no cabeçalho (o Odvix imprime CNPJ, telefone, e-mail). */
+  emitenteContato?: { documento?: string | null; endereco?: string | null; telefone?: string | null; email?: string | null } | null;
 }
-
 
 function numeroDoPedido(numero: number): string {
   return `PED-${String(numero).padStart(4, "0")}`;
 }
 
-/**
- * Ordem de entrega: sequência da rota, desempate pelo número. A rota SQL já
- * vem ordenada, mas o romaneio não confia nisso — quem IMPRIME garante a
- * ordem que o motorista dirige.
- */
+function moeda(cents: number): string {
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function dataCurta(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dia}/${mes}/${d.getFullYear()}`;
+}
+
 export function ordenarParadasDoRomaneio(paradas: ParadaDoRomaneio[]): ParadaDoRomaneio[] {
   return [...paradas].sort((a, b) => a.sequencia - b.sequencia || a.numero - b.numero);
 }
@@ -262,6 +297,53 @@ export function agruparItensRepetidos(paradas: ParadaDoRomaneio[]): ItemRepetido
     .sort((a, b) => b.quantidade_total - a.quantidade_total || a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
+
+/**
+ * OS PRODUTOS DA CARGA, CONSOLIDADOS — a tabela do Odvix.
+ *
+ * Um produto que aparece em três pedidos vira UMA linha com a soma, porque quem
+ * carrega o caminhão pega a quantidade total de uma vez. Chave = código; sem
+ * código, o nome normalizado.
+ */
+export interface ProdutoDaCarga {
+  codigo: string;
+  nome: string;
+  quantidade: number;
+  valorUnitCents: number;
+  valorTotalCents: number;
+  pesoKg: number;
+}
+
+export function agregarProdutosDaCarga(paradas: ParadaDoRomaneio[]): ProdutoDaCarga[] {
+  const norm = (v: string): string =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  const mapa = new Map<string, ProdutoDaCarga>();
+  for (const p of ordenarParadasDoRomaneio(paradas)) {
+    for (const it of p.itens ?? []) {
+      const chave = it.codigo ? `cod:${norm(it.codigo)}` : `nome:${norm(it.nome)}`;
+      const total = (it.preco_unit_cents ?? 0) * it.quantidade;
+      const existente = mapa.get(chave);
+      if (existente) {
+        existente.quantidade += it.quantidade;
+        existente.valorTotalCents += total;
+        existente.pesoKg += (it.peso_kg ?? 0) * it.quantidade;
+      } else {
+        mapa.set(chave, {
+          codigo: it.codigo,
+          nome: it.nome,
+          quantidade: it.quantidade,
+          valorUnitCents: it.preco_unit_cents ?? 0,
+          valorTotalCents: total,
+          pesoKg: (it.peso_kg ?? 0) * it.quantidade,
+        });
+      }
+    }
+  }
+  return [...mapa.values()].sort(
+    (a, b) => a.codigo.localeCompare(b.codigo, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"),
+  );
+}
+
 export function RomaneioPdf({
   emitente,
   carga,
@@ -287,80 +369,160 @@ function ConteudoRomaneio({
   carga: RomaneioDados;
 }) {
   const paradas = ordenarParadasDoRomaneio(carga.paradas);
-  const totalItens = paradas.reduce((s, p) => s + (p.itens?.length ?? 0), 0);
-  const grupos = agruparParadasPorCidade(paradas);
-  // A numeração é REDISTRIBUÍDA na ordem em que o papel é lido, para o
-  // motorista não ler "1, 5, 9, 2". A rota continua mandando; a cidade agrupa.
-  const ordemDaParada = new Map<ParadaDoRomaneio, number>();
-  let n = 0;
-  for (const g of grupos) for (const p of g.paradas) ordemDaParada.set(p, ++n);
+  const produtos = agregarProdutosDaCarga(paradas);
+  const totalCents = paradas.reduce((s, p) => s + p.total_cents, 0);
+  const totalItens = produtos.reduce((s, p) => s + p.quantidade, 0);
+  const totalPeso = produtos.reduce((s, p) => s + p.pesoKg, 0);
+  const temPeso = produtos.some((p) => p.pesoKg > 0);
+  const cidades = [...new Set(paradas.map((p) => (p.cidade ?? "").trim()).filter(Boolean))];
+  const contato = carga.emitenteContato ?? null;
+  const linhasContato = [
+    contato?.documento ? `CNPJ ${contato.documento}` : null,
+    contato?.endereco,
+    contato?.telefone,
+    contato?.email,
+  ].filter(Boolean) as string[];
 
   return (
     <View>
       <View style={styles.header}>
         <Text style={styles.emitente}>{emitente.nome}</Text>
+        <Text style={styles.titulo}>Romaneio Carga Nº: {numeroDaCarga(carga.numero)}</Text>
         <View>
-          <Text style={styles.titulo}>Romaneio {numeroDaCarga(carga.numero)}</Text>
-          <Text style={styles.info}>
-            {[carga.placa, carga.veiculo_tipo, carga.motorista_nome].filter(Boolean).join(" · ") ||
-              "Sem veículo definido"}
-          </Text>
+          {linhasContato.map((l, i) => (
+            <Text key={`${l}-${i}`} style={styles.contato}>
+              {l}
+            </Text>
+          ))}
         </View>
       </View>
 
       <View style={styles.faixa}>
-        <Text>
-          {paradas.length} {paradas.length === 1 ? "entrega" : "entregas"} · {totalItens}{" "}
-          {totalItens === 1 ? "item" : "itens"}
-        </Text>
-        <Text>Marque [ ] a cada item entregue</Text>
-      </View>
-
-      {grupos.map((g) => (
-        <View key={`cidade-${g.rotulo}`}>
-          <View style={styles.cidade} wrap={false}>
-            <Text style={styles.cidadeNome}>{g.rotulo}</Text>
-            <Text style={styles.cidadeQtd}>
-              {g.paradas.length} {g.paradas.length === 1 ? "parada" : "paradas"}
+        <View style={styles.linhaDados}>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Data:</Text>
+            <Text style={styles.valor}>{dataCurta(paradas[0]?.emissao ?? new Date().toISOString())}</Text>
+          </View>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Nº Docs:</Text>
+            <Text style={styles.valor}>{paradas.length}</Text>
+          </View>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Qtde Total:</Text>
+            <Text style={styles.valor}>{totalItens.toFixed(4)}</Text>
+          </View>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Valor Total:</Text>
+            <Text style={styles.valor}>R$ {moeda(totalCents)}</Text>
+          </View>
+          {temPeso && (
+            <View style={styles.campo}>
+              <Text style={styles.rotulo}>Peso:</Text>
+              <Text style={styles.valor}>{totalPeso.toFixed(3)} Kg</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.linhaDados}>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Descrição:</Text>
+            <Text style={styles.valor}>{cidades.length > 0 ? cidades.join(" · ") : "—"}</Text>
+          </View>
+          <View style={styles.campo}>
+            <Text style={styles.rotulo}>Veículo:</Text>
+            <Text style={styles.valor}>
+              {[carga.placa, carga.veiculo_tipo, carga.motorista_nome].filter(Boolean).join(" · ") ||
+                "sem veículo definido"}
             </Text>
           </View>
+        </View>
+      </View>
 
-          {g.paradas.map((p) => {
-            const itens = p.itens ?? [];
-            return (
-              <View key={`${p.sequencia}-${p.numero}`} style={styles.parada} wrap={false}>
-                <View style={styles.paradaTopo}>
-                  <Text style={styles.seqNum}>{ordemDaParada.get(p) ?? p.sequencia}</Text>
-                  <Text style={styles.cliente}>{p.cliente_nome}</Text>
-                  <Text style={styles.pedido}>{numeroDoPedido(p.numero)}</Text>
-                </View>
-
-                {p.endereco_entrega ? (
-                  <Text style={styles.endereco}>{p.endereco_entrega}</Text>
-                ) : (
-                  <Text style={styles.semEndereco}>
-                    Sem endereço — confirme com o escritório antes de sair.
-                  </Text>
-                )}
-
-                <View style={styles.fluxo}>
-                  {itens.map((it, idx) => (
-                    <Text key={`${it.codigo}-${idx}`} style={styles.item}>
-                      [ ] {it.quantidade} un. {it.codigo ? `${it.codigo} — ` : ""}
-                      {it.nome}
-                    </Text>
-                  ))}
-                  {/* A assinatura fecha a parada, na mesma linha quando cabe:
-                      é a prova de entrega e não pode ficar só na última folha. */}
-                  <Text style={styles.assinatura} wrap={false}>
-                    Recebido por: ______________________
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
+      <Text style={styles.secao}>Pedidos</Text>
+      <View style={styles.cabecalhoTabela}>
+        <Text style={[styles.celula, { width: "8%" }]}>Origem</Text>
+        <Text style={[styles.celula, { width: "10%" }]}>Id</Text>
+        <Text style={[styles.celula, { width: "13%" }]}>Nº Documento</Text>
+        <Text style={[styles.celula, { width: "12%" }]}>Emissão</Text>
+        <Text style={[styles.celula, { flex: 1 }]}>Cliente</Text>
+        <Text style={[styles.celula, { width: "16%" }]}>Cond. Pagto</Text>
+      </View>
+      {paradas.map((p, i) => (
+        <View
+          key={`ped-${p.sequencia}-${p.numero}`}
+          style={[styles.linhaTabela, i % 2 === 1 ? styles.linhaAlternada : {}]}
+          wrap={false}
+        >
+          <Text style={[styles.celula, { width: "8%" }]}>Pedido</Text>
+          <Text style={[styles.celula, { width: "10%" }]}>{p.numero}</Text>
+          <Text style={[styles.celula, { width: "13%" }]}>{numeroDoPedido(p.numero)}</Text>
+          <Text style={[styles.celula, { width: "12%" }]}>{dataCurta(p.emissao)}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.celulaForte}>{p.cliente_nome}</Text>
+            {p.endereco_entrega ? (
+              <Text style={styles.endereco}>{p.endereco_entrega}</Text>
+            ) : (
+              <Text style={[styles.endereco, { color: "#b45309" }]}>
+                Sem endereço — confirme com o escritório
+              </Text>
+            )}
+          </View>
+          <Text style={[styles.celula, { width: "16%" }]}>{p.condicao_pagamento || "—"}</Text>
         </View>
       ))}
+
+      <View style={styles.cabecalhoProdutos}>
+        <Text style={[styles.celula, { width: "10%" }]}>Código</Text>
+        <Text style={[styles.celula, { width: "8%" }]}>Qtde</Text>
+        <Text style={[styles.celula, { flex: 1 }]}>Descrição</Text>
+        <Text style={[styles.celula, { width: "12%", textAlign: "right" }]}>Valor Unit.</Text>
+        <Text style={[styles.celula, { width: "12%", textAlign: "right" }]}>Valor Total</Text>
+        {temPeso && (
+          <Text style={[styles.celula, { width: "10%", textAlign: "right" }]}>Peso</Text>
+        )}
+      </View>
+      {produtos.map((p, i) => (
+        <View
+          key={`prod-${p.codigo}-${p.nome}-${i}`}
+          style={[styles.linhaTabela, i % 2 === 1 ? styles.linhaAlternada : {}]}
+          wrap={false}
+        >
+          <Text style={[styles.celula, { width: "10%" }]}>{p.codigo || "—"}</Text>
+          <Text style={[styles.celula, { width: "8%" }]}>{p.quantidade.toFixed(4)}</Text>
+          <Text style={[styles.celula, { flex: 1 }]}>{p.nome}</Text>
+          <Text style={[styles.celula, { width: "12%", textAlign: "right" }]}>
+            {moeda(p.valorUnitCents)}
+          </Text>
+          <Text style={[styles.celula, { width: "12%", textAlign: "right" }]}>
+            {moeda(p.valorTotalCents)}
+          </Text>
+          {temPeso && (
+            <Text style={[styles.celula, { width: "10%", textAlign: "right" }]}>
+              {p.pesoKg.toFixed(3)}
+            </Text>
+          )}
+        </View>
+      ))}
+
+      <View style={styles.rodapeTotais}>
+        <View style={styles.totalBloco}>
+          <Text style={styles.totalRotulo}>Qtde Total</Text>
+          <Text style={styles.totalValor}>{totalItens.toFixed(4)}</Text>
+        </View>
+        <View style={styles.totalBloco}>
+          <Text style={styles.totalRotulo}>Nº Docs</Text>
+          <Text style={styles.totalValor}>{paradas.length}</Text>
+        </View>
+        <View style={styles.totalBloco}>
+          <Text style={styles.totalRotulo}>Valor Total</Text>
+          <Text style={styles.totalValor}>R$ {moeda(totalCents)}</Text>
+        </View>
+        {temPeso && (
+          <View style={styles.totalBloco}>
+            <Text style={styles.totalRotulo}>Peso Total</Text>
+            <Text style={styles.totalValor}>{totalPeso.toFixed(3)} Kg</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

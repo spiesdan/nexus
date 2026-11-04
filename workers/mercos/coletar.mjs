@@ -351,14 +351,34 @@ try {
       // a linha do CNPJ É o documento, e a razão é a ANTERIOR. Feito assim, o
       // `cliente_nome` de 572 pedidos vira um número de CNPJ — e o nome do
       // cliente é o que o vendedor lê na tela e o que casa o contato.
-      const jDoc = linhas.findIndex((l) => /^-?\s*\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/.test(l));
+      // ─── ONDE TERMINA O CLIENTE E COMEÇA A REPRESENTADA ─────────────────
+      //
+      // Medido em 04/11/2026, no pedido 19438: a página tem DOIS blocos, nesta
+      // ordem — "Cliente" (ADRIANA BISON, CPF 017.724.049-00) e "Representada"
+      // (BILL COMERCIO DE ESTOPAS, o próprio emitente). O parser pegava o
+      // primeiro CNPJ da PÁGINA; como o cliente era pessoa física, o único
+      // CNPJ era o da representada — e 133 pedidos entraram com o nome e o
+      // CNPJ da própria empresa no lugar do cliente.
+      //
+      // Duas correções, e as duas eram necessárias:
+      //   1. o escopo termina na linha "Representada" (o cliente vem antes);
+      //   2. o documento pode ser CPF, não só CNPJ.
+      const iRepresentada = linhas.findIndex((l) => /^[^\w]*\s*Representada\s*$/i.test(l));
+      const escopo = iRepresentada > -1 ? linhas.slice(0, iRepresentada) : linhas;
+      const RE_DOC = /^-?\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2})/;
+      const jDoc = escopo.findIndex((l) => RE_DOC.test(l));
       const tiraPrefixo = (l) => (l || "").replace(/^[-–]\s*/, "").trim();
-      const documento = jDoc > -1 ? (linhas[jDoc].match(/[\d.]+\/[\d-]+/) || [])[0] ?? null : null;
-      const razao = jDoc > 0 ? tiraPrefixo(linhas[jDoc - 1]) : null;
-      const anterior = jDoc > 1 ? linhas[jDoc - 2] : null;
+      const documento = jDoc > -1 ? (escopo[jDoc].match(RE_DOC) || [])[1] ?? null : null;
+      const razao = jDoc > 0 ? tiraPrefixo(escopo[jDoc - 1]) : null;
+      const anterior = jDoc > 1 ? escopo[jDoc - 2] : null;
       // A fantasia é a linha que NÃO começa com "-"; se a anterior começar com
       // "-", não existe fantasia separada (pedido de consumidor final).
-      const fantasia = anterior && !/^[-–]/.test(anterior) ? anterior.trim() : null;
+      const fantasia =
+        anterior &&
+        !/^[-–]/.test(anterior) &&
+        !/^(Listar todos clientes|Trocar cliente|Cliente|Nova representada)$/i.test(anterior.trim())
+          ? anterior.trim()
+          : null;
 
       //
       // Telefone e cidade vêm nas linhas seguintes, MAS cada um deles é
@@ -366,7 +386,7 @@ try {
       // começo da linha. Por isso a busca é por CONTEÚDO e varre as 3 linhas
       // seguintes, em vez de ancorar na posição exata: a posição muda entre o
       // bloco do cliente e o da representada, e o ícone some em metade das telas.
-      const janela = jDoc > -1 ? linhas.slice(jDoc + 1, jDoc + 4) : [];
+      const janela = jDoc > -1 ? escopo.slice(jDoc + 1, jDoc + 4) : [];
       const soNumero = (l) => (l || "").replace(/[^\d()\s-]/g, "").trim();
       const linhaFone = janela.find((l) => /\(\d{2}\)\s?\d{4,5}-?\d{4}|\d{4,5}-\d{4}/.test(soNumero(l)) && soNumero(l).length >= 8);
       const telefone = linhaFone ? soNumero(linhaFone) || null : null;

@@ -23,7 +23,7 @@ import {
   nomeDaEntrega,
 } from "@/lib/expedicao/endereco-da-entrega";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
-import { renderRomaneioPdf } from "@/lib/comercial/romaneio-pdf";
+import { renderRomaneioPdf, type ItemDaParada } from "@/lib/comercial/romaneio-pdf";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -71,9 +71,11 @@ export async function GET(
     contact_id: string | null;
     cliente_documento: string | null;
     total_cents: number;
+    condicao_pagamento: string | null;
+    created_at: string | null;
   }
   const pedidos: Record<string, LinhaPedido> = {};
-  const itensPorPedido: Record<string, { codigo: string; nome: string; quantidade: number }[]> = {};
+  const itensPorPedido: Record<string, ItemDaParada[]> = {};
   if (ids.length > 0) {
     // Sem recebíveis aqui de propósito: o "pago antecipado" era insumo da
     // metade do fechamento, que não sai mais neste PDF. Menos uma query, e
@@ -81,12 +83,12 @@ export async function GET(
     const [{ data }, { data: itensPedidos }] = await Promise.all([
       supabase
         .from("commercial_orders")
-        .select("id, numero, cliente_nome, endereco_entrega, contact_id, cliente_documento, total_cents")
+        .select("id, numero, cliente_nome, endereco_entrega, contact_id, cliente_documento, total_cents, condicao_pagamento, created_at")
         .eq("organization_id", authz.org.orgId)
         .in("id", ids),
       supabase
         .from("commercial_order_items")
-        .select("order_id, produto_codigo, produto_nome, quantidade, posicao")
+        .select("order_id, produto_codigo, produto_nome, quantidade, posicao, preco_unit_cents, product_id")
         .eq("organization_id", authz.org.orgId)
         .in("order_id", ids)
         .order("posicao"),
@@ -94,11 +96,38 @@ export async function GET(
     for (const p of ((data ?? []) as unknown as LinhaPedido[])) {
       pedidos[p.id] = p;
     }
+    // Peso do produto: o Odvix imprime peso por item. Só buscamos quando o item
+    // aponta para um produto do catálogo — item digitado à mão não tem ficha.
+    const idsProdutos = [
+      ...new Set(
+        ((itensPedidos ?? []) as unknown as { product_id: string | null }[])
+          .map((i) => i.product_id)
+          .filter((v): v is string => !!v),
+      ),
+    ];
+    const pesos: Record<string, number> = {};
+    if (idsProdutos.length > 0) {
+      const { data: prods } = await supabase
+        .from("catalog_products")
+        .select("id, peso_bruto_kg")
+        .eq("organization_id", authz.org.orgId)
+        .in("id", idsProdutos);
+      for (const pr of (prods ?? []) as unknown as { id: string; peso_bruto_kg: number | null }[]) {
+        if (pr.peso_bruto_kg != null) pesos[pr.id] = pr.peso_bruto_kg;
+      }
+    }
     for (const it of ((itensPedidos ?? []) as unknown as {
       order_id: string; produto_codigo: string; produto_nome: string; quantidade: number;
+      preco_unit_cents: number | null; product_id: string | null;
     }[])) {
       const lista = itensPorPedido[it.order_id] ?? [];
-      lista.push({ codigo: it.produto_codigo, nome: it.produto_nome, quantidade: it.quantidade });
+      lista.push({
+        codigo: it.produto_codigo,
+        nome: it.produto_nome,
+        quantidade: it.quantidade,
+        preco_unit_cents: it.preco_unit_cents,
+        peso_kg: it.product_id ? (pesos[it.product_id] ?? null) : null,
+      });
       itensPorPedido[it.order_id] = lista;
     }
   }
@@ -142,6 +171,8 @@ export async function GET(
           cidade: ped ? cidadeDaEntrega(ped, contatos) : null,
           total_cents: ped?.total_cents ?? 0,
           status: i.status,
+          condicao_pagamento: ped?.condicao_pagamento ?? null,
+          emissao: ped?.created_at ?? null,
           itens: itensPorPedido[i.order_id] ?? [],
         };
       }),
