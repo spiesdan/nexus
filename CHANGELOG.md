@@ -8,6 +8,29 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.13] — 2026-11-04
+
+### Corrigido
+
+- **NF-e manda o responsável técnico — a SEFAZ recusava sem ele (rejeição 972)** A primeira emissão real depois do IBS/CBS **chegou à SEFAZ** e voltou com:
+
+  ```
+  SEFAZ_972: Rejeicao: Obrigatoria as informacoes do responsavel tecnico
+  ```
+
+  O grupo `infRespTec` é exigido pela NT 2018.005 e não existia no nosso XML. Ele
+  identifica quem responde pelo **software**, não pela empresa que emite — por
+  isso o CNPJ não pode ser o mesmo do emitente (rejeição 776) e o dado vive no
+  ambiente do sidecar, não no cadastro fiscal:
+
+  - `FISCAL_RESP_TEC_CNPJ`
+  - `FISCAL_RESP_TEC_CONTATO`
+  - `FISCAL_RESP_TEC_EMAIL`
+  - `FISCAL_RESP_TEC_FONE`
+
+  Sem CNPJ válido a emissão é recusada **antes** de consumir número, com a
+  mensagem dizendo qual variável falta.
+
 ## [1.38.12] — 2026-11-04
 
 ### Corrigido
@@ -6079,7 +6102,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.12...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.13...HEAD
+[1.38.13]: https://github.com/spiesdan/nexus/compare/v1.38.12...v1.38.13
 [1.38.12]: https://github.com/spiesdan/nexus/compare/v1.38.11...v1.38.12
 [1.38.11]: https://github.com/spiesdan/nexus/compare/v1.38.10...v1.38.11
 [1.38.10]: https://github.com/spiesdan/nexus/compare/v1.38.9...v1.38.10
