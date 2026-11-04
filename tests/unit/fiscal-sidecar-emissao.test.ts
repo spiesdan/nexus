@@ -107,12 +107,26 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toMatch(/private function cfopParaDestino\(string \$cfop\): string/);
   });
 
-  it("indFinal segue o cadastro do destinatário — empresa com IE não é consumidora final", () => {
-    // Era `'1'` fixo para toda venda. O indicador não é escolha da tela: sai do
-    // mesmo campo que alimenta o `indIEDest` (indicador_ie 1 = contribuinte).
+  it("indFinal: CPF é consumidor final, CNPJ não — como no XML autorizado do Odivix", () => {
+    // Medido no XML autorizado (nNF 4575): venda para CNPJ sai com indFinal 0,
+    // inclusive destinatário isento. A regra anterior olhava o indicador_ie e
+    // mandava 1 para isento, divergindo do emissor anterior.
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
     expect(src).not.toMatch(/'indFinal'\s*=>\s*'1',/);
-    expect(src).toMatch(/'indFinal'\s*=>.*\$p\['indicador_ie'\]/);
+    expect(src).toMatch(/'indFinal'\s*=>.*documento/);
+  });
+
+  it("IBS/CBS e IPI vão no XML — e o Make precisa do schema PL_010", () => {
+    // `new Make()` usa schema 9 (PL_009) e os grupos IBSCBS são silenciosamente
+    // omitidos (o build só os injeta com schema > 9). O emissor anterior emite
+    // CST 000 / cClassTrib 000001 / IBS-UF 0,10% / CBS 0,90%.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).not.toMatch(/new Make\(\)/);
+    expect(src).toContain("new Make('PL_010')");
+    expect(src).toMatch(/tagIBSCBS\(/);
+    expect(src).toMatch(/'cClassTrib'\s*=>\s*'000001'/);
+    expect(src).toMatch(/tagIBSCBSTot\(/);
+    expect(src).toMatch(/'CST'\s*=>\s*'53'/);
   });
 
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {

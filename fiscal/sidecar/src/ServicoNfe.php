@@ -86,7 +86,7 @@ class ServicoNfe
             $tools = new Tools($this->montarConfigTools(), $cert);
             $tools->model(55);
 
-            $make = new Make();
+            $make = new Make('PL_010');
             $this->montarNFe($make);
             $xml = $make->montaNFe();
             // O render() do sped-nfe engole a exceção em getErrors(): preenchimento
@@ -215,6 +215,31 @@ class ServicoNfe
             'xmotivo' => $this->texto($no, 'xMotivo') ?: $this->texto($dom, 'xMotivo'),
             'protocolo' => $this->texto($no, 'nProt'),
         ];
+    }
+
+    /**
+     * Monta o XML SEM transmitir — prévia para conferir o leiaute antes de
+     * consumir um número. Não valida certificado nem ambiente: só o XML.
+     *
+     * @return array<string,mixed>
+     */
+    public function previa(): array
+    {
+        try {
+            $make = new Make('PL_010');
+            $this->montarNFe($make);
+            $xml = $make->montaNFe();
+            $erros = $make->getErrors();
+            if (!empty($erros)) {
+                return ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => $this->resumir($erros)];
+            }
+            if ($xml === '') {
+                return ['ok' => false, 'codigo' => 'VALIDACAO', 'mensagem' => 'Montagem não produziu XML.'];
+            }
+            return ['ok' => true, 'xml' => $xml];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'codigo' => 'EXCECAO', 'mensagem' => substr($e->getMessage(), 0, 500)];
+        }
     }
 
     /** @return array<string,mixed> */
@@ -636,27 +661,17 @@ class ServicoNfe
             'cDV' => null,
             'tpAmb' => (string)$tpAmb,
             'finNFe' => '1',
-            // indFinal 0 = NÃO consumidor final (destinatário contribuinte do
-            // ICMS, que compra para revender/industrializar); 1 = consumidor
-            // final. Era fixo em 1 para toda venda, inclusive para empresa com
-            // IE — o indicador não é escolha da tela, sai do cadastro:
-            // `indicador_ie` 1 é contribuinte, e é o mesmo campo que alimenta
-            // o `indIEDest`. Sem IE (2 isento / 9 não contribuinte), a operação
-            // é com consumidor final.
-            'indFinal' => ((string)($p['indicador_ie'] ?? '9') === '1') ? '0' : '1',
-            // indPres 9 = não presencial, outros. indPag NÃO entra aqui: no
-            // leiaute 4.00 ele só existe dentro de detPag (o XSD tem um único
-            // indPag, filho de detPag) — em ide ele rejeita.
-            'indPres' => '9',
-            // Com indPres 9 a NT 2020.006 passa a exigir o indicador do
-            // intermediador, e a SEFAZ recusa a nota inteira sem ele (434:
-            // "NF-e sem indicativo do intermediador" — medido na 1ª emissão em
-            // homologação, 19/10/2026). 0 = operação sem intermediador, que é a
-            // venda no canal do próprio emitente (WhatsApp/CRM). O XSD admite
-            // só 0 e 1: venda por marketplace exigiria 1 MAIS o grupo
-            // `infIntermed` com o CNPJ do intermediador — que este sidecar não
-            // configura hoje (limitação conhecida, não regra inventada).
-            'indIntermed' => '0',
+            // indFinal 0 = não consumidor final; 1 = consumidor final. A
+            // regra espelha o emissor ANTERIOR desta instalação, lida do XML
+            // autorizado (nNF 4575): venda para CNPJ sai com 0, venda para
+            // CPF sai com 1. (Antes víamos `indicador_ie`, e o XML do Odivix
+            // mostra que a empresa/isento também vai com 0.)
+            'indFinal' => preg_replace('/\D/', '', (string)($p['documento'] ?? '')) !== '' &&
+                strlen(preg_replace('/\D/', '', (string)($p['documento'] ?? ''))) === 11 ? '1' : '0',
+            // indPres 0 = presencial (operação do próprio emitente). O XML
+            // autorizado do Odivix usa 0 e NÃO manda `indIntermed`; com 9 a NT
+            // 2020.006 exigia o indicador e a SEFAZ recusava sem ele (434).
+            'indPres' => '0',
             'procEmi' => '0',
             // verProc tem maxLength 20 no XSD do leiaute 4.00. A string
             // anterior — 'nexus-fiscal-sidecar/1.0', 27 caracteres — fazia
@@ -734,6 +749,26 @@ class ServicoNfe
             }
             $make->tagPIS((object)['item' => $n, 'CST' => '07']);
             $make->tagCOFINS((object)['item' => $n, 'CST' => '07']);
+            // IPI não tributado (CST 53), como no XML autorizado do emissor
+            // anterior — o Simples não destaca IPI, mas o grupo vai no leiaute.
+            $make->tagIPI((object)['item' => $n, 'cEnq' => '999', 'CST' => '53']);
+            // IBS/CBS da transição de 2026, iguais aos do XML autorizado:
+            // CST 000, cClassTrib 000001, IBS-UF 0,10% e CBS 0,90% (IBS-Mun 0).
+            // Valores por item e o totalizador é somado pelo próprio Make.
+            $vIbsUf = round($vItem * 0.001, 2);
+            $vCbs = round($vItem * 0.009, 2);
+            $make->tagIBSCBS((object)[
+                'item' => $n,
+                'CST' => '000',
+                'cClassTrib' => '000001',
+                'vBC' => $this->moeda($vItem),
+                'gIBSUF_pIBSUF' => '0.10',
+                'gIBSUF_vIBSUF' => $this->moeda($vIbsUf),
+                'gIBSMun_pIBSMun' => '0.00',
+                'gIBSMun_vIBSMun' => '0.00',
+                'gCBS_pCBS' => '0.90',
+                'gCBS_vCBS' => $this->moeda($vCbs),
+            ]);
         }
 
         // Totais: o Make já soma vProd/vBC/vICMS a partir das tags de item e
@@ -742,6 +777,9 @@ class ServicoNfe
         // único valor que entra explícito. Assim total e det batem por
         // construção, e não por dois arredondamentos paralelos.
         $make->tagICMSTot((object)['vFrete' => $this->moeda($frete)]);
+        // Total do IBS/CBS: o Make somou cada item em `stdIBSCBSTot`; aqui o
+        // grupo é escrito no `<total>`, como no XML do emissor anterior.
+        $make->tagIBSCBSTot((object)[]);
 
         $this->montarTransporte($make);
         $this->montarPagamento($make, $vNF);
@@ -822,9 +860,12 @@ class ServicoNfe
     {
         $t = $this->extras['transporte'] ?? [];
         $t = is_array($t) ? $t : [];
-        $modFrete = (string)($t['modalidade_frete'] ?? '9');
+        // 0 = por conta do emitente, que é como o emissor anterior desta
+        // instalação declara toda venda (XML autorizado nNF 4575). 9 ("sem
+        // frete") só quando a operação realmente não tem transporte.
+        $modFrete = (string)($t['modalidade_frete'] ?? '0');
         if (!in_array($modFrete, self::MODALIDADES_DE_FRETE, true)) {
-            $modFrete = '9';
+            $modFrete = '0';
         }
         $make->tagtransp((object)['modFrete' => $modFrete]);
 
