@@ -139,6 +139,16 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toContain("'schemes' => 'PL_010_V1.30'");
   });
 
+  it("responsável técnico vai no XML e é recusado sem CNPJ válido", () => {
+    // Medido na 1ª emissão: a SEFAZ devolveu 972 ("Obrigatória as informações
+    // do responsável técnico"). O dado é do fornecedor do software e vive no
+    // ambiente; CNPJ igual ao do emitente é recusado (776).
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toContain("taginfRespTec");
+    expect(src).toContain("FISCAL_RESP_TEC_CNPJ");
+    expect(src).toMatch(/rejeição 776|rejeicao 776/);
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.

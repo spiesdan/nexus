@@ -225,6 +225,14 @@ services:
       # Ausente, o serviço sobe e recusa TODO POST com 401 — melhor que um
       # segredo previsível, e o `/saude` continua respondendo ao healthcheck.
       FISCAL_SIDECAR_SECRET: ${FISCAL_SIDECAR_SECRET:?defina FISCAL_SIDECAR_SECRET no .env}
+      # Responsável técnico pelo software (NT 2018.005). A SEFAZ recusa a nota
+      # sem ele (rejeição 972, medida em 04/11/2026) e recusa se o CNPJ for o
+      # MESMO do emitente (776). É dado do fornecedor do sistema, não do
+      # emitente — por isso vive no `.env`, não no cadastro da empresa.
+      FISCAL_RESP_TEC_CNPJ: ${FISCAL_RESP_TEC_CNPJ:-}
+      FISCAL_RESP_TEC_CONTATO: ${FISCAL_RESP_TEC_CONTATO:-}
+      FISCAL_RESP_TEC_EMAIL: ${FISCAL_RESP_TEC_EMAIL:-}
+      FISCAL_RESP_TEC_FONE: ${FISCAL_RESP_TEC_FONE:-}
     volumes:
       # SÓ LEITURA de propósito: o sidecar lê o certificado, nunca escreve nele.
       # Um `:ro` é a diferença entre "o sidecar pode trocar o certificado da
