@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.10] — 2026-11-04
+
+### Corrigido
+
+- **As faixas de números param de se espremer quando a barra lateral está aberta** Com a sidebar aberta, a área útil cai para ~850 px e as quatro colunas das
+  faixas de situação espremiam o texto: "0 paradas em aber…", "28 pedidos na
+  doca" cortado, e na ficha da carga os dois valores em reais encostavam um no
+  outro. O problema não é o tamanho da janela — é a sidebar comer a largura, e
+  breakpoint de viewport não enxerga isso.
+
+  Agora as faixas viram **2×2 abaixo de 1536 px** e só voltam a quatro colunas em
+  telas largas de verdade. O número não encolhe (`shrink-0`) e o texto ao lado
+  pode truncar (`min-w-0`), então nada mais se sobrepõe. Junto, a faixa de Notas
+  ganhou `shrink-0`: ela ficava com **2 px de altura** dentro da coluna flex da
+  página e não aparecia.
+
 ## [1.38.9] — 2026-11-04
 
 ### Alterado
@@ -6020,7 +6036,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.9...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.10...HEAD
+[1.38.10]: https://github.com/spiesdan/nexus/compare/v1.38.9...v1.38.10
 [1.38.9]: https://github.com/spiesdan/nexus/compare/v1.38.8...v1.38.9
 [1.38.8]: https://github.com/spiesdan/nexus/compare/v1.38.7...v1.38.8
 [1.38.7]: https://github.com/spiesdan/nexus/compare/v1.38.6...v1.38.7
