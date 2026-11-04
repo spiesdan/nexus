@@ -8,6 +8,66 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.0] — 2026-11-04
+
+### Adicionado
+
+- **Agrupar pedidos numa nota só, e as telas de Notas e do entregador repensadas** **Cliente que tirou três pedidos no mês quer uma nota, não três.** Na aba
+  *Emitir nota*, ao escolher um pedido, aparece a lista dos outros pedidos
+  daquele mesmo cliente: marque os que entram e saia **uma NF-e com os itens de todos**.
+  Só pedidos do mesmo cliente podem ser agrupados — a nota tem um destinatário só.
+
+  O que já era verdade continua: um pedido não entra em duas notas vivas, e o
+  frete da nota é a soma dos pedidos agrupados.
+
+  Junto com isso, três telas ficaram mais fáceis de usar:
+
+  - **App do entregador**: o mapa ocupa a tela inteira, sem barra no topo (o
+    *Sair* virou um botão redondo sobre o mapa). A folha de baixo virou um cartão
+    de destino com *Navegar* e *Entregue*; o resto abre num toque. O GPS agora
+    mantém o ponto azul andando com o carro desde que a tela abre — publicar a
+    posição para o escritório continua sendo o botão *Ligar rastreio*.
+  - **Notas fiscais**: sumiram os quatro cartões que repetiam os números do topo.
+    A busca, o período e o modelo ficam numa faixa só, e as situações
+    (*Autorizadas*, *Com erro*…) viraram filtros com contagem — o mesmo toque que
+    mostra o número mostra a lista.
+  - **Romaneio**: o papel do motorista, não o do escritório. Sem valores, sem o
+    resumo de separação (que é do galpão), com letra maior, um quadradinho por
+    item e a assinatura de quem recebeu. Continua cabendo em duas páginas.
+
+### Corrigido
+
+- **Nome longo do cliente e número repetido deixam de travar a nota fiscal** Duas notas reais foram recusadas em 04/11/2026, por motivos diferentes — e os
+  dois eram nossos.
+
+  **Nome do cliente com mais de 60 caracteres.** A nota do cliente com razão
+  social longa foi recusada inteira, com uma mensagem sobre XML inválido:
+
+  > `xNome`: o valor tem 62 caracteres; o máximo é 60.
+
+  O limite é do leiaute da NF-e. Agora o nome é cortado no limite do campo (a
+  razão social completa continua no cadastro) — em vez de a nota não sair por
+  causa de um campo.
+
+  **Número da nota entregue duas vezes.** Uma nota foi **autorizada** pela SEFAZ e
+  continuou aparecendo como "Emitindo", sem número e sem chave. O número dela
+  tinha sido devolvido ao contador por uma nota anterior que falhou antes de
+  enviar — mas continuava presa naquela nota. A emissão seguinte tomou o mesmo
+  número, a SEFAZ autorizou, e a gravação aqui foi recusada por número repetido,
+  em silêncio.
+
+  Agora a numeração **nunca entrega um número que alguma nota já carrega**, e a
+  devolução de número desfaz as duas pontas (contador e nota) ou nenhuma. Se a
+  gravação da nota falhar depois de a SEFAZ responder, o erro aparece no
+  histórico da nota com a chave e o protocolo — o que permite reconstruí-la em vez
+  de reemitir e duplicar a faixa.
+
+  Quem já instalou: **não precisa fazer nada**.
+
+  Na tela de Notas, a coluna **Ambiente** passou a mostrar só **Produção** — o aviso
+  "(vale de verdade)" ocupava a coluna inteira sem dizer nada que "Produção" já
+  não diga.
+
 ## [1.38.17] — 2026-11-04
 
 ### Corrigido
@@ -6195,7 +6255,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.17...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.0...HEAD
+[1.39.0]: https://github.com/spiesdan/nexus/compare/v1.38.17...v1.39.0
 [1.38.17]: https://github.com/spiesdan/nexus/compare/v1.38.16...v1.38.17
 [1.38.16]: https://github.com/spiesdan/nexus/compare/v1.38.15...v1.38.16
 [1.38.15]: https://github.com/spiesdan/nexus/compare/v1.38.14...v1.38.15
