@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   lerMensagemCarta,
@@ -6,6 +6,9 @@ import {
   motivoDeNaoImportarXml,
   motivoDeNaoTransmitir,
   montarMensagemCarta,
+  transmitirCancelamento,
+  transmitirCartaCorrecao,
+  transmitirInutilizacao,
 } from "./eventos";
 import type { ContextoSped } from "./sped-payload";
 
@@ -49,6 +52,68 @@ afterEach(() => {
   else process.env.FISCAL_SIDECAR_URL = ambienteOriginal.url;
   if (ambienteOriginal.secret === undefined) delete process.env.FISCAL_SIDECAR_SECRET;
   else process.env.FISCAL_SIDECAR_SECRET = ambienteOriginal.secret;
+  vi.unstubAllGlobals();
+});
+
+describe("envelope dos eventos — o certificado vai com o caminho do sidecar", () => {
+  const CHAVE = "42261135233142000183550010000045761198194996";
+
+  /** Guarda os corpos enviados ao sidecar e responde sucesso. */
+  function espiaoDoSidecar(): Record<string, unknown>[] {
+    const corpos: Record<string, unknown>[] = [];
+    vi.stubGlobal("fetch", async (_url: string, init?: RequestInit) => {
+      corpos.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          protocolo: "242260527060630",
+          protocolo_cancelamento: "242260527060630",
+          cstat: "135",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
+    return corpos;
+  }
+
+  /**
+   * O defeito medido em 04/11/2026 (cancelamento e79442d3): o envelope mandava
+   * `fiscal_settings.certificado_path` cru — `certificado.pfx` — e o sidecar
+   * tentava abrir esse nome no próprio diretório de trabalho. `file_get_contents`
+   * devolvia false e a tela mostrava "Arquivo de certificado não legível no
+   * volume /certs." A emissão funcionava porque montava o caminho completo;
+   * cancelamento, carta e inutilização não.
+   */
+  it("cancelar, carta de correção e inutilizar mandam /certs/{org}/certificado.pfx", async () => {
+    process.env.FISCAL_SIDECAR_URL = "http://sidecar:8080";
+    process.env.FISCAL_SIDECAR_SECRET = "segredo";
+    const corpos = espiaoDoSidecar();
+    const ctx = contexto({ certificado_path: "certificado.pfx" });
+    const esperado = `/certs/${ctx.orgId}/certificado.pfx`;
+
+    const cancelamento = await transmitirCancelamento(ctx, {
+      chave: CHAVE,
+      protocolo: "242260527060630",
+      justificativa: "Cliente desistiu da compra antes da entrega",
+    });
+    const carta = await transmitirCartaCorrecao(ctx, {
+      chave: CHAVE,
+      correcao: "O CFOP do item 2 estava 5102 e passa a ser 6102.",
+      sequencia: 1,
+    });
+    const inutilizacao = await transmitirInutilizacao(ctx, {
+      serie: "1",
+      numero_inicial: 4600,
+      numero_final: 4605,
+      justificativa: "Quebra de sequência por falha de comunicação",
+    });
+
+    expect(cancelamento.ok).toBe(true);
+    expect(carta.ok).toBe(true);
+    expect(inutilizacao.ok).toBe(true);
+    expect(corpos).toHaveLength(3);
+    for (const corpo of corpos) expect(corpo.certificado_arquivo).toBe(esperado);
+  });
 });
 
 describe("mensagem da carta de correção", () => {

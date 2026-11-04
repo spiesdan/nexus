@@ -14,6 +14,7 @@
 
 import { MAX_CARTAS_POR_NOTA } from "@/lib/schemas/fiscal";
 
+import { caminhoDoCertificadoNoSidecar } from "./certificado";
 import { eRetentavel } from "./fila";
 import { carregarContextoSped, type ContextoSped } from "./sped-payload";
 
@@ -154,7 +155,18 @@ function envelope(ctx: ContextoSped): Record<string, unknown> {
       uf: e.uf,
       codigo_municipio: e.codigo_municipio,
     },
-    certificado_arquivo: e.certificado_path,
+    // ─── O caminho do certificado, não o nome dele ──────────────────────────
+    //
+    // `fiscal_settings.certificado_path` guarda só `certificado.pfx` (é o que a
+    // tela mostra). O sidecar lê o arquivo direto do volume, e no CWD dele
+    // esse nome não existe: `file_get_contents("certificado.pfx")` devolve
+    // false e o evento morre com "Arquivo de certificado não legível no volume
+    // /certs." — medido no cancelamento e79442d3 (04/11/2026), com a emissão
+    // funcionando, porque o payload de emissão já montava o caminho completo.
+    //
+    // O caminho é por organização (`/certs/{orgId}/certificado.pfx`); a função
+    // é a mesma que a emissão usa, para os dois envelopes não divergirem.
+    certificado_arquivo: caminhoDoCertificadoNoSidecar(ctx.orgId) ?? e.certificado_path,
     certificado_senha: ctx.senhaCertificado,
   };
 }
