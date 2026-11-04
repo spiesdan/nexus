@@ -795,13 +795,13 @@ export function CargaClient({
         <>
       {/* O que a carga significa em trabalho e em dinheiro — uma faixa de
           instrumentos, não quatro cartões iguais. */}
-      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-4">
+      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4">
         <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
           <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {textos.paradasConcluidas}
           </p>
-          <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-text tabular-nums whitespace-nowrap sm:text-2xl">
+          <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-lg font-semibold text-text tabular-nums whitespace-nowrap sm:text-2xl">
               {concluidas.length}/{itens.length}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -821,10 +821,10 @@ export function CargaClient({
           <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("A separar")}
           </p>
-          <div className="mt-0.5 flex items-baseline gap-2">
+          <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
             <span
               className={cn(
-                "text-lg font-semibold tabular-nums whitespace-nowrap sm:text-2xl",
+                "shrink-0 text-lg font-semibold tabular-nums whitespace-nowrap sm:text-2xl",
                 naoSeparados.length > 0 ? "text-warning-fg" : "text-text",
               )}
             >

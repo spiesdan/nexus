@@ -282,7 +282,7 @@ export function ExpedicaoClient({
           Uma faixa, não três cartões. Cada número é também o filtro da fila:
           "2 na rua" abre as duas; "8 aguardando embarque" leva à Nova carga. */}
       <div
-        className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-4"
+        className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4"
         aria-label={t("Situação da expedição")}
       >
         <button
@@ -297,8 +297,8 @@ export function ExpedicaoClient({
           <span className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("Na rua")}
           </span>
-          <span className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums text-text">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
               {contagem.em_rota}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -327,8 +327,8 @@ export function ExpedicaoClient({
           <span className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("Montando")}
           </span>
-          <span className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums text-text">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
               {contagem.montando}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -351,8 +351,8 @@ export function ExpedicaoClient({
           <span className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {textos.embarcaveis}
           </span>
-          <span className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums text-text">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
               {fila.total}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -377,8 +377,8 @@ export function ExpedicaoClient({
           <span className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("Concluídas")}
           </span>
-          <span className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold tabular-nums text-text">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
               {contagem.concluidas}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
