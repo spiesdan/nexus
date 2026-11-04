@@ -792,7 +792,15 @@ export function DetalheDoPedido({
           />
           <LinhaDetalhe rotulo={t("Vendedor")} valor={nomeVendedor ?? (pedido.vendedor_user_id ?? "").slice(0, 8) ?? "—"} />
           <LinhaDetalhe rotulo={t("Cond. de pagamento")} valor={pedido.condicao_pagamento ?? ""} />
-          <LinhaDetalhe rotulo={t("End. de entrega")} valor={pedido.endereco_entrega ?? ""} />
+          {/* O pedido importado do Mercos não traz endereço próprio: o destino
+              É o endereço principal do cliente. A ficha mostrava vazio e
+              parecia pedido sem endereço, embora o papel e a carga já
+              mostrassem o do cadastro. Mesma precedência dos outros lugares:
+              escrito no pedido vence, cadastro cobre a ausência. */}
+          <LinhaDetalhe
+            rotulo={t("End. de entrega")}
+            valor={pedido.endereco_entrega?.trim() || contato?.endereco || ""}
+          />
           <LinhaDetalhe rotulo={t("Transportadora")} valor={pedido.transportadora_nome ?? ""} />
           <LinhaDetalhe
             rotulo={t("Valor do frete")}

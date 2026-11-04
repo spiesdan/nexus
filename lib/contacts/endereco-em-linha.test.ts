@@ -51,3 +51,24 @@ describe("enderecoEmLinha", () => {
     expect(enderecoEmLinha({ logradouro: "  " })).toBe("");
   });
 });
+
+describe("o NULL do export não chega à tela", () => {
+  it("some da rua, do complemento e do bairro", () => {
+    const linha = enderecoEmLinha({
+      logradouro: "RUA BRASIL, 183, NULL",
+      numero_end: "183",
+      bairro: "NULL",
+      cidade: "Mafra",
+      uf: "SC",
+      cep: "89300001",
+    });
+    expect(linha).not.toMatch(/NULL/i);
+    expect(linha).toContain("RUA BRASIL");
+    expect(linha).toContain("Mafra/SC");
+  });
+
+  it("não come número repetido nem vírgula solta", () => {
+    const linha = enderecoEmLinha({ logradouro: "R JACOB SCHEUER, 132, NULL", numero_end: "132", cidade: "Canoinhas", uf: "SC" });
+    expect(linha).toBe("R JACOB SCHEUER, 132 — Canoinhas/SC");
+  });
+});
