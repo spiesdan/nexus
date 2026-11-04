@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.11] — 2026-11-04
+
+### Corrigido
+
+- **NF-e passa a sair com IBS/CBS, IPI e os mesmos indicadores do emissor anterior** Comparado com um XML **autorizado** do Odivix (nNF 4575, produção), o nosso
+  saía diferente em pontos que a SEFAZ confere:
+
+  - **sem o grupo `IBSCBS`** — o `Make` do `sped-nfe` só injeta IBS/CBS quando é
+    construído com o schema **PL_010**; com o padrão (`PL_009`) a tag é
+    **descartada em silêncio**, sem erro. Agora vai CST 000, `cClassTrib` 000001,
+    IBS-UF 0,10% e CBS 0,90% por item, mais o `IBSCBSTot` e o `vNFTot`;
+  - **sem IPI** — o emissor anterior manda `IPINT` CST 53 em toda venda;
+  - **`indPres` 9** contra 0, e `indIntermed` que o XML autorizado não tem;
+  - **`indFinal`**: passa a ser 0 para CNPJ e 1 para CPF, como no XML autorizado
+    (a regra anterior olhava o `indicador_ie` e mandava 1 para isento);
+  - **`modFrete` 9** contra 0 (por conta do emitente).
+
+  O número da série também veio de lá: o Odivix está na **sequência 4576** com a
+  última nota 4575 autorizada, e é esse valor que ficou no campo de numeração.
+
 ## [1.38.10] — 2026-11-04
 
 ### Corrigido
@@ -6036,7 +6056,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.10...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.11...HEAD
+[1.38.11]: https://github.com/spiesdan/nexus/compare/v1.38.10...v1.38.11
 [1.38.10]: https://github.com/spiesdan/nexus/compare/v1.38.9...v1.38.10
 [1.38.9]: https://github.com/spiesdan/nexus/compare/v1.38.8...v1.38.9
 [1.38.8]: https://github.com/spiesdan/nexus/compare/v1.38.7...v1.38.8
