@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.16] — 2026-11-04
+
+### Corrigido
+
+- **Cancelar nota volta a falar com a SEFAZ (e a carta de correção também)** Cancelar uma nota autorizada respondia **422** com *"SEFAZ recusou o cancelamento
+  (Arquivo de certificado não legível no volume /certs.)"* — e a SEFAZ nunca era
+  consultada. O app mandava ao serviço fiscal só o **nome** do arquivo de
+  certificado (`certificado.pfx`), e o serviço abre o arquivo pelo caminho: não
+  achava nada, desistia, e o erro aparecia como recusa do fisco.
+
+  A emissão nunca sofreu disso porque já mandava o caminho completo. Agora
+  **cancelamento, carta de correção e inutilização de numeração** mandam o mesmo
+  caminho da emissão.
+
+  Quem já instalou: **não precisa fazer nada** — o certificado que está no disco
+  continua valendo, nada muda de lugar.
+
 ## [1.38.15] — 2026-11-04
 
 ### Adicionado
@@ -6145,7 +6162,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.15...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.16...HEAD
+[1.38.16]: https://github.com/spiesdan/nexus/compare/v1.38.15...v1.38.16
 [1.38.15]: https://github.com/spiesdan/nexus/compare/v1.38.14...v1.38.15
 [1.38.14]: https://github.com/spiesdan/nexus/compare/v1.38.13...v1.38.14
 [1.38.13]: https://github.com/spiesdan/nexus/compare/v1.38.12...v1.38.13
