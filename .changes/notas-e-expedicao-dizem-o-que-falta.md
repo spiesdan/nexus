@@ -17,7 +17,4 @@ era gravado, e a tela abria vazia outra vez. Agora:
 - a configuração carrega `proximo_numero` e os campos de entrada, então o que
   está gravado é o que aparece.
 
-**Expedição.** A lista de paradas passa a destacar **quantas estão sem
-endereço** (selo no cabeçalho) e mostra o endereço em vermelho quando falta —
-antes a parada só revelava isso ao abrir a rota, quando o mapa não tinha o quê
-desenhar. O endereço truncado ganhou tooltip com o texto inteiro.
+**Expedição.** A lista de paradas passa a destacar as que estão **sem endereço** por um selo no cabeçalho, e mostra o endereço em vermelho quando falta — antes a parada só revelava isso ao abrir a rota, quando o mapa não tinha o quê desenhar. O endereço truncado ganhou tooltip com o texto inteiro.
