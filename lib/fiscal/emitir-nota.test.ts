@@ -71,18 +71,36 @@ function bancoFalso(status: string) {
       });
     }
     if (tabela === "commercial_orders") {
+      // Lista, e não linha única: a emissão agrupada busca os pedidos com
+      // `.in("id", ids)` (0294) e trata o resultado como array.
       return corrente({
-        data: {
-          id: PEDIDO_ID,
-          numero: 7,
-          cliente_nome: "Cliente",
-          cliente_documento: null,
-          total_cents: 1000,
-          frete_cents: 0,
-          status,
-        },
+        data: [
+          {
+            id: PEDIDO_ID,
+            numero: 7,
+            cliente_nome: "Cliente",
+            cliente_documento: null,
+            // Sem contato o destinatário sai do próprio pedido — o banco falso
+            // não tem a tabela `contacts`.
+            contact_id: null,
+            total_cents: 1000,
+            frete_cents: 0,
+            status,
+          },
+        ],
         error: null,
       });
+    }
+    if (tabela === "invoice_orders") {
+      // Nenhum vínculo: o pedido ainda não está em nota nenhuma. A escrita do
+      // vínculo novo (0294) acontece depois do insert da nota.
+      return {
+        ...corrente({ data: [], error: null }),
+        insert: (valor: unknown) => {
+          escritas.push(`invoice_orders.insert ${JSON.stringify(valor)}`);
+          return corrente({ data: null, error: null });
+        },
+      };
     }
     if (tabela === "invoices") {
       const leitura = corrente({ data: null, error: null });
@@ -120,6 +138,85 @@ function emitir(status: string) {
     }),
   };
 }
+
+/**
+ * Banco falso com DOIS pedidos e contatos distintos — o caso do agrupamento
+ * que precisa ser recusado.
+ */
+function bancoDeDoisClientes() {
+  const escritas: string[] = [];
+  const from = (tabela: string) => {
+    if (tabela === "fiscal_settings") {
+      return corrente({
+        data: {
+          serie: "1",
+          natureza_operacao: "Venda de mercadoria",
+          cfop_padrao: "5102",
+          emitente_documento: "12345678000199",
+          provedor: "stub",
+        },
+        error: null,
+      });
+    }
+    if (tabela === "commercial_orders") {
+      return corrente({
+        data: [
+          {
+            id: PEDIDO_ID,
+            numero: 7,
+            cliente_nome: "Cliente A",
+            cliente_documento: "11111111000111",
+            contact_id: "contato-a",
+            total_cents: 1000,
+            frete_cents: 0,
+            status: "faturado",
+          },
+          {
+            id: "44444444-4444-4444-8444-444444444444",
+            numero: 8,
+            cliente_nome: "Cliente B",
+            cliente_documento: "22222222000122",
+            contact_id: "contato-b",
+            total_cents: 2000,
+            frete_cents: 0,
+            status: "faturado",
+          },
+        ],
+        error: null,
+      });
+    }
+    if (tabela === "invoice_orders") return corrente({ data: [], error: null });
+    return {
+      ...corrente({ data: null, error: null }),
+      insert: (valor: unknown) => {
+        escritas.push(`${tabela}.insert ${JSON.stringify(valor)}`);
+        return corrente({ data: null, error: null });
+      },
+    };
+  };
+  return { from, escritas };
+}
+
+describe("agrupamento de pedidos (0294)", () => {
+  it("recusa juntar pedidos de clientes diferentes — a nota tem UM destinatário", async () => {
+    const banco = bancoDeDoisClientes();
+    const erro = await emitirNota({
+      supabase: banco as never,
+      admin: banco as never,
+      orgId: ORG_ID,
+      userId: USUARIO_ID,
+      requestId: "req-1",
+      orderId: PEDIDO_ID,
+      orderIds: [PEDIDO_ID, "44444444-4444-4444-8444-444444444444"],
+    }).catch((e: unknown) => e);
+
+    expect(erro).toBeInstanceOf(ApiError);
+    expect((erro as ApiError).status).toBe(422);
+    expect((erro as ApiError).message).toContain("mesmo cliente");
+    // Nada foi escrito: a recusa acontece antes de a nota existir.
+    expect(banco.escritas.some((e) => e.startsWith("invoices.insert"))).toBe(false);
+  });
+});
 
 describe("status do pedido que vira nota", () => {
   it("faturado, expedido e entregue são faturáveis", () => {

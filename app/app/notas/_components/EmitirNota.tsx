@@ -206,6 +206,15 @@ export function EmitirNota({
   const t = useT();
   const router = useRouter();
   const [pedidoId, setPedidoId] = React.useState("");
+  /**
+   * AGRUPAMENTO (0294): outros pedidos do MESMO cliente que entram nesta nota.
+   *
+   * O cliente que tirou três pedidos no mês quer uma NF-e, não três. A lista
+   * só oferece pedidos do mesmo contato — a nota tem um destinatário só, e
+   * misturar clientes produziria um documento que a SEFAZ aceita e o fisco
+   * contesta. O servidor recusa de novo, com mensagem própria.
+   */
+  const [agrupados, setAgrupados] = React.useState<string[]>([]);
   const [emitindo, setEmitindo] = React.useState(false);
   const [pendencias, setPendencias] = React.useState<{ campo: string; mensagem: string; onde: string }[] | null>(null);
   const [extras, setExtras] = React.useState<ExtrasDoFormulario>(EXTRAS_VAZIOS);
@@ -217,6 +226,15 @@ export function EmitirNota({
     };
 
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
+  const selecionados = pedidoId ? [pedidoId, ...agrupados] : [];
+  const pedidosDaNota = faturados.filter((p) => selecionados.includes(p.id));
+  const totalDaNota = pedidosDaNota.reduce((soma, p) => soma + p.total_cents, 0);
+  // Só entram na lista os pedidos do mesmo cliente do pedido principal.
+  const doMesmoCliente = escolhido
+    ? faturados.filter(
+        (p) => p.id !== escolhido.id && p.contact_id != null && p.contact_id === escolhido.contact_id,
+      )
+    : [];
 
   /**
    * Trocar de pedido troca o endereço de entrega — manter o do cliente anterior
@@ -227,6 +245,7 @@ export function EmitirNota({
    */
   function escolherPedido(id: string) {
     setPedidoId(id);
+    setAgrupados([]);
     setPendencias(null);
     const entrega = faturados.find((p) => p.id === id)?.destinatario?.entrega ?? null;
     setExtras((atual) => ({
@@ -267,20 +286,38 @@ export function EmitirNota({
       // O envelope `ok()` chega como `{data}` — ler `prev.ok` em cima dele era
       // `undefined`, caía no ramo de pendências com `pendencias === undefined`
       // e o render derrubava o boundary (`undefined.length`).
-      const prev = await apiClient.post<{ data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] } }>(
-        "/api/v1/invoices/validar",
-        { order_id: pedidoId },
-      );
-      if (!prev.data.ok) {
-        setPendencias(prev.data.pendencias);
-        return;
+      // A pré-validação roda para CADA pedido agrupado: um item sem NCM no
+      // segundo pedido derrubaria a nota inteira depois de a SEFAZ já ter
+      // consumido número. O gate é aqui, onde ainda dá para corrigir.
+      for (const id of selecionados) {
+        const prev = await apiClient.post<{ data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] } }>(
+          "/api/v1/invoices/validar",
+          { order_id: id },
+        );
+        if (!prev.data.ok) {
+          const ped = faturados.find((p) => p.id === id);
+          setPendencias(
+            ped && selecionados.length > 1
+              ? prev.data.pendencias.map((x) => ({ ...x, onde: `${numeroDoPedido(ped.numero)} · ${x.onde}` }))
+              : prev.data.pendencias,
+          );
+          return;
+        }
       }
       await apiClient.post("/api/v1/invoices", {
-        order_id: pedidoId,
+        // `order_id` continua indo (compatibilidade); `order_ids` é o que
+        // agrupa. Com um pedido só os dois são iguais.
+        order_id: selecionados[0],
+        ...(selecionados.length > 1 ? { order_ids: selecionados } : {}),
         ...(extrasValidados ? { extras: extrasValidados } : {}),
       });
-      toast.success(t("Nota enfileirada para emissão"));
+      toast.success(
+        selecionados.length > 1
+          ? t("Nota agrupada enfileirada para emissão")
+          : t("Nota enfileirada para emissão"),
+      );
       setPedidoId("");
+      setAgrupados([]);
       router.push("/app/notas?aba=notas");
       router.refresh();
     } catch (e) {
@@ -328,6 +365,44 @@ export function EmitirNota({
               ))}
             </select>
           </div>
+
+          {doMesmoCliente.length > 0 && (
+            <div className="max-w-xl space-y-1.5 rounded-lg border border-border bg-muted/20 p-3">
+              <p className="text-sm font-medium text-text">{t("Juntar outros pedidos deste cliente")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("Os pedidos marcados saem numa nota só, com todos os itens.")}
+              </p>
+              <ul className="mt-1 space-y-1">
+                {doMesmoCliente.map((p) => (
+                  <li key={p.id}>
+                    <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-muted/40">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border"
+                        checked={agrupados.includes(p.id)}
+                        onChange={(e) =>
+                          setAgrupados((atual) =>
+                            e.target.checked ? [...atual, p.id] : atual.filter((id) => id !== p.id),
+                          )
+                        }
+                      />
+                      <span className="tabular-nums">{numeroDoPedido(p.numero)}</span>
+                      <span className="text-muted-foreground">
+                        {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                      <span className="ml-auto tabular-nums">{comoMoeda(p.total_cents, p.moeda)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              {agrupados.length > 0 && (
+                <p className="pt-1 text-sm font-medium text-text">
+                  {t("Nota com")} {selecionados.length} {t("pedidos")} ·{" "}
+                  <span className="tabular-nums">{comoMoeda(totalDaNota, escolhido?.moeda ?? "BRL")}</span>
+                </p>
+              )}
+            </div>
+          )}
 
           {escolhido && (
             <div className="grid max-w-xl grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
