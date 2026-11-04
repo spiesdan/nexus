@@ -160,6 +160,7 @@ function linkDoMapa(endereco: string | null): string | null {
 export function CargaClient({
   cargaId,
   secao,
+  motorista = false,
   podeOperar,
   podeExcluir,
   podeFechar,
@@ -168,6 +169,8 @@ export function CargaClient({
   cargaId: string;
   /** Qual das quatro telas da carga esta rota renderiza. */
   secao: "paradas" | "rota" | "fechamento" | "motorista";
+  /** Login de entregador (0292): a cabine ocupa a tela, sem cabeçalho da ficha. */
+  motorista?: boolean;
   podeOperar: boolean;
   podeExcluir: boolean;
   /** Fechar caixa é mexer em dinheiro: o mesmo nível do PUT, `manager`+. */
@@ -584,6 +587,21 @@ export function CargaClient({
       ) : null,
     };
   })();
+
+  if (secao === "motorista" && motorista) {
+    // Tela cheia: o mapa é o aplicativo. Sem "Painel da carga" (o entregador não
+    // tem painel) e sem padding — a casca já entrega a altura toda.
+    return (
+      <div className="h-full">
+        <ModoMotorista
+          cargaId={cargaId}
+          podeOperar={podeOperar}
+          imersivo
+          aoMudar={() => void recarregar()}
+        />
+      </div>
+    );
+  }
 
   if (secao === "motorista") {
     return (

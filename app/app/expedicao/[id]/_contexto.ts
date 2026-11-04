@@ -36,6 +36,8 @@ export async function contextoDaCarga(id: string) {
   if (!carga) notFound();
 
   return {
+    // Modo entregador (0292): a cabine vira tela cheia, sem o cabeçalho da ficha.
+    motorista: activeOrg.motorista === true,
     podeOperar,
     podeExcluir,
     podeFechar,

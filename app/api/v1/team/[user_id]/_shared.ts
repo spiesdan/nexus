@@ -17,6 +17,7 @@ import { ApiError } from "@/lib/api/types";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import {
+  changeMotoristaSchema,
   changeNomeSchema,
   changeRoleSchema,
   changeSetorSchema,
@@ -262,4 +263,78 @@ export async function changeMemberNome(
   });
 
   return ok({ user_id: targetUserId, nome: input.nome }, { requestId });
+}
+
+/**
+ * Shared handler: liga/desliga o MODO ENTREGADOR (0292).
+ *
+ * Canonical route: PATCH /api/v1/team/[user_id]/motorista
+ *
+ * Mesmos gates do role e do setor (admin, membro ativo, 404/409/422) porque o
+ * risco é o mesmo: um admin mexendo no vínculo de outra pessoa. O corpo é
+ * `{ motorista: boolean }`.
+ *
+ * O que a flag NÃO faz: não concede permissão nenhuma. O acesso continua sendo
+ * o `role` — que é o que as policies de `shipments` leem. Ela só esconde a
+ * casca (menu/topbar) e manda a home para a expedição.
+ */
+export async function changeMemberMotorista(
+  req: NextRequest,
+  ctx: { params: Promise<{ user_id: string }> },
+): Promise<Response> {
+  const requestId = randomUUID();
+  const { user_id: targetUserId } = await ctx.params;
+
+  const authz = await requireRole("admin", { requestId, resource: "team" });
+  if (!authz.ok) return authz.response;
+  const { user: authUser, org: activeOrg } = authz;
+
+  let input;
+  try {
+    input = await validateRequest(changeMotoristaSchema, req);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return fail(err.code, err.message, err.status, {
+        details: err.details as Record<string, unknown> | undefined,
+        requestId,
+      });
+    }
+    throw err;
+  }
+
+  const supabase = await createClient();
+
+  const { data: target, error: fetchErr } = await supabase
+    .from("user_organizations")
+    .select("id, user_id, motorista, revoked_at")
+    .eq("organization_id", activeOrg.orgId)
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+  if (fetchErr) return fail("internal_error", fetchErr.message, 500, { requestId });
+  if (!target) return fail("not_found", "Membro não encontrado.", 404, { requestId });
+  if (target.revoked_at) {
+    return fail("state_conflict", "Membro está revogado.", 409, { requestId });
+  }
+
+  const { error: updErr } = await supabase
+    .from("user_organizations")
+    .update({ motorista: input.motorista, updated_at: new Date().toISOString() })
+    .eq("id", target.id);
+  if (updErr) return fail("internal_error", updErr.message, 500, { requestId });
+
+  await audit({
+    action: "team.motorista_changed",
+    actorUserId: authUser.id,
+    organizationId: activeOrg.orgId,
+    resourceType: "membership",
+    resourceId: target.id,
+    requestId,
+    metadata: {
+      target_user_id: targetUserId,
+      old_motorista: (target as unknown as { motorista: boolean }).motorista,
+      new_motorista: input.motorista,
+    },
+  });
+
+  return ok({ user_id: targetUserId, motorista: input.motorista }, { requestId });
 }

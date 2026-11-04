@@ -113,6 +113,8 @@ export interface UserOrgMembership {
   organization_id: string;
   organization_name: string;
   role: Role;
+  /** Login de entregador (0292): esconde o menu; não concede permissão. */
+  motorista?: boolean;
   /**
    * Idioma padrão da organização (`organizations.locale`).
    *
@@ -184,6 +186,8 @@ export interface ActiveOrg {
   orgId: string;
   name: string;
   role: Role;
+  /** Login de entregador (0292): a casca esconde o menu e a home vai para a expedição. */
+  motorista?: boolean;
   /**
    * Escopo de visualização da org (G4-01). Opcional: só é preenchido no client
    * context (AppLayout) para a UI do inbox decidir visões visíveis. Não é fonte

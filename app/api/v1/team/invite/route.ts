@@ -104,6 +104,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       organization_id: activeOrg.orgId,
       role: inv.role,
       exp,
+      ...(inv.motorista ? { motorista: true } : {}),
     });
     const acceptUrl = `${baseUrl.replace(/\/$/, "")}/team/accept-invite/${token}`;
     const expiresAt = new Date(exp * 1000);
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       orgName: activeOrg.name,
       acceptUrl,
       role: inv.role,
+      motorista: inv.motorista === true,
       expiresAt,
       marca,
     });

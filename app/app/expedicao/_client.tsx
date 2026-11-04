@@ -128,6 +128,7 @@ export function ExpedicaoClient({
   fila,
   progresso = {},
   podeCriar,
+  motorista = false,
   textos,
 }: {
   inicial: Carga[];
@@ -143,6 +144,8 @@ export function ExpedicaoClient({
    */
   progresso?: Record<string, ProgressoDaCarga>;
   podeCriar: boolean;
+  /** Entregador: o cartão da carga abre a cabine (mapa), não a ficha. */
+  motorista?: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -260,6 +263,47 @@ export function ExpedicaoClient({
     { chave: "montando", rotulo: t("Montando"), contagem: contagem.montando },
     { chave: "concluidas", rotulo: t("Concluídas"), contagem: contagem.concluidas },
   ];
+
+  /* ENTREGADOR (0292): a lista dele é a rua. Sem faixa de indicadores, sem
+     filtros, sem doca — cada número que não é a carga dele é ruído no celular
+     em movimento. O cartão abre a cabine (mapa), não a ficha da carga. */
+  if (motorista) {
+    return (
+      <div className="min-h-full space-y-4 p-4">
+        <header>
+          <h1 className="text-lg font-semibold text-text">{textos.titulo}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{textos.subtitulo}</p>
+        </header>
+        {porStatus.emRota.length === 0 ? (
+          <p className="rounded-xl border border-border bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
+            {t("Nenhuma carga na rua agora.")}
+          </p>
+        ) : (
+          <ul className="overflow-hidden rounded-xl border border-border bg-surface">
+            {porStatus.emRota.map((c) => (
+              <LinhaDaCarga
+                key={c.id}
+                carga={c}
+                progresso={
+                  progresso[c.id] ?? {
+                    total: 0,
+                    entregues: 0,
+                    devolvidos: 0,
+                    cidades: [],
+                    semCidade: 0,
+                  }
+                }
+                concluindo={concluindoId === c.id}
+                aoConcluir={concluirCarga}
+                motorista
+                textos={textos}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full space-y-5 p-4 sm:p-6">
@@ -484,6 +528,7 @@ export function ExpedicaoClient({
                 aoAbrir={() => setGruposAbertos((g) => ({ ...g, em_rota: !g.em_rota }))}
                 concluindoId={concluindoId}
                 aoConcluir={concluirCarga}
+                motorista={motorista}
                 textos={textos}
               />
               <GrupoDaFila
@@ -495,6 +540,7 @@ export function ExpedicaoClient({
                 aoAbrir={() => setGruposAbertos((g) => ({ ...g, montando: !g.montando }))}
                 concluindoId={concluindoId}
                 aoConcluir={concluirCarga}
+                motorista={motorista}
                 textos={textos}
               />
 
@@ -557,6 +603,7 @@ export function ExpedicaoClient({
                           }
                           concluindo={concluindoId === c.id}
                           aoConcluir={concluirCarga}
+                          motorista={motorista}
                           textos={textos}
                         />
                       ))}
@@ -590,6 +637,7 @@ function GrupoDaFila({
   aoAbrir,
   concluindoId,
   aoConcluir,
+  motorista,
   textos,
 }: {
   titulo: string;
@@ -600,6 +648,7 @@ function GrupoDaFila({
   aoAbrir: () => void;
   concluindoId: string | null;
   aoConcluir: (c: Carga) => void;
+  motorista: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -631,6 +680,7 @@ function GrupoDaFila({
             }
             concluindo={concluindoId === c.id}
             aoConcluir={aoConcluir}
+            motorista={motorista}
             textos={textos}
           />
         ))}
@@ -656,12 +706,14 @@ function LinhaDaCarga({
   progresso,
   concluindo,
   aoConcluir,
+  motorista,
   textos,
 }: {
   carga: Carga;
   progresso: ProgressoDaCarga;
   concluindo: boolean;
   aoConcluir: (c: Carga) => void;
+  motorista: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -681,7 +733,7 @@ function LinhaDaCarga({
       data-testid={`carga-linha-${carga.numero}`}
     >
       <Link
-        href={`/app/expedicao/${carga.id}`}
+        href={`/app/expedicao/${carga.id}${motorista ? "/motorista" : ""}`}
         className="absolute inset-0 z-0"
         aria-label={`${t("Abrir")} ${numeroDaCarga(carga.numero)}`}
       />

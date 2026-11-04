@@ -7,6 +7,7 @@ import { useInviteMembers } from "@/hooks/team/useInviteMembers";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/components/nexus-ui/forms/form-field";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,11 @@ export function InviteForm() {
   const t = useT();
   const [emailsRaw, setEmailsRaw] = useState("");
   const [role, setRole] = useState<Role>("agent");
+  /**
+   * Convite de ENTREGADOR (0292): mantém o cargo escolhido (as policies leem o
+   * role) e liga a experiência de cabine — sem menu, direto na expedição.
+   */
+  const [motorista, setMotorista] = useState(false);
   const [result, setResult] = useState<ResultState | null>(null);
   const [erroLocal, setErroLocal] = useState<string | null>(null);
   const invite = useInviteMembers();
@@ -48,7 +54,7 @@ export function InviteForm() {
     setErroLocal(null);
     try {
       const res = await invite.mutateAsync({
-        invitations: unique.map((email) => ({ email, role })),
+        invitations: unique.map((email) => ({ email, role, ...(motorista ? { motorista: true } : {}) })),
       });
       setResult(res.data);
       const ok = res.data.sent.length;
@@ -103,6 +109,21 @@ export function InviteForm() {
             </SelectContent>
           </Select>
         </FormField>
+        <label className="flex items-start gap-3 rounded-xl border border-border p-3">
+          <Switch
+            checked={motorista}
+            onCheckedChange={setMotorista}
+            aria-label={t("Modo entregador")}
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">{t("Modo entregador")}</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {t(
+                "Ao entrar, a pessoa vê só a expedição — no celular, com o mapa em tela cheia. Não concede permissão: o cargo continua valendo.",
+              )}
+            </span>
+          </span>
+        </label>
         <Button type="submit" disabled={invite.isPending}>
           {invite.isPending ? t("Enviando…") : t("Enviar convites")}
         </Button>

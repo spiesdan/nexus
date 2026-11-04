@@ -21,6 +21,12 @@ export interface InvitePayload {
   organization_id: string;
   role: string;
   exp: number; // epoch seconds
+  /**
+   * Modo entregador (0292). AUSENTE nos tokens emitidos antes dele — e é de
+   * propósito que seja opcional: um convite de 24h emitido ontem continua
+   * válido hoje, e o aceite lê `=== true`. Token antigo não vira entregador.
+   */
+  motorista?: boolean;
 }
 
 function b64url(buf: Buffer): string {
@@ -54,6 +60,10 @@ export function verifyInviteToken(token: string): InvitePayload | null {
     const json = Buffer.from(body, "base64url").toString("utf8");
     payload = JSON.parse(json) as InvitePayload;
   } catch {
+    return null;
+  }
+
+  if (payload.motorista !== undefined && typeof payload.motorista !== "boolean") {
     return null;
   }
 

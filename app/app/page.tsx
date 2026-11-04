@@ -45,6 +45,8 @@ export default async function DashboardHomePage({
   const user = await requireAuth();
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app/inbox");
+  // Entregador não tem dashboard: a casa dele é a rota.
+  if (activeOrg.motorista) redirect("/app/expedicao");
 
   const supabase = await createClient();
   const agoraMs = new Date().getTime();

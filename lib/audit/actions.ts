@@ -196,6 +196,9 @@ export const AUDIT_ACTIONS = [
   "team.role_changed",
 "team.setor_changed",
 "team.nome_changed",
+  // Modo entregador: ligar/desligar muda o que a pessoa vê ao entrar. É
+  // escrita de admin sobre o vínculo de outro — entra no mesmo trilho.
+  "team.motorista_changed",
   "leads.bulk_assigned",
   "attendant.availability_changed",
   "routing.config_changed",

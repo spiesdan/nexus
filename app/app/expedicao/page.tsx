@@ -25,7 +25,10 @@ export default async function ExpedicaoPage() {
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
 
-  const podeCriar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
+  // Entregador não monta carga nem vê histórico: só o que está na rua.
+  const motorista = activeOrg.motorista === true;
+  const podeCriar =
+    !motorista && (user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent);
 
   const supabase = await createClient();
   const [{ data: cargas }, { data: fila }] = await Promise.all([
@@ -128,16 +131,21 @@ export default async function ExpedicaoPage() {
 
   return (
     <ExpedicaoClient
-      inicial={(cargas ?? []) as unknown as Carga[]}
+      inicial={((cargas ?? []) as unknown as Carga[]).filter(
+        (c) => !motorista || c.status === "em_rota",
+      )}
       fila={{
         total: pedidosNaFila.length,
         valor: pedidosNaFila.reduce((soma, p) => soma + (p.total_cents || 0), 0),
       }}
       progresso={progresso}
       podeCriar={podeCriar}
+      motorista={motorista}
       textos={{
-        titulo: t("Expedição"),
-        subtitulo: t("Cargas do transporte próprio e pedidos aguardando embarque."),
+        titulo: motorista ? t("Minhas entregas") : t("Expedição"),
+        subtitulo: motorista
+          ? t("A carga que está na rua. Toque para abrir a rota.")
+          : t("Cargas do transporte próprio e pedidos aguardando embarque."),
         nova: t("Nova carga"),
         cargas: t("Cargas"),
         vazias: t("Nenhuma carga ainda"),

@@ -23766,6 +23766,13 @@ revoke all on function public.fn_devolver_numero_nfe(uuid, integer) from public,
 grant execute on function public.fn_reservar_numero_nfe(uuid) to service_role;
 grant execute on function public.fn_devolver_numero_nfe(uuid, integer) to service_role;
 
+-- ---- 0292 — modo entregador (login que abre só a expedição) ----
+alter table public.user_organizations
+  add column if not exists motorista boolean not null default false;
+
+comment on column public.user_organizations.motorista is
+  'Login de entregador: a casca esconde o menu, a home vai para a expedição e a lista mostra só cargas em rota. NÃO concede permissão — o acesso continua sendo o role.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

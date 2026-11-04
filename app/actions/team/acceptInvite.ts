@@ -60,6 +60,7 @@ export async function acceptInviteAction(token: string): Promise<AcceptInviteRes
       .from("user_organizations")
       .update({
         role: payload.role,
+        motorista: payload.motorista === true,
         revoked_at: null,
         accepted_at: existing.revoked_at ? nowIso : (nowIso),
         updated_at: nowIso,
@@ -82,6 +83,7 @@ export async function acceptInviteAction(token: string): Promise<AcceptInviteRes
         user_id: user.id,
         organization_id: payload.organization_id,
         role: payload.role,
+        motorista: payload.motorista === true,
         invited_at: new Date(payload.exp * 1000 - 24 * 60 * 60 * 1000).toISOString(),
         accepted_at: nowIso,
       })
@@ -99,5 +101,7 @@ export async function acceptInviteAction(token: string): Promise<AcceptInviteRes
     });
   }
 
-  redirect("/app/inbox");
+  // Entregador não tem caixa de entrada: a casa dele é a expedição. O layout
+  // também barra `/app/*` para ele; este redirect evita o desvio visível.
+  redirect(payload.motorista === true ? "/app/expedicao" : "/app/inbox");
 }

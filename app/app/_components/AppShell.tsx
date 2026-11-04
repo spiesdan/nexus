@@ -12,14 +12,42 @@ import { useNotifyOpenFromServiceWorker } from "@/lib/notifications/notify_open"
 
 interface AppShellProps {
   sidebarCollapsed: boolean;
+  /**
+   * Login de entregador (0292): a casca vira só o conteúdo, em tela cheia.
+   * Sem menu, sem topbar, sem dock — o entregador não tem o que navegar; ele
+   * abre a rota e dirige. O acesso continua sendo o role; isto esconde tela.
+   */
+  motorista?: boolean;
   children: ReactNode;
 }
 
-export function AppShell({ sidebarCollapsed, children }: AppShellProps) {
+export function AppShell({ sidebarCollapsed, motorista = false, children }: AppShellProps) {
   useInboundMessageAlerts();
   useCrmAlerts();
   useNotifyOpenFromServiceWorker();
   const t = useT();
+  if (motorista) {
+    return (
+      <AssistenteProvider>
+        <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+            <p className="text-sm font-semibold text-text">{t("Minhas entregas")}</p>
+            <form action="/api/auth/signout" method="post">
+              <button
+                type="submit"
+                className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-text"
+              >
+                {t("Sair")}
+              </button>
+            </form>
+          </header>
+          <main id="conteudo" className="min-h-0 flex-1 overflow-auto">
+            {children}
+          </main>
+        </div>
+      </AssistenteProvider>
+    );
+  }
   return (
     <AssistenteProvider>
       <div className="flex h-screen w-full overflow-hidden bg-background">
