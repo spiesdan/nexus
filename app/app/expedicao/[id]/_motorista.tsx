@@ -723,7 +723,11 @@ export function ModoMotorista({
 
       {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
       <div className="absolute inset-x-0 bottom-0 z-20">
-        <div className="mx-auto flex max-h-[72dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-[0_-10px_30px_rgba(0,0,0,0.18)]">
+        <div
+          className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-[0_-10px_30px_rgba(0,0,0,0.18)] ${
+            folhaAberta ? "max-h-[78dvh]" : "max-h-[58dvh]"
+          }`}
+        >
           <button
             type="button"
             onClick={() => setFolhaAberta((v) => !v)}
