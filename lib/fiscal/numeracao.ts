@@ -64,22 +64,45 @@ export async function reservarNumeroDaNota(admin: Admin, organizationId: string)
 /**
  * Devolve o número reservado quando a nota NÃO chegou à SEFAZ.
  *
- * Só desfaz se ninguém tomou o número seguinte (a função de banco confere:
- * `proximo_numero = numero + 1`). Se outra emissão já avançou o contador, o
- * número fica consumido e aparece no relatório de puladas para inutilização —
- * devolvê-lo criaria uma faixa fora de ordem.
+ * ─── Duas metades, e o defeito que nasceu de separá-las ────────────────────
+ *
+ * O contador `proximo_numero` e a linha `invoices.numero` são O MESMO dado em
+ * dois lugares. No defeito medido em 04/11/2026 a devolução desfez só o
+ * contador: a nota 4577 (falha local, sem NCM) continuou com `numero = 4577`,
+ * o contador voltou para 4577, a emissão seguinte reservou 4577, a SEFAZ
+ * AUTORIZOU — e o UPDATE final morreu no índice único
+ * `invoices_org_serie_numero_key`. A nota autorizada ficou invisível por horas.
+ *
+ * Por isso a devolução bem-sucedida limpa o número da linha da mesma nota:
+ * ou as duas metades voltam, ou nenhuma volta. Quando a devolução falha (outra
+ * emissão já tomou o número seguinte), a linha MANTÉM o número e ele aparece
+ * entre as puladas para inutilização — nunca some.
+ *
+ * Só é chamada quando `falhouAntesDaSefaz` dá true: depois de transmitir, o
+ * número está queimado de propósito (reusar pode duplicar nota).
  */
 export async function devolverNumeroDaNota(
   admin: Admin,
   organizationId: string,
   numero: number,
+  invoiceId: string,
 ): Promise<boolean> {
   const { data, error } = await admin.rpc("fn_devolver_numero_nfe", {
     p_organization_id: organizationId,
     p_numero: numero,
   });
   if (error) return false;
-  return data === true;
+  if (data !== true) return false;
+
+  // A segunda metade. Se falhar, o número volta ao contador mas continua na
+  // linha — e a reserva nova pula ele, então não há reuso; o pior caso é uma
+  // faixa pulada, nunca um número entregue a duas notas.
+  await admin
+    .from("invoices")
+    .update({ numero: null, updated_at: new Date().toISOString() })
+    .eq("id", invoiceId)
+    .neq("status", "autorizada");
+  return true;
 }
 
 /**

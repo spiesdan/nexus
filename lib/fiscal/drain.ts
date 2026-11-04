@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { carregarDestinatario } from "./destinatario-da-nota";
 import { destinoAposFalha, eRetentavel } from "./fila";
@@ -281,8 +282,10 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   // Número consumido sem ter saído daqui: devolve, para a sequência continuar
   // de onde parou (certificado, validação, configuração — nada transmitido).
+  // A devolução desfaz as DUAS metades (contador e linha da nota); ver
+  // `devolverNumeroDaNota`.
   if (numeroDaNota !== null && falhouAntesDaSefaz(resultado)) {
-    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota);
+    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota, nota.id);
   } else if (numeroDaNota !== null && resultado.numero == null) {
     // A SEFAZ respondeu mas não repetiu o número: o da reserva é o que foi
     // transmitido, e é ele que fica gravado.
@@ -347,7 +350,7 @@ async function finalizar(
   mensagem: string | null,
   resultado: ResultadoDeEmissao | null,
 ): Promise<void> {
-  await admin
+  const { error: erroDoRegistro } = await admin
     .from("invoices")
     .update({
       status,
@@ -373,6 +376,40 @@ async function finalizar(
       xml: resultado?.xml ?? null,
     },
   );
+
+  // ─── A NOTA AUTORIZADA NÃO PODE SUMIR NUM ERRO DE GRAVAÇÃO ────────────────
+  //
+  // Medido em 04/11/2026: o UPDATE da nota 4577 (pedido 19415) bateu no índice
+  // único `invoices_org_serie_numero_key` — o número havia sido entregue a
+  // duas notas — e o erro foi DESCARTADO. A SEFAZ tinha autorizado a nota; a
+  // tela seguiu dizendo "Emitindo", sem número, chave nem protocolo, e o
+  // `fiscal_jobs` marcou o trabalho como concluído. A nota existia no fisco e
+  // não existia aqui.
+  //
+  // O erro agora tem dois lugares visíveis: o log (com chave e protocolo, o
+  // que basta para reconstruir a nota à mão) e um evento `erro` na própria
+  // nota. Reemitir é a resposta ERRADA — o número já foi usado na SEFAZ.
+  if (erroDoRegistro) {
+    logger.error("fiscal: nota não gravada depois do retorno da SEFAZ", {
+      invoice_id: nota.id,
+      organization_id: nota.organization_id,
+      status,
+      chave_acesso: resultado?.chave_acesso ?? null,
+      protocolo: resultado?.protocolo ?? null,
+      erro: erroDoRegistro.message.slice(0, 300),
+    });
+    await evento(admin, nota.organization_id, nota.id, "erro", {
+      status: "registro_falhou",
+      protocolo: resultado?.protocolo ?? null,
+      mensagem:
+        `A SEFAZ respondeu "${status}"` +
+        (resultado?.protocolo ? ` (protocolo ${resultado.protocolo})` : "") +
+        (resultado?.chave_acesso ? `, chave ${resultado.chave_acesso}` : "") +
+        `, mas o registro local falhou: ${erroDoRegistro.message}. ` +
+        "NÃO REEMITA — o número já foi usado na SEFAZ.",
+      xml: null,
+    });
+  }
   await admin
     .from("fiscal_jobs")
     .update({
