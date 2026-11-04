@@ -47,6 +47,15 @@ describe("DANFE do sidecar", () => {
     expect(php).toMatch(/render\(''\)/);
   });
 
+  it("o rodapé do DANFE usa o crédito do integrador, sem o Powered by NFePHP", () => {
+    // O PDF é documento que chega ao cliente final: o crédito é configurável
+    // (FISCAL_DANFE_CREDITO) e o "Powered by NFePHP®" é desligado.
+    const php = fs.readFileSync(path.join(RAIZ, "fiscal", "sidecar", "src", "ServicoNfe.php"), "utf8");
+    expect(php).toContain("creditsIntegratorFooter");
+    expect(php).toContain("FISCAL_DANFE_CREDITO");
+    expect(php).toMatch(/creditsIntegratorFooter\([\s\S]{0,400}?false\s*\)/);
+  });
+
   it("a rota do app manda o logo do emitente quando existe", () => {
     const rota = fs.readFileSync(
       path.join(RAIZ, "app", "api", "v1", "invoices", "[id]", "danfe", "route.ts"),
