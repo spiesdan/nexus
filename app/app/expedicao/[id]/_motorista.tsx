@@ -4,6 +4,7 @@ import * as React from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,12 +19,13 @@ import {
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { formatarDistancia, formatarDuracao, ordemCompleta } from "@/lib/rotas/roteamento";
 import { MOTIVOS_DEVOLUCAO, ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from "@/lib/schemas/expedicao";
-import { CaretRight, Check, Clock } from "@/lib/ui/icons";
+import { CaretRight, Check, Clock, Crosshair } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
-import type { RotaCarregada } from "./_roteirizador";
+import type { PropostaRota, RotaCarregada } from "./_roteirizador";
 
 function posicaoAtual(timeoutMs = 10000): Promise<GeolocationPosition> {
   return new Promise((ok, falha) => {
@@ -71,6 +73,12 @@ export function ModoMotorista({
   const [folhaAberta, setFolhaAberta] = React.useState(false);
   // Última posição do GPS — o "você está aqui" do mapa, como num app de mapas.
   const [minhaPosicao, setMinhaPosicao] = React.useState<{ lat: number; lng: number } | null>(null);
+  // "Seguindo você": o mapa acompanha o GPS a cada ping. Desligado quando o
+  // dedo arrasta o mapa — ver `aoArrastar` em `MapaRota`.
+  const [seguir, setSeguir] = React.useState(false);
+  // Qual modo de organização está rodando (senão os dois botões piscam juntos).
+  const [organizando, setOrganizando] = React.useState<"tsp" | "distancia" | null>(null);
+  const confirmar = useConfirmar();
   const refVigia = React.useRef<number | null>(null);
 
   const recarregar = React.useCallback(async () => {
@@ -135,6 +143,120 @@ export function ModoMotorista({
       if (refVigia.current != null) navigator.geolocation.clearWatch(refVigia.current);
     };
   }, []);
+
+  // ─── O PONTO AZUL APARECE SEM NINGUÉM APERTAR NADA ────────────────────────
+  //
+  // App de mapa já abre sabendo onde você está. Aqui a leitura é LOCAL: ela só
+  // desenha o ponto, NÃO manda posição para o servidor — publicar posição
+  // continua sendo o botão "Ligar" (§32, privacidade). Negou a permissão? Segue
+  // sem o ponto, sem toast: o motorista abriu a tela para ver a rota.
+  React.useEffect(() => {
+    let vivo = true;
+    posicaoAtual(8000)
+      .then((pos) => {
+        if (vivo) setMinhaPosicao({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  /** O gesto de "onde estou": recentraliza no ponto azul e volta a seguir. */
+  async function centralizarEmMim() {
+    setSeguir(true);
+    try {
+      const pos = await posicaoAtual(8000);
+      setMinhaPosicao({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    } catch {
+      toast.error(t("GPS negado ou indisponível."));
+    }
+  }
+
+  /**
+   * REORGANIZAR AS PARADAS, DO CELULAR — a mesma operação do planejador da web.
+   *
+   * O motorista na rua descobre que a ordem não fecha (obra, cliente fechado,
+   * trânsito) e até aqui só o escritório resolvia. O servidor já aceita `agent`
+   * nessa rota — é o role dele — e a origem é "onde estou": recomeçar do ponto
+   * atual é o que faz sentido na rua.
+   *
+   * O cálculo NÃO grava nada: devolve a proposta. A confirmação mostra o que
+   * vai mudar (paradas, distância, tempo) e só então a ordem é salva — igual à
+   * web. Reordenar a carga de alguém é ato com consequência.
+   */
+  async function reorganizar(modo: "tsp" | "distancia") {
+    if (organizando) return;
+    setOrganizando(modo);
+    try {
+      let origem: { latitude: number; longitude: number } | null = null;
+      try {
+        const pos = await posicaoAtual(8000);
+        origem = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      } catch {
+        // Sem GPS, a ordem por distância cai na base salva da carga. Se não
+        // houver base, o servidor recusa e nomeia o que falta — nunca
+        // inventamos uma origem: "perto de quê" sem base é pergunta sem
+        // resposta.
+        origem = null;
+      }
+
+      const corpo = await apiClient.post<{ data: PropostaRota }>(
+        `/api/v1/shipments/${cargaId}/rota/otimizar`,
+        {
+          modo,
+          origem,
+          retornar_origem: rota?.carga.retornar_origem,
+          tempo_parada_min: rota?.carga.tempo_parada_min,
+        },
+      );
+      const p = corpo.data;
+
+      const seguirCom = await confirmar({
+        title: modo === "tsp" ? t("Ordenar pelas ruas?") : t("Ordenar por distância?"),
+        description:
+          `${p.ordem.length} ${t("paradas")} · ${formatarDistancia(p.distancia_m)} · ` +
+          `${formatarDuracao(p.duracao_total_s)}` +
+          (p.ruas ? "" : ` — ${t("aproximada: o serviço de ruas está fora do ar")}`),
+        confirmLabel: t("Aplicar"),
+      });
+      if (!seguirCom) return;
+
+      const salva = await apiClient.patch<{ data: RotaCarregada }>(
+        `/api/v1/shipments/${cargaId}/rota/ordem`,
+        {
+          ordem: ordemCompleta(p.ordem, p.nao_roteirizaveis),
+          distancia_m: p.distancia_m,
+          duracao_s: p.duracao_dirigindo_s,
+          geometria: p.geometria,
+          provedor: p.provedor,
+          ruas: p.ruas,
+          modo: p.modo,
+          retornar_origem: p.retornar_origem,
+          tempo_parada_min: p.tempo_parada_min,
+          ...(p.origem
+            ? {
+                origem_endereco: p.origem.endereco,
+                origem_lat: p.origem.lat,
+                origem_lng: p.origem.lng,
+              }
+            : {}),
+        },
+      );
+      // A versão sobe ao gravar a ordem. Marcar como VISTA aqui é o que evita
+      // a faixa "a rota foi alterada no painel" aparecer para quem acabou de
+      // alterá-la — o aviso é para mudança vinda de fora, não para esta.
+      setRota(salva.data);
+      salvarRotaLocal(cargaId, salva.data);
+      setVersaoVista(salva.data.carga.rota_versao);
+      aoMudar();
+      toast.success(t("Nova ordem aplicada."));
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setOrganizando(null);
+    }
+  }
 
   // Internet voltou: descarrega sozinho, sem o motorista lembrar.
   React.useEffect(() => {
@@ -238,6 +360,7 @@ export function ModoMotorista({
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
     );
     setRastreando(true);
+    setSeguir(true);
     toast.success(t("Rastreio ligado — só durante esta rota."));
   }
 
@@ -307,6 +430,8 @@ export function ModoMotorista({
       pinoPendente={null}
       aoClicarMapa={() => undefined}
       aoAcaoParada={() => undefined}
+      seguir={seguir}
+      aoArrastar={() => setSeguir(false)}
     />
   );
 
@@ -593,6 +718,45 @@ export function ModoMotorista({
             {rota.paradas.length} {rota.paradas.length === 1 ? t("parada") : t("paradas")}
           </p>
         </header>
+
+        {/* ── ORGANIZAR, DO CELULAR ──────────────────────────────────────────
+            A mesma operação do planejador da web ("Ordenar por distância" /
+            "Otimizar por ruas"), aqui sem sair da cabine. É a pergunta que o
+            motorista faz na rua — "qual é a próxima mais perto?" — e que até
+            agora só o escritório respondia. A origem é onde ele está; o
+            cálculo devolve proposta e a confirmação mostra o resultado antes
+            de a ordem valer. */}
+        {podeOperar && (
+          <div className="border-b border-border bg-stage-2/40 px-4 py-2.5">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              {t("Organizar paradas")}
+            </p>
+            <div className="mt-1.5 flex gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 flex-1"
+                disabled={organizando !== null}
+                onClick={() => void reorganizar("distancia")}
+              >
+                {organizando === "distancia" ? t("Calculando…") : t("Por distância")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 flex-1"
+                disabled={organizando !== null}
+                onClick={() => void reorganizar("tsp")}
+              >
+                {organizando === "tsp" ? t("Calculando…") : t("Por ruas")}
+              </Button>
+            </div>
+            <p className="mt-1 text-[11px] text-text-subtle">
+              {t("A nova ordem aparece para você conferir antes de valer.")}
+            </p>
+          </div>
+        )}
+
         <ol className="divide-y divide-border text-sm">
           {rota.paradas.map((p, i) => {
             const temPendente = p.pedidos.some((x) => mapaFila.has(x.order_id));
@@ -680,6 +844,111 @@ export function ModoMotorista({
   }
 
   /*
+   * O CARTÃO COMPACTO — o que a folha mostra FECHADA, e por que ele existe.
+   *
+   * A folha fechada mostrava o cartão inteiro da próxima entrega (telefone,
+   * lista de pedidos, "Cheguei", "Marcar como entregue", "Não entregue"). Eram
+   * ~700px num celular de 900: o mapa — que é o motivo de a tela existir —
+   * ficava com um terço. No app de mapa que o motorista conhece, a folha
+   * fechada é um cartão de destino com UMA ação, e o resto está atrás do
+   * gesto de subir.
+   *
+   * Aqui a folha fechada mostra cliente, endereço e as duas ações do momento
+   * (navegar e entregar). O resto continua a um toque: a alça, o "Roteiro" do
+   * placar ou o próprio cartão.
+   */
+  const ordemDaProxima = proxima
+    ? rota.paradas.findIndex((p) => p.chave === proxima.chave) + 1
+    : 0;
+  const alvoDaProxima = proxima?.pedidos.find((x) =>
+    ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+  );
+
+  const cartaoCompacto = (
+    <div className="pb-1">
+      {proxima ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setFolhaAberta(true)}
+            className="w-full px-1 text-left"
+            aria-label={t("Abrir detalhes desta entrega")}
+          >
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent uppercase">
+              {t("Próxima entrega")} · {t("parada")} {ordemDaProxima} {t("de")}{" "}
+              {rota.paradas.length}
+            </p>
+            <p className="mt-0.5 truncate text-lg leading-tight font-semibold text-text">
+              {proxima.cliente}
+            </p>
+            {proxima.endereco ? (
+              <p className="mt-0.5 truncate text-[13px] leading-snug text-muted-foreground">
+                {proxima.endereco}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+            )}
+          </button>
+
+          <div className="mt-2.5 flex gap-2">
+            {navegarHref && (
+              <Button asChild className="h-12 flex-1 text-[15px]">
+                <a href={navegarHref} target="_blank" rel="noopener noreferrer">
+                  {t("Navegar")}
+                </a>
+              </Button>
+            )}
+            {podeOperar && (
+              <Button
+                className="h-12 flex-1 bg-success text-[15px] text-accent-fg hover:bg-success/90"
+                onClick={() => {
+                  if (alvoDaProxima) void desfecho(alvoDaProxima.order_id, "entregue");
+                }}
+              >
+                <Check className="h-4 w-4" aria-hidden />
+                {t("Entregue")}
+              </Button>
+            )}
+          </div>
+
+          {/* O rastreio continua a um toque. Ele mora no cartão completo, que
+              agora está atrás do gesto de subir — e publicação de posição é o
+              que o escritório usa para acompanhar a carga (§32). Sem esta
+              linha, ligar o GPS exigiria descobrir que a folha abre. */}
+          {rota.carga.status === "em_rota" && (
+            <button
+              type="button"
+              onClick={() => (rastreando ? pararRastreio() : iniciarRastreio())}
+              className="mt-1.5 flex w-full items-center justify-center gap-1.5 py-1 text-xs text-muted-foreground"
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  rastreando ? "bg-success" : "bg-muted-foreground/50",
+                )}
+              />
+              {rastreando ? t("Rastreio ligado — só nesta rota") : t("Ligar rastreio")}
+            </button>
+          )}
+        </>
+      ) : (
+        <div className="flex items-center gap-3 px-1 py-1">
+          <Check className="h-6 w-6 shrink-0 text-success-fg" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm font-semibold text-success-fg">
+            {t("Todas as paradas concluídas.")}
+          </p>
+          {podeOperar && rota.carga.status === "em_rota" && (
+            <Button className="h-10 shrink-0" onClick={() => void transicao("finalizar")}>
+              {t("Finalizar rota")}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  /*
    * A CABINE, TELA CHEIA (0292) — o mapa é o aplicativo.
    *
    * O celular fica preso na vertical, no suporte do painel: o que precisa
@@ -687,8 +956,8 @@ export function ModoMotorista({
    * `100%` da altura e os cartões vivem numa folha que sobe do rodapé —
    * exatamente o desenho do app de navegação, com a ação ao alcance do dedo.
    *
-   * A folha tem duas posições: fechada (próxima entrega + ações) e aberta
-   * (o roteiro inteiro). Ela rola por dentro; o mapa nunca sai do lugar.
+   * A folha tem duas posições: fechada (o cartão do destino, com uma ação) e
+   * aberta (o roteiro inteiro). Ela rola por dentro; o mapa nunca sai do lugar.
    */
   return (
     <div className="relative h-full w-full overflow-hidden bg-muted">
@@ -721,11 +990,29 @@ export function ModoMotorista({
         </div>
       </div>
 
+      {/* O "onde estou" — botão redondo no canto, o gesto de todo app de mapa.
+          `aria-pressed` porque ele ALTERNA o modo de seguir, não só centraliza
+          uma vez: aceso, cada ping do GPS recentraliza. */}
+      <button
+        type="button"
+        onClick={() => void centralizarEmMim()}
+        aria-label={t("Centralizar em mim")}
+        aria-pressed={seguir}
+        title={t("Centralizar em mim")}
+        className={`absolute top-16 right-3 z-20 grid h-11 w-11 place-items-center rounded-full border shadow-lg backdrop-blur transition active:scale-95 ${
+          seguir
+            ? "border-accent-600 bg-accent-600 text-white"
+            : "border-border bg-background/95 text-text"
+        }`}
+      >
+        <Crosshair size={20} weight={seguir ? "fill" : "regular"} aria-hidden />
+      </button>
+
       {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
           className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-[0_-10px_30px_rgba(0,0,0,0.18)] ${
-            folhaAberta ? "max-h-[78dvh]" : "max-h-[58dvh]"
+            folhaAberta ? "max-h-[80dvh]" : "max-h-[34dvh]"
           }`}
         >
           <button
@@ -742,7 +1029,7 @@ export function ModoMotorista({
             // vai em estilo, e não como classe fora da escala.
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
-            {cartoes}
+            {folhaAberta ? cartoes : cartaoCompacto}
           </div>
           {/* O Leaflet ancora a atribuição no canto inferior direito; a folha
               cobre esse canto, então o crédito do OpenStreetMap sobe para cá. */}
