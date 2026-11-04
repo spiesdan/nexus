@@ -631,8 +631,8 @@ export function IndicadoresClient({
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Vendedor")}</TableHead>
-                <TableHead className="text-right">{t("Pedidos")}</TableHead>
-                <TableHead className="text-right">{t("Ticket médio")}</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">{t("Pedidos")}</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">{t("Ticket médio")}</TableHead>
                 <TableHead className="text-right">{t("Total")}</TableHead>
                 <TableHead className="text-right">{t("Meta")}</TableHead>
               </TableRow>
@@ -641,8 +641,8 @@ export function IndicadoresClient({
               {dados.ranking.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.nome}</TableCell>
-                  <TableCell className="text-right tabular-nums">{r.qtd}</TableCell>
-                  <TableCell className="text-right tabular-nums">{brl(r.ticket)}</TableCell>
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">{r.qtd}</TableCell>
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">{brl(r.ticket)}</TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">
                     {brl(r.total)}
                   </TableCell>

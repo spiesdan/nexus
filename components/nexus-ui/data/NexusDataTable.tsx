@@ -33,7 +33,7 @@ export function NexusDataTable<T>({
   errorTitle?: string;
   errorDescription?: string;
   pagination?: ReactNode;
-  /** Render mobile: quando presente, `<md` mostra cards em vez da tabela. */
+  /** Render mobile: quando presente, abaixo de `lg` mostra cards em vez da tabela. */
   renderCard?: (item: T) => ReactNode;
   items?: T[];
   keyOf?: (item: T, index: number) => string;
@@ -55,8 +55,8 @@ export function NexusDataTable<T>({
   if (renderCard && items) {
     return (
       <div className={className}>
-        <div className={cn(nexusTableContainerClass, "hidden md:block")}>{table}</div>
-        <ul className="space-y-3 md:hidden">
+        <div className={cn(nexusTableContainerClass, "hidden lg:block")}>{table}</div>
+        <ul className="space-y-3 lg:hidden">
           {items.map((item, i) => (
             <li
               key={keyOf ? keyOf(item, i) : i}
