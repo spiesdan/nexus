@@ -248,7 +248,14 @@ export const notaCreateSchema = z.object({
    * pedido: a nota autorizada não se reescreve quando o pedido muda.
    */
   extras: extrasFiscaisSchema.optional(),
-});
+})
+  // Ou o pedido único, ou a lista do agrupamento — nunca nenhum dos dois. A
+  // recusa aqui nomeia o campo em vez de deixar a emissão falhar com "pedido
+  // não encontrado" no meio.
+  .refine((v) => v.order_id != null || (v.order_ids?.length ?? 0) > 0, {
+    message: "Informe o pedido (order_id) ou os pedidos agrupados (order_ids).",
+    path: ["order_id"],
+  });
 
 export type NotaCreate = z.infer<typeof notaCreateSchema>;
 
