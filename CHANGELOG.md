@@ -8,6 +8,29 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.12] — 2026-11-04
+
+### Corrigido
+
+- **A validação do XML passa a usar o XSD do PL_010, o único que conhece IBS/CBS** A primeira emissão depois de incluir o IBS/CBS foi recusada pelo próprio
+  **sidecar**, antes de sair para a SEFAZ:
+
+  ```
+  XML_INVALIDO: Element 'IBSCBS': This element is not expected.
+  Expected is one of ( COFINSST, ICMSUFDest )
+  ```
+
+  O `signNFe` valida o XML contra a pasta de XSD configurada em `schemes`, e ela
+  estava em **`PL_009_V4`** — leiaute anterior à reforma. O grupo existia no XML, e
+  o validador não o conhecia. Agora a pasta é **`PL_010_V1.30`**, que é a que
+  acompanha o `sped-nfe` 5.2.9 com IBS/CBS. Medido: o mesmo XML prévia, validado
+  manualmente conta o PL_009, acusa exatamente o `IBSCBS`; contra o PL_010 a única
+  falta é a `<Signature>`, que o `signNFe` acrescenta ao assinar.
+
+  Junto, a rota **`POST /previa`** entra na imagem (ela tinha ficado só no código
+  local): monta e devolve o XML sem transmitir, para conferir o leiaute antes de
+  consumir um número.
+
 ## [1.38.11] — 2026-11-04
 
 ### Corrigido
@@ -6056,7 +6079,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.11...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.12...HEAD
+[1.38.12]: https://github.com/spiesdan/nexus/compare/v1.38.11...v1.38.12
 [1.38.11]: https://github.com/spiesdan/nexus/compare/v1.38.10...v1.38.11
 [1.38.10]: https://github.com/spiesdan/nexus/compare/v1.38.9...v1.38.10
 [1.38.9]: https://github.com/spiesdan/nexus/compare/v1.38.8...v1.38.9
