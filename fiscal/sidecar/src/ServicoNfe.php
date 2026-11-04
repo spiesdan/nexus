@@ -390,6 +390,15 @@ class ServicoNfe
         try {
             $danfe = new \NFePHP\DA\NFe\Danfe($xml);
             $danfe->debugMode(false);
+            // Rodapé: crédito do integrador no lugar do "Powered by NFePHP®".
+            // Configurável para o revendedor pôr a própria marca sem editar
+            // código (o DANFE chega ao cliente final).
+            $danfe->creditsIntegratorFooter(
+                trim((string)getenv('FISCAL_DANFE_CREDITO')) !== ''
+                    ? trim((string)getenv('FISCAL_DANFE_CREDITO'))
+                    : 'By nexus',
+                false
+            );
             // Sem logo o DANFE sai igual (o layout reserva o espaço e centraliza
             // os dados do emitente). Com logo, é o do EMITENTE — o arquivo que a
             // própria organização subiu, nunca a marca de quem revende o produto.
