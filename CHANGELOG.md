@@ -8,6 +8,38 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.8] — 2026-11-04
+
+### Corrigido
+
+- **Endereço do cliente na ficha do pedido, e o "NULL" do export sai da rua** A ficha do pedido mostrava **End. de entrega vazio** para todo pedido vindo do
+  Mercos — o pedido não tem endereço próprio, o destino é o endereço principal do
+  cliente. A carga, o romaneio e a impressão já resolviam isso; a ficha, não.
+  Agora ela usa a mesma precedência: o que estiver escrito no pedido vence, e o
+  cadastro cobre a ausência.
+
+  Junto, um defeito que fazia o endereço parecer quebrado onde ele existia:
+  o export do WP/Mercos grava **`NULL` literal** no fim da rua
+  ("RUA BRASIL, 183, NULL") — medido em 87 cadastros desta instalação (51 na rua,
+  36 no bairro). O texto ia assim para a tela, o romaneio e o mapa. Agora "NULL"
+  é tratado como ausência, e a linha sai "RUA BRASIL, 183 — CENTRO, Mafra/SC,
+  89300001" em vez de "183, NULL, 183".
+
+- **Notas e expedição dizem o que falta, e a numeração configurada aparece na tela** **Notas fiscais.** A aba abria na grade sem dizer o que impedia a emissão, e a
+  configuração tinha um defeito que anulava o campo novo: a página lia o banco
+  por uma lista fixa de colunas que **não incluía `proximo_numero`** — o número
+  era gravado, e a tela abria vazia outra vez. Agora:
+
+  - a faixa do topo mostra **a emitir, autorizadas, com erro e na fila**, e "a
+    emitir" leva para a aba de emissão;
+  - as pendências aparecem na ordem em que desbloqueiam — configuração →
+    numeração → certificado — cada uma com o botão que resolve;
+  - as abas mostram contagem (`Notas`, `Emitir`) e rolam no celular;
+  - a configuração carrega `proximo_numero` e os campos de entrada, então o que
+    está gravado é o que aparece.
+
+  **Expedição.** A lista de paradas passa a destacar as que estão **sem endereço** por um selo no cabeçalho, e mostra o endereço em vermelho quando falta — antes a parada só revelava isso ao abrir a rota, quando o mapa não tinha o quê desenhar. O endereço truncado ganhou tooltip com o texto inteiro.
+
 ## [1.38.7] — 2026-11-03
 
 ### Alterado
@@ -5973,7 +6005,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.7...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.8...HEAD
+[1.38.8]: https://github.com/spiesdan/nexus/compare/v1.38.7...v1.38.8
 [1.38.7]: https://github.com/spiesdan/nexus/compare/v1.38.6...v1.38.7
 [1.38.6]: https://github.com/spiesdan/nexus/compare/v1.38.5...v1.38.6
 [1.38.5]: https://github.com/spiesdan/nexus/compare/v1.38.4...v1.38.5
