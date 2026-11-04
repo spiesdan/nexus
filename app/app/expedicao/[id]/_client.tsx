@@ -464,6 +464,9 @@ export function CargaClient({
   const concluidas = itens.filter((i) => ["entregue", "devolvido"].includes(i.status));
   // Conferência §49: quantos itens na carga ainda não foram separados.
   const naoSeparados = itens.filter((i) => i.status === "na_carga" && i.separado_em == null);
+  // Parada sem endereço é parada que não vira pino no mapa nem rota: o
+  // operador precisa saber disso ANTES de montar a rota, não depois.
+  const semEndereco = pendentes.filter((i) => !i.pedido.endereco_entrega);
   const separados = itens.filter((i) => i.separado_em != null);
   const totalMercadorias = itens.reduce((s, i) => s + (i.pedido.total_cents || 0), 0);
   const totalPago = itens.reduce((s, i) => s + (i.pago_cents || 0), 0);
@@ -911,6 +914,12 @@ export function CargaClient({
                   {t("Cheguei marca a presença; Entregue dá baixa na parada.")}
                 </p>
               </div>
+              {semEndereco.length > 0 && (
+                <Badge variant="warning">
+                  {semEndereco.length}{" "}
+                  {semEndereco.length === 1 ? t("sem endereço") : t("sem endereço")}
+                </Badge>
+              )}
               <Badge variant={pendentes.length > 0 ? "info" : "success"}>
                 {pendentes.length > 0
                   ? `${pendentes.length} ${pendentes.length === 1 ? t("em aberto") : t("em aberto")}`
@@ -978,7 +987,13 @@ export function CargaClient({
                                 <span className="font-medium text-text tabular-nums">
                                   {comoMoeda(i.pedido.total_cents, "BRL")}
                                 </span>
-                                <span className="min-w-0 truncate">
+                                <span
+                                  className={cn(
+                                    "min-w-0 truncate",
+                                    !i.pedido.endereco_entrega && "text-warning-fg",
+                                  )}
+                                  title={i.pedido.endereco_entrega ?? undefined}
+                                >
                                   {i.pedido.endereco_entrega ?? textos.semEndereco}
                                 </span>
                               </span>
