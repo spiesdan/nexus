@@ -18,6 +18,9 @@ import { cn } from "@/lib/utils";
  * (Fornecedores, Produtos, Eventos) → fechar (Relatórios, Histórico, Config).
  */
 export const ABAS_DO_FISCAL = [
+  // A emissão é a porta irmã: fica no começo porque é o uso diário, e o módulo
+  // de entrada é o que se visita de vez em quando.
+  { href: "/app/notas", label: "Emitir NF-e" },
   { href: "/app/fiscal", label: "Visão Geral" },
   { href: "/app/fiscal/notas", label: "Todas as Notas" },
   { href: "/app/fiscal/pendentes", label: "Pendentes de Conferência" },
