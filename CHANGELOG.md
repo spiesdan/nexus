@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.38.15] — 2026-11-04
+
+### Adicionado
+
+- **Modo entregador: login que abre só a expedição, com o mapa em tela cheia** - **login de entregador**: o convite (Equipe → Convidar) ganhou a opção
+    **Modo entregador**. Quem entra por ele cai direto na expedição: sem menu, sem
+    topbar, sem dock — só as cargas **na rua**, e a saída no canto da tela;
+  - **a cabine virou app de mapas**: mapa em tela cheia (`100%` da altura), placar
+    flutuante com `feitas/total` e a próxima entrega numa folha que sobe do
+    rodapé, com os botões de cheguei/entregue ao alcance do dedo. A folha abre o
+    roteiro inteiro; o mapa nunca sai do lugar;
+  - **"você está aqui"**: com o rastreio ligado, a posição do celular aparece no
+    mapa (antes só o painel via o rastro, minutos depois);
+  - **o mapa se redimensiona sozinho** quando a barra do navegador recolhe ou o
+    aparelho gira — antes sobrava faixa cinza até recarregar;
+  - a flag é `user_organizations.motorista` (0292) e **não concede permissão**:
+    o acesso continua sendo o `role`, que é o que as policies de `shipments`
+    leem. Desligar a flag devolve menu e home na hora.
+
+  Para ligar/desligar em quem já é membro: Equipe → menu da linha → *Ligar modo
+  entregador*.
+
 ## [1.38.14] — 2026-11-04
 
 ### Corrigido
@@ -6123,7 +6145,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.14...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.38.15...HEAD
+[1.38.15]: https://github.com/spiesdan/nexus/compare/v1.38.14...v1.38.15
 [1.38.14]: https://github.com/spiesdan/nexus/compare/v1.38.13...v1.38.14
 [1.38.13]: https://github.com/spiesdan/nexus/compare/v1.38.12...v1.38.13
 [1.38.12]: https://github.com/spiesdan/nexus/compare/v1.38.11...v1.38.12
