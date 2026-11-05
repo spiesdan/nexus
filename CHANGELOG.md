@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.12] — 2026-11-05
+
+### Corrigido
+
+- **O aviso de entrega sai no "Sair para rota" e fala com o cliente, não com a doca** Quando o pedido entrava numa carga, o cliente recebia um texto que explicava a logística de dentro de casa: que o pedido tinha sido **separado**, que entrou na **carga nº 25** e que ela estava *programada* para sair. Só que isso acontecia na hora de montar a carga — o caminhão ainda estava na doca — e o cliente lia um aviso técnico sobre um processo que ele não vê e não pediu para acompanhar.
+
+  Agora o aviso tem dois consertos, um de gatilho e um de texto:
+
+  - **Sai só quando a rota sai para a rua.** O envio aconteceu ao clicar em **Sair para rota**, na ficha da carga — é o momento em que o pedido realmente saiu para entrega. Montar a carga ou acrescentar pedido a uma carga que ainda está na doca não dispara nada.
+  - **Fala como gente.** A mensagem é só a saudação pelo horário da empresa (bom dia, boa tarde ou boa noite, no fuso configurado em Configurações › Empresa) seguida do fato: *"Seu pedido PED-0007 saiu para entrega. 🚚 Em breve ele chega até você."* Sem carga, sem separação, sem promessa de prazo.
+
+  A entrega do aviso continua best-effort: se o WhatsApp falhar, a rota sai do mesmo jeito e nada na operação trava.
+
 ## [1.39.11] — 2026-11-05
 
 ### Adicionado
@@ -6450,7 +6463,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.11...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.12...HEAD
+[1.39.12]: https://github.com/spiesdan/nexus/compare/v1.39.11...v1.39.12
 [1.39.11]: https://github.com/spiesdan/nexus/compare/v1.39.10...v1.39.11
 [1.39.10]: https://github.com/spiesdan/nexus/compare/v1.39.9...v1.39.10
 [1.39.9]: https://github.com/spiesdan/nexus/compare/v1.39.8...v1.39.9
