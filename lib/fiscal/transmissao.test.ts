@@ -41,7 +41,7 @@ describe("desfechoDaInutilizacao", () => {
   it("recusa de verdade continua erro, com o motivo da SEFAZ", () => {
     const d = desfechoDaInutilizacao(
       { ok: false, cstat: "241", protocolo: null },
-      "SEFAZ [241]: Um número de NF-e já foi utilizado",
+      "Um número de NF-e já foi utilizado",
     );
     expect(d.status).toBe("erro");
     expect(d.sucesso).toBe(false);

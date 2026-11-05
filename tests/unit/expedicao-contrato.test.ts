@@ -19,12 +19,51 @@ import {
   agruparParadasPorCidade,
   ordenarParadasDoRomaneio,
   renderRomaneioPdf,
+  totaisPorCondicaoDePagamento,
 } from "@/lib/comercial/romaneio-pdf";
 import { numeroDoPedidoPdf } from "@/lib/comercial/pedido-pdf";
 
 /**
  * O CONTRATO DA EXPEDIÇÃO — cerca do ATT.txt Fase 3.
  */
+describe("totaisPorCondicaoDePagamento", () => {
+  const parada = (numero: number, condicao: string | null, cents: number) => ({
+    sequencia: numero,
+    numero,
+    cliente_nome: `CLIENTE ${numero}`,
+    endereco_entrega: null,
+    total_cents: cents,
+    status: "na_carga",
+    condicao_pagamento: condicao,
+  });
+
+  it("agrupa caixa/acento/espaço: 'BOLETO 14 DIAS' e 'Boleto 14 dias' são o mesmo meio", () => {
+    const totais = totaisPorCondicaoDePagamento([
+      parada(1, "BOLETO 14 DIAS", 10000),
+      parada(2, "Boleto  14 dias", 25000),
+      parada(3, "PIX", 5000),
+    ]);
+    expect(totais).toEqual([
+      { rotulo: "BOLETO 14 DIAS", pedidos: 2, totalCents: 35000 },
+      { rotulo: "PIX", pedidos: 1, totalCents: 5000 },
+    ]);
+  });
+
+  it("pedido sem condição entra em 'Não informado' — a soma tem de fechar", () => {
+    const paradas = [parada(1, "AVISTA", 7000), parada(2, null, 3000), parada(3, "  ", 1000)];
+    const totais = totaisPorCondicaoDePagamento(paradas);
+    const semPagamento = totais.find((t) => t.rotulo === "Não informado");
+    expect(semPagamento).toEqual({ rotulo: "Não informado", pedidos: 2, totalCents: 4000 });
+    const soma = totais.reduce((s, t) => s + t.totalCents, 0);
+    const totalDaCarga = paradas.reduce((s, p) => s + p.total_cents, 0);
+    expect(soma).toBe(totalDaCarga);
+  });
+
+  it("carga vazia devolve lista vazia", () => {
+    expect(totaisPorCondicaoDePagamento([])).toEqual([]);
+  });
+});
+
 describe("cargaCreateSchema", () => {
   it("aceita carga vazia (só monta, sem pedidos)", () => {
     const r = cargaCreateSchema.safeParse({});
