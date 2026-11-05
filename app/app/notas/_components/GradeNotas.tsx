@@ -524,14 +524,14 @@ export function GradeNotas({
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
                     <TableHead>{textos.status}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{textos.protocolo}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{textos.operacao}</TableHead>
+                    <TableHead className="hidden 2xl:table-cell">{textos.protocolo}</TableHead>
+                    <TableHead className="hidden 2xl:table-cell">{textos.operacao}</TableHead>
                     <TableHead>{textos.data}</TableHead>
                     <TableHead className="text-right">{textos.numNota}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{textos.serie}</TableHead>
+                    <TableHead className="hidden 2xl:table-cell">{textos.serie}</TableHead>
                     <TableHead>{textos.pessoa}</TableHead>
                     <TableHead className="text-right">{textos.valorTotal}</TableHead>
-                    <TableHead className="hidden lg:table-cell">{textos.ambiente}</TableHead>
+                    <TableHead className="hidden min-[1700px]:table-cell">{textos.ambiente}</TableHead>
                     <TableHead>
                       <span className="sr-only">{textos.acoes}</span>
                     </TableHead>
@@ -547,10 +547,10 @@ export function GradeNotas({
                           </Badge>
                           {n.erro && <span className="block text-xs text-error-fg">{n.erro}</span>}
                         </TableCell>
-                        <TableCell className="hidden font-mono text-xs whitespace-nowrap lg:table-cell">
+                        <TableCell className="hidden font-mono text-xs whitespace-nowrap 2xl:table-cell">
                           {n.protocolo ?? "—"}
                         </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                        <TableCell className="hidden whitespace-nowrap text-muted-foreground 2xl:table-cell">
                           {operacaoPadrao === "" ? "—" : operacaoPadrao}
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-muted-foreground">
@@ -559,14 +559,14 @@ export function GradeNotas({
                         <TableCell className="text-right font-medium whitespace-nowrap text-text tabular-nums">
                           {n.numero === null ? textos.semNumero : n.numero}
                         </TableCell>
-                        <TableCell className="hidden text-muted-foreground lg:table-cell">{n.serie}</TableCell>
-                        <TableCell className="max-w-64 truncate">
+                        <TableCell className="hidden text-muted-foreground 2xl:table-cell">{n.serie}</TableCell>
+                        <TableCell className="max-w-56 truncate">
                           {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
                         </TableCell>
                         <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
                           {comoMoeda(n.total_cents, "BRL")}
                         </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                        <TableCell className="hidden whitespace-nowrap text-muted-foreground min-[1700px]:table-cell">
                           {ambientePadrao === "producao" ? textos.producao : textos.homologacao}
                         </TableCell>
                         <TableCell>
@@ -654,10 +654,10 @@ export function GradeNotas({
                       </TableRow>
                       {expandida === n.id && (
                         <TableRow className="bg-muted/30">
-                          <TableCell colSpan={6} className="p-3 lg:hidden">
+                          <TableCell colSpan={6} className="p-3 2xl:hidden">
                             <DetalheNota id={n.id} textos={textos} />
                           </TableCell>
-                          <TableCell colSpan={10} className="hidden p-3 lg:table-cell">
+                          <TableCell colSpan={10} className="hidden p-3 2xl:table-cell">
                             <DetalheNota id={n.id} textos={textos} />
                           </TableCell>
                         </TableRow>
@@ -671,16 +671,16 @@ export function GradeNotas({
               <Table>
                 <TableBody>
                   <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
-                    <TableCell colSpan={3} className="lg:hidden">
+                    <TableCell colSpan={3} className="2xl:hidden">
                       {visiveis.length} {textos.notas}
                     </TableCell>
-                    <TableCell colSpan={7} className="hidden lg:table-cell">
+                    <TableCell colSpan={7} className="hidden 2xl:table-cell">
                       {visiveis.length} {textos.notas}
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap tabular-nums">
                       {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
                     </TableCell>
-                    <TableCell colSpan={2} className="hidden lg:table-cell" />
+                    <TableCell colSpan={2} className="hidden 2xl:table-cell" />
                   </TableRow>
                 </TableBody>
               </Table>
