@@ -303,6 +303,12 @@ export function Roteirizador({
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
           `/api/v1/shipments/${cargaId}/rota/geocodificar`,
           {},
+          // Até 8 consultas por contato (rua → CEP → município) × 1,1s de
+          // ritmo justo, em lote de 10: a chamada passa fácil dos 60s. O
+          // timeout padrão de 10s abortava justamente as paradas difíceis —
+          // as que precisam do fallback —, e o retry do cliente disparava
+          // requisições sobrepostas.
+          { timeoutMs: 180_000 },
         );
         const d = corpo.data;
         localizadas += d.estados.filter((e) => e.estado === "ok").length;

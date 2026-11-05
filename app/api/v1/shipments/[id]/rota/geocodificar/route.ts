@@ -24,8 +24,10 @@ const corpoSchema = z.object({
   contact_ids: z.array(z.string().uuid()).max(20).optional(),
 });
 
-// 10 por chamada: cada contato pode custar até 6 consultas (cadeia de
-// fallback × 1,1s de ritmo justo) — lote maior estouraria o timeout da rota.
+// 10 por chamada: cada contato pode custar até 8 consultas (cadeia de
+// fallback + CEP/município × 1,1s de ritmo justo). O cliente espera até 180s
+// por lote (ver _roteirizador); lotes maiores alongam o "Localizando…" sem
+// progresso e aproximam o limite.
 const MAXIMO_POR_CHAMADA = 10;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
