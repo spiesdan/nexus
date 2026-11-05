@@ -494,6 +494,156 @@ export function ModoMotorista({
     />
   );
 
+  /** O detalhe da parada vive FORA da folha: a folha desmonta ao escolher. */
+  const dialogoDaParada = (
+  (() => {
+          const parada = paradaAberta
+            ? (rota.paradas.find((p) => p.chave === paradaAberta) ?? null)
+            : null;
+          if (!parada) return null;
+          const ordem = rota.paradas.findIndex((p) => p.chave === parada.chave) + 1;
+          const alvo = parada.pedidos.find((x) =>
+            ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+          );
+          const podeIr = parada.latitude != null && parada.longitude != null;
+          return (
+            <Dialog
+              open
+              onOpenChange={(aberto) => {
+                if (!aberto) setParadaAberta(null);
+              }}
+            >
+              <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+                <DialogHeader>
+                  <DialogDescription className="text-[11px] font-semibold tracking-[0.14em] uppercase">
+                    {t("Parada")} {ordem} {t("de")} {rota.paradas.length}
+                  </DialogDescription>
+                  <DialogTitle className="text-xl leading-tight">{parada.cliente}</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-3 text-sm">
+                  {parada.endereco ? (
+                    <p className="flex items-start gap-1.5 text-muted-foreground">
+                      <MapPin size={14} aria-hidden className="mt-0.5 shrink-0" />
+                      <span>{parada.endereco}</span>
+                    </p>
+                  ) : (
+                    <p className="text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+                  )}
+                  {parada.fone && (
+                    <a
+                      href={`tel:${parada.fone.replace(/[^\d+]/g, "")}`}
+                      className="inline-block font-medium text-accent underline underline-offset-4"
+                    >
+                      {parada.fone}
+                    </a>
+                  )}
+
+                  {(parada.itens?.length ?? 0) > 0 && (
+                    <div>
+                      <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        {t("Itens para entregar")}
+                      </p>
+                      <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
+                        {(parada.itens ?? []).map((it, idx) => (
+                          <li
+                            key={`${it.codigo}-${idx}`}
+                            className="flex items-baseline gap-2 px-3 py-2"
+                          >
+                            <span className="shrink-0 font-semibold tabular-nums">{it.quantidade}×</span>
+                            <span className="min-w-0 flex-1">{it.nome}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Pedidos")}
+                    </p>
+                    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
+                      {parada.pedidos.map((pedido) => (
+                        <li key={pedido.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
+                          <span className="font-medium tabular-nums">{numeroDoPedido(pedido.numero)}</span>
+                          <span className="tabular-nums">{comoMoeda(pedido.total_cents, "BRL")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    {podeIr && (
+                      <Button
+                        className="h-11 flex-1 rounded-2xl"
+                        onClick={() => {
+                          setParadaAberta(null);
+                          void navegar(parada);
+                        }}
+                      >
+                        <NavigationArrow size={16} aria-hidden />
+                        {t("Navegar")}
+                      </Button>
+                    )}
+                    {podeOperar && alvo && (
+                      <Button
+                        className="h-11 flex-1 rounded-2xl"
+                        variant="outline"
+                        onClick={() => {
+                          void desfecho(alvo.order_id, "em_atendimento").then(() => setParadaAberta(null));
+                        }}
+                      >
+                        {t("Cheguei")}
+                      </Button>
+                    )}
+                  </div>
+
+                  {podeOperar && alvo && (
+                    <Button
+                      className="h-12 w-full rounded-2xl bg-success text-accent-fg hover:bg-success/90"
+                      onClick={() => {
+                        void desfecho(alvo.order_id, "entregue").then(() => setParadaAberta(null));
+                      }}
+                    >
+                      <Check size={16} aria-hidden />
+                      {t("Marcar como entregue")}
+                    </Button>
+                  )}
+
+                  {podeOperar && alvo && (
+                    <div className="space-y-2 rounded-xl border border-error/30 bg-error-bg/40 p-2.5">
+                      <p className="text-xs font-medium text-error-fg">{t("Não entregue")}</p>
+                      <select
+                        className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm"
+                        value={motivo}
+                        onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
+                        aria-label={t("Motivo")}
+                      >
+                        {MOTIVOS_DEVOLUCAO.map((m) => (
+                          <option key={m} value={m}>
+                            {ROTULO_MOTIVO_DEVOLUCAO[m]}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-9 w-full"
+                        onClick={() => {
+                          void desfecho(alvo.order_id, "devolvido").then(() => setParadaAberta(null));
+                        }}
+                      >
+                        {t("Confirmar devolução")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          );
+        })()
+  );
+
   // O MESMO conteúdo nos dois desenhos: no painel é uma coluna embaixo do mapa;
   // no celular do entregador é a folha que sobe por cima dele.
   const cartoes = (
@@ -893,152 +1043,6 @@ export function ModoMotorista({
       </Card>
       )}
 
-      {(() => {
-        const parada = paradaAberta
-          ? (rota.paradas.find((p) => p.chave === paradaAberta) ?? null)
-          : null;
-        if (!parada) return null;
-        const ordem = rota.paradas.findIndex((p) => p.chave === parada.chave) + 1;
-        const alvo = parada.pedidos.find((x) =>
-          ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
-        );
-        const podeIr = parada.latitude != null && parada.longitude != null;
-        return (
-          <Dialog
-            open
-            onOpenChange={(aberto) => {
-              if (!aberto) setParadaAberta(null);
-            }}
-          >
-            <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
-              <DialogHeader>
-                <DialogDescription className="text-[11px] font-semibold tracking-[0.14em] uppercase">
-                  {t("Parada")} {ordem} {t("de")} {rota.paradas.length}
-                </DialogDescription>
-                <DialogTitle className="text-xl leading-tight">{parada.cliente}</DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-3 text-sm">
-                {parada.endereco ? (
-                  <p className="flex items-start gap-1.5 text-muted-foreground">
-                    <MapPin size={14} aria-hidden className="mt-0.5 shrink-0" />
-                    <span>{parada.endereco}</span>
-                  </p>
-                ) : (
-                  <p className="text-warning-fg">{t("Sem endereço cadastrado.")}</p>
-                )}
-                {parada.fone && (
-                  <a
-                    href={`tel:${parada.fone.replace(/[^\d+]/g, "")}`}
-                    className="inline-block font-medium text-accent underline underline-offset-4"
-                  >
-                    {parada.fone}
-                  </a>
-                )}
-
-                {(parada.itens?.length ?? 0) > 0 && (
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                      {t("Itens para entregar")}
-                    </p>
-                    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
-                      {(parada.itens ?? []).map((it, idx) => (
-                        <li
-                          key={`${it.codigo}-${idx}`}
-                          className="flex items-baseline gap-2 px-3 py-2"
-                        >
-                          <span className="shrink-0 font-semibold tabular-nums">{it.quantidade}×</span>
-                          <span className="min-w-0 flex-1">{it.nome}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <div>
-                  <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                    {t("Pedidos")}
-                  </p>
-                  <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
-                    {parada.pedidos.map((pedido) => (
-                      <li key={pedido.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
-                        <span className="font-medium tabular-nums">{numeroDoPedido(pedido.numero)}</span>
-                        <span className="tabular-nums">{comoMoeda(pedido.total_cents, "BRL")}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  {podeIr && (
-                    <Button
-                      className="h-11 flex-1 rounded-2xl"
-                      onClick={() => {
-                        setParadaAberta(null);
-                        void navegar(parada);
-                      }}
-                    >
-                      <NavigationArrow size={16} aria-hidden />
-                      {t("Navegar")}
-                    </Button>
-                  )}
-                  {podeOperar && alvo && (
-                    <Button
-                      className="h-11 flex-1 rounded-2xl"
-                      variant="outline"
-                      onClick={() => {
-                        void desfecho(alvo.order_id, "em_atendimento").then(() => setParadaAberta(null));
-                      }}
-                    >
-                      {t("Cheguei")}
-                    </Button>
-                  )}
-                </div>
-
-                {podeOperar && alvo && (
-                  <Button
-                    className="h-12 w-full rounded-2xl bg-success text-accent-fg hover:bg-success/90"
-                    onClick={() => {
-                      void desfecho(alvo.order_id, "entregue").then(() => setParadaAberta(null));
-                    }}
-                  >
-                    <Check size={16} aria-hidden />
-                    {t("Marcar como entregue")}
-                  </Button>
-                )}
-
-                {podeOperar && alvo && (
-                  <div className="space-y-2 rounded-xl border border-error/30 bg-error-bg/40 p-2.5">
-                    <p className="text-xs font-medium text-error-fg">{t("Não entregue")}</p>
-                    <select
-                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm"
-                      value={motivo}
-                      onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
-                      aria-label={t("Motivo")}
-                    >
-                      {MOTIVOS_DEVOLUCAO.map((m) => (
-                        <option key={m} value={m}>
-                          {ROTULO_MOTIVO_DEVOLUCAO[m]}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="h-9 w-full"
-                      onClick={() => {
-                        void desfecho(alvo.order_id, "devolvido").then(() => setParadaAberta(null));
-                      }}
-                    >
-                      {t("Confirmar devolução")}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-        );
-      })()}
 
       {rota.carga.status === "em_rota" && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
@@ -1066,6 +1070,7 @@ export function ModoMotorista({
       <div className="mx-auto max-w-xl space-y-3.5 pb-8">
         <div className="sticky top-0 z-10">{mapa("40dvh", false)}</div>
         {cartoes}
+        {dialogoDaParada}
       </div>
     );
   }
@@ -1285,6 +1290,8 @@ export function ModoMotorista({
       </button>
 
       {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
+      {dialogoDaParada}
+
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
           className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-t border-border bg-surface shadow-[0_-18px_50px_rgba(0,0,0,0.28)] ${
