@@ -303,6 +303,22 @@ export function ModoMotorista({
     return () => window.removeEventListener("online", aoVoltar);
   }, [sincronizar]);
 
+  // ─── RASTREIO LIGADO POR PADRÃO NA CABINE ────────────────────────────────
+  //
+  // O escritório precisa ver onde a carga está, e exigir que o motorista ache
+  // o botão "Ligar rastreio" dentro da folha deixava a rota sem posição na
+  // maior parte do dia. Na cabine (login do entregador), carga em rota começa
+  // PUBLICANDO sozinha — e o botão continua ali para ele desligar. É decisão do
+  // dono da instalação (05/11/2026); o §32 continua valendo no painel, onde o
+  // rastreio segue opt-in.
+  React.useEffect(() => {
+    if (!imersivo) return;
+    if (rota?.carga.status !== "em_rota") return;
+    refPublicando.current = true;
+    setRastreando(true);
+    setSeguir(true);
+  }, [imersivo, rota?.carga.status]);
+
   if (!rota) return <p className="text-sm text-muted-foreground">{t("Carregando rota…")}</p>;
 
   // O que está na fila offline vale como desfecho até o servidor confirmar:
