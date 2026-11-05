@@ -44,6 +44,7 @@ import {
   DownloadSimple,
   FileText,
   MagnifyingGlass,
+  PencilSimple,
   Plus,
   Printer,
   Receipt,
@@ -51,6 +52,7 @@ import {
 } from "@/lib/ui/icons";
 
 import type { Textos } from "./textos";
+import { CorrigirNota } from "./CorrigirNota";
 
 const VARIANTE_STATUS: Record<
   StatusDaNota,
@@ -106,6 +108,7 @@ export function GradeNotas({
   const [busca, setBusca] = React.useState("");
   const [periodo, setPeriodo] = React.useState("ano");
   const [cartaPara, setCartaPara] = React.useState<NotaFiscal | null>(null);
+  const [corrigirPara, setCorrigirPara] = React.useState<NotaFiscal | null>(null);
   const [correcao, setCorrecao] = React.useState("");
   const [registrandoCarta, setRegistrandoCarta] = React.useState(false);
   const [modeloXml, setModeloXml] = React.useState("");
@@ -629,6 +632,18 @@ export function GradeNotas({
                                 )}
                               </>
                             )}
+                            {podeEmitir && (n.status === "erro" || n.status === "pendente") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1.5"
+                                onClick={() => setCorrigirPara(n)}
+                                title={t("Corrigir nota")}
+                              >
+                                <PencilSimple size={14} />
+                                {t("Corrigir")}
+                              </Button>
+                            )}
                             {podeEmitir && n.status === "erro" && (
                               <Button
                                 size="sm"
@@ -691,6 +706,21 @@ export function GradeNotas({
           </>
         )}
 
+      {corrigirPara && (
+        <CorrigirNota
+          id={corrigirPara.id}
+          rotulo={
+            corrigirPara.numero === null
+              ? `${corrigirPara.serie}`
+              : `${corrigirPara.numero}/${corrigirPara.serie}`
+          }
+          aberto
+          aoFechar={() => {
+            setCorrigirPara(null);
+            router.refresh();
+          }}
+        />
+      )}
       {cartaPara && (
         <Dialog
           open

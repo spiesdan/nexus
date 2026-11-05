@@ -20160,9 +20160,24 @@ create unique index if not exists ai_kbv_version_por_agente_legado
 
 alter table public.fiscal_events drop constraint if exists fiscal_events_tipo_check;
 
+-- O vocabulário é o FINAL, não o da 0235: a 0295 acrescentou 'ajuste' e ele
+-- entra AQUI, no bloco único — apêndice que só amplia vocabulário não recria a
+-- constraint (numa base com dados do valor novo o `add` antigo falharia e a
+-- tabela ficaria sem constraint entre o drop e o add). Regra em
+-- `tests/unit/baseline-constraint-reconstruida.test.ts`.
 alter table public.fiscal_events
   add constraint fiscal_events_tipo_check check (
-    tipo in ('criada', 'enviada', 'autorizada', 'rejeitada', 'erro', 'retry', 'cancelada', 'carta_correcao')
+    tipo in (
+      'criada',
+      'enviada',
+      'autorizada',
+      'rejeitada',
+      'erro',
+      'retry',
+      'cancelada',
+      'carta_correcao',
+      'ajuste'
+    )
   );
 
 create table if not exists public.fiscal_inutilizacoes (
@@ -23889,6 +23904,16 @@ create policy invoice_orders_select on public.invoice_orders
 revoke all on public.invoice_orders from anon;
 grant select on public.invoice_orders to authenticated;
 grant all on public.invoice_orders to service_role;
+
+-- ---- 0295 — o evento "ajuste" na timeline da nota ----
+--
+-- Corrigir nota rejeitada é mudar o documento antes de ele ir à SEFAZ. O fato
+-- ganha tipo próprio: `retry` é a mesma tentativa, `ajuste` é outro conteúdo.
+--
+-- A constraint NÃO é reconstruída aqui de propósito: o vocabulário final mora
+-- no bloco único da 0235 (acima), já com 'ajuste'. Recriar aqui faria o
+-- `update.sh` falhar num banco que já tem eventos 'ajuste' gravados — a regra
+-- está em `tests/unit/baseline-constraint-reconstruida.test.ts`.
 
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --

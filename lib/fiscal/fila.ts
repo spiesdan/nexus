@@ -63,6 +63,9 @@ export const TIPOS_DE_EVENTO = [
   "erro",
   "retry",
   "cancelada",
+  "carta_correcao",
+  /** Correção do documento antes de reenviar uma nota rejeitada (0295). */
+  "ajuste",
 ] as const;
 export type TipoDeEvento = (typeof TIPOS_DE_EVENTO)[number];
 

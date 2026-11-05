@@ -211,12 +211,118 @@ const entregaSchema = z.object({
     .optional(),
 });
 
+/**
+ * O DESTINATÁRIO AJUSTADO NA NOTA — o que a tela de correção grava.
+ *
+ * A nota lê o destinatário do cadastro (`contacts`), e é isso que mantém um
+ * cliente, um endereço. Mas quando o cadastro está errado e a SEFAZ recusa a
+ * nota (232 = IE não informada, 726 = endereço ausente), a correção precisa
+ * valer para ESTA nota **agora** — e não depois de a pessoa achar a ficha do
+ * cliente noutra tela. Por isso o ajuste mora na nota (jsonb) e o drain o
+ * aplica por cima do cadastro. A tela oferece, em paralelo, gravar o mesmo
+ * ajuste no cadastro (`aplicar_no_cadastro`), que é o que faz a próxima nota
+ * já sair certa.
+ *
+ * Os limites são os do XML (TLocal/xNome), não os do banco `text` — aceitar
+ * 200 caracteres aqui só empurraria a recusa para a SEFAZ.
+ */
+const destinatarioAjusteSchema = z.object({
+  /** xNome, 2..60. */
+  nome: z.string().trim().min(2, "Nome curto demais").max(60).optional(),
+  /** CPF (11) ou CNPJ (14) — só dígitos, como o XML leva. */
+  documento: z
+    .string()
+    .trim()
+    .regex(/^\d{11}$|^\d{14}$/, "Documento: CPF com 11 ou CNPJ com 14 dígitos")
+    .optional(),
+  /**
+   * IE do destinatário. "ISENTO" é aceito (vira `indIEDest` 2); vazio limpa a
+   * IE e leva o destinatário para não contribuinte (9).
+   */
+  ie: z.string().trim().max(20).optional(),
+  logradouro: z.string().trim().min(2, "Logradouro curto demais").max(60).optional(),
+  numero: z.string().trim().min(1, "Informe o número").max(60).optional(),
+  complemento: z.string().trim().max(60).optional(),
+  bairro: z.string().trim().min(2, "Bairro curto demais").max(60).optional(),
+  cidade: z.string().trim().min(2, "Município curto demais").max(60).optional(),
+  uf: z.string().trim().length(2, "UF com 2 letras").toUpperCase().optional(),
+  /** CEP de 8 dígitos, sem hífen (o formulário tira a máscara). */
+  cep: z.string().trim().regex(/^\d{8}$/, "CEP com 8 dígitos").optional(),
+});
+
+export type AjusteDoDestinatario = z.infer<typeof destinatarioAjusteSchema>;
+
+/**
+ * O ITEM AJUSTADO NA NOTA — NCM, CFOP, unidade e descrição.
+ *
+ * O drain monta os itens do pedido (`commercial_order_items`) + do cadastro do
+ * produto (`catalog_products`). Só que o cadastro do produto é editável apenas
+ * por manager, e a pessoa que emite a nota — que é quem vê a rejeição — pode
+ * ser agent. Sem esta camada, "corrigir o NCM" viraria "pedir para alguém
+ * mudar o catálogo", e a nota continuaria parada.
+ *
+ * O ajuste é POR NOTA e por item do pedido (`order_item_id`): o documento
+ * fiscal carrega a classificação daquela venda, e o catálogo continua sendo a
+ * verdade para as próximas.
+ */
+const itemAjusteSchema = z.object({
+  order_item_id: z.string().uuid(),
+  /** xProd, 1..120. */
+  descricao: z.string().trim().min(1, "Informe a descrição").max(120).optional(),
+  /** NCM: 8 dígitos. */
+  ncm: z
+    .string()
+    .trim()
+    .regex(/^\d{8}$/, "NCM tem 8 dígitos")
+    .optional(),
+  /** CFOP: 4 dígitos. */
+  cfop: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "CFOP tem 4 dígitos")
+    .optional(),
+  /** uCom/uTrib, 1..6. */
+  unidade: z.string().trim().min(1, "Informe a unidade").max(6).optional(),
+});
+
+export type AjusteDoItem = z.infer<typeof itemAjusteSchema>;
+
 export const extrasFiscaisSchema = z.object({
   transporte: transporteSchema.optional(),
   cobranca: cobrancaSchema.optional(),
   adicionais: adicionaisSchema.optional(),
   entrega: entregaSchema.optional(),
+  /** Correções feitas NA NOTA depois de uma rejeição (ver `ajusteDaNotaSchema`). */
+  destinatario: destinatarioAjusteSchema.optional(),
+  itens: z.array(itemAjusteSchema).max(500).optional(),
 });
+
+/**
+ * O corpo do PATCH da tela de correção.
+ *
+ * `aplicar_no_cadastro` existe porque as duas coisas são verdade ao mesmo
+ * tempo: a nota precisa sair hoje, e o cadastro precisa parar de gerar nota
+ * errada amanhã. Default `true` — quem corrige a IE de um cliente está
+ * corrigindo o cadastro dele, não inventando um fato só para esta nota.
+ */
+export const ajusteDaNotaSchema = z
+  .object({
+    destinatario: destinatarioAjusteSchema.optional(),
+    itens: z.array(itemAjusteSchema).max(500).optional(),
+    adicionais: adicionaisSchema.optional(),
+    aplicar_no_cadastro: z.boolean().default(true),
+    /** Salva e devolve a nota para a fila na mesma ação (o botão "Salvar e reenviar"). */
+    reenviar: z.boolean().default(false),
+  })
+  .refine(
+    (v) =>
+      v.destinatario !== undefined ||
+      (v.itens?.length ?? 0) > 0 ||
+      v.adicionais !== undefined,
+    { message: "Nada para corrigir.", path: ["destinatario"] },
+  );
+
+export type AjusteDaNota = z.infer<typeof ajusteDaNotaSchema>;
 
 export type ExtrasFiscais = z.infer<typeof extrasFiscaisSchema>;
 
