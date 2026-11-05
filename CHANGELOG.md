@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.5] — 2026-11-05
+
+### Corrigido
+
+- **Inbox: os filtros não vazam mais para fora da coluna** Em tela larga, o bloco de filtros do Inbox desenhava **17px para fora** do
+  painel da lista (45px em 1280px de janela). O interruptor "Apenas não lidos"
+  nascia fora do cartão, meio escondido sob a coluna da conversa, e o contador da
+  última aba era cortado.
+
+  Agora o bloco respeita a largura da coluna e a faixa de abas **quebra em duas linhas** quando os cinco rótulos com contador não cabem — nada fica cortado nem invade a conversa. Em telas estreitas os cinco continuam em uma linha.
+
+  Quem já instalou: **não precisa fazer nada**.
+
 ## [1.39.4] — 2026-11-05
 
 ### Adicionado
@@ -6361,7 +6374,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.4...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.5...HEAD
+[1.39.5]: https://github.com/spiesdan/nexus/compare/v1.39.4...v1.39.5
 [1.39.4]: https://github.com/spiesdan/nexus/compare/v1.39.3...v1.39.4
 [1.39.3]: https://github.com/spiesdan/nexus/compare/v1.39.2...v1.39.3
 [1.39.2]: https://github.com/spiesdan/nexus/compare/v1.39.1...v1.39.2
