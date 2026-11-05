@@ -8,6 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.3] — 2026-11-05
+
+### Corrigido
+
+- **Roteiro do entregador: clicar na parada abre o pedido completo** No **Roteiro** da cabine, só a próxima entrega era clicável. As outras paradas
+  apareciam na lista, mas tocar nelas não abria nada.
+
+  Agora **qualquer parada abre o pedido completo**: endereço, telefone, itens a
+  entregar, pedidos com valor e as ações — navegar até ela, cheguei, marcar como
+  entregue e registrar a devolução com motivo.
+
+  Quem já instalou: **não precisa fazer nada**.
+
 ## [1.39.2] — 2026-11-05
 
 ### Alterado
@@ -6310,7 +6323,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.3...HEAD
+[1.39.3]: https://github.com/spiesdan/nexus/compare/v1.39.2...v1.39.3
 [1.39.2]: https://github.com/spiesdan/nexus/compare/v1.39.1...v1.39.2
 [1.39.1]: https://github.com/spiesdan/nexus/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/spiesdan/nexus/compare/v1.38.17...v1.39.0
