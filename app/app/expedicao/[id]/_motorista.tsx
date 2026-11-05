@@ -19,9 +19,9 @@ import {
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
-import { formatarDistancia, formatarDuracao, ordemCompleta } from "@/lib/rotas/roteamento";
+import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
 import { MOTIVOS_DEVOLUCAO, ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from "@/lib/schemas/expedicao";
-import { CaretRight, Check, Clock, Crosshair } from "@/lib/ui/icons";
+import { CaretRight, Check, Clock, Crosshair, MapPin, NavigationArrow } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
@@ -381,6 +381,10 @@ export function ModoMotorista({
   }
 
   const podeNavegar = proxima?.latitude != null && proxima?.longitude != null;
+  const distanciaProximaM =
+    minhaPosicao && proxima?.latitude != null && proxima?.longitude != null
+      ? haversineM(minhaPosicao, { lat: proxima.latitude, lng: proxima.longitude })
+      : null;
 
   /**
    * NAVEGAR DENTRO DO APP — sem sair para o Google Maps.
@@ -926,31 +930,38 @@ export function ModoMotorista({
               {t("Próxima entrega")} · {t("parada")} {ordemDaProxima} {t("de")}{" "}
               {rota.paradas.length}
             </p>
-            <p className="mt-0.5 truncate text-lg leading-tight font-semibold text-text">
+            <p className="mt-0.5 truncate text-[22px] leading-tight font-semibold tracking-tight text-text">
               {proxima.cliente}
             </p>
             {proxima.endereco ? (
-              <p className="mt-0.5 truncate text-[13px] leading-snug text-muted-foreground">
-                {proxima.endereco}
+              <p className="mt-1 flex items-center gap-1 text-[13px] leading-snug text-muted-foreground">
+                <MapPin size={13} aria-hidden className="shrink-0" />
+                <span className="truncate">{proxima.endereco}</span>
               </p>
             ) : (
-              <p className="mt-0.5 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+              <p className="mt-1 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+            )}
+            {distanciaProximaM != null && (
+              <p className="mt-1 text-xs font-medium text-accent tabular-nums">
+                {t("a")} {formatarDistancia(distanciaProximaM)}
+              </p>
             )}
           </button>
 
           <div className="mt-2.5 flex gap-2">
             {podeNavegar && (
               <Button
-                className="h-12 flex-1 text-[15px]"
+                className="h-12 flex-1 rounded-2xl text-[15px]"
                 disabled={calculandoRota}
                 onClick={() => void navegar()}
               >
+                <NavigationArrow size={17} aria-hidden />
                 {calculandoRota ? t("Calculando…") : t("Navegar")}
               </Button>
             )}
             {podeOperar && (
               <Button
-                className="h-12 flex-1 bg-success text-[15px] text-accent-fg hover:bg-success/90"
+                className="h-12 flex-1 rounded-2xl bg-success text-[15px] text-accent-fg hover:bg-success/90"
                 onClick={() => {
                   if (alvoDaProxima) void desfecho(alvoDaProxima.order_id, "entregue");
                 }}
@@ -1083,7 +1094,7 @@ export function ModoMotorista({
       {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
-          className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border-t border-border bg-surface shadow-[0_-10px_30px_rgba(0,0,0,0.18)] ${
+          className={`mx-auto flex w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border-t border-border bg-surface shadow-[0_-18px_50px_rgba(0,0,0,0.28)] ${
             folhaAberta ? "max-h-[80dvh]" : "max-h-[34dvh]"
           }`}
         >
