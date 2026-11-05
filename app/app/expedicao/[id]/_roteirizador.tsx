@@ -907,23 +907,31 @@ export function Roteirizador({
                         ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
                         : ""}
                     </span>
-                    {podeOperar && p.contact_id && p.geo_status !== "ok" && (
+                    {podeOperar && p.contact_id && (
                       <>
-                        <button
-                          type="button"
-                          className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                          onClick={() => void geocodificarTudo()}
-                        >
-                          {t("Tentar de novo")}
-                        </button>
-                        <button
-                          type="button"
-                          className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                          onClick={() => alternarMarcar(p.contact_id as string)}
-                        >
-                          {marcarPara === p.contact_id ? t("Cancelar marcação") : t("Marcar no mapa")}
-                        </button>
-                        {p.contact_id && (
+                        {p.geo_status !== "ok" && (
+                          <button
+                            type="button"
+                            className="text-muted-foreground underline underline-offset-2 hover:text-text"
+                            onClick={() => void geocodificarTudo()}
+                          >
+                            {t("Tentar de novo")}
+                          </button>
+                        )}
+                        {/* Ponto aproximado também se corrige à mão: no endereço
+                            rural o pino de cidade é só o começo, e o motorista
+                            marca a porteira. Antes o "Marcar no mapa" sumia
+                            justamente quando o pino estava no lugar errado. */}
+                        {(p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
+                          <button
+                            type="button"
+                            className="text-muted-foreground underline underline-offset-2 hover:text-text"
+                            onClick={() => alternarMarcar(p.contact_id as string)}
+                          >
+                            {marcarPara === p.contact_id ? t("Cancelar marcação") : t("Marcar no mapa")}
+                          </button>
+                        )}
+                        {(p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
                           <Link
                             href={`/app/contacts/${p.contact_id}`}
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
