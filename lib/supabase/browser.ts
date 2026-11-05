@@ -121,6 +121,10 @@ export function createClient() {
     // D-01.01: cookie name canônico alinhado ao middleware/server.
     cookieOptions: {
       name: "sb-nexus-auth",
+      // 30 dias: cookie de sessão morre quando o app é fechado, e no celular
+      // isso significa digitar a senha de novo toda vez. O refresh do token
+      // continua sendo do Supabase; isto só mantém a sessão entre aberturas.
+      maxAge: 60 * 60 * 24 * 30,
       sameSite: "strict",
       path: "/",
     },
