@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,7 @@ export function AcoesFiscais({
 }) {
   const t = useT();
   const tagIdioma = useTagDeIdioma();
+  const confirmar = useConfirmar();
   const router = useRouter();
   const formRef = React.useRef<HTMLDivElement | null>(null);
   const [serieInut, setSerieInut] = React.useState(configInicial?.serie ?? "1");
@@ -89,6 +91,7 @@ export function AcoesFiscais({
   const [numFim, setNumFim] = React.useState("");
   const [motivoInut, setMotivoInut] = React.useState("");
   const [inutilizando, setInutilizando] = React.useState(false);
+  const [inutilizandoLacunas, setInutilizandoLacunas] = React.useState(false);
   const [retransmitindo, setRetransmitindo] = React.useState<string | null>(null);
   const [buscaCarta, setBuscaCarta] = React.useState("");
   const arquivoIbptRef = React.useRef<HTMLInputElement | null>(null);
@@ -137,6 +140,55 @@ export function AcoesFiscais({
       showApiError(e);
     } finally {
       setInutilizando(false);
+    }
+  }
+
+
+  /**
+   * Fecha os buracos da numeração de uma vez.
+   *
+   * Foi o que o dreno passou a fazer sozinho para o número que uma rejeição
+   * queima — este botão recolhe o que JÁ estava aberto (buracos anteriores à
+   * automação) e o que uma transmissão falha deixou `registrada`. A conta é a
+   * mesma do relatório de puladas; números vizinhos viram uma faixa só.
+   */
+  async function inutilizarLacunas() {
+    const confirmado = await confirmar({
+      title: t("Inutilizar todas as lacunas da numeração?"),
+      description: t(
+        "Isso envia a inutilização à SEFAZ e não tem como desfazer. Lacunas já cobertas não são reenviadas.",
+      ),
+      confirmLabel: t("Inutilizar lacunas"),
+      danger: true,
+    });
+    if (!confirmado) return;
+    setInutilizandoLacunas(true);
+    try {
+      const r = await apiClient.post<{
+        data?: {
+          faixas?: { serie: string; inicial: number; final: number; status: string }[];
+          inutilizados?: number;
+          falhas?: number;
+        };
+      }>("/api/v1/fiscal-inutilizacoes/lacunas", {});
+      const d = r.data ?? {};
+      const inutilizados = d.inutilizados ?? 0;
+      const falhas = d.falhas ?? 0;
+      if (inutilizados > 0) {
+        toast.success(
+          `${inutilizados} ${inutilizados === 1 ? t("número inutilizado") : t("números inutilizados")}` +
+            (falhas > 0 ? ` · ${falhas} ${t("faixa(s) com pendência")}` : ""),
+        );
+      } else if (falhas > 0) {
+        toast.error(t("Nenhuma faixa foi transmitida — veja o retorno na lista abaixo."));
+      } else {
+        toast.success(t("Nenhuma lacuna na numeração."));
+      }
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setInutilizandoLacunas(false);
     }
   }
 
@@ -363,6 +415,16 @@ export function AcoesFiscais({
             <Button size="sm" variant="outline" onClick={focarFormulario}>
               <Receipt size={14} />
               {textos.inutilizaNota}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void inutilizarLacunas()}
+              disabled={inutilizandoLacunas}
+              title={t("Inutiliza os buracos da numeração que não têm nota")}
+            >
+              <Receipt size={14} />
+              {inutilizandoLacunas ? t("Enviando…") : t("Inutilizar lacunas")}
             </Button>
             <Button size="sm" variant="outline" onClick={exportarCsv}>
               {textos.exportarCsv}
