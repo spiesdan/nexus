@@ -13,7 +13,6 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { avisarClientesDaCarga } from "@/lib/expedicao/aviso-de-carga";
 import {
   cargaCreateSchema,
   COLUNAS_DA_CARGA,
@@ -157,16 +156,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     requestId,
   });
 
-  // O cliente fica sabendo que o pedido embarcou. Best-effort e NUNCA lança:
-  // a carga já existe e já foi auditada — um envio que falhou não pode
-  // derrubar a resposta da rota. (Aguardar é de propósito: com a resposta já
-  // enviada, a promise solta pode ser cortada junto com o request.)
-  await avisarClientesDaCarga(supabase, {
-    organizationId: authz.org.orgId,
-    shipmentId: cargaId,
-    shipmentNumero: numero,
-    orderIds: ids,
-  });
+  // O aviso ao cliente NÃO sai aqui: o pedido embarcou, mas o caminhão ainda
+  // está na doca. Quem avisa é o "Sair para rota" (`rota/iniciar`), quando a
+  // carga vira `em_rota` — ver `lib/expedicao/aviso-de-carga.ts`.
 
   return ok({ ...(carga as unknown as Record<string, unknown>), numero }, { requestId, status: 201 });
 }

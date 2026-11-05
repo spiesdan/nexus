@@ -19,7 +19,6 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { avisarClientesDaCarga } from "@/lib/expedicao/aviso-de-carga";
 import {
   carregarContatosDaEntrega,
   cidadeDaEntrega,
@@ -214,14 +213,8 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     requestId,
   });
 
-  // O cliente dos pedidos novos também fica sabendo que embarcaram.
-  // Best-effort e nunca lança: a carga já existe e a resposta não pode cair.
-  await avisarClientesDaCarga(supabase, {
-    organizationId: authz.org.orgId,
-    shipmentId: id,
-    shipmentNumero: (carga as unknown as { numero: number }).numero,
-    orderIds: ids,
-  });
+  // O aviso ao cliente NÃO sai aqui: o pedido entrou na carga, mas ela ainda
+  // pode estar `montando`. O gatilho é o "Sair para rota" (`rota/iniciar`).
 
   return ok({ adicionados: inseridos ?? [], shipment_id: id }, { requestId, status: 201 });
 }
