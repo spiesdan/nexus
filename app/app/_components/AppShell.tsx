@@ -40,19 +40,6 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
     return (
       <AssistenteProvider>
         <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background">
-          {!naCabine && (
-            <header className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-              <p className="text-sm font-semibold text-text">{t("Minhas entregas")}</p>
-              <form action="/api/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="rounded-lg border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-text"
-                >
-                  {t("Sair")}
-                </button>
-              </form>
-            </header>
-          )}
           <main
             id="conteudo"
             className={naCabine ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-auto"}
@@ -64,7 +51,7 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
             no canto, sobre o mapa. Sessão sem saída é armadilha — e é a única
             coisa da casca antiga que o entregador realmente usava.
           */}
-          {naCabine && (
+          {(
             <form action="/api/auth/signout" method="post" className="absolute top-3 right-3 z-30">
               <button
                 type="submit"

@@ -39,13 +39,33 @@ const COR_ESTADO: Record<PontoParadaMapa["estado"], string> = {
   problema: "#dc2626",
 };
 
-const SIMBOLO_ESTADO: Record<PontoParadaMapa["estado"], string> = {
-  pendente: "",
-  proxima: "▶",
-  atendimento: "◉",
-  entregue: "✓",
-  problema: "!",
-};
+/**
+ * O PINO DO MAPA — gota clássica, com o número da parada dentro.
+ *
+ * Antes era um círculo achatado com símbolos (▶ ◉ ✓ !) colados ao número: em
+ * zoom de rua o símbolo virava um borrão ao lado do algarismo e o marcador
+ * não apontava para o endereço — ficava por cima dele. A gota tem ponta, e a
+ * ponta é o lugar. A cor continua dizendo o estado, e o número é o que o
+ * roteiro e o romaneio usam.
+ */
+function htmlDoPino(cor: string, conteudo: string, destaque: boolean, titulo: string): string {
+  const tamanho = destaque ? 38 : 34;
+  return (
+    `<div title="${titulo}" style="position:relative;width:${tamanho}px;height:${tamanho + 10}px;` +
+    `filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35))">` +
+    `<div style="position:absolute;left:0;top:0;width:${tamanho}px;height:${tamanho}px;border-radius:50%;` +
+    `background:${cor};border:3px solid #fff;display:flex;align-items:center;justify-content:center;` +
+    `color:#fff;font:700 ${destaque ? 15 : 13}px/1 system-ui,sans-serif;` +
+    (destaque ? `box-shadow:0 0 0 4px rgba(37,99,235,0.35);` : "") +
+    `">${conteudo}</div>` +
+    `<div style="position:absolute;left:50%;top:${tamanho - 2}px;transform:translateX(-50%);width:0;height:0;` +
+    `border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid ${cor}"></div>` +
+    `</div>`
+  );
+}
+
+const CASA =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>';
 
 /**
  * MAPA DA ROTA — Leaflet de verdade: geometria pelas ruas (OSRM), marcadores
@@ -171,9 +191,10 @@ export function MapaRota({
           L.marker([ori.lat, ori.lng], {
             icon: L.divIcon({
               className: "",
-              html: `<div title="${esc(t("Origem"))}" style="background:#16a34a;color:#fff;border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;border:2px solid #fff">⌂</div>`,
-              iconSize: [26, 26],
-              iconAnchor: [13, 13],
+              html: htmlDoPino("#16a34a", CASA, false, esc(t("Origem"))),
+              iconSize: [34, 44],
+              iconAnchor: [17, 44],
+              popupAnchor: [0, -44],
             }),
           }),
         )
@@ -182,7 +203,7 @@ export function MapaRota({
       }
       for (const p of comCoord) {
         const cor = COR_ESTADO[p.estado];
-        const sim = SIMBOLO_ESTADO[p.estado];
+        const destaque = p.estado === "proxima";
         const valor = p.pedidos.reduce((s, x) => s + x.total_cents, 0);
         const pedidosHtml = p.pedidos
           .map((x) => `#${x.numero} · ${esc(comoMoeda(x.total_cents, "BRL"))}`)
@@ -198,13 +219,10 @@ export function MapaRota({
           L.marker([p.lat as number, p.lng as number], {
             icon: L.divIcon({
               className: "",
-              html:
-                `<div title="#${p.ordem} ${esc(p.cliente)}" style="background:${cor};color:#fff;border-radius:9999px;` +
-                `min-width:26px;height:26px;padding:0 4px;display:flex;align-items:center;justify-content:center;` +
-                `font-size:11px;font-weight:700;border:${p.estado === "proxima" ? "3px solid #111827" : "2px solid #fff"}">` +
-                `${p.ordem}${sim ? ` ${sim}` : ""}</div>`,
-              iconSize: [30, 26],
-              iconAnchor: [15, 13],
+              html: htmlDoPino(cor, String(p.ordem), destaque, `#${p.ordem} ${esc(p.cliente)}`),
+              iconSize: destaque ? [38, 48] : [34, 44],
+              iconAnchor: destaque ? [19, 48] : [17, 44],
+              popupAnchor: [0, destaque ? -48 : -44],
             }),
           }),
         )
@@ -259,9 +277,9 @@ export function MapaRota({
             draggable: true,
             icon: L.divIcon({
               className: "",
-              html: `<div title="${esc(t("Posição marcada — arraste para ajustar"))}" style="background:#ea580c;color:#fff;border-radius:9999px 9999px 9999px 0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;border:2px solid #fff;transform:rotate(-45deg)"><span style="transform:rotate(45deg)">📍</span></div>`,
-              iconSize: [30, 30],
-              iconAnchor: [4, 26],
+              html: htmlDoPino("#ea580c", '<span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span>', false, esc(t("Posição marcada — arraste para ajustar"))),
+              iconSize: [34, 44],
+              iconAnchor: [17, 44],
             }),
           }),
         )
@@ -289,7 +307,7 @@ export function MapaRota({
       if (seguindo && mot) {
         m.setView([mot.lat, mot.lng], Math.max(m.getZoom(), 15), { animate: true });
       } else if (!refArrastou.current && todos.length > 0) {
-        m.fitBounds(L.latLngBounds(todos), { padding: [30, 30] });
+        m.fitBounds(L.latLngBounds(todos), { padding: [30, 30], maxZoom: 15 });
       }
     });
   }
