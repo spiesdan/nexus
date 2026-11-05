@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ApiError } from "@/lib/api/types";
 import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
+import { logger } from "@/lib/logger";
 import {
   COLUNAS_DA_NOTA,
   statusFaturavel,
@@ -235,23 +236,39 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   // lendo uma nota por pedido). `invoice_orders` guarda TODOS — é o que permite
   // o drain somar os itens dos três pedidos e o que impede o mesmo pedido de
   // entrar em duas notas vivas.
-  const { error: erroVinculos } = await supabase.from("invoice_orders").insert(
+  //
+  // ESCRITA PELO SERVICE ROLE (*), não pelo client da sessão. A 0294 dá ao
+  // `authenticated` apenas `select` — de propósito, porque o vínculo é
+  // consequência de uma decisão que o app já tomou, não uma escolha da tela.
+  // Medido em 05/11/2026: com o client da sessão o INSERT voltava 42501, a
+  // nota já tinha nascido e ficava órfã em `em_emissao` — sem job, sem evento,
+  // invisível para o drain. Duas notas reais (4580/4581) pararam assim.
+  const { error: erroVinculos } = await admin.from("invoice_orders").insert(
     lista.map((p) => ({
       invoice_id: notaId,
       order_id: p.id,
       organization_id: orgId,
     })),
   );
+
+  // A nota já nasceu. Se qualquer passo seguinte falhar, ela NÃO pode ficar
+  // viva: uma linha em `em_emissao` sem job é uma nota que nunca emite e nunca
+  // morre — a tela mostra "Emitindo" para sempre. Descartar devolve a emissão
+  // ao estado anterior (nada emitido) e deixa a pessoa tentar de novo.
+  const descartarNota = async (motivo: string): Promise<never> => {
+    const { error: erroDescarte } = await admin.from("invoices").delete().eq("id", notaId);
+    if (erroDescarte) {
+      logger.error("fiscal: falha ao descartar a nota órfã", {
+        invoice_id: notaId,
+        organization_id: orgId,
+        erro: erroDescarte.message.slice(0, 300),
+      });
+    }
+    throw new ApiError(500, "internal_error", { requestId }, requestId, motivo);
+  };
+
   if (erroVinculos) {
-    // A nota já nasceu: sem os vínculos ela sairia só com o pedido principal,
-    // calada. Melhor derrubar a emissão e dizer o que aconteceu.
-    throw new ApiError(
-      500,
-      "internal_error",
-      { requestId },
-      requestId,
-      "Nota criada, mas os pedidos agrupados não foram vinculados. Cancele a nota e tente de novo.",
-    );
+    return descartarNota("Não foi possível vincular os pedidos da nota. Nada foi emitido — tente novamente.");
   }
 
   const { error: erroJob } = await supabase.from("fiscal_jobs").insert({
@@ -262,7 +279,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     created_by: userId,
   });
   if (erroJob) {
-    throw new ApiError(500, "internal_error", { requestId }, requestId, "Nota criada, mas a fila recusou o job.");
+    return descartarNota("A fila fiscal recusou a nota. Nada foi emitido — tente novamente.");
   }
 
   await admin.from("fiscal_events").insert({

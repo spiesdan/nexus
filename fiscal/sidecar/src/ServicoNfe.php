@@ -699,13 +699,17 @@ class ServicoNfe
             'cDV' => null,
             'tpAmb' => (string)$tpAmb,
             'finNFe' => '1',
-            // indFinal 0 = não consumidor final; 1 = consumidor final. A
-            // regra espelha o emissor ANTERIOR desta instalação, lida do XML
-            // autorizado (nNF 4575): venda para CNPJ sai com 0, venda para
-            // CPF sai com 1. (Antes víamos `indicador_ie`, e o XML do Odivix
-            // mostra que a empresa/isento também vai com 0.)
-            'indFinal' => preg_replace('/\D/', '', (string)($p['documento'] ?? '')) !== '' &&
-                strlen(preg_replace('/\D/', '', (string)($p['documento'] ?? ''))) === 11 ? '1' : '0',
+            // indFinal 0 = não consumidor final; 1 = consumidor final.
+            //
+            // A regra anterior olhava só o tamanho do documento (CPF = 1,
+            // CNPJ = 0) e reproduzia o emissor antigo. Medido em 05/11/2026:
+            // duas notas para CNPJ SEM IE cadastrada (indIEDest = 9) foram
+            // rejeitadas pela SEFAZ com **696 — "Operação com não contribuinte
+            // deve indicar operação com consumidor final"**. O leiaute exige
+            // indFinal = 1 sempre que o destinatário é não contribuinte, e é
+            // o MESMO indicador que vai em <dest><indIEDest>. CPF cai em 9 do
+            // mesmo jeito, então a regra por documento continua coberta.
+            'indFinal' => $this->indicadorIe() === '9' ? '1' : '0',
             // indPres 0 = presencial (operação do próprio emitente). O XML
             // autorizado do Odivix usa 0 e NÃO manda `indIntermed`; com 9 a NT
             // 2020.006 exigia o indicador e a SEFAZ recusava sem ele (434).
@@ -832,6 +836,20 @@ class ServicoNfe
      * validar() recusa antes de abrir o certificado. Em homologação o próprio
      * Make troca o xNome pela frase obrigatória da SEFAZ.
      */
+    /**
+     * `indIEDest` normalizado — 1 contribuinte, 2 isento, 9 não contribuinte.
+     *
+     * Vive em um lugar só porque DUAS tags dependem dele: `<dest><indIEDest>`
+     * e `<ide><indFinal>`. Quando as duas regras moravam separadas, a primeira
+     * lia o cadastro e a segunda olhava só o tamanho do documento — e a SEFAZ
+     * rejeitava (696) toda venda para CNPJ sem IE.
+     */
+    private function indicadorIe(): string
+    {
+        $indicador = (string)($this->pedido['indicador_ie'] ?? '9');
+        return in_array($indicador, ['1', '2', '9'], true) ? $indicador : '9';
+    }
+
     private function montarDest(Make $make): void
     {
         $p = $this->pedido;
@@ -840,10 +858,7 @@ class ServicoNfe
         // ICMS (IE vai no XML), 2 = isento, 9 = não contribuinte. Antes era '9'
         // para todo mundo, então cliente com IE cadastrada saía classificado
         // como não contribuinte.
-        $indicador = (string)($p['indicador_ie'] ?? '9');
-        if (!in_array($indicador, ['1', '2', '9'], true)) {
-            $indicador = '9';
-        }
+        $indicador = $this->indicadorIe();
         $ie = preg_replace('/[^0-9A-Za-z]/', '', (string)($p['ie'] ?? ''));
         $dest = (object)[
             'xNome' => $this->limitar((string)($p['nome'] ?? ''), 60),

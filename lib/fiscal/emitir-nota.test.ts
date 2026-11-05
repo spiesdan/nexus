@@ -216,6 +216,53 @@ describe("agrupamento de pedidos (0294)", () => {
     // Nada foi escrito: a recusa acontece antes de a nota existir.
     expect(banco.escritas.some((e) => e.startsWith("invoices.insert"))).toBe(false);
   });
+
+  it("grava os vínculos pelo service role — a 0294 só dá SELECT ao usuário", async () => {
+    // Medido em 05/11/2026: com o client da sessão o INSERT em
+    // `invoice_orders` voltava 42501, a nota já tinha nascido e ficava órfã
+    // em `em_emissao` — sem job, sem evento, sem nunca emitir. O vínculo é
+    // escrita de service role (0294), e este teste trava a escolha do client.
+    const banco = bancoFalso("faturado");
+    const negado = {
+      then: (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
+        Promise.resolve({
+          data: null,
+          error: { message: "new row violates row-level security policy" },
+        }).then(ok, falha),
+    };
+    const supabase = {
+      from: (tabela: string) =>
+        tabela === "invoice_orders"
+          ? { ...banco.from(tabela), insert: () => negado }
+          : banco.from(tabela),
+    };
+    const admin = {
+      from: (tabela: string) =>
+        tabela === "invoice_orders"
+          ? {
+              insert: (valor: unknown) => {
+                banco.escritas.push(`admin.invoice_orders.insert ${JSON.stringify(valor)}`);
+                return {
+                  then: (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
+                    Promise.resolve({ data: null, error: null }).then(ok, falha),
+                };
+              },
+            }
+          : banco.from(tabela),
+    };
+
+    await expect(
+      emitirNota({
+        supabase: supabase as never,
+        admin: admin as never,
+        orgId: ORG_ID,
+        userId: USUARIO_ID,
+        requestId: "req-1",
+        orderId: PEDIDO_ID,
+      }),
+    ).resolves.toBeTruthy();
+    expect(banco.escritas.some((e) => e.startsWith("admin.invoice_orders.insert"))).toBe(true);
+  });
 });
 
 describe("status do pedido que vira nota", () => {
