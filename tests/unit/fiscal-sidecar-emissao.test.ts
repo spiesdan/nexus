@@ -176,6 +176,32 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toMatch(/rejeição 776|rejeicao 776/);
   });
 
+  it("nota a prazo emite o grupo Fatura antes das duplicatas (rejeição 905)", () => {
+    // Medido em 05/11/2026, nota 4587 desta instalação: `<cobr>` saía só com
+    // `<dup>` (o XSD dispensa `<fat>`, e o XML passava na validação de
+    // esquema) — mas a SEFAZ aplica regra de negócio e recusou com
+    // `905 — Campos do grupo Fatura não informados`. A nota seguinte, com o
+    // `<fat>` na frente, foi autorizada (4588, protocolo 242260530117471).
+    //
+    // O gate é estático porque o sidecar é PHP: ele cobra a ORDEM (fat antes
+    // de dup) e os campos que a fatura precisa ter.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    const inicio = src.indexOf("private function montarDuplicatas");
+    expect(inicio, "montarDuplicatas não encontrada").toBeGreaterThan(-1);
+    const trecho = src.slice(inicio, src.indexOf("\n    }", inicio));
+
+    const posFat = trecho.indexOf("tagfat(");
+    const posDup = trecho.indexOf("tagdup(");
+    expect(posFat, "a fatura não é emitida — rejeição 905 de volta").toBeGreaterThan(-1);
+    expect(posDup, "as duplicatas sumiram").toBeGreaterThan(-1);
+    expect(posFat, "a fatura precisa vir ANTES das duplicatas (leiaute Y02 → Y07)").toBeLessThan(
+      posDup,
+    );
+    for (const campo of ["'nFat'", "'vOrig'", "'vLiq'"]) {
+      expect(trecho, `o grupo Fatura sem ${campo} não fecha`).toContain(campo);
+    }
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.

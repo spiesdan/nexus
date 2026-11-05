@@ -1009,13 +1009,26 @@ class ServicoNfe
     }
 
     /**
-     * <cobr/dup> — uma por parcela, com vDup somando exatamente vNF.
+     * <cobr/fat> + <cobr/dup> — a fatura e uma duplicata por parcela.
      *
      * INFERIDO (sem forma de pagamento gravada por pedido, não há de onde
      * copiar): o total é dividido em N parcelas iguais de 2 casas e o resto da
      * divisão, em centavos, vai para a ÚLTIMA — é o jeito de a soma bater sem
      * quebrar a casa decimal. nDup = 3 dígitos; dVenc = 1º vencimento + i × dias.
-     * Sem tagfat: o ERP antigo não emitia e o XSD dispensa o grupo.
+     *
+     * ─── O `<fat>` NÃO É OPCIONAL NA PRÁTICA ────────────────────────────────
+     *
+     * A regra anterior emitia só `<dup>`, com o argumento de que "o ERP antigo
+     * não emitia e o XSD dispensa o grupo" — o XSD dispensa mesmo (`minOccurs=0`),
+     * e foi por isso que o XML passou na validação de esquema. Mas a SEFAZ
+     * aplica uma regra de NEGÓCIO por cima: pagamento a prazo (`indPag=1`) sem
+     * o grupo Fatura é recusado com **905 — "Campos do grupo Fatura não
+     * informados"**. Medido em 05/11/2026, nota 4587 desta instalação: XML
+     * válido, `<cobr><dup>` presentes, e a recusa veio assim mesmo.
+     *
+     * O `<fat>` que a SEFAZ espera é o resumo da cobrança: número da fatura
+     * (o da própria nota), valor original e líquido iguais ao total, desconto
+     * zero — o desconto já está no item, não na fatura.
      */
     private function montarDuplicatas(Make $make, float $vNF, int $parcelas, string $primeiro, int $diasEntre): void
     {
@@ -1030,6 +1043,12 @@ class ServicoNfe
         if ($porParcela <= 0) {
             return;
         }
+        $make->tagfat((object)[
+            'nFat' => (string)($this->pedido['numero_nota'] ?? ''),
+            'vOrig' => $this->moeda($vNF),
+            'vDesc' => '0.00',
+            'vLiq' => $this->moeda($vNF),
+        ]);
         $resto = $totalCents - $porParcela * $parcelas;
         for ($i = 0; $i < $parcelas; $i++) {
             $cents = $porParcela + ($i === $parcelas - 1 ? $resto : 0);

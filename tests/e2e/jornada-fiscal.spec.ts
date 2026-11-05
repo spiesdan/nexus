@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { carregarEnvLocal } from "../../scripts/lib/env-de-teste";
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
-import { rotuloDoPedido, semearPedido, semearProduto } from "./helpers/pedidos";
+import { rotuloDoPedido, semearContato, semearPedido, semearProduto } from "./helpers/pedidos";
 
 test.setTimeout(300_000);
 
@@ -56,10 +56,31 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   const produtoId = await semearProduto(page, `Produto Jornada Fiscal ${carimbo}`, {
     ncm: "84713012",
   });
-  // Pedido AVULSO (sem contato): com contato, a pre-validação exige endereço
-  // completo dele como pendência adicional — esta jornada mede o
-  // faturamento e a emissão honesta, não a caderneta do cliente.
-  const pedido = await semearPedido(page, cliente, { produtoId });
+  // O CLIENTE PRECISA DE CADASTRO COMPLETO.
+  //
+  // A pré-validação da emissão usa o MESMO resolvedor do XML
+  // (`carregarDestinatario`) e recusa a nota sem documento/endereço — inclusive
+  // quando o pedido não tem contato, porque a NF-e exige `<enderDest>` de
+  // qualquer jeito. O comentário anterior dizia que "pedido AVULSO (sem
+  // contato)" evitava essa checagem; medido em 05/11/2026, não evitava nada: a
+  // jornada parava em seis pendências ("Cliente: ajuste logradouro"…) antes de
+  // emitir, e a suíte critical ficou vermelha na main.
+  const contatoId = await semearContato(page, cliente);
+  const cadastro = await page.request.patch(`/api/v1/contacts/${contatoId}`, {
+    data: {
+      tipo_pessoa: "J",
+      cnpj: "11222333000181",
+      ie: "123456789",
+      logradouro: "Rua das Nacoes",
+      numero_end: "1000",
+      bairro: "Centro",
+      cidade: "Sao Paulo",
+      uf: "SP",
+      cep: "01001000",
+    },
+  });
+  expect(cadastro.status(), "cadastro completo do cliente da nota").toBe(200);
+  const pedido = await semearPedido(page, cliente, { produtoId, contactId: contatoId });
   const numero = rotuloDoPedido(pedido.numero);
 
   // 1. Faturar pela ficha: `aprovado → faturado` habilita o pedido na aba Emitir.
@@ -217,7 +238,12 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   ).toBeVisible({ timeout: 20_000 });
   // Hidratação do diálogo: ele busca o quadro no GET ao abrir.
   await expect(dialogo.locator("#ajuste-ie")).toBeVisible({ timeout: 20_000 });
-  await dialogo.locator("#ajuste-ie").fill("123456789");
+  // IE DIFERENTE da que está no cadastro (o seed gravou 123456789): só assim a
+  // releitura abaixo prova o ajuste da NOTA, e não o cadastro do cliente.
+  await dialogo.locator("#ajuste-ie").fill("987654321");
+  // Desmarcado: este passo mede a correção que vale SÓ para esta nota — o
+  // caminho que não depende de editar o cadastro.
+  await dialogo.getByRole("checkbox", { name: /Salvar também no cadastro/ }).uncheck();
   await dialogo
     .locator("#ajuste-complementares")
     .fill("Pedido conferido e corrigido antes da transmissão.");
@@ -227,12 +253,12 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   ).toBeVisible({ timeout: 20_000 });
 
   // O ajuste é LIDO DE VOLTA do banco: reabrir o diálogo mostra a IE gravada
-  // (se o PATCH tivesse sido ignorado, o campo voltaria vazio).
+  // (se o PATCH tivesse sido ignorado, o campo voltaria com a do cadastro).
   await page.reload();
   await page.waitForTimeout(1_500);
   await page.getByLabel(/^Buscar nota/).fill(cliente);
   await linha.getByRole("button", { name: "Corrigir" }).click();
-  await expect(page.getByRole("dialog").locator("#ajuste-ie")).toHaveValue("123456789", {
+  await expect(page.getByRole("dialog").locator("#ajuste-ie")).toHaveValue("987654321", {
     timeout: 20_000,
   });
   await page.getByRole("dialog").getByRole("button", { name: "Cancelar" }).click();
