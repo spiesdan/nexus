@@ -941,13 +941,13 @@ export function ModoMotorista({
               {t("Próxima entrega")} · {t("parada")} {ordemDaProxima} {t("de")}{" "}
               {rota.paradas.length}
             </p>
-            <p className="mt-0.5 truncate text-[22px] leading-tight font-semibold tracking-tight text-text">
+            <p className="mt-0.5 line-clamp-2 text-[22px] leading-tight font-semibold tracking-tight text-text">
               {proxima.cliente}
             </p>
             {proxima.endereco ? (
               <p className="mt-1 flex items-center gap-1 text-[13px] leading-snug text-muted-foreground">
-                <MapPin size={13} aria-hidden className="shrink-0" />
-                <span className="truncate">{proxima.endereco}</span>
+                <MapPin size={13} aria-hidden className="mt-0.5 shrink-0" />
+                <span className="line-clamp-2">{proxima.endereco}</span>
               </p>
             ) : (
               <p className="mt-1 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>

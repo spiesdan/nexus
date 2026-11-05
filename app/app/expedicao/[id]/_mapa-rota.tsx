@@ -289,7 +289,7 @@ export function MapaRota({
       if (seguindo && mot) {
         m.setView([mot.lat, mot.lng], Math.max(m.getZoom(), 15), { animate: true });
       } else if (!refArrastou.current && todos.length > 0) {
-        m.fitBounds(L.latLngBounds(todos), { padding: [30, 30] });
+        m.fitBounds(L.latLngBounds(todos), { padding: [30, 30], maxZoom: 15 });
       }
     });
   }
