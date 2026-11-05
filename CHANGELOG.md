@@ -8,6 +8,27 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.2] — 2026-11-05
+
+### Alterado
+
+- **Cabine do entregador com nome e endereço completos** O nome do cliente e o endereço no cartão da próxima entrega agora ocupam
+  **até duas linhas** em vez de serem cortados em uma. O mapa abre com
+  **zoom de rua** (máximo 15) em vez de enquadrar o estado inteiro. E a lista de
+  cargas perdeu a barra sólida duplicada: o **Sair** flutua sobre a tela nas duas
+  telas.
+
+  Os marcadores do mapa viraram **pinos de gota com o número da parada**. Antes
+  eram círculos achatados com símbolos (▶ ◉ ✓ !) que viravam borrão ao lado do
+  algarismo e não apontavam para o endereço. A ponta do pino agora é o lugar, a
+  cor continua dizendo o estado, e a próxima parada ganha um anel de destaque.
+
+  No **Roteiro**, qualquer parada abre agora o pedido completo — endereço,
+  telefone, itens, pedidos e as ações (navegar, cheguei, entregue, devolver). Antes
+  só a próxima entrega era clicável.
+
+  Quem já instalou: **não precisa fazer nada**.
+
 ## [1.39.1] — 2026-11-05
 
 ### Corrigido
@@ -6289,7 +6310,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.2...HEAD
+[1.39.2]: https://github.com/spiesdan/nexus/compare/v1.39.1...v1.39.2
 [1.39.1]: https://github.com/spiesdan/nexus/compare/v1.39.0...v1.39.1
 [1.39.0]: https://github.com/spiesdan/nexus/compare/v1.38.17...v1.39.0
 [1.38.17]: https://github.com/spiesdan/nexus/compare/v1.38.16...v1.38.17
