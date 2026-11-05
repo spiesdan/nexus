@@ -50,6 +50,13 @@ export async function proxy(request: NextRequest) {
       },
       cookieOptions: {
         name: COOKIE_NAME,
+        // O middleware TAMBÉM grava o cookie — e era ele que o rebaixava a
+        // cookie de sessão a cada refresh: `getUser()` renova o token e chama
+        // `setAll`, que reescrevia o cookie com estas opções, sem `maxAge`.
+        // Resultado: a pessoa entrava, atualizava a página e, ao fechar o app,
+        // caía no login de novo. As três cópias (proxy, server, browser)
+        // precisam carregar o mesmo prazo.
+        maxAge: 60 * 60 * 24 * 30,
         sameSite: "strict",
         httpOnly: true,
         secure: cookieSecure(),
