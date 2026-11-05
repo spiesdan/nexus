@@ -39,7 +39,11 @@ const styles = StyleSheet.create({
   },
   // O nome do emitente é longo (razão social inteira) e empurrava o título
   // por cima dele. Ele encolhe/quebra; o título e o contato não.
-  emitente: { fontSize: 13, fontWeight: "bold", color: "#1e3a5f", maxWidth: "48%", flexShrink: 1 },
+  // 10,5 e não 13: o cabeçalho é identificação, não manchete — no papel o nome
+  // da empresa ocupava a faixa inteira e o romaneio é lido a um braço de
+  // distância, no volante. O corpo da tabela é 8–9, então 10,5 ainda é o maior
+  // texto do cabeçalho sem virar título de cartaz.
+  emitente: { fontSize: 10.5, fontWeight: "bold", color: "#1e3a5f", maxWidth: "48%", flexShrink: 1 },
   titulo: { fontSize: 12, fontWeight: "bold", color: "#6b7280", flexShrink: 0, marginHorizontal: 8 },
   contato: { fontSize: 7.5, color: "#4b5563", textAlign: "right", lineHeight: 1.35, maxWidth: "30%" },
   faixa: {
