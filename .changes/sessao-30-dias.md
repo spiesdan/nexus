@@ -5,9 +5,9 @@ titulo: Fechar o app não desloga mais (cookie de sessão reescrito pelo middlew
 ---
 
 O login continuava caindo ao atualizar a página ou fechar o app no celular. O
-cookie de autenticação nascia persistente, mas o **middleware reescrevia ele a
-cada navegação** com as próprias opções — e sem prazo, voltando a ser cookie de
-sessão. O navegador descartava ao fechar, e a pessoa caía no login outra vez.
+cookie de autenticação nascia persistente, mas era **reescrito pelo middleware**
+a cada navegação, com opções sem prazo — e voltava a ser cookie de sessão. O
+navegador descartava ao fechar, e a pessoa caía no login outra vez.
 
 Agora as três pontas que gravam o cookie (middleware, servidor e navegador)
 carregam o mesmo prazo de **30 dias**. Quem já está logado só precisa entrar uma
