@@ -202,4 +202,46 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
     expandida.getByText("Ver DANFE"),
     "DANFE só existe com XML autorizado — stub nunca gera",
   ).toHaveCount(0);
+
+  // 7. Corrigir a nota rejeitada NA TELA (0295).
+  //
+  // A nota está `pendente` (é o estado honesto do stub), e é exatamente o
+  // estado em que a correção vale: o documento ainda não saiu. O caminho medido
+  // aqui é o do caso real de 05/11/2026 — a nota parou por falta de IE no
+  // cadastro e não havia onde preencher.
+  await linha.getByRole("button", { name: "Corrigir" }).click();
+  const dialogo = page.getByRole("dialog");
+  await expect(
+    dialogo.getByRole("heading", { name: /Corrigir nota/ }),
+    "o diálogo de correção abre pelo botão da linha",
+  ).toBeVisible({ timeout: 20_000 });
+  // Hidratação do diálogo: ele busca o quadro no GET ao abrir.
+  await expect(dialogo.locator("#ajuste-ie")).toBeVisible({ timeout: 20_000 });
+  await dialogo.locator("#ajuste-ie").fill("123456789");
+  await dialogo
+    .locator("#ajuste-complementares")
+    .fill("Pedido conferido e corrigido antes da transmissão.");
+  await dialogo.getByRole("button", { name: "Só salvar" }).click();
+  await expect(
+    page.locator("[data-sonner-toast]").filter({ hasText: "Correção salva" }).first(),
+  ).toBeVisible({ timeout: 20_000 });
+
+  // O ajuste é LIDO DE VOLTA do banco: reabrir o diálogo mostra a IE gravada
+  // (se o PATCH tivesse sido ignorado, o campo voltaria vazio).
+  await page.reload();
+  await page.waitForTimeout(1_500);
+  await page.getByLabel(/^Buscar nota/).fill(cliente);
+  await linha.getByRole("button", { name: "Corrigir" }).click();
+  await expect(page.getByRole("dialog").locator("#ajuste-ie")).toHaveValue("123456789", {
+    timeout: 20_000,
+  });
+  await page.getByRole("dialog").getByRole("button", { name: "Cancelar" }).click();
+
+  // A correção aparece na timeline da nota — quem abre a nota amanhã vê que ela
+  // foi corrigida à mão, não só que "deu erro".
+  await linha.getByRole("button", { name: "Detalhe" }).click();
+  await expect(
+    page.getByRole("row").filter({ hasText: "ajuste" }).first(),
+    "a timeline registra o evento `ajuste`",
+  ).toBeVisible({ timeout: 15_000 });
 });

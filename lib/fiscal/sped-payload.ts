@@ -143,6 +143,17 @@ export function montarPayloadSped(
     return { ok: false, falta: "CPF/CNPJ do destinatário para o local de entrega" };
   }
 
+  // ─── O AJUSTE DA NOTA FICA AQUI — NÃO VAI AO SIDECAR ───────────────────────
+  //
+  // `destinatario` e `itens` são a correção feita na tela depois de uma
+  // rejeição. Ela já foi aplicada NESTE payload — o destinatário entrou em
+  // `pedido`, os itens na lista acima. Mandá-los adiante entregaria ao emissor
+  // um contrato que ele não conhece (e que ele, corretamente, ignoraria).
+  const { destinatario: _ajusteDoDestinatario, itens: _ajusteDosItens, ...extrasDoXml } =
+    extras ?? {};
+  const extrasParaOSidecar =
+    Object.keys(extrasDoXml).length > 0 ? (extrasDoXml as ExtrasFiscais) : null;
+
   return {
     ok: true,
     payload: {
@@ -183,7 +194,7 @@ export function montarPayloadSped(
         preco_cents: i.preco_cents,
         desconto_pct: i.desconto_pct,
       })),
-      extras: extras ?? null,
+      extras: extrasParaOSidecar,
     },
   };
 }

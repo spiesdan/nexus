@@ -20,7 +20,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
+import type { AjusteDoDestinatario, ExtrasFiscais } from "@/lib/schemas/fiscal";
 
 import { documentoDoCadastro } from "@/lib/contacts/documento-do-cadastro";
 
@@ -75,8 +75,59 @@ const COLUNAS_DO_CONTATO =
   "id, name, display_name, cnpj, tipo_pessoa, source_metadata, ie, logradouro, numero_end, " +
   "complemento, bairro, cidade, uf, cep";
 
+/** Exportado para a tela de correção ler o cadastro cru (sem o resolvedor). */
+export const COLUNAS_DO_CONTATO_FISCAL = COLUNAS_DO_CONTATO;
+
 function texto(v: string | null | undefined): string {
   return (v ?? "").trim().replace(/\s+/g, " ");
+}
+
+/**
+ * O AJUSTE DA NOTA SOBRE O CADASTRO — campo a campo, sem apagar o resto.
+ *
+ * A correção é cirúrgica de propósito: quem preenche a IE do cliente na hora
+ * de desentupir uma nota não está reescrevendo o cadastro inteiro, e um
+ * `update` com os campos vazios apagaria endereço que ninguém pediu para
+ * apagar. Só o que veio no ajuste muda.
+ */
+export function aplicarAjusteNoContato(
+  contato: ContatoFiscal | null | undefined,
+  ajuste: AjusteDoDestinatario | null | undefined,
+): ContatoFiscal | null {
+  if (!contato && !ajuste) return null;
+  const base: ContatoFiscal = { id: contato?.id ?? "" };
+  if (contato) Object.assign(base, contato);
+  if (!ajuste) return base;
+  // `nome` do ajuste vai para `display_name`: é o campo que o resolvedor lê
+  // primeiro (`display_name` → `name` → pedido), então é o único que de fato
+  // muda o `<xNome>` sem renomear o cliente no CRM (`name` é o nome da ficha).
+  if (ajuste.nome !== undefined) base.display_name = ajuste.nome;
+  if (ajuste.documento !== undefined) base.cnpj = ajuste.documento;
+  if (ajuste.ie !== undefined) base.ie = ajuste.ie;
+  if (ajuste.logradouro !== undefined) base.logradouro = ajuste.logradouro;
+  if (ajuste.numero !== undefined) base.numero_end = ajuste.numero;
+  if (ajuste.complemento !== undefined) base.complemento = ajuste.complemento;
+  if (ajuste.bairro !== undefined) base.bairro = ajuste.bairro;
+  if (ajuste.cidade !== undefined) base.cidade = ajuste.cidade;
+  if (ajuste.uf !== undefined) base.uf = ajuste.uf;
+  if (ajuste.cep !== undefined) base.cep = ajuste.cep;
+  return base;
+}
+
+/** O ajuste mexe no endereço? Só então o snapshot de `entrega` da nota é refeito. */
+export function ajusteMexeNoEndereco(
+  ajuste: AjusteDoDestinatario | null | undefined,
+): boolean {
+  if (!ajuste) return false;
+  return (
+    ajuste.logradouro !== undefined ||
+    ajuste.numero !== undefined ||
+    ajuste.complemento !== undefined ||
+    ajuste.bairro !== undefined ||
+    ajuste.cidade !== undefined ||
+    ajuste.uf !== undefined ||
+    ajuste.cep !== undefined
+  );
 }
 
 /** CNPJ ou CPF: só dígitos, e só os tamanhos que a SEFAZ aceita. */
@@ -112,22 +163,24 @@ export function indicadorIe(valor: string | null | undefined): {
 export function montarDestinatario(
   pedido: PedidoParaDestinatario,
   contato: ContatoFiscal | null | undefined,
+  ajuste?: AjusteDoDestinatario | null,
 ): DestinatarioDaNota {
-  const nome = texto(contato?.display_name) || texto(contato?.name) || texto(pedido.cliente_nome);
+  const c = aplicarAjusteNoContato(contato, ajuste);
+  const nome = texto(c?.display_name) || texto(c?.name) || texto(pedido.cliente_nome);
   // O documento vem do cadastro inteiro, não só da coluna `cnpj`: o
   // importador do Mercos deixa o CPF em `source_metadata.mercos.documento` e
   // deixa `cnpj` NULL (907 contatos nesta instalação). Sem esta leitura, a nota
   // pedia CPF a um cliente que tem CPF — o pedido 19341 é o caso.
   const documento =
-    documentoDoCadastro(contato)?.digitos ?? documentoFiscal(pedido.cliente_documento);
-  const { ie, indicador: indicador_ie } = indicadorIe(contato?.ie);
+    documentoDoCadastro(c)?.digitos ?? documentoFiscal(pedido.cliente_documento);
+  const { ie, indicador: indicador_ie } = indicadorIe(c?.ie);
 
   const faltando: string[] = [];
-  const logradouro = texto(contato?.logradouro);
-  const numero = texto(contato?.numero_end);
-  const bairro = texto(contato?.bairro);
-  const uf = texto(contato?.uf).toUpperCase();
-  const municipio = municipioIbge(contato?.cidade, contato?.uf);
+  const logradouro = texto(c?.logradouro);
+  const numero = texto(c?.numero_end);
+  const bairro = texto(c?.bairro);
+  const uf = texto(c?.uf).toUpperCase();
+  const municipio = municipioIbge(c?.cidade, c?.uf);
 
   if (!nome) faltando.push("nome");
   if (!logradouro) faltando.push("logradouro");
@@ -141,8 +194,8 @@ export function montarDestinatario(
   // xCpl, xBairro — o XSD). O cadastro é `text`, sem limite: cortar aqui
   // mandaria endereço pela metade para a SEFAZ, então o campo é NOMEADO para
   // quem emite corrigir no cadastro.
-  const cep = (contato?.cep ?? "").replace(/\D/g, "");
-  const complemento = texto(contato?.complemento);
+  const cep = (c?.cep ?? "").replace(/\D/g, "");
+  const complemento = texto(c?.complemento);
   for (const [rotulo, valor] of [
     ["logradouro", logradouro],
     ["número do endereço", numero],
@@ -184,6 +237,8 @@ export async function carregarDestinatario(
   supabase: SupabaseClient,
   organizationId: string,
   pedido: PedidoParaDestinatario,
+  /** Correções gravadas NA NOTA (jsonb), aplicadas por cima do cadastro. */
+  ajuste?: AjusteDoDestinatario | null,
 ): Promise<DestinatarioDaNota> {
   let contato: ContatoFiscal | null = null;
 
@@ -210,5 +265,5 @@ export async function carregarDestinatario(
     }
   }
 
-  return montarDestinatario(pedido, contato);
+  return montarDestinatario(pedido, contato, ajuste);
 }

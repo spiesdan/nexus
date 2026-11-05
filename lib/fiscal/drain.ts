@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { audit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
+import { aplicarAjusteNosItens, type ItemDaNota } from "./ajustes-da-nota";
 import { carregarDestinatario } from "./destinatario-da-nota";
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
@@ -154,7 +155,16 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   // o endereço vem do cadastro quando a nota não trouxe um (notas antigas, ou
   // emissão sem endereço digitado). Emissão que já gravou `entrega` na nota é
   // respeitada: o que foi decidido na hora da emissão não se reescreve.
-  const destinatario = await carregarDestinatario(admin, nota.organization_id, ped);
+  //
+  // O AJUSTE DA NOTA entra aqui: se a nota foi corrigida depois de uma
+  // rejeição (IE do destinatário, endereço), a correção vale para ela — é o
+  // documento que está sendo reenviado, não um cadastro novo.
+  const destinatario = await carregarDestinatario(
+    admin,
+    nota.organization_id,
+    ped,
+    nota.extras_fiscais?.destinatario,
+  );
   const entrega = nota.extras_fiscais?.entrega ?? destinatario.entrega;
   const extras: ExtrasFiscais | null = entrega
     ? { ...(nota.extras_fiscais ?? {}), entrega }
@@ -183,7 +193,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     const { data: itensDb } = await admin
       .from("commercial_order_items")
       .select(
-        "produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
+        "id, produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct, product_id",
       )
       .in("order_id", idsDosPedidos)
       .eq("organization_id", nota.organization_id)
@@ -231,6 +241,31 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .update({ numero: numeroReservado, updated_at: new Date().toISOString() })
       .eq("id", nota.id);
 
+    // O item entra no XML com a correção da nota por cima (NCM/CFOP/unidade/
+    // descrição): a rejeição é do documento, e o ajuste é por item do pedido.
+    const itensDaNota: ItemDaNota[] = (
+      (itensDb ?? []) as unknown as {
+        id: string;
+        produto_codigo: string;
+        produto_nome: string;
+        quantidade: number;
+        preco_unit_cents: number;
+        desconto_pct: number;
+        product_id: string | null;
+      }[]
+    ).map((i) => ({
+      order_item_id: i.id,
+      codigo: i.produto_codigo,
+      descricao: i.produto_nome,
+      ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,
+      cfop: i.product_id ? (fiscais[i.product_id]?.cfop ?? null) : null,
+      unidade: i.product_id ? (fiscais[i.product_id]?.unidade ?? null) : null,
+      quantidade: i.quantidade,
+      preco_cents: i.preco_unit_cents,
+      desconto_pct: Number(i.desconto_pct),
+    }));
+    const itensAjustados = aplicarAjusteNosItens(itensDaNota, nota.extras_fiscais?.itens);
+
     const em = ctx.emitente as unknown as Record<string, string | null>;
     resultado = await emitirViaSpedNfe({
       // Só para montar o caminho do certificado no formato que o sidecar exige
@@ -265,24 +300,15 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         frete_cents: pedidoDaNota.frete_cents,
       },
       extras,
-      itens: (
-        (itensDb ?? []) as unknown as {
-          produto_codigo: string;
-          produto_nome: string;
-          quantidade: number;
-          preco_unit_cents: number;
-          desconto_pct: number;
-          product_id: string | null;
-        }[]
-      ).map((i) => ({
-        codigo: i.produto_codigo,
-        descricao: i.produto_nome,
-        ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,
-        cfop: i.product_id ? (fiscais[i.product_id]?.cfop ?? null) : null,
-        unidade: i.product_id ? (fiscais[i.product_id]?.unidade ?? null) : null,
+      itens: itensAjustados.map((i) => ({
+        codigo: i.codigo,
+        descricao: i.descricao,
+        ncm: i.ncm,
+        cfop: i.cfop,
+        unidade: i.unidade,
         quantidade: i.quantidade,
-        preco_cents: i.preco_unit_cents,
-        desconto_pct: Number(i.desconto_pct),
+        preco_cents: i.preco_cents,
+        desconto_pct: i.desconto_pct,
       })),
     });
   } else {

@@ -485,6 +485,12 @@ export const AUDIT_ACTIONS = [
   "invoice.retry_requested",
   "invoice.emitted",
   "invoice.carta_correcao",
+  /**
+   * A nota rejeitada foi CORRIGIDA antes de voltar para a fila (05/11/2026).
+   * Ação própria porque editar o documento fiscal é diferente de reenviar:
+   * o reenvio é a mesma tentativa; a correção muda o que vai à SEFAZ.
+   */
+  "invoice.adjusted",
   "fiscal.inutilizacao",
   "fiscal.inutilizacao_retransmitida",
   "fiscal.historico_importado",

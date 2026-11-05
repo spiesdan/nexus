@@ -156,6 +156,31 @@ describe("montarPayloadSped", () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.payload.extras).toBeNull();
   });
+
+  it("o ajuste da nota não vaza para o contrato do sidecar", () => {
+    // `destinatario` e `itens` são a correção feita na tela (0295). Eles já
+    // foram aplicados neste payload — o destinatário em `pedido`, os itens na
+    // lista. Mandá-los adiante seria pedir ao emissor que entendesse um campo
+    // que ele não conhece.
+    const r = montarPayloadSped(
+      EMITENTE,
+      "senha",
+      ORG,
+      { ...PEDIDO, documento: "12987654000100" },
+      [ITEM],
+      {
+        destinatario: { ie: "123456789" },
+        itens: [
+          {
+            order_item_id: "11111111-1111-4111-8111-111111111111",
+            ncm: "28289011",
+          },
+        ],
+      },
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.payload.extras).toBeNull();
+  });
 });
 
 describe("extrasFiscaisSchema", () => {
