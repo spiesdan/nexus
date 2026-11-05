@@ -7,6 +7,12 @@
  * entrega do pedido → endereço do contato → nada (nunca chute).
  */
 
+export interface ItemDaParada {
+  codigo: string;
+  nome: string;
+  quantidade: number;
+}
+
 export interface ParadaDaRota {
   /** Chave estável: contact_id ou "avulso:<cliente_nome>". */
   chave: string;
@@ -20,6 +26,8 @@ export interface ParadaDaRota {
   /** nominatim:numero|nominatim:rua|manual — a tela diz quando é aproximado. */
   geo_fonte: string | null;
   pedidos: { shipment_order_id: string; order_id: string; numero: number; total_cents: number; status: string }[];
+  /** O que entregar nesta parada — itens dos pedidos do cliente, somados. */
+  itens: ItemDaParada[];
   total_cents: number;
 }
 
@@ -41,6 +49,7 @@ export interface ItemDaCargaParaParada {
   geo_status: string | null;
   geo_fonte: string | null;
   total_cents: number;
+  itens?: ItemDaParada[];
 }
 
 /**
@@ -73,6 +82,7 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
         geo_status: i.geo_status ?? "pendente",
         geo_fonte: i.geo_fonte ?? null,
         pedidos: [],
+        itens: [],
         total_cents: 0,
         menorSeq: i.sequencia,
       };
@@ -93,6 +103,17 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
       status: i.status,
     });
     p.total_cents += i.total_cents;
+    // Itens da parada: o cliente recebe tudo de uma vez, então o mesmo produto
+    // em dois pedidos vira UMA linha com a soma — igual ao romaneio.
+    for (const item of i.itens ?? []) {
+      const norm = (v: string) => v.trim().toUpperCase().replace(/\s+/g, " ");
+      const chaveItem = item.codigo ? `cod:${norm(item.codigo)}` : `nome:${norm(item.nome)}`;
+      const existente = p.itens.find(
+        (x) => (x.codigo ? `cod:${norm(x.codigo)}` : `nome:${norm(x.nome)}`) === chaveItem,
+      );
+      if (existente) existente.quantidade += item.quantidade;
+      else p.itens.push({ ...item });
+    }
     if (i.sequencia < p.menorSeq) p.menorSeq = i.sequencia;
   }
   return [...mapa.values()]

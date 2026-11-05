@@ -72,6 +72,30 @@ export async function carregarCargaComParadas(
     .select("id, numero, cliente_nome, contact_id, endereco_entrega, total_cents, status")
     .eq("organization_id", orgId)
     .in("id", idsPedidos);
+  // Itens de cada pedido: o motorista precisa saber O QUE entregar, não só
+  // para quem. Uma consulta para todos os pedidos da carga.
+  const { data: itensProdutos } = await supabase
+    .from("commercial_order_items")
+    .select("order_id, produto_codigo, produto_nome, quantidade")
+    .eq("organization_id", orgId)
+    .in("order_id", idsPedidos)
+    .order("posicao");
+  const porPedidoItens = new Map<string, { codigo: string; nome: string; quantidade: number }[]>();
+  for (const it of (itensProdutos ?? []) as unknown as {
+    order_id: string;
+    produto_codigo: string;
+    produto_nome: string;
+    quantidade: number;
+  }[]) {
+    const listaItens = porPedidoItens.get(it.order_id) ?? [];
+    listaItens.push({
+      codigo: it.produto_codigo ?? "",
+      nome: it.produto_nome ?? "",
+      quantidade: Number(it.quantidade ?? 0),
+    });
+    porPedidoItens.set(it.order_id, listaItens);
+  }
+
   const porPedido = new Map(
     ((pedidos ?? []) as unknown as {
       id: string;
@@ -161,6 +185,7 @@ export async function carregarCargaComParadas(
       geo_status: c?.geo_status ?? "pendente",
       geo_fonte: c?.geo_fonte ?? null,
       total_cents: p?.total_cents ?? 0,
+      itens: porPedidoItens.get(i.order_id) ?? [],
     };
   });
 

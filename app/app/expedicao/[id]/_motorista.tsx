@@ -818,7 +818,7 @@ export function ModoMotorista({
               <li
                 key={p.chave}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-2.5",
+                  "flex items-start gap-3 px-4 py-2.5",
                   atual && "bg-accent-soft/60",
                 )}
               >
@@ -844,20 +844,31 @@ export function ModoMotorista({
                     i + 1
                   )}
                 </span>
-                <span
-                  className={cn(
-                    "min-w-0 flex-1 truncate",
-                    feito ? "text-muted-foreground line-through decoration-border" : "text-text",
-                    atual && "font-medium",
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 truncate",
+                        feito ? "text-muted-foreground line-through decoration-border" : "text-text",
+                        atual && "font-medium",
+                      )}
+                    >
+                      {p.cliente}
+                    </span>
+                    {atual && (
+                      <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-semibold tracking-wide text-accent-foreground uppercase">
+                        {t("agora")}
+                      </span>
+                    )}
+                  </div>
+                  {(p.itens?.length ?? 0) > 0 && (
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {(p.itens ?? [])
+                        .map((it) => `${it.quantidade}× ${it.nome}`)
+                        .join(" · ")}
+                    </p>
                   )}
-                >
-                  {p.cliente}
-                </span>
-                {atual && (
-                  <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-semibold tracking-wide text-accent-foreground uppercase">
-                    {t("agora")}
-                  </span>
-                )}
+                </div>
               </li>
             );
           })}
@@ -945,6 +956,24 @@ export function ModoMotorista({
               <p className="mt-1 text-xs font-medium text-accent tabular-nums">
                 {t("a")} {formatarDistancia(distanciaProximaM)}
               </p>
+            )}
+            {(proxima.itens?.length ?? 0) > 0 && (
+              <ul className="mt-2 space-y-0.5">
+                {proxima.itens!.slice(0, 3).map((it, i) => (
+                  <li
+                    key={`${it.codigo}-${i}`}
+                    className="flex items-baseline gap-1.5 text-[13px] text-text"
+                  >
+                    <span className="shrink-0 font-semibold tabular-nums">{it.quantidade}×</span>
+                    <span className="truncate">{it.nome}</span>
+                  </li>
+                ))}
+                {proxima.itens!.length > 3 && (
+                  <li className="text-xs text-muted-foreground">
+                    +{proxima.itens!.length - 3} {t("itens")}
+                  </li>
+                )}
+              </ul>
             )}
           </button>
 
