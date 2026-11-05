@@ -147,11 +147,25 @@ export function InboxFilters({ value, onChange }: Props) {
   }, [searchInput, onChange]);
 
   return (
-    // `.list-top` da referência: 16px de respiro, filete embaixo, grade com
-    // 10px de intervalo — e a ordem da folha: busca primeiro, as abas logo
-    // embaixo dela. Os seletores e o alternador não existem na referência e
-    // ficam depois das abas, que são a âncora visual da coluna.
-    <div className="grid gap-2.5 border-b border-border bg-card px-4 py-4">
+    /*
+     * `.list-top` da referência: 16px de respiro, filete embaixo, grade com
+     * 10px de intervalo — e a ordem da folha: busca primeiro, as abas logo
+     * embaixo dela. Os seletores e o alternador não existem na referência e
+     * ficam depois das abas, que são a âncora visual da coluna.
+     *
+     * `grid-cols-1` NÃO É DECORAÇÃO — é o que impede o filtro de vazar para a
+     * coluna da conversa.
+     *
+     * Sem ele, a grade implícita é uma coluna `auto`, dimensionada pelo
+     * min-content do maior filho (a faixa de abas, 316px) e não pela largura da
+     * coluna da lista (299px em `2xl`, 271px em `xl`). O bloco então desenhava
+     * 17px — 45px em `xl` — para fora do cartão: o interruptor "Apenas não
+     * lidos" nascia FORA do painel, meio escondido sob a coluna vizinha, e o
+     * contador da última aba era cortado. `grid-cols-1` força a trilha
+     * `minmax(0,1fr)`, que encolhe com a coluna; quem transborda por dentro (a
+     * faixa de abas) quebra ou rola, sem arrastar o resto junto.
+     */
+    <div className="grid grid-cols-1 gap-2.5 border-b border-border bg-card px-4 py-4">
       <Input
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
@@ -169,11 +183,13 @@ export function InboxFilters({ value, onChange }: Props) {
             ("Automático" mede ~64px onde a coluna tinha ~44px em 272px de
             largura) e o `justify-center` transbordava para os dois lados: as
             abas vizinhas se sobrepunham. No flex, `min-width:auto` do filho
-            dá piso no tamanho do conteúdo — a faixa encolhe igual até o
-            min-content e, se um dia não couber, o `overflow-x-auto` do
-            primitivo rola a faixa (precedente em components/ui/tabs.tsx) em
-            vez de espremer o texto. */}
-        <TabsList className="flex h-auto w-full max-w-full gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5">
+            dá piso no tamanho do conteúdo. Esse piso é o número que importa:
+            as cinco abas com contador medem 316px, e a coluna da lista oferece
+            267px de conteúdo em `2xl` (239px em `xl`) — não cabem em uma linha
+            em nenhuma das duas faixas. `flex-wrap` quebra em duas linhas e
+            mantém TODOS os rótulos e contadores visíveis; sem ele a última aba
+            transbordava o cartão e o "417" do Automático era cortado. */}
+        <TabsList className="flex h-auto w-full max-w-full flex-wrap gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5">
           {tabs.map((tab) => {
             const meta = INBOX_TABS.find((t) => t.value === tab)!;
             const count = countFor[tab];
@@ -186,9 +202,10 @@ export function InboxFilters({ value, onChange }: Props) {
                 // ativo — `--surface-2` + filete inset de `--line`. O
                 // sublinhado base some porque o `border-transparent` ativo
                 // vence o `border-accent` do primitivo. `px-0.5`/`gap-0.5` em
-                // vez de 4px porque são CINCO abas em 272px de coluna (a
-                // referência tem quatro em 330px) — 6px a menos por aba é o
-                // que fecha a conta sem rolagem no xl.
+                // vez de 4px porque são CINCO abas na coluna (a referência
+                // tem quatro em 330px): o aperto é o suficiente para caber o
+                // máximo de abas por linha, e o `flex-wrap` acima resolve o
+                // resto quebrando a faixa.
                 className="flex-1 gap-0.5 rounded-[7px] px-0.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-muted data-[state=active]:shadow-[inset_0_0_0_1px_var(--color-border)]"
               >
                 {t(meta.label)}
