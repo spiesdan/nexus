@@ -110,7 +110,7 @@ export interface FaixaInutilizar {
  */
 export function desfechoDaInutilizacao(
   retorno: { ok: boolean; cstat: string | null; protocolo: string | null },
-  motivoDaFalha: string | null,
+  motivoSefaz: string | null,
 ): { status: "transmitida" | "erro"; protocolo: string | null; sucesso: boolean; xmotivo: string | null } {
   if (retorno.ok) {
     return { status: "transmitida", protocolo: retorno.protocolo, sucesso: true, xmotivo: null };
@@ -120,10 +120,18 @@ export function desfechoDaInutilizacao(
       status: "transmitida",
       protocolo: retorno.protocolo,
       sucesso: true,
-      xmotivo: `SEFAZ [563]: ${motivoDaFalha ?? "já existe pedido de inutilização"} — faixa já homologada`,
+      // Uma vez só o prefixo: o chamador usa este texto como está.
+      xmotivo: `SEFAZ [563]: ${motivoSefaz ?? "já existe pedido de inutilização"} — faixa já homologada`,
     };
   }
-  return { status: "erro", protocolo: retorno.protocolo, sucesso: false, xmotivo: motivoDaFalha };
+  return {
+    status: "erro",
+    protocolo: retorno.protocolo,
+    sucesso: false,
+    xmotivo: retorno.cstat
+      ? `SEFAZ [${retorno.cstat}]: ${motivoSefaz ?? "sem motivo"}`
+      : (motivoSefaz ?? "Falha sem motivo."),
+  };
 }
 
 /**
@@ -145,7 +153,8 @@ export async function transmitirInutilizacaoRegistrada(
   let sucesso = false;
   if (contexto && !bloqueio) {
     const r = await transmitirInutilizacao(contexto, faixa);
-    const desfecho = desfechoDaInutilizacao(r, motivoDaRecusa(r.cstat, r.xmotivo));
+    // O motivo vai CRU: o desfecho monta o "SEFAZ [cStat]:" uma vez só.
+    const desfecho = desfechoDaInutilizacao(r, r.xmotivo ?? null);
     status = desfecho.status;
     protocolo = desfecho.protocolo;
     sucesso = desfecho.sucesso;

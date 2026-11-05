@@ -37,9 +37,11 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     marginBottom: 5,
   },
-  emitente: { fontSize: 15, fontWeight: "bold", color: "#1e3a5f" },
-  titulo: { fontSize: 13, fontWeight: "bold", color: "#6b7280" },
-  contato: { fontSize: 7.5, color: "#4b5563", textAlign: "right", lineHeight: 1.35 },
+  // O nome do emitente é longo (razão social inteira) e empurrava o título
+  // por cima dele. Ele encolhe/quebra; o título e o contato não.
+  emitente: { fontSize: 13, fontWeight: "bold", color: "#1e3a5f", maxWidth: "48%", flexShrink: 1 },
+  titulo: { fontSize: 12, fontWeight: "bold", color: "#6b7280", flexShrink: 0, marginHorizontal: 8 },
+  contato: { fontSize: 7.5, color: "#4b5563", textAlign: "right", lineHeight: 1.35, maxWidth: "30%" },
   faixa: {
     backgroundColor: "#f3f4f6",
     borderTop: "0.5pt solid #d1d5db",
@@ -90,6 +92,12 @@ const styles = StyleSheet.create({
   celula: { fontSize: 8 },
   celulaForte: { fontSize: 8, fontWeight: "bold" },
   endereco: { fontSize: 7, color: "#6b7280", marginTop: 0.5 },
+  fechamentoPagamento: {
+    marginTop: 7,
+    borderTop: "1pt solid #a11b6a",
+    paddingTop: 3,
+  },
+  linhaPagamento: { fontSize: 8, color: "#111827", marginTop: 1, lineHeight: 1.3 },
   rodapeTotais: {
     flexDirection: "row",
     borderTop: "1pt solid #a11b6a",
@@ -344,6 +352,45 @@ export function agregarProdutosDaCarga(paradas: ParadaDoRomaneio[]): ProdutoDaCa
   );
 }
 
+export interface TotalPorPagamento {
+  /** O rótulo como veio no pedido ("BOLETO 14 DIAS"), ou "Não informado". */
+  rotulo: string;
+  pedidos: number;
+  totalCents: number;
+}
+
+/**
+ * O FECHAMENTO POR MEIO DE PAGAMENTO — o que o motorista confere no fim do dia.
+ *
+ * Agrupa pelo texto normalizado (sem acento, sem caixa, sem espaço duplo):
+ * "BOLETO 14 DIAS" e "Boleto 14 dias" são o mesmo meio, e separá-los faria a
+ * soma não fechar. O rótulo impresso é o primeiro que apareceu — quem digitou
+ * "PIX" continua vendo "PIX", não "PIX " normalizado.
+ *
+ * Pedido sem condição cai em "Não informado" em vez de sumir: a soma dos meios
+ * tem de fechar com o total da carga, inclusive quando o dado falta.
+ */
+export function totaisPorCondicaoDePagamento(paradas: ParadaDoRomaneio[]): TotalPorPagamento[] {
+  const norm = (v: string): string =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  const mapa = new Map<string, TotalPorPagamento>();
+  for (const p of paradas) {
+    const bruto = (p.condicao_pagamento ?? "").trim();
+    const chave = norm(bruto) || "__SEM_PAGAMENTO__";
+    const atual = mapa.get(chave) ?? {
+      rotulo: bruto || "Não informado",
+      pedidos: 0,
+      totalCents: 0,
+    };
+    atual.pedidos += 1;
+    atual.totalCents += p.total_cents;
+    mapa.set(chave, atual);
+  }
+  return [...mapa.values()].sort(
+    (a, b) => b.totalCents - a.totalCents || a.rotulo.localeCompare(b.rotulo, "pt-BR"),
+  );
+}
+
 export function RomaneioPdf({
   emitente,
   carga,
@@ -371,6 +418,7 @@ function ConteudoRomaneio({
   const paradas = ordenarParadasDoRomaneio(carga.paradas);
   const produtos = agregarProdutosDaCarga(paradas);
   const totalCents = paradas.reduce((s, p) => s + p.total_cents, 0);
+  const porPagamento = totaisPorCondicaoDePagamento(paradas);
   const totalItens = produtos.reduce((s, p) => s + p.quantidade, 0);
   const totalPeso = produtos.reduce((s, p) => s + p.pesoKg, 0);
   const temPeso = produtos.some((p) => p.pesoKg > 0);
@@ -387,7 +435,7 @@ function ConteudoRomaneio({
     <View>
       <View style={styles.header}>
         <Text style={styles.emitente}>{emitente.nome}</Text>
-        <Text style={styles.titulo}>Romaneio Carga Nº: {numeroDaCarga(carga.numero)}</Text>
+        <Text style={styles.titulo}>Romaneio · {numeroDaCarga(carga.numero)}</Text>
         <View>
           {linhasContato.map((l, i) => (
             <Text key={`${l}-${i}`} style={styles.contato}>
@@ -438,13 +486,17 @@ function ConteudoRomaneio({
       </View>
 
       <Text style={styles.secao}>Pedidos</Text>
+      {/* "Origem" era a palavra "Pedido" repetida em toda linha e "Id" repetia
+          o número que já vai em "Nº Documento" — duas colunas de largura fixa
+          que só roubavam espaço do cliente (e endereço quebrado é linha a
+          mais). Saíram para caber Valor e Pagamento sem empurrar a carga para
+          uma 3ª página. */}
       <View style={styles.cabecalhoTabela}>
-        <Text style={[styles.celula, { width: "8%" }]}>Origem</Text>
-        <Text style={[styles.celula, { width: "10%" }]}>Id</Text>
         <Text style={[styles.celula, { width: "13%" }]}>Nº Documento</Text>
-        <Text style={[styles.celula, { width: "12%" }]}>Emissão</Text>
+        <Text style={[styles.celula, { width: "11%" }]}>Emissão</Text>
         <Text style={[styles.celula, { flex: 1 }]}>Cliente</Text>
-        <Text style={[styles.celula, { width: "16%" }]}>Cond. Pagto</Text>
+        <Text style={[styles.celula, { width: "15%" }]}>Pagamento</Text>
+        <Text style={[styles.celula, { width: "12%", textAlign: "right" }]}>Valor</Text>
       </View>
       {paradas.map((p, i) => (
         <View
@@ -452,10 +504,8 @@ function ConteudoRomaneio({
           style={[styles.linhaTabela, i % 2 === 1 ? styles.linhaAlternada : {}]}
           wrap={false}
         >
-          <Text style={[styles.celula, { width: "8%" }]}>Pedido</Text>
-          <Text style={[styles.celula, { width: "10%" }]}>{p.numero}</Text>
           <Text style={[styles.celula, { width: "13%" }]}>{numeroDoPedido(p.numero)}</Text>
-          <Text style={[styles.celula, { width: "12%" }]}>{dataCurta(p.emissao)}</Text>
+          <Text style={[styles.celula, { width: "11%" }]}>{dataCurta(p.emissao)}</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.celulaForte}>{p.cliente_nome}</Text>
             {p.endereco_entrega ? (
@@ -466,7 +516,10 @@ function ConteudoRomaneio({
               </Text>
             )}
           </View>
-          <Text style={[styles.celula, { width: "16%" }]}>{p.condicao_pagamento || "—"}</Text>
+          <Text style={[styles.celula, { width: "15%" }]}>{p.condicao_pagamento || "—"}</Text>
+          <Text style={[styles.celulaForte, { width: "12%", textAlign: "right" }]}>
+            {moeda(p.total_cents)}
+          </Text>
         </View>
       ))}
 
@@ -502,6 +555,20 @@ function ConteudoRomaneio({
           )}
         </View>
       ))}
+
+      {/* Fechamento por meio de pagamento — uma linha compacta, não uma
+          tabela: o papel do motorista é a lista do que carregar, e a soma por
+          meio de pagamento tem de ca;ber sem empurrar a carga para uma 3ª
+          página (o gate de 2 páginas existe). A soma fecha com o Valor Total
+          do rodapé. */}
+      <View style={styles.fechamentoPagamento}>
+        <Text style={styles.totalRotulo}>Por meio de pagamento</Text>
+        <Text style={styles.linhaPagamento}>
+          {porPagamento
+            .map((t) => `${t.rotulo}: R$ ${moeda(t.totalCents)} (${t.pedidos})`)
+            .join("   ·   ")}
+        </Text>
+      </View>
 
       <View style={styles.rodapeTotais}>
         <View style={styles.totalBloco}>
