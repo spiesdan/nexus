@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { aplicarAjusteNosItens, type ItemDaNota } from "./ajustes-da-nota";
 import { carregarDestinatario } from "./destinatario-da-nota";
+import { anoDaNumeracao, inutilizarNumeroQueimado, podeInutilizar } from "./inutilizacao-automatica";
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
 import { devolverNumeroDaNota, falhouAntesDaSefaz, reservarNumeroDaNota } from "./numeracao";
@@ -71,7 +72,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   const { data: notaDb } = await admin
     .from("invoices")
-    .select("id, organization_id, order_id, serie, status, provedor, numero, extras_fiscais")
+    .select("id, organization_id, order_id, serie, status, provedor, numero, created_at, extras_fiscais")
     .eq("id", job.invoice_id)
     .maybeSingle();
   const nota = notaDb as unknown as {
@@ -81,6 +82,8 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     serie: string;
     status: string;
     provedor: string;
+    numero: number | null;
+    created_at: string;
     extras_fiscais: ExtrasFiscais | null;
   } | null;
   // Nota saiu de em_emissao no meio do caminho (cancelada pelo usuário):
@@ -401,7 +404,13 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 async function finalizar(
   admin: SupabaseClient,
   job: JobFiscal,
-  nota: { id: string; organization_id: string },
+  nota: {
+    id: string;
+    organization_id: string;
+    serie: string;
+    numero: number | null;
+    created_at: string;
+  },
   status: "autorizada" | "denegada" | "erro" | "cancelada",
   mensagem: string | null,
   resultado: ResultadoDeEmissao | null,
@@ -481,6 +490,30 @@ async function finalizar(
       action: "invoice.emitted",
       resourceType: "invoices",
       resourceId: nota.id,
+    });
+  }
+
+  // ─── O NÚMERO QUEIMADO VIRA INUTILIZAÇÃO ────────────────────────────────
+  //
+  // A reserva acontece ANTES da transmissão (é o que impede duas notas com o
+  // mesmo `nNF`). Quando a SEFAZ REJEITA, o número não pertence mais a nota
+  // nenhuma: a próxima tentativa pega outro. Medido em 05/11/2026, quatro
+  // números (4580/4581/4583/4587) ficaram como buraco na série — obrigação
+  // acessória que não se resolve sozinha.
+  //
+  // Só para recusa DEFINITIVA (`podeInutilizar`): timeout e lote em
+  // processamento podem ter virado nota, e inutilizar seria declarar morto um
+  // número vivo. Falhar aqui não desfaz nada — a inutilização fica
+  // `registrada` e o botão de lacunas recolhe o que sobrar.
+  const numeroQueimado = resultado?.numero ?? nota.numero;
+  if (status === "erro" && numeroQueimado != null && podeInutilizar(resultado)) {
+    await inutilizarNumeroQueimado(admin, nota.organization_id, {
+      serie: nota.serie,
+      numero: numeroQueimado,
+      cstat: resultado?.sefaz_cstat ?? null,
+      notaNumero: nota.numero ?? numeroQueimado,
+      invoiceId: nota.id,
+      anoDaNota: anoDaNumeracao(nota.created_at),
     });
   }
 }
