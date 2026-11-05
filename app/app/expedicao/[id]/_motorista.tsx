@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -27,8 +28,23 @@ import {
 } from "@/lib/entregas/outbox";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
-import { MOTIVOS_DEVOLUCAO, ROTULO_MOTIVO_DEVOLUCAO, type MotivoDevolucao } from "@/lib/schemas/expedicao";
-import { CaretRight, Check, Clock, Crosshair, MapPin, NavigationArrow } from "@/lib/ui/icons";
+import {
+  MOTIVOS_DEVOLUCAO,
+  numeroDaCarga,
+  ROTULO_DA_CARGA,
+  ROTULO_MOTIVO_DEVOLUCAO,
+  type Carga,
+  type MotivoDevolucao,
+} from "@/lib/schemas/expedicao";
+import {
+  CaretRight,
+  Check,
+  Clock,
+  Crosshair,
+  MapPin,
+  NavigationArrow,
+  Truck,
+} from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
@@ -69,6 +85,7 @@ export function ModoMotorista({
   aoMudar: () => void;
 }) {
   const t = useT();
+  const router = useRouter();
   const [rota, setRota] = React.useState<RotaCarregada | null>(null);
   const [versaoVista, setVersaoVista] = React.useState<number | null>(null);
   const [rastreando, setRastreando] = React.useState(false);
@@ -78,6 +95,9 @@ export function ModoMotorista({
   const [sincronizando, setSincronizando] = React.useState(false);
   // Folha da cabine: fechada mostra a próxima entrega; aberta, o roteiro.
   const [folhaAberta, setFolhaAberta] = React.useState(false);
+  /** "Trocar carga": pular de romaneio sem voltar para a home. */
+  const [trocandoCarga, setTrocandoCarga] = React.useState(false);
+  const [cargasLiberadas, setCargasLiberadas] = React.useState<Carga[] | null>(null);
   // Última posição do GPS — o "você está aqui" do mapa, como num app de mapas.
   const [minhaPosicao, setMinhaPosicao] = React.useState<{ lat: number; lng: number } | null>(null);
   /** Rota da navegação até a próxima parada (desenhada em azul no mapa). */
@@ -302,6 +322,51 @@ export function ModoMotorista({
     window.addEventListener("online", aoVoltar);
     return () => window.removeEventListener("online", aoVoltar);
   }, [sincronizar]);
+
+  // ─── RASTREIO LIGADO POR PADRÃO NA CABINE ────────────────────────────────
+  //
+  // O escritório precisa ver onde a carga está, e exigir que o motorista ache
+  // o botão "Ligar rastreio" dentro da folha deixava a rota sem posição na
+  // maior parte do dia. Na cabine (login do entregador), carga em rota começa
+  // PUBLICANDO sozinha — e o botão continua ali para ele desligar. É decisão do
+  // dono da instalação (05/11/2026); o §32 continua valendo no painel, onde o
+  // rastreio segue opt-in.
+  React.useEffect(() => {
+    if (!imersivo) return;
+    if (rota?.carga.status !== "em_rota") return;
+    refPublicando.current = true;
+    setRastreando(true);
+    setSeguir(true);
+  }, [imersivo, rota?.carga.status]);
+
+  // ─── TROCAR CARGA ────────────────────────────────────────────────────────
+  //
+  // A cabine é a tela que fica aberta o dia inteiro. Sem esta lista, trocar de
+  // romaneio exigia voltar para a home, achar a carga e entrar de novo — e o
+  // motorista que leva duas cargas no mesmo turno ficava preso na primeira.
+  // Lista as mesmas cargas que a home libera: `em_rota` + `montando`.
+  React.useEffect(() => {
+    if (!trocandoCarga) return;
+    let vivo = true;
+    void (async () => {
+      try {
+        const corpo = await apiClient.get<{ data: Carga[] }>("/api/v1/shipments");
+        if (!vivo) return;
+        setCargasLiberadas(
+          corpo.data
+            .filter((c) => c.status === "em_rota" || c.status === "montando")
+            .sort((a, b) => b.numero - a.numero),
+        );
+      } catch (e) {
+        if (!vivo) return;
+        setCargasLiberadas([]);
+        showApiError(e);
+      }
+    })();
+    return () => {
+      vivo = false;
+    };
+  }, [trocandoCarga]);
 
   if (!rota) return <p className="text-sm text-muted-foreground">{t("Carregando rota…")}</p>;
 
@@ -1252,7 +1317,7 @@ export function ModoMotorista({
       {/* A faixa da navegação: o motorista vê para onde está indo e quanto
           falta, sem sair do app. "Encerrar" volta ao mapa da rota inteira. */}
       {navegacao && (
-        <div className="absolute top-14 left-3 z-20 max-w-[70%]">
+        <div className="absolute top-28 left-3 z-20 max-w-[70%]">
           <div className="flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1.5 text-white shadow-lg">
             <span className="text-xs font-semibold tabular-nums">
               {formatarDistancia(navegacao.distancia_m)}
@@ -1270,6 +1335,22 @@ export function ModoMotorista({
           </div>
         </div>
       )}
+
+      {/* "Trocar carga": abre a lista de romaneios liberados sem sair da
+          cabine. O motorista que leva duas cargas no dia pula de uma para a
+          outra sem voltar para a home. */}
+      <button
+        type="button"
+        onClick={() => {
+          setCargasLiberadas(null);
+          setTrocandoCarga(true);
+        }}
+        aria-label={t("Trocar carga")}
+        title={t("Trocar carga")}
+        className="absolute top-16 left-3 z-20 grid h-11 w-11 place-items-center rounded-full border border-border/60 bg-background/90 text-text shadow-lg backdrop-blur transition active:scale-95"
+      >
+        <Truck size={19} aria-hidden />
+      </button>
 
       {/* O "onde estou" — botão redondo no canto, o gesto de todo app de mapa.
           `aria-pressed` porque ele ALTERNA o modo de seguir, não só centraliza
@@ -1291,6 +1372,64 @@ export function ModoMotorista({
 
       {/* A folha. `max-h` deixa o mapa respirar em cima; o conteúdo rola. */}
       {dialogoDaParada}
+
+      {/* Trocar de romaneio sem sair da cabine. */}
+      <Dialog open={trocandoCarga} onOpenChange={setTrocandoCarga}>
+        <DialogContent className="max-h-[80dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("Trocar carga")}</DialogTitle>
+            <DialogDescription>
+              {t("Escolha o romaneio que você está entregando agora.")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {cargasLiberadas === null ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {t("Carregando cargas…")}
+            </p>
+          ) : cargasLiberadas.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {t("Nenhuma outra carga liberada agora.")}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {cargasLiberadas.map((c) => {
+                const atual = c.id === cargaId;
+                const tripulacao = [c.placa, c.motorista_nome].filter(Boolean).join(" · ");
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      disabled={atual}
+                      onClick={() => {
+                        setTrocandoCarga(false);
+                        router.push(`/app/expedicao/${c.id}/motorista`);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition active:scale-[0.99] ${
+                        atual
+                          ? "border-accent-300 bg-accent-soft/60"
+                          : "border-border bg-surface hover:bg-muted/40"
+                      }`}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-text">
+                          {numeroDaCarga(c.numero)}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                          {tripulacao || t("Sem veículo ou motorista definido")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                        {atual ? t("Atual") : (ROTULO_DA_CARGA[c.status] ?? c.status)}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="absolute inset-x-0 bottom-0 z-20">
         <div
