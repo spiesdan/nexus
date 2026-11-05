@@ -23,7 +23,7 @@ export interface ParadaDaRota {
   latitude: number | null;
   longitude: number | null;
   geo_status: string;
-  /** nominatim:numero|nominatim:rua|manual — a tela diz quando é aproximado. */
+  /** nominatim:numero|nominatim:rua|nominatim:cidade|manual — a tela diz quando é aproximado. */
   geo_fonte: string | null;
   pedidos: { shipment_order_id: string; order_id: string; numero: number; total_cents: number; status: string }[];
   /** O que entregar nesta parada — itens dos pedidos do cliente, somados. */

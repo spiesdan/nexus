@@ -86,6 +86,19 @@ const ROTULO_GEO: Record<string, string> = {
 };
 
 /**
+ * O QUE O PINO VALE — a tela não pode chamar de exato o que é aproximado.
+ *
+ * `nominatim:rua` o OSM achou a rua mas não o número; `nominatim:cidade` a
+ * rua não existe no OSM e o pino caiu no município (CEP/bairro). O segundo
+ * acontece em endereço rural, onde o motorista precisa saber que ainda tem
+ * que localizar a porteira — por isso o rótulo é explícito.
+ */
+const APROXIMADO_POR_FONTE: Record<string, string> = {
+  "nominatim:rua": "(rua aproximada)",
+  "nominatim:cidade": "(aproximado — cidade)",
+};
+
+/**
  * ROTEIRIZADOR — a central de planejamento da carga.
  *
  * Paradas vêm da carga (agrupadas por cliente no backend), geocodificação no
@@ -890,8 +903,8 @@ export function Roteirizador({
                     >
                       <MapPin className="h-3 w-3 shrink-0" aria-hidden />
                       {ROTULO_GEO[p.geo_status] ?? p.geo_status}
-                      {p.geo_status === "ok" && p.geo_fonte === "nominatim:rua"
-                        ? ` ${t("(rua aproximada)")}`
+                      {p.geo_status === "ok" && APROXIMADO_POR_FONTE[p.geo_fonte ?? ""]
+                        ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
                         : ""}
                     </span>
                     {podeOperar && p.contact_id && p.geo_status !== "ok" && (

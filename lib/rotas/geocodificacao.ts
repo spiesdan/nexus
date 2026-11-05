@@ -4,8 +4,9 @@
  * O mapa antigo geocodificava no NAVEGADOR, 1 req/s por endereço, a cada
  * abertura. Agora o servidor resolve (mesma fila de 1,1s entre chamadas,
  * User-Agent honesto, `countrycodes=br`) e grava em `contacts` — a segunda
- * abertura não reconsulta nada. Sem localização, a parada vai para a lista
- * de "sem mapa", nunca para um ponto inventado.
+ * abertura não reconsulta nada. Quando a rua não existe no OSM, o último
+ * recurso é o CEP/município, gravado como APROXIMADO (`precisao: "cidade"`);
+ * sem nem isso, a parada vai para "sem mapa", nunca para um ponto inventado.
  */
 
 export type EstadoGeo = "ok" | "nao_encontrado" | "ambiguo" | "erro";
@@ -26,6 +27,13 @@ export interface PartesEndereco {
   bairro?: string | null;
   cidade?: string | null;
   uf?: string | null;
+  /**
+   * CEP — o último recurso antes de desistir. Endereço rural ("Lageadinho a
+   * 100 mts da BR") e rua que o OSM do interior não tem não casam por nome,
+   * mas o CEP sempre resolve para o município. O pino sai marcado como
+   * aproximado (precisão "cidade"), nunca como se fosse a porta.
+   */
+  cep?: string | null;
 }
 
 /** "268 sala03" → "268"; "SN"/"S/N"/"KM 258" → null (não é número de porta). */
@@ -34,6 +42,12 @@ export function normalizarNumero(valor: string | null | undefined): string | nul
   if (v === "" || v === "SN" || v === "S/N" || /^KM\b/.test(v)) return null;
   const m = v.match(/\d+/);
   return m ? m[0] : null;
+}
+
+/** "89520000" → "89520-000". CEP torto (menos de 8 dígitos) vira null. */
+export function formatarCep(cep: string | null | undefined): string | null {
+  const digitos = (cep ?? "").replace(/\D/g, "");
+  return digitos.length === 8 ? `${digitos.slice(0, 5)}-${digitos.slice(5)}` : null;
 }
 
 const ABREVIACOES: [RegExp, string][] = [
@@ -178,6 +192,23 @@ export function semTipoVial(rua: string): string {
 
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 
+/**
+ * Os `addresstype` que são um LUGAR, não um imóvel: CEP, município, bairro.
+ * Servem de ponto aproximado quando a rua não está no OSM.
+ */
+const LUGARES_APROXIMADOS = new Set([
+  "postcode",
+  "city",
+  "town",
+  "village",
+  "municipality",
+  "administrative",
+  "suburb",
+  "neighbourhood",
+  "quarter",
+  "hamlet",
+]);
+
 // Ritmo justo da instância pública: serializa as chamadas do processo com
 // 1,1s entre elas. Sem isso, rajada de carga com 20 paradas = bloqueio.
 let ultimaChamada = 0;
@@ -229,10 +260,39 @@ export function parseLinhaEndereco(linha: string): PartesEndereco {
 }
 
 /**
+ * AS CONSULTAS DE EMERGÊNCIA — quando a rua não existe no OSM.
+ *
+ * Medido em 2026-11-05 na carga 027: quatro paradas ficaram sem pino porque
+ * a rua do cadastro não está mapeada ("AURELIANO GONÇALVES LINS" em Ponte
+ * Alta do Norte, "ESTRADA GERAL DE ALTO CANOINHAS", "LAGEADINHO A 100 MTS DA
+ * BR") e uma nem rua tinha. O CEP, porém, resolve sempre para o município.
+ *
+ * O ponto que sai daqui é APROXIMADO e é gravado como tal (`precisao:
+ * "cidade"`, `geo_fonte: nominatim:cidade`): a tela diz "aproximado" e o
+ * motorista pode arrastar o pino. Melhor um pino honesto no município do que
+ * a parada sumir do mapa — e nunca um pino no lugar errado fingindo exatidão.
+ */
+export function consultasDeEmergencia(p: PartesEndereco): string[] {
+  const cidade = (p.cidade ?? "").trim().replace(/\s+/g, " ");
+  const uf = (p.uf ?? "").trim().toUpperCase();
+  const cep = formatarCep(p.cep);
+  const saida: string[] = [];
+  if (cep) saida.push(`${cep}, Brasil`);
+  if (cidade) saida.push([cidade, uf, cep, "Brasil"].filter(Boolean).join(", "));
+  if (cidade) saida.push([cidade, uf, "Brasil"].filter(Boolean).join(", "));
+  return [...new Set(saida)];
+}
+
+/**
  * Geocodifica com a cadeia de fallback: tenta cada consulta em ordem e fica
  * com o primeiro "ok" — com número exato ganhando da rua aproximada. O
  * "não localizado" final significa OSM sem a rua mesmo (medido: interior),
  * não consulta malformada — aí o caminho é marcar no mapa.
+ *
+ * Resultado de precisão "cidade" NÃO encerra a cadeia: uma consulta de rua
+ * que só devolve o município é sinal de que a rua não foi encontrada, não de
+ * que achamos o imóvel. O ponto de cidade só é aceito nas consultas de
+ * emergência (CEP/município), depois de esgotada a rua.
  */
 export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: string | null): Promise<ResultadoGeo> {
   let cadeia = montarConsultas(p);
@@ -243,15 +303,77 @@ export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: s
   // Último suspiro: a linha crua (o Nominatim às vezes entende o que a
   // normalização desmontou).
   const crua = linhaPedido?.trim() ? [`${linhaPedido.trim()}, Brasil`] : [];
+  const emergencia = consultasDeEmergencia(p);
   let viuErro = false;
   for (const consulta of [...cadeia, ...crua]) {
     const r = await buscar(consulta);
+    if (r.estado === "ok" && r.precisao !== "cidade") return r;
+    if (r.estado === "erro") viuErro = true;
+    // nao_encontrado/ambiguo/cidade: próxima fase (mais solta) pode resolver.
+  }
+  for (const consulta of emergencia) {
+    const r = await buscar(consulta);
     if (r.estado === "ok") return r;
     if (r.estado === "erro") viuErro = true;
-    // nao_encontrado/ambiguo: próxima fase (mais solta) pode resolver.
   }
-  if (cadeia.length === 0 && crua.length === 0) return { estado: "erro", latitude: null, longitude: null, precisao: null };
+  if (cadeia.length + crua.length + emergencia.length === 0) {
+    return { estado: "erro", latitude: null, longitude: null, precisao: null };
+  }
   return { estado: viuErro ? "erro" : "nao_encontrado", latitude: null, longitude: null, precisao: null };
+}
+
+export interface CandidatoNominatim {
+  lat?: string;
+  lon?: string;
+  addresstype?: string;
+  address?: {
+    road?: string;
+    house_number?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    suburb?: string;
+    municipality?: string;
+    postcode?: string;
+  };
+}
+
+/**
+ * A CLASSIFICAÇÃO DO PRIMEIRO RESULTADO — o que o ponto vale.
+ *
+ * Exportada porque é a parte que decide entre exato, rua e município, e tem
+ * de ser provada sem depender da rede (o Nominatim não se dubla em CI).
+ */
+export function classificarResultado(j: CandidatoNominatim[] | null | undefined): ResultadoGeo {
+  if (!j || j.length === 0) return { estado: "nao_encontrado", latitude: null, longitude: null, precisao: null };
+  const primeiro = j[0]!;
+  const lat = Number(primeiro.lat);
+  const lng = Number(primeiro.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return { estado: "erro", latitude: null, longitude: null, precisao: null };
+  }
+  // Número certo: o OSM conhece o imóvel (housenumber ou addresstype).
+  if (primeiro.address?.house_number || primeiro.addresstype === "house" || primeiro.addresstype === "building") {
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "numero" };
+  }
+  // Rua aproximada: todos os candidatos são a mesma rua na mesma cidade
+  // (o OSM do interior raramente tem número — o trecho basta para a rota,
+  // e a tela diz que é aproximado em vez de fingir exatidão).
+  const rua = (primeiro.address?.road ?? "").toLowerCase();
+  const cidadeRes = (primeiro.address?.city ?? primeiro.address?.town ?? primeiro.address?.village ?? "").toLowerCase();
+  const mesmaRua = rua !== "" && j.every((c) => (c.address?.road ?? "").toLowerCase() === rua);
+  const mesmaCidade =
+    cidadeRes === "" || j.every((c) => (c.address?.city ?? c.address?.town ?? c.address?.village ?? "").toLowerCase() === cidadeRes);
+  if (mesmaRua && mesmaCidade) {
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "rua" };
+  }
+  // Lugar (CEP, município, bairro): não é a rua, mas é um ponto honesto do
+  // território. Quem chama decide se aceita — a cadeia de rua ignora e
+  // segue; só as consultas de emergência param aqui.
+  if (LUGARES_APROXIMADOS.has(primeiro.addresstype ?? "")) {
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "cidade" };
+  }
+  return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
 }
 
 async function buscar(consulta: string): Promise<ResultadoGeo> {
@@ -264,35 +386,7 @@ async function buscar(consulta: string): Promise<ResultadoGeo> {
       { headers: { "User-Agent": ua(), Accept: "application/json" }, signal: controle.signal },
     );
     if (!res.ok) return { estado: "erro", latitude: null, longitude: null, precisao: null };
-    const j = (await res.json()) as {
-      lat?: string;
-      lon?: string;
-      addresstype?: string;
-      address?: { road?: string; house_number?: string; city?: string; town?: string; village?: string };
-    }[];
-    if (!j || j.length === 0) return { estado: "nao_encontrado", latitude: null, longitude: null, precisao: null };
-    const primeiro = j[0]!;
-    const lat = Number(primeiro.lat);
-    const lng = Number(primeiro.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return { estado: "erro", latitude: null, longitude: null, precisao: null };
-    }
-    // Número certo: o OSM conhece o imóvel (housenumber ou addresstype).
-    if (primeiro.address?.house_number || primeiro.addresstype === "house" || primeiro.addresstype === "building") {
-      return { estado: "ok", latitude: lat, longitude: lng, precisao: "numero" };
-    }
-    // Rua aproximada: todos os candidatos são a mesma rua na mesma cidade
-    // (o OSM do interior raramente tem número — o trecho basta para a rota,
-    // e a tela diz que é aproximado em vez de fingir exatidão).
-    const rua = (primeiro.address?.road ?? "").toLowerCase();
-    const cidadeRes = (primeiro.address?.city ?? primeiro.address?.town ?? primeiro.address?.village ?? "").toLowerCase();
-    const mesmaRua = rua !== "" && j.every((c) => (c.address?.road ?? "").toLowerCase() === rua);
-    const mesmaCidade =
-      cidadeRes === "" || j.every((c) => (c.address?.city ?? c.address?.town ?? c.address?.village ?? "").toLowerCase() === cidadeRes);
-    if (mesmaRua && mesmaCidade) {
-      return { estado: "ok", latitude: lat, longitude: lng, precisao: "rua" };
-    }
-    return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
+    return classificarResultado((await res.json()) as CandidatoNominatim[]);
   } catch {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
   } finally {

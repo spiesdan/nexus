@@ -61,6 +61,24 @@ describe("enderecoDaEntrega", () => {
     expect(linha).toBe("Rua das Flores, 10 — Sala 2 — Centro, Mafra/SC, 89300000");
   });
 
+  it("snapshot importado sem rua perde para o cadastro completo", () => {
+    // Caso medido na carga 027: 658 pedidos têm snapshot começando com
+    // vírgula porque o cadastro estava sem logradouro no faturamento.
+    const linha = enderecoDaEntrega(
+      { endereco_entrega: ", 679 — INDUSTRIAL, Ponte Alta do Norte/SC, 89535000", contact_id: "c1" },
+      mapa([contato]),
+    );
+    expect(linha).toBe("Rua das Flores, 10 — Sala 2 — Centro, Mafra/SC, 89300000");
+  });
+
+  it("referência sem número (KM) continua valendo como escolha do operador", () => {
+    const linha = enderecoDaEntrega(
+      { endereco_entrega: "KM 89 — ZONA RURAL, Monte Castelo/SC", contact_id: "c1" },
+      mapa([contato]),
+    );
+    expect(linha).toBe("KM 89 — ZONA RURAL, Monte Castelo/SC");
+  });
+
   it("importado sem vínculo: acha o contato pelo CNPJ do pedido", () => {
     const linha = enderecoDaEntrega(
       { endereco_entrega: "", contact_id: null, cliente_documento: CNPJ },

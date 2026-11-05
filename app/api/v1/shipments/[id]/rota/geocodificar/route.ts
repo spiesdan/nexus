@@ -83,6 +83,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         bairro: s("bairro"),
         cidade: s("cidade"),
         uf: s("uf"),
+        cep: s("cep"),
       },
       alvo.endereco as string,
     );

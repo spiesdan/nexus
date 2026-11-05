@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  classificarResultado,
+  consultasDeEmergencia,
   expandirAbreviacoes,
+  formatarCep,
   limparComplemento,
   montarConsultas,
   normalizarNumero,
@@ -133,5 +136,84 @@ describe("normalização da consulta", () => {
       cidade: null,
       uf: null,
     });
+  });
+});
+
+describe("ponto de emergência (CEP/município)", () => {
+  it("formata CEP de 8 dígitos e recusa o resto", () => {
+    expect(formatarCep("89520000")).toBe("89520-000");
+    expect(formatarCep("89520-000")).toBe("89520-000");
+    expect(formatarCep(" 89380 000 ")).toBe("89380-000");
+    expect(formatarCep("8952000")).toBeNull();
+    expect(formatarCep("")).toBeNull();
+    expect(formatarCep(null)).toBeNull();
+  });
+
+  it("tenta CEP, CEP+cidade e cidade — do mais estreito ao mais largo", () => {
+    // O caso do MATERPLAN (carga 027): a estrada rural não existe no OSM.
+    expect(consultasDeEmergencia({ cidade: "Monte Castelo", uf: "sc", cep: "89380000" })).toEqual([
+      "89380-000, Brasil",
+      "Monte Castelo, SC, 89380-000, Brasil",
+      "Monte Castelo, SC, Brasil",
+    ]);
+  });
+
+  it("sem CEP sobra o município; sem nada não inventa consulta", () => {
+    expect(consultasDeEmergencia({ cidade: "Curitibanos", uf: "SC" })).toEqual([
+      "Curitibanos, SC, Brasil",
+    ]);
+    expect(consultasDeEmergencia({ cidade: null, uf: "SC", cep: "89520000" })).toEqual([
+      "89520-000, Brasil",
+    ]);
+    expect(consultasDeEmergencia({})).toEqual([]);
+  });
+});
+
+describe("classificarResultado", () => {
+  it("imóvel com número é precisão de número", () => {
+    expect(
+      classificarResultado([
+        { lat: "-27.1", lon: "-50.2", addresstype: "house", address: { house_number: "10", road: "Rua X" } },
+      ]),
+    ).toMatchObject({ estado: "ok", precisao: "numero" });
+  });
+
+  it("a mesma rua em todos os candidatos é rua aproximada", () => {
+    expect(
+      classificarResultado([
+        { lat: "-27.1", lon: "-50.2", address: { road: "Rua X", city: "Mafra" } },
+        { lat: "-27.2", lon: "-50.3", address: { road: "Rua X", city: "Mafra" } },
+      ]),
+    ).toMatchObject({ estado: "ok", precisao: "rua" });
+  });
+
+  it("CEP é lugar, não rua: precisão de cidade", () => {
+    expect(
+      classificarResultado([
+        { lat: "-26.46", lon: "-50.22", addresstype: "postcode", address: { postcode: "89380-000" } },
+      ]),
+    ).toMatchObject({ estado: "ok", precisao: "cidade" });
+  });
+
+  it("bairro também é ponto aproximado de cidade", () => {
+    expect(
+      classificarResultado([
+        { lat: "-27.3", lon: "-50.57", addresstype: "suburb", address: { suburb: "Água Santa" } },
+      ]),
+    ).toMatchObject({ estado: "ok", precisao: "cidade" });
+  });
+
+  it("ruas diferentes na mesma consulta é ambíguo — não escolhe no chute", () => {
+    expect(
+      classificarResultado([
+        { lat: "-27.1", lon: "-50.2", address: { road: "Rua X", city: "Mafra" } },
+        { lat: "-27.2", lon: "-50.3", address: { road: "Rua Y", city: "Mafra" } },
+      ]),
+    ).toMatchObject({ estado: "ambiguo", latitude: null, longitude: null });
+  });
+
+  it("lista vazia é não encontrado", () => {
+    expect(classificarResultado([])).toMatchObject({ estado: "nao_encontrado" });
+    expect(classificarResultado(null)).toMatchObject({ estado: "nao_encontrado" });
   });
 });
