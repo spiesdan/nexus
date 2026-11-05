@@ -8,6 +8,13 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import {
@@ -25,7 +32,7 @@ import { CaretRight, Check, Clock, Crosshair, MapPin, NavigationArrow } from "@/
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
-import type { PropostaRota, RotaCarregada } from "./_roteirizador";
+import type { ParadaRotaApi, PropostaRota, RotaCarregada } from "./_roteirizador";
 
 function posicaoAtual(timeoutMs = 10000): Promise<GeolocationPosition> {
   return new Promise((ok, falha) => {
@@ -76,6 +83,8 @@ export function ModoMotorista({
   /** Rota da navegação até a próxima parada (desenhada em azul no mapa). */
   const [navegacao, setNavegacao] = React.useState<{ geometria: number[][]; distancia_m: number; duracao_s: number } | null>(null);
   const [calculandoRota, setCalculandoRota] = React.useState(false);
+  /** Parada aberta no detalhe (qualquer uma do roteiro, não só a próxima). */
+  const [paradaAberta, setParadaAberta] = React.useState<string | null>(null);
   // "Seguindo você": o mapa acompanha o GPS a cada ping. Desligado quando o
   // dedo arrasta o mapa — ver `aoArrastar` em `MapaRota`.
   const [seguir, setSeguir] = React.useState(false);
@@ -396,8 +405,8 @@ export function ModoMotorista({
    * Sem coordenada na parada não há rota por ruas — aí a tela diz o motivo, em
    * vez de abrir outro aplicativo por baixo.
    */
-  async function navegar() {
-    if (!proxima || proxima.latitude == null || proxima.longitude == null) {
+  async function navegar(para: ParadaRotaApi | null = proxima) {
+    if (!para || para.latitude == null || para.longitude == null) {
       toast.error(t("Esta parada não tem coordenada no mapa."));
       return;
     }
@@ -416,7 +425,7 @@ export function ModoMotorista({
     try {
       const corpo = await apiClient.get<{
         data: { geometria: number[][]; distancia_m: number; duracao_s: number };
-      }>(`/api/v1/rotas?de=${de.lat},${de.lng}&para=${proxima.latitude},${proxima.longitude}`);
+      }>(`/api/v1/rotas?de=${de.lat},${de.lng}&para=${para.latitude},${para.longitude}`);
       setNavegacao(corpo.data);
       setSeguir(true);
       toast.success(t("Rota calculada — siga a linha azul."));
@@ -817,64 +826,219 @@ export function ModoMotorista({
             return (
               <li
                 key={p.chave}
-                className={cn(
-                  "flex items-start gap-3 px-4 py-2.5",
-                  atual && "bg-accent-soft/60",
-                )}
+                className={cn(atual && "bg-accent-soft/60")}
               >
-                <span
-                  className={cn(
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
-                    feito
-                      ? "bg-success-bg text-success-fg"
-                      : temPendente
-                        ? "bg-warning-bg text-warning-fg"
-                        : atual
-                          ? "bg-accent text-accent-foreground"
-                          : "bg-muted text-muted-foreground",
-                  )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setParadaAberta(p.chave);
+                    setFolhaAberta(false);
+                  }}
+                  className="flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors active:bg-muted/50"
+                  aria-label={`${t("Abrir detalhes de")} ${p.cliente}`}
                 >
-                  {feito ? (
-                    <Check className="h-3.5 w-3.5" aria-hidden />
-                  ) : temPendente ? (
-                    <Clock className="h-3.5 w-3.5" aria-hidden />
-                  ) : atual ? (
-                    <CaretRight className="h-3.5 w-3.5" aria-hidden />
-                  ) : (
-                    i + 1
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        "min-w-0 flex-1 truncate",
-                        feito ? "text-muted-foreground line-through decoration-border" : "text-text",
-                        atual && "font-medium",
-                      )}
-                    >
-                      {p.cliente}
-                    </span>
-                    {atual && (
-                      <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-semibold tracking-wide text-accent-foreground uppercase">
-                        {t("agora")}
+                  <span
+                    className={cn(
+                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
+                      feito
+                        ? "bg-success-bg text-success-fg"
+                        : temPendente
+                          ? "bg-warning-bg text-warning-fg"
+                          : atual
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {feito ? (
+                      <Check className="h-3.5 w-3.5" aria-hidden />
+                    ) : temPendente ? (
+                      <Clock className="h-3.5 w-3.5" aria-hidden />
+                    ) : atual ? (
+                      <CaretRight className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      i + 1
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate",
+                          feito ? "text-muted-foreground line-through decoration-border" : "text-text",
+                          atual && "font-medium",
+                        )}
+                      >
+                        {p.cliente}
                       </span>
+                      {atual && (
+                        <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[9px] font-semibold tracking-wide text-accent-foreground uppercase">
+                          {t("agora")}
+                        </span>
+                      )}
+                      <CaretRight size={14} className="shrink-0 text-muted-foreground" aria-hidden />
+                    </div>
+                    {(p.itens?.length ?? 0) > 0 && (
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        {(p.itens ?? [])
+                          .map((it) => `${it.quantidade}× ${it.nome}`)
+                          .join(" · ")}
+                      </p>
                     )}
                   </div>
-                  {(p.itens?.length ?? 0) > 0 && (
-                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                      {(p.itens ?? [])
-                        .map((it) => `${it.quantidade}× ${it.nome}`)
-                        .join(" · ")}
-                    </p>
-                  )}
-                </div>
+                </button>
               </li>
             );
           })}
         </ol>
       </Card>
       )}
+
+      {(() => {
+        const parada = paradaAberta
+          ? (rota.paradas.find((p) => p.chave === paradaAberta) ?? null)
+          : null;
+        if (!parada) return null;
+        const ordem = rota.paradas.findIndex((p) => p.chave === parada.chave) + 1;
+        const alvo = parada.pedidos.find((x) =>
+          ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+        );
+        const podeIr = parada.latitude != null && parada.longitude != null;
+        return (
+          <Dialog
+            open
+            onOpenChange={(aberto) => {
+              if (!aberto) setParadaAberta(null);
+            }}
+          >
+            <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+              <DialogHeader>
+                <DialogDescription className="text-[11px] font-semibold tracking-[0.14em] uppercase">
+                  {t("Parada")} {ordem} {t("de")} {rota.paradas.length}
+                </DialogDescription>
+                <DialogTitle className="text-xl leading-tight">{parada.cliente}</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-3 text-sm">
+                {parada.endereco ? (
+                  <p className="flex items-start gap-1.5 text-muted-foreground">
+                    <MapPin size={14} aria-hidden className="mt-0.5 shrink-0" />
+                    <span>{parada.endereco}</span>
+                  </p>
+                ) : (
+                  <p className="text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+                )}
+                {parada.fone && (
+                  <a
+                    href={`tel:${parada.fone.replace(/[^\d+]/g, "")}`}
+                    className="inline-block font-medium text-accent underline underline-offset-4"
+                  >
+                    {parada.fone}
+                  </a>
+                )}
+
+                {(parada.itens?.length ?? 0) > 0 && (
+                  <div>
+                    <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Itens para entregar")}
+                    </p>
+                    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
+                      {(parada.itens ?? []).map((it, idx) => (
+                        <li
+                          key={`${it.codigo}-${idx}`}
+                          className="flex items-baseline gap-2 px-3 py-2"
+                        >
+                          <span className="shrink-0 font-semibold tabular-nums">{it.quantidade}×</span>
+                          <span className="min-w-0 flex-1">{it.nome}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div>
+                  <p className="mb-1 text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    {t("Pedidos")}
+                  </p>
+                  <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-stage-2/50">
+                    {parada.pedidos.map((pedido) => (
+                      <li key={pedido.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
+                        <span className="font-medium tabular-nums">{numeroDoPedido(pedido.numero)}</span>
+                        <span className="tabular-nums">{comoMoeda(pedido.total_cents, "BRL")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  {podeIr && (
+                    <Button
+                      className="h-11 flex-1 rounded-2xl"
+                      onClick={() => {
+                        setParadaAberta(null);
+                        void navegar(parada);
+                      }}
+                    >
+                      <NavigationArrow size={16} aria-hidden />
+                      {t("Navegar")}
+                    </Button>
+                  )}
+                  {podeOperar && alvo && (
+                    <Button
+                      className="h-11 flex-1 rounded-2xl"
+                      variant="outline"
+                      onClick={() => {
+                        void desfecho(alvo.order_id, "em_atendimento").then(() => setParadaAberta(null));
+                      }}
+                    >
+                      {t("Cheguei")}
+                    </Button>
+                  )}
+                </div>
+
+                {podeOperar && alvo && (
+                  <Button
+                    className="h-12 w-full rounded-2xl bg-success text-accent-fg hover:bg-success/90"
+                    onClick={() => {
+                      void desfecho(alvo.order_id, "entregue").then(() => setParadaAberta(null));
+                    }}
+                  >
+                    <Check size={16} aria-hidden />
+                    {t("Marcar como entregue")}
+                  </Button>
+                )}
+
+                {podeOperar && alvo && (
+                  <div className="space-y-2 rounded-xl border border-error/30 bg-error-bg/40 p-2.5">
+                    <p className="text-xs font-medium text-error-fg">{t("Não entregue")}</p>
+                    <select
+                      className="h-10 w-full rounded-lg border border-input bg-surface px-2 text-sm"
+                      value={motivo}
+                      onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
+                      aria-label={t("Motivo")}
+                    >
+                      {MOTIVOS_DEVOLUCAO.map((m) => (
+                        <option key={m} value={m}>
+                          {ROTULO_MOTIVO_DEVOLUCAO[m]}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-9 w-full"
+                      onClick={() => {
+                        void desfecho(alvo.order_id, "devolvido").then(() => setParadaAberta(null));
+                      }}
+                    >
+                      {t("Confirmar devolução")}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
 
       {rota.carga.status === "em_rota" && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">

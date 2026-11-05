@@ -15,4 +15,8 @@ eram círculos achatados com símbolos (▶ ◉ ✓ !) que viravam borrão ao la
 algarismo e não apontavam para o endereço. A ponta do pino agora é o lugar, a
 cor continua dizendo o estado, e a próxima parada ganha um anel de destaque.
 
+No **Roteiro**, qualquer parada abre agora o pedido completo — endereço,
+telefone, itens, pedidos e as ações (navegar, cheguei, entregue, devolver). Antes
+só a próxima entrega era clicável.
+
 Quem já instalou: **não precisa fazer nada**.
