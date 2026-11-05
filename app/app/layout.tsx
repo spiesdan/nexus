@@ -21,6 +21,7 @@ import {
 } from "@/components/app/ImpersonateBanner";
 import { ConexaoCaidaBanner } from "@/components/app/ConexaoCaidaBanner";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { RegistrarServiceWorker } from "./_components/RegistrarServiceWorker";
 import { SincronizadorOffline } from "./_components/SincronizadorOffline";
 import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
@@ -235,6 +236,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           comia ~40px da altura do mapa, que na cabine é o produto inteiro.
         */}
         {activeOrg?.motorista ? null : <ConexaoCaidaBanner caidas={conexoesCaidas} />}
+        <RegistrarServiceWorker />
         {needsMfaGate ? (
           // Gate always mounted for MFA-required roles; it latches the blocking
           // decision client-side so the enroll Server Action's revalidation

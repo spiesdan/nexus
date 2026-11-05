@@ -132,7 +132,11 @@ export default async function ExpedicaoPage() {
   return (
     <ExpedicaoClient
       inicial={((cargas ?? []) as unknown as Carga[]).filter(
-        (c) => !motorista || c.status === "em_rota",
+        // O entregador escolhe entre as cargas LIBERADAS: a que está montada
+        // (pronta para sair) e a que já está na rua. Antes só `em_rota`
+        // aparecia — carga recém-liberada ficava invisível para quem ia
+        // dirigi-la, e o botão "Iniciar rota" da cabine nunca era alcançado.
+        (c) => !motorista || c.status === "em_rota" || c.status === "montando",
       )}
       fila={{
         total: pedidosNaFila.length,
@@ -144,7 +148,7 @@ export default async function ExpedicaoPage() {
       textos={{
         titulo: motorista ? t("Minhas entregas") : t("Expedição"),
         subtitulo: motorista
-          ? t("A carga que está na rua. Toque para abrir a rota.")
+          ? t("Escolha a carga liberada e toque para abrir a rota.")
           : t("Cargas do transporte próprio e pedidos aguardando embarque."),
         nova: t("Nova carga"),
         cargas: t("Cargas"),

@@ -229,9 +229,9 @@ export function RequestsTable() {
                 <TableHead className="w-[90px]">ID</TableHead>
                 <TableHead>{t("Tipo")}</TableHead>
                 <TableHead>{t("Sujeito")}</TableHead>
-                <TableHead>{t("Recebido")}</TableHead>
-                <TableHead>{t("Vence")}</TableHead>
-                <TableHead>SLA</TableHead>
+                <TableHead className="hidden lg:table-cell">{t("Recebido")}</TableHead>
+                <TableHead className="hidden lg:table-cell">{t("Vence")}</TableHead>
+                <TableHead className="hidden lg:table-cell">SLA</TableHead>
                 <TableHead>{t("Status")}</TableHead>
                 <TableHead className="w-[60px]" />
               </TableRow>
@@ -293,15 +293,15 @@ export function RequestsTable() {
                       <TableCell className="max-w-[140px] truncate font-mono text-xs">
                         {subject}
                       </TableCell>
-                      <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                      <TableCell className="hidden text-xs whitespace-nowrap text-muted-foreground lg:table-cell">
                         {fmtRelative(r.received_at, t)}
                       </TableCell>
                       <TableCell
-                        className={`text-xs font-medium whitespace-nowrap ${due.urgent ? "text-error-fg" : "text-muted-foreground"}`}
+                        className={`hidden text-xs font-medium whitespace-nowrap lg:table-cell ${due.urgent ? "text-error-fg" : "text-muted-foreground"}`}
                       >
                         {due.label}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Badge variant={SLA_VARIANT[r.sla_bucket]} className="text-xs">
                           {t(SLA_LABELS[r.sla_bucket])}
                         </Badge>

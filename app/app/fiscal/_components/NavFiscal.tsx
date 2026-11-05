@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
@@ -37,17 +37,50 @@ export const ABAS_DO_FISCAL = [
 
 export function NavFiscal() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const ativaDe = (href: string): boolean =>
+    pathname === href || (href !== "/app/fiscal" && pathname.startsWith(`${href}/`));
+  const atual = ABAS_DO_FISCAL.find((aba) => ativaDe(aba.href)) ?? ABAS_DO_FISCAL[0]!;
+
+  /*
+   * No celular, treze destinos numa faixa rolável é uma faixa que ninguém
+   * percorre: metade das abas fica fora da tela sem nenhuma pista de que
+   * existe mais. Aqui a faixa vira um MENU SUSPENSO com a aba atual como
+   * rótulo — o destino escolhido está sempre visível, e nenhum some.
+   *
+   * A partir de `md` a faixa de pílulas volta: há largura para ler os treze
+   * nomes de uma vez, e o menu suspenso obrigaria a abrir para saber onde se
+   * está.
+   */
   return (
-    <nav
-      aria-label="Subtelas de notas fiscais"
-      className="-mx-1 flex gap-1 overflow-x-auto pb-1"
-    >
+    <>
+      <div className="md:hidden">
+        <label className="sr-only" htmlFor="nav-fiscal-mobile">
+          Subtelas de notas fiscais
+        </label>
+        <select
+          id="nav-fiscal-mobile"
+          value={atual.href}
+          onChange={(e) => router.push(e.target.value)}
+          className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text"
+        >
+          {ABAS_DO_FISCAL.map((aba) => (
+            <option key={aba.href} value={aba.href}>
+              {aba.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <nav
+        aria-label="Subtelas de notas fiscais"
+        className="hidden gap-1 overflow-x-auto pb-1 md:flex"
+      >
       {ABAS_DO_FISCAL.map((aba) => {
         // `/app/fiscal/notas/[id]` pertence a "Todas as Notas": o detalhe é
         // uma continuação da lista, não uma aba própria.
-        const ativa =
-          pathname === aba.href ||
-          (aba.href !== "/app/fiscal" && pathname.startsWith(`${aba.href}/`));
+        const ativa = ativaDe(aba.href);
         return (
           <Link
             key={aba.href}
@@ -64,6 +97,7 @@ export function NavFiscal() {
           </Link>
         );
       })}
-    </nav>
+      </nav>
+    </>
   );
 }

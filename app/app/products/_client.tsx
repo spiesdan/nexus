@@ -1133,12 +1133,12 @@ export function ProdutosClient({
                 <TableHead className="w-10">
                   <span className="sr-only">{t("Ativo")}</span>
                 </TableHead>
-                <TableHead className="w-16">{t("Fotos")}</TableHead>
+                <TableHead className="hidden w-16 xl:table-cell">{t("Fotos")}</TableHead>
                 <TableHead className="w-20">{t("Código")}</TableHead>
-                <TableHead className="min-w-[14rem]">{t("Nome")}</TableHead>
-                <TableHead className="w-16">{t("IPI")}</TableHead>
-                <TableHead className="w-20">{t("Unidade")}</TableHead>
-                <TableHead className="w-20">{t("Comissão")}</TableHead>
+                <TableHead className="min-w-[10rem]">{t("Nome")}</TableHead>
+                <TableHead className="hidden w-16 xl:table-cell">{t("IPI")}</TableHead>
+                <TableHead className="hidden w-20 xl:table-cell">{t("Unidade")}</TableHead>
+                <TableHead className="hidden w-20 xl:table-cell">{t("Comissão")}</TableHead>
                 <TableHead className="w-28 text-right">{t("Preço de Tabela")}</TableHead>
                 <TableHead className="w-10">
                   <span className="sr-only">{t("Adicionar a uma tabela de preço")}</span>
@@ -1169,7 +1169,7 @@ export function ProdutosClient({
                         {p.ativo ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden xl:table-cell">
                       <FotosDoProduto
                         productId={p.id}
                         podeEditar={podeEditar}
@@ -1211,11 +1211,11 @@ export function ProdutosClient({
                           : t("sem controle de estoque")}
                       </p>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap tabular-nums">
+                    <TableCell className="hidden whitespace-nowrap tabular-nums xl:table-cell">
                       {comoPorcentagem(p.ipi_pct)}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{p.unidade ?? "---"}</TableCell>
-                    <TableCell className="whitespace-nowrap tabular-nums">
+                    <TableCell className="hidden whitespace-nowrap xl:table-cell">{p.unidade ?? "---"}</TableCell>
+                    <TableCell className="hidden whitespace-nowrap tabular-nums xl:table-cell">
                       {comoPorcentagem(p.comissao_pct)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right tabular-nums">

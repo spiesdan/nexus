@@ -80,11 +80,11 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Membro")}</TableHead>
-                <TableHead>{t("Setor")}</TableHead>
+                <TableHead className="hidden md:table-cell">{t("Setor")}</TableHead>
                 <TableHead>{t("Papel")}</TableHead>
-                <TableHead>{t("Modo entregador")}</TableHead>
+                <TableHead className="hidden lg:table-cell">{t("Modo entregador")}</TableHead>
                 <TableHead>{t("Status")}</TableHead>
-                <TableHead>{t("Última atividade")}</TableHead>
+                <TableHead className="hidden lg:table-cell">{t("Última atividade")}</TableHead>
                 {canManage ? <TableHead className="w-[80px]" /> : null}
               </TableRow>
             </TableHeader>
@@ -102,7 +102,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                       <div className="text-xs text-muted-foreground">{m.email}</div>
                     ) : null}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <SetorCell
                       userId={m.user_id}
                       nome={m.full_name ?? m.email ?? m.user_id}
@@ -139,7 +139,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                       <Badge variant="secondary">{rotuloDoPapel(m.role)}</Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {m.motorista ? (
                       <Badge variant="outline" title={t("Entra direto na expedição, sem menu.")}>
                         {t("Entregador")}
@@ -155,7 +155,7 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                       <Badge variant="outline">{t("Pendente")}</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
                     {m.last_sign_in_at
                       ? new Date(m.last_sign_in_at).toLocaleString(tagDoIdioma)
                       : "—"}

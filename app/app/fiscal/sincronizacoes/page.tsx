@@ -86,9 +86,9 @@ export default async function SincronizacoesPage() {
                 <TableHead>Quando</TableHead>
                 <TableHead>Origem</TableHead>
                 <TableHead>Resultado</TableHead>
-                <TableHead>NSU</TableHead>
-                <TableHead className="text-right">Docs</TableHead>
-                <TableHead>Mensagem</TableHead>
+                <TableHead className="hidden lg:table-cell">NSU</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">Docs</TableHead>
+                <TableHead className="hidden lg:table-cell">Mensagem</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -106,19 +106,19 @@ export default async function SincronizacoesPage() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs tabular-nums text-muted-foreground">
+                  <TableCell className="hidden text-xs tabular-nums text-muted-foreground lg:table-cell">
                     <span className="block">
                       {log.nsu_inicial ?? 0} → {log.nsu_final ?? 0}
                     </span>
                     <span className="block">máx. {log.max_nsu ?? 0}</span>
                   </TableCell>
-                  <TableCell className="text-right text-xs tabular-nums">
+                  <TableCell className="hidden text-right text-xs tabular-nums lg:table-cell">
                     <span className="block">{log.docs_importados} importado(s)</span>
                     <span className="block text-muted-foreground">
                       {log.docs_encontrados} encontrado(s) · {log.docs_erro} erro(s)
                     </span>
                   </TableCell>
-                  <TableCell className="max-w-80 text-xs text-muted-foreground">
+                  <TableCell className="hidden max-w-80 text-xs text-muted-foreground lg:table-cell">
                     {log.mensagem ?? "—"}
                   </TableCell>
                 </TableRow>

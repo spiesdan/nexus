@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Warning } from "@/lib/ui/icons";
 
 import { GradeNotas } from "./_components/GradeNotas";
+import { SeletorDeAbas } from "./_components/SeletorDeAbas";
 import { EntradasFiscais } from "./_components/EntradasFiscais";
 import { EmitirNota } from "./_components/EmitirNota";
 import { AcoesFiscais } from "./_components/AcoesFiscais";
@@ -541,7 +542,13 @@ export default async function NotasPage({
           faz para `?aba=notas`) reconcilia sem remontar — a URL muda e a aba
           fica onde estava. A tecla força o mount novo com o valor da URL. */}
       <Tabs key={abaInicial} defaultValue={abaInicial} className="flex flex-1 flex-col">
-        <TabsList aria-label={textos.abas} className="w-full justify-start overflow-x-auto">
+        <SeletorDeAbas
+          abas={abasVisiveis}
+          atual={abaInicial}
+          rotulos={rotuloAba}
+          ariaLabel={textos.abas}
+        />
+        <TabsList aria-label={textos.abas} className="hidden w-full justify-start overflow-x-auto md:inline-flex">
           {abasVisiveis.map((a) => (
             <TabsTrigger key={a} value={a}>
               {rotuloAba[a]}

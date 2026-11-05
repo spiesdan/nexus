@@ -32,6 +32,8 @@ export interface ParadaRotaApi {
   geo_status: string;
   geo_fonte: string | null;
   pedidos: { shipment_order_id: string; order_id: string; numero: number; total_cents: number; status: string }[];
+  /** Itens a entregar (somados por produto quando o cliente tem 2+ pedidos). */
+  itens?: { codigo: string; nome: string; quantidade: number }[];
   total_cents: number;
 }
 

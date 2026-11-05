@@ -268,38 +268,138 @@ export function ExpedicaoClient({
      filtros, sem doca — cada número que não é a carga dele é ruído no celular
      em movimento. O cartão abre a cabine (mapa), não a ficha da carga. */
   if (motorista) {
+    // ── O ENTREGADOR ESCOLHE A CARGA ──────────────────────────────────────
+    //
+    // Carga liberada pelo escritório nasce `montando` ("pronta para sair") e
+    // só vira `em_rota` quando o motorista aperta "Iniciar rota" na cabine.
+    // Listar apenas `em_rota` escondia justamente a carga que ele deveria
+    // começar — e ele não tinha como escolher entre duas.
+    const disponiveis = [...porStatus.emRota, ...porStatus.montando].sort(
+      (a, b) => b.numero - a.numero,
+    );
+
     return (
-      <div className="min-h-full space-y-4 p-4">
-        <header>
-          <h1 className="text-lg font-semibold text-text">{textos.titulo}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{textos.subtitulo}</p>
-        </header>
-        {porStatus.emRota.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
-            {t("Nenhuma carga na rua agora.")}
+      <div className="min-h-full bg-gradient-to-b from-accent-soft/50 via-background to-background pb-8">
+        <header className="px-5 pt-7 pb-4">
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+            {t("Entrega")}
           </p>
+          <h1 className="mt-1 text-[28px] leading-none font-semibold tracking-tight text-text">
+            {textos.titulo}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {disponiveis.length === 0
+              ? t("Nenhuma carga liberada agora.")
+              : disponiveis.length === 1
+                ? t("1 carga liberada para você")
+                : `${disponiveis.length} ${t("cargas liberadas para você")}`}
+          </p>
+        </header>
+
+        {disponiveis.length === 0 ? (
+          <div className="mx-4 rounded-3xl border border-dashed border-border bg-surface/60 px-5 py-10 text-center">
+            <Truck className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden />
+            <p className="mt-3 text-sm font-medium text-text">{t("Nada na rua agora.")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("Quando o escritório liberar uma carga, ela aparece aqui.")}
+            </p>
+          </div>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-border bg-surface">
-            {porStatus.emRota.map((c) => (
-              <LinhaDaCarga
-                key={c.id}
-                carga={c}
-                progresso={
-                  progresso[c.id] ?? {
-                    total: 0,
-                    entregues: 0,
-                    devolvidos: 0,
-                    cidades: [],
-                    semCidade: 0,
-                  }
-                }
-                concluindo={concluindoId === c.id}
-                aoConcluir={concluirCarga}
-                motorista
-                textos={textos}
-              />
-            ))}
-          </ul>
+          <div className="space-y-3 px-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="carga-do-entregador"
+                className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
+              >
+                {t("Qual carga você está entregando?")}
+              </label>
+              <select
+                id="carga-do-entregador"
+                className="h-12 w-full rounded-2xl border border-border bg-surface px-3 text-sm text-text shadow-xs"
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) router.push(`/app/expedicao/${e.target.value}/motorista`);
+                }}
+              >
+                <option value="" disabled>
+                  {t("Escolha a carga…")}
+                </option>
+                {disponiveis.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {numeroDaCarga(c.numero)}
+                    {c.placa ? ` · ${c.placa}` : ""}
+                    {` · ${ROTULO_DA_CARGA[c.status as StatusDaCarga] ?? c.status}`}
+                    {c.motorista_nome ? ` · ${c.motorista_nome}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {disponiveis.map((c) => {
+              const pr =
+                progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0, cidades: [], semCidade: 0 };
+              const feitas = pr.entregues + pr.devolvidos;
+              const pct = pr.total > 0 ? Math.round((feitas / pr.total) * 100) : 0;
+              const naRua = c.status === "em_rota";
+              return (
+                <Link
+                  key={c.id}
+                  href={`/app/expedicao/${c.id}/motorista`}
+                  className="group block rounded-3xl border border-border bg-surface p-4 shadow-xs transition active:scale-[0.99]"
+                  data-testid={`carga-linha-${c.numero}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                        {t("Carga")}
+                      </p>
+                      <p className="text-[32px] leading-none font-semibold tracking-tight text-text tabular-nums">
+                        {String(c.numero).padStart(3, "0")}
+                      </p>
+                    </div>
+                    <Badge variant={naRua ? "success" : "info"} className="mt-0.5 shrink-0">
+                      {naRua ? t("Na rua") : t("Pronta para sair")}
+                    </Badge>
+                  </div>
+
+                  <p className="mt-2 truncate text-sm font-medium text-text">
+                    {[c.placa, c.veiculo_tipo, c.motorista_nome].filter(Boolean).join(" · ") ||
+                      t("Sem veículo ou motorista definido")}
+                  </p>
+                  {pr.cidades.length > 0 && (
+                    <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin size={12} aria-hidden className="shrink-0" />
+                      <span className="truncate">{pr.cidades.join(" · ")}</span>
+                    </p>
+                  )}
+
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn("h-full rounded-full transition-[width]", naRua ? "bg-success" : "bg-accent")}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                      {feitas}/{pr.total}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {pr.total - feitas === 1
+                        ? t("1 parada pela frente")
+                        : `${Math.max(0, pr.total - feitas)} ${t("paradas pela frente")}`}
+                    </span>
+                    <span className="flex items-center gap-1 text-sm font-medium text-accent">
+                      {t("Abrir rota")}
+                      <ArrowRight size={15} aria-hidden />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         )}
       </div>
     );

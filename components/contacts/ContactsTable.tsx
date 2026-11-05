@@ -184,6 +184,7 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
             onSort={onSort}
           />
           <SortableHead
+            className="hidden md:table-cell"
             label={t("Email")}
             column="email"
             orderBy={orderBy}
@@ -197,9 +198,10 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
             orderDir={orderDir}
             onSort={onSort}
           />
-          <TableHead>{t("Cidade/UF")}</TableHead>
-          <TableHead>{t("Tags")}</TableHead>
+          <TableHead className="hidden md:table-cell">{t("Cidade/UF")}</TableHead>
+          <TableHead className="hidden lg:table-cell">{t("Tags")}</TableHead>
           <SortableHead
+            className="hidden lg:table-cell"
             label={t("Última atividade")}
             column="last_activity_at"
             orderBy={orderBy}
@@ -231,16 +233,16 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
                 {displayName(c)}
               </Link>
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="hidden text-muted-foreground md:table-cell">
               {c.email ?? "—"}
             </TableCell>
             <TableCell className="text-muted-foreground">
               {c.phone_number ? phoneForDisplay(c.phone_number) : "—"}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="hidden text-muted-foreground md:table-cell">
               {[c.cidade, c.uf].filter(Boolean).join("/") || "—"}
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden lg:table-cell">
               <div className="flex flex-wrap gap-1">
                 {c.tags.length === 0
                   ? <span className="text-muted-foreground text-xs">—</span>
@@ -249,7 +251,7 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
                     ))}
               </div>
             </TableCell>
-            <TableCell className="text-muted-foreground text-sm">
+            <TableCell className="hidden text-muted-foreground lg:table-cell text-sm">
               {c.last_activity_at
                 ? formatUltimaAtividade(c.last_activity_at, localeDaData)
                 : "—"}

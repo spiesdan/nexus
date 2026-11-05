@@ -106,11 +106,11 @@ export function AuditClient() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t("Quando")}</TableHead>
-                <TableHead>{t("Ator")}</TableHead>
+                <TableHead className="hidden md:table-cell">{t("Ator")}</TableHead>
                 <TableHead>{t("Ação")}</TableHead>
-                <TableHead>{t("Recurso")}</TableHead>
-                <TableHead>Request ID</TableHead>
-                <TableHead>Metadata</TableHead>
+                <TableHead className="hidden md:table-cell">{t("Recurso")}</TableHead>
+                <TableHead className="hidden md:table-cell">Request ID</TableHead>
+                <TableHead className="hidden md:table-cell">Metadata</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -136,7 +136,7 @@ export function AuditClient() {
                     <TableCell className="text-xs whitespace-nowrap">
                       {fmtDate(r.created_at, tagDoIdioma)}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="hidden font-mono text-xs md:table-cell">
                       {r.acting_as_platform_admin
                         ? "platform_admin"
                         : r.actor_user_id
@@ -146,14 +146,14 @@ export function AuditClient() {
                             : "system"}
                     </TableCell>
                     <TableCell className="font-mono text-xs">{r.action}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="hidden font-mono text-xs md:table-cell">
                       {r.resource_type ?? "—"}
                       {r.resource_id ? `:${r.resource_id.slice(0, 8)}` : ""}
                     </TableCell>
-                    <TableCell className="font-mono text-[10px] text-muted-foreground">
+                    <TableCell className="hidden font-mono text-[10px] text-muted-foreground md:table-cell">
                       {r.request_id ? r.request_id.slice(0, 8) : "—"}
                     </TableCell>
-                    <TableCell className="font-mono text-[10px] text-muted-foreground">
+                    <TableCell className="hidden font-mono text-[10px] text-muted-foreground md:table-cell">
                       {truncJson(r.metadata)}
                     </TableCell>
                   </TableRow>
