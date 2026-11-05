@@ -39,9 +39,50 @@ const styles = StyleSheet.create({
   },
   // O nome do emitente é longo (razão social inteira) e empurrava o título
   // por cima dele. Ele encolhe/quebra; o título e o contato não.
-  emitente: { fontSize: 13, fontWeight: "bold", color: "#1e3a5f", maxWidth: "48%", flexShrink: 1 },
-  titulo: { fontSize: 12, fontWeight: "bold", color: "#6b7280", flexShrink: 0, marginHorizontal: 8 },
+  // 10,5 e não 13: o cabeçalho é identificação, não manchete — no papel o nome
+  // da empresa ocupava a faixa inteira e o romaneio é lido a um braço de
+  // distância, no volante. O corpo da tabela é 8–9, então 10,5 ainda é o maior
+  // texto do cabeçalho sem virar título de cartaz.
+  emitente: { fontSize: 10.5, fontWeight: "bold", color: "#1e3a5f", maxWidth: "48%", flexShrink: 1 },
+  // O NÚMERO DA CARGA é o que o motorista procura primeiro no papel — e ele
+  // era o mesmo cinza do resto do cabeçalho, colado na palavra "Romaneio".
+  // Agora "Romaneio" é rótulo pequeno em cima e o número sai grande e na cor
+  // do emitente. É a única informação do topo que precisa ser lida a distância.
+  tituloBloco: { flexShrink: 0, marginHorizontal: 8, alignItems: "center" },
+  tituloRotulo: {
+    fontSize: 7,
+    color: "#6b7280",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  tituloNumero: { fontSize: 15, fontWeight: "bold", color: "#1e3a5f", marginTop: 1 },
   contato: { fontSize: 7.5, color: "#4b5563", textAlign: "right", lineHeight: 1.35, maxWidth: "30%" },
+  // ─── DATA DE ENTREGA EM BRANCO, PARA PREENCHER À MÃO ─────────────────────
+  //
+  // A carga é impressa no dia em que é montada, mas o "Sair para rota" pode ser
+  // clicado um ou dois dias depois. A data que o papel mostrava era a de
+  // EMISSÃO — que não é a data em que o cliente recebe. O campo vazio, com
+  // moldura, deixa o motorista escrever a data real antes de sair; enquanto
+  // ninguém escreve, ele não afirma nada.
+  linhaDataDeEntrega: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 3 },
+  campoDataDeEntrega: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 0.75,
+    borderColor: "#9ca3af",
+    borderStyle: "solid",
+    borderRadius: 2,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  rotuloDataDeEntrega: {
+    fontSize: 7.5,
+    color: "#374151",
+    marginRight: 5,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  espacoParaEscrever: { fontSize: 10, color: "#111827", letterSpacing: 1 },
   faixa: {
     backgroundColor: "#f3f4f6",
     borderTop: "0.5pt solid #d1d5db",
@@ -435,13 +476,23 @@ function ConteudoRomaneio({
     <View>
       <View style={styles.header}>
         <Text style={styles.emitente}>{emitente.nome}</Text>
-        <Text style={styles.titulo}>Romaneio · {numeroDaCarga(carga.numero)}</Text>
+        <View style={styles.tituloBloco}>
+          <Text style={styles.tituloRotulo}>Romaneio</Text>
+          <Text style={styles.tituloNumero}>{numeroDaCarga(carga.numero)}</Text>
+        </View>
         <View>
           {linhasContato.map((l, i) => (
             <Text key={`${l}-${i}`} style={styles.contato}>
               {l}
             </Text>
           ))}
+        </View>
+      </View>
+
+      <View style={styles.linhaDataDeEntrega}>
+        <View style={styles.campoDataDeEntrega}>
+          <Text style={styles.rotuloDataDeEntrega}>Data de entrega</Text>
+          <Text style={styles.espacoParaEscrever}>____/____/____</Text>
         </View>
       </View>
 
