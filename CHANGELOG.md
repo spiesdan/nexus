@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.6] — 2026-11-05
+
+### Corrigido
+
+- **Notas: a emissão não deixa mais nota presa e o B2B sem IE é explicado** A emissão gravava os vínculos dos pedidos com o **client da sessão**, mas a tabela de vínculos só permite leitura ao usuário — o INSERT era recusado, a nota já tinha nascido e ficava **"Emitindo" para sempre**, sem fila e sem evento. Agora a gravação usa o service role e, se qualquer passo da fila falhar, a nota é descartada em vez de ficar órfã. Duas notas reais (4580/4581) pararam assim em 05/11 e foram recuperadas.
+
+  Também corrigimos o `indFinal` do XML: venda para **não contribuinte** (CNPJ sem IE) passou a sair como consumidor final, o que a SEFAZ exige (rejeição 696). E a rejeição **232** agora diz o que fazer — preencher a IE no cadastro do contato —, que foi o caso da OUT SERVICE, cujo CNPJ tem Inscrição Estadual ativa no Paraná.
+
 ## [1.39.5] — 2026-11-05
 
 ### Corrigido
@@ -6374,7 +6382,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.6...HEAD
+[1.39.6]: https://github.com/spiesdan/nexus/compare/v1.39.5...v1.39.6
 [1.39.5]: https://github.com/spiesdan/nexus/compare/v1.39.4...v1.39.5
 [1.39.4]: https://github.com/spiesdan/nexus/compare/v1.39.3...v1.39.4
 [1.39.3]: https://github.com/spiesdan/nexus/compare/v1.39.2...v1.39.3
