@@ -10,6 +10,24 @@ import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import type { ResultadoDeEmissao } from "./provedor";
 import { montarPayloadSped, type EmitenteSped, type ItemSped } from "./sped-payload";
 
+/**
+ * Rejeições que NÃO são "tente de novo": são cadastro, e a tela precisa dizer
+ * qual campo abrir. Sem isto a pessoa lê "232" e não sabe o que fazer.
+ *
+ * A 232 é a mais traiçoeira: o cliente foi cadastrado sem IE, mas o CNPJ tem
+ * inscrição ativa na UF — a SEFAZ cruza os dois e recusa. Medido em
+ * 05/11/2026 com a OUT SERVICE (PR): a nota só saiu depois de preencher a IE
+ * no cadastro do contato.
+ */
+const DICA_DA_REJEICAO: Record<string, string> = {
+  SEFAZ_232:
+    " O CNPJ do cliente tem Inscrição Estadual ativa na UF de destino — preencha a IE no cadastro do contato e emita de novo.",
+};
+
+function dicaDaRejeicao(codigo: string | undefined): string {
+  return (codigo && DICA_DA_REJEICAO[codigo]) || "";
+}
+
 export interface EntradaSpedNfe {
   emitente: EmitenteSped;
   /** Só para montar o caminho do certificado no formato que o sidecar exige. */
@@ -92,7 +110,7 @@ export async function emitirViaSpedNfe(entrada: EntradaSpedNfe): Promise<Resulta
     }
     return {
       status: "erro",
-      erro: `SEFAZ/sidecar [${corpo.codigo ?? "?"}]: ${corpo.mensagem ?? "sem motivo"}`,
+      erro: `SEFAZ/sidecar [${corpo.codigo ?? "?"}]: ${corpo.mensagem ?? "sem motivo"}${dicaDaRejeicao(corpo.codigo)}`,
       numero: null,
       chave_acesso: null,
       xml: null,

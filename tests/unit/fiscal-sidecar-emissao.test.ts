@@ -132,13 +132,15 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).toMatch(/private function cfopParaDestino\(string \$cfop\): string/);
   });
 
-  it("indFinal: CPF é consumidor final, CNPJ não — como no XML autorizado do Odivix", () => {
-    // Medido no XML autorizado (nNF 4575): venda para CNPJ sai com indFinal 0,
-    // inclusive destinatário isento. A regra anterior olhava o indicador_ie e
-    // mandava 1 para isento, divergindo do emissor anterior.
+  it("indFinal: não contribuinte (indIEDest 9) é consumidor final — SEFAZ 696", () => {
+    // Medido em 05/11/2026: notas para CNPJ sem IE (indIEDest 9) foram
+    // rejeitadas com "696 — Operação com não contribuinte deve indicar
+    // operação com consumidor final". A regra antiga olhava só o tamanho do
+    // documento (CPF=1, CNPJ=0) e deixava todo B2B sem IE travado. O
+    // indicador é o MESMO que vai em <dest><indIEDest>.
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
-    expect(src).not.toMatch(/'indFinal'\s*=>\s*'1',/);
-    expect(src).toMatch(/'indFinal'\s*=>.*documento/);
+    expect(src).toMatch(/'indFinal'\s*=>\s*\$this->indicadorIe\(\)\s*===\s*'9'\s*\?\s*'1'\s*:\s*'0'/);
+    expect(src).toMatch(/private function indicadorIe\(\): string/);
   });
 
   it("IBS/CBS e IPI vão no XML — e o Make precisa do schema PL_010", () => {
