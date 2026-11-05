@@ -6,6 +6,7 @@
  * tudo sai daqui, validado no backend (a rota confia no banco, não no body).
  */
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
+import { linhaComRua } from "@/lib/expedicao/endereco-da-entrega";
 import { agruparParadas, type ItemDaCargaParaParada, type ParadaDaRota } from "@/lib/rotas/paradas";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -179,7 +180,12 @@ export async function carregarCargaComParadas(
       // ("Geocodificação concluída" sem mover um pino) e o mapa ficava vazio.
       // O cadastro é o dado que o cliente deu; a ausência do snapshot do
       // pedido não significa "cliente sem endereço".
-      endereco_entrega: p?.endereco_entrega?.trim() || enderecoEmLinha(c) || null,
+      //
+      // `linhaComRua` cobre o caso seguinte, medido em 2026-11-05: o snapshot
+      // EXISTE mas nasceu sem a rua (o cadastro estava incompleto na hora do
+      // faturamento) e vencia o cadastro já completo. Endereço sem rua não é
+      // ponto de entrega escolhido — é dado velho.
+      endereco_entrega: linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
       latitude: c?.latitude ?? null,
       longitude: c?.longitude ?? null,
       geo_status: c?.geo_status ?? "pendente",

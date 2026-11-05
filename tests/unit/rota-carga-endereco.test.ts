@@ -16,7 +16,9 @@
  * 3. sem endereço em nenhum dos dois, a parada fica sem endereço — nunca um
  *    chute, porque pino em lugar errado é pior que pino nenhum;
  * 4. as coordenadas já cacheadas do contato chegam na parada (senão o mapa
- *    teria endereço e continuaria vazio).
+ *    teria endereço e continuaria vazio);
+ * 5. snapshot do pedido SEM RUA (", 679 — …") não vence o cadastro completo:
+ *    ele nasceu de cadastro incompleto e escondia a rua que existe hoje.
  *
  * Banco dublado com cadeia encadeável, no molde de
  * `tests/unit/shipment-orders-route.test.ts`.
@@ -127,8 +129,7 @@ function cenario(opts: {
 }
 
 describe("carregarCargaComParadas — endereço da parada", () => {
-  it("pedido sem endereço de entrega usa o cadastro do cliente", async () => {
-    const d = await carregarCargaComParadas(
+  it("pedido sem endereço de entrega usa o cadastro do cliente", async () => {    const d = await carregarCargaComParadas(
       cenario({
         contato: {
           id: CONTATO,
@@ -155,6 +156,39 @@ describe("carregarCargaComParadas — endereço da parada", () => {
     expect(d?.paradas).toHaveLength(1);
     expect(d?.paradas[0]?.endereco).toBe(
       "RUA JOÃO FRANCISCO DE ASSIS, 27 — EDIFICIO — EDIFICIO, MAFRA/SC, 89303092",
+    );
+  });
+
+  it("snapshot do pedido sem rua não esconde o cadastro completo", async () => {
+    // Medido na carga 027 (pedido 19435): o snapshot nasceu ", 679 — …" e a
+    // parada ia para o mapa sem rua, mesmo com o cadastro completo.
+    const d = await carregarCargaComParadas(
+      cenario({
+        enderecoPedido: ", 679 — INDUSTRIAL, PONTE ALTA DO NORTE/SC, 89535000",
+        contato: {
+          id: CONTATO,
+          display_name: "MADEIREIRA SAMISTRARO",
+          name: "MADEIREIRA SAMISTRARO",
+          phone_number: null,
+          logradouro: "AURELIANO GONÇALVES LINS",
+          numero_end: "679",
+          complemento: null,
+          bairro: "INDUSTRIAL",
+          cidade: "PONTE ALTA DO NORTE",
+          uf: "SC",
+          cep: "89535000",
+          latitude: null,
+          longitude: null,
+          geo_status: "nao_encontrado",
+          geo_fonte: "nominatim",
+        },
+      }),
+      ORG,
+      CARGA,
+    );
+
+    expect(d?.paradas[0]?.endereco).toBe(
+      "AURELIANO GONÇALVES LINS, 679 — INDUSTRIAL, PONTE ALTA DO NORTE/SC, 89535000",
     );
   });
 

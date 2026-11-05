@@ -9,6 +9,8 @@
  * A ordem de precedência não é gosto, é o que a operação já faz:
  * 1. `endereco_entrega` do pedido, quando alguém o digitou — é o destino
  *    daquele pedido, e vence o cadastro (entrega em obra, em outro depósito).
+ *    Só vale se tiver rua de verdade (`linhaComRua`): snapshot importado sem
+ *    logradouro não é escolha de destino, é dado velho.
  * 2. o endereço estruturado do contato (`logradouro`…`cep`), via
  *    `enderecoEmLinha`.
  * 3. o contato achado pelo CNPJ do pedido, para os importados que trouxeram o
@@ -45,11 +47,35 @@ export function cnpjDoPedido(documento: string | null | undefined): string | nul
   return digitos.length === 14 ? digitos : null;
 }
 
+/**
+ * O SNAPSHOT DO PEDIDO SÓ VALE SE TIVER RUA.
+ *
+ * `endereco_entrega` é gravado no faturamento a partir do cadastro. Quando o
+ * cadastro ainda estava sem `logradouro`, o snapshot saiu começando com
+ * vírgula (", 679 — INDUSTRIAL, Ponte Alta do Norte/SC") — medido em 658
+ * pedidos desta instalação em 2026-11-05. Usar esse texto esconde a rua que o
+ * cadastro tem HOJE e entrega à geocodificação uma linha sem alvo: a parada
+ * some do mapa mesmo com endereço completo no cadastro.
+ *
+ * Rua = primeiro trecho (antes do "—") com alguma letra e que não começa em
+ * vírgula. "RUA X, 10" e "KM 89" passam; ", 1919", ", SN" e "1919" não.
+ * Snapshot sem rua não é ponto de entrega escolhido — é cadastro incompleto
+ * do passado.
+ */
+export function linhaComRua(linha: string | null | undefined): string | null {
+  const texto = (linha ?? "").trim();
+  if (!texto) return null;
+  const primeira = texto.split("—")[0]?.trim() ?? "";
+  const temLetra = /\p{L}/u.test(primeira);
+  const slotVazio = /^[,;]/.test(primeira);
+  return temLetra && !slotVazio ? texto : null;
+}
+
 export function enderecoDaEntrega(
   pedido: PedidoComEndereco,
   contatos: ContatosDaEntrega,
 ): string | null {
-  const escrito = (pedido.endereco_entrega ?? "").trim();
+  const escrito = linhaComRua(pedido.endereco_entrega);
   if (escrito) return escrito;
 
   return enderecoEmLinha(contatoDaEntrega(pedido, contatos) ?? null) || null;
