@@ -18,6 +18,16 @@ listados para ajuste.
 
 Também nesta versão:
 
+- **Navegação dentro do app**: o botão *Navegar* não abre mais o Google Maps.
+  Ele calcula a rota da posição atual até a próxima parada (mesmo OSRM que
+  planeja a carga), desenha em azul sobre o mapa e o mapa passa a seguir o GPS,
+  com distância e tempo na tela.
+- **O entregador escolhe a carga**: a lista mostra as cargas liberadas (montada
+  e na rua) num seletor, em vez de só a que já saiu.
+- **Sessão de 30 dias**: fechar o app não obriga a digitar a senha de novo.
+- **Abre offline**: depois de visitar a cabine uma vez, o app abre sem sinal e
+  a rota vem do aparelho; a baixa continua na fila e sobe quando o sinal volta.
+
 - **Abas em menu no celular**: as 13 subtelas do fiscal e as 7 de Notas deixam
   de ser uma faixa que rola para o lado; em tela estreita viram um seletor com
   a aba atual.

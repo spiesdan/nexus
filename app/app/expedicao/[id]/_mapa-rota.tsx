@@ -62,6 +62,7 @@ export function MapaRota({
   origem,
   motorista,
   rastro,
+  navegacao,
   altura,
   modoMarcar,
   pinoPendente,
@@ -79,6 +80,8 @@ export function MapaRota({
   motorista: PontoMotorista | null;
   /** Rastro realizado [[lat,lng]...]. */
   rastro: [number, number][];
+  /** Traçado da navegação até a próxima parada (GeoJSON [lng,lat]), se houver. */
+  navegacao?: number[][];
   altura?: string;
   modoMarcar: boolean;
   /** Pino pendente (aguardando confirmação — ainda NÃO salvo). */
@@ -116,7 +119,7 @@ export function MapaRota({
   // O desenho mora depois dos efeitos (regra do lint): os efeitos iniciais
   // despacham pelo ref, que a atribuição abaixo liga na função real.
   const refRedesenhar = React.useRef<(m: MapaLeaflet) => void>(() => undefined);
-  const refProps = React.useRef({ paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar });
+  const refProps = React.useRef({ paradas, geometria, origem, motorista, rastro, navegacao, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar });
   // Quem já arrastou o mapa não quer ser reenquadrado a cada dado novo. Vive em
   // ref porque o Leaflet (fora do React) escreve aqui.
   const refArrastou = React.useRef(false);
@@ -124,11 +127,11 @@ export function MapaRota({
   // Props frescas para os callbacks do Leaflet (mapa vive fora do React).
   // Em efeito, não no render: escrever ref no render quebra a atualização.
   React.useEffect(() => {
-    refProps.current = { paradas, geometria, origem, motorista, rastro, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar };
+    refProps.current = { paradas, geometria, origem, motorista, rastro, navegacao, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar };
   });
 
   function redesenharCamadas(m: MapaLeaflet) {
-    const { paradas: ps, geometria: geo, origem: ori, motorista: mot, rastro: ras, pinoPendente: pino, seguir: seguindo } = refProps.current;
+    const { paradas: ps, geometria: geo, origem: ori, motorista: mot, rastro: ras, navegacao: nav, pinoPendente: pino, seguir: seguindo } = refProps.current;
     void import("leaflet").then(({ default: L }) => {
       // Limpa só as camadas de dados (o tile fica): lista própria, sem
       // fuçar `options` do Leaflet.
@@ -153,6 +156,15 @@ export function MapaRota({
       }
       if (ras.length > 1) {
         por(L.polyline(ras, { color: "#6b7280", weight: 3, opacity: 0.7, dashArray: "6 6" })).addTo(m);
+      }
+      // ─── A ROTA DA NAVEGAÇÃO (até a próxima parada) ──────────────────────
+      //
+      // Azul, por cima da rota planejada (roxa): é a linha que o motorista está
+      // seguindo AGORA. O mesmo contorno branco da rota, para não sumir no mapa.
+      if (nav && nav.length > 1) {
+        const pontos = nav.map((c) => [c[1] as number, c[0] as number] as [number, number]);
+        por(L.polyline(pontos, { color: "#ffffff", weight: 10, opacity: 0.95, lineCap: "round", lineJoin: "round" })).addTo(m);
+        por(L.polyline(pontos, { color: "#2563eb", weight: 6, opacity: 0.95, lineCap: "round", lineJoin: "round" })).addTo(m);
       }
       if (ori) {
         por(
@@ -263,6 +275,7 @@ export function MapaRota({
         ...comCoord.map((p) => [p.lat as number, p.lng as number] as [number, number]),
         ...(ori ? [[ori.lat, ori.lng] as [number, number]] : []),
         ...(mot ? [[mot.lat, mot.lng] as [number, number]] : []),
+        ...((nav ?? []).map((c) => [c[1] as number, c[0] as number] as [number, number])),
       ];
       // ─── QUEM MANDA NO ENQUADRAMENTO ───────────────────────────────────────
       //
@@ -392,7 +405,7 @@ export function MapaRota({
   React.useEffect(() => {
     const m = refMapa.current;
     if (m) refRedesenhar.current(m);
-  }, [paradas, geometria, origem, motorista, rastro, pinoPendente]);
+  }, [paradas, geometria, origem, motorista, rastro, navegacao, pinoPendente]);
 
 
   return (

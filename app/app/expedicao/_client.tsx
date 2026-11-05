@@ -268,38 +268,80 @@ export function ExpedicaoClient({
      filtros, sem doca — cada número que não é a carga dele é ruído no celular
      em movimento. O cartão abre a cabine (mapa), não a ficha da carga. */
   if (motorista) {
+    // ── O ENTREGADOR ESCOLHE A CARGA ──────────────────────────────────────
+    //
+    // Carga liberada pelo escritório nasce `montando` ("pronta para sair") e
+    // só vira `em_rota` quando o motorista aperta "Iniciar rota" na cabine.
+    // Listar apenas `em_rota` escondia justamente a carga que ele deveria
+    // começar — e ele não tinha como escolher entre duas.
+    const disponiveis = [...porStatus.emRota, ...porStatus.montando].sort(
+      (a, b) => b.numero - a.numero,
+    );
+
     return (
       <div className="min-h-full space-y-4 p-4">
         <header>
           <h1 className="text-lg font-semibold text-text">{textos.titulo}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{textos.subtitulo}</p>
         </header>
-        {porStatus.emRota.length === 0 ? (
+
+        {disponiveis.length === 0 ? (
           <p className="rounded-xl border border-border bg-surface px-4 py-6 text-center text-sm text-muted-foreground">
-            {t("Nenhuma carga na rua agora.")}
+            {t("Nenhuma carga liberada agora.")}
           </p>
         ) : (
-          <ul className="overflow-hidden rounded-xl border border-border bg-surface">
-            {porStatus.emRota.map((c) => (
-              <LinhaDaCarga
-                key={c.id}
-                carga={c}
-                progresso={
-                  progresso[c.id] ?? {
-                    total: 0,
-                    entregues: 0,
-                    devolvidos: 0,
-                    cidades: [],
-                    semCidade: 0,
+          <>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="carga-do-entregador"
+                className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
+              >
+                {t("Qual carga você está entregando?")}
+              </label>
+              <select
+                id="carga-do-entregador"
+                className="h-12 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text"
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) router.push(`/app/expedicao/${e.target.value}/motorista`);
+                }}
+              >
+                <option value="" disabled>
+                  {t("Escolha a carga…")}
+                </option>
+                {disponiveis.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {numeroDaCarga(c.numero)}
+                    {c.placa ? ` · ${c.placa}` : ""}
+                    {` · ${ROTULO_DA_CARGA[c.status as StatusDaCarga] ?? c.status}`}
+                    {c.motorista_nome ? ` · ${c.motorista_nome}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <ul className="overflow-hidden rounded-xl border border-border bg-surface">
+              {disponiveis.map((c) => (
+                <LinhaDaCarga
+                  key={c.id}
+                  carga={c}
+                  progresso={
+                    progresso[c.id] ?? {
+                      total: 0,
+                      entregues: 0,
+                      devolvidos: 0,
+                      cidades: [],
+                      semCidade: 0,
+                    }
                   }
-                }
-                concluindo={concluindoId === c.id}
-                aoConcluir={concluirCarga}
-                motorista
-                textos={textos}
-              />
-            ))}
-          </ul>
+                  concluindo={concluindoId === c.id}
+                  aoConcluir={concluirCarga}
+                  motorista
+                  textos={textos}
+                />
+              ))}
+            </ul>
+          </>
         )}
       </div>
     );

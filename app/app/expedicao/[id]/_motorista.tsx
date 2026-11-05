@@ -73,6 +73,9 @@ export function ModoMotorista({
   const [folhaAberta, setFolhaAberta] = React.useState(false);
   // Última posição do GPS — o "você está aqui" do mapa, como num app de mapas.
   const [minhaPosicao, setMinhaPosicao] = React.useState<{ lat: number; lng: number } | null>(null);
+  /** Rota da navegação até a próxima parada (desenhada em azul no mapa). */
+  const [navegacao, setNavegacao] = React.useState<{ geometria: number[][]; distancia_m: number; duracao_s: number } | null>(null);
+  const [calculandoRota, setCalculandoRota] = React.useState(false);
   // "Seguindo você": o mapa acompanha o GPS a cada ping. Desligado quando o
   // dedo arrasta o mapa — ver `aoArrastar` em `MapaRota`.
   const [seguir, setSeguir] = React.useState(false);
@@ -325,6 +328,7 @@ export function ModoMotorista({
       await apiClient.patch(`/api/v1/shipments/${cargaId}/orders/${orderId}`, corpo);
       toast.success(status === "entregue" ? t("Entregue.") : status === "em_atendimento" ? t("Em atendimento.") : t("Registrado."));
       setMotivoAberto(false);
+      setNavegacao(null);
       await recarregar();
       aoMudar();
     } catch (e) {
@@ -376,12 +380,48 @@ export function ModoMotorista({
     toast.success(t("GPS encerrado."));
   }
 
-  const navegarHref =
-    proxima?.latitude != null && proxima?.longitude != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${proxima.latitude},${proxima.longitude}`
-      : proxima?.endereco
-        ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(proxima.endereco)}`
-        : null;
+  const podeNavegar = proxima?.latitude != null && proxima?.longitude != null;
+
+  /**
+   * NAVEGAR DENTRO DO APP — sem sair para o Google Maps.
+   *
+   * A rota sai do mesmo OSRM que planeja a carga (`/api/v1/rotas`): sai da
+   * posição atual do motorista e vai até a próxima parada. O traçado entra no
+   * mapa em azul, por cima da rota planejada, e o mapa passa a seguir o GPS.
+   *
+   * Sem coordenada na parada não há rota por ruas — aí a tela diz o motivo, em
+   * vez de abrir outro aplicativo por baixo.
+   */
+  async function navegar() {
+    if (!proxima || proxima.latitude == null || proxima.longitude == null) {
+      toast.error(t("Esta parada não tem coordenada no mapa."));
+      return;
+    }
+    let de = minhaPosicao;
+    if (!de) {
+      try {
+        const pos = await posicaoAtual(10000);
+        de = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setMinhaPosicao(de);
+      } catch {
+        toast.error(t("Ligue o GPS para calcular a rota."));
+        return;
+      }
+    }
+    setCalculandoRota(true);
+    try {
+      const corpo = await apiClient.get<{
+        data: { geometria: number[][]; distancia_m: number; duracao_s: number };
+      }>(`/api/v1/rotas?de=${de.lat},${de.lng}&para=${proxima.latitude},${proxima.longitude}`);
+      setNavegacao(corpo.data);
+      setSeguir(true);
+      toast.success(t("Rota calculada — siga a linha azul."));
+    } catch {
+      toast.error(t("Não consegui calcular a rota agora. Tente de novo com sinal."));
+    } finally {
+      setCalculandoRota(false);
+    }
+  }
 
   // O MAPA É O HERÓI — como no app de navegação. Ele fica no topo, colado na
   // tela (`sticky`), e os cartões rolam por cima: o motorista vê a rota e a
@@ -431,6 +471,7 @@ export function ModoMotorista({
       origem={origemDoMapa}
       motorista={minhaPosicao}
       rastro={[]}
+      navegacao={navegacao?.geometria ?? []}
       modoMarcar={false}
       pinoPendente={null}
       aoClicarMapa={() => undefined}
@@ -603,11 +644,13 @@ export function ModoMotorista({
                 coordenada o "Navegar" não existe e o "Cheguei" ficava sozinho
                 na metade esquerda, com um buraco ao lado. */}
             <div className="flex gap-2">
-              {navegarHref && (
-                <Button asChild className="h-11 flex-1">
-                  <a href={navegarHref} target="_blank" rel="noopener noreferrer">
-                    {t("Navegar")}
-                  </a>
+              {podeNavegar && (
+                <Button
+                  className="h-11 flex-1"
+                  disabled={calculandoRota}
+                  onClick={() => void navegar()}
+                >
+                  {calculandoRota ? t("Calculando…") : t("Navegar")}
                 </Button>
               )}
               {podeOperar && (
@@ -896,11 +939,13 @@ export function ModoMotorista({
           </button>
 
           <div className="mt-2.5 flex gap-2">
-            {navegarHref && (
-              <Button asChild className="h-12 flex-1 text-[15px]">
-                <a href={navegarHref} target="_blank" rel="noopener noreferrer">
-                  {t("Navegar")}
-                </a>
+            {podeNavegar && (
+              <Button
+                className="h-12 flex-1 text-[15px]"
+                disabled={calculandoRota}
+                onClick={() => void navegar()}
+              >
+                {calculandoRota ? t("Calculando…") : t("Navegar")}
               </Button>
             )}
             {podeOperar && (
@@ -994,6 +1039,28 @@ export function ModoMotorista({
           </button>
         </div>
       </div>
+
+      {/* A faixa da navegação: o motorista vê para onde está indo e quanto
+          falta, sem sair do app. "Encerrar" volta ao mapa da rota inteira. */}
+      {navegacao && (
+        <div className="absolute top-14 left-3 z-20 max-w-[70%]">
+          <div className="flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1.5 text-white shadow-lg">
+            <span className="text-xs font-semibold tabular-nums">
+              {formatarDistancia(navegacao.distancia_m)}
+            </span>
+            <span className="text-[11px] text-white/80 tabular-nums">
+              {formatarDuracao(navegacao.duracao_s)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setNavegacao(null)}
+              className="shrink-0 rounded-full px-1.5 text-[11px] font-medium text-white/90 underline underline-offset-2"
+            >
+              {t("Encerrar")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* O "onde estou" — botão redondo no canto, o gesto de todo app de mapa.
           `aria-pressed` porque ele ALTERNA o modo de seguir, não só centraliza
