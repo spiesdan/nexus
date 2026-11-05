@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.7] — 2026-11-05
+
+### Adicionado
+
+- **Notas: dá para corrigir a nota rejeitada na própria tela, como no Odivix** A nota que a SEFAZ recusava ficava parada no status **"Erro"**, com o motivo ao lado e só dois botões: tentar de novo do mesmo jeito, ou cancelar. Quando a recusa era de cadastro — **232**, IE do destinatário não informada, que foi o caso da OUT SERVICE em 05/11 —, não havia onde preencher a IE: era sair da tela, achar o cliente, abrir a ficha, corrigir e voltar.
+
+  Agora cada nota em **erro** (ou pendente) tem o botão **Corrigir**, que abre o documento para edição no lugar onde o erro aparece:
+
+  - **Destinatário** — IE, CPF/CNPJ e endereço completo. Com "Salvar também no cadastro do cliente" marcado (o padrão), a correção vai para a ficha do cliente e a próxima nota já sai certa.
+  - **Itens** — NCM, CFOP, unidade e descrição, item por item. A correção vale para **esta nota**; o cadastro do produto continua sendo a verdade das próximas.
+  - **Informações complementares** do DANFE.
+
+  O botão **Salvar e reenviar** grava e devolve a nota para a fila na mesma ação, sem cancelar e emitir outra — o número já reservado continua sendo o dela. Toda correção fica na timeline da nota como evento **ajuste**, com os campos que mudaram, e no rastro de auditoria como `invoice.adjusted`.
+
 ## [1.39.6] — 2026-11-05
 
 ### Corrigido
@@ -6382,7 +6396,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.6...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.7...HEAD
+[1.39.7]: https://github.com/spiesdan/nexus/compare/v1.39.6...v1.39.7
 [1.39.6]: https://github.com/spiesdan/nexus/compare/v1.39.5...v1.39.6
 [1.39.5]: https://github.com/spiesdan/nexus/compare/v1.39.4...v1.39.5
 [1.39.4]: https://github.com/spiesdan/nexus/compare/v1.39.3...v1.39.4
