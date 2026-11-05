@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.8] — 2026-11-05
+
+### Corrigido
+
+- **Nota a prazo: o grupo Fatura passou a ser emitido e a SEFAZ não recusa mais (905)** Nota com pagamento **a prazo** (duas ou mais parcelas) era recusada pela SEFAZ com **905 — "Campos do grupo Fatura não informados"**, mesmo com as duplicatas certas no XML. O grupo `<fat>` (fatura) é opcional no leiaute — o XML passava na validação de esquema —, mas a SEFAZ aplica uma regra de negócio por cima: pagamento a prazo exige a fatura.
+
+  Medido em 05/11/2026 nesta instalação: a nota **4587** (R$ 650,00 em 2×, primeiro vencimento 23/11) parou nessa recusa. Com o grupo Fatura emitido antes das duplicatas (número da nota, valor original e líquido iguais ao total, desconto zero), a mesma nota foi autorizada como **4588**, protocolo `242260530117471`.
+
+  O gate `tests/unit/fiscal-sidecar-emissao.test.ts` passa a cobrar a ordem — `<fat>` antes de `<dup>` — e os campos que a fatura precisa ter.
+
 ## [1.39.7] — 2026-11-05
 
 ### Adicionado
@@ -6396,7 +6406,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.7...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.8...HEAD
+[1.39.8]: https://github.com/spiesdan/nexus/compare/v1.39.7...v1.39.8
 [1.39.7]: https://github.com/spiesdan/nexus/compare/v1.39.6...v1.39.7
 [1.39.6]: https://github.com/spiesdan/nexus/compare/v1.39.5...v1.39.6
 [1.39.5]: https://github.com/spiesdan/nexus/compare/v1.39.4...v1.39.5
