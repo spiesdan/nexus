@@ -201,10 +201,8 @@ describe("POST /api/v1/shipments/[id]/orders", () => {
     expect(vi.mocked(audit)).toHaveBeenCalledWith(
       expect.objectContaining({ action: "shipment_order.added", resourceId: CARGA }),
     );
-    expect(vi.mocked(avisarClientesDaCarga)).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ shipmentId: CARGA, orderIds: [PEDIDO] }),
-    );
+    // O aviso ao cliente mudou de gatilho: só no "Sair para rota".
+    expect(vi.mocked(avisarClientesDaCarga)).not.toHaveBeenCalled();
   });
 
   it("viewer não põe pedido na carga", async () => {

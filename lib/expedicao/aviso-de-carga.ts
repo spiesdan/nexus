@@ -1,15 +1,16 @@
 /**
- * O AVISO ao cliente quando a carga nasce — lado do CRM (`supabase-js`).
+ * O AVISO ao cliente quando a rota SAI PARA A RUA — lado do CRM (`supabase-js`).
  *
- * Gatilho: `POST /api/v1/shipments`, depois do insert das linhas de carga.
- * O pedido passa de `aprovado/faturado` para `expedido` ali dentro, e quem
- * espera a entrega tem direito de saber que ela começou — sem esperar o
- * cliente perguntar "e meu pedido?".
+ * Gatilho: `POST /api/v1/shipments/[id]/rota/iniciar` (o botão "Sair para
+ * rota"), depois do update que vira a carga para `em_rota`. Antes ele saía na
+ * criação da carga — quando o caminhão ainda estava na doca — e o texto tinha
+ * que se explicar ("programada para sair"). O cliente não precisa da logística
+ * interna; precisa saber que o pedido saiu para entrega.
  *
  * É o MESMO encanamento do aviso de escalação (`lib/ai/handoff/aviso-ao-lead.ts`):
  * `sendMessageHandler` com ator declarado e metadata que identifica o aviso
  * como sistema, fire-and-forget com catch por pedido. A função NUNCA lança —
- * um envio que falhou não pode derrubar a criação da carga que já foi
+ * um envio que falhou não pode derrubar a resposta da rota que já foi
  * auditada e respondida.
  *
  * O que este caminho NÃO cobre (dito como no aviso de escalação): janela/
@@ -21,6 +22,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
 import { ensureConversation, sessaoProntaParaEnvio } from "@/lib/automation/start-conversation";
 import { logger } from "@/lib/logger";
+import { FUSO_PADRAO, fusoValido } from "@/lib/tempo/fusos";
 
 /** Ator do envio — o sistema de expedição falando, não uma pessoa. */
 const ATOR_DO_AVISO = "expedicao-aviso";
@@ -28,21 +30,48 @@ const ATOR_DO_AVISO = "expedicao-aviso";
 export interface AvisoDaCargaInput {
   organizationId: string;
   shipmentId: string;
-  shipmentNumero: number;
   /** Os pedidos embarcados nesta carga (vazia = nada a avisar). */
   orderIds: readonly string[];
 }
 
 /**
- * O texto do aviso. Sem promessa de prazo (regra dura do produto): diz o que
- * ACONTECEU — o pedido embarcou — e não quando chega.
+ * Saudação pelo relógio da ORGANIZAÇÃO (não do servidor, que roda em UTC).
+ *
+ * Cortes 5/12/18 são apresentação, não regra de negócio — os mesmos da home
+ * do produto (`app/app/_home.tsx`). Madrugada cai em "Boa noite": ninguém
+ * quer receber "Bom dia" às 3h.
  */
-function textoDoAviso(numeroPedido: number, cargaNumero: number): string {
+export function saudacao(agora: Date, fuso: string): string {
+  // "en-US" aqui NÃO é idioma de tela: é a forma estável de pedir ao Intl só o
+  // NÚMERO da hora de parede no fuso (mesmo padrão de
+  // `lib/agent-engine/agent/janela-de-atendimento.ts` e `pacing/engine.ts`). A
+  // data formatada com idioma quem escolhe é a camada `lib/i18n/datas.ts` — o
+  // guarda `tests/unit/i18n-a-data-segue-o-idioma.test.ts` reprova "pt-BR"
+  // fixo justamente porque aquilo viraria texto na tela; aqui o resultado é
+  // convertido em número e nunca chega ao cliente.
+  // `% 24`: algumas ICUs devolvem "24" à meia-noite com hour12:false.
+  const hora =
+    Number(
+      new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: fuso,
+      }).format(agora),
+    ) % 24;
+  if (hora >= 5 && hora < 12) return "Bom dia";
+  if (hora >= 12 && hora < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+/**
+ * O texto do aviso. Comercial e curto: saudação + o fato que interessa.
+ * Sem prazo prometido, sem jargão de expedição (carga, separação, romaneio).
+ */
+export function textoDoAviso(numeroPedido: number, saudacaoDoMomento: string): string {
   const pedido = `PED-${String(numeroPedido).padStart(4, "0")}`;
   return (
-    `Boa notícia: o seu pedido ${pedido} foi separado e entrou na carga nº ${cargaNumero}, ` +
-    "que é a programada para sair para a entrega. Assim que a entrega for concluída, " +
-    "o pedido é atualizado como entregue por aqui. Qualquer dúvida, é só responder nesta conversa."
+    `${saudacaoDoMomento}! Seu pedido ${pedido} saiu para entrega. 🚚 ` +
+    "Em breve ele chega até você. Qualquer dúvida, é só responder por aqui."
   );
 }
 
@@ -68,6 +97,18 @@ export async function avisarClientesDaCarga(
       .not("contact_id", "is", null);
     if (error) throw new Error(error.message);
     if (!pedidos || pedidos.length === 0) return { avisados: 0 };
+
+    // O fuso que vale é o da organização — o servidor roda em UTC e "Bom dia"
+    // às 3h da manhã é o defeito que este select evita. Falha aberta: fuso
+    // inválido (a coluna não tem CHECK) cai no padrão do produto.
+    const { data: org } = await admin
+      .from("organizations")
+      .select("timezone")
+      .eq("id", input.organizationId)
+      .maybeSingle();
+    const fusoBruto = String((org as { timezone?: string | null } | null)?.timezone ?? "").trim();
+    const fuso = fusoBruto !== "" && fusoValido(fusoBruto) ? fusoBruto : FUSO_PADRAO;
+    const saudacaoDoMomento = saudacao(new Date(), fuso);
 
     const sessionId = await sessaoProntaParaEnvio(admin, input.organizationId);
     if (!sessionId) {
@@ -97,7 +138,7 @@ export async function avisarClientesDaCarga(
           {
             conversation_id: conversationId,
             type: "text",
-            body: textoDoAviso(p.numero, input.shipmentNumero),
+            body: textoDoAviso(p.numero, saudacaoDoMomento),
             // A linha se DECLARA — mesma razão do aviso de escalação: quem
             // audita a conversa depois precisa separar sistema de fala humana
             // ou de agente.

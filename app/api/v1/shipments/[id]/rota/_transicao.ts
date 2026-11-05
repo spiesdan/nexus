@@ -8,6 +8,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { avisarClientesDaCarga } from "@/lib/expedicao/aviso-de-carga";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "./_carga";
@@ -79,6 +80,19 @@ export async function transicaoDeRota(
     resourceId: id,
     requestId,
   });
+
+  // É AQUI que o cliente fica sabendo — o botão "Sair para rota" é o fato, não
+  // a criação da carga. Best-effort e nunca lança: a rota já virou `em_rota` e
+  // já foi auditada; um envio que falhou não pode derrubar a resposta.
+  // Aguardar é de propósito: com a resposta já enviada, a promise solta pode
+  // ser cortada junto com o request.
+  if (para === "iniciar") {
+    await avisarClientesDaCarga(supabase, {
+      organizationId: authz.org.orgId,
+      shipmentId: id,
+      orderIds: [...new Set(d.itens.map((i) => i.order_id))],
+    });
+  }
 
   const atualizado = await carregarCargaComParadas(supabase, authz.org.orgId, id);
   return ok(atualizado, { requestId });
