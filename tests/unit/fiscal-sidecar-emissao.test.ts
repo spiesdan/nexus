@@ -202,6 +202,16 @@ describe("emissor NF-e do sidecar", () => {
     }
   });
 
+  it("inutilização aceita o cStat 102 — e não o 1002, que não existe", () => {
+    // Medido em 05/11/2026 nas três primeiras inutilizações reais desta
+    // instalação: a SEFAZ homologou (102, "Inutilização de número homologado")
+    // e o sidecar procurava 1002 — a tela mostrava "Erro" para número
+    // inutilizado de verdade, e "Retransmitir" reenviava o que já estava feito.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toContain("$ret['cstat'] === '102'");
+    expect(src).not.toContain("'1002'");
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.

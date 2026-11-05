@@ -96,6 +96,37 @@ export interface FaixaInutilizar {
 }
 
 /**
+ * O desfecho de uma transmissão de inutilização.
+ *
+ * O sucesso é cStat **102** ("Inutilização de número homologado"). E **563**
+ * ("Já existe pedido de Inutilização com a mesma faixa") também encerra: é a
+ * resposta da SEFAZ ao reenvio de uma faixa que JÁ foi homologada — tratá-la
+ * como erro deixaria a tela oferecendo "Retransmitir" para sempre e esconderia
+ * o fato de o número estar inutilizado.
+ *
+ * Medido em 05/11/2026 nesta instalação: as três faixas saíram com 102 e o
+ * sidecar só conhecia 1002 (código que não existe nesse serviço); o reenvio
+ * devolveu 563 — a prova de que a homologação tinha acontecido.
+ */
+export function desfechoDaInutilizacao(
+  retorno: { ok: boolean; cstat: string | null; protocolo: string | null },
+  motivoDaFalha: string | null,
+): { status: "transmitida" | "erro"; protocolo: string | null; sucesso: boolean; xmotivo: string | null } {
+  if (retorno.ok) {
+    return { status: "transmitida", protocolo: retorno.protocolo, sucesso: true, xmotivo: null };
+  }
+  if (retorno.cstat === "563") {
+    return {
+      status: "transmitida",
+      protocolo: retorno.protocolo,
+      sucesso: true,
+      xmotivo: `SEFAZ [563]: ${motivoDaFalha ?? "já existe pedido de inutilização"} — faixa já homologada`,
+    };
+  }
+  return { status: "erro", protocolo: retorno.protocolo, sucesso: false, xmotivo: motivoDaFalha };
+}
+
+/**
  * Transmite a faixa já registrada; grava status/protocolo/xmotivo.
  * Quando não dá para transmitir, o status continua "registrada" e só o
  * `sefaz_xmotivo` explica o motivo — a linha continua honesta.
@@ -114,10 +145,13 @@ export async function transmitirInutilizacaoRegistrada(
   let sucesso = false;
   if (contexto && !bloqueio) {
     const r = await transmitirInutilizacao(contexto, faixa);
-    status = r.ok ? "transmitida" : "erro";
-    protocolo = r.protocolo;
-    sucesso = r.ok;
-    xmotivo = r.ok ? (r.xmotivo ?? null) : motivoDaRecusa(r.cstat, r.xmotivo);
+    const desfecho = desfechoDaInutilizacao(r, motivoDaRecusa(r.cstat, r.xmotivo));
+    status = desfecho.status;
+    protocolo = desfecho.protocolo;
+    sucesso = desfecho.sucesso;
+    // No sucesso com protocolo, a SEFAZ devolve o xMotivo de homologação; no
+    // 563, o texto que explica por que não há protocolo novo.
+    xmotivo = desfecho.status === "transmitida" ? (desfecho.xmotivo ?? r.xmotivo ?? null) : desfecho.xmotivo;
   }
 
   const admin = createAdminClient();

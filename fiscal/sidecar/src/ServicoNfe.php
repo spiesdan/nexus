@@ -387,7 +387,13 @@ class ServicoNfe
             if ($ret === null) {
                 return ['ok' => false, 'codigo' => 'RESPOSTA_ILEGIVEL', 'mensagem' => 'A SEFAZ respondeu fora do leiaute esperado.'];
             }
-            if ($ret['cstat'] === '1002') {
+            // 102 = "Inutilização de número homologado". É O código de
+            // sucesso deste serviço (não existe 1002 em inutilização). Medido
+            // em 05/11/2026, nas três primeiras inutilizações reais desta
+            // instalação: a SEFAZ homologou (102) e o sidecar devolveu erro —
+            // a tela mostrava "Erro" para um número que estava inutilizado de
+            // verdade, e "Retransmitir" reenviava o que já estava feito.
+            if ($ret['cstat'] === '102') {
                 return [
                     'ok' => true,
                     'cstat' => $ret['cstat'],
