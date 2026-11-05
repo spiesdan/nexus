@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.11] — 2026-11-05
+
+### Adicionado
+
+- **Romaneio: valor de cada pedido, meio de pagamento e o fechamento por meio no fim** O romaneio saía com o valor **total da carga** no rodapé, mas não dizia quanto era cada pedido nem como cada cliente paga — e o motorista fechava o dia sem saber quanto deveria voltar de cada forma.
+
+  Agora a tabela de pedidos tem **Pagamento** e **Valor** por linha, e o fim da folha traz o **fechamento por meio de pagamento**: uma linha por meio (AVISTA, BOLETO 14 DIAS, PIX…), com a quantidade de pedidos e o valor somado, fechando no total da carga.
+
+  O agrupamento ignora caixa, acento e espaço duplo — "BOLETO 14 DIAS" e "Boleto 14 dias" são o mesmo meio —, e pedido sem condição entra em **"Não informado"** em vez de sumir: a soma dos meios tem de bater com o total, inclusive quando o dado falta.
+
+  Para caber sem empurrar a carga para uma terceira página, saíram as colunas **Origem** (a palavra "Pedido" repetida em toda linha) e **Id** (o mesmo número que já vai em "Nº Documento"). O cabeçalho também parou de sobrepor o título quando a razão social é longa.
+
+### Corrigido
+
+- **Inutilização: o retorno 563 aparece uma vez só, e as três faixas antigas ficaram fechadas** O fechamento de uma inutilização já homologada (cStat **563 — "já existe pedido com a mesma faixa"**) escrevia o prefixo `SEFAZ [563]:` duas vezes no retorno da tela. Agora o texto é montado num lugar só.
+
+  As três inutilizações de 05/11 (lacunas **4580–4581, 4583 e 4587** da série 1) foram reconciliadas pelo próprio botão **Retransmitir**: estão `transmitida`, com o motivo da SEFAZ registrado. O protocolo original não foi capturado — ele se perdeu no bug do cStat 1002 (corrigido na 1.39.10) —, e a SEFAZ não devolve protocolo novo no reenvio de faixa já homologada; a consulta fica no portal da SEFAZ.
+
 ## [1.39.10] — 2026-11-05
 
 ### Corrigido
@@ -6432,7 +6450,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.10...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.11...HEAD
+[1.39.11]: https://github.com/spiesdan/nexus/compare/v1.39.10...v1.39.11
 [1.39.10]: https://github.com/spiesdan/nexus/compare/v1.39.9...v1.39.10
 [1.39.9]: https://github.com/spiesdan/nexus/compare/v1.39.8...v1.39.9
 [1.39.8]: https://github.com/spiesdan/nexus/compare/v1.39.7...v1.39.8
