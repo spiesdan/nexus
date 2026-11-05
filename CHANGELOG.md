@@ -8,6 +8,44 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.39.4] — 2026-11-05
+
+### Adicionado
+
+- **Cabine do entregador: trocar de romaneio sem voltar para a lista** A cabine é a tela que fica aberta o dia inteiro, e não havia como pular de um
+  romaneio para outro: o motorista que leva duas cargas no mesmo turno precisava
+  sair, achar a outra carga na lista e entrar de novo.
+
+  Agora o botão **Trocar carga** abre, dentro da cabine, a lista das cargas
+  liberadas (`em rota` e `montando`) e leva direto para o romaneio escolhido — a
+  carga atual aparece marcada como **Atual**.
+
+  Quem já instalou: **não precisa fazer nada**.
+
+### Alterado
+
+- **Rastreio do entregador ligado por padrão na cabine** Na cabine do entregador, a carga em rota agora **começa publicando sozinha** a
+  posição — o escritório volta a ver a carga no mapa sem depender de o motorista
+  achar o botão "Ligar rastreio" dentro da folha. O botão continua na tela, e
+  tocar em "Parar" desliga na hora.
+
+  No painel da expedição o rastreio segue opt-in.
+
+  Quem já instalou: **não precisa fazer nada**.
+
+### Corrigido
+
+- **Fechar o app não desloga mais (cookie de sessão reescrito pelo middleware)** O login continuava caindo ao atualizar a página ou fechar o app no celular. O
+  cookie de autenticação nascia persistente, mas era **reescrito pelo middleware**
+  a cada navegação, com opções sem prazo — e voltava a ser cookie de sessão. O
+  navegador descartava ao fechar, e a pessoa caía no login outra vez.
+
+  Agora as três pontas que gravam o cookie (middleware, servidor e navegador)
+  carregam o mesmo prazo de **30 dias**. Quem já está logado só precisa entrar uma
+  última vez; a partir daí a sessão sobrevive a refresh e a fechar o app.
+
+  Quem já instalou: **não precisa fazer nada** além de entrar de novo uma vez.
+
 ## [1.39.3] — 2026-11-05
 
 ### Corrigido
@@ -6323,7 +6361,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.4...HEAD
+[1.39.4]: https://github.com/spiesdan/nexus/compare/v1.39.3...v1.39.4
 [1.39.3]: https://github.com/spiesdan/nexus/compare/v1.39.2...v1.39.3
 [1.39.2]: https://github.com/spiesdan/nexus/compare/v1.39.1...v1.39.2
 [1.39.1]: https://github.com/spiesdan/nexus/compare/v1.39.0...v1.39.1
