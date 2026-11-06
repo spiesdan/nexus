@@ -46,6 +46,7 @@ import {
   type PedidoParaDestinatario,
 } from "./destinatario-da-nota";
 import { podeTransitar } from "./fila";
+import { resolverProdutosDosItens } from "./produto-do-item";
 
 /** Estados em que a nota ainda pode ser corrigida: o documento não saiu. */
 export const STATUS_EDITAVEIS = ["erro", "pendente"] as const;
@@ -236,29 +237,13 @@ export async function carregarQuadroDaNota(
     product_id: string | null;
   }[];
 
-  const idsProd = brutos.map((i) => i.product_id).filter((v): v is string => !!v);
-  const fiscais = new Map<
-    string,
-    { ncm: string | null; cfop: string | null; unidade: string | null }
-  >();
-  if (idsProd.length > 0) {
-    const { data: prods } = await supabase
-      .from("catalog_products")
-      .select("id, ncm, cfop, unidade")
-      .eq("organization_id", orgId)
-      .in("id", idsProd);
-    for (const p of (prods ?? []) as unknown as {
-      id: string;
-      ncm: string | null;
-      cfop: string | null;
-      unidade: string | null;
-    }[]) {
-      fiscais.set(p.id, { ncm: p.ncm, cfop: p.cfop, unidade: p.unidade });
-    }
-  }
+  // Mesmo resolvedor do drain: vínculo explícito → código → nome. O quadro
+  // mostra o que a emissão VAI usar; se aqui dissesse "sem NCM" e o drain
+  // achasse o NCM pelo cadastro, a tela mentiria contra o documento.
+  const produtosDosItens = await resolverProdutosDosItens(supabase, orgId, brutos);
 
-  const doCadastro: ItemDaNota[] = brutos.map((i) => {
-    const fiscal = i.product_id ? fiscais.get(i.product_id) : undefined;
+  const doCadastro: ItemDaNota[] = brutos.map((i, pos) => {
+    const fiscal = produtosDosItens[pos];
     return {
       order_item_id: i.id,
       codigo: i.produto_codigo,

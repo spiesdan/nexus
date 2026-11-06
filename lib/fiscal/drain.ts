@@ -9,6 +9,7 @@ import { anoDaNumeracao, inutilizarNumeroQueimado, podeInutilizar } from "./inut
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
 import { devolverNumeroDaNota, falhouAntesDaSefaz, reservarNumeroDaNota } from "./numeracao";
+import { resolverProdutosDosItens } from "./produto-do-item";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped } from "./sped-payload";
 
@@ -201,28 +202,23 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .in("order_id", idsDosPedidos)
       .eq("organization_id", nota.organization_id)
       .order("posicao");
-    const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
-      .map((i) => i.product_id)
-      .filter(Boolean) as string[];
-    const fiscais: Record<
-      string,
-      { ncm: string | null; cfop: string | null; unidade: string | null }
-    > = {};
-    if (idsProd.length > 0) {
-      const { data: prods } = await admin
-        .from("catalog_products")
-        .select("id, ncm, cfop, unidade")
-        .eq("organization_id", nota.organization_id)
-        .in("id", idsProd);
-      for (const p of (prods ?? []) as unknown as {
-        id: string;
-        ncm: string | null;
-        cfop: string | null;
-        unidade: string | null;
-      }[]) {
-        fiscais[p.id] = p;
-      }
-    }
+    // O item do pedido é texto livre: `product_id` pode estar nulo (ou apontar
+    // para produto que sumiu) e o NCM existir no catálogo pelo código/nome.
+    // Sem esta resolução, a nota sai com `Falta NCM do produto "..."` mesmo
+    // com o cadastro preenchido — foi o que parou a nota da HAYLA em 06/11.
+    const produtosDosItens = await resolverProdutosDosItens(
+      admin,
+      nota.organization_id,
+      ((itensDb ?? []) as unknown as {
+        product_id: string | null;
+        produto_codigo: string | null;
+        produto_nome: string | null;
+      }[]).map((i) => ({
+        product_id: i.product_id,
+        produto_codigo: i.produto_codigo,
+        produto_nome: i.produto_nome,
+      })),
+    );
     // O NÚMERO DA NOTA VEM DO CONTADOR, NÃO DO PEDIDO.
     //
     // Antes daqui saía `ped.numero`. Pedido que não vira nota abre buraco na
@@ -256,17 +252,20 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
         desconto_pct: number;
         product_id: string | null;
       }[]
-    ).map((i) => ({
-      order_item_id: i.id,
-      codigo: i.produto_codigo,
-      descricao: i.produto_nome,
-      ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,
-      cfop: i.product_id ? (fiscais[i.product_id]?.cfop ?? null) : null,
-      unidade: i.product_id ? (fiscais[i.product_id]?.unidade ?? null) : null,
-      quantidade: i.quantidade,
-      preco_cents: i.preco_unit_cents,
-      desconto_pct: Number(i.desconto_pct),
-    }));
+    ).map((i, pos) => {
+      const produto = produtosDosItens[pos];
+      return {
+        order_item_id: i.id,
+        codigo: i.produto_codigo,
+        descricao: i.produto_nome,
+        ncm: produto?.ncm ?? null,
+        cfop: produto?.cfop ?? null,
+        unidade: produto?.unidade ?? null,
+        quantidade: i.quantidade,
+        preco_cents: i.preco_unit_cents,
+        desconto_pct: Number(i.desconto_pct),
+      };
+    });
     const itensAjustados = aplicarAjusteNosItens(itensDaNota, nota.extras_fiscais?.itens);
 
     const em = ctx.emitente as unknown as Record<string, string | null>;
