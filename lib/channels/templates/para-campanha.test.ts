@@ -119,7 +119,7 @@ describe("listarTemplatesParaCampanha", () => {
     expect(m!.motivo).toContain("PENDING");
   });
 
-  it("modelo com slot de MÍDIA não é aceito por campanha — mas o motivo é visível", async () => {
+  it("modelo com slot de MÍDIA é aceito por campanha — imagem/vídeo/documento são montados", async () => {
     const [m] = await listarTemplatesParaCampanha(
       db([
         {
@@ -133,9 +133,10 @@ describe("listarTemplatesParaCampanha", () => {
       "org-1",
     );
 
-    expect(m!.aceito).toBe(false);
-    expect(m!.motivo).toContain("image");
+    expect(m!.aceito).toBe(true);
+    expect(m!.motivo).toBeNull();
     expect(m!.slots.map((s) => s.slotKey)).toEqual(["header:1", "1"]);
+    expect(m!.slots[0]).toMatchObject({ expects: "image", onde: "cabeçalho" });
   });
 
   it("modelo em RED não é aceito, e o motivo diz por quê", async () => {
@@ -207,19 +208,63 @@ describe("avaliarTemplateParaCampanha", () => {
     expect(v.erro).toContain("mudou na Meta");
   });
 
-  it("slot de mídia é recusado com o tipo no texto — campanha só monta texto", () => {
+  const comImagem = () =>
+    template({
+      slots: [
+        { slotKey: "header:1", key: "1", expects: "image", onde: "cabeçalho", contexto: "" },
+        { slotKey: "1", key: "1", expects: "text", onde: "corpo", contexto: "Olá {{1}}" },
+      ],
+    });
+
+  it("slot de mídia passa com link https público", () => {
+    const v = avaliarTemplateParaCampanha(
+      comImagem(),
+      { ...valores, "header:1": "https://cdn.exemplo.com/kit.jpeg" },
+      "hash-1",
+    );
+    expect(v).toMatchObject({ ok: true, codigo: "ok" });
+  });
+
+  it("slot de mídia passa com a referência de storage do upload da campanha", () => {
+    const v = avaliarTemplateParaCampanha(
+      comImagem(),
+      { ...valores, "header:1": "bucket://whatsapp-media/org-1/campanhas/kit.jpeg" },
+      "hash-1",
+    );
+    expect(v).toMatchObject({ ok: true, codigo: "ok" });
+  });
+
+  it("slot de mídia com texto solto é recusado ANTES de a Meta cobrar", () => {
+    const v = avaliarTemplateParaCampanha(
+      comImagem(),
+      { ...valores, "header:1": "kit.jpeg" },
+      "hash-1",
+    );
+    expect(v).toMatchObject({ ok: false, codigo: "midia_invalida", pausar: true });
+    expect(v.erro).toContain("https://");
+  });
+
+  it("slot de mídia com http:// é recusado — a Meta exige HTTPS", () => {
+    const v = avaliarTemplateParaCampanha(
+      comImagem(),
+      { ...valores, "header:1": "http://cdn.exemplo.com/kit.jpeg" },
+      "hash-1",
+    );
+    expect(v).toMatchObject({ ok: false, codigo: "midia_invalida" });
+  });
+
+  it("slot ESTRUTURADO (currency) continua fora: campanha não monta objeto", () => {
     const v = avaliarTemplateParaCampanha(
       template({
         slots: [
-          { slotKey: "header:1", key: "1", expects: "image", onde: "cabeçalho", contexto: "" },
-          { slotKey: "1", key: "1", expects: "text", onde: "corpo", contexto: "Olá {{1}}" },
+          { slotKey: "1", key: "1", expects: "currency", onde: "corpo", contexto: "Preço {{1}}" },
         ],
       }),
       valores,
       "hash-1",
     );
-    expect(v).toMatchObject({ ok: false, codigo: "media_nao_suportada", pausar: true });
-    expect(v.erro).toContain("image");
+    expect(v).toMatchObject({ ok: false, codigo: "slot_nao_suportado", pausar: true });
+    expect(v.erro).toContain("currency");
   });
 
   it("valor em branco é ausente e o veredito diz QUAL slot falta", () => {

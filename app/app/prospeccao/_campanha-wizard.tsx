@@ -41,11 +41,14 @@ import { useT } from "@/hooks/i18n/useT";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import { apiClient } from "@/lib/api/client";
 import { renderTemplateBody } from "@/lib/channels/meta/render-template";
+import { ehSlotDeMidia, valorDeMidiaAceito } from "@/lib/channels/templates/midia";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import { comoMoeda } from "@/lib/format/moeda";
+
+import { CampoDeMidia } from "./_campo-de-midia";
 import {
   presetsDaSelecao,
   presetSugerido,
@@ -750,6 +753,17 @@ export function CampanhaWizard({
           );
           return false;
         }
+        const midiaInvalida = modelo.slots.filter(
+          (s) => ehSlotDeMidia(s.expects) && !valorDeMidiaAceito(modeloUnico.valores[s.slotKey] ?? ""),
+        );
+        if (midiaInvalida.length > 0) {
+          toast.error(
+            t(
+              `Informe um link https:// ou envie o arquivo do parâmetro ${midiaInvalida[0]!.onde}.`,
+            ),
+          );
+          return false;
+        }
         return validarAgenda();
       }
       const semModelo = categoriasMarcadas.filter(
@@ -779,6 +793,17 @@ export function CampanhaWizard({
               `Preencha os parâmetros de ${rotuloDaCategoria(busca)}: ${faltando
                 .map((s) => `{{${s.key}}}`)
                 .join(", ")}.`,
+            ),
+          );
+          return false;
+        }
+        const midiaInvalida = modelo.slots.filter(
+          (s) => ehSlotDeMidia(s.expects) && !valorDeMidiaAceito(valores[s.slotKey] ?? ""),
+        );
+        if (midiaInvalida.length > 0) {
+          toast.error(
+            t(
+              `Em ${rotuloDaCategoria(busca)}, informe um link https:// ou envie o arquivo do parâmetro ${midiaInvalida[0]!.onde}.`,
             ),
           );
           return false;
@@ -1867,7 +1892,7 @@ export function CampanhaWizard({
                         )}
                         <p className="text-xs text-muted-foreground">
                           {t(
-                            "Cada campo aceita texto fixo ou as variáveis {{nome}} e {{primeiro_nome}} — trocadas por cliente no envio.",
+                            "Cada campo aceita texto fixo ou as variáveis {{nome}} e {{primeiro_nome}} — trocadas por cliente no envio. Nos parâmetros de mídia, use um link https:// ou envie um arquivo.",
                           )}
                         </p>
                         {modeloDoUnico.slots.map((slot) => (
@@ -1875,13 +1900,22 @@ export function CampanhaWizard({
                               <Label htmlFor={`wiz-slot-unico-${slot.slotKey}`}>
                                 {slot.onde} · {t("parâmetro")} {slot.key}
                               </Label>
-                              <Input
-                                id={`wiz-slot-unico-${slot.slotKey}`}
-                                value={modeloUnico.valores[slot.slotKey] ?? ""}
-                                onChange={(e) => trocarValorDoUnico(slot.slotKey, e.target.value)}
-                                placeholder={slot.contexto || t("Valor do parâmetro")}
-                                maxLength={4000}
-                              />
+                              {ehSlotDeMidia(slot.expects) ? (
+                                <CampoDeMidia
+                                  id={`wiz-slot-unico-${slot.slotKey}`}
+                                  expects={slot.expects}
+                                  valor={modeloUnico.valores[slot.slotKey] ?? ""}
+                                  onChange={(v) => trocarValorDoUnico(slot.slotKey, v)}
+                                />
+                              ) : (
+                                <Input
+                                  id={`wiz-slot-unico-${slot.slotKey}`}
+                                  value={modeloUnico.valores[slot.slotKey] ?? ""}
+                                  onChange={(e) => trocarValorDoUnico(slot.slotKey, e.target.value)}
+                                  placeholder={slot.contexto || t("Valor do parâmetro")}
+                                  maxLength={4000}
+                                />
+                              )}
                             </div>
                           ))}
                         <div className="space-y-1 rounded-lg border bg-muted/20 p-3">
@@ -2025,7 +2059,7 @@ export function CampanhaWizard({
                             )}
                             <p className="text-xs text-muted-foreground">
                               {t(
-                                "Cada campo aceita texto fixo ou as variáveis {{nome}}, {{primeiro_nome}}, {{cidade}} e {{categoria}} — trocadas por empresa no envio.",
+                                "Cada campo aceita texto fixo ou as variáveis {{nome}}, {{primeiro_nome}}, {{cidade}} e {{categoria}} — trocadas por empresa no envio. Nos parâmetros de mídia, use um link https:// ou envie um arquivo.",
                               )}
                             </p>
                             {escolhido.slots.map((slot) => (
@@ -2033,15 +2067,26 @@ export function CampanhaWizard({
                                 <Label htmlFor={`wiz-slot-${idDaBusca}-${slot.slotKey}`}>
                                   {slot.onde} · {t("parâmetro")} {slot.key}
                                 </Label>
-                                <Input
-                                  id={`wiz-slot-${idDaBusca}-${slot.slotKey}`}
-                                  value={entrada?.valores[slot.slotKey] ?? ""}
-                                  onChange={(e) =>
-                                    trocarValorDaCategoria(busca, slot.slotKey, e.target.value)
-                                  }
-                                  placeholder={slot.contexto || t("Valor do parâmetro")}
-                                  maxLength={4000}
-                                />
+                                {ehSlotDeMidia(slot.expects) ? (
+                                  <CampoDeMidia
+                                    id={`wiz-slot-${idDaBusca}-${slot.slotKey}`}
+                                    expects={slot.expects}
+                                    valor={entrada?.valores[slot.slotKey] ?? ""}
+                                    onChange={(v) =>
+                                      trocarValorDaCategoria(busca, slot.slotKey, v)
+                                    }
+                                  />
+                                ) : (
+                                  <Input
+                                    id={`wiz-slot-${idDaBusca}-${slot.slotKey}`}
+                                    value={entrada?.valores[slot.slotKey] ?? ""}
+                                    onChange={(e) =>
+                                      trocarValorDaCategoria(busca, slot.slotKey, e.target.value)
+                                    }
+                                    placeholder={slot.contexto || t("Valor do parâmetro")}
+                                    maxLength={4000}
+                                  />
+                                )}
                               </div>
                             ))}
                             <div className="space-y-1 rounded-lg border bg-muted/20 p-3">

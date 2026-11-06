@@ -29,6 +29,7 @@ import { ensureConversation } from "@/lib/automation/start-conversation";
 import { renderizarCorpoDoTemplate } from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
+import { resolverReferenciasDeMidia } from "@/lib/prospeccao/midia-da-campanha";
 
 /** O mínimo do prospect que o envio precisa. */
 export interface ProspectParaEnvio {
@@ -122,6 +123,12 @@ export async function enviarParaProspect(
         cidade: p.prospect.cidade ?? null,
         categoria: p.prospect.categoria ?? null,
       });
+      // Mídia é referência de storage (`bucket://…`) até ESTE ponto: assinar
+      // antes de enviar mantém o link válido durante toda a campanha, mesmo
+      // que a configuração tenha sido feita semanas antes.
+      const midia = await resolverReferenciasDeMidia(admin, p.orgId, templateValues);
+      if (!midia.ok) return { ok: false, erro: midia.erro };
+      templateValues = midia.values;
       corpo = renderizarCorpoDoTemplate(
         {
           components: p.template.components,

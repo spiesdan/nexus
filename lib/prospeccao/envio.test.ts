@@ -24,8 +24,9 @@ function resposta(over: Record<string, unknown> = {}) {
   } as never;
 }
 
-function adminFalso() {
+function adminFalso(opts: { urlBase?: string; erroDeAssinatura?: string } = {}) {
   const ledger: unknown[] = [];
+  const assinaturas: Array<{ bucket: string; caminho: string; validade: number }> = [];
   const admin = {
     rpc: vi.fn(async () => ({ data: "contact-1", error: null })),
     from: (tabela: string) => ({
@@ -34,8 +35,24 @@ function adminFalso() {
         return { error: null };
       },
     }),
+    storage: {
+      from: (bucket: string) => ({
+        createSignedUrl: async (caminho: string, validade: number) => {
+          assinaturas.push({ bucket, caminho, validade });
+          if (opts.erroDeAssinatura) {
+            return { data: null, error: { message: opts.erroDeAssinatura } };
+          }
+          return {
+            data: {
+              signedUrl: `${opts.urlBase ?? "https://storage.exemplo.com"}/${caminho}`,
+            },
+            error: null,
+          };
+        },
+      }),
+    },
   } as unknown as SupabaseClient;
-  return { admin, ledger };
+  return { admin, ledger, assinaturas };
 }
 
 function parametros(over: Partial<ParametrosDoEnvio> = {}): ParametrosDoEnvio {
@@ -117,6 +134,95 @@ describe("enviarParaProspect", () => {
 
     expect(r).toEqual({ ok: false, erro: "131047: janela fechada" });
     expect(ledger).toHaveLength(0);
+  });
+
+  it("template: assina a referência de mídia NO ENVIO e manda o link para a Meta", async () => {
+    vi.mocked(sendMessageHandler).mockResolvedValue(resposta());
+    const { admin, assinaturas } = adminFalso({ urlBase: "https://assinado.exemplo.com" });
+
+    const r = await enviarParaProspect(
+      admin,
+      parametros({
+        template: {
+          name: "kit_promocional",
+          language: "pt_BR",
+          contractHash: "hash-1",
+          values: {
+            "header:1": "bucket://whatsapp-media/org-1/campanhas/kit.jpeg",
+            "1": "Olá {{primeiro_nome}}",
+          },
+          components: [
+            { type: "HEADER", format: "IMAGE" },
+            { type: "BODY", text: "{{1}}" },
+          ],
+          parameterFormat: "POSITIONAL",
+        },
+      }),
+    );
+
+    expect(r).toMatchObject({ ok: true });
+    expect(assinaturas).toEqual([
+      { bucket: "whatsapp-media", caminho: "org-1/campanhas/kit.jpeg", validade: 3600 },
+    ]);
+    const [, , entrada] = vi.mocked(sendMessageHandler).mock.calls[0]!;
+    expect(entrada).toMatchObject({
+      template_values: {
+        "header:1": "https://assinado.exemplo.com/org-1/campanhas/kit.jpeg",
+        "1": "Olá Maria",
+      },
+    });
+  });
+
+  it("referência de OUTRA organização é recusada sem assinar nada", async () => {
+    const { admin, assinaturas } = adminFalso();
+
+    const r = await enviarParaProspect(
+      admin,
+      parametros({
+        template: {
+          name: "kit_promocional",
+          language: "pt_BR",
+          contractHash: "hash-1",
+          values: { "header:1": "bucket://whatsapp-media/org-2/campanhas/kit.jpeg" },
+          components: [
+            { type: "HEADER", format: "IMAGE" },
+            { type: "BODY", text: "Kit" },
+          ],
+          parameterFormat: "POSITIONAL",
+        },
+      }),
+    );
+
+    expect(r).toMatchObject({
+      ok: false,
+      erro: expect.stringContaining("midia_fora_da_organizacao"),
+    });
+    expect(assinaturas).toHaveLength(0);
+    expect(sendMessageHandler).not.toHaveBeenCalled();
+  });
+
+  it("falha de assinatura interrompe o envio em vez de mandar a referência crua", async () => {
+    const { admin } = adminFalso({ erroDeAssinatura: "bucket indisponível" });
+
+    const r = await enviarParaProspect(
+      admin,
+      parametros({
+        template: {
+          name: "kit_promocional",
+          language: "pt_BR",
+          contractHash: "hash-1",
+          values: { "header:1": "bucket://whatsapp-media/org-1/campanhas/kit.jpeg" },
+          components: [
+            { type: "HEADER", format: "IMAGE" },
+            { type: "BODY", text: "Kit" },
+          ],
+          parameterFormat: "POSITIONAL",
+        },
+      }),
+    );
+
+    expect(r).toMatchObject({ ok: false, erro: expect.stringContaining("midia_indisponivel") });
+    expect(sendMessageHandler).not.toHaveBeenCalled();
   });
 
   it("template sem texto para os guardrails é recusado ANTES de chamar o handler", async () => {

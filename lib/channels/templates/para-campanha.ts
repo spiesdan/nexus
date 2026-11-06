@@ -14,13 +14,18 @@
  * mora aqui, dentro de `lib/channels/`, e a campanha importa funções — nunca o
  * nome de um provider.
  *
- * ─── O que a campanha NÃO aceita nesta versão ──────────────────────────────
+ * ─── O que a campanha aceita (e o que ainda não) ───────────────────────────
  *
- * Slot de mídia (image/video/document) e estruturado (currency/date_time).
- * Campanha é texto: o operador ainda não anexa mídia por prospect, e mandar o
- * payload sem o parâmetro faria a Meta recusar com 132012 DEPOIS de aceitar a
- * chamada. O modelo aparece na lista com o motivo, não some — o operador
- * precisa saber que ele existe e por que não dá para usar.
+ * Texto, sufixo de URL, cupom e MÍDIA (image/video/document). A mídia é UM
+ * valor por slot, compartilhado por todos os prospects: um link `https://`
+ * público ou uma referência a arquivo enviado pela tela
+ * (`bucket://whatsapp-media/…`, assinada no momento do envio).
+ *
+ * Slot ESTRUTURADO (currency/date_time) continua de fora: o payload da Meta
+ * para esses tipos é objeto, não string, e mandá-lo como texto produziria
+ * 132012 DEPOIS de a plataforma aceitar a chamada. O modelo aparece na lista
+ * com o motivo, não some — o operador precisa saber que ele existe e por que
+ * não dá para usar.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -39,8 +44,19 @@ import {
 import { normalizeRejectedReason } from "@/lib/channels/meta/webhook";
 import { normalizarQualidade, type QualidadeDoNumero } from "@/lib/channels/number-quality";
 
-/** Só estes slots viram string no payload. Mídia/estruturado ficam de fora. */
-const SLOTS_DE_TEXTO = new Set(["text", "url_suffix", "coupon_code"]);
+import { ehSlotDeMidia, valorDeMidiaAceito } from "./midia";
+
+export { ehSlotDeMidia, valorDeMidiaAceito } from "./midia";
+
+/** Slots que a campanha monta. `currency`/`date_time` ficam de fora. */
+const SLOTS_SUPORTADOS = new Set([
+  "text",
+  "url_suffix",
+  "coupon_code",
+  "image",
+  "video",
+  "document",
+]);
 
 export interface SlotParaCampanha {
   /** A chave COMPOSTA do formulário: "1", "header:1", "button0:1", "card0::1". */
@@ -131,7 +147,7 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
     parameter_format: linha.parameter_format,
     components: linha.components as never,
   });
-  const naoTextuais = contrato.slots.filter((s) => !SLOTS_DE_TEXTO.has(s.expects));
+  const naoSuportados = contrato.slots.filter((s) => !SLOTS_SUPORTADOS.has(s.expects));
   const aprovado = linha.status === "APPROVED";
   const qualidade = normalizarQualidade(linha.quality_score);
 
@@ -144,9 +160,9 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
     // modelo (3h → 6h → desabilitar) e, se repetir, penalizar o número.
     motivo =
       "Este modelo está com qualidade baixa (RED) na Meta. Corrija o conteúdo e o público dos últimos envios antes de usar — a plataforma pausa e depois desabilita modelos nesse estado, e a reputação do número vai junto.";
-  } else if (naoTextuais.length > 0) {
-    const tipos = [...new Set(naoTextuais.map((s) => s.expects))].join(", ");
-    motivo = `Este modelo tem slot de ${tipos}. Campanha por template, nesta versão, aceita só texto, sufixo de URL e cupom — use o inbox para enviar mídia.`;
+  } else if (naoSuportados.length > 0) {
+    const tipos = [...new Set(naoSuportados.map((s) => s.expects))].join(", ");
+    motivo = `Este modelo tem slot de ${tipos}. Campanha por template aceita texto, sufixo de URL, cupom e mídia (imagem/vídeo/documento) — parâmetro estruturado ainda não é montado.`;
   }
 
   return {
@@ -168,7 +184,7 @@ function paraView(linha: LinhaDoEspelho): TemplateParaCampanha {
     })),
     previews: previewsDeTexto(linha.components),
     components: Array.isArray(linha.components) ? (linha.components as unknown[]) : [],
-    aceito: aprovado && naoTextuais.length === 0 && qualidade !== "RED",
+    aceito: aprovado && naoSuportados.length === 0 && qualidade !== "RED",
     motivo,
   };
 }
@@ -216,7 +232,8 @@ export interface VereditoDoTemplate {
   /** Código estável para log/teste; não é texto de tela. */
   codigo:
     | BindingState
-    | "media_nao_suportada"
+    | "slot_nao_suportado"
+    | "midia_invalida"
     | "missing_values"
     | "quality_red";
   /** Frase acionável para `ultimo_erro`/toast. */
@@ -293,12 +310,12 @@ export function avaliarTemplateParaCampanha(
     };
   }
 
-  const naoTextuais = template.slots.filter((s) => !SLOTS_DE_TEXTO.has(s.expects));
-  if (naoTextuais.length > 0) {
+  const naoSuportados = template.slots.filter((s) => !SLOTS_SUPORTADOS.has(s.expects));
+  if (naoSuportados.length > 0) {
     return {
       ok: false,
-      codigo: "media_nao_suportada",
-      erro: `O modelo ${alvo} tem slot de ${[...new Set(naoTextuais.map((s) => s.expects))].join(", ")}, que campanha não monta. Use o inbox.`,
+      codigo: "slot_nao_suportado",
+      erro: `O modelo ${alvo} tem slot de ${[...new Set(naoSuportados.map((s) => s.expects))].join(", ")}, que campanha não monta. Use o inbox.`,
       pausar: true,
     };
   }
@@ -317,6 +334,22 @@ export function avaliarTemplateParaCampanha(
       erro: `Faltam valores para: ${faltando.map((s) => `{{${s.key}}}`).join(", ")}.`,
       pausar: true,
       faltando: faltando.map((s) => s.key),
+    };
+  }
+
+  // Mídia não é "texto qualquer": a Meta baixa o link e recusa depois de
+  // cobrar. Recusar aqui dá ao operador a frase que ele pode consertar.
+  const midiaInvalida = template.slots.filter(
+    (s) => ehSlotDeMidia(s.expects) && !valorDeMidiaAceito(values[s.slotKey] ?? ""),
+  );
+  if (midiaInvalida.length > 0) {
+    return {
+      ok: false,
+      codigo: "midia_invalida",
+      erro: `O modelo ${alvo} espera ${[...new Set(midiaInvalida.map((s) => s.expects))].join(", ")} em ${midiaInvalida
+        .map((s) => s.onde)
+        .join(", ")}. Informe um link https:// público ou envie o arquivo pela tela da campanha.`,
+      pausar: true,
     };
   }
 
