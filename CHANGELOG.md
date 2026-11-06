@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.40.0] — 2026-11-06
+
+### Adicionado
+
+- **Campanha por modelo aceita imagem, vídeo e documento** Campanha por template passou a aceitar cabeçalho de mídia. Antes, um modelo com
+  imagem (como o kit promocional) aparecia desabilitado no assistente de campanha,
+  mesmo aprovado na Meta — só o inbox conseguia enviá-lo.
+
+  Agora o operador escolhe o modelo normalmente e preenche o parâmetro de mídia de
+  duas formas: colando um link https:// público ou enviando o arquivo pelo botão
+  "Enviar arquivo" (JPG/PNG até 5 MB, MP4 até 16 MB, PDF até 20 MB). O mesmo
+  arquivo é usado para todos os contatos da campanha.
+
+  O arquivo fica no bucket privado e o link é renovado a cada envio — por isso a
+  campanha pode durar semanas sem que a mídia pare de funcionar no meio da fila.
+
 ## [1.39.14] — 2026-11-05
 
 ### Corrigido
@@ -6489,7 +6505,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.39.14...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.40.0...HEAD
+[1.40.0]: https://github.com/spiesdan/nexus/compare/v1.39.14...v1.40.0
 [1.39.14]: https://github.com/spiesdan/nexus/compare/v1.39.13...v1.39.14
 [1.39.13]: https://github.com/spiesdan/nexus/compare/v1.39.12...v1.39.13
 [1.39.12]: https://github.com/spiesdan/nexus/compare/v1.39.11...v1.39.12
