@@ -8,6 +8,30 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.42.0] — 2026-11-06
+
+### Adicionado
+
+- **Cada membro pode enxergar apenas os números de WhatsApp que o admin liberar** Agora dá para separar, na mesma empresa, a conta administrativa da comercial sem duplicar organização. Em **Equipe**, no menu de ações do membro, existe **Números que enxerga**. Por padrão o membro continua vendo todos os números — nada muda para quem já está configurado.
+
+  Ao desligar "Todos os números", o admin marca número por número. A conta administrativa pode ficar só com o número de avisos de carga; a comercial, só com o número oficial da Meta e o comercial. A separação é de verdade, não de tela: conversas e mensagens dos números não liberados não chegam nem pela API — a regra vive no banco, então a lista, o contador das abas e o tempo real obedecem ao mesmo escopo.
+
+  Escolher nenhum número é permitido e significa o que diz: o membro entra no inbox e não vê conversa alguma. Sem a escolha (o padrão), nada é restringido.
+
+  Contatos, negócios e relatórios continuam valendo para a organização inteira — um mesmo cliente pode falar pelos dois números, e esconder o cadastro dele quebraria o histórico de quem atende.
+
+- **Pedido alterado no Mercos agora chega na sincronização e avisa a expedição** Até aqui a importação do Mercos só andava para frente: quando o vendedor externo alterava um pedido já importado, a alteração ficava só no ERP. O pedido daqui continuava com o cliente, a cidade e os itens antigos — e a carga saía com o dado velho.
+
+  Agora a sincronização revisa uma janela recente de pedidos ainda em aberto e aplica o que mudou. A ficha do pedido também ganhou **Atualizar do Mercos** em "Mais opções", para o caso pontual e para o pedido antigo que o corte por número não revisita.
+
+  O que o Mercos pode atualizar: **cliente, endereço de entrega (cidade/UF) e itens/totais**. Status do ciclo, vendedor, carga e ajuste fiscal continuam do nosso lado. Pedido com **nota emitida** não tem itens reescritos — o documento congela. Pedido **entregue ou cancelado** também não.
+
+  Quando o pedido já está numa carga, a atualização acontece e a opção **Mudou no Mercos** aparece na parada, com o motivo: nada sai do romaneio sozinho — quem opera decide se remaneja. A ficha mostra a última alteração, campo por campo ("Cliente X → Y", "Quantidade 3 → 4").
+
+### Corrigido
+
+- **Item sem vínculo com o catálogo não bloqueia mais a nota na pré-validação nem some do imposto aproximado** A correção de NCM por código/nome já valia na emissão. Faltavam duas telas que liam o vínculo direto: a **pré-validação** da nota (a que dizia "Falta NCM do produto") e o **imposto aproximado** do pedido. Agora as duas usam o mesmo resolvedor da emissão — vínculo, depois código, depois nome —, então um item que veio do Mercos sem `product_id` deixa de acusar falta de NCM quando o produto está no catálogo.
+
 ## [1.41.1] — 2026-11-06
 
 ### Corrigido
@@ -6532,7 +6556,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.41.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.42.0...HEAD
+[1.42.0]: https://github.com/spiesdan/nexus/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/spiesdan/nexus/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/spiesdan/nexus/compare/v1.40.0...v1.41.0
 [1.40.0]: https://github.com/spiesdan/nexus/compare/v1.39.14...v1.40.0
