@@ -149,3 +149,76 @@ describe("TeamMembersClient — seletor de papel (G2-02)", () => {
     expect(toast.success).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * 0296 — "Números que enxerga".
+ *
+ * O caso que originou a feature: a conta administrativa precisa se restringir
+ * ao número de avisos de carga. Por isso a ação aparece também na PRÓPRIA linha
+ * — sem ela, o admin único da empresa não teria como se limitar.
+ */
+describe("TeamMembersClient — números do membro (0296)", () => {
+  it("admin restringe a própria conta e envia a allowlist", async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (url === "/api/v1/channel-sessions") {
+        return {
+          data: [
+            {
+              id: "canal-comercial",
+              display_name: "Comercial",
+              phone_number: null,
+              status: "WORKING",
+              status_reason: null,
+              last_health_check_at: null,
+              last_status_change_at: null,
+              daily_message_limit: 100,
+              is_warmup_complete: true,
+              created_at: "2026-01-01T00:00:00Z",
+              finalidade: "comercial",
+              visivel_no_inbox: true,
+            },
+            {
+              id: "canal-expedicao",
+              display_name: "Expedição",
+              phone_number: null,
+              status: "WORKING",
+              status_reason: null,
+              last_health_check_at: null,
+              last_status_change_at: null,
+              daily_message_limit: 100,
+              is_warmup_complete: true,
+              created_at: "2026-01-01T00:00:00Z",
+              finalidade: "expedicao",
+              visivel_no_inbox: true,
+            },
+          ],
+        };
+      }
+      return { data: members() };
+    });
+    vi.mocked(apiClient.patch).mockResolvedValue({
+      data: { user_id: ADMIN_ID, canais_permitidos: ["canal-expedicao"] },
+    });
+
+    const user = userEvent.setup();
+    renderClient();
+
+    await screen.findByText("agente@example.com");
+
+    // A primeira linha é o próprio admin (members() vem nessa ordem).
+    const [menuDoAdmin] = await screen.findAllByRole("button", { name: "Ações" });
+    await user.click(menuDoAdmin!);
+    await user.click(await screen.findByRole("menuitem", { name: "Números que enxerga" }));
+
+    // Desliga "todos" e libera só a expedição.
+    await user.click(screen.getByRole("switch", { name: "Todos os números" }));
+    await user.click(screen.getByRole("switch", { name: "Expedição" }));
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() =>
+      expect(apiClient.patch).toHaveBeenCalledWith(`/api/v1/team/${ADMIN_ID}/canais`, {
+        canais_permitidos: ["canal-expedicao"],
+      }),
+    );
+  });
+});

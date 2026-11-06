@@ -85,6 +85,28 @@ export const changeNomeSchema = z.object({
 });
 export type ChangeNomeInput = z.infer<typeof changeNomeSchema>;
 
+/**
+ * Números que o membro enxerga no inbox (0296).
+ *
+ * `canais_permitidos` é a allowlist de `channel_sessions.id`:
+ *
+ *  - `null`  → todos os números (é o padrão histórico; desligar a restrição)
+ *  - `[]`    → nenhum (conta que ainda não recebeu número)
+ *  - `[ids]` → exatamente esses
+ *
+ * `null` e `[]` são coisas diferentes e o schema não pode colapsar as duas:
+ * `undefined` no corpo é 422, porque uma escrita que "não veio" não deve
+ * desligar a restrição de ninguém por omissão.
+ */
+export const changeCanaisSchema = z.object({
+  canais_permitidos: z
+    .array(z.string().uuid())
+    .max(100)
+    .nullable()
+    .transform((ids) => (ids === null ? null : [...new Set(ids)])),
+});
+export type ChangeCanaisInput = z.infer<typeof changeCanaisSchema>;
+
 export const createApiTokenSchema = z.object({
   name: z.string().min(2).max(100),
   scopes: z.array(z.string()).min(1),

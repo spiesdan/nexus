@@ -204,6 +204,10 @@ export const AUDIT_ACTIONS = [
   // Modo entregador: ligar/desligar muda o que a pessoa vê ao entrar. É
   // escrita de admin sobre o vínculo de outro — entra no mesmo trilho.
   "team.motorista_changed",
+  // Escopo de números do inbox (0296): o admin decide quais números o membro
+  // enxerga. Sem rastro, "a conta administrativa viu o atendimento" não teria
+  // como ser respondido depois.
+  "team.canais_changed",
   "leads.bulk_assigned",
   "attendant.availability_changed",
   "routing.config_changed",
