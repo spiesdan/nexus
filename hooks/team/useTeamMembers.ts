@@ -8,6 +8,11 @@ export interface TeamMember {
   setor: string | null;
   /** Modo entregador (0292): casca sem menu, home na expedição. */
   motorista?: boolean;
+  /**
+   * Números que o membro enxerga no inbox (0296).
+   * `null` = todos; `[]` = nenhum; `[ids]` = esses.
+   */
+  canais_permitidos?: string[] | null;
   invited_at: string | null;
   accepted_at: string | null;
   revoked_at: string | null;

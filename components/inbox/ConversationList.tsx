@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
+import { canaisDoInbox } from "@/lib/channels/visibilidade";
 import { BTN_REF, BTN_REF_SEC } from "@/components/inbox/estilos-da-referencia";
 
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
@@ -50,7 +51,7 @@ export function ConversationList({
   //
   // `?? []` e não `undefined`: enquanto a lista de canais carrega, o certo é
   // NÃO mostrar. Mostrar e sumir depois é pior que aparecer um instante tarde.
-  const canais = useChannelSessions().data ?? [];
+  const canais = canaisDoInbox(useChannelSessions().data ?? []);
   const maisDeUmCanal = canais.length > 1;
 
   // Fila: mostra "Aguardando há…" na linha.

@@ -15,6 +15,11 @@ import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { requireRole } from "@/lib/auth/require-role";
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
 import { finalidadeDoCanal, type Finalidade } from "@/lib/channels/finalidade";
+import {
+  CANAIS_PERMITIDOS,
+  canalVisivelPara,
+  interpretarLeituraDeCanais,
+} from "@/lib/channels/visibilidade";
 import { createChannelSchema } from "@/lib/schemas/channels";
 import { createClient } from "@/lib/supabase/server";
 import { getWahaClient, wahaFriendlyError } from "@/lib/waha/client";
@@ -66,9 +71,39 @@ export async function GET(): Promise<Response> {
   );
   if (error) return fail("internal_error", error.message, 500, { requestId });
 
-  return ok((data ?? []).map(comFinalidadeNaResposta), {
+  /*
+   * Quais números ESTE membro enxerga no inbox (0296).
+   *
+   * A verdade é a RLS (`fn_can_view_channel`); o campo `visivel_no_inbox`
+   * existe para a tela não oferecer no seletor um número que devolveria zero
+   * conversas. Platform admin não é escopado — a policy também não o escopa.
+   *
+   * A leitura é tolerante à coluna ausente: sem a migration, todos veem todos,
+   * que é o estado anterior. A Central de Conexões continua listando TODOS os
+   * canais (é onde o admin pareia e exclui número) — só o inbox filtra.
+   */
+  const { data: membro, error: membroErr } = await supabase
+    .from("user_organizations")
+    .select(CANAIS_PERMITIDOS)
+    .eq("organization_id", activeOrg.orgId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const leitura = interpretarLeituraDeCanais({ data: membro, error: membroErr });
+  if (!leitura.ok) return fail("internal_error", leitura.message, 500, { requestId });
+  const permitidos = user.is_platform_admin ? null : leitura.canais;
+
+  const canais = (data ?? []).map((canal) => ({
+    ...comFinalidadeNaResposta(canal),
+    visivel_no_inbox: canalVisivelPara(permitidos, canal.id),
+  }));
+
+  const meta: Record<string, boolean> = {};
+  if (schemaOutdated) meta.schema_outdated = true;
+  if (leitura.schemaOutdated) meta.canais_schema_outdated = true;
+
+  return ok(canais, {
     requestId,
-    ...(schemaOutdated ? { meta: { schema_outdated: true } } : {}),
+    ...(Object.keys(meta).length > 0 ? { meta } : {}),
   });
 }
 

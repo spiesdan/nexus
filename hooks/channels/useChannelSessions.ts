@@ -31,6 +31,19 @@ export interface ChannelSession {
    * um `metadata` vazio significa.
    */
   finalidade: Finalidade;
+  /**
+   * Este número aparece para MIM no inbox (0296).
+   *
+   * `false` = o admin da organização não liberou este número para o meu
+   * vínculo: as conversas dele nem chegam pela RLS, e o seletor do inbox não
+   * deve oferecê-lo. A Central de Conexões ignora este campo de propósito — é
+   * lá que o admin pareia e exclui números, e esconder um canal da lista faria
+   * parecer que ele não existe.
+   *
+   * Opcional porque um cache do react-query gravado antes do deploy não o tem;
+   * ausente significa "visível" (o estado anterior).
+   */
+  visivel_no_inbox?: boolean;
 }
 
 export type ConnectionHealth = "connected" | "connecting" | "down" | "none" | "unknown";
