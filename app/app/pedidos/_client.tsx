@@ -520,8 +520,13 @@ export function PedidosClient({
   async function importarMercos() {
     const confirmado = await confirmar({
       title: t("Importar pedidos do Mercos agora?"),
+      // A cópia dizia "nenhum pedido existente é sobrescrito" — e a 0297
+      // tornou isso FALSO: o pedido já importado é atualizado quando mudou lá.
+      // Texto de confirmação que promete o contrário do que o botão faz não é
+      // detalhe: é o operador autorizando uma escrita que ele acha que não
+      // acontece.
       description: t(
-        "O worker entra no Mercos, lê os pedidos novos e cria os que ainda não existem. Pedidos já importados são ignorados; nenhum pedido existente é sobrescrito.",
+        "O worker entra no Mercos, cria os pedidos novos e revisa os pedidos recentes ainda em aberto. Cliente, endereço e itens de um pedido já importado são atualizados quando mudaram lá — e a carga dele é marcada para reconferir. Pedido com nota emitida, entregue ou cancelado não é reescrito.",
       ),
       confirmLabel: t("Importar pedidos Mercos"),
     });
@@ -547,6 +552,8 @@ export function PedidosClient({
         status: string;
         orders_new: number;
         orders_skipped: number;
+        /** 0297: pedidos já importados que o Mercos mudou e a revisão aplicou. */
+        orders_updated: number;
         items_new: number;
         customers_new: number;
         errors: unknown[];
@@ -559,6 +566,7 @@ export function PedidosClient({
               status: string;
               orders_new: number;
               orders_skipped: number;
+              orders_updated: number;
               items_new: number;
               customers_new: number;
               errors: unknown[];
@@ -573,10 +581,15 @@ export function PedidosClient({
       if (!ultima) {
         toast.info(t("A importação continua no worker. Atualize a lista em instantes."));
       } else if (ultima.status === "success") {
+        const atualizados = ultima.orders_updated ?? 0;
         toast.success(
-          t(
-            `${ultima.orders_new} pedido(s) novo(s), ${ultima.items_new} item(ns), ${ultima.customers_new} cliente(s) novo(s).`,
-          ),
+          atualizados > 0
+            ? t(
+                `${ultima.orders_new} pedido(s) novo(s), ${ultima.items_new} item(ns), ${ultima.customers_new} cliente(s) novo(s). ${atualizados} pedido(s) já existente(s) foram atualizados pelo Mercos — confira a expedição.`,
+              )
+            : t(
+                `${ultima.orders_new} pedido(s) novo(s), ${ultima.items_new} item(ns), ${ultima.customers_new} cliente(s) novo(s).`,
+              ),
         );
       } else if (ultima.status === "partial") {
         toast.warning(
