@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.41.0] — 2026-11-06
+
+### Adicionado
+
+- **O aviso de "saiu para entrega" pode sair por um número dedicado, separado do comercial** Até agora todo envio automático saía pelo mesmo número: o mais antigo conectado. Na prática, o cliente que estava conversando com o vendedor recebia o aviso de que o pedido saiu para entrega na mesma conversa — e o número que atende e vende era também o que dispara notificação, sem separação nenhuma.
+
+  Agora cada número tem um **uso**, escolhido em **Conexões**:
+
+  - **Atendimento e vendas** é o padrão. É o número que recebe conversa, campanha, follow-up e venda automática.
+  - **Avisos de expedição** é o número que manda só o aviso de que o pedido saiu para entrega. O aviso passa a sair por ele quando a rota é iniciada em **Sair para rota**.
+
+  A separação é de verdade, não de tela: com um número marcado para expedição, os envios comerciais continuam saindo pelo número de atendimento mesmo que o de expedição seja mais antigo. Só **um número por empresa** pode ser o de expedição — marcar um novo desmarca o anterior.
+
+  Se o número de expedição estiver desconectado, ou se nenhum tiver sido marcado, o aviso sai pelo comercial, como antes. A alternativa seria deixar de avisar o cliente porque o número escolhido caiu, e isso não é aceitável: a carga já saiu para a rua.
+
+  A marcação existe apenas para número conectado por QR — o canal oficial da Meta exige modelo aprovado fora da janela de 24 horas, e o aviso é texto livre.
+
 ## [1.40.0] — 2026-11-06
 
 ### Adicionado
@@ -6505,7 +6522,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.40.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.41.0...HEAD
+[1.41.0]: https://github.com/spiesdan/nexus/compare/v1.40.0...v1.41.0
 [1.40.0]: https://github.com/spiesdan/nexus/compare/v1.39.14...v1.40.0
 [1.39.14]: https://github.com/spiesdan/nexus/compare/v1.39.13...v1.39.14
 [1.39.13]: https://github.com/spiesdan/nexus/compare/v1.39.12...v1.39.13
