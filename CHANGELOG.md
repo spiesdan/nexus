@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.41.1] — 2026-11-06
+
+### Corrigido
+
+- **Nota não para mais por falta de NCM quando o item do pedido veio do texto livre** Uma nota parou com "Falta NCM do produto" mesmo com o NCM preenchido no cadastro do produto. O motivo: o item do pedido é texto livre e, quando ele não estava ligado ao produto do catálogo, a emissão não procurava o NCM em lugar nenhum — ia sem NCM para a SEFAZ e voltava com a rejeição.
+
+  Agora a emissão resolve o produto do item pelo vínculo salvo e, quando ele não existe, pelo código e depois pelo nome, exatamente como o cadastro está escrito. Se houver mais de um produto com o mesmo código ou nome, só aceita quando todos têm o mesmo NCM; NCMs diferentes continuam sem resolução de propósito, porque escolher um no chute seria erro fiscal.
+
+  A tela de correção da nota usa a mesma regra, então o que ela mostra é o que o documento vai levar. A rejeição também deixa de acontecer para os itens antigos, sem precisar reeditar pedido nenhum.
+
 ## [1.41.0] — 2026-11-06
 
 ### Adicionado
@@ -6522,7 +6532,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.41.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.41.1...HEAD
+[1.41.1]: https://github.com/spiesdan/nexus/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/spiesdan/nexus/compare/v1.40.0...v1.41.0
 [1.40.0]: https://github.com/spiesdan/nexus/compare/v1.39.14...v1.40.0
 [1.39.14]: https://github.com/spiesdan/nexus/compare/v1.39.13...v1.39.14
