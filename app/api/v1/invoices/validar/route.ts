@@ -12,6 +12,7 @@ import { z } from "zod";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
+import { resolverProdutosDosItens } from "@/lib/fiscal/produto-do-item";
 import { carregarContextoSped, montarPayloadSped } from "@/lib/fiscal/sped-payload";
 import { statusFaturavel } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
@@ -96,28 +97,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     .eq("order_id", ped.id)
     .eq("organization_id", authz.org.orgId)
     .order("posicao");
-  const idsProd = ((itensDb ?? []) as unknown as { product_id: string | null }[])
-    .map((i) => i.product_id)
-    .filter(Boolean) as string[];
-  const fiscais: Record<
-    string,
-    { ncm: string | null; cfop: string | null; unidade: string | null }
-  > = {};
-  if (idsProd.length > 0) {
-    const { data: prods } = await supabase
-      .from("catalog_products")
-      .select("id, ncm, cfop, unidade")
-      .eq("organization_id", authz.org.orgId)
-      .in("id", idsProd);
-    for (const p of (prods ?? []) as unknown as {
-      id: string;
-      ncm: string | null;
-      cfop: string | null;
-      unidade: string | null;
-    }[]) {
-      fiscais[p.id] = p;
-    }
-  }
+  // O MESMO resolvedor do drain: vínculo explícito → código → nome. Esta é a
+  // tela que mostrou `Falta NCM do produto "ESPONJA COM 4 UN"` enquanto o NCM
+  // estava no cadastro — porque só olhava `product_id`, que é nulo no item de
+  // texto livre.
+  const produtosDosItens = await resolverProdutosDosItens(supabase, authz.org.orgId, itensDb ?? []);
   const em = ctx.emitente as unknown as Record<string, string | null>;
   const montado = montarPayloadSped(
     {
@@ -159,16 +143,19 @@ export async function POST(req: NextRequest): Promise<Response> {
         desconto_pct: number;
         product_id: string | null;
       }[]
-    ).map((i) => ({
-      codigo: i.produto_codigo,
-      descricao: i.produto_nome,
-      ncm: i.product_id ? (fiscais[i.product_id]?.ncm ?? null) : null,
-      cfop: i.product_id ? (fiscais[i.product_id]?.cfop ?? null) : null,
-      unidade: i.product_id ? (fiscais[i.product_id]?.unidade ?? null) : null,
-      quantidade: i.quantidade,
-      preco_cents: i.preco_unit_cents,
-      desconto_pct: Number(i.desconto_pct),
-    })),
+    ).map((i, pos) => {
+      const produto = produtosDosItens[pos];
+      return {
+        codigo: i.produto_codigo,
+        descricao: i.produto_nome,
+        ncm: produto?.ncm ?? null,
+        cfop: produto?.cfop ?? null,
+        unidade: produto?.unidade ?? null,
+        quantidade: i.quantidade,
+        preco_cents: i.preco_unit_cents,
+        desconto_pct: Number(i.desconto_pct),
+      };
+    }),
   );
   if (!montado.ok) {
     pendencias.push({ campo: "fiscal", mensagem: montado.falta, onde: "/app/notas" });
