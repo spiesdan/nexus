@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.0] — 2026-11-06
+
+### Adicionado
+
+- **O pedido que o vendedor já entregou e recebeu vem do Mercos fechado como entregue** Quando o vendedor entrega a mercadoria na mão e recebe o dinheiro ali mesmo, ele registra isso nas **Informações Adicionais** do pedido no Mercos ("Pago e ja entregue"). O pedido chega ao CRM como **entregue** — sai da fila da carga e não pode ser colocado em nenhuma — em vez de ficar esperando um motorista que sairia com uma mercadoria que o cliente já tem.
+
+  A régua exige as duas ideias: *pago* **e** *entregue*. Ela tolera digitação ("pg e entregue", "pago e entrgue", "pago e entrege") e não confunde futuro nem negação ("falta pagar", "pago e a entregar", "pago e não entregue"). Na revisão do Mercos a mesma regra vale para pedido importado antes — inclusive com nota emitida, porque a entrega física pode vir depois da nota.
+
+  O texto do ERP fica na ficha do pedido em **Observações do Mercos**, só leitura, num campo separado das **Informações adicionais** que o operador digita no CRM (esse continua alimentando o campo de informações complementares da nota).
+
 ## [1.43.0] — 2026-11-06
 
 ### Adicionado
@@ -6570,7 +6580,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.43.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.0...HEAD
+[1.44.0]: https://github.com/spiesdan/nexus/compare/v1.43.0...v1.44.0
 [1.43.0]: https://github.com/spiesdan/nexus/compare/v1.42.0...v1.43.0
 [1.42.0]: https://github.com/spiesdan/nexus/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/spiesdan/nexus/compare/v1.41.0...v1.41.1
