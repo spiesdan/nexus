@@ -54,7 +54,7 @@ function corrente(resultado: Resultado) {
 }
 
 /** O banco da emissão: config, pedido com o status em teste e nenhuma nota viva. */
-function bancoFalso(status: string) {
+function bancoFalso(status: string, observacoes: string | null = null) {
   const escritas: string[] = [];
 
   const from = (tabela: string) => {
@@ -86,6 +86,7 @@ function bancoFalso(status: string) {
             total_cents: 1000,
             frete_cents: 0,
             status,
+            observacoes,
           },
         ],
         error: null,
@@ -124,8 +125,11 @@ function bancoFalso(status: string) {
   return { from, escritas };
 }
 
-function emitir(status: string) {
-  const banco = bancoFalso(status);
+function emitir(
+  status: string,
+  opcoes: { observacoes?: string | null; extras?: Parameters<typeof emitirNota>[0]["extras"] } = {},
+) {
+  const banco = bancoFalso(status, opcoes.observacoes ?? null);
   return {
     banco,
     promessa: emitirNota({
@@ -135,6 +139,7 @@ function emitir(status: string) {
       userId: USUARIO_ID,
       requestId: "req-1",
       orderId: PEDIDO_ID,
+      extras: opcoes.extras ?? null,
     }),
   };
 }
@@ -299,5 +304,39 @@ describe("emitirNota", () => {
     expect((erro as ApiError).message).toContain("faturado, expedido ou entregue");
     // A recusa acontece ANTES de qualquer escrita: nenhuma nota nasce condenada.
     expect(banco.escritas).toEqual([]);
+  });
+});
+
+
+describe("informações adicionais do pedido viram o infCpl da nota", () => {
+  const extrasGravados = (banco: { escritas: string[] }) => {
+    const linha = banco.escritas.find((e) => e.startsWith("invoices.insert"));
+    expect(linha).toBeTruthy();
+    return JSON.parse(linha!.slice("invoices.insert ".length)).extras_fiscais;
+  };
+
+  it("leva 'Ordem de compra 22550' para informacoes_complementares", async () => {
+    const { banco, promessa } = emitir("faturado", { observacoes: "Ordem de compra 22550" });
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+    expect(extrasGravados(banco)).toMatchObject({
+      adicionais: { informacoes_complementares: "Ordem de compra 22550" },
+    });
+  });
+
+  it("o que a pessoa digita na emissão vence o texto do pedido", async () => {
+    const { banco, promessa } = emitir("faturado", {
+      observacoes: "Ordem de compra 22550",
+      extras: { adicionais: { informacoes_complementares: "Pedido 19441" } },
+    });
+    await expect(promessa).resolves.toBeTruthy();
+    expect(extrasGravados(banco)).toMatchObject({
+      adicionais: { informacoes_complementares: "Pedido 19441" },
+    });
+  });
+
+  it("pedido sem Informações adicionais não inventa campo na nota", async () => {
+    const { banco, promessa } = emitir("faturado");
+    await expect(promessa).resolves.toBeTruthy();
+    expect(extrasGravados(banco)).toBeNull();
   });
 });

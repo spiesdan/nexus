@@ -249,9 +249,16 @@ export function EmitirNota({
     setPedidoId(id);
     setAgrupados([]);
     setPendencias(null);
-    const entrega = faturados.find((p) => p.id === id)?.destinatario?.entrega ?? null;
+    const pedido = faturados.find((p) => p.id === id);
+    const entrega = pedido?.destinatario?.entrega ?? null;
     setExtras((atual) => ({
       ...atual,
+      // O que o cliente escreveu em "Informações adicionais" do pedido (a
+      // ordem de compra, por exemplo) já vem preenchido aqui — e visível, para
+      // ninguém descobrir depois que a nota saiu com um texto que não leu.
+      // Trocar de pedido troca o texto, como troca o endereço: manter o do
+      // anterior seria pôr a ordem de compra de um cliente na nota de outro.
+      informacoesComplementares: pedido?.observacoes?.trim() ?? "",
       entregaLogradouro: entrega?.logradouro ?? "",
       entregaNumero: entrega?.numero ?? "",
       entregaComplemento: entrega?.complemento ?? "",
@@ -607,6 +614,11 @@ export function EmitirNota({
                     value={extras.informacoesComplementares}
                     onChange={alterar("informacoesComplementares")}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "Vem das Informações adicionais do pedido. O que você editar aqui vence — é este texto que sai no campo de informações complementares da nota.",
+                    )}
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="ex-inf-fisco">{t("Informações de interesse do Fisco")}</Label>
