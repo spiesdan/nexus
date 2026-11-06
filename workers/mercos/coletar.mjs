@@ -386,6 +386,27 @@ try {
       // começo da linha. Por isso a busca é por CONTEÚDO e varre as 3 linhas
       // seguintes, em vez de ancorar na posição exata: a posição muda entre o
       // bloco do cliente e o da representada, e o ícone some em metade das telas.
+      // ═══ INFORMAÇÕES ADICIONAIS — onde o vendedor escreve "pago e entregue" ═
+      //
+      // O bloco "Detalhes do pedido" tem um par rotulo/valor próprio, fora da
+      // lista de campos:
+      //
+      //     <div class="label-titulo">Informações Adicionais</div>
+      //     <div class="label-valor">Pago e ja entregue</div>
+      //
+      // O `campo()` genérico não serve: ele pega a PRÓXIMA linha da página, e
+      // quando o campo está vazio a próxima linha é o botão "Alterar detalhes
+      // do pedido" — que viraria observação de todo pedido. Aqui o valor é o
+      // irmão do rótulo, então vazio é vazio.
+      const infoAdicionais = (() => {
+        const titulo = [...doc.querySelectorAll(".label-titulo")].find(
+          (el) => el.textContent.trim().replace(/\s+/g, " ").toLowerCase() === "informações adicionais",
+        );
+        const valor = titulo?.parentElement?.querySelector(".label-valor")?.innerText ?? "";
+        const limpo = valor.replace(/\s+/g, " ").trim();
+        return limpo === "" || limpo === "---" ? null : limpo;
+      })();
+
       const janela = jDoc > -1 ? escopo.slice(jDoc + 1, jDoc + 4) : [];
       const soNumero = (l) => (l || "").replace(/[^\d()\s-]/g, "").trim();
       const linhaFone = janela.find((l) => /\(\d{2}\)\s?\d{4,5}-?\d{4}|\d{4,5}-\d{4}/.test(soNumero(l)) && soNumero(l).length >= 8);
@@ -408,6 +429,10 @@ try {
         valor_frete: campo("Valor do frete"),
         transportadora: campo("Transportadora"),
         contato_cliente: campo("Contato no cliente"),
+        // O texto livre de "Informações Adicionais" do ERP. Quem decide o que
+        // ele significa é a função do banco (`fn_mercos_pago_e_entregue`), não
+        // o coletor: regra de negócio não mora no parser de HTML.
+        informacoes_adicionais: infoAdicionais,
         cliente: { razao, documento, fantasia, telefone, cidade },
         itens,
         total_bruto: (() => {

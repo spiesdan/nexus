@@ -228,6 +228,12 @@ export interface PedidoComercial {
   price_table_id: string | null;
   observacoes: string | null;
   obs_interna: string | null;
+  /**
+   * 0298: as **Informações Adicionais** do pedido no Mercos, como vieram do
+   * ERP. Só leitura — o campo editável do CRM é `observacoes`. É onde o
+   * vendedor escreve "Pago e ja entregue" quando entrega na mão.
+   */
+  mercos_observacoes?: string | null;
   endereco_entrega: string | null;
   transportadora_nome: string | null;
   /** 0276: código de rastreio da transportadora. */
@@ -276,7 +282,7 @@ export const COLUNAS_DO_PEDIDO =
   "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "rastreamento, contato_no_cliente, " +
   "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at, " +
-  "mercos_sincronizado_em, mercos_ultima_mudanca";
+  "mercos_sincronizado_em, mercos_ultima_mudanca, mercos_observacoes";
 
 /**
  * Parcelas a partir da condição ("30/60/90", "28 dias", "à vista"...).

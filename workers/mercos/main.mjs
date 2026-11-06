@@ -106,6 +106,9 @@ function normalizar(linha) {
       status_origem: statusOrigem,
       cliente_nome: clienteNome.slice(0, 300),
       cliente_documento: cli.documento ?? null,
+      // "Informações Adicionais" do pedido no ERP, como vieram. O banco decide
+      // se isso significa "pago e entregue" — aqui é texto bruto.
+      mercos_observacoes: bruto.informacoes_adicionais ?? null,
       // Quem emitiu o pedido no Mercos. O detalhe traz "Vendedor"; a lista
       // traz "emitido por". Guardamos os dois porque o detalhe pode falhar e a
       // lista já veio na varredura.

@@ -1016,6 +1016,14 @@ export function DetalheDoPedido({
               }
             />
           )}
+          {pedido.origem === "mercos" && pedido.mercos_observacoes && (
+            // Texto do ERP, só leitura. Não confundir com "Informações
+            // adicionais" do CRM, editável logo abaixo e que vai para a nota.
+            <LinhaDetalhe
+              rotulo={t("Observações do Mercos")}
+              valor={pedido.mercos_observacoes}
+            />
+          )}
         </dl>
         {(pedido.observacoes || pedido.obs_interna) && (
           <div className="space-y-1 text-sm">
