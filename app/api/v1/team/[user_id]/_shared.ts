@@ -17,6 +17,7 @@ import { ApiError } from "@/lib/api/types";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import {
+  changeCanaisSchema,
   changeMotoristaSchema,
   changeNomeSchema,
   changeRoleSchema,
@@ -337,4 +338,115 @@ export async function changeMemberMotorista(
   });
 
   return ok({ user_id: targetUserId, motorista: input.motorista }, { requestId });
+}
+
+/**
+ * Shared handler: números que o membro enxerga no inbox (0296).
+ *
+ * Canonical route: PATCH /api/v1/team/[user_id]/canais
+ *
+ * Mesmos gates do role/setor/motorista (admin, membro ativo, 404/409/422).
+ * O corpo é `{ canais_permitidos: string[] | null }`:
+ *
+ *  - `null`  → todos os números (remove a restrição)
+ *  - `[]`    → nenhum
+ *  - `[ids]` → exatamente esses
+ *
+ * A allowlist é validada contra `channel_sessions` DA ORGANIZAÇÃO. Um id de
+ * outra org no array não concede leitura (a RLS cruza org e número), mas
+ * aceitar lixo faria a tela mostrar "1 número liberado" e o membro continuar
+ * vendo zero — mentira silenciosa que só aparece quando alguém reclama.
+ *
+ * Canal arquivado continua aceito: a linha é a mesma que o "reconectar"
+ * ressuscita (`lib/channels/reactivate`), então apagar um número da allowlist
+ * porque ele foi arquivado faria a permissão evaporar na reconexão.
+ */
+export async function changeMemberCanais(
+  req: NextRequest,
+  ctx: { params: Promise<{ user_id: string }> },
+): Promise<Response> {
+  const requestId = randomUUID();
+  const { user_id: targetUserId } = await ctx.params;
+
+  const authz = await requireRole("admin", { requestId, resource: "team" });
+  if (!authz.ok) return authz.response;
+  const { user: authUser, org: activeOrg } = authz;
+
+  let input;
+  try {
+    input = await validateRequest(changeCanaisSchema, req);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return fail(err.code, err.message, err.status, {
+        details: err.details as Record<string, unknown> | undefined,
+        requestId,
+      });
+    }
+    throw err;
+  }
+
+  const supabase = await createClient();
+
+  const { data: target, error: fetchErr } = await supabase
+    .from("user_organizations")
+    .select("id, user_id, canais_permitidos, revoked_at")
+    .eq("organization_id", activeOrg.orgId)
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+  if (fetchErr) return fail("internal_error", fetchErr.message, 500, { requestId });
+  if (!target) return fail("not_found", "Membro não encontrado.", 404, { requestId });
+  if (target.revoked_at) {
+    return fail("state_conflict", "Membro está revogado.", 409, { requestId });
+  }
+
+  if (input.canais_permitidos && input.canais_permitidos.length > 0) {
+    const { data: encontrados, error: canaisErr } = await supabase
+      .from("channel_sessions")
+      .select("id")
+      .eq("organization_id", activeOrg.orgId)
+      .in("id", input.canais_permitidos);
+    if (canaisErr) return fail("internal_error", canaisErr.message, 500, { requestId });
+
+    const conhecidos = new Set(
+      ((encontrados ?? []) as { id: string }[]).map((c) => c.id),
+    );
+    const desconhecidos = input.canais_permitidos.filter((id) => !conhecidos.has(id));
+    if (desconhecidos.length > 0) {
+      return fail(
+        "validation_failed",
+        "Um ou mais números não pertencem a esta organização.",
+        422,
+        { requestId, details: { canais_permitidos: desconhecidos } },
+      );
+    }
+  }
+
+  const { error: updErr } = await supabase
+    .from("user_organizations")
+    .update({
+      canais_permitidos: input.canais_permitidos,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", target.id);
+  if (updErr) return fail("internal_error", updErr.message, 500, { requestId });
+
+  await audit({
+    action: "team.canais_changed",
+    actorUserId: authUser.id,
+    organizationId: activeOrg.orgId,
+    resourceType: "membership",
+    resourceId: target.id,
+    requestId,
+    metadata: {
+      target_user_id: targetUserId,
+      old_canais_permitidos: (target as unknown as { canais_permitidos: string[] | null })
+        .canais_permitidos,
+      new_canais_permitidos: input.canais_permitidos,
+    },
+  });
+
+  return ok(
+    { user_id: targetUserId, canais_permitidos: input.canais_permitidos },
+    { requestId },
+  );
 }

@@ -23915,6 +23915,63 @@ grant all on public.invoice_orders to service_role;
 -- `update.sh` falhar num banco que já tem eventos 'ajuste' gravados — a regra
 -- está em `tests/unit/baseline-constraint-reconstruida.test.ts`.
 
+-- ---- 0296 — os números que cada membro enxerga no inbox ----
+--
+-- Apêndice idempotente da migration 0296. Uma conta administrativa e uma
+-- comercial na mesma organização: a primeira só vê os avisos de carga (número
+-- de expedição), a segunda só os números de venda. Até aqui o escopo do inbox
+-- (0035) olhava papel e `visibility_mode`, nunca o NÚMERO.
+--
+-- `user_organizations.canais_permitidos uuid[]`: NULL = todos (padrão
+-- histórico; ninguém muda de comportamento), {} = nenhum, [ids] = esses.
+-- `fn_can_view_channel` é DEFINER (a policy roda para quem consulta, e
+-- user_organizations tem RLS própria) com revoke public/anon e grant a
+-- authenticated/service_role. `conversations_select` passa a exigir o escopo de
+-- papel E o número; `messages_select` herda pelo `exists` sobre conversations,
+-- sem uma segunda regra que possa divergir. Escrita inalterada — a restrição é
+-- de leitura, não uma fronteira contra o dono da conta.
+alter table public.user_organizations
+  add column if not exists canais_permitidos uuid[];
+
+comment on column public.user_organizations.canais_permitidos is
+  'Números (channel_sessions.id) que este membro enxerga no inbox. NULL = todos (padrão histórico); {} = nenhum. Restringe LEITURA via fn_can_view_channel; papel e visibility_mode continuam valendo por cima.';
+
+create or replace function public.fn_can_view_channel(
+  p_org uuid,
+  p_channel uuid
+) returns boolean
+language sql stable security definer
+set search_path = public
+as $$
+  select case
+    when auth.uid() is null then true
+    when public.fn_is_platform_admin() then true
+    when public.fn_user_role_in_org(p_org) is null then false
+    else coalesce(
+      (select (uo.canais_permitidos is null
+               or (p_channel is not null and p_channel = any(uo.canais_permitidos)))
+         from public.user_organizations uo
+        where uo.user_id = auth.uid()
+          and uo.organization_id = p_org
+          and uo.revoked_at is null
+        limit 1),
+      false
+    )
+  end;
+$$;
+
+revoke all on function public.fn_can_view_channel(uuid, uuid) from public;
+revoke execute on function public.fn_can_view_channel(uuid, uuid) from anon;
+grant execute on function public.fn_can_view_channel(uuid, uuid)
+  to authenticated, service_role;
+
+drop policy if exists "conversations_select" on public.conversations;
+create policy "conversations_select" on public.conversations
+  for select using (
+    public.fn_can_view_conversation(organization_id, assigned_to_user_id)
+    and public.fn_can_view_channel(organization_id, channel_session_id)
+  );
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

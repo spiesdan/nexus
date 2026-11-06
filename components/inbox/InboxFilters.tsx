@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { channelLabel, useChannelSessions } from "@/hooks/channels/useChannelSessions";
+import { canaisDoInbox } from "@/lib/channels/visibilidade";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useConversationTagVocabulary } from "@/hooks/inbox/useConversationTags";
 import { useConversationCounts } from "@/hooks/inbox/useConversationCounts";
@@ -79,7 +80,11 @@ interface Props {
 export function InboxFilters({ value, onChange }: Props) {
   const t = useT();
   const [searchInput, setSearchInput] = useState(value.search);
-  const { data: channels } = useChannelSessions({ refetchInterval: 30_000 });
+  const { data: canaisDaOrg } = useChannelSessions({ refetchInterval: 30_000 });
+  // 0296: o seletor oferece só os números que este membro enxerga. Mostrar um
+  // número bloqueado pela RLS renderia um filtro que devolve sempre zero —
+  // pior que não existir, porque parece defeito do inbox.
+  const channels = canaisDaOrg ? canaisDoInbox(canaisDaOrg) : undefined;
   const { activeOrg } = useAuth();
   const { data: tagVocabulary } = useConversationTagVocabulary(activeOrg?.orgId ?? null);
   const { data: counts } = useConversationCounts(activeOrg?.orgId ?? null);
