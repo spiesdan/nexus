@@ -37,7 +37,7 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
 
   const { data: itens, error: erroItens } = await supabase
     .from("shipment_orders")
-    .select("id, order_id, sequencia, status, separado_em")
+    .select("id, order_id, sequencia, status, separado_em, reconferir_em, reconferir_motivo")
     .eq("shipment_id", id)
     .eq("organization_id", orgId)
     .order("sequencia");
@@ -104,7 +104,15 @@ async function detalhe(supabase: Awaited<ReturnType<typeof createClient>>, orgId
   return {
     carga,
     itens: (itens ?? []).map((i) => {
-      const r = i as unknown as { id: string; order_id: string; sequencia: number; status: string; separado_em: string | null };
+      const r = i as unknown as {
+        id: string;
+        order_id: string;
+        sequencia: number;
+        status: string;
+        separado_em: string | null;
+        reconferir_em: string | null;
+        reconferir_motivo: string | null;
+      };
       return {
         ...r,
         pedido: pedidos[r.order_id] ?? null,

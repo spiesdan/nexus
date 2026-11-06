@@ -28,6 +28,12 @@ const corpoSchema = z
   .object({
     status: z.enum(["em_atendimento", "entregue", "devolvido"]).optional(),
     separado: z.boolean().optional(),
+    /**
+     * 0297: o operador viu que o pedido mudou no Mercos depois de embarcar e
+     * conferiu a mercadoria/destino. Limpa o aviso da carga; NÃO mexe em
+     * status, itens nem no pedido — é o registro de que alguém olhou.
+     */
+    reconferido: z.boolean().optional(),
     motivo: z.enum(MOTIVOS_DEVOLUCAO).optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
@@ -39,8 +45,8 @@ const corpoSchema = z
     ocorrido_em: z.string().datetime({ offset: true }).optional(),
   })
   .superRefine((v, ctx) => {
-    if (v.status === undefined && v.separado === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe status ou separado." });
+    if (v.status === undefined && v.separado === undefined && v.reconferido === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Informe status, separado ou reconferido." });
     }
     if (v.status === "devolvido" && !v.motivo) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Devolução pede o motivo.", path: ["motivo"] });
@@ -91,6 +97,31 @@ export async function PATCH(
 
   if (erroItem || !item) {
     return fail("not_found", "Pedido não está nesta carga.", 404, { requestId });
+  }
+
+  // Reconferência pós-Mercos (0297): o pedido mudou depois de embarcar e
+  // alguém conferiu. Só limpa o aviso; não altera o item nem o pedido.
+  if (parsed.data.reconferido === true) {
+    const { data: reconferido, error: erroRec } = await supabase
+      .from("shipment_orders")
+      .update({ reconferir_em: null, reconferir_motivo: null })
+      .eq("shipment_id", id)
+      .eq("order_id", orderId)
+      .eq("organization_id", authz.org.orgId)
+      .select("id, order_id, sequencia, status, separado_em, reconferir_em, reconferir_motivo")
+      .single();
+    if (erroRec || !reconferido) {
+      return fail("internal_error", "Erro ao registrar a reconferência.", 500, { requestId });
+    }
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "shipment_order.reconferido",
+      resourceType: "shipment_orders",
+      resourceId: (reconferido as unknown as { id: string }).id,
+      requestId,
+    });
+    return ok(reconferido, { requestId });
   }
 
   // Separação e conferência (0240): só com a carga em montagem. Não mexe

@@ -69,6 +69,12 @@ export interface PedidoNaCarga {
   status: StatusNaCarga;
   /** NULL/ausente = ainda não separado/conferido (0240). */
   separado_em?: string | null;
+  /**
+   * 0297: o pedido mudou no Mercos DEPOIS de entrar nesta carga. A carga não
+   * muda sozinha — o aviso é para quem está no pátio reconferir.
+   */
+  reconferir_em?: string | null;
+  reconferir_motivo?: string | null;
   pedido: {
     numero: number;
     cliente_nome: string;

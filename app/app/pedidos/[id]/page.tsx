@@ -122,6 +122,9 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
       }}
       podeEditar={user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent}
       podeExcluir={user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager}
+      podeSincronizarMercos={
+        user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager
+      }
     />
   );
 }

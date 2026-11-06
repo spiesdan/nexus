@@ -464,6 +464,7 @@ export const AUDIT_ACTIONS = [
   // Separação (migration 0240). Conferência antes da rota: quem separou
   // e quando, por item — o romaneio diz o que deveria ir, isto diz o que foi.
   "shipment_order.separado",
+  "shipment_order.reconferido",
   // Vendedor autônomo (NEXUS FASE 10). Decisões do Orchestrator com a
   // trilha de governança no metadata (quem/agente/dados/ferramentas/
   // políticas/resultado) — o Decision Log se lê em /api/v1/audit.
