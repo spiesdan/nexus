@@ -12,10 +12,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
+import { eCanalDeExpedicao } from "@/lib/channels/finalidade";
 
 const OPEN_STATUSES = ["open", "pending", "claimed", "ai_handling"];
 
-/** Sessão viva da org: WORKING primeiro; senão qualquer uma não arquivada. */
+interface CanalParaEnvio {
+  id: string;
+  metadata: unknown;
+}
+
+/**
+ * Sessão viva da org: WORKING primeiro; senão qualquer uma não arquivada.
+ *
+ * Entre as vivas, o número COMERCIAL vence o de expedição mesmo sendo mais novo.
+ * Sem essa ordem, marcar um segundo número como "avisos de expedição" e torná-lo
+ * WORKING antes do comercial (ou reconectar o comercial depois) faria follow-up,
+ * campanha e venda automática saírem pelo número de aviso — a separação que o
+ * usuário pediu existiria só no texto da tela. O canal de expedição continua
+ * elegível como último recurso: org com um único número não pode ficar muda.
+ */
 export async function sessaoProntaParaEnvio(
   supabase: SupabaseClient,
   organizationId: string,
@@ -23,20 +38,64 @@ export async function sessaoProntaParaEnvio(
   const listar = (soWorking: boolean, ignorarArquivadas: boolean) => {
     let q = supabase
       .from("channel_sessions")
-      .select("id")
+      .select("id, metadata")
       .eq("organization_id", organizationId);
     if (soWorking) q = q.eq("status", "WORKING");
     if (ignorarArquivadas) q = q.is(ARCHIVED_AT, null);
-    return q.order("created_at", { ascending: true }).limit(1);
+    // Sem `limit(1)`: a escolha entre comercial e expedição é feita depois de
+    // ler os candidatos, e cortar a lista antes disso devolveria justamente a
+    // linha errada.
+    return q.order("created_at", { ascending: true });
   };
-  const tentar = async (soWorking: boolean) => {
+  const tentar = async (soWorking: boolean): Promise<string | null> => {
     const { data } = await queryTolerantToMissingArchived(
       () => listar(soWorking, true),
       () => listar(soWorking, false),
     );
-    return (data as Array<{ id: string }> | null)?.[0]?.id ?? null;
+    const canais = (data as CanalParaEnvio[] | null) ?? [];
+    const comercial = canais.find((c) => !eCanalDeExpedicao(c.metadata));
+    return (comercial ?? canais[0])?.id ?? null;
   };
   return (await tentar(true)) ?? (await tentar(false));
+}
+
+/**
+ * A sessão por onde saem os avisos de EXPEDIÇÃO ("seu pedido saiu para
+ * entrega").
+ *
+ * Devolve também `dedicado`: o chamador registra no log quando o aviso saiu pelo
+ * número comercial porque não havia um marcado (ou porque o marcado está fora do
+ * ar), em vez de o desvio acontecer em silêncio.
+ *
+ * O canal dedicado precisa estar WORKING de verdade — mandar para uma sessão
+ * parada só gravaria a mensagem como enfileirada, e a rota já saiu para a rua.
+ * Nesse caso o aviso cai no comercial, que é o comportamento que existia antes
+ * desta função: nunca trocar "avisar por outro número" por "não avisar".
+ */
+export async function sessaoParaAvisosDeExpedicao(
+  supabase: SupabaseClient,
+  organizationId: string,
+): Promise<{ id: string; dedicado: boolean } | null> {
+  const listar = (ignorarArquivadas: boolean) => {
+    let q = supabase
+      .from("channel_sessions")
+      .select("id, metadata")
+      .eq("organization_id", organizationId)
+      .eq("status", "WORKING");
+    if (ignorarArquivadas) q = q.is(ARCHIVED_AT, null);
+    return q.order("created_at", { ascending: true });
+  };
+  const { data } = await queryTolerantToMissingArchived(
+    () => listar(true),
+    () => listar(false),
+  );
+  const dedicado = ((data as CanalParaEnvio[] | null) ?? []).find((c) =>
+    eCanalDeExpedicao(c.metadata),
+  );
+  if (dedicado) return { id: dedicado.id, dedicado: true };
+
+  const geral = await sessaoProntaParaEnvio(supabase, organizationId);
+  return geral ? { id: geral, dedicado: false } : null;
 }
 
 export async function ensureConversation(

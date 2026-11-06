@@ -20,7 +20,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { sendMessageHandler } from "@/app/api/v1/messages/_handler";
-import { ensureConversation, sessaoProntaParaEnvio } from "@/lib/automation/start-conversation";
+import {
+  ensureConversation,
+  sessaoParaAvisosDeExpedicao,
+} from "@/lib/automation/start-conversation";
 import { logger } from "@/lib/logger";
 import { FUSO_PADRAO, fusoValido } from "@/lib/tempo/fusos";
 
@@ -110,14 +113,25 @@ export async function avisarClientesDaCarga(
     const fuso = fusoBruto !== "" && fusoValido(fusoBruto) ? fusoBruto : FUSO_PADRAO;
     const saudacaoDoMomento = saudacao(new Date(), fuso);
 
-    const sessionId = await sessaoProntaParaEnvio(admin, input.organizationId);
-    if (!sessionId) {
+    // O número que avisa pode ser diferente do que vende: quem marca um canal
+    // como "avisos de expedição" em Conexões espera que o cliente receba o
+    // aviso por ele, não pelo número do atendimento. Sem canal dedicado (ou com
+    // ele fora do ar), cai no comercial de sempre — e o log diz que caiu.
+    const sessao = await sessaoParaAvisosDeExpedicao(admin, input.organizationId);
+    if (!sessao) {
       logger.warn("[expedicao-aviso] sem sessão de canal — aviso pulado", {
         organization_id: input.organizationId,
         shipment_id: input.shipmentId,
       });
       return { avisados: 0 };
     }
+    if (!sessao.dedicado) {
+      logger.info("[expedicao-aviso] sem número dedicado à expedição — aviso sai pelo comercial", {
+        organization_id: input.organizationId,
+        shipment_id: input.shipmentId,
+      });
+    }
+    const sessionId = sessao.id;
 
     let avisados = 0;
     for (const p of pedidos as Array<{ id: string; numero: number; contact_id: string }>) {

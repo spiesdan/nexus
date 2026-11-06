@@ -14,6 +14,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { requireRole } from "@/lib/auth/require-role";
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
+import { finalidadeDoCanal, type Finalidade } from "@/lib/channels/finalidade";
 import { createChannelSchema } from "@/lib/schemas/channels";
 import { createClient } from "@/lib/supabase/server";
 import { getWahaClient, wahaFriendlyError } from "@/lib/waha/client";
@@ -21,7 +22,22 @@ import { getWahaClient, wahaFriendlyError } from "@/lib/waha/client";
 export const dynamic = "force-dynamic";
 
 export const CHANNEL_COLUMNS =
-  "id, waha_session_name, display_name, phone_number, status, status_reason, last_health_check_at, last_status_change_at, daily_message_limit, is_warmup_complete, created_at";
+  "id, waha_session_name, display_name, phone_number, status, status_reason, last_health_check_at, last_status_change_at, daily_message_limit, is_warmup_complete, created_at, metadata";
+
+/**
+ * A resposta fala em `finalidade`, não no jsonb onde ela mora.
+ *
+ * O `metadata` é detalhe de armazenamento: a tela precisa saber se o número é
+ * comercial ou de expedição, e nada além disso. Devolver o jsonb cru faria cada
+ * consumidor reimplementar a leitura — e a regra "valor estranho cai em
+ * comercial" mora em `finalidadeDoCanal`, um lugar só.
+ */
+function comFinalidadeNaResposta<T extends { metadata?: unknown }>(
+  canal: T,
+): Omit<T, "metadata"> & { finalidade: Finalidade } {
+  const { metadata, ...resto } = canal;
+  return { ...resto, finalidade: finalidadeDoCanal(metadata) };
+}
 
 export async function GET(): Promise<Response> {
   const requestId = randomUUID();
@@ -50,7 +66,7 @@ export async function GET(): Promise<Response> {
   );
   if (error) return fail("internal_error", error.message, 500, { requestId });
 
-  return ok(data ?? [], {
+  return ok((data ?? []).map(comFinalidadeNaResposta), {
     requestId,
     ...(schemaOutdated ? { meta: { schema_outdated: true } } : {}),
   });
@@ -112,7 +128,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     .select(CHANNEL_COLUMNS)
     .single();
   if (insErr || !created) {
-    return fail("internal_error", insErr?.message ?? "channel_session_insert_failed", 500, { requestId });
+    return fail("internal_error", insErr?.message ?? "channel_session_insert_failed", 500, {
+      requestId,
+    });
   }
 
   try {
@@ -137,5 +155,5 @@ export async function POST(req: NextRequest): Promise<Response> {
     metadata: { waha_session_name: sessionName },
   });
 
-  return ok(created, { requestId, status: 201 });
+  return ok(comFinalidadeNaResposta(created), { requestId, status: 201 });
 }

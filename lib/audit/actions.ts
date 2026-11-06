@@ -181,6 +181,11 @@ export const AUDIT_ACTIONS = [
   "ai_agent.run_failed",
   "channel.connected",
   "channel.reconnected",
+  // O USO do número mudou (`comercial` ↔ `expedicao`). Separada de
+  // `connected`/`reactivated` porque muda o remetente dos avisos de entrega sem
+  // mexer em conexão: quem lê a auditoria depois precisa saber por que o aviso
+  // do cliente saiu de outro número.
+  "channel.finalidade_alterada",
   // Duas ações distintas de propósito: `deleted` apagou a linha (canal virgem),
   // `archived` só a escondeu porque conversas/mensagens ainda a referenciam.
   // A auditoria precisa distinguir o que sumiu do que continua no banco.
@@ -194,8 +199,8 @@ export const AUDIT_ACTIONS = [
   "channel.reactivated",
   "authz.denied",
   "team.role_changed",
-"team.setor_changed",
-"team.nome_changed",
+  "team.setor_changed",
+  "team.nome_changed",
   // Modo entregador: ligar/desligar muda o que a pessoa vê ao entrar. É
   // escrita de admin sobre o vínculo de outro — entra no mesmo trilho.
   "team.motorista_changed",
@@ -580,8 +585,8 @@ export const AUDIT_ACTIONS = [
   // hora: sem este código o fiscal vê `sugerido` na linha e não vê QUANDO a
   // máquina escolheu nem quem salvou por cima.
   "catalog_product.ncm_sugerido",
-"catalog_product.ncm_lote",
-"commercial_orders.mercos_import.enqueue",
+  "catalog_product.ncm_lote",
+  "commercial_orders.mercos_import.enqueue",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
