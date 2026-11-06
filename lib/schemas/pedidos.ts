@@ -237,8 +237,29 @@ export interface PedidoComercial {
   modalidade_frete: string;
   previsao_entrega: string | null;
   parcelas: Parcela[];
+  /**
+   * 0297: quando a revisão do Mercos conferiu os dados deste pedido.
+   * `null` = nunca revisado depois de importado.
+   */
+  mercos_sincronizado_em?: string | null;
+  /**
+   * 0297: a última mudança que o Mercos aplicou. `null` = a última revisão
+   * não achou diferença. É o que a ficha mostra como "mudou no Mercos".
+   */
+  mercos_ultima_mudanca?: MudancaDoMercos | null;
   created_at: string;
   updated_at: string;
+}
+
+/** 0297: uma diferença que a revisão do Mercos encontrou (e aplicou). */
+export interface MudancaDoMercos {
+  em: string;
+  campos: {
+    campo: string;
+    /** Valor anterior; número quando o campo é contagem (itens). */
+    de: string | number | null;
+    para: string | number | null;
+  }[];
 }
 
 export interface Parcela {
@@ -254,7 +275,8 @@ export const COLUNAS_DO_PEDIDO =
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
   "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "rastreamento, contato_no_cliente, " +
-  "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at";
+  "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at, " +
+  "mercos_sincronizado_em, mercos_ultima_mudanca";
 
 /**
  * Parcelas a partir da condição ("30/60/90", "28 dias", "à vista"...).

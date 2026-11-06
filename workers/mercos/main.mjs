@@ -196,12 +196,58 @@ async function processar(admin, run) {
   // existe só para recuperação operacional e não fica ligado por padrão.
   const aPartirDeOverride = Number(process.env.MERCOS_A_PARTIR_DE || 0);
   const maiorNumero = aPartirDeOverride > 0 ? aPartirDeOverride : Number(ultimo?.numero ?? 0);
-  const inicio =
+
+  // ─── Revisão: o pedido já importado também muda no ERP ────────────────────
+  //
+  // O corte por número é o que faz a coleta ser barata — e é também o que
+  // impedia a correção feita no Mercos de chegar: pedido antigo nunca era
+  // relido. Aqui a coleta começa alguns dias ANTES do maior número, para
+  // revisitar quem ainda está em aberto. `revisar_numeros` (botão da ficha do
+  // pedido) mira um número específico, inclusive antigo.
+  const janelaDias = Math.max(1, Number(process.env.MERCOS_REVISAR_DIAS || "3"));
+  const alvo = Array.isArray(run.revisar_numeros)
+    ? [...new Set(run.revisar_numeros.map(Number).filter((n) => Number.isInteger(n) && n > 0))]
+    : [];
+
+  let revisarDe = null;
+  let inicioDaRevisao = null;
+  if (alvo.length > 0) {
+    const { data: alvos } = await admin
+      .from("commercial_orders")
+      .select("numero, created_at")
+      .eq("organization_id", org)
+      .in("numero", alvo)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    revisarDe = Math.min(...alvo);
+    inicioDaRevisao = alvos?.[0]?.created_at ? new Date(alvos[0].created_at) : null;
+  } else {
+    const { data: abertos } = await admin
+      .from("commercial_orders")
+      .select("numero")
+      .eq("organization_id", org)
+      .eq("origem", "mercos")
+      .neq("status", "entregue")
+      .neq("status", "cancelado")
+      .gte("created_at", new Date(Date.now() - janelaDias * 86400000).toISOString())
+      .order("numero", { ascending: true })
+      .limit(1);
+    revisarDe = abertos?.[0]?.numero ?? null;
+  }
+
+  const aPartirDaColeta = Math.max(
+    0,
+    Math.min(maiorNumero, revisarDe != null ? revisarDe - 1 : maiorNumero),
+  );
+  const aPartirDe = aPartirDeOverride > 0 ? aPartirDeOverride : aPartirDaColeta;
+
+  let inicio =
     aPartirDeOverride > 0
       ? new Date(Date.now() - 30 * 86400000)
       : ultimo?.created_at
         ? new Date(ultimo.created_at)
         : new Date(Date.now() - 30 * 86400000);
+  if (inicioDaRevisao && inicioDaRevisao < inicio) inicio = inicioDaRevisao;
   const de = dataBr(new Date(inicio.getTime() - 86400000));
   const ate = dataBr(new Date(Date.now() + 86400000));
   const pasta = join(TMP_ROOT, run.id);
@@ -209,8 +255,8 @@ async function processar(admin, run) {
   const saida = join(pasta, "pedidos.jsonl");
   const andamento = join(pasta, "andamento.json");
 
-  log("inicio", { run: run.id, org, maior_numero: maiorNumero, de, ate });
-  const { stdout } = await executarColetor({ saida, andamento, aPartirDe: maiorNumero, de, ate });
+  log("inicio", { run: run.id, org, maior_numero: maiorNumero, a_partir_de: aPartirDe, revisar_de: revisarDe, alvo: alvo.length ? alvo : undefined, de, ate });
+  const { stdout } = await executarColetor({ saida, andamento, aPartirDe, de, ate });
 
   let conteudo = "";
   try {
@@ -225,6 +271,35 @@ async function processar(admin, run) {
   let itensNovos = 0;
   let clientesNovos = 0;
   let divergentes = 0;
+  let atualizados = 0;
+  let revisados = 0;
+  let reconferir = 0;
+  const bloqueados = [];
+  const revisao = [];
+
+  async function importar(pedido) {
+    const { data, error } = await admin.rpc("fn_importar_pedido_mercos", {
+      p_org: org,
+      p_pedido: pedido,
+    });
+    if (error) {
+      erros.push({ numero: pedido.numero, motivo: error.message });
+      return;
+    }
+    const resultado = data ?? {};
+    if (resultado.status === "inserted") {
+      novos++;
+      itensNovos += Number(resultado.items ?? 0);
+      if (resultado.customer_created) clientesNovos++;
+    } else if (resultado.status === "skipped") {
+      pulados++;
+    } else if (resultado.status === "divergent") {
+      divergentes++;
+      erros.push({ numero: pedido.numero, motivo: resultado.motivo ?? "divergente" });
+    } else {
+      erros.push({ numero: pedido.numero, motivo: "resultado inesperado" });
+    }
+  }
 
   for (const linha of linhas) {
     let normalizado;
@@ -239,40 +314,72 @@ async function processar(admin, run) {
       erros.push({ numero: normalizado.numero, motivo: normalizado.erro });
       continue;
     }
-    const { data, error } = await admin.rpc("fn_importar_pedido_mercos", {
-      p_org: org,
-      p_pedido: normalizado.pedido,
-    });
-    if (error) {
-      erros.push({ numero: normalizado.pedido.numero, motivo: error.message });
+
+    const pedido = normalizado.pedido;
+    const numero = pedido.numero;
+    const existente = numero <= maiorNumero;
+    const noAlvo = alvo.length === 0 || alvo.includes(numero);
+
+    // Pedido que já existe e está no escopo desta execução: sincroniza em vez
+    // de pular. `p_aplicar` é sempre true aqui — a conferência sem escrita é
+    // para a tela, não para o cron.
+    if (existente && noAlvo) {
+      const { data, error } = await admin.rpc("fn_sincronizar_pedido_mercos", {
+        p_org: org,
+        p_pedido: pedido,
+        p_aplicar: true,
+      });
+      if (error) {
+        erros.push({ numero, motivo: error.message });
+        continue;
+      }
+      const r = data ?? {};
+      if (r.status === "atualizado") {
+        atualizados++;
+        if (r.carga?.reconferir) reconferir++;
+        revisao.push({ numero, status: "atualizado", mudancas: r.mudancas ?? [], carga: r.carga ?? null });
+      } else if (r.status === "sem_mudanca") {
+        revisados++;
+        revisao.push({ numero, status: "sem_mudanca", mudancas: [] });
+      } else if (r.status === "bloqueado") {
+        bloqueados.push({ numero, motivo: r.motivo ?? "bloqueado" });
+        revisao.push({ numero, status: "bloqueado", motivo: r.motivo ?? null, mudancas: [] });
+      } else if (r.status === "divergente") {
+        divergentes++;
+        erros.push({ numero, motivo: r.motivo ?? "divergente" });
+      } else if (r.status === "nao_encontrado") {
+        // Número de pedido nosso (demonstração) com a mesma identidade: o
+        // import pula, como sempre pulou. Nunca sobrescreve pedido local.
+        await importar(pedido);
+      } else {
+        erros.push({ numero, motivo: "resultado inesperado na sincronização" });
+      }
       continue;
     }
-    const resultado = data ?? {};
-    if (resultado.status === "inserted") {
-      novos++;
-      itensNovos += Number(resultado.items ?? 0);
-      if (resultado.customer_created) clientesNovos++;
-    } else if (resultado.status === "skipped") {
-      pulados++;
-    } else if (resultado.status === "divergent") {
-      divergentes++;
-      erros.push({ numero: normalizado.pedido.numero, motivo: resultado.motivo ?? "divergente" });
-    } else {
-      erros.push({ numero: normalizado.pedido.numero, motivo: "resultado inesperado" });
+
+    if (numero > maiorNumero) {
+      await importar(pedido);
     }
   }
 
-  const status = erros.length > 0 ? (novos > 0 ? "partial" : "error") : "success";
+  const status = erros.length > 0 ? (novos > 0 || atualizados > 0 ? "partial" : "error") : "success";
   const resumo = {
     lidos: linhas.length,
     novos,
     pulados,
+    atualizados,
+    revisados,
+    bloqueados: bloqueados.length,
+    reconferir,
     divergentes,
     falhas: erros.length,
+    revisao: revisao.slice(0, 60),
+    bloqueados_detalhe: bloqueados.slice(0, 60),
     stdout: stdout.slice(-2000),
     de,
     ate,
     maior_numero_anterior: maiorNumero,
+    revisar_de: revisarDe,
   };
   await admin
     .from("mercos_import_runs")
@@ -281,6 +388,7 @@ async function processar(admin, run) {
       finished_at: new Date().toISOString(),
       orders_new: novos,
       orders_skipped: pulados,
+      orders_updated: atualizados,
       items_new: itensNovos,
       customers_new: clientesNovos,
       errors: erros.slice(0, 200),
@@ -290,7 +398,7 @@ async function processar(admin, run) {
     .eq("organization_id", org);
   rmSync(pasta, { recursive: true, force: true });
   log("fim", { run: run.id, status, ...resumo });
-  return { status, novos, pulados, itensNovos, clientesNovos, erros: erros.length };
+  return { status, novos, pulados, atualizados, itensNovos, clientesNovos, erros: erros.length };
 }
 
 async function marcarErro(admin, run, err) {

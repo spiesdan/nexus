@@ -291,6 +291,19 @@ export function CargaClient({
     }
   }
 
+  /** 0297: alguém conferiu o que mudou no Mercos depois do embarque. */
+  async function reconferir(orderId: string) {
+    try {
+      await apiClient.patch(`/api/v1/shipments/${cargaId}/orders/${orderId}`, {
+        reconferido: true,
+      });
+      toast.success(t("Reconferência registrada."));
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function excluirCarga() {
     const ok = await confirmar({
       title: textos.confirmarExcluir,
@@ -997,6 +1010,12 @@ export function CargaClient({
                                 {!separado && carga.status === "montando" && (
                                   <Badge variant="warning">{t("A separar")}</Badge>
                                 )}
+                                {/* 0297: o pedido mudou no Mercos depois de
+                                    embarcar. Fica no topo da parada, que é
+                                    onde quem está no pátio olha. */}
+                                {i.reconferir_em && (
+                                  <Badge variant="warning">{t("Mudou no Mercos")}</Badge>
+                                )}
                               </span>
                               <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                 <span className="font-medium tabular-nums">
@@ -1056,6 +1075,32 @@ export function CargaClient({
                                   </span>
                                 )}
                               </div>
+
+                              {/* 0297: o dado do pedido mudou depois de ele
+                                  entrar na carga. Diz o que aconteceu e que
+                                  nada saiu do romaneio sozinho — a decisão de
+                                  remanejar é de quem opera. */}
+                              {i.reconferir_em && (
+                                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-warning bg-warning-bg px-2 py-1.5 text-xs text-warning-fg">
+                                  <span>
+                                    {i.reconferir_motivo ??
+                                      t("Este pedido mudou no Mercos depois de entrar na carga.")}{" "}
+                                    <span className="text-muted-foreground">
+                                      {t("Confira a mercadoria e o destino antes da entrega.")}
+                                    </span>
+                                  </span>
+                                  {podeOperar && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="ml-auto"
+                                      onClick={() => void reconferir(i.order_id)}
+                                    >
+                                      {t("Reconferido")}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
 
                               {podeOperar &&
                                 carga.status === "montando" &&

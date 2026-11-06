@@ -3432,6 +3432,8 @@ export type Database = {
           forma_pagamento: string | null;
           frete_cents: number;
           id: string;
+          mercos_sincronizado_em: string | null;
+          mercos_ultima_mudanca: Json | null;
           modalidade_frete: string;
           moeda: string;
           numero: number;
@@ -3467,6 +3469,8 @@ export type Database = {
           forma_pagamento?: string | null;
           frete_cents?: number;
           id?: string;
+          mercos_sincronizado_em?: string | null;
+          mercos_ultima_mudanca?: Json | null;
           modalidade_frete?: string;
           moeda?: string;
           numero: number;
@@ -3502,6 +3506,8 @@ export type Database = {
           forma_pagamento?: string | null;
           frete_cents?: number;
           id?: string;
+          mercos_sincronizado_em?: string | null;
+          mercos_ultima_mudanca?: Json | null;
           modalidade_frete?: string;
           moeda?: string;
           numero?: number;
@@ -7566,9 +7572,11 @@ export type Database = {
           items_new: number;
           orders_new: number;
           orders_skipped: number;
+          orders_updated: number;
           organization_id: string;
           origem: string;
           requested_by: string | null;
+          revisar_numeros: number[] | null;
           started_at: string | null;
           status: string;
           summary: NonNullable<Json>;
@@ -7583,9 +7591,11 @@ export type Database = {
           items_new?: number;
           orders_new?: number;
           orders_skipped?: number;
+          orders_updated?: number;
           organization_id: string;
           origem?: string;
           requested_by?: string | null;
+          revisar_numeros?: number[] | null;
           started_at?: string | null;
           status?: string;
           summary?: NonNullable<Json>;
@@ -7600,9 +7610,11 @@ export type Database = {
           items_new?: number;
           orders_new?: number;
           orders_skipped?: number;
+          orders_updated?: number;
           organization_id?: string;
           origem?: string;
           requested_by?: string | null;
+          revisar_numeros?: number[] | null;
           started_at?: string | null;
           status?: string;
           summary?: NonNullable<Json>;
@@ -9843,6 +9855,8 @@ export type Database = {
           motivo: string | null;
           order_id: string;
           organization_id: string;
+          reconferir_em: string | null;
+          reconferir_motivo: string | null;
           separado_em: string | null;
           separado_por: string | null;
           sequencia: number;
@@ -9860,6 +9874,8 @@ export type Database = {
           motivo?: string | null;
           order_id: string;
           organization_id: string;
+          reconferir_em?: string | null;
+          reconferir_motivo?: string | null;
           separado_em?: string | null;
           separado_por?: string | null;
           sequencia?: number;
@@ -9877,6 +9893,8 @@ export type Database = {
           motivo?: string | null;
           order_id?: string;
           organization_id?: string;
+          reconferir_em?: string | null;
+          reconferir_motivo?: string | null;
           separado_em?: string | null;
           separado_por?: string | null;
           sequencia?: number;
@@ -11078,9 +11096,11 @@ export type Database = {
           items_new: number;
           orders_new: number;
           orders_skipped: number;
+          orders_updated: number;
           organization_id: string;
           origem: string;
           requested_by: string | null;
+          revisar_numeros: number[] | null;
           started_at: string | null;
           status: string;
           summary: NonNullable<Json>;

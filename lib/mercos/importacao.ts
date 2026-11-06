@@ -20,10 +20,13 @@ export interface ExecucaoMercos {
   finished_at: string | null;
   orders_new: number;
   orders_skipped: number;
+  orders_updated: number;
   items_new: number;
   customers_new: number;
   errors: unknown[];
   summary: Record<string, unknown>;
+  /** Revisão sob demanda: números de pedido a reconferir. NULL = janela normal. */
+  revisar_numeros: number[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +49,12 @@ export async function enfileirarImportacaoMercos(
     organizationId: string;
     requestedBy: string | null;
     origem: "manual" | "cron";
+    /**
+     * Revisão sob demanda de pedidos específicos (a ação "Atualizar do
+     * Mercos" da ficha). Sem isso, a execução revisa a janela recente e
+     * importa o que é novo.
+     */
+    revisarNumeros?: number[] | null;
   },
 ): Promise<ResultadoDoEnfileiramento> {
   const { data, error } = await admin
@@ -55,6 +64,10 @@ export async function enfileirarImportacaoMercos(
       origem: params.origem,
       requested_by: params.requestedBy,
       status: "queued",
+      revisar_numeros:
+        params.revisarNumeros && params.revisarNumeros.length > 0
+          ? [...new Set(params.revisarNumeros.filter((n) => Number.isInteger(n) && n > 0))]
+          : null,
     })
     .select("*")
     .single();

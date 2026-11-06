@@ -66,6 +66,82 @@ const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
   expedido: "Marcar entregue",
 };
 
+/** 0297: como cada campo da revisão do Mercos aparece para quem lê a ficha. */
+const ROTULO_DA_MUDANCA: Record<string, string> = {
+  cliente_nome: "Cliente",
+  cliente_documento: "Documento",
+  condicao_pagamento: "Condição de pagamento",
+  frete_cents: "Frete",
+  subtotal_cents: "Subtotal",
+  total_cents: "Total",
+  itens: "Quantidade total",
+  cidade: "Cidade/UF",
+};
+
+/** Campos que a revisão devolve em centavos — sem isto, "66237" na tela. */
+const MUDANCA_EM_DINHEIRO = new Set(["frete_cents", "subtotal_cents", "total_cents"]);
+
+interface ExecucaoMercosNaTela {
+  id: string;
+  status: "queued" | "running" | "success" | "partial" | "error";
+  summary: Record<string, unknown> | null;
+}
+
+interface RevisaoDoPedido {
+  numero: number;
+  status: string;
+  motivo?: string | null;
+  mudancas?: unknown[];
+}
+
+/**
+ * O resultado da revisão para ESTE pedido, lido do `summary` da execução.
+ *
+ * A execução pode revisar vários números (janela recente) ou nenhum (quando
+ * outra já estava rodando). Sem este recorte, o toast diria "sincronizado"
+ * mesmo quando o pedido aberto não foi tocado.
+ */
+function revisaoDoPedido(summary: Record<string, unknown> | null | undefined, numero: number) {
+  const lista = summary?.revisao;
+  if (!Array.isArray(lista)) return null;
+  return (
+    (lista as RevisaoDoPedido[]).find((r) => Number(r?.numero) === numero) ?? null
+  );
+}
+
+/**
+ * Acompanha a execução enfileirada até ela sair de `queued`/`running`.
+ *
+ * O scrape abre um navegador de verdade e pode levar minutos. A tela espera
+ * por ~3 minutos e então devolve o controle: um spinner infinito é pior que
+ * um aviso honesto de "ainda está rodando", porque o worker termina sozinho e
+ * o dado aparece no próximo carregamento.
+ */
+async function esperarExecucaoDoMercos(id: string): Promise<ExecucaoMercosNaTela | null> {  for (let tentativa = 0; tentativa < 90; tentativa += 1) {
+    const corpo = await apiClient.get<{ data: { execucao: ExecucaoMercosNaTela | null } }>(
+      `/api/v1/commercial-orders/importar-mercos?id=${encodeURIComponent(id)}`,
+    );
+    const execucao = corpo.data.execucao;
+    if (execucao && execucao.status !== "queued" && execucao.status !== "running") {
+      return execucao;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  return null;
+}
+
+/** Um valor da revisão como a ficha mostra: dinheiro formatado, resto literal. */
+function valorDaMudanca(
+  campo: string,
+  valor: string | number | null,
+  moeda: string,
+): string {
+  if (valor === null || valor === undefined || valor === "") return "—";
+  if (MUDANCA_EM_DINHEIRO.has(campo)) return comoMoeda(Number(valor), moeda);
+  return String(valor);
+}
+
+
 /**
  * Seção FINANCEIRO da ficha do pedido — recebíveis gerados, com ação de
  * gerar e atalho para a central. O vínculo NF aparece quando existir.
@@ -259,6 +335,7 @@ export function DetalheDoPedido({
   representada,
   podeEditar,
   podeExcluir,
+  podeSincronizarMercos,
 }: {
   pedido: PedidoComercial;
   itens: ItemDoPedido[];
@@ -273,6 +350,8 @@ export function DetalheDoPedido({
   };
   podeEditar: boolean;
   podeExcluir: boolean;
+  /** 0297: manager+ — a rota do "Atualizar do Mercos" pede esse nível. */
+  podeSincronizarMercos: boolean;
 }) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
@@ -305,6 +384,8 @@ export function DetalheDoPedido({
   // conversa com o cliente certo (sem DDI, o link disca para outro país).
   const [telefoneDoCliente, setTelefoneDoCliente] = React.useState<string | null>(null);
   const [gerandoLink, setGerandoLink] = React.useState(false);
+  // 0297: uma revisão do Mercos em andamento (o scrape leva minutos).
+  const [sincronizandoMercos, setSincronizandoMercos] = React.useState(false);
 
   React.useEffect(() => {
     let vivo = true;
@@ -321,14 +402,68 @@ export function DetalheDoPedido({
     };
   }, [inicial.id]);
 
-  async function recarregar() {
+  async function recarregar(): Promise<PedidoComercial | null> {
     try {
       const corpo = await apiClient.get<{ data: PedidoComercial & { itens: ItemDoPedido[] } }>(
         `/api/v1/commercial-orders/${inicial.id}`,
       );
       setPedido(corpo.data);
+      return corpo.data;
     } catch (e) {
       showApiError(e);
+      return null;
+    }
+  }
+
+  /**
+   * "Atualizar do Mercos" — o pedido que o vendedor externo mudou no ERP.
+   *
+   * A rota só ENFILEIRA (o Chromium e a credencial vivem no worker `mercos`);
+   * a tela acompanha a execução até o fim e então recarrega a ficha. O toast
+   * diz o que ACONTECEU com ESTE pedido, lido do `summary.revisao` — não um
+   * "sincronizado" genérico que esconderia um bloqueio por nota emitida.
+   */
+  async function atualizarDoMercos() {
+    setSincronizandoMercos(true);
+    try {
+      const enfileirado = await apiClient.post<{
+        data: { execucao: { id: string }; jaEstavaRodando: boolean };
+      }>(`/api/v1/commercial-orders/${pedido.id}/mercos`, {});
+
+      const execucaoId = enfileirado.data.execucao.id;
+      if (enfileirado.data.jaEstavaRodando) {
+        toast.info(t("Já havia uma sincronização rodando. Aviso assim que ela terminar."));
+      }
+
+      const execucao = await esperarExecucaoDoMercos(execucaoId);
+      if (!execucao) {
+        toast.info(t("A sincronização ainda está rodando. Confira de novo em alguns minutos."));
+        return;
+      }
+
+      const revisao = revisaoDoPedido(execucao.summary, pedido.numero);
+      await recarregar();
+      router.refresh();
+
+      if (revisao?.status === "atualizado") {
+        toast.success(t("Pedido atualizado com os dados do Mercos."));
+      } else if (revisao?.status === "sem_mudanca") {
+        toast.info(t("O Mercos não tem nada diferente deste pedido."));
+      } else if (revisao?.status === "bloqueado") {
+        toast.error(
+          revisao.motivo === "nota_emitida"
+            ? t("Este pedido já tem nota emitida — o Mercos não pode reescrever os itens.")
+            : t("Pedido encerrado não aceita atualização do Mercos."),
+        );
+      } else if (execucao.status === "error" || execucao.status === "partial") {
+        toast.error(t("A sincronização do Mercos terminou com erro. Veja o histórico da importação."));
+      } else {
+        toast.info(t("A sincronização terminou sem revisar este pedido. Tente de novo em instantes."));
+      }
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setSincronizandoMercos(false);
     }
   }
 
@@ -550,6 +685,23 @@ export function DetalheDoPedido({
                     {t("Imprimir pedido")}
                   </Link>
                 </DropdownMenuItem>
+                {/* 0297: pedido importado do Mercos que mudou LÁ depois de já
+                    estar aqui. A sincronização automática cobre a janela
+                    recente; este item existe para o caso pontual e para o
+                    pedido antigo, que o corte por número nunca revisita. */}
+                {pedido.origem === "mercos" &&
+                  podeSincronizarMercos &&
+                  pedido.status !== "entregue" &&
+                  pedido.status !== "cancelado" && (
+                    <DropdownMenuItem
+                      disabled={sincronizandoMercos}
+                      onSelect={() => void atualizarDoMercos()}
+                    >
+                      {sincronizandoMercos
+                        ? t("Atualizando do Mercos…")
+                        : t("Atualizar do Mercos")}
+                    </DropdownMenuItem>
+                  )}
                 {podeEditar && (
                   <DropdownMenuItem onSelect={() => void duplicar()}>
                     {t("Duplicar")}
@@ -572,6 +724,44 @@ export function DetalheDoPedido({
       <div className="flex flex-wrap items-center gap-3">
         <PillDoStatus status={pedido.status as StatusDoPedido} />
       </div>
+
+      {/* 0297: o pedido mudou no Mercos DEPOIS de já estar aqui. O aviso é o
+          que faz alguém conferir a carga antes de sair: "cliente X→Y, 3→4
+          itens" não é curiosidade, é romaneio errado esperando acontecer. */}
+      {pedido.origem === "mercos" && pedido.mercos_ultima_mudanca && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50/60 p-3 text-sm dark:border-amber-500/40 dark:bg-amber-500/10">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="font-medium">
+              {t("Este pedido mudou no Mercos em")}{" "}
+              {new Date(pedido.mercos_ultima_mudanca.em).toLocaleString(tagIdioma)}
+            </p>
+            {pedido.mercos_sincronizado_em && (
+              <p className="text-xs text-muted-foreground">
+                {t("Revisado em")}{" "}
+                {new Date(pedido.mercos_sincronizado_em).toLocaleString(tagIdioma)}
+              </p>
+            )}
+          </div>
+          <ul className="mt-2 space-y-1">
+            {pedido.mercos_ultima_mudanca.campos.map((m, i) => (
+              <li key={`${m.campo}-${i}`} className="text-xs">
+                <span className="font-medium">{t(ROTULO_DA_MUDANCA[m.campo] ?? m.campo)}</span>
+                {": "}
+                {valorDaMudanca(m.campo, m.de, pedido.moeda)}
+                {" → "}
+                <span className="font-medium">
+                  {valorDaMudanca(m.campo, m.para, pedido.moeda)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t(
+              "Se este pedido já estava numa carga, a expedição foi marcada para reconferir — nada saiu da carga sozinho.",
+            )}
+          </p>
+        </div>
+      )}
 
       {/* O LINK DE APROVAÇÃO fica na tela depois de gerado: com o WhatsApp da
           conexão fora do ar, copiar e colar na conversa é o caminho que
@@ -816,6 +1006,16 @@ export function DetalheDoPedido({
             rotulo={t("Atualizado em")}
             valor={new Date(pedido.updated_at).toLocaleDateString(tagIdioma)}
           />
+          {pedido.origem === "mercos" && (
+            <LinhaDetalhe
+              rotulo={t("Revisado no Mercos")}
+              valor={
+                pedido.mercos_sincronizado_em
+                  ? new Date(pedido.mercos_sincronizado_em).toLocaleString(tagIdioma)
+                  : ""
+              }
+            />
+          )}
         </dl>
         {(pedido.observacoes || pedido.obs_interna) && (
           <div className="space-y-1 text-sm">
