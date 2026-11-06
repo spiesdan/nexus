@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/lib/api/client";
+import type { Finalidade } from "@/lib/channels/finalidade";
 
 export interface ChannelSession {
   id: string;
@@ -21,6 +22,15 @@ export interface ChannelSession {
   daily_message_limit: number;
   is_warmup_complete: boolean | null;
   created_at: string;
+  /**
+   * Para que serve este número: `comercial` (padrão — atende, vende, recebe
+   * campanha) ou `expedicao` (só manda "seu pedido saiu para entrega").
+   *
+   * Vem derivada do `metadata` no servidor (`finalidadeDoCanal`); o jsonb cru
+   * não atravessa a API. A tela não deve ter um segundo lugar decidindo o que
+   * um `metadata` vazio significa.
+   */
+  finalidade: Finalidade;
 }
 
 export type ConnectionHealth = "connected" | "connecting" | "down" | "none" | "unknown";
@@ -82,6 +92,7 @@ export function useChannelSessions(opts?: { refetchInterval?: number; enabled?: 
 export function deriveOverallHealth(sessions: ChannelSession[] | undefined): ConnectionHealth {
   if (!sessions || sessions.length === 0) return "none";
   if (sessions.some((s) => s.status === "FAILED" || s.status === "STOPPED")) return "down";
-  if (sessions.some((s) => s.status === "STARTING" || s.status === "SCAN_QR_CODE")) return "connecting";
+  if (sessions.some((s) => s.status === "STARTING" || s.status === "SCAN_QR_CODE"))
+    return "connecting";
   return "connected";
 }

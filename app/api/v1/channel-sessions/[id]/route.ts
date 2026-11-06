@@ -19,12 +19,21 @@
  */
 import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { audit } from "@/lib/audit";
 import { ok, fail } from "@/lib/api/wrappers";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { requireRole } from "@/lib/auth/require-role";
+import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
 import { CHANNEL_PROVIDER_WAHA } from "@/lib/channels/capabilities";
+import {
+  comFinalidade,
+  eCanalDeExpedicao,
+  FINALIDADE_COMERCIAL,
+  FINALIDADE_EXPEDICAO,
+  FINALIDADES,
+} from "@/lib/channels/finalidade";
 import { numeroObservadoDaSessao } from "@/lib/channels/numero-observado";
 import { isChannelStatus } from "@/lib/schemas/channels";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -145,14 +154,15 @@ export async function GET(
     req.nextUrl.searchParams.get("impact") === "1"
       ? await loadDeletionImpact(activeOrg.orgId, id)
       : null;
-  const comImpacto = <T extends object>(corpo: T): T & { deletion_impact?: ChannelDeletionImpact } =>
+  const comImpacto = <T extends object>(
+    corpo: T,
+  ): T & { deletion_impact?: ChannelDeletionImpact } =>
     impact ? { ...corpo, deletion_impact: impact } : corpo;
 
   const waha = getWahaClient();
   // Canal oficial não tem sessão no transporte para consultar — `waha_session_name`
   // é NULL nele por CHECK, e perguntar assim mesmo pediria `/api/sessions/null`.
-  const nomeSessao =
-    session.provider === CHANNEL_PROVIDER_WAHA ? session.waha_session_name : null;
+  const nomeSessao = session.provider === CHANNEL_PROVIDER_WAHA ? session.waha_session_name : null;
   if (!waha || !nomeSessao) {
     // Nada a checar ao vivo (transporte fora do ar, ou canal que não vive nele):
     // devolve o que está no DB, sinalizando que o estado não foi confirmado agora.
@@ -231,6 +241,152 @@ export async function GET(
     }),
     { requestId },
   );
+}
+
+/**
+ * PATCH /api/v1/channel-sessions/[id] — para que serve este número.
+ *
+ * `finalidade` é `comercial` (o padrão: atende, vende, recebe campanha) ou
+ * `expedicao` (só manda o aviso de "seu pedido saiu para entrega"). A resolução
+ * do envio está em `sessaoParaAvisosDeExpedicao`
+ * (`lib/automation/start-conversation.ts`): o aviso usa o número marcado e cai
+ * no comercial quando não há um.
+ *
+ * ─── Por que só canal pareado por QR ────────────────────────────────────────
+ *
+ * O aviso é texto livre, e o canal oficial da Meta só entrega texto livre dentro
+ * da janela de 24h — fora dela exige modelo aprovado, que este caminho não tem.
+ * Aceitar a marcação num canal oficial prometeria uma entrega que a plataforma
+ * recusa com 131047, e o erro apareceria na conversa do cliente, não aqui.
+ *
+ * ─── Por que desmarcar os outros ANTES de marcar este ───────────────────────
+ *
+ * "Um número de expedição por organização" não é índice do banco (o marcador
+ * mora em jsonb). A ordem escolhida é a que degrada para o lado seguro: se a
+ * segunda escrita falhar, a org fica com ZERO canais de expedição e o aviso sai
+ * pelo comercial — o comportamento anterior a esta função. Na ordem inversa,
+ * uma falha deixaria dois números marcados e a escolha viraria "o mais antigo",
+ * que ninguém pediu.
+ *
+ * Canal arquivado é recusado: ele não envia nem recebe nada, e marcá-lo daria à
+ * tela um número de expedição que nunca avisa.
+ *
+ * Admin only. organization_id vem da sessão — nunca do path/body.
+ */
+const finalidadeSchema = z.object({ finalidade: z.enum(FINALIDADES) });
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+): Promise<Response> {
+  const requestId = randomUUID();
+  const { id } = await params;
+
+  const authz = await requireRole("admin", {
+    requestId,
+    resource: "channel_sessions",
+    allowPlatformAdmin: true,
+  });
+  if (!authz.ok) return authz.response;
+  const { user, org: activeOrg } = authz;
+
+  let raw: unknown = {};
+  try {
+    raw = await req.json();
+  } catch {
+    raw = {};
+  }
+  const parsed = finalidadeSchema.safeParse(raw ?? {});
+  if (!parsed.success) {
+    return fail("validation_failed", "Finalidade inválida.", 422, {
+      requestId,
+      details: parsed.error.flatten().fieldErrors as Record<string, unknown>,
+    });
+  }
+  const finalidade = parsed.data.finalidade;
+
+  const supabase = await createClient();
+  // `colunas` como string (e não literal ternário) porque o supabase-js tipa o
+  // retorno a partir do texto do select: um ternário vira união de literais e o
+  // `maybeSingle()` devolve `ParserError`. É o mesmo caminho de
+  // `channel-sessions/[id]/reconnect`.
+  const buscar = (colunas: string) =>
+    supabase
+      .from("channel_sessions")
+      .select(colunas)
+      .eq("organization_id", activeOrg.orgId)
+      .eq("id", id)
+      .maybeSingle();
+  // Tolerante à coluna ausente: num banco sem a migration 0106 nada está
+  // arquivado, e a leitura sem o filtro é exata (ver lib/channels/archived).
+  const { data: canal } = await queryTolerantToMissingArchived(
+    () => buscar(`id, waha_session_name, metadata, ${ARCHIVED_AT}`),
+    () => buscar("id, waha_session_name, metadata"),
+  );
+  if (!canal) return fail("not_found", "Canal não encontrado.", 404, { requestId });
+
+  const linha = canal as unknown as {
+    id: string;
+    waha_session_name: string | null;
+    metadata: unknown;
+    archived_at?: string | null;
+  };
+  if (linha.archived_at) {
+    return fail("validation_failed", "Canal excluído não pode ser configurado.", 422, {
+      requestId,
+    });
+  }
+  if (!linha.waha_session_name) {
+    return fail(
+      "validation_failed",
+      "Só um número conectado por QR pode enviar os avisos de expedição: o canal oficial exige modelo aprovado fora da janela de 24 horas.",
+      422,
+      { requestId },
+    );
+  }
+
+  if (finalidade === FINALIDADE_EXPEDICAO) {
+    const listar = (ignorarArquivadas: boolean) => {
+      let q = supabase
+        .from("channel_sessions")
+        .select("id, metadata")
+        .eq("organization_id", activeOrg.orgId);
+      if (ignorarArquivadas) q = q.is(ARCHIVED_AT, null);
+      return q;
+    };
+    const { data: todas } = await queryTolerantToMissingArchived(
+      () => listar(true),
+      () => listar(false),
+    );
+    for (const outra of (todas as Array<{ id: string; metadata: unknown }> | null) ?? []) {
+      if (outra.id === id || !eCanalDeExpedicao(outra.metadata)) continue;
+      const { error: limparErr } = await supabase
+        .from("channel_sessions")
+        .update({ metadata: comFinalidade(outra.metadata, FINALIDADE_COMERCIAL) })
+        .eq("organization_id", activeOrg.orgId)
+        .eq("id", outra.id);
+      if (limparErr) return fail("internal_error", limparErr.message, 500, { requestId });
+    }
+  }
+
+  const { error: gravarErr } = await supabase
+    .from("channel_sessions")
+    .update({ metadata: comFinalidade(linha.metadata, finalidade) })
+    .eq("organization_id", activeOrg.orgId)
+    .eq("id", id);
+  if (gravarErr) return fail("internal_error", gravarErr.message, 500, { requestId });
+
+  void audit({
+    action: "channel.finalidade_alterada",
+    actorUserId: user.id,
+    organizationId: activeOrg.orgId,
+    resourceType: "channel_session",
+    resourceId: id,
+    requestId,
+    metadata: { finalidade },
+  });
+
+  return ok({ id, finalidade }, { requestId });
 }
 
 /**

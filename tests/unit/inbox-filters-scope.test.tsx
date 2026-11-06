@@ -61,6 +61,7 @@ function canal(over: Partial<ChannelSession> = {}): ChannelSession {
     daily_message_limit: 250,
     is_warmup_complete: null,
     created_at: "2026-08-01T00:00:00Z",
+    finalidade: "comercial",
     ...over,
   };
 }

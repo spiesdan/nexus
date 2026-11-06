@@ -19,6 +19,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,8 +40,10 @@ import {
   Plus,
   ShieldCheck,
   Trash,
+  Truck,
   Warning,
 } from "@/lib/ui/icons";
+import type { Finalidade } from "@/lib/channels/finalidade";
 import { lerEstadoDoCanal } from "@/lib/channels/estado";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -115,6 +124,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
   const [qr, setQr] = useState<{ sessionId: string; title: string } | null>(null);
   const [antiBanId, setAntiBanId] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<ChannelSession | null>(null);
+  const [salvandoFinalidade, setSalvandoFinalidade] = useState<string | null>(null);
   const pacingItems = usePacingKnobs().data?.items ?? [];
 
   const invalidate = useCallback(
@@ -151,10 +161,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
   const handleConnectNew = useCallback(async () => {
     setCreating(true);
     try {
-      const res = await apiClient.post<{ data: ChannelSession }>(
-        "/api/v1/channel-sessions",
-        {},
-      );
+      const res = await apiClient.post<{ data: ChannelSession }>("/api/v1/channel-sessions", {});
       invalidate();
       setQr({ sessionId: res.data.id, title: t("Conectar novo WhatsApp") });
     } catch (err) {
@@ -197,6 +204,32 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
     setToDelete(null);
     invalidate();
   }, [invalidate]);
+
+  /**
+   * Troca o uso do número. O servidor desmarca o anterior quando este vira o de
+   * expedição, então a lista recarregada já volta consistente — não há estado
+   * local de "qual está marcado" para sincronizar à mão.
+   */
+  const handleFinalidade = useCallback(
+    async (c: ChannelSession, finalidade: Finalidade) => {
+      if (finalidade === c.finalidade) return;
+      setSalvandoFinalidade(c.id);
+      try {
+        await apiClient.patch(`/api/v1/channel-sessions/${c.id}`, { finalidade });
+        await invalidate();
+        toast.success(
+          finalidade === "expedicao"
+            ? t("Número reservado para os avisos de expedição.")
+            : t("Número voltou a atender e vender."),
+        );
+      } catch (err) {
+        toast.error(errMsg(err, "Não foi possível mudar o uso do número.", t));
+      } finally {
+        setSalvandoFinalidade(null);
+      }
+    },
+    [invalidate, t],
+  );
 
   const handleConnected = useCallback(() => {
     toast.success(t("WhatsApp conectado!"));
@@ -332,6 +365,43 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
                     ? `${t("Verificado")} ${new Date(c.last_health_check_at).toLocaleString(tagDoIdioma)}`
                     : t("Ainda não verificado")}
                 </p>
+                {/* Uso do número. Só em canal pareado por QR: o aviso de
+                    expedição é texto livre, e o canal oficial exige modelo
+                    aprovado fora da janela de 24h — a rota recusa a marcação
+                    nesses canais (PATCH em channel-sessions/[id]). */}
+                {vivaNoTransporte && (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Truck size={14} className="text-muted-foreground" aria-hidden />
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("Uso do número")}
+                      </span>
+                      <Select
+                        value={c.finalidade}
+                        onValueChange={(v) => void handleFinalidade(c, v as Finalidade)}
+                        disabled={salvandoFinalidade === c.id}
+                      >
+                        <SelectTrigger
+                          className="h-7 w-[180px] text-xs"
+                          aria-label={`${t("Uso do número")} ${channelLabel(c, t)}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="comercial">{t("Atendimento e vendas")}</SelectItem>
+                          <SelectItem value="expedicao">{t("Avisos de expedição")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {c.finalidade === "expedicao" && (
+                      <p className="text-[11px] text-muted-foreground">
+                        {t(
+                          "Os avisos de “seu pedido saiu para entrega” saem por este número. O atendimento continua no número comercial.",
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div className="mt-auto flex gap-2">
                   {/* Some no canal oficial em vez de aparecer desabilitado: não é
                       indisponibilidade passageira (como o Excluir sem o serviço no
@@ -444,8 +514,7 @@ export function frasesDoImpacto(
 
   const frases: string[] = [];
   if (noInbox) frases.push(`${t("Continua no inbox:")} ${noInbox}.`);
-  if (semNumero)
-    frases.push(`${t("Fica salvo, mas sem número — para de atender:")} ${semNumero}.`);
+  if (semNumero) frases.push(`${t("Fica salvo, mas sem número — para de atender:")} ${semNumero}.`);
   // Sobra o caso em que só há registro interno (auditoria de envio): nada a
   // listar, mas o canal continua sendo arquivado, e prometer "não tem nada
   // ligado" seria falso.

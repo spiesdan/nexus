@@ -75,6 +75,7 @@ function canal(over: Linha = {}): Linha {
     phone_number: "+5531999998888",
     status: "WORKING",
     archived_at: null,
+    metadata: {},
     ...over,
   };
 }
@@ -154,7 +155,8 @@ function makeDb(opts: DbOpts = {}): Registro {
     }
 
     then<R1 = unknown, R2 = never>(
-      onOk?: ((v: { data: unknown; error: unknown; count?: number }) => R1 | PromiseLike<R1>) | null,
+      onOk?:
+        ((v: { data: unknown; error: unknown; count?: number }) => R1 | PromiseLike<R1>) | null,
       onErr?: ((r: unknown) => R2 | PromiseLike<R2>) | null,
     ): PromiseLike<R1 | R2> {
       return Promise.resolve(this.executar()).then(onOk, onErr);
@@ -214,6 +216,12 @@ const reqDelete = (id = CANAL) =>
   new NextRequest(`http://localhost/api/v1/channel-sessions/${id}`, { method: "DELETE" });
 const reqGet = (qs = "", id = CANAL) =>
   new NextRequest(`http://localhost/api/v1/channel-sessions/${id}${qs}`);
+const reqPatch = (body: unknown, id = CANAL) =>
+  new NextRequest(`http://localhost/api/v1/channel-sessions/${id}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -498,5 +506,107 @@ describe("GET /api/v1/channel-sessions/[id]", () => {
     expect(res.status).toBe(200);
     expect(waha.getSessionQr).not.toHaveBeenCalled();
     expect((await res.json()).data.waha_configured).toBe(false);
+  });
+});
+
+/**
+ * PATCH — o USO do número (`comercial` x `expedicao`).
+ *
+ * O aviso de "saiu para entrega" é o único envio que precisa de um número
+ * diferente do comercial; a marcação é o que faz essa separação existir no
+ * envio, não só na tela (resolução em `sessaoParaAvisosDeExpedicao`).
+ */
+describe("PATCH /api/v1/channel-sessions/[id]", () => {
+  it("exige admin", async () => {
+    authOk();
+    makeDb();
+    const { PATCH } = await import("./route");
+    await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+    expect(vi.mocked(requireRole).mock.calls[0]?.[0]).toBe("admin");
+  });
+
+  it("marca o número como aviso de expedição e audita a mudança", async () => {
+    authOk();
+    const db = makeDb();
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).data).toEqual({ id: CANAL, finalidade: "expedicao" });
+    const marcacao = db.escritas.find((e) => e.filtros.some(([, v]) => v === CANAL));
+    expect(marcacao?.patch).toMatchObject({ metadata: { finalidade: "expedicao" } });
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "channel.finalidade_alterada" }),
+    );
+  });
+
+  it("só um número de expedição por org: marcar o novo desmarca o anterior", async () => {
+    authOk();
+    const OUTRO = "55555555-5555-4555-8555-555555555555";
+    const db = makeDb({
+      sessions: [canal({ id: OUTRO, metadata: { finalidade: "expedicao" } }), canal()],
+    });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+
+    expect(res.status).toBe(200);
+    // A limpeza vem ANTES da marcação: se a segunda escrita falhar, a org fica
+    // sem número de expedição (aviso sai pelo comercial) e não com dois.
+    expect(db.escritas).toHaveLength(2);
+    expect(db.escritas[0]?.filtros).toContainEqual(["id", OUTRO]);
+    expect(db.escritas[0]?.patch).toEqual({ metadata: {} });
+    expect(db.escritas[1]?.filtros).toContainEqual(["id", CANAL]);
+    expect(db.escritas[1]?.patch).toEqual({ metadata: { finalidade: "expedicao" } });
+  });
+
+  it("voltar para comercial apaga a chave e não toca em outro canal", async () => {
+    authOk();
+    const db = makeDb({ sessions: [canal({ metadata: { finalidade: "expedicao" } })] });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "comercial" }), ctx());
+
+    expect(res.status).toBe(200);
+    expect(db.escritas).toHaveLength(1);
+    expect(db.escritas[0]?.patch).toEqual({ metadata: {} });
+  });
+
+  it("canal oficial recusa a marcação: texto livre fora da janela de 24h não entrega", async () => {
+    authOk();
+    const db = makeDb({
+      sessions: [canal({ provider: "meta_cloud", waha_session_name: null })],
+    });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+
+    expect(res.status).toBe(422);
+    expect(db.escritas).toEqual([]);
+  });
+
+  it("canal arquivado recusa: ele não envia nada, marcá-lo prometeria aviso que nunca sai", async () => {
+    authOk();
+    const db = makeDb({ sessions: [canal({ archived_at: "2026-11-04T20:45:00Z" })] });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+
+    expect(res.status).toBe(422);
+    expect(db.escritas).toEqual([]);
+  });
+
+  it("canal de OUTRA org → 404, sem escrever", async () => {
+    authOk();
+    const db = makeDb({ sessions: [canal({ organization_id: OUTRA_ORG })] });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(reqPatch({ finalidade: "expedicao" }), ctx());
+
+    expect(res.status).toBe(404);
+    expect(db.escritas).toEqual([]);
+  });
+
+  it("finalidade fora da lista → 422", async () => {
+    authOk();
+    const db = makeDb();
+    const { PATCH } = await import("./route");
+    expect((await PATCH(reqPatch({ finalidade: "suporte" }), ctx())).status).toBe(422);
+    expect(db.escritas).toEqual([]);
   });
 });
