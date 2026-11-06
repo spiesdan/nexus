@@ -16,6 +16,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { impostoAproximadoCents, percentualTotal } from "@/lib/fiscal/ibpt";
+import { resolverProdutosDosItens } from "@/lib/fiscal/produto-do-item";
 import { COLUNAS_DA_NOTA } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 
@@ -57,27 +58,21 @@ async function impostoAproximadoDaNota(
 
   const { data: itens } = await supabase
     .from("commercial_order_items")
-    .select("product_id, quantidade, preco_unit_cents, desconto_pct")
+    .select("product_id, produto_codigo, produto_nome, quantidade, preco_unit_cents, desconto_pct")
     .eq("organization_id", orgId)
     .eq("order_id", orderId)
     .order("posicao");
   if (!itens || itens.length === 0) return null;
 
-  const ids = [...new Set(itens.map((i) => i.product_id).filter((v): v is string => !!v))];
-  const ncmPorProduto = new Map<string, string | null>();
-  if (ids.length > 0) {
-    const { data: produtos } = await supabase
-      .from("catalog_products")
-      .select("id, ncm")
-      .eq("organization_id", orgId)
-      .in("id", ids);
-    for (const p of produtos ?? []) ncmPorProduto.set(p.id, p.ncm);
-  }
+  // Mesmo resolvedor da emissão: sem ele, item de texto livre não entra no
+  // imposto aproximado (o IBPT é por NCM) e a nota mostra menos imposto do que
+  // o documento declara.
+  const produtosDosItens = await resolverProdutosDosItens(supabase, orgId, itens);
 
   const codigos = [
     ...new Set(
-      ids
-        .map((id) => ncmPorProduto.get(id))
+      produtosDosItens
+        .map((p) => p?.ncm)
         .filter((v): v is string => !!v && /^\d{1,16}$/.test(v)),
     ),
   ];
@@ -135,8 +130,8 @@ async function impostoAproximadoDaNota(
   let total = 0;
   let comNcm = 0;
   let semNcm = 0;
-  for (const i of itens) {
-    const ncm = i.product_id ? (ncmPorProduto.get(i.product_id) ?? null) : null;
+  for (const [pos, i] of itens.entries()) {
+    const ncm = produtosDosItens[pos]?.ncm ?? null;
     const linha = ncm ? porCodigo.get(ncm) : undefined;
     if (!linha) {
       semNcm += 1;
