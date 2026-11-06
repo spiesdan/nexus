@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.43.0] — 2026-11-06
+
+### Adicionado
+
+- **As informações adicionais do pedido entram no campo de informações complementares da nota** O que o cliente escreve em **Informações adicionais** no pedido — a ordem de compra, por exemplo — passa a preencher o campo **Informações complementares** da NF-e na emissão. Antes era preciso digitar de novo em cada nota, e a referência sumia justamente nas notas em que o cliente confere o pedido.
+
+  Na tela de emissão o texto aparece preenchido ao escolher o pedido e pode ser editado; o que for digitado ali vence o texto do pedido. Na nota agrupada vale o pedido principal. A nota guarda o texto do dia da emissão: mudar o pedido depois não reescreve uma nota já autorizada.
+
+### Corrigido
+
+- **A confirmação do Mercos deixa de prometer que nenhum pedido existente é sobrescrito** A janela que abre no botão **Importar pedidos Mercos** dizia que "pedidos já importados são ignorados; nenhum pedido existente é sobrescrito". Isso deixou de ser verdade na 1.42.0: a sincronização passou a **atualizar** o pedido já importado quando o vendedor externo muda cliente, endereço ou itens no ERP.
+
+  O texto agora descreve o que o botão faz — cria os novos, revisa os recentes em aberto, atualiza o que mudou e marca a carga para reconferir — e diz o que continua intocável: pedido com **nota emitida**, **entregue** ou **cancelado**. O aviso de fim da sincronização também passou a contar quantos pedidos existentes foram atualizados; antes ele só falava em pedidos novos e o operador não tinha como saber que um pedido dele mudou.
+
 ## [1.42.0] — 2026-11-06
 
 ### Adicionado
@@ -6556,7 +6570,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.42.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.43.0...HEAD
+[1.43.0]: https://github.com/spiesdan/nexus/compare/v1.42.0...v1.43.0
 [1.42.0]: https://github.com/spiesdan/nexus/compare/v1.41.1...v1.42.0
 [1.41.1]: https://github.com/spiesdan/nexus/compare/v1.41.0...v1.41.1
 [1.41.0]: https://github.com/spiesdan/nexus/compare/v1.40.0...v1.41.0
