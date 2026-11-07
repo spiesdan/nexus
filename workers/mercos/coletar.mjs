@@ -30,6 +30,8 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 
 import { chromium } from "@playwright/test";
 
+import { lerCartao, lerCliente } from "./cliente.mjs";
+
 const arg = (nome, padrao) => {
   const i = process.argv.indexOf(`--${nome}`);
   return i > -1 ? process.argv[i + 1] : padrao;
@@ -211,20 +213,12 @@ try {
           if (/R\$/.test(t) && STATUS.some((s) => t.includes(s))) break;
         }
         const linhas = (el?.innerText || "").split("\n").map((s) => s.trim()).filter(Boolean);
-        const iNum = linhas.findIndex((l) => /^#\d{3,8}/.test(l));
-        if (!id || iNum < 0) continue;
-        pedidos.push({
-          id,
-          numero: Number(linhas[iNum].match(/#(\d{3,8})/)[1]),
-          status: STATUS.find((s) => linhas.some((l) => l === s)) ?? null,
-          // O cartão da lista diz "#19228 emitido por VENDEDOR JB". O detalhe
-          // também traz "Vendedor", mas ele é uma requisição a mais por pedido;
-          // guardar o da lista dá vendedor até quando o detalhe falha.
-          vendedor_lista:
-            linhas[iNum].match(/emitido por\s+(.+?)(?:\s+R\$|\s*$)/i)?.[1]?.trim() ?? null,
-          razao_lista: linhas[iNum + 2] ?? null,
-          fantasia_lista: linhas[iNum + 3] ?? null,
-        });
+        if (!id || !linhas.some((l) => /^#\d{3,8}/.test(l))) continue;
+        // O cartão é lido no Node (`lerCartao`), onde a regra é testável. Aqui
+        // só se coleta o texto: o layout muda entre status, selo, cliente,
+        // fantasia e forma de pagamento, e posição fixa já trocou pagamento
+        // por nome ("event AVISTA - ...", "- Concluído").
+        pedidos.push({ id, linhas });
       }
       const prox = [...document.querySelectorAll("a")]
         .find((a) => /^Próxima/.test(a.textContent.trim()))
@@ -233,7 +227,9 @@ try {
       return { pedidos, cursor };
     });
 
-    const novos = paginaDados.pedidos.filter((p) => p.id && p.numero && !vistos.has(p.id));
+    const novos = paginaDados.pedidos
+      .map((p) => ({ id: p.id, ...lerCartao(p.linhas) }))
+      .filter((p) => p.id && p.numero && !vistos.has(p.id));
     if (novos.length === 0) break;
     novos.forEach((p) => vistos.add(p.id));
     lista.push(...novos);
@@ -365,27 +361,19 @@ try {
       //   2. o documento pode ser CPF, não só CNPJ.
       const iRepresentada = linhas.findIndex((l) => /^[^\w]*\s*Representada\s*$/i.test(l));
       const escopo = iRepresentada > -1 ? linhas.slice(0, iRepresentada) : linhas;
-      const RE_DOC = /^-?\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2})/;
-      const jDoc = escopo.findIndex((l) => RE_DOC.test(l));
-      const tiraPrefixo = (l) => (l || "").replace(/^[-–]\s*/, "").trim();
-      const documento = jDoc > -1 ? (escopo[jDoc].match(RE_DOC) || [])[1] ?? null : null;
-      const razao = jDoc > 0 ? tiraPrefixo(escopo[jDoc - 1]) : null;
-      const anterior = jDoc > 1 ? escopo[jDoc - 2] : null;
-      // A fantasia é a linha que NÃO começa com "-"; se a anterior começar com
-      // "-", não existe fantasia separada (pedido de consumidor final).
-      const fantasia =
-        anterior &&
-        !/^[-–]/.test(anterior) &&
-        !/^(Listar todos clientes|Trocar cliente|Cliente|Nova representada)$/i.test(anterior.trim())
-          ? anterior.trim()
-          : null;
-
+      // O documento da representada é usado por `lerCliente` para detectar o
+      // pedido cadastrado no nome da própria empresa (loja virtual e venda
+      // interna): nesse caso o cliente é CONSUMIDOR FINAL, nunca a empresa.
+      const RE_DOC_PAGINA = /^-?\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2})/;
+      const documentoRepresentada = (() => {
+        if (iRepresentada < 0) return null;
+        const linha = linhas.slice(iRepresentada).find((l) => RE_DOC_PAGINA.test(l));
+        return linha ? (linha.match(RE_DOC_PAGINA) || [])[1] ?? null : null;
+      })();
+      // O cliente em si é lido no Node (`lerCliente`), a partir do texto até
+      // "Representada". É o que cobre o caso SEM documento — que é onde o nome
+      // caía para a lista e virava "event AVISTA - ..." / "- Concluído".
       //
-      // Telefone e cidade vêm nas linhas seguintes, MAS cada um deles é
-      // precedido por um ícone (Material Symbol) que o `innerText` cola no
-      // começo da linha. Por isso a busca é por CONTEÚDO e varre as 3 linhas
-      // seguintes, em vez de ancorar na posição exata: a posição muda entre o
-      // bloco do cliente e o da representada, e o ícone some em metade das telas.
       // ═══ INFORMAÇÕES ADICIONAIS — onde o vendedor escreve "pago e entregue" ═
       //
       // O bloco "Detalhes do pedido" tem um par rotulo/valor próprio, fora da
@@ -407,13 +395,6 @@ try {
         return limpo === "" || limpo === "---" ? null : limpo;
       })();
 
-      const janela = jDoc > -1 ? escopo.slice(jDoc + 1, jDoc + 4) : [];
-      const soNumero = (l) => (l || "").replace(/[^\d()\s-]/g, "").trim();
-      const linhaFone = janela.find((l) => /\(\d{2}\)\s?\d{4,5}-?\d{4}|\d{4,5}-\d{4}/.test(soNumero(l)) && soNumero(l).length >= 8);
-      const telefone = linhaFone ? soNumero(linhaFone) || null : null;
-      const linhaCidade = janela.find((l) => l.includes(",") && !/^[^\w(]*\s*[\d.,/-]+$/.test(l.trim()));
-      const cidade = linhaCidade ? linhaCidade.replace(/^[^\w(]*\s*/, "").trim() : null;
-
       return {
         http_status: resp.status,
         // `numero` NULO é falha de leitura, nunca "pedido sem número". Sem
@@ -433,7 +414,10 @@ try {
         // ele significa é a função do banco (`fn_mercos_pago_e_entregue`), não
         // o coletor: regra de negócio não mora no parser de HTML.
         informacoes_adicionais: infoAdicionais,
-        cliente: { razao, documento, fantasia, telefone, cidade },
+        // Texto do bloco do cliente (até "Representada"), lido por `lerCliente`
+        // logo depois deste evaluate — o parser puro não roda no navegador.
+        cliente_linhas: escopo,
+        documento_representada: documentoRepresentada,
         itens,
         total_bruto: (() => {
           // `/^Valor total/` pega "Valor total DO PEDIDO" — que e o campo do
@@ -470,6 +454,14 @@ try {
       falhas.push({ numero: pedido.numero, erro: "numero nao encontrado no HTML" });
       continue;
     }
+
+    // O bloco do cliente vem como texto do navegador; a leitura é pura e
+    // testável (`cliente.mjs`). Nunca gravar as linhas cruas no JSONL.
+    dados.cliente = lerCliente(dados.cliente_linhas, {
+      documentoRepresentada: dados.documento_representada,
+    });
+    delete dados.cliente_linhas;
+    delete dados.documento_representada;
 
     const somaItens = dados.itens.reduce((a, i) => a + moeda(i.subtotal), 0);
     // O total vem de "Valor total R$ X" — que na página aparece colado.
