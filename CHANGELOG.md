@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.1] — 2026-11-07
+
+### Corrigido
+
+- **O pedido agora é encontrado pelo número na busca** Digitar o número do pedido no campo de busca da lista devolvia lista vazia — como se o pedido não existisse. A busca só olhava nome e documento do cliente, e o número é justamente o que a pessoa tem na mão: o telefone, o romaneio, o boleto.
+
+  Agora o campo aceita o número nas duas formas que aparecem na rotina — `19405` e `PED-19405` — e continua achando por nome e por CNPJ/CPF. A mesma régua vale na busca global (⌘K) e no assistente, que usam a mesma rota.
+
+  De passagem, um cliente com vírgula ou parêntese no nome ("SILVA, MARIA") deixou de derrubar a consulta: esses caracteres são sintaxe do filtro e agora não vazam para dentro dele.
+
 ## [1.44.0] — 2026-11-06
 
 ### Adicionado
@@ -6580,7 +6590,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.1...HEAD
+[1.44.1]: https://github.com/spiesdan/nexus/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/spiesdan/nexus/compare/v1.43.0...v1.44.0
 [1.43.0]: https://github.com/spiesdan/nexus/compare/v1.42.0...v1.43.0
 [1.42.0]: https://github.com/spiesdan/nexus/compare/v1.41.1...v1.42.0
