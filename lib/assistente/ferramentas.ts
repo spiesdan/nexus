@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 
 import { listaAgendamentos } from "@/lib/agenda/consulta";
+import { filtroOrDeBuscaDePedido } from "@/lib/comercial/busca-de-pedido";
 import { precoDeVitrine } from "@/lib/schemas/produtos";
 import { statusFaturavel } from "@/lib/schemas/fiscal";
 import { responder } from "@/components/assistente/respostas";
@@ -124,7 +125,7 @@ const verPedidos = (ctx: AssistenteCtx) =>
     description: "Lista pedidos recentes, opcionalmente de um cliente (contact_id). Para ver itens de um pedido, use ver_pedido.",
     inputSchema: z.object({
       contact_id: z.string().uuid().optional().describe("filtre por este cliente quando souber quem é"),
-      busca: z.string().trim().optional().describe("nome ou documento do cliente"),
+      busca: z.string().trim().optional().describe("número do pedido, nome ou documento do cliente"),
       limite: z.number().int().min(1).max(20).optional().default(5),
     }),
     execute: async (args) => {
@@ -134,8 +135,9 @@ const verPedidos = (ctx: AssistenteCtx) =>
         .eq("organization_id", ctx.organizationId);
       if (args.contact_id) q = q.eq("contact_id", args.contact_id);
       if (args.busca) {
-        const b = `%${args.busca}%`;
-        q = q.or(`cliente_nome.ilike.${b},cliente_documento.ilike.${b}`);
+        // Mesma régua da tela e da rota: `19405`, `PED-19405` e nome/documento.
+        const filtro = filtroOrDeBuscaDePedido(args.busca);
+        if (filtro) q = q.or(filtro);
       }
       const { data, error } = await q.order("created_at", { ascending: false }).limit(args.limite);
       if (error) return { erro: `não consegui listar agora: ${error.message}` };
