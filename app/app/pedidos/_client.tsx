@@ -825,7 +825,7 @@ export function PedidosClient({
             <Input
               value={filtros.busca}
               onChange={(e) => mudar({ busca: e.target.value }, true)}
-              placeholder={t("Pedido, cliente ou representada")}
+              placeholder={t("Número do pedido, cliente ou CNPJ")}
               aria-label={textos.buscar}
               className="h-9 bg-surface pl-9"
             />

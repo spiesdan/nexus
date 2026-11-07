@@ -13,6 +13,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, pedidoCreateSchema } from "@/lib/schemas/pedidos";
+import { filtroOrDeBuscaDePedido } from "@/lib/comercial/busca-de-pedido";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +59,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (valorMin > 0) q = q.gte("total_cents", Math.round(valorMin * 100));
   if (valorMax > 0) q = q.lte("total_cents", Math.round(valorMax * 100));
   if (busca !== "") {
-    q = q.or(`cliente_nome.ilike.%${busca}%,cliente_documento.ilike.%${busca}%`);
+    // Número do pedido, nome ou documento — ver `lib/comercial/busca-de-pedido`.
+    const filtro = filtroOrDeBuscaDePedido(busca);
+    if (filtro) q = q.or(filtro);
   }
   if (DIA.test(de)) q = q.gte("created_at", `${de}T00:00:00Z`);
   else if (INSTANTE.test(de)) q = q.gte("created_at", de);

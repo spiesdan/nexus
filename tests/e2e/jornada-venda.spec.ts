@@ -93,10 +93,12 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   const numero = ((await toast.textContent()) ?? "").match(/PED-\d+/)?.[0];
   expect(numero, "o toast de sucesso devolve o número do pedido").toBeTruthy();
 
-  // 6. Pedido criado — a tela volta para a lista; a busca por cliente acha o
-  // card e o link do número abre a ficha.
+  // 6. Pedido criado — a tela volta para a lista; a busca PELO NÚMERO acha o
+  // card e o link do número abre a ficha. Buscar por número é o caminho que a
+  // pessoa usa de verdade (telefone, romaneio, boleto) e já devolveu lista
+  // vazia uma vez: a rota só olhava nome/documento do cliente.
   await page.waitForURL((url) => url.pathname === "/app/pedidos", { timeout: 20_000 });
-  await page.getByPlaceholder("Pedido, cliente ou representada").fill(cliente);
+  await page.getByRole("textbox", { name: "Buscar" }).fill(numero!);
   await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 20_000 });
   const card = page.getByRole("link", { name: numero!, exact: true });
   await expect(card, "o pedido criado aparece na lista").toBeVisible({ timeout: 15_000 });
