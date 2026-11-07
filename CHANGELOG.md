@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.2] — 2026-11-07
+
+### Corrigido
+
+- **O cliente do pedido importado do Mercos não vem mais com pagamento e status colados no nome** Quando o cliente não tinha CNPJ/CPF no cadastro do Mercos, o importador não encontrava o nome no detalhe e caía no cartão da lista — que carrega o rótulo de pagamento ("event AVISTA"), o selo de status ("Concluído") e o ícone do Material. Foi assim que pedidos entraram como "R$ 0,00 - WISNIEVSKI AUTO PECAS" e "LOJA BILL HIGIENE - Concluído".
+
+  O bloco do cliente agora é lido pelo que ele é: o nome fica entre "Listar todos clientes" e "Representada", com ou sem documento, e o cartão da lista só entra como reserva depois de descartar status, ícone e pagamento. Pedido cadastrado no CNPJ da própria empresa (o caso "CLIENTE ONLINE" da loja virtual) passa a entrar como CONSUMIDOR FINAL, sem gravar o documento da representada como se fosse do comprador.
+
+  A leitura saiu do navegador e virou um módulo puro com os casos reais de produção em teste: 19442, 19472, 19473, 18685, 14048 e o bloco vazio dos pedidos cancelados.
+
 ## [1.44.1] — 2026-11-07
 
 ### Corrigido
@@ -6590,7 +6600,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.2...HEAD
+[1.44.2]: https://github.com/spiesdan/nexus/compare/v1.44.1...v1.44.2
 [1.44.1]: https://github.com/spiesdan/nexus/compare/v1.44.0...v1.44.1
 [1.44.0]: https://github.com/spiesdan/nexus/compare/v1.43.0...v1.44.0
 [1.43.0]: https://github.com/spiesdan/nexus/compare/v1.42.0...v1.43.0
