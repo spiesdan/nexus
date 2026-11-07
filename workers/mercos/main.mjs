@@ -17,6 +17,7 @@ import { spawn } from "node:child_process";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { CONSUMIDOR_FINAL } from "./cliente.mjs";
 import { STATUS } from "./status.mjs";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -86,10 +87,14 @@ function normalizar(linha) {
     .map((x) => (x ?? "").trim())
     .filter(Boolean)
     .join(" - ");
-  const clienteNome = (cli.razao || cli.fantasia || nomeLista || "").replace(/^[-\u2013]\s*/, "").trim();
-  if (!clienteNome) {
-    return { erro: "cliente sem nome", numero: bruto.numero };
-  }
+  const clienteNome =
+    (cli.razao || cli.fantasia || nomeLista || "").replace(/^[-\u2013]\s*/, "").trim() ||
+    // Último recurso: o ERP não tem cliente nenhum no pedido e o cartão da
+    // lista também não traz nome. O pedido não pode desaparecer — entra sob o
+    // contato canônico CONSUMIDOR FINAL, a mesma regra usada na correção dos
+    // pedidos históricos. Se o bloco do cliente voltar numa releitura, a
+    // sincronização corrige o nome.
+    CONSUMIDOR_FINAL;
 
   const itens = (bruto.itens ?? []).map((i) => ({
     codigo: i.codigo ?? null,
