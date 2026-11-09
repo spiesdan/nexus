@@ -23,11 +23,14 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { logger } from "@/lib/logger";
+
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "../archived";
 import { aplicarEfeitosPosEntrada } from "../pos-entrada";
 import { encontrarContatoPorTelefone } from "../contato-por-telefone";
 import { canonicalPhoneBR, phoneLookupVariants } from "../phone-variants";
 import type { ChannelTenantScope } from "../types";
+import { endpointDaMidia } from "./media";
 import type { InboundMessageEvent } from "./webhook";
 
 type Admin = SupabaseClient;
@@ -181,6 +184,11 @@ export async function ingestMetaInbound(
       body: e.type === "contact" ? (e.sharedContact?.name ?? e.text) : e.text,
       external_id: e.externalId,
       media_mime: e.media?.mime ?? null,
+      // O seam fala em URL, mas a Meta anuncia um ID: a ingestão grava o
+      // endpoint estável da Graph que resolve o binário (ver ./media.ts). Sem
+      // esta coluna o worker de persistência pulava a mídia ("no media_url") e
+      // o áudio recebido ficava sem bytes para o inbox tocar.
+      media_url: e.media ? (e.media.url ?? endpointDaMidia(e.media.id)) : null,
       sent_at: e.sentAt.toISOString(),
       metadata: {
         ...(e.media ? { meta_media_id: e.media.id, voice: e.media.voice } : {}),
@@ -218,6 +226,27 @@ export async function ingestMetaInbound(
     nomeDoContato: e.profileName ?? null,
     origem: "meta_webhook",
   });
+
+  // Pede a persistência dos BYTES. Sem este evento, a mensagem existe e o
+  // worker nem sabe que há algo a baixar: `media_url` sozinho não persiste
+  // nada. Best-effort — a mensagem já está gravada e visível, e derrubar a
+  // ingestão aqui faria a Meta reenviar tudo por uma mídia faltando.
+  if (e.media && messageId) {
+    const { error } = await admin.rpc("emit_event" as never, {
+      p_event_type: "media.persist_requested",
+      p_entity_kind: "message",
+      p_entity_id: messageId,
+      p_payload: { message_id: messageId, conversation_id: conversationId },
+      p_metadata: { source: "meta_webhook" },
+      p_organization_id: orgId,
+    } as never);
+    if (error) {
+      logger.warn("[meta.ingest] emit media.persist_requested falhou", {
+        messageId,
+        detail: error.message,
+      });
+    }
+  }
 
   return {
     status: "ingested",
