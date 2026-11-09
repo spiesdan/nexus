@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
+import { isServiceRoleConfigured } from "@/lib/audit";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { extremosDoPeriodo, FUSO_PADRAO } from "@/lib/comercial/janela-do-dia";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { PedidosClient, type FiltrosIniciais } from "./_client";
@@ -111,6 +113,41 @@ export default async function PedidosPage({
     vendedorNome = nomes.get(iniciais.vendedor) ?? "";
   }
 
+  // VENDEDORES do filtro — quem da organização pode vender (role != viewer;
+  // manager e admin entram na mesma lista da tela de Comissões, que é a fonte
+  // que já existia para o mesmo recorte). A lista nasce no servidor e vai pro
+  // client no primeiro paint: o filtro de vendedor não pode abrir sem ninguém
+  // para selecionar — era isso que o operador via ("não tem nem um vendedor").
+  const { data: membros } = await supabase
+    .from("user_organizations")
+    .select("user_id")
+    .eq("organization_id", activeOrg.orgId)
+    .is("revoked_at", null)
+    .neq("role", "viewer")
+    .limit(50);
+  const idsVendedores = ((membros ?? []) as unknown as { user_id: string }[]).map(
+    (m) => m.user_id,
+  );
+  const nomesVendedores: Record<string, string> = {};
+  if (isServiceRoleConfigured() && idsVendedores.length > 0) {
+    const admin = createAdminClient();
+    await Promise.all(
+      idsVendedores.map(async (id) => {
+        try {
+          const { data: userRes } = await admin.auth.admin.getUserById(id);
+          const nome = userRes?.user?.user_metadata?.full_name as string | undefined;
+          if (nome?.trim()) nomesVendedores[id] = nome.trim();
+        } catch {
+          // Nome é cortesia: o id curto cobre no select.
+        }
+      }),
+    );
+  }
+  const vendedores = idsVendedores.map((userId) => ({
+    user_id: userId,
+    nome: nomesVendedores[userId] ?? "",
+  }));
+
   return (
     <PedidosClient
       inicial={iniciaisComEmitente as unknown as PedidoComercial[]}
@@ -120,6 +157,7 @@ export default async function PedidosPage({
       podeExcluir={podeExcluir}
       podeImportar={podeImportar}
       meuId={user.id}
+      vendedores={vendedores}
       textos={{
         titulo: t("Pedidos"),
         subtitulo: t("Os pedidos da loja, do rascunho à entrega."),
