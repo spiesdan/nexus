@@ -284,6 +284,13 @@ beforeAll(() => {
           insert into public.shipment_orders (organization_id, shipment_id, order_id)
             values (v_org, v_shi, v_ord);
         end if;
+        -- migration 0299 — fila do aviso "saiu para entrega". Uma linha por
+        -- carga+pedido (unique); o controle positivo precisa dela para não ser
+        -- vácuo.
+        if not exists (select 1 from public.shipment_notices where organization_id = v_org) then
+          insert into public.shipment_notices (organization_id, shipment_id, order_id)
+            values (v_org, v_shi, v_ord);
+        end if;
         -- migration 0268 — fechamento de caixa da carga. Uma linha por carga
         -- (índice único em shipment_id): o seed põe uma por org, que é o que o
         -- controle positivo ("lê a própria") precisa para não ser vácuo.
@@ -579,6 +586,9 @@ export const TABLES = [
   "shipments",
   "commercial_shipment_counters",
   "shipment_orders",
+  // migration 0299 — fila durável do aviso de rota. Leitura org-scoped (a tela
+  // da carga pode mostrar o pendente); escrita agent+.
+  "shipment_notices",
   // migration 0268 — fechamento de caixa da carga. Mesmo molde da onda acima:
   // leitura org-scoped sem gate de papel (a tela do fechamento lê junto da
   // carga); a ESCRITA é `manager`, provada na rota PUT do fechamento

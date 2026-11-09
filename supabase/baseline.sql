@@ -25197,6 +25197,73 @@ revoke execute on function public.fn_sincronizar_pedido_mercos(uuid, jsonb, bool
 grant execute on function public.fn_sincronizar_pedido_mercos(uuid, jsonb, boolean) to service_role;
 
 
+-- ---- 0299 — o aviso de expedição nunca sai pelo número comercial ----
+--
+-- Apêndice idempotente da migration 0299. Quando o número de expedição está
+-- fora do ar, o aviso de rota NÃO cai no comercial: fica numa fila durável e é
+-- entregue pelo cron `expedition-notices` quando a sessão volta a WORKING.
+-- `unique (shipment_id, order_id)` impede aviso dobrado; o envio continua sendo
+-- o caminho canônico (`sendMessageHandler`), sem uma segunda implementação.
+create table if not exists public.shipment_notices (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  shipment_id uuid not null references public.shipments(id) on delete cascade,
+  order_id uuid not null references public.commercial_orders(id) on delete cascade,
+
+  status text not null default 'pendente',
+  attempts integer not null default 0,
+
+  message_id uuid references public.messages(id) on delete set null,
+  last_error text,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  sent_at timestamptz,
+
+  constraint shipment_notices_status_valido check (
+    status in ('pendente', 'enviando', 'enviado', 'falhou')
+  ),
+  constraint shipment_notices_attempts_nao_negativo check (attempts >= 0),
+  constraint shipment_notices_carga_pedido_unico unique (shipment_id, order_id)
+);
+
+comment on table public.shipment_notices is
+  'Fila durável do aviso "saiu para entrega". O aviso só sai pelo número de expedição; se ele está fora do ar, a linha fica pendente e o cron expedition-notices entrega quando a sessão volta a WORKING. Unique (shipment_id, order_id) impede aviso dobrado.';
+
+create index if not exists shipment_notices_fila_idx
+  on public.shipment_notices (organization_id, status, created_at)
+  where status in ('pendente', 'enviando');
+
+alter table public.shipment_notices enable row level security;
+
+drop policy if exists shipment_notices_select on public.shipment_notices;
+create policy shipment_notices_select on public.shipment_notices
+  for select using (
+    (organization_id in (select public.fn_user_org_ids())) or public.fn_is_platform_admin()
+  );
+
+drop policy if exists shipment_notices_write on public.shipment_notices;
+create policy shipment_notices_write on public.shipment_notices
+  using (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or ((organization_id in (select public.fn_user_org_ids()))
+        and public.fn_role_at_least(organization_id, 'agent'))
+  );
+
+revoke all on public.shipment_notices from anon;
+grant select, insert, update, delete on public.shipment_notices to authenticated;
+grant all on public.shipment_notices to service_role;
+
+drop trigger if exists trg_shipment_notices_updated_at on public.shipment_notices;
+create trigger trg_shipment_notices_updated_at
+  before update on public.shipment_notices
+  for each row execute function public.fn_set_updated_at();
+
 -- ---- 0300 — as notas da conversa entram na publicação do realtime ----
 --
 -- Apêndice idempotente da migration 0300. `conversation_notes` era assinada por

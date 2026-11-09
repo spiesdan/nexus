@@ -551,7 +551,8 @@ describe("PATCH /api/v1/channel-sessions/[id]", () => {
 
     expect(res.status).toBe(200);
     // A limpeza vem ANTES da marcação: se a segunda escrita falhar, a org fica
-    // sem número de expedição (aviso sai pelo comercial) e não com dois.
+    // sem número de expedição (e o aviso FICA NA FILA, sem cair no comercial)
+    // e não com dois.
     expect(db.escritas).toHaveLength(2);
     expect(db.escritas[0]?.filtros).toContainEqual(["id", OUTRO]);
     expect(db.escritas[0]?.patch).toEqual({ metadata: {} });

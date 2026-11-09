@@ -9,6 +9,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { avisarClientesDaCarga } from "@/lib/expedicao/aviso-de-carga";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "./_carga";
@@ -87,7 +88,12 @@ export async function transicaoDeRota(
   // Aguardar é de propósito: com a resposta já enviada, a promise solta pode
   // ser cortada junto com o request.
   if (para === "iniciar") {
-    await avisarClientesDaCarga(supabase, {
+    // Admin client de propósito: quem aperta "Sair para rota" pode ser a conta
+    // do comercial, e o isolamento por número (0296) esconderia dela a conversa
+    // do número de expedição — `ensureConversation` não a acharia e o aviso
+    // sairia pela conversa errada. O `organization_id` já foi resolvido por
+    // `requireRole` acima, nunca do body.
+    await avisarClientesDaCarga(createAdminClient(), {
       organizationId: authz.org.orgId,
       shipmentId: id,
       orderIds: [...new Set(d.itens.map((i) => i.order_id))],

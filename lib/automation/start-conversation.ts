@@ -18,7 +18,18 @@ const OPEN_STATUSES = ["open", "pending", "claimed", "ai_handling"];
 
 interface CanalParaEnvio {
   id: string;
+  status?: string;
   metadata: unknown;
+}
+
+export interface SessaoDeExpedicao {
+  id: string;
+  /**
+   * `WORKING` = pode enviar agora. Qualquer outro valor (STOPPED, STARTING,
+   * SCAN_QR_CODE, FAILED…) = o aviso fica na fila até a sessão voltar.
+   */
+  status: string;
+  dedicado: true;
 }
 
 /**
@@ -63,25 +74,31 @@ export async function sessaoProntaParaEnvio(
  * A sessão por onde saem os avisos de EXPEDIÇÃO ("seu pedido saiu para
  * entrega").
  *
- * Devolve também `dedicado`: o chamador registra no log quando o aviso saiu pelo
- * número comercial porque não havia um marcado (ou porque o marcado está fora do
- * ar), em vez de o desvio acontecer em silêncio.
+ * ═══ NUNCA cai no comercial ═══════════════════════════════════════════════
  *
- * O canal dedicado precisa estar WORKING de verdade — mandar para uma sessão
- * parada só gravaria a mensagem como enfileirada, e a rota já saiu para a rua.
- * Nesse caso o aviso cai no comercial, que é o comportamento que existia antes
- * desta função: nunca trocar "avisar por outro número" por "não avisar".
+ * Até 2026-11-09, se o número de expedição estivesse parado, o aviso saía pelo
+ * comercial "para não deixar de avisar". O dono mediu o custo disso: a conta
+ * comercial passou a ver no inbox avisos de rota que não são dela, e o próprio
+ * cliente recebeu a notificação fria no número em que compra. Numa organização
+ * com dois números e duas contas separadas, o fallback destrói a separação.
+ *
+ * Então esta função devolve APENAS o canal marcado como expedição — sem filtrar
+ * por status. Quem chama decide: `WORKING` envia; fora do ar, o aviso vai para
+ * a fila durável (`lib/expedicao/aviso-de-carga.ts`) e é entregue quando a
+ * sessão voltar. Sem canal marcado, devolve `null` e nada sai por outro número.
+ *
+ * O canal arquivado não conta: excluir o número é a promessa de que ele não é
+ * mais elegível para envio.
  */
 export async function sessaoParaAvisosDeExpedicao(
   supabase: SupabaseClient,
   organizationId: string,
-): Promise<{ id: string; dedicado: boolean } | null> {
+): Promise<SessaoDeExpedicao | null> {
   const listar = (ignorarArquivadas: boolean) => {
     let q = supabase
       .from("channel_sessions")
-      .select("id, metadata")
-      .eq("organization_id", organizationId)
-      .eq("status", "WORKING");
+      .select("id, status, metadata")
+      .eq("organization_id", organizationId);
     if (ignorarArquivadas) q = q.is(ARCHIVED_AT, null);
     return q.order("created_at", { ascending: true });
   };
@@ -92,10 +109,13 @@ export async function sessaoParaAvisosDeExpedicao(
   const dedicado = ((data as CanalParaEnvio[] | null) ?? []).find((c) =>
     eCanalDeExpedicao(c.metadata),
   );
-  if (dedicado) return { id: dedicado.id, dedicado: true };
+  if (!dedicado) return null;
 
-  const geral = await sessaoProntaParaEnvio(supabase, organizationId);
-  return geral ? { id: geral, dedicado: false } : null;
+  return {
+    id: dedicado.id,
+    status: String(dedicado.status ?? "STOPPED"),
+    dedicado: true,
+  };
 }
 
 export async function ensureConversation(

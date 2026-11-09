@@ -129,6 +129,7 @@ export function ExpedicaoClient({
   progresso = {},
   podeCriar,
   motorista = false,
+  avisosNaFila = 0,
   textos,
 }: {
   inicial: Carga[];
@@ -146,6 +147,12 @@ export function ExpedicaoClient({
   podeCriar: boolean;
   /** Entregador: o cartão da carga abre a cabine (mapa), não a ficha. */
   motorista?: boolean;
+  /**
+   * Avisos de "saiu para entrega" esperando o número de expedição voltar
+   * (migration 0299). Zero é o normal; acima de zero, a tela avisa — o
+   * despachante não pode achar que o cliente foi avisado quando não foi.
+   */
+  avisosNaFila?: number;
   textos: Textos;
 }) {
   const t = useT();
@@ -421,6 +428,31 @@ export function ExpedicaoClient({
           ) : undefined
         }
       />
+
+      {/* ── Avisos esperando o número de expedição (migration 0299) ─────────
+          O aviso "saiu para entrega" NUNCA sai pelo comercial. Se o número de
+          expedição está fora do ar, o fato fica na fila e o cron entrega
+          quando ele voltar — mas quem despacha precisa SABER que o cliente
+          ainda não foi avisado, senão a tela mente por omissão. */}
+      {avisosNaFila > 0 && (
+        <div
+          role="status"
+          data-testid="avisos-de-expedicao-na-fila"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-warning/40 bg-warning-bg px-3.5 py-2.5 text-sm text-warning-fg"
+        >
+          <span>
+            {avisosNaFila === 1
+              ? t("1 aviso de saída esperando o número de expedição voltar.")
+              : `${avisosNaFila} ${t("avisos de saída esperando o número de expedição voltar.")}`}
+          </span>
+          <Link
+            href="/app/connections"
+            className="font-medium text-accent underline-offset-4 hover:underline"
+          >
+            {t("Ver conexões")}
+          </Link>
+        </div>
+      )}
 
       {/* ── A situação da operação ──────────────────────────────────────────
           Uma faixa, não três cartões. Cada número é também o filtro da fila:

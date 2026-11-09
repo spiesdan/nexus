@@ -31,7 +31,7 @@ export default async function ExpedicaoPage() {
     !motorista && (user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent);
 
   const supabase = await createClient();
-  const [{ data: cargas }, { data: fila }] = await Promise.all([
+  const [{ data: cargas }, { data: fila }, { count: avisosNaFila }] = await Promise.all([
     supabase
       .from("shipments")
       .select(COLUNAS_DA_CARGA)
@@ -46,6 +46,14 @@ export default async function ExpedicaoPage() {
       .eq("organization_id", activeOrg.orgId)
       .in("status", ["aprovado", "faturado"])
       .limit(200),
+    // migration 0299 — o aviso "saiu para entrega" só sai pelo número de
+    // expedição. Com ele fora do ar, o aviso fica na fila; a tela precisa dizer
+    // isso, senão o despachante acha que o cliente foi avisado quando não foi.
+    supabase
+      .from("shipment_notices")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", activeOrg.orgId)
+      .in("status", ["pendente", "enviando"]),
   ]);
 
   /**
@@ -145,6 +153,7 @@ export default async function ExpedicaoPage() {
       progresso={progresso}
       podeCriar={podeCriar}
       motorista={motorista}
+      avisosNaFila={avisosNaFila ?? 0}
       textos={{
         titulo: motorista ? t("Minhas entregas") : t("Expedição"),
         subtitulo: motorista
