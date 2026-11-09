@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.9] — 2026-11-09
+
+### Corrigido
+
+- **O filtro de Vendedor lista os vendedores da organização** A tela de pedidos tinha o filtro de vendedor sem quem selecionar — só "Todos os
+  vendedores" e "Só meus pedidos", com a lista de vendedores nunca chegando ao
+  select.
+
+  A lista passa a nascer no server component (mesma fonte da tela de Comissões:
+  membros da organização com role != viewer, nomes resolvidos via service role) e
+  é repassada ao filtro no primeiro paint. Vendedores que registraram pedidos no
+  Mercos passam a aparecer com o nome resolvido, e o filtro volta a recortar por
+  vendedor — a base do lançamento com campanha no Meta a 1 msg/min.
+
 ## [1.44.8] — 2026-11-09
 
 ### Corrigido
@@ -6696,7 +6710,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.7...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.9...HEAD
+[1.44.9]: https://github.com/spiesdan/nexus/compare/v1.44.8...v1.44.9
 [1.44.7]: https://github.com/spiesdan/nexus/compare/v1.44.6...v1.44.7
 [1.44.6]: https://github.com/spiesdan/nexus/compare/v1.44.5...v1.44.6
 [1.44.5]: https://github.com/spiesdan/nexus/compare/v1.44.4...v1.44.5
