@@ -17,7 +17,7 @@ import { resolverFotoDoProduto } from "@/lib/catalogo/foto-do-produto";
 import { fichaDoProduto } from "@/lib/catalogo/ficha-do-produto";
 
 import type { McpToolDefinition } from "../types";
-import { buscarComRelaxamento } from "@/lib/catalogo/busca";
+import { buscarComRelaxamento, normalizar, type Achado } from "@/lib/catalogo/busca";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
 import { precoDeVitrine } from "@/lib/schemas/produtos";
 
@@ -179,6 +179,144 @@ function precoLegivel(cents: number, moeda: string): string {
   return moeda === "BRL" ? `R$ ${valor}` : `${moeda} ${valor}`;
 }
 
+/** Uma linha de `catalog_products` como a busca a lê. */
+interface LinhaDoCatalogo {
+  id: string;
+  codigo: string;
+  nome: string;
+  descricao: string | null;
+  marca: string | null;
+  categoria: string | null;
+  preco_cents: number;
+  moeda: string;
+  controla_estoque: boolean;
+  quantidade: number;
+  destaque: boolean | null;
+  preco_promocional_cents: number | null;
+  promocao_ate: string | null;
+}
+
+/**
+ * A faixa a que o produto pertence, para o agente RESUMIR em vez de listar.
+ *
+ * O que se pede numa loja é "papel higiênico"; o que se escolhe é o tamanho.
+ * Agrupar por número de rolos (e, na falta dele, por metragem) é o recorte que
+ * o cliente entende — "8 rolos", "16 rolos", "96 rolos".
+ */
+export function faixaDoProduto(nome: string): string {
+  const n = normalizar(nome);
+  const rolos = /(\d+)\s*rolos?\b/.exec(n);
+  if (rolos?.[1] !== undefined) return `${rolos[1]} rolos`;
+  const metros = /(\d+)\s*(?:metros?|mts?|m)\b/.exec(n);
+  if (metros?.[1] !== undefined) return `${metros[1]} m`;
+  return "outras opções";
+}
+
+function ordemDaFaixa(faixa: string): number {
+  const n = /(\d+)/.exec(faixa);
+  return n?.[1] !== undefined ? Number(n[1]) : Number.POSITIVE_INFINITY;
+}
+
+export interface ResumoDoCatalogo {
+  /** Produtos que casaram o pedido inteiro (nota ≥ 0,75), não só parte dele. */
+  do_pedido: number;
+  /** Quantos desses o agente está vendo na lista. */
+  mostrados: number;
+  /** Casaram só parte do pedido (ex.: "papel toalha" para quem pediu "papel higiênico"). */
+  parecidos: number;
+  /** Acessórios/alternativas (o dispenser de quem pediu o papel). */
+  relacionados: number;
+  faixas: Array<{
+    faixa: string;
+    opcoes: number;
+    com_estoque: number;
+    preco_de: string;
+    preco_ate: string;
+  }>;
+}
+
+/**
+ * O resumo que impede a amostra de virar catálogo.
+ *
+ * ═══ O defeito que motiva ═══════════════════════════════════════════════════
+ *
+ * "oi, tem papel higiênico?" — a busca devolveu `total_encontrados: 40` e os 8
+ * primeiros; o modelo respondeu 2 ("os que têm estoque") e a pessoa perguntou
+ * "mas tem muito mais papel no sistema, por que não listou todos?".
+ *
+ * O `total_encontrados` sozinho não bastou: 40 é um número sem forma, e o
+ * modelo não tinha como dizer QUAIS eram as outras 38 sem listar 38. O resumo
+ * dá a forma — quantas opções do pedido existem, quantas com saldo e em que
+ * faixas — e separa o que é parecido (papel toalha) do que é acessório
+ * (dispenser) para o agente não prometer o catálogo errado.
+ *
+ * `do_pedido` conta só o pelotão de frente: `relacao === 'direta'` e nota de
+ * pelo menos 0,75 — a faixa em que o produto casou TODAS as palavras do pedido,
+ * com a tolerância de prefixo/erro de digitação da busca (0,9 e 0,75). Abaixo
+ * disso o item casou só parte: "papel toalha" para quem pediu "papel
+ * higiênico" fica em 0,5 e vira `parecidos`, não opção do pedido.
+ *
+ * Quando a busca inteira fica abaixo de 0,75 (pedido com erro feio, loja
+ * pequena), o corte cai para a nota do melhor resultado — o pelotão é o melhor
+ * que existe, e `do_pedido` nunca fica zero havendo resultado.
+ */
+export function resumirFaixas(
+  achados: ReadonlyArray<Achado<LinhaDoCatalogo>>,
+  mostrados: number,
+  hoje: string,
+): ResumoDoCatalogo {
+  const diretos = achados.filter((a) => a.relacao === "direta");
+  const notaDeFrente = diretos.reduce((maior, a) => Math.max(maior, a.nota), 0);
+  const corte = Math.min(0.75, notaDeFrente);
+  const doPedido = diretos.filter((a) => a.nota >= corte - 1e-9);
+
+  const grupos = new Map<
+    string,
+    { opcoes: number; com_estoque: number; de: number; ate: number; moeda: string }
+  >();
+  for (const { produto } of doPedido) {
+    const faixa = faixaDoProduto(produto.nome);
+    const vitrine = precoDeVitrine(
+      {
+        preco_cents: produto.preco_cents,
+        preco_promocional_cents: produto.preco_promocional_cents,
+        promocao_ate: produto.promocao_ate,
+      },
+      hoje,
+    );
+    const grupo = grupos.get(faixa) ?? {
+      opcoes: 0,
+      com_estoque: 0,
+      de: vitrine.cents,
+      ate: vitrine.cents,
+      moeda: produto.moeda,
+    };
+    grupo.opcoes += 1;
+    if (!produto.controla_estoque || produto.quantidade > 0) grupo.com_estoque += 1;
+    grupo.de = Math.min(grupo.de, vitrine.cents);
+    grupo.ate = Math.max(grupo.ate, vitrine.cents);
+    grupos.set(faixa, grupo);
+  }
+
+  const faixas = [...grupos.entries()]
+    .sort(([a], [b]) => ordemDaFaixa(a) - ordemDaFaixa(b) || a.localeCompare(b))
+    .map(([faixa, g]) => ({
+      faixa,
+      opcoes: g.opcoes,
+      com_estoque: g.com_estoque,
+      preco_de: precoLegivel(g.de, g.moeda),
+      preco_ate: precoLegivel(g.ate, g.moeda),
+    }));
+
+  return {
+    do_pedido: doPedido.length,
+    mostrados,
+    parecidos: diretos.length - doPedido.length,
+    relacionados: achados.length - diretos.length,
+    faixas,
+  };
+}
+
 /**
  * O aviso que a busca manda junto com o resultado.
  *
@@ -219,8 +357,21 @@ export function avisosDaBusca(input: {
   ignorados: readonly string[];
   /** Tudo que voltou é acessório/alternativa — opcional para não quebrar chamadas existentes. */
   soRelacionadas?: boolean;
+  /**
+   * A lista é uma AMOSTRA do que casou o pedido. `do_pedido` = quantas opções
+   * existem; `mostrados` = quantas vieram nesta resposta.
+   */
+  parcial?: { do_pedido: number; mostrados: number };
 }): string {
   const avisos: string[] = [];
+  if (input.parcial !== undefined && input.parcial.do_pedido > input.parcial.mostrados) {
+    avisos.push(
+      `há ${input.parcial.do_pedido} opções que casam o pedido e esta lista mostra ` +
+        `${input.parcial.mostrados}. Diga quantas são no total e resuma por faixa ` +
+        `(campo "resumo.faixas") ou peça o tamanho — NUNCA responda como se estas ` +
+        `${input.parcial.mostrados} fossem o catálogo inteiro.`,
+    );
+  }
   if (input.ignorados.length > 0) {
     avisos.push(
       `não há produto com ${input.ignorados.join(" nem ")} no catálogo desta loja. ` +
@@ -268,7 +419,11 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     "todas as variações com preço, e para as marcadas false diga que confirma o estoque antes " +
     "de prometer. `total_encontrados` diz quantos casaram antes do corte do `limite`: se ele " +
     "for bem maior que a lista, NÃO afirme que são só aqueles — resuma por tamanho e pergunte " +
-    "qual. Lista vazia significa que a loja não tem esse item cadastrado: não invente, " +
+    "qual. Quando a lista for uma amostra, vem também `resumo`: `do_pedido` é quantas opções " +
+    "existem de verdade, `mostrados` é quantas estão na lista e `faixas` agrupa por tamanho " +
+    "(rolos/metragem) com preço e saldo. Use o `resumo.faixas` para responder \"temos N opções, " +
+    "de 8 a 96 rolos\" — e NUNCA conte `parecidos`/`relacionados` como se fossem o pedido. " +
+    "Lista vazia significa que a loja não tem esse item cadastrado: não invente, " +
     "ofereça consultar com a equipe.",
   inputSchema: produtosInputShape,
   category: "read",
@@ -344,21 +499,7 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     // "a loja não tem" — e só a segunda pode ser dita ao cliente.
     const varreduraParcial = !alcancouOFim;
 
-    type Linha = {
-      id: string;
-      codigo: string;
-      nome: string;
-      descricao: string | null;
-      marca: string | null;
-      categoria: string | null;
-      preco_cents: number;
-      moeda: string;
-      controla_estoque: boolean;
-      quantidade: number;
-      destaque: boolean | null;
-      preco_promocional_cents: number | null;
-      promocao_ate: string | null;
-    };
+    type Linha = LinhaDoCatalogo;
 
     const { achados, ignorados } = buscarComRelaxamento((data ?? []) as Linha[], input.termo);
 
@@ -370,6 +511,15 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       : achados;
 
     const topo = disponiveis.slice(0, input.limite);
+
+    // A lista é uma AMOSTRA do que casou. O resumo é o que permite ao agente
+    // responder "temos 8 opções de 8 a 96 rolos" em vez de apresentar as
+    // primeiras como se fossem o catálogo inteiro (medido em 2026-11-09).
+    const hoje = new Date().toISOString().slice(0, 10);
+    const resumo = resumirFaixas(disponiveis, topo.filter((t) => t.relacao === 'direta').length, hoje);
+    // Com uma opção só não há o que resumir: o resumo existe para a pergunta
+    // ampla, onde a lista pode ser lida como o catálogo inteiro.
+    const resumoUtil = resumo.do_pedido > 1 ? resumo : null;
 
     // §10 — diagnóstico da busca sem conteúdo privado: contagens e classificação,
     // nunca o termo cru além de um prefixo curto (pode carregar dado do cliente).
@@ -412,7 +562,14 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
     const soRelacionadas =
       topo.length > 0 && topo.every((t) => t.relacao === 'relacionada');
 
-    const mensagem = avisosDaBusca({ empate, ignorados, soRelacionadas });
+    const mensagem = avisosDaBusca({
+      empate,
+      ignorados,
+      soRelacionadas,
+      ...(resumoUtil !== null && resumoUtil.do_pedido > resumoUtil.mostrados
+        ? { parcial: { do_pedido: resumoUtil.do_pedido, mostrados: resumoUtil.mostrados } }
+        : {}),
+    });
 
     return {
       // Total ANTES do corte do limite: sem ele o agente trata a amostra
@@ -420,6 +577,10 @@ export const crmSearchProducts: McpToolDefinition<typeof produtosInputShape> = {
       // lixo, medido em 2026-10-15). Com o total ele resume por tamanho e
       // pergunta, em vez de afirmar sobre o que não viu.
       total_encontrados: disponiveis.length,
+      // Presente só quando há corte. `do_pedido` separa o que a pessoa pediu
+      // do que só parece (papel toalha para quem pediu papel higiênico) e do
+      // que é acessório (o dispenser).
+      ...(resumoUtil !== null ? { resumo: resumoUtil } : {}),
       produtos: topo.map(({ produto, relacao }) => {
         // Mesmo preço de vitrine da tela: promoção válida vence o base — uma
         // regra só, ou o agente anuncia um preço e o pedido cobra outro.

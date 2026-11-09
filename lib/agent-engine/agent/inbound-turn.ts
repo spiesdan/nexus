@@ -1902,6 +1902,10 @@ async function executarTurnoDoAgente(
   // as chamadas) — alimenta o `catalogIdentityGate` no envio. Por turno
   // (closure), nunca cross-turno: mesma garantia de isolamento do resto do run.
   const buscasDoTurno: ItemCitavel[] = [];
+  // Quantas opções cada busca devolveu ANTES do corte do `limite` e quantas
+  // vieram na lista. Sem isso o gate não sabe distinguir "o catálogo é este"
+  // de "esta é uma amostra" — e a amostra vira resposta de catálogo.
+  const cortesDoTurno: Array<{ total_encontrados: number; devolvidos: number }> = [];
   const outcomes: ChannelSendResult[] = [];
   // Citações acumuladas por buscas de conhecimento DESTE turno — anexadas à
   // próxima outbound enviada (shape de lib/ai/citations/types, que a UI já lê).
@@ -2279,7 +2283,9 @@ async function executarTurnoDoAgente(
             },
             // F4-10: o gate confere o citado contra o devolvido; sem busca no
             // turno, ausente = no-op (preço pode vir de RAG/prompt do tenant).
-            ...(buscasDoTurno.length > 0 ? { catalogo: { itens: [...buscasDoTurno] } } : {}),
+            ...(buscasDoTurno.length > 0
+              ? { catalogo: { itens: [...buscasDoTurno], buscas: [...cortesDoTurno] } }
+              : {}),
             ...(deps.knobs.disclosureMode !== undefined ? { disclosureMode: deps.knobs.disclosureMode } : {}),
             // Gate 5 (F4-02): classificador semântico roteado pelo MESMO seam agnóstico (budget
             // da org checado nele). Closure com tenant/lead/job da ROW fechados — nunca do payload.
@@ -2865,7 +2871,16 @@ async function executarTurnoDoAgente(
                     preco_cents: number;
                     relacao?: 'direta' | 'relacionada';
                   }>;
+                  resumo?: { do_pedido: number; mostrados: number };
                 } | null;
+                // Só existe `resumo` quando o `limite` cortou: é exatamente o
+                // caso em que a resposta pode confundir amostra com catálogo.
+                if (resultado?.resumo !== undefined) {
+                  cortesDoTurno.push({
+                    total_encontrados: resultado.resumo.do_pedido,
+                    devolvidos: resultado.resumo.mostrados,
+                  });
+                }
                 for (const p of resultado?.produtos ?? []) {
                   if (typeof p?.codigo === 'string' && typeof p?.nome === 'string') {
                     buscasDoTurno.push({
