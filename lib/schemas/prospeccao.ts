@@ -127,8 +127,15 @@ export const disparoSchema = z
      *
      * `mensagem` (texto único) continua valendo: quem já chamava a API não
      * precisa mudar nada. Os dois campos juntos: as variações ganham.
+     *
+     * SEM `.min(1)` DE PROPÓSITO: lista vazia é "não há texto", não erro de
+     * formato. O refine abaixo (que conhece o `campaign_id`) é quem decide se
+     * a ausência é legítima — numa campanha de template ela é. Quando o
+     * `.min(1)` morava aqui, a tela de uma campanha de template mandava
+     * `mensagens: []` (as caixas nem aparecem) e a simulação respondia
+     * "Validation failed" antes de ler o tipo da campanha.
      */
-    mensagens: z.array(z.string().trim().min(1).max(4000)).min(1).max(MENSAGENS_POR_DISPARO_MAX).optional(),
+    mensagens: z.array(z.string().trim().min(1).max(4000)).max(MENSAGENS_POR_DISPARO_MAX).optional(),
     /** Cota do dia. O teto real é `TETO_DIARIO` do planejador. */
     limite: z.number().int().min(1).max(500).optional(),
     /** Intervalo mínimo entre dois envios, em ms. */
