@@ -1,39 +1,37 @@
 /**
- * TELA QUE ASSINA REALTIME NUMA TABELA FORA DA PUBLICAÇÃO NUNCA RECEBE EVENTO —
- * E NÃO DÁ ERRO NENHUM.
+ * TELA QUE ASSINA REALTIME NUMA TABELA FORA DA PUBLICAÇÃO NÃO RECEBE EVENTO.
  *
- * ## O modo de falha, e por que ele desperdiça o tempo de quem investiga
+ * ## O modo de falha REAL, medido em produção (09/11/2026)
  *
  * `postgres_changes` só entrega evento de tabela que está na publicação
- * `supabase_realtime`. Se a tabela não estiver:
+ * `supabase_realtime`. O cabeçalho deste arquivo afirmava que, sem a tabela, o
+ * canal subia calado e o `subscribe()` devolvia SUBSCRIBED. **Isso estava
+ * errado**, e a diferença custou uma tarde:
  *
- *   - o canal SOBE,
- *   - o `subscribe()` devolve **SUBSCRIBED**,
- *   - `data-realtime-status` fica **subscribed** na tela,
- *   - e nenhum evento chega. Nunca.
+ *   o Realtime responde com uma mensagem `system` de erro —
+ *   "Unable to subscribe to changes with given parameters. Please check Realtime
+ *   is enabled for the given connect parameters: [...]" — e o `subscribe()`
+ *   recebe `CHANNEL_ERROR`.
  *
- * A tela só muda quando alguém recarrega — indistinguível de "ninguém fez nada".
- *
- * O agravante é que esta base JÁ tem um caso conhecido de canal que morre calado
- * por OUTRO motivo (o cookie `httpOnly` que faz o socket virar anônimo). Quem
- * ligar realtime numa tabela nova e não receber evento vai direto para o
- * `setAuth` e o token do socket — o lugar certo para o defeito errado, e uma
- * tarde perdida. Este teste responde a pergunta em milissegundos.
+ * Com `conversation_notes` fora da publicação, os DOIS canais que a assinam
+ * (aviso de menção, montado no AppShell, e as notas da conversa aberta) entraram
+ * em retomada, e o laço de 1 Hz que se seguiu saturou a VPS: ~45 listas de
+ * conversa por 10 s, ~900 validações de sessão por minuto, load 15 em 2 vCPU, e
+ * o inbox caindo em "algo deu errado". Não era silêncio — era tempestade.
  *
  * ## O que ele mede
  *
- * As tabelas assinadas no código (`table: "x"` nos filtros de `postgres_changes`)
+ * As tabelas assinadas no código (o `table:` de cada bloco `postgresChanges`)
  * contra a publicação **do `baseline.sql`** — e não das migrations. O baseline é
  * o que a instalação self-host aplica; uma tabela adicionada só em migration não
  * chega a quem instalou do zero, que é a maioria.
  *
- * ## A dívida que ele congela, medida ao nascer
+ * ## Por que a varredura ignora `*.test.ts(x)`
  *
- * Seis assinaturas já estavam fora da publicação quando este arquivo foi escrito.
- * Elas entram como dívida CONHECIDA, com o nome de cada uma — e não como
- * exceção silenciosa. Gate que nasce vermelho não é adotado; gate que nasce
- * verde por ignorar o passado não protege. O meio-termo é este: congela o que
- * existe, barra o que chegar.
+ * As seis entradas da "dívida conhecida" original eram FALSOS POSITIVOS: testes
+ * de rota mencionam `postgres_changes` e têm `table: "x"` no mesmo arquivo, sem
+ * assinar nada. Com o filtro de testes, a lista real é só a que a tela usa — e
+ * `conversation_notes` foi a única de verdade (corrigida na migration 0300).
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -43,17 +41,12 @@ import { describe, expect, it } from "vitest";
 const RAIZ = process.cwd();
 
 /**
- * As seis que já estavam assim. Cada uma é um realtime que não funciona hoje —
- * a lista é para elas NÃO crescerem, não para elas ficarem.
+ * Vazia de propósito. As seis entradas originais eram falsos positivos de
+ * arquivos de teste (ver o cabeçalho). Se alguma assinatura de verdade ficar sem
+ * publicação, o caso abaixo reprova nomeando a tabela e o arquivo — a lista
+ * existe para registrar dívida CONHECIDA, não para esconder a nova.
  */
-const DIVIDA_CONHECIDA: Record<string, string> = {
-  channel_sessions: "assinada por hooks de canal; entrou antes deste gate",
-  contacts: "assinada pela ficha do contato; entrou antes deste gate",
-  conversation_notes: "assinada por hooks/inbox/useConversationNotes.ts; entrou antes deste gate",
-  crm_pipelines: "assinada pela tela de funis; entrou antes deste gate",
-  system_update_runs: "assinada pela tela de atualização; entrou antes deste gate",
-  system_version: "assinada pela tela de atualização; entrou antes deste gate",
-};
+const DIVIDA_CONHECIDA: Record<string, string> = {};
 
 function publicacaoDoBaseline(): Set<string> {
   const sql = readFileSync(path.join(RAIZ, "supabase/baseline.sql"), "utf8");
@@ -78,11 +71,13 @@ function assinadasNoCodigo(): Map<string, string[]> {
       const completo = path.join(dir, entrada);
       if (statSync(completo).isDirectory()) varrer(completo);
       else if (/\.tsx?$/.test(entrada)) {
+        // Arquivo de TESTE fala de realtime sem assinar nada: foi daqui que
+        // saíram as seis entradas falsas da dívida original.
+        if (/\.test\.tsx?$/.test(entrada)) continue;
         const fonte = readFileSync(completo, "utf8");
-        // só conta quando há `postgres_changes` no mesmo arquivo: `table:` sozinho
-        // aparece em consulta comum e viraria falso positivo.
-        if (!fonte.includes("postgres_changes")) continue;
-        for (const m of fonte.matchAll(/table:\s*"([a-z_]+)"/g)) {
+        // Só conta o `table:` DENTRO de um bloco `postgresChanges` — `table:`
+        // sozinho aparece em consulta comum e viraria falso positivo.
+        for (const m of fonte.matchAll(/postgresChanges[\s\S]{0,400}?table:\s*"([a-z_]+)"/g)) {
           const rel = path.relative(RAIZ, completo);
           achadas.set(m[1]!, [...(achadas.get(m[1]!) ?? []), rel]);
         }
