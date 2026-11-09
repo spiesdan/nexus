@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.6] — 2026-11-09
+
+### Corrigido
+
+- **O envio por modelo no canal oficial acha o modelo pela WABA e não pela conexão** A campanha por modelo aprovado no número oficial (`meta_cloud`) pausava com "o modelo não está no espelho local" mesmo com o modelo APROVADO e a conexão WORKING. O espelho grava o modelo pela WABA — dois números da mesma conta compartilham o mesmo modelo —, e o envio procurava pela conexão, coluna que o sincronizador não preenche. O resultado era um modelo existente se apresentando como ausente.
+
+  A busca passou a usar a WABA da sessão, que é o dono real do modelo. Quem não tem a WABA na credencial (instalação antiga de número único) e as linhas do caminho de parceiro continuam no filtro por conexão, como antes.
+
 ## [1.44.5] — 2026-11-09
 
 ### Corrigido
@@ -6636,7 +6644,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.6...HEAD
+[1.44.6]: https://github.com/spiesdan/nexus/compare/v1.44.5...v1.44.6
 [1.44.5]: https://github.com/spiesdan/nexus/compare/v1.44.4...v1.44.5
 [1.44.4]: https://github.com/spiesdan/nexus/compare/v1.44.3...v1.44.4
 [1.44.3]: https://github.com/spiesdan/nexus/compare/v1.44.2...v1.44.3
