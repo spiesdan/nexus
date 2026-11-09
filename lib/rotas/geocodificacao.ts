@@ -232,7 +232,8 @@ function ua(): string {
 export async function geocodificarEndereco(endereco: string, cidade?: string | null, uf?: string | null): Promise<ResultadoGeo> {
   const consulta = [endereco.trim(), cidade?.trim(), uf?.trim(), "Brasil"].filter(Boolean).join(", ");
   if (!consulta) return { estado: "erro", latitude: null, longitude: null, precisao: null };
-  return buscar(consulta);
+  const { resultado } = await buscar(consulta);
+  return resultado;
 }
 
 /**
@@ -306,15 +307,19 @@ export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: s
   const emergencia = consultasDeEmergencia(p);
   let viuErro = false;
   for (const consulta of [...cadeia, ...crua]) {
-    const r = await buscar(consulta);
-    if (r.estado === "ok" && r.precisao !== "cidade") return r;
-    if (r.estado === "erro") viuErro = true;
+    const { resultado, candidato } = await buscar(consulta);
+    if (resultado.estado === "ok" && candidato && resultado.precisao !== "cidade" && ePontoDeEntrega(candidato)) {
+      return resultado;
+    }
+    if (resultado.estado === "erro") viuErro = true;
     // nao_encontrado/ambiguo/cidade: próxima fase (mais solta) pode resolver.
   }
   for (const consulta of emergencia) {
-    const r = await buscar(consulta);
-    if (r.estado === "ok") return r;
-    if (r.estado === "erro") viuErro = true;
+    const { resultado, candidato } = await buscar(consulta);
+    if (resultado.estado === "ok" && candidato && ePontoDeEntrega(candidato)) {
+      return resultado;
+    }
+    if (resultado.estado === "erro") viuErro = true;
   }
   if (cadeia.length + crua.length + emergencia.length === 0) {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
@@ -338,6 +343,29 @@ export interface CandidatoNominatim {
   };
 }
 
+const TIPOS_ENTREGA = new Set([...LUGARES_APROXIMADOS, "house", "building", "road"]);
+
+/**
+ * O candidato é um ponto de ENTREGA — residência/um imóvel, ou um LUGAR (CEP,
+ * município, bairro)? — e não um estabelecimento (comércio, indústria, loja)?
+ *
+ * Medido em 2026-11-09: o fallback de emergência (CEP) devolveu a indústria
+ * Coca-Cola — industrial com "house number" 1080 — para o CEP de uma entrega
+ * residencial, e a classificação aceitou o house number como número de casa,
+ * gravando `ok/nominatim:numero` num contato cujo endereço é de São Mateus do
+ * Sul/PR. Pin no Mato Grosso, no lugar errado, fingindo exatidão. Estabelecimento
+ * com número próprio não é endereço de entrega: a cadeia segue para a fase mais
+ * solta em vez de fingir que sabemos o ponto.
+ */
+export function ePontoDeEntrega(c: CandidatoNominatim | null | undefined): boolean {
+  if (!c) return false;
+  const tipo = c.addresstype ?? "";
+  if (tipo === "") return true; // sem tipo: a cadeia decide (número/rua/lugar).
+  // Aceita imóvel, rua e lugar; comércio/industrial/loja com house number
+  // próprio não é endereço de entrega (ver comentário em cima).
+  return TIPOS_ENTREGA.has(tipo);
+}
+
 /**
  * A CLASSIFICAÇÃO DO PRIMEIRO RESULTADO — o que o ponto vale.
  *
@@ -351,6 +379,13 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   const lng = Number(primeiro.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
+  }
+  // Comércio, indústria e loja com "house number" próprio (Coca-Cola Indústria
+  // no CEP de uma entrega residencial) NÃO é endereço de entrega: não finge
+  // que sabemos o ponto. Só residência/um imóvel ou lugar (CEP, município, bairro)
+  // pode virar ok — senão a cadeia continua para a fase mais solta.
+  if (!ePontoDeEntrega(primeiro)) {
+    return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
   }
   // Número certo: o OSM conhece o imóvel (housenumber ou addresstype).
   if (primeiro.address?.house_number || primeiro.addresstype === "house" || primeiro.addresstype === "building") {
@@ -376,7 +411,13 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
 }
 
-async function buscar(consulta: string): Promise<ResultadoGeo> {
+interface RespostaBusca {
+  resultado: ResultadoGeo;
+  /** Candidato que decidiu o resultado — quem aceita/rejeita o ponto mora aqui. */
+  candidato: CandidatoNominatim | null;
+}
+
+async function buscar(consulta: string): Promise<RespostaBusca> {
   await reservarVez();
   const controle = new AbortController();
   const limite = setTimeout(() => controle.abort(), 15000);
@@ -385,10 +426,11 @@ async function buscar(consulta: string): Promise<ResultadoGeo> {
       `${NOMINATIM}?q=${encodeURIComponent(consulta)}&format=json&limit=5&countrycodes=br&addressdetails=1`,
       { headers: { "User-Agent": ua(), Accept: "application/json" }, signal: controle.signal },
     );
-    if (!res.ok) return { estado: "erro", latitude: null, longitude: null, precisao: null };
-    return classificarResultado((await res.json()) as CandidatoNominatim[]);
+    if (!res.ok) return { resultado: { estado: "erro", latitude: null, longitude: null, precisao: null }, candidato: null };
+    const j = (await res.json()) as CandidatoNominatim[];
+    return { resultado: classificarResultado(j), candidato: j[0] ?? null };
   } catch {
-    return { estado: "erro", latitude: null, longitude: null, precisao: null };
+    return { resultado: { estado: "erro", latitude: null, longitude: null, precisao: null }, candidato: null };
   } finally {
     clearTimeout(limite);
   }

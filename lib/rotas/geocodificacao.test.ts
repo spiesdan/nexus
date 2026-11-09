@@ -216,4 +216,32 @@ describe("classificarResultado", () => {
     expect(classificarResultado([])).toMatchObject({ estado: "nao_encontrado" });
     expect(classificarResultado(null)).toMatchObject({ estado: "nao_encontrado" });
   });
+
+  it("comércio com house number próprio não é ponto de entrega", () => {
+    // Medido em 2026-11-09: o fallback de CEP devolveu a indústria Coca-Cola
+    // (industrial, house 1080) para o CEP de uma entrega residencial; o pin
+    // foi gravado no Mato Grosso fingindo "numero". Estabelecimento não é
+    // endereço de entrega — não finge que sabemos o ponto.
+    expect(
+      classificarResultado([
+        { lat: "-15.61", lon: "-56.15", addresstype: "industrial", address: { house_number: "1080", road: "Rodovia Mário Andreazza", city: "Várzea Grande" } },
+      ]),
+    ).toMatchObject({ estado: "ambiguo", latitude: null, longitude: null });
+  });
+
+  it("loja com número próprio também não é ponto de entrega", () => {
+    expect(
+      classificarResultado([
+        { lat: "-23.55", lon: "-46.63", addresstype: "shop", address: { house_number: "12", road: "Rua das Laranjeiras", city: "São Paulo" } },
+      ]),
+    ).toMatchObject({ estado: "ambiguo", latitude: null, longitude: null });
+  });
+
+  it("imóvel residencial continua sendo ponto de entrega com número", () => {
+    expect(
+      classificarResultado([
+        { lat: "-27.55", lon: "-53.18", addresstype: "house", address: { house_number: "37", road: "Francisco Neves Filho", city: "São Mateus do Sul" } },
+      ]),
+    ).toMatchObject({ estado: "ok", precisao: "numero" });
+  });
 });
