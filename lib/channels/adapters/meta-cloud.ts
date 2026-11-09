@@ -21,7 +21,9 @@
  */
 import { createAdminClient } from "@/lib/supabase/admin";
 import { metaContactsPayload } from "@/lib/channels/meta/contact-card";
+import { MAX_MEDIA_BYTES, MediaTooLargeError, type FetchedMedia } from "@/lib/messaging/media/types";
 import { resolveMetaCreds } from "../meta/credentials";
+import { idDaMidia } from "../meta/media";
 import { sendTemplate as enviarTemplateMeta } from "../meta/send-template";
 import type {
   ChannelAdapter,
@@ -189,6 +191,81 @@ export const metaCloudAdapter: ChannelAdapter = {
       const detail = err instanceof Error ? err.message : "erro_desconhecido";
       return { reachable: false, status: null, detail: detail.slice(0, 200) };
     }
+  },
+
+  /**
+   * Baixa o anexo que o cliente mandou.
+   *
+   * ─── Por que este método faltava, e o que isso custava ────────────────────
+   *
+   * O worker de persistência testa `if (!adapter.fetchInboundMedia) skip`, e
+   * este adapter não implementava. Resultado medido em 09/11/2026: o áudio que
+   * um cliente mandou para o número oficial ficou como linha `type=audio`,
+   * `media_url` e `media_storage_path` nulos — e o inbox não tinha o que tocar.
+   *
+   * ─── As duas chamadas da Graph ────────────────────────────────────────────
+   *
+   * O webhook traz um ID, não um link. `GET /{id}` devolve metadados e uma URL
+   * temporária; só ELA devolve os bytes. As duas levam o Bearer da sessão: sem
+   * ele a primeira devolve 401 e a segunda, 400.
+   */
+  async fetchInboundMedia(input: ChannelTenantScope & {
+    sessionRef: string;
+    url: string;
+    hintMime?: string | null;
+  }): Promise<FetchedMedia> {
+    const creds = await resolveMetaCreds(createAdminClient(), {
+      organizationId: input.organizationId,
+      phoneNumberId: input.sessionRef,
+    });
+    if (!creds) {
+      throw new Error(
+        "meta_not_configured: sem credencial para baixar a mídia desta sessão.",
+      );
+    }
+
+    const id = idDaMidia(input.url);
+    let binarioUrl = input.url;
+
+    if (id) {
+      const res = await fetch(`https://graph.facebook.com/${creds.graphVersion}/${encodeURIComponent(id)}`, {
+        headers: { Authorization: `Bearer ${creds.token}` },
+        signal: AbortSignal.timeout(20_000),
+      });
+      const meta = (await res.json().catch(() => ({}))) as {
+        url?: string;
+        error?: { message?: string; code?: number };
+      };
+      if (!res.ok || meta.error || !meta.url) {
+        throw new Error(
+          `meta_media_lookup_failed: ${meta.error?.code ?? res.status} ${
+            meta.error?.message ?? "sem url de download"
+          }`.trim(),
+        );
+      }
+      binarioUrl = meta.url;
+    }
+
+    const bin = await fetch(binarioUrl, {
+      headers: { Authorization: `Bearer ${creds.token}` },
+      // A Meta descarta a mídia depois de um tempo; 20s cobrem o download de
+      // um documento pequeno sem pendurar o worker indefinidamente.
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!bin.ok) throw new Error(`meta_media_download_failed: ${bin.status}`);
+
+    const declarado = Number(bin.headers.get("content-length") ?? 0);
+    if (declarado > MAX_MEDIA_BYTES) throw new MediaTooLargeError();
+    const buffer = Buffer.from(await bin.arrayBuffer());
+    if (buffer.byteLength > MAX_MEDIA_BYTES) throw new MediaTooLargeError();
+
+    // O content-type do BINÁRIO manda; a dica do webhook só preenche o vazio —
+    // e o `; codecs=` sai porque o path do bucket deriva a extensão do mime.
+    const mime =
+      bin.headers.get("content-type")?.split(";")[0]?.trim() ||
+      input.hintMime?.split(";")[0]?.trim() ||
+      "application/octet-stream";
+    return { buffer, mime };
   },
 
   codes: {
