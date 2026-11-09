@@ -100,6 +100,21 @@ describe("disparoSchema — as variacoes de mensagem", () => {
     ).toBe(false);
   });
 
+  /**
+   * A tela manda `mensagens: []` quando a campanha é de TEMPLATE — não há
+   * caixa de texto para preencher, o conteúdo vem do modelo aprovado. O
+   * `.min(1)` no array reprovava isso como erro de formato e a simulação
+   * respondia "Validation failed" sem nunca olhar o tipo da campanha.
+   */
+  it("campanha de template aceita lista vazia — o texto vem do modelo", () => {
+    const r = disparoSchema.safeParse({
+      prospect_ids: BASE.prospect_ids,
+      mensagens: [],
+      campaign_id: "32153022-0316-4450-85c6-f05f27bc5fcb",
+    });
+    expect(r.success).toBe(true);
+  });
+
   it("uma variacao em branco no meio reprova — sairia como bolha vazia no WhatsApp", () => {
     expect(
       disparoSchema.safeParse({ prospect_ids: BASE.prospect_ids, mensagens: [tres[0], "   "] }).success,
