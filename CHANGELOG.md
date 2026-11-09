@@ -8,6 +8,44 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.7] — 2026-11-09
+
+### Corrigido
+
+- **Aviso de "saiu para entrega" nunca sai pelo número comercial** Quando o número marcado como expedição estava fora do ar, o aviso de rota caía
+  no número comercial — e a conta comercial via no inbox avisos que não eram dela.
+
+  Agora o aviso só sai pelo número de expedição. Se ele estiver desconectado, o
+  aviso fica numa fila e é entregue sozinho quando a sessão voltar; nada sai pelo
+  comercial. A tela de Expedição avisa quando há aviso esperando, para ninguém
+  achar que o cliente já foi avisado.
+
+- **A foto do template aparece no inbox junto da mensagem enviada** Mensagens de campanha por template com cabeçalho de imagem chegavam ao cliente
+  com a foto, mas no inbox do CRM apareciam só com o texto — não havia o que
+  renderizar, porque o arquivo é da campanha e não da mensagem.
+
+  Agora a referência do arquivo é guardada com a mensagem (sem entrar na cascata
+  de exclusão da LGPD, que apagaria a imagem compartilhada por toda a campanha),
+  e a bolha mostra a foto com o mesmo clique para ampliar das demais imagens.
+
+- **Áudio, imagem e documento recebidos pelo número oficial chegam ao inbox** Mensagens com anexo enviadas por clientes ao número conectado pela API oficial
+  da Meta entravam no inbox sem os bytes: o áudio não tocava, a imagem não
+  aparecia e o documento não abria.
+
+  O canal oficial agora baixa o arquivo da Meta e o guarda junto da mensagem, no
+  mesmo caminho usado pelo WhatsApp por QR — e o player volta a funcionar antes
+  mesmo de o download terminar. As mensagens que já estavam sem arquivo são
+  recuperadas no próximo deploy pelo mesmo mecanismo.
+
+- **Inbox deixa de travar quando a conexão de tempo real cai** Em algumas situações o inbox inteiro ficava lento e o envio respondia "algo deu
+  errado": a conexão de tempo real caía, tentava voltar a cada segundo e, a cada
+  tentativa, mandava a tela buscar tudo de novo. Com a aba aberta por muito tempo,
+  isso sozinho ocupava o servidor.
+
+  A reconexão agora usa um canal novo a cada tentativa e espera o anterior ser
+  encerrado, então ou volta de verdade ou espera mais — sem repetir em rajada. As
+  notas internas também passaram a avisar a tela em tempo real, e não só no F5.
+
 ## [1.44.6] — 2026-11-09
 
 ### Corrigido
@@ -6644,7 +6682,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.6...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.7...HEAD
+[1.44.7]: https://github.com/spiesdan/nexus/compare/v1.44.6...v1.44.7
 [1.44.6]: https://github.com/spiesdan/nexus/compare/v1.44.5...v1.44.6
 [1.44.5]: https://github.com/spiesdan/nexus/compare/v1.44.4...v1.44.5
 [1.44.4]: https://github.com/spiesdan/nexus/compare/v1.44.3...v1.44.4
