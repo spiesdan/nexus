@@ -28,6 +28,7 @@ import { ApiError } from "@/lib/api/types";
 import { ensureConversation } from "@/lib/automation/start-conversation";
 import { renderizarCorpoDoTemplate } from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
+import { templateMediaDosValores } from "@/lib/messaging/template-media";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 import { resolverReferenciasDeMidia } from "@/lib/prospeccao/midia-da-campanha";
 
@@ -117,12 +118,19 @@ export async function enviarParaProspect(
     // enxergarem o template em vez de um ponto cego.
     let corpo = p.mensagem;
     let templateValues: Record<string, string> | null = null;
+    // A foto/arquivo do cabeçalho, capturada ANTES da assinatura: depois o valor
+    // é uma URL de 1h, e o inbox precisa de uma referência estável para mostrar
+    // a mesma imagem que a Meta entregou. Vai em `metadata.template_media` — e
+    // não em `media_storage_path` — porque esse caminho é alvo da cascata de
+    // LGPD, e o arquivo é compartilhado por toda a campanha.
+    let midiaDoTemplate: ReturnType<typeof templateMediaDosValores> = null;
     if (p.template) {
       templateValues = interpolarValoresDoTemplate(p.template.values, {
         nome: p.prospect.nome,
         cidade: p.prospect.cidade ?? null,
         categoria: p.prospect.categoria ?? null,
       });
+      midiaDoTemplate = templateMediaDosValores(templateValues);
       // Mídia é referência de storage (`bucket://…`) até ESTE ponto: assinar
       // antes de enviar mantém o link válido durante toda a campanha, mesmo
       // que a configuração tenha sido feita semanas antes.
@@ -165,6 +173,7 @@ export async function enviarParaProspect(
             template_name: p.template.name,
             template_language: p.template.language,
             template_values: templateValues,
+            ...(midiaDoTemplate ? { metadata: { template_media: midiaDoTemplate } } : {}),
           }
         : { conversation_id: conversationId, type: "text", body: corpo },
     );

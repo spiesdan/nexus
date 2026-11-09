@@ -11,6 +11,7 @@ import { CitationButton } from "@/components/ai/CitationButton";
 import { WA } from "@/components/inbox/whatsapp-theme";
 import { MediaRenderer } from "@/components/inbox/media/MediaRenderer";
 import { ContactCard } from "@/components/inbox/media/ContactCard";
+import { templateMediaDoMetadata } from "@/lib/messaging/template-media";
 import { extractCitations, isAiGeneratedMessage } from "@/lib/ai/citations/types";
 
 interface Props {
@@ -67,7 +68,13 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
   const isOutbound = message.direction === "outbound";
   const time = format(new Date(message.sent_at), "HH:mm", { locale: localeDaData });
   const isFailed = message.status === "failed";
-  const hasMedia = Boolean(message.media_url || message.media_storage_path);
+  // Template com cabeçalho de mídia: a referência não está nas colunas de
+  // anexo (é da campanha, não da mensagem), e sim em `metadata.template_media`.
+  const hasMedia = Boolean(
+    message.media_url ||
+      message.media_storage_path ||
+      templateMediaDoMetadata(message.metadata),
+  );
   const isContact = message.type === "contact";
   // Figurinha sem caption: sem moldura de bolha (padrão WhatsApp).
   const isBareSticker = hasMedia && message.type === "sticker" && !message.body;

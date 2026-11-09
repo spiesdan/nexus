@@ -19,6 +19,7 @@ import {
   type ChannelProvider,
   type ChannelSessionRef,
 } from "@/lib/channels";
+import { templateMediaDoMetadata } from "@/lib/messaging/template-media";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -52,22 +53,37 @@ export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
   // Filtro explícito de organization_id por doutrina (defense-in-depth).
   const { data: msg, error } = await supabase
     .from("messages")
-    .select("id, media_url, media_mime, media_storage_path, channel_session_id")
+    .select("id, media_url, media_mime, media_storage_path, channel_session_id, metadata")
     .eq("id", messageId)
     .eq("organization_id", activeOrg.orgId)
     .maybeSingle();
   if (error) {
     return fail("internal_error", "Erro ao buscar mensagem.", 500, { requestId });
   }
-  if (!msg || (!msg.media_storage_path && !msg.media_url)) {
+
+  // A foto de um template NÃO fica em `media_storage_path` (a cascata de LGPD
+  // apagaria o arquivo compartilhado da campanha); o envio grava a referência
+  // em `metadata.template_media`. O prefixo `${orgId}/` é checado aqui porque o
+  // service role assina sem reclamar — sem ele, um metadata forjado apontaria
+  // para a mídia de outra organização.
+  const midiaDoModelo = templateMediaDoMetadata(
+    (msg?.metadata as Record<string, unknown> | null | undefined) ?? null,
+  );
+  const caminhoDoModelo =
+    midiaDoModelo && midiaDoModelo.path.startsWith(`${activeOrg.orgId}/`)
+      ? midiaDoModelo.path
+      : null;
+  const caminhoPersistido = msg?.media_storage_path ?? caminhoDoModelo;
+
+  if (!msg || (!caminhoPersistido && !msg.media_url)) {
     return fail("not_found", "Mensagem sem mídia.", 404, { requestId });
   }
 
-  if (msg.media_storage_path) {
+  if (caminhoPersistido) {
     const admin = createAdminClient();
     const { data: signed, error: signErr } = await admin.storage
       .from("whatsapp-media")
-      .createSignedUrl(msg.media_storage_path, SIGNED_URL_TTL_S);
+      .createSignedUrl(caminhoPersistido, SIGNED_URL_TTL_S);
     if (!signErr && signed?.signedUrl) {
       const response = NextResponse.redirect(signed.signedUrl, 302);
       response.headers.set("X-Request-Id", requestId);

@@ -1,5 +1,6 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
+import { templateMediaDoMetadata } from "@/lib/messaging/template-media";
 import type { Message } from "@/lib/types/messaging";
 
 import { AudioPlayer } from "./AudioPlayer";
@@ -27,6 +28,27 @@ export function MediaRenderer({ message }: { message: Message }) {
       return <VideoMedia messageId={message.id} />;
     case "contact":
       return null;
+    case "template": {
+      // O arquivo do cabeçalho mora em `metadata.template_media` (ver
+      // lib/messaging/template-media.ts). Sem ele, template só tem texto.
+      const midia = templateMediaDoMetadata(message.metadata);
+      if (!midia) return null;
+      if (midia.mime.startsWith("image/")) {
+        return <ImageMedia messageId={message.id} alt={t("Imagem do modelo")} />;
+      }
+      if (midia.mime.startsWith("video/")) {
+        return <VideoMedia messageId={message.id} />;
+      }
+      return (
+        <DocumentCard
+          messageId={message.id}
+          mime={midia.mime}
+          sizeBytes={null}
+          storagePath={midia.path}
+          isOutbound={isOutbound}
+        />
+      );
+    }
     default:
       return (
         <DocumentCard
