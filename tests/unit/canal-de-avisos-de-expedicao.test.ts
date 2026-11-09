@@ -116,39 +116,42 @@ describe("sessaoParaAvisosDeExpedicao", () => {
     const db = fakeDb([comercial(), expedicao()]);
     expect(await sessaoParaAvisosDeExpedicao(db, "org")).toEqual({
       id: "canal-expedicao",
+      status: "WORKING",
       dedicado: true,
     });
   });
 
-  it("sem número marcado, avisa pelo comercial e diz que NÃO é dedicado", async () => {
+  /**
+   * A regra dura do dono: aviso de rota NUNCA sai pelo comercial. Sem número
+   * marcado, a resposta é null — o chamador enfileira o fato e espera. Devolver
+   * o comercial aqui era o defeito que encheu a conta comercial de avisos de
+   * expedição em 2026-11-09.
+   */
+  it("sem número marcado devolve null — não cai no comercial", async () => {
     const db = fakeDb([comercial()]);
-    expect(await sessaoParaAvisosDeExpedicao(db, "org")).toEqual({
-      id: "canal-comercial",
-      dedicado: false,
-    });
+    expect(await sessaoParaAvisosDeExpedicao(db, "org")).toBeNull();
   });
 
   /**
-   * O aviso de rota não pode ficar esperando o número de expedição voltar: se
-   * ele está parado, a mensagem só ficaria enfileirada e a carga já saiu.
+   * Número dedicado parado continua sendo o escolhido: a sessão não está
+   * pronta, mas é ELA que a fila espera. Devolver `status` é o que permite ao
+   * chamador decidir entre enviar agora e enfileirar.
    */
-  it("número dedicado parado não é usado: cai no comercial", async () => {
+  it("número dedicado parado continua sendo o escolhido, com o status real", async () => {
     const db = fakeDb([expedicao({ status: "STOPPED" }), comercial()]);
     expect(await sessaoParaAvisosDeExpedicao(db, "org")).toEqual({
-      id: "canal-comercial",
-      dedicado: false,
+      id: "canal-expedicao",
+      status: "STOPPED",
+      dedicado: true,
     });
   });
 
   it("dedicado arquivado não conta", async () => {
     const db = fakeDb([expedicao({ archived_at: "2026-11-04T20:45:00Z" }), comercial()]);
-    expect(await sessaoParaAvisosDeExpedicao(db, "org")).toEqual({
-      id: "canal-comercial",
-      dedicado: false,
-    });
+    expect(await sessaoParaAvisosDeExpedicao(db, "org")).toBeNull();
   });
 
-  it("org sem canal nenhum devolve null — o chamador pula o aviso em vez de estourar", async () => {
+  it("org sem canal nenhum devolve null — o chamador enfileira em vez de estourar", async () => {
     const db = fakeDb([]);
     expect(await sessaoParaAvisosDeExpedicao(db, "org")).toBeNull();
   });

@@ -7,6 +7,27 @@
  * que se explicar ("programada para sair"). O cliente não precisa da logística
  * interna; precisa saber que o pedido saiu para entrega.
  *
+ * ─── A REGRA DURA: SÓ O NÚMERO DE EXPEDIÇÃO ───────────────────────────────
+ *
+ * Até 2026-11-09, se o número de expedição estivesse parado, o aviso caía no
+ * comercial. O dono mediu o custo: a conta comercial via no inbox avisos de
+ * rota que não são dela, e o cliente recebia a notificação no número em que
+ * compra. Numa organização com dois números e duas contas separadas, esse
+ * fallback destrói a separação que a tela promete.
+ *
+ * Agora o aviso só sai pelo canal marcado `finalidade = 'expedicao'`. Se ele
+ * não existe ou não está `WORKING`, o FATO fica na fila durável
+ * `shipment_notices` (uma linha por carga+pedido) e o cron
+ * `expedition-notices` entrega quando a sessão voltar. Nada sai pelo comercial
+ * — nem como último recurso.
+ *
+ * Por que a fila é uma tabela e não `messages.status='queued'`: o caminho de
+ * envio grava `queued` quando a sessão não está pronta, mas NÃO existe drenagem
+ * desse estado — a linha ficaria parada para sempre. E reenviar uma linha
+ * `queued` exigiria reimplementar o envio num segundo lugar, que é exatamente
+ * onde os guardrails divergem. A fila guarda o fato; o envio continua sendo o
+ * caminho canônico (`sendMessageHandler`).
+ *
  * É o MESMO encanamento do aviso de escalação (`lib/ai/handoff/aviso-ao-lead.ts`):
  * `sendMessageHandler` com ator declarado e metadata que identifica o aviso
  * como sistema, fire-and-forget com catch por pedido. A função NUNCA lança —
@@ -30,12 +51,51 @@ import { FUSO_PADRAO, fusoValido } from "@/lib/tempo/fusos";
 /** Ator do envio — o sistema de expedição falando, não uma pessoa. */
 const ATOR_DO_AVISO = "expedicao-aviso";
 
+/**
+ * Claim de um tick que morreu entre marcar `enviando` e concluir. Dez minutos é
+ * maior que qualquer envio legítimo e menor que a paciência de quem espera o
+ * aviso; sem reciclar, a linha ficaria `enviando` para sempre e o cliente nunca
+ * saberia que o pedido saiu.
+ */
+const CLAIM_ORFAO_MS = 10 * 60 * 1000;
+
 export interface AvisoDaCargaInput {
   organizationId: string;
   shipmentId: string;
   /** Os pedidos embarcados nesta carga (vazia = nada a avisar). */
   orderIds: readonly string[];
 }
+
+interface PedidoDaCarga {
+  id: string;
+  numero: number;
+  contact_id: string | null;
+}
+
+interface AvisoPendente {
+  id: string;
+  organization_id: string;
+  shipment_id: string;
+  order_id: string;
+  attempts: number;
+}
+
+export interface EntregarPendentesOpts {
+  organizationId?: string;
+  shipmentId?: string;
+  limit?: number;
+}
+
+export interface EntregarPendentesResult {
+  /** Avisos que saíram nesta rodada. */
+  enviados: number;
+  /** Avisos que tentaram com o número no ar e falharam (terminal). */
+  falharam: number;
+  /** Avisos que continuam esperando o número de expedição. */
+  naFila: number;
+}
+
+const ZERO: EntregarPendentesResult = { enviados: 0, falharam: 0, naFila: 0 };
 
 /**
  * Saudação pelo relógio da ORGANIZAÇÃO (não do servidor, que roda em UTC).
@@ -78,12 +138,52 @@ export function textoDoAviso(numeroPedido: number, saudacaoDoMomento: string): s
   );
 }
 
+async function fusoDaOrganizacao(admin: SupabaseClient, orgId: string): Promise<string> {
+  // O fuso que vale é o da organização — o servidor roda em UTC e "Bom dia"
+  // às 3h da manhã é o defeito que este select evita. Falha aberta: fuso
+  // inválido (a coluna não tem CHECK) cai no padrão do produto.
+  const { data: org } = await admin
+    .from("organizations")
+    .select("timezone")
+    .eq("id", orgId)
+    .maybeSingle();
+  const bruto = String((org as { timezone?: string | null } | null)?.timezone ?? "").trim();
+  return bruto !== "" && fusoValido(bruto) ? bruto : FUSO_PADRAO;
+}
+
+async function carregarPedidos(
+  admin: SupabaseClient,
+  organizationId: string,
+  orderIds: readonly string[],
+): Promise<PedidoDaCarga[]> {
+  if (orderIds.length === 0) return [];
+  const { data, error } = await admin
+    .from("commercial_orders")
+    .select("id, numero, contact_id")
+    .eq("organization_id", organizationId)
+    .in("id", [...orderIds]);
+  if (error) throw new Error(error.message);
+  return (data as PedidoDaCarga[] | null) ?? [];
+}
+
+async function marcarAviso(
+  admin: SupabaseClient,
+  id: string,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  await admin
+    .from("shipment_notices")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id);
+}
+
 /**
  * Avisa o cliente de CADA pedido embarcado. Fire-and-forget por contrato:
  * nunca lança, e o erro de um pedido não impede os demais.
  *
- * Retorna quantos avisos saíram — para o teste e para o log, não para a rota
- * decidir alguma coisa com isso.
+ * Enfileira TODOS os pedidos antes de tentar enviar. O `unique
+ * (shipment_id, order_id)` é o que impede aviso dobrado se a rota for
+ * reiniciada ou se o cron rodar no mesmo instante.
  */
 export async function avisarClientesDaCarga(
   admin: SupabaseClient,
@@ -92,89 +192,27 @@ export async function avisarClientesDaCarga(
   if (input.orderIds.length === 0) return { avisados: 0 };
 
   try {
-    const { data: pedidos, error } = await admin
-      .from("commercial_orders")
-      .select("id, numero, contact_id")
-      .eq("organization_id", input.organizationId)
-      .in("id", input.orderIds)
-      .not("contact_id", "is", null);
+    const pedidos = await carregarPedidos(admin, input.organizationId, input.orderIds);
+    if (pedidos.length === 0) return { avisados: 0 };
+
+    const { error } = await admin.from("shipment_notices").upsert(
+      pedidos.map((p) => ({
+        organization_id: input.organizationId,
+        shipment_id: input.shipmentId,
+        order_id: p.id,
+      })),
+      { onConflict: "shipment_id,order_id", ignoreDuplicates: true },
+    );
     if (error) throw new Error(error.message);
-    if (!pedidos || pedidos.length === 0) return { avisados: 0 };
 
-    // O fuso que vale é o da organização — o servidor roda em UTC e "Bom dia"
-    // às 3h da manhã é o defeito que este select evita. Falha aberta: fuso
-    // inválido (a coluna não tem CHECK) cai no padrão do produto.
-    const { data: org } = await admin
-      .from("organizations")
-      .select("timezone")
-      .eq("id", input.organizationId)
-      .maybeSingle();
-    const fusoBruto = String((org as { timezone?: string | null } | null)?.timezone ?? "").trim();
-    const fuso = fusoBruto !== "" && fusoValido(fusoBruto) ? fusoBruto : FUSO_PADRAO;
-    const saudacaoDoMomento = saudacao(new Date(), fuso);
-
-    // O número que avisa pode ser diferente do que vende: quem marca um canal
-    // como "avisos de expedição" em Conexões espera que o cliente receba o
-    // aviso por ele, não pelo número do atendimento. Sem canal dedicado (ou com
-    // ele fora do ar), cai no comercial de sempre — e o log diz que caiu.
-    const sessao = await sessaoParaAvisosDeExpedicao(admin, input.organizationId);
-    if (!sessao) {
-      logger.warn("[expedicao-aviso] sem sessão de canal — aviso pulado", {
-        organization_id: input.organizationId,
-        shipment_id: input.shipmentId,
-      });
-      return { avisados: 0 };
-    }
-    if (!sessao.dedicado) {
-      logger.info("[expedicao-aviso] sem número dedicado à expedição — aviso sai pelo comercial", {
-        organization_id: input.organizationId,
-        shipment_id: input.shipmentId,
-      });
-    }
-    const sessionId = sessao.id;
-
-    let avisados = 0;
-    for (const p of pedidos as Array<{ id: string; numero: number; contact_id: string }>) {
-      try {
-        const conversationId = await ensureConversation(
-          admin,
-          input.organizationId,
-          p.contact_id,
-          sessionId,
-        );
-        await sendMessageHandler(
-          admin,
-          {
-            organization_id: input.organizationId,
-            actor: { type: "ai_agent", id: ATOR_DO_AVISO, role: "manager" },
-            requestId: `expedicao-aviso:${input.shipmentId}:${p.id}`,
-          },
-          {
-            conversation_id: conversationId,
-            type: "text",
-            body: textoDoAviso(p.numero, saudacaoDoMomento),
-            // A linha se DECLARA — mesma razão do aviso de escalação: quem
-            // audita a conversa depois precisa separar sistema de fala humana
-            // ou de agente.
-            metadata: {
-              aviso_de_expedicao: true,
-              shipment_id: input.shipmentId,
-              order_id: p.id,
-            },
-          },
-        );
-        avisados++;
-      } catch (err) {
-        // PII fora do log: só a razão. Contato bloqueado/anonimizado cai aqui
-        // e não pode parar o aviso do pedido seguinte.
-        logger.warn("[expedicao-aviso] aviso de pedido não saiu", {
-          organization_id: input.organizationId,
-          shipment_id: input.shipmentId,
-          error: err instanceof Error ? err.message.slice(0, 200) : String(err),
-        });
-      }
-    }
-    return { avisados };
+    // Mesmo com o número fora do ar, a chamada é barata: a função devolve os
+    // pendentes e LOGa que estão na fila. O cron entrega quando a sessão voltar.
+    const resumo = await entregarAvisosPendentes(admin, {
+      organizationId: input.organizationId,
+      shipmentId: input.shipmentId,
+      limit: 500,
+    });
+    return { avisados: resumo.enviados };
   } catch (err) {
     logger.warn("[expedicao-aviso] aviso da carga não saiu", {
       organization_id: input.organizationId,
@@ -183,4 +221,212 @@ export async function avisarClientesDaCarga(
     });
     return { avisados: 0 };
   }
+}
+
+/**
+ * Entrega a fila de avisos pendentes das organizações cujo número de expedição
+ * está `WORKING`. Chamada pelo cron `expedition-notices` a cada minuto e pelo
+ * caminho da rota logo depois de enfileirar.
+ *
+ * O CLAIM é atômico: o UPDATE com `eq("status","pendente")` só vence um tick.
+ * Se dois crons rodarem juntos, o segundo não encontra a linha `pendente` e
+ * segue. Um claim órfão (processo morreu no meio) volta à fila após
+ * `CLAIM_ORFAO_MS`.
+ */
+export async function entregarAvisosPendentes(
+  admin: SupabaseClient,
+  opts: EntregarPendentesOpts = {},
+): Promise<EntregarPendentesResult> {
+  const limit = Math.min(Math.max(opts.limit ?? 200, 1), 500);
+  const agora = new Date();
+  const agoraIso = agora.toISOString();
+
+  // Recicla claim órfão antes de ler a fila.
+  let reciclar = admin
+    .from("shipment_notices")
+    .update({
+      status: "pendente",
+      last_error: "claim_expirado",
+      updated_at: agoraIso,
+    })
+    .eq("status", "enviando")
+    .lt("updated_at", new Date(agora.getTime() - CLAIM_ORFAO_MS).toISOString());
+  if (opts.organizationId) reciclar = reciclar.eq("organization_id", opts.organizationId);
+  if (opts.shipmentId) reciclar = reciclar.eq("shipment_id", opts.shipmentId);
+  const { error: reciclarErr } = await reciclar;
+  if (reciclarErr) {
+    logger.warn("[expedicao-aviso] reciclagem de claim falhou", {
+      error: reciclarErr.message.slice(0, 200),
+    });
+  }
+
+  let consulta = admin
+    .from("shipment_notices")
+    .select("id, organization_id, shipment_id, order_id, attempts")
+    .eq("status", "pendente")
+    .order("created_at", { ascending: true })
+    .limit(limit);
+  if (opts.organizationId) consulta = consulta.eq("organization_id", opts.organizationId);
+  if (opts.shipmentId) consulta = consulta.eq("shipment_id", opts.shipmentId);
+  const { data, error } = await consulta;
+  if (error) throw new Error(`shipment_notices_query_failed: ${error.message}`);
+
+  const pendentes = (data as AvisoPendente[] | null) ?? [];
+  if (pendentes.length === 0) return ZERO;
+
+  const porOrg = new Map<string, AvisoPendente[]>();
+  for (const aviso of pendentes) {
+    porOrg.set(aviso.organization_id, [...(porOrg.get(aviso.organization_id) ?? []), aviso]);
+  }
+
+  let enviados = 0;
+  let falharam = 0;
+  let naFila = 0;
+
+  for (const [orgId, avisos] of porOrg) {
+    const sessao = await sessaoParaAvisosDeExpedicao(admin, orgId);
+    if (!sessao) {
+      naFila += avisos.length;
+      // O cron roda a cada minuto: logar a espera em todo tick encheria o log
+      // de 1.440 linhas/dia dizendo "ainda não". Quem cria o aviso (a rota)
+      // registra a espera uma vez; o cron só fala quando ENTREGA ou falha.
+      if (opts.shipmentId) {
+        logger.warn("[expedicao-aviso] sem número de expedição marcado — aviso(s) na fila", {
+          organization_id: orgId,
+          pendentes: avisos.length,
+        });
+      }
+      continue;
+    }
+    if (sessao.status !== "WORKING") {
+      naFila += avisos.length;
+      if (opts.shipmentId) {
+        logger.info("[expedicao-aviso] número de expedição fora do ar — aviso(s) na fila", {
+          organization_id: orgId,
+          channel_session_id: sessao.id,
+          status: sessao.status,
+          pendentes: avisos.length,
+        });
+      }
+      continue;
+    }
+
+    const fuso = await fusoDaOrganizacao(admin, orgId);
+    const saudacaoDoMomento = saudacao(agora, fuso);
+    const pedidos = await carregarPedidos(
+      admin,
+      orgId,
+      avisos.map((a) => a.order_id),
+    );
+    const porPedido = new Map(pedidos.map((p) => [p.id, p]));
+
+    for (const aviso of avisos) {
+      const pedido = porPedido.get(aviso.order_id);
+      if (!pedido || !pedido.contact_id) {
+        await marcarAviso(admin, aviso.id, {
+          status: "falhou",
+          last_error: "pedido_sem_contato",
+        });
+        falharam++;
+        continue;
+      }
+
+      const { data: claim } = await admin
+        .from("shipment_notices")
+        .update({
+          status: "enviando",
+          attempts: aviso.attempts + 1,
+          last_error: null,
+          updated_at: agoraIso,
+        })
+        .eq("id", aviso.id)
+        .eq("status", "pendente")
+        .select("id")
+        .maybeSingle();
+      if (!claim) continue; // outro tick pegou
+
+      try {
+        const conversationId = await ensureConversation(
+          admin,
+          orgId,
+          pedido.contact_id,
+          sessao.id,
+        );
+        const mensagem = await sendMessageHandler(
+          admin,
+          {
+            organization_id: orgId,
+            actor: { type: "ai_agent", id: ATOR_DO_AVISO, role: "manager" },
+            requestId: `expedicao-aviso:${aviso.shipment_id}:${pedido.id}`,
+          },
+          {
+            conversation_id: conversationId,
+            type: "text",
+            body: textoDoAviso(pedido.numero, saudacaoDoMomento),
+            // A linha se DECLARA — mesma razão do aviso de escalação: quem
+            // audita a conversa depois precisa separar sistema de fala humana
+            // ou de agente.
+            metadata: {
+              aviso_de_expedicao: true,
+              shipment_id: aviso.shipment_id,
+              order_id: pedido.id,
+            },
+          },
+        );
+
+        if (mensagem.status === "queued") {
+          // A sessão deixou de estar pronta entre o claim e o envio. Volta para
+          // a fila; o próximo tick tenta de novo quando ela voltar.
+          await marcarAviso(admin, aviso.id, {
+            status: "pendente",
+            last_error: "channel_session_not_working",
+          });
+          naFila++;
+        } else if (mensagem.status === "failed") {
+          await marcarAviso(admin, aviso.id, {
+            status: "falhou",
+            message_id: mensagem.id,
+            last_error:
+              mensagem.error_code ?? mensagem.error_message ?? "send_failed",
+          });
+          falharam++;
+        } else {
+          // `sent` E `sending` contam como enviado: `sending` significa que o
+          // transporte ACEITOU e o ack ainda não chegou. Reenviar por causa do
+          // ack pendente mandaria a mesma mensagem duas vezes ao cliente — o
+          // desfecho real da mensagem quem conta é a linha de `messages`.
+          await marcarAviso(admin, aviso.id, {
+            status: "enviado",
+            message_id: mensagem.id,
+            sent_at: new Date().toISOString(),
+            last_error: null,
+          });
+          enviados++;
+        }
+      } catch (err) {
+        // PII fora do log: só a razão. Contato bloqueado/anonimizado cai aqui
+        // e não pode parar o aviso do pedido seguinte.
+        //
+        // Erro INESPERADO (rede, storage, banco) ganha até 3 tentativas: o
+        // claim já contou esta. Depois disso vira terminal — insistir para
+        // sempre num contato bloqueado é ruído, não recuperação.
+        const tentativa = aviso.attempts + 1;
+        const transitorio = tentativa < 3;
+        await marcarAviso(admin, aviso.id, {
+          status: transitorio ? "pendente" : "falhou",
+          last_error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+        });
+        if (transitorio) naFila++;
+        else falharam++;
+        logger.warn("[expedicao-aviso] aviso de pedido não saiu", {
+          organization_id: orgId,
+          shipment_id: aviso.shipment_id,
+          tentativa,
+          error: err instanceof Error ? err.message.slice(0, 200) : String(err),
+        });
+      }
+    }
+  }
+
+  return { enviados, falharam, naFila };
 }

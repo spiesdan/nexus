@@ -70,6 +70,7 @@ CRONS="
 * * * * *|25|api/v1/cron/recover-stuck-messages
 * * * * *|45|api/v1/cron/prospecting-drain
 * * * * *|60|api/v1/cron/prospecting-send
+* * * * *|55|api/v1/cron/expedition-notices
 */5 * * * *|90|api/v1/cron/prospecting-fit
 * * * * *|60|api/v1/cron/automatic-sales
 */2 * * * *|120|api/v1/cron/fiscal-drain
