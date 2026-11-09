@@ -8,7 +8,7 @@ import { carregarDestinatario } from "./destinatario-da-nota";
 import { anoDaNumeracao, inutilizarNumeroQueimado, podeInutilizar } from "./inutilizacao-automatica";
 import { destinoAposFalha, eRetentavel } from "./fila";
 import { FALTA_EMISSOR, provedorStub, resolverProvedor, type ResultadoDeEmissao } from "./provedor";
-import { devolverNumeroDaNota, falhouAntesDaSefaz, reservarNumeroDaNota } from "./numeracao";
+import { devolverNumeroDaNota, podeDevolverNumero, reservarNumeroDaNota } from "./numeracao";
 import { resolverProdutosDosItens } from "./produto-do-item";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped } from "./sped-payload";
@@ -339,15 +339,40 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   }
 
   // Número consumido sem ter saído daqui: devolve, para a sequência continuar
-  // de onde parou (certificado, validação, configuração — nada transmitido).
-  // A devolução desfaz as DUAS metades (contador e linha da nota); ver
-  // `devolverNumeroDaNota`.
-  if (numeroDaNota !== null && falhouAntesDaSefaz(resultado)) {
-    await devolverNumeroDaNota(admin, nota.organization_id, numeroDaNota, nota.id);
-  } else if (numeroDaNota !== null && resultado.numero == null) {
-    // A SEFAZ respondeu mas não repetiu o número: o da reserva é o que foi
-    // transmitido, e é ele que fica gravado.
-    resultado = { ...resultado, numero: numeroDaNota };
+  // de onde parou (falha local ou RECUSA DEFINITIVA da SEFAZ — ver
+  // `podeDevolverNumero`). A devolução desfaz as DUAS metades (contador e linha
+  // da nota); ver `devolverNumeroDaNota`.
+  //
+  // ─── POR QUE A REJEIÇÃO TAMBÉM DEVOLVE ─────────────────────────────────
+  //
+  // Rejeição (232 IE não informada, 234 IE não vinculada, 210 IE inválida) é
+  // documento NÃO autorizado: a SEFAZ descarta a nota e o número continua
+  // livre. Sem devolver, cada recusa abria um buraco na série e a reemissão
+  // pegava o número seguinte. Medido em 06/11/2026: 4595/4596 e 4602/4604
+  // viraram buracos, e as notas saíram como 4597, 4603 e 4605.
+  //
+  // Se outra emissão já tomou o número seguinte, a devolução falha (função de
+  // banco) e o número continua nesta nota — visível para inutilização.
+  let numeroDevolvido = false;
+  if (numeroDaNota !== null) {
+    if (podeDevolverNumero(resultado)) {
+      numeroDevolvido = await devolverNumeroDaNota(
+        admin,
+        nota.organization_id,
+        numeroDaNota,
+        nota.id,
+      );
+    }
+    if (numeroDevolvido) {
+      // O número voltou ao contador e saiu da linha: a nota não tem mais
+      // número, e `finalizar` não pode regravá-lo nem inutilizá-lo.
+      nota.numero = null;
+      resultado = { ...resultado, numero: null };
+    } else if (resultado.numero == null) {
+      // A SEFAZ respondeu mas não repetiu o número: o da reserva é o que foi
+      // transmitido, e é ele que fica gravado.
+      resultado = { ...resultado, numero: numeroDaNota };
+    }
   }
 
   if (resultado.status === "autorizada") {
@@ -495,10 +520,12 @@ async function finalizar(
   // ─── O NÚMERO QUEIMADO VIRA INUTILIZAÇÃO ────────────────────────────────
   //
   // A reserva acontece ANTES da transmissão (é o que impede duas notas com o
-  // mesmo `nNF`). Quando a SEFAZ REJEITA, o número não pertence mais a nota
-  // nenhuma: a próxima tentativa pega outro. Medido em 05/11/2026, quatro
-  // números (4580/4581/4583/4587) ficaram como buraco na série — obrigação
-  // acessória que não se resolve sozinha.
+  // mesmo `nNF`). Quando a SEFAZ rejeita de forma DEFINITIVA e o número NÃO
+  // pôde voltar ao contador (outra emissão já tomou o seguinte), ele não
+  // pertence mais a nota nenhuma: a próxima tentativa pega outro. Medido em
+  // 05/11/2026, quatro números (4580/4581/4583/4587) ficaram como buraco na
+  // série — obrigação acessória que não se resolve sozinha. A rejeição que
+  // devolveu o número (`numeroDevolvido`) não chega aqui: não há buraco.
   //
   // Só para recusa DEFINITIVA (`podeInutilizar`): timeout e lote em
   // processamento podem ter virado nota, e inutilizar seria declarar morto um

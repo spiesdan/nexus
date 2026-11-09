@@ -4,24 +4,36 @@
  * ─── O problema medido ──────────────────────────────────────────────────────
  *
  * A emissão reserva o número ANTES de transmitir (é o que impede duas notas de
- * saírem com o mesmo `nNF`). Quando a SEFAZ REJEITA a nota — 905, 232, 696,
- * 778 —, o número fica consumido: a próxima tentativa reserva outro e a nota
- * passa a ter o número novo. O antigo não pertence a nota nenhuma.
+ * saírem com o mesmo `nNF`). Quando a SEFAZ responde de forma AMBÍGUA — timeout,
+ * lote em processamento —, o número fica consumido: a próxima tentativa reserva
+ * outro e o antigo não pertence a nota nenhuma.
  *
- * Medido nesta instalação em 05/11/2026: 4580, 4581, 4583 e 4587 viraram
- * buracos na sequência da série 1 — **quatro números que a SEFAZ nunca soube
- * que não seriam usados**. Buraco de numeração é obrigação acessória: tem de
- * ser inutilizado, senão a escrituração do cliente não fecha com a SEFAZ.
+ * ─── A REJEIÇÃO NÃO QUEIMA MAIS O NÚMERO (corrigido em 09/11/2026) ─────────
+ *
+ * Rejeição é documento NÃO autorizado: o número continua livre e a mesma nota
+ * deve ser reenviada com ele. O dreno agora devolve o número ao contador nesse
+ * caso (`podeDevolverNumero`) e o buraco deixa de existir. Medido antes da
+ * correção: 4595/4596 (duas rejeições 210) e 4602/4604 (232 e 234) viraram
+ * buracos na série 1, e as notas saíram como 4597, 4603 e 4605.
+ *
+ * Medido em 05/11/2026: 4580, 4581, 4583 e 4587 viraram buracos na sequência
+ * da série 1 — **quatro números que a SEFAZ nunca soube que não seriam
+ * usados**. Buraco de numeração é obrigação acessória: tem de ser inutilizado,
+ * senão a escrituração do cliente não fecha com a SEFAZ. Esta automação
+ * continua valendo para o número que NÃO pôde voltar (outra emissão tomou o
+ * seguinte) e para os buracos anteriores à correção.
  *
  * ─── Quando NÃO inutilizar ──────────────────────────────────────────────────
  *
  * - **Falha antes da SEFAZ** (validação, certificado, XML): o número é
  *   devolvido ao contador por `devolverNumeroDaNota` — não existe buraco.
+ * - **Rejeição definitiva que voltou ao contador**: idem — `podeDevolverNumero`
+ *   devolveu o número, então não há buraco a inutilizar.
  * - **Resposta ambígua** (timeout, lote em processamento, 108/109): a SEFAZ
  *   pode ter recebido a nota. Inutilizar seria declarar morto um número que
  *   pode estar vivo.
- * - **Duplicidade (204/539)**: o número já existe no fisco — inutilizar é
- *   recusado e, pior, esconde o fato de que há nota com ele.
+ * - **Duplicidade (204/205/218/539)**: o número já existe no fisco —
+ *   inutilizar é recusado e, pior, esconde o fato de que há nota com ele.
  * - **Denegada**: a nota existe (denegada tem protocolo). O número foi usado.
  *
  * ─── E o buraco antigo? ─────────────────────────────────────────────────────
@@ -35,6 +47,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { audit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 
+import { cstatNumerico } from "./cstat";
 import { transmitirInutilizacaoRegistrada } from "./transmissao";
 
 export const MOTIVO_MIN = 15;
@@ -42,12 +55,14 @@ export const MOTIVO_MAX = 255;
 
 /**
  * `cStat` em que o número NÃO pode ser inutilizado: a nota existe no fisco
- * (100/150/204/539) ou a resposta não é definitiva (103/104/105/108/109).
+ * (100/150/204/205/218/539) ou a resposta não é definitiva (103/104/105/108/109).
  */
 const CSTAT_COM_NUMERO_NO_FISCO = new Set([
   "100",
   "150",
   "204",
+  "205",
+  "218",
   "539",
   "103",
   "104",
@@ -64,10 +79,12 @@ export function podeInutilizar(resultado: {
   if (!resultado || resultado.status === "autorizada" || resultado.status === "denegada") {
     return false;
   }
-  const cstat = (resultado.sefaz_cstat ?? "").trim();
+  // O sidecar grava "SEFAZ_232", a SEFAZ devolve "232": sem normalizar, a
+  // inutilização automática nunca reconhecia as rejeições reais.
+  const cstat = cstatNumerico(resultado.sefaz_cstat);
   // Só código NUMÉRICO de rejeição: "VALIDACAO"/"XML_INVALIDO" são locais, e
   // timeout/lote em processamento não têm cStat nenhum.
-  if (!/^\d{3}$/.test(cstat)) return false;
+  if (!cstat) return false;
   return !CSTAT_COM_NUMERO_NO_FISCO.has(cstat);
 }
 
