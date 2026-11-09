@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-import { describe, expect, it } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useRealtimeChannel } from "@/hooks/realtime/useRealtimeChannel";
 
 /**
  * O CANAL QUE CAIU TEM DE VOLTAR SOZINHO.
@@ -45,8 +48,31 @@ describe("o canal volta sozinho", () => {
 
   it("monta canal NOVO a cada tentativa", () => {
     // Reassinar o mesmo objeto devolve SUBSCRIBED e não entrega nada.
-    expect(FONTE).toMatch(/supabase\.removeChannel\(active\);\s*\n\s*montar\(\);/);
-    expect(FONTE).toMatch(/supabase\.channel\(`\$\{channelName\}#\$\{tentativas\}`\)/);
+    expect(FONTE, "a remoção do canal velho não é aguardada").toMatch(
+      /await supabase\.removeChannel\(velho\)/,
+    );
+    expect(FONTE, "o canal novo não tem nome próprio por tentativa").toMatch(
+      /supabase\.channel\(`\$\{channelName\}#\$\{geracao\+\+\}`\)/,
+    );
+  });
+
+  it("o nome do canal NÃO usa o contador que zera no SUBSCRIBED", () => {
+    /**
+     * ⚠️ ESTE É O DEFEITO QUE DERRUBOU O APP EM 09/11/2026.
+     *
+     * O nome era `#${tentativas}`, e `tentativas` volta a zero no SUBSCRIBED.
+     * A retomada então pedia `channel("#1")` — e o supabase-js DEVOLVE o canal
+     * existente quando o nome repete. Como `removeChannel` é assíncrono, o
+     * objeto ainda estava na lista: o `subscribe()` nele respondia CLOSED na
+     * hora, o que agendava outra retomada de 1s. Laço eterno, um por canal,
+     * cada volta invalidando as queries da tela.
+     *
+     * O nome passou a sair de `geracao`, que NUNCA volta a zero.
+     */
+    expect(FONTE, "o nome do canal voltou a usar o contador que zera").not.toMatch(
+      /channelName\}#\$\{tentativas\}/,
+    );
+    expect(FONTE).toMatch(/let geracao = 0;/);
   });
 
   it("ao voltar, FORÇA uma busca — o que passou não chega sozinho", () => {
@@ -179,3 +205,106 @@ describe("a segunda rede: voltar para a aba", () => {
     expect(fonte).toMatch(/refetchOnWindowFocus: false/);
   });
 });
+
+// ─── A PROVA COMPORTAMENTAL DO LAÇO ────────────────────────────────────────
+//
+// As asserções acima leem o texto do hook. A que segue o EXECUTA contra um
+// dublê que imita a semântica real do supabase-js (`channel(nome)` devolve o
+// canal existente; `removeChannel` responde depois). Foi essa combinação — e
+// não uma linha isolada — que produziu o laço de 1 Hz.
+
+const fake = vi.hoisted(() => {
+  type Bruto = { topic: string; removido: boolean; cb: ((s: string) => void) | null };
+  const criados: Bruto[] = [];
+  const eventos: string[] = [];
+
+  function objeto(bruto: Bruto) {
+    const canal = {
+      topic: bruto.topic,
+      on() {
+        return canal;
+      },
+      subscribe(cb: (s: string) => void) {
+        bruto.cb = cb;
+        return canal;
+      },
+    };
+    return canal;
+  }
+
+  const client = {
+    channel(topic: string) {
+      const existente = criados.find((c) => c.topic === topic && !c.removido);
+      if (existente) {
+        eventos.push(`reuso:${topic}`);
+        return objeto(existente);
+      }
+      const bruto: Bruto = { topic, removido: false, cb: null };
+      criados.push(bruto);
+      eventos.push(`cria:${topic}`);
+      return objeto(bruto);
+    },
+    async removeChannel(canal: { topic: string }) {
+      eventos.push(`remove:inicio:${canal.topic}`);
+      await Promise.resolve(); // o leave responde depois, como no cliente real
+      const alvo = criados.find((c) => c.topic === canal.topic);
+      if (alvo) alvo.removido = true;
+      eventos.push(`remove:fim:${canal.topic}`);
+    },
+  };
+
+  return { criados, eventos, client };
+});
+
+vi.mock("@/lib/supabase/browser", () => ({ createClient: () => fake.client }));
+
+describe("três quedas seguidas não podem virar um laço de 1 Hz", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    fake.criados.length = 0;
+    fake.eventos.length = 0;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("cada retomada cria um canal com nome PRÓPRIO e só depois de remover o anterior", async () => {
+    renderHook(() =>
+      useRealtimeChannel({
+        name: "teste",
+        postgresChanges: { event: "*", table: "messages" },
+        onChange: () => {},
+      }),
+    );
+
+    const atual = () => fake.criados.at(-1)!;
+    act(() => atual().cb!("SUBSCRIBED"));
+
+    for (let i = 0; i < 3; i++) {
+      act(() => atual().cb!("CLOSED"));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      act(() => atual().cb!("SUBSCRIBED"));
+    }
+
+    const nomes = fake.criados.map((c) => c.topic);
+    expect(fake.criados, "a remoção não recriou o canal").toHaveLength(4);
+    expect(new Set(nomes).size, `nome repetido: ${nomes.join(", ")}`).toBe(4);
+    expect(
+      fake.eventos.filter((e) => e.startsWith("reuso:")),
+      "o cliente reaproveitou um canal — é isto que devolve CLOSED na hora",
+    ).toEqual([]);
+
+    for (let i = 1; i < nomes.length; i++) {
+      const fimDaRemocao = fake.eventos.indexOf(`remove:fim:${nomes[i - 1]}`);
+      const criacao = fake.eventos.indexOf(`cria:${nomes[i]}`);
+      expect(
+        fimDaRemocao,
+        `o canal ${nomes[i]} nasceu antes de ${nomes[i - 1]} terminar de sair`,
+      ).toBeLessThan(criacao);
+    }
+  });
+});
+

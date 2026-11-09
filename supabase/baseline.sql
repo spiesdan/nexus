@@ -25197,6 +25197,41 @@ revoke execute on function public.fn_sincronizar_pedido_mercos(uuid, jsonb, bool
 grant execute on function public.fn_sincronizar_pedido_mercos(uuid, jsonb, boolean) to service_role;
 
 
+-- ---- 0300 — as notas da conversa entram na publicação do realtime ----
+--
+-- Apêndice idempotente da migration 0300. `conversation_notes` era assinada por
+-- `hooks/notifications/useCrmAlerts.ts` (montado no AppShell, em toda página) e
+-- por `hooks/inbox/useConversationNotes.ts`, mas não estava na publicação: o
+-- Realtime recusava a assinatura, o hook entrava em retomada de 1 Hz e cada
+-- reassinatura invalidava as queries da tela. Medido em 09/11/2026: ~45 listas
+-- de conversa por 10 s, ~900 validações de sessão por minuto, load 15 em 2
+-- vCPU e o inbox em "algo deu errado". Sem a tabela na publicação, o gatilho do
+-- laço não existe mais.
+--
+-- `replica identity full` para o DELETE casar `filter: conversation_id=eq.<id>`
+-- (com a identidade padrão o payload traz só a PK). Notas são poucas e escritas
+-- à mão — o custo de WAL é irrelevante aqui.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication where pubname = 'supabase_realtime'
+  ) then
+    create publication supabase_realtime;
+  end if;
+
+  if not exists (
+    select 1 from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'conversation_notes'
+  ) then
+    execute 'alter publication supabase_realtime add table public.conversation_notes';
+  end if;
+end $$;
+
+alter table public.conversation_notes replica identity full;
+
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

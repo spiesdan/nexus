@@ -123,6 +123,23 @@ export function useRealtimeChannel(opts: UseRealtimeChannelOpts): {
     let active: RealtimeChannel | null = null;
     let cancelado = false;
     let tentativas = 0;
+    /**
+     * ⚠️ MONOTÔNICO: NUNCA VOLTA A ZERO — nem quando o canal volta a assinar.
+     *
+     * Era `tentativas` que nomeava o canal, e ela ZERAVA no SUBSCRIBED. A
+     * consequência medida em produção (09/11/2026) foi um laço de 1 Hz por
+     * canal, com o app inteiro lento:
+     *
+     *   `channel(name)` do supabase-js DEVOLVE o canal existente quando o nome
+     *   repete; `removeChannel` é ASSÍNCRONO. Então a retomada removia e
+     *   remontava no mesmo tique, reaproveitava o objeto que ainda estava
+     *   saindo, e o `subscribe()` nele respondia CLOSED na hora — o que
+     *   agendava outra retomada de 1s. Para sempre, com o nome preso em `#1`.
+     *
+     * Cada tentativa agora tem nome PRÓPRIO, então `channel()` sempre cria um
+     * objeto novo; e a remoção é AGUARDADA antes de montar (ver abaixo).
+     */
+    let geracao = 0;
     let retomada: ReturnType<typeof setTimeout> | null = null;
     setStatus("connecting");
 
@@ -137,7 +154,7 @@ export function useRealtimeChannel(opts: UseRealtimeChannelOpts): {
     const montar = () => {
       if (cancelado) return;
 
-      let novo: RealtimeChannel = supabase.channel(`${channelName}#${tentativas}`);
+      let novo: RealtimeChannel = supabase.channel(`${channelName}#${geracao++}`);
       if (postgresChanges) {
         novo = novo.on(
           "postgres_changes",
@@ -191,9 +208,25 @@ export function useRealtimeChannel(opts: UseRealtimeChannelOpts): {
           const espera = Math.min(30_000, 1_000 * 2 ** tentativas);
           tentativas++;
           if (retomada) clearTimeout(retomada);
-          retomada = setTimeout(() => {
+          retomada = setTimeout(async () => {
             if (cancelado) return;
-            if (active) supabase.removeChannel(active);
+            // AGUARDA a remoção: `removeChannel` só tira o canal da lista
+            // DEPOIS que o leave responde. Sem o `await`, a criação seguinte
+            // encontrava o objeto velho pelo nome e o `subscribe()` nele
+            // devolvia CLOSED — a origem do laço de 1 Hz descrito em `geracao`.
+            const velho = active;
+            active = null;
+            if (velho) {
+              // Falha ao remover não pode impedir a retomada: o canal novo não
+              // depende do velho, e deixar de remontar aqui devolveria a morte
+              // silenciosa que este hook existe para curar.
+              try {
+                await supabase.removeChannel(velho);
+              } catch {
+                // segue
+              }
+            }
+            if (cancelado) return;
             montar();
           }, espera);
         }
@@ -206,7 +239,7 @@ export function useRealtimeChannel(opts: UseRealtimeChannelOpts): {
       cancelado = true;
       if (retomada) clearTimeout(retomada);
       if (active) {
-        supabase.removeChannel(active);
+        void supabase.removeChannel(active);
         active = null;
       }
     };
