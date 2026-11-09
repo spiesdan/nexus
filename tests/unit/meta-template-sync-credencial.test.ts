@@ -77,6 +77,7 @@ describe("POST /channels/templates — credencial da sessão, não só do ambien
       phoneNumberId: PHONE,
       token: "token-da-sessao",
       graphVersion: "v22.0",
+      wabaId: WABA,
       source: "session",
     });
 
@@ -103,6 +104,7 @@ describe("POST /channels/templates — credencial da sessão, não só do ambien
       phoneNumberId: "999",
       token: "token-do-env",
       graphVersion: "v22.0",
+      wabaId: null,
       source: "env",
     });
 

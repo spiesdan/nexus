@@ -45,6 +45,19 @@ export interface MetaCredentials {
   phoneNumberId: string;
   token: string;
   graphVersion: string;
+  /**
+   * `channel_sessions.meta_waba_id` — a conta do WhatsApp Business desta sessão.
+   *
+   * É o discriminante do espelho de MODELOS: `syncTemplates` grava `waba_id` e
+   * deixa `channel_session_id` nulo, porque dois números da mesma WABA
+   * compartilham o mesmo modelo. Sem ele o adapter filtraria por uma coluna que
+   * o sincronizador nunca preenche e diria `meta_template_missing` para um
+   * modelo APROVADO.
+   *
+   * `null` quando a credencial veio do ambiente sem `META_WABA_ID` — o
+   * chamador cai no filtro por conexão, que é o máximo que dá para saber.
+   */
+  wabaId: string | null;
   /** De onde veio — aparece no log de diagnóstico, nunca no payload. */
   source: "session" | "env";
 }
@@ -72,7 +85,15 @@ export function metaCredsFromEnv(): MetaCredentials | null {
   const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
   const token = process.env.META_SYSTEM_USER_TOKEN;
   if (!phoneNumberId || !token) return null;
-  return { phoneNumberId, token, graphVersion: graphVersion(), source: "env" };
+  return {
+    phoneNumberId,
+    token,
+    graphVersion: graphVersion(),
+    // Opcional no `.env`: instalação antiga de número único pode não ter a WABA
+    // declarada, e aí o look-up de modelo cai no filtro por conexão.
+    wabaId: process.env.META_WABA_ID?.trim() || null,
+    source: "env",
+  };
 }
 
 /**
@@ -103,7 +124,7 @@ export async function metaCredsForPhoneNumberId(
   const base = () =>
     admin
       .from("channel_sessions")
-      .select("meta_phone_number_id, meta_token_encrypted")
+      .select("meta_phone_number_id, meta_token_encrypted, meta_waba_id")
       .eq("organization_id", organizationId)
       .eq("meta_phone_number_id", phoneNumberId);
   const { data, error } = await queryTolerantToMissingArchived(
@@ -129,6 +150,7 @@ export async function metaCredsForPhoneNumberId(
     phoneNumberId: data.meta_phone_number_id as string,
     token,
     graphVersion: graphVersion(),
+    wabaId: ((data.meta_waba_id as string | null) ?? null) || null,
     source: "session",
   };
 }

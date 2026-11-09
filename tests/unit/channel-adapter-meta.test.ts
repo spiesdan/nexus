@@ -8,7 +8,7 @@ import { getAdapter } from "@/lib/channels";
  * chamada à Graph API — foi assim que estes testes vermelharam quando a resolução
  * por sessão entrou, e o vermelho foi correto.
  */
-const sessaoNoBanco: { token: string | null } = { token: null };
+const sessaoNoBanco: { token: string | null; wabaId?: string | null } = { token: null };
 
 /**
  * O espelho de modelos que `sendTemplate` lê para montar o payload. `null` =
@@ -30,7 +30,11 @@ function cadeia(): Record<string, unknown> {
   const alvo: Record<string, unknown> = {
     maybeSingle: async () => ({
       data: sessaoNoBanco.token
-        ? { meta_phone_number_id: "sessao-pn", meta_token_encrypted: "\\xdeadbeef" }
+        ? {
+            meta_phone_number_id: "sessao-pn",
+            meta_token_encrypted: "\\xdeadbeef",
+            meta_waba_id: sessaoNoBanco.wabaId ?? null,
+          }
         : null,
       error: null,
     }),
@@ -41,13 +45,19 @@ function cadeia(): Record<string, unknown> {
   return alvo;
 }
 
-/** Cadeia de `meta_templates` — filtros por org/nome/idioma/conexão são no-op. */
+/** Filtros aplicados ao espelho — prova QUAL discriminante o adapter usou. */
+const filtrosDoEspelho: Array<{ coluna: string; valor: string }> = [];
+
+/** Cadeia de `meta_templates` — terminal devolve a linha; filtros são registrados. */
 function cadeiaDeModelos(): Record<string, unknown> {
   const alvo: Record<string, unknown> = {
     maybeSingle: async () => ({ data: modeloNoBanco.linha, error: null }),
   };
   alvo.select = () => alvo;
-  alvo.eq = () => alvo;
+  alvo.eq = (coluna: string, valor: string) => {
+    filtrosDoEspelho.push({ coluna, valor });
+    return alvo;
+  };
   alvo.limit = () => alvo;
   return alvo;
 }
@@ -72,6 +82,9 @@ function configurar() {
   vi.stubEnv("META_PHONE_NUMBER_ID", "1103328999528818");
   vi.stubEnv("META_SYSTEM_USER_TOKEN", "tok");
   vi.stubEnv("META_GRAPH_VERSION", "v22.0");
+  // O caminho do env não conhece a WABA a menos que ela seja declarada; fixar
+  // vazio evita que um `.env` da máquina mude o discriminante do teste.
+  vi.stubEnv("META_WABA_ID", "");
 }
 
 function stubFetch(resposta: unknown, ok = true) {
@@ -88,7 +101,9 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   sessaoNoBanco.token = null;
+  sessaoNoBanco.wabaId = null;
   modeloNoBanco.linha = null;
+  filtrosDoEspelho.length = 0;
 });
 
 describe("adapter meta_cloud — endereçamento", () => {
@@ -315,6 +330,58 @@ describe("adapter meta_cloud — template pela credencial da SESSÃO", () => {
       type: "body",
       parameters: [{ type: "text", text: "Maria" }],
     });
+  });
+
+  it("resolve o modelo pela WABA da sessão — o sincronizador não grava channel_session_id", async () => {
+    configurar();
+    modeloAprovado();
+    // Sessão com credencial gravada: é ela que carrega a WABA (o caminho do
+    // env não tem esse dado). O espelho, como `syncTemplates` grava, tem
+    // `waba_id` e `channel_session_id` NULO.
+    sessaoNoBanco.token = "tok-sessao";
+    sessaoNoBanco.wabaId = "waba-da-sessao";
+    const spy = stubFetch({ messages: [{ id: "wamid.WABA" }] });
+
+    const r = await a().sendTemplate!({
+      organizationId: ORG,
+      sessionRef: "1103328999528818",
+      channelSessionId: "sess-oficial",
+      to: "5531998966398",
+      name: "boas_vindas",
+      language: "pt_BR",
+      values: { "1": "Maria" },
+    });
+
+    expect(r).toEqual({ externalId: "wamid.WABA" });
+    expect(spy).toHaveBeenCalledTimes(1);
+    // O discriminante é a WABA. Filtrar por `channel_session_id` aqui é o
+    // defeito que fazia modelo APROVADO responder `meta_template_missing`.
+    expect(filtrosDoEspelho).toContainEqual({ coluna: "waba_id", valor: "waba-da-sessao" });
+    expect(filtrosDoEspelho.some((f) => f.coluna === "channel_session_id")).toBe(false);
+  });
+
+  it("sem WABA na credencial, mantém o filtro por conexão (linha do parceiro)", async () => {
+    configurar();
+    modeloAprovado();
+    sessaoNoBanco.token = "tok-sessao";
+    sessaoNoBanco.wabaId = null;
+    stubFetch({ messages: [{ id: "wamid.SEM-WABA" }] });
+
+    await a().sendTemplate!({
+      organizationId: ORG,
+      sessionRef: "1103328999528818",
+      channelSessionId: "sess-oficial",
+      to: "5531998966398",
+      name: "boas_vindas",
+      language: "pt_BR",
+      values: { "1": "Maria" },
+    });
+
+    expect(filtrosDoEspelho).toContainEqual({
+      coluna: "channel_session_id",
+      valor: "sess-oficial",
+    });
+    expect(filtrosDoEspelho.some((f) => f.coluna === "waba_id")).toBe(false);
   });
 
   it("modelo fora do espelho lança ANTES do POST — não gasta chamada para receber 132000", async () => {

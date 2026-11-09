@@ -284,10 +284,20 @@ export const metaCloudAdapter: ChannelAdapter = {
       .eq("organization_id", input.organizationId)
       .eq("name", input.name)
       .eq("language", input.language);
-    // Dois números da mesma organização podem ter o MESMO nome de modelo com
-    // corpos diferentes. Filtrar pela conexão é o que impede mandar o payload
-    // de um no número do outro.
-    if (input.channelSessionId) {
+    // O discriminante do espelho é a WABA, não a conexão.
+    //
+    // `syncTemplates` grava `waba_id` e deixa `channel_session_id` NULO, porque
+    // dois números da mesma WABA compartilham o mesmo modelo — o modelo é da
+    // conta, não da linha. Filtrar pela conexão fazia um modelo APPROVED
+    // responder `meta_template_missing` e a campanha pausar (medido em
+    // 09/11/2026: `kit_promocional_novos_clientes` no espelho, sessão WORKING).
+    //
+    // O filtro por conexão continua como fallback para quem não tem a WABA na
+    // credencial (env de instalação antiga) e para as linhas do caminho de
+    // parceiro, que grava as duas colunas.
+    if (creds.wabaId) {
+      consulta = consulta.eq("waba_id", creds.wabaId);
+    } else if (input.channelSessionId) {
       consulta = consulta.eq("channel_session_id", input.channelSessionId);
     }
     const { data: linha, error } = await consulta.limit(1).maybeSingle();
