@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.8] — 2026-11-09
+
+### Corrigido
+
+- **O PDF do pedido não trazia o vendedor quando o pedido vem do Mercos** O PDF do pedido (e do lote) saía com o campo "Vendedor" em branco — o traço
+  (--). A montagem do PDF só olhava o vínculo com usuário (`vendedor_user_id`);
+  pedidos de origem Mercos gravam o vendedor no próprio pedido ("VENDEDOR JB"),
+  sem casar com usuário.
+
+  Agora o nome que o próprio pedido já registrou é o fallback: o vendedor aparece
+  no PDF pelo que o pedido carregou, e quem foi resolvido por usuário continua
+  pelo cadastro. Nenhum fluxo de digitação mudou — só o impresso volta a nomear a
+  representada.
+
 ## [1.44.7] — 2026-11-09
 
 ### Corrigido
