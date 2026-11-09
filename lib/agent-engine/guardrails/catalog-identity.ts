@@ -17,12 +17,15 @@
  * no-op, como os demais). Sem resultado registrado não há contra o que
  * conferir, e chutar seria vetar preço vindo de RAG/prompt do tenant.
  *
- * Três verificações, todas determinísticas:
+ * Quatro verificações, todas determinísticas:
  *
  * 1. preço citado ∈ preços devolvidos (cenário G);
- * 2. produto citado como resposta sendo `relacionada` com `direta` ignorada e
- *    sem marca explícita de alternativa (o caso da vassoura);
- * 3. código citado ∄ nos devolvidos (cenário H).
+ * 2. código citado ∄ nos devolvidos (cenário H);
+ * 3. amostra apresentada como catálogo: a busca cortou em `limite`, e a
+ *    resposta cita preço sem dizer que há mais opções (o caso do papel
+ *    higiênico, medido em 2026-11-09);
+ * 4. produto citado como resposta sendo `relacionada` com `direta` ignorada e
+ *    sem marca explícita de alternativa (o caso da vassoura).
  *
  * Veto volta como erro instrutivo (o modelo reformula no mesmo turno); o trace
  * registra camada + código, nunca o trecho (pode carregar PII).
@@ -39,12 +42,22 @@ export interface ItemCitavel {
 
 export interface CatalogoDoTurno {
   itens: ItemCitavel[];
+  /**
+   * Uma entrada por chamada a `crm_search_products` NESTE turno.
+   *
+   * `total_encontrados` é quantos produtos casaram o pedido antes do corte do
+   * `limite`; `devolvidos` é quantos vieram. Quando o primeiro é maior, a
+   * resposta do modelo está falando de uma AMOSTRA — e amostra apresentada
+   * como catálogo é o defeito que a checagem 4 barra.
+   */
+  buscas?: Array<{ total_encontrados: number; devolvidos: number }>;
 }
 
 export type CatalogIdentityCode =
   | 'catalogo_preco_inconsistente'
   | 'catalogo_troca_por_acessorio'
-  | 'catalogo_codigo_desconhecido';
+  | 'catalogo_codigo_desconhecido'
+  | 'catalogo_amostra_como_total';
 
 export interface CatalogIdentityVerdict {
   ok: boolean;
@@ -106,9 +119,21 @@ export function codigosCitadosNoCorpo(body: string): string[] {
 const MARCADORES_ALTERNATIVA =
   /\b(mas|por[eé]m|contudo|alternativa|tamb[eé]m temos|tamb[eé]m tem|outra op[cç][aã]o|se (te |lhe )?interessar|poderia servir|n[aã]o temos|n[aã]o encontrei|infelizmente)\b/i;
 
+/**
+ * O que faz uma resposta sobre uma AMOSTRA ser honesta: dizer que há mais.
+ *
+ * Sem este marcador a resposta está tratando as N primeiras como o catálogo —
+ * foi o que aconteceu em 2026-11-09 ("oi, tem papel higiênico?" → 2 produtos
+ * de 8, sem uma palavra sobre os outros 6). A lista é generosa de propósito:
+ * qualquer forma de "há mais" serve, e o gate só arma quando há preço citado.
+ */
+const MARCADORES_DE_COMPLETUDE =
+  /\b(outras?|demais|mais)\s+(op[cç][õo]es|op[cç][aã]o|modelos?|tamanhos?|varia[cç][õo]es|vers[õo]es|itens|faixas?)\b|\bno total\b|\bao todo\b|\bal[eé]m d(?:ess[ae]s?|isso)\b|\btemos\s+\d+\b|\bs[aã]o\s+\d+\s+(?:op[cç][õo]es|modelos|tipos|tamanhos)\b|\bentre\s+\d+/i;
+
 export function validarCitacaoCatalogo(
   body: string,
   itens: readonly ItemCitavel[],
+  buscas?: CatalogoDoTurno['buscas'],
 ): CatalogIdentityVerdict {
   if (itens.length === 0) return { ok: true };
   const corpo = corpoNormalizado(body);
@@ -143,7 +168,39 @@ export function validarCitacaoCatalogo(
     }
   }
 
-  // 3. Relacionada apresentada como SE fosse o pedido, com direta ignorada.
+  // 3. Amostra apresentada como catálogo. Dois gatilhos:
+  //    a) a busca CRIOU a amostra (o `limite` cortou);
+  //    b) o modelo criou a amostra sozinho: devolveram 3+ opções e ele citou
+  //       preço de menos de um terço delas, sem dizer que há mais.
+  // Só arma quando a resposta está APRESENTANDO produtos (cita preço): quem
+  // pergunta "qual tamanho você precisa?" sem preço não afirma completude e
+  // não pode ser vetado.
+  const precosNoTurno = new Set(itens.map((i) => i.preco_cents));
+  const citados = new Set(
+    precosCitadosNoCorpo(body).filter((c) => precosNoTurno.has(c)),
+  );
+  const amostra = (buscas ?? []).find(
+    (b) =>
+      b.total_encontrados > b.devolvidos ||
+      (b.devolvidos >= 3 && citados.size * 3 < b.devolvidos),
+  );
+  if (amostra !== undefined && citados.size > 0 && !MARCADORES_DE_COMPLETUDE.test(body)) {
+    const quantas =
+      amostra.total_encontrados > amostra.devolvidos
+        ? `a busca devolveu ${amostra.devolvidos} das ${amostra.total_encontrados} opções`
+        : `a busca devolveu ${amostra.devolvidos} opções`;
+    return {
+      ok: false,
+      code: 'catalogo_amostra_como_total',
+      reason:
+        `${quantas} e você citou preço de ${citados.size} sem dizer que há mais. Diga QUANTAS ` +
+        `opções existem e resuma por faixa (campo "resumo.faixas" da busca) — se não couber ` +
+        `listar, diga que há mais e pergunte qual. Não responda como se a sua lista fosse o ` +
+        `catálogo inteiro.`,
+    };
+  }
+
+  // 4. Relacionada apresentada como SE fosse o pedido, com direta ignorada.
   const mencionadas = new Set(
     itens.filter((i) => menciona(corpo, i.nome) || mencionaCodigo(corpo, i.codigo)).map((i) => i.codigo),
   );

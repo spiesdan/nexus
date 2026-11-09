@@ -149,7 +149,7 @@ export interface GateContext {
    * modelo não têm contra o que conferir — e chutar seria vetar preço vindo
    * de RAG/prompt do tenant).
    */
-  catalogo?: { itens: ItemCitavel[] } | null;
+  catalogo?: { itens: ItemCitavel[]; buscas?: Array<{ total_encontrados: number; devolvidos: number }> } | null;
   /**
    * Disclosure "assistente virtual" (F4-05; blueprint 5.7) — carregado por ponteiro sob o
    * lock. `template` null = org não configurou disclosure (gate no-op). `isFirstOutbound`
@@ -388,7 +388,7 @@ export const catalogIdentityGate: Gate = {
   name: 'catalog_identity',
   evaluate: (ctx) => {
     if (!ctx.catalogo || ctx.catalogo.itens.length === 0) return { pass: true };
-    const veredito = validarCitacaoCatalogo(ctx.body, ctx.catalogo.itens);
+    const veredito = validarCitacaoCatalogo(ctx.body, ctx.catalogo.itens, ctx.catalogo.buscas);
     return veredito.ok
       ? { pass: true }
       : {
@@ -858,7 +858,7 @@ export interface RunBeforeSendArgs {
    * Resultado das buscas de catálogo NESTE turno (F4-10) — ver `GateContext.catalogo`.
    * Ausente = gate no-op.
    */
-  catalogo?: { itens: ItemCitavel[] };
+  catalogo?: { itens: ItemCitavel[]; buscas?: Array<{ total_encontrados: number; devolvidos: number }> };
   /**
    * Enviado SÓ se TODOS os gates passarem — ChannelAdapter (própria tx/idempotência). Recebe o
    * corpo FINAL (o disclosureGate F4-05 pode emendá-lo via `amendBody`): quem monta o send DEVE

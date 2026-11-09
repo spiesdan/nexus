@@ -134,3 +134,100 @@ describe("runtime legado: extração dos itens do turno + fallback", () => {
     expect(validarCitacaoCatalogo(FALLBACK_IDENTIDADE_LEGADO, TURNO_VASSOURA).ok).toBe(true);
   });
 });
+
+/**
+ * O caso do papel higiênico (2026-11-09): a busca devolveu 8 de 8 opções com
+ * `limite: 8`… mas com `limite: 2` a resposta citou os 2 preços e chamou
+ * aquilo de "as opções". Aqui a busca foi cortada e a resposta precisa dizer.
+ */
+describe("amostra apresentada como catálogo", () => {
+  const PAPEIS: ItemCitavel[] = [
+    { codigo: "242", nome: "PAPEL HIG 8 ROLOS X 300MT FOLHA SIMPLES", preco_cents: 7200 },
+    { codigo: "243", nome: "PAPEL HIG 8 ROLOS X 300M 100% CELULOSE", preco_cents: 8200 },
+  ];
+  const CORTADA = [{ total_encontrados: 8, devolvidos: 2 }];
+
+  it("⭐ os 2 preços, sem dizer que há mais, é VETO", () => {
+    const v = validarCitacaoCatalogo(
+      "Temos sim! Folha simples R$ 72,00 e 100% celulose R$ 82,00. Qual dessas opções atende?",
+      PAPEIS,
+      CORTADA,
+    );
+    expect(v.ok).toBe(false);
+    expect(v.code).toBe("catalogo_amostra_como_total");
+  });
+
+  it("dizer o total passa — 'temos 8 opções, de 8 a 96 rolos'", () => {
+    const v = validarCitacaoCatalogo(
+      "Temos 8 opções de papel higiênico, de 8 a 96 rolos. Folha simples R$ 72,00 e celulose R$ 82,00.",
+      PAPEIS,
+      CORTADA,
+    );
+    expect(v.ok).toBe(true);
+  });
+
+  it("'há outras opções' também passa", () => {
+    const v = validarCitacaoCatalogo(
+      "Folha simples R$ 72,00. Há outras opções de 16, 24 e 96 rolos — qual tamanho você precisa?",
+      PAPEIS,
+      CORTADA,
+    );
+    expect(v.ok).toBe(true);
+  });
+
+  it("perguntar o tamanho SEM citar preço nunca é veto", () => {
+    const v = validarCitacaoCatalogo(
+      "Temos papel higiênico sim! Qual tamanho você precisa?",
+      PAPEIS,
+      CORTADA,
+    );
+    expect(v.ok).toBe(true);
+  });
+
+  it("sem corte registrado, o gate é no-op", () => {
+    const v = validarCitacaoCatalogo(
+      "Folha simples R$ 72,00 e celulose R$ 82,00.",
+      PAPEIS,
+      [{ total_encontrados: 2, devolvidos: 2 }],
+    );
+    expect(v.ok).toBe(true);
+  });
+
+  it("⭐ o caso real: 8 devolvidos, 2 citados, sem falar dos outros 6 → VETO", () => {
+    const oito: ItemCitavel[] = [
+      ...PAPEIS,
+      { codigo: "238", nome: "PAPEL HIGIENICO 16 ROLOS x 60MT", preco_cents: 2800 },
+      { codigo: "735", nome: "PAPEL HIG FOFINHO 16 ROLOS X 60M", preco_cents: 2800 },
+      { codigo: "587", nome: "PAPEL HIG FOFINHO 24 ROLOS X 30M FOLHA DUPLA", preco_cents: 4200 },
+      { codigo: "239", nome: "PAPEL HIG 48 ROLOS X 30M FOLHA DUPLA", preco_cents: 8200 },
+      { codigo: "647", nome: "PAPEL HIG FOFINHO 96 ROLOS X 60 MT FOLHA SIMPLES", preco_cents: 15000 },
+      { codigo: "241", nome: "PAPEL HIG FOFINHO 64 ROLOS X 60 MT", preco_cents: 11000 },
+    ];
+    const v = validarCitacaoCatalogo(
+      "Temos sim! Trabalhamos com fardos de papel higiênico rolão (8 rolos de 300 metros):\n" +
+        "- Folha Simples: R$ 72,00\n- 100% Celulose: R$ 82,00\nQual dessas opções atende?",
+      oito,
+      [{ total_encontrados: 8, devolvidos: 8 }],
+    );
+    expect(v.ok).toBe(false);
+    expect(v.code).toBe("catalogo_amostra_como_total");
+  });
+
+  it("listar 3 de 8 com preço já é metade do caminho — não veta", () => {
+    const oito: ItemCitavel[] = [
+      ...PAPEIS,
+      { codigo: "238", nome: "PAPEL HIGIENICO 16 ROLOS x 60MT", preco_cents: 2800 },
+      { codigo: "735", nome: "PAPEL HIG FOFINHO 16 ROLOS X 60M", preco_cents: 2800 },
+      { codigo: "587", nome: "PAPEL HIG FOFINHO 24 ROLOS X 30M FOLHA DUPLA", preco_cents: 4200 },
+      { codigo: "239", nome: "PAPEL HIG 48 ROLOS X 30M FOLHA DUPLA", preco_cents: 8200 },
+      { codigo: "647", nome: "PAPEL HIG FOFINHO 96 ROLOS X 60 MT FOLHA SIMPLES", preco_cents: 15000 },
+      { codigo: "241", nome: "PAPEL HIG FOFINHO 64 ROLOS X 60 MT", preco_cents: 11000 },
+    ];
+    const v = validarCitacaoCatalogo(
+      "Temos folha simples R$ 72,00, celulose R$ 82,00 e o fofinho de 64 rolos R$ 110,00. Qual?",
+      oito,
+      [{ total_encontrados: 8, devolvidos: 8 }],
+    );
+    expect(v.ok).toBe(true);
+  });
+});

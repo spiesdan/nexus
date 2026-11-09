@@ -216,6 +216,21 @@ const MARCADORES_ACESSORIO = new Set([
   'bicos',
   'anel',
   'aneis',
+  // Quem VENDE o item, não o item. Medido em 2026-11-09 no catálogo real da
+  // Bill Higiene: "oi, tem papel higiênico?" devolveu 3 dispensers na frente
+  // dos 8 papéis — e os dois primeiros lugares, ambos dispenser, fizeram a
+  // ferramenta disparar `empate: true` sobre a coisa errada. O modelo recebeu
+  // esse empate, escolheu 2 produtos e respondeu 2 de 8.
+  //
+  // A regra de intenção continua valendo: quem pede "quero um dispenser"
+  // casa a cabeça do nome e volta `direta` — o marcador só age quando o
+  // pedido NÃO contém a palavra.
+  'dispenser',
+  'dispensers',
+  'saboneteira',
+  'saboneteiras',
+  'suporte',
+  'suportes',
 ]);
 
 /** Categorias que dizem "sou acessório" sem precisar ler o nome. */
