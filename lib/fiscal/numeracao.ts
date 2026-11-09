@@ -28,6 +28,7 @@
  */
 import type { createAdminClient } from "@/lib/supabase/admin";
 
+import { cstatNumerico } from "./cstat";
 import type { ResultadoDeEmissao } from "./provedor";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -78,8 +79,9 @@ export async function reservarNumeroDaNota(admin: Admin, organizationId: string)
  * emissão já tomou o número seguinte), a linha MANTÉM o número e ele aparece
  * entre as puladas para inutilização — nunca some.
  *
- * Só é chamada quando `falhouAntesDaSefaz` dá true: depois de transmitir, o
- * número está queimado de propósito (reusar pode duplicar nota).
+ * Só é chamada quando `podeDevolverNumero` dá true: falha local ou rejeição
+ * DEFINITIVA da SEFAZ. Depois de uma resposta ambígua (timeout, lote em
+ * processamento) o número continua consumido — reusar pode duplicar nota.
  */
 export async function devolverNumeroDaNota(
   admin: Admin,
@@ -122,4 +124,45 @@ export function falhouAntesDaSefaz(resultado: ResultadoDeEmissao): boolean {
   }
   const erro = resultado.erro ?? "";
   return erro.startsWith("Falta ") || erro.includes("fora do ar (FISCAL_SIDECAR_URL");
+}
+
+/**
+ * O número pode voltar ao contador? — a pergunta que faltava.
+ *
+ * ─── A rejeição da SEFAZ NÃO CONSOME NUMERAÇÃO ─────────────────────────────
+ *
+ * Rejeição é documento NÃO autorizado: a SEFAZ descarta a nota e o número
+ * continua livre. Todo emissor reenvia a MESMA nota com o MESMO número depois
+ * de corrigir o cadastro. Este dreno reservava um número novo a cada tentativa
+ * e tratava a rejeição como se ela tivesse chegado ao fisco — foi assim que
+ * 4595, 4596, 4602 e 4604 viraram buraco na série 1:
+ *
+ *   4602 → rejeição 232 (IE do destinatário não informada), pedido 19451
+ *   4604 → rejeição 234 (IE não vinculada ao CNPJ), pedido 19448
+ *
+ * As notas saíram depois como 4603 e 4605, e os números recusados ficaram
+ * órfãos. Devolver o número na rejeição faz a reemissão reservar o MESMO
+ * número — não existe buraco, não existe inutilização a fazer.
+ *
+ * ─── Quando NÃO devolver ───────────────────────────────────────────────────
+ *
+ * - **Número/chave já no fisco** (204/205/218/539): duplicidade significa que
+ *   o documento existe; reusar criaria duas notas com o mesmo número.
+ * - **Resposta ambígua** (103/104/105/108/109, timeout, lote em processamento):
+ *   a SEFAZ pode ter recebido a nota. Só a certeza de recusa autoriza reusar.
+ * - **Autorizada/denegada**: o número pertence ao documento.
+ *
+ * Falha local (`falhouAntesDaSefaz`) continua devolvendo — nada foi transmitido.
+ */
+const CSTAT_JA_NO_FISCO = new Set(["204", "205", "218", "539"]);
+const CSTAT_RESPOSTA_AMBIGUA = new Set(["103", "104", "105", "108", "109"]);
+
+export function podeDevolverNumero(resultado: ResultadoDeEmissao): boolean {
+  if (resultado.status !== "erro") return false;
+  if (falhouAntesDaSefaz(resultado)) return true;
+  const cstat = cstatNumerico(resultado.sefaz_cstat);
+  // 1xx é autorização/processamento — nunca chega aqui como erro, mas se
+  // chegar é resposta ambígua, não recusa. De 2xx a 9xx são rejeições.
+  if (!/^[2-9]\d{2}$/.test(cstat)) return false;
+  return !CSTAT_JA_NO_FISCO.has(cstat) && !CSTAT_RESPOSTA_AMBIGUA.has(cstat);
 }

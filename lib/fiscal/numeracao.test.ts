@@ -4,6 +4,7 @@ import {
   devolverNumeroDaNota,
   FALTA_NUMERACAO,
   falhouAntesDaSefaz,
+  podeDevolverNumero,
   reservarNumeroDaNota,
 } from "./numeracao";
 import type { ResultadoDeEmissao } from "./provedor";
@@ -17,7 +18,9 @@ import type { ResultadoDeEmissao } from "./provedor";
  *
  *  1. contador nulo = recusa nomeada, nunca um número inventado;
  *  2. falha local devolve o número (a sequência continua de onde parou);
- *  3. falha ambígua NÃO devolve — depois de enviar, reusar número duplica nota.
+ *  3. rejeição DEFINITIVA da SEFAZ também devolve — a nota recusada não existe
+ *     no fisco e a reemissão deve usar o mesmo número (232/234/210 queimavam);
+ *  4. falha ambígua NÃO devolve — depois de enviar, reusar número duplica nota.
  */
 
 type Rpc = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
@@ -151,7 +154,7 @@ describe("falhouAntesDaSefaz", () => {
     expect(falhouAntesDaSefaz(resultado({ erro: 'Falta NCM do produto "X".' }))).toBe(true);
   });
 
-  it("rejeição da SEFAZ consome o número — reusar duplicaria nota", () => {
+  it("rejeição da SEFAZ não é falha local — quem decide é podeDevolverNumero", () => {
     expect(falhouAntesDaSefaz(resultado({ sefaz_cstat: "SEFAZ_539" }))).toBe(false);
     expect(falhouAntesDaSefaz(resultado({ sefaz_cstat: "LOTE_RECEBIDO" }))).toBe(false);
   });
@@ -164,5 +167,43 @@ describe("falhouAntesDaSefaz", () => {
 
   it("nota autorizada nunca devolve número", () => {
     expect(falhouAntesDaSefaz(resultado({ status: "autorizada", sefaz_cstat: "100" }))).toBe(false);
+  });
+});
+
+describe("podeDevolverNumero", () => {
+  it("rejeição de validação devolve o número — a nota recusada não existe no fisco", () => {
+    // 232 (IE não informada) e 234 (IE não vinculada ao CNPJ) são as que
+    // queimaram 4602 e 4604 nesta instalação em 06/11/2026. 210 e 905 vieram
+    // de outros buracos da mesma série. O sidecar grava "SEFAZ_xxx"; a SEFAZ
+    // devolve "xxx". Os dois formatos têm de casar.
+    for (const cstat of ["SEFAZ_232", "SEFAZ_234", "SEFAZ_210", "232", "234", "905", "778"]) {
+      expect(podeDevolverNumero(resultado({ sefaz_cstat: cstat }))).toBe(true);
+    }
+  });
+
+  it("NÃO devolve quando o número/chave já existe no fisco", () => {
+    // Duplicidade significa documento criado: reusar o número duplicaria nota.
+    for (const cstat of ["204", "205", "218", "539", "SEFAZ_204", "SEFAZ_539"]) {
+      expect(podeDevolverNumero(resultado({ sefaz_cstat: cstat }))).toBe(false);
+    }
+  });
+
+  it("NÃO devolve em resposta ambígua — a SEFAZ pode ter recebido a nota", () => {
+    for (const cstat of ["103", "104", "105", "108", "109", "LOTE_RECEBIDO", "EXCECAO", "RESPOSTA_ILEGIVEL"]) {
+      expect(podeDevolverNumero(resultado({ sefaz_cstat: cstat }))).toBe(false);
+    }
+    expect(
+      podeDevolverNumero(resultado({ erro: "Sidecar fiscal tempo esgotado (120s)." })),
+    ).toBe(false);
+  });
+
+  it("falha local continua devolvendo — nada foi transmitido", () => {
+    expect(podeDevolverNumero(resultado({ sefaz_cstat: "VALIDACAO" }))).toBe(true);
+    expect(podeDevolverNumero(resultado({ erro: 'Falta NCM do produto "X".' }))).toBe(true);
+  });
+
+  it("autorizada e denegada nunca devolvem — o número pertence ao documento", () => {
+    expect(podeDevolverNumero(resultado({ status: "autorizada", sefaz_cstat: "100" }))).toBe(false);
+    expect(podeDevolverNumero(resultado({ status: "denegada", sefaz_cstat: "110" }))).toBe(false);
   });
 });

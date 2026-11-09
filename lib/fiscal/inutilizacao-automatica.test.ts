@@ -22,9 +22,9 @@ import {
 
 describe("podeInutilizar", () => {
   it("recusa rejeições que significam número já usado no fisco", () => {
-    // 204 = duplicidade de NF-e; 539 = duplicidade com chave. Inutilizar um
-    // número que existe é declarar morto documento vivo.
-    for (const cstat of ["100", "150", "204", "539"]) {
+    // 204 = duplicidade de NF-e; 539 = duplicidade com chave; 205/218 = NF-e já
+    // na base. Inutilizar um número que existe é declarar morto documento vivo.
+    for (const cstat of ["100", "150", "204", "205", "218", "539"]) {
       expect(podeInutilizar({ status: "erro", sefaz_cstat: cstat })).toBe(false);
     }
   });
@@ -49,6 +49,15 @@ describe("podeInutilizar", () => {
     for (const cstat of ["905", "232", "696", "778"]) {
       expect(podeInutilizar({ status: "erro", sefaz_cstat: cstat })).toBe(true);
     }
+  });
+
+  it("reconhece o código como o sidecar grava (SEFAZ_232)", () => {
+    // O lado caro do defeito: `invoices.sefaz_cstat` guarda "SEFAZ_232", e o
+    // regex só numérico devolvia false — nenhuma rejeição real era inutilizada
+    // sozinha. O prefixo não muda o significado da recusa.
+    expect(podeInutilizar({ status: "erro", sefaz_cstat: "SEFAZ_232" })).toBe(true);
+    expect(podeInutilizar({ status: "erro", sefaz_cstat: "SEFAZ_539" })).toBe(false);
+    expect(podeInutilizar({ status: "erro", sefaz_cstat: "SEFAZ_204" })).toBe(false);
   });
 
   it("autorizada e denegada nunca são inutilizadas", () => {
