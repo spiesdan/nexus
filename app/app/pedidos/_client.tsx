@@ -211,6 +211,7 @@ export function PedidosClient({
   podeExcluir,
   podeImportar = false,
   meuId,
+  vendedores = [],
   textos,
 }: {
   inicial: PedidoComercial[];
@@ -228,6 +229,8 @@ export function PedidosClient({
   podeExcluir: boolean;
   podeImportar?: boolean;
   meuId: string;
+  /** Vendedores da organização — a lista do filtro. */
+  vendedores?: Array<{ user_id: string; nome: string }>;
   textos: Textos;
 }) {
   const t = useT();
@@ -863,9 +866,16 @@ export function PedidosClient({
           >
             <option value="">{t("Todos os vendedores")}</option>
             <option value="meus">{textos.meus}</option>
-            {filtros.vendedorId && !filtros.meus && (
-              <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
-            )}
+            {vendedores.map((v) => (
+              <option key={v.user_id} value={v.user_id}>
+                {v.nome || v.user_id.slice(0, 8)}
+              </option>
+            ))}
+            {filtros.vendedorId &&
+              !filtros.meus &&
+              !vendedores.some((v) => v.user_id === filtros.vendedorId) && (
+                <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
+              )}
           </select>
 
           <select
