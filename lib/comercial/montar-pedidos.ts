@@ -41,6 +41,8 @@ type LinhaDoPedido = Omit<PedidoPdfDados, "itens" | "cliente" | "vendedor_nome">
   cliente_nome: string;
   cliente_documento: string | null;
   vendedor_user_id: string | null;
+  /** Vendedor gravado no próprio pedido (ex.: "VENDEDOR JB" do Mercos). */
+  vendedor_nome?: string | null;
   endereco_entrega: string | null;
 };
 
@@ -253,6 +255,10 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
  * Sem `SERVICE_ROLE_KEY` o helper devolve mapa vazio e o impresso sai sem
  * pessoa no campo "Vendedor" — cortesia, nunca erro. É o mesmo contrato da
  * tela de Pedidos.
+ *
+ * O nome do pedido em si (gravado no cadastro ou no payload do Mercos) é o
+ * fallback: quem não casou com usuário (origem Mercos) ainda tem o nome no
+ * pedido, e o impresso não pode sair com o campo em branco por causa disso.
  */
 async function carregarVendedores(linhas: LinhaDoPedido[]): Promise<Map<string, string>> {
   const ids = [...new Set(linhas.map((l) => l.vendedor_user_id).filter(Boolean))] as string[];
@@ -272,6 +278,12 @@ async function carregarVendedores(linhas: LinhaDoPedido[]): Promise<Map<string, 
 }
 
 function nomeDeVendedor(linha: LinhaDoPedido, nomes: Map<string, string>): string | null {
-  if (!linha.vendedor_user_id) return null;
-  return nomes.get(linha.vendedor_user_id) ?? null;
+  const resolvido = linha.vendedor_user_id ? nomes.get(linha.vendedor_user_id) ?? null : null;
+  if (resolvido) return resolvido;
+  // Pedidos de origem que não casam com usuário (o Mercos grava o vendedor no
+  // próprio pedido — "VENDEDOR JB") não têm `vendedor_user_id`. A cortesia do
+  // impresso não pode sair sem pessoa: o nome que o pedido já gravou é quem o
+  // vendedor tinha.
+  const doPedido = (linha.vendedor_nome ?? "").trim();
+  return doPedido || null;
 }
