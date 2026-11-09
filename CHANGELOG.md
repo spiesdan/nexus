@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.4] — 2026-11-09
+
+### Corrigido
+
+- **A simulação do disparo de uma campanha de modelo aprovado voltou a abrir** Quem abria o disparo de uma campanha com modelo aprovado e clicava em "Simular envio" recebia "Validation failed" — sem dizer qual campo. A tela manda a lista de mensagens vazia, porque numa campanha de modelo não há texto livre para preencher: o conteúdo é o modelo salvo. O contrato da rota, porém, recusava a lista vazia antes de olhar o tipo da campanha, e a simulação morria na validação.
+
+  Agora a lista vazia é tratada como "não há texto", e quem decide se isso é legítimo é a regra que já conhece a campanha: numa campanha de texto a ausência continua sendo erro; numa de modelo aprovado é o caso normal. A tela de Empresas, que simula sem campanha, continua exigindo mensagem.
+
 ## [1.44.3] — 2026-11-09
 
 ### Corrigido
@@ -6610,7 +6618,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.4...HEAD
+[1.44.4]: https://github.com/spiesdan/nexus/compare/v1.44.3...v1.44.4
 [1.44.3]: https://github.com/spiesdan/nexus/compare/v1.44.2...v1.44.3
 [1.44.2]: https://github.com/spiesdan/nexus/compare/v1.44.1...v1.44.2
 [1.44.1]: https://github.com/spiesdan/nexus/compare/v1.44.0...v1.44.1
