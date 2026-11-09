@@ -109,6 +109,74 @@ describe("enviarParaProspect", () => {
     expect(ledger).toHaveLength(1);
   });
 
+  it("template com cabeçalho de imagem persiste a referência em metadata.template_media", async () => {
+    vi.mocked(sendMessageHandler).mockResolvedValue(resposta());
+    const { admin, assinaturas } = adminFalso();
+
+    await enviarParaProspect(
+      admin,
+      parametros({
+        template: {
+          name: "kit_promocional",
+          language: "pt_BR",
+          contractHash: "hash-1",
+          values: {
+            "header:1":
+              "bucket://whatsapp-media/org-1/campanhas/1f4ac242-e986-46f3-b9af-cf4486f185b9.jpg",
+          },
+          components: [
+            { type: "HEADER", format: "IMAGE" },
+            { type: "BODY", text: "Olá" },
+          ],
+          parameterFormat: "POSITIONAL",
+        },
+      }),
+    );
+
+    // A assinatura consome a referência e devolve URL; o inbox precisa da
+    // referência ESTÁVEL, senão a foto some quando a URL de 1h expirar.
+    expect(assinaturas).toEqual([
+      {
+        bucket: "whatsapp-media",
+        caminho: "org-1/campanhas/1f4ac242-e986-46f3-b9af-cf4486f185b9.jpg",
+        validade: 3600,
+      },
+    ]);
+    const [, , entrada] = vi.mocked(sendMessageHandler).mock.calls[0]!;
+    expect(entrada).toMatchObject({
+      type: "template",
+      metadata: {
+        template_media: {
+          path: "org-1/campanhas/1f4ac242-e986-46f3-b9af-cf4486f185b9.jpg",
+          mime: "image/jpeg",
+        },
+      },
+    });
+    expect(entrada.template_values?.["header:1"]).toContain("storage.exemplo.com");
+  });
+
+  it("template só de texto não grava metadata.template_media", async () => {
+    vi.mocked(sendMessageHandler).mockResolvedValue(resposta());
+    const { admin } = adminFalso();
+
+    await enviarParaProspect(
+      admin,
+      parametros({
+        template: {
+          name: "boas_vindas",
+          language: "pt_BR",
+          contractHash: "hash-1",
+          values: { "1": "Olá" },
+          components: [{ type: "BODY", text: "{{1}}" }],
+          parameterFormat: "POSITIONAL",
+        },
+      }),
+    );
+
+    const [, , entrada] = vi.mocked(sendMessageHandler).mock.calls[0]!;
+    expect(entrada).not.toHaveProperty("metadata");
+  });
+
   it("queued NÃO é enviado: devolve erro e não consome o espaçamento do número", async () => {
     vi.mocked(sendMessageHandler).mockResolvedValue(
       resposta({ status: "queued", metadata: { queued_reason: "meta_not_configured" } }),
