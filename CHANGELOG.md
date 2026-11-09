@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.5] — 2026-11-09
+
+### Corrigido
+
+- **Rejeição da SEFAZ não queima mais número de nota** Quando a SEFAZ recusava uma nota por validação — por exemplo IE do destinatário
+  não informada (232) ou não vinculada ao CNPJ (234) —, o número reservado era
+  tratado como se a nota tivesse chegado ao fisco. A reemissão pegava o número
+  seguinte e o recusado ficava como buraco na série, exigindo inutilização.
+
+  Agora a rejeição devolve o número ao contador: a nota fica com status de erro e,
+  ao ser reemitida depois da correção do cadastro, usa o MESMO número. Não há mais
+  buraco a inutilizar por causa de uma recusa.
+
+  Número que já existe no fisco (duplicidade 204/205/218/539) e resposta ambígua
+  (timeout ou lote em processamento) continuam sem devolução — nesses casos reusar
+  o número poderia duplicar o documento. Se outra emissão já tiver tomado o número
+  seguinte, a devolução falha e o número continua visível para inutilização.
+
 ## [1.44.4] — 2026-11-09
 
 ### Corrigido
@@ -6618,7 +6636,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.4...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.5...HEAD
+[1.44.5]: https://github.com/spiesdan/nexus/compare/v1.44.4...v1.44.5
 [1.44.4]: https://github.com/spiesdan/nexus/compare/v1.44.3...v1.44.4
 [1.44.3]: https://github.com/spiesdan/nexus/compare/v1.44.2...v1.44.3
 [1.44.2]: https://github.com/spiesdan/nexus/compare/v1.44.1...v1.44.2
