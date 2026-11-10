@@ -5,7 +5,9 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { isServiceRoleConfigured } from "@/lib/audit";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { extremosDoPeriodo, FUSO_PADRAO } from "@/lib/comercial/janela-do-dia";
+import { vendedoresDoMercos } from "@/lib/comercial/vendedores-do-mercos";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { logger } from "@/lib/logger";
 import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 import { COLUNAS_DO_PEDIDO, STATUS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -143,10 +145,64 @@ export default async function PedidosPage({
       }),
     );
   }
-  const vendedores = idsVendedores.map((userId) => ({
-    user_id: userId,
-    nome: nomesVendedores[userId] ?? "",
-  }));
+  const vendedoresDaOrganizacao: Array<{ user_id: string; nome: string; mercos?: boolean }> =
+    idsVendedores.map((userId) => ({
+      user_id: userId,
+      nome: nomesVendedores[userId] ?? "",
+      mercos: false,
+    }));
+
+  // VENDEDORES DO MERCOS — quem EMITIU pedidos pelo canal (importação), mesmo sem
+  // usuário no CRM. O UUID fica nulo (`vendedor_user_id`) e o NOME sobrevive em
+  // `vendedor_nome` ("VENDEDOR JB" é o caso real: 161 pedidos, UUID nulo). Sem
+  // eles no filtro, o pedido do vendedor JB existia mas só um filtro por UUID
+  // conseguiria alcançá-lo — e ele não tem UUID.
+  //
+  // A varredura é paginada porque o PostgREST corta em 1000 linhas por resposta
+  // e esta organização tem 11.768 pedidos Mercos: a consulta única ordenada por
+  // data devolvia 4 dos 9 vendedores. Regra e páginas em `vendedoresDoMercos`.
+  const vendedoresMercos = await vendedoresDoMercos({
+    contar: async () => {
+      const { count } = await supabase
+        .from("commercial_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", activeOrg.orgId)
+        .eq("origem", "mercos")
+        .is("vendedor_user_id", null)
+        .not("vendedor_nome", "is", null);
+      return count ?? 0;
+    },
+    pagina: async (de, ate) => {
+      const { data } = await supabase
+        .from("commercial_orders")
+        .select("vendedor_nome")
+        .eq("organization_id", activeOrg.orgId)
+        .eq("origem", "mercos")
+        .is("vendedor_user_id", null)
+        .not("vendedor_nome", "is", null)
+        // Ordem estável: `range` sem ordenação pode repetir ou pular linha.
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(de, ate);
+      return ((data ?? []) as Array<{ vendedor_nome: string | null }>).map(
+        (p) => p.vendedor_nome,
+      );
+    },
+  });
+  if (vendedoresMercos.truncado) {
+    logger.warn("pedidos: lista de vendedores do Mercos truncada", {
+      organization_id: activeOrg.orgId,
+      lidos: vendedoresMercos.lidos,
+    });
+  }
+  const vendedores = [
+    ...vendedoresDaOrganizacao,
+    ...vendedoresMercos.nomes.map((nome) => ({
+      user_id: nome,
+      nome,
+      mercos: true as const,
+    })),
+  ];
 
   return (
     <PedidosClient

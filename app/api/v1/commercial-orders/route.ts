@@ -33,6 +33,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   const contato = params.get("contact_id")?.trim() ?? "";
   const condicao = params.get("condicao")?.trim() ?? "";
   const vendedor = params.get("vendedor_user_id")?.trim() ?? "";
+  // Vendedor do Mercos sem usuário no CRM: o UUID fica nulo e o NOME sobrevive
+  // em `vendedor_nome` ("VENDEDOR JB" — caso real medido em 21/10/2026). Quem
+  // emite pelo canal carrega o nome; quem não tem usuário não tem UUID para
+  // filtrar. Este parâmetro é o caminho do vendedor externo.
+  const vendedorNome = params.get("vendedor_nome")?.trim() ?? "";
   const valorMin = Number(params.get("valor_min") ?? "") || 0;
   const valorMax = Number(params.get("valor_max") ?? "") || 0;
   // Janela de datas para drill-down do dashboard. Aceita dia (`YYYY-MM-DD`,
@@ -56,6 +61,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (contato !== "") q = q.eq("contact_id", contato);
   if (condicao !== "") q = q.ilike("condicao_pagamento", `%${condicao}%`);
   if (vendedor !== "") q = q.eq("vendedor_user_id", vendedor);
+  if (vendedorNome !== "") q = q.eq("vendedor_nome", vendedorNome);
   if (valorMin > 0) q = q.gte("total_cents", Math.round(valorMin * 100));
   if (valorMax > 0) q = q.lte("total_cents", Math.round(valorMax * 100));
   if (busca !== "") {

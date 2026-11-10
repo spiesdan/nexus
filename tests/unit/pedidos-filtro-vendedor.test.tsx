@@ -14,13 +14,13 @@
  * nomes via service role) — este teste trava que ela chega ao select com o
  * rótulo certo, no formato que o filtro grava (`vendedor_user_id`).
  */
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
 vi.mock("@/lib/api/client", () => ({
-  apiClient: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  apiClient: { get: vi.fn(() => Promise.resolve({ data: [] })), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 vi.mock("@/components/nexus-ui/forms/ConfirmacaoProvider", () => ({ useConfirmar: () => vi.fn() }));
 vi.mock("@/components/feedback/ApiErrorToast", () => ({ showApiError: vi.fn() }));
@@ -80,7 +80,7 @@ const VENDEDORES = [
   { user_id: "dddddddd-2222-4222-8222-222222222222", nome: "" },
 ];
 
-function montar(vendedores: Array<{ user_id: string; nome: string }>) {
+function montar(vendedores: Array<{ user_id: string; nome: string; mercos?: boolean }>) {
   return render(
     <PedidosClient
       inicial={[]}
@@ -114,5 +114,31 @@ describe("o filtro de Vendedor lista os vendedores da organização", () => {
     montar([]);
     expect(screen.getByText("Todos os vendedores")).toBeTruthy();
     expect(screen.queryByText("Ana")).toBeNull();
+  });
+
+  it("traz o vendedor do Mercos que emitiu pedidos — com o nome cru do canal", () => {
+    // Vendedor do Mercos sem usuário no CRM: a lista do filtro leva o nome, e a
+    // opção não pode descer para o UUID curto.
+    montar([{ user_id: "VENDEDOR JB", nome: "VENDEDOR JB", mercos: true }]);
+    expect(screen.getByText("VENDEDOR JB")).toBeTruthy();
+  });
+
+  it("selecionar o vendedor do Mercos filtra por nome e o rótulo não vira UUID", () => {
+    montar([{ user_id: "VENDEDOR JB", nome: "VENDEDOR JB", mercos: true }]);
+    const select = screen.getByLabelText("Vendedor") as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: "VENDEDOR JB" } });
+    expect(select.value).toBe("VENDEDOR JB");
+    // Rótulo do chip: o nome do vendedor, não o prefixo do UUID.
+    expect(screen.getByText("Vendedor: VENDEDOR JB")).toBeTruthy();
+  });
+
+  it("selecionar um membro mostra o nome dele, não o id curto", () => {
+    montar(VENDEDORES);
+    const select = screen.getByLabelText("Vendedor") as HTMLSelectElement;
+    fireEvent.change(select, {
+      target: { value: "dddddddd-1111-4111-8111-111111111111" },
+    });
+    expect(screen.getByText("Vendedor: Ana")).toBeTruthy();
+    expect(screen.queryByText("Vendedor: dddddddd")).toBeNull();
   });
 });
