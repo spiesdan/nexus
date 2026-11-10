@@ -64,6 +64,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     created_at: string;
     prospect_ids?: string[] | null;
     contato_ids?: string[] | null;
+    publico?: string | null;
   }[];
 
   // ── O resumo de envio entra na LISTA, não só no painel ───────────────────
@@ -91,7 +92,10 @@ export async function GET(req: NextRequest): Promise<Response> {
       // aceitou o pedido. Sem consultar `messages`, toda campanha apareceria
       // com zero confirmadas — ou, pior, com todas "enviadas" como antes.
       // Em lotes porque `.in()` vira URL e um histórico longo estoura o limite.
-      const porMensagem = new Map<string, { status: string | null; ack: number | null }>();
+      const porMensagem = new Map<
+        string,
+        { status: string | null; ack: number | null; error_code: string | null }
+      >();
       const idsMensagem = [
         ...new Set(
           ((envios ?? []) as { message_id: string | null }[])
@@ -102,7 +106,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       for (let i = 0; i < idsMensagem.length; i += LOTE_DE_MENSAGENS) {
         const { data: msgs, error: erroMsgs } = await supabase
           .from("messages")
-          .select("id, status, ack")
+          .select("id, status, ack, error_code")
           .eq("organization_id", authz.org.orgId)
           .in("id", idsMensagem.slice(i, i + LOTE_DE_MENSAGENS));
         if (erroMsgs) {
@@ -115,8 +119,13 @@ export async function GET(req: NextRequest): Promise<Response> {
           });
           break;
         }
-        for (const m of (msgs ?? []) as { id: string; status: string | null; ack: number | null }[]) {
-          porMensagem.set(m.id, { status: m.status, ack: m.ack });
+        for (const m of (msgs ?? []) as {
+          id: string;
+          status: string | null;
+          ack: number | null;
+          error_code: string | null;
+        }[]) {
+          porMensagem.set(m.id, { status: m.status, ack: m.ack, error_code: m.error_code });
         }
       }
 
@@ -126,7 +135,12 @@ export async function GET(req: NextRequest): Promise<Response> {
       })[]) {
         const msg = envio.message_id ? porMensagem.get(envio.message_id) : null;
         const lista = porCampanha.get(envio.campaign_id) ?? [];
-        lista.push({ ...envio, status: msg?.status ?? null, ack: msg?.ack ?? null });
+        lista.push({
+          ...envio,
+          status: msg?.status ?? null,
+          ack: msg?.ack ?? null,
+          error_code: msg?.error_code ?? null,
+        });
         porCampanha.set(envio.campaign_id, lista);
       }
       for (const linha of linhas) {
@@ -158,7 +172,15 @@ export async function GET(req: NextRequest): Promise<Response> {
       const funis = await funisDaDescoberta(
         supabase,
         authz.org.orgId,
-        comEnvio.map((l) => ({ id: l.id, created_at: l.created_at })),
+        comEnvio.map((l) => ({
+          id: l.id,
+          created_at: l.created_at,
+          // A lista fechada da audiência: é o universo da campanha de base,
+          // que não tem busca nenhuma. Sem isto o funil dela é zero.
+          prospect_ids: l.prospect_ids,
+          contato_ids: l.contato_ids,
+          publico: l.publico,
+        })),
       );
       return ok(
         comEnvio.map((l) => ({ ...l, funil: funis[l.id] })),

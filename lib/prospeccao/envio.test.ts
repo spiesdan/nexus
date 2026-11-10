@@ -13,6 +13,13 @@ vi.mock("@/lib/automation/start-conversation", () => ({
 vi.mock("@/lib/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
+// O que o envio DEIXA GRAVADO na empresa é testado em
+// `tests/unit/prospeccao-estado-do-prospect.test.ts`; aqui interessa se o
+// envio de prospecção chama, com os ids certos, e se o de orçamento não chama.
+vi.mock("@/lib/prospeccao/estado-do-prospect", () => ({
+  vincularContatoAoProspect: vi.fn(async () => undefined),
+  marcarComoContatado: vi.fn(async () => undefined),
+}));
 
 function resposta(over: Record<string, unknown> = {}) {
   return {
@@ -312,5 +319,49 @@ describe("enviarParaProspect", () => {
 
     expect(r).toMatchObject({ ok: false, erro: expect.stringContaining("template_sem_texto") });
     expect(sendMessageHandler).not.toHaveBeenCalled();
+  });
+});
+
+describe("enviarParaProspect — o que o envio deixa na empresa", () => {
+  beforeEach(async () => {
+    vi.mocked(sendMessageHandler).mockReset();
+    vi.mocked(sendMessageHandler).mockResolvedValue(resposta());
+    const { vincularContatoAoProspect, marcarComoContatado } = await import(
+      "@/lib/prospeccao/estado-do-prospect"
+    );
+    vi.mocked(vincularContatoAoProspect).mockClear();
+    vi.mocked(marcarComoContatado).mockClear();
+  });
+
+  it("campanha: vincula o contato resolvido e marca contatado", async () => {
+    const { admin } = adminFalso();
+    const { vincularContatoAoProspect, marcarComoContatado } = await import(
+      "@/lib/prospeccao/estado-do-prospect"
+    );
+
+    await enviarParaProspect(admin, parametros({ businessProspectId: "prospect-1" }));
+
+    expect(vincularContatoAoProspect).toHaveBeenCalledWith(
+      admin,
+      expect.objectContaining({ prospectId: "prospect-1", contactId: "contact-1" }),
+    );
+    expect(marcarComoContatado).toHaveBeenCalledWith(
+      admin,
+      expect.objectContaining({ prospectId: "prospect-1" }),
+    );
+  });
+
+  it("orçamento (sem businessProspectId) não toca a base de prospecção", async () => {
+    // Ali `prospect.id` é o id do CONTATO: gravar status na base de prospecção
+    // com esse id acertaria a empresa errada (ou nenhuma).
+    const { admin } = adminFalso();
+    const { vincularContatoAoProspect, marcarComoContatado } = await import(
+      "@/lib/prospeccao/estado-do-prospect"
+    );
+
+    await enviarParaProspect(admin, parametros());
+
+    expect(vincularContatoAoProspect).not.toHaveBeenCalled();
+    expect(marcarComoContatado).not.toHaveBeenCalled();
   });
 });

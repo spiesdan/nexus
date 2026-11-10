@@ -55,6 +55,32 @@ export interface EnvioDaCampanha {
   /** Confirmações do canal, quando a consulta trouxe `messages`. */
   delivered_at?: string | null;
   read_at?: string | null;
+  /**
+   * `messages.error_code` — o código da Meta para a recusa. O que importa aqui
+   * é distinguir a recusa que o TEMPO resolve (pagamento) da que ele não
+   * resolve (número inválido, experimento). Ver `ehFalhaDePagamento`.
+   */
+  error_code?: string | null;
+}
+
+/**
+ * O código que a Meta devolve quando a conta do WhatsApp está com pagamento
+ * pendente. **É a única recusa que vale reenviar**: ela não fala nada sobre o
+ * contato, só sobre a fatura — depois de paga, a mesma mensagem passa. As
+ * outras (`131026` número inalcançável, `130472` experimento, `131049` limite
+ * de ecossistema) continuam recusando se repetidas, e insistir é assédio a
+ * quem nunca vai receber.
+ *
+ * Medido em 10/11/2026: 113 mensagens da campanha `b4129d6b` ficaram presas
+ * neste código. O ledger guarda a reserva mesmo quando o envio falha (de
+ * propósito, para não insistir no mesmo número ruim), e sem esta distinção a
+ * campanha nunca mais volta para essas 113 empresas — o progresso congela e o
+ * operador não tem como mandar de novo depois de pagar.
+ */
+export const CODIGO_FALHA_DE_PAGAMENTO = "131042";
+
+export function ehFalhaDePagamento(codigo: string | null | undefined): boolean {
+  return codigo === CODIGO_FALHA_DE_PAGAMENTO;
 }
 
 /** O degrau de entrega que a tela mostra por empresa. */
@@ -122,6 +148,14 @@ export interface ResumoDeEnvio {
   lidos: number;
   /** O WhatsApp recusou (`failed` ou ack < 0) — não é "sem confirmação". */
   falhas: number;
+  /**
+   * Recusas por pagamento pendente na conta Meta (`131042`). É um SUBCONJUNTO
+   * de `falhas`, separado porque a ação é diferente: as outras recusas são
+   * definitivas, estas voltam para a fila quando a fatura é paga. A tela usa
+   * este número para oferecer o reenvio — sem ele o operador via "134
+   * recusadas" e nenhuma explicação de quais ainda podiam sair.
+   */
+  falhas_de_pagamento: number;
 }
 
 function instante(iso: string | null | undefined): number {
@@ -153,6 +187,7 @@ export function resumirEnvios(input: {
   let entregues = 0;
   let lidos = 0;
   let falhas = 0;
+  let falhasDePagamento = 0;
   let ultimo = 0;
   for (const s of porProspect.values()) {
     const degrau = entregaDoStatus(s.status, s.ack);
@@ -164,6 +199,8 @@ export function resumirEnvios(input: {
     // WhatsApp recusou" — que é justamente a informação que o operador precisa.
     if (degrau === "falhou") {
       falhas += 1;
+      // Subconjunto retentável: a fatura da Meta não fala do contato.
+      if (ehFalhaDePagamento(s.error_code)) falhasDePagamento += 1;
       continue;
     }
     if (confirmada(degrau)) {
@@ -202,5 +239,6 @@ export function resumirEnvios(input: {
     entregues,
     lidos,
     falhas,
+    falhas_de_pagamento: falhasDePagamento,
   };
 }

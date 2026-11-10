@@ -282,6 +282,15 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
           : ""}
         {resumo.falhas > 0 ? ` · ${t(`${resumo.falhas} recusadas`)}` : ""}
       </p>
+      {resumo.falhas_de_pagamento > 0 && (
+        // A barra não sobe para quem nunca recebeu. Sem dizer POR QUE, o card
+        // parece travado; com a causa, o próximo passo é abrir o controle.
+        <p className="text-xs text-warning-fg">
+          {t(
+            `${resumo.falhas_de_pagamento} não saíram por pagamento pendente — abra o controle para reenviar.`,
+          )}
+        </p>
+      )}
     </div>
   );
 }

@@ -1003,6 +1003,9 @@ async function enviarPlano(p: ParamsDoEnvio) {
       },
       mensagem: templateDoItem ? "" : mensagemDaVez(p.mensagens, item.mensagem_indice),
       template: templateDoItem,
+      // O "Enviar agora" é o MESMO envio da campanha agendada — inclusive no
+      // que ele deixa gravado na empresa (vínculo + `contatado`).
+      businessProspectId: item.id,
     });
     if (resultado.ok) {
       enviados.push({ nome: item.nome, message_id: resultado.messageId, status: resultado.status });

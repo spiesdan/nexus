@@ -18,13 +18,17 @@
  *
  * ─── A ORDEM é a regra, não um detalhe de implementação ─────────────────────
  *
- * Os três rodam em sequência e a sequência carrega significado:
+ * Os quatro rodam em sequência e a sequência carrega significado:
  *
  *   1. opt-out  — grava `is_blocked` ANTES do lead;
  *   2. lead     — `garantirLeadDaConversa` RELÊ o contato e recusa criar card
  *                 para bloqueado. Inverter 1 e 2 faz quem acabou de pedir para
  *                 sair virar oportunidade nova no funil;
- *   3. despacho — o turno do agente resolve o lead ativo do contato. Emitir
+ *   3. resposta — o prospect da base que aponta para este contato passa a
+ *                 `respondeu` (é de onde o funil do §28 conta), e o follow-up
+ *                 do lead avança. Vale mesmo quando o agente não vai
+ *                 responder: o fato é a mensagem que chegou;
+ *   4. despacho — o turno do agente resolve o lead ativo do contato. Emitir
  *                 antes do passo 2 faria o primeiro turno rodar sem lead.
  *
  * Trocar a ordem não quebra teste de tipo nem derruba nada em runtime: quebra
@@ -41,6 +45,7 @@
 import { audit } from "@/lib/audit";
 import { garantirLeadDaConversa } from "@/lib/leads/nascimento-do-lead";
 import { logger } from "@/lib/logger";
+import { marcarProspectComoRespondeu } from "@/lib/prospeccao/estado-do-prospect";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { ehPedidoDeOptOut } from "@/lib/opt-out/deteccao";
 import { acelerarPipelineDeEventos } from "@/lib/dev/kick-local-pipeline";
@@ -115,6 +120,10 @@ export async function aplicarEfeitosPosEntrada(
 ): Promise<void> {
   await aplicarOptOut(admin, entrada);
   await abrirDemanda(admin, entrada);
+  // O fato que o funil do §28 conta: a empresa da campanha respondeu. Roda
+  // antes do despacho porque a resposta existe mesmo quando não há agente
+  // publicado para responder — o contador não pode depender do robô.
+  await marcarRespostaDoProspect(admin, entrada);
   // A resposta do lead avança o follow-up AQUI. O despacho do agente (LLM)
   // vem depois: no Hobby ele estoura o tempo da request e o próximo texto
   // do fluxo ficava esperando o relógio.
@@ -210,7 +219,28 @@ async function abrirDemanda(admin: Admin, entrada: EntradaDeMensagem): Promise<v
 }
 
 /**
- * 3 · Acorda o agente.
+ * 3 · A empresa da campanha que respondeu deixa de ser "intocada".
+ *
+ * O `status_comercial` é o que o funil do §28 conta (D15), e até aqui só o
+ * import manual para o CRM o escrevia. Medido em 10/11/2026: 71 empresas
+ * contatadas por campanha, 10 respostas reais, e o card da campanha em "0
+ * respostas". A regra mora em `lib/prospeccao/estado-do-prospect.ts` — aqui
+ * só se chama, com o contato que o canal resolveu.
+ *
+ * A conversa do cliente que nunca foi prospect passa por aqui também e não
+ * muda nada (zero linhas). É barato de propósito: identificar "esta mensagem
+ * é resposta de campanha?" exigiria cruzar o ledger com a conversa em cada
+ * entrada, e um cruzamento errado calaria justamente quem respondeu.
+ */
+async function marcarRespostaDoProspect(admin: Admin, entrada: EntradaDeMensagem): Promise<void> {
+  await marcarProspectComoRespondeu(admin, {
+    organizationId: entrada.organizationId,
+    contactId: entrada.contactId,
+  });
+}
+
+/**
+ * 4 · Acorda o agente.
  *
  * Emitir o evento NÃO faz o assistente responder: o consumidor só abre turno se
  * a organização tiver versão publicada apontando para esta sessão. Sem versão

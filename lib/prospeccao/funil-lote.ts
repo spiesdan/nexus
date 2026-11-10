@@ -41,6 +41,16 @@ interface ProspectDaCampanha {
 export interface CampanhaComCorte {
   id: string;
   created_at: string;
+  /**
+   * A lista fechada da audiência. Campanha de BASE não tem busca: ela nasce
+   * apontando para empresas que já existem no banco, e é esta coluna que diz
+   * quais. Sem ela o funil procura buscas que nunca houve, não acha ninguém e
+   * devolve zero — foi o "0 respostas" de 10/11/2026.
+   */
+  prospect_ids?: string[] | null;
+  /** Audiência de RECUPERAÇÃO (`publico: "contatos"`): ids de `contacts`. */
+  contato_ids?: string[] | null;
+  publico?: string | null;
 }
 
 const funilVazio = (): FunilDaCampanha => ({
@@ -58,6 +68,21 @@ const funilVazio = (): FunilDaCampanha => ({
  * O funil de TODAS as campanhas de descoberta em 5 queries:
  * buscas → resultados → prospects → leads → pedidos, cada uma com `in(…)`
  * cobrindo a união das campanhas e agrupamento em JS.
+ *
+ * ─── A campanha de BASE não tem busca ──────────────────────────────────────
+ *
+ * Até 10/11/2026 este funil só sabia contar campanha de DESCOBERTA: buscava
+ * `prospecting_searches` da campanha e, não achando nenhuma, devolvia o funil
+ * todo zerado. Só que campanha de base (`fonte_publico: "base"`) nunca tem
+ * busca — o público já estava no banco e a campanha aponta para ele em
+ * `prospect_ids`. Resultado medido: 241 empresas na campanha, 71 já
+ * contatadas, 10 respostas reais, e o card dizendo "0 encontrados · 0
+ * respostas". O universo agora cai para `prospect_ids` quando não há busca.
+ *
+ * Campanha de RECUPERAÇÃO (`publico: "contatos"`) sai SEM funil, de propósito:
+ * o estágio dela é status de `business_prospects`, e um contato do CRM não
+ * tem esse status. Devolver zero ali seria repetir o mesmo defeito com outra
+ * roupa; sem funil, a tela mostra "—" em vez de um número inventado.
  *
  * Os limites espelham os da rota individual multiplicados pelo nº de
  * campanhas (500 buscas, 10.000 resultados/prospects, 5.000 pedidos por
@@ -92,29 +117,45 @@ export async function funisDaDescoberta(
     if (b.campaign_id) campanhaDaBusca.set(b.id, b.campaign_id);
   }
   const idsBusca = [...campanhaDaBusca.keys()];
-  if (idsBusca.length === 0) return resultado;
 
   // 2) resultados → prospects por campanha.
   const prospectsDaCampanha = new Map<string, Set<string>>();
   for (const c of campanhas) prospectsDaCampanha.set(c.id, new Set());
-  // As listas abaixo crescem com a base da campanha (até 10.000 resultados).
-  // Vão em fatias de 100: uma URL com 500 UUIDs já volta `414 URI too long`.
-  const { linhas: resultados, falhas: falhasResultados } = await porFatias(
-    idsBusca,
-    async (fatia) => {
-      const r = await supabase
-        .from("prospect_search_results")
-        .select("prospect_id, search_id")
-        .eq("organization_id", org)
-        .in("search_id", fatia)
-        .limit(10000 * n);
-      return { linhas: (r.data ?? []) as never[], erro: r.error };
-    },
-  );
-  if (falhasResultados > 0) throw new Error("resultados_indisponiveis: falha ao ler em fatias");
-  for (const r of resultados as { prospect_id: string; search_id: string }[]) {
-    const campanhaId = campanhaDaBusca.get(r.search_id);
-    if (campanhaId) prospectsDaCampanha.get(campanhaId)?.add(r.prospect_id);
+  if (idsBusca.length > 0) {
+    // As listas abaixo crescem com a base da campanha (até 10.000 resultados).
+    // Vão em fatias de 100: uma URL com 500 UUIDs já volta `414 URI too long`.
+    const { linhas: resultados, falhas: falhasResultados } = await porFatias(
+      idsBusca,
+      async (fatia) => {
+        const r = await supabase
+          .from("prospect_search_results")
+          .select("prospect_id, search_id")
+          .eq("organization_id", org)
+          .in("search_id", fatia)
+          .limit(10000 * n);
+        return { linhas: (r.data ?? []) as never[], erro: r.error };
+      },
+    );
+    if (falhasResultados > 0) throw new Error("resultados_indisponiveis: falha ao ler em fatias");
+    for (const r of resultados as { prospect_id: string; search_id: string }[]) {
+      const campanhaId = campanhaDaBusca.get(r.search_id);
+      if (campanhaId) prospectsDaCampanha.get(campanhaId)?.add(r.prospect_id);
+    }
+  }
+
+  // 2b) A BASE não nasce de busca: o universo é a lista fechada da campanha.
+  // `prospect_ids` guarda o recorte aprovado no wizard; ler daqui é a mesma
+  // régua que o controle, o disparo e o agendador já usam.
+  const semFunil = new Set<string>();
+  for (const c of campanhas) {
+    if (c.publico === "contatos" || (c.contato_ids ?? []).length > 0) {
+      semFunil.add(c.id);
+      delete resultado[c.id];
+      continue;
+    }
+    const universo = prospectsDaCampanha.get(c.id);
+    if (!universo || universo.size > 0) continue;
+    for (const id of c.prospect_ids ?? []) universo.add(id);
   }
 
   // 3) prospects da união (uma leitura em fatias).
@@ -206,6 +247,7 @@ export async function funisDaDescoberta(
   }
 
   for (const c of campanhas) {
+    if (semFunil.has(c.id)) continue;
     const linhas = linhasPorCampanha.get(c.id) ?? [];
     const contatos = contatoDaCampanha.get(c.id) ?? new Set<string>();
     const corte = Date.parse(c.created_at);

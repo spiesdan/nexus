@@ -10,17 +10,50 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [1.45.0] — 2026-11-10
 
-### Adicionado
+### Corrigido
 
-- **NF-e de venda avulsa (balcão) no fluxo normal da emissão** A tela de notas ganhou o modo NF-e de venda avulsa. Venda sem pedido: destinatário (cadastro ou informado), frete e os itens vendidos. O fato entra em extras_fiscais.avulsa, a nota nasce sem pedido (order_id nulo) e o número sai pela reserva da série.
+- **A campanha mostra quem respondeu, inclusive a que saiu da base** Uma campanha de base — aquela que o operador monta escolhendo empresas que já estão no CRM — terminava o dia com dezenas de conversas abertas e o card dizendo **"0 respostas"**. Medido em 10/11/2026: 241 empresas na campanha, 71 já contatadas, respostas reais de clientes no inbox, e o contador em zero. A campanha anterior, de 251 empresas, estava igual.
 
-- **PDF do fechamento da carga com a conta fechada** O documento do fechamento da carga passa a nascer no sistema: o endpoint de geração em PDF recebe a carga e devolve o documento com a conta fechada — resumo financeiro, conta, linhas contadas, conferência e cobrança por condição. Na tela de fechamento da carga específica, o botão Fechamento (PDF) abre o documento; o romaneio continua em seu endpoint.
+  Eram dois defeitos, e os dois eram de leitura:
+
+  1. o funil da campanha só sabia procurar o público pelas **buscas** (`prospecting_searches`). Campanha de base não tem busca nenhuma — o público já estava no banco e a campanha aponta para ele em `prospect_ids`. Sem busca, o funil ficava todo zerado;
+  2. o status comercial do prospect (`status_comercial`, de onde o funil conta) nunca saía de "Novo". Só o import manual para o CRM o escrevia — nem o envio da campanha nem a resposta do cliente mexiam nele. Todos os 71 prospects da campanha tinham `contact_id` nulo, então a resposta que chegava no inbox não tinha como voltar até a empresa de origem.
+
+  O que passou a acontecer sozinho: o envio da campanha grava o vínculo da empresa com o contato do WhatsApp e marca a empresa como **contatada**; a mensagem que o cliente manda marca **respondeu**. O status só anda para a frente — quem já foi marcado como sem interesse, descartado ou cliente não volta atrás por causa de um envio. E o funil da campanha de base passou a contar o público a partir da lista fechada, com o status real de cada empresa.
+
+  Campanha de recuperação (público de contatos do CRM) passou a mostrar **"—"** em respostas em vez de **0**: ali o estágio não é status de prospect, e zero era mentira com outra roupa.
+
+  Nas duas campanhas que já estavam em produção, o vínculo e os status foram recalculados a partir do histórico: 324 empresas vinculadas ao contato, 276 marcadas como contatadas e 50 como respondidas.
+
+- **A campanha volta a enviar quem a Meta recusou por pagamento** Quando a conta do WhatsApp ficava com pagamento pendente na Meta, cada tentativa da campanha voltava recusada com o código 131042 — e a reserva daquela empresa ficava no histórico como se o envio tivesse acontecido. Depois de pagar, a campanha seguia em frente sozinha, mas nunca reenviava essas empresas: o progresso congelava e o card só dizia "recusadas", sem dizer por quê nem o que fazer.
+
+  Medido em 10/11/2026 na campanha de Lebon Régis/Fraiburgo/Videira: 113 mensagens recusadas entre 11h11 e 14h45 (UTC), e um envio entregue às 14h47 provando que a conta já falava de novo. As 113 continuavam presas.
+
+  A tela de controle agora separa as recusas por pagamento das recusas definitivas (número inalcançável, experimento, limite de ecossistema) e oferece "Reenviar N mensagens" depois que a fatura é regularizada. O reenvio devolve essas empresas para a fila do agendador, que volta a mandar no ritmo do número — respeitando a janela, o limite diário e o intervalo entre mensagens. As outras recusas não entram: repetir não faz a mensagem chegar, e insistir é assédio a quem nunca vai receber.
+
+  A lista de campanhas também passou a dizer quantas mensagens estão paradas por pagamento, no lugar de deixar a barra travada sem explicação.
+
+## [1.44.12] — 2026-11-10
 
 ### Corrigido
 
-- **O TLocal da NF-e fecha com o estado por extenso na cidade** O destinatário da NF-e passa a derivar a sigla do estado (SC, PR e demais) quando o cadastro escreve o estado por extenso na cidade — "Mafra, Santa Catarina", "Irati, Paraná" — e deixa o campo `uf` estruturado vazio. Antes, o município resolvia mas o TLocal ficava sem UF e a emissão recusava com "O cadastro do cliente precisa de ajuste: UF".
+- **O cadastro do Mercos é o cadastro do CRM — um pra um** O cadastro do Mercos deixou de nascer duplicado no CRM. Antes, a ficha nova do
+  cliente do ERP era criada com a segunda tag `mercos:pedido-sem-cadastro` — o
+  stub que marcava "ficha só pra o pedido não ficar órfão" — e o importador em
+  lote ainda não deduplicava dentro do próprio lote, então duas extrações do
+  mesmo cliente (variações de espaço e caixa no nome) viraram duas fichas.
 
-  Com isto, pedidos seguintes com o mesmo padrão de cadastro passam a gerar a nota sem precisar completar o cadastro manualmente.
+  Agora a importação casa o contato por documento (CNPJ, CPF, nome normalizado
+  ou telefone) e só cria ficha quando o cliente realmente não existe; quem já tem
+  ficha é completado, sem sobrescrever dado do operador. A tag única `mercos` cobre
+  toda a superfície.
+
+  E os duplicados históricos já no banco são recolhidos pela fusão
+  `fn_mercos_fundir_duplicados`: mesmo nome normalizado + mesma cidade fundem, o
+  perdedor vira ponteiro (`is_merged_into`), nada é apagado, e pedidos, conversas,
+  leads e filas são remarcados. Mesmo nome com documento divergente (CNPJ ou CPF
+  diferente) mantém os dois clientes — é o caso do dono: "tem cadastro com o mesmo
+  nome com CNPJ diferente, ai deixe os 2".
 
 ## [1.44.11] — 2026-11-09
 
@@ -6751,7 +6784,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
 [Não lançado]: https://github.com/spiesdan/nexus/compare/v1.45.0...HEAD
-[1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.45.0
+[1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.12...v1.45.0
+[1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.11]: https://github.com/spiesdan/nexus/compare/v1.44.10...v1.44.11
 [1.44.10]: https://github.com/spiesdan/nexus/compare/v1.44.9...v1.44.10
