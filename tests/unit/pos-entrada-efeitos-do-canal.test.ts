@@ -22,7 +22,7 @@ import { acelerarPipelineDeEventos } from "@/lib/dev/kick-local-pipeline";
  *
  * ─── Por que a maioria dos casos é sobre ORDEM ──────────────────────────────
  *
- * Os três efeitos rodam em sequência, e a sequência é regra de negócio:
+ * Os efeitos rodam em sequência, e a sequência é regra de negócio:
  * inverter opt-out e lead faz quem pediu para sair virar card de oportunidade.
  * Uma troca de ordem não quebra tipo nem derruba nada em runtime — quebra em
  * silêncio, semanas depois. Só um teste que observe a ORDEM a segura.
@@ -48,6 +48,8 @@ let sequencia: string[] = [];
 let updateErro: { message: string } | null = null;
 let rpcErro: { message: string } | null = null;
 let ultimoUpdate: Record<string, unknown> | null = null;
+/** O último update na BASE de prospecção — separado do update do contato. */
+let ultimoUpdateDaBase: Record<string, unknown> | null = null;
 let ultimaRpc: Record<string, unknown> | null = null;
 
 /** Imita o builder do PostgREST: encadeável, o efeito acontece no `await`. */
@@ -72,7 +74,11 @@ const admin = {
   from(tabela: string) {
     return {
       update(payload: Record<string, unknown>) {
-        ultimoUpdate = payload;
+        // `ultimoUpdate` é o do CONTATO (é o que os casos de opt-out leem); o
+        // da base de prospecção ganha variável própria para ninguém confundir
+        // o bloqueio com o contador do funil.
+        if (tabela === "contacts") ultimoUpdate = payload;
+        if (tabela === "business_prospects") ultimoUpdateDaBase = payload;
         return cadeia(`update:${tabela}`);
       },
     };
@@ -106,6 +112,7 @@ beforeEach(() => {
   updateErro = null;
   rpcErro = null;
   ultimoUpdate = null;
+  ultimoUpdateDaBase = null;
   ultimaRpc = null;
   audit.mockClear();
   garantirLeadDaConversa.mockClear();
@@ -113,7 +120,7 @@ beforeEach(() => {
   vi.mocked(acelerarPipelineDeEventos).mockClear();
 });
 
-describe("a ordem dos três efeitos", () => {
+describe("a ordem dos efeitos", () => {
   it("opt-out acontece ANTES do nascimento do lead", async () => {
     // Esta é a razão de o arquivo existir. `garantirLeadDaConversa` RELÊ o
     // contato e recusa criar card para bloqueado — mas só se o bloqueio já
@@ -216,6 +223,23 @@ describe("opt-out", () => {
     await rodar({ texto: "PARAR" });
     expect(garantirLeadDaConversa).toHaveBeenCalled();
     expect(sequencia).toContain("rpc:ai_agent.dispatch_requested");
+  });
+});
+
+describe("o prospect da campanha que respondeu", () => {
+  it("vira `respondeu` na base — é de onde o funil do §28 conta", async () => {
+    // Medido em 10/11/2026: 71 empresas contatadas, 10 respostas reais, card
+    // da campanha em "0 respostas". O status nunca saía de `novo`.
+    await rodar();
+    expect(sequencia).toContain("update:business_prospects");
+    expect(ultimoUpdateDaBase).toMatchObject({ status_comercial: "respondeu" });
+  });
+
+  it("acontece ANTES do despacho do agente — a resposta existe sem robô", async () => {
+    await rodar();
+    expect(sequencia.indexOf("update:business_prospects")).toBeLessThan(
+      sequencia.indexOf("rpc:ai_agent.dispatch_requested"),
+    );
   });
 });
 

@@ -20,6 +20,11 @@
  *      inclusive com duas campanhas ativas). Falha aqui NÃO derruba o envio:
  *      o ledger é o freio, e um freio que tranca o carro é pior que freio
  *      nenhum.
+ *   5. o ESTADO do prospect — vínculo com o contato e `contatado`. Só quando
+ *      quem chama diz que o id é de `business_prospects` (`businessProspectId`):
+ *      o orçamento usa esta mesma função passando o id do CONTATO. Sem esse
+ *      passo o funil fica em zero para sempre — a história está em
+ *      `lib/prospeccao/estado-do-prospect.ts`.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -29,6 +34,10 @@ import { ensureConversation } from "@/lib/automation/start-conversation";
 import { renderizarCorpoDoTemplate } from "@/lib/channels/templates/para-campanha";
 import { logger } from "@/lib/logger";
 import { templateMediaDosValores } from "@/lib/messaging/template-media";
+import {
+  marcarComoContatado,
+  vincularContatoAoProspect,
+} from "@/lib/prospeccao/estado-do-prospect";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
 import { resolverReferenciasDeMidia } from "@/lib/prospeccao/midia-da-campanha";
 
@@ -73,6 +82,15 @@ export interface ParametrosDoEnvio {
   requestId: string;
   sessaoId: string;
   prospect: ProspectParaEnvio;
+  /**
+   * O `business_prospects.id` quando este envio é de PROSPECÇÃO.
+   *
+   * `prospect.id` não serve para isso: o orçamento chama esta função passando
+   * o id do CONTATO. A presença deste campo é o que autoriza gravar vínculo e
+   * status na base de prospecção — e é por isso que ele é explícito, não
+   * inferido.
+   */
+  businessProspectId?: string | null;
   mensagem: string;
   /** Presente = o caminho é template; `mensagem` fica ignorada. */
   template?: TemplateDoEnvio | null;
@@ -210,6 +228,23 @@ export async function enviarParaProspect(
         organizationId: p.orgId,
         prospectId: p.prospect.id,
         erro: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    // ── O que a empresa passa a SABER sobre si mesma ──────────────────────
+    // A mensagem saiu, então o vínculo com o contato existe (o RPC acima o
+    // resolveu) e a empresa não é mais "intocada". Sem estes dois updates o
+    // funil do §28 não sai de zero, por mais que o cliente responda — foi o
+    // que aconteceu com 71 empresas e 10 respostas em 10/11/2026.
+    if (p.businessProspectId) {
+      await vincularContatoAoProspect(admin, {
+        organizationId: p.orgId,
+        prospectId: p.businessProspectId,
+        contactId,
+      });
+      await marcarComoContatado(admin, {
+        organizationId: p.orgId,
+        prospectId: p.businessProspectId,
       });
     }
 

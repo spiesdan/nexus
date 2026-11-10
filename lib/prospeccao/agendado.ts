@@ -649,6 +649,9 @@ export async function processarCampanhasAgendadas(
         requestId: `prospecting-send:${campanha.id}`,
         sessaoId: sessao.id,
         prospect: escolhido,
+        // Aqui o id é de `business_prospects` — é o que autoriza o envio a
+        // deixar vínculo com o contato e marcar `contatado` (funil do §28).
+        businessProspectId: escolhido.id,
         mensagem,
         template: templateDoEnvio,
         agoraIso,

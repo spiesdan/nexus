@@ -148,6 +148,46 @@ describe("resumirEnvios", () => {
     // ...e "sem confirmação" junta aceita-sem-ack e reserva sem comprovante.
     expect(r.total).toBe(r.pendentes + r.enviados + r.sem_confirmacao + r.falhas);
   });
+
+  /**
+   * Medido em 10/11/2026: 113 mensagens recusadas com `131042` (pagamento
+   * pendente na Meta) ficaram presas no ledger depois que a fatura foi paga.
+   * O total de recusas sozinho não dizia quais ainda podiam sair; a tela agora
+   * separa as retentáveis das definitivas.
+   */
+  it("separa a recusa por pagamento das recusas definitivas", () => {
+    const r = resumirEnvios({
+      prospectIds: ["a", "b", "c", "d"],
+      sends: [
+        envio("a", "m1", { status: "failed", ack: 0, error_code: "131042" }),
+        envio("b", "m2", { status: "failed", ack: 0, error_code: "131042" }),
+        envio("c", "m3", { status: "failed", ack: 0, error_code: "131026" }),
+        envio("d", "m4", { status: "delivered", ack: 2 }),
+      ],
+    });
+
+    // Pagamento é SUBCONJUNTO das recusas: continua contando em `falhas`.
+    expect(r.falhas).toBe(3);
+    expect(r.falhas_de_pagamento).toBe(2);
+    // 1 confirmada de 4 — e as 3 recusadas não entram em "pendentes".
+    expect(r.enviados).toBe(1);
+    expect(r.pendentes).toBe(0);
+    expect(r.percentual).toBe(25);
+  });
+
+  it("sem código (ou com código novo da Meta) não vira reenvio por pagamento", () => {
+    const r = resumirEnvios({
+      sends: [
+        envio("a", "m1", { status: "failed", ack: 0 }),
+        envio("b", "m2", { status: "failed", ack: 0, error_code: "131999" }),
+        // Recusa antiga, mas o status atual é `sent`: o desfecho atual manda.
+        envio("c", "m3", { status: "sent", ack: 0, error_code: "131042" }),
+      ],
+    });
+
+    expect(r.falhas).toBe(2);
+    expect(r.falhas_de_pagamento).toBe(0);
+  });
 });
 
 describe("entregaDoStatus", () => {

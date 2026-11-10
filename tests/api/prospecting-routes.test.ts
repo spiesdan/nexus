@@ -1455,6 +1455,54 @@ describe("GET /api/v1/prospecting/campaigns — funil em lote (N+1, FASE 15)", (
     expect(corpo.data[0].funil).toMatchObject({ encontrados: 2, pedidos: 0, faturamento_cents: 0 });
   });
 
+  it("campanha de BASE (sem busca) conta o funil a partir de prospect_ids", async () => {
+    // O caso medido em 10/11/2026: a campanha não tem busca nenhuma, porque o
+    // público veio da base. Antes da correção o funil dela era zero mesmo com
+    // empresas contatadas e respostas reais.
+    const db = makeDb({
+      prospecting_campaigns: [
+        { ...CAMPANHA, publico: "prospects", prospect_ids: [PROSPECT_A, PROSPECT_B] },
+      ],
+      business_prospects: [
+        prospecto({ id: PROSPECT_A, status_comercial: "contatado" }),
+        prospecto({ id: PROSPECT_B, status_comercial: "respondeu" }),
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?com_funil=1"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data[0].funil).toMatchObject({
+      encontrados: 2,
+      selecionados: 2,
+      contatados: 2,
+      responderam: 1,
+    });
+  });
+
+  it("campanha de RECUPERAÇÃO (contatos) sai sem funil — zero seria mentira", async () => {
+    // O estágio do funil é `status_comercial` de `business_prospects`, e um
+    // contato do CRM não tem esse status. A tela mostra "—" (funil ausente) em
+    // vez de "0 respostas" para uma campanha que pode ter respondido muito.
+    const db = makeDb({
+      prospecting_campaigns: [
+        {
+          ...CAMPANHA,
+          publico: "contatos",
+          contato_ids: [CONTATO_ID],
+          prospect_ids: null,
+        },
+      ],
+    });
+    session("viewer", db);
+    const res = await rotaCampanhas.GET(
+      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?com_funil=1"),
+    );
+    const corpo = await res.json();
+    expect(corpo.data[0]).not.toHaveProperty("funil");
+  });
+
   it("erro no banco DURANTE o funil → lista volta SEM funil (não derruba)", async () => {
     const db = makeDb({ prospecting_campaigns: [CAMPANHA] });
     db.comErroEm("prospecting_searches");
