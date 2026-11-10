@@ -8,13 +8,19 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.45.0] — 2026-11-10
+
 ### Adicionado
 
-- **NF-e de venda avulsa (balcão) no fluxo normal da emissão** A tela de notas ganhou o modo "NF-e de venda avulsa": venda sem pedido, com destinatário (cadastro ou informado), frete e os itens vendidos. O fato entra em `extras_fiscais.avulsa`; a nota nasce sem pedido (`order_id` nulo) e o número sai pela reserva da série — não pela sequência do pedido.
+- **NF-e de venda avulsa (balcão) no fluxo normal da emissão** A tela de notas ganhou o modo NF-e de venda avulsa. Venda sem pedido: destinatário (cadastro ou informado), frete e os itens vendidos. O fato entra em extras_fiscais.avulsa, a nota nasce sem pedido (order_id nulo) e o número sai pela reserva da série.
 
-  Prévia (`POST /api/v1/invoices/validar`) e emissão (`emitirNota` + drain + provedor) seguem o mesmo caminho do de pedido: validação fail-closed, destino do destinatário, itens resolvidos por catálogo/código/nome, total com frete. O ajuste de item por `order_item_id` não se aplica (não há pedido), e a nota órfã (`em_emissao` sem job) continua descartando.
+- **PDF do fechamento da carga com a conta fechada** O documento do fechamento da carga passa a nascer no sistema: o endpoint de geração em PDF recebe a carga e devolve o documento com a conta fechada — resumo financeiro, conta, linhas contadas, conferência e cobrança por condição. Na tela de fechamento da carga específica, o botão Fechamento (PDF) abre o documento; o romaneio continua em seu endpoint.
 
-- **PDF do fechamento da carga** `GET /api/v1/shipments/[id]/fechamento/pdf` gera o documento com a conta fechada da carga — resumo financeiro, conta (entradas/saídas/líquido/esperado/diferença), linhas contadas, conferência e cobrança por condição/parada. Na tela de fechamento da carga específica, o botão "Fechamento (PDF)" abre o documento em nova aba; o romaneio continua em `/api/v1/shipments/[id]/romaneio` (apenas o romaneio).
+### Corrigido
+
+- **O TLocal da NF-e fecha com o estado por extenso na cidade** O destinatário da NF-e passa a derivar a sigla do estado (SC, PR e demais) quando o cadastro escreve o estado por extenso na cidade — "Mafra, Santa Catarina", "Irati, Paraná" — e deixa o campo `uf` estruturado vazio. Antes, o município resolvia mas o TLocal ficava sem UF e a emissão recusava com "O cadastro do cliente precisa de ajuste: UF".
+
+  Com isto, pedidos seguintes com o mesmo padrão de cadastro passam a gerar a nota sem precisar completar o cadastro manualmente.
 
 ## [1.44.11] — 2026-11-09
 
@@ -6744,7 +6750,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.12...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.45.0...HEAD
+[1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.45.0
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.11]: https://github.com/spiesdan/nexus/compare/v1.44.10...v1.44.11
 [1.44.10]: https://github.com/spiesdan/nexus/compare/v1.44.9...v1.44.10
