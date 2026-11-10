@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.48.0] — 2026-11-10
+
+### Adicionado
+
+- **Inbox ganha opção de marcar contato como sem envio** Quando um cliente pede para não receber mais nada, a decisão humana tomada na conversa agora vira a parada dura do contato: o atendente marca "sem envio" no header do inbox e o sistema grava `contacts.is_blocked` (motivo `manual`) — o mesmo estado do opt-out por palavra (`STOP`) — que o guard de before-send, o comando da conversa e o worker já respeitam. Antes, pedir "não me mande mais nada" em conversa não chegava ao estado; a parada só nascia da palavra-chave.
+
+  A linha da timeline ganha o tipo `contact_no_send` ("Marcou o contato sem envio").
+
 ## [1.47.0] — 2026-11-10
 
 ### Adicionado
@@ -6805,7 +6813,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.47.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.0...HEAD
+[1.48.0]: https://github.com/spiesdan/nexus/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/spiesdan/nexus/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/spiesdan/nexus/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.12...v1.45.0
