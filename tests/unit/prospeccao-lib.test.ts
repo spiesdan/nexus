@@ -14,6 +14,7 @@ import { bonusDeAderencia, prioridadeAlta, scoreDeProspect, PESOS_SCORE, CORTE_A
 import { ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import {
   campanhaCreateSchema,
+  campanhaPatchSchema,
   CATEGORIAS_MAX,
   prospectPatchSchema,
 } from "@/lib/schemas/prospeccao";
@@ -304,5 +305,29 @@ describe("campanhaCreateSchema — o recorte é do operador", () => {
     expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: 120_000 }).success).toBe(true);
     expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: ESPACO_MAXIMO_MS }).success).toBe(true);
     expect(campanhaCreateSchema.safeParse({ ...comCategoria, espaco_ms: ESPACO_MAXIMO_MS + 1 }).success).toBe(false);
+  });
+});
+
+describe("campanhaPatchSchema — agendamento (0273) de campanha de modelo", () => {
+  it("aceita `mensagens: []` no PATCH de agendamento — template manda lista vazia", () => {
+    expect(
+      campanhaPatchSchema.safeParse({
+        mensagens: [],
+        janelas: [{ inicio: "08:00", fim: "12:00" }, { inicio: "13:00", fim: "17:50" }],
+        data_inicio: "2026-11-10",
+        data_fim: "2026-11-13",
+        limite_diario: 250,
+        espaco_ms: 60_000,
+        agendada_em: new Date().toISOString(),
+        status: "ativa",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("continua recusando data final anterior à inicial", () => {
+    expect(
+      campanhaPatchSchema.safeParse({ data_inicio: "2026-11-13", data_fim: "2026-11-10" })
+        .success,
+    ).toBe(false);
   });
 });

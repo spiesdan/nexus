@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.11] — 2026-11-09
+
+### Corrigido
+
+- **A agenda de uma campanha com modelo aprovado volta a salvar** Quem agendava uma campanha com modelo aprovado — "Agendar envio (241)" — e confirmava o horário recebia "Validation failed" sem dizer qual campo. A tela manda a lista de mensagens vazia, porque numa campanha de modelo aprovado não há texto livre para preencher: o conteúdo é o modelo salvo.
+
+  O schema de agendamento (compartilhado por create e patch da campanha) ainda exigia `.min(1)` na lista de mensagens, então o PATCH que grava o relógio morria na validação antes de chegar ao handler que já sabia o tipo da campanha. O schema de disparo tinha recebido esse tratamento no PR #367; o de agendamento não.
+
+  Agora a lista vazia é aceita e quem decide se é legítima é a regra que conhece o tipo da campanha.
+
 ## [1.44.10] — 2026-11-09
 
 ### Corrigido
@@ -6726,7 +6736,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.10...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.11...HEAD
+[1.44.11]: https://github.com/spiesdan/nexus/compare/v1.44.10...v1.44.11
 [1.44.10]: https://github.com/spiesdan/nexus/compare/v1.44.9...v1.44.10
 [1.44.9]: https://github.com/spiesdan/nexus/compare/v1.44.8...v1.44.9
 [1.44.7]: https://github.com/spiesdan/nexus/compare/v1.44.6...v1.44.7

@@ -268,10 +268,16 @@ export const agendamentoSchema = z.object({
    * minuto. Recusar em 2.000 cortaria a campanha que o operador quer montar.
    */
   prospect_ids: z.array(z.string().uuid()).min(1).max(10_000).optional(),
-  /** As variações (1..5) da rotação anti-ban. */
+  /**
+   * As variações (1..5) da rotação anti-ban. Lista vazia = "não há texto"
+   * direto na campanha — SEM `.min(1)`: campanha de TEMPLATE manda `mensagens:
+   * []` porque o conteúdo mora no modelo aprovado (o mesmo critério do
+   * `disparoSchema`, corrigido no PR #367). A checagem semântica de conteúdo
+   * (exigir texto só quando a campanha não é de template) vive no handler —
+   * validar aqui no array escondia a campanha de modelo atrás de um 422.
+   */
   mensagens: z
     .array(z.string().trim().min(1).max(4000))
-    .min(1)
     .max(MENSAGENS_POR_DISPARO_MAX)
     .optional(),
   espaco_ms: z.number().int().min(1000).max(ESPACO_MAXIMO_MS).optional(),
