@@ -11,8 +11,8 @@
  * Vínculo pedido→cliente (exigência do dono):
  *   1. dígitos do documento do cabeçalho (CNPJ da tela "CLIENTE ... - doc")
  *   2. nome normalizado forte (sem LTDA/ME/pontuação)
- *   3. fallback: cria contato stub `mercos:pedido-sem-cadastro` — todo pedido
- *      sai linkado, nenhum órfão.
+ *   3. fallback: cria contato com a tag única `mercos` — todo pedido sai
+ *      linkado, nenhum órfão, e um cadastro só existe por cliente do ERP (1:1).
  *
  * Uso:
  *   pnpm exec tsx scripts/mercos-scrape/importar-mercos.ts --org <uuid> [--fase tudo|produtos|contatos|pedidos] [--apply] [--limite N] [--vendedores map.json]
@@ -278,7 +278,7 @@ async function main(): Promise<void> {
       ...cpf,
       source: "mercos",
       source_metadata: { mercos: { stub: true, documento: doc || null, ...extra } },
-      tags: ["mercos", "mercos:pedido-sem-cadastro"],
+      tags: ["mercos"],
     };
     if (!apply) {
       contadores.stubs++;
@@ -355,6 +355,9 @@ async function main(): Promise<void> {
       wp_id: number; ie: string; num: string; bairro: string; cep: string;
     }[];
     const novos: { chave: string; doc: string; fone: string | null; nomeForte: string; row: Record<string, unknown> }[] = [];
+    // Dedupe dentro do lote: o mesmo cliente entra duas vezes na extração (variações
+    // de espaço/caixa no nome), e lote com ficha duplicada regrava o que já existe.
+    const chavesVistas = new Set<string>();
     let n = 0;
     for (const c of base) {
       if (n++ >= limite) break;
@@ -389,8 +392,16 @@ async function main(): Promise<void> {
         }
         continue;
       }
-      contadores.criados++;
       const nf = nomeForte(c.nome);
+      const chave = `${doc}|${fone ?? ""}|${nf}`;
+      if (chavesVistas.has(chave)) {
+        // Mesmo cliente do mesmo lote: a ficha já nasce da primeira ocorrência.
+        // Dedupe é por documento|telefone|nome-forte — o suficiente para casar
+        // as variações do mesmo cadastro sem fundir clientes de nome parecido.
+        continue;
+      }
+      chavesVistas.add(chave);
+      contadores.criados++;
       const row = {
         organization_id: orgId,
         name: c.nome.slice(0, 200),
