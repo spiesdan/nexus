@@ -12,6 +12,7 @@ import { useReleaseConversation } from "@/hooks/inbox/useReleaseConversation";
 import { useCloseConversation } from "@/hooks/inbox/useCloseConversation";
 import { useResumeAiAttendance } from "@/hooks/inbox/useResumeAiAttendance";
 import { usePauseAiAttendance } from "@/hooks/inbox/usePauseAiAttendance";
+import { useMarkNoSendConversation } from "@/hooks/inbox/useMarkNoSendConversation";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
@@ -82,6 +83,7 @@ export function ConversationHeader({ conversation }: Props) {
   const close = useCloseConversation();
   const retomar = useResumeAiAttendance();
   const pausar = usePauseAiAttendance();
+  const marcarSemEnvio = useMarkNoSendConversation();
   // "Existe automático nesta org?" — sem isto o selo afirmava que o robô estava
   // atendendo em instalação que nunca configurou agente nenhum.
   const automaticoDaOrg = useAutomaticoAtivo();
@@ -312,6 +314,37 @@ export function ConversationHeader({ conversation }: Props) {
             onClick={() => pausar.mutate({ conversation_id: conversation.id })}
           >
             {pausar.isPending ? t("Pausando...") : t("Pausar o automático")}
+          </Button>
+        )}
+        {/* O GESTO HUMANO DO OPT-OUT: o cliente pediu para não receber mais
+            nada, e a decisão tomada na conversa precisa virar a PARADA DURA do
+            contato. Sem este botão a palavra era a única porta — pedir "não me
+            mande mais nada" em conversa não chegava ao estado que o motor já
+            respeita (`contacts.is_blocked` via `before_send`). Agora a pessoa que
+            atende grava a decisão no lugar certo: o MESMO flag, o MESMO gate, sem
+            segundo mecanismo de estado. */}
+        {!encerrada && c?.is_blocked !== true && (
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${BTN_REF} ${BTN_REF_SEC}`}
+            disabled={marcarSemEnvio.isPending}
+            data-testid="marcar-sem-envio"
+            title={t(
+              "Marca o contato como sem envio — o sistema não envia mais nada a esta pessoa, mesmo no próximo turno.",
+            )}
+            onClick={async () => {
+              if (
+                await confirmar({
+                  title: t("Marcar este contato como sem envio?"),
+                  confirmLabel: t("Marcar sem envio"),
+                })
+              ) {
+                marcarSemEnvio.mutate({ conversation_id: conversation.id });
+              }
+            }}
+          >
+            {marcarSemEnvio.isPending ? t("Marcando...") : t("Marcar sem envio")}
           </Button>
         )}
         {status !== "closed" && status !== "archived" && (
