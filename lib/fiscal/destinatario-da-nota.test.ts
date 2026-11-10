@@ -86,6 +86,22 @@ describe("montarDestinatario", () => {
     });
   });
 
+  it("UF vazio com o estado por extenso na cidade fecha o TLocal sem pedir ajuste", () => {
+    // O cadastro do Mercos escrevia "Mafra, Santa Catarina" com o `uf` estruturado
+    // vazio — a mesma cadeia do PED-19447: o município resolvia, mas o `uf` vazio
+    // mantinha o TLocal incompleto e a emissão recusava com "UF" em faltando. A
+    // sigla sai da resolução do município (UF_POR_NOME), cobrindo "SC", "PR" e os
+    // demais estados por extenso.
+    const d = montarDestinatario(
+      { cliente_nome: "POSTO TIO RUI" },
+      { ...WANDERLEI, cidade: "Mafra, Santa Catarina", uf: "" },
+    );
+    expect(d.faltando).toEqual([]);
+    expect(d.entrega).not.toBeNull();
+    expect(d.entrega?.uf).toBe("SC");
+    expect(d.entrega?.codigo_municipio).toBe("4210100");
+  });
+
   it("o cadastro vence o pedido no nome e no documento; o pedido é só reserva", () => {
     const semNome = montarDestinatario(
       { cliente_nome: "NOME DO PEDIDO", cliente_documento: "98765432000110" },
