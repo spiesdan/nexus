@@ -64,6 +64,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     created_at: string;
     prospect_ids?: string[] | null;
     contato_ids?: string[] | null;
+    publico?: string | null;
   }[];
 
   // ── O resumo de envio entra na LISTA, não só no painel ───────────────────
@@ -171,7 +172,15 @@ export async function GET(req: NextRequest): Promise<Response> {
       const funis = await funisDaDescoberta(
         supabase,
         authz.org.orgId,
-        comEnvio.map((l) => ({ id: l.id, created_at: l.created_at })),
+        comEnvio.map((l) => ({
+          id: l.id,
+          created_at: l.created_at,
+          // A lista fechada da audiência: é o universo da campanha de base,
+          // que não tem busca nenhuma. Sem isto o funil dela é zero.
+          prospect_ids: l.prospect_ids,
+          contato_ids: l.contato_ids,
+          publico: l.publico,
+        })),
       );
       return ok(
         comEnvio.map((l) => ({ ...l, funil: funis[l.id] })),
