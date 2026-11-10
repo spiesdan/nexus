@@ -179,8 +179,13 @@ export function montarDestinatario(
   const logradouro = texto(c?.logradouro);
   const numero = texto(c?.numero_end);
   const bairro = texto(c?.bairro);
-  const uf = texto(c?.uf).toUpperCase();
+  const ufBruto = texto(c?.uf).toUpperCase();
   const municipio = municipioIbge(c?.cidade, c?.uf);
+  // O cadastro às vezes deixa o `uf` estruturado vazio e escreve o estado por
+  // extenso na cidade ("Mafra, Santa Catarina" / "Irati, Paraná"). A sigla sai da
+  // mesma regra do `UF_POR_NOME` dentro do IBGE (via município resolvido) — o que
+  // fecha o TLocal da NF-e sem a emissão pedir o endereço de novo.
+  const uf = ufBruto.length === 2 ? ufBruto : (municipio?.uf ?? ufBruto);
 
   if (!nome) faltando.push("nome");
   if (!logradouro) faltando.push("logradouro");
