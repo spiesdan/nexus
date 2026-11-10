@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.46.0] — 2026-11-10
+
+### Adicionado
+
+- **NF-e de venda avulsa (balcão) no fluxo normal da emissão** A tela de notas ganhou o modo NF-e de venda avulsa: venda sem pedido, com destinatário (cadastro ou informado), frete e os itens vendidos. O fato entra em `extras_fiscais.avulsa`; a nota nasce sem pedido (`order_id` nulo) e o número sai pela reserva da série — não pela sequência do pedido.
+
+  A prévia (`POST /api/v1/invoices/validar`) e a emissão (`emitirNota` + drain + provedor) seguem o mesmo caminho do de pedido: validação fail-closed, destino do destinatário, itens resolvidos por catálogo/código/nome, total com frete. O ajuste de item por `order_item_id` não se aplica (não há pedido), e a nota órfã (`em_emissao` sem job) continua descartando.
+
+  Com isto, quem vendia no balcão passa a ter a nota fiscal no fluxo normal da operação — sem bypass nem papelada paralela.
+
+- **PDF do fechamento da carga com a conta fechada** O documento do fechamento da carga passa a nascer no sistema: o endpoint de geração em PDF recebe a carga e devolve o documento com a conta fechada — resumo financeiro, conta (entradas/saídas/líquido/esperado/diferença), linhas contadas, conferência e cobrança por condição/parada. Na tela de fechamento da carga específica, o botão Fechamento (PDF) abre o documento em nova aba; o romaneio continua em seu endpoint.
+
+  Com isto, quem fecha o caixa gera o papel da conta fechada pela mesma fonte que a tela usa — a montagem mora numa só função (`lib/comercial/fechamento`) e o GET, o PUT e o PDF não podem divergir.
+
 ## [1.45.0] — 2026-11-10
 
 ### Corrigido
@@ -6783,7 +6797,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.45.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.46.0...HEAD
+[1.46.0]: https://github.com/spiesdan/nexus/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.12...v1.45.0
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
