@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.44.10] — 2026-11-09
+
+### Corrigido
+
+- **O filtro de Vendedor traz os vendedores do Mercos** A tela de pedidos tinha filtro de vendedor, mas só conseguia recortar quem tem
+  usuário no CRM: os pedidos importados do Mercos gravam o emissor no próprio
+  pedido (`vendedor_nome`, ex.: "VENDEDOR JB") com UUID nulo quando quem emitiu não
+  é usuário do CRM — e só quem tinha UUID aparecia no filtro.
+
+  A lista do filtro passa a incluir todos os vendedores do Mercos que emitiram
+  pedidos na organização, de qualquer período (a varredura é paginada; o banco
+  devolve no máximo 1000 linhas por consulta), com o nome cru do canal. O recorte
+  passa a usar `vendedor_nome` para eles; membros da organização continuam
+  filtrando por `vendedor_user_id`. O rótulo do vendedor selecionado mostra o nome,
+  nunca o pedaço do UUID.
+
 ## [1.44.9] — 2026-11-09
 
 ### Corrigido
@@ -6710,7 +6726,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.9...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.10...HEAD
+[1.44.10]: https://github.com/spiesdan/nexus/compare/v1.44.9...v1.44.10
 [1.44.9]: https://github.com/spiesdan/nexus/compare/v1.44.8...v1.44.9
 [1.44.7]: https://github.com/spiesdan/nexus/compare/v1.44.6...v1.44.7
 [1.44.6]: https://github.com/spiesdan/nexus/compare/v1.44.5...v1.44.6
