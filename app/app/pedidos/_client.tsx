@@ -229,8 +229,13 @@ export function PedidosClient({
   podeExcluir: boolean;
   podeImportar?: boolean;
   meuId: string;
-  /** Vendedores da organização — a lista do filtro. */
-  vendedores?: Array<{ user_id: string; nome: string }>;
+  /**
+   * Vendedores da organização — a lista do filtro. `mercos: true` marca quem
+   * EMITIU pelo Mercos sem usuário no CRM: o UUID fica nulo no pedido e o NOME
+   * sobrevive em `vendedor_nome`, então a chave deste filtro é o nome do vendedor
+   * (`user_id` duplica `nome` no caso externo), não o uuid.
+   */
+  vendedores?: Array<{ user_id: string; nome: string; mercos?: boolean }>;
   textos: Textos;
 }) {
   const t = useT();
@@ -259,10 +264,23 @@ export function PedidosClient({
    * terceira opção de despejar o UUID inteiro — 36 caracteres num rótulo de
    * filtro não é informação para quem opera.
    */
-  const rotuloDoVendedor = React.useMemo(
-    () => vendedorNome || filtros.vendedorId.slice(0, 8),
-    [vendedorNome, filtros.vendedorId],
+  const vendedorDaSelecao = React.useMemo(
+    () => vendedores.find((v) => v.user_id === filtros.vendedorId) ?? null,
+    [vendedores, filtros.vendedorId],
   );
+  const rotuloDoVendedor = React.useMemo(() => {
+    if (filtros.meus) return "";
+    const vendedor = vendedorDaSelecao;
+    // Vendedor do Mercos: o nome cru do canal é o rótulo ("VENDEDOR JB"), não o
+    // UUID — quem não tem usuário no CRM nunca resolve nome pelo service role.
+    if (vendedor?.mercos) return vendedor.nome;
+    // Membro: o roster já tem o nome; o id curto é só o piso quando ele não veio.
+    return (
+      vendedor?.nome ||
+      vendedorNome ||
+      (filtros.vendedorId ? filtros.vendedorId.slice(0, 8) : "")
+    );
+  }, [filtros.meus, filtros.vendedorId, vendedorDaSelecao, vendedorNome]);
   const [carregando, setCarregando] = React.useState(false);
   const [visao, setVisao] = React.useState<"tabela" | "quadro" | "cartoes">("cartoes");
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
@@ -313,7 +331,9 @@ export function PedidosClient({
       if (f.valorMin) qs.set("valor_min", f.valorMin);
       if (f.valorMax) qs.set("valor_max", f.valorMax);
       if (f.meus) qs.set("vendedor_user_id", meuId);
-      if (f.vendedorId) qs.set("vendedor_user_id", f.vendedorId);
+      const vendedor = vendedores.find((v) => v.user_id === f.vendedorId);
+      if (vendedor?.mercos) qs.set("vendedor_nome", vendedor.nome);
+      else if (f.vendedorId) qs.set("vendedor_user_id", f.vendedorId);
       if (f.de) qs.set("de", f.de);
       if (f.ate) qs.set("ate", f.ate);
       const corpo = await apiClient.get<{ data: unknown }>(
