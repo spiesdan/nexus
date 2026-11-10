@@ -310,6 +310,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
   const [disparoAberto, setDisparoAberto] = React.useState(false);
   const [excluirAberto, setExcluirAberto] = React.useState(false);
   const [liberarAberto, setLiberarAberto] = React.useState(false);
+  const [reenviarPagamentoAberto, setReenviarPagamentoAberto] = React.useState(false);
 
   const carregar = React.useCallback(
     async (silencioso = false) => {
@@ -450,6 +451,34 @@ export function ControleDaCampanha({ id }: { id: string }) {
       const liberadas = resposta?.data?.liberadas ?? 0;
       toast.success(t(`${liberadas} reservas liberadas. Agende o envio de novo.`));
       setLiberarAberto(false);
+      await carregar(true);
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setAcao(null);
+    }
+  }
+
+  async function reenviarFalhasDePagamento() {
+    setAcao("reenviar-pagamento");
+    try {
+      const resposta = await apiClient.post<{ data?: { liberadas?: number } }>(
+        `/api/v1/prospecting/campaigns/${id}/reenviar-falhas-de-pagamento`,
+        {},
+      );
+      const liberadas = resposta?.data?.liberadas ?? 0;
+      if (liberadas > 0) {
+        toast.success(
+          t(
+            `${liberadas} mensagens voltaram para a fila. O agendador reenvia no ritmo do número, dentro da janela e do limite diário.`,
+          ),
+        );
+      } else {
+        // Nada a reenviar não é erro: ou as recusas por pagamento já foram
+        // tratadas, ou a próxima atualização da tela confirma que não há mais.
+        toast.success(t("Não há mensagens pendentes por pagamento para reenviar."));
+      }
+      setReenviarPagamentoAberto(false);
       await carregar(true);
     } catch (e) {
       showApiError(e);
@@ -653,6 +682,11 @@ export function ControleDaCampanha({ id }: { id: string }) {
                   {t(`${dados.resumo.falhas} recusadas pelo WhatsApp`)}
                 </Badge>
               )}
+              {dados.resumo.falhas_de_pagamento > 0 && (
+                <Badge variant="warning">
+                  {t(`${dados.resumo.falhas_de_pagamento} por pagamento`)}
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               {dados.previa_base
@@ -712,6 +746,41 @@ export function ControleDaCampanha({ id }: { id: string }) {
           </p>
         )}
       </Card>
+
+      {/*
+        POR QUE ESTE CARD EXISTE: a barra conta só o que o WhatsApp CONFIRMOU.
+        Quando a Meta recusa por pagamento pendente, a mensagem nunca chega — o
+        progresso não sobe, a campanha não volta sozinha para essas empresas e o
+        operador só via "recusadas". Aqui o número tem nome, causa e saída.
+        O reenvio é manual porque "paguei" é um fato externo ao produto.
+      */}
+      {dados.resumo.falhas_de_pagamento > 0 && (
+        <Card className="flex items-start gap-3 border-warning/40 bg-warning-bg p-4 text-sm text-warning-fg">
+          <WarningCircle size={18} className="mt-0.5 shrink-0" aria-hidden />
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium">
+              {t(
+                `${dados.resumo.falhas_de_pagamento} mensagens não saíram porque a conta do WhatsApp estava com pagamento pendente na Meta.`,
+              )}
+            </p>
+            <p className="text-xs opacity-90">
+              {t(
+                "Elas não entram no progresso porque nunca chegaram ao cliente, e não voltam sozinhas para a fila. Depois de regularizar o pagamento na Meta, reenvie: o agendador respeita a janela, o limite diário e o intervalo entre mensagens.",
+              )}
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-2 border-warning/40 bg-surface text-warning-fg hover:bg-warning-bg"
+              onClick={() => setReenviarPagamentoAberto(true)}
+              disabled={acao === "reenviar-pagamento" || Boolean(dados.disparo_em_andamento)}
+            >
+              {t(`Reenviar ${dados.resumo.falhas_de_pagamento} mensagens`)}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <aside className="min-w-0 space-y-3 xl:order-2">
@@ -1321,6 +1390,32 @@ export function ControleDaCampanha({ id }: { id: string }) {
               }}
             >
               {acao === "liberar" ? t("Liberando…") : t("Liberar reservas")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={reenviarPagamentoAberto} onOpenChange={setReenviarPagamentoAberto}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Reenviar as mensagens que a Meta recusou por pagamento?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                `Isto devolve ${dados.resumo.falhas_de_pagamento} empresas para a fila do agendador. Só as recusas por pagamento pendente (código 131042) são reenviadas — as outras recusas continuam de fora, porque repetir não faz a mensagem chegar. Confirme que o pagamento já foi regularizado na Meta.`,
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={acao === "reenviar-pagamento"}>
+              {t("Cancelar")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={acao === "reenviar-pagamento"}
+              onClick={(e) => {
+                e.preventDefault();
+                void reenviarFalhasDePagamento();
+              }}
+            >
+              {acao === "reenviar-pagamento" ? t("Devolvendo…") : t("Reenviar")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

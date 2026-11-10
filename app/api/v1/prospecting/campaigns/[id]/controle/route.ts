@@ -151,6 +151,11 @@ interface LinhaMensagem {
   read_at: string | null;
   /** Motivo da recusa, quando o WhatsApp deu um (ex.: 463, conta restrita). */
   error_message: string | null;
+  /**
+   * Código da Meta para a recusa (ex.: `131042` = pagamento pendente). A tela
+   * separa esta das demais porque só ela volta para a fila depois de paga.
+   */
+  error_code: string | null;
 }
 
 /** O degrau de entrega de uma linha do ledger, pronto para a resposta. */
@@ -263,7 +268,9 @@ async function buscarMensagens(
   const { linhas, falhas } = await porFatias(validos, async (fatia) => {
     const { data, error } = await admin
       .from("messages")
-      .select("id, conversation_id, sent_at, status, ack, delivered_at, read_at, error_message")
+      .select(
+        "id, conversation_id, sent_at, status, ack, delivered_at, read_at, error_message, error_code",
+      )
       .eq("organization_id", organizationId)
       .in("id", fatia);
     if (error && !primeiroErro) primeiroErro = error;
@@ -526,6 +533,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
         ack: msg?.ack ?? null,
         delivered_at: msg?.delivered_at ?? null,
         read_at: msg?.read_at ?? null,
+        error_code: msg?.error_code ?? null,
       };
     }),
     totalFallback: previaBase ? empresas.length : 0,
