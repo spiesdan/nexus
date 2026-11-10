@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.47.0] — 2026-11-10
+
+### Adicionado
+
+- **Venda avulsa na NF-e ganha seleção de produto do catálogo** Na NF-e de venda avulsa (balcão) o operador conta a venda; quando o produto já existe no catálogo, o seletor (`ProdutoParaItem`) escolhe o produto e o item nasce com descrição + NCM + unidade do cadastro, com o vínculo `product_id`/`codigo` que o resolver do drain usa para casar o fato à classificação fiscal. O preço da venda continua com o operador — o catálogo traz custo, a venda avulsa traz o valor que o cliente pagou.
+
+  Com isto, "digita o nome e seleciona" sai da digitação livre: o balcão passa a nascer do catálogo cadastrado, sem NCM manual.
+
 ## [1.46.0] — 2026-11-10
 
 ### Adicionado
@@ -6797,7 +6805,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.46.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.47.0...HEAD
+[1.47.0]: https://github.com/spiesdan/nexus/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/spiesdan/nexus/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.12...v1.45.0
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
