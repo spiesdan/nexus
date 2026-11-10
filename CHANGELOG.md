@@ -8,6 +8,31 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.45.0] — 2026-11-10
+
+### Corrigido
+
+- **A campanha mostra quem respondeu, inclusive a que saiu da base** Uma campanha de base — aquela que o operador monta escolhendo empresas que já estão no CRM — terminava o dia com dezenas de conversas abertas e o card dizendo **"0 respostas"**. Medido em 10/11/2026: 241 empresas na campanha, 71 já contatadas, respostas reais de clientes no inbox, e o contador em zero. A campanha anterior, de 251 empresas, estava igual.
+
+  Eram dois defeitos, e os dois eram de leitura:
+
+  1. o funil da campanha só sabia procurar o público pelas **buscas** (`prospecting_searches`). Campanha de base não tem busca nenhuma — o público já estava no banco e a campanha aponta para ele em `prospect_ids`. Sem busca, o funil ficava todo zerado;
+  2. o status comercial do prospect (`status_comercial`, de onde o funil conta) nunca saía de "Novo". Só o import manual para o CRM o escrevia — nem o envio da campanha nem a resposta do cliente mexiam nele. Todos os 71 prospects da campanha tinham `contact_id` nulo, então a resposta que chegava no inbox não tinha como voltar até a empresa de origem.
+
+  O que passou a acontecer sozinho: o envio da campanha grava o vínculo da empresa com o contato do WhatsApp e marca a empresa como **contatada**; a mensagem que o cliente manda marca **respondeu**. O status só anda para a frente — quem já foi marcado como sem interesse, descartado ou cliente não volta atrás por causa de um envio. E o funil da campanha de base passou a contar o público a partir da lista fechada, com o status real de cada empresa.
+
+  Campanha de recuperação (público de contatos do CRM) passou a mostrar **"—"** em respostas em vez de **0**: ali o estágio não é status de prospect, e zero era mentira com outra roupa.
+
+  Nas duas campanhas que já estavam em produção, o vínculo e os status foram recalculados a partir do histórico: 324 empresas vinculadas ao contato, 276 marcadas como contatadas e 50 como respondidas.
+
+- **A campanha volta a enviar quem a Meta recusou por pagamento** Quando a conta do WhatsApp ficava com pagamento pendente na Meta, cada tentativa da campanha voltava recusada com o código 131042 — e a reserva daquela empresa ficava no histórico como se o envio tivesse acontecido. Depois de pagar, a campanha seguia em frente sozinha, mas nunca reenviava essas empresas: o progresso congelava e o card só dizia "recusadas", sem dizer por quê nem o que fazer.
+
+  Medido em 10/11/2026 na campanha de Lebon Régis/Fraiburgo/Videira: 113 mensagens recusadas entre 11h11 e 14h45 (UTC), e um envio entregue às 14h47 provando que a conta já falava de novo. As 113 continuavam presas.
+
+  A tela de controle agora separa as recusas por pagamento das recusas definitivas (número inalcançável, experimento, limite de ecossistema) e oferece "Reenviar N mensagens" depois que a fatura é regularizada. O reenvio devolve essas empresas para a fila do agendador, que volta a mandar no ritmo do número — respeitando a janela, o limite diário e o intervalo entre mensagens. As outras recusas não entram: repetir não faz a mensagem chegar, e insistir é assédio a quem nunca vai receber.
+
+  A lista de campanhas também passou a dizer quantas mensagens estão paradas por pagamento, no lugar de deixar a barra travada sem explicação.
+
 ## [1.44.12] — 2026-11-10
 
 ### Corrigido
@@ -6758,7 +6783,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.12...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.45.0...HEAD
+[1.45.0]: https://github.com/spiesdan/nexus/compare/v1.44.12...v1.45.0
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.11]: https://github.com/spiesdan/nexus/compare/v1.44.10...v1.44.11
