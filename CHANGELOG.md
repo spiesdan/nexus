@@ -6736,7 +6736,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.11...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.44.12...HEAD
+[1.44.12]: https://github.com/spiesdan/nexus/compare/v1.44.11...v1.44.12
 [1.44.11]: https://github.com/spiesdan/nexus/compare/v1.44.10...v1.44.11
 [1.44.10]: https://github.com/spiesdan/nexus/compare/v1.44.9...v1.44.10
 [1.44.9]: https://github.com/spiesdan/nexus/compare/v1.44.8...v1.44.9
