@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+### Adicionado
+
+- **NF-e de venda avulsa (balcão) no fluxo normal da emissão** A tela de notas ganhou o modo "NF-e de venda avulsa": venda sem pedido, com destinatário (cadastro ou informado), frete e os itens vendidos. O fato entra em `extras_fiscais.avulsa`; a nota nasce sem pedido (`order_id` nulo) e o número sai pela reserva da série — não pela sequência do pedido.
+
+  Prévia (`POST /api/v1/invoices/validar`) e emissão (`emitirNota` + drain + provedor) seguem o mesmo caminho do de pedido: validação fail-closed, destino do destinatário, itens resolvidos por catálogo/código/nome, total com frete. O ajuste de item por `order_item_id` não se aplica (não há pedido), e a nota órfã (`em_emissao` sem job) continua descartando.
+
+- **PDF do fechamento da carga** `GET /api/v1/shipments/[id]/fechamento/pdf` gera o documento com a conta fechada da carga — resumo financeiro, conta (entradas/saídas/líquido/esperado/diferença), linhas contadas, conferência e cobrança por condição/parada. Na tela de fechamento da carga específica, o botão "Fechamento (PDF)" abre o documento em nova aba; o romaneio continua em `/api/v1/shipments/[id]/romaneio` (apenas o romaneio).
+
 ## [1.44.11] — 2026-11-09
 
 ### Corrigido
