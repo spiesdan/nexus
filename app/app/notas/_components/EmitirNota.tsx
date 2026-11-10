@@ -30,6 +30,8 @@ import type { DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { Receipt } from "@/lib/ui/icons";
 
+import type { Produto } from "@/lib/schemas/produtos";
+import { ProdutoParaItem } from "./ProdutoParaItem";
 import type { Textos } from "./textos";
 
 /**
@@ -43,6 +45,22 @@ type Transporte = NonNullable<ExtrasFiscais["transporte"]>;
 type Cobranca = NonNullable<ExtrasFiscais["cobranca"]>;
 type Adicionais = NonNullable<ExtrasFiscais["adicionais"]>;
 type Entrega = NonNullable<ExtrasFiscais["entrega"]>;
+
+/**
+ * Item da venda avulsa no formulário — tudo em string; a conversão acontece na
+ * montagem dos extras (`emitirAvulsa`). `codigo`/`product_id`/`unidade` acompanham
+ * o item quando ele foi preenchido pelo seletor de catálogo (`ProdutoParaItem`).
+ */
+export type ItemDaVendaAvulsa = {
+  descricao: string;
+  quantidade: string;
+  preco_cents: string;
+  desconto_pct: string;
+  ncm: string;
+  codigo?: string;
+  unidade?: string;
+  product_id?: string | null;
+};
 
 /** Tudo vira string no formulário; a conversão acontece na montagem dos extras. */
 export type ExtrasDoFormulario = {
@@ -227,7 +245,12 @@ export function EmitirNota({
    */
   const [modo, setModo] = React.useState<"pedido" | "avulsa">("pedido");
   /** Campos do formulário da venda avulsa (NF-e sem pedido). */
-  const [avulsa, setAvulsa] = React.useState({
+  const [avulsa, setAvulsa] = React.useState<{
+    cliente_nome: string;
+    cliente_documento: string;
+    frete_cents: string;
+    itens: ItemDaVendaAvulsa[];
+  }>({
     cliente_nome: "",
     cliente_documento: "",
     frete_cents: "0",
@@ -284,6 +307,30 @@ export function EmitirNota({
   }
 
   /**
+   * NF-E AVULSA — o operador escolheu o produto no catálogo (`ProdutoParaItem`):
+   * o item nasce com descrição + NCM + unidade do cadastro e o vínculo
+   * (`product_id`/`codigo`) que o resolver do drain usa para casar o fato à
+   * classificação fiscal. Preço da venda continua com o operador.
+   */
+  function selecionarProdutoDoItem(idx: number, produto: Produto) {
+    setAvulsa({
+      ...avulsa,
+      itens: avulsa.itens.map((x, j) =>
+        j === idx
+          ? {
+              ...x,
+              descricao: produto.nome,
+              codigo: produto.codigo ?? "",
+              unidade: produto.unidade ?? "",
+              ncm: produto.ncm ?? "",
+              product_id: produto.id,
+            }
+          : x,
+      ),
+    });
+  }
+
+  /**
    * NF-E AVULSA — venda sem pedido: o fato entra em `extras.avulsa`. Não há
    * pedido por trás, então a pré-validação é do fato informado (destinatário +
    * itens) e a nota nasce sem `order_id`.
@@ -291,10 +338,12 @@ export function EmitirNota({
   async function emitirAvulsa() {
     const itensPayload = avulsa.itens
       .map((i) => ({
+        product_id: i.product_id ?? null,
+        codigo: i.codigo || undefined,
         descricao: i.descricao.trim(),
         ncm: i.ncm.trim() || undefined,
         cfop: undefined,
-        unidade: undefined,
+        unidade: i.unidade || undefined,
         quantidade: Math.max(0, Math.trunc(Number(i.quantidade)) || 0),
         preco_cents: Math.round((Number(i.preco_cents) || 0) * 100),
         desconto_pct: Number(i.desconto_pct) || 0,
@@ -919,7 +968,8 @@ export function EmitirNota({
                     }
                   />
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end gap-2">
+                  <ProdutoParaItem onSelecionar={(produto) => selecionarProdutoDoItem(idx, produto)} />
                   <Button variant="outline" size="sm" onClick={() => setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })}>
                     {t("Remover")}
                   </Button>
