@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api/types";
 import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
 import { logger } from "@/lib/logger";
+import { subtotalDoItem } from "@/lib/schemas/pedidos";
 import {
   COLUNAS_DA_NOTA,
   INF_CPL_MAX,
@@ -75,6 +76,131 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     );
   }
   const cfg = config as unknown as ConfigFiscalSalva & { provedor: string };
+
+  /**
+   * NF-E AVULSA (venda sem pedido) — o fato entra em `extras.avulsa`. Enquanto o
+   * campo está ausente a emissão nasce de pedido (abaixo); com ele, o emitente
+   * conta a venda que o operador registrou no balcão.
+   */
+  const avulsa = extras?.avulsa ?? null;
+
+  // A nota já nasceu nesta tentativa (pedido OU avulsa). Se qualquer passo
+  // seguinte falhar, ela NÃO pode ficar viva: uma linha em `em_emissao` sem job
+  // é uma nota que nunca emite e nunca morre — a tela mostra "Emitindo" para
+  // sempre. Descartar devolve a emissão ao estado anterior (nada emitido) e
+  // deixa a pessoa tentar de novo.
+  const descartarNota = async (motivo: string): Promise<never> => {
+    const { error: erroDescarte } = await admin.from("invoices").delete().eq("id", notaId);
+    if (erroDescarte) {
+      logger.error("fiscal: falha ao descartar a nota órfã", {
+        invoice_id: notaId,
+        organization_id: orgId,
+        erro: erroDescarte.message.slice(0, 300),
+      });
+    }
+    throw new ApiError(500, "internal_error", { requestId }, requestId, motivo);
+  };
+
+  if (avulsa) {
+    const escolha = resolverProvedor(cfg);
+
+    // A venda avulsa não admite ajuste de item por `order_item_id` (não há
+    // pedido): os itens informados na venda já são o fato, e ajustar seria
+    // recontar um documento que nunca nasceu de pedido.
+    if ((extras?.itens?.length ?? 0) > 0) {
+      throw new ApiError(
+        422,
+        "validation_failed",
+        { requestId },
+        requestId,
+        "A venda avulsa não admite ajustes de item — os itens informados na venda já são o fato.",
+      );
+    }
+
+    const totalCents =
+      avulsa.itens.reduce((soma, i) => soma + subtotalDoItem(i.quantidade, i.preco_cents, i.desconto_pct), 0) +
+      avulsa.frete_cents;
+
+    const destinatario = await carregarDestinatario(supabase, orgId, {
+      cliente_nome: avulsa.cliente_nome ?? undefined,
+      cliente_documento: avulsa.cliente_documento ?? null,
+      contact_id: avulsa.contato_id ?? null,
+    });
+    const entrega = extras?.entrega ?? destinatario.entrega;
+
+    if (escolha === "spednfe" && !entrega) {
+      const falta = destinatario.faltando.length > 0
+        ? `O cadastro do cliente precisa de ajuste: ${destinatario.faltando.join(", ")}.`
+        : "O endereço do destinatário está incompleto.";
+      throw new ApiError(
+        422,
+        "validation_failed",
+        { requestId },
+        requestId,
+        `${falta} Complete o cadastro do cliente ou informe o endereço em "Dados adicionais da emissão".`,
+      );
+    }
+    if (escolha === "spednfe" && entrega && !destinatario.documento) {
+      throw new ApiError(
+        422,
+        "validation_failed",
+        { requestId },
+        requestId,
+        "O cadastro do cliente não tem CPF/CNPJ. É obrigatório na NF-e — complete o cadastro antes de emitir.",
+      );
+    }
+
+    const extrasDaNota: ExtrasFiscais | null = {
+      ...(extras ?? {}),
+      avulsa,
+      ...(entrega ? { entrega } : {}),
+    };
+
+    const { data: nota, error } = await supabase
+      .from("invoices")
+      .insert({
+        organization_id: orgId,
+        order_id: null,
+        serie: cfg.serie,
+        numero: null,
+        chave_acesso: null,
+        xml: null,
+        status: "em_emissao",
+        provedor: escolha,
+        erro: null,
+        extras_fiscais: extrasDaNota,
+        total_cents: totalCents,
+        created_by: userId,
+      })
+      .select(COLUNAS_DA_NOTA)
+      .single();
+    if (error || !nota) {
+      throw new ApiError(500, "internal_error", { requestId }, requestId, "Erro ao registrar a nota.");
+    }
+    const notaId = (nota as unknown as { id: string }).id;
+
+    const { error: erroJob } = await supabase.from("fiscal_jobs").insert({
+      organization_id: orgId,
+      invoice_id: notaId,
+      tipo: "emitir",
+      status: "pendente",
+      created_by: userId,
+    });
+    if (erroJob) {
+      // A nota já nasceu na transação falha aqui: descarta e devolve a emissão
+      // ao estado anterior (nada foi emitido) — mesma régua do branch de pedido.
+      return descartarNota("A fila fiscal recusou a nota. Nada foi emitido — tente novamente.");
+    }
+
+    await admin.from("fiscal_events").insert({
+      organization_id: orgId,
+      invoice_id: notaId,
+      tipo: "criada",
+      status: "em_emissao",
+    });
+
+    return nota as unknown as NotaEmitida;
+  }
 
   const ids = [...new Set((orderIds?.length ? orderIds : orderId ? [orderId] : []).filter(Boolean))];
   if (ids.length === 0) {
@@ -275,22 +401,6 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
       organization_id: orgId,
     })),
   );
-
-  // A nota já nasceu. Se qualquer passo seguinte falhar, ela NÃO pode ficar
-  // viva: uma linha em `em_emissao` sem job é uma nota que nunca emite e nunca
-  // morre — a tela mostra "Emitindo" para sempre. Descartar devolve a emissão
-  // ao estado anterior (nada emitido) e deixa a pessoa tentar de novo.
-  const descartarNota = async (motivo: string): Promise<never> => {
-    const { error: erroDescarte } = await admin.from("invoices").delete().eq("id", notaId);
-    if (erroDescarte) {
-      logger.error("fiscal: falha ao descartar a nota órfã", {
-        invoice_id: notaId,
-        organization_id: orgId,
-        erro: erroDescarte.message.slice(0, 300),
-      });
-    }
-    throw new ApiError(500, "internal_error", { requestId }, requestId, motivo);
-  };
 
   if (erroVinculos) {
     return descartarNota("Não foi possível vincular os pedidos da nota. Nada foi emitido — tente novamente.");

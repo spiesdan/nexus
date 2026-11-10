@@ -16,7 +16,11 @@
 export type StatusDeNota = "pendente" | "autorizada" | "denegada" | "cancelada" | "erro";
 
 export interface PedidoParaNota {
-  order_id: string;
+  /**
+   * Pedido de origem. `null` na NF-e AVULSA — venda sem pedido (o fato entra em
+   * `extras_fiscais.avulsa`, e o número vem da reserva da série).
+   */
+  order_id: string | null;
   numero: number;
   cliente_nome: string;
   cliente_documento: string | null;

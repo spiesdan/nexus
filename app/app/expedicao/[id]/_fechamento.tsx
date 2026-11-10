@@ -32,6 +32,7 @@
  * todo dia, e o que não pode é passar sem ninguém ver.
  */
 import * as React from "react";
+import Link from "next/link";
 
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -69,6 +70,7 @@ import {
   type MotivoDevolucao,
   type StatusNaCarga,
 } from "@/lib/schemas/expedicao";
+import { FileText } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 interface ParadaDaTela {
@@ -275,6 +277,15 @@ export function FechamentoCarga({
         ) : (
           <Badge variant="neutral">{t("Ainda não conferido")}</Badge>
         )}
+        {/* O fechamento fechou: o documento que o conferente gera do estado
+            gravado é SÓ o fechamento — a conta, as linhas contadas, a
+            conferência. O romaneio continua na frente do `/romaneio`. */}
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/api/v1/shipments/${cargaId}/fechamento/pdf`} target="_blank" rel="noopener noreferrer">
+            <FileText className="h-3.5 w-3.5" aria-hidden />
+            {t("Fechamento (PDF)")}
+          </Link>
+        </Button>
       </div>
 
       {/* ── Resumo financeiro — a fita do PDF, lida do servidor ───────────── */}

@@ -1,9 +1,10 @@
 /**
- * POST /api/v1/invoices/validar {order_id} — pré-validação fiscal SEM emitir.
+ * POST /api/v1/invoices/validar — pré-validação fiscal SEM emitir.
  *
- * Devolve a lista de pendências (cliente, produtos, emitente) com para onde
- * ir corrigir. A UI mostra antes do "Emitir" para a SEFAZ nunca ser a
- * primeira a dizer que falta NCM.
+ * Aceita `{ order_id }` (emissão de pedido) e `{ extras: { avulsa } }` (NF-e de
+ * venda sem pedido). Em ambos devolve a lista de pendências (cliente, produtos,
+ * emitente) com para onde ir corrigir. A UI mostra antes do "Emitir" para a SEFAZ
+ * nunca ser a primeira a dizer que falta NCM.
  */
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
@@ -14,12 +15,25 @@ import { requireRole } from "@/lib/auth/require-role";
 import { carregarDestinatario } from "@/lib/fiscal/destinatario-da-nota";
 import { resolverProdutosDosItens } from "@/lib/fiscal/produto-do-item";
 import { carregarContextoSped, montarPayloadSped } from "@/lib/fiscal/sped-payload";
-import { statusFaturavel } from "@/lib/schemas/fiscal";
+import { extrasFiscaisSchema, statusFaturavel } from "@/lib/schemas/fiscal";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const corpoSchema = z.object({ order_id: z.string().uuid() });
+const corpoSchema = z
+  .object({
+    order_id: z.string().uuid().optional(),
+    extras: extrasFiscaisSchema.optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.order_id && !(v.extras?.avulsa ?? null)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["order_id"],
+        message: "Informe o pedido (order_id) ou a venda avulsa (extras.avulsa).",
+      });
+    }
+  });
 
 export async function POST(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
@@ -30,6 +44,82 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!parsed.success) return fail("validation_failed", "Dados inválidos.", 422, { requestId });
 
   const supabase = await createClient();
+  const pendencias: { campo: string; mensagem: string; onde: string }[] = [];
+
+  // NF-E AVULSA (venda sem pedido): o fato vem de `extras.avulsa`; a pré-validação
+  // cobre destinatário e itens da própria venda, sem pedido por trás.
+  const avulsa = parsed.data.order_id ? null : (parsed.data.extras?.avulsa ?? null);
+  if (avulsa) {
+    const destinatario = await carregarDestinatario(supabase, authz.org.orgId, {
+      cliente_nome: avulsa.cliente_nome ?? undefined,
+      cliente_documento: avulsa.cliente_documento ?? null,
+      contact_id: avulsa.contato_id ?? null,
+    });
+    for (const falta of destinatario.faltando) {
+      pendencias.push({
+        campo: "cliente",
+        mensagem: `Cliente: ajuste ${falta}`,
+        onde: avulsa.contato_id ? `/app/contacts/${avulsa.contato_id}` : "/app/contacts",
+      });
+    }
+
+    const ctx = await carregarContextoSped(authz.org.orgId);
+    if (!ctx) {
+      return ok(
+        {
+          ok: false,
+          pendencias: [{ campo: "emitente", mensagem: "Configuração fiscal incompleta.", onde: "/app/notas" }],
+        },
+        { requestId },
+      );
+    }
+    const montado = montarPayloadSped(
+      {
+        serie: "",
+        natureza_operacao: (ctx.emitente.natureza_operacao as string) ?? "",
+        cfop_padrao: (ctx.emitente.cfop_padrao as string) ?? "",
+        emitente_documento: ctx.emitente.emitente_documento ?? null,
+        razao_social: ctx.emitente.razao_social ?? null,
+        ie: ctx.emitente.ie ?? null,
+        crt: (ctx.emitente.crt as string) ?? "1",
+        logradouro: ctx.emitente.logradouro ?? null,
+        numero_end: ctx.emitente.numero_end ?? null,
+        bairro: ctx.emitente.bairro ?? null,
+        municipio: ctx.emitente.municipio ?? null,
+        codigo_municipio: ctx.emitente.codigo_municipio ?? null,
+        uf: ctx.emitente.uf ?? null,
+        cep: ctx.emitente.cep ?? null,
+        ambiente: (ctx.emitente.ambiente as string) ?? "homologacao",
+        certificado_path: ctx.emitente.certificado_path ?? null,
+      },
+      ctx.senhaCertificado ?? "",
+      ctx.orgId,
+      {
+        numero: 0,
+        nome: destinatario.nome || avulsa.cliente_nome || "",
+        documento: destinatario.documento ?? avulsa.cliente_documento ?? null,
+        ie: destinatario.ie,
+        indicador_ie: destinatario.indicador_ie,
+        frete_cents: avulsa.frete_cents ?? 0,
+      },
+      avulsa.itens.map((i) => ({
+        codigo: i.codigo ?? "",
+        descricao: i.descricao ?? "",
+        ncm: i.ncm ?? null,
+        cfop: i.cfop ?? null,
+        unidade: i.unidade ?? null,
+        quantidade: i.quantidade,
+        preco_cents: i.preco_cents,
+        desconto_pct: i.desconto_pct,
+      })),
+      parsed.data.extras,
+    );
+    if (!montado.ok) {
+      pendencias.push({ campo: "fiscal", mensagem: montado.falta, onde: "/app/notas" });
+    }
+    return ok({ ok: pendencias.length === 0, pendencias }, { requestId });
+  }
+
   const { data: pedido } = await supabase
     .from("commercial_orders")
     .select(
@@ -65,7 +155,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
 
-  const pendencias: { campo: string; mensagem: string; onde: string }[] = [];
   // O MESMO resolvedor da emissão. Antes esta pré-validação exigia CEP e olhava
   // as colunas soltas do contato: divergia do que a emissão faz — bloqueava
   // pedido emissível (CEP é opcional no TLocal) e deixava passar cidade que não
