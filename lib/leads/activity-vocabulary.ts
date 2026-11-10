@@ -100,7 +100,15 @@ export type ActivityType =
   | "conversation_claimed"
   | "conversation_transferred"
   | "conversation_released"
-  | "conversation_ai_paused";
+  | "conversation_ai_paused"
+  /**
+   * O atendente MARCO o contato como sem envio — o cliente pediu para não receber
+   * mais nada e a decisão humana chegou ao mesmo estado de opt-out que a palavra
+   * `STOP` produziria (`contacts.is_blocked`, via `before_send`). Antes desta linha a
+   * parada só existia pelo lado da INGESTÃO: pedir "não me mande mais nada" em
+   * conversa deixava o bot mandando até o cliente repetir o desligamento.
+   */
+  | "contact_no_send";
 
 export const ACTIVITY_LABELS: Record<ActivityType, string> = {
   lead_created: "Entrou pelo WhatsApp",
@@ -190,6 +198,10 @@ export const ACTIVITY_LABELS: Record<ActivityType, string> = {
   // arquivos e o controle NEGATIVO de `handoff-por-orcamento.test.ts` usa
   // literalmente "Voltar para a IA" como a sabotagem que deve reprovar.
   conversation_ai_paused: "Pausou o automático",
+  // O atendente marcou o contato como sem envio — a decisão humana registrada
+  // na conversa ("não mande mais nada"). Rótulo com objeto, como o resto da fila
+  // de comandos: diz QUEM fez e A resolução, sem verbo nu.
+  contact_no_send: "Marcou o contato sem envio",
 };
 
 /** Quando o tipo é legado/desconhecido, a linha ainda é honesta — sem jargão. */

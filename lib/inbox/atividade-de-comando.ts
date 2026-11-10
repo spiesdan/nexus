@@ -43,7 +43,14 @@ export type AtividadeDeComando =
   | "conversation_claimed"
   | "conversation_transferred"
   | "conversation_released"
-  | "conversation_ai_paused";
+  | "conversation_ai_paused"
+  /**
+   * O atendente marcou o contato como sem envio (cliente pediu para não receber
+   * mais nada). A linha da linha do tempo que o comando mudou de "automático
+   * atendendo" para "sem envio" — antes a parada existia só pelo opt-out de
+   * palavra; a decisão humana registrada na conversa agora nasce no mesmo canal.
+   */
+  | "contact_no_send";
 
 interface Entrada {
   /**
