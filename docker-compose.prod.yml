@@ -233,6 +233,8 @@ services:
       FISCAL_RESP_TEC_CONTATO: ${FISCAL_RESP_TEC_CONTATO:-}
       FISCAL_RESP_TEC_EMAIL: ${FISCAL_RESP_TEC_EMAIL:-}
       FISCAL_RESP_TEC_FONE: ${FISCAL_RESP_TEC_FONE:-}
+      # Crédito do integrador no rodapé do DANFE. Vazio = "By nexus".
+      FISCAL_DANFE_CREDITO: ${FISCAL_DANFE_CREDITO:-}
     volumes:
       # SÓ LEITURA de propósito: o sidecar lê o certificado, nunca escreve nele.
       # Um `:ro` é a diferença entre "o sidecar pode trocar o certificado da
