@@ -220,6 +220,19 @@ export function EmitirNota({
   const [emitindo, setEmitindo] = React.useState(false);
   const [pendencias, setPendencias] = React.useState<{ campo: string; mensagem: string; onde: string }[] | null>(null);
   const [extras, setExtras] = React.useState<ExtrasDoFormulario>(EXTRAS_VAZIOS);
+  /**
+   * Modo de emissão: NF-e de PEDIDO (faturado/expedido/entregue) ou NF-e de
+   * VENDA AVULSA — venda sem pedido (balcão). Na avulsa o fato entra em
+   * `extras.avulsa`; o operador conta a venda, a nota não nasce de pedido.
+   */
+  const [modo, setModo] = React.useState<"pedido" | "avulsa">("pedido");
+  /** Campos do formulário da venda avulsa (NF-e sem pedido). */
+  const [avulsa, setAvulsa] = React.useState({
+    cliente_nome: "",
+    cliente_documento: "",
+    frete_cents: "0",
+    itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+  });
 
   const alterar =
     (campo: keyof ExtrasDoFormulario) =>
@@ -270,7 +283,56 @@ export function EmitirNota({
     }));
   }
 
+  /**
+   * NF-E AVULSA — venda sem pedido: o fato entra em `extras.avulsa`. Não há
+   * pedido por trás, então a pré-validação é do fato informado (destinatário +
+   * itens) e a nota nasce sem `order_id`.
+   */
+  async function emitirAvulsa() {
+    const itensPayload = avulsa.itens
+      .map((i) => ({
+        descricao: i.descricao.trim(),
+        ncm: i.ncm.trim() || undefined,
+        cfop: undefined,
+        unidade: undefined,
+        quantidade: Math.max(0, Math.trunc(Number(i.quantidade)) || 0),
+        preco_cents: Math.round((Number(i.preco_cents) || 0) * 100),
+        desconto_pct: Number(i.desconto_pct) || 0,
+      }))
+      .filter((i) => i.descricao !== "" && i.quantidade > 0 && i.preco_cents > 0);
+    const extrasCandidatos: ExtrasFiscais = {
+      avulsa: {
+        cliente_nome: avulsa.cliente_nome.trim(),
+        cliente_documento: avulsa.cliente_documento.replace(/\D/g, "") || undefined,
+        frete_cents: Math.max(0, Math.trunc(Number(avulsa.frete_cents)) || 0),
+        itens: itensPayload,
+      },
+    };
+    const checagem = extrasFiscaisSchema.safeParse(extrasCandidatos);
+    if (!checagem.success) {
+      toast.error(checagem.error.issues[0]?.message ?? t("Dados adicionais inválidos."));
+      return;
+    }
+    setEmitindo(true);
+    setPendencias(null);
+    try {
+      await apiClient.post("/api/v1/invoices", { extras: checagem.data });
+      toast.success(t("Venda avulsa enfileirada para emissão"));
+      setAvulsa({ cliente_nome: "", cliente_documento: "", frete_cents: "0", itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }] });
+      router.push("/app/notas?aba=notas");
+      router.refresh();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setEmitindo(false);
+    }
+  }
+
   async function emitir() {
+    if (modo === "avulsa") {
+      await emitirAvulsa();
+      return;
+    }
     if (!pedidoId) {
       toast.error(t("Escolha o pedido faturado ou expedido."));
       return;
@@ -352,7 +414,17 @@ export function EmitirNota({
         </p>
       )}
 
-      {faturados.length === 0 ? (
+      <div className="flex gap-2">
+        <Button variant={modo === "pedido" ? "default" : "outline"} size="sm" onClick={() => setModo("pedido")}>
+          {t("NF-e de pedido")}
+        </Button>
+        <Button variant={modo === "avulsa" ? "default" : "outline"} size="sm" onClick={() => setModo("avulsa")}>
+          {t("NF-e de venda avulsa")}
+        </Button>
+      </div>
+
+      {modo === "pedido" ? (
+        faturados.length === 0 ? (
         <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
           {textos.semFaturados}
         </div>
@@ -739,6 +811,125 @@ export function EmitirNota({
               {emitindo ? t("Enviando…") : textos.emitir}
             </Button>
           </div>
+        </div>
+        )
+      ) : (
+        <div className="max-w-xl space-y-4">
+          <p className="text-xs text-muted-foreground">
+            {t("Venda sem pedido (balcão): a nota nasce da venda informada, sem precisar gerar pedido.")}
+          </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="av-cliente">{t("Cliente (destinatário)")}</Label>
+            <Input
+              id="av-cliente"
+              value={avulsa.cliente_nome}
+              onChange={(e) => setAvulsa({ ...avulsa, cliente_nome: e.target.value })}
+              placeholder={t("Nome do cliente")}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="av-doc">{t("CPF ou CNPJ")}</Label>
+              <Input
+                id="av-doc"
+                inputMode="numeric"
+                maxLength={14}
+                value={avulsa.cliente_documento}
+                onChange={(e) => setAvulsa({ ...avulsa, cliente_documento: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="av-frete">{t("Frete (centavos)")}</Label>
+              <Input
+                id="av-frete"
+                type="number"
+                min={0}
+                value={avulsa.frete_cents}
+                onChange={(e) => setAvulsa({ ...avulsa, frete_cents: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Itens da venda")}</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setAvulsa({
+                    ...avulsa,
+                    itens: [...avulsa.itens, { descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+                  })
+                }
+              >
+                {t("Adicionar item")}
+              </Button>
+            </div>
+            {avulsa.itens.map((item, idx) => (
+              <div key={idx} className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-6">
+                <div className="space-y-1.5 sm:col-span-3">
+                  <Label>{t("Descrição")}</Label>
+                  <Input
+                    value={item.descricao}
+                    onChange={(e) =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, descricao: e.target.value } : x)) })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("Qtd.")}</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={item.quantidade}
+                    onChange={(e) =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, quantidade: e.target.value } : x)) })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("Preço (centavos)")}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={item.preco_cents}
+                    onChange={(e) =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, preco_cents: e.target.value } : x)) })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("Desconto (%)")}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={item.desconto_pct}
+                    onChange={(e) =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, desconto_pct: e.target.value } : x)) })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("NCM")}</Label>
+                  <Input
+                    value={item.ncm}
+                    onChange={(e) =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, ncm: e.target.value } : x)) })
+                    }
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button variant="outline" size="sm" onClick={() => setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })}>
+                    {t("Remover")}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button onClick={() => void emitir()} disabled={emitindo || !configInicial}>
+            {emitindo ? t("Enviando…") : textos.emitir}
+          </Button>
         </div>
       )}
 

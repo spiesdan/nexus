@@ -287,6 +287,67 @@ const itemAjusteSchema = z.object({
 
 export type AjusteDoItem = z.infer<typeof itemAjusteSchema>;
 
+/**
+ * O ITEM da venda avulsa — o que o operador informou no balcão. Mesmo vocabulário
+ * fiscal do item do pedido (`itemAjusteSchema`), sem o vínculo com
+ * `commercial_order_items`: na avulsa a nota é a própria verdade do fato.
+ */
+const itemAvulsaSchema = z.object({
+  /** Vínculo com o catálogo quando o item nasceu de um produto cadastrado. */
+  product_id: z.string().uuid().nullable().optional(),
+  /** Código do produto — atalho de resolução de NCM/CFOP/unidade no catálogo. */
+  codigo: z.string().trim().min(1, "Código do produto").max(60).optional(),
+  /** Descrição do item (xProd). */
+  descricao: z.string().trim().min(1, "Informe a descrição").max(120).optional(),
+  /** NCM: 8 dígitos. */
+  ncm: z.string().trim().regex(/^\d{8}$/, "NCM tem 8 dígitos").optional(),
+  /** CFOP: 4 dígitos. */
+  cfop: z.string().trim().regex(/^\d{4}$/, "CFOP tem 4 dígitos").optional(),
+  /** uCom/uTrib, 1..6. */
+  unidade: z.string().trim().min(1, "Informe a unidade").max(6).optional(),
+  quantidade: z.number().int().min(1, "quantidade precisa ser ao menos 1").max(999999),
+  preco_cents: z.number().int().min(0, "preço não pode ser negativo").max(2_000_000_000),
+  desconto_pct: z.number().min(0).max(100).default(0),
+});
+
+/** Um item da venda avulsa, pronto para a NF-e. */
+export type ItemAvulsa = z.infer<typeof itemAvulsaSchema>;
+
+/**
+ * A venda avulsa — NF-e sem pedido. `itens` é o fato; `frete_cents` entra no
+ * vNF; o destinatário pode vir do cadastro (`contato_id`) ou do que foi
+ * informado na própria venda.
+ */
+export const avulsaSchema = z
+  .object({
+    /** Contato do cadastro quando o cliente já existe no CRM (opcional). */
+    contato_id: z.string().uuid().nullable().optional(),
+    /** Nome do destinatário na venda (xNome) — obrigatório sem contato cadastrado. */
+    cliente_nome: z.string().trim().min(2, "Nome curto demais").max(60).optional(),
+    /** CPF (11) ou CNPJ (14) — só dígitos, como o XML leva. */
+    cliente_documento: z
+      .string()
+      .trim()
+      .regex(/^\d{11}$|^\d{14}$/, "Documento: CPF com 11 ou CNPJ com 14 dígitos")
+      .optional(),
+    /** Frete em centavos — entra no vNF. */
+    frete_cents: z.number().int().min(0).default(0),
+    /** Itens vendidos no balcão. */
+    itens: z.array(itemAvulsaSchema).min(1, "A venda avulsa precisa de ao menos 1 item").max(50),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.contato_id && !v.cliente_nome) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["cliente_nome"],
+        message: "Informe o nome do cliente (ou escolha o contato cadastrado).",
+      });
+    }
+  });
+
+/** A venda avulsa, como a nota a guarda e a tela a envia. */
+export type AvulsaNota = z.infer<typeof avulsaSchema>;
+
 export const extrasFiscaisSchema = z.object({
   transporte: transporteSchema.optional(),
   cobranca: cobrancaSchema.optional(),
@@ -295,6 +356,13 @@ export const extrasFiscaisSchema = z.object({
   /** Correções feitas NA NOTA depois de uma rejeição (ver `ajusteDaNotaSchema`). */
   destinatario: destinatarioAjusteSchema.optional(),
   itens: z.array(itemAjusteSchema).max(500).optional(),
+  /**
+   * NF-e AVULSA (venda sem pedido): o fato da venda em si, que não vem de um
+   * `commercial_orders`. Enquanto o campo está ausente a emissão é sempre de
+   * pedido (faturado/expedido/entregue); com ele presente, a nota nasce sem
+   * pedido — a venda avulsa/balcão.
+   */
+  avulsa: avulsaSchema.optional(),
 });
 
 /**
@@ -331,7 +399,8 @@ export type ExtrasFiscaisGravados = ExtrasFiscais | null | undefined;
 
 export const notaCreateSchema = z.object({
   /**
-   * O pedido que origina a nota. Sem pedido, sem nota (avulsa é fase futura).
+   * O pedido que origina a nota (agora opcional: venda avulsa/balcão). Sem
+   * pedido, sem nota — salvo a venda avulsa, que vai em `extras.avulsa`.
    *
    * Opcional quando `order_ids` vem preenchido: o primeiro pedido continua
    * sendo o `order_id` da nota (compatibilidade com tudo que lê uma nota por
@@ -355,13 +424,18 @@ export const notaCreateSchema = z.object({
    */
   extras: extrasFiscaisSchema.optional(),
 })
-  // Ou o pedido único, ou a lista do agrupamento — nunca nenhum dos dois. A
-  // recusa aqui nomeia o campo em vez de deixar a emissão falhar com "pedido
-  // não encontrado" no meio.
-  .refine((v) => v.order_id != null || (v.order_ids?.length ?? 0) > 0, {
-    message: "Informe o pedido (order_id) ou os pedidos agrupados (order_ids).",
-    path: ["order_id"],
-  });
+  // Tudo o que dá para emitir: o pedido único, a lista do agrupamento (o
+  // primeiro continua sendo o `order_id` da nota) — ou a venda avulsa, que não
+  // nasce de pedido nenhum. A recusa aqui nomeia o campo em vez de deixar a
+  // emissão falhar com "pedido não encontrado" no meio.
+  .refine(
+    (v) => v.order_id != null || (v.order_ids?.length ?? 0) > 0 || v.extras?.avulsa != null,
+    {
+      message:
+        "Informe o pedido (order_id) ou os pedidos agrupados (order_ids), ou a venda avulsa (extras.avulsa).",
+      path: ["order_id"],
+    },
+  );
 
 export type NotaCreate = z.infer<typeof notaCreateSchema>;
 
