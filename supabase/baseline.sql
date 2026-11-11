@@ -27399,6 +27399,30 @@ $$;
 revoke execute on function public.fn_aplicar_status_mercos(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.fn_aplicar_status_mercos(uuid, jsonb) to service_role;
 
+-- ---- 0303 — a campanha escolhe o número; o motor obedece ----
+--
+-- Apêndice idempotente da migration 0303. A campanha por região fala com
+-- clientes que já compraram nas cidades escolhidas, por um número NÃO OFICIAL
+-- (WAHA). Até aqui o motor escolhia a primeira sessão compatível por
+-- capability; com mais de um número pareado, quem decidia era a máquina.
+-- `session_id` guarda a escolha do operador; NULL = escolha automática
+-- (campanhas anteriores, prospecção e recuperação). Se o número escolhido
+-- deixar de estar WORKING, o tick PAUSA a campanha com motivo em vez de trocar
+-- de número em silêncio.
+--
+-- `on delete set null` porque sessão é arquivada, não apagada; o SET NULL só
+-- existe para não travar a remoção da organização (cascade).
+alter table public.prospecting_campaigns
+  add column if not exists session_id uuid
+    references public.channel_sessions(id) on delete set null;
+
+comment on column public.prospecting_campaigns.session_id is
+  'Número (channel_sessions.id) escolhido pelo operador para esta campanha. NULL = escolha automática por capability (campanhas anteriores à 0303, prospecção e recuperação).';
+
+create index if not exists prospecting_campaigns_session_id_idx
+  on public.prospecting_campaigns (session_id)
+  where session_id is not null;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

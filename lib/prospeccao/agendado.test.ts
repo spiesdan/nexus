@@ -1002,6 +1002,67 @@ describe("processarCampanhasAgendadas", () => {
     expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("texto livre");
   });
 
+  it("(v3) 0303 — a campanha fala pelo número ESCOLHIDO, não pelo primeiro WORKING", async () => {
+    // Com dois números pareados, "o primeiro da lista" era a máquina decidindo
+    // por qual porta a campanha sai. Agora quem escolhe é o operador, e o tick
+    // obedece — inclusive quando o número escolhido não é o primeiro.
+    const dados = base({
+      prospecting_campaigns: [campanha({ session_id: "sess-2" })],
+      channel_sessions: [
+        { id: "sess-1", organization_id: "org-1", provider: SESSOES.qr, status: "WORKING", archived_at: null },
+        { id: "sess-2", organization_id: "org-1", provider: SESSOES.qr, status: "WORKING", archived_at: null },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(resumo.enviados).toBe(1);
+    expect(enviar.mock.calls[0]![1].sessaoId).toBe("sess-2");
+  });
+
+  it("(v4) 0303 — número escolhido fora do WORKING PAUSA a campanha e diz por quê", async () => {
+    // Trocar de número em silêncio mandaria pela porta errada e chamaria isso
+    // de sucesso. O tick para, e a tela mostra o próximo passo.
+    const dados = base({
+      prospecting_campaigns: [campanha({ session_id: "sess-caida" })],
+      channel_sessions: [
+        { id: "sess-1", organization_id: "org-1", provider: SESSOES.qr, status: "WORKING", archived_at: null },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pausadas).toBe(1);
+    expect(resumo.pulados).toEqual([
+      { campanha: "camp-1", motivo: "sessao_da_campanha_indisponivel" },
+    ]);
+    expect(dados.prospecting_campaigns![0]).toMatchObject({
+      status: "pausada",
+      pausa_motivo: expect.stringContaining("não está conectado"),
+    });
+  });
+
+  it("(v5) 0303 — número escolhido que não aceita o tipo também pausa, com motivo próprio", async () => {
+    // Aqui o número ESTÁ conectado; o conserto não é reconectar, é trocar o
+    // escolhido. Um "sem canal" genérico mandaria refazer o que está de pé.
+    const dados = base({
+      prospecting_campaigns: [campanha({ session_id: "sess-oficial" })],
+      channel_sessions: [
+        { id: "sess-oficial", organization_id: "org-1", provider: SESSOES.oficial, status: "WORKING", archived_at: null },
+      ],
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    expect(enviar).not.toHaveBeenCalled();
+    expect(resumo.pausadas).toBe(1);
+    expect(dados.prospecting_campaigns![0]).toMatchObject({
+      status: "pausada",
+      pausa_motivo: expect.stringContaining("texto livre"),
+    });
+  });
+
   it("(v2) número oficial em RED PAUSA a campanha de template — e diz por quê", async () => {
     // A Meta ainda aceita o envio em RED; é justamente por isso que a decisão
     // não pode ser dela. Seguir mandando piora a nota do número e, depois,

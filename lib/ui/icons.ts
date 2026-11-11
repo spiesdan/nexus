@@ -45,6 +45,7 @@ export {
   Bell,
   BellSlash,
   PaperPlaneTilt,
+  Megaphone,
   Smiley,
   Check,
   Checks,

@@ -295,7 +295,16 @@ function BarraDeEnvio({ resumo }: { resumo: ResumoDeEnvio | null | undefined }) 
   );
 }
 
-export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
+export function CampanhasTab({
+  podeOperar,
+  aoCriarPrimeira,
+  rotuloCriarPrimeira,
+}: {
+  podeOperar: boolean;
+  /** O que o estado vazio oferece como primeira ação. Sem isto, o assistente. */
+  aoCriarPrimeira?: () => void;
+  rotuloCriarPrimeira?: string;
+}) {
   const t = useT();
   const router = useRouter();
   const [descobertas, setDescobertas] = React.useState<CampanhaDescoberta[] | null>(null);
@@ -471,8 +480,8 @@ export function CampanhasTab({ podeOperar }: { podeOperar: boolean }) {
           primary={
             podeOperar
               ? {
-                  label: t("Criar primeira campanha"),
-                  onClick: () => router.push("/app/prospeccao/nova"),
+                  label: t(rotuloCriarPrimeira ?? "Criar primeira campanha"),
+                  onClick: aoCriarPrimeira ?? (() => router.push("/app/prospeccao/nova")),
                 }
               : undefined
           }

@@ -489,6 +489,64 @@ export const inativosPreviewSchema = z.object({
   dias_sem_compra: z.number().int().min(1).max(3650),
 });
 
+/** O recorte geográfico da campanha por região — a mesma forma de `cidades`. */
+const cidadesDaRegiaoSchema = z
+  .array(
+    z.object({
+      cidade: z.string().trim().min(2).max(120),
+      estado: z.string().trim().max(10).optional(),
+    }),
+  )
+  .min(1)
+  .max(50);
+
+/** A PRÉVIA da campanha por região: só o recorte, sem criar nem reservar. */
+export const regiaoPreviewSchema = z.object({
+  cidades: cidadesDaRegiaoSchema,
+});
+
+/**
+ * A CAMPANHA POR REGIÃO — clientes que já compraram nas cidades escolhidas.
+ *
+ * A audiência NÃO vem do corpo: o servidor recalcula a lista com
+ * `listarClientesPorRegiao` a partir das cidades. Aceitar `contato_ids` da tela
+ * deixaria a campanha mandar para quem não foi atendido na região — o mesmo
+ * erro que a campanha de recuperação evita ao ler o radar, não a seleção.
+ *
+ * O número é escolha do operador (`session_id`, 0303), e é NÃO OFICIAL por
+ * construção: a mensagem é texto livre, e só o que fala texto fora da janela de
+ * 24h é compatível (WAHA). O POST confere a capability antes de gravar.
+ */
+export const campanhaPorRegiaoSchema = z
+  .object({
+    nome: z.string().trim().min(2).max(120),
+    objetivo: z.string().trim().max(300).nullable().optional(),
+    cidades: cidadesDaRegiaoSchema,
+    session_id: z.string().uuid(),
+    /** As variações da rotação anti-ban — 1..5, a mesma régua do disparo. */
+    mensagens: z
+      .array(z.string().trim().min(1).max(4000))
+      .min(1)
+      .max(MENSAGENS_POR_DISPARO_MAX),
+    espaco_ms: z.number().int().min(1000).max(ESPACO_MAXIMO_MS).optional(),
+    limite_diario: z.number().int().min(1).max(500).optional(),
+    data_inicio: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+      .nullable()
+      .optional(),
+    data_fim: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD.")
+      .nullable()
+      .optional(),
+    janelas: z.array(janelaDoDiaSchema).max(10).optional(),
+  })
+  .refine(periodoValido, {
+    message: "A data final não pode ser anterior à inicial.",
+    path: ["data_fim"],
+  });
+
 /** A fonte do público é um botão da tela de campanha, não campo de texto. */
 export type FonteDoPublico = NonNullable<
   z.infer<typeof campanhaCreateSchema>["fonte_publico"]
