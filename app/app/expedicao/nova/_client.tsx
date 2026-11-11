@@ -17,7 +17,7 @@ import { apiClient } from "@/lib/api/client";
 import { diaDeReferencia, filtrarEmbarcaveisPor, temCidade } from "@/lib/expedicao/buscar-embarcavel";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
-import { type PedidoComercial } from "@/lib/schemas/pedidos";
+import { type MudancaDoMercos, type PedidoComercial } from "@/lib/schemas/pedidos";
 import {
   CaretLeft,
   Funnel,
@@ -26,6 +26,12 @@ import {
   X,
 } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+
+/** Uma mudança que a revisão do Mercos aplicou em um pedido embarcado. */
+type MudancaCarregada = {
+  numero: number;
+  mercos_ultima_mudanca: MudancaDoMercos | null;
+};
 
 /** `2026-10-26` → `26/10`; string vazia → `—` (nunca "Invalid Date"). */
 function diaCurto(chave: string | null | undefined): string {
@@ -144,18 +150,48 @@ export function NovaCargaClient({
     }
     setEnviando(true);
     try {
-      const corpo = await apiClient.post<{ data: { id: string; numero: number } | null }>(
-        `/api/v1/shipments`,
-        {
-          ...(placa.trim() ? { placa: placa.trim() } : {}),
-          ...(veiculo.trim() ? { veiculo_tipo: veiculo.trim() } : {}),
-          ...(motorista.trim() ? { motorista_nome: motorista.trim() } : {}),
-          order_ids: selecionados,
-        },
-      );
+      const corpo = await apiClient.post<{
+        data: { id: string; numero: number; mudancas?: MudancaCarregada[] } | null;
+      }>(`/api/v1/shipments`, {
+        ...(placa.trim() ? { placa: placa.trim() } : {}),
+        ...(veiculo.trim() ? { veiculo_tipo: veiculo.trim() } : {}),
+        ...(motorista.trim() ? { motorista_nome: motorista.trim() } : {}),
+        order_ids: selecionados,
+      });
       const carga = corpo?.data;
       if (!carga) throw new Error(t("A carga foi criada mas o servidor não devolveu o resumo."));
+
+      // Ao gerar a carga, a revisão do Mercos corre sobre TODOS os pedidos que
+      // estão saindo — a geração não pode partir de dado do ERP defasado.
+      const numeros = selecionados
+        .map((id) => embarcaveis.find((p) => p.id === id))
+        .filter((p): p is PedidoComercial => Boolean(p))
+        .map((p) => p.numero);
+      await apiClient.post("/api/v1/commercial-orders/importar-mercos", { revisarNumeros: numeros });
+
       nexusToast.success(`${t("Carga criada")}: ${numeroDaCarga(carga.numero)}`);
+
+      // Balão de aviso: o que o Mercos mudou nos pedidos embarcados. É a
+      // mesma informação que a revisão devolveu para a ficha — a carga que vai
+      // imprimir (romaneio) nasce dos itens atuais, então quem imprime não pode
+      // sair com a versão antiga sem ninguém saber.
+      const mudancas = carga.mudancas ?? [];
+      if (mudancas.length > 0) {
+        const linhas = mudancas.flatMap((m) =>
+          m.mercos_ultima_mudanca
+            ? [
+                `${m.numero ? `PED-${String(m.numero).padStart(4, "0")}` : "—"} — ` +
+                  (m.mercos_ultima_mudanca.campos ?? [])
+                    .map((c) => `${c.campo}: ${String(c.de ?? "")} → ${String(c.para ?? "")}`)
+                    .join("; "),
+              ]
+            : [],
+        );
+        nexusToast.warning(
+          `${t("Carga criada")}: ${numeroDaCarga(carga.numero)} — ${t("Mudanças encontradas no Mercos")}. ${linhas.join(" | ")} ${t("Reimprima o romaneio para a carga sair com o pedido atualizado.")}`,
+        );
+      }
+
       router.push(`/app/expedicao/${carga.id}`);
     } catch (e) {
       showApiError(e);

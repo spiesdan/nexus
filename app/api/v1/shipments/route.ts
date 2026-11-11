@@ -61,11 +61,19 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const supabase = await createClient();
 
+  // O que o Mercos mudou nos pedidos da carga — preenchido quando há
+  // pedidos embarcáveis (o diff vem do `commercial_orders.mercos_ultima_mudanca`,
+  // gravado pela revisão do Mercos). Vazio quando a carga nasce sem pedidos.
+  const mudancas: Array<{
+    numero: number;
+    mercos_ultima_mudanca: { em: string; campos: Array<{ campo: string; de: string | number | null; para: string | number | null }> } | null;
+  }> = [];
+
   // Elegibilidade + existência, um a um, antes de criar qualquer coisa.
   if (ids.length > 0) {
     const { data: pedidos, error } = await supabase
       .from("commercial_orders")
-      .select("id, numero, status")
+      .select("id, numero, status, mercos_ultima_mudanca")
       .eq("organization_id", authz.org.orgId)
       .in("id", ids);
     if (error) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
@@ -93,6 +101,20 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (ocupados && ocupados.length > 0) {
       return fail("validation_failed", "Um dos pedidos já está em outra carga.", 409, { requestId });
     }
+
+    // O QUE O MERCOS MUDOU NOS PEDIDOS DA CARGA — a revisão guarda o último diff
+    // aplicado em `commercial_orders.mercos_ultima_mudanca`. Quem embarca um
+    // pedido que já foi revisado com mudança precisa ver o aviso: a carga nasce
+    // lendo os itens atuais, mas a pessoa que gera a carga precisa saber que o
+    // romaneio que vai imprimir reflete uma alteração (itens/cliente/endereço).
+    mudancas.push(
+      ...((pedidos ?? []) as unknown as Array<{
+        numero: number;
+        mercos_ultima_mudanca: { em: string; campos: Array<{ campo: string; de: string | number | null; para: string | number | null }> } | null;
+      }>)
+        .filter((p) => p.mercos_ultima_mudanca != null)
+        .map((p) => ({ numero: p.numero, mercos_ultima_mudanca: p.mercos_ultima_mudanca })),
+    );
   }
 
   const { data: numero, error: erroNumero } = await supabase.rpc("fn_proximo_numero_carga", {
@@ -160,5 +182,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   // está na doca. Quem avisa é o "Sair para rota" (`rota/iniciar`), quando a
   // carga vira `em_rota` — ver `lib/expedicao/aviso-de-carga.ts`.
 
-  return ok({ ...(carga as unknown as Record<string, unknown>), numero }, { requestId, status: 201 });
+  // O que o Mercos mudou nos pedidos embarcados: a tela de montagem usa isso
+  // para o balão de aviso ("o que mudou") antes de o operador imprimir o
+  // romaneio — a impressão não pode sair com a versão antiga sem ninguém saber.
+  const resposta: Record<string, unknown> = {
+    ...(carga as unknown as Record<string, unknown>),
+    numero,
+  };
+  if (mudancas.length > 0) resposta.mudancas = mudancas;
+
+  return ok(resposta, { requestId, status: 201 });
 }
