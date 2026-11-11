@@ -363,6 +363,8 @@ export default async function NotasPage({
     processando: t("Processando"),
     concluido: t("Concluído"),
     cliente: t("Cliente"),
+    buscarCliente: t("Buscar cliente por nome, telefone ou e-mail…"),
+    clienteAvulso: t("ou digite o nome para cliente avulso"),
     modelo: t("Modelo"),
     modeloNfe: t("NF-e (55)"),
     modeloNfce: t("NFC-e (65)"),

@@ -44,6 +44,7 @@ export function CustomerSelector({
   aoEscolher,
   aoCriarNovo,
   textos,
+  mostrarResumo,
 }: {
   contatos: ContatoOpcao[];
   contatoId: string | null;
@@ -52,6 +53,8 @@ export function CustomerSelector({
   /** Abre o cadastro de cliente sem sair do pedido (só quando o pai oferece). */
   aoCriarNovo?: () => void;
   textos: { cliente: string; buscarCliente: string; clienteAvulso: string };
+  /** Só na tela de NF-e avulsa: o resumo de pedidos/comércio não se aplica. */
+  mostrarResumo?: boolean;
 }) {
   const t = useT();
   const [busca, setBusca] = React.useState(clienteNome);
@@ -64,7 +67,7 @@ export function CustomerSelector({
   }, [clienteNome]);
 
   React.useEffect(() => {
-    if (!contatoId) {
+    if (!contatoId || mostrarResumo === false) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setResumo(null);
       return;
@@ -222,7 +225,7 @@ export function CustomerSelector({
         </div>
       </div>
 
-      {resumo && (
+      {mostrarResumo && resumo && (
         <dl className="space-y-1 rounded-2xl border bg-muted/40 p-3 text-sm">
           {resumo.limite_cents !== null && (
             <div className="flex justify-between">

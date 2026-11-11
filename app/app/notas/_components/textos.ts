@@ -139,6 +139,10 @@ export interface Textos {
   processando: string;
   concluido: string;
   cliente: string;
+  /** Busca do seletor de cliente cadastrado na tela de NF-e avulsa. */
+  buscarCliente: string;
+  /** Aviso quando o destinatário não está no cadastro (venda avulsa sem cliente). */
+  clienteAvulso: string;
   modelo: string;
   modeloNfe: string;
   modeloNfce: string;
