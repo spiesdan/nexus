@@ -88,7 +88,12 @@ export default async function PedidosPage({
   if (periodo.de) q = q.gte("created_at", periodo.de);
   if (periodo.ate) q = q.lt("created_at", periodo.ate);
 
-  const { data } = await q.order("created_at", { ascending: false }).limit(200);
+  // A ORDEM É O NÚMERO DO PEDIDO, do maior para o menor — a mesma da lista
+  // do Mercos. `numero` é único por organização
+  // (`commercial_orders_org_numero_key`), então a ordem é total: não precisa
+  // de desempate, e o pedido novo entra sempre no topo. O filtro de período
+  // continua em `created_at` (o dia que o dono conta), mas ele não posiciona.
+  const { data } = await q.order("numero", { ascending: false }).limit(200);
   const iniciaisComEmitente = await comNomeDoEmitente(
     (data ?? []) as unknown as Array<{
       created_by: string | null;
