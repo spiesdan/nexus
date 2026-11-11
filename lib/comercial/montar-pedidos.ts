@@ -24,7 +24,8 @@
  */
 import { isServiceRoleConfigured } from "@/lib/audit";
 import { documentoDoCadastro } from "@/lib/contacts/documento-do-cadastro";
-import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
+import { cidadeSemEstado, enderecoDaRua } from "@/lib/contacts/endereco-em-linha";
+import { rotuloDoContato, SEM_NOME } from "@/lib/contacts/rotulo-do-contato";
 import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO } from "@/lib/schemas/pedidos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -35,12 +36,22 @@ import type { PedidoPdfCliente, PedidoPdfDados, PedidoPdfItem } from "./pedido-p
 type ClienteServidor = Awaited<ReturnType<typeof createClient>>;
 
 /** Linha crua de `commercial_orders` no formato que o PDF espera. */
-type LinhaDoPedido = Omit<PedidoPdfDados, "itens" | "cliente" | "vendedor_nome"> & {
+type LinhaDoPedido = Omit<
+  PedidoPdfDados,
+  "itens" | "cliente" | "vendedor_nome" | "observacoes"
+> & {
   id: string;
   contact_id: string | null;
   cliente_nome: string;
   cliente_documento: string | null;
   vendedor_user_id: string | null;
+  /** Emissor importado do canal, quando ele não é usuário do CRM. */
+  vendedor_nome: string | null;
+  origem: string;
+  /** Observação INTERNA dos pedidos do Mercos — não vai para o impresso. */
+  observacoes: string | null;
+  /** A observação que o Mercos imprime em "Informações adicionais". */
+  mercos_observacoes: string | null;
   endereco_entrega: string | null;
 };
 
@@ -101,7 +112,7 @@ export async function montarPedidosPdf(
       frete_cents: linha.frete_cents,
       total_cents: linha.total_cents,
       condicao_pagamento: linha.condicao_pagamento,
-      observacoes: linha.observacoes,
+      observacoes: observacoesDoPdf(linha),
       endereco_entrega: linha.endereco_entrega,
       created_at: linha.created_at,
       cliente: clienteDe(linha, clientePorId.get(linha.contact_id ?? "")),
@@ -208,6 +219,7 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
     rotuloDocumento: rotuloDoDocumento(null, linha.cliente_documento),
     documento: linha.cliente_documento,
     ie: null,
+    // Sem cadastro, o snapshot do pedido é a única informação que existe.
     endereco: linha.endereco_entrega,
     bairro: null,
     cep: null,
@@ -223,28 +235,62 @@ function clienteDe(linha: LinhaDoPedido, contato?: RegistroDoContato): PedidoPdf
   // nenhum, embora o cadastro o tivesse.
   const documento = documentoDoCadastro(contato)?.digitos ?? linha.cliente_documento;
   return {
-    nome: contato.display_name ?? contato.name ?? linha.cliente_nome,
+    nome: nomeDoCliente(contato, linha.cliente_nome),
     fantasia: contato.fantasia,
     rotuloDocumento: rotuloDoDocumento(contato.tipo_pessoa, documento),
     documento,
     ie: contato.ie,
-    endereco:
-      enderecoEmLinha({
-        logradouro: contato.logradouro,
-        numero_end: contato.numero_end,
-        complemento: contato.complemento,
-        bairro: contato.bairro,
-        cidade: contato.cidade,
-        uf: contato.uf,
-        cep: contato.cep,
-      }) || linha.endereco_entrega,
+    // O campo "Endereço" do impresso é só a rua (ver `enderecoDaRua`): bairro,
+    // cidade, UF e CEP têm linha própria, e repeti-los aqui era o defeito
+    // visível do pedido 19513.
+    endereco: enderecoDaRua(contato) || linha.endereco_entrega,
     bairro: contato.bairro,
     cep: contato.cep,
-    cidade: contato.cidade,
+    // O Mercos colou o estado na cidade em parte do cadastro ("Porto União,
+    // Santa Catarina"); a linha "Estado" logo abaixo já o imprime.
+    cidade: cidadeSemEstado(contato.cidade, contato.uf),
     uf: contato.uf,
     fone: contato.phone_number,
     email: contato.email,
   };
+}
+
+/**
+ * O nome do cliente que o Mercos imprime.
+ *
+ * O importador grava `display_name` como `"<fantasia> - <razão social>"`
+ * (medido nesta instalação em 2026-11-11: 6.420 pedidos do Mercos com o nome
+ * do cliente no formato `A - B`) e o impresso mostra só a razão social — o
+ * campo "Nome Fantasia" já carrega a outra metade. Com o prefixo, a fantasia
+ * sai duas vezes na mesma linha e empurra o bloco inteiro.
+ */
+function nomeDoCliente(contato: RegistroDoContato, snapshot: string): string {
+  // O rótulo central é quem decide o que é nome de gente (recusa `@lid` e o
+  // "Contato 123" que o código antigo inventava). Sem o telefone de propósito:
+  // no impresso ele tem a linha "Telefone", e o campo "Cliente" é a razão
+  // social — que, sem cadastro, é o snapshot do pedido.
+  const rotulo = rotuloDoContato({ display_name: contato.display_name, name: contato.name });
+  const nome = rotulo === SEM_NOME ? "" : rotulo;
+  if (!nome) return snapshot;
+  const fantasia = contato.fantasia?.trim();
+  if (!fantasia) return nome;
+  const prefixo = `${fantasia.toLowerCase()} - `;
+  if (!nome.toLowerCase().startsWith(prefixo)) return nome;
+  const semFantasia = nome.slice(prefixo.length).trim();
+  return semFantasia || nome;
+}
+
+/**
+ * O texto de "Informações adicionais" do impresso.
+ *
+ * Nos pedidos importados, `observacoes` guarda lixo interno do importador
+ * ("Status Mercos: Concluído") e a observação que o cliente via no Mercos
+ * está em `mercos_observacoes`. Nos pedidos criados no CRM, a observação é
+ * `observacoes`. Bloco vazio não é impresso (ver `pedido-pdf.tsx`).
+ */
+function observacoesDoPdf(linha: LinhaDoPedido): string | null {
+  const texto = (linha.origem === "mercos" ? linha.mercos_observacoes : linha.observacoes)?.trim();
+  return texto ? texto : null;
 }
 
 /**
@@ -272,6 +318,9 @@ async function carregarVendedores(linhas: LinhaDoPedido[]): Promise<Map<string, 
 }
 
 function nomeDeVendedor(linha: LinhaDoPedido, nomes: Map<string, string>): string | null {
-  if (!linha.vendedor_user_id) return null;
-  return nomes.get(linha.vendedor_user_id) ?? null;
+  const usuario = linha.vendedor_user_id ? nomes.get(linha.vendedor_user_id) : null;
+  // Pedido importado do Mercos não tem usuário do CRM: o nome vem da coluna
+  // `vendedor_nome` ("VENDEDOR JB"). Sem essa reserva o campo saía "-----"
+  // num pedido que o Mercos imprime com vendedor (caso do 19513).
+  return usuario?.trim() || linha.vendedor_nome?.trim() || null;
 }

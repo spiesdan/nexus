@@ -33,9 +33,19 @@
  *   Mercos — e `N%` quando há (o modelo não mostra desconto nos dois
  *   arquivos, então o formato do valor positivo é o nosso).
  *
- * O que o Mercos imprime e nós NÃO temos, portanto não aparece: nada. O
- * emitente entra inteiro (nome no título, CNPJ na linha da representada);
- * telefone e endereço da loja não são impressos no modelo deles.
+ * O que o Mercos imprime e nós NÃO temos: o NOME COMERCIAL da emitente. O
+ * título e a representada usam a razão social (`organizations.legal_name`)
+ * porque a fantasia do ERP ("BILL COMERCIO DE ESTOPAS") não está gravada em
+ * lugar nenhum — `display_name` é outra coisa (a marca da instalação). Na
+ * referência a linha é "fantasia / razão social"; aqui ela sai só com a razão
+ * social. Telefone e endereço da loja não são impressos no modelo deles.
+ *
+ * ## "Informações adicionais"
+ *
+ * É o bloco que o Mercos imprime entre o telefone e a grade, com o rótulo numa
+ * linha e o texto na de baixo. O texto vem de `mercos_observacoes` nos pedidos
+ * importados e de `observacoes` nos pedidos do CRM (ver `montar-pedidos.ts`);
+ * sem texto, o bloco inteiro desaparece — o Mercos não imprime rótulo vazio.
  *
  * ## Identidade
  *
@@ -47,7 +57,10 @@
 import { Document, Image, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import React from "react";
 
+import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
+import { formatarDocumento } from "@/lib/contacts/documento-do-cadastro";
 import { nomeDoEstado } from "@/lib/format/estados";
+import { formatarCep } from "@/lib/rotas/geocodificacao";
 import type { StatusDoPedido } from "@/lib/schemas/pedidos";
 
 import { larguraDoTexto, quebrarEmLinhas } from "./helvetica";
@@ -325,6 +338,42 @@ function ouTraco(valor: string | null | undefined): string {
   return valor?.trim() ? valor.trim() : "-----";
 }
 
+/**
+ * O documento como o Mercos imprime — "85.168.318/0001-39", nunca o número
+ * cru. O cadastro pode estar só com dígitos (é assim que o import grava) e o
+ * rótulo ("CPF"/"CNPJ") é quem diz qual máscara aplicar.
+ */
+function documentoFormatado(valor: string | null | undefined, rotulo: string): string | null {
+  const digitos = (valor ?? "").replace(/\D/g, "");
+  if (rotulo === "CPF" && digitos.length === 11) return formatarDocumento({ digitos, tipo: "CPF" });
+  if (rotulo === "CNPJ" && digitos.length === 14) return formatarDocumento({ digitos, tipo: "CNPJ" });
+  return valor?.trim() || null;
+}
+
+/** "89400000" → "89400-000"; CEP torto fica como veio (o `ouTraco` decide). */
+function cepFormatado(valor: string | null | undefined): string | null {
+  return formatarCep(valor) ?? (valor?.trim() || null);
+}
+
+/**
+ * O telefone como o Mercos imprime — DDD e número, sem o `+55` do E.164.
+ *
+ * O cadastro guarda `+5542999258697`; o papel mostra "42 99925-8697". A forma
+ * canônica do CRM devolve o nono dígito quando ele existe — o Mercos antigo
+ * imprime "42 9925-8697", mas é o mesmo número e o cadastro já o tem com o
+ * nono.
+ */
+function telefoneFormatado(valor: string | null | undefined): string | null {
+  const bruto = valor?.trim();
+  if (!bruto) return null;
+  const digitos = canonicalPhoneBR(bruto).replace(/\D/g, "");
+  if (!digitos.startsWith("55") || (digitos.length !== 12 && digitos.length !== 13)) return bruto;
+  const ddd = digitos.slice(2, 4);
+  const local = digitos.slice(4);
+  if (local.length === 9) return `${ddd} ${local.slice(0, 5)}-${local.slice(5)}`;
+  return `${ddd} ${local.slice(0, 4)}-${local.slice(4)}`;
+}
+
 /** Larguras úteis das colunas da grade (as mesmas usadas no desenho). */
 const LARGURA_DO_PRODUTO = 126;
 const LARGURA_DO_CODIGO = 70;
@@ -568,6 +617,12 @@ interface Celula {
   rotulo: string;
   /** Já resolvido por `ouTraco`: nunca vazio. */
   valor: string;
+  /**
+   * O rótulo ocupa uma linha própria e o valor começa na linha de baixo —
+   * como o "Informações adicionais" do Mercos. Sem isto, um valor longo
+   * dividiria a primeira linha com o rótulo e sairia diferente do impresso.
+   */
+  rotuloNaPropriaLinha?: boolean;
 }
 
 /** Uma linha do cabeçalho: as células que dividem a mesma linha de base. */
@@ -599,7 +654,13 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
   const c = pedido.cliente;
   const estado = c.uf ? (nomeDoEstado(c.uf) ?? c.uf) : null;
 
-  const representada = [emitente.nome, pedido.vendedor_nome ? ` / ${emitente.nome} - ${pedido.vendedor_nome}` : ""].join("");
+  // O Mercos imprime "Representada: <fantasia> / <razão social>". O nome da
+  // emitente aqui é a razão social — a fantasia da loja (o nome comercial que
+  // eles usam no ERP) não está gravada em lugar nenhum. O vendedor NÃO entra
+  // nesta linha: no Mercos ele tem o campo dele na cauda.
+  const representada = emitente.nome;
+
+  const observacoes = pedido.observacoes?.trim();
 
   const linhas: LinhaDoCabecalho[] = [
     {
@@ -611,7 +672,12 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
     {
       y: Y.representadaDoc,
       celulas: [
-        { x: GEO.esquerda, largura: COLUNA.cheia, rotulo: "CNPJ", valor: ouTraco(emitente.documento) },
+        {
+          x: GEO.esquerda,
+          largura: COLUNA.cheia,
+          rotulo: "CNPJ",
+          valor: ouTraco(documentoFormatado(emitente.documento, "CNPJ")),
+        },
       ],
     },
     {
@@ -628,7 +694,12 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
     {
       y: Y.clienteDoc,
       celulas: [
-        { x: GEO.esquerda, largura: COLUNA.esquerda, rotulo: c.rotuloDocumento, valor: ouTraco(c.documento) },
+        {
+          x: GEO.esquerda,
+          largura: COLUNA.esquerda,
+          rotulo: c.rotuloDocumento,
+          valor: ouTraco(documentoFormatado(c.documento, c.rotuloDocumento)),
+        },
         ...(c.ie?.trim()
           ? [{ x: GEO.direita, largura: COLUNA.direita, rotulo: "Inscrição Estadual", valor: c.ie.trim() }]
           : []),
@@ -641,7 +712,7 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
           x: GEO.esquerda,
           largura: COLUNA.cheia,
           rotulo: "Endereço",
-          valor: ouTraco(c.endereco ?? pedido.endereco_entrega),
+          valor: ouTraco(c.endereco || pedido.endereco_entrega),
         },
       ],
     },
@@ -649,7 +720,7 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
       y: Y.bairro,
       celulas: [
         { x: GEO.esquerda, largura: COLUNA.esquerda, rotulo: "Bairro", valor: ouTraco(c.bairro) },
-        { x: GEO.direita, largura: COLUNA.direita, rotulo: "CEP", valor: ouTraco(c.cep) },
+        { x: GEO.direita, largura: COLUNA.direita, rotulo: "CEP", valor: ouTraco(cepFormatado(c.cep)) },
       ],
     },
     {
@@ -662,10 +733,32 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
     {
       y: Y.telefone,
       celulas: [
-        { x: GEO.esquerda, largura: COLUNA.esquerda, rotulo: "Telefone", valor: ouTraco(c.fone) },
+        {
+          x: GEO.esquerda,
+          largura: COLUNA.esquerda,
+          rotulo: "Telefone",
+          valor: ouTraco(telefoneFormatado(c.fone)),
+        },
         { x: GEO.direita, largura: COLUNA.direita, rotulo: "E-mail", valor: ouTraco(c.email) },
       ],
     },
+    // Só existe quando há texto: o Mercos não imprime rótulo sem valor.
+    ...(observacoes
+      ? [
+          {
+            y: Y.telefone - TAMANHO.alturaDaLinha,
+            celulas: [
+              {
+                x: GEO.esquerda,
+                largura: COLUNA.cheia,
+                rotulo: "Informações adicionais",
+                valor: observacoes,
+                rotuloNaPropriaLinha: true,
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   return linhas;
@@ -673,7 +766,7 @@ function linhasDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados):
 
 /** O fluxo completo: as réguas fixas intercaladas nas linhas medidas. */
 function fluxoDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados): ItemDoFluxo[] {
-  const [representada, representadaDoc, cliente, clienteDoc, endereco, bairro, cidade, telefone] =
+  const [representada, representadaDoc, cliente, clienteDoc, endereco, bairro, cidade, telefone, ...depois] =
     linhasDoCabecalho(emitente, pedido);
 
   return [
@@ -688,6 +781,9 @@ function fluxoDoCabecalho(emitente: PedidoPdfEmitente, pedido: PedidoPdfDados): 
     { tipo: "linha", linha: bairro! },
     { tipo: "linha", linha: cidade! },
     { tipo: "linha", linha: telefone! },
+    // "Informações adicionais" vem DEPOIS do telefone e antes da régua do
+    // cliente, como no Mercos. Ele é opcional: só existe quando há texto.
+    ...depois.map((linha) => ({ tipo: "linha" as const, linha })),
     { tipo: "regua", y: REGUAS_FIXAS.fimDoCliente, traco: TRACO.forte },
     // A régua fina sob o cabeçalho da grade pertence à GRADE, não ao bloco do
     // cliente: ela desce junto com a grade (e é a última coisa do fluxo).
@@ -717,23 +813,35 @@ export function montarCabecalho(
       continue;
     }
 
-    const celulas = item.linha.celulas.map((celula) => ({
-      ...celula,
-      linhas: quebrarEmLinhas(
-        celula.valor,
-        {
-          // O rótulo em negrito ocupa a frente da primeira linha.
-          primeira: Math.max(1, celula.largura - larguraDoTexto(`${celula.rotulo}: `, TAMANHO.corpo, true)),
-          seguintes: celula.largura,
-        },
-        TAMANHO.corpo,
-      ),
-    }));
+    const celulas = item.linha.celulas.map((celula) => {
+      // Numa célula normal o rótulo em negrito ocupa a frente da primeira
+      // linha; no "rótulo na própria linha" ele não disputa espaço nenhum.
+      const larguraDoRotulo = celula.rotuloNaPropriaLinha
+        ? 0
+        : larguraDoTexto(`${celula.rotulo}: `, TAMANHO.corpo, true);
+      return {
+        ...celula,
+        linhas: quebrarEmLinhas(
+          celula.valor,
+          { primeira: Math.max(1, celula.largura - larguraDoRotulo), seguintes: celula.largura },
+          TAMANHO.corpo,
+        ),
+      };
+    });
 
     linhas.push({ y: item.linha.y - empurrao, celulas });
 
-    const alturaEmLinhas = Math.max(...celulas.map((celula) => celula.linhas.length), 1);
-    empurrao += (alturaEmLinhas - 1) * TAMANHO.alturaDaLinha;
+    // Quantas linhas EXTRAS a célula ocupa. Numa célula normal é o valor
+    // quebrado menos uma linha (a que já existia). No "rótulo na própria
+    // linha" o bloco inteiro é acréscimo — ele não tinha linha reservada na
+    // referência: o rótulo e cada linha de valor empurram o que vem abaixo.
+    const linhasExtras = Math.max(
+      ...celulas.map((celula) =>
+        celula.rotuloNaPropriaLinha ? celula.linhas.length + 1 : celula.linhas.length - 1,
+      ),
+      0,
+    );
+    empurrao += linhasExtras * TAMANHO.alturaDaLinha;
   }
 
   return { linhas, reguas, empurrao };
@@ -861,19 +969,6 @@ function Pagina({
           borderColor: "#000000",
         }}
       />
-      {/* Fundo do cabeçalho da grade: um cinza bem claro que separa os rótulos
-          das linhas de item sem virar faixa pesada no papel. Desenhado antes
-          das réguas para não cobrir as divisórias. */}
-      <View
-        style={{
-          position: "absolute",
-          left: GEO.caixaEsquerda + 0.5,
-          top: A4.altura - topoDaGrade,
-          width: GEO.caixaDireita - GEO.caixaEsquerda - 1,
-          height: topoDaGrade - (Y.cabecalhoDaGrade - empurrao - CAUDA.reguaDoCabecalho),
-          backgroundColor: "#f2f2f2",
-        }}
-      />
       {reguas.map((r, i) => (
         <Regua key={`r${i}`} y={r.y} traco={r.traco} />
       ))}
@@ -901,22 +996,42 @@ function Pagina({
         <React.Fragment key={`cl${i}`}>
           {linha.celulas.map((celula, j) => (
             <React.Fragment key={`cc${j}`}>
-              <Linha y={linha.y} x={celula.x} largura={celula.largura}>
-                <Text style={{ fontWeight: "bold" }}>{celula.rotulo}: </Text>
-                <Text>{celula.linhas[0]}</Text>
-              </Linha>
-              {/* As linhas seguintes do mesmo campo voltam à margem da coluna,
-                  como no navegador — sem o rótulo na frente. */}
-              {celula.linhas.slice(1).map((continuacaoDoCampo, k) => (
-                <Linha
-                  key={`cl${k}`}
-                  y={linha.y - TAMANHO.alturaDaLinha * (k + 1)}
-                  x={celula.x}
-                  largura={celula.largura}
-                >
-                  {continuacaoDoCampo}
-                </Linha>
-              ))}
+              {celula.rotuloNaPropriaLinha ? (
+                <>
+                  <Linha y={linha.y} x={celula.x} largura={celula.largura} negrito>
+                    {celula.rotulo}:
+                  </Linha>
+                  {celula.linhas.map((parte, k) => (
+                    <Linha
+                      key={`cv${k}`}
+                      y={linha.y - TAMANHO.alturaDaLinha * (k + 1)}
+                      x={celula.x}
+                      largura={celula.largura}
+                    >
+                      {parte}
+                    </Linha>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <Linha y={linha.y} x={celula.x} largura={celula.largura}>
+                    <Text style={{ fontWeight: "bold" }}>{celula.rotulo}: </Text>
+                    <Text>{celula.linhas[0]}</Text>
+                  </Linha>
+                  {/* As linhas seguintes do mesmo campo voltam à margem da coluna,
+                      como no navegador — sem o rótulo na frente. */}
+                  {celula.linhas.slice(1).map((continuacaoDoCampo, k) => (
+                    <Linha
+                      key={`cl${k}`}
+                      y={linha.y - TAMANHO.alturaDaLinha * (k + 1)}
+                      x={celula.x}
+                      largura={celula.largura}
+                    >
+                      {continuacaoDoCampo}
+                    </Linha>
+                  ))}
+                </>
+              )}
             </React.Fragment>
           ))}
         </React.Fragment>

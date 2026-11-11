@@ -74,7 +74,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (DIA.test(ate)) q = q.lt("created_at", `${ate}T23:59:59.999Z`);
   else if (INSTANTE.test(ate)) q = q.lt("created_at", ate);
 
-  const { data, error } = await q.order("created_at", { ascending: false }).limit(200);
+  // A lista da tela é a mesma do Mercos: número do pedido, do maior para o
+  // menor. `numero` é único por organização, então a ordem é total e o pedido
+  // recém-criado aparece no topo. O filtro de período continua sendo por
+  // `created_at` (o dia que o dono conta) — ele não decide a posição.
+  const { data, error } = await q.order("numero", { ascending: false }).limit(200);
 
   if (error) return fail("internal_error", "Erro ao listar os pedidos.", 500, { requestId });
   // "Emitido por <nome>": a lista da tela refaz aqui a cada filtro, então o
