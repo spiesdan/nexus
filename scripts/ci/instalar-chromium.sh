@@ -116,7 +116,7 @@ fi
 # ── 4. Se o apt não voltou: o Chromium abre? ────────────────────────────────
 if [ "$DEPS_OK" != "1" ]; then
   aviso "apt não instalou as libs — provando se o Chromium abre com as do runner."
-  if node "$RAIZ/scripts/ci/provar-chromium.cjs"; then
+  if node "$RAIZ/scripts/ci/provar-chromium.mjs"; then
     aviso "Chromium abriu sem o apt: o mirror estava fora, o browser não. Seguindo para a suíte."
     DEPS_OK=1
   fi

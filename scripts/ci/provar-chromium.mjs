@@ -11,7 +11,7 @@
 // Deliberadamente sem `--no-sandbox` manual: quem roda é o usuário `runner`, não
 // root, e é a mesma configuração dos specs. Um sandbox que só existe aqui não
 // provaria nada sobre a suíte.
-const { chromium } = require("@playwright/test");
+import { chromium } from "@playwright/test";
 
 (async () => {
   const navegador = await chromium.launch();

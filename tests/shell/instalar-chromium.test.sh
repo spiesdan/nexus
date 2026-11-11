@@ -129,13 +129,13 @@ check "retry: sai 0" bash -c '[ "$1" = 0 ]' _ "$RC"
 check "retry: tentou 2 vezes" bash -c '[ "$1" = 2 ]' _ "$(reais)"
 check "retry: esperou entre as tentativas" contem "sleep 20" "$(chamadas)"
 check "retry: avisou no log do job" contem "::warning::" "$SAIDA"
-check "retry: não chegou a provar o browser" nao_contem "provar-chromium.cjs" "$(chamadas)"
+check "retry: não chegou a provar o browser" nao_contem "provar-chromium.mjs" "$(chamadas)"
 
 # ── Caso 4: apt fora, mas o Chromium abre — segue (não derruba 40 min) ──────
 SAIDA="$(rodar fallback CHROMIUM_CACHE_HIT=true)"
 RC=$?
 check "fallback: sai 0" bash -c '[ "$1" = 0 ]' _ "$RC"
-check "fallback: prova o browser" contem "provar-chromium.cjs" "$(chamadas)"
+check "fallback: prova o browser" contem "provar-chromium.mjs" "$(chamadas)"
 check "fallback: diz que segue" contem "Seguindo para a suíte" "$SAIDA"
 check "fallback: terminou pronto" contem "Chromium pronto." "$SAIDA"
 

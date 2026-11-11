@@ -82,7 +82,7 @@ describe("CI: a instalação do Chromium é uma só e tem as três defesas", () 
 
     // 3. prova de que o browser abre antes de derrubar o gate.
     expect(sh, "a prova de que o Chromium abre saiu do script").toContain(
-      "provar-chromium.cjs",
+      "provar-chromium.mjs",
     );
 
     // E a reprovação continua sendo reprovação: sem `exit 1` no fim, o passo
