@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.49.0] — 2026-11-11
+
+### Adicionado
+
+- **Ao gerar carga, o Mercos é revisado e o operador recebe o balão do que mudou** Quando o operador gera a carga na Expedição, a revisão do Mercos agora roda sobre
+  todos os pedidos que estão saindo — a carga não nasce mais de um dado do ERP
+  defasado.
+
+  A resposta de criação de carga passa a incluir `mudancas`: os pedidos embarcados
+  que o Mercos alterou depois da última revisão (cliente, endereço de entrega ou
+  itens/totais). A tela de montagem exibe um balão de aviso com o que mudou; o
+  operador vê o que a revisão atualizou e reimprime o pedido/romaneio que já saiu com
+  o dado antigo, sem errar a entrega.
+
+- **Campanha por região fala com quem já comprou na cidade, pelo número que você escolher** O menu ganhou **Campanha**, com duas subtelas: **Campanha** (nova) e **Prospecção** (a tela B2B de sempre, que mudou de porta — `/app/prospeccao` continua funcionando e redireciona preservando a aba).
+
+  A campanha por região monta o público a partir das cidades onde a loja já atendeu: qualquer pedido não cancelado conta, e a cidade vem do cadastro do cliente. A tela mostra as cidades que existem de verdade na carteira, com a contagem de clientes alcançáveis, e uma prévia do público antes de criar — quantos recebem agora, quantos estão sem telefone e quantos já estão em outra campanha.
+
+  O número é escolha do operador, e o formulário só oferece números não oficiais conectados (por QR): a mensagem é texto livre, e o número oficial exige modelo aprovado. O envio é uma mensagem por minuto, dentro das janelas e do período escolhidos, respeitando a cota da campanha e o teto diário do próprio número. Se o número escolhido cair, a campanha pausa e diz por quê — ela não troca de número em silêncio.
+
 ## [1.48.2] — 2026-11-11
 
 ### Corrigido
@@ -6857,7 +6877,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.49.0...HEAD
+[1.49.0]: https://github.com/spiesdan/nexus/compare/v1.48.2...v1.49.0
 [1.48.2]: https://github.com/spiesdan/nexus/compare/v1.48.1...v1.48.2
 [1.48.1]: https://github.com/spiesdan/nexus/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/spiesdan/nexus/compare/v1.47.0...v1.48.0
