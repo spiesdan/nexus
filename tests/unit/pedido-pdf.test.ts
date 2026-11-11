@@ -35,7 +35,7 @@ function pedido(numero: number): PedidoPdfDados {
     frete_cents: 500,
     total_cents: 14500,
     condicao_pagamento: "30 dias",
-    observacoes: "Entregar pela manhã",
+    observacoes: null,
     endereco_entrega: null,
     created_at: "2026-09-04T12:00:00Z",
     vendedor_nome: "Ana",
@@ -289,6 +289,48 @@ describe("renderPedidoPdf", () => {
     expect(t).toContain("E-mail: -----");
     // E o traço dos totais que o próprio Mercos imprime sem preenchimento.
     expect(t).toContain("Qtde. volumes: 0 Vol");
+  });
+
+  it("documento, CEP e telefone saem no formato do papel, não crus", async () => {
+    const p = pedido(7);
+    p.cliente.documento = "85168318000139";
+    p.cliente.cep = "89400000";
+    p.cliente.fone = "+5542999258697";
+    const t = await texto(await renderPedidoPdf(EMITENTE, p));
+    expect(t).toContain("CNPJ: 85.168.318/0001-39");
+    expect(t).toContain("CEP: 89400-000");
+    expect(t).toContain("Telefone: 42 99925-8697");
+    expect(t).not.toContain("+5542999258697");
+  });
+
+  it("a Representada não carrega o vendedor", async () => {
+    const t = await texto(await renderPedidoPdf(EMITENTE, pedido(7)));
+    expect(t).toContain("Representada: Bill Higiene e Limpeza");
+    // O vendedor tem o campo dele na cauda; no Mercos a segunda metade da
+    // Representada é a razão social, não a pessoa que vendeu.
+    expect(t).not.toContain("Bill Higiene e Limpeza / ");
+  });
+
+  it("Informações adicionais: rótulo numa linha, texto na de baixo, grade desce", async () => {
+    const p = pedido(7);
+    p.observacoes = "compras simone";
+    const c = montarCabecalho(EMITENTE, p);
+    // Rótulo + valor = duas linhas inteiras de acréscimo: o bloco não existia
+    // na referência, então empurra a régua do cliente e a grade em 26,8pt.
+    expect(c.empurrao).toBe(26.8);
+    expect(c.linhas[8]!.y).toBeCloseTo(623.6, 5);
+    expect(c.linhas[8]!.celulas[0]!.rotuloNaPropriaLinha).toBe(true);
+    // A régua que separa o cliente da grade desce junto.
+    expect(c.reguas.some((r) => Math.abs(r.y - 606.9) < 1e-6)).toBe(true);
+
+    const t = await texto(await renderPedidoPdf(EMITENTE, p));
+    expect(t).toContain("Informações adicionais:");
+    expect(t).toContain("compras simone");
+  });
+
+  it("sem observação, o bloco de Informações adicionais não é impresso", async () => {
+    const t = await texto(await renderPedidoPdf(EMITENTE, pedido(7)));
+    expect(t).not.toContain("Informações adicionais");
   });
 
   it("Nome Fantasia e Inscrição Estadual aparecem só quando preenchidos", async () => {
