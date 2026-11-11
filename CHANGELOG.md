@@ -8,6 +8,35 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.48.1] — 2026-11-11
+
+### Corrigido
+
+- **O PDF do pedido imprime endereço, documento e cliente como o Mercos** O impresso do pedido repetia o endereço inteiro no campo "Endereço" — bairro,
+  cidade, UF e CEP saíam de novo nas linhas de baixo —, imprimia CNPJ, CEP e
+  telefone crus e deixava o bloco "Informações adicionais" de fora. O cliente
+  recebia um papel diferente do que o Mercos gera para o mesmo pedido.
+
+  Agora o campo "Endereço" leva só rua, número e complemento; o documento sai
+  pontuado (85.168.318/0001-39), o CEP com hífen e o telefone como o papel mostra
+  (42 99925-8697, sem o +55). O nome do cliente perde o prefixo de fantasia que o
+  importador colou ("MARMORARIA GLORIA - ..."), a cidade perde o estado que veio
+  junto ("Porto União, Santa Catarina"), o vendedor importado volta a aparecer
+  quando não há usuário do CRM, e o texto de "Informações adicionais" do Mercos é
+  impresso no bloco dele, entre o telefone e a grade.
+
+  O cinza que nós tínhamos posto no cabeçalho da grade saiu: no Mercos ele é
+  branco.
+
+- **A tela de Pedidos lista pelo número do pedido, como o Mercos** A lista ordenava por data de criação. Quando um pedido era relançado ou
+  corrigido no Mercos, o número novo aparecia abaixo de um número menor no mesmo
+  dia, e a tela parecia fora de ordem para quem lê o número.
+
+  Agora a listagem — a página e o `GET /api/v1/commercial-orders` — ordena por
+  `numero` decrescente, do último para o primeiro, como a lista do Mercos. O
+  filtro de período continua por data de criação; o que mudou é a posição, não a
+  janela.
+
 ## [1.48.0] — 2026-11-10
 
 ### Adicionado
@@ -6813,7 +6842,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.1...HEAD
+[1.48.1]: https://github.com/spiesdan/nexus/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/spiesdan/nexus/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/spiesdan/nexus/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/spiesdan/nexus/compare/v1.45.0...v1.46.0
