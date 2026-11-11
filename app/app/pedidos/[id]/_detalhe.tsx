@@ -54,6 +54,7 @@ const PROXIMO_STATUS: Partial<Record<StatusDoPedido, StatusDoPedido>> = {
   rascunho: "aprovado",
   em_analise: "aprovado",
   aprovado: "faturado",
+  concluido: "expedido",
   faturado: "expedido",
   expedido: "entregue",
 };
@@ -62,6 +63,7 @@ const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
   rascunho: "Aprovar pedido",
   em_analise: "Aprovar pedido",
   aprovado: "Faturar pedido",
+  concluido: "Expedir pedido",
   faturado: "Expedir pedido",
   expedido: "Marcar entregue",
 };

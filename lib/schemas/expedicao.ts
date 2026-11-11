@@ -37,7 +37,7 @@ export const cargaCreateSchema = z.object({
     .optional(),
   veiculo_tipo: z.string().trim().max(60).optional(),
   motorista_nome: z.string().trim().max(120).optional(),
-  /** Pedidos que abrem a carga (só aprovado/faturado — a rota confere). */
+  /** Pedidos que abrem a carga (só embarcável — a rota confere). */
   order_ids: z.array(z.string().uuid()).max(200).default([]),
 });
 
@@ -108,13 +108,17 @@ export const COLUNAS_DA_CARGA =
   "id, numero, placa, veiculo_tipo, motorista_nome, status, created_at, updated_at";
 
 /**
- * Só aprovado/faturado embarca — o texto do ATT.txt ("pedidos
- * aprovados/faturados aguardando expedição"). Em análise precisa de aprovação
- * antes de subir no caminhão; rascunho é intenção; entregue/cancelado é
- * passado. Ao embarcar, a rota avança para `expedido` — e é por isso que quem
- * já foi sai da fila sozinho.
+ * Só o que já pode subir no caminhão embarca: aprovado, concluído (venda
+ * fechada no ERP, ainda sem nota) e faturado (nota emitida). O texto do
+ * ATT.txt falava só em "aprovados/faturados", mas o pedido que entra pelo
+ * Mercos nasce `concluido` — sem esta linha ele chegaria do ERP e ficaria
+ * invisível na fila, que é o defeito que já custou 11 mil pedidos.
+ *
+ * Em análise precisa de aprovação antes de subir; rascunho é intenção;
+ * expedido/entregue/cancelado é passado. Ao embarcar, a rota avança para
+ * `expedido` — e é por isso que quem já foi sai da fila sozinho.
  */
-export const STATUS_EMBARCAVEIS = ["aprovado", "faturado"] as const;
+export const STATUS_EMBARCAVEIS = ["aprovado", "concluido", "faturado"] as const;
 
 export function numeroDaCarga(numero: number): string {
   return `Carga ${String(numero).padStart(3, "0")}`;

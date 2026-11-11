@@ -5,7 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { cidadesDaCarga } from "@/lib/expedicao/cidades-da-carga";
 import { carregarContatosDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
-import { COLUNAS_DA_CARGA, type Carga } from "@/lib/schemas/expedicao";
+import { COLUNAS_DA_CARGA, STATUS_EMBARCAVEIS, type Carga } from "@/lib/schemas/expedicao";
 import { createClient } from "@/lib/supabase/server";
 
 import { ExpedicaoClient, type ProgressoDaCarga } from "./_client";
@@ -44,7 +44,7 @@ export default async function ExpedicaoPage() {
       .from("commercial_orders")
       .select("id, total_cents")
       .eq("organization_id", activeOrg.orgId)
-      .in("status", ["aprovado", "faturado"])
+      .in("status", [...STATUS_EMBARCAVEIS])
       .limit(200),
     // migration 0299 — o aviso "saiu para entrega" só sai pelo número de
     // expedição. Com ele fora do ar, o aviso fica na fila; a tela precisa dizer

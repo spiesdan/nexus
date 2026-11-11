@@ -119,7 +119,13 @@ export async function contextoDeDuplicidade(
   const status = ((pedidos ?? []) as Array<{ status: string }>).map((p) => p.status);
   base.jaCliente = status.includes("entregue");
   base.pedidoEmAndamento = status.some(
-    (s) => s === "rascunho" || s === "em_analise" || s === "aprovado" || s === "faturado" || s === "expedido",
+    (s) =>
+      s === "rascunho" ||
+      s === "em_analise" ||
+      s === "aprovado" ||
+      s === "concluido" ||
+      s === "faturado" ||
+      s === "expedido",
   );
 
   return base;

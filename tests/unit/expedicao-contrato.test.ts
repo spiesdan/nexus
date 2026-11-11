@@ -82,13 +82,17 @@ describe("cargaCreateSchema", () => {
 });
 
 describe("embarque", () => {
-  it("só aprovado/faturado embarca — em_analise precisa aprovar antes", () => {
+  it("aprovado, concluído e faturado embarcam — em_analise precisa aprovar antes", () => {
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("rascunho")).toBe(false);
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("em_analise")).toBe(false);
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("aprovado")).toBe(true);
+    // Concluído = venda fechada no ERP sem nota; antes da 0302 esse pedido
+    // chegava como `faturado`, e é por isso que ele já embarcava.
+    expect((STATUS_EMBARCAVEIS as readonly string[]).includes("concluido")).toBe(true);
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("faturado")).toBe(true);
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("expedido")).toBe(false);
     expect((STATUS_EMBARCAVEIS as readonly string[]).includes("entregue")).toBe(false);
+    expect((STATUS_EMBARCAVEIS as readonly string[]).includes("cancelado")).toBe(false);
   });
 
   it("todo status tem rótulo", () => {

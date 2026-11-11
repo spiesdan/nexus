@@ -5,34 +5,47 @@
  *
  * Ele já esteve dentro do `main.mjs` — e um erro de uma linha aqui deixou
  * 11.278 pedidos invisíveis na Expedição: o Mercos marca o pedido como
- * **Concluído** quando a venda fecha (nota emitida), e a tradução levava isso
- * para `entregue`. Como a Expedição só lista `aprovado`/`faturado`, todo pedido
+ * **Concluído** quando a venda fecha, e a tradução levava isso para
+ * `entregue`. Como a Expedição só lista o que ainda não embarcou, todo pedido
  * que chegava do ERP nascia "já entregue" e nunca entrava na fila de carga.
  *
- * O vocabulário do CRM tem quatro passos que o Mercos não tem:
+ * ═══ O que cada rótulo do ERP quer dizer ══════════════════════════════════
  *
- *     rascunho → aprovado → faturado → expedido → entregue
+ *   Concluído            venda fechada; a mercadoria ainda está no depósito
+ *                        e precisa entrar numa carga. NÃO é entrega física.
+ *   Faturado             nota emitida no ERP — é a prova de NF-e gerada.
+ *   Parcialmente Faturado  idem: já existe nota, mesmo que parcial.
+ *   Aguardando Faturamento  saiu do orçamento, ainda sem nota.
+ *
+ * O vocabulário do CRM tem passos que o Mercos não tem:
+ *
+ *     rascunho → aprovado → faturado → concluido → expedido → entregue
  *
  * `expedido` e `entregue` são do NOSSO caminho de carga (`shipments`): o pedido
  * vira `expedido` quando entra numa carga e `entregue` quando a entrega é
- * confirmada no fechamento. O Mercos não sabe nada disso — ele só sabe que a
- * venda fechou. Portanto "Concluído" do Mercos é o NOSSO `faturado`: nota
- * emitida, mercadoria ainda no depósito, esperando a carga.
+ * confirmada no fechamento. O Mercos não sabe nada disso.
  *
- * ═══ A regra que este arquivo existe para não deixar esquecer ═════════════
+ * ═══ As duas regras que este arquivo existe para não deixar esquecer ══════
  *
- * Status do ERP NUNCA sobrescreve o passo de entrega do CRM. `entregue` só é
- * escrito pelo fechamento da carga; pedido importado nasce, no máximo,
- * `faturado`. Quem já existe é pulado pelo `fn_importar_pedido_mercos` — o
- * importador não revisita nem corrige status de pedido antigo.
+ * 1. Status do ERP NUNCA escreve o passo de entrega do CRM. `entregue` só é
+ *    escrito pelo fechamento da carga (ou pela observação "pago e entregue",
+ *    que é entrega declarada no próprio ERP). Pedido importado nasce, no
+ *    máximo, `concluido`/`faturado`.
+ *
+ * 2. `faturado` é reservado para quem tem NF-e gerada. "Concluído" no ERP não
+ *    é nota emitida — por isso ele vira `concluido`, não `faturado`. Quem já
+ *    existe é pulado pelo `fn_importar_pedido_mercos`; a revisão corrige o
+ *    status dos últimos dias por `fn_aplicar_status_mercos`.
  */
 export const STATUS = {
-  // Venda fechada / nota emitida. NÃO é entrega física: a carga é nossa.
-  Concluído: "faturado",
+  // Venda fechada, sem nota (ou nota ainda não emitida no ERP). Vai para a
+  // fila da Expedição e ainda pode ser faturada.
+  Concluído: "concluido",
   "Em orçamento": "rascunho",
   Cancelado: "cancelado",
   Expedido: "expedido",
   Aprovado: "aprovado",
+  // Nota emitida no ERP: é o único caminho do ERP para `faturado`.
   Faturado: "faturado",
   "Parcialmente Faturado": "faturado",
   // O detalhe do Mercos mostra "Aguardando Faturamento" quando o pedido já

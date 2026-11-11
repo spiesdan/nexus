@@ -342,10 +342,36 @@ async function processar(admin, run) {
         continue;
       }
       const r = data ?? {};
-      if (r.status === "atualizado") {
+
+      // ─── O status é a segunda porta ──────────────────────────────────────
+      //
+      // `fn_sincronizar_pedido_mercos` não mexe no ciclo (0297): status é
+      // decisão nossa. Mas a tradução antiga gravou `faturado` em quem não
+      // tinha nota — e pedido que já existe não passa pelo importador. Esta
+      // função corrige só o status ABERTO de venda (aprovado/faturado/
+      // concluido) e recusa nota emitida, pedido em carga e regressão.
+      //
+      // Divergente é recusa do coletor (soma dos itens != total): o payload
+      // inteiro é suspeito, o status inclusive.
+      let statusDoErp = null;
+      if (r.status !== "divergente" && r.status !== "nao_encontrado") {
+        const { data: s, error: erroStatus } = await admin.rpc("fn_aplicar_status_mercos", {
+          p_org: org,
+          p_pedido: pedido,
+        });
+        if (erroStatus) {
+          erros.push({ numero, motivo: erroStatus.message });
+        } else if (s?.status === "atualizado") {
+          statusDoErp = s;
+        }
+      }
+
+      const mudancas = [...(r.mudancas ?? []), ...(statusDoErp?.mudancas ?? [])];
+
+      if (r.status === "atualizado" || (r.status === "sem_mudanca" && statusDoErp)) {
         atualizados++;
         if (r.carga?.reconferir) reconferir++;
-        revisao.push({ numero, status: "atualizado", mudancas: r.mudancas ?? [], carga: r.carga ?? null });
+        revisao.push({ numero, status: "atualizado", mudancas, carga: r.carga ?? null });
       } else if (r.status === "sem_mudanca") {
         revisados++;
         revisao.push({ numero, status: "sem_mudanca", mudancas: [] });

@@ -2,7 +2,7 @@
  * GET  /api/v1/shipments — cargas da organização ativa.
  * POST /api/v1/shipments — cria uma carga com pedidos (romaneio).
  *
- * Só pedido comprometido embarca (em_analise/aprovado/faturado/expedido):
+ * Só pedido comprometido embarca (em_analise/aprovado/concluido/faturado/expedido):
  * rascunho é intenção, entregue/cancelado é passado. A rota confere um a um
  * e recusa a carga inteira no primeiro inelegível — carga parcial silenciosa
  * faria o expedidor achar que levou o que ficou para trás.
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       if (!(STATUS_EMBARCAVEIS as readonly string[]).includes(ped.status)) {
         return fail(
           "validation_failed",
-          `Pedido PED-${String(ped.numero).padStart(4, "0")} está "${ped.status}" — só embarcável aprovado/faturado.`,
+          `Pedido PED-${String(ped.numero).padStart(4, "0")} está "${ped.status}" — só embarcável aprovado/concluído/faturado.`,
           422,
           { requestId },
         );
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return fail("internal_error", "Erro ao embarcar os pedidos.", 500, { requestId });
     }
     // Quem embarcou sai da fila: avança para `expedido`, e a lista de
-    // "aguardando embarque" (só aprovado/faturado) deixa de mostrá-lo.
+    // "aguardando embarque" (só aprovado/concluído/faturado) deixa de mostrá-lo.
     // Só avança — nunca regride: se o pedido mudou de status na concorrência,
     // o filtro protege.
     await supabase

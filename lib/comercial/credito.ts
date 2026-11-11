@@ -11,7 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * crédito é visível na ficha, não um zero que barra tudo.
  */
 
-const STATUS_EM_ABERTO = ["em_analise", "aprovado", "faturado", "expedido"];
+const STATUS_EM_ABERTO = ["em_analise", "aprovado", "concluido", "faturado", "expedido"];
 
 export interface SituacaoDeCredito {
   /** false = sem limite definido; não há bloqueio possível. */

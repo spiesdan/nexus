@@ -337,7 +337,7 @@ async function varrerForaDaCarga(
       "id, numero, cliente_nome, status, created_at, previsao_entrega, contact_id, endereco_entrega",
     )
     .eq("organization_id", organizationId)
-    .in("status", ["aprovado", "faturado", "em_analise", "rascunho"])
+    .in("status", ["aprovado", "concluido", "faturado", "em_analise", "rascunho"])
     .lt("created_at", `${ontem}T23:59:59Z`)
     .order("created_at", { ascending: false })
     .limit(SCAN_LIMIT);

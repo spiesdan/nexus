@@ -1,7 +1,7 @@
 /**
  * BUSCAR O PEDIDO QUE VAI EMBARCAR.
  *
- * A tela "Nova carga" listava os pedidos aprovados/faturados em bloco, sem
+ * A tela "Nova carga" listava os pedidos aprovados/concluídos/faturados em bloco, sem
  * filtro. Com a fila grande, achar o pedido certo para montar a carga era obra
  * de rolagem e leitura linha a linha — e a pessoa que monta a carga está
  * normalmente no celular, no depósito, com a mão ocupada.

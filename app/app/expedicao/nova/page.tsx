@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { documentoNormalizado, vincularPorDocumento } from "@/lib/expedicao/buscar-embarcavel";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { STATUS_EMBARCAVEIS } from "@/lib/schemas/expedicao";
 import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,9 +42,10 @@ export default async function NovaCargaPage() {
     .from("commercial_orders")
     .select(COLUNAS_DO_PEDIDO)
     .eq("organization_id", activeOrg.orgId)
-    // Só aprovado/faturado: quem embarcou virou `expedido` e saiu da fila
-    // sozinho (a rota avança no POST da carga).
-    .in("status", ["aprovado", "faturado"])
+    // Só o que ainda não embarcou: quem entrou numa carga virou `expedido` e
+    // saiu da fila sozinho (a rota avança no POST da carga). A lista vem do
+    // contrato da Expedição para não divergir do que a rota aceita.
+    .in("status", [...STATUS_EMBARCAVEIS])
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -61,7 +63,7 @@ export default async function NovaCargaPage() {
 
   // QUEM NÃO TEM CONTATO VINCULADO — o caso dos pedidos importados, que trazem
   // o CNPJ no pedido mas não o vínculo com o cadastro. Sem esta segunda busca,
-  // 101 dos 109 pedidos aprovados/faturados ficavam sem cidade nenhuma e o
+  // 101 dos 109 pedidos aprovados/concluídos/faturados ficavam sem cidade nenhuma e o
   // filtro "Canoinhas" devolvia zero com 32 pedidos de Canoinhas na fila.
   const documentosSemContato = [
     ...new Set(

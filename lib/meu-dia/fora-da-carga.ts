@@ -61,7 +61,7 @@ export interface AchadoDeForaDaCarga {
 }
 
 /** Status em que o pedido ainda espera expedição. */
-const AINDA_NAO_EXPEDIDO = new Set(["aprovado", "faturado", "em_analise", "rascunho"]);
+const AINDA_NAO_EXPEDIDO = new Set(["aprovado", "concluido", "faturado", "em_analise", "rascunho"]);
 
 /** Status em que o pedido não é mais candidato a nenhuma carga. */
 const NAO_ELEGIVEL = new Set(["cancelado", "entregue", "expedido", "devolvido"]);

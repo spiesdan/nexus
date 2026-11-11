@@ -361,10 +361,10 @@ export function NovaCargaClient({
               <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-4 py-10 text-center">
                 <Package className="h-6 w-6 text-text-subtle" aria-hidden />
                 <p className="text-sm text-muted-foreground">
-                  {t("Nenhum pedido aprovado aguardando embarque.")}
+                  {t("Nenhum pedido aprovado, concluído ou faturado aguardando embarque.")}
                 </p>
                 <p className="max-w-sm text-xs text-text-subtle">
-                  {t("Um pedido entra na fila quando é aprovado ou faturado.")}
+                  {t("Um pedido entra na fila quando é aprovado, concluído ou faturado.")}
                 </p>
                 <Button asChild size="sm" variant="outline" className="mt-1">
                   <Link href="/app/pedidos">{t("Ver pedidos")}</Link>
