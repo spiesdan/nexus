@@ -47,10 +47,19 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!authz.ok) return authz.response;
 
   try {
+    // Revisão sobre TODOS os pedidos pedidos na carga (o botão "gerar carga"
+    // a usa): números específicos têm precedência sobre a janela normal do cron.
+    const corpo = (await req.json().catch(() => ({}))) as { revisarNumeros?: unknown };
+    const revisarNumeros = Array.isArray(corpo?.revisarNumeros)
+      ? corpo.revisarNumeros
+          .map(Number)
+          .filter((n) => Number.isInteger(n) && n > 0)
+      : [];
     const resultado = await enfileirarImportacaoMercos(createAdminClient(), {
       organizationId: authz.org.orgId,
       requestedBy: authz.user.id,
       origem: "manual",
+      revisarNumeros: revisarNumeros.length > 0 ? [...new Set(revisarNumeros)] : null,
     });
 
     void audit({

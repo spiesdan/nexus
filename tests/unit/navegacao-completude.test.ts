@@ -49,6 +49,8 @@ const NAV_ALLOWLIST: Record<string, string> = {
     "subtela do Radar, alcançada pela navegação da própria seção — novos prospects com as três ações da aba Empresas; antes vivia numa âncora da landing do Radar",
   "/app/prospeccao/nova":
     "sub-fluxo de criar campanha, alcançado pelo botão Nova campanha dentro de Campanhas — tarefa com começo, meio e fim, com endereço próprio para sobreviver ao F5",
+  "/app/prospeccao":
+    "redirect para /app/campanhas?subtela=prospeccao — a prospecção virou a segunda subtela da tela Campanha; o endereço antigo sobrevive a links salvos, ao F5 e aos deep-links com ?aba=",
   "/app/pedidos/imprimir":
     "impressão em lote dos selecionados, alcançada pelo botão Imprimir da barra de massa (ids via URL)",
   "/app/team/invite": "sub-fluxo de convite, alcançado de dentro de Equipe",

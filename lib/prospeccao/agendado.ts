@@ -105,6 +105,11 @@ export type MotivoDoPulo =
   /** 0288 — um "Enviar agora" está segurando o número (lease de disparo). */
   | "disparo_manual"
   /**
+   * 0303 — a campanha escolheu um número e ele não está mais WORKING. Trocar
+   * de número em silêncio mandaria pela porta errada; o certo é pausar e dizer.
+   */
+  | "sessao_da_campanha_indisponivel"
+  /**
    * A lista acabou, mas há reserva sem comprovante: o lote está em voo ou o
    * envio falhou. Não é "concluída" — a mensagem ainda não chegou.
    */
@@ -142,6 +147,8 @@ interface CampanhaAgendada {
   template_values: Record<string, string> | null;
   /** 0285 — um bind por categoria. Vazio = bind legado (0284). */
   templates_por_categoria: unknown;
+  /** 0303 — o número escolhido na tela. `null` = escolha automática. */
+  session_id: string | null;
   espaco_ms: number;
   limite_diario: number;
   data_inicio: string | null;
@@ -203,7 +210,7 @@ interface EstadoDaSessao {
 const COLUNAS =
   "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, " +
   "mensagem_tipo, template_name, template_language, template_contract_hash, template_values, " +
-  "templates_por_categoria, espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
+  "templates_por_categoria, session_id, espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
 
 export async function processarCampanhasAgendadas(
   admin: SupabaseClient,
@@ -292,6 +299,27 @@ export async function processarCampanhasAgendadas(
       if (listaFechada.length === 0) continue; // nada a mandar — não é "pulo", é campanha vazia
 
       const org = await estadoDaOrg(campanha.organization_id);
+
+      // 0303 — se a campanha ESCOLHEU um número, só ele fala. Quando ele não
+      // está mais WORKING (desconectado, arquivado ou trocado), a campanha
+      // pausa com motivo: escolher outro em silêncio seria mandar pela porta
+      // errada e chamar isso de sucesso. `null` = campanha antiga: automático.
+      const sessoesDaCampanha = campanha.session_id
+        ? org.sessoes.filter((s) => s.id === campanha.session_id)
+        : org.sessoes;
+      if (campanha.session_id && sessoesDaCampanha.length === 0) {
+        const erro =
+          "O número escolhido para esta campanha não está conectado (WORKING). " +
+          "Reconecte-o em Conexões ou edite a campanha para escolher outro número.";
+        await registrarErroDaCampanha(admin, campanha, erro, agoraIso, true);
+        resumo.pausadas++;
+        resumo.pulados.push({
+          campanha: campanha.id,
+          motivo: "sessao_da_campanha_indisponivel",
+        });
+        continue;
+      }
+
       if (org.sessoes.length === 0) {
         resumo.pulados.push({ campanha: campanha.id, motivo: "sem_sessao" });
         continue;
@@ -302,19 +330,37 @@ export async function processarCampanhasAgendadas(
       // doutrina de restrição de canal).
       const tipo: TipoDaMensagem =
         campanha.mensagem_tipo === "template" ? "template" : "texto";
-      const sessao = escolherSessaoDaCampanha(org.sessoes, tipo);
+
+      const sessao = escolherSessaoDaCampanha(sessoesDaCampanha, tipo);
       if (!sessao) {
         // 0286 — dois desfechos diferentes, dois próximos passos diferentes.
         // Se o canal existe e foi recusado pela qualidade, o problema não é
         // conexão: é reputação. Dizer "conecte um número" aqui mandaria o
         // operador refazer uma conexão que já está de pé.
-        if (bloqueadaPorQualidade(org.sessoes, tipo)) {
+        if (bloqueadaPorQualidade(sessoesDaCampanha, tipo)) {
           const erro =
             "O número oficial está com qualidade RED na Meta. A campanha foi pausada para não piorar a avaliação do número. " +
             "Revise o conteúdo e o público dos últimos envios; quando a qualidade voltar para GREEN, retome a campanha.";
           await registrarErroDaCampanha(admin, campanha, erro, agoraIso, true);
           resumo.pausadas++;
           resumo.pulados.push({ campanha: campanha.id, motivo: "numero_qualidade_red" });
+          continue;
+        }
+        // 0303 — o número escolhido está WORKING mas não aceita o tipo. O
+        // conserto não é conectar outro número: é trocar o escolhido (ou o
+        // tipo da mensagem). Pausar com o motivo certo evita a campanha que
+        // fica tentando e nunca fala.
+        if (campanha.session_id) {
+          const erro =
+            tipo === "template"
+              ? "O número escolhido para esta campanha não aceita modelo aprovado. Escolha o número oficial em Conexões."
+              : "O número escolhido para esta campanha é oficial e não pode enviar texto livre fora da janela de 24h. Escolha um número por QR (não oficial).";
+          await registrarErroDaCampanha(admin, campanha, erro, agoraIso, true);
+          resumo.pausadas++;
+          resumo.pulados.push({
+            campanha: campanha.id,
+            motivo: "sessao_da_campanha_indisponivel",
+          });
           continue;
         }
         const motivo = tipo === "template" ? "sem_canal_template" : "sem_canal_texto";

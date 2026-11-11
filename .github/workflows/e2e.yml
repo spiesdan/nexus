@@ -134,7 +134,15 @@ jobs:
   # invariants, e2e, imagens-ok). Antes havia um agregador com este nome por
   # causa da matrix (`e2e-parte (1)`/`(2)`); com um job só, o nome mora aqui.
   e2e:
-    runs-on: ubuntu-latest
+    # Runner FIXO em ubuntu-24.04 desde 2026-11-11 — e NÃO como cura de falha:
+    # medido no log do run 43055433534, o runner já era `noble` (24.04) quando
+    # esta linha ainda dizia `ubuntu-latest`, então o pin não mudou o SO nem
+    # consertou nada. O que ele compra é não trocar de SO sozinho no meio de um
+    # ciclo de release (o `ubuntu-latest` migra quando o GitHub decide). O
+    # defeito daquele dia era o apt/mirror do runner, tratado em
+    # `scripts/ci/instalar-chromium.sh` — a doutrina está em CLAUDE.md,
+    # § "O `e2e` vermelho no SETUP".
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # ─────────────────────────────────────────────────────────────────────────
     # A COBERTURA DEIXA DE SER PROSA DIGITADA À MÃO.
@@ -687,15 +695,20 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
+      # A decisão mora em scripts/ci/instalar-chromium.sh, com teste em
+      # tests/shell/instalar-chromium.test.sh — o e2e-pos-deploy.yml usa o MESMO
+      # arquivo, porque duas cópias deste passo divergem (e divergiram).
+      #
+      # O que ele resolve, medido em 2026-11-11: este passo falhava com
+      # `Temporary failure resolving 'azure.archive.ubuntu.com'` →
+      # `Failed to install browser dependencies` → exit 100, e o job ficava
+      # vermelho por 1h45 sem a suíte rodar (5 execuções). O script pula o apt
+      # quando as libs já existem, tenta de novo com backoff, e por fim prova que
+      # o Chromium abre. Doutrina em CLAUDE.md § "O `e2e` vermelho no SETUP".
       - name: Instalar o browser
-        run: |
-          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
-            # Só as libs do sistema: o binário veio do cache, mas runners
-            # frescos não têm libnss3 & cia. e o Chromium não abre sem elas.
-            sudo "$(which pnpm)" exec playwright install-deps chromium
-          else
-            pnpm exec playwright install --with-deps chromium
-          fi
+        env:
+          CHROMIUM_CACHE_HIT: ${{ steps.cache-chromium.outputs.cache-hit }}
+        run: bash scripts/ci/instalar-chromium.sh
 
       # `.env.local` é CÓPIA do `.env.e2e`, não uma terceira redação dele.
       #

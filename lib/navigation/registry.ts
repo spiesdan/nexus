@@ -26,6 +26,7 @@ import {
   ListChecks,
   Lock,
   MagnifyingGlass,
+  Megaphone,
   Package,
   Palette,
   PaperPlaneTilt,
@@ -458,12 +459,15 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     sidebar: true,
   },
   {
-    // Prospecção B2B: descobrir empresas por região/categoria e levar ao CRM.
-    // Uma tela com abas (não 7 itens no menu): a dobra em 900px agradece.
-    href: "/app/prospeccao",
-    label: "Prospecção",
-    description: "Encontre empresas por região e categoria e leve ao CRM.",
-    icon: MagnifyingGlass,
+    // Campanha: o trabalho de falar com a base. Duas subtelas — a campanha por
+    // região (cliente que já comprou nas cidades escolhidas, por número não
+    // oficial) e a prospecção B2B (empresa nova por região/categoria). Uma
+    // tela, duas portas: a dobra em 900px agradece e o trabalho do dia começa
+    // no mesmo lugar.
+    href: "/app/campanhas",
+    label: "Campanha",
+    description: "Campanhas para clientes e prospecção de empresas novas.",
+    icon: Megaphone,
     group: "vendas",
     sidebar: true,
   },

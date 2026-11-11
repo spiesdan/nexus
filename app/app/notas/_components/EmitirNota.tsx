@@ -32,6 +32,7 @@ import { Receipt } from "@/lib/ui/icons";
 
 import type { Produto } from "@/lib/schemas/produtos";
 import { ProdutoParaItem } from "./ProdutoParaItem";
+import { CustomerSelector } from "../../pedidos/novo/_cliente";
 import type { Textos } from "./textos";
 
 /**
@@ -250,11 +251,14 @@ export function EmitirNota({
     cliente_documento: string;
     frete_cents: string;
     itens: ItemDaVendaAvulsa[];
+    /** Contato cadastrado que puxou o nome (a NF-e completa pelo cadastro). */
+    contato_id: string;
   }>({
     cliente_nome: "",
     cliente_documento: "",
     frete_cents: "0",
     itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+    contato_id: "",
   });
 
   const alterar =
@@ -351,6 +355,10 @@ export function EmitirNota({
       .filter((i) => i.descricao !== "" && i.quantidade > 0 && i.preco_cents > 0);
     const extrasCandidatos: ExtrasFiscais = {
       avulsa: {
+        // O vínculo com o cadastro que puxou o nome: é ele que faz a NF-e
+        // completar destinatário (nome + CPF/CNPJ) e endereço a partir do
+        // cadastro — não redigitar nada na venda do balcão.
+        contato_id: avulsa.contato_id.trim() || null,
         cliente_nome: avulsa.cliente_nome.trim(),
         cliente_documento: avulsa.cliente_documento.replace(/\D/g, "") || undefined,
         frete_cents: Math.max(0, Math.trunc(Number(avulsa.frete_cents)) || 0),
@@ -367,7 +375,13 @@ export function EmitirNota({
     try {
       await apiClient.post("/api/v1/invoices", { extras: checagem.data });
       toast.success(t("Venda avulsa enfileirada para emissão"));
-      setAvulsa({ cliente_nome: "", cliente_documento: "", frete_cents: "0", itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }] });
+      setAvulsa({
+        cliente_nome: "",
+        cliente_documento: "",
+        frete_cents: "0",
+        itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+        contato_id: "",
+      });
       router.push("/app/notas?aba=notas");
       router.refresh();
     } catch (e) {
@@ -867,15 +881,18 @@ export function EmitirNota({
           <p className="text-xs text-muted-foreground">
             {t("Venda sem pedido (balcão): a nota nasce da venda informada, sem precisar gerar pedido.")}
           </p>
-          <div className="space-y-1.5">
-            <Label htmlFor="av-cliente">{t("Cliente (destinatário)")}</Label>
-            <Input
-              id="av-cliente"
-              value={avulsa.cliente_nome}
-              onChange={(e) => setAvulsa({ ...avulsa, cliente_nome: e.target.value })}
-              placeholder={t("Nome do cliente")}
-            />
-          </div>
+          <CustomerSelector
+            contatos={[]}
+            contatoId={avulsa.contato_id || null}
+            clienteNome={avulsa.cliente_nome}
+            aoEscolher={(id, nome) => setAvulsa({ ...avulsa, contato_id: id ?? "", cliente_nome: nome })}
+            mostrarResumo={false}
+            textos={{
+              cliente: textos.cliente,
+              buscarCliente: textos.buscarCliente,
+              clienteAvulso: textos.clienteAvulso,
+            }}
+          />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="av-doc">{t("CPF ou CNPJ")}</Label>

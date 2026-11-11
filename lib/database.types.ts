@@ -9048,6 +9048,7 @@ export type Database = {
           pausa_motivo: string | null;
           prospect_ids: string[];
           publico: string;
+          session_id: string | null;
           recorrencia_dias: number | null;
           status: string;
           template_contract_hash: string | null;
@@ -9084,6 +9085,7 @@ export type Database = {
           pausa_motivo?: string | null;
           prospect_ids?: string[];
           publico?: string;
+          session_id?: string | null;
           recorrencia_dias?: number | null;
           status?: string;
           template_contract_hash?: string | null;
@@ -9120,6 +9122,7 @@ export type Database = {
           pausa_motivo?: string | null;
           prospect_ids?: string[];
           publico?: string;
+          session_id?: string | null;
           recorrencia_dias?: number | null;
           status?: string;
           template_contract_hash?: string | null;
