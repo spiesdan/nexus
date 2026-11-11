@@ -4,7 +4,7 @@
  * O que este teste prende:
  *   1. a lista da tela só oferece número que ACEITA o tipo — o oficial fica de
  *      fora porque exige template (a resposta vem da matriz de capabilities,
- *      não de uma comparação de string com "waha");
+ *      não de uma comparação de string com o nome do transporte);
  *   2. número parado/arquivado nem aparece: seria uma opção que o tick pausaria
  *      no primeiro minuto;
  *   3. a validação do escolhido é fail-closed e distingue os TRÊS motivos —
@@ -13,11 +13,32 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it, vi } from "vitest";
 
+import { CHANNEL_CAPABILITIES, type ChannelProvider } from "@/lib/channels";
+
 import {
   listarNumerosDaCampanha,
   mensagemDoNumeroInvalido,
   validarNumeroDaCampanha,
 } from "./numero-da-campanha";
+
+/**
+ * Os providers das fixtures saem da MATRIZ, não de literais: o lint de canal
+ * proíbe nomear provider fora de `lib/channels/`, e teste co-locado em `lib/`
+ * entra na varredura. A fixture fala a mesma língua do motor.
+ */
+const PROVIDERS = Object.keys(CHANNEL_CAPABILITIES) as ChannelProvider[];
+const SESSOES = {
+  qr: PROVIDERS.find(
+    (p) =>
+      CHANNEL_CAPABILITIES[p].freeformOutsideWindow &&
+      !CHANNEL_CAPABILITIES[p].requiresTemplates,
+  )!,
+  oficial: PROVIDERS.find(
+    (p) =>
+      CHANNEL_CAPABILITIES[p].requiresTemplates &&
+      !CHANNEL_CAPABILITIES[p].freeformOutsideWindow,
+  )!,
+};
 
 interface SessaoDeTeste {
   id: string;
@@ -73,7 +94,7 @@ const sessao = (id: string, extra: Partial<SessaoDeTeste> = {}): SessaoDeTeste =
   organization_id: ORG,
   display_name: id,
   phone_number: "+5549999990000",
-  provider: "waha",
+  provider: SESSOES.qr,
   status: "WORKING",
   archived_at: null,
   created_at: "2026-01-01T00:00:00.000Z",
@@ -83,9 +104,9 @@ const sessao = (id: string, extra: Partial<SessaoDeTeste> = {}): SessaoDeTeste =
 describe("listarNumerosDaCampanha", () => {
   it("só devolve o que aceita TEXTO livre — o oficial exige template", async () => {
     const supabase = fakeSupabase([
-      sessao("qr-1", { display_name: "Comercial", provider: "waha" }),
-      sessao("oficial-1", { provider: "meta_cloud" }),
-      sessao("zernio-1", { provider: "zernio" }),
+      sessao("qr-1", { display_name: "Comercial", provider: SESSOES.qr }),
+      sessao("oficial-1", { provider: SESSOES.oficial }),
+      sessao("outro-oficial", { provider: SESSOES.oficial }),
     ]);
 
     const numeros = await listarNumerosDaCampanha(supabase, ORG, "texto");
@@ -100,8 +121,8 @@ describe("listarNumerosDaCampanha", () => {
 
   it("para TEMPLATE a régua se inverte: só o canal que exige modelo", async () => {
     const supabase = fakeSupabase([
-      sessao("qr-1", { provider: "waha" }),
-      sessao("oficial-1", { display_name: "Oficial", provider: "meta_cloud" }),
+      sessao("qr-1", { provider: SESSOES.qr }),
+      sessao("oficial-1", { display_name: "Oficial", provider: SESSOES.oficial }),
     ]);
 
     const numeros = await listarNumerosDaCampanha(supabase, ORG, "template");
@@ -171,7 +192,7 @@ describe("validarNumeroDaCampanha", () => {
 
   it("oficial escolhido para campanha de texto é 'capability', não 'desconectado'", async () => {
     const veredito = await validarNumeroDaCampanha(
-      fakeSupabase([sessao("oficial-1", { provider: "meta_cloud" })]),
+      fakeSupabase([sessao("oficial-1", { provider: SESSOES.oficial })]),
       ORG,
       "oficial-1",
       "texto",

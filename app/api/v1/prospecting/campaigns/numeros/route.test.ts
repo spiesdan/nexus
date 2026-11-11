@@ -50,8 +50,13 @@ describe("GET /api/v1/prospecting/campaigns/numeros", () => {
       tipo: "texto",
       numeros: [{ id: "qr-1", rotulo: "Comercial", telefone: "+5549999990000" }],
     });
-    // Nada de encanamento na resposta da API.
-    expect(JSON.stringify(dados)).not.toContain("waha");
+    // Nada de encanamento na resposta da API: a tela recebe rótulo e telefone,
+    // nunca o provider do transporte.
+    expect(dados.numeros[0]).toEqual({
+      id: "qr-1",
+      rotulo: "Comercial",
+      telefone: "+5549999990000",
+    });
   });
 
   it("`tipo=template` usa a outra régua", async () => {

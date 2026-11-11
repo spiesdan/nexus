@@ -4,8 +4,8 @@
  * A campanha por região deixa o operador ESCOLHER o número (0303). A tela
  * precisa de uma lista curta: rótulo e telefone, nunca nome de provider. Quem
  * decide se o número serve é a capability (`lib/prospeccao/numero-da-campanha`),
- * não uma comparação de string com "waha" — o canal oficial fica de fora porque
- * exige template, que é a resposta da matriz.
+ * não uma comparação de string com o nome do transporte — o canal oficial fica
+ * de fora porque exige template, que é a resposta da matriz.
  *
  * Somente leitura. Número parado/arquivado nem aparece: seria uma opção que o
  * tick pausaria no primeiro minuto.

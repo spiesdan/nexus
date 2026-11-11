@@ -515,7 +515,7 @@ export const regiaoPreviewSchema = z.object({
  *
  * O número é escolha do operador (`session_id`, 0303), e é NÃO OFICIAL por
  * construção: a mensagem é texto livre, e só o que fala texto fora da janela de
- * 24h é compatível (WAHA). O POST confere a capability antes de gravar.
+ * 24h é compatível (número por QR). O POST confere a capability antes de gravar.
  */
 export const campanhaPorRegiaoSchema = z
   .object({
