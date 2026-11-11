@@ -134,7 +134,14 @@ jobs:
   # invariants, e2e, imagens-ok). Antes havia um agregador com este nome por
   # causa da matrix (`e2e-parte (1)`/`(2)`); com um job só, o nome mora aqui.
   e2e:
-    runs-on: ubuntu-latest
+    # Runner FIXO em ubuntu-24.04 desde 2026-11-11: o `ubuntu-latest` migrou para
+    # Ubuntu 26 (runner-images#14748), e o Chromium do Playwright deixou de
+    # instalar no runner novo — o step "Instalar o browser" falhava em TODAS as
+    # execuções a partir de 10h30 de 11/11 (run 42967201087, main/schedule, era a
+    # primeira vermelha do dia; a última verde era 42957705002, 05h27, antes da
+    # migração). Fixado no LTS que o Chromium suporta de forma estável; migrar de
+    # volta é tarefa futura, com a validação de regressão.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # ─────────────────────────────────────────────────────────────────────────
     # A COBERTURA DEIXA DE SER PROSA DIGITADA À MÃO.
