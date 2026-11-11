@@ -34,6 +34,7 @@ import { verificarOrcamento } from "./orcamento-link";
 /** Estágios em que o pedido já saiu do orçamento — nada a aprovar. */
 const JA_APROVADO: ReadonlySet<StatusDoPedido> = new Set<StatusDoPedido>([
   "aprovado",
+  "concluido",
   "faturado",
   "expedido",
   "entregue",

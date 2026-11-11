@@ -10,6 +10,7 @@ export type StatusDoPedidoNoCrm =
   | "em_analise"
   | "aprovado"
   | "faturado"
+  | "concluido"
   | "expedido"
   | "entregue"
   | "cancelado";

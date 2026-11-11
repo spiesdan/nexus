@@ -1309,7 +1309,7 @@ export function CargaClient({
           <DialogHeader>
             <DialogTitle>{t("Adicionar pedido à carga")}</DialogTitle>
             <DialogDescription>
-              {t("Só pedido aprovado ou faturado que ainda não está em outra carga.")}
+              {t("Só pedido aprovado, concluído ou faturado que ainda não está em outra carga.")}
             </DialogDescription>
           </DialogHeader>
 

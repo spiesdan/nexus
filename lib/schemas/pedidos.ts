@@ -15,6 +15,9 @@ export const STATUS_DO_PEDIDO = [
   "em_analise",
   "aprovado",
   "faturado",
+  // Venda concluída no ERP, ainda sem nota e ainda no depósito. É o que a
+  // Expedição precisa enxergar; `faturado` fica reservado a quem tem NF-e.
+  "concluido",
   "expedido",
   "entregue",
   "cancelado",
@@ -64,6 +67,7 @@ export const ROTULO_DO_STATUS: Record<StatusDoPedido, string> = {
   em_analise: "Em análise",
   aprovado: "Aprovado",
   faturado: "Faturado",
+  concluido: "Concluído",
   expedido: "Expedido",
   entregue: "Entregue",
   cancelado: "Cancelado",

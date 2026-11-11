@@ -242,7 +242,7 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
 
   // Os itens caem juntos (FK on delete cascade) — mas os PEDIDOS não "voltam
   // sozinhos". Criar a carga os levou para `expedido` (`shipments/route.ts`) e
-  // a fila de embarque só lê `aprovado`/`faturado`: sem a devolução explícita
+  // a fila de embarque só lê `aprovado`/`concluido`/`faturado`: sem a devolução explícita
   // abaixo, excluir a carga deixava os pedidos invisíveis nas DUAS telas — nem
   // na carga, nem na fila. Este comentário afirmava o contrário e estava errado
   // desde a 0214.

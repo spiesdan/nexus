@@ -54,7 +54,7 @@ import { ProductSearch } from "../novo/_produtos";
 import type { Produto } from "@/lib/schemas/produtos";
 
 /** Status em que a troca precisa de aviso — espelha `STATUS_COMPROMETIDOS`. */
-const COMPROMETIDOS = new Set(["aprovado", "expedido", "entregue", "faturado"]);
+const COMPROMETIDOS = new Set(["aprovado", "concluido", "expedido", "entregue", "faturado"]);
 
 interface LinhaEditavel {
   quantidade: number;

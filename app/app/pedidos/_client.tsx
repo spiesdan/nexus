@@ -160,6 +160,7 @@ const PROXIMO_STATUS: Partial<Record<StatusDoPedido, StatusDoPedido>> = {
   rascunho: "aprovado",
   em_analise: "aprovado",
   aprovado: "faturado",
+  concluido: "expedido",
   faturado: "expedido",
   expedido: "entregue",
 };

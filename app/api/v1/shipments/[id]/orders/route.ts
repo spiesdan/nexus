@@ -154,7 +154,7 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     if (!(STATUS_EMBARCAVEIS as readonly string[]).includes(ped.status)) {
       return fail(
         "validation_failed",
-        `Pedido PED-${String(ped.numero).padStart(4, "0")} está "${ped.status}" — só embarcável aprovado/faturado.`,
+        `Pedido PED-${String(ped.numero).padStart(4, "0")} está "${ped.status}" — só embarcável aprovado/concluído/faturado.`,
         422,
         { requestId },
       );

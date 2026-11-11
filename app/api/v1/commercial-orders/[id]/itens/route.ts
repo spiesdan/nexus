@@ -34,7 +34,7 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 
 /** Status em que a troca muda a natureza do ato. Não impede — avisa. */
-const STATUS_COMPROMETIDOS = ["aprovado", "expedido", "entregue", "faturado"] as const;
+const STATUS_COMPROMETIDOS = ["aprovado", "concluido", "expedido", "entregue", "faturado"] as const;
 
 export async function PATCH(
   req: NextRequest,

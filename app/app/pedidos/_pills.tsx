@@ -9,20 +9,20 @@ import { ROTULO_DO_STATUS, type StatusDoPedido } from "@/lib/schemas/pedidos";
  * não de hex/escala fixa: as classes `bg-*-100` anteriores lavavam no tema
  * escuro. O mapeamento preserva a convenção Mercos por status.
  */
-const VARIANTE_DO_STATUS: Record<StatusDoPedido, "amber" | "warning" | "sky" | "magenta" | "info" | "success" | "neutral"> = {
+const VARIANTE_DO_STATUS: Record<StatusDoPedido, "amber" | "warning" | "sky" | "magenta" | "info" | "success" | "mint" | "neutral"> = {
   rascunho: "amber",
   em_analise: "warning",
   aprovado: "sky",
   faturado: "magenta",
+  concluido: "success",
   expedido: "info",
-  entregue: "success",
+  entregue: "mint",
   cancelado: "neutral",
 };
 
 /** Rótulo da pill: rascunho aparece como "Em orçamento", como no Mercos. */
 export function rotuloDaPill(status: StatusDoPedido): string {
   if (status === "rascunho") return "Em orçamento";
-  if (status === "entregue") return "Concluído";
   return ROTULO_DO_STATUS[status] ?? status;
 }
 
