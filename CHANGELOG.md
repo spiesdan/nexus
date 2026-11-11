@@ -8,6 +8,21 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.48.2] — 2026-11-11
+
+### Corrigido
+
+- **O pedido concluído no Mercos entra na Expedição; faturado volta a significar NF-e** O Mercos marca **Concluído** quando a venda fecha. O mapper do worker traduzia
+  isso para `faturado` — e como a Expedição lia `faturado`, o pedido aparecia
+  na fila, mas com a rótulo errada: quem não tinha nota emitida algum dia seria
+  chamado de "Faturado".
+
+  Agora o ciclo comercial tem `concluido` (venda fechada no ERP, mercadoria no
+  depósito, sem nota) e `faturado` volta a ser exclusivo de quem tem NF-e gerada
+  (`Faturado`/`Parcialmente Faturado` no Mercos). A Expedição passa a embarcar
+  `aprovado`, `concluido` e `faturado`. A revisão automática corrige o status dos
+  pedidos que já existem, sem regredir quem está em carga ou com nota emitida.
+
 ## [1.48.1] — 2026-11-11
 
 ### Corrigido
@@ -6842,7 +6857,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.48.2...HEAD
+[1.48.2]: https://github.com/spiesdan/nexus/compare/v1.48.1...v1.48.2
 [1.48.1]: https://github.com/spiesdan/nexus/compare/v1.48.0...v1.48.1
 [1.48.0]: https://github.com/spiesdan/nexus/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/spiesdan/nexus/compare/v1.46.0...v1.47.0
