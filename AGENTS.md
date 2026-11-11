@@ -207,7 +207,23 @@ verify, build-and-size, invariants, e2e, imagens-ok
    função exposta como RPC alcançável pela anon key. Detalhe em `CLAUDE.md`, item 9 da
    doutrina de Migrations.
 
-## Testes existentes (CONFIRMADO)
+### CI vermelho no SETUP — leia o step antes de reexecutar
+
+Job `e2e`/`e2e-pos-deploy` vermelho tem dois significados: se parou num step de
+**setup** ("Instalar o browser", "Subir Supabase local", "Build"), a suíte **não
+rodou** e o problema é infraestrutura; se parou em **"E2E — a suíte do evento"**,
+é teste reprovado e é código.
+
+Em 2026-11-11 o `e2e` ficou vermelho em 5 execuções seguidas porque o apt do
+runner não resolvia `azure.archive.ubuntu.com` no `playwright install-deps`
+(`exit 100`), e nenhum teste rodou. **Não reexecute no escuro**: nomeie o step e a
+linha de erro com `gh run view <run> --log-failed`. A instalação de browser hoje
+mora em `scripts/ci/instalar-chromium.sh` (dry-run offline → retry → prova que o
+Chromium abre → reprova listando libs faltando), com teste em
+`tests/shell/instalar-chromium.test.sh` dentro de `pnpm test:shell`. Lei completa:
+`CLAUDE.md` § "O `e2e` vermelho no SETUP".
+
+
 
 Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
 

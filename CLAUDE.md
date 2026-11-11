@@ -372,6 +372,42 @@ qualquer lista aqui**, com o comando acima.
 
 Ao mexer em schema, RLS, RBAC, atribuição, escopo, roteamento, follow-up, webhooks ou automações: rode `pnpm test:db` **localmente** antes de abrir PR. É o único caminho que exercita o `baseline.sql` que o self-hoster realmente aplica.
 
+### O `e2e` vermelho no SETUP — leia o step antes de reexecutar
+
+O `e2e` falha em dois lugares diferentes, e tratá-los como o mesmo custa caro:
+
+| Onde parou | O que significa | O que fazer |
+|---|---|---|
+| step de **setup** ("Instalar o browser", "Subir Supabase local", "Build") | a suíte **não rodou** — é infraestrutura | diagnosticar pelo log, abaixo |
+| step **"E2E — a suíte do evento"** | teste reprovado | é código: conserte |
+
+Medido em 2026-11-11: **cinco execuções seguidas** do `e2e` ficaram vermelhas no step "Instalar o browser" e **nenhum teste rodou**. O log do run `43055433534` dizia:
+
+```console
+Err:2 https://security.ubuntu.com/ubuntu noble InRelease
+  Temporary failure resolving 'azure.archive.ubuntu.com'
+E: Failed to install browser dependencies
+Error: Installation process exited with code: 100
+```
+
+O `playwright install-deps chromium` roda `apt-get update && apt-get install`, e o apt do runner não resolvia o mirror da Ubuntu. O PR não mergeava (o `e2e` é obrigatório), a release ficou bloqueada por 1h45 e **três reexecuções não mudaram nada** — reexecutar não conserta o que não foi diagnosticado.
+
+**A causa virou código, não parágrafo.** `e2e.yml` e `e2e-pos-deploy.yml` chamam `scripts/ci/instalar-chromium.sh`, que decide em camadas:
+
+1. `install-deps --dry-run` primeiro — simula, sem rede; se as libs já existem, o apt **não roda** (é o caso normal das imagens do GitHub, que já trazem Chrome);
+2. retry com backoff — cobre a falha transitória de DNS;
+3. se o apt continuar fora, prova que o Chromium **abre** e segue: o gate é a suíte, não o mirror;
+4. se não abre, reprova listando as libs que faltam (`ldd`).
+
+As decisões têm teste sem rede em `tests/shell/instalar-chromium.test.sh`, que roda em `pnpm test:shell` — job do CI. **Mexeu no passo de browser? Rode `pnpm test:shell`.**
+
+**Regras que ficam:**
+
+1. **Antes de reexecutar, nomeie o step e a linha de erro** — `gh run view <run> --log-failed` (ou o zip de logs da API) entrega os dois. Sem isso, reexecução é sorte: das cinco de 11/11, nenhuma deu certo.
+2. **Falha de setup em CI é defeito nosso, não "coisa do GitHub".** O gate que protege a `main` fica vermelho e a entrega para; dívida de infraestrutura entra no backlog como qualquer outra.
+3. **Toda dependência externa nova num step de CI precisa de retry e de um caminho sem rede.** Baixar de mirror/registry é a parte frágil; o `--dry-run` do Playwright é o modelo — pergunte barato se já está lá antes de depender da rede.
+4. **Não registre causa sem medir.** Em 11/11 o pin do runner em `ubuntu-24.04` foi justificado com "o `ubuntu-latest` migrou para Ubuntu 26"; o log mostrava `noble` (24.04), ou seja, o pin não mudou nada. O pin ficou (não trocar de SO no meio de um ciclo), mas o comentário diz o que foi medido — hipótese plausível não vira registro.
+
 ---
 
 ## QA Visual com Recursos Reais — DOUTRINA (produto self-host)
