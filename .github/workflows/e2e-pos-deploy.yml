@@ -204,13 +204,12 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
+      # Mesmo arquivo do e2e.yml: uma decisão só sobre apt/Chromium nos dois
+      # jobs. Ver CLAUDE.md § "O `e2e` vermelho no SETUP".
       - name: Instalar o browser
-        run: |
-          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
-            sudo "$(which pnpm)" exec playwright install-deps chromium
-          else
-            pnpm exec playwright install --with-deps chromium
-          fi
+        env:
+          CHROMIUM_CACHE_HIT: ${{ steps.cache-chromium.outputs.cache-hit }}
+        run: bash scripts/ci/instalar-chromium.sh
 
       # Os MESMOS seeds do e2e.yml, agora escrevendo no banco do ALVO (o
       # `anunciarDestino` de scripts/lib/env-de-teste.ts imprime "⚠️ REMOTO"
