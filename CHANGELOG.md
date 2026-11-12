@@ -8,6 +8,26 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.50.2] — 2026-11-12
+
+### Corrigido
+
+- **O aviso "Mudou no Mercos" para de disparar em pedido que não mudou** A revisão do Mercos compara o que o ERP manda com o que está no CRM e avisa a expedição quando algo mudou depois do embarque. Em 12/11/2026 o aviso aparecia em 17 das 19 paradas da carga 40 — e nenhuma delas tinha item, quantidade ou preço alterado.
+
+  O que todas registravam era a mesma mudança falsa: a cidade de "GENERAL CARNEIRO, Paraná/PR" para "GENERAL CARNEIRO, Paraná". A cidade é idêntica dos dois lados. O que "mudava" era a UF: o cadastro tem `PR` e o Mercos nunca manda `uf` — o coletor extrai a linha "<cidade>, <estado>" da tela e manda tudo dentro de `cidade`, com o estado por extenso.
+
+  Agora uma régua só separa cidade e UF, usada pela importação e pela revisão, aceitando sigla ou nome do estado ("Bituruna, Paraná", "Canoinhas, SC", "Canoinhas/SC"). O aviso só olha UF quando o ERP realmente mandou UF. De quebra, a revisão limpa o cadastro que a importação antiga sujou com o nome do estado colado — "Bituruna, Paraná" vira "Bituruna" com `uf = PR`, sem marcar a carga.
+
+  A regra do aviso continua a mesma: mudou cliente, endereço ou itens/totais depois de entrar na carga, a parada avisa e quem opera decide se remaneja.
+
+- **Ordenar por distância para de mandar o motorista para o outro lado da cidade** O botão "Ordenar por distância" ordenava as paradas pela distância até a base — do mais perto ao mais longe. Parece razoável no papel e é errado na rua: duas paradas a 2 km da base em direções opostas ficam vizinhas na lista e a 3 km uma da outra no mapa.
+
+  Medido na carga 039 (12/11/2026), com as coordenadas já corrigidas: a parada 4 (PRIME AUTOMOTIVE, Centro) mandava para a 5 (BRTECH, Industrial 1) — 3,0 km atravessando a cidade no meio do trajeto. O radial somava 11,65 km entre paradas.
+
+  Agora a ordem é o caminho curto de verdade: base primeiro, depois sempre a parada mais próxima da anterior, com uma passada de 2-opt desfazendo os cruzamentos. Nessa mesma carga: BRTECH → LANCHONETE → VITINS → CAMILA → PRIME → SCHIESSL → PAPE, nenhum trecho acima de 1,6 km e 7,25 km no total — o ótimo exato entre as 5.040 ordens possíveis dos 7 pontos. A base continua fixa na primeira posição.
+
+  A conta é feita em linha reta e sem depender de serviço externo; a rua continua sendo desenhada pelo OSRM depois, na ordem nova. "Otimizar por ruas" segue existindo para quem quer o caixeiro-viajante pelas ruas de verdade.
+
 ## [1.50.1] — 2026-11-12
 
 ### Corrigido
@@ -6941,7 +6961,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.50.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.50.2...HEAD
+[1.50.2]: https://github.com/spiesdan/nexus/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/spiesdan/nexus/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/spiesdan/nexus/compare/v1.49.1...v1.50.0
 [1.49.1]: https://github.com/spiesdan/nexus/compare/v1.49.0...v1.49.1
