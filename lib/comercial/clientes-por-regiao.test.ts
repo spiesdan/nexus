@@ -129,6 +129,15 @@ describe("chaveComparavel", () => {
     expect(chaveComparavel("Canoinhas", "SC")).toBe(chaveComparavel("Canoinhas, Santa Catarina", "SC"));
     expect(chaveComparavel("Caçador", "SC")).toBe(chaveComparavel("CACADOR", "SC"));
   });
+
+  it("reconhece o estado colado mesmo quando o cadastro veio sem UF", () => {
+    expect(chaveComparavel("Canoinhas, Santa Catarina", null)).toBe(
+      chaveComparavel("Canoinhas", "SC"),
+    );
+    expect(chaveComparavel("Lapa, Paraná", null)).toBe(chaveComparavel("LAPA", "PR"));
+    // Sigla também: "Canoinhas, SC".
+    expect(chaveComparavel("Canoinhas, SC", null)).toBe(chaveComparavel("Canoinhas", "SC"));
+  });
 });
 
 describe("cidadeCombina", () => {
@@ -217,6 +226,43 @@ describe("agruparPorCidade", () => {
 
     expect(cidades.find((c) => c.cidade === "Canoinhas")?.total).toBe(2);
     expect(cidades.find((c) => c.cidade === "Mafra")?.total).toBe(1);
+  });
+
+  it("a cidade sem UF entra na linha da cidade com UF, em vez de abrir outra", () => {
+    // Medido em produção: `Canoinhas/SC` (206) + `CANOINHAS` sem UF (3) eram
+    // duas linhas para a mesma cidade.
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas", "SC"),
+      linha("b", "CANOINHAS", null),
+      linha("c", "canoinhas", null),
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]).toMatchObject({ cidade: "Canoinhas", uf: "SC", total: 3 });
+  });
+
+  it("o rótulo perde o nome do estado colado, mesmo sem UF no cadastro", () => {
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas, Santa Catarina", "SC"),
+      linha("b", "Canoinhas, Santa Catarina", null),
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]?.cidade).toBe("Canoinhas");
+    expect(cidades[0]?.total).toBe(2);
+  });
+
+  it("mesmo nome em estados diferentes não se mistura", () => {
+    // "Bom Sucesso" existe no PR e na PB: a UF do critério decide o público.
+    const cidades = agruparPorCidade([
+      linha("a", "Bom Sucesso", "PR"),
+      linha("b", "Bom Sucesso", "PB"),
+      linha("c", "Bom Sucesso", null),
+    ]);
+
+    expect(cidades).toHaveLength(3);
+    expect(cidades.find((c) => c.uf === "PR")?.total).toBe(1);
+    expect(cidades.find((c) => c.uf === "PB")?.total).toBe(1);
   });
 });
 
