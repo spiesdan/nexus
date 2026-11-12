@@ -49,13 +49,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!d) return fail("not_found", "Carga não encontrada.", 404, { requestId });
   if (d.paradas.length === 0) return fail("validation_failed", "Carga sem pedidos.", 422, { requestId });
 
-  const alvos = d.paradas.filter(
-    (p) =>
-      p.contact_id &&
-      p.endereco &&
-      (p.latitude == null || p.longitude == null) &&
-      (!parsed.data.contact_ids || parsed.data.contact_ids.includes(p.contact_id)),
-  );
+  // Alvos: quem ainda não tem coordenada — e, quando o operador pede um
+  // contato EXPLICITAMENTE ("Tentar de novo" numa parada aproximada), também
+  // quem está num ponto aproximado. Sem isso, o pino de cidade/prefeitura
+  // ficava congelado para sempre: a geocodificação só olhava lat/lng nulos e
+  // nunca revisitava uma parada marcada como "ok" mas aproximada.
+  const pedidos = parsed.data.contact_ids;
+  const alvos = d.paradas.filter((p) => {
+    if (!p.contact_id || !p.endereco) return false;
+    if (pedidos && !pedidos.includes(p.contact_id)) return false;
+    // Pino marcado à mão é decisão do humano — geocodificação nunca o desfaz.
+    if (p.geo_fonte === "manual") return false;
+    const semCoord = p.latitude == null || p.longitude == null;
+    const aproximado =
+      p.geo_status === "ok" &&
+      (p.geo_fonte === "nominatim:bairro" || p.geo_fonte === "nominatim:cidade");
+    return semCoord || (pedidos != null && aproximado);
+  });
 
   // Só contatos desta carga — o body não inventa destino.
   const { data: contatos } = await supabase

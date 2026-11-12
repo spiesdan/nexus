@@ -10,7 +10,10 @@ import {
   normalizarNumero,
   parseLinhaEndereco,
   ruaSemNumeroColado,
+  semConectores,
+  semHonorifico,
   semTipoVial,
+  variantesDoNome,
 } from "./geocodificacao";
 
 describe("normalização da consulta", () => {
@@ -109,6 +112,39 @@ describe("normalização da consulta", () => {
     expect(q).toContain("RUBENS RIBEIRO DA SILVA, 85, Campo da Água Verde, Canoinhas, SC, Brasil");
   });
 
+  it("título e conector do cadastro não impedem achar a rua", () => {
+    // Medido na carga 039 (12/11/2026): as duas ruas abaixo não existem no OSM
+    // com o nome do cadastro, e a cadeia caía no município — pino na Prefeitura.
+    expect(semHonorifico("VEREADOR JOAO ALEXANDRINA")).toBe("JOAO ALEXANDRINA");
+    expect(semHonorifico("Rua Coronel ALBUQUERQUE")).toBe("Rua Coronel ALBUQUERQUE");
+    expect(semConectores("Rua Saulo de Carvalho")).toBe("Rua Saulo Carvalho");
+    expect(semConectores("Rua da Paz")).toBe("Rua da Paz");
+    expect(variantesDoNome("VEREADOR JOAO ALEXANDRINA")).toEqual([
+      "JOAO ALEXANDRINA",
+    ]);
+    expect(variantesDoNome("Rua Saulo de Carvalho")).toEqual([
+      "Rua Saulo Carvalho",
+    ]);
+
+    const q = montarConsultas({
+      logradouro: "RUA VEREADOR JOAO ALEXANDRINA",
+      numero_end: "548",
+      bairro: "INDUSTRIAL 1",
+      cidade: "Canoinhas",
+      uf: "SC",
+    });
+    expect(q).toContain("JOAO ALEXANDRINA, Canoinhas, SC, Brasil");
+
+    const q2 = montarConsultas({
+      logradouro: "R. Saulo de Carvalho",
+      numero_end: "1065",
+      bairro: "Sossego",
+      cidade: "Canoinhas",
+      uf: "SC",
+    });
+    expect(q2).toContain("Saulo Carvalho, Canoinhas, SC, Brasil");
+  });
+
   it("sem rua ou sem cidade não consulta", () => {
     expect(montarConsultas({ logradouro: null, cidade: "Canoinhas", uf: "SC" })).toEqual([]);
     expect(montarConsultas({ logradouro: "RUA X", cidade: null, uf: "SC" })).toEqual([]);
@@ -149,12 +185,24 @@ describe("ponto de emergência (CEP/município)", () => {
     expect(formatarCep(null)).toBeNull();
   });
 
-  it("tenta CEP, CEP+cidade e cidade — do mais estreito ao mais largo", () => {
+  it("bairro primeiro; CEP genérico não vira ponto; município por último", () => {
     // O caso do MATERPLAN (carga 027): a estrada rural não existe no OSM.
+    // 89380-000 é CEP genérico do município — o centroide pode cair em
+    // qualquer distrito, então a consulta de município é mais honesta.
     expect(consultasDeEmergencia({ cidade: "Monte Castelo", uf: "sc", cep: "89380000" })).toEqual([
-      "89380-000, Brasil",
-      "Monte Castelo, SC, 89380-000, Brasil",
       "Monte Castelo, SC, Brasil",
+    ]);
+    // Carga 039: o bairro existe no OSM e é mais preciso que o município.
+    expect(
+      consultasDeEmergencia({ bairro: "Sossego", cidade: "Canoinhas", uf: "SC", cep: "89460000" }),
+    ).toEqual(["Sossego, Canoinhas, SC, Brasil", "Canoinhas, SC, Brasil"]);
+    // CEP específico continua valendo como último recurso antes do município.
+    expect(
+      consultasDeEmergencia({ bairro: "Industrial 1", cidade: "Canoinhas", uf: "SC", cep: "89462514" }),
+    ).toEqual([
+      "Industrial 1, Canoinhas, SC, Brasil",
+      "89462-514, Brasil",
+      "Canoinhas, SC, Brasil",
     ]);
   });
 
@@ -195,12 +243,12 @@ describe("classificarResultado", () => {
     ).toMatchObject({ estado: "ok", precisao: "cidade" });
   });
 
-  it("bairro também é ponto aproximado de cidade", () => {
+  it("bairro é ponto aproximado de bairro, não de cidade", () => {
     expect(
       classificarResultado([
         { lat: "-27.3", lon: "-50.57", addresstype: "suburb", address: { suburb: "Água Santa" } },
       ]),
-    ).toMatchObject({ estado: "ok", precisao: "cidade" });
+    ).toMatchObject({ estado: "ok", precisao: "bairro" });
   });
 
   it("ruas diferentes na mesma consulta é ambíguo — não escolhe no chute", () => {
