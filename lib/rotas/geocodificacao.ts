@@ -5,14 +5,15 @@
  * abertura. Agora o servidor resolve (mesma fila de 1,1s entre chamadas,
  * User-Agent honesto, `countrycodes=br`) e grava em `contacts` — a segunda
  * abertura não reconsulta nada. Quando a rua não existe no OSM, o último
- * recurso é o CEP/município, gravado como APROXIMADO (`precisao: "cidade"`);
- * sem nem isso, a parada vai para "sem mapa", nunca para um ponto inventado.
+ * recurso é o bairro/CEP/município, gravado como APROXIMADO (`precisao:
+ * "bairro"` ou `"cidade"`); sem nem isso, a parada vai para "sem mapa", nunca
+ * para um ponto inventado.
  */
 
 export type EstadoGeo = "ok" | "nao_encontrado" | "ambiguo" | "erro";
 
-/** O quanto o ponto vale: número certo, rua aproximada ou só cidade. */
-export type PrecisaoGeo = "numero" | "rua" | "cidade";
+/** O quanto o ponto vale: número certo, rua aproximada, bairro ou só cidade. */
+export type PrecisaoGeo = "numero" | "rua" | "bairro" | "cidade";
 
 export interface ResultadoGeo {
   estado: EstadoGeo;
@@ -159,11 +160,25 @@ export function montarConsultas(p: PartesEndereco): string[] {
   const cadeia: string[] = [];
   if (numero) cadeia.push(`${rua}, ${numero}, ${base}`);
   cadeia.push(`${rua}, ${cidade}, ${uf}, Brasil`.replace(/, ,/g, ","));
-  if (numero) {
-    const semTipo = semTipoVial(rua);
-    if (semTipo && semTipo.toLowerCase() !== rua.toLowerCase()) {
-      cadeia.push(`${semTipo}, ${numero}, ${base}`);
-    }
+  const semTipo = semTipoVial(rua);
+  if (numero && semTipo && semTipo.toLowerCase() !== rua.toLowerCase()) {
+    cadeia.push(`${semTipo}, ${numero}, ${base}`);
+  }
+  // O NOME COMO O OSM ESCREVE — sem o título e sem o conector do cadastro.
+  //
+  // Medido na carga 039 (12/11/2026): "RUA VEREADOR JOAO ALEXANDRINA" não
+  // existe no OSM, mas "Rua João Alexandrina" existe; e "R. Saulo de Carvalho"
+  // não existe, mas "Rua Saulo Carvalho" existe. Nos dois casos a consulta
+  // exata falhava, a cadeia caía no município e o pino ia parar na Prefeitura
+  // — a 1,3 km da parada, e ainda escolhida como a primeira pela ordem por
+  // distância. O título ("Vereador", "Dr.", "Cel.") e o conector ("de", "da",
+  // "do") são invenção do cadastro, não do mapa; tirá-los é a diferença entre
+  // achar a rua e desistir.
+  //
+  // Sem número de propósito: quando a rua+numero já falhou, repetir o número
+  // na variante só gasta outra chamada de 1,1s e costuma falhar igual.
+  for (const variante of variantesDoNome(semTipo || rua)) {
+    cadeia.push(`${variante}, ${cidade}, ${uf}, Brasil`);
   }
   // Último recurso antes do manual: primeiro trecho (rua sem o lixo do fim).
   const primeiroTrecho = rua.split(",")[0]?.trim() ?? "";
@@ -190,10 +205,60 @@ export function semTipoVial(rua: string): string {
     .trim();
 }
 
+/**
+ * Títulos que o cadastro cola na frente do nome e o OSM não usa: "VEREADOR
+ * JOAO ALEXANDRINA" é "Rua João Alexandrina" no mapa. Só os que são cargo —
+ * "Dom", "Frei" e "Marechal" ficam de fora porque costumam ser o próprio nome
+ * da rua ("Rua Dom Pedro II", "Rua Marechal Deodoro").
+ */
+const HONORIFICOS =
+  /^(?:(?:vereador|vereadora|deputado|deputada|senador|senadora|governador|governadora|prefeito|prefeita|doutor|doutora|dr|dra|coronel|cel|major|capitão|capitao|tenente|general|professor|professora|prof|padre)\s+)+/i;
+
+export function semHonorifico(rua: string): string {
+  return rua.replace(HONORIFICOS, "").trim();
+}
+
+/**
+ * Conectores que o cadastro tem e o OSM não: "SAULO DE CARVALHO" × "Rua Saulo
+ * Carvalho". Não vale a pena quando sobra uma palavra só ("RUA DA PAZ" →
+ * "RUA PAZ" viraria consulta genérica em qualquer cidade) — nesse caso devolve
+ * o nome original e a variante some.
+ */
+export function semConectores(rua: string): string {
+  const limpa = rua
+    .replace(/(^|\s)(de|da|do|das|dos)(\s|$)/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Só vale quando sobra NOME suficiente: "Rua da Paz" → "Rua Paz" é uma
+  // consulta genérica que acha qualquer praça; já "Rua Saulo Carvalho" tem
+  // duas palavras de nome e continua específica.
+  const nome = semTipoVial(limpa);
+  return nome.split(" ").filter(Boolean).length >= 2 ? limpa : rua;
+}
+
+/**
+ * As variantes do nome da rua, na ordem em que valem a pena: título fora,
+ * conector fora, e os dois juntos. Cada uma é única e diferente do original.
+ */
+export function variantesDoNome(rua: string): string[] {
+  const saida = new Set<string>();
+  const original = rua.trim().toLowerCase();
+  const candidatos = [
+    semHonorifico(rua),
+    semConectores(rua),
+    semConectores(semHonorifico(rua)),
+  ];
+  for (const c of candidatos) {
+    const v = c.trim();
+    if (v && v.toLowerCase() !== original) saida.add(v);
+  }
+  return [...saida];
+}
+
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 
 /**
- * Os `addresstype` que são um LUGAR, não um imóvel: CEP, município, bairro.
+ * Os `addresstype` que são um LUGAR maior que o bairro: CEP e município.
  * Servem de ponto aproximado quando a rua não está no OSM.
  */
 const LUGARES_APROXIMADOS = new Set([
@@ -203,11 +268,11 @@ const LUGARES_APROXIMADOS = new Set([
   "village",
   "municipality",
   "administrative",
-  "suburb",
-  "neighbourhood",
-  "quarter",
   "hamlet",
 ]);
+
+/** Bairro é mais preciso que cidade — e mais honesto do que chamá-lo de cidade. */
+const BAIRROS_APROXIMADOS = new Set(["suburb", "neighbourhood", "quarter"]);
 
 // Ritmo justo da instância pública: serializa as chamadas do processo com
 // 1,1s entre elas. Sem isso, rajada de carga com 20 paradas = bloqueio.
@@ -276,9 +341,20 @@ export function consultasDeEmergencia(p: PartesEndereco): string[] {
   const cidade = (p.cidade ?? "").trim().replace(/\s+/g, " ");
   const uf = (p.uf ?? "").trim().toUpperCase();
   const cep = formatarCep(p.cep);
+  const bairro = limparComplemento(p.bairro ?? "");
   const saida: string[] = [];
-  if (cep) saida.push(`${cep}, Brasil`);
-  if (cidade) saida.push([cidade, uf, cep, "Brasil"].filter(Boolean).join(", "));
+  // Bairro antes de tudo: quando o OSM conhece o bairro, o pino cai dentro
+  // dele. Medido na carga 039: "Sossego, Canoinhas, SC" resolve no bairro
+  // certo, enquanto o CEP genérico 89460-000 caía em Marcílio Dias — um
+  // distrito a 4 km, que a ordem por distância tratava como a parada.
+  if (bairro.length >= 3) {
+    saida.push([bairro, cidade, uf, "Brasil"].filter(Boolean).join(", "));
+  }
+  // CEP genérico (final 000) é o município inteiro: o centroide do polígono
+  // pode ser qualquer distrito, não a cidade. Nesses casos a consulta de
+  // município é mais honesta e mais previsível — mas só quando há município
+  // para consultar; sem cidade, o CEP genérico ainda é melhor que nada.
+  if (cep && (!cep.endsWith("-000") || !cidade)) saida.push(`${cep}, Brasil`);
   if (cidade) saida.push([cidade, uf, "Brasil"].filter(Boolean).join(", "));
   return [...new Set(saida)];
 }
@@ -289,10 +365,10 @@ export function consultasDeEmergencia(p: PartesEndereco): string[] {
  * "não localizado" final significa OSM sem a rua mesmo (medido: interior),
  * não consulta malformada — aí o caminho é marcar no mapa.
  *
- * Resultado de precisão "cidade" NÃO encerra a cadeia: uma consulta de rua
- * que só devolve o município é sinal de que a rua não foi encontrada, não de
- * que achamos o imóvel. O ponto de cidade só é aceito nas consultas de
- * emergência (CEP/município), depois de esgotada a rua.
+ * Resultado de precisão "bairro"/"cidade" NÃO encerra a cadeia: uma consulta
+ * de rua que só devolve o município é sinal de que a rua não foi encontrada,
+ * não de que achamos o imóvel. O ponto aproximado só é aceito nas consultas
+ * de emergência (bairro/CEP/município), depois de esgotada a rua.
  */
 export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: string | null): Promise<ResultadoGeo> {
   let cadeia = montarConsultas(p);
@@ -307,9 +383,9 @@ export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: s
   let viuErro = false;
   for (const consulta of [...cadeia, ...crua]) {
     const r = await buscar(consulta);
-    if (r.estado === "ok" && r.precisao !== "cidade") return r;
+    if (r.estado === "ok" && (r.precisao === "numero" || r.precisao === "rua")) return r;
     if (r.estado === "erro") viuErro = true;
-    // nao_encontrado/ambiguo/cidade: próxima fase (mais solta) pode resolver.
+    // nao_encontrado/ambiguo/bairro/cidade: próxima fase (mais solta) pode resolver.
   }
   for (const consulta of emergencia) {
     const r = await buscar(consulta);
@@ -367,9 +443,12 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   if (mesmaRua && mesmaCidade) {
     return { estado: "ok", latitude: lat, longitude: lng, precisao: "rua" };
   }
-  // Lugar (CEP, município, bairro): não é a rua, mas é um ponto honesto do
+  // Lugar (CEP, município): não é a rua, mas é um ponto honesto do
   // território. Quem chama decide se aceita — a cadeia de rua ignora e
   // segue; só as consultas de emergência param aqui.
+  if (BAIRROS_APROXIMADOS.has(primeiro.addresstype ?? "")) {
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "bairro" };
+  }
   if (LUGARES_APROXIMADOS.has(primeiro.addresstype ?? "")) {
     return { estado: "ok", latitude: lat, longitude: lng, precisao: "cidade" };
   }

@@ -95,6 +95,7 @@ const ROTULO_GEO: Record<string, string> = {
  */
 const APROXIMADO_POR_FONTE: Record<string, string> = {
   "nominatim:rua": "(rua aproximada)",
+  "nominatim:bairro": "(aproximado — bairro)",
   "nominatim:cidade": "(aproximado — cidade)",
 };
 
@@ -292,7 +293,7 @@ export function Roteirizador({
    * dentro do cálculo da ordem ele é `"otimizar"`, para os botões não voltarem
    * a ficar clicáveis no meio da operação.
    */
-  async function geocodificarTudo(rotulo = "geo"): Promise<number> {
+  async function geocodificarTudo(rotulo = "geo", contactIds?: string[]): Promise<number> {
     setTrabalhando(rotulo);
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
@@ -302,7 +303,10 @@ export function Roteirizador({
       for (;;) {
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
           `/api/v1/shipments/${cargaId}/rota/geocodificar`,
-          {},
+          // `contact_ids` só vai quando é uma parada específica ("Tentar de
+          // novo" num pino aproximado): é o que autoriza regeocodificar quem
+          // já tem coordenada, sem varrer a carga inteira a cada clique.
+          contactIds ? { contact_ids: contactIds } : {},
           // Até 8 consultas por contato (rua → CEP → município) × 1,1s de
           // ritmo justo, em lote de 10: a chamada passa fácil dos 60s. O
           // timeout padrão de 10s abortava justamente as paradas difíceis —
@@ -915,11 +919,13 @@ export function Roteirizador({
                     </span>
                     {podeOperar && p.contact_id && (
                       <>
-                        {p.geo_status !== "ok" && (
+                        {(p.geo_status !== "ok" ||
+                          p.geo_fonte === "nominatim:bairro" ||
+                          p.geo_fonte === "nominatim:cidade") && (
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() => void geocodificarTudo()}
+                            onClick={() => void geocodificarTudo("geo", [p.contact_id as string])}
                           >
                             {t("Tentar de novo")}
                           </button>
