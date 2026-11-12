@@ -220,15 +220,15 @@ export default async function NotasPage({
 
   const textos = {
     titulo: t("Notas fiscais"),
-    subtitulo: t("Emita a partir do pedido faturado ou expedido e acompanhe o status."),
+    subtitulo: t("Emita a partir do pedido concluído, faturado ou expedido e acompanhe o status."),
     abas: t("Abas das notas fiscais"),
     emitir: t("Emitir nota"),
-    subtituloEmitir: t("Gerar a NF-e a partir do pedido que já foi faturado, expedido ou entregue."),
-    escolherPedido: t("Pedido faturado ou expedido"),
+    subtituloEmitir: t("Gerar a NF-e a partir do pedido que já foi concluído, faturado, expedido ou entregue."),
+    escolherPedido: t("Pedido concluído, faturado ou expedido"),
     selecione: t("Selecione…"),
     notas: t("Notas"),
     vazias: t("Nenhuma nota ainda"),
-    semFaturados: t("Nenhum pedido faturado ou expedido aguardando nota."),
+    semFaturados: t("Nenhum pedido concluído, faturado ou expedido aguardando nota."),
     semConfig: t("Configure os dados fiscais abaixo antes de emitir."),
     config: t("Configuração fiscal"),
     serie: t("Série"),
@@ -597,7 +597,11 @@ export default async function NotasPage({
         {podeEmitir && (
           <TabsContent value="emitir" className="mt-4">
             <EmitirNota
-              faturados={faturadosComDestinatario}
+              // Só quem ainda NÃO tem nota viva. O pedido concluído no ERP
+              // mantém o status depois de faturado aqui (o `faturado` do ERP é
+              // outro fato), então sem este corte ele continuaria na lista
+              // depois de emitido — e a segunda tentativa só devolveria 409.
+              faturados={faturadosComDestinatario.filter((p) => !comNotaViva.has(p.id))}
               configInicial={config as unknown as Parameters<typeof EmitirNota>[0]["configInicial"]}
               textos={textos}
             />

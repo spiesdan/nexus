@@ -359,7 +359,7 @@ export const extrasFiscaisSchema = z.object({
   /**
    * NF-e AVULSA (venda sem pedido): o fato da venda em si, que não vem de um
    * `commercial_orders`. Enquanto o campo está ausente a emissão é sempre de
-   * pedido (faturado/expedido/entregue); com ele presente, a nota nasce sem
+   * pedido (concluído/faturado/expedido/entregue); com ele presente, a nota nasce sem
    * pedido — a venda avulsa/balcão.
    */
   avulsa: avulsaSchema.optional(),
@@ -566,8 +566,18 @@ export const COLUNAS_DA_NOTA =
  * e sem eles quem emite a NF-e depois da saída ficava travado num pedido que já
  * existe de verdade. Antes disso (`rascunho`, `em_analise`, `aprovado`) ainda é
  * intenção, não fato fiscal.
+ *
+ * `concluido` entrou em 2026-11-12 e é o caso mais comum da operação: a
+ * migration 0302 separou "venda fechada no ERP sem nota" (`concluido`) de
+ * "nota já emitida no ERP" (`faturado`) — e a lista ficou sem o status novo,
+ * embora ele seja EXATAMENTE o pedido que espera a nossa NF-e. Medido no
+ * pedido 19538: concluído no Mercos, sem nota, e a emissão recusava dizendo
+ * "só faturado, expedido ou entregue vira nota". O Mercos não escreve
+ * `faturado` em venda fechada; ele escreve `concluido`. Sem esta linha, todo
+ * pedido vindo do ERP precisava de um avanço manual de status — que mente
+ * (diz que já tem nota) para liberar a emissão.
  */
-export const STATUS_FATURAVEL = ["faturado", "expedido", "entregue"] as const;
+export const STATUS_FATURAVEL = ["concluido", "faturado", "expedido", "entregue"] as const;
 
 /** Uma pergunta só, usada pela emissão, pela pré-validação e pelo assistente. */
 export function statusFaturavel(status: string): boolean {

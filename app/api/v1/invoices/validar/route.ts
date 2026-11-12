@@ -146,7 +146,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         pendencias: [
           {
             campo: "status",
-            mensagem: `Pedido está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota.`,
+            mensagem: `Pedido está "${ped.status}" — só pedido concluído, faturado, expedido ou entregue vira nota.`,
             onde: `/app/pedidos/${ped.id}`,
           },
         ],

@@ -360,6 +360,17 @@ export function DetalheDoPedido({
   const confirmar = useConfirmar();
   const router = useRouter();
   const [pedido, setPedido] = React.useState(inicial);
+  /**
+   * OS ITENS QUE A TELA MOSTRA.
+   *
+   * Eram só prop do Server Component — e por isso a ficha mentia: quando o
+   * Mercos reescrevia os itens (0297), `recarregar()` trazia o pedido novo
+   * (total, aviso) e a tabela continuava exibindo os produtos ANTIGOS. A nota
+   * fiscal sai dos `commercial_order_items` do banco; o que a ficha mostra
+   * tem que ser exatamente isso, senão quem confere antes de emitir aprova
+   * uma lista que não é a que vai para a SEFAZ.
+   */
+  const [itensDoPedido, setItensDoPedido] = React.useState(itens);
   const [editando, setEditando] = React.useState(false);
   // Modo SEPARADO do de cima, de propósito: um "Salvar" que grava condição de
   // pagamento e itens ao mesmo tempo mistura dois PATCH de naturezas diferentes —
@@ -404,12 +415,30 @@ export function DetalheDoPedido({
     };
   }, [inicial.id]);
 
+  /**
+   * O prop do servidor ainda é a fonte quando ele muda DE VERDADE (primeira
+   * renderização e o `router.refresh()` depois de salvar). A assinatura existe
+   * porque o array é uma referência nova a cada render: sem ela, o efeito
+   * rodaria sempre e desfaria o que o `recarregar()` acabou de aplicar.
+   */
+  const assinaturaDosItens = itens
+    .map((i) => `${i.id}:${i.quantidade}:${i.preco_unit_cents}:${i.desconto_pct}`)
+    .join("|");
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- sincroniza com o prop quando o conteúdo muda; a assinatura é a dependência real
+    setItensDoPedido(itens);
+  }, [assinaturaDosItens]);
+
   async function recarregar(): Promise<PedidoComercial | null> {
     try {
       const corpo = await apiClient.get<{ data: PedidoComercial & { itens: ItemDoPedido[] } }>(
         `/api/v1/commercial-orders/${inicial.id}`,
       );
       setPedido(corpo.data);
+      // Os itens vêm na MESMA resposta (a rota devolve o pedido com `itens`).
+      // Sem aplicar aqui, o total mudava e a lista de produtos não — que é
+      // exatamente o "puxa os produtos antigos" da ficha do pedido.
+      if (corpo.data.itens) setItensDoPedido(corpo.data.itens);
       return corpo.data;
     } catch (e) {
       showApiError(e);
@@ -619,7 +648,7 @@ export function DetalheDoPedido({
   const mensagemDoOrcamento = linkDoOrcamento
     ? `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome}\nTotal: ${comoMoeda(pedido.total_cents, pedido.moeda)}\nAprove por aqui: ${linkDoOrcamento}`
     : "";
-  const qtdTotal = itens.reduce((a, i) => a + i.quantidade, 0);
+  const qtdTotal = itensDoPedido.reduce((a, i) => a + i.quantidade, 0);
   const proximo = PROXIMO_STATUS[pedido.status as StatusDoPedido];
 
   return (
@@ -885,7 +914,7 @@ export function DetalheDoPedido({
             </Button>
           )}
         </div>
-        {itens.length === 0 ? (
+        {itensDoPedido.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("Sem itens.")}</p>
         ) : (
           <div className="overflow-x-auto rounded-3xl border">
@@ -903,7 +932,7 @@ export function DetalheDoPedido({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {itens.map((it) => (
+                {itensDoPedido.map((it) => (
                   <TableRow key={it.id}>
                     <TableCell>
                       {it.product_id ? (
@@ -942,7 +971,7 @@ export function DetalheDoPedido({
         <div className="mt-3 flex flex-wrap gap-6 border-t pt-3 text-sm">
           <p>
             <span className="text-muted-foreground">{t("Itens no pedido")}: </span>
-            <strong>{itens.length}</strong>
+            <strong>{itensDoPedido.length}</strong>
           </p>
           <p>
             <span className="text-muted-foreground">{t("Quantidade total")}: </span>
@@ -958,15 +987,13 @@ export function DetalheDoPedido({
       {editandoItens && podeEditar && (
         <EditorDeItens
           pedido={pedido}
-          itens={itens}
+          itens={itensDoPedido}
           aoCancelar={() => setEditandoItens(false)}
           aoSalvar={async () => {
             await recarregar();
-            // `recarregar()` traz o pedido (com o total novo), mas NÃO os
-            // itens: eles são prop do Server Component, e só mudam quando o
-            // servidor re-renderiza. Sem este `refresh`, a tabela continuaria
-            // mostrando a lista antiga com o total novo — que é a combinação
-            // que faz alguém achar que o salvamento deu errado.
+            // `recarregar()` já aplica o pedido E os itens na tela; o
+            // `refresh` continua aqui pelo que só o servidor sabe (contato,
+            // vendedor, fotos). A tabela não depende mais dele.
             router.refresh();
             setEditandoItens(false);
           }}
