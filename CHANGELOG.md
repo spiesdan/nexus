@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.51.0] — 2026-11-12
+
+### Adicionado
+
+- **O pedido ganha o campo de Informações Fiscais** A tela de detalhes do pedido ganhou o campo dedicado "Informações Fiscais", e a emissão de nota passa a ler esse campo como a fonte do texto complementar da NF-e (infCpl / dados da DANFE).
+
+  Antes o texto que virava o infCpl era apenas o campo livre do pedido — a fonte mais frágil do fluxo. Com a coluna `informacoes_fiscais` o operador tem um campo próprio para colocar a ordem de compra ou qualquer dado complementar que a nota deve levar, e a emissão grava nesse campo no infCpl da nota. O texto legado (`observacoes`) continua como fallback para os pedidos antigos, sem re-escrita em massa.
+
+  Na venda avulsa (NF-e sem pedido) o destinatário que vem do cadastro do cliente já nasce preenchido pela tela de emissão — nome, documento e entrega vêm do próprio contato, sem digitação manual no formulário.
+
 ## [1.50.3] — 2026-11-12
 
 ### Corrigido
@@ -6969,7 +6979,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.50.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.51.0...HEAD
+[1.51.0]: https://github.com/spiesdan/nexus/compare/v1.50.3...v1.51.0
 [1.50.3]: https://github.com/spiesdan/nexus/compare/v1.50.2...v1.50.3
 [1.50.2]: https://github.com/spiesdan/nexus/compare/v1.50.1...v1.50.2
 [1.50.1]: https://github.com/spiesdan/nexus/compare/v1.50.0...v1.50.1
