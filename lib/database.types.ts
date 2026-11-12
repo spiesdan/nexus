@@ -3432,6 +3432,7 @@ export type Database = {
           forma_pagamento: string | null;
           frete_cents: number;
           id: string;
+          informacoes_fiscais: string | null;
           mercos_observacoes: string | null;
           mercos_sincronizado_em: string | null;
           mercos_ultima_mudanca: Json | null;
@@ -3508,6 +3509,7 @@ export type Database = {
           forma_pagamento?: string | null;
           frete_cents?: number;
           id?: string;
+          informacoes_fiscais?: string | null;
           mercos_observacoes?: string | null;
           mercos_sincronizado_em?: string | null;
           mercos_ultima_mudanca?: Json | null;

@@ -85,10 +85,14 @@ export const DIAS_DO_AVISO_PREVENTIVO_45 = 30;
  */
 export function exigeNF(pedido: {
   exige_nf?: boolean | null;
+  /** 0305: o campo fiscal dedicado — fonte primária do texto da marcação. */
+  informacoes_fiscais?: string | null;
   observacoes?: string | null;
 }): boolean {
   if (pedido.exige_nf === true) return true;
-  return observaPedidoComNota(pedido.observacoes);
+  // 0305: o campo fiscal dedicado vence o texto legado na detecção ("pedido com
+  // nota" / "nota fiscal"); `observacoes` continua valendo para o legado.
+  return observaPedidoComNota(pedido.informacoes_fiscais) || observaPedidoComNota(pedido.observacoes);
 }
 
 /**

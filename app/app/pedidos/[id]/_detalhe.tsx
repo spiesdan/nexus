@@ -385,6 +385,13 @@ export function DetalheDoPedido({
     inicial.contato_no_cliente ?? "",
   );
   const [obs, setObs] = React.useState(inicial.observacoes ?? "");
+  /**
+   * 0305 — as **Informações Fiscais** do pedido: o texto que a emissão grava
+   * como `informacoes_complementares` (infCpl) da NF-e. É o campo da seção de
+   * detalhes dedicado à ordem de compra etc.; o `observacoes` legado continua
+   * sendo a fonte do pedido quando este fica vazio.
+   */
+  const [informacoesFiscais, setInformacoesFiscais] = React.useState(inicial.informacoes_fiscais ?? "");
   const [timeline, setTimeline] = React.useState<{ acao: string; por: string; em: string }[] | null>(null);
   const [trocando, setTrocando] = React.useState(false);
   const [buscaCliente, setBuscaCliente] = React.useState("");
@@ -549,6 +556,7 @@ export function DetalheDoPedido({
         transportadora_nome: transportadora.trim() || null,
         rastreamento: rastreamento.trim() || null,
         contato_no_cliente: contatoNoCliente.trim() || null,
+        informacoes_fiscais: informacoesFiscais.trim() || null,
         observacoes: obs.trim() || null,
       });
       toast.success("Detalhes salvos");
@@ -1054,8 +1062,14 @@ export function DetalheDoPedido({
             />
           )}
         </dl>
-        {(pedido.observacoes || pedido.obs_interna) && (
+        {(pedido.informacoes_fiscais || pedido.observacoes || pedido.obs_interna) && (
           <div className="space-y-1 text-sm">
+            {pedido.informacoes_fiscais && (
+              <p>
+                <span className="text-muted-foreground">{t("Informações Fiscais")}: </span>
+                {pedido.informacoes_fiscais}
+              </p>
+            )}
             {pedido.observacoes && (
               <p>
                 <span className="text-muted-foreground">{t("Informações adicionais")}: </span>
@@ -1098,6 +1112,12 @@ export function DetalheDoPedido({
                   </Button>
                 </div>
               )}
+              <Input
+                value={informacoesFiscais}
+                onChange={(e) => setInformacoesFiscais(e.target.value)}
+                placeholder={t("Informações Fiscais")}
+                className="sm:col-span-2"
+              />
               <Input
                 value={obs}
                 onChange={(e) => setObs(e.target.value)}

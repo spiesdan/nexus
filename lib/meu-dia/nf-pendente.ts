@@ -38,6 +38,8 @@ export interface PedidoParaConferir {
   status: string;
   created_at: string;
   exige_nf?: boolean | null;
+  /** 0305: o campo fiscal dedicado; o texto legado é o fallback. */
+  informacoes_fiscais?: string | null;
   observacoes?: string | null;
 }
 
@@ -116,13 +118,14 @@ export function textoDoEstado(estado: EstadoFiscal): {
  * caso comum depois da 0261; o texto é o que sobrou dos pedidos antigos.
  */
 export function descricaoDaIndicacao(pedido: PedidoParaConferir): string {
+  const texto = pedido.informacoes_fiscais ?? pedido.observacoes;
   if (pedido.exige_nf === true) {
-    const trecho = trechoQueIndicaNota(pedido.observacoes);
+    const trecho = trechoQueIndicaNota(texto);
     return trecho
       ? `Marcado no cadastro. A observação também menciona: ${trecho}`
       : "Marcado no cadastro do pedido.";
   }
-  const trecho = trechoQueIndicaNota(pedido.observacoes);
+  const trecho = trechoQueIndicaNota(texto);
   return trecho ? `A observação do pedido menciona: ${trecho}` : "O pedido pede nota fiscal.";
 }
 

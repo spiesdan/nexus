@@ -210,7 +210,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   const { data: pedidos, error: erroPedidos } = await supabase
     .from("commercial_orders")
     .select(
-      "id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status, observacoes",
+      "id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status, informacoes_fiscais, observacoes",
     )
     .in("id", ids)
     .eq("organization_id", orgId);
@@ -223,6 +223,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     total_cents: number;
     frete_cents: number;
     status: string;
+    informacoes_fiscais: string | null;
     observacoes: string | null;
   };
   const lista = (pedidos ?? []) as unknown as PedidoDaNota[];
@@ -335,17 +336,17 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   // (do cadastro quando ela não digitou). O drain lê daqui, então reemitir
   // reusa a mesma decisão em vez de recalcular.
   //
-  // ── As "Informações adicionais" do pedido viram o infCpl da nota ──────────
+  // ── As "Informações Fiscais" do pedido viram o infCpl da nota ────────────
   //
   // O campo do pedido é o que o cliente já lê no pedido impresso (não é a
   // observação interna). É onde a ordem de compra dele entra, e digitar de
   // novo em toda emissão era o que fazia a referência sumir justamente nas
-  // notas que o cliente confere. Sem texto digitado em "Informações
-  // complementares", ele é o padrão; o que a pessoa digitar na emissão vence.
+  // notas que o cliente confere. Sem texto no campo novo, cai no `observacoes`
+  // legado — pedidos antigos continuam com a mesma fonte.
   //
   // Na nota agrupada vale o pedido PRINCIPAL (o primeiro): é ele que dá o
   // destinatário e o número da nota, e o infCpl é um só.
-  const complementaresDoPedido = (ped.observacoes ?? "").trim().slice(0, INF_CPL_MAX);
+  const complementaresDoPedido = ((ped.informacoes_fiscais ?? ped.observacoes) ?? "").trim().slice(0, INF_CPL_MAX);
   const adicionaisDaNota: NonNullable<ExtrasFiscais["adicionais"]> | undefined =
     complementaresDoPedido !== "" && !extras?.adicionais?.informacoes_complementares
       ? { ...(extras?.adicionais ?? {}), informacoes_complementares: complementaresDoPedido }

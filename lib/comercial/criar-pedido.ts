@@ -333,6 +333,7 @@ export async function criarPedidoComercial(
       exige_nf: entrada.exige_nf ?? false,
       forma_pagamento: entrada.forma_pagamento ?? null,
       price_table_id: entrada.price_table_id ?? null,
+      informacoes_fiscais: entrada.informacoes_fiscais ?? null,
       observacoes: entrada.observacoes ?? null,
       obs_interna: entrada.obs_interna ?? null,
       endereco_entrega: entrada.endereco_entrega ?? null,

@@ -74,6 +74,7 @@ function pedidoDeTeste(status: PedidoComercial["status"]): PedidoComercial {
     exige_nf: true,
     forma_pagamento: null,
     price_table_id: null,
+    informacoes_fiscais: null,
     observacoes: null,
     obs_interna: null,
     endereco_entrega: null,

@@ -113,6 +113,13 @@ export const pedidoCreateSchema = z.object({
    */
   forma_pagamento: FormaDePagamentoSchema,
   observacoes: z.string().trim().max(2000).optional(),
+  /**
+   * 0305: as **Informações Fiscais** do pedido — o texto que a emissão grava
+   * como `informacoes_complementares` (infCpl) da NF-e. É o campo da tela de
+   * detalhes do pedido que o operador usa para colocar a ordem de compra etc.
+   * Vence o `observacoes` legado na emissão; ausência = fallback para o legado.
+   */
+  informacoes_fiscais: z.string().trim().max(2000).optional(),
   /** Interna (equipe); nunca imprime. */
   obs_interna: z.string().trim().max(2000).optional(),
   /** Onde este pedido desce (0212). Por pedido, não por cliente. */
@@ -167,6 +174,8 @@ export const pedidoPatchSchema = z.object({
   /** Trocar o prazo estruturado (0261). */
   forma_pagamento: FormaDePagamentoSchema.optional(),
   observacoes: z.string().trim().max(2000).nullable().optional(),
+  /** 0305: as Informações Fiscais do pedido — a fonte do infCpl da NF-e. */
+  informacoes_fiscais: z.string().trim().max(2000).nullable().optional(),
   obs_interna: z.string().trim().max(2000).nullable().optional(),
   endereco_entrega: z.string().trim().max(500).nullable().optional(),
   transportadora_nome: z.string().trim().max(120).nullable().optional(),
@@ -230,6 +239,12 @@ export interface PedidoComercial {
   /** 0261: o prazo estruturado. `null` = prazo livre. */
   forma_pagamento: FormaDePagamento | null;
   price_table_id: string | null;
+  /**
+   * 0305: as **Informações Fiscais** do pedido — o texto que a emissão grava
+   * como `informacoes_complementares` (infCpl) da NF-e. Vence o `observacoes`
+   * legado; `null` = usar o legado.
+   */
+  informacoes_fiscais: string | null;
   observacoes: string | null;
   obs_interna: string | null;
   /**
@@ -283,7 +298,7 @@ export const COLUNAS_DO_PEDIDO =
   "id, numero, contact_id, cliente_nome, cliente_documento, created_by, vendedor_user_id, " +
   "vendedor_nome, " +
   "status, origem, moeda, subtotal_cents, desconto_cents, desconto_pct, frete_cents, total_cents, " +
-  "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
+  "condicao_pagamento, exige_nf, forma_pagamento, price_table_id, informacoes_fiscais, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
   "rastreamento, contato_no_cliente, " +
   "modalidade_frete, previsao_entrega, parcelas, created_at, updated_at, " +
   "mercos_sincronizado_em, mercos_ultima_mudanca, mercos_observacoes";
