@@ -8,6 +8,46 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.50.0] — 2026-11-12
+
+### Adicionado
+
+- **A campanha por região fala com todos os clientes cadastrados na cidade** A campanha por região só alcançava quem já tinha pedido não cancelado. Quem estava cadastrado na cidade mas nunca comprou — o público mais óbvio para uma oferta — ficava de fora sem aviso.
+
+  Agora a audiência é a **união** de duas fontes: o cadastro do contato (a cidade onde ele está) e o endereço de entrega dos pedidos não cancelados. Quem nunca comprou entra com zero pedido, e a prévia separa quantos têm pedido e quantos não têm antes de você agendar. A lista de cidades mostra a mesma contagem, então o número da tela é o número que recebe.
+
+  O veto continua o mesmo de todo o produto: contato bloqueado, que recusou marketing, anonimizado ou mesclado não recebe campanha.
+
+### Corrigido
+
+- **Cada aba de campanha lista só o seu tipo de campanha** As três audiências moram na mesma tabela e apareciam todas na mesma lista. A aba **Campanha** mostrava a garimpagem de empresa e a recuperação de conversa; a aba **Prospecção** mostrava campanha por região. Quem abria uma para ver um público encontrava o outro — e o card de campanha por região era rotulado "Recuperação", porque as duas usam público de contatos.
+
+  Agora cada tela pede o seu recorte ao servidor, antes de calcular envio e funil:
+
+  - **Campanha** — campanha por região: clientes cadastrados nas cidades escolhidas.
+  - **Prospecção** — campanha de garimpagem de empresa (`prospects`), e só ela.
+  - **Radar → Recuperação** — campanhas de recuperação, no mesmo lugar onde são criadas, com o andamento do envio.
+
+  O card de campanha por região passou a dizer "Por região" e quantos clientes entram.
+
+- **Cidade sem UF no cadastro não vira uma segunda linha na campanha** A lista de cidades da campanha por região contava a mesma cidade mais de uma vez quando o cadastro importado veio sem UF e com o nome do estado colado. Em Canoinhas, a tela mostrava quatro linhas: `Canoinhas, Santa Catarina/SC` (206), `CANOINHAS` sem UF (3), `canoinhas/PR` (1) e `canoinhas, Santa Catarina` sem UF (1).
+
+  Agora o nome do estado colado sai do rótulo mesmo quando a UF não veio, e a linha sem UF entra na linha da cidade quando existe **um** estado conhecido para ela. Cidade com o mesmo nome em dois estados (`Bom Sucesso/PR` e `Bom Sucesso/PB`) continua separada, porque a campanha compara UF quando o operador escolhe o estado.
+
+  O efeito na tela é a cidade voltar a aparecer uma vez só, com o nome limpo e a soma dos clientes.
+
+- **O nome da campanha não é mais cortado em 120 caracteres** O campo **Nome da campanha** parava de aceitar texto depois de 120 caracteres — e o servidor recusava o que a tela deixasse passar. Como a própria tela monta o nome a partir da lista de cidades, a campanha por região nascia com nome cortado no meio de uma cidade.
+
+  O limite saiu do formulário e da validação, nas quatro telas de campanha: região, prospecção, recuperação e venda automática. O nome é rótulo para o operador, não conteúdo de mensagem — a coluna é `text` e nada mais dependia dos 120.
+
+- **Pedido concluído no Mercos volta a virar nota, e a ficha mostra os itens que o banco tem** Dois defeitos que apareciam juntos quando o Mercos reescrevia um pedido já importado.
+
+  O primeiro é de status. A migration 0302 separou "venda fechada no ERP, sem nota" (`concluido`) de "nota já emitida no ERP" (`faturado`) — e a lista de status que podem virar NF-e ficou só com os antigos (`faturado`, `expedido`, `entregue`). O Mercos não escreve `faturado` em venda fechada; ele escreve `concluido`. Resultado: o pedido que o próprio aviso mandava faturar era recusado com "só pedido faturado, expedido ou entregue vira nota", e a saída era avançar o status à mão — dizendo que já existia nota para liberar a emissão. Agora `concluido` é faturável na emissão, na pré-validação, na lista de pedidos da aba Emitir nota e no assistente.
+
+  O segundo é o que fazia o operador desconfiar da nota: a tabela de produtos da ficha continuava mostrando a lista antiga depois do "Atualizar do Mercos". O `recarregar()` trazia o pedido novo (total, aviso) e descartava os itens que vinham na mesma resposta, porque eles eram só prop do Server Component — só mudavam com um `router.refresh()`. A ficha agora guarda os itens em estado, aplica o que a rota devolve e continua adotando o servidor quando ele muda de verdade. A NF-e sempre saiu dos itens do banco; o que estava errado era a tela que a pessoa confere antes de emitir.
+
+  Junto vai um detalhe que o status novo expunha: o pedido concluído no ERP não muda de status ao receber a nossa nota — `faturado` continua sendo "o ERP emitiu". Sem cortar quem já tem nota viva, ele ficaria para sempre na lista de escolha da aba Emitir nota, e a segunda tentativa só devolveria "já tem nota". A lista agora mostra só o que ainda está aguardando, que é o que o contador da tela já dizia.
+
 ## [1.49.1] — 2026-11-12
 
 ### Corrigido
@@ -6885,7 +6925,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.49.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.50.0...HEAD
+[1.50.0]: https://github.com/spiesdan/nexus/compare/v1.49.1...v1.50.0
 [1.49.1]: https://github.com/spiesdan/nexus/compare/v1.49.0...v1.49.1
 [1.49.0]: https://github.com/spiesdan/nexus/compare/v1.48.2...v1.49.0
 [1.48.2]: https://github.com/spiesdan/nexus/compare/v1.48.1...v1.48.2
