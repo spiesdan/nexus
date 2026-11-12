@@ -257,7 +257,7 @@ export function NovaCampanhaDaSelecao({
 
       <div className="space-y-1">
         <Label htmlFor="va-sel-nome">{t("Nome da campanha")}</Label>
-        <Input id="va-sel-nome" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} />
+        <Input id="va-sel-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
       </div>
 
       <div className="space-y-1">

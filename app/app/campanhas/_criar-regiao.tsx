@@ -392,7 +392,6 @@ export function CriarCampanhaPorRegiao({
               id="regiao-nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              maxLength={120}
             />
           </div>
 

@@ -158,7 +158,6 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
                 id="rec-nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                maxLength={120}
               />
             </div>
 

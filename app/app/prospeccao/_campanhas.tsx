@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
+import { ehCampanhaPorRegiao } from "@/lib/prospeccao/origem-da-campanha";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
 import { lerTemplatesPorCategoria } from "@/lib/prospeccao/templates-por-categoria";
 
@@ -61,7 +62,7 @@ interface CampanhaDescoberta {
   ultima_execucao_at: string | null;
   /** 0271: `busca` (provider ativo) | `base` (já cadastrado) | `ambas`. */
   fonte_publico?: string | null;
-  /** 0274: `prospects` (garimpagem) | `contatos` (recuperação). */
+  /** 0274: `prospects` (garimpagem) | `contatos` (recuperação ou região). */
   publico?: string | null;
   prospect_ids?: string[] | null;
   contato_ids?: string[] | null;
@@ -299,11 +300,18 @@ export function CampanhasTab({
   podeOperar,
   aoCriarPrimeira,
   rotuloCriarPrimeira,
+  origem,
 }: {
   podeOperar: boolean;
   /** O que o estado vazio oferece como primeira ação. Sem isto, o assistente. */
   aoCriarPrimeira?: () => void;
   rotuloCriarPrimeira?: string;
+  /**
+   * `"regiao"` = a aba Campanha: só a audiência "quem já comprou nesta cidade".
+   * Sem isto a tela mostrava a garimpagem de empresa e a recuperação de
+   * conversa no mesmo lugar — públicos diferentes, decisão do servidor.
+   */
+  origem?: "regiao";
 }) {
   const t = useT();
   const router = useRouter();
@@ -324,9 +332,19 @@ export function CampanhasTab({
       // FASE 15 (§45): o funil vem NAS listas (`com_funil=1`) — eram 2 + N
       // requests para desenhar a aba; agora são as 2 de sempre. O resumo de
       // envio também vem na lista, numa query em lote.
+      //
+      // A aba Campanha pede só a origem `regiao`: a campanha de prospecção
+      // (empresas da base) e a de recuperação não pertencem a esse recorte. A
+      // venda automática é outra superfície — nem é consultada ali.
+      const urlDescobertas =
+        origem === "regiao"
+          ? "/api/v1/prospecting/campaigns?com_funil=1&origem=regiao"
+          : "/api/v1/prospecting/campaigns?com_funil=1";
       const [resDesc, resVa] = await Promise.all([
-        apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns?com_funil=1"),
-        apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
+        apiClient.get<{ data: unknown }>(urlDescobertas),
+        origem === "regiao"
+          ? Promise.resolve(null)
+          : apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
       ]);
       const listaDesc = ((resDesc as { data?: unknown } | null)?.data ??
         []) as CampanhaDescoberta[];
@@ -338,7 +356,7 @@ export function CampanhasTab({
       setErro(true);
       showApiError(e);
     }
-  }, []);
+  }, [origem]);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -430,13 +448,15 @@ export function CampanhasTab({
             onChange={setStatusFiltro}
             options={opcoesStatus}
           />
-          <FilterSelect
-            id="campanhas-tipo"
-            label={t("Tipo")}
-            value={tipoFiltro}
-            onChange={setTipoFiltro}
-            options={opcoesTipo}
-          />
+          {origem !== "regiao" && (
+            <FilterSelect
+              id="campanhas-tipo"
+              label={t("Tipo")}
+              value={tipoFiltro}
+              onChange={setTipoFiltro}
+              options={opcoesTipo}
+            />
+          )}
         </FilterPrimary>
         <FilterActions>
           <span className="text-xs text-muted-foreground" aria-live="polite">
@@ -476,7 +496,11 @@ export function CampanhasTab({
         <NexusEmptyState
           icon={Megaphone}
           headline={t("Nenhuma campanha ainda.")}
-          subcopy={t("Comece por um recorte de cidades e categorias da sua base.")}
+          subcopy={
+            origem === "regiao"
+              ? t("Comece escolhendo as cidades onde você já atendeu.")
+              : t("Comece por um recorte de cidades e categorias da sua base.")
+          }
           primary={
             podeOperar
               ? {
@@ -501,7 +525,12 @@ export function CampanhasTab({
             const status = rotuloDoStatus(chave, t);
             const funil = card.campanha.funil ?? null;
             const respostas = funil?.responderam ?? null;
-            const recuperacao = card.tipo === "descoberta" && card.campanha.publico === "contatos";
+            const regiaoDaCampanha =
+              card.tipo === "descoberta" && ehCampanhaPorRegiao(card.campanha);
+            const recuperacao =
+              card.tipo === "descoberta" &&
+              card.campanha.publico === "contatos" &&
+              !regiaoDaCampanha;
             const contatoIds = card.tipo === "descoberta" ? (card.campanha.contato_ids ?? []) : [];
             const rotaPatch =
               card.tipo === "descoberta"
@@ -586,6 +615,17 @@ export function CampanhasTab({
                           {t("Com erro")}
                         </Badge>
                       )}
+                      {regiaoDaCampanha && (
+                        <Badge
+                          variant="outline"
+                          className="h-5 px-2 text-xs font-normal"
+                          title={t(
+                            "Audiência: clientes que já compraram nas cidades do recorte — campanha por região, não prospecção.",
+                          )}
+                        >
+                          {t("Por região")} · {contatoIds.length}
+                        </Badge>
+                      )}
                       {recuperacao && (
                         <Badge
                           variant="outline"
@@ -602,9 +642,13 @@ export function CampanhasTab({
                     <p className="truncate text-xs text-muted-foreground">
                       {recuperacao
                         ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
-                        : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
-                            categorias || "—"
-                          }`}
+                        : regiaoDaCampanha
+                          ? `${t("Região")}: ${regiao || "—"} · ${t("Público")}: ${
+                              contatoIds.length
+                            } ${t("clientes que já compraram")}`
+                          : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
+                              categorias || "—"
+                            }`}
                     </p>
 
                     {agenda && (

@@ -10,17 +10,18 @@ import { CampanhasTab } from "../prospeccao/_campanhas";
 import { CriarCampanhaPorRegiao } from "./_criar-regiao";
 
 /**
- * A SUBTELA "CAMPANHA" — a campanha por região e o painel de todas as campanhas.
+ * A SUBTELA "CAMPANHA" — a campanha por região e o painel das campanhas dela.
  *
  * Duas perguntas no mesmo lugar: "quem eu já atendi nesta cidade e ainda posso
  * chamar?" (o diálogo de criação, com prévia real) e "o que está rodando agora?"
  * (a lista que a prospecção já tinha, reaproveitada — nenhuma segunda cópia da
  * consulta de campanhas).
  *
- * O painel lista TODAS as campanhas, inclusive as de recuperação e a venda
- * automática: esconder uma campanha ativa de quem veio gerenciar campanha é o
- * tipo de tela que mente por omissão. A de região se distingue pelo recorte de
- * cidades que o card já desenha.
+ * A lista pede `origem=regiao`: mostra só a audiência "quem já comprou nesta
+ * cidade". Campanha de garimpagem de empresa (`publico: "prospects"`) e a
+ * recuperação de conversa (contatos sem recorte geográfico) ficam na aba
+ * Prospecção, onde foram criadas — misturar as duas fazia o operador procurar
+ * campanha de região no meio de público que nunca comprou.
  */
 export function CampanhaPorRegiaoTab({ podeOperar }: { podeOperar: boolean }) {
   const t = useT();
@@ -65,6 +66,7 @@ export function CampanhaPorRegiaoTab({ podeOperar }: { podeOperar: boolean }) {
       <CampanhasTab
         key={versao}
         podeOperar={podeOperar}
+        origem="regiao"
         aoCriarPrimeira={() => setCriando(true)}
         rotuloCriarPrimeira={t("Criar primeira campanha por região")}
       />
