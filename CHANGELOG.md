@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.49.1] — 2026-11-12
+
+### Corrigido
+
+- **A campanha por região conta o cliente pela cidade do pedido, não só pelo cadastro** A lista de cidades da campanha por região estava magra: ela olhava apenas a cidade do cadastro do cliente, e metade da carteira veio do Mercos com o município só no endereço de entrega do pedido. Na medição desta instalação, o cadastro sozinho deixava 260 clientes compradores de fora — e a mesma cidade aparecia partida em duas linhas quando o importador colou o nome do estado no cadastro ("Canoinhas" e "Canoinhas, Santa Catarina").
+
+  Agora o cliente entra na cidade pelo endereço de entrega do pedido — onde a loja de fato atendeu —, com o cadastro como resposta para os pedidos que vieram sem município. A cidade com o estado colado volta a ser a mesma cidade, e quem comprou em duas cidades aparece nas duas, com a contagem de cada uma. Os pedidos somados por cliente respeitam o recorte: escolher Canoinhas não soma o pedido que foi entregue em Mafra.
+
 ## [1.49.0] — 2026-11-11
 
 ### Adicionado
@@ -6877,7 +6885,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.49.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.49.1...HEAD
+[1.49.1]: https://github.com/spiesdan/nexus/compare/v1.49.0...v1.49.1
 [1.49.0]: https://github.com/spiesdan/nexus/compare/v1.48.2...v1.49.0
 [1.48.2]: https://github.com/spiesdan/nexus/compare/v1.48.1...v1.48.2
 [1.48.1]: https://github.com/spiesdan/nexus/compare/v1.48.0...v1.48.1
