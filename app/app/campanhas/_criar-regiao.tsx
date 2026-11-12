@@ -67,6 +67,8 @@ interface LinhaDaPrevia {
 
 interface Previa {
   total: number;
+  com_pedido: number;
+  sem_pedido: number;
   com_telefone: number;
   sem_telefone: number;
   em_campanha: number;
@@ -87,13 +89,15 @@ function chaveDaCidade(c: { cidade: string; uf: string | null }): string {
 }
 
 /**
- * CRIAR CAMPANHA POR REGIÃO — clientes que já compraram nas cidades escolhidas.
+ * CRIAR CAMPANHA POR REGIÃO — todos os clientes cadastrados nas cidades
+ * escolhidas, com pedido ou sem.
  *
- * A tela pergunta três coisas, nesta ordem: ONDE já atendemos (cidades com
+ * A tela pergunta três coisas, nesta ordem: ONDE você tem cliente (cidades com
  * contagem real), DE QUAL NÚMERO sai (só os não oficiais que aceitam texto
  * livre) e QUANDO/COMO fala (janelas, período, cota, variações). O resumo da
- * prévia é a promessa verificável: quantos entram agora, quantos ficaram sem
- * telefone e quantos já estão em outra campanha.
+ * prévia é a promessa verificável: quantos entram agora, quantos têm pedido e
+ * quantos não têm, quantos ficaram sem telefone e quantos já estão em outra
+ * campanha.
  *
  * O envio é o motor único (`lib/prospeccao/agendado.ts`): UMA mensagem por
  * minuto, dentro da janela, no período, respeitando a cota da campanha E a do
@@ -278,12 +282,12 @@ export function CriarCampanhaPorRegiao({
         <div className="space-y-5">
           <p className="text-sm text-muted-foreground">
             {t(
-              "Vai falar com quem já comprou nas cidades escolhidas, uma mensagem por minuto, por um número não oficial.",
+              "Vai falar com todos os clientes cadastrados nas cidades escolhidas — quem já comprou e quem ainda não —, uma mensagem por minuto, por um número não oficial.",
             )}
           </p>
 
           <div className="space-y-2">
-            <Label>{t("Cidades onde já atendemos")}</Label>
+            <Label>{t("Cidades com clientes cadastrados")}</Label>
             <Input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
@@ -294,7 +298,7 @@ export function CriarCampanhaPorRegiao({
                 <p className="p-2 text-sm text-muted-foreground">{t("Carregando cidades…")}</p>
               ) : cidadesFiltradas.length === 0 ? (
                 <p className="p-2 text-sm text-muted-foreground">
-                  {t("Nenhuma cidade com cliente e telefone.")}
+                  {t("Nenhuma cidade com cliente cadastrado e telefone.")}
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
@@ -338,9 +342,10 @@ export function CriarCampanhaPorRegiao({
                   {previa.resumo}
                 </p>
                 <p className="text-muted-foreground">
-                  {previa.sem_telefone} {t("sem telefone")} · {previa.em_campanha}{" "}
-                  {t("já em outra campanha")}
-                  {previa.completa ? "" : ` · ${t("varredura parcial (teto de pedidos)")}`}
+                  {previa.com_pedido} {t("com pedido")} · {previa.sem_pedido}{" "}
+                  {t("sem pedido")} · {previa.sem_telefone} {t("sem telefone")} ·{" "}
+                  {previa.em_campanha} {t("já em outra campanha")}
+                  {previa.completa ? "" : ` · ${t("varredura parcial (teto de leitura)")}`}
                 </p>
                 {previa.linhas.length > 0 && (
                   <p className="text-xs text-muted-foreground">

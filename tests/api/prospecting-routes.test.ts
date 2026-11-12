@@ -1414,7 +1414,7 @@ describe("GET /api/v1/prospecting/campaigns — funil em lote (N+1, FASE 15)", (
     expect(corpo.data[0]).not.toHaveProperty("funil");
   });
 
-  it("origem=regiao → só campanha por região; prospecção e recuperação ficam de fora", async () => {
+  it("origem separa as três audiências: região, prospecção e recuperação", async () => {
     // Os três formatos convivem na mesma tabela. `cidades` sozinho não decide:
     // a prospecção também grava cidades no recorte (onde procurar empresa).
     const PROSPECCAO: Row = {
@@ -1444,11 +1444,21 @@ describe("GET /api/v1/prospecting/campaigns — funil em lote (N+1, FASE 15)", (
       "viewer",
       makeDb({ prospecting_campaigns: [PROSPECCAO, REGIAO, RECUPERACAO] }),
     );
-    const res = await rotaCampanhas.GET(
-      req("GET", undefined, "http://localhost/api/v1/prospecting/campaigns?origem=regiao"),
-    );
-    const corpo = await res.json();
-    expect(corpo.data.map((c: { nome: string }) => c.nome)).toEqual(["Canoinhas/SC"]);
+
+    const nomes = async (query: string) => {
+      const res = await rotaCampanhas.GET(
+        req("GET", undefined, `http://localhost/api/v1/prospecting/campaigns?${query}`),
+      );
+      return (await res.json()).data.map((c: { nome: string }) => c.nome);
+    };
+
+    expect(await nomes("origem=regiao")).toEqual(["Canoinhas/SC"]);
+    // A aba Prospecção lista a garimpagem — e só ela.
+    expect(await nomes("origem=prospeccao")).toEqual(["Lebon Régis/SC Fraiburgo/SC"]);
+    // A recuperação é listada onde é criada (Radar), não na prospecção.
+    expect(await nomes("origem=recuperacao")).toEqual(["Clientes parados há 90 dias"]);
+    // Sem `origem` a lista continua completa (compatibilidade).
+    expect(await nomes("com_funil=0")).toHaveLength(3);
   });
 
   it("com_funil=1 → cada linha ganha funil com todos os estágios", async () => {

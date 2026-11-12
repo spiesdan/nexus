@@ -12,16 +12,16 @@ import { CriarCampanhaPorRegiao } from "./_criar-regiao";
 /**
  * A SUBTELA "CAMPANHA" — a campanha por região e o painel das campanhas dela.
  *
- * Duas perguntas no mesmo lugar: "quem eu já atendi nesta cidade e ainda posso
- * chamar?" (o diálogo de criação, com prévia real) e "o que está rodando agora?"
- * (a lista que a prospecção já tinha, reaproveitada — nenhuma segunda cópia da
- * consulta de campanhas).
+ * Duas perguntas no mesmo lugar: "quem são meus clientes nesta cidade?" (o
+ * diálogo de criação, com prévia real) e "o que está rodando agora?" (a lista
+ * que a prospecção já tinha, reaproveitada — nenhuma segunda cópia da consulta
+ * de campanhas).
  *
- * A lista pede `origem=regiao`: mostra só a audiência "quem já comprou nesta
- * cidade". Campanha de garimpagem de empresa (`publico: "prospects"`) e a
- * recuperação de conversa (contatos sem recorte geográfico) ficam na aba
- * Prospecção, onde foram criadas — misturar as duas fazia o operador procurar
- * campanha de região no meio de público que nunca comprou.
+ * A lista pede `origem=regiao`: mostra só a audiência de clientes cadastrados
+ * no recorte. Campanha de garimpagem de empresa (`publico: "prospects"`) fica na
+ * aba Prospecção; a recuperação de conversa (contatos sem recorte geográfico)
+ * fica no Radar, onde é criada. Misturar as três fazia o operador procurar
+ * campanha de região no meio de público que nunca foi cliente.
  */
 export function CampanhaPorRegiaoTab({ podeOperar }: { podeOperar: boolean }) {
   const t = useT();
@@ -39,7 +39,7 @@ export function CampanhaPorRegiaoTab({ podeOperar }: { podeOperar: boolean }) {
             <h2 className="text-base font-semibold">{t("Campanha por região")}</h2>
             <p className="max-w-2xl text-sm text-muted-foreground">
               {t(
-                "Mande mensagem para os clientes que já compraram nas cidades que você escolher. Uma mensagem por minuto, por um número não oficial — nada de API oficial.",
+                "Mande mensagem para os clientes cadastrados nas cidades que você escolher — quem já comprou e quem ainda não. Uma mensagem por minuto, por um número não oficial — nada de API oficial.",
               )}
             </p>
           </div>

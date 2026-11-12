@@ -124,7 +124,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
         data_fim: fim || null,
         limite_diario: Number(cota) > 0 ? Number(cota) : undefined,
       });
-      toast.success(t("Campanha de recuperação agendada. Ela aparece na aba Campanhas da prospecção."));
+      toast.success(t("Campanha de recuperação agendada. Ela aparece no Radar, em Recuperação."));
       setAberto(false);
     } catch (e) {
       showApiError(e);

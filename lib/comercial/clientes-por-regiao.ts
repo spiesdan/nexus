@@ -1,24 +1,27 @@
 /**
- * QUEM JÁ COMPROU NUMA REGIÃO — a audiência da campanha por cidade.
+ * QUEM ESTÁ CADASTRADO NUMA REGIÃO — a audiência da campanha por cidade.
  *
  * ═══ A PERGUNTA ═══════════════════════════════════════════════════════════
  *
- * "Quais clientes já foram atendidos nas cidades que eu escolhi?" Não existe
- * uma coluna só com a resposta: o pedido guarda o ENDEREÇO DE ENTREGA em texto
- * (`commercial_orders.endereco_entrega`, "…, CANOINHAS/SC, 89460048") e o
- * cadastro do contato guarda `cidade`/`uf` — e os dois discordam com frequência.
+ * "Quais clientes estão nas cidades que eu escolhi?" A resposta tem DUAS
+ * fontes, e a audiência é a união das duas:
+ *
+ *   - o CADASTRO do contato (`contacts.cidade`) — inclui quem nunca comprou;
+ *   - o ENDEREÇO DE ENTREGA do pedido (`commercial_orders.endereco_entrega`,
+ *     "…, CANOINHAS/SC, 89460048") — a cidade onde a loja de fato atendeu.
+ *
+ * As duas discordam com frequência e cada uma cobre o que a outra perde.
  * Medido nesta instalação (2026-11-12): 11.814 pedidos não cancelados, 1.898
- * contatos compradores, e a cidade do cadastro sozinha deixava de fora 260
- * clientes que só tinham cidade no endereço do pedido.
+ * contatos compradores, 3.140 contatos com cidade no cadastro — e a cidade do
+ * cadastro sozinha deixava de fora 260 clientes que só tinham cidade no
+ * endereço do pedido. Por isso a função lê os DOIS lados e o contato entra na
+ * cidade quando QUALQUER UM deles o coloca lá:
  *
- * Por isso a função lê os DOIS lados e o cliente entra na cidade quando
- * QUALQUER UM deles o coloca lá:
- *
- *   1. o endereço de entrega do pedido — a cidade onde a loja de fato atendeu;
- *   2. o cadastro do contato (`contacts.cidade`) — quem mudou de endereço mas
- *      continua na mesma cidade, e o pedido antigo não tinha endereço;
- *   3. qualquer pedido NÃO CANCELADO conta como "já atendemos" — a mesma régua
- *      do radar de inativos (`lib/comercial/inativos.ts`);
+ *   1. o cadastro do contato — quem mora na cidade, compre ou não;
+ *   2. o endereço de entrega do pedido — prova de onde a loja atendeu;
+ *   3. qualquer pedido NÃO CANCELADO conta como compra — a mesma régua do
+ *      radar de inativos (`lib/comercial/inativos.ts`); quem nunca comprou
+ *      entra com `pedidos: 0`, e a prévia separa "com pedido" de "sem pedido";
  *   4. o contato entra UMA vez por cidade, somando os pedidos daquele recorte;
  *   5. veto de contato é o MESMO do resto do produto (`contatoPodeReceber`):
  *      STOP, recusa de marketing, anonimizado ou mesclado não recebem campanha.
@@ -48,6 +51,12 @@ import { chaveDeCidade } from "@/lib/prospeccao/publico-da-base";
 /** Teto de PEDIDOS varridos — 20 páginas de 1.000, com ordem estável. */
 const PAGINA = 1_000;
 const MAX_PAGINAS = 20;
+/**
+ * Teto de CONTATOS cadastrados varridos — 10 páginas de 1.000. Medido em
+ * 2026-11-12: 3.140 contatos com cidade nesta instalação, então o teto é
+ * folgado; se um dia encostar, `completa: false` avisa a tela.
+ */
+const MAX_PAGINAS_DE_CONTATOS = 10;
 /** Teto de CONTATOS devolvidos — o mesmo teto do `contato_ids` no schema. */
 export const LIMITE_DE_CLIENTES = 10_000;
 
@@ -94,9 +103,11 @@ export interface CidadeComCliente {
 
 export interface ResultadoDeClientesPorRegiao {
   lista: ClienteDaRegiao[];
-  /** Pedidos lidos até o teto — é o denominador da varredura. */
+  /** Pedidos lidos até o teto — é o denominador da varredura de compra. */
   pedidos_lidos: number;
-  /** `false` = havia mais pedidos do que o teto; a tela não pode dizer "todos". */
+  /** Contatos cadastrados lidos até o teto — o denominador do cadastro. */
+  contatos_lidos: number;
+  /** `false` = havia mais pedidos/contatos do que o teto; a tela não diz "todos". */
   completa: boolean;
 }
 
@@ -301,7 +312,11 @@ function contatoDoPedido(pedido: PedidoComContato): ContatoBruto | null {
 }
 
 /**
- * Lista os clientes com pedido não cancelado nas cidades escolhidas.
+ * Lista os clientes das cidades escolhidas — cadastro e histórico de compra.
+ *
+ * A audiência é a UNIÃO: quem está cadastrado na cidade (compre ou não) e quem
+ * tem pedido não cancelado com cidade no endereço de entrega. Quem nunca
+ * comprou entra com `pedidos: 0` e `ultimo_pedido_em: ""`.
  *
  * `cidades: []` (ou omitido) = todas: é o que a rota de cidades usa para montar
  * as opções da tela com a contagem real.
@@ -415,6 +430,75 @@ export async function listarClientesPorRegiao(
     if (pagina === MAX_PAGINAS - 1) completa = false;
   }
 
+  // ── O CADASTRO: quem mora na cidade, com ou sem compra ───────────────────
+  // A varredura de pedidos só enxerga comprador. A campanha por região fala com
+  // os CLIENTES da cidade — quem não comprou ainda é o público mais óbvio de
+  // uma oferta. Esta segunda varredura acrescenta quem falta e a cidade do
+  // cadastro a quem já entrou pelo endereço do pedido.
+  let contatosLidos = 0;
+  for (let pagina = 0; pagina < MAX_PAGINAS_DE_CONTATOS; pagina += 1) {
+    const de = pagina * PAGINA;
+    const { data, error } = await supabase
+      .from("contacts")
+      .select(
+        "id, name, display_name, phone_number, cidade, uf, " +
+          "is_blocked, is_anonymized, is_merged_into, consent",
+      )
+      .eq("organization_id", input.organizationId)
+      // Cadastro sem cidade não pode ser colocado em cidade nenhuma. O filtro
+      // é no banco para a página não vir cheia de contato sem endereço (10.167
+      // dos 13.307 desta instalação).
+      .not("cidade", "is", null)
+      .neq("cidade", "")
+      // Ordem estável pelo id: `range` sem ordem definida pula ou repete linha.
+      .order("id", { ascending: true })
+      .range(de, de + PAGINA - 1);
+
+    if (error) throw new Error(`contatos_indisponiveis: ${error.message}`);
+    const lote = (data ?? []) as unknown as ContatoBruto[];
+    contatosLidos += lote.length;
+
+    for (const contato of lote) {
+      if (!contatoPodeReceber(contato)) continue;
+      const cidadeDoCadastro: CidadeDoContato | null =
+        (contato.cidade ?? "").trim() === ""
+          ? null
+          : {
+              cidade: (contato.cidade ?? "").trim(),
+              uf: (contato.uf ?? "").trim() || null,
+            };
+      if (!cidadeDoCadastro) continue;
+      if (!cidadeCombina(cidadeDoCadastro.cidade, cidadeDoCadastro.uf, cidades)) continue;
+
+      const atual = porContato.get(contato.id);
+      if (atual) {
+        // Já entrou por um pedido: acrescenta a grafia do cadastro (se ainda
+        // não estiver) e não mexe na contagem de pedidos.
+        const chave = `${chaveComparavel(cidadeDoCadastro.cidade, cidadeDoCadastro.uf)}|${(cidadeDoCadastro.uf ?? "").toUpperCase()}`;
+        if (!atual.cidades.has(chave)) atual.cidades.set(chave, cidadeDoCadastro);
+        continue;
+      }
+
+      // Nunca comprou no recorte: entra zerado, e a prévia diz "sem pedido".
+      porContato.set(contato.id, {
+        contato,
+        pedidos: 0,
+        total_cents: 0,
+        ultimo_pedido_em: "",
+        exibicao: cidadeDoCadastro,
+        cidades: new Map([
+          [
+            `${chaveComparavel(cidadeDoCadastro.cidade, cidadeDoCadastro.uf)}|${(cidadeDoCadastro.uf ?? "").toUpperCase()}`,
+            cidadeDoCadastro,
+          ],
+        ]),
+      });
+    }
+
+    if (lote.length < PAGINA) break;
+    if (pagina === MAX_PAGINAS_DE_CONTATOS - 1) completa = false;
+  }
+
   const lista = [...porContato.entries()]
     .map(([contact_id, v]): ClienteDaRegiao => {
       const normalizado = v.contato.phone_number
@@ -437,7 +521,9 @@ export async function listarClientesPorRegiao(
     })
     .sort(
       (a, b) =>
-        Date.parse(b.ultimo_pedido_em) - Date.parse(a.ultimo_pedido_em) ||
+        // Quem já comprou vem primeiro; os dois grupos em ordem de recência.
+        (b.ultimo_pedido_em ? Date.parse(b.ultimo_pedido_em) : 0) -
+          (a.ultimo_pedido_em ? Date.parse(a.ultimo_pedido_em) : 0) ||
         a.nome.localeCompare(b.nome, "pt-BR"),
     );
 
@@ -445,6 +531,7 @@ export async function listarClientesPorRegiao(
   return {
     lista: cortada ? lista.slice(0, limite) : lista,
     pedidos_lidos: pedidosLidos,
+    contatos_lidos: contatosLidos,
     completa: completa && !cortada,
   };
 }

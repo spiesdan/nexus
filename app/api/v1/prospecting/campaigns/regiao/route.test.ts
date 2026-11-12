@@ -115,6 +115,7 @@ beforeEach(() => {
   vi.mocked(listarClientesPorRegiao).mockResolvedValue({
     lista: [cliente("c-1"), cliente("c-2")],
     pedidos_lidos: 3,
+    contatos_lidos: 5,
     completa: true,
   } as never);
 });

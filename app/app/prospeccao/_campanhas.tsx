@@ -50,6 +50,9 @@ import { lerTemplatesPorCategoria } from "@/lib/prospeccao/templates-por-categor
  *
  * "Criar campanha" não mora aqui: é ação do cabeçalho da Prospecção, como
  * "Criar pedido" é do cabeçalho de Pedidos.
+ *
+ * A mesma lista serve às três superfícies, com `origem` decidindo o recorte no
+ * SERVIDOR: Campanha (região), Prospecção (garimpagem) e Radar (recuperação).
  */
 interface CampanhaDescoberta {
   id: string;
@@ -307,11 +310,14 @@ export function CampanhasTab({
   aoCriarPrimeira?: () => void;
   rotuloCriarPrimeira?: string;
   /**
-   * `"regiao"` = a aba Campanha: só a audiência "quem já comprou nesta cidade".
-   * Sem isto a tela mostrava a garimpagem de empresa e a recuperação de
-   * conversa no mesmo lugar — públicos diferentes, decisão do servidor.
+   * Qual audiência esta lista mostra — o recorte é aplicado no SERVIDOR:
+   *   `regiao`      aba Campanha: contatos cadastrados na cidade;
+   *   `prospeccao`  aba Prospecção: garimpagem de empresa;
+   *   `recuperacao` Radar: contatos que pararam de comprar.
+   * Sem isto a tela mostrava tudo em todo lugar — e o operador adivinhava qual
+   * campanha era de qual público.
    */
-  origem?: "regiao";
+  origem?: "regiao" | "prospeccao" | "recuperacao";
 }) {
   const t = useT();
   const router = useRouter();
@@ -333,16 +339,16 @@ export function CampanhasTab({
       // requests para desenhar a aba; agora são as 2 de sempre. O resumo de
       // envio também vem na lista, numa query em lote.
       //
-      // A aba Campanha pede só a origem `regiao`: a campanha de prospecção
-      // (empresas da base) e a de recuperação não pertencem a esse recorte. A
-      // venda automática é outra superfície — nem é consultada ali.
-      const urlDescobertas =
-        origem === "regiao"
-          ? "/api/v1/prospecting/campaigns?com_funil=1&origem=regiao"
-          : "/api/v1/prospecting/campaigns?com_funil=1";
+      // A aba pede só a origem dela: a campanha por região (abad Campanha), a
+      // garimpagem (Prospecção) ou a recuperação (Radar). O recorte é do
+      // servidor — a tela não filtra o que já não devia ter vindo. A venda
+      // automática é outra superfície e só aparece na lista base.
+      const urlDescobertas = origem
+        ? `/api/v1/prospecting/campaigns?com_funil=1&origem=${origem}`
+        : "/api/v1/prospecting/campaigns?com_funil=1";
       const [resDesc, resVa] = await Promise.all([
         apiClient.get<{ data: unknown }>(urlDescobertas),
-        origem === "regiao"
+        origem
           ? Promise.resolve(null)
           : apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
       ]);
@@ -448,7 +454,7 @@ export function CampanhasTab({
             onChange={setStatusFiltro}
             options={opcoesStatus}
           />
-          {origem !== "regiao" && (
+          {!origem && (
             <FilterSelect
               id="campanhas-tipo"
               label={t("Tipo")}
@@ -495,14 +501,20 @@ export function CampanhasTab({
       ) : cards.length === 0 ? (
         <NexusEmptyState
           icon={Megaphone}
-          headline={t("Nenhuma campanha ainda.")}
+          headline={
+            origem === "recuperacao"
+              ? t("Nenhuma campanha de recuperação ainda.")
+              : t("Nenhuma campanha ainda.")
+          }
           subcopy={
             origem === "regiao"
-              ? t("Comece escolhendo as cidades onde você já atendeu.")
-              : t("Comece por um recorte de cidades e categorias da sua base.")
+              ? t("Comece escolhendo as cidades onde você tem clientes cadastrados.")
+              : origem === "recuperacao"
+                ? t("Crie uma campanha a partir da lista de clientes inativos acima.")
+                : t("Comece por um recorte de cidades e categorias da sua base.")
           }
           primary={
-            podeOperar
+            podeOperar && origem !== "recuperacao"
               ? {
                   label: t(rotuloCriarPrimeira ?? "Criar primeira campanha"),
                   onClick: aoCriarPrimeira ?? (() => router.push("/app/prospeccao/nova")),
@@ -620,7 +632,7 @@ export function CampanhasTab({
                           variant="outline"
                           className="h-5 px-2 text-xs font-normal"
                           title={t(
-                            "Audiência: clientes que já compraram nas cidades do recorte — campanha por região, não prospecção.",
+                            "Audiência: todos os clientes cadastrados nas cidades do recorte — campanha por região, não prospecção.",
                           )}
                         >
                           {t("Por região")} · {contatoIds.length}
@@ -645,7 +657,7 @@ export function CampanhasTab({
                         : regiaoDaCampanha
                           ? `${t("Região")}: ${regiao || "—"} · ${t("Público")}: ${
                               contatoIds.length
-                            } ${t("clientes que já compraram")}`
+                            } ${t("clientes cadastrados")}`
                           : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
                               categorias || "—"
                             }`}

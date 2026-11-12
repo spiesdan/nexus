@@ -1,9 +1,15 @@
 ---
 impacto: nada_mudou
 secao: corrigido
-titulo: A aba Campanha mostra só campanha por região, não a prospecção
+titulo: Cada aba de campanha lista só o seu tipo de campanha
 ---
 
-A aba **Campanha** listava tudo o que existe em `prospecting_campaigns` — inclusive as campanhas de garimpagem de empresa (criadas na aba Prospecção, com público `prospects`) e as de recuperação de conversa. Quem abria "Campanha" para ver quem já comprou na região encontrava campanha de público que nunca comprou.
+As três audiências moram na mesma tabela e apareciam todas na mesma lista. A aba **Campanha** mostrava a garimpagem de empresa e a recuperação de conversa; a aba **Prospecção** mostrava campanha por região. Quem abria uma para ver um público encontrava o outro — e o card de campanha por região era rotulado "Recuperação", porque as duas usam público de contatos.
 
-Agora a lista pede a origem ao servidor e mostra só a campanha por região: público de contatos **com** recorte de cidade. A prospecção e a recuperação continuam na aba onde foram criadas. Os cards de campanha por região passaram a dizer "Por região" e quantos clientes entram — antes eram rotulados como "Recuperação", porque as duas usam público de contatos.
+Agora cada tela pede o seu recorte ao servidor, antes de calcular envio e funil:
+
+- **Campanha** — campanha por região: clientes cadastrados nas cidades escolhidas.
+- **Prospecção** — campanha de garimpagem de empresa (`prospects`), e só ela.
+- **Radar → Recuperação** — campanhas de recuperação, no mesmo lugar onde são criadas, com o andamento do envio.
+
+O card de campanha por região passou a dizer "Por região" e quantos clientes entram.

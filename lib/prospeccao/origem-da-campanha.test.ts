@@ -11,7 +11,11 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { ehCampanhaPorRegiao } from "./origem-da-campanha";
+import {
+  ehCampanhaDeProspeccao,
+  ehCampanhaDeRecuperacao,
+  ehCampanhaPorRegiao,
+} from "./origem-da-campanha";
 
 describe("ehCampanhaPorRegiao", () => {
   it("contatos + cidades = campanha por região", () => {
@@ -47,5 +51,42 @@ describe("ehCampanhaPorRegiao", () => {
     expect(ehCampanhaPorRegiao({ cidades: [{ cidade: "Canoinhas" }] })).toBe(false);
     expect(ehCampanhaPorRegiao({ publico: null, cidades: ["Canoinhas"] })).toBe(false);
     expect(ehCampanhaPorRegiao({ publico: "outro", cidades: ["Canoinhas"] })).toBe(false);
+  });
+});
+
+describe("ehCampanhaDeProspeccao", () => {
+  it("prospects é prospecção, com ou sem cidades no recorte", () => {
+    expect(ehCampanhaDeProspeccao({ publico: "prospects", cidades: [] })).toBe(true);
+    expect(
+      ehCampanhaDeProspeccao({
+        publico: "prospects",
+        cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+      }),
+    ).toBe(true);
+  });
+
+  it("campanha de cliente (região ou recuperação) não é prospecção", () => {
+    expect(
+      ehCampanhaDeProspeccao({
+        publico: "contatos",
+        cidades: [{ cidade: "Canoinhas" }],
+      }),
+    ).toBe(false);
+    expect(ehCampanhaDeProspeccao({ publico: "contatos", cidades: [] })).toBe(false);
+    expect(ehCampanhaDeProspeccao({ publico: null, cidades: [] })).toBe(false);
+  });
+});
+
+describe("ehCampanhaDeRecuperacao", () => {
+  it("contatos sem cidades é recuperação", () => {
+    expect(ehCampanhaDeRecuperacao({ publico: "contatos", cidades: [] })).toBe(true);
+    expect(ehCampanhaDeRecuperacao({ publico: "contatos" })).toBe(true);
+  });
+
+  it("região e prospecção não são recuperação", () => {
+    expect(
+      ehCampanhaDeRecuperacao({ publico: "contatos", cidades: [{ cidade: "Canoinhas" }] }),
+    ).toBe(false);
+    expect(ehCampanhaDeRecuperacao({ publico: "prospects", cidades: [] })).toBe(false);
   });
 });

@@ -54,6 +54,8 @@ describe("GET /api/v1/prospecting/campaigns/regiao/cidades", () => {
         cliente("c-4", "Mafra", "SC", null),
       ],
       pedidos_lidos: 9,
+      // A contagem agora inclui cadastro sem compra (ver `listarClientesPorRegiao`).
+      contatos_lidos: 9,
       completa: true,
     } as never);
 
