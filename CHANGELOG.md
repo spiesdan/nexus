@@ -8,6 +8,50 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.51.1] — 2026-11-12
+
+### Corrigido
+
+- **Geocodificação rejeita coordenadas fora da faixa válida** O resolvedor de coordenadas aceitava qualquer número finito como latitude ou
+  longitude — um valor com centésimos fora do planeta entrava na rota e o mapa
+  desenhamia linha para lugar nenhum.
+
+  Agora a faixa é validada (latitude entre -90 e 90, longitude entre -180 e
+  180) antes de virar parada; resultado fora de faixa é rejeitado como erro e a
+  cadeia de fallback segue para o próximo candidato.
+
+- **Endereço alterado na revisão não reusa a coordenada anterior** Ao trocar o endereço de entrega de um pedido embarcado (ou criar a carga a
+  partir dele), o cache de geocodificação do contato mantinha a latitude,
+  longitude e status da coordenada antiga.
+
+  Com isso, a rota podia nascer com o destino errado sem nenhuma nova
+  consulta — o cache precisava ser limpo quando o corpo da alteração trouxa
+  `endereco_entrega`.
+
+- **Agrupamento de paradas considera o destino, não só o cliente** Um cliente com dois pedidos para endereços diferentes gerava uma única parada
+  na rota — as duas entregas eram jogadas no mesmo pino, e o mapa achava a
+  segunda entrega no lugar da primeira.
+
+  O agrupamento passa a usar o destino efetivo do pedido (`${base}::${destino}`)
+  quando o pedido traz endereço de entrega, e só recorre ao contato quando não
+  tém. Cliente com mesmo endereço continua podendo virar parada única.
+
+  A tela de montagem da nova carga também mantém os pedidos escolhidos fora da
+  lista de busca — antes um pedido marcado podia "sumir" da lista quando casava
+  com o termo pesquisado.
+
+- **Sequência manual na rota invalida a geometria que estava desenhada** Ao alterar a ordem de entrega manualmente na tela de rota, a linha que o
+  mapa desenhava pertencia à sequência anterior e podia continuar no caminho
+  errado.
+
+  Com a sequência gravada, o backend invalida a geometria (`rota_geojson`),
+  a distância e a duração — e incrementa a versão da rota. Sem isso, a tela
+  mostrava a linha da ordem antiga enquanto a lista de paradas já estava na
+  ordem nova, e o motorista ia de fato para o trajeto errado.
+
+  Quando a alteração vem de uma proposta salva (otimizar e salvar), a
+  geometria passa a vir do próprio payload, então a invalidação não se aplica.
+
 ## [1.51.0] — 2026-11-12
 
 ### Adicionado
@@ -6979,7 +7023,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.51.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.51.1...HEAD
+[1.51.1]: https://github.com/spiesdan/nexus/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/spiesdan/nexus/compare/v1.50.3...v1.51.0
 [1.50.3]: https://github.com/spiesdan/nexus/compare/v1.50.2...v1.50.3
 [1.50.2]: https://github.com/spiesdan/nexus/compare/v1.50.1...v1.50.2
