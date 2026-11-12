@@ -26,7 +26,7 @@ import {
   type ModalidadeDeFrete,
 } from "@/lib/schemas/fiscal";
 import { type PedidoComercial } from "@/lib/schemas/pedidos";
-import type { DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
+import type { ContatoFiscal, DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { Receipt } from "@/lib/ui/icons";
 
@@ -267,6 +267,29 @@ export function EmitirNota({
       setExtras((a) => ({ ...a, [campo]: e.target.value }));
     };
 
+  /**
+   * NF-E AVULSA — ao escolher o cliente pelo cadastro, o destinatário se
+   * preenche sozinho: nome e documento vêm do próprio contato (a NF-e exige
+   * CPF/CNPJ no TLocal). O cliente avulso (sem cadastro) mantém o que foi
+   * digitado no campo livre — a busca limpa o `contato_id` e o nome.
+   */
+  const aoEscolherClienteAvulso = React.useCallback((id: string | null, nome: string) => {
+    setAvulsa((atual) => ({ ...atual, contato_id: id ?? "", cliente_nome: nome }));
+    if (!id) return;
+    void (async () => {
+      const r = await apiClient.get<{ data: ContatoFiscal }>(`/api/v1/contacts/${id}`).catch(() => null);
+      const contato = r?.data;
+      if (!contato) return;
+      const documento = (contato.cnpj ?? "").replace(/\D/g, "");
+      const nomeDoCadastro = (contato.display_name ?? contato.name ?? nome).trim();
+      setAvulsa((atual) => ({
+        ...atual,
+        cliente_nome: atual.cliente_nome || nomeDoCadastro,
+        cliente_documento: atual.cliente_documento || documento,
+      }));
+    })();
+  }, []);
+
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
   const selecionados = pedidoId ? [pedidoId, ...agrupados] : [];
   const pedidosDaNota = faturados.filter((p) => selecionados.includes(p.id));
@@ -298,7 +321,7 @@ export function EmitirNota({
       // ninguém descobrir depois que a nota saiu com um texto que não leu.
       // Trocar de pedido troca o texto, como troca o endereço: manter o do
       // anterior seria pôr a ordem de compra de um cliente na nota de outro.
-      informacoesComplementares: pedido?.observacoes?.trim() ?? "",
+      informacoesComplementares: (pedido?.informacoes_fiscais ?? pedido?.observacoes ?? "").trim(),
       entregaLogradouro: entrega?.logradouro ?? "",
       entregaNumero: entrega?.numero ?? "",
       entregaComplemento: entrega?.complemento ?? "",
@@ -885,7 +908,7 @@ export function EmitirNota({
             contatos={[]}
             contatoId={avulsa.contato_id || null}
             clienteNome={avulsa.cliente_nome}
-            aoEscolher={(id, nome) => setAvulsa({ ...avulsa, contato_id: id ?? "", cliente_nome: nome })}
+            aoEscolher={aoEscolherClienteAvulso}
             mostrarResumo={false}
             textos={{
               cliente: textos.cliente,

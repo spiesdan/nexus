@@ -28494,6 +28494,19 @@ grant execute on function public.fn_sincronizar_pedido_mercos(uuid, jsonb, boole
 revoke execute on function public.fn_importar_pedido_mercos(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.fn_importar_pedido_mercos(uuid, jsonb) to service_role;
 
+-- ---- 0305 — o campo que a NF-e vai ler como informação complementar (infCPL) ----
+--
+-- Apêndice idempotente da migration 20261113090000 (0305). Só coluna + comment:
+-- nenhuma função nova, logo sem revoke/grant (a coluna nasce sem privilégio de
+-- função). Idempotente por construção (`add column if not exists`). Entra antes
+-- da varredura anon por ser bloco sem função; a varredura continua sendo o
+-- último bloco do arquivo.
+
+alter table public.commercial_orders add column if not exists informacoes_fiscais text;
+
+comment on column public.commercial_orders.informacoes_fiscais is
+  'Informações Fiscais do pedido: o texto que a emissão grava como informacoes_complementares (infCpl) da NF-e — ex.: ordem de compra. O campo editável que alimentava o mesmo infCpl era `observacoes`; a emissão passa a ler primeiro este campo e cair no legado quando vazio.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
