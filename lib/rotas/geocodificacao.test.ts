@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  aceitaResultado,
   classificarResultado,
   consultasDeEmergencia,
   expandirAbreviacoes,
@@ -263,5 +264,33 @@ describe("classificarResultado", () => {
   it("lista vazia é não encontrado", () => {
     expect(classificarResultado([])).toMatchObject({ estado: "nao_encontrado" });
     expect(classificarResultado(null)).toMatchObject({ estado: "nao_encontrado" });
+  });
+});
+
+describe("aceitaResultado (precisão com número no cadastro)", () => {
+  it("com número no cadastro, só imóvel (numero) fecha a fase de rua", () => {
+    // Carga 40 (12/11/2026): 19506 e 19542 colapsaram na mesma avenida — com
+    // número no cadastro a geometria de rua não é ponto de parada.
+    expect(
+      aceitaResultado({ estado: "ok", latitude: -26.4154231, longitude: -51.3182519, precisao: "rua" }, true),
+    ).toBe(false);
+    expect(
+      aceitaResultado({ estado: "ok", latitude: -26.4154231, longitude: -51.3182519, precisao: "numero" }, true),
+    ).toBe(true);
+  });
+
+  it("sem número no cadastro, rua aproximada continua aceita", () => {
+    expect(
+      aceitaResultado({ estado: "ok", latitude: -26.4154231, longitude: -51.3182519, precisao: "rua" }, false),
+    ).toBe(true);
+    expect(
+      aceitaResultado({ estado: "ok", latitude: -26.4154231, longitude: -51.3182519, precisao: "bairro" }, false),
+    ).toBe(false);
+  });
+
+  it("não aceita estados não-ok", () => {
+    expect(aceitaResultado({ estado: "nao_encontrado", latitude: null, longitude: null, precisao: null }, false)).toBe(false);
+    expect(aceitaResultado({ estado: "ambiguo", latitude: null, longitude: null, precisao: null }, false)).toBe(false);
+    expect(aceitaResultado({ estado: "erro", latitude: null, longitude: null, precisao: null }, false)).toBe(false);
   });
 });

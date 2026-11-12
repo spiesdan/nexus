@@ -144,12 +144,20 @@ export function ruaSemNumeroColado(logradouro: string, numero: string | null): s
  * A rua já sai normalizada (abreviatura expandida, complemento fora);
  * bairro entra quando é bairro de verdade.
  */
+/**
+ * Número de porta do cadastro: separado ("RUA X, 65") ou colado no fim do
+ * logradouro ("RUA X, 100" — exige a vírgula; "TRAVESSA 7" é nome, não número).
+ */
+function numeroDa(p: PartesEndereco): string | null {
+  const ruaLimpa = limparComplemento(p.logradouro ?? "");
+  const numero = normalizarNumero(p.numero_end);
+  if (numero) return numero;
+  return ruaLimpa.match(/,\s*(\d{1,6})\s*$/)?.[1] ?? null;
+}
+
 export function montarConsultas(p: PartesEndereco): string[] {
   const ruaLimpa = limparComplemento(p.logradouro ?? "");
-  let numero = normalizarNumero(p.numero_end);
-  // Número colado no fim do logradouro sem campo separado ("RUA X, 100"):
-  // vale como número (exige a vírgula — "TRAVESSA 7" é nome, não número).
-  if (!numero) numero = ruaLimpa.match(/,\s*(\d{1,6})\s*$/)?.[1] ?? null;
+  const numero = numeroDa(p);
   const rua = ruaSemNumeroColado(ruaLimpa, numero);
   const cidade = (p.cidade ?? "").trim().replace(/\s+/g, " ");
   const uf = (p.uf ?? "").trim().toUpperCase();
@@ -369,12 +377,36 @@ export function consultasDeEmergencia(p: PartesEndereco): string[] {
  * de rua que só devolve o município é sinal de que a rua não foi encontrada,
  * não de que achamos o imóvel. O ponto aproximado só é aceito nas consultas
  * de emergência (bairro/CEP/município), depois de esgotada a rua.
+ *
+ * Com número no cadastro, a fase de rua só fecha com precisão de imóvel
+ * (`aceitaResultado`); geometria de rua/avenida sem imóvel confirmado não é
+ * ponto de parada — o pino não pode colapsar duas paradas da mesma avenida.
  */
+/**
+ * Aceita um resultado da cadeia de ruas como ponto da parada.
+ *
+ * Com número no cadastro, só a precisão de imóvel ("numero") fecha a fase de
+ * rua: geometria de avenida/rua sem imóvel confirmado não é ponto de parada —
+ * medido na carga 40 (12/11/2026): 19506 e 19542, mesma avenida Avenida
+ * Presidente Getúlio Vargas, colapsaram no mesmo pino (-26.4154231, -51.3182519)
+ * e a rota saiu com trecho de 0 km entre clientes diferentes. Sem número no
+ * cadastro, o trecho de rua continua aceito como aproximado (diretriz medida no
+ * OSM do interior).
+ */
+export function aceitaResultado(r: ResultadoGeo, temNumero: boolean): boolean {
+  if (r.estado !== "ok") return false;
+  if (r.precisao === "numero") return true;
+  return !temNumero && r.precisao === "rua";
+}
+
 export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: string | null): Promise<ResultadoGeo> {
   let cadeia = montarConsultas(p);
+  let temNumero = Boolean(numeroDa(p));
   // Sem rua no cadastro, destrincha a linha do pedido e tenta a cadeia nela.
   if (cadeia.length === 0 && linhaPedido?.trim()) {
-    cadeia = montarConsultas(parseLinhaEndereco(linhaPedido));
+    const partes = parseLinhaEndereco(linhaPedido);
+    cadeia = montarConsultas(partes);
+    temNumero = Boolean(numeroDa(partes));
   }
   // Último suspiro: a linha crua (o Nominatim às vezes entende o que a
   // normalização desmontou).
@@ -383,7 +415,7 @@ export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: s
   let viuErro = false;
   for (const consulta of [...cadeia, ...crua]) {
     const r = await buscar(consulta);
-    if (r.estado === "ok" && (r.precisao === "numero" || r.precisao === "rua")) return r;
+    if (aceitaResultado(r, temNumero)) return r;
     if (r.estado === "erro") viuErro = true;
     // nao_encontrado/ambiguo/bairro/cidade: próxima fase (mais solta) pode resolver.
   }
