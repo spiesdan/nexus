@@ -2,14 +2,19 @@
  * QUEM JÁ COMPROU NUMA REGIÃO — a audiência da campanha por cidade.
  *
  * O que este teste prende:
- *   1. a cidade compara SEM acento e SEM caixa ("Caçador" = "Cacador") — o
- *      PostgREST não sabe disso, e um `eq` no banco deixaria gente de fora em
- *      silêncio;
- *   2. o veto de contato é o MESMO do resto do produto (STOP, opt-out, LGPD,
+ *   1. a cidade vem do ENDEREÇO DE ENTREGA do pedido e do cadastro do contato —
+ *      os dois lados, porque metade da base só tem um deles. Foi medido em
+ *      produção (2026-11-12): 11.814 pedidos, 1.898 compradores, e o cadastro
+ *      sozinho deixava 260 clientes de fora;
+ *   2. a cidade compara SEM acento, SEM caixa e SEM o nome do estado colado
+ *      ("Canoinhas" = "Canoinhas, Santa Catarina") — o PostgREST não sabe
+ *      disso, e um `eq` no banco deixaria gente de fora em silêncio;
+ *   3. o veto de contato é o MESMO do resto do produto (STOP, opt-out, LGPD,
  *      merge) — não é a tela que filtra depois;
- *   3. o contato entra UMA vez, somando os pedidos daquele recorte;
- *   4. pedido cancelado NÃO conta como "já atendemos" (a consulta exclui);
- *   5. telefone fora do E.164 não vira público alcançável — mas o contato
+ *   4. o contato entra UMA vez, somando os pedidos daquele recorte — e quem
+ *      comprou em duas cidades aparece nas duas;
+ *   5. pedido cancelado NÃO conta como "já atendemos" (a consulta exclui);
+ *   6. telefone fora do E.164 não vira público alcançável — mas o contato
  *      continua na resposta, para a tela dizer por que ele ficou de fora.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -17,7 +22,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   agruparPorCidade,
+  chaveComparavel,
   cidadeCombina,
+  cidadeDoEnderecoDeEntrega,
   listarClientesPorRegiao,
 } from "./clientes-por-regiao";
 
@@ -38,6 +45,7 @@ interface PedidoDeTeste {
   contact_id: string | null;
   total_cents: number;
   created_at: string;
+  endereco_entrega?: string | null;
   contacts: ContatoDeTeste | ContatoDeTeste[] | null;
 }
 
@@ -81,8 +89,46 @@ const pedido = (
   contact_id: contact?.id ?? null,
   total_cents: 10_000,
   created_at: "2026-10-01T12:00:00.000Z",
+  endereco_entrega: null,
   contacts: contact,
   ...extra,
+});
+
+describe("cidadeDoEnderecoDeEntrega", () => {
+  it("lê a cidade do endereço em linha do Mercos", () => {
+    expect(
+      cidadeDoEnderecoDeEntrega(
+        "RUA PAULA PEREIRA, 816, EDIFICIO, 816 — CENTRO, CANOINHAS/SC, 89460048",
+      ),
+    ).toEqual({ cidade: "CANOINHAS", uf: "SC" });
+  });
+
+  it("quando o estado veio colado antes da UF, a cidade é o segmento anterior", () => {
+    expect(
+      cidadeDoEnderecoDeEntrega(
+        "RODOVIA BR 153, SN, SALA 3, SN — AREA INDUSTRIAL, GENERAL CARNEIRO, Paraná/PR, 84660000",
+      ),
+    ).toEqual({ cidade: "GENERAL CARNEIRO", uf: "PR" });
+  });
+
+  it("endereço sem bairro não confunde o número com a cidade", () => {
+    expect(
+      cidadeDoEnderecoDeEntrega("AV RIGESA, 2297, 2297 — Três Barras/SC, 89490000"),
+    ).toEqual({ cidade: "Três Barras", uf: "SC" });
+  });
+
+  it("endereço sem município devolve null — quem responde é o cadastro", () => {
+    expect(cidadeDoEnderecoDeEntrega("RUA DA IGREJA, 69")).toBeNull();
+    expect(cidadeDoEnderecoDeEntrega("")).toBeNull();
+    expect(cidadeDoEnderecoDeEntrega(null)).toBeNull();
+  });
+});
+
+describe("chaveComparavel", () => {
+  it("une a cidade com e sem o nome do estado colado", () => {
+    expect(chaveComparavel("Canoinhas", "SC")).toBe(chaveComparavel("Canoinhas, Santa Catarina", "SC"));
+    expect(chaveComparavel("Caçador", "SC")).toBe(chaveComparavel("CACADOR", "SC"));
+  });
 });
 
 describe("cidadeCombina", () => {
@@ -92,6 +138,14 @@ describe("cidadeCombina", () => {
     ).toBe(true);
     expect(
       cidadeCombina("SAO BENTO DO SUL", "sc", [{ cidade: "São Bento do Sul", estado: "SC" }]),
+    ).toBe(true);
+  });
+
+  it("o cadastro com o estado colado casa com a cidade escolhida na tela", () => {
+    expect(
+      cidadeCombina("Canoinhas, Santa Catarina", "SC", [
+        { cidade: "Canoinhas", estado: "SC" },
+      ]),
     ).toBe(true);
   });
 
@@ -112,16 +166,57 @@ describe("cidadeCombina", () => {
 });
 
 describe("agruparPorCidade", () => {
+  const linha = (
+    contact_id: string,
+    cidade: string,
+    uf: string | null,
+    cidades?: Array<{ cidade: string; uf: string | null }>,
+  ) => ({
+    contact_id,
+    nome: contact_id,
+    telefone: null,
+    telefone_e164: null,
+    cidade,
+    uf,
+    cidades: cidades ?? [{ cidade, uf }],
+    pedidos: 1,
+    total_cents: 1,
+    ultimo_pedido_em: "",
+  });
+
   it("conta CONTATOS por cidade (não pedidos) e ordena pelo maior", () => {
     const cidades = agruparPorCidade([
-      { contact_id: "a", nome: "A", telefone: null, telefone_e164: null, cidade: "Canoinhas", uf: "SC", pedidos: 4, total_cents: 1, ultimo_pedido_em: "" },
-      { contact_id: "b", nome: "B", telefone: null, telefone_e164: null, cidade: "canoinhas", uf: "sc", pedidos: 1, total_cents: 1, ultimo_pedido_em: "" },
-      { contact_id: "c", nome: "C", telefone: null, telefone_e164: null, cidade: "Caçador", uf: "SC", pedidos: 1, total_cents: 1, ultimo_pedido_em: "" },
+      linha("a", "Canoinhas", "SC"),
+      linha("b", "canoinhas", "sc"),
+      linha("c", "Caçador", "SC"),
     ]);
 
     expect(cidades).toHaveLength(2);
     expect(cidades[0]).toMatchObject({ cidade: "Canoinhas", uf: "SC", total: 2 });
     expect(cidades[1]).toMatchObject({ cidade: "Caçador", total: 1 });
+  });
+
+  it("a mesma cidade com o estado colado não vira duas linhas", () => {
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas", "SC"),
+      linha("b", "Canoinhas, Santa Catarina", "SC"),
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]?.total).toBe(2);
+  });
+
+  it("quem comprou em duas cidades conta nas duas", () => {
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas", "SC", [
+        { cidade: "Canoinhas", uf: "SC" },
+        { cidade: "Mafra", uf: "SC" },
+      ]),
+      linha("b", "Canoinhas", "SC"),
+    ]);
+
+    expect(cidades.find((c) => c.cidade === "Canoinhas")?.total).toBe(2);
+    expect(cidades.find((c) => c.cidade === "Mafra")?.total).toBe(1);
   });
 });
 
@@ -148,6 +243,64 @@ describe("listarClientesPorRegiao", () => {
     });
     expect(resultado.pedidos_lidos).toBe(2);
     expect(resultado.completa).toBe(true);
+  });
+
+  it("a cidade do ENDEREÇO do pedido entra mesmo com o cadastro sem cidade", async () => {
+    const { client } = fakeSupabase([
+      pedido(contato("c-endereco", { cidade: null, uf: null }), {
+        endereco_entrega: "RUA X, 10 — CENTRO, IRATI/PR, 84400000",
+      }),
+      pedido(contato("c-fora", { cidade: "Mafra", uf: "SC" })),
+    ]);
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Irati", estado: "PR" }],
+    });
+
+    expect(resultado.lista.map((c) => c.contact_id)).toEqual(["c-endereco"]);
+    expect(resultado.lista[0]).toMatchObject({ cidade: "IRATI", uf: "PR" });
+  });
+
+  it("cadastro incompleto não descarta quem tem cidade no endereço", async () => {
+    const { client } = fakeSupabase([
+      pedido(contato("c-1", { cidade: "  ", uf: "" }), {
+        endereco_entrega: "RUA Y, 20 — CENTRO, MAFRA/SC, 89300000",
+      }),
+    ]);
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Mafra", estado: "SC" }],
+    });
+
+    expect(resultado.lista.map((c) => c.contact_id)).toEqual(["c-1"]);
+  });
+
+  it("só soma os pedidos da cidade escolhida — pedido de outra cidade não infla", async () => {
+    const { client } = fakeSupabase([
+      pedido(contato("c-1"), {
+        total_cents: 1_000,
+        created_at: "2026-10-05T12:00:00.000Z",
+        endereco_entrega: "RUA A, 1 — CENTRO, CANOINHAS/SC, 89460000",
+      }),
+      pedido(contato("c-1"), {
+        total_cents: 9_000,
+        created_at: "2026-10-04T12:00:00.000Z",
+        endereco_entrega: "RUA B, 2 — CENTRO, MAFRA/SC, 89300000",
+      }),
+    ]);
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+    });
+
+    expect(resultado.lista).toHaveLength(1);
+    expect(resultado.lista[0]).toMatchObject({ pedidos: 1, total_cents: 1_000 });
+    // A lista do recorte conhece só a cidade que casou: a prévia de Canoinhas
+    // não pode anunciar cliente de Mafra.
+    expect(resultado.lista[0]?.cidades.map((c) => c.cidade)).toEqual(["Canoinhas"]);
   });
 
   it("exclui cancelado, contato de fora da cidade e contato vetado", async () => {
