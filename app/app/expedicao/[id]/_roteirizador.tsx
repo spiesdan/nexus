@@ -668,7 +668,7 @@ export function Roteirizador({
                   ? t("Pelas ruas (OSRM)")
                   : t("Aproximado — sem serviço de ruas")}
                 {modoEfetivo
-                  ? ` · ${modoEfetivo === "distancia" ? t("por distância da base") : t("caminho mais curto")}`
+                  ? ` · ${modoEfetivo === "distancia" ? t("por distância entre as paradas") : t("caminho mais curto")}`
                   : ""}
               </span>
             )}

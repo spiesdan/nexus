@@ -45,27 +45,63 @@ export function haversineM(a: Coordenada, b: Coordenada): number {
 }
 
 /**
- * Ordem radial a partir da origem (índice 0): do mais perto ao mais longe
- * da base, em linha reta. É a ordem que o dono da loja espera no romaneio
- * ("sai e vai entregando") — transparente e previsível. Não é o caminho
- * mais curto possível (esse é o TSP); é o mais legível.
+ * A ORDEM QUE O MOTORISTA CONSEGUE SEGUIR — base primeiro, depois cada parada
+ * seguida da mais próxima da ANTERIOR, e uma passada de 2-opt para desfazer
+ * cruzamentos.
+ *
+ * Era radial ("do mais perto da base ao mais longe") e é isso que mandava
+ * atravessar a cidade no meio do trajeto. Medido na carga 039 (12/11/2026),
+ * com as coordenadas já corretas: a parada 4 (PRIME, Centro) mandava para a 5
+ * (BRTECH, Industrial 1) — 3,0 km para o outro lado — porque as duas estão a
+ * ~2 km da base em direções opostas. Distância até a base não é distância
+ * entre paradas; o romaneio que o dono da loja lê é o do caminho.
+ *
+ * O vizinho-mais-próximo sozinho ainda guarda um trecho longo para o fim (a
+ * última parada fica longe de todas as outras): na mesma carga, o último
+ * trecho era PAPE → BRTECH, 4,0 km. O 2-opt troca a ordem de trechos enquanto
+ * o caminho encurtar; a base continua fixa no índice 0.
+ *
+ * Determinístico, em linha reta e sem rede: a rua é desenhada depois por quem
+ * chama, e a tela diz qual provedor respondeu.
  */
-export function ordenarPorDistanciaDaOrigem(pontos: Coordenada[], retornar: boolean): number[] {
-  if (pontos.length <= 1) return pontos.map((_, i) => i);
-  const origem = pontos[0]!;
-  const resto = pontos
-    .slice(1)
-    .map((p, k) => ({ i: k + 1, d: haversineM(origem, p) }))
-    .sort((a, b) => a.d - b.d)
-    .map((x) => x.i);
-  const ordem = [0, ...resto];
+export function ordenarPorMenorTrajeto(pontos: Coordenada[], retornar: boolean): number[] {
+  if (pontos.length <= 2) return vizinhoMaisProximo(pontos, retornar);
+  const ordem = vizinhoMaisProximo(pontos, false);
+  const n = ordem.length;
+  const em = (i: number) => pontos[ordem[i]!]!;
+  // O 2-opt é ganancioso e cada volta pode abrir outra melhoria; o teto de
+  // voltas existe para o pior caso (200 paradas) não virar laço infinito.
+  let melhorou = true;
+  let voltas = 0;
+  while (melhorou && voltas < 40) {
+    melhorou = false;
+    voltas += 1;
+    for (let i = 1; i < n - 1; i++) {
+      for (let k = i + 1; k < n; k++) {
+        const a = em(i - 1);
+        const b = em(i);
+        const c = em(k);
+        const d = k + 1 < n ? em(k + 1) : retornar ? pontos[0]! : null;
+        const antes = haversineM(a, b) + (d ? haversineM(c, d) : 0);
+        const depois = haversineM(a, c) + (d ? haversineM(b, d) : 0);
+        if (depois < antes - 0.5) {
+          // Inverte o trecho i..k: é o movimento do 2-opt, e é o que tira o
+          // cruzamento sem mexer na base.
+          const trecho = ordem.slice(i, k + 1).reverse();
+          ordem.splice(i, trecho.length, ...trecho);
+          melhorou = true;
+        }
+      }
+    }
+  }
   if (retornar) ordem.push(0);
   return ordem;
 }
 /**
- * Vizinho mais próximo a partir da origem (índice 0). Não é ótimo — é o
- * plano B documentado quando o OSRM não responde (§54): melhor que a ordem
- * de digitação, pior que a rua, e a tela diz qual é.
+ * Vizinho mais próximo a partir da origem (índice 0). Sozinho não é ótimo —
+ * é o ponto de partida do `ordenarPorMenorTrajeto` e o plano B documentado
+ * quando o OSRM não responde (§54): melhor que a ordem de digitação, pior que
+ * a rua, e a tela diz qual é.
  */
 export function vizinhoMaisProximo(pontos: Coordenada[], retornar: boolean): number[] {
   if (pontos.length <= 1) return pontos.map((_, i) => i);

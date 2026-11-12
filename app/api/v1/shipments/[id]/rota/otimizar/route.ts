@@ -2,8 +2,10 @@
  * POST /api/v1/shipments/[id]/rota/otimizar — a sequência de entrega.
  *
  * Dois modos (`modo`):
- * - `distancia` (padrão): radial a partir da base — do mais perto ao mais
- *   longe da origem. É a ordem do romaneio ("sai e vai entregando").
+ * - `distancia` (padrão): caminho curto entre as paradas a partir da base —
+ *   base primeiro, depois sempre a parada mais próxima da anterior, com 2-opt
+ *   desfazendo cruzamentos. É a ordem do romaneio ("sai e vai entregando"),
+ *   em linha reta, sem depender de serviço externo (a rua é desenhada depois).
  *   EXIGE origem (sem base, "perto" não significa nada).
  * - `tsp`: caixeiro-viajante pelas ruas (OSRM trip) — caminho mais curto,
  *   nem sempre radial.
@@ -23,7 +25,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { geocodificarEndereco } from "@/lib/rotas/geocodificacao";
 import { otimizarComFallback, OsmrmProvider, type Coordenada } from "@/lib/rotas/osrm";
-import { haversineM, ordenarPorDistanciaDaOrigem } from "@/lib/rotas/roteamento";
+import { haversineM, ordenarPorMenorTrajeto } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "../_carga";
@@ -97,12 +99,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let prop: Awaited<ReturnType<typeof otimizarComFallback>>;
   if (modo === "distancia") {
-    // Radial: ordena por distância da base e desenha a rua nessa ordem.
-    const ordemRadial = ordenarPorDistanciaDaOrigem(pontos, ret);
-    const naOrdem = ordemRadial.map((i) => pontos[i]!);
+    // Caminho curto entre as paradas, base primeiro — não "distância até a
+    // base", que mandava atravessar a cidade no meio do trajeto.
+    const ordemCalculada = ordenarPorMenorTrajeto(pontos, ret);
+    const naOrdem = ordemCalculada.map((i) => pontos[i]!);
     try {
       const rua = await new OsmrmProvider().rota(naOrdem);
-      prop = { ...rua, ordem: ordemRadial };
+      prop = { ...rua, ordem: ordemCalculada };
     } catch {
       let distanciaM = 0;
       for (let i = 1; i < naOrdem.length; i++) {
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       distanciaM = Math.round(distanciaM * 1.3);
       prop = {
-        ordem: ordemRadial,
+        ordem: ordemCalculada,
         distanciaM,
         duracaoS: Math.round((distanciaM / 1000 / 30) * 3600),
         geometria: [],
