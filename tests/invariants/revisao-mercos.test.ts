@@ -21,7 +21,11 @@ import { beforeAll, describe, expect, it } from "vitest";
  *      o caso dos 18538..18558 de demonstração;
  *   5. pedido em carga é atualizado e a CARGA é marcada para reconferir — sem
  *      sair da carga sozinho;
- *   6. segunda revisão igual devolve `sem_mudanca` e não suja `updated_at`.
+ *   6. segunda revisão igual devolve `sem_mudanca` e não suja `updated_at`;
+ *   7. a UF que o ERP NÃO manda não é mudança (0304): o worker extrai a linha
+ *      "<cidade>, <estado>" e manda tudo dentro de `cidade`, sem `uf`. Comparar
+ *      a UF do cadastro com NULL marcava "Mudou no Mercos" em todo pedido — 17
+ *      das 19 paradas da carga 40 em 12/11/2026, nenhum item alterado.
  *
  * Prova contra Postgres real porque a regra é do banco: é a função que decide
  * o que o ERP pode reescrever, e um dublê aceitaria qualquer coisa.
@@ -55,6 +59,13 @@ const PEDIDO_ENTREGUE = "0297aaaa-2222-4000-8000-000000000004";
 const PEDIDO_SUJO = "0297aaaa-2222-4000-8000-000000000005";
 const CONTATO_SUJO = "0297aaaa-1111-4000-8000-000000000002";
 const CARGA = "0297aaaa-3333-4000-8000-000000000001";
+// 0304 — o worker manda "Cidade, Estado" sem `uf`.
+const CONTATO_UF = "0297aaaa-1111-4000-8000-000000000003";
+const PEDIDO_UF = "0297aaaa-2222-4000-8000-000000000006";
+const CONTATO_ESTADO = "0297aaaa-1111-4000-8000-000000000004";
+const PEDIDO_ESTADO = "0297aaaa-2222-4000-8000-000000000007";
+const CONTATO_CIDADE = "0297aaaa-1111-4000-8000-000000000005";
+const PEDIDO_CIDADE = "0297aaaa-2222-4000-8000-000000000008";
 
 interface Payload {
   numero: number;
@@ -140,6 +151,33 @@ beforeAll(() => {
     insert into public.contacts (id, organization_id, name, display_name, cidade, uf)
     values ('${CONTATO_SUJO}', '${ORG}', 'CLIENTE SUJO', 'CLIENTE SUJO', 'Canoinhas, SC', null)
     on conflict (id) do nothing;
+
+    -- 0304: cadastro limpo com UF, cadastro sujo com o nome do estado dentro
+    -- da cidade, e cadastro de uma cidade DIFERENTE (para provar que mudança
+    -- real continua avisando).
+    insert into public.contacts (id, organization_id, name, display_name, cidade, uf)
+    values
+      ('${CONTATO_UF}', '${ORG}', 'CLIENTE COM UF', 'CLIENTE COM UF', 'Bituruna', 'PR'),
+      ('${CONTATO_ESTADO}', '${ORG}', 'CLIENTE COM ESTADO', 'CLIENTE COM ESTADO', 'Bituruna, Paraná', 'PR'),
+      ('${CONTATO_CIDADE}', '${ORG}', 'CLIENTE DE CIDADE', 'CLIENTE DE CIDADE', 'Bituruna', 'PR')
+    on conflict (id) do nothing;
+
+    insert into public.commercial_orders
+      (id, organization_id, numero, contact_id, cliente_nome, status, origem,
+       subtotal_cents, frete_cents, total_cents)
+    values
+      ('${PEDIDO_UF}', '${ORG}', 9006, '${CONTATO_UF}', 'CLIENTE COM UF', 'aprovado', 'mercos', 1000, 0, 1000),
+      ('${PEDIDO_ESTADO}', '${ORG}', 9007, '${CONTATO_ESTADO}', 'CLIENTE COM ESTADO', 'aprovado', 'mercos', 1000, 0, 1000),
+      ('${PEDIDO_CIDADE}', '${ORG}', 9008, '${CONTATO_CIDADE}', 'CLIENTE DE CIDADE', 'aprovado', 'mercos', 1000, 0, 1000)
+    on conflict (id) do nothing;
+
+    insert into public.commercial_order_items
+      (organization_id, order_id, produto_codigo, produto_nome, quantidade,
+       preco_unit_cents, desconto_pct, subtotal_cents, posicao)
+    values ('${ORG}', '${PEDIDO_UF}', 'X', 'ITEM X', 1, 1000, 0, 1000, 1),
+           ('${ORG}', '${PEDIDO_ESTADO}', 'X', 'ITEM X', 1, 1000, 0, 1000, 1),
+           ('${ORG}', '${PEDIDO_CIDADE}', 'X', 'ITEM X', 1, 1000, 0, 1000, 1)
+    on conflict do nothing;
 
     insert into public.commercial_orders
       (id, organization_id, numero, contact_id, cliente_nome, status, origem,
@@ -301,5 +339,84 @@ describe("0297 · revisão do pedido importado do Mercos", () => {
   it("soma dos itens diferente do total é divergência, não escrita", () => {
     const r = sincronizar(payloadDoMercos({ total_cents: 99_999 }), true);
     expect(r.status).toBe("divergente");
+  });
+});
+
+/**
+ * 0304 · A UF QUE O MERCOS NÃO MANDA NÃO É MUDANÇA.
+ *
+ * O caso medido em 12/11/2026: 17 das 19 paradas da carga 40 com "Mudou no
+ * Mercos", e nenhuma delas com item, quantidade ou preço alterado. Todas
+ * registravam a mesma mudança falsa — `cidade` de "GENERAL CARNEIRO,
+ * Paraná/PR" para "GENERAL CARNEIRO, Paraná" — porque o worker manda
+ * "<cidade>, <estado>" dentro de `cidade` e NUNCA manda `uf`; a revisão
+ * comparava a UF do cadastro com NULL.
+ *
+ * O que aqui se prende:
+ *
+ *   1. payload sem `uf` + cadastro com UF = `sem_mudanca` (e a UF fica);
+ *   2. cadastro sujo ("Bituruna, Paraná") + payload "Bituruna, Paraná" =
+ *      `sem_mudanca`, e o cadastro é limpo para "Bituruna" + PR;
+ *   3. cidade de verdade diferente CONTINUA avisando.
+ */
+
+/** O payload mínimo que a tela do ERP entrega: cidade crua, sem `uf`. */
+function payloadSimples(numero: number, clienteNome: string, cidade: string): Payload {
+  return {
+    numero,
+    cliente_nome: clienteNome,
+    cliente_documento: null,
+    cliente: { cidade },
+    condicao_pagamento: null,
+    subtotal_cents: 1000,
+    frete_cents: 0,
+    total_cents: 1000,
+    itens: [
+      {
+        codigo: "X",
+        descricao: "ITEM X",
+        quantidade: 1,
+        preco_unit_cents: 1000,
+        subtotal_cents: 1000,
+      },
+    ],
+  };
+}
+
+describe("0304 · a UF que o Mercos não manda não é mudança", () => {
+  it("payload sem `uf` não inventa mudança — a UF do cadastro permanece", () => {
+    const r = sincronizar(payloadSimples(9006, "CLIENTE COM UF", "Bituruna"), true);
+    expect(r.status).toBe("sem_mudanca");
+    expect(r.mudancas).toEqual([]);
+    expect(
+      sql(`select cidade || '|' || coalesce(uf, '') from public.contacts where id = '${CONTATO_UF}'`),
+    ).toBe("Bituruna|PR");
+    expect(
+      sql(`select coalesce(mercos_ultima_mudanca::text, 'null')
+             from public.commercial_orders where id = '${PEDIDO_UF}'`),
+    ).toBe("null");
+  });
+
+  it("cadastro com o estado colado na cidade é o mesmo endereço, não mudança", () => {
+    const r = sincronizar(payloadSimples(9007, "CLIENTE COM ESTADO", "Bituruna, Paraná"), true);
+    expect(r.status).toBe("sem_mudanca");
+    expect(r.mudancas).toEqual([]);
+    // A revisão limpa o que a importação antiga gravou — sem marcar a carga.
+    expect(
+      sql(`select cidade || '|' || coalesce(uf, '')
+             from public.contacts where id = '${CONTATO_ESTADO}'`),
+    ).toBe("Bituruna|PR");
+  });
+
+  it("cidade de verdade diferente continua avisando, com a UF separada", () => {
+    const r = sincronizar(payloadSimples(9008, "CLIENTE DE CIDADE", "Canoinhas, Santa Catarina"), true);
+    expect(r.status).toBe("atualizado");
+    expect(r.mudancas).toEqual([
+      { campo: "cidade", de: "Bituruna/PR", para: "Canoinhas/SC" },
+    ]);
+    expect(
+      sql(`select cidade || '|' || coalesce(uf, '')
+             from public.contacts where id = '${CONTATO_CIDADE}'`),
+    ).toBe("Canoinhas|SC");
   });
 });
