@@ -1,7 +1,7 @@
 /**
  * GET  /api/v1/invoices — notas da organização ativa.
  * POST /api/v1/invoices — emite nota a partir de um pedido faturável
- * (faturado, expedido ou entregue).
+ * (concluído, faturado, expedido ou entregue).
  *
  * Sem config fiscal, 422 nomeando a tela de configuração — nunca presume
  * série 1. Sem emissor real, a nota nasce `pendente` via stub (honesto):

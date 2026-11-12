@@ -225,7 +225,7 @@ const diagnosticarNota = (ctx: AssistenteCtx) =>
         ok: faturavel,
         detalhe: faturavel
           ? `está "${ped.status}"`
-          : `está "${ped.status}" — só pedido faturado, expedido ou entregue vira nota; aprove/fature na tela do pedido`,
+          : `está "${ped.status}" — só pedido concluído, faturado, expedido ou entregue vira nota; aprove/conclua na tela do pedido`,
       });
 
       const { data: config } = await ctx.supabase

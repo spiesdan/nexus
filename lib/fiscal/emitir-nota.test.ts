@@ -271,7 +271,8 @@ describe("agrupamento de pedidos (0294)", () => {
 });
 
 describe("status do pedido que vira nota", () => {
-  it("faturado, expedido e entregue são faturáveis", () => {
+  it("concluído, faturado, expedido e entregue são faturáveis", () => {
+    expect(statusFaturavel("concluido")).toBe(true);
     expect(statusFaturavel("faturado")).toBe(true);
     expect(statusFaturavel("expedido")).toBe(true);
     expect(statusFaturavel("entregue")).toBe(true);
@@ -285,6 +286,15 @@ describe("status do pedido que vira nota", () => {
 });
 
 describe("emitirNota", () => {
+  it("emite para pedido concluído — a venda fechada que espera a nossa nota", async () => {
+    // 0302: o Mercos marca "Concluído" quando a venda fecha, e é ESTE o
+    // status de quem está esperando a NF-e (não `faturado`, que já tem nota
+    // no ERP). Medido no pedido 19538: a ficha avisava da mudança no Mercos e
+    // a emissão recusava o próprio pedido que o aviso mandava faturar.
+    const { banco, promessa } = emitir("concluido");
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+    expect(banco.escritas.some((e) => e.startsWith("invoices.insert"))).toBe(true);
+  });
   it("emite para pedido expedido — a mercadoria saiu antes da nota", async () => {
     const { banco, promessa } = emitir("expedido");
     await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
@@ -301,7 +311,7 @@ describe("emitirNota", () => {
     const erro = await promessa.catch((e: unknown) => e);
     expect(erro).toBeInstanceOf(ApiError);
     expect((erro as ApiError).status).toBe(422);
-    expect((erro as ApiError).message).toContain("faturado, expedido ou entregue");
+    expect((erro as ApiError).message).toContain("concluído, faturado, expedido ou entregue");
     // A recusa acontece ANTES de qualquer escrita: nenhuma nota nasce condenada.
     expect(banco.escritas).toEqual([]);
   });
