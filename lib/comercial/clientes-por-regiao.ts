@@ -3,26 +3,33 @@
  *
  * ═══ A PERGUNTA ═══════════════════════════════════════════════════════════
  *
- * "Quais clientes já foram atendidos nas cidades que eu escolhi?" A resposta
- * NÃO mora no pedido: `commercial_orders` não guarda cidade. Mora no CONTATO
- * (`contacts.cidade` / `contacts.uf`), e o pedido é o que prova o atendimento.
+ * "Quais clientes já foram atendidos nas cidades que eu escolhi?" Não existe
+ * uma coluna só com a resposta: o pedido guarda o ENDEREÇO DE ENTREGA em texto
+ * (`commercial_orders.endereco_entrega`, "…, CANOINHAS/SC, 89460048") e o
+ * cadastro do contato guarda `cidade`/`uf` — e os dois discordam com frequência.
+ * Medido nesta instalação (2026-11-12): 11.814 pedidos não cancelados, 1.898
+ * contatos compradores, e a cidade do cadastro sozinha deixava de fora 260
+ * clientes que só tinham cidade no endereço do pedido.
  *
- * Por isso a função lê os pedidos e cruza com o cadastro:
+ * Por isso a função lê os DOIS lados e o cliente entra na cidade quando
+ * QUALQUER UM deles o coloca lá:
  *
- *   1. qualquer pedido NÃO CANCELADO conta como "já atendemos" — a mesma régua
- *      do radar de inativos (`lib/comercial/inativos.ts`). Rascunho, aprovado,
- *      faturado, concluído, expedido, entregue: todos provam que a loja atendeu
- *      aquela pessoa naquela cidade.
- *   2. o contato entra UMA vez, somando todos os pedidos daquela cidade.
- *   3. veto de contato é o MESMO do resto do produto (`contatoPodeReceber`):
+ *   1. o endereço de entrega do pedido — a cidade onde a loja de fato atendeu;
+ *   2. o cadastro do contato (`contacts.cidade`) — quem mudou de endereço mas
+ *      continua na mesma cidade, e o pedido antigo não tinha endereço;
+ *   3. qualquer pedido NÃO CANCELADO conta como "já atendemos" — a mesma régua
+ *      do radar de inativos (`lib/comercial/inativos.ts`);
+ *   4. o contato entra UMA vez por cidade, somando os pedidos daquele recorte;
+ *   5. veto de contato é o MESMO do resto do produto (`contatoPodeReceber`):
  *      STOP, recusa de marketing, anonimizado ou mesclado não recebem campanha.
  *
  * ═══ A COMPARAÇÃO DE CIDADE É FEITA AQUI, NÃO NO BANCO ════════════════════
  *
- * A base tem "Caçador" e "Cacador", "São Bento" e "Sao Bento". O PostgREST não
- * sabe disso, então a comparação usa `chaveDeCidade` (sem acento, sem caixa) —
- * a MESMA função do público da base. Se fosse `eq` no banco, escolher a cidade
- * na tela deixaria gente de fora em silêncio.
+ * A base tem "Caçador" e "Cacador", "Canoinhas" e "Canoinhas, Santa Catarina"
+ * (o Mercos colou o nome do estado no cadastro). O PostgREST não sabe disso,
+ * então a comparação usa `chaveComparavel` — sem acento, sem caixa e sem o
+ * nome do estado colado. Se fosse `eq` no banco, escolher a cidade na tela
+ * deixaria gente de fora em silêncio.
  *
  * ═══ O QUE ESTA FUNÇÃO NÃO DECIDE ═════════════════════════════════════════
  *
@@ -32,8 +39,10 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { normalizaTelefone } from "@/lib/contacts/csv";
 import { contatoPodeReceber } from "@/lib/comercial/inativos";
+import { cidadeSemEstado } from "@/lib/contacts/endereco-em-linha";
+import { normalizaTelefone } from "@/lib/contacts/csv";
+import { nomeDoEstado } from "@/lib/format/estados";
 import { chaveDeCidade } from "@/lib/prospeccao/publico-da-base";
 
 /** Teto de PEDIDOS varridos — 20 páginas de 1.000, com ordem estável. */
@@ -50,6 +59,12 @@ export interface CidadeDaCampanha {
   estado?: string | null;
 }
 
+/** Uma cidade onde o cliente já foi atendido (ou onde mora). */
+export interface CidadeDoContato {
+  cidade: string;
+  uf: string | null;
+}
+
 export interface ClienteDaRegiao {
   contact_id: string;
   nome: string;
@@ -57,8 +72,14 @@ export interface ClienteDaRegiao {
   telefone: string | null;
   /** `null` = não dá para mandar (sem telefone ou fora do E.164). */
   telefone_e164: string | null;
+  /** Cidade de exibição: a do pedido mais recente; senão, a do cadastro. */
   cidade: string;
   uf: string | null;
+  /**
+   * TODAS as cidades em que o cliente aparece (pedido + cadastro). É o que faz
+   * a contagem por cidade não perder quem comprou em mais de uma.
+   */
+  cidades: CidadeDoContato[];
   pedidos: number;
   total_cents: number;
   ultimo_pedido_em: string;
@@ -96,6 +117,7 @@ interface PedidoComContato {
   contact_id: string | null;
   total_cents: number;
   created_at: string;
+  endereco_entrega: string | null;
   contacts: ContatoBruto | ContatoBruto[] | null;
 }
 
@@ -107,31 +129,97 @@ function ufCombina(ufDoContato: string | null, ufDoCriterio: string | null | und
   return (ufDoContato ?? "").trim().toUpperCase() === ufDoCriterio.trim().toUpperCase();
 }
 
-/** O contato mora em UMA das cidades escolhidas? (acento e caixa fora) */
+/**
+ * A chave de comparação: acento e caixa fora, e o nome do estado colado fora.
+ * "Canoinhas", "CANOINHAS" e "Canoinhas, Santa Catarina" viram a mesma chave.
+ */
+export function chaveComparavel(
+  cidade: string | null | undefined,
+  uf: string | null | undefined,
+): string {
+  return chaveDeCidade(cidadeSemEstado(cidade, uf)).trim();
+}
+
+const CHAVE_VAZIA = "";
+
+/**
+ * O ENDEREÇO DE ENTREGA VIRA CIDADE — "RUA X, 96 — CENTRO, CANOINHAS/SC, 89460048".
+ *
+ * O Mercos grava o endereço como uma linha só, no formato
+ * `logradouro, número, complemento — bairro, cidade, [Estado]/UF, cep`. A cidade
+ * é o segmento que vem antes de `/UF`; quando o estado foi colado no meio
+ * ("GENERAL CARNEIRO, Paraná/PR"), o segmento anterior é que traz o município.
+ *
+ * Endereço sem cidade (só a rua) devolve `null` — aí quem responde é o cadastro,
+ * e o cliente não é descartado só porque o importador não trouxe o município.
+ */
+export function cidadeDoEnderecoDeEntrega(
+  endereco: string | null | undefined,
+): CidadeDoContato | null {
+  const texto = (endereco ?? "").trim();
+  if (texto === "") return null;
+
+  const segmentos = texto.split(",").map((s) => s.trim());
+  for (let i = segmentos.length - 1; i >= 0; i -= 1) {
+    // O formato do Mercos usa " — " entre o número e o bairro; quando o bairro
+    // não veio, o traço cola na cidade ("2297 — Três Barras/SC").
+    const segmento = (segmentos[i] ?? "").split("—").pop() ?? "";
+    const achado = /^(.*?)\s*\/\s*([A-Za-z]{2})\s*(?:[\d-]{8,9})?$/.exec(segmento);
+    if (!achado) continue;
+    const uf = (achado[2] ?? "").toUpperCase();
+    let municipio = achado[1] ?? "";
+    // "Paraná/PR": o segmento é o nome do estado, não a cidade — recua um.
+    if (chaveComparavel(municipio, uf) === chaveComparavel(nomeDoEstado(uf), uf)) {
+      municipio = (segmentos[i - 1] ?? "").split("—").pop() ?? "";
+    }
+    const cidade = cidadeSemEstado(municipio, uf).replace(/\s+/g, " ").trim();
+    if (cidade === "") continue;
+    return { cidade, uf };
+  }
+  return null;
+}
+
+/** O cliente está em UMA das cidades escolhidas? (acento, caixa e estado fora) */
 export function cidadeCombina(
   cidade: string | null | undefined,
   uf: string | null | undefined,
   criterios: readonly CidadeDaCampanha[],
 ): boolean {
-  const nome = (cidade ?? "").trim();
-  if (nome === "") return false;
+  const chave = chaveComparavel(cidade, uf);
+  if (chave === CHAVE_VAZIA) return false;
   if (criterios.length === 0) return true;
-  const chave = chaveDeCidade(nome);
   return criterios.some(
-    (c) => chaveDeCidade(c.cidade) === chave && ufCombina(uf ?? null, c.estado),
+    (c) =>
+      chaveComparavel(c.cidade, c.estado ?? uf) === chave &&
+      ufCombina(uf ?? null, c.estado),
   );
 }
 
-/** Uma linha por contato, com a contagem por cidade preservando a primeira grafia. */
+/**
+ * Uma linha por cidade, contando CONTATOS. Um cliente que comprou em duas
+ * cidades aparece nas duas (com um voto cada), e as grafias que a chave une
+ * ("Canoinhas" / "Canoinhas, Santa Catarina") não viram duas linhas.
+ */
 export function agruparPorCidade(
   lista: readonly ClienteDaRegiao[],
 ): CidadeComCliente[] {
   const porChave = new Map<string, CidadeComCliente>();
   for (const cliente of lista) {
-    const chave = `${chaveDeCidade(cliente.cidade)}|${(cliente.uf ?? "").trim().toUpperCase()}`;
-    const atual = porChave.get(chave);
-    if (atual) atual.total += 1;
-    else porChave.set(chave, { cidade: cliente.cidade, uf: cliente.uf, total: 1 });
+    const vistas = new Set<string>();
+    const cidades =
+      cliente.cidades && cliente.cidades.length > 0
+        ? cliente.cidades
+        : [{ cidade: cliente.cidade, uf: cliente.uf }];
+    for (const c of cidades) {
+      const nome = c.cidade.trim();
+      if (nome === "") continue;
+      const chave = `${chaveComparavel(nome, c.uf)}|${(c.uf ?? "").trim().toUpperCase()}`;
+      if (vistas.has(chave)) continue;
+      vistas.add(chave);
+      const atual = porChave.get(chave);
+      if (atual) atual.total += 1;
+      else porChave.set(chave, { cidade: nome, uf: c.uf, total: 1 });
+    }
   }
   return [...porChave.values()].sort(
     (a, b) => b.total - a.total || a.cidade.localeCompare(b.cidade, "pt-BR"),
@@ -171,6 +259,10 @@ export async function listarClientesPorRegiao(
       pedidos: number;
       total_cents: number;
       ultimo_pedido_em: string;
+      /** Cidade de exibição — a do pedido mais recente que casou com o recorte. */
+      exibicao: CidadeDoContato | null;
+      /** Todas as cidades conhecidas do cliente, sem repetir pela chave. */
+      cidades: Map<string, CidadeDoContato>;
     }
   >();
   let pedidosLidos = 0;
@@ -181,7 +273,7 @@ export async function listarClientesPorRegiao(
     const { data, error } = await supabase
       .from("commercial_orders")
       .select(
-        "contact_id, total_cents, created_at, " +
+        "contact_id, total_cents, created_at, endereco_entrega, " +
           "contacts!inner(id, name, display_name, phone_number, cidade, uf, " +
           "is_blocked, is_anonymized, is_merged_into, consent)",
       )
@@ -206,21 +298,49 @@ export async function listarClientesPorRegiao(
       const contato = contatoDoPedido(pedido);
       if (!contato) continue;
       if (!contatoPodeReceber(contato)) continue;
-      if (!cidadeCombina(contato.cidade, contato.uf, cidades)) continue;
+
+      const doEndereco = cidadeDoEnderecoDeEntrega(pedido.endereco_entrega);
+      const doCadastro: CidadeDoContato | null =
+        (contato.cidade ?? "").trim() === ""
+          ? null
+          : { cidade: (contato.cidade ?? "").trim(), uf: (contato.uf ?? "").trim() || null };
+
+      // A cidade DESTE pedido: o endereço de entrega manda (foi onde a loja
+      // atendeu); o cadastro só responde quando o endereço não trouxe município.
+      const cidadeDoPedido = doEndereco ?? doCadastro;
+      if (!cidadeDoPedido) continue;
+      if (!cidadeCombina(cidadeDoPedido.cidade, cidadeDoPedido.uf, cidades)) continue;
 
       const atual = porContato.get(pedido.contact_id);
-      if (atual) {
-        atual.pedidos += 1;
-        atual.total_cents += pedido.total_cents;
-        // A varredura vem em ordem decrescente; o primeiro é o mais recente.
-      } else {
-        porContato.set(pedido.contact_id, {
+      const alvo =
+        atual ??
+        {
           contato,
-          pedidos: 1,
-          total_cents: pedido.total_cents,
+          pedidos: 0,
+          total_cents: 0,
           ultimo_pedido_em: pedido.created_at,
-        });
+          exibicao: null as CidadeDoContato | null,
+          cidades: new Map<string, CidadeDoContato>(),
+        };
+
+      if (!atual) porContato.set(pedido.contact_id, alvo);
+
+      alvo.pedidos += 1;
+      alvo.total_cents += pedido.total_cents;
+      // A varredura vem em ordem decrescente: o primeiro pedido é o mais novo.
+      if (alvo.pedidos === 1 || pedido.created_at > alvo.ultimo_pedido_em) {
+        alvo.ultimo_pedido_em = pedido.created_at;
       }
+
+      // O cadastro entra primeiro: é a grafia "humana" da cidade, melhor para
+      // a tela. A do endereço é a prova de onde a loja atendeu.
+      for (const candidata of [doCadastro, doEndereco]) {
+        if (!candidata) continue;
+        const chave = `${chaveComparavel(candidata.cidade, candidata.uf)}|${(candidata.uf ?? "").toUpperCase()}`;
+        if (!alvo.cidades.has(chave)) alvo.cidades.set(chave, candidata);
+      }
+      const exibicao = doEndereco ?? doCadastro;
+      if (exibicao && alvo.exibicao === null) alvo.exibicao = exibicao;
     }
 
     if (lote.length < PAGINA) break;
@@ -232,14 +352,16 @@ export async function listarClientesPorRegiao(
       const normalizado = v.contato.phone_number
         ? normalizaTelefone(v.contato.phone_number)
         : null;
+      const exibicao = v.exibicao ?? { cidade: "", uf: null };
       return {
         contact_id,
         nome:
           v.contato.display_name ?? v.contato.name ?? v.contato.phone_number ?? "Sem nome",
         telefone: v.contato.phone_number,
         telefone_e164: normalizado !== null && TELEFONE_VALIDO.test(normalizado) ? normalizado : null,
-        cidade: (v.contato.cidade ?? "").trim(),
-        uf: (v.contato.uf ?? "").trim() || null,
+        cidade: exibicao.cidade,
+        uf: exibicao.uf,
+        cidades: [...v.cidades.values()],
         pedidos: v.pedidos,
         total_cents: v.total_cents,
         ultimo_pedido_em: v.ultimo_pedido_em,
