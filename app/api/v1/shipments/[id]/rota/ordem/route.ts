@@ -78,6 +78,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const b = parsed.data;
+  // Sequência alterada manualmente (prompt §5): sem proposta nova, a geometria
+  // salva não corresponde mais à sequência — invalidar (null) em vez de deixar a
+  // linha antiga no mapa para uma ordem que não é mais a verdade. Com proposta
+  // (otimizar → salvar), a geometria vem no body e continua sendo a válida.
+  const semProposta = b.geometria === undefined && b.provedor === undefined;
+  const ordemPersistida = d.paradas.map((p) => p.chave);
+  const ordemMudou = [...parsed.data.ordem].join("|") !== [...ordemPersistida].join("|");
+  const invalidar = ordemMudou && semProposta;
   const { error: erroCarga } = await supabase
     .from("shipments")
     .update({
@@ -98,6 +106,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             },
           }
         : {}),
+      // Sequência manual salva sem proporção nova: a geometria antiga morre
+      // aqui (null) — rota sem linha — e a versão sobe, invalidando o que o
+      // app do motorista tem em cache. A tela mostra "pendente de recálculo"
+      // em vez de desenhar uma linha que não corresponde à ordem.
+      ...(invalidar ? { rota_geojson: null, distancia_m: null, duracao_s: null } : {}),
       rota_em: new Date().toISOString(),
       rota_versao: d.carga.rota_versao + 1,
     })

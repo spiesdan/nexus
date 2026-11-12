@@ -578,10 +578,13 @@ export function Roteirizador({
         </Badge>
       </div>
 
-      {/* ── O mapa é o herói da seção ───────────────────────────────────────
-          Os números que importam ficam sobre ele, para não haver uma faixa de
+      {/* ── As três áreas da expedição: esquerda (pedidos/cargas), centro
+          (mapa) e direita (planejamento). O mapa é a maior área do centro, e os
+          números que importam ficam sobre ele, para não haver uma faixa de
           cartões entre a pessoa e o desenho da rota. */}
-      <div className="min-w-0">
+      <div className="grid items-start gap-4 grid-cols-1 xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)_minmax(0,360px)]">
+        {/* ── ÁREA CENTRAL — mapa (a maior área do centro) ── */}
+        <div className="min-w-0 xl:order-2">
         <MapaRota
           altura="min(46vh, 430px)"
           paradas={pontosMapa}
@@ -690,10 +693,9 @@ export function Roteirizador({
         )}
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        {/* ── O planejamento, em três passos ────────────────────────────── */}
+        {/* ── ÁREA DIREITA — planejamento ────────────────────────────── */}
         {editavel && (
-          <Card className="overflow-hidden p-0">
+          <Card className="min-w-0 overflow-hidden p-0 xl:order-3">
             <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -846,7 +848,7 @@ export function Roteirizador({
         )}
 
         {/* ── A ordem de entrega ────────────────────────────────────────── */}
-        <Card className="min-w-0 overflow-hidden p-0">
+        <Card className="min-w-0 overflow-hidden p-0 xl:order-1">
           <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-border px-3.5 py-2.5">
             <p className="text-sm font-medium text-text">
               {t("Ordem de entrega")}{" "}

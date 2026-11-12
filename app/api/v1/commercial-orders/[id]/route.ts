@@ -99,6 +99,30 @@ export async function PATCH(
     }
   }
 
+  // Endereço de entrega mudou (prompt §3): a geocodificação em cache do
+  // contato não pode sobreviver ao destino novo — a coordenada antiga
+  // pertence ao endereço anterior. Limpa o cache para a próxima resolução
+  // não casar o novo destino com coordenadas velhas (prompt §8, teste 3).
+  if (atualizacao.endereco_entrega !== undefined) {
+    const { data: ordemContato } = await supabase
+      .from("commercial_orders")
+      .select("contact_id")
+      .eq("id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    const contatoId = (parsed.data.contact_id ??
+      (ordemContato as unknown as { contact_id: string | null } | null)?.contact_id) as string | null;
+    if (contatoId) {
+      await supabase.from("contacts").update({
+        latitude: null,
+        longitude: null,
+        geo_status: "pendente",
+        geo_fonte: null,
+        geo_em: new Date().toISOString(),
+      }).eq("id", contatoId).eq("organization_id", authz.org.orgId);
+    }
+  }
+
   // Aprovar (em_analise → aprovado) é poder de `manager`: é o gate do
   // workflow de aprovação (§15). As demais transições seguem agent+.
   // E sair do rascunho com desconto acima do teto ESCALA para em_analise
