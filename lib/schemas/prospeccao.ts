@@ -330,7 +330,10 @@ const periodoValido = (v: { data_inicio?: string | null; data_fim?: string | nul
   !v.data_inicio || !v.data_fim || v.data_fim >= v.data_inicio;
 
 export const campanhaCreateSchema = z.object({
-  nome: z.string().trim().min(2).max(120),
+  // O nome é rótulo do operador, não conteúdo de mensagem: não tem teto. O
+  // limite de 120 cortava o nome que a própria tela gera (a lista de cidades
+  // vira nome) e não protegia nada — a coluna é `text`.
+  nome: z.string().trim().min(2),
   objetivo: z.string().trim().max(300).nullable().optional(),
   categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX),
   cidades: z
@@ -414,7 +417,8 @@ export const mensagensPorCategoriaSchema = z.object({
  */
 export const campanhaDeRecuperacaoSchema = z
   .object({
-    nome: z.string().trim().min(2).max(120),
+    // Sem teto de caracteres — a mesma régua de `campanhaCreateSchema`.
+    nome: z.string().trim().min(2),
     objetivo: z.string().trim().max(300).nullable().optional(),
     /** A lista fechada da prévia de inativos (o radar é a mesma fonte). */
     contato_ids: z.array(z.string().uuid()).min(1).max(10_000),
@@ -519,7 +523,8 @@ export const regiaoPreviewSchema = z.object({
  */
 export const campanhaPorRegiaoSchema = z
   .object({
-    nome: z.string().trim().min(2).max(120),
+    // Sem teto de caracteres — a mesma régua de `campanhaCreateSchema`.
+    nome: z.string().trim().min(2),
     objetivo: z.string().trim().max(300).nullable().optional(),
     cidades: cidadesDaRegiaoSchema,
     session_id: z.string().uuid(),

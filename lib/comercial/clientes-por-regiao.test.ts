@@ -1,20 +1,22 @@
 /**
- * QUEM JÁ COMPROU NUMA REGIÃO — a audiência da campanha por cidade.
+ * QUEM ESTÁ CADASTRADO NUMA REGIÃO — a audiência da campanha por cidade.
  *
  * O que este teste prende:
- *   1. a cidade vem do ENDEREÇO DE ENTREGA do pedido e do cadastro do contato —
+ *   1. a cidade vem do CADASTRO do contato e do ENDEREÇO DE ENTREGA do pedido —
  *      os dois lados, porque metade da base só tem um deles. Foi medido em
- *      produção (2026-11-12): 11.814 pedidos, 1.898 compradores, e o cadastro
- *      sozinho deixava 260 clientes de fora;
- *   2. a cidade compara SEM acento, SEM caixa e SEM o nome do estado colado
+ *      produção (2026-11-12): 11.814 pedidos, 1.898 compradores, 3.140 contatos
+ *      com cidade, e o cadastro sozinho deixava 260 clientes de fora;
+ *   2. quem está cadastrado na cidade entra MESMO SEM PEDIDO — a campanha por
+ *      região fala com os clientes da cidade, não só com quem já comprou;
+ *   3. a cidade compara SEM acento, SEM caixa e SEM o nome do estado colado
  *      ("Canoinhas" = "Canoinhas, Santa Catarina") — o PostgREST não sabe
  *      disso, e um `eq` no banco deixaria gente de fora em silêncio;
- *   3. o veto de contato é o MESMO do resto do produto (STOP, opt-out, LGPD,
+ *   4. o veto de contato é o MESMO do resto do produto (STOP, opt-out, LGPD,
  *      merge) — não é a tela que filtra depois;
- *   4. o contato entra UMA vez, somando os pedidos daquele recorte — e quem
+ *   5. o contato entra UMA vez, somando os pedidos daquele recorte — e quem
  *      comprou em duas cidades aparece nas duas;
- *   5. pedido cancelado NÃO conta como "já atendemos" (a consulta exclui);
- *   6. telefone fora do E.164 não vira público alcançável — mas o contato
+ *   6. pedido cancelado NÃO conta como compra (a consulta exclui);
+ *   7. telefone fora do E.164 não vira público alcançável — mas o contato
  *      continua na resposta, para a tela dizer por que ele ficou de fora.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -50,20 +52,29 @@ interface PedidoDeTeste {
 }
 
 /** O mínimo do PostgREST que a função usa, com registro das chamadas. */
-function fakeSupabase(pedidos: PedidoDeTeste[]) {
-  const chamadas: Array<{ metodo: string; args: unknown[] }> = [];
+function fakeSupabase(pedidos: PedidoDeTeste[], contatos: ContatoDeTeste[] = []) {
+  const chamadas: Array<{ tabela: string; metodo: string; args: unknown[] }> = [];
+  let tabela = "";
   const builder: Record<string, unknown> = {};
   for (const metodo of ["select", "eq", "neq", "not", "order", "range"]) {
     builder[metodo] = vi.fn((...args: unknown[]) => {
-      chamadas.push({ metodo, args });
+      chamadas.push({ tabela, metodo, args });
       return builder;
     });
   }
   builder.then = (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) =>
-    Promise.resolve({ data: pedidos, error: null }).then(onF, onR);
+    Promise.resolve({
+      data: tabela === "contacts" ? contatos : pedidos,
+      error: null,
+    }).then(onF, onR);
 
   return {
-    client: { from: vi.fn(() => builder) } as unknown as SupabaseClient,
+    client: {
+      from: vi.fn((nome: string) => {
+        tabela = nome;
+        return builder;
+      }),
+    } as unknown as SupabaseClient,
     chamadas,
   };
 }
@@ -128,6 +139,15 @@ describe("chaveComparavel", () => {
   it("une a cidade com e sem o nome do estado colado", () => {
     expect(chaveComparavel("Canoinhas", "SC")).toBe(chaveComparavel("Canoinhas, Santa Catarina", "SC"));
     expect(chaveComparavel("Caçador", "SC")).toBe(chaveComparavel("CACADOR", "SC"));
+  });
+
+  it("reconhece o estado colado mesmo quando o cadastro veio sem UF", () => {
+    expect(chaveComparavel("Canoinhas, Santa Catarina", null)).toBe(
+      chaveComparavel("Canoinhas", "SC"),
+    );
+    expect(chaveComparavel("Lapa, Paraná", null)).toBe(chaveComparavel("LAPA", "PR"));
+    // Sigla também: "Canoinhas, SC".
+    expect(chaveComparavel("Canoinhas, SC", null)).toBe(chaveComparavel("Canoinhas", "SC"));
   });
 });
 
@@ -217,6 +237,43 @@ describe("agruparPorCidade", () => {
 
     expect(cidades.find((c) => c.cidade === "Canoinhas")?.total).toBe(2);
     expect(cidades.find((c) => c.cidade === "Mafra")?.total).toBe(1);
+  });
+
+  it("a cidade sem UF entra na linha da cidade com UF, em vez de abrir outra", () => {
+    // Medido em produção: `Canoinhas/SC` (206) + `CANOINHAS` sem UF (3) eram
+    // duas linhas para a mesma cidade.
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas", "SC"),
+      linha("b", "CANOINHAS", null),
+      linha("c", "canoinhas", null),
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]).toMatchObject({ cidade: "Canoinhas", uf: "SC", total: 3 });
+  });
+
+  it("o rótulo perde o nome do estado colado, mesmo sem UF no cadastro", () => {
+    const cidades = agruparPorCidade([
+      linha("a", "Canoinhas, Santa Catarina", "SC"),
+      linha("b", "Canoinhas, Santa Catarina", null),
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]?.cidade).toBe("Canoinhas");
+    expect(cidades[0]?.total).toBe(2);
+  });
+
+  it("mesmo nome em estados diferentes não se mistura", () => {
+    // "Bom Sucesso" existe no PR e na PB: a UF do critério decide o público.
+    const cidades = agruparPorCidade([
+      linha("a", "Bom Sucesso", "PR"),
+      linha("b", "Bom Sucesso", "PB"),
+      linha("c", "Bom Sucesso", null),
+    ]);
+
+    expect(cidades).toHaveLength(3);
+    expect(cidades.find((c) => c.uf === "PR")?.total).toBe(1);
+    expect(cidades.find((c) => c.uf === "PB")?.total).toBe(1);
   });
 });
 
@@ -358,6 +415,91 @@ describe("listarClientesPorRegiao", () => {
     expect(porId.get("c-sem")?.telefone_e164).toBeNull();
     expect(porId.get("c-curto")?.telefone_e164).toBeNull();
     expect(porId.get("c-ok")?.telefone_e164).toBe("+5549999998888");
+  });
+
+  it("quem está cadastrado na cidade entra mesmo sem nenhum pedido", async () => {
+    // O pedido do cliente: a campanha por região fala com os CLIENTES da
+    // cidade — quem nunca comprou é público, não sobra.
+    const { client } = fakeSupabase(
+      [],
+      [
+        contato("c-sem-compra", { display_name: "Mercado Sem Compra" }),
+        contato("c-fora", { cidade: "Mafra" }),
+        contato("c-sem-cidade", { cidade: "  ", uf: null }),
+      ],
+    );
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+    });
+
+    expect(resultado.lista.map((c) => c.contact_id)).toEqual(["c-sem-compra"]);
+    expect(resultado.lista[0]).toMatchObject({
+      pedidos: 0,
+      total_cents: 0,
+      ultimo_pedido_em: "",
+      cidade: "Canoinhas",
+      uf: "SC",
+      telefone_e164: "+5549999998888",
+    });
+    expect(resultado.contatos_lidos).toBe(3);
+  });
+
+  it("o cadastro e o pedido não duplicam o mesmo cliente", async () => {
+    const { client } = fakeSupabase(
+      [pedido(contato("c-1"), { total_cents: 2_000 })],
+      [contato("c-1")],
+    );
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+    });
+
+    expect(resultado.lista).toHaveLength(1);
+    expect(resultado.lista[0]).toMatchObject({ contact_id: "c-1", pedidos: 1 });
+  });
+
+  it("quem comprou fora do recorte mas mora na cidade entra zerado", async () => {
+    // A compra foi em Mafra; o cadastro é de Canoinhas. Escolhendo Canoinhas, a
+    // pessoa é cliente da cidade e recebe — com zero pedido NESTE recorte.
+    const { client } = fakeSupabase(
+      [
+        pedido(contato("c-1", { cidade: "Canoinhas", uf: "SC" }), {
+          endereco_entrega: "RUA A, 1 — CENTRO, MAFRA/SC, 89300000",
+        }),
+      ],
+      [contato("c-1")],
+    );
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+    });
+
+    expect(resultado.lista.map((c) => c.contact_id)).toEqual(["c-1"]);
+    expect(resultado.lista[0]).toMatchObject({ pedidos: 0, total_cents: 0 });
+  });
+
+  it("o veto de contato vale também para o cadastro", async () => {
+    const { client } = fakeSupabase(
+      [],
+      [
+        contato("c-ok"),
+        contato("c-block", { is_blocked: true }),
+        contato("c-optout", { consent: { marketing: { declined_at: "2026-01-01" } } }),
+        contato("c-lgpd", { is_anonymized: true }),
+        contato("c-merge", { is_merged_into: "c-ok" }),
+      ],
+    );
+
+    const resultado = await listarClientesPorRegiao(client, {
+      organizationId: "org-1",
+      cidades: [{ cidade: "Canoinhas", estado: "SC" }],
+    });
+
+    expect(resultado.lista.map((c) => c.contact_id)).toEqual(["c-ok"]);
   });
 
   it("o teto corta a lista e marca `completa: false` — nunca 'todos' por engano", async () => {

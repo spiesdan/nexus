@@ -14,7 +14,7 @@ type PropsDaProspeccao = React.ComponentProps<typeof ProspeccaoClient>;
 /**
  * A TELA "CAMPANHA" — duas subtelas, uma porta.
  *
- *   Campanha    — falar com a base: clientes que já compraram na região, por
+ *   Campanha    — falar com a base: todos os clientes cadastrados na região, por
  *                 número não oficial, uma mensagem por minuto.
  *   Prospecção  — a tela B2B de sempre (buscar, empresas, mapa, campanhas de
  *                 garimpagem). Ela não perdeu nada: mudou de porta.
@@ -48,7 +48,7 @@ export function CampanhasClient({
         <h1 className="text-xl font-semibold tracking-tight">{t("Campanha")}</h1>
         <p className="text-sm text-muted-foreground">
           {t(
-            "Fale com quem já comprou na sua região e encontre empresas novas — o mesmo lugar, duas campanhas.",
+            "Fale com os clientes cadastrados na sua região e encontre empresas novas — o mesmo lugar, duas campanhas.",
           )}
         </p>
       </div>

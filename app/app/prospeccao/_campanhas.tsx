@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import type { FunilDaCampanha } from "@/lib/prospeccao/funil";
+import { ehCampanhaPorRegiao } from "@/lib/prospeccao/origem-da-campanha";
 import type { ResumoDeEnvio } from "@/lib/prospeccao/resumo-de-envio";
 import { lerTemplatesPorCategoria } from "@/lib/prospeccao/templates-por-categoria";
 
@@ -49,6 +50,9 @@ import { lerTemplatesPorCategoria } from "@/lib/prospeccao/templates-por-categor
  *
  * "Criar campanha" não mora aqui: é ação do cabeçalho da Prospecção, como
  * "Criar pedido" é do cabeçalho de Pedidos.
+ *
+ * A mesma lista serve às três superfícies, com `origem` decidindo o recorte no
+ * SERVIDOR: Campanha (região), Prospecção (garimpagem) e Radar (recuperação).
  */
 interface CampanhaDescoberta {
   id: string;
@@ -61,7 +65,7 @@ interface CampanhaDescoberta {
   ultima_execucao_at: string | null;
   /** 0271: `busca` (provider ativo) | `base` (já cadastrado) | `ambas`. */
   fonte_publico?: string | null;
-  /** 0274: `prospects` (garimpagem) | `contatos` (recuperação). */
+  /** 0274: `prospects` (garimpagem) | `contatos` (recuperação ou região). */
   publico?: string | null;
   prospect_ids?: string[] | null;
   contato_ids?: string[] | null;
@@ -299,11 +303,21 @@ export function CampanhasTab({
   podeOperar,
   aoCriarPrimeira,
   rotuloCriarPrimeira,
+  origem,
 }: {
   podeOperar: boolean;
   /** O que o estado vazio oferece como primeira ação. Sem isto, o assistente. */
   aoCriarPrimeira?: () => void;
   rotuloCriarPrimeira?: string;
+  /**
+   * Qual audiência esta lista mostra — o recorte é aplicado no SERVIDOR:
+   *   `regiao`      aba Campanha: contatos cadastrados na cidade;
+   *   `prospeccao`  aba Prospecção: garimpagem de empresa;
+   *   `recuperacao` Radar: contatos que pararam de comprar.
+   * Sem isto a tela mostrava tudo em todo lugar — e o operador adivinhava qual
+   * campanha era de qual público.
+   */
+  origem?: "regiao" | "prospeccao" | "recuperacao";
 }) {
   const t = useT();
   const router = useRouter();
@@ -324,9 +338,19 @@ export function CampanhasTab({
       // FASE 15 (§45): o funil vem NAS listas (`com_funil=1`) — eram 2 + N
       // requests para desenhar a aba; agora são as 2 de sempre. O resumo de
       // envio também vem na lista, numa query em lote.
+      //
+      // A aba pede só a origem dela: a campanha por região (abad Campanha), a
+      // garimpagem (Prospecção) ou a recuperação (Radar). O recorte é do
+      // servidor — a tela não filtra o que já não devia ter vindo. A venda
+      // automática é outra superfície e só aparece na lista base.
+      const urlDescobertas = origem
+        ? `/api/v1/prospecting/campaigns?com_funil=1&origem=${origem}`
+        : "/api/v1/prospecting/campaigns?com_funil=1";
       const [resDesc, resVa] = await Promise.all([
-        apiClient.get<{ data: unknown }>("/api/v1/prospecting/campaigns?com_funil=1"),
-        apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
+        apiClient.get<{ data: unknown }>(urlDescobertas),
+        origem
+          ? Promise.resolve(null)
+          : apiClient.get<{ data: unknown }>("/api/v1/automatic-sales/campaigns?com_funil=1"),
       ]);
       const listaDesc = ((resDesc as { data?: unknown } | null)?.data ??
         []) as CampanhaDescoberta[];
@@ -338,7 +362,7 @@ export function CampanhasTab({
       setErro(true);
       showApiError(e);
     }
-  }, []);
+  }, [origem]);
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -430,13 +454,15 @@ export function CampanhasTab({
             onChange={setStatusFiltro}
             options={opcoesStatus}
           />
-          <FilterSelect
-            id="campanhas-tipo"
-            label={t("Tipo")}
-            value={tipoFiltro}
-            onChange={setTipoFiltro}
-            options={opcoesTipo}
-          />
+          {!origem && (
+            <FilterSelect
+              id="campanhas-tipo"
+              label={t("Tipo")}
+              value={tipoFiltro}
+              onChange={setTipoFiltro}
+              options={opcoesTipo}
+            />
+          )}
         </FilterPrimary>
         <FilterActions>
           <span className="text-xs text-muted-foreground" aria-live="polite">
@@ -475,10 +501,20 @@ export function CampanhasTab({
       ) : cards.length === 0 ? (
         <NexusEmptyState
           icon={Megaphone}
-          headline={t("Nenhuma campanha ainda.")}
-          subcopy={t("Comece por um recorte de cidades e categorias da sua base.")}
+          headline={
+            origem === "recuperacao"
+              ? t("Nenhuma campanha de recuperação ainda.")
+              : t("Nenhuma campanha ainda.")
+          }
+          subcopy={
+            origem === "regiao"
+              ? t("Comece escolhendo as cidades onde você tem clientes cadastrados.")
+              : origem === "recuperacao"
+                ? t("Crie uma campanha a partir da lista de clientes inativos acima.")
+                : t("Comece por um recorte de cidades e categorias da sua base.")
+          }
           primary={
-            podeOperar
+            podeOperar && origem !== "recuperacao"
               ? {
                   label: t(rotuloCriarPrimeira ?? "Criar primeira campanha"),
                   onClick: aoCriarPrimeira ?? (() => router.push("/app/prospeccao/nova")),
@@ -501,7 +537,12 @@ export function CampanhasTab({
             const status = rotuloDoStatus(chave, t);
             const funil = card.campanha.funil ?? null;
             const respostas = funil?.responderam ?? null;
-            const recuperacao = card.tipo === "descoberta" && card.campanha.publico === "contatos";
+            const regiaoDaCampanha =
+              card.tipo === "descoberta" && ehCampanhaPorRegiao(card.campanha);
+            const recuperacao =
+              card.tipo === "descoberta" &&
+              card.campanha.publico === "contatos" &&
+              !regiaoDaCampanha;
             const contatoIds = card.tipo === "descoberta" ? (card.campanha.contato_ids ?? []) : [];
             const rotaPatch =
               card.tipo === "descoberta"
@@ -586,6 +627,17 @@ export function CampanhasTab({
                           {t("Com erro")}
                         </Badge>
                       )}
+                      {regiaoDaCampanha && (
+                        <Badge
+                          variant="outline"
+                          className="h-5 px-2 text-xs font-normal"
+                          title={t(
+                            "Audiência: todos os clientes cadastrados nas cidades do recorte — campanha por região, não prospecção.",
+                          )}
+                        >
+                          {t("Por região")} · {contatoIds.length}
+                        </Badge>
+                      )}
                       {recuperacao && (
                         <Badge
                           variant="outline"
@@ -602,9 +654,13 @@ export function CampanhasTab({
                     <p className="truncate text-xs text-muted-foreground">
                       {recuperacao
                         ? `${t("Público")}: ${contatoIds.length} ${t("clientes que pararam de comprar")}`
-                        : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
-                            categorias || "—"
-                          }`}
+                        : regiaoDaCampanha
+                          ? `${t("Região")}: ${regiao || "—"} · ${t("Público")}: ${
+                              contatoIds.length
+                            } ${t("clientes cadastrados")}`
+                          : `${t("Região")}: ${regiao || "—"} · ${t("Categorias")}: ${
+                              categorias || "—"
+                            }`}
                     </p>
 
                     {agenda && (

@@ -1,20 +1,21 @@
 /**
- * POST /api/v1/prospecting/campaigns/regiao — campanha para quem já comprou
- * numa região.
+ * POST /api/v1/prospecting/campaigns/regiao — campanha para os clientes de uma
+ * região.
  *
  * ═══ POR QUE ESTA ROTA É PRÓPRIA ═════════════════════════════════════════
  *
  * O contrato é outro: a audiência é `contacts` (cliente, nunca prospect), o
- * recorte é a CIDADE do cadastro cruzada com pedido não cancelado, e o número é
- * escolhido pelo operador (0303). Reaproveitar a criação da prospecção faria o
- * schema virar um "ou" de dois recursos — e o defeito apareceria como campanha
- * de garimpo mandando para cliente próprio.
+ * recorte é a CIDADE do cadastro cruzada com o endereço dos pedidos não
+ * cancelados, e o número é escolhido pelo operador (0303). Reaproveitar a
+ * criação da prospecção faria o schema virar um "ou" de dois recursos — e o
+ * defeito apareceria como campanha de garimpo mandando para cliente próprio.
  *
  * ═══ A AUDIÊNCIA É RECALCULADA AQUI, NÃO VEM DO CORPO ════════════════════
  *
- * O corpo traz as CIDADES, nunca a lista de contatos. O servidor lê os pedidos e
- * o cadastro com `listarClientesPorRegiao` — a mesma função da prévia. Aceitar
- * `contato_ids` da tela deixaria mandar para quem não foi atendido na região.
+ * O corpo traz as CIDADES, nunca a lista de contatos. O servidor lê o cadastro
+ * e os pedidos com `listarClientesPorRegiao` — a mesma função da prévia.
+ * Cliente cadastrado na cidade entra mesmo sem pedido; aceitar `contato_ids` da
+ * tela deixaria mandar para quem não é da região.
  *
  * Contato já reservado por outra campanha sai da lista (0277). O trigger do
  * banco continua sendo a trava final; a 23505 vira 409 com mensagem humana.
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   let contatoIds: string[] = [];
   let semTelefone = 0;
   let pedidosLidos = 0;
+  let contatosLidos = 0;
   let completa = true;
   try {
     const [clientes, reservados] = await Promise.all([
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .filter((c) => c.telefone_e164 !== null && !reservados.has(c.contact_id))
       .map((c) => c.contact_id);
     pedidosLidos = clientes.pedidos_lidos;
+    contatosLidos = clientes.contatos_lidos;
     completa = clientes.completa;
   } catch (e) {
     logger.error("[prospecting.campaigns.regiao] falha ao montar o público", {
@@ -191,6 +194,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       contatos: contatoIds.length,
       sem_telefone: semTelefone,
       pedidos_lidos: pedidosLidos,
+      contatos_lidos: contatosLidos,
       completa,
     },
     { requestId, status: 201 },

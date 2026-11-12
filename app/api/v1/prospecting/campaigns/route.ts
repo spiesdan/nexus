@@ -11,6 +11,11 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { funisDaDescoberta } from "@/lib/prospeccao/funil-lote";
+import {
+  ehCampanhaDeProspeccao,
+  ehCampanhaDeRecuperacao,
+  ehCampanhaPorRegiao,
+} from "@/lib/prospeccao/origem-da-campanha";
 import { conflitosDeReserva, resumoDosConflitos } from "@/lib/prospeccao/reserva-de-campanha";
 import {
   resumirEnvios,
@@ -41,6 +46,21 @@ export async function GET(req: NextRequest): Promise<Response> {
   // FASE 15 (§45): `com_funil=1` traz o funil de TODAS as campanhas em 5
   // queries — a aba Campanhas passou a pedir só as duas listas (N+1 morto).
   const comFunil = req.nextUrl.searchParams.get("com_funil") === "1";
+  // `origem` é o recorte da tela que está pedindo. Cada aba mostra o SEU tipo:
+  //   regiao      — contatos + cidades (aba Campanha)
+  //   prospeccao  — prospects (garimpagem de empresa)
+  //   recuperacao — contatos sem cidades (Radar)
+  // Sem isto a aba Campanha listava a garimpagem e a recuperação, e a
+  // Prospecção listava campanha de região — dois públicos na mesma tela.
+  const origem = req.nextUrl.searchParams.get("origem");
+  const recorte =
+    origem === "regiao"
+      ? ehCampanhaPorRegiao
+      : origem === "prospeccao"
+        ? ehCampanhaDeProspeccao
+        : origem === "recuperacao"
+          ? ehCampanhaDeRecuperacao
+          : null;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospecting_campaigns")
@@ -59,13 +79,17 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
     return fail("internal_error", "Erro ao listar campanhas.", 500, { requestId });
   }
-  const linhas = (data ?? []) as unknown as {
+  const todas = (data ?? []) as unknown as {
     id: string;
     created_at: string;
     prospect_ids?: string[] | null;
     contato_ids?: string[] | null;
     publico?: string | null;
+    cidades?: unknown;
   }[];
+  // O filtro é aplicado ANTES do resumo de envio e do funil: as queries em
+  // lote só olham as campanhas que a tela vai desenhar.
+  const linhas = recorte ? todas.filter(recorte) : todas;
 
   // ── O resumo de envio entra na LISTA, não só no painel ───────────────────
   // O card precisa dizer "22 de 48 enviadas · 26 faltam" sem abrir a campanha.

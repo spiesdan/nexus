@@ -1151,7 +1151,6 @@ export function CampanhaWizard({
                   id="wiz-nome"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  maxLength={120}
                   placeholder={
                     publicoAlvo === "inativos"
                       ? t("Recuperação — clientes sem compra há 90 dias")

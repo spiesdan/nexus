@@ -575,7 +575,10 @@ export function ProspeccaoClient({
         </TabsContent>
 
         <TabsContent value="campanhas" className="mt-4">
-          <CampanhasTab podeOperar={podeBuscar} />
+          {/* A aba Prospecção lista a garimpagem de empresa — e só ela. A
+              recuperação é criada e listada no Radar; a campanha por região
+              fica na subtela Campanha. */}
+          <CampanhasTab podeOperar={podeBuscar} origem="prospeccao" />
         </TabsContent>
 
         {podeGerenciar && (

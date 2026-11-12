@@ -2,13 +2,16 @@
  * GET /api/v1/prospecting/campaigns/regiao/cidades — as cidades com clientes.
  *
  * A campanha por região não escolhe cidade num textarea: ela SELECIONA da lista
- * que existe de verdade na carteira. A pergunta é "onde eu já atendi?", e a
- * resposta cruza pedido não cancelado com `contacts.cidade` — o pedido não
- * guarda cidade (ver `lib/comercial/clientes-por-regiao.ts`).
+ * que existe de verdade na carteira. A pergunta é "onde eu tenho cliente?", e a
+ * resposta cruza o cadastro (`contacts.cidade`) com o pedido não cancelado — o
+ * pedido entra pela cidade do endereço de entrega (ver
+ * `lib/comercial/clientes-por-regiao.ts`).
  *
- * Só entra cidade com pelo menos UM cliente alcançável (telefone em E.164):
- * oferecer uma cidade que não pode receber mensagem é o caminho mais curto para
- * uma campanha vazia. A contagem é de CONTATOS, não de pedidos.
+ * Entram TODOS os clientes cadastrados na cidade, com pedido ou sem — quem
+ * nunca comprou é público da oferta. Só entra cidade com pelo menos UM cliente
+ * alcançável (telefone em E.164): oferecer uma cidade que não pode receber
+ * mensagem é o caminho mais curto para uma campanha vazia. A contagem é de
+ * CONTATOS, não de pedidos.
  *
  * Somente leitura; não reserva nem cria nada.
  */
@@ -40,6 +43,7 @@ export async function GET(): Promise<Response> {
         cidades: agruparPorCidade(alcancaveis),
         clientes: alcancaveis.length,
         pedidos_lidos: clientes.pedidos_lidos,
+        contatos_lidos: clientes.contatos_lidos,
         completa: clientes.completa,
       },
       { requestId },

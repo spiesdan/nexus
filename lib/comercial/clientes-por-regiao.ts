@@ -1,24 +1,27 @@
 /**
- * QUEM JÁ COMPROU NUMA REGIÃO — a audiência da campanha por cidade.
+ * QUEM ESTÁ CADASTRADO NUMA REGIÃO — a audiência da campanha por cidade.
  *
  * ═══ A PERGUNTA ═══════════════════════════════════════════════════════════
  *
- * "Quais clientes já foram atendidos nas cidades que eu escolhi?" Não existe
- * uma coluna só com a resposta: o pedido guarda o ENDEREÇO DE ENTREGA em texto
- * (`commercial_orders.endereco_entrega`, "…, CANOINHAS/SC, 89460048") e o
- * cadastro do contato guarda `cidade`/`uf` — e os dois discordam com frequência.
+ * "Quais clientes estão nas cidades que eu escolhi?" A resposta tem DUAS
+ * fontes, e a audiência é a união das duas:
+ *
+ *   - o CADASTRO do contato (`contacts.cidade`) — inclui quem nunca comprou;
+ *   - o ENDEREÇO DE ENTREGA do pedido (`commercial_orders.endereco_entrega`,
+ *     "…, CANOINHAS/SC, 89460048") — a cidade onde a loja de fato atendeu.
+ *
+ * As duas discordam com frequência e cada uma cobre o que a outra perde.
  * Medido nesta instalação (2026-11-12): 11.814 pedidos não cancelados, 1.898
- * contatos compradores, e a cidade do cadastro sozinha deixava de fora 260
- * clientes que só tinham cidade no endereço do pedido.
+ * contatos compradores, 3.140 contatos com cidade no cadastro — e a cidade do
+ * cadastro sozinha deixava de fora 260 clientes que só tinham cidade no
+ * endereço do pedido. Por isso a função lê os DOIS lados e o contato entra na
+ * cidade quando QUALQUER UM deles o coloca lá:
  *
- * Por isso a função lê os DOIS lados e o cliente entra na cidade quando
- * QUALQUER UM deles o coloca lá:
- *
- *   1. o endereço de entrega do pedido — a cidade onde a loja de fato atendeu;
- *   2. o cadastro do contato (`contacts.cidade`) — quem mudou de endereço mas
- *      continua na mesma cidade, e o pedido antigo não tinha endereço;
- *   3. qualquer pedido NÃO CANCELADO conta como "já atendemos" — a mesma régua
- *      do radar de inativos (`lib/comercial/inativos.ts`);
+ *   1. o cadastro do contato — quem mora na cidade, compre ou não;
+ *   2. o endereço de entrega do pedido — prova de onde a loja atendeu;
+ *   3. qualquer pedido NÃO CANCELADO conta como compra — a mesma régua do
+ *      radar de inativos (`lib/comercial/inativos.ts`); quem nunca comprou
+ *      entra com `pedidos: 0`, e a prévia separa "com pedido" de "sem pedido";
  *   4. o contato entra UMA vez por cidade, somando os pedidos daquele recorte;
  *   5. veto de contato é o MESMO do resto do produto (`contatoPodeReceber`):
  *      STOP, recusa de marketing, anonimizado ou mesclado não recebem campanha.
@@ -42,12 +45,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { contatoPodeReceber } from "@/lib/comercial/inativos";
 import { cidadeSemEstado } from "@/lib/contacts/endereco-em-linha";
 import { normalizaTelefone } from "@/lib/contacts/csv";
-import { nomeDoEstado } from "@/lib/format/estados";
+import { NOMES_DOS_ESTADOS, nomeDoEstado } from "@/lib/format/estados";
 import { chaveDeCidade } from "@/lib/prospeccao/publico-da-base";
 
 /** Teto de PEDIDOS varridos — 20 páginas de 1.000, com ordem estável. */
 const PAGINA = 1_000;
 const MAX_PAGINAS = 20;
+/**
+ * Teto de CONTATOS cadastrados varridos — 10 páginas de 1.000. Medido em
+ * 2026-11-12: 3.140 contatos com cidade nesta instalação, então o teto é
+ * folgado; se um dia encostar, `completa: false` avisa a tela.
+ */
+const MAX_PAGINAS_DE_CONTATOS = 10;
 /** Teto de CONTATOS devolvidos — o mesmo teto do `contato_ids` no schema. */
 export const LIMITE_DE_CLIENTES = 10_000;
 
@@ -94,9 +103,11 @@ export interface CidadeComCliente {
 
 export interface ResultadoDeClientesPorRegiao {
   lista: ClienteDaRegiao[];
-  /** Pedidos lidos até o teto — é o denominador da varredura. */
+  /** Pedidos lidos até o teto — é o denominador da varredura de compra. */
   pedidos_lidos: number;
-  /** `false` = havia mais pedidos do que o teto; a tela não pode dizer "todos". */
+  /** Contatos cadastrados lidos até o teto — o denominador do cadastro. */
+  contatos_lidos: number;
+  /** `false` = havia mais pedidos/contatos do que o teto; a tela não diz "todos". */
   completa: boolean;
 }
 
@@ -137,7 +148,37 @@ export function chaveComparavel(
   cidade: string | null | undefined,
   uf: string | null | undefined,
 ): string {
-  return chaveDeCidade(cidadeSemEstado(cidade, uf)).trim();
+  return chaveDeCidade(cidadeSemEstadoColado(cidade, uf)).trim();
+}
+
+/** O sufixo é nome ou sigla de estado? (para o cadastro que veio sem UF) */
+function ehSufixoDeEstado(sufixo: string): boolean {
+  const bruto = sufixo.trim().toUpperCase();
+  if (bruto === "") return false;
+  // Sigla ("SC") ou nome por extenso ("Santa Catarina", com ou sem acento).
+  if (NOMES_DOS_ESTADOS[bruto]) return true;
+  const semAcento = (t: string) =>
+    t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  return Object.values(NOMES_DOS_ESTADOS).some((nome) => semAcento(nome) === semAcento(bruto));
+}
+
+/**
+ * "Canoinhas, Santa Catarina" → "Canoinhas", MESMO quando a UF não veio.
+ *
+ * `cidadeSemEstado` só corta o sufixo quando conhece a UF. O cadastro importado
+ * tem cidade sem UF (204 contatos nesta instalação) e o nome do estado colado —
+ * e aí a mesma cidade virava uma linha separada na lista de cidades, com o
+ * rótulo comprido. Aqui o sufixo é reconhecido contra os 27 estados.
+ */
+export function cidadeSemEstadoColado(
+  cidade: string | null | undefined,
+  uf: string | null | undefined,
+): string {
+  const nome = cidadeSemEstado(cidade, uf);
+  const corte = nome.lastIndexOf(",");
+  if (corte < 0) return nome;
+  if (!ehSufixoDeEstado(nome.slice(corte + 1))) return nome;
+  return nome.slice(0, corte).trim();
 }
 
 const CHAVE_VAZIA = "";
@@ -199,6 +240,12 @@ export function cidadeCombina(
  * Uma linha por cidade, contando CONTATOS. Um cliente que comprou em duas
  * cidades aparece nas duas (com um voto cada), e as grafias que a chave une
  * ("Canoinhas" / "Canoinhas, Santa Catarina") não viram duas linhas.
+ *
+ * A UF entra na chave porque "Bom Sucesso" existe no PR e na PB — misturar as
+ * duas faria a campanha escolher um estado e perder o outro. Mas cadastro
+ * importado vem sem UF com frequência: quando a cidade tem UM estado conhecido
+ * e o contato veio sem UF, ele entra nessa linha em vez de abrir uma quarta
+ * "Canoinhas" na tela.
  */
 export function agruparPorCidade(
   lista: readonly ClienteDaRegiao[],
@@ -211,19 +258,51 @@ export function agruparPorCidade(
         ? cliente.cidades
         : [{ cidade: cliente.cidade, uf: cliente.uf }];
     for (const c of cidades) {
-      const nome = c.cidade.trim();
-      if (nome === "") continue;
-      const chave = `${chaveComparavel(nome, c.uf)}|${(c.uf ?? "").trim().toUpperCase()}`;
+      // O rótulo é a cidade SEM o estado colado: "Canoinhas, Santa Catarina"
+      // é nome de importador, não de tela.
+      const nome = cidadeSemEstadoColado(c.cidade, c.uf);
+      if (nome.trim() === "") continue;
+      const uf = (c.uf ?? "").trim().toUpperCase() || null;
+      const chave = `${chaveDeCidade(nome)}|${uf ?? ""}`;
       if (vistas.has(chave)) continue;
       vistas.add(chave);
       const atual = porChave.get(chave);
       if (atual) atual.total += 1;
-      else porChave.set(chave, { cidade: nome, uf: c.uf, total: 1 });
+      else porChave.set(chave, { cidade: nome, uf, total: 1 });
     }
   }
-  return [...porChave.values()].sort(
+  return juntarSemUf([...porChave.values()]).sort(
     (a, b) => b.total - a.total || a.cidade.localeCompare(b.cidade, "pt-BR"),
   );
+}
+
+/**
+ * Junta a linha sem UF na linha da cidade quando existe UM estado só para ela.
+ * Com dois estados conhecidos ("Bom Sucesso/PR" e "Bom Sucesso/PB") as linhas
+ * ficam separadas — o operador escolhe o estado, e a campanha compara UF.
+ */
+function juntarSemUf(cidades: CidadeComCliente[]): CidadeComCliente[] {
+  const porNome = new Map<string, CidadeComCliente[]>();
+  for (const c of cidades) {
+    const nome = chaveDeCidade(c.cidade);
+    const grupo = porNome.get(nome) ?? [];
+    grupo.push(c);
+    porNome.set(nome, grupo);
+  }
+  const saida: CidadeComCliente[] = [];
+  for (const grupo of porNome.values()) {
+    const comUf = grupo.filter((c) => c.uf !== null);
+    const alvo = comUf.length === 1 ? comUf[0] : undefined;
+    if (!alvo) {
+      saida.push(...grupo);
+      continue;
+    }
+    for (const c of grupo) {
+      if (c !== alvo) alvo.total += c.total;
+    }
+    saida.push(alvo);
+  }
+  return saida;
 }
 
 /** O embed pode vir como objeto ou array — normaliza sem perder a linha. */
@@ -233,7 +312,11 @@ function contatoDoPedido(pedido: PedidoComContato): ContatoBruto | null {
 }
 
 /**
- * Lista os clientes com pedido não cancelado nas cidades escolhidas.
+ * Lista os clientes das cidades escolhidas — cadastro e histórico de compra.
+ *
+ * A audiência é a UNIÃO: quem está cadastrado na cidade (compre ou não) e quem
+ * tem pedido não cancelado com cidade no endereço de entrega. Quem nunca
+ * comprou entra com `pedidos: 0` e `ultimo_pedido_em: ""`.
  *
  * `cidades: []` (ou omitido) = todas: é o que a rota de cidades usa para montar
  * as opções da tela com a contagem real.
@@ -347,6 +430,75 @@ export async function listarClientesPorRegiao(
     if (pagina === MAX_PAGINAS - 1) completa = false;
   }
 
+  // ── O CADASTRO: quem mora na cidade, com ou sem compra ───────────────────
+  // A varredura de pedidos só enxerga comprador. A campanha por região fala com
+  // os CLIENTES da cidade — quem não comprou ainda é o público mais óbvio de
+  // uma oferta. Esta segunda varredura acrescenta quem falta e a cidade do
+  // cadastro a quem já entrou pelo endereço do pedido.
+  let contatosLidos = 0;
+  for (let pagina = 0; pagina < MAX_PAGINAS_DE_CONTATOS; pagina += 1) {
+    const de = pagina * PAGINA;
+    const { data, error } = await supabase
+      .from("contacts")
+      .select(
+        "id, name, display_name, phone_number, cidade, uf, " +
+          "is_blocked, is_anonymized, is_merged_into, consent",
+      )
+      .eq("organization_id", input.organizationId)
+      // Cadastro sem cidade não pode ser colocado em cidade nenhuma. O filtro
+      // é no banco para a página não vir cheia de contato sem endereço (10.167
+      // dos 13.307 desta instalação).
+      .not("cidade", "is", null)
+      .neq("cidade", "")
+      // Ordem estável pelo id: `range` sem ordem definida pula ou repete linha.
+      .order("id", { ascending: true })
+      .range(de, de + PAGINA - 1);
+
+    if (error) throw new Error(`contatos_indisponiveis: ${error.message}`);
+    const lote = (data ?? []) as unknown as ContatoBruto[];
+    contatosLidos += lote.length;
+
+    for (const contato of lote) {
+      if (!contatoPodeReceber(contato)) continue;
+      const cidadeDoCadastro: CidadeDoContato | null =
+        (contato.cidade ?? "").trim() === ""
+          ? null
+          : {
+              cidade: (contato.cidade ?? "").trim(),
+              uf: (contato.uf ?? "").trim() || null,
+            };
+      if (!cidadeDoCadastro) continue;
+      if (!cidadeCombina(cidadeDoCadastro.cidade, cidadeDoCadastro.uf, cidades)) continue;
+
+      const atual = porContato.get(contato.id);
+      if (atual) {
+        // Já entrou por um pedido: acrescenta a grafia do cadastro (se ainda
+        // não estiver) e não mexe na contagem de pedidos.
+        const chave = `${chaveComparavel(cidadeDoCadastro.cidade, cidadeDoCadastro.uf)}|${(cidadeDoCadastro.uf ?? "").toUpperCase()}`;
+        if (!atual.cidades.has(chave)) atual.cidades.set(chave, cidadeDoCadastro);
+        continue;
+      }
+
+      // Nunca comprou no recorte: entra zerado, e a prévia diz "sem pedido".
+      porContato.set(contato.id, {
+        contato,
+        pedidos: 0,
+        total_cents: 0,
+        ultimo_pedido_em: "",
+        exibicao: cidadeDoCadastro,
+        cidades: new Map([
+          [
+            `${chaveComparavel(cidadeDoCadastro.cidade, cidadeDoCadastro.uf)}|${(cidadeDoCadastro.uf ?? "").toUpperCase()}`,
+            cidadeDoCadastro,
+          ],
+        ]),
+      });
+    }
+
+    if (lote.length < PAGINA) break;
+    if (pagina === MAX_PAGINAS_DE_CONTATOS - 1) completa = false;
+  }
+
   const lista = [...porContato.entries()]
     .map(([contact_id, v]): ClienteDaRegiao => {
       const normalizado = v.contato.phone_number
@@ -369,7 +521,9 @@ export async function listarClientesPorRegiao(
     })
     .sort(
       (a, b) =>
-        Date.parse(b.ultimo_pedido_em) - Date.parse(a.ultimo_pedido_em) ||
+        // Quem já comprou vem primeiro; os dois grupos em ordem de recência.
+        (b.ultimo_pedido_em ? Date.parse(b.ultimo_pedido_em) : 0) -
+          (a.ultimo_pedido_em ? Date.parse(a.ultimo_pedido_em) : 0) ||
         a.nome.localeCompare(b.nome, "pt-BR"),
     );
 
@@ -377,6 +531,7 @@ export async function listarClientesPorRegiao(
   return {
     lista: cortada ? lista.slice(0, limite) : lista,
     pedidos_lidos: pedidosLidos,
+    contatos_lidos: contatosLidos,
     completa: completa && !cortada,
   };
 }

@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 /**
  * A TELA CAMPANHA — a porta do menu para falar com a base.
  *
- * Subtelas: Campanha (por região, cliente que já comprou) e Prospecção (a tela
- * B2B de sempre). O menu passou a ter UMA entrada, e a prospecção virou a
- * segunda subtela — o endereço antigo `/app/prospeccao` redireciona para cá
+ * Subtelas: Campanha (por região, clientes cadastrados na cidade) e Prospecção
+ * (a tela B2B de sempre). O menu passou a ter UMA entrada, e a prospecção virou
+ * a segunda subtela — o endereço antigo `/app/prospeccao` redireciona para cá
  * preservando o `?aba=`, então link salvo e F5 continuam funcionando.
  *
  * A biblioteca de categorias e as buscas iniciais vêm do servidor; a prospecção

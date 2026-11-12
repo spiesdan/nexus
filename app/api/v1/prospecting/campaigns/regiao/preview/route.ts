@@ -1,10 +1,10 @@
 /**
  * POST /api/v1/prospecting/campaigns/regiao/preview
  *
- * A PRÉVIA da campanha por região: "quem já comprou nas cidades escolhidas?".
- * Não cria campanha, não reserva contato e não envia nada — é a mesma promessa
- * verificável da prévia da recuperação: o que aparece aqui é o que a criação vai
- * alcançar.
+ * A PRÉVIA da campanha por região: "quem está cadastrado nas cidades
+ * escolhidas?" — com pedido e sem pedido. Não cria campanha, não reserva
+ * contato e não envia nada — é a mesma promessa verificável da prévia da
+ * recuperação: o que aparece aqui é o que a criação vai alcançar.
  *
  * A lista vem de `listarClientesPorRegiao`, a MESMA função do POST e da lista de
  * cidades. O que esta rota acrescenta é o cruzamento com as reservas: contato já
@@ -61,6 +61,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
 
     const comTelefone = linhas.filter((l) => l.telefone_e164 !== null).length;
+    const comPedido = linhas.filter((l) => l.pedidos > 0).length;
+    const semPedido = linhas.length - comPedido;
     const emCampanha = linhas.filter((l) => l.em_campanha).length;
     const elegiveis = linhas.filter((l) => l.elegivel).length;
 
@@ -77,10 +79,13 @@ export async function POST(req: NextRequest): Promise<Response> {
         regiao: true,
         cidades: parsed.data.cidades,
         total: linhas.length,
+        com_pedido: comPedido,
+        sem_pedido: semPedido,
         com_telefone: comTelefone,
         em_campanha: emCampanha,
         elegiveis,
         pedidos_lidos: clientes.pedidos_lidos,
+        contatos_lidos: clientes.contatos_lidos,
         completa: clientes.completa,
       },
     });
@@ -89,14 +94,18 @@ export async function POST(req: NextRequest): Promise<Response> {
       {
         cidades: parsed.data.cidades,
         total: linhas.length,
+        com_pedido: comPedido,
+        sem_pedido: semPedido,
         com_telefone: comTelefone,
         sem_telefone: linhas.length - comTelefone,
         em_campanha: emCampanha,
         elegiveis,
         pedidos_lidos: clientes.pedidos_lidos,
+        contatos_lidos: clientes.contatos_lidos,
         completa: clientes.completa,
         resumo:
-          `${linhas.length} ${linhas.length === 1 ? "cliente" : "clientes"} com pedido nas cidades escolhidas · ` +
+          `${linhas.length} ${linhas.length === 1 ? "cliente" : "clientes"} nas cidades escolhidas · ` +
+          `${comPedido} com pedido · ${semPedido} sem pedido · ` +
           `${comTelefone} com WhatsApp · ` +
           `${elegiveis} ${elegiveis === 1 ? "pronto" : "prontos"} para receber`,
         linhas,

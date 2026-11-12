@@ -33,16 +33,20 @@ function corpo(valor: unknown): NextRequest {
   });
 }
 
-const cliente = (id: string, telefone: string | null = "+5549999998888") => ({
+const cliente = (
+  id: string,
+  telefone: string | null = "+5549999998888",
+  pedidos = 1,
+) => ({
   contact_id: id,
   nome: id,
   telefone,
   telefone_e164: telefone,
   cidade: "Canoinhas",
   uf: "SC",
-  pedidos: 1,
-  total_cents: 10_000,
-  ultimo_pedido_em: "2026-10-01T12:00:00.000Z",
+  pedidos,
+  total_cents: pedidos * 10_000,
+  ultimo_pedido_em: pedidos > 0 ? "2026-10-01T12:00:00.000Z" : "",
 });
 
 beforeEach(() => {
@@ -55,8 +59,16 @@ beforeEach(() => {
   vi.mocked(idsReservadosPorOutras).mockResolvedValue(new Set<string>() as never);
   vi.mocked(listarClientesPorRegiao).mockReset();
   vi.mocked(listarClientesPorRegiao).mockResolvedValue({
-    lista: [cliente("c-1"), cliente("c-2"), cliente("c-sem", null), cliente("c-reservado")],
+    lista: [
+      cliente("c-1"),
+      cliente("c-2"),
+      cliente("c-sem", null),
+      cliente("c-reservado"),
+      // Cadastrado na cidade e nunca comprou: entra na audiência.
+      cliente("c-novo", "+5549999995555", 0),
+    ],
     pedidos_lidos: 7,
+    contatos_lidos: 12,
     completa: true,
   } as never);
 });
@@ -84,13 +96,19 @@ describe("POST /api/v1/prospecting/campaigns/regiao/preview", () => {
     expect(resposta.status).toBe(200);
 
     const dados = (await resposta.json()).data;
-    expect(dados.total).toBe(4);
-    expect(dados.com_telefone).toBe(3);
+    expect(dados.total).toBe(5);
+    expect(dados.com_pedido).toBe(4);
+    expect(dados.sem_pedido).toBe(1);
+    expect(dados.com_telefone).toBe(4);
     expect(dados.sem_telefone).toBe(1);
     expect(dados.em_campanha).toBe(1);
-    expect(dados.elegiveis).toBe(2);
+    expect(dados.elegiveis).toBe(3);
     expect(dados.pedidos_lidos).toBe(7);
+    expect(dados.contatos_lidos).toBe(12);
     expect(dados.completa).toBe(true);
+    expect(dados.resumo).toContain("5 clientes nas cidades escolhidas");
+    expect(dados.resumo).toContain("4 com pedido");
+    expect(dados.resumo).toContain("1 sem pedido");
 
     const porId = new Map<string, { elegivel: boolean; em_campanha: boolean }>(
       (dados.linhas as Array<{ contact_id: string; elegivel: boolean; em_campanha: boolean }>).map(
@@ -105,7 +123,7 @@ describe("POST /api/v1/prospecting/campaigns/regiao/preview", () => {
     expect(audit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "prospecting_campaigns.public_read",
-        metadata: expect.objectContaining({ regiao: true, elegiveis: 2 }),
+        metadata: expect.objectContaining({ regiao: true, elegiveis: 3 }),
       }),
     );
   });
