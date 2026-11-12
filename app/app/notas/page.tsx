@@ -597,7 +597,11 @@ export default async function NotasPage({
         {podeEmitir && (
           <TabsContent value="emitir" className="mt-4">
             <EmitirNota
-              faturados={faturadosComDestinatario}
+              // Só quem ainda NÃO tem nota viva. O pedido concluído no ERP
+              // mantém o status depois de faturado aqui (o `faturado` do ERP é
+              // outro fato), então sem este corte ele continuaria na lista
+              // depois de emitido — e a segunda tentativa só devolveria 409.
+              faturados={faturadosComDestinatario.filter((p) => !comNotaViva.has(p.id))}
               configInicial={config as unknown as Parameters<typeof EmitirNota>[0]["configInicial"]}
               textos={textos}
             />
