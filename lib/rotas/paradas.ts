@@ -1,10 +1,12 @@
 /**
  * OS PARADOS DA ROTA — tipos e montagem, sem entidade paralela.
  *
- * A parada NÃO é uma tabela: é `shipment_orders` agrupado por cliente.
- * Vários pedidos do mesmo cliente viram UMA parada (o motorista visita uma
- * vez só). O endereço da parada segue a prioridade do negócio: endereço de
- * entrega do pedido → endereço do contato → nada (nunca chute).
+ * A parada NÃO é uma tabela: é `shipment_orders` agrupado por DESTINO.
+ * Vários pedidos do mesmo destino (mesmo cliente, mesmo endereço) viram UMA
+ * parada (o motorista visita uma vez só); pedidos para endereços diferentes são
+ * destinos diferentes e entram como paradas separadas. O endereço da parada
+ * segue a prioridade do negócio: endereço de entrega do pedido → endereço do
+ * contato → nada (nunca chute).
  */
 
 export interface ItemDaParada {
@@ -14,7 +16,7 @@ export interface ItemDaParada {
 }
 
 export interface ParadaDaRota {
-  /** Chave estável: contact_id ou "avulso:<cliente_nome>". */
+  /** Chave estável do destino: `contact_id`/`avulso:<nome>` + "::endereço" quando há destino. */
   chave: string;
   contact_id: string | null;
   cliente: string;
@@ -68,7 +70,13 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
       .toLowerCase()
       .replace(/\s+/g, " ")
       .trim();
-    const chave = i.contact_id ?? `avulso:${nomeChave}`;
+    const base = i.contact_id ?? `avulso:${nomeChave}`;
+    const destino = (i.endereco_entrega ?? "").trim();
+    // Destino é a identidade da parada (prompt §2): o agrupamento não pode usar
+    // o contato/cliente como se o destino fosse esse. Cliente com dois pedidos
+    // para endereços diferentes é DOIS destinos e dois roteiros — agrupar por
+    // contato só fazia a rota colapsar duas ruas diferentes na mesma parada.
+    const chave = destino ? `${base}::${destino}` : base;
     let p = mapa.get(chave);
     if (!p) {
       p = {
@@ -76,7 +84,7 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
         contact_id: i.contact_id,
         cliente: i.contato_nome?.trim() || i.cliente_nome,
         fone: i.fone,
-        endereco: i.endereco_entrega?.trim() || null,
+        endereco: destino || null,
         latitude: i.latitude,
         longitude: i.longitude,
         geo_status: i.geo_status ?? "pendente",

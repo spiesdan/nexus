@@ -457,7 +457,10 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   const primeiro = j[0]!;
   const lat = Number(primeiro.lat);
   const lng = Number(primeiro.lon);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+  // Faixa também: lat/lng fora da ordem geográfica válida não é ponto de
+  // entrega (prompt §3). Só finito não bastava — um valor absurdo entra como
+  // "ok" e pintava a parada no mapa em lugar nenhum/rua errada.
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
   }
   // Número certo: o OSM conhece o imóvel (housenumber ou addresstype).

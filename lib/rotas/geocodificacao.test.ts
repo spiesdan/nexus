@@ -265,6 +265,21 @@ describe("classificarResultado", () => {
     expect(classificarResultado([])).toMatchObject({ estado: "nao_encontrado" });
     expect(classificarResultado(null)).toMatchObject({ estado: "nao_encontrado" });
   });
+
+  it("coordenadas fora de faixa não viram ponto (lat -90..90, lng -180..180)", () => {
+    // Prompt §3/§8 (teste 4): coordenada inválida não é "ok" por não ser null.
+    // Antes só se checava finito — um valor fora de faixa entrava como ponto
+    // válido e a rota desenhava/motorista ia para lugar nenhum.
+    expect(
+      classificarResultado([{ lat: "95", lon: "-50.2", addresstype: "house", address: { house_number: "10", road: "Rua X" } }]),
+    ).toMatchObject({ estado: "erro", latitude: null, longitude: null });
+    expect(
+      classificarResultado([{ lat: "-26.4", lon: "200", addresstype: "house", address: { house_number: "10", road: "Rua X" } }]),
+    ).toMatchObject({ estado: "erro", latitude: null, longitude: null });
+    expect(
+      classificarResultado([{ lat: "abc", lon: "-50.2" }]),
+    ).toMatchObject({ estado: "erro", latitude: null, longitude: null });
+  });
 });
 
 describe("aceitaResultado (precisão com número no cadastro)", () => {

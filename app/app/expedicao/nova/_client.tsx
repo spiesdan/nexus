@@ -448,7 +448,7 @@ export function NovaCargaClient({
                       >
                         <input
                           type="checkbox"
-                          checked={false}
+                          checked={selecionados.includes(p.id)}
                           onChange={() => alternar(p.id)}
                           data-testid={`carga-pedido-${p.numero}`}
                           className="h-4 w-4 shrink-0 accent-accent"
