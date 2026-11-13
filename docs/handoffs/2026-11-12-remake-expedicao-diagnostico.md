@@ -361,14 +361,34 @@ pages (51/51)`).
 3. **Gates finais re-executados** (§8.3): typecheck limpo, lint 0 erros, test:unit 937/9941.
 4. **Release v1.51.1 concluída de ponta a ponta** (§9.1): fragment → dispatch → PR #418 → merge →
    tag v1.51.1 → publish (re-run: SUCCESS) → deploy VPS (exit 0) → health (200 / v1.51.1).
+5. **F5 — fases 1 e 2 entregues** (ver §10.2): serviço Python OR-Tools + contrato + capacidade +
+   rota de otimização por veículos + migration de frota com RLS + tipos + gate de banco verdes.
 
-### 10.2 Pendências registradas (2026-11-13, verificação de fechamento)
+### 10.2 Pendências registradas (2026-11-14, verificação de fechamento)
 
-1. **F5 — OR-Tools/VRPTW multi-motorista + capacidade**: **BLOQUEADO** neste ambiente. O pacote
-   `@google/or-tools` não está acessível ao registry (HTTP 404 persistente) e o modelo de
-   veículo/motorista por carga ainda não existe no schema (não há `vehicle_id`/`driver_id`
-   mapeados em código/SQL nenhum). Sem solver externo e sem modelo, a heurística atual
-   (NN + 2-opt, veículo único) permanece como solver — F5 fica em aberto com justificativa.
+1. **F5 — OR-Tools/VRPTW multi-motorista + capacidade**: **BLOQUEADO** no início da sessão (13/11);
+   destravado na sequência da mesma sessão por **via pip** (`ortools==9.15.6755` instalado;
+   `@google/or-tools` npm com HTTP 404 persistente — bypass documentado). **Fase 1 entregue
+   (commit `baa29b3e` + migration `503362c9`):**
+   - Serviço Python independente `services/rota/` (FastAPI + OR-Tools): `POST /rota/otimizar`
+     com `SolverRequest` (origem + pontos + veículos + tempo_parada_min) e `SolverResponse`
+     (veículos com paradas/distância/duração/geometria).
+   - Contrato Pydantic como fronteira única (`app/contract.py`); matriz de distância via OSRM
+     (`app/osrm.py`, fallback in-process) — OSRM é a fonte; sem OSRM o solver falha fechado.
+   - Capacidade por veículo via `AddDimensionWithVehicleCapacity` (solver devolve
+     `sem_solucao` quando demanda > capacidade).
+   - Extração de rotas via cumul (`start_val < cumul <= end_val`, nó 0 = depósito excluído);
+     geometria OSRM pós-otimização (`rota_fn`).
+   - Cliente TS `lib/expedicao/roteador-vrptw.ts` (Zod + fail-closed `SolverIndisponivelError`).
+   - Rota `POST /api/v1/shipments/[id]/rota/otimizar/veiculos` (carga → pontos → serviço →
+     distribuição por veículo).
+   - Testes: TS contrato (4/4), pytest solver + endpoint (5/5).
+   - **F5 — Fase 2 entregue (2026-11-14)**: migration `0306_frota_veiculos_motoristas` criando
+     `fleet_vehicles` + `fleet_drivers` (tenant-aware, RLS por comando), apêndice no baseline,
+     MANIFEST, `database.types.ts`, seed comportamental de RLS (gate `pnpm test:db` verde).
+   - **Ainda não**: VRPTW com veículos reais persistidos (fleet tables vazias em runtime) e UI
+     de confirmação de distribuição — trabalho de integração com o front/end de frota. F5
+     permanece em andamento, não em bloqueio.
 2. **§1.1 MapLibre / §1.2 Photon-Pelias / §1.3 Table API**: bloqueadas por decisão/arquitetura
    registrada — substituições são trabalho futuro com justificativa técnica.
 3. **§6.2 design visual premium**: pendente (além do layout de áreas).
