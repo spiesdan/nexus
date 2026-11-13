@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.2] — 2026-11-13
+
+### Corrigido
+
+- **Página de rota com o mapa grande em cima e o worker do mapa servido de verdade** O mapa da expedição passou a ocupar o topo da página, largo e alto, com os números da carga (entregas, quantas estão no mapa, distância, tempo e mercadorias) numa faixa acima dele — antes esses números flutuavam **por cima** do desenho da rota, e o mapa era uma coluna estreita no meio. Os painéis de trabalho (ordem de entrega, planejamento, recuperação de endereços e distribuição por veículo) ficam abaixo, em colunas iguais.
+
+  O traçado da rota voltou a aparecer. O worker do MapLibre é um módulo `.mjs`, e o proxy de autenticação não reconhecia essa extensão como arquivo estático: respondia um redirecionamento para o login no lugar do módulo, e o navegador abortava com "non-JavaScript MIME type of text/html". Os pinos apareciam porque são elementos da página; as linhas, que dependem do worker para indexar a geometria, não. O worker agora é servido por `/maplibre-gl-worker.mjs` (200, `application/javascript`) e um teste reprova se a extensão voltar a passar pelo proxy.
+
 ## [1.52.1] — 2026-11-13
 
 ### Alterado
@@ -7068,7 +7076,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.2...HEAD
+[1.52.2]: https://github.com/spiesdan/nexus/compare/v1.52.1...v1.52.2
 [1.52.1]: https://github.com/spiesdan/nexus/compare/v1.52.0...v1.52.1
 [1.52.0]: https://github.com/spiesdan/nexus/compare/v1.51.1...v1.52.0
 [1.51.1]: https://github.com/spiesdan/nexus/compare/v1.51.0...v1.51.1
