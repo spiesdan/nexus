@@ -1333,6 +1333,13 @@ export function Roteirizador({
           </Card>
         )}
 
+        {/* ── Recuperação de endereços (Address Recovery Engine, 0309) ──────
+            Fica ao lado do planejamento porque é pré-requisito dele: com
+            endereço sem confirmação o servidor recusa otimizar. */}
+        {editavel && (
+          <PainelRecuperacao cargaId={cargaId} podeOperar={podeOperar} aoAtualizar={recarregar} />
+        )}
+
         {/* ── Distribuição por veículo (F5 / VRPTW) ────────────────────────
             O passo que faltava: sem esta tela, a distribuição do OR-Tools
             morria na resposta HTTP. Aqui o operador escolhe QUEM participa,
@@ -1561,13 +1568,6 @@ export function Roteirizador({
               )}
             </div>
           </Card>
-        )}
-
-        {/* ── Recuperação de endereços (Address Recovery Engine, 0309) ──────
-            Fica ao lado do planejamento porque é pré-requisito dele: com
-            endereço sem confirmação o servidor recusa otimizar. */}
-        {editavel && (
-          <PainelRecuperacao cargaId={cargaId} podeOperar={podeOperar} aoAtualizar={recarregar} />
         )}
 
         {/* ── A ordem de entrega ────────────────────────────────────────── */}

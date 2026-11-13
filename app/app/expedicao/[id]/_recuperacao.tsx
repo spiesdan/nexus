@@ -233,7 +233,7 @@ export function PainelRecuperacao({
 
   if (carregando) {
     return (
-      <Card className="min-w-0 p-0 xl:order-4">
+      <Card className="min-w-0 p-0 xl:order-3">
         <div className="space-y-2 p-3.5">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-3 w-full" />
@@ -247,7 +247,7 @@ export function PainelRecuperacao({
   // e dizer isso é melhor que mostrar um painel vazio sem explicação.
   if (!destinos || destinos.length === 0) {
     return (
-      <Card className="min-w-0 p-0 xl:order-4">
+      <Card className="min-w-0 p-0 xl:order-3">
         <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -274,7 +274,7 @@ export function PainelRecuperacao({
   const zona = resumo?.pendentes ?? pendentes.length;
 
   return (
-    <Card className="min-w-0 p-0 xl:order-4">
+    <Card className="min-w-0 p-0 xl:order-3">
       <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">

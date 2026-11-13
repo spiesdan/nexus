@@ -501,6 +501,15 @@ export function MapaRota({
       const lib = (modulo as unknown as { default?: typeof import("maplibre-gl") }).default ?? modulo;
       if (cancelado || !refCaixa.current || refMapa.current) return;
       refLib.current = lib;
+      // ─── WORKER DO MAPLIBRE: EM NEXT.JS, O CAMINHO É O DO PUBLIC ───────────
+      //
+      // O MapLibre resolve o worker a partir de `import.meta.url` do bundle,
+      // que num build Next/Turbopack aponta para um chunk sem o worker ao lado.
+      // Sem isto, o console enche de "Worker failed to load" e as rotas (GeoJSON)
+      // não pintam — o worker é quem indexa os tiles e desenha as camadas.
+      // Copiar `maplibre-gl-worker.mjs` para `public/` e apontar `setWorkerUrl`
+      // resolve: o Next serve `/maplibre-gl-worker.mjs` com MIME correto.
+      lib.setWorkerUrl("/maplibre-gl-worker.mjs");
       const mapa = new lib.Map({
         container: refCaixa.current,
         // O estilo é inline (raster do OSM): sem `style.json` remoto, sem
