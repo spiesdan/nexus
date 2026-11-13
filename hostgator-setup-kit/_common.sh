@@ -650,6 +650,9 @@ IMG_MERCOS="${IMG_NS}/nexus-mercos"
 # levaria sozinho para outra release. O app fala com ele por HTTP; as duas
 # pontas em versões diferentes é o mesmo parque misturado que esta lista evita.
 IMG_OCR="${IMG_NS}/nexus-ocr"
+# O solver de rotas (F5) também é pino: o app e o solver falam um contrato HTTP
+# versionado, e um `up -d` não pode levar só um dos lados para outra release.
+IMG_ROTA="${IMG_NS}/nexus-rota"
 
 # A última versão publicada (ex.: "1.2.1"), ou vazio se não deu para saber.
 #
@@ -755,7 +758,7 @@ pin_incompleto() {  # pin_incompleto [caminho do .env]
   app_tag="$(tag_da_imagem "$app_ref")"
   case "$app_tag" in latest|main|stable|"") return 0 ;; esac
 
-  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler" "FISCAL_IMAGE:fiscal" "MERCOS_IMAGE:mercos" "OCR_IMAGE:ocr"; do
+  for par in "WORKER_IMAGE:worker" "SCHEDULER_IMAGE:scheduler" "FISCAL_IMAGE:fiscal" "MERCOS_IMAGE:mercos" "OCR_IMAGE:ocr" "ROTA_IMAGE:rota"; do
     chave="${par%%:*}"; svc="${par##*:}"
     img="$(valor_do_env "$envfile" "$chave")"
     if [ -z "$img" ]; then
@@ -840,6 +843,8 @@ gravar_imagens() {
   set_env_var "$envfile" MERCOS_PULL_POLICY    "$politica"
   set_env_var "$envfile" OCR_IMAGE             "${IMG_OCR}:${versao}"
   set_env_var "$envfile" OCR_PULL_POLICY       "$politica"
+  set_env_var "$envfile" ROTA_IMAGE            "${IMG_ROTA}:${versao}"
+  set_env_var "$envfile" ROTA_PULL_POLICY       "$politica"
   set_env_var "$envfile" SCHEDULER_PULL_POLICY "$politica"
 }
 

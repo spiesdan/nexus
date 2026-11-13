@@ -82,6 +82,7 @@ const IMAGENS = [
   "nexus-fiscal-sidecar",
   "nexus-mercos",
   "nexus-ocr",
+  "nexus-rota",
 ];
 
 describe("o canal `stable` move em bloco", () => {
@@ -103,7 +104,7 @@ describe("o canal `stable` move em bloco", () => {
     ).toEqual([]);
   });
 
-  it("o job de promoção espera as seis imagens E o boot do app — nem uma a menos", () => {
+  it("o job de promoção espera as sete imagens E o boot do app — nem uma a menos", () => {
     const needs = /needs:\s*\[([^\]]*)\]/.exec(corpo(publish, "promover-stable"))?.[1];
     expect(needs, "o job de promoção não declara `needs`").toBeDefined();
     // Conjunto exato, não `toContain`: exigir a presença de um deixaria remover
@@ -118,7 +119,7 @@ describe("o canal `stable` move em bloco", () => {
     expect(corpo(publish, "promover-stable")).not.toMatch(/always\(\)/);
   });
 
-  it("as seis imagens são promovidas — o canal não anda pela metade nem aqui", () => {
+  it("as sete imagens são promovidas — o canal não anda pela metade nem aqui", () => {
     const t = corpo(publish, "promover-stable");
     for (const img of IMAGENS) expect(t, `a promoção não cita ${img}`).toContain(img);
   });

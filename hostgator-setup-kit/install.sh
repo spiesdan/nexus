@@ -1510,6 +1510,10 @@ esac
   # contrato é HTTP nosso, mas o app espera o formato que a imagem dele devolve.
   envq OCR_IMAGE "${IMG_OCR}:${TAG_ALVO}"
   envq OCR_PULL_POLICY "$PULL_POLICY_ALVO"
+  # O solver de rotas na MESMA versão: o contrato HTTP (campos e status) é
+  # nosso, e um lado velho com o outro novo é resposta que a tela não entende.
+  envq ROTA_IMAGE "${IMG_ROTA}:${TAG_ALVO}"
+  envq ROTA_PULL_POLICY "$PULL_POLICY_ALVO"
   envq DOMAIN "$DOMAIN"
   envq ACME_EMAIL "$ACME_EMAIL"
   printf '# Proxy reverso: "caddy" (o kit sobe o dele nas portas 80/443) ou "traefik"\n'

@@ -404,3 +404,40 @@ honesta (faixa + cache), sequência manual com invalidação de geometria, cache
 de três áreas na rota, tempo real verificado como existente, subtelas auditadas, bug crítico de UI
 corrigido e release v1.51.1 publicada/deployada/saudável. Pendências remanescentes são exatamente as
 registradas nos §§6/7/8/10 — nenhuma nova regra de negócio foi inventada nesta entrega.
+
+### 10.4 Revisão do F5 antes de publicar (2026-11-14) — defeitos encontrados e corrigidos
+
+O PR de release #419 (1.51.0) foi **fechado sem merge**. A revisão do que estava na branch
+encontrou cinco defeitos que o changelog e os testes verdes escondiam:
+
+1. **Release errada**: a branch foi cortada de uma base anterior à v1.51.0/v1.51.1, então o PR
+   reescrevia a seção 1.51.0 já publicada (conflito com a `main`), calculou um número que já
+   existia (`v1.51.0`) e **não levou o fragmento do F5** (`.changes/rota-vrptw-servico-python.md`
+   nunca foi commitado). Rebaseada na `main` (`9c8b71ed`) e recortada de novo.
+2. **A primeira entrega virava depósito e desaparecia**: a rota não mandava `origem`, o solver
+   usava `pontos[0]` como base e a excluía das entregas. O teste existente *consagrava* o bug
+   (`ids_entregas == {"p2"}`). Agora a origem vai no contrato (da carga/body) e, sem ela, o
+   serviço cria um depósito virtual na coordenada da primeira entrega **mantendo-a como entrega**.
+3. **A "capacidade" media distância, não peso**: `AddDimensionWithVehicleCapacity` recebia o
+   callback de distância. Com capacidade real (ex.: 1.000 kg), qualquer rota acima de 1 km virava
+   "sem solução". Agora peso (gramas) e volume (litros) têm dimensões próprias, com callback de
+   demanda; `sem_solucao` traz `motivo` e todas as entregas em `entregas_nao_alocadas`.
+4. **Peso era zero fixo no handler** (`peso_kg: 0`): nenhuma restrição de capacidade podia
+   valer. Agora o peso/volume saem de `catalog_products` (peso bruto × quantidade; volume pelas
+   três dimensões quando existem) e o que falta de dado sai em `restricoes_nao_aplicadas`.
+5. **Serviço sem deploy**: sem `Dockerfile`, sem serviço no compose, sem imagem publicada e sem
+   `ROTA_SOLVER_URL` no `.env`/`lib/env.ts` — o F5 não teria como rodar em VPS nenhuma. Agora a
+   imagem `nexus-rota` é publicada pelo CI (matriz + `promover-stable`), o compose sobe `rota` na
+   rede interna, e o kit (`_common.sh`/`install.sh`/`update.sh`/`.env.hostgator.example`) pina
+   `ROTA_IMAGE` na mesma versão dos demais.
+
+Também entraram: `versao_algoritmo`, `tempo_execucao_ms`, `matriz_provedor`, limite de busca
+(`limite_busca_s`) com Guided Local Search, jornada e janelas no modelo de tempo, rota aberta de
+custo zero e geometria começando na base. Testes do solver: 10 (pytest), incluindo "todas as
+entregas aparecem uma vez", "capacidade respeitada por veículo", "capacidade insuficiente devolve
+motivo", "id do veículo é o do request" e "sem peso não finge capacidade".
+
+**Ainda não** (próxima entrega, registrado de propósito): tela de confirmar a distribuição por
+veículo, cadastro de frota (as tabelas existem, sem UI) e persistência da rota multi-veículo como
+versão. O endpoint devolve a distribuição, mas não grava `rota_versao` — não há tabela por veículo
+e inventar uma agora seria schema sem operação que o use.

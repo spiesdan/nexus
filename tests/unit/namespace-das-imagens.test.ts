@@ -85,7 +85,7 @@ function reposDoKit(): string[] {
   // lista pelo motivo do resto: imagem nossa precisa ser construída e pinada
   // pelo CI, senão o `update.sh` não a traz e o serviço fica numa versão que
   // ninguém atualiza.
-  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL", "IMG_MERCOS", "IMG_OCR"].map((chave) => {
+  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL", "IMG_MERCOS", "IMG_OCR", "IMG_ROTA"].map((chave) => {
     const m = COMUM.match(new RegExp(`^${chave}="\\$\\{IMG_NS\\}/([^"]+)"$`, "m"));
     if (!m?.[1]) {
       throw new Error(
@@ -147,7 +147,7 @@ describe("o default do compose diz o mesmo que o kit", () => {
   });
 });
 
-describe("o sidecar fiscal, o importador do Mercos e o OCR também são pinos do kit", () => {
+describe("o sidecar fiscal, o importador do Mercos, o OCR e o solver de rotas também são pinos do kit", () => {
   // Não entram na lista `CHAVES` acima porque ela usa o índice para casar com
   // `reposDoKit()`; a conferência deles fica explícita, e cobre as duas
   // declarações independentes — o default do compose e o template do .env.
@@ -155,6 +155,7 @@ describe("o sidecar fiscal, o importador do Mercos e o OCR também são pinos do
     ["nexus-fiscal-sidecar", "FISCAL_IMAGE"],
     ["nexus-mercos", "MERCOS_IMAGE"],
     ["nexus-ocr", "OCR_IMAGE"],
+    ["nexus-rota", "ROTA_IMAGE"],
   ] as const) {
     it(`o default de ${chave} no compose usa o namespace de IMG_NS`, () => {
       const m = COMPOSE.match(new RegExp(`^\\s*image: \\$\\{${chave}:-([^}]+)\\}`, "m"));

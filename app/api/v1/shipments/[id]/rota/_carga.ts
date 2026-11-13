@@ -81,18 +81,59 @@ export async function carregarCargaComParadas(
     .eq("organization_id", orgId)
     .in("order_id", idsPedidos)
     .order("posicao");
-  const porPedidoItens = new Map<string, { codigo: string; nome: string; quantidade: number }[]>();
-  for (const it of (itensProdutos ?? []) as unknown as {
+  const listaItensProdutos = (itensProdutos ?? []) as unknown as {
     order_id: string;
     produto_codigo: string;
     produto_nome: string;
     quantidade: number;
-  }[]) {
+  }[];
+
+  // PESO E VOLUME DO QUE VAI NA CARGA — sem inventar número.
+  //
+  // O solver usa a matriz rodoviária e a capacidade dos veículos; para a
+  // capacidade significar algo, a demanda de cada parada precisa vir do
+  // cadastro do produto (`catalog_products`), não de um zero fixo. Produto
+  // sem `peso_bruto_kg` fica SEM peso (a resposta dirá que a restrição não
+  // foi aplicada) — ausência não vira zero silencioso.
+  //
+  // Volume só é derivado quando as três dimensões existem: cm³ → m³.
+  const codigosProdutos = [...new Set(listaItensProdutos.map((i) => (i.produto_codigo ?? "").trim()).filter(Boolean))];
+  const fisicoPorCodigo = new Map<string, { pesoKg: number | null; volumeM3: number | null }>();
+  if (codigosProdutos.length > 0) {
+    const { data: produtos } = await supabase
+      .from("catalog_products")
+      .select("codigo, peso_bruto_kg, altura_cm, largura_cm, comprimento_cm")
+      .eq("organization_id", orgId)
+      .in("codigo", codigosProdutos);
+    for (const p of (produtos ?? []) as unknown as {
+      codigo: string;
+      peso_bruto_kg: number | null;
+      altura_cm: number | null;
+      largura_cm: number | null;
+      comprimento_cm: number | null;
+    }[]) {
+      const dimensoes = [p.altura_cm, p.largura_cm, p.comprimento_cm];
+      const volumeM3 =
+        dimensoes.every((d) => d != null && d > 0)
+          ? (Number(p.altura_cm) * Number(p.largura_cm) * Number(p.comprimento_cm)) / 1_000_000
+          : null;
+      fisicoPorCodigo.set(p.codigo.trim(), { pesoKg: p.peso_bruto_kg ?? null, volumeM3 });
+    }
+  }
+
+  const porPedidoItens = new Map<
+    string,
+    { codigo: string; nome: string; quantidade: number; peso_unit_kg: number | null; volume_unit_m3: number | null }[]
+  >();
+  for (const it of listaItensProdutos) {
     const listaItens = porPedidoItens.get(it.order_id) ?? [];
+    const fisico = fisicoPorCodigo.get((it.produto_codigo ?? "").trim());
     listaItens.push({
       codigo: it.produto_codigo ?? "",
       nome: it.produto_nome ?? "",
       quantidade: Number(it.quantidade ?? 0),
+      peso_unit_kg: fisico?.pesoKg ?? null,
+      volume_unit_m3: fisico?.volumeM3 ?? null,
     });
     porPedidoItens.set(it.order_id, listaItens);
   }

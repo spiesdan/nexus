@@ -246,6 +246,14 @@ const schema = z.object({
   /** Teto de uma leitura de OCR. CPU em 2 vCPUs leva segundos; 60 s é folga. */
   OCR_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(60_000).catch(60_000),
   /**
+   * Solver de rotas (serviço Python/OR-Tools). Opcional de propósito: sem ele
+   * no ar a rota de otimização responde 503, mas o resto da expedição continua
+   * funcionando — derrubar o boot por um serviço de uma tela seria trocar um
+   * recurso por todos.
+   */
+  ROTA_SOLVER_URL: z.string().optional().default(""),
+  ROTA_SOLVER_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(30_000).catch(30_000),
+  /**
    * Teto de NEGÓCIOS decididos por passada do cron de risco (15 min).
    *
    * O custo é medido, não estimado: 64 estados com uma pergunta custam ~12,5 s

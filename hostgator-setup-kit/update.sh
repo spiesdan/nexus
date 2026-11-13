@@ -298,6 +298,9 @@ export MERCOS_IMAGE="${IMG_MERCOS}:${VERSAO_ALVO}"
 # mesma versão. Sem este export, o serviço cairia no default `:stable` do
 # compose enquanto o resto fica pinado.
 export OCR_IMAGE="${IMG_OCR}:${VERSAO_ALVO}"
+# O solver de rotas também: o app e o solver falam um contrato HTTP nosso, e
+# versões diferentes dos dois lados é resposta que a tela não entende.
+export ROTA_IMAGE="${IMG_ROTA}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
 # O segredo do sidecar tem de existir ANTES do `dc pull`, e não só antes do

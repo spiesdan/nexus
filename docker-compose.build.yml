@@ -45,3 +45,7 @@ services:
   ocr:
     image: ${OCR_IMAGE:-nexus-ocr:local}
     pull_policy: never
+
+  rota:
+    image: ${ROTA_IMAGE:-nexus-rota:local}
+    pull_policy: never

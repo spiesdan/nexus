@@ -13,6 +13,10 @@ export interface ItemDaParada {
   codigo: string;
   nome: string;
   quantidade: number;
+  /** Peso bruto unitário do cadastro do produto; null = sem dado. */
+  peso_unit_kg?: number | null;
+  /** Volume unitário (m³) derivado das dimensões; null = dimensões incompletas. */
+  volume_unit_m3?: number | null;
 }
 
 export interface ParadaDaRota {
