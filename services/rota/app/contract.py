@@ -72,6 +72,8 @@ class SolverResponse(BaseModel):
 
     @model_validator(mode="after")
     def _validar_status(self) -> "SolverResponse":
-        if self.erro:
+        # `sem_solucao` e estado esperado (demanda > capacidade) — so um
+        # status de sucesso com erro INVALIDO e rejeitado aqui.
+        if self.status == "otimizado" and self.erro:
             raise ValueError(self.erro)
         return self
