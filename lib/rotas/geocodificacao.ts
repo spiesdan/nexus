@@ -20,6 +20,25 @@ export interface ResultadoGeo {
   latitude: number | null;
   longitude: number | null;
   precisao: PrecisaoGeo | null;
+  /**
+   * Componentes do endereço do CANDIDATO, como o provedor devolveu.
+   *
+   * O Address Recovery Engine compara cada componente com o que o vendedor
+   * digitou para aplicar os vetos duros (UF, CEP, município). Sem isto o
+   * motor não teria como saber que o candidato é de outra cidade — e aceitar
+   * o primeiro resultado é exatamente o defeito que o requisito proíbe.
+   *
+   * Opcional porque `geocodificarEndereco` (consulta crua) também devolve
+   * ResultadoGeo; quando o provedor não traz `addressdetails`, fica ausente.
+   */
+  componentes?: {
+    rua: string | null;
+    numero: string | null;
+    bairro: string | null;
+    municipio: string | null;
+    uf: string | null;
+    cep: string | null;
+  };
 }
 
 export interface PartesEndereco {
@@ -475,6 +494,25 @@ export interface CandidatoNominatim {
     suburb?: string;
     municipality?: string;
     postcode?: string;
+    state?: string;
+    "ISO3166-2-lvl4"?: string;
+  };
+}
+
+/**
+ * Componentes do endereço que o provedor devolveu, no vocabulário do motor.
+ * `uf` vem de `state` ou do código ISO (o Nominatim usa um dos dois conforme a
+ * região); o resto é direto.
+ */
+function componentesDoCandidato(c: CandidatoNominatim): NonNullable<ResultadoGeo["componentes"]> {
+  const a = c.address;
+  return {
+    rua: a?.road ?? null,
+    numero: a?.house_number ?? null,
+    bairro: a?.suburb ?? null,
+    municipio: a?.city ?? a?.town ?? a?.village ?? a?.municipality ?? null,
+    uf: a?.state ?? a?.["ISO3166-2-lvl4"]?.replace(/^BR-/, "") ?? null,
+    cep: a?.postcode ?? null,
   };
 }
 
@@ -495,9 +533,10 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
   }
+  const componentes = componentesDoCandidato(primeiro);
   // Número certo: o OSM conhece o imóvel (housenumber ou addresstype).
   if (primeiro.address?.house_number || primeiro.addresstype === "house" || primeiro.addresstype === "building") {
-    return { estado: "ok", latitude: lat, longitude: lng, precisao: "numero" };
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "numero", componentes };
   }
   // Rua aproximada: todos os candidatos são a mesma rua na mesma cidade
   // (o OSM do interior raramente tem número — o trecho basta para a rota,
@@ -508,16 +547,16 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   const mesmaCidade =
     cidadeRes === "" || j.every((c) => (c.address?.city ?? c.address?.town ?? c.address?.village ?? "").toLowerCase() === cidadeRes);
   if (mesmaRua && mesmaCidade) {
-    return { estado: "ok", latitude: lat, longitude: lng, precisao: "rua" };
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "rua", componentes };
   }
   // Lugar (CEP, município): não é a rua, mas é um ponto honesto do
   // território. Quem chama decide se aceita — a cadeia de rua ignora e
   // segue; só as consultas de emergência param aqui.
   if (BAIRROS_APROXIMADOS.has(primeiro.addresstype ?? "")) {
-    return { estado: "ok", latitude: lat, longitude: lng, precisao: "bairro" };
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "bairro", componentes };
   }
   if (LUGARES_APROXIMADOS.has(primeiro.addresstype ?? "")) {
-    return { estado: "ok", latitude: lat, longitude: lng, precisao: "cidade" };
+    return { estado: "ok", latitude: lat, longitude: lng, precisao: "cidade", componentes };
   }
   return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
 }

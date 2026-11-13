@@ -56,6 +56,16 @@ export interface ParadaDaRota {
   veiculo_id: string | null;
   motorista_id: string | null;
   sequencia_veiculo: number | null;
+  /**
+   * Address Recovery Engine (migration 0309). Estado da recuperação do
+   * DESTINO, com o que o vendedor digitou e o que o motor encontrou — a tela
+   * mostra os dois lado a lado, nunca um no lugar do outro.
+   */
+  recuperacao_status?: string | null;
+  endereco_original?: string | null;
+  endereco_recuperado?: string | null;
+  recuperacao_confianca?: number | null;
+  recuperacao_metodo?: string | null;
 }
 
 export interface ItemDaCargaParaParada {
@@ -85,6 +95,12 @@ export interface ItemDaCargaParaParada {
   veiculo_id?: string | null;
   motorista_id?: string | null;
   sequencia_veiculo?: number | null;
+  /** Address Recovery Engine (0309) — estado do DESTINO, não do pedido. */
+  recuperacao_status?: string | null;
+  endereco_original?: string | null;
+  endereco_recuperado?: string | null;
+  recuperacao_confianca?: number | null;
+  recuperacao_metodo?: string | null;
 }
 
 /**
@@ -132,6 +148,11 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
         veiculo_id: null,
         motorista_id: null,
         sequencia_veiculo: null,
+        recuperacao_status: i.recuperacao_status ?? null,
+        endereco_original: i.endereco_original ?? null,
+        endereco_recuperado: i.endereco_recuperado ?? null,
+        recuperacao_confianca: i.recuperacao_confianca ?? null,
+        recuperacao_metodo: i.recuperacao_metodo ?? null,
         menorSeq: i.sequencia,
       };
       mapa.set(chave, p);

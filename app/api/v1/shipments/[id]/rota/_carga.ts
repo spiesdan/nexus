@@ -178,11 +178,18 @@ export async function carregarCargaComParadas(
     longitude: number | null;
     geo_status: string | null;
     geo_fonte: string | null;
+    recuperacao_status: string | null;
+    endereco_original: string | null;
+    endereco_recuperado: string | null;
+    confianca: number | null;
+    metodo: string | null;
   }>();
   if (idsDestinos.length > 0) {
     const { data: destinos } = await supabase
       .from("shipment_destinations")
-      .select("id, endereco, latitude, longitude, geo_status, geo_fonte")
+      .select(
+        "id, endereco, latitude, longitude, geo_status, geo_fonte, recuperacao_status, endereco_original, endereco_recuperado, confianca, metodo",
+      )
       .eq("organization_id", orgId)
       .in("id", idsDestinos);
     for (const d of (destinos ?? []) as unknown as {
@@ -192,6 +199,11 @@ export async function carregarCargaComParadas(
       longitude: number | null;
       geo_status: string | null;
       geo_fonte: string | null;
+      recuperacao_status: string | null;
+      endereco_original: string | null;
+      endereco_recuperado: string | null;
+      confianca: number | null;
+      metodo: string | null;
     }[]) {
       porDestino.set(d.id, d);
     }
@@ -292,6 +304,13 @@ export async function carregarCargaComParadas(
       sequencia_veiculo: i.sequencia_veiculo,
       janela_inicio: i.janela_inicio,
       janela_fim: i.janela_fim,
+      // Estado da recuperação do DESTINO (0309) — a tela mostra o original e
+      // o sugerido lado a lado. Em carga legada (sem destino) fica null.
+      recuperacao_status: destino?.recuperacao_status ?? null,
+      endereco_original: destino?.endereco_original ?? null,
+      endereco_recuperado: destino?.endereco_recuperado ?? null,
+      recuperacao_confianca: destino?.confianca ?? null,
+      recuperacao_metodo: destino?.metodo ?? null,
     };
   });
 
