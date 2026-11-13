@@ -8,6 +8,45 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.0] — 2026-11-13
+
+### Adicionado
+
+- **Recuperação de endereços com confiança auditável** A expedição ganha o **Address Recovery Engine**: quando o endereço de uma entrega não localiza, o sistema tenta recuperá-lo em cinco passos — endereço original, normalização (acento, abreviação, CEP), correção de digitação, busca por componentes e provedor alternativo (Photon, opcional) — e **mostra ao operador o que encontrou, com que confiança e por quê**.
+
+  O ponto central é a régua: **correção automática só acontece com confiança alta, componentes verificáveis do provedor e precisão de rua ou número**. UF, CEP ou município divergente são vetos duros que nunca corrigem sozinhos; centroide de bairro ou cidade nunca vira pino de entrega; e o Photon sugere, não decide. Quando a evidência não fecha, o destino fica **aguardando confirmação** em vez de receber um ponto inventado — a regra é preferir pedir confirmação humana a mandar o motorista ao endereço errado.
+
+  **Nada é sobrescrito.** O endereço que o vendedor digitou fica em `endereco_original`, imutável; o que o sistema encontrou vai para `endereco_recuperado`. Toda tentativa vira uma linha append-only em `shipment_destination_recoveries` (provedor, consulta, candidato, score, motivo, autor, data) — é o histórico auditável e a base da reversão. Desfazer uma correção volta ao original e registra mais uma linha; o histórico nunca é apagado.
+
+  **A otimização passa a exigir endereço resolvido.** Cargas com destino sem coordenada válida ou aguardando confirmação são recusadas com a lista dos pendentes, em vez de sair com um pino errado. O operador pode seguir mesmo assim por decisão explícita (`ignorar_pendentes`), e a tela pergunta antes. Cargas que já existiam não param: destino com pino válido é marcado como resolvido pelo backfill da migration.
+
+  **O planejador ganhou o painel de recuperação**: contadores por estado, botão para recuperar em lote, a lista com original e sugerido lado a lado, confiança, método e motivo, e as ações **confirmar**, **rejeitar** e **desfazer**. A sugestão continua disponível depois de recarregar a página — ela é lida do histórico, não da memória da tela.
+
+- **Roteirização multi-veículo com Google OR-Tools (VRPTW)** A expedição ganha um otimizador de rotas de verdade: um serviço Python independente (FastAPI + Google OR-Tools, publicado pelo CI como imagem `nexus-rota`) recebe as entregas da carga e devolve a distribuição por veículo, com sequência, distância, duração, **horário de chegada em cada parada** e geometria rodoviária de cada rota.
+
+  O solver usa a matriz do OSRM (distância **e** duração pelas ruas) e aplica, como restrições de verdade:
+
+  - **capacidade de peso e de volume por veículo** — dimensões próprias (`AddDimensionWithVehicleCapacity`), alimentadas pelo peso bruto e pelas dimensões do produto no cadastro;
+  - **jornada por motorista**, quando informada;
+  - **janelas de entrega por parada** — a hora combinada com o cliente é convertida em minutos desde a saída prevista da carga; sem hora de saída a janela **não é aplicada** e a resposta declara, em vez de inventar uma partida;
+  - **rota aberta ou com retorno à base**, conforme a carga.
+
+  O que não tem dado não é fingido: a resposta declara `restricoes_nao_aplicadas` (produto sem peso no cadastro, veículo sem capacidade, janela sem hora de saída). Quando não há solução viável, a rota responde com o motivo (capacidade de peso, volume, jornada) e a lista completa de entregas não alocadas — nenhuma parada desaparece em silêncio.
+
+  **A tela fecha o laço.** O planejador ganhou o painel de distribuição por veículo: escolher quem participa, definir a hora de saída, ver a sequência de cada caminhão com ETA, mover parada entre veículos e confirmar. O mapa desenha **uma linha por veículo**, na cor da legenda, em vez de uma linha única que mentia sobre quem passa onde. A fila da expedição filtra por veículo, motorista e situação, e a linha da carga mostra os veículos da distribuição (não só a placa legada).
+
+  **A frota tem cadastro próprio** (`/app/frota`): veículos com placa única por organização, capacidade de peso e volume; motoristas com jornada. A capacidade que o otimizador respeita vem do banco, nunca do corpo da requisição — a tela escolhe *quem* participa, o cadastro diz *o que cabe*.
+
+  **A distribuição é versionada.** Confirmar grava um snapshot imutável em `shipment_route_versions` (versão ativa), a atribuição por pedido (`veiculo_id`, `motorista_id`, `sequencia_veiculo`) e a hora de saída. A confirmação revalida no servidor a cobertura total, a capacidade e a jornada, e usa lock otimista (`versao_base` + update condicional): duas telas não sobrescrevem a rota uma da outra — a segunda recebe 409 e recarrega. O histórico das últimas versões aparece no próprio painel.
+
+  **O destino da entrega passa a ser o endereço, não o cliente.** Antes, dois pedidos do mesmo cliente para endereços diferentes viravam duas paradas na lista mas dividiam o mesmo pino no mapa — corrigir um movia o outro, e mexer no cadastro do cliente movia entregas já planejadas. Agora cada pedido guarda um snapshot do endereço efetivo quando entra na carga (`shipment_destinations`), com coordenada, fonte e precisão da geocodificação próprias. Mudar o endereço de um pedido já embarcado cria um destino novo; a parada antiga continua onde estava. Carga anterior a esta versão segue lendo o cadastro como antes — nada é reescrito no histórico.
+
+  A stack geográfica é livre e autohospedável: **Leaflet + OpenStreetMap + Nominatim + OSRM**, sem licença paga. As URLs da geocodificação e do roteamento são variáveis de ambiente (`GEOCODER_URL`, `OSRM_URL`), então quem sobe as instâncias próprias aponta o produto para elas sem depender de release — o default continua sendo a instância pública, para avaliação. O procedimento está em `docs/runbooks/geodados.md` e a decisão em `docs/adr/0002-stack-geografica-osm.md`.
+
+  **O romaneio em PDF não muda**: a folha que o motorista leva continua a mesma, com o veículo e o motorista da carga. A distribuição por veículo vive na tela e no mapa; o papel continua sendo o que a operação já confere.
+
+  A rota `POST /api/v1/shipments/[id]/rota/otimizar/veiculos` lê a frota cadastrada quando o pedido informa veículos (capacidade e jornada vêm do banco) ou usa a frota ativa inteira quando não informa, e devolve `503 upstream_unavailable` se o serviço não estiver no ar — a heurística antiga (vizinho mais próximo + 2-opt, veículo único) continua no caminho legado e nunca responde por este contrato.
+
 ## [1.51.1] — 2026-11-12
 
 ### Corrigido
@@ -7023,7 +7062,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.51.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.0...HEAD
+[1.52.0]: https://github.com/spiesdan/nexus/compare/v1.51.1...v1.52.0
 [1.51.1]: https://github.com/spiesdan/nexus/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/spiesdan/nexus/compare/v1.50.3...v1.51.0
 [1.50.3]: https://github.com/spiesdan/nexus/compare/v1.50.2...v1.50.3
