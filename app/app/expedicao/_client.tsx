@@ -47,6 +47,7 @@ interface Textos {
   vazias: string;
   embarcaveis: string;
   verRomaneio: string;
+  frota: string;
 }
 
 /** Quantas paradas a carga tem, quantas já tiveram desfecho e para onde ela vai. */
@@ -62,6 +63,13 @@ export interface ProgressoDaCarga {
   cidades: string[];
   /** Paradas cujo endereço não resolve cidade — dito, não escondido. */
   semCidade: number;
+  /**
+   * Veículos e motoristas da distribuição confirmada (migration 0307), já com
+   * a placa/o nome resolvidos no servidor. Vazio = carga anterior à
+   * distribuição por veículo (o veículo dela é o `placa` da própria carga).
+   */
+  veiculos: string[];
+  motoristas: string[];
 }
 
 type FiltroDeCargas = "todas" | "em_rota" | "montando" | "concluidas" | "canceladas";
@@ -162,6 +170,11 @@ export function ExpedicaoClient({
   // ── Fila de cargas ────────────────────────────────────────────────────────
   const [filtroCargas, setFiltroCargas] = React.useState<FiltroDeCargas>("todas");
   const [buscaCarga, setBuscaCarga] = React.useState("");
+  // Filtros por veículo e motorista: a atribuição da distribuição, não o campo
+  // legado da carga. Sem eles, achar "o que sai com o ABC1D23 hoje" era rolar a
+  // fila inteira lendo placa por placa.
+  const [filtroVeiculo, setFiltroVeiculo] = React.useState("");
+  const [filtroMotorista, setFiltroMotorista] = React.useState("");
   const [historicoAberto, setHistoricoAberto] = React.useState(false);
   const [gruposAbertos, setGruposAbertos] = React.useState<Record<string, boolean>>({});
   const [concluindoId, setConcluindoId] = React.useState<string | null>(null);
@@ -211,12 +224,16 @@ export function ExpedicaoClient({
         return c.status === "cancelada";
       })
       .filter((c) => {
+        const pr = progresso[c.id];
+        if (filtroVeiculo && !(pr?.veiculos ?? []).includes(filtroVeiculo)) return false;
+        if (filtroMotorista && !(pr?.motoristas ?? []).includes(filtroMotorista)) return false;
         if (!termo) return true;
         // Cidade entra na busca: "canoinhas" tem de achar a carga que vai
-        // para lá, não só o pedido na fila de embarque.
-        const cidades = (progresso[c.id]?.cidades ?? []).join(" ");
+        // para lá, não só o pedido na fila de embarque. Placa e motorista da
+        // distribuição entram junto com os campos legados da carga.
+        const cidades = (pr?.cidades ?? []).join(" ");
         return chaveDeBusca(
-          `${numeroDaCarga(c.numero)} ${c.placa ?? ""} ${c.veiculo_tipo ?? ""} ${c.motorista_nome ?? ""} ${cidades}`,
+          `${numeroDaCarga(c.numero)} ${c.placa ?? ""} ${c.veiculo_tipo ?? ""} ${c.motorista_nome ?? ""} ${(pr?.veiculos ?? []).join(" ")} ${(pr?.motoristas ?? []).join(" ")} ${cidades}`,
         ).includes(termo);
       })
       .sort((a, b) => {
@@ -224,7 +241,23 @@ export function ExpedicaoClient({
           ORDEM_DO_STATUS[a.status as StatusDaCarga] - ORDEM_DO_STATUS[b.status as StatusDaCarga];
         return porStatus !== 0 ? porStatus : (b.created_at ?? "").localeCompare(a.created_at ?? "");
       });
-  }, [inicial, filtroCargas, buscaCarga, progresso]);
+  }, [inicial, filtroCargas, buscaCarga, filtroVeiculo, filtroMotorista, progresso]);
+
+  // Opções dos filtros: só o que aparece em alguma carga da fila, ordenado.
+  const opcoesDeVeiculo = React.useMemo(
+    () =>
+      [...new Set(Object.values(progresso).flatMap((p) => p.veiculos ?? []))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [progresso],
+  );
+  const opcoesDeMotorista = React.useMemo(
+    () =>
+      [...new Set(Object.values(progresso).flatMap((p) => p.motoristas ?? []))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [progresso],
+  );
 
   const emRotaFiltradas = cargasFiltradas.filter((c) => c.status === "em_rota");
   const montandoFiltradas = cargasFiltradas.filter((c) => c.status === "montando");
@@ -234,6 +267,7 @@ export function ExpedicaoClient({
 
   const buscandoCarga = chaveDeBusca(buscaCarga) !== "";
   const filtroDeCargaAtivo = filtroCargas !== "todas";
+  const filtroDeAtribuicaoAtivo = filtroVeiculo !== "" || filtroMotorista !== "";
   const historicoVisivel =
     historicoAberto ||
     filtroDeCargaAtivo ||
@@ -344,7 +378,7 @@ export function ExpedicaoClient({
 
             {disponiveis.map((c) => {
               const pr =
-                progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0, cidades: [], semCidade: 0 };
+                progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0, cidades: [], semCidade: 0, veiculos: [], motoristas: [] };
               const feitas = pr.entregues + pr.devolvidos;
               const pct = pr.total > 0 ? Math.round((feitas / pr.total) * 100) : 0;
               const naRua = c.status === "em_rota";
@@ -418,14 +452,27 @@ export function ExpedicaoClient({
         title={textos.titulo}
         subtitle={textos.subtitulo}
         actions={
-          podeCriar ? (
-            <Button asChild>
-              <Link href="/app/expedicao/nova">
-                <Package size={16} aria-hidden />
-                {textos.nova}
-              </Link>
-            </Button>
-          ) : undefined
+          motorista ? undefined : (
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Frota mora no registro, mas a porta do dia a dia é AQUI: é
+                  montando a rota que se descobre que falta veículo com
+                  capacidade declarada. */}
+              <Button asChild variant="outline">
+                <Link href="/app/frota">
+                  <Truck size={16} aria-hidden />
+                  {textos.frota}
+                </Link>
+              </Button>
+              {podeCriar ? (
+                <Button asChild>
+                  <Link href="/app/expedicao/nova">
+                    <Package size={16} aria-hidden />
+                    {textos.nova}
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          )
         }
       />
 
@@ -589,34 +636,70 @@ export function ExpedicaoClient({
               </p>
             </div>
 
-            <div className="relative w-full sm:w-60">
-              <MagnifyingGlass
-                size={15}
-                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-subtle"
-              />
-              <Input
-                value={buscaCarga}
-                onChange={(e) => setBuscaCarga(e.target.value)}
-                placeholder={t("Número, placa ou motorista")}
-                aria-label={t("Buscar carga")}
-                className="h-9 w-full bg-surface pl-9"
-              />
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+              {(opcoesDeVeiculo.length > 0 || opcoesDeMotorista.length > 0) && (
+                <>
+                  <select
+                    aria-label={t("Filtrar por veículo")}
+                    value={filtroVeiculo}
+                    onChange={(e) => setFiltroVeiculo(e.target.value)}
+                    className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
+                  >
+                    <option value="">{t("Todos os veículos")}</option>
+                    {opcoesDeVeiculo.map((placa) => (
+                      <option key={placa} value={placa}>
+                        {placa}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={t("Filtrar por motorista")}
+                    value={filtroMotorista}
+                    onChange={(e) => setFiltroMotorista(e.target.value)}
+                    className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
+                  >
+                    <option value="">{t("Todos os motoristas")}</option>
+                    {opcoesDeMotorista.map((nome) => (
+                      <option key={nome} value={nome}>
+                        {nome}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+              <div className="relative w-full sm:w-60">
+                <MagnifyingGlass
+                  size={15}
+                  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-subtle"
+                />
+                <Input
+                  value={buscaCarga}
+                  onChange={(e) => setBuscaCarga(e.target.value)}
+                  placeholder={t("Número, placa ou motorista")}
+                  aria-label={t("Buscar carga")}
+                  className="h-9 w-full bg-surface pl-9"
+                />
+              </div>
             </div>
           </div>
 
-          {(filtroDeCargaAtivo || buscandoCarga) && (
+          {(filtroDeCargaAtivo || buscandoCarga || filtroDeAtribuicaoAtivo) && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {filtroDeCargaAtivo && (
                 <Badge variant="neutral">
                   {filtrosDeCarga.find((f) => f.chave === filtroCargas)?.rotulo}
                 </Badge>
               )}
+              {filtroVeiculo && <Badge variant="neutral">{filtroVeiculo}</Badge>}
+              {filtroMotorista && <Badge variant="neutral">{filtroMotorista}</Badge>}
               {buscandoCarga && <Badge variant="neutral">“{buscaCarga}”</Badge>}
               <button
                 type="button"
                 onClick={() => {
                   setFiltroCargas("todas");
                   setBuscaCarga("");
+                  setFiltroVeiculo("");
+                  setFiltroMotorista("");
                 }}
                 className="underline underline-offset-4 hover:text-text"
               >
@@ -644,6 +727,8 @@ export function ExpedicaoClient({
                 onClick={() => {
                   setFiltroCargas("todas");
                   setBuscaCarga("");
+                  setFiltroVeiculo("");
+                  setFiltroMotorista("");
                 }}
               >
                 {t("Limpar filtros")}
@@ -731,6 +816,8 @@ export function ExpedicaoClient({
                               devolvidos: 0,
                               cidades: [],
                               semCidade: 0,
+                              veiculos: [],
+                              motoristas: [],
                             }
                           }
                           concluindo={concluindoId === c.id}
@@ -808,6 +895,8 @@ function GrupoDaFila({
                 devolvidos: 0,
                 cidades: [],
                 semCidade: 0,
+                veiculos: [],
+                motoristas: [],
               }
             }
             concluindo={concluindoId === c.id}
@@ -854,9 +943,12 @@ function LinhaDaCarga({
   const prontaParaConcluir =
     carga.status === "em_rota" && progresso.total > 0 && paradasEmAberto === 0;
   const semPedidos = progresso.total === 0;
-  const veiculoETripulacao = [carga.placa, carga.veiculo_tipo, carga.motorista_nome]
-    .filter(Boolean)
-    .join(" · ");
+  // Depois da distribuição, a carga pode sair em MAIS DE UM veículo: mostrar
+  // só `shipments.placa` (o veículo legado) esconderia a segunda perna da rota.
+  const veiculoETripulacao =
+    progresso.veiculos.length > 0
+      ? [...progresso.veiculos, ...progresso.motoristas].join(" · ")
+      : [carga.placa, carga.veiculo_tipo, carga.motorista_nome].filter(Boolean).join(" · ");
   const criada = chaveDoDia(new Date(carga.created_at));
 
   return (
