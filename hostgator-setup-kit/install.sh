@@ -1633,6 +1633,19 @@ esac
   # Vazio desliga (a foto volta a usar só a IA) e é o desligamento de emergência.
   envq OCR_SERVICE_URL "http://ocr:8790"
   envq OCR_TIMEOUT_MS "60000"
+  # Solver de rotas (OR-Tools): endereço do contêiner `rota` na rede interna,
+  # sem porta publicada. Sem ele o app responde 503 na otimização multi-veículo
+  # — não existe heurística local se passando por OR-Tools. A chave tem de ser
+  # gravada aqui: `.env` é reescrito a partir desta lista FECHADA, e uma chave
+  # posta à mão some no próximo install (gate em hostgator-setup-kit/test-validators.sh).
+  envq ROTA_SOLVER_URL "http://rota:8791"
+  # Geocodificação e ruas. O default é a instância PÚBLICA: funciona sem
+  # infraestrutura extra, mas não tem SLA e a política do Nominatim limita uso
+  # em massa. Quem sobe a instância própria (docs/runbooks/geodados.md) edita
+  # estas três linhas no .env e roda o update — o install as preserva.
+  envq GEOCODER_URL "${GEOCODER_URL:-https://nominatim.openstreetmap.org/search}"
+  envq GEOCODER_MIN_INTERVALO_MS "${GEOCODER_MIN_INTERVALO_MS:-1100}"
+  envq OSRM_URL "${OSRM_URL:-https://router.project-osrm.org}"
   envq WAHA_API_KEY "$WAHA_API_KEY"
   envq WAHA_API_KEY_SHA512 "$WAHA_API_KEY_SHA512"
   envq WAHA_HMAC_SECRET "$WAHA_HMAC_SECRET"

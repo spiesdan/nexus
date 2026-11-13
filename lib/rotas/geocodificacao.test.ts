@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   aceitaResultado,
@@ -14,8 +14,50 @@ import {
   semConectores,
   semHonorifico,
   semTipoVial,
+  ritmoDoGeocoderMs,
+  urlDoGeocoder,
   variantesDoNome,
 } from "./geocodificacao";
+
+/**
+ * A STACK GEOGRÁFICA É AUTOHOSPEDÁVEL POR CONFIGURAÇÃO.
+ *
+ * Decisão registrada em `docs/adr/0002-stack-geografica-osm.md`: Leaflet +
+ * OpenStreetMap + Nominatim + OSRM, sem licença paga. Estes testes travam o
+ * que faz a troca valer: o endpoint e o ritmo vêm do ambiente, não do código.
+ * Sem isso, "apontar para a instância própria" seria editar código-fonte — e
+ * a primeira atualização apagaria a edição.
+ */
+describe("endpoint do geocodificador", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("sem configuração, usa o Nominatim público", () => {
+    vi.stubEnv("GEOCODER_URL", "");
+    expect(urlDoGeocoder()).toBe("https://nominatim.openstreetmap.org/search");
+  });
+
+  it("instância própria vence o default público", () => {
+    vi.stubEnv("GEOCODER_URL", "http://nominatim:8080/search");
+    expect(urlDoGeocoder()).toBe("http://nominatim:8080/search");
+  });
+
+  it("ritmo padrão respeita a instância pública (1100 ms)", () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "");
+    expect(ritmoDoGeocoderMs()).toBe(1100);
+  });
+
+  it("instância própria zera a espera artificial", () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "0");
+    expect(ritmoDoGeocoderMs()).toBe(0);
+  });
+
+  it("valor inválido não zera o ritmo por acidente", () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "depressa");
+    expect(ritmoDoGeocoderMs()).toBe(1100);
+  });
+});
 
 describe("normalização da consulta", () => {
   it("número com texto vira dígitos; SN/KM viram nada", () => {
