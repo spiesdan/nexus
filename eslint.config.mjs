@@ -11,7 +11,24 @@ export default defineConfig([
   // `node_modules/` próprios) — nunca fonte deste repo; lintá-los explode o eslint
   // com dezenas de milhares de falsos positivos em JS gerado. (Na CI, checkout
   // limpo, o diretório nem existe.)
-  globalIgnores([".next/", "node_modules/", "dist/", "supabase/", "mobile/www/", "android/app/src/main/assets/public/", "next-env.d.ts", ".claude/worktrees/"]),
+  //
+  // `public/maplibre-gl-worker.mjs` é ASSET VENDORIZADO: o bundle do worker do
+  // MapLibre, copiado de `node_modules` e servido como está (é ele que o
+  // `setWorkerUrl` do mapa carrega). Lintá-lo produziu **1073 erros** no CI —
+  // o arquivo é minificado, e as regras do produto não se aplicam a código que
+  // não escrevemos. O teste `worker-do-mapa-e-asset-estatico` garante que ele é
+  // byte a byte o do pacote instalado, então não há código nosso escondido ali.
+  globalIgnores([
+    ".next/",
+    "node_modules/",
+    "dist/",
+    "supabase/",
+    "mobile/www/",
+    "android/app/src/main/assets/public/",
+    "next-env.d.ts",
+    ".claude/worktrees/",
+    "public/maplibre-gl-worker.mjs",
+  ]),
   nextPlugin.configs["core-web-vitals"],
   reactHooks.configs.flat.recommended,
   ...tseslint.configs.recommended,

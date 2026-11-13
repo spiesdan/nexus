@@ -76,4 +76,12 @@ describe("worker do MapLibre — asset estático fora do proxy", () => {
       expect(re.test(caminho), `${caminho} não pode passar pelo proxy`).toBe(false);
     }
   });
+
+  it("o bundle vendorizado está fora do lint", () => {
+    // O arquivo é minificado e não é código nosso: lintá-lo produziu 1073 erros
+    // no `verify` do CI, derrubando o PR por um asset. A entrada no
+    // `globalIgnores` é o que impede isso de voltar no próximo bump.
+    const eslint = readFileSync(join(RAIZ, "eslint.config.mjs"), "utf8");
+    expect(eslint).toContain('"public/maplibre-gl-worker.mjs"');
+  });
 });
