@@ -1,6 +1,6 @@
 # ADR-0002 — Stack geográfica: Leaflet + OpenStreetMap + Nominatim + OSRM
 
-- **Status:** aceito
+- **Status:** **superseded by ADR-0003**
 - **Data:** 2026-11-13
 - **Decisão de produto:** manter a stack livre, autohospedável, com custo de licença zero
 - **Runbook:** [`docs/runbooks/geodados.md`](../runbooks/geodados.md)

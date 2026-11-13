@@ -1,24 +1,26 @@
 /**
- * Todo contêiner de mapa Leaflet do repo cria o próprio stacking context — e
- * faz isso de um jeito que TODO browser entende.
+ * Todo contêiner de mapa do repo cria o próprio stacking context — e faz isso
+ * de um jeito que TODO browser entende.
  *
  * ═══ O BUG, E OS DOIS LADOS DELE ══════════════════════════════════════════
  *
- * O Leaflet escreve z-index nos próprios panes, em pixels, na MESMA pilha da
- * página:
+ * Um mapa não é uma imagem: ele pinta em várias camadas com z-index próprio,
+ * na MESMA pilha da página.
  *
- *   400 overlay · 600 marcadores · 700 popup · 800/1000 controle
+ *   Leaflet  → `.leaflet-pane` com 400 overlay · 600 marcadores · 700 popup ·
+ *              800/1000 controle, e `position: absolute` nos panes.
+ *   MapLibre → canvas, controles (`z-index: 2`) e marcadores dentro do
+ *              contêiner, que o próprio MapLibre posiciona.
  *
- * E `.leaflet-pane` é `position: absolute`, enquanto o `dist/leaflet.css` do
- * Leaflet posiciona o container só com `overflow: hidden` — **sem `position`**.
+ * Nos dois casos, sem `position` no contêiner os filhos absolutos ancoram no
+ * ancestral POSICIONADO mais próximo, que pode estar bem acima do mapa — e aí o
+ * `overflow: hidden` do mapa não recorta nada.
  *
- * 1. SEM `position`: os panes absolutos ancoram no ancestral POSICIONADO mais
- *    próximo, que pode estar bem acima do mapa. Aí o `overflow: hidden` do
- *    mapa não recorta nada — cortar um absoluto exige ser o containing block.
- *    Tiles e popups pintam FORA da caixa do mapa.
- * 2. SEM stacking context próprio: o cabeçalho `sticky top-14 z-10` da ficha de
- *    expedição fica ABAIXO de popup e marcadores — o mapa invade o cabeçalho ao
- *    rolar. E `Dialog`/`Sheet` (`z-50`) ficam ATRÁS do mapa.
+ * E sem stacking context próprio:
+ *
+ * - o cabeçalho `sticky top-14 z-10` da ficha de expedição fica ABAIXO de popup
+ *   e marcadores — o mapa invade o cabeçalho ao rolar;
+ * - `Dialog`/`Sheet` (`z-50`) ficam ATRÁS do mapa.
  *
  * ═══ POR QUE `relative z-0` E NÃO SÓ `isolate` ═══════════════════════════
  *
@@ -34,8 +36,7 @@
  *   com `position: relative; z-index: 0` → CABEÇALHO POR CIMA  ✅
  *
  * `position` com `z-index` diferente de `auto` cria stacking context em todo
- * browser, ancient browser included. `isolate` fica como reforço, nunca como
- * o que sustenta o conserto.
+ * browser. `isolate` fica como reforço, nunca como o que sustenta o conserto.
  *
  * ═══ POR QUE ESTE TESTE EXISTE ════════════════════════════════════════════
  *
@@ -43,8 +44,10 @@
  * _mapa.tsx` ganhou `isolate` e a ficha de expedição ficou sem nada. Mesmo
  * sintoma, outra tela, mesma causa.
  *
- * E porque `isolate` sozinho, já presente na prospecção, **não resolvia** —
- * era `z-0` que faltava. Este teste exige o que resolve.
+ * E porque a ficha de expedição TROCOU de biblioteca (Leaflet → MapLibre,
+ * ADR-0003) e o conserto de stacking continuou valendo: a varredura é por
+ * "quem instancia um mapa", não por "quem importa Leaflet". Gate que vigia
+ * biblioteca em vez de sintoma deixa de vigiar no dia da migração.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -56,25 +59,33 @@ const RAIZ = process.cwd();
 const DIRETORIOS = ["app", "components", "lib"];
 const IGNORAR = new Set(["node_modules", ".next", ".git", "graphify-out", ".repro"]);
 
-function arquivosComLeaflet(dir: string, achados: string[] = []): string[] {
+/**
+ * Instancia um mapa — em qualquer das duas bibliotecas que o repo usa.
+ *
+ * O `\b` antes do `L` não é enfeite: sem ele, `ABAS_DO_FISCAL.map(...)` casa
+ * com `L.map(` e a varredura passa a exigir stacking context de uma lista de
+ * abas. A primeira versão deste padrão fazia exatamente isso — quatro falsos
+ * positivos, todos do mesmo jeito: constante terminada em "L".
+ */
+const INSTANCIA_MAPA = /(\bL\.map\(|new\s+lib\.Map\(|new\s+maplibregl\.Map\()/;
+
+function arquivosComMapa(dir: string, achados: string[] = []): string[] {
   for (const entrada of readdirSync(dir)) {
     if (IGNORAR.has(entrada)) continue;
     const caminho = join(dir, entrada);
     if (statSync(caminho).isDirectory()) {
-      arquivosComLeaflet(caminho, achados);
+      arquivosComMapa(caminho, achados);
       continue;
     }
     if (!/\.tsx?$/.test(entrada)) continue;
     const texto = readFileSync(caminho, "utf8");
-    // Só interessa quem INSTANCIA o Leaflet. Importar o tipo não cria pane.
-    if (/(await import\("leaflet"\)|from "leaflet"\))/.test(texto) && /L\.map\(/.test(texto)) {
-      achados.push(caminho);
-    }
+    // Só interessa quem INSTANCIA. Importar o tipo não cria pane nenhum.
+    if (INSTANCIA_MAPA.test(texto)) achados.push(caminho);
   }
   return achados;
 }
 
-const COM_LEAFLET = DIRETORIOS.flatMap((d) => arquivosComLeaflet(join(RAIZ, d)));
+const COM_MAPA = DIRETORIOS.flatMap((d) => arquivosComMapa(join(RAIZ, d)));
 
 /**
  * O `className` do div que recebe `refCaixa` — o contêiner que vira o mapa.
@@ -110,15 +121,25 @@ function temClasse(classe: string, nome: string): boolean {
   return tokens.includes(nome);
 }
 
-describe("todo mapa Leaflet cria o próprio stacking context", () => {
+describe("todo mapa cria o próprio stacking context", () => {
   // Guarda de vácuo: uma varredura que não acha nada passa sem provar nada.
-  it("a varredura acha os dois mapas que existem", () => {
-    const relativos = COM_LEAFLET.map((c) => relative(RAIZ, c));
+  it("a varredura acha os mapas que existem", () => {
+    const relativos = COM_MAPA.map((c) => relative(RAIZ, c));
+    // Prospecção continua no Leaflet; a expedição está no MapLibre.
     expect(relativos).toContain("app/app/prospeccao/_mapa.tsx");
     expect(relativos).toContain("app/app/expedicao/[id]/_mapa-rota.tsx");
   });
 
-  it.each(COM_LEAFLET.map((c) => [relative(RAIZ, c), c] as const))(
+  it("os mapas encontrados usam só as duas bibliotecas conhecidas", () => {
+    // Se aparecer um terceiro mapa, ele entra na varredura acima e nas
+    // asserções de stacking abaixo sem ninguém editar o teste.
+    for (const caminho of COM_MAPA) {
+      const texto = readFileSync(caminho, "utf8");
+      expect(INSTANCIA_MAPA.test(texto), `${caminho} sem instância reconhecida`).toBe(true);
+    }
+  });
+
+  it.each(COM_MAPA.map((c) => [relative(RAIZ, c), c] as const))(
     "%s — tem `isolate` ou `z-0`",
     (nome, caminho) => {
       const classe = classDoContêiner(readFileSync(caminho, "utf8"));
@@ -130,10 +151,9 @@ describe("todo mapa Leaflet cria o próprio stacking context", () => {
       // ignorar o próprio teste.
       expect(
         temClasse(classe, "isolate") || temClasse(classe, "z-0"),
-        `${nome}: o contêiner do Leaflet não tem \`isolate\` nem \`z-0\`. Os panes ` +
-          `do Leaflet (400/600/700/1000) ficam na pilha global: o cabeçalho ` +
-          `\`sticky z-10\` passa por baixo do mapa e o \`Dialog\` (\`z-50\`) fica ` +
-          `ATRÁS dele.`,
+        `${nome}: o contêiner do mapa não tem \`isolate\` nem \`z-0\`. As camadas ` +
+          `do mapa ficam na pilha global: o cabeçalho \`sticky z-10\` passa por ` +
+          `baixo dele e o \`Dialog\` (\`z-50\`) fica ATRÁS.`,
       ).toBe(true);
     },
   );

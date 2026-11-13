@@ -1453,7 +1453,7 @@ export function ModoMotorista({
           >
             {folhaAberta ? cartoes : cartaoCompacto}
           </div>
-          {/* O Leaflet ancora a atribuição no canto inferior direito; a folha
+          {/* O mapa ancora a atribuição no canto inferior direito; a folha
               cobre esse canto, então o crédito do OpenStreetMap sobe para cá. */}
           <p className="shrink-0 border-t border-border px-3 py-1 text-right text-[9px] text-text-subtle">
             © OpenStreetMap

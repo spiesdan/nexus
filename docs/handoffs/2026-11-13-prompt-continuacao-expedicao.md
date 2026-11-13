@@ -480,3 +480,136 @@ workflow `release` depois do merge; os fragmentos ficam em `.changes/`.
 - **Observabilidade de painel** (tempo médio de recuperação por provedor): hoje há log
   estruturado por desfecho (`recuperacao.endereco`, `recuperacao.aguardando_confirmacao`,
   `recuperacao.sem_resultado`), sem agregação em tela.
+
+---
+
+## 12. Release 1.52.0 publicada — e o que a estreia do `rota` ensinou
+
+Medido em 2026-11-13, no registro público e nos runs do GitHub Actions.
+
+### O que saiu
+
+| Item | Estado |
+|---|---|
+| PR #420 (código) | mergeado em `main` @ `5de4a411` |
+| PR #421 (release) | mergeado @ `a291fa71` |
+| Tag | `v1.52.0` → `26a7f205` |
+| `publish-image.yml` (tag) | verde — as 7 imagens publicadas |
+| `imagens-ok` / `promover-stable` | verdes |
+| `1.52.0` = `1.52` = `stable` | mesmo digest nas 7 (`nexus-rota` incluso) |
+
+Digests da versão (sonda anônima, 13/11):
+
+```console
+nexus                  sha256:174af5e9…
+nexus-worker           sha256:7cb5d3e3…
+nexus-scheduler        sha256:17ce931b…
+nexus-fiscal-sidecar   sha256:7557aa1b…
+nexus-mercos           sha256:6a241c47…
+nexus-ocr              sha256:097b5ea7…
+nexus-rota             sha256:eb47847c…
+```
+
+### Incidente 1 — `nexus-rota` nasceu PRIVADO (corrigido)
+
+O primeiro release que publicou o solver criou o pacote no GHCR **privado**, como todo
+pacote novo nasce. Sintoma medido, sem credencial:
+
+```console
+nexus:1.52.0        200
+nexus-rota:1.52.0   401 Unauthorized
+```
+
+Como o `rota` está no `docker-compose.prod.yml` com `pull_policy: always` e sem profile, o
+`docker compose pull` de **toda VPS** falharia nele — e um `pull` que falha aborta a operação
+inteira, matando a atualização depois do `git checkout` e do banco. Foi corrigido na
+visibilidade do pacote (Package settings → Public) e confirmado por sonda anônima nas sete.
+
+**O gate tinha um buraco:** `imagens-ok` provava que a imagem **existiu**, não que ela é
+**baixável sem conta**. Fechado nesta mesma rodada, no mesmo PR deste registro.
+
+### Incidente 2 — build depende do CDN do Google Fonts (ABERTO)
+
+`app/layout.tsx` e `app/design/lib/fonts.ts` usam `next/font/google`, que baixa as fontes
+**durante o build**. Em 3 dos 4 builds do app feitos hoje o Turbopack falhou:
+
+```console
+Error: Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'
+Error while looking up import map: next/font/google queries have exactly one entry
+Import trace: [next]/internal/font/google/inter_356056bc.js → ./app/layout.tsx
+```
+
+É resposta inesperada do `fonts.googleapis.com` (limite/página de erro) chegando ao
+`NextFontGoogleFontFileReplacer`. Não é código desta entrega — o trace é o layout da marca, e
+a 1.52.0 não tocou em fonte. Passou por rerun, mas o build segue **não reprodutível**: quem
+depende dele (CI, `build-and-size`, imagem Docker) pode reprovar sem que nada tenha mudado.
+
+Correção de verdade, para um PR próprio: trocar as 11 famílias por `next/font/local` com os
+arquivos `.woff2` versionados (some a dependência de rede no build; custo: ~15 binários e
+prova visual da tipografia). Não foi feito aqui porque exige prova visual que este ambiente
+não tem.
+
+---
+
+## 13. Migração MapLibre + prova visual (2026-11-13)
+
+### O que foi entregue
+
+- **Mapa da expedição migrado de Leaflet para MapLibre GL JS 6.18.0** —
+  `app/app/expedicao/[id]/_mapa-rota.tsx` reescrito (10 casos do gate do mapa +
+  7 do gate de stacking, verdes).
+  Cartografia inalterada: tiles raster do OpenStreetMap, sem chave, sem custo de
+  licença. A prospecção (`app/app/prospeccao/_mapa.tsx`) segue em Leaflet.
+- **Helpers puros** em `lib/mapas/estilo.ts` e `lib/mapas/geometria.ts`
+  (estilo raster, linha de rota, polígono de precisão do GPS em metros, limites),
+  com 14 testes sem browser (`estilo.test.ts` 4, `geometria.test.ts` 10, verdes).
+- **Gates atualizados:**
+  - `tests/unit/mapas-em-contexto-de-stack.test.ts` (renomeado de
+    `leaflet-isolado-em-contexto-de-stack.test.ts`): varre quem instancia mapa
+    (`L.map(` / `new maplibregl.Map(`) e exige `isolate` ou `z-0`.
+  - `tests/unit/mapa-da-expedicao-e-maplibre.test.ts` (10 casos): importação
+    MapLibre (não Leaflet), estilo de `lib/mapas/estilo`, geometria de
+    `lib/mapas/geometria`, enquadramento que respeita o dedo, popup com ações,
+    pino arrastável, `ResizeObserver` + `remove()`, stacking context.
+- **Prova visual** em `evidence/2026-11-13-expedicao/`:
+  - `evidence/2026-11-13-expedicao/mapa-rotas-veiculo.png` — mapa MapLibre com
+    tiles OSM, 9 pinos, 3 rotas coloridas por veículo, ponto azul do motorista,
+    distribuição "Confirmada", painel de recuperação expandido (2 pendentes).
+  - `evidence/2026-11-13-expedicao/recuperacao-colapsado.png` — mesmo layout,
+    painel de recuperação colapsado.
+  - `evidence/2026-11-13-expedicao/README.md` — fixtures, viewport 1680×1600,
+    como rebuildar com `node tests/visual/expedicao/build.mjs <dir>`.
+- **Bancada visual** em `tests/visual/expedicao/` (`bancada.tsx`, `fixtures.ts`,
+  `fetch-falso.ts`, `link-stub.tsx`, `build.mjs`) — componentes de produção com
+  `fetch` falso; build com esbuild + Tailwind; worker do MapLibre copiado para o
+  output e `setWorkerUrl` forçado (corrige o worker que falhava em servidores de
+  arquivo estático).
+
+### ADR e documentação
+
+- `docs/adr/0003-maplibre-no-mapa-da-expedicao.md` — novo, supersede o ADR-0002.
+- `docs/adr/0002-stack-geografica-osm.md` — marcado `superseded by ADR-0003`.
+- `docs/runbooks/geodados.md` — linha 3 agora cita ADR-0003.
+- `docs/architecture/expedicao-vrptw.architecture.json` — mapa = MapLibre, com
+  `mapas-helpers` (lib/mapas) e a dependência de tiles do OSM como nodes.
+- `tests/visual/expedicao/` — bancada da prova visual (componentes de produção).
+- `.changes/mapa-expedicao-maplibre.md` — fragmento de release.
+
+### Gates medidos nesta máquina
+
+| Gate | Resultado |
+|---|---|
+| `pnpm typecheck` | zerado |
+| `pnpm lint` | 0 erros |
+| `pnpm test:unit` (mapas) | 31 verdes (10 gate do mapa + 7 stacking + 14 helpers) |
+| `pnpm test:unit` (completo) | pendente — rodar antes do commit |
+| `pnpm build` | pendente — rodar antes do commit |
+
+### O que continua aberto
+
+- `pnpm test:unit` completo e `pnpm build` ainda não rodaram nesta máquina após a
+  migração (fazer antes de commitar).
+- A suíte `e2e` do PR #422 está `in_progress` — acompanhar até verde e mergear.
+- Prova visual em app rodando com banco real (o CI smoke não cobre esta tela) —
+  fora do escopo deste ambiente (não há Supabase nem banco semeados aqui).
+

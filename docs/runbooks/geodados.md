@@ -1,7 +1,8 @@
 # Runbook — dados geográficos (Nominatim + OSRM)
 
-> **Decisão de stack:** [ADR-0002](../adr/0002-stack-geografica-osm.md). Leaflet + OpenStreetMap +
-> Nominatim + OSRM, tudo autohospedável, sem licença paga.
+> **Decisão de stack:** [ADR-0003](../adr/0003-maplibre-no-mapa-da-expedicao.md). MapLibre GL JS
+> + OpenStreetMap (tiles) para o mapa; Nominatim + OSRM para geocodificação e roteamento, tudo
+> autohospedável, sem licença paga. A prospecção continua em Leaflet (ADR-0002, mantida ali).
 >
 > **Regra curta:** o default do produto é a instância **pública**. Ela serve para avaliação e
 > instalação pequena; para operação com volume, suba a instância própria e aponte o `.env`.

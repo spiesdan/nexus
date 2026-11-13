@@ -53,7 +53,12 @@
     {
       "id": "mapa-rota",
       "lane": "tela",
-      "label": "Mapa — uma linha por veículo, ETA no balão"
+      "label": "Mapa — MapLibre GL JS, uma linha por veículo, ETA no balão (tiles OSM, sem chave)"
+    },
+    {
+      "id": "mapas-helpers",
+      "lane": "tela",
+      "label": "Estilo e geometria do mapa — helpers puros em lib/mapas: estiloOsm(), linhaDeRota(), limitesDe()"
     },
     {
       "id": "pagina-frota",
@@ -156,6 +161,11 @@
       "label": "Nominatim — geocodificação (instância própria ou pública)"
     },
     {
+      "id": "tiles-osm",
+      "lane": "geo",
+      "label": "Tiles raster do OpenStreetMap — tile.openstreetmap.org, sem chave"
+    },
+    {
       "id": "destino",
       "lane": "dados",
       "label": "shipment_destinations — destino com snapshot (endereço + coordenada, 0308)"
@@ -179,6 +189,18 @@
       "from": "roteirizador",
       "to": "mapa-rota",
       "label": "rotas por veículo"
+    },
+    {
+      "id": "mapa-usa-helpers",
+      "from": "mapa-rota",
+      "to": "mapas-helpers",
+      "label": "estilo, geometria e limites"
+    },
+    {
+      "id": "helpers-apontam-tiles",
+      "from": "mapas-helpers",
+      "to": "tiles-osm",
+      "label": "URL {z}/{x}/{y}.png"
     },
     {
       "id": "planejador-le-rota",
