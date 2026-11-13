@@ -40,7 +40,11 @@ export interface PontoMotorista {
 }
 
 function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 const COR_ESTADO: Record<PontoParadaMapa["estado"], string> = {
@@ -192,7 +196,22 @@ export function MapaRota({
   // O desenho mora depois dos efeitos (regra do lint): os efeitos iniciais
   // despacham pelo ref, que a atribuição abaixo liga na função real.
   const refRedesenhar = React.useRef<(m: MapaMaplibre) => void>(() => undefined);
-  const refProps = React.useRef({ paradas, geometria, rotas, origem, motorista, rastro, navegacao, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar });
+  const refProps = React.useRef({
+    paradas,
+    geometria,
+    rotas,
+    origem,
+    motorista,
+    rastro,
+    navegacao,
+    modoMarcar,
+    pinoPendente,
+    aoClicarMapa,
+    aoAcaoParada,
+    imersivo,
+    seguir,
+    aoArrastar,
+  });
   // Quem já arrastou o mapa não quer ser reenquadrado a cada dado novo. Vive em
   // ref porque o MapLibre (fora do React) escreve aqui.
   const refArrastou = React.useRef(false);
@@ -211,7 +230,22 @@ export function MapaRota({
   // Props frescas para os callbacks do mapa (ele vive fora do React).
   // Em efeito, não no render: escrever ref no render quebra a atualização.
   React.useEffect(() => {
-    refProps.current = { paradas, geometria, rotas, origem, motorista, rastro, navegacao, modoMarcar, pinoPendente, aoClicarMapa, aoAcaoParada, imersivo, seguir, aoArrastar };
+    refProps.current = {
+      paradas,
+      geometria,
+      rotas,
+      origem,
+      motorista,
+      rastro,
+      navegacao,
+      modoMarcar,
+      pinoPendente,
+      aoClicarMapa,
+      aoAcaoParada,
+      imersivo,
+      seguir,
+      aoArrastar,
+    };
   });
 
   function limparCamadas(m: MapaMaplibre) {
@@ -230,7 +264,17 @@ export function MapaRota({
     }
     const lib = refLib.current;
     if (!lib) return;
-    const { paradas: ps, geometria: geo, rotas: rotasVeiculo, origem: ori, motorista: mot, rastro: ras, navegacao: nav, pinoPendente: pino, seguir: seguindo } = refProps.current;
+    const {
+      paradas: ps,
+      geometria: geo,
+      rotas: rotasVeiculo,
+      origem: ori,
+      motorista: mot,
+      rastro: ras,
+      navegacao: nav,
+      pinoPendente: pino,
+      seguir: seguindo,
+    } = refProps.current;
     limparCamadas(m);
     // Acumuladores locais: o ref é um só, e cada camada nova precisa entrar
     // nele para o próximo desenho conseguir limpar.
@@ -298,12 +342,16 @@ export function MapaRota({
     // Rastro realizado: tracejado cinza. Vem DEPOIS da rota planejada para
     // pintar por cima dela — é o que aconteceu, não o que foi planejado.
     if (ras.length > 1) {
-      desenharLinha("rastro", ras.map(([lat, lng]) => [lng, lat]), {
-        cor: "#6b7280",
-        halo: 0,
-        espessura: 3,
-        tracejado: true,
-      });
+      desenharLinha(
+        "rastro",
+        ras.map(([lat, lng]) => [lng, lat]),
+        {
+          cor: "#6b7280",
+          halo: 0,
+          espessura: 3,
+          tracejado: true,
+        },
+      );
       // O halo do rastro não deve existir: com contorno branco, o tracejado
       // some por baixo dele. A camada branca é escondida aqui.
       const haloRastro = m.getLayer("rastro-halo");
@@ -348,10 +396,16 @@ export function MapaRota({
      * com o endereço inteiro numa linha só.
      */
     const novoBaliao = (html: string, deslocamento: number) =>
-      new lib.Popup({ offset: [0, -deslocamento], maxWidth: "280px", closeButton: true }).setHTML(html);
+      new lib.Popup({ offset: [0, -deslocamento], maxWidth: "280px", closeButton: true }).setHTML(
+        html,
+      );
 
     if (ori) {
-      const marcador = criarMarcador(ori.lng, ori.lat, htmlDoPino("#16a34a", CASA, false, esc(t("Origem"))));
+      const marcador = criarMarcador(
+        ori.lng,
+        ori.lat,
+        htmlDoPino("#16a34a", CASA, false, esc(t("Origem"))),
+      );
       marcador.setPopup(
         novoBaliao(
           `<b>${esc(t("Origem"))}</b>${ori.endereco ? `<br>${esc(ori.endereco)}` : ""}`,
@@ -462,7 +516,7 @@ export function MapaRota({
       ...comCoord.map((p) => [p.lng as number, p.lat as number] as [number, number]),
       ...(ori ? [[ori.lng, ori.lat] as [number, number]] : []),
       ...(mot ? [[mot.lng, mot.lat] as [number, number]] : []),
-      ...((nav ?? []).map((c) => [c[0] as number, c[1] as number] as [number, number])),
+      ...(nav ?? []).map((c) => [c[0] as number, c[1] as number] as [number, number]),
     ];
     // ─── QUEM MANDA NO ENQUADRAMENTO ───────────────────────────────────────
     //
@@ -498,9 +552,19 @@ export function MapaRota({
     let cancelado = false;
     (async () => {
       const modulo = await import("maplibre-gl");
-      const lib = (modulo as unknown as { default?: typeof import("maplibre-gl") }).default ?? modulo;
+      const lib =
+        (modulo as unknown as { default?: typeof import("maplibre-gl") }).default ?? modulo;
       if (cancelado || !refCaixa.current || refMapa.current) return;
       refLib.current = lib;
+      // ─── WORKER DO MAPLIBRE: EM NEXT.JS, O CAMINHO É O DO PUBLIC ───────────
+      //
+      // O MapLibre resolve o worker a partir de `import.meta.url` do bundle,
+      // que num build Next/Turbopack aponta para um chunk sem o worker ao lado.
+      // Sem isto, o console enche de "Worker failed to load" e as rotas (GeoJSON)
+      // não pintam — o worker é quem indexa os tiles e desenha as camadas.
+      // Copiar `maplibre-gl-worker.mjs` para `public/` e apontar `setWorkerUrl`
+      // resolve: o Next serve `/maplibre-gl-worker.mjs` com MIME correto.
+      lib.setWorkerUrl("/maplibre-gl-worker.mjs");
       const mapa = new lib.Map({
         container: refCaixa.current,
         // O estilo é inline (raster do OSM): sem `style.json` remoto, sem
@@ -690,7 +754,7 @@ export function MapaRota({
           !motorista &&
           !pinoPendente && (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-6">
-              <div className="max-w-xs rounded-xl border border-border bg-background/95 px-4 py-3 text-center shadow-xs backdrop-blur">
+              <div className="max-w-xs rounded-xl border border-border bg-background px-4 py-3 text-center shadow-xs">
                 <p className="text-sm font-medium text-text">{t("Nenhuma parada no mapa")}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                   {t("Geocodifique os endereços ou marque a posição no mapa para desenhar a rota.")}

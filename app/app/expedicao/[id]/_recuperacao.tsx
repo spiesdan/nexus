@@ -58,7 +58,12 @@ interface DestinoRecuperacaoApi {
   longitude: number | null;
   geoStatus: string | null;
   sugestao: SugestaoApi | null;
-  tentativas: { tentativa: number; provedor: string; confianca: number | null; motivo: string | null }[];
+  tentativas: {
+    tentativa: number;
+    provedor: string;
+    confianca: number | null;
+    motivo: string | null;
+  }[];
 }
 
 interface ResumoRecuperacaoApi {
@@ -153,16 +158,16 @@ export function PainelRecuperacao({
         {},
         // O motor respeita a cadência do provedor público (1 req/s) e tenta 5
         // caminhos por destino: a chamada passa dos 10s padrão com facilidade.
-        { timeoutMs: 180_000 }
+        { timeoutMs: 180_000 },
       );
       const r = corpo.data.resumo;
       if (r.recuperados + r.encontrados > 0) {
         toast.success(
-          `${r.encontrados} ${t("confirmado(s)")}, ${r.recuperados} ${t("corrigido(s) automaticamente.")}`
+          `${r.encontrados} ${t("confirmado(s)")}, ${r.recuperados} ${t("corrigido(s) automaticamente.")}`,
         );
       } else if (r.aguardandoConfirmacao > 0) {
         toast.warning(
-          `${r.aguardandoConfirmacao} ${t("endereço(s) precisam da sua confirmação.")}`
+          `${r.aguardandoConfirmacao} ${t("endereço(s) precisam da sua confirmação.")}`,
         );
       } else {
         toast.info(t("Nenhum endereço novo foi localizado."));
@@ -191,7 +196,7 @@ export function PainelRecuperacao({
           provedor: s.provedor === "photon" ? "photon" : "nominatim",
           ...(s.confianca != null ? { confianca: s.confianca } : {}),
           ...(s.motivo ? { motivo: s.motivo } : {}),
-        }
+        },
       );
       toast.success(t("Endereço confirmado — a parada está no mapa."));
       await carregar();
@@ -206,7 +211,10 @@ export function PainelRecuperacao({
   async function rejeitar(dest: DestinoRecuperacaoApi) {
     setTrabalhando(dest.destinationId);
     try {
-      await apiClient.post(`/api/v1/shipments/${cargaId}/destinos/${dest.destinationId}/rejeitar`, {});
+      await apiClient.post(
+        `/api/v1/shipments/${cargaId}/destinos/${dest.destinationId}/rejeitar`,
+        {},
+      );
       toast.info(t("Sugestão rejeitada. O endereço original foi preservado."));
       await carregar();
       await aoAtualizar();
@@ -220,7 +228,10 @@ export function PainelRecuperacao({
   async function reverter(dest: DestinoRecuperacaoApi) {
     setTrabalhando(dest.destinationId);
     try {
-      await apiClient.post(`/api/v1/shipments/${cargaId}/destinos/${dest.destinationId}/reverter`, {});
+      await apiClient.post(
+        `/api/v1/shipments/${cargaId}/destinos/${dest.destinationId}/reverter`,
+        {},
+      );
       toast.info(t("Recuperação desfeita. O endereço original voltou a valer."));
       await carregar();
       await aoAtualizar();
@@ -233,7 +244,7 @@ export function PainelRecuperacao({
 
   if (carregando) {
     return (
-      <Card className="min-w-0 p-0 xl:order-4">
+      <Card className="min-w-0 p-0">
         <div className="space-y-2 p-3.5">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-3 w-full" />
@@ -247,7 +258,7 @@ export function PainelRecuperacao({
   // e dizer isso é melhor que mostrar um painel vazio sem explicação.
   if (!destinos || destinos.length === 0) {
     return (
-      <Card className="min-w-0 p-0 xl:order-4">
+      <Card className="min-w-0 p-0">
         <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -259,22 +270,20 @@ export function PainelRecuperacao({
         </header>
         <p className="p-3.5 text-xs text-muted-foreground">
           {t(
-            "Esta carga não tem destinos persistidos. Geocodifique as paradas para habilitar a recuperação."
+            "Esta carga não tem destinos persistidos. Geocodifique as paradas para habilitar a recuperação.",
           )}
         </p>
       </Card>
     );
   }
 
-  const pendentes = destinos.filter(
-    (d) => d.status !== "encontrado" && d.status !== "recuperado"
-  );
+  const pendentes = destinos.filter((d) => d.status !== "encontrado" && d.status !== "recuperado");
   const resolvidos = destinos.filter((d) => d.status === "encontrado" || d.status === "recuperado");
   const recuperados = destinos.filter((d) => d.status === "recuperado");
   const zona = resumo?.pendentes ?? pendentes.length;
 
   return (
-    <Card className="min-w-0 p-0 xl:order-4">
+    <Card className="min-w-0 p-0">
       <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -325,7 +334,7 @@ export function PainelRecuperacao({
           <p className="flex items-start gap-1.5 rounded-md bg-warning-bg px-2 py-1.5 text-[11px] text-warning-fg">
             <Warning className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
             {t(
-              "A otimização fica bloqueada enquanto houver endereço sem confirmação. Confirme, rejeite ou corrija o cadastro."
+              "A otimização fica bloqueada enquanto houver endereço sem confirmação. Confirme, rejeite ou corrija o cadastro.",
             )}
           </p>
         )}
@@ -473,7 +482,7 @@ export function PainelRecuperacao({
         {recuperados.length > 0 && (
           <p className="text-[10px] text-text-subtle">
             {t(
-              "Correção automática só acontece com confiança alta, componentes verificáveis e precisão de rua ou número. O endereço original nunca é sobrescrito."
+              "Correção automática só acontece com confiança alta, componentes verificáveis e precisão de rua ou número. O endereço original nunca é sobrescrito.",
             )}
           </p>
         )}
@@ -482,21 +491,13 @@ export function PainelRecuperacao({
   );
 }
 
-function Contador({
-  rotulo,
-  valor,
-  alerta,
-}: {
-  rotulo: string;
-  valor: number;
-  alerta?: boolean;
-}) {
+function Contador({ rotulo, valor, alerta }: { rotulo: string; valor: number; alerta?: boolean }) {
   return (
     <div className="rounded-md border border-border px-1.5 py-1.5">
       <p
         className={cn(
           "text-base font-semibold tabular-nums",
-          alerta && valor > 0 ? "text-warning-fg" : "text-text"
+          alerta && valor > 0 ? "text-warning-fg" : "text-text",
         )}
       >
         {valor}

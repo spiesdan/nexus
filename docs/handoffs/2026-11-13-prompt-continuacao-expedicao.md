@@ -613,3 +613,62 @@ não tem.
 - Prova visual em app rodando com banco real (o CI smoke não cobre esta tela) —
   fora do escopo deste ambiente (não há Supabase nem banco semeados aqui).
 
+
+---
+
+## 14. Correção da página de rota (pós-1.52.1): layout e worker
+
+Publicada a 1.52.1, a tela de rota chegou ao operador com dois defeitos. Os dois
+foram reproduzidos aqui e estão travados por gate.
+
+### 14.1 O worker do MapLibre não existia no build
+
+O console do navegador, em produção, dizia:
+
+```
+rota Failed to load module script: non-JavaScript MIME type of "text/html"
+Error: Worker failed to load. Check that the worker URL is correct.
+```
+
+O MapLibre resolve o worker a partir de `import.meta.url` do bundle; no build
+Next/Turbopack esse caminho não tem o worker ao lado, e o servidor devolvia HTML
+no lugar do módulo. Consequência: as **linhas de rota (GeoJSON) não pintavam** —
+os pinos apareciam porque são DOM, o traçado não, porque quem indexa o GeoJSON é
+o worker.
+
+Correção: `maplibre-gl-worker.mjs` passou a ser servido por `public/` e o
+componente chama `setWorkerUrl("/maplibre-gl-worker.mjs")` antes de criar o mapa.
+`tests/unit/mapa-da-expedicao-e-maplibre.test.ts` ganhou dois casos: a chamada
+existe e vem antes de `new lib.Map(`, e o arquivo em `public/` é **byte a byte**
+o worker do maplibre instalado (bump de versão sem recopiar reprova).
+
+### 14.2 A página de rota tinha cinco itens num grid de três colunas
+
+`PainelRecuperacao` usava `xl:order-4` num grid que declara três colunas: o item
+não tinha coluna, caía na linha seguinte e a página terminava num bloco largo de
+cartões embaixo do mapa. Além disso, mapa, planejamento, recuperação e
+distribuição eram todos itens soltos do mesmo grid.
+
+O layout foi refeito na direção pedida: **mapa grande em cima, painéis abaixo**.
+
+1. cabeçalho da seção (`h2 text-base`, mesmo peso da seção "Paradas");
+2. faixa de números (`rounded-2xl border bg-surface shadow-xs`): entregas,
+   quantas estão no mapa, distância, tempo e mercadorias;
+3. **o mapa**, largo e alto (`min(58vh, 640px)`), sem chips flutuando por cima —
+   os números saíram de cima do desenho e foram para a faixa;
+4. **os painéis abaixo**, em `xl:grid-cols-3`: ordem de entrega (primeira, no
+   desktop e no celular), planejamento, e recuperação + distribuição.
+
+`tests/unit/expedicao-pagina-de-rota-layout.test.ts` (7 casos) mede a forma: o
+mapa não é coluna de grid, tem altura em `vh` ≥ 50, a faixa de números vem antes
+dele, os painéis vêm depois num grid próprio, e **nenhum cartão pede
+`xl:order-N`** — que era a assinatura do defeito.
+
+Também saiu `backdrop-blur` do aviso do mapa: `backdrop-filter` dentro de `main`
+é reprovado por `tests/e2e/auditoria-aceite-11-itens.spec.ts`.
+
+### 14.3 Prova visual
+
+`evidence/2026-11-13-expedicao/rota-mapa-no-topo.jpeg` — mesma bancada de
+produção (1680px), medindo na página: mapa `1648×640` em `y=209`, faixa de
+números acima, três painéis de trabalho abaixo. Console **sem erros**.

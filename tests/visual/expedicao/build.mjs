@@ -128,11 +128,12 @@ if (!existsSync(join(SAIDA, "bancada.js"))) {
 
 // ─── Worker do MapLibre ───────────────────────────────────────────────────
 // O MapLibre carrega o worker como módulo. Copiamos o arquivo oficial para o
-// diretório de saída e a bancada aponta setWorkerUrl para ele.
-const WORKER_SRC = join(
-  RAIZ,
-  "node_modules/.pnpm/maplibre-gl@6.18.0/node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
-);
+// diretório de saída e o componente aponta `setWorkerUrl("/maplibre-gl-worker.mjs")`.
+//
+// O caminho é resolvido pelo PACOTE instalado, não por `maplibre-gl@<versão>`:
+// hardcodar a versão aqui fazia a bancada quebrar (ou, pior, servir o worker de
+// outra versão) no primeiro bump do Dependabot.
+const WORKER_SRC = join(RAIZ, "node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs");
 if (!existsSync(WORKER_SRC)) {
   throw new Error(`maplibre-gl worker não encontrado: ${WORKER_SRC}`);
 }
