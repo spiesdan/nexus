@@ -313,3 +313,37 @@ encontrada, gates re-executados e preparação do corte de release.
   sessão. `curl` não prova UX (doctrine de QA Visual).
 - **Release**: fragments prontos; corte a executar no fluxo padrão (dispatch → release PR →
   merge → tag → publish → deploy → health). Nenhuma mudança de schema nesta entrega.
+
+---
+
+## 9. CONTINUAÇÃO — DESFECHO DO FLUXO DE RELEASE (2026-11-13, fim de sessão)
+
+### 9.1 Release v1.51.1 — cadeia completa (fragment → dispatch → release PR → merge → tag → publish → deploy → health)
+
+| Etapa | Resultado |
+|---|---|
+| Fragmentos (`.changes/`) | 4 novos desta sessão: agrupamento por destino; sequência manual invalida geometria; geocodificação fora de faixa; endereço novo não reusa coordenada. |
+| Dispatch `release` | Run `43329009641` → PR **#418** ("Release 1.51.1") criado. |
+| Merge do PR #418 | **23:29:50Z — MERGED**. |
+| Tag `v1.51.1` | Criada pelo workflow (commit do App) a partir do merge; publicada via `publish-image` (run da tag, `43329450066`). |
+| Publish (`publish-image`) | run da TAG: `imagem-do-app-sobe` **FALHOU** no build; `imagens-ok` reprovou (gate de boot); `promover-stable` **pulado**. |
+| Re-run publish (tag v1.51.1) | run `43329450066` re-executado → **SUCCESS**; `imagem-do-app-sobe` + `imagens-ok` + `promover-stable` → **SUCCESS**. Canal `stable` passou a apontar para a v1.51.1. |
+| Re-run e2e (main, pós-merge do release PR) | run `43329338301` re-executado → **SUCCESS** (mesmo flake de build; re-executou verde). |
+| Release run | `43329338202` re-executado → **SUCCESS** (corte idempotente: tag já existia). |
+| Deploy (VPS `crm.billhigiene.tech`) | `bash hostgator-setup-kit/update.sh` via SSH → **exit 0** ("✓ Atualização concluída — app no ar e saudável"). |
+| Health | `GET /api/v1/health` → **200** `{"status":"healthy","version":"1.51.1",...}`; checks supabase/redis/waha ok; raiz → `307`; containers `Healthy`. |
+
+### 9.2 Causa raiz do bloqueio da cadeia
+
+O build de produção (`pnpm build`, Turbopack default do Next 16) falhou nos runners do GitHub com
+`Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` — tanto no gate
+`imagem-do-app-sobe` (run da tag) quanto no build do e2e na main. **Não era defeito do código desta
+entrega** (nenhuma alteração tocou fontes/design): falha transitória nos runners, **reprovada
+localmente** com o mesmo env do Dockerfile (`✓ Compiled successfully in 16.7s`, `✓ Generating static
+pages (51/51)`).
+
+### 9.3 Estado final
+
+- Release **v1.51.1** publicada, `stable` promovido, deployada na VPS e com health check verde.
+- OR-Tools/VRPTW, MapLibre/Pelias, design visual §6.2, subtelas §6.3 restantes, E2E visual e matriz
+  de distâncias continuam como pendências registradas nos §§6/7/8.
