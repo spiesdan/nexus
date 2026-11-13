@@ -486,6 +486,13 @@ export const AUDIT_ACTIONS = [
   // porque a ordem sozinha não diz o veículo — e é essa pergunta que o
   // operador faz quando a entrega dá errado.
   "shipment.rota.distribuida",
+  // Address Recovery Engine (migration 0309). Recuperação de endereços com
+  // histórico: confirma, rejeita e reverte são rastreáveis para não haver
+  // correção silenciosa do endereço do cliente.
+  "shipment.rota.recuperada",
+  "shipment.rota.recuperacao_confirmada",
+  "shipment.rota.recuperacao_rejeitada",
+  "shipment.rota.recuperacao_revertida",
   // Frota (migration 0306/0307). Capacidade e jornada decidem o que o
   // otimizador pode alocar; mudar isso sem rastro deixa a distribuição
   // inexplicável depois.

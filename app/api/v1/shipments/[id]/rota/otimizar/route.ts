@@ -43,6 +43,8 @@ const corpoSchema = z.object({
   retornar_origem: z.boolean().optional(),
   tempo_parada_min: z.number().int().min(0).max(120).optional(),
   modo: z.enum(["tsp", "distancia"]).default("distancia"),
+  /** Bypassa o gate de destino pendente (decisão explícita do operador). */
+  ignorar_pendentes: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
@@ -63,6 +65,51 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const d = await carregarCargaComParadas(supabase, authz.org.orgId, id);
   if (!d) return fail("not_found", "Carga não encontrada.", 404, { requestId });
   if (d.paradas.length === 0) return fail("validation_failed", "Carga sem pedidos.", 422, { requestId });
+
+  // ── Gate do Address Recovery Engine (migration 0309) ───────────────────
+  // Recusa a otimização quando algum destino da carga não está resolvido: ou
+  // nunca foi tentado, ou ficou ambíguo e nenhum pino válido existe. Destino
+  // que já tem coordenada (`geo_status = 'ok'`) nunca bloqueia — a rota não
+  // pode parar por causa de um campo novo.
+  //
+  // O operador contorna com `ignorar_pendentes: true` (decisão explícita:
+  // prefere-se não roteirizar a enviar para endereço errado).
+  if (!parsed.data.ignorar_pendentes) {
+    const idsDestinos = d.paradas
+      .map((p) => p.destination_id)
+      .filter((id): id is string => Boolean(id));
+    if (idsDestinos.length > 0) {
+      const { data: todosDestinos } = await supabase
+        .from("shipment_destinations")
+        .select("id, chave, recuperacao_status, endereco_original, endereco_recuperado, latitude, longitude, geo_status")
+        .eq("organization_id", authz.org.orgId)
+        .in("id", idsDestinos);
+      const pendentes = (todosDestinos ?? []).filter(
+        (p) =>
+          (p.recuperacao_status === "nao_tentada" || p.recuperacao_status === "ambiguo") &&
+          (p.latitude == null || p.longitude == null || p.geo_status !== "ok")
+      );
+      if (pendentes.length > 0) {
+        return fail(
+          "validation_failed",
+          "Existem destinos sem endereço resolvido. Recupere os endereços antes de otimizar a rota.",
+          422,
+          {
+            requestId,
+            details: {
+              pendentes: pendentes.map((p) => ({
+                destinationId: p.id,
+                chave: p.chave,
+                status: p.recuperacao_status,
+                enderecoOriginal: p.endereco_original,
+                enderecoRecuperado: p.endereco_recuperado,
+              })),
+            },
+          }
+        );
+      }
+    }
+  }
 
   const comCoord = d.paradas.filter((p) => p.latitude != null && p.longitude != null);
   const naoRoteirizaveis = d.paradas.filter((p) => p.latitude == null || p.longitude == null).map((p) => p.chave);
