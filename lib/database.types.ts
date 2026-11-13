@@ -10067,6 +10067,63 @@ export type Database = {
           },
         ];
       };
+      shipment_destination_recoveries: {
+        Row: {
+          candidato: Json | null;
+          confianca: number | null;
+          consulta: string | null;
+          criado_em: string;
+          criado_por: string | null;
+          destination_id: string;
+          id: string;
+          motivo: string | null;
+          organization_id: string;
+          provedor: string;
+          tentativa: number;
+        };
+        Insert: {
+          candidato?: Json | null;
+          confianca?: number | null;
+          consulta?: string | null;
+          criado_em?: string;
+          criado_por?: string | null;
+          destination_id: string;
+          id?: string;
+          motivo?: string | null;
+          organization_id: string;
+          provedor: string;
+          tentativa: number;
+        };
+        Update: {
+          candidato?: Json | null;
+          confianca?: number | null;
+          consulta?: string | null;
+          criado_em?: string;
+          criado_por?: string | null;
+          destination_id?: string;
+          id?: string;
+          motivo?: string | null;
+          organization_id?: string;
+          provedor?: string;
+          tentativa?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipment_destination_recoveries_destination_id_fkey";
+            columns: ["destination_id"];
+            isOneToOne: false;
+            referencedRelation: "shipment_destinations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_destination_recoveries_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shipment_destinations: {
         Row: {
           atualizado_em: string;
@@ -10075,9 +10132,13 @@ export type Database = {
           chave: string;
           cidade: string | null;
           complemento: string | null;
+          confianca: number | null;
           contact_id: string | null;
           criado_em: string;
           endereco: string | null;
+          endereco_normalizado: string | null;
+          endereco_original: string | null;
+          endereco_recuperado: string | null;
           geo_em: string | null;
           geo_fonte: string | null;
           geo_precisao_m: number | null;
@@ -10085,8 +10146,12 @@ export type Database = {
           id: string;
           latitude: number | null;
           longitude: number | null;
+          metodo: string | null;
           numero: string | null;
           organization_id: string;
+          provedor: string | null;
+          recuperacao_status: string;
+          recuperado_em: string | null;
           uf: string | null;
         };
         Insert: {
@@ -10096,9 +10161,13 @@ export type Database = {
           chave: string;
           cidade?: string | null;
           complemento?: string | null;
+          confianca?: number | null;
           contact_id?: string | null;
           criado_em?: string;
           endereco?: string | null;
+          endereco_normalizado?: string | null;
+          endereco_original?: string | null;
+          endereco_recuperado?: string | null;
           geo_em?: string | null;
           geo_fonte?: string | null;
           geo_precisao_m?: number | null;
@@ -10106,8 +10175,12 @@ export type Database = {
           id?: string;
           latitude?: number | null;
           longitude?: number | null;
+          metodo?: string | null;
           numero?: string | null;
           organization_id: string;
+          provedor?: string | null;
+          recuperacao_status?: string;
+          recuperado_em?: string | null;
           uf?: string | null;
         };
         Update: {
@@ -10117,9 +10190,13 @@ export type Database = {
           chave?: string;
           cidade?: string | null;
           complemento?: string | null;
+          confianca?: number | null;
           contact_id?: string | null;
           criado_em?: string;
           endereco?: string | null;
+          endereco_normalizado?: string | null;
+          endereco_original?: string | null;
+          endereco_recuperado?: string | null;
           geo_em?: string | null;
           geo_fonte?: string | null;
           geo_precisao_m?: number | null;
@@ -10127,8 +10204,12 @@ export type Database = {
           id?: string;
           latitude?: number | null;
           longitude?: number | null;
+          metodo?: string | null;
           numero?: string | null;
           organization_id?: string;
+          provedor?: string | null;
+          recuperacao_status?: string;
+          recuperado_em?: string | null;
           uf?: string | null;
         };
         Relationships: [

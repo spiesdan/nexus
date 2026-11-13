@@ -29056,3 +29056,130 @@ begin
     end if;
   end loop;
 end $$;
+
+-- ─── 0309 — ADDRESS RECOVERY ENGINE ─────────────────────────────────────────
+--
+-- Apêndice idempotente do migration
+-- supabase/migrations/20261116130000_0309_address_recovery_engine.sql.
+--
+-- Recuperação de endereços com histórico auditável. Nada aqui reescreve o
+-- endereço que o vendedor digitou: `endereco_original` é imutável e cada
+-- tentativa do motor vira linha append-only em `shipment_destination_recoveries`.
+
+alter table public.shipment_destinations
+  add column if not exists endereco_original text;
+alter table public.shipment_destinations
+  add column if not exists endereco_normalizado text;
+alter table public.shipment_destinations
+  add column if not exists endereco_recuperado text;
+alter table public.shipment_destinations
+  add column if not exists recuperacao_status text not null default 'nao_tentada';
+alter table public.shipment_destinations
+  add column if not exists confianca numeric(4,3);
+alter table public.shipment_destinations
+  add column if not exists metodo text;
+alter table public.shipment_destinations
+  add column if not exists provedor text;
+alter table public.shipment_destinations
+  add column if not exists recuperado_em timestamptz;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_destinations_recuperacao_status_valido'
+  ) then
+    alter table public.shipment_destinations
+      add constraint shipment_destinations_recuperacao_status_valido
+      check (recuperacao_status in (
+        'nao_tentada', 'encontrado', 'recuperado', 'ambiguo', 'nao_encontrado', 'erro'
+      ));
+  end if;
+end $$;
+
+create index if not exists shipment_destinations_recuperacao_idx
+  on public.shipment_destinations (organization_id, recuperacao_status);
+
+create table if not exists public.shipment_destination_recoveries (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  destination_id uuid not null references public.shipment_destinations (id) on delete cascade,
+  tentativa integer not null,
+  provedor text not null,
+  consulta text,
+  candidato jsonb,
+  confianca numeric(4,3),
+  motivo text,
+  criado_em timestamptz not null default now(),
+  criado_por uuid references auth.users (id) on delete set null
+);
+
+create index if not exists shipment_destination_recoveries_dest_idx
+  on public.shipment_destination_recoveries (destination_id, tentativa);
+
+alter table public.shipment_destination_recoveries enable row level security;
+
+drop policy if exists shipment_destination_recoveries_select on public.shipment_destination_recoveries;
+create policy shipment_destination_recoveries_select on public.shipment_destination_recoveries
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists shipment_destination_recoveries_insert on public.shipment_destination_recoveries;
+create policy shipment_destination_recoveries_insert on public.shipment_destination_recoveries
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+revoke all on public.shipment_destination_recoveries from anon;
+grant select, insert on public.shipment_destination_recoveries to authenticated;
+grant all on public.shipment_destination_recoveries to service_role;
+
+drop policy if exists shipment_destinations_update_0309 on public.shipment_destinations;
+create policy shipment_destinations_update_0309 on public.shipment_destinations
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+grant select, insert, update on public.shipment_destinations to authenticated;
+grant all on public.shipment_destinations to service_role;
+
+comment on column public.shipment_destinations.endereco_original is
+  'Endereço informado pelo vendedor no pedido. Imutável: o motor grava o resultado em endereco_recuperado.';
+
+comment on column public.shipment_destinations.recuperacao_status is
+  'nao_tentada|encontrado|recuperado|ambiguo|nao_encontrado|erro. Só o motor de recuperação e o operador mudam este estado.';
+
+comment on column public.shipment_destinations.confianca is
+  'Pontuação 0–1 da última recuperação. Vetos duros (UF/CEP/município divergente) vencem qualquer pontuação.';
+
+comment on table public.shipment_destination_recoveries is
+  'Histórico append-only do Address Recovery Engine. Uma linha por tentativa; nunca se apaga. Base da auditoria e da reversão.';
+
+-- Backfill: original preenchido uma vez; quem já tem pino não passa a travar a
+-- rota por causa da coluna nova.
+update public.shipment_destinations
+   set endereco_original = coalesce(endereco_original, endereco)
+ where endereco_original is null;
+
+update public.shipment_destinations
+   set recuperacao_status = 'encontrado'
+ where recuperacao_status = 'nao_tentada'
+   and latitude is not null
+   and longitude is not null
+   and geo_status = 'ok';

@@ -111,6 +111,7 @@ beforeAll(() => {
       v_camp uuid;
       v_compra uuid;
       v_va uuid;
+      v_dest uuid;
       v_tag text;
       v_chave text;
     begin
@@ -549,6 +550,18 @@ beforeAll(() => {
             (organization_id, chave, endereco, geo_status)
             values (v_org, 'rls-' || v_tag || '::Rua da Prova, 100', 'Rua da Prova, 100', 'pendente');
         end if;
+        select id into v_dest from public.shipment_destinations where organization_id = v_org limit 1;
+
+        -- migration 0309 — histórico append-only do Address Recovery Engine.
+        -- O seed é a prova comportamental: a org lê a própria tentativa (≥1) e
+        -- 0 da vizinha. Insert-only por RLS; não há delete por papel.
+        if v_dest is not null and not exists (
+          select 1 from public.shipment_destination_recoveries where organization_id = v_org
+        ) then
+          insert into public.shipment_destination_recoveries
+            (organization_id, destination_id, tentativa, provedor, consulta, motivo)
+            values (v_org, v_dest, 1, 'nominatim', 'Rua da Prova, 100', 'seed de invariante RLS');
+        end if;
       end loop;
     end
     $seed$;
@@ -709,6 +722,10 @@ export const TABLES = [
   // org-scoped; a escrita é agent+ (inclusão na carga, geocodificação e pino
   // manual) e não há delete por papel: destino é snapshot, não rascunho.
   "shipment_destinations",
+  // migration 0309 — histórico append-only da recuperação de endereços.
+  // Leitura org-scoped; escrita agent+ e sem delete por papel: histórico de
+  // correção de endereço é auditoria, não rascunho.
+  "shipment_destination_recoveries",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {
