@@ -438,3 +438,45 @@ apóstrofo. Se for mexer, valide nos dois bashes.
 - [ ] Romaneio em PDF intocado (gate verde).
 - [ ] Prova visual (E2E) se tocou UI.
 - [ ] `.changes/` atualizado e compatível com a versão publicada.
+
+---
+
+## 11. Estado final (2026-11-13) — o que foi entregue
+
+O que este handoff pedia está implementado, testado e no PR #420
+(`feat/f5-vrptw-servico-python` → `main`). O corte da **1.52.0** é feito pelo
+workflow `release` depois do merge; os fragmentos ficam em `.changes/`.
+
+### Entregue nesta rodada
+
+- **Address Recovery Engine** (`lib/rotas/recuperacao/`): 5 tentativas, confiança auditável,
+  vetos duros, Photon opcional, original imutável, histórico append-only.
+- **Migration 0309** + apêndice no baseline + MANIFEST + `database.types.ts` + seed de RLS.
+- **API**: `POST /rota/recuperar`, `GET /rota/recuperacoes`,
+  `POST /destinos/[destinationId]/{confirmar,rejeitar,reverter}`.
+- **Gate do `otimizar`**: 422 com a lista de pendentes; `ignorar_pendentes` como override
+  explícito; destino com pino válido nunca bloqueia (backfill não para carga existente).
+- **Painel de recuperação** no planejador (`app/app/expedicao/[id]/_recuperacao.tsx`), com
+  original × sugerido, confiança, método, motivo e confirmar/rejeitar/desfazer.
+- **Testes**: 17 do motor + 9 das rotas + 4 do gate, com provedores simulados (sem rede).
+
+### Gates medidos nesta máquina
+
+| Gate | Resultado |
+|---|---|
+| `pnpm typecheck` | zerado |
+| `pnpm lint` | 0 erros (472 warnings pré-existentes) |
+| `pnpm test:unit` | 10.084 verdes + 1 expected fail; única falha é o caso de DNS de `channel-adapter-zernio.test.ts` (ambiente resolve `zernio.com` para `198.18.1.0`) |
+| `pnpm test:db` | verde — 158 arquivos, 1.486 casos, incluindo RLS da tabela nova |
+| `pytest services/rota` | não executado (solver não foi tocado nesta rodada) |
+| `pnpm test:shell` | não executado (falso negativo conhecido em bash 3.2 do macOS, §8) |
+| E2E / prova visual | **não executado aqui** — exige app + banco semeados; o CI roda `e2e` smoke no PR e critical na main |
+
+### O que continua aberto (fora do escopo deste MD)
+
+- **Prova visual** do painel de recuperação em app rodando (o CI smoke não cobre esta tela).
+- **Central de expedição de três áreas** (§6.1/§6.3) e **restrições hard/soft do solver**
+  (§4.1) — outro ciclo, como já registrado no §3.
+- **Observabilidade de painel** (tempo médio de recuperação por provedor): hoje há log
+  estruturado por desfecho (`recuperacao.endereco`, `recuperacao.aguardando_confirmacao`,
+  `recuperacao.sem_resultado`), sem agregação em tela.

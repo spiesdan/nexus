@@ -10,8 +10,8 @@
 
 ## Contexto
 
-O prompt de remodelação da expedição (`docs/PROMPT-V5-EXPEDICAO-ROTEIRIZACAO.md`, §1) sugeria
-MapLibre GL JS, Photon ou Pelias e OSRM. A auditoria do repositório mostrou que a expedição já
+O requisito de remodelação da expedição (§1) sugeria MapLibre GL JS, Photon ou Pelias e OSRM.
+A auditoria do repositório mostrou que a expedição já
 tinha um caminho funcionando com **Leaflet** (já instalado), **OpenStreetMap** como fonte de
 tiles, **Nominatim** para geocodificação e **OSRM** para ruas e matrizes. O custo de trocar de
 biblioteca de mapa não era só o pacote: eram todos os comportamentos já medidos e pagos com
