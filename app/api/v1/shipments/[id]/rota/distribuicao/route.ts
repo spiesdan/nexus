@@ -68,6 +68,18 @@ type VeiculoSnapshot = {
   placa: string | null;
   motorista_nome: string | null;
   paradas: string[];
+  /**
+   * O que cada parada ERA no momento da confirmação: destino persistido,
+   * coordenada e estado da geocodificação. `paradas` (string[]) segue sendo a
+   * leitura do app do motorista.
+   */
+  paradas_detalhe?: {
+    chave: string;
+    destination_id: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    geo_status: string;
+  }[];
   chegadas_s?: number[];
   distancia_m: number | null;
   duracao_s: number | null;
@@ -356,6 +368,22 @@ export async function PATCH(
   }
 
   // ── Snapshot imutável da distribuição ──────────────────────────────────────
+  // Detalhe de cada parada no snapshot: a chave sozinha não diz QUAL endereço
+  // foi planejado nem se ele tinha coordenada (prompt §5). `paradas` continua
+  // string[] porque é o que o app do motorista lê.
+  const detalhePorChave = new Map(
+    d.paradas.map((p) => [
+      p.chave,
+      {
+        chave: p.chave,
+        destination_id: p.destination_id ?? null,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        geo_status: p.geo_status,
+      },
+    ]),
+  );
+
   const snapshot: VeiculoSnapshot[] = corpo.veiculos.map((entrada) => {
     const veiculo = entrada.veiculo_id ? veiculosDaFrota.get(entrada.veiculo_id) : null;
     const motorista = entrada.motorista_id
@@ -374,6 +402,9 @@ export async function PATCH(
       placa: veiculo?.placa ?? d.carga.placa ?? null,
       motorista_nome: motorista?.nome ?? d.carga.motorista_nome ?? null,
       paradas: entrada.paradas,
+      paradas_detalhe: entrada.paradas
+        .map((c) => detalhePorChave.get(c))
+        .filter((x): x is NonNullable<typeof x> => x != null),
       ...(entrada.chegadas_s ? { chegadas_s: entrada.chegadas_s } : {}),
       distancia_m: entrada.distancia_m ?? null,
       duracao_s: entrada.duracao_s ?? null,

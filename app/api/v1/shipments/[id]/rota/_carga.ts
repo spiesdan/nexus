@@ -62,7 +62,7 @@ export async function carregarCargaComParadas(
   const { data: itens } = await supabase
     .from("shipment_orders")
     .select(
-      "id, order_id, sequencia, status, separado_em, veiculo_id, motorista_id, sequencia_veiculo, janela_inicio, janela_fim",
+      "id, order_id, sequencia, status, separado_em, veiculo_id, motorista_id, sequencia_veiculo, janela_inicio, janela_fim, destination_id",
     )
     .eq("shipment_id", shipmentId)
     .eq("organization_id", orgId)
@@ -78,6 +78,7 @@ export async function carregarCargaComParadas(
     sequencia_veiculo: number | null;
     janela_inicio: string | null;
     janela_fim: string | null;
+    destination_id: string | null;
   }[]);
   if (lista.length === 0) {
     return { carga: carga as unknown as CargaRota, itens: [], paradas: [] };
@@ -166,6 +167,36 @@ export async function carregarCargaComParadas(
     }[]).map((p) => [p.id, p]),
   );
 
+  // O DESTINO PERSISTIDO (migration 0308) — endereço e coordenada do ENDEREÇO,
+  // não do cliente. É a fonte primária; o cadastro só entra quando a carga é
+  // anterior a esta migration (`destination_id` nulo).
+  const idsDestinos = [...new Set(lista.map((i) => i.destination_id).filter(Boolean))] as string[];
+  const porDestino = new Map<string, {
+    id: string;
+    endereco: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    geo_status: string | null;
+    geo_fonte: string | null;
+  }>();
+  if (idsDestinos.length > 0) {
+    const { data: destinos } = await supabase
+      .from("shipment_destinations")
+      .select("id, endereco, latitude, longitude, geo_status, geo_fonte")
+      .eq("organization_id", orgId)
+      .in("id", idsDestinos);
+    for (const d of (destinos ?? []) as unknown as {
+      id: string;
+      endereco: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      geo_status: string | null;
+      geo_fonte: string | null;
+    }[]) {
+      porDestino.set(d.id, d);
+    }
+  }
+
   const idsContatos = [...new Set([...porPedido.values()].map((p) => p.contact_id).filter(Boolean))] as string[];
   let porContato = new Map<string, {
     id: string;
@@ -216,6 +247,7 @@ export async function carregarCargaComParadas(
   const paraParada: ItemDaCargaParaParada[] = lista.map((i) => {
     const p = porPedido.get(i.order_id);
     const c = p?.contact_id ? porContato.get(p.contact_id) : undefined;
+    const destino = i.destination_id ? porDestino.get(i.destination_id) : undefined;
     return {
       shipment_order_id: i.id,
       order_id: i.order_id,
@@ -225,6 +257,7 @@ export async function carregarCargaComParadas(
       numero: p?.numero ?? 0,
       cliente_nome: p?.cliente_nome ?? "?",
       contact_id: p?.contact_id ?? null,
+      destination_id: i.destination_id,
       contato_nome: c ? (c.display_name ?? c.name) : null,
       fone: c?.phone_number ?? null,
       // O ENDEREÇO DA PARADA — o do PEDIDO quando o operador escolheu outro
@@ -242,11 +275,16 @@ export async function carregarCargaComParadas(
       // EXISTE mas nasceu sem a rua (o cadastro estava incompleto na hora do
       // faturamento) e vencia o cadastro já completo. Endereço sem rua não é
       // ponto de entrega escolhido — é dado velho.
-      endereco_entrega: linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
-      latitude: c?.latitude ?? null,
-      longitude: c?.longitude ?? null,
-      geo_status: c?.geo_status ?? "pendente",
-      geo_fonte: c?.geo_fonte ?? null,
+      //
+      // Com destino persistido, o snapshot VENCE: é o endereço que o pedido
+      // tinha quando entrou na carga, e mexer no cadastro do cliente depois
+      // disso não move a entrega planejada (prompt §2).
+      endereco_entrega:
+        destino?.endereco ?? linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
+      latitude: destino ? destino.latitude : (c?.latitude ?? null),
+      longitude: destino ? destino.longitude : (c?.longitude ?? null),
+      geo_status: destino ? (destino.geo_status ?? "pendente") : (c?.geo_status ?? "pendente"),
+      geo_fonte: destino ? destino.geo_fonte : (c?.geo_fonte ?? null),
       total_cents: p?.total_cents ?? 0,
       itens: porPedidoItens.get(i.order_id) ?? [],
       veiculo_id: i.veiculo_id,

@@ -24,6 +24,12 @@ export interface ItemDaParada {
 export interface ParadaDaRota {
   /** Chave estável do destino: `contact_id`/`avulso:<nome>` + "::endereço" quando há destino. */
   chave: string;
+  /**
+   * Identidade persistida do destino (`shipment_destinations`, migration 0308).
+   * `chave` continua sendo o que a tela usa; o id é o que autoriza geocodificar
+   * e marcar pino sem tocar no cadastro do cliente. NULL em carga legada.
+   */
+  destination_id?: string | null;
   contact_id: string | null;
   cliente: string;
   fone: string | null;
@@ -65,6 +71,7 @@ export interface ItemDaCargaParaParada {
   contato_nome: string | null;
   fone: string | null;
   endereco_entrega: string | null;
+  destination_id?: string | null;
   latitude: number | null;
   longitude: number | null;
   geo_status: string | null;
@@ -107,6 +114,7 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
     if (!p) {
       p = {
         chave,
+        destination_id: i.destination_id ?? null,
         contact_id: i.contact_id,
         cliente: i.contato_nome?.trim() || i.cliente_nome,
         fone: i.fone,

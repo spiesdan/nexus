@@ -9948,6 +9948,7 @@ export type Database = {
       };
       shipment_orders: {
         Row: {
+          destination_id: string | null;
           conferido: boolean;
           created_at: string;
           entregue_em: string | null;
@@ -9972,6 +9973,7 @@ export type Database = {
           veiculo_id: string | null;
         };
         Insert: {
+          destination_id?: string | null;
           conferido?: boolean;
           created_at?: string;
           entregue_em?: string | null;
@@ -9996,6 +9998,7 @@ export type Database = {
           veiculo_id?: string | null;
         };
         Update: {
+          destination_id?: string | null;
           conferido?: boolean;
           created_at?: string;
           entregue_em?: string | null;
@@ -10020,6 +10023,13 @@ export type Database = {
           veiculo_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "shipment_orders_destination_id_fkey";
+            columns: ["destination_id"];
+            isOneToOne: false;
+            referencedRelation: "shipment_destinations";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "shipment_orders_order_id_fkey";
             columns: ["order_id"];
@@ -10053,6 +10063,87 @@ export type Database = {
             columns: ["motorista_id"];
             isOneToOne: false;
             referencedRelation: "fleet_drivers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      shipment_destinations: {
+        Row: {
+          atualizado_em: string;
+          bairro: string | null;
+          cep: string | null;
+          chave: string;
+          cidade: string | null;
+          complemento: string | null;
+          contact_id: string | null;
+          criado_em: string;
+          endereco: string | null;
+          geo_em: string | null;
+          geo_fonte: string | null;
+          geo_precisao_m: number | null;
+          geo_status: string;
+          id: string;
+          latitude: number | null;
+          longitude: number | null;
+          numero: string | null;
+          organization_id: string;
+          uf: string | null;
+        };
+        Insert: {
+          atualizado_em?: string;
+          bairro?: string | null;
+          cep?: string | null;
+          chave: string;
+          cidade?: string | null;
+          complemento?: string | null;
+          contact_id?: string | null;
+          criado_em?: string;
+          endereco?: string | null;
+          geo_em?: string | null;
+          geo_fonte?: string | null;
+          geo_precisao_m?: number | null;
+          geo_status?: string;
+          id?: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          numero?: string | null;
+          organization_id: string;
+          uf?: string | null;
+        };
+        Update: {
+          atualizado_em?: string;
+          bairro?: string | null;
+          cep?: string | null;
+          chave?: string;
+          cidade?: string | null;
+          complemento?: string | null;
+          contact_id?: string | null;
+          criado_em?: string;
+          endereco?: string | null;
+          geo_em?: string | null;
+          geo_fonte?: string | null;
+          geo_precisao_m?: number | null;
+          geo_status?: string;
+          id?: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          numero?: string | null;
+          organization_id?: string;
+          uf?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipment_destinations_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_destinations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];

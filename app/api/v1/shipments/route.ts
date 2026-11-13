@@ -13,6 +13,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { garantirDestinosDosPedidos } from "@/lib/rotas/destinos-do-banco";
 import {
   cargaCreateSchema,
   COLUNAS_DA_CARGA,
@@ -156,6 +157,26 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (erroItens) {
       await supabase.from("shipments").delete().eq("id", cargaId);
       return fail("internal_error", "Erro ao embarcar os pedidos.", 500, { requestId });
+    }
+    // O DESTINO NASCE AQUI (prompt §2): snapshot do endereço efetivo de cada
+    // pedido neste instante. Depois disto, mexer no cadastro do cliente não
+    // move a entrega já planejada.
+    const { destinos, erro: erroDestinos } = await garantirDestinosDosPedidos(
+      supabase,
+      authz.org.orgId,
+      ids,
+    );
+    if (erroDestinos) {
+      await supabase.from("shipments").delete().eq("id", cargaId);
+      return fail("internal_error", erroDestinos, 500, { requestId });
+    }
+    for (const [orderId, destinoId] of destinos) {
+      await supabase
+        .from("shipment_orders")
+        .update({ destination_id: destinoId })
+        .eq("shipment_id", cargaId)
+        .eq("order_id", orderId)
+        .eq("organization_id", authz.org.orgId);
     }
     // Quem embarcou sai da fila: avança para `expedido`, e a lista de
     // "aguardando embarque" (só aprovado/concluído/faturado) deixa de mostrá-lo.

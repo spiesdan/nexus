@@ -24,6 +24,7 @@ import {
   cidadeDaEntrega,
   nomeDaEntrega,
 } from "@/lib/expedicao/endereco-da-entrega";
+import { garantirDestinosDosPedidos } from "@/lib/rotas/destinos-do-banco";
 import { STATUS_EMBARCAVEIS } from "@/lib/schemas/expedicao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -193,6 +194,24 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     .select("id, order_id, sequencia");
   if (erroItens) {
     return fail("internal_error", "Erro ao pôr os pedidos na carga.", 500, { requestId });
+  }
+
+  // Destino com snapshot, igual à criação da carga (prompt §2).
+  const { destinos, erro: erroDestinos } = await garantirDestinosDosPedidos(
+    supabase,
+    authz.org.orgId,
+    ids,
+  );
+  if (erroDestinos) {
+    return fail("internal_error", erroDestinos, 500, { requestId });
+  }
+  for (const [orderId, destinoId] of destinos) {
+    await supabase
+      .from("shipment_orders")
+      .update({ destination_id: destinoId })
+      .eq("shipment_id", id)
+      .eq("order_id", orderId)
+      .eq("organization_id", authz.org.orgId);
   }
 
   // Mesma regra da criação da carga: quem embarcou sai da fila de embarque.

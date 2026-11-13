@@ -25,6 +25,8 @@ import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 
 export interface ParadaRotaApi {
   chave: string;
+  /** Identidade do ENDEREÇO (migration 0308) — o que autoriza geocodificar e fixar pino. */
+  destination_id: string | null;
   contact_id: string | null;
   cliente: string;
   fone: string | null;
@@ -536,7 +538,7 @@ export function Roteirizador({
    * dentro do cálculo da ordem ele é `"otimizar"`, para os botões não voltarem
    * a ficar clicáveis no meio da operação.
    */
-  async function geocodificarTudo(rotulo = "geo", contactIds?: string[]): Promise<number> {
+  async function geocodificarTudo(rotulo = "geo", destinationIds?: string[]): Promise<number> {
     setTrabalhando(rotulo);
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
@@ -546,10 +548,10 @@ export function Roteirizador({
       for (;;) {
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
           `/api/v1/shipments/${cargaId}/rota/geocodificar`,
-          // `contact_ids` só vai quando é uma parada específica ("Tentar de
-          // novo" num pino aproximado): é o que autoriza regeocodificar quem
-          // já tem coordenada, sem varrer a carga inteira a cada clique.
-          contactIds ? { contact_ids: contactIds } : {},
+          // `destination_ids` só vai quando é um DESTINO específico ("Tentar
+          // de novo" num pino aproximado): é o que autoriza regeocodificar
+          // quem já tem coordenada, sem varrer a carga inteira a cada clique.
+          destinationIds ? { destination_ids: destinationIds } : {},
           // Até 8 consultas por contato (rua → CEP → município) × 1,1s de
           // ritmo justo, em lote de 10: a chamada passa fácil dos 60s. O
           // timeout padrão de 10s abortava justamente as paradas difíceis —
@@ -928,8 +930,9 @@ export function Roteirizador({
     setProposta(null);
   }
 
-  function alternarMarcar(contactId: string) {
-    setMarcarPara((atual) => (atual === contactId ? null : contactId));
+  /** `destino` é o id do DESTINO (0308) — ou o contato, em carga legada. */
+  function alternarMarcar(destino: string) {
+    setMarcarPara((atual) => (atual === destino ? null : destino));
     setPinoPendente(null);
   }
 
@@ -947,7 +950,7 @@ export function Roteirizador({
     setTrabalhando("pino");
     try {
       await apiClient.post(`/api/v1/shipments/${cargaId}/rota/manual`, {
-        contact_id: marcarPara,
+        destination_id: marcarPara,
         latitude: Number(pinoPendente.lat.toFixed(6)),
         longitude: Number(pinoPendente.lng.toFixed(6)),
       });
@@ -1625,7 +1628,7 @@ export function Roteirizador({
                         ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
                         : ""}
                     </span>
-                    {podeOperar && p.contact_id && (
+                    {podeOperar && (p.destination_id ?? p.contact_id) && (
                       <>
                         {(p.geo_status !== "ok" ||
                           p.geo_fonte === "nominatim:bairro" ||
@@ -1633,7 +1636,9 @@ export function Roteirizador({
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() => void geocodificarTudo("geo", [p.contact_id as string])}
+                            onClick={() =>
+                              void geocodificarTudo("geo", [(p.destination_id ?? p.contact_id) as string])
+                            }
                           >
                             {t("Tentar de novo")}
                           </button>
@@ -1646,12 +1651,14 @@ export function Roteirizador({
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() => alternarMarcar(p.contact_id as string)}
+                            onClick={() => alternarMarcar((p.destination_id ?? p.contact_id) as string)}
                           >
-                            {marcarPara === p.contact_id ? t("Cancelar marcação") : t("Marcar no mapa")}
+                            {marcarPara === (p.destination_id ?? p.contact_id)
+                              ? t("Cancelar marcação")
+                              : t("Marcar no mapa")}
                           </button>
                         )}
-                        {(p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
+                        {p.contact_id && (p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
                           <Link
                             href={`/app/contacts/${p.contact_id}`}
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"

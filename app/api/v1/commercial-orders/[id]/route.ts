@@ -12,6 +12,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { garantirDestinosDosPedidos } from "@/lib/rotas/destinos-do-banco";
 import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO, pedidoPatchSchema } from "@/lib/schemas/pedidos";
 import { cabeNoCredito, situacaoDeCredito } from "@/lib/comercial/credito";
 import { gerarRecebiveis } from "@/lib/comercial/financeiro";
@@ -100,9 +101,10 @@ export async function PATCH(
   }
 
   // Endereço de entrega mudou (prompt §3): a geocodificação em cache do
-  // contato não pode sobreviver ao destino novo — a coordenada antiga
-  // pertence ao endereço anterior. Limpa o cache para a próxima resolução
-  // não casar o novo destino com coordenadas velhas (prompt §8, teste 3).
+  // CONTATO não pode sobreviver ao destino novo — a coordenada antiga pertence
+  // ao endereço anterior. Continua valendo para carga legada (sem destino) e
+  // para a próxima inclusão; o pedido já embarcado resolve abaixo, com um
+  // destino novo (prompt §8, teste 3).
   if (atualizacao.endereco_entrega !== undefined) {
     const { data: ordemContato } = await supabase
       .from("commercial_orders")
@@ -216,6 +218,31 @@ export async function PATCH(
 
   if (error || !data) {
     return fail("not_found", "Pedido não encontrado.", 404, { requestId });
+  }
+
+  // Endereço de entrega mudou DEPOIS do update (prompt §2/§8, teste 3): o
+  // destino é snapshot e a linha antiga não se reescreve — o pedido ganha um
+  // destino NOVO, com coordenada zerada, e a parada passa a apontar para ele.
+  // Antes daqui, o único efeito era limpar o cache do CONTATO, o que movia
+  // também as outras entregas do mesmo cliente.
+  if (atualizacao.endereco_entrega !== undefined) {
+    const { data: naCarga } = await supabase
+      .from("shipment_orders")
+      .select("shipment_id")
+      .eq("order_id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    if (naCarga) {
+      const { destinos } = await garantirDestinosDosPedidos(supabase, authz.org.orgId, [id]);
+      const destinoId = destinos.get(id);
+      if (destinoId) {
+        await supabase
+          .from("shipment_orders")
+          .update({ destination_id: destinoId })
+          .eq("order_id", id)
+          .eq("organization_id", authz.org.orgId);
+      }
+    }
   }
 
   await audit({

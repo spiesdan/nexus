@@ -540,6 +540,15 @@ beforeAll(() => {
             (organization_id, shipment_id, versao, algoritmo, veiculos)
             values (v_org, v_shi, 1, 'ortools-vrptw-1', '[]'::jsonb);
         end if;
+
+        -- migration 0308 — destino da entrega com snapshot (prompt §2). O seed
+        -- usa a carga já criada: a chave é única por organização, então o
+        -- sufixo da tag evita colisão entre as duas orgs do teste.
+        if not exists (select 1 from public.shipment_destinations where organization_id = v_org) then
+          insert into public.shipment_destinations
+            (organization_id, chave, endereco, geo_status)
+            values (v_org, 'rls-' || v_tag || '::Rua da Prova, 100', 'Rua da Prova, 100', 'pendente');
+        end if;
       end loop;
     end
     $seed$;
@@ -696,6 +705,10 @@ export const TABLES = [
   // escrita é agent+ (confirmar distribuição) e não há delete por papel:
   // histórico de rota é snapshot, não rascunho.
   "shipment_route_versions",
+  // migration 0308 — destino da entrega (endereço + coordenada). Leitura
+  // org-scoped; a escrita é agent+ (inclusão na carga, geocodificação e pino
+  // manual) e não há delete por papel: destino é snapshot, não rascunho.
+  "shipment_destinations",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

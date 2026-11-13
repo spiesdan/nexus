@@ -21,6 +21,11 @@ import { carregarCargaComParadas } from "../_carga";
 export const dynamic = "force-dynamic";
 
 const corpoSchema = z.object({
+  /**
+   * Alvos por DESTINO (migration 0308) — é o endereço que tem coordenada, não
+   * o cliente. `contact_ids` continua aceito para carga anterior à migration.
+   */
+  destination_ids: z.array(z.string().uuid()).max(20).optional(),
   contact_ids: z.array(z.string().uuid()).max(20).optional(),
 });
 
@@ -54,10 +59,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // quem está num ponto aproximado. Sem isso, o pino de cidade/prefeitura
   // ficava congelado para sempre: a geocodificação só olhava lat/lng nulos e
   // nunca revisitava uma parada marcada como "ok" mas aproximada.
-  const pedidos = parsed.data.contact_ids;
+  const pedidosDestino = parsed.data.destination_ids;
+  const pedidosContato = parsed.data.contact_ids;
+  const pedidos = pedidosDestino ?? pedidosContato;
   const alvos = d.paradas.filter((p) => {
-    if (!p.contact_id || !p.endereco) return false;
-    if (pedidos && !pedidos.includes(p.contact_id)) return false;
+    if (!(p.destination_id ?? p.contact_id) || !p.endereco) return false;
+    if (pedidosDestino && (!p.destination_id || !pedidosDestino.includes(p.destination_id))) return false;
+    if (pedidosContato && (!p.contact_id || !pedidosContato.includes(p.contact_id))) return false;
     // Pino marcado à mão é decisão do humano — geocodificação nunca o desfaz.
     if (p.geo_fonte === "manual") return false;
     const semCoord = p.latitude == null || p.longitude == null;
@@ -68,23 +76,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   // Só contatos desta carga — o body não inventa destino.
-  const { data: contatos } = await supabase
-    .from("contacts")
-    .select("id, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
-    .eq("organization_id", authz.org.orgId)
-    .in(
-      "id",
-      alvos.map((a) => a.contact_id as string).slice(0, MAXIMO_POR_CHAMADA),
-    );
+  const idsContatosDosAlvos = alvos
+    .map((a) => a.contact_id)
+    .filter((c): c is string => Boolean(c))
+    .slice(0, MAXIMO_POR_CHAMADA);
+  const { data: contatos } = idsContatosDosAlvos.length
+    ? await supabase
+        .from("contacts")
+        .select("id, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
+        .eq("organization_id", authz.org.orgId)
+        .in("id", idsContatosDosAlvos)
+    : { data: [] as unknown[] };
   const porId = new Map(
     ((contatos ?? []) as unknown as Record<string, string | null>[]).map((c) => [c.id as string, c]),
   );
 
-  const estados: { contact_id: string; estado: string }[] = [];
+  const estados: { destination_id: string | null; contact_id: string | null; estado: string }[] = [];
   for (const alvo of alvos.slice(0, MAXIMO_POR_CHAMADA)) {
-    const c = porId.get(alvo.contact_id as string);
-    if (!c) continue;
-    const s = (k: string) => (c[k] as string | null) ?? null;
+    // Sem contato (avulso) a cadeia trabalha só com a linha do endereço — as
+    // partes viram null, e `geocodificarComFallback` extrai da própria linha.
+    const c = alvo.contact_id ? porId.get(alvo.contact_id) : undefined;
+    const s = (k: string) => (c?.[k] as string | null) ?? null;
     // Cadeia de fallback (rua+número → expandida → sem número): cada fase
     // existe por um envenenamento medido — número com "sala03", "65, 65"
     // colado, "R CEL" abreviado, "LOJA" no bairro.
@@ -109,8 +121,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             geo_fonte: `nominatim:${r.precisao ?? "rua"}`,
           }
         : { latitude: null, longitude: null, geo_status: r.estado, geo_em: new Date().toISOString(), geo_fonte: "nominatim" };
-    await supabase.from("contacts").update(patch).eq("id", alvo.contact_id).eq("organization_id", authz.org.orgId);
-    estados.push({ contact_id: alvo.contact_id as string, estado: r.estado });
+    // Grava no DESTINO. O cadastro do contato só é tocado em carga legada
+    // (sem `destination_id`) — gravar sempre no contato era o defeito que
+    // fazia dois endereços do mesmo cliente compartilharem um pino.
+    if (alvo.destination_id) {
+      await supabase
+        .from("shipment_destinations")
+        .update(patch)
+        .eq("id", alvo.destination_id)
+        .eq("organization_id", authz.org.orgId);
+    } else {
+      await supabase
+        .from("contacts")
+        .update(patch)
+        .eq("id", alvo.contact_id as string)
+        .eq("organization_id", authz.org.orgId);
+    }
+    estados.push({ destination_id: alvo.destination_id ?? null, contact_id: alvo.contact_id, estado: r.estado });
   }
 
   await audit({
