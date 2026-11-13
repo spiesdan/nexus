@@ -28507,6 +28507,45 @@ alter table public.commercial_orders add column if not exists informacoes_fiscai
 comment on column public.commercial_orders.informacoes_fiscais is
   'Informações Fiscais do pedido: o texto que a emissão grava como informacoes_complementares (infCpl) da NF-e — ex.: ordem de compra. O campo editável que alimentava o mesmo infCpl era `observacoes`; a emissão passa a ler primeiro este campo e cair no legado quando vazio.';
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0310 — CONTAGENS DO INBOX EM UMA ÚNICA VARREDURA
+--
+-- `/api/v1/conversations/counts` disparava 4 queries em paralelo; cada uma
+-- levava ~1,2 s e o pico batia 7991 ms contra o `statement_timeout` de 8 s do
+-- role `authenticated` — daí o 500 `57014` na Inbox. A causa é a RLS de
+-- `conversations` (2 funções por linha, 3 subconsultas de papel cada) somada a
+-- 4 varreduras completas da mesma tabela. Uma varredura com `count(*) filter`
+-- faz o mesmo trabalho em 799 ms. `security invoker`: a RLS continua valendo.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create or replace function public.fn_conversas_contagens(
+  p_org uuid,
+  p_me uuid,
+  p_comandos text[],
+  p_terminais text[]
+)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public
+as $fn$
+  select jsonb_build_object(
+    'fila', count(*) filter (where public.comando_da_conversa(conversations) = any (p_comandos)),
+    'automatico', count(*) filter (where public.comando_da_conversa(conversations) = 'automatico'),
+    'mine', count(*) filter (where assigned_to_user_id = p_me and status <> all (p_terminais)),
+    'all', count(*)
+  )
+  from public.conversations
+  where organization_id = p_org;
+$fn$;
+
+comment on function public.fn_conversas_contagens(uuid, uuid, text[], text[])
+  is 'Contagens por visão do inbox em UMA varredura. Espelha tabToFilter (InboxLayout); SECURITY INVOKER para a RLS de conversations valer.';
+
+revoke execute on function public.fn_conversas_contagens(uuid, uuid, text[], text[]) from public, anon;
+grant execute on function public.fn_conversas_contagens(uuid, uuid, text[], text[]) to authenticated, service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
@@ -29183,3 +29222,4 @@ update public.shipment_destinations
    and latitude is not null
    and longitude is not null
    and geo_status = 'ok';
+
