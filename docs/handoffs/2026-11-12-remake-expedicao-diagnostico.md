@@ -347,3 +347,40 @@ pages (51/51)`).
 - Release **v1.51.1** publicada, `stable` promovido, deployada na VPS e com health check verde.
 - OR-Tools/VRPTW, MapLibre/Pelias, design visual §6.2, subtelas §6.3 restantes, E2E visual e matriz
   de distâncias continuam como pendências registradas nos §§6/7/8.
+
+---
+
+## 10. STATUS FINAL — REMAKE DA EXPEDIÇÃO (2026-11-13)
+
+### 10.1 Entregue nesta continuação (sessões de 12/12 e 13/11 de 2026)
+
+1. **Subtelas remanescentes auditadas** (§8.1): fila, fechamento, motorista, ficha raiz e montagem —
+   todas nos estados documentados; nenhuma pendência nova encontrada.
+2. **Bug crítico de UI corrigido** (§8.2): checkbox de pedido em `/app/expedicao/nova` com
+   `checked={false}` fixo → `checked={selecionados.includes(p.id)}`.
+3. **Gates finais re-executados** (§8.3): typecheck limpo, lint 0 erros, test:unit 937/9941.
+4. **Release v1.51.1 concluída de ponta a ponta** (§9.1): fragment → dispatch → PR #418 → merge →
+   tag v1.51.1 → publish (re-run: SUCCESS) → deploy VPS (exit 0) → health (200 / v1.51.1).
+
+### 10.2 Pendências registradas (2026-11-13, verificação de fechamento)
+
+1. **F5 — OR-Tools/VRPTW multi-motorista + capacidade**: **BLOQUEADO** neste ambiente. O pacote
+   `@google/or-tools` não está acessível ao registry (HTTP 404 persistente) e o modelo de
+   veículo/motorista por carga ainda não existe no schema (não há `vehicle_id`/`driver_id`
+   mapeados em código/SQL nenhum). Sem solver externo e sem modelo, a heurística atual
+   (NN + 2-opt, veículo único) permanece como solver — F5 fica em aberto com justificativa.
+2. **§1.1 MapLibre / §1.2 Photon-Pelias / §1.3 Table API**: bloqueadas por decisão/arquitetura
+   registrada — substituições são trabalho futuro com justificativa técnica.
+3. **§6.2 design visual premium**: pendente (além do layout de áreas).
+4. **§8 testes pendentes**: 8/9 (multi-motorista/capacidade), 12 (matriz); 10 parcial.
+5. **E2E visual dedicada**: a suíte crítica `jornada-expedicao.spec.ts` re-executou **SUCCESS**
+   nesta sessão (run 43329338301 re-executado) — o fluxo de Expedição está coberto pelo gate
+   E2E; evidência de screenshot visual dedicada à remodelação das três áreas ainda não capturada.
+
+### 10.3 Conclusão
+
+A remaking da Expedição contra o prompt V5 entregou: agrupamento por destino, geocodificação
+honesta (faixa + cache), sequência manual com invalidação de geometria, cache por endereço, layout
+de três áreas na rota, tempo real verificado como existente, subtelas auditadas, bug crítico de UI
+corrigido e release v1.51.1 publicada/deployada/saudável. Pendências remanescentes são exatamente as
+registradas nos §§6/7/8/10 — nenhuma nova regra de negócio foi inventada nesta entrega.
