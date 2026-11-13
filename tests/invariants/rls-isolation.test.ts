@@ -519,6 +519,18 @@ beforeAll(() => {
           insert into public.automatic_sales_events (organization_id, campaign_id, event_type)
             values (v_org, v_va, 'descoberta');
         end if;
+
+        -- migration 0306 (F5: VRPTW) — frota e motoristas. As linhas são a
+        -- prova comportamental da RLS (o gate de completude exige seed positivo):
+        -- a org lê a própria frota/motorista (≥1) e 0 da vizinha.
+        if not exists (select 1 from public.fleet_vehicles where organization_id = v_org) then
+          insert into public.fleet_vehicles (organization_id, placa, veiculo_tipo, capacidade_kg, capacidade_m3)
+            values (v_org, 'FRT-' || v_tag, 'truck', 1000, 10);
+        end if;
+        if not exists (select 1 from public.fleet_drivers where organization_id = v_org) then
+          insert into public.fleet_drivers (organization_id, nome, capacidade_jornada_min)
+            values (v_org, 'Motorista RLS Invariant', 480);
+        end if;
       end loop;
     end
     $seed$;
@@ -665,6 +677,12 @@ export const TABLES = [
   // at-risk); a ESCRITA é do worker com service role no cron risk-watcher.
   // Seed em `beforeAll`, logo após o lead da própria org (FK).
   "crm_lead_risk_decisions",
+  // migration 0306 (F5: VRPTW) — frota e motoristas. Mesmo molde da onda acima:
+  // leitura org-scoped sem gate de papel (o agente que opera a rota lê a frota
+  // da própria org — positivo semeado em `beforeAll`); a escrita é manager+ via
+  // API/worker de frota (service role).
+  "fleet_vehicles",
+  "fleet_drivers",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {
