@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.1] — 2026-11-13
+
+### Alterado
+
+- **Mapa da expedição agora é MapLibre (sem Leaflet)** O mapa da expedição (`app/app/expedicao/[id]/_mapa-rota.tsx`) foi migrado de Leaflet para MapLibre GL JS 6.18.0. A cartografia continua a mesma: tiles raster do OpenStreetMap, sem chave e sem custo de licença. A prospecção segue em Leaflet. Helpers puros de estilo e geometria ficam em `lib/mapas/`. Veja ADR-0003 (substitui ADR-0002).
+
 ## [1.52.0] — 2026-11-13
 
 ### Adicionado
@@ -7062,7 +7068,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.1...HEAD
+[1.52.1]: https://github.com/spiesdan/nexus/compare/v1.52.0...v1.52.1
 [1.52.0]: https://github.com/spiesdan/nexus/compare/v1.51.1...v1.52.0
 [1.51.1]: https://github.com/spiesdan/nexus/compare/v1.51.0...v1.51.1
 [1.51.0]: https://github.com/spiesdan/nexus/compare/v1.50.3...v1.51.0
