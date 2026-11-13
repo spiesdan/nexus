@@ -97,9 +97,9 @@ Nenhuma das quatro peças exige chave, assinatura ou licença paga. Todas rodam 
 
 Está registrado para não ser confundido com "feito":
 
-- **Coordenada por destino**: hoje o cache de geocodificação mora em `contacts`. Dois pedidos do
-  mesmo cliente em endereços diferentes já viram duas paradas na lista, mas compartilham o mesmo
-  pino até o snapshot por destino existir (ver handoff da remodelação, §10.5).
+- **Coordenada por destino**: resolvido na migration 0308 (`shipment_destinations`). Endereço e
+  coordenada moram no destino, com snapshot na inclusão do pedido na carga; dois endereços do
+  mesmo cliente são dois pinos, e mudar o cadastro do cliente não move entrega já planejada.
 - **Agrupamento de marcadores, seleção de pedido pelo mapa e filtros no mapa**: não
   implementados. A fila tem os filtros; o mapa ainda não.
 - **Validação de "ponto perto de via roteável" (Nearest API)**: não usada.

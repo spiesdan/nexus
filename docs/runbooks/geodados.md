@@ -71,11 +71,13 @@ Dados do OSM envelhecem. Duas rotas:
 
 Depois de atualizar os dados, o **cache de coordenadas do produto não é invalidado sozinho** —
 de propósito: reimportar ruas não muda o endereço do cliente. Quando a mudança de malha viária
-for material (obra que mudou o acesso), force a revisão dos contatos afetados:
+for material (obra que mudou o acesso), force a revisão dos **destinos** afetados (a coordenada
+mora em `shipment_destinations`, migration 0308 — não no cadastro do contato):
 
 ```sql
--- Exemplo por organização. Zera o cache para a próxima geocodificação resolver de novo.
-update public.contacts
+-- Exemplo por organização. Zera a coordenada do destino para a próxima
+-- geocodificação resolver de novo. O endereço do snapshot NÃO muda.
+update public.shipment_destinations
    set latitude = null, longitude = null,
        geo_status = 'pendente', geo_fonte = null, geo_em = now()
  where organization_id = '<org-id>'
@@ -83,7 +85,8 @@ update public.contacts
 ```
 
 Pino marcado à mão (`geo_fonte = 'manual'`) é decisão do operador: geocodificação nunca o
-sobrescreve.
+sobrescreve. Carga anterior à 0308 (sem destino) ainda usa o cache de `contacts` — para essas,
+o `update` equivalente é em `public.contacts`.
 
 ## 4. Subir o OSRM próprio
 
@@ -168,8 +171,9 @@ Recrie `app` e `rota`. Nenhum dado é perdido: o cache em `contacts` e as versõ
 
 ## 8. O que este runbook não cobre
 
-- **Coordenada por destino**: hoje o cache mora em `contacts`; a evolução por endereço de entrega
-  está registrada no handoff da remodelação (§10.5) e ainda não foi implementada.
+- **Coordenada por destino**: implementada na migration 0308. O que este runbook não cobre é
+  invalidar coordenada de destino em massa por mudança de malha — o comando acima é por
+  organização e por fonte.
 - **Atualização automática da malha viária** dentro do produto: não existe. É operação da máquina
   geográfica.
 - **Perfil de caminhão** com restrições de altura/peso: não implementado.

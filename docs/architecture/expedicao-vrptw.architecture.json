@@ -154,6 +154,11 @@
       "id": "nominatim",
       "lane": "geo",
       "label": "Nominatim — geocodificação (instância própria ou pública)"
+    },
+    {
+      "id": "destino",
+      "lane": "dados",
+      "label": "shipment_destinations — destino com snapshot (endereço + coordenada, 0308)"
     }
   ],
   "edges": [
@@ -366,6 +371,18 @@
       "from": "api-geocodificar",
       "to": "nominatim",
       "label": "consulta /search"
+    },
+    {
+      "id": "carga-snapshot-destino",
+      "from": "carga",
+      "to": "destino",
+      "label": "inclusão do pedido grava o snapshot"
+    },
+    {
+      "id": "destino-geocodifica",
+      "from": "destino",
+      "to": "api-geocodificar",
+      "label": "endereço e coordenada do destino"
     }
   ]
 }

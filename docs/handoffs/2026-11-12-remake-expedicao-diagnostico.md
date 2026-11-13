@@ -486,6 +486,18 @@ de entrega, com seletor para mover a parada. Fila da expedição com filtros por
 (saídos da atribuição por pedido, não da placa legada) e a linha mostrando todos os veículos da
 carga.
 
+**Destino com snapshot (2026-11-13)** — o defeito mais grave que sobrava do §2: a parada já era
+agrupada por endereço, mas endereço e coordenada vinham do CADASTRO DO CONTATO
+(`_carga.ts`, `rota/geocodificar`, `rota/manual`). Dois pedidos do mesmo cliente para endereços
+diferentes viravam duas paradas e UM pino; corrigir um movia o outro. A migration 0308 cria
+`shipment_destinations` (chave `<contact_id|avulso:nome>::<endereço>`, endereço completo,
+coordenada, fonte e precisão) e `shipment_orders.destination_id`. O snapshot nasce na inclusão do
+pedido na carga e não se reescreve: mudar o endereço gera outro destino e o pedido passa a apontar
+para ele (teste 3 do §8), e a parada antiga fica onde estava. Geocodificação e pino manual gravam
+no destino; `contacts` só é tocado em carga anterior à migration. Gates: `lib/rotas/destinos.test.ts`
+(11), RLS em `tests/invariants/rls-isolation.test.ts` com seed positivo, e o dublê de
+`shipment-orders-route` passou a exigir a gravação do destino.
+
 **Stack geográfica — decisão do dono do produto (2026-11-13)**: manter **Leaflet + OpenStreetMap +
 Nominatim + OSRM**, autohospedáveis, com custo de licença zero. Registrado em
 `docs/adr/0002-stack-geografica-osm.md`, com as alternativas (MapLibre, Photon/Pelias, Google/
