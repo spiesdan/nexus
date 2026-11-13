@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.3] — 2026-11-13
+
+### Corrigido
+
+- **Contagens do inbox param de estourar o tempo do banco (500 na Inbox)** A faixa de contadores do inbox (fila, automático, minhas, todas) disparava **quatro** consultas em paralelo. Cada uma varria a tabela de conversas inteira, e a regra de visibilidade por linha multiplica esse custo — medido na VPS: ~1,2 s por consulta e pico de **7.991 ms** contra o limite de 8 s do banco. O resultado era `500` no inbox, e a lista de conversas junto.
+
+  Agora as quatro contagens saem de **uma única varredura** da tabela: a mesma regra de visibilidade continua valendo (a checagem de permissão não foi desligada), mas o banco deixa de fazer quatro vezes o mesmo trabalho. Medido: 799 ms. A faixa volta a carregar e a lista com ela.
+
 ## [1.52.2] — 2026-11-13
 
 ### Corrigido
@@ -7076,7 +7084,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.3...HEAD
+[1.52.3]: https://github.com/spiesdan/nexus/compare/v1.52.2...v1.52.3
 [1.52.2]: https://github.com/spiesdan/nexus/compare/v1.52.1...v1.52.2
 [1.52.1]: https://github.com/spiesdan/nexus/compare/v1.52.0...v1.52.1
 [1.52.0]: https://github.com/spiesdan/nexus/compare/v1.51.1...v1.52.0
