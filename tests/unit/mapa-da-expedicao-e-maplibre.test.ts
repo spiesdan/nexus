@@ -21,7 +21,7 @@ import { describe, expect, it } from "vitest";
  *
  * Porque o que se quer impedir é a REGRESSÃO SILENCIOSA na próxima edição do
  * arquivo — não provar que o MapLibre desenha (isso é o navegador). A prova
- * visual está em `docs/evidence/2026-11-13-expedicao/` e foi feita com os
+ * visual está em `evidence/2026-11-13-expedicao/` e foi feita com os
  * componentes reais; o gate aqui é o que continua valendo depois.
  */
 const RAIZ = process.cwd();
@@ -86,7 +86,7 @@ describe("o mapa da expedição roda em MapLibre", () => {
     // O balão é criado a cada abertura: o ouvinte tem de ser ligado no `open`,
     // senão os botões "Cheguei"/"Entregue" param de funcionar em silêncio.
     expect(CODIGO).toMatch(/popup\.on\("open"/);
-    expect(CODIGO).toContain('button[data-chave][data-acao]');
+    expect(CODIGO).toContain("button[data-chave][data-acao]");
     expect(CODIGO).toContain("aoAcaoParada");
   });
 
@@ -108,6 +108,36 @@ describe("o mapa da expedição roda em MapLibre", () => {
 
   it("mantém o stacking context próprio do contêiner", () => {
     expect(CODIGO).toMatch(/relative isolate z-0/);
+  });
+
+  it("aponta o worker para o caminho do `public` ANTES de criar o mapa", () => {
+    // Este é o defeito que fez as rotas sumirem em produção na 1.52.1: o
+    // MapLibre resolve o worker a partir de `import.meta.url` do bundle, e num
+    // build Next/Turbopack esse caminho não tem o worker ao lado. O console do
+    // navegador dizia "Worker failed to load" e nada pintava.
+    const chamada = CODIGO.indexOf('setWorkerUrl("/maplibre-gl-worker.mjs")');
+    expect(chamada, "o mapa precisa apontar o worker para /maplibre-gl-worker.mjs").toBeGreaterThan(
+      -1,
+    );
+    expect(CODIGO.indexOf("new lib.Map(")).toBeGreaterThan(chamada);
+  });
+
+  it("o worker servido em `public/` existe e é o do maplibre instalado", () => {
+    // O `setWorkerUrl` só funciona se o arquivo estiver em `public/` — o Next
+    // serve `public` como está, com MIME de JavaScript. E ele tem de ser o
+    // worker da versão INSTALADA: um arquivo velho aqui falha de um jeito mudo
+    // (o worker sobe, recebe mensagens de outro protocolo e não responde).
+    const servido = join(RAIZ, "public/maplibre-gl-worker.mjs");
+    const esperado = join(RAIZ, "node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs");
+    // Comparação por conteúdo normalizado: o checkout pode converter CRLF, e
+    // isso não muda o worker — mudar o hash do bundle, sim.
+    const normalizar = (caminho: string) => readFileSync(caminho, "utf8").replace(/\r\n/g, "\n");
+    const emPublico = normalizar(servido);
+    expect(emPublico.length).toBeGreaterThan(100_000);
+    expect(
+      emPublico === normalizar(esperado),
+      "public/maplibre-gl-worker.mjs divergiu do maplibre instalado — copie de novo de node_modules/maplibre-gl/dist/",
+    ).toBe(true);
   });
 });
 

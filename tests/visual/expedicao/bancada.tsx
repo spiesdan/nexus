@@ -34,13 +34,12 @@ instalarFetchFalso();
  */
 import * as maplibregl from "maplibre-gl";
 
-// O MapLibre resolve o worker a partir de `import.meta.url` do bundle. Na
-// bancada (esbuild IIFE servido por http.server simples) isso aponta para um
-// caminho que não existe e o servidor devolve HTML — "non-JavaScript MIME
-// type". Forçamos a URL do worker para um arquivo que copiamos ao lado do
-// bundle (ver build.mjs). Sem o worker, fontes GeoJSON (rotas) não indexam e
-// não pintam, mesmo com `addLayer`/`addSource` criados corretamente.
-maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+// O worker NÃO é configurado aqui de propósito: quem aponta
+// `setWorkerUrl("/maplibre-gl-worker.mjs")` é o próprio componente
+// (`_mapa-rota.tsx`), porque em produção o caminho resolvido pelo bundle também
+// não serve. Deixar a bancada configurar esconderia a regressão — o build.mjs
+// copia o worker para o lado da bancada para que o caminho do componente exista
+// aqui exatamente como existe em `public/` no app.
 
 const registro = {
   camadas: [] as string[],

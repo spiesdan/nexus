@@ -132,6 +132,12 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Run on all paths except static assets / Next internals.
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)",
+    //
+    // `mjs` entra na lista por um defeito medido: o worker do MapLibre é um
+    // módulo `.mjs` servido pelo `public/`, e sem esta extensão ele caía no
+    // proxy, que respondia 307 para `/login`. O navegador recebia HTML onde
+    // esperava JavaScript e abortava com "non-JavaScript MIME type of
+    // text/html" — as rotas do mapa paravam de pintar em produção.
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|mjs)$).*)",
   ],
 };

@@ -14,17 +14,18 @@ fixtures são sintéticas (nomes e endereços inventados de Canoinhas/SC).
 2. Sirve `<dir>` com qualquer servidor estático (ex.: `python3 -m http.server
    --directory <dir> 8000`) e abra `http://localhost:8000/`.
 3. O print é **full page** da moldura com o iframe de 1680px de largura, para
-   que as media queries `xl` da expedição (três colunas) sejam as certas.
+   que as media queries `xl` da expedição sejam as certas.
 
-O build **não é versionado** — só os PNGs são. Rebuildar sempre que o código do
-mapa ou dos painéis mudar.
+O build **não é versionado** — só as imagens são. Rebuildar sempre que o código
+do mapa ou dos painéis mudar.
 
 ## Arquivos
 
 | Arquivo | O que mostra |
 |---|---|
-| `mapa-rotas-veiculo.png` | Mapa MapLibre com tiles OSM, 9 pinos numerados, 3 rotas coloridas por veículo (contorno branco + cor), ponto azul "você está aqui", distribuição por veículo "Confirmada" e painel de recuperação **expandido** (2 pendentes, original × sugerido). |
-| `recuperacao-colapsado.png` | Mesmo layout, com o painel de recuperação **colapsado** (toggle "2 endereços resolvidos" fechado) — exibe só o cabeçalho com a contagem. |
+| `rota-mapa-no-topo.jpeg` | **Layout atual (1.52.2).** Cabeçalho da seção, faixa de números (entregas, no mapa, distância, tempo, mercadorias) e o **mapa grande no topo** (1648×640 na moldura). Abaixo, os três painéis de trabalho: ordem de entrega, planejamento e recuperação/distribuição. É a prova de que o mapa deixou de ser coluna do meio. |
+| `mapa-rotas-veiculo.png` | Layout anterior (1.52.0/1.52.1) em três colunas: mapa no centro, com os números flutuando sobre ele. Guardado para comparar a mudança. |
+| `recuperacao-colapsado.png` | Layout anterior, com o painel de recuperação **colapsado** (toggle "2 endereços resolvidos" fechado). |
 
 ## Viewport
 
