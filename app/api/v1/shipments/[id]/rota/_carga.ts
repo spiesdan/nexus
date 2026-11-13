@@ -29,6 +29,8 @@ export interface CargaRota {
   rota_geojson: { geometria?: number[][]; provedor?: string; ruas?: boolean; modo?: string } | null;
   rota_em: string | null;
   rota_versao: number;
+  /** Hora do dia da saída da base (migration 0307). NULL = janela não aplicável. */
+  saida_prevista: string | null;
   started_at: string | null;
   finished_at: string | null;
 }
@@ -41,7 +43,8 @@ export interface CargaComParadas {
 
 const COLUNAS_CARGA_ROTA =
   "id, numero, status, placa, veiculo_tipo, motorista_nome, origem_endereco, origem_lat, origem_lng, " +
-  "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, started_at, finished_at";
+  "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, " +
+  "saida_prevista, started_at, finished_at";
 
 export async function carregarCargaComParadas(
   supabase: Supabase,
@@ -58,11 +61,24 @@ export async function carregarCargaComParadas(
 
   const { data: itens } = await supabase
     .from("shipment_orders")
-    .select("id, order_id, sequencia, status, separado_em")
+    .select(
+      "id, order_id, sequencia, status, separado_em, veiculo_id, motorista_id, sequencia_veiculo, janela_inicio, janela_fim",
+    )
     .eq("shipment_id", shipmentId)
     .eq("organization_id", orgId)
     .order("sequencia");
-  const lista = ((itens ?? []) as unknown as { id: string; order_id: string; sequencia: number; status: string; separado_em: string | null }[]);
+  const lista = ((itens ?? []) as unknown as {
+    id: string;
+    order_id: string;
+    sequencia: number;
+    status: string;
+    separado_em: string | null;
+    veiculo_id: string | null;
+    motorista_id: string | null;
+    sequencia_veiculo: number | null;
+    janela_inicio: string | null;
+    janela_fim: string | null;
+  }[]);
   if (lista.length === 0) {
     return { carga: carga as unknown as CargaRota, itens: [], paradas: [] };
   }
@@ -233,6 +249,11 @@ export async function carregarCargaComParadas(
       geo_fonte: c?.geo_fonte ?? null,
       total_cents: p?.total_cents ?? 0,
       itens: porPedidoItens.get(i.order_id) ?? [],
+      veiculo_id: i.veiculo_id,
+      motorista_id: i.motorista_id,
+      sequencia_veiculo: i.sequencia_veiculo,
+      janela_inicio: i.janela_inicio,
+      janela_fim: i.janela_fim,
     };
   });
 

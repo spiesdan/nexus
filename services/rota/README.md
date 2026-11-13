@@ -28,7 +28,10 @@ Resposta `SolverResponse`:
 
 - `status`: `otimizado` | `sem_solucao`.
 - `veiculos[]`: `veiculo_id`, `motorista_id`, `paradas` (ordem real),
-  `distancia_m`, `duracao_s`, `duracao_com_paradas_s`, `carga_kg`, `carga_m3`,
+  `chegadas_s` (instante de chegada em cada parada, em segundos desde a saída,
+  1:1 com `paradas` — sai do `CumulVar` da dimensão de tempo, o MESMO relógio
+  que as janelas respeitam), `distancia_m`, `duracao_s`,
+  `duracao_com_paradas_s`, `carga_kg`, `carga_m3`,
   `geometria` (base → entregas → base quando retorna).
 - `entregas_nao_alocadas`, `motivo` (`capacidade_peso`, `capacidade_volume`,
   `jornada`, `nenhuma_solucao_viavel`), `restricoes_nao_aplicadas`,

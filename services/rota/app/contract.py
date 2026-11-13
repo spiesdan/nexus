@@ -89,6 +89,11 @@ class RotaDeVeiculo(BaseModel):
     motorista_id: Optional[str] = None
     # node_id das entregas, na ordem real do trajeto (sem a base).
     paradas: list[str] = Field(default_factory=list)
+    # Instante de CHEGADA em cada parada, em segundos desde a saida da base,
+    # alinhado 1:1 com `paradas`. Vem do valor acumulado da dimensao de tempo
+    # (inclui espera por janela), nao de uma soma de duracoes refeita no
+    # cliente — ETA recalculado fora do solver diverge quando ha janela.
+    chegadas_s: list[int] = Field(default_factory=list)
     distancia_m: float = 0
     # Tempo dirigindo (matriz OSRM), e tempo total com os atendimentos.
     duracao_s: float = 0
@@ -97,6 +102,15 @@ class RotaDeVeiculo(BaseModel):
     carga_m3: float = 0
     # Sequencia completa (base -> entregas -> base quando retorna) desenhada.
     geometria: list[list[float]] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validar_chegadas(self) -> "RotaDeVeiculo":
+        if self.chegadas_s and len(self.chegadas_s) != len(self.paradas):
+            raise ValueError(
+                f"chegadas_s de {self.veiculo_id} fora de sincronia com paradas "
+                f"({len(self.chegadas_s)} != {len(self.paradas)})"
+            )
+        return self
 
 
 class SolverResponse(BaseModel):

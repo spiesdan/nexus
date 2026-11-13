@@ -32,7 +32,10 @@ import {
   type PontoDoSolver,
   type VeiculoDoSolver,
 } from "@/lib/expedicao/roteador-vrptw";
+import { demandasPorParada, type DemandaDaParada } from "@/lib/expedicao/demanda-da-carga";
+import { converterJanelaParaSolver } from "@/lib/expedicao/janelas-solver";
 import { geocodificarEndereco } from "@/lib/rotas/geocodificacao";
+import { minutosDoDia } from "@/lib/rotas/janelas";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "../../_carga";
@@ -44,10 +47,21 @@ const origemSchema = z.union([
   z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) }),
 ]);
 
+const horaSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, "Hora inválida (use HH:MM)");
+
 const corpoSchema = z.object({
   origem: origemSchema.nullable().optional(),
+  /**
+   * Hora de saída da base. Vem do painel antes da confirmação: sem ela NÃO há
+   * como converter "entregar entre 14h e 16h" no relógio do solver. Quando
+   * ausente, usa a que a carga já tem gravada; se nenhuma das duas existir, a
+   * resposta declara `janelas_de_entrega_sem_hora_de_saida`.
+   */
   retornar_origem: z.boolean().optional(),
   tempo_parada_min: z.number().int().min(0).max(600).optional(),
+  saida_prevista: horaSchema.nullable().optional(),
   max_veiculos: z.number().int().min(1).optional(),
   limite_busca_s: z.number().int().min(1).max(60).optional(),
   veiculos: z
@@ -63,13 +77,6 @@ const corpoSchema = z.object({
     .min(1)
     .optional(),
 });
-
-interface DemandaDaParada {
-  peso_kg: number;
-  volume_m3: number;
-  semPeso: boolean;
-  semVolume: boolean;
-}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   const requestId = randomUUID();
@@ -123,47 +130,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // ── Demanda de cada parada: soma dos itens × peso/volume do cadastro.
-  const porShipmentOrder = new Map<string, DemandaDaParada>();
-  for (const item of d.itens) {
-    let peso = 0;
-    let volume = 0;
-    let semPeso = false;
-    let semVolume = false;
-    for (const produto of item.itens ?? []) {
-      const qtd = Number(produto.quantidade ?? 0);
-      if (produto.peso_unit_kg == null) semPeso = true;
-      else peso += qtd * produto.peso_unit_kg;
-      if (produto.volume_unit_m3 == null) semVolume = true;
-      else volume += qtd * produto.volume_unit_m3;
-    }
-    porShipmentOrder.set(item.shipment_order_id, {
-      peso_kg: Math.round(peso * 1000) / 1000,
-      volume_m3: Math.round(volume * 1_000_000) / 1_000_000,
-      semPeso,
-      semVolume,
-    });
-  }
-
-  const demandaDaParada = (parada: (typeof d.paradas)[number]): DemandaDaParada => {
-    let peso = 0;
-    let volume = 0;
-    let semPeso = false;
-    let semVolume = false;
-    for (const pedido of parada.pedidos) {
-      const demanda = porShipmentOrder.get(pedido.shipment_order_id);
-      if (!demanda) continue;
-      peso += demanda.peso_kg;
-      volume += demanda.volume_m3;
-      semPeso ||= demanda.semPeso;
-      semVolume ||= demanda.semVolume;
-    }
-    return {
-      peso_kg: Math.round(peso * 1000) / 1000,
-      volume_m3: Math.round(volume * 1_000_000) / 1_000_000,
-      semPeso,
-      semVolume,
-    };
+  //
+  // Fonte única (`demandasPorParada`): a confirmação da distribuição revalida
+  // capacidade com a MESMA conta — duas fórmulas divergiriam no dia do ajuste.
+  const demandaPorChave = demandasPorParada(d.itens, d.paradas);
+  const demandaVazia: DemandaDaParada = {
+    peso_kg: 0,
+    volume_m3: 0,
+    semPeso: false,
+    semVolume: false,
   };
+  const demandaDaParada = (parada: (typeof d.paradas)[number]): DemandaDaParada =>
+    demandaPorChave.get(parada.chave) ?? demandaVazia;
 
   const comCoord = d.paradas.filter((p) => p.latitude != null && p.longitude != null);
   const naoRoteirizaveis = d.paradas
@@ -173,33 +151,124 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return fail("validation_failed", "Nenhuma parada geocodificada. Geocodifique antes de otimizar.", 422, { requestId });
   }
 
+  // ── Janelas de entrega: hora do dia → minutos desde a saída ──────────────
+  //
+  // A janela é do CLIENTE (14h–16h). Para virar restrição do solver precisa da
+  // hora em que a carga sai; sem ela, a restrição é declarada como não
+  // aplicada — não existe partida padrão inventada.
+  const saidaEfetiva = parsed.data.saida_prevista ?? d.carga.saida_prevista;
+  const partidaMin = minutosDoDia(saidaEfetiva);
+  const janelasVencidas: string[] = [];
   const pontos: PontoDoSolver[] = comCoord.map((p) => {
     const demanda = demandaDaParada(p);
-    return {
+    const ponto: PontoDoSolver = {
       node_id: p.chave,
       latitude: p.latitude as number,
       longitude: p.longitude as number,
       peso_kg: demanda.peso_kg,
       volume_m3: demanda.volume_m3,
     };
+    if (partidaMin != null) {
+      const janela = converterJanelaParaSolver(p.janela_inicio, p.janela_fim, partidaMin);
+      if (janela.estado === "vencida") janelasVencidas.push(p.chave);
+      else if (janela.estado === "ok") {
+        ponto.janela_inicio_min = janela.janela.inicio;
+        ponto.janela_fim_min = janela.janela.fim;
+      }
+    }
+    return ponto;
   });
 
+  if (janelasVencidas.length > 0) {
+    return fail(
+      "validation_failed",
+      "Há janela de entrega que termina antes da saída prevista. Ajuste a hora de saída ou a janela.",
+      422,
+      { requestId, details: { janelas_vencidas: janelasVencidas } },
+    );
+  }
+
   const paradasSemPeso = comCoord.filter((p) => demandaDaParada(p).semPeso).length;
+  const paradasComJanela = comCoord.filter((p) => p.janela_inicio && p.janela_fim).length;
+  const paradasComJanelaConflitante = comCoord.filter((p) => p.janela_conflito).length;
 
   // ── Veículos: body → frota cadastrada → o veículo da própria carga.
-  let veiculos: VeiculoDoSolver[] = (parsed.data.veiculos ?? []).map((v) => ({
-    veiculo_id: v.veiculo_id,
-    motorista_id: v.motorista_id,
-    capacidade_kg: v.capacidade_kg,
-    capacidade_m3: v.capacidade_m3,
-    tempo_jornada_min: v.tempo_jornada_min,
-  }));
+  //
+  // Capacidade e jornada NÃO vêm do body quando o id é de um veículo da frota:
+  // a tela escolhe QUEM participa, o banco diz O QUE CABE. Confiar no body
+  // deixaria o otimizador "respeitar" uma capacidade que ninguém cadastrou.
+  let veiculos: VeiculoDoSolver[] = [];
+  if (parsed.data.veiculos?.length) {
+    const ids = parsed.data.veiculos.map((v) => v.veiculo_id);
+    const { data: frota } = await supabase
+      .from("fleet_vehicles")
+      .select("id, placa, capacidade_kg, capacidade_m3, ativo")
+      .eq("organization_id", authz.org.orgId)
+      .in("id", ids);
+    const porId = new Map(
+      ((frota ?? []) as unknown as {
+        id: string;
+        placa: string;
+        capacidade_kg: number;
+        capacidade_m3: number;
+        ativo: boolean;
+      }[]).map((v) => [v.id, v]),
+    );
+    const idsDeMotorista = [
+      ...new Set(
+        parsed.data.veiculos
+          .map((v) => v.motorista_id)
+          .filter((v): v is string => typeof v === "string" && v.length > 0),
+      ),
+    ];
+    const jornadaPorMotorista = new Map<string, number>();
+    if (idsDeMotorista.length > 0) {
+      const { data: motoristas } = await supabase
+        .from("fleet_drivers")
+        .select("id, capacidade_jornada_min")
+        .eq("organization_id", authz.org.orgId)
+        .in("id", idsDeMotorista);
+      for (const m of (motoristas ?? []) as unknown as {
+        id: string;
+        capacidade_jornada_min: number;
+      }[]) {
+        jornadaPorMotorista.set(m.id, Number(m.capacidade_jornada_min ?? 0));
+      }
+    }
+
+    for (const entrada of parsed.data.veiculos) {
+      const daFrota = porId.get(entrada.veiculo_id);
+      if (daFrota && !daFrota.ativo) {
+        return fail(
+          "validation_failed",
+          `O veículo ${daFrota.placa} está inativo e não entra na distribuição.`,
+          422,
+          { requestId },
+        );
+      }
+      const jornadaDoMotorista = entrada.motorista_id
+        ? jornadaPorMotorista.get(entrada.motorista_id)
+        : undefined;
+      veiculos.push({
+        veiculo_id: entrada.veiculo_id,
+        motorista_id: entrada.motorista_id,
+        // Frota manda; o body só vale para veículo legado sem cadastro.
+        capacidade_kg: daFrota ? Number(daFrota.capacidade_kg ?? 0) : entrada.capacidade_kg,
+        capacidade_m3: daFrota ? Number(daFrota.capacidade_m3 ?? 0) : entrada.capacidade_m3,
+        tempo_jornada_min:
+          jornadaDoMotorista && jornadaDoMotorista > 0
+            ? jornadaDoMotorista
+            : entrada.tempo_jornada_min,
+      });
+    }
+  }
 
   if (veiculos.length === 0) {
     const { data: frota } = await supabase
       .from("fleet_vehicles")
-      .select("id, placa, capacidade_kg, capacidade_m3, veiculo_tipo")
+      .select("id, placa, capacidade_kg, capacidade_m3, veiculo_tipo, ativo")
       .eq("organization_id", authz.org.orgId)
+      .eq("ativo", true)
       .order("placa");
     veiculos = ((frota ?? []) as unknown as {
       id: string;
@@ -246,6 +315,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const restricoes = [...resultado.restricoes_nao_aplicadas];
   if (paradasSemPeso > 0) restricoes.push("peso_de_produto_incompleto");
+  if (paradasComJanela > 0 && partidaMin == null) {
+    restricoes.push("janelas_de_entrega_sem_hora_de_saida");
+  }
+  if (paradasComJanelaConflitante > 0) {
+    restricoes.push("janelas_conflitantes_na_parada");
+  }
 
   if (resultado.status === "sem_solucao") {
     return fail(
@@ -279,6 +354,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       origem,
       retornar_origem: retornarOrigem,
       tempo_parada_min: tempoParadaMin,
+      saida_prevista: saidaEfetiva,
       nao_roteirizaveis: naoRoteirizaveis,
       entregas_nao_alocadas: resultado.entregas_nao_alocadas,
       restricoes_nao_aplicadas: [...new Set(restricoes)],

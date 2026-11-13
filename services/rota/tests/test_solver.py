@@ -110,7 +110,47 @@ def test_geometria_comeca_na_base_e_termina_na_ultima_parada():
     assert rota.geometria[-1] == [ponto["longitude"], ponto["latitude"]]
 
 
-def test_capacidade_de_peso_respeitada_por_veiculo():
+def test_chegadas_por_parada_alinham_e_avancam_com_o_tempo():
+    resposta = _otimizar(_req(PONTOS, [{"veiculo_id": "v1"}], origem=BASE))
+    rota = next(r for r in resposta.veiculos if r.paradas)
+    assert len(rota.chegadas_s) == len(rota.paradas), "ETA tem de cobrir cada parada"
+    assert rota.chegadas_s == sorted(rota.chegadas_s), "chegada nao pode andar para tras"
+    # Sem janela, o ETA e' a chegada MAIS CEDO possivel: espera artificial
+    # (slack) inflaria o horario que a tela mostra ao cliente. A primeira
+    # parada esta' a 222 s da base neste fixture.
+    assert rota.chegadas_s[0] < 30 * 60, "ETA inflado por espera que ninguem pediu"
+    # Tempo de atendimento entra entre paradas: o intervalo minimo e' o
+    # deslocamento + o atendimento (30 min), nunca so a distancia.
+    for anterior, seguinte in zip(rota.chegadas_s, rota.chegadas_s[1:]):
+        assert seguinte - anterior >= 30 * 60
+
+
+def test_janela_faz_o_solver_esperar_e_o_eta_reflete_isso():
+    # Janela abre muito depois da saida: sem espera o solver "chegaria" cedo e
+    # violaria a janela. O CumulVar tem de marcar a chegada no inicio dela.
+    pontos = [
+        {
+            "node_id": "p1",
+            "latitude": -26.41,
+            "longitude": -51.31,
+            "janela_inicio_min": 600,
+            "janela_fim_min": 660,
+        },
+        {"node_id": "p2", "latitude": -26.45, "longitude": -51.35},
+    ]
+    resposta = _otimizar(_req(pontos, [{"veiculo_id": "v1"}], origem=BASE))
+    assert resposta.status == "otimizado"
+    rota = next(r for r in resposta.veiculos if r.paradas)
+    indice_p1 = rota.paradas.index("p1")
+    assert rota.chegadas_s[indice_p1] >= 600 * 60, "ETA desrespeitou a janela"
+
+
+def test_sem_janela_informada_o_solver_declara_a_restricao():
+    resposta = _otimizar(_req(PONTOS, [{"veiculo_id": "v1"}], origem=BASE))
+    assert "janelas_de_entrega_sem_dados" in resposta.restricoes_nao_aplicadas
+
+
+
     pontos = [
         {"node_id": "p1", "latitude": -26.41, "longitude": -51.31, "peso_kg": 10.0},
         {"node_id": "p2", "latitude": -26.42, "longitude": -51.32, "peso_kg": 10.0},

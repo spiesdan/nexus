@@ -28687,3 +28687,139 @@ comment on table public.fleet_vehicles is
 
 comment on table public.fleet_drivers is
   'Motoristas (F5/VRPTW): motorista com capacidade de jornada (min) e disponibilidade/restricoes (jsonb operacional). user_id liga ao login quando houver; sem login, motorista continua nome-only (logica TS no servico).';
+
+-- ─── 0307 — DISTRIBUIÇÃO POR VEÍCULO / JANELAS / VERSÕES DE ROTA ──────────────
+-- Apêndice idempotente do migration 20261115120000_0307_distribuicao_por_veiculo.
+-- Idempotente (add column if not exists / create ... if not exists / drop policy
+-- if exists + create), portável em psql puro. Não altera dado existente: as
+-- colunas novas nascem NULL/true e o caminho single-vehicle continua válido.
+
+alter table public.fleet_vehicles
+  add column if not exists ativo boolean not null default true;
+
+alter table public.fleet_drivers
+  add column if not exists ativo boolean not null default true;
+
+create unique index if not exists fleet_vehicles_org_placa_key
+  on public.fleet_vehicles (
+    organization_id,
+    upper(regexp_replace(placa, '\s', '', 'g'))
+  );
+
+alter table public.shipment_orders
+  add column if not exists veiculo_id uuid references public.fleet_vehicles (id) on delete set null;
+
+alter table public.shipment_orders
+  add column if not exists motorista_id uuid references public.fleet_drivers (id) on delete set null;
+
+alter table public.shipment_orders
+  add column if not exists sequencia_veiculo integer;
+
+alter table public.shipment_orders
+  add column if not exists janela_inicio time;
+
+alter table public.shipment_orders
+  add column if not exists janela_fim time;
+
+alter table public.shipments
+  add column if not exists saida_prevista time;
+
+comment on column public.shipments.saida_prevista is
+  'Hora do dia em que a carga sai da base. Converte a janela de entrega (hora do dia) para o solver e o ETA (segundos desde a saida) para horario. NULL = janela nao aplicavel; o solver declara.';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_orders_sequencia_veiculo_positiva'
+  ) then
+    alter table public.shipment_orders
+      add constraint shipment_orders_sequencia_veiculo_positiva
+      check (sequencia_veiculo is null or sequencia_veiculo > 0);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_orders_janela_completa'
+  ) then
+    alter table public.shipment_orders
+      add constraint shipment_orders_janela_completa
+      check (
+        (janela_inicio is null and janela_fim is null)
+        or (janela_inicio is not null and janela_fim is not null and janela_fim > janela_inicio)
+      );
+  end if;
+end
+$$;
+
+create index if not exists shipment_orders_veiculo_idx
+  on public.shipment_orders (shipment_id, veiculo_id, sequencia_veiculo);
+
+create table if not exists public.shipment_route_versions (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  shipment_id uuid not null references public.shipments (id) on delete cascade,
+  versao integer not null,
+  algoritmo text not null,
+  veiculos jsonb not null default '[]'::jsonb,
+  distancia_m integer,
+  duracao_s integer,
+  tempo_execucao_ms integer,
+  criado_por uuid references auth.users (id) on delete set null,
+  criado_em timestamptz not null default now(),
+  ativa boolean not null default false,
+  constraint shipment_route_versions_versao_positiva check (versao > 0)
+);
+
+create unique index if not exists shipment_route_versions_shipment_versao_key
+  on public.shipment_route_versions (shipment_id, versao);
+
+create index if not exists shipment_route_versions_org_idx
+  on public.shipment_route_versions (organization_id, shipment_id, versao desc);
+
+alter table public.shipment_route_versions enable row level security;
+
+drop policy if exists shipment_route_versions_select on public.shipment_route_versions;
+create policy shipment_route_versions_select on public.shipment_route_versions
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists shipment_route_versions_insert on public.shipment_route_versions;
+create policy shipment_route_versions_insert on public.shipment_route_versions
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+drop policy if exists shipment_route_versions_update on public.shipment_route_versions;
+create policy shipment_route_versions_update on public.shipment_route_versions
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+revoke all on public.shipment_route_versions from anon;
+grant select, insert, update on public.shipment_route_versions to authenticated;
+grant all on public.shipment_route_versions to service_role;
+
+comment on table public.shipment_route_versions is
+  'Histórico de rotas (F5): snapshot imutável de cada distribuição confirmada por veículo. `ativa` marca a versão que o app do motorista aplica; versão antiga nunca sobrescreve a nova.';
+
+comment on column public.shipment_orders.veiculo_id is
+  'Veículo da frota responsável por esta parada na distribuição confirmada. NULL = caminho single-vehicle legado (shipments.placa).';
+
+comment on column public.shipment_orders.janela_inicio is
+  'Janela de entrega combinada com o cliente (hora do dia). Sem janela, o solver declara a restrição como não aplicada.';

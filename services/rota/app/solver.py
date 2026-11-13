@@ -35,7 +35,13 @@ VERSAO_ALGORITMO = "ortools-vrptw-1"
 TETO_PESO_G = 10**12
 TETO_VOLUME_L = 10**12
 TETO_TEMPO_S = 48 * 3600
-SLACK_TEMPO_S = 30 * 60
+# Espera maxima por arco. Tem de ser o HORIZONTE, nao meia hora: a janela do
+# cliente abre quando abre (14h pode ser 10h depois da saida), e com slack de
+# 30 min o solver declarava "sem solucao" uma rota perfeitamente possivel —
+# so porque nao podia esperar no meio do caminho. O tempo de espera nao custa
+# nada na funcao objetivo (que e distancia); ele so existe para respeitar
+# janela.
+SLACK_TEMPO_S = TETO_TEMPO_S
 
 
 def _base_do_request(request: SolverRequest) -> PontoMissao:
@@ -90,6 +96,31 @@ def _extrair_sequencia(routing, manager, sol, veiculo: int) -> list[int]:
         indice = sol.Value(routing.NextVar(indice))
         sequencia.append(manager.IndexToNode(indice))
     return sequencia
+
+
+def _extrair_chegadas(
+    routing,
+    manager,
+    sol,
+    veiculo: int,
+    dimensao_tempo,
+    final_virtual: int,
+) -> list[int]:
+    """Chegada em cada ENTREGA, em segundos desde a saida da base.
+
+    Sai do CumulVar da dimensao de tempo — e' o mesmo relogio que as janelas
+    usam, entao espera por janela entra no ETA. Recalcular somando duracoes no
+    cliente daria um horario que o proprio solver nao respeitou.
+    """
+    indice = routing.Start(veiculo)
+    chegadas: list[int] = []
+    while not routing.IsEnd(indice):
+        indice = sol.Value(routing.NextVar(indice))
+        no = manager.IndexToNode(indice)
+        if no == 0 or no == final_virtual:
+            continue
+        chegadas.append(int(sol.Value(dimensao_tempo.CumulVar(indice))))
+    return chegadas
 
 
 def _diagnostico_viabilidade(
@@ -258,6 +289,9 @@ async def otimizar_vrptw(
     visitadas: set[str] = set()
     for v in range(num_veiculos):
         sequencia = _extrair_sequencia(routing, manager, solucao, v)
+        chegadas = _extrair_chegadas(
+            routing, manager, solucao, v, dimensao_tempo, final_virtual
+        )
         if final_virtual >= 0:
             sequencia = [n for n in sequencia if n != final_virtual]
         paradas_idx = [n for n in sequencia if n != 0]
@@ -290,6 +324,7 @@ async def otimizar_vrptw(
                 veiculo_id=veiculo.veiculo_id if veiculo else f"veiculo-{v + 1}",
                 motorista_id=veiculo.motorista_id if veiculo else None,
                 paradas=ids,
+                chegadas_s=chegadas,
                 distancia_m=float(distancia_m),
                 duracao_s=float(dirigindo_s),
                 duracao_com_paradas_s=float(dirigindo_s + atendimento_s),

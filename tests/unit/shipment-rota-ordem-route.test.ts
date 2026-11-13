@@ -130,6 +130,12 @@ function mockCarregar(ordemPersistida: string[]) {
       pedidos: [],
       itens: [],
       total_cents: 0,
+      janela_inicio: null,
+      janela_fim: null,
+      janela_conflito: false,
+      veiculo_id: null,
+      motorista_id: null,
+      sequencia_veiculo: null,
     })),
   });
 }

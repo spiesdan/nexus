@@ -44,6 +44,7 @@ const carga = {
   rota_geojson: null,
   rota_em: null,
   rota_versao: 1,
+  saida_prevista: null,
   started_at: null,
   finished_at: null,
 };
@@ -62,6 +63,12 @@ function parada(chave: string, latitude: number | null, longitude: number | null
     pedidos: [{ shipment_order_id: `so-${chave}`, order_id: `o-${chave}`, numero: 1, total_cents: 0, status: "ativo" }],
     itens: [],
     total_cents: 0,
+    janela_inicio: null,
+    janela_fim: null,
+    janela_conflito: false,
+    veiculo_id: null,
+    motorista_id: null,
+    sequencia_veiculo: null,
   };
 }
 
@@ -110,8 +117,11 @@ function mockCarga() {
   });
 }
 
-function banco() {
-  const proto: Record<string, unknown> = {
+function banco(
+  frota: { veiculos?: Record<string, unknown>[]; motoristas?: Record<string, unknown>[] } = {},
+) {
+  const proto = {
+    _tabela: "",
     select() {
       return this;
     },
@@ -121,12 +131,24 @@ function banco() {
     order() {
       return this;
     },
+    in() {
+      const dados =
+        this._tabela === "fleet_vehicles"
+          ? (frota.veiculos ?? [])
+          : this._tabela === "fleet_drivers"
+            ? (frota.motoristas ?? [])
+            : [];
+      return Promise.resolve({ data: dados, error: null });
+    },
     then(ok: (v: unknown) => void) {
       return Promise.resolve({ data: [], error: null }).then(ok);
     },
   };
   return {
-    from: () => proto,
+    from: (tabela: string) => {
+      proto._tabela = tabela;
+      return proto;
+    },
   };
 }
 
@@ -162,6 +184,7 @@ const respostaOtimizada = {
     {
       veiculo_id: "ABC1D23",
       paradas: ["p1", "p2"],
+      chegadas_s: [600, 1800],
       distancia_m: 1000,
       duracao_s: 600,
       duracao_com_paradas_s: 1800,
@@ -267,6 +290,105 @@ describe("POST /api/v1/shipments/[id]/rota/otimizar/veiculos", () => {
     expect(corpo.error.code).toBe("unprocessable_entity");
     expect(corpo.error.details.motivo).toBe("capacidade_peso");
     expect(corpo.error.details.entregas_nao_alocadas).toEqual(["p1", "p2"]);
+  });
+
+  it("capacidade do body NÃO vale para veículo da frota: o banco manda", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      banco({
+        veiculos: [
+          { id: "v1", placa: "ABC1D23", capacidade_kg: 5, capacidade_m3: 0.1, ativo: true },
+        ],
+      }) as never,
+    );
+    vi.mocked(otimizarVRPTW).mockResolvedValue(respostaOtimizada);
+
+    const { POST } = await import("@/app/api/v1/shipments/[id]/rota/otimizar/veiculos/route");
+    await POST(
+      post({ veiculos: [{ veiculo_id: "v1", capacidade_kg: 999_999 }] }),
+      { params: Promise.resolve({ id: CARGA }) },
+    );
+
+    const chamada = vi.mocked(otimizarVRPTW).mock.calls[0]?.[0];
+    expect(chamada?.veiculos[0]?.capacidade_kg).toBe(5);
+    expect(chamada?.veiculos[0]?.capacidade_m3).toBe(0.1);
+  });
+
+  it("veículo inativo da frota é recusado antes de chamar o solver", async () => {
+    vi.mocked(createClient).mockReturnValue(
+      banco({
+        veiculos: [
+          { id: "v1", placa: "ABC1D23", capacidade_kg: 100, capacidade_m3: 1, ativo: false },
+        ],
+      }) as never,
+    );
+
+    const { POST } = await import("@/app/api/v1/shipments/[id]/rota/otimizar/veiculos/route");
+    const res = await POST(post({ veiculos: [{ veiculo_id: "v1" }] }), {
+      params: Promise.resolve({ id: CARGA }),
+    });
+
+    expect(res.status).toBe(422);
+    expect(otimizarVRPTW).not.toHaveBeenCalled();
+  });
+
+  it("saída prevista converte a janela do cliente em minutos desde a partida", async () => {
+    vi.mocked(carregarCargaComParadas).mockResolvedValue({
+      carga: { ...carga, saida_prevista: "08:00:00" } as never,
+      itens: [],
+      paradas: [
+        { ...parada("p1", -26.41, -51.31), janela_inicio: "10:00:00", janela_fim: "12:00:00" },
+        parada("p2", -26.42, -51.32),
+      ],
+    });
+    vi.mocked(otimizarVRPTW).mockResolvedValue(respostaOtimizada);
+
+    const { POST } = await import("@/app/api/v1/shipments/[id]/rota/otimizar/veiculos/route");
+    await POST(post({}), { params: Promise.resolve({ id: CARGA }) });
+
+    const chamada = vi.mocked(otimizarVRPTW).mock.calls[0]?.[0];
+    const p1 = chamada?.pontos.find((p) => p.node_id === "p1");
+    expect(p1?.janela_inicio_min).toBe(120);
+    expect(p1?.janela_fim_min).toBe(240);
+  });
+
+  it("janela sem hora de saída não é aplicada — e a resposta declara", async () => {
+    vi.mocked(carregarCargaComParadas).mockResolvedValue({
+      carga: { ...carga, saida_prevista: null } as never,
+      itens: [],
+      paradas: [
+        { ...parada("p1", -26.41, -51.31), janela_inicio: "10:00:00", janela_fim: "12:00:00" },
+        parada("p2", -26.42, -51.32),
+      ],
+    });
+    vi.mocked(otimizarVRPTW).mockResolvedValue(respostaOtimizada);
+
+    const { POST } = await import("@/app/api/v1/shipments/[id]/rota/otimizar/veiculos/route");
+    const res = await POST(post({}), { params: Promise.resolve({ id: CARGA }) });
+    const corpo = (await res.json()) as { data: { restricoes_nao_aplicadas: string[] } };
+
+    const chamada = vi.mocked(otimizarVRPTW).mock.calls[0]?.[0];
+    expect(chamada?.pontos.find((p) => p.node_id === "p1")?.janela_inicio_min).toBeUndefined();
+    expect(corpo.data.restricoes_nao_aplicadas).toContain(
+      "janelas_de_entrega_sem_hora_de_saida",
+    );
+  });
+
+  it("janela que termina antes da saída é 422, não restrição silenciosa", async () => {
+    vi.mocked(carregarCargaComParadas).mockResolvedValue({
+      carga: { ...carga, saida_prevista: "18:00:00" } as never,
+      itens: [],
+      paradas: [
+        { ...parada("p1", -26.41, -51.31), janela_inicio: "08:00:00", janela_fim: "10:00:00" },
+      ],
+    });
+
+    const { POST } = await import("@/app/api/v1/shipments/[id]/rota/otimizar/veiculos/route");
+    const res = await POST(post({}), { params: Promise.resolve({ id: CARGA }) });
+    const corpo = (await res.json()) as { error: { details: { janelas_vencidas: string[] } } };
+
+    expect(res.status).toBe(422);
+    expect(corpo.error.details.janelas_vencidas).toEqual(["p1"]);
+    expect(otimizarVRPTW).not.toHaveBeenCalled();
   });
 
   it("serviço fora do ar devolve 503 upstream_unavailable", async () => {

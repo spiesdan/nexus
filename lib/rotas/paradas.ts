@@ -9,6 +9,8 @@
  * contato → nada (nunca chute).
  */
 
+import { minutosDoDia } from "./janelas";
+
 export interface ItemDaParada {
   codigo: string;
   nome: string;
@@ -35,6 +37,19 @@ export interface ParadaDaRota {
   /** O que entregar nesta parada — itens dos pedidos do cliente, somados. */
   itens: ItemDaParada[];
   total_cents: number;
+  /**
+   * Janela da parada: INTERSEÇÃO das janelas dos pedidos que caem nela
+   * (maior início, menor fim). Se dois pedidos do mesmo destino têm janelas
+   * que não se cruzam, `janela_conflito` fica true e a janela sai nula — o
+   * solver não recebe restrição impossível, e a tela diz o motivo.
+   */
+  janela_inicio: string | null;
+  janela_fim: string | null;
+  janela_conflito: boolean;
+  /** Atribuição operacional da distribuição confirmada (migration 0307). */
+  veiculo_id: string | null;
+  motorista_id: string | null;
+  sequencia_veiculo: number | null;
 }
 
 export interface ItemDaCargaParaParada {
@@ -56,6 +71,13 @@ export interface ItemDaCargaParaParada {
   geo_fonte: string | null;
   total_cents: number;
   itens?: ItemDaParada[];
+  /** Janela combinada para O PEDIDO (migration 0307), hora do dia. */
+  janela_inicio?: string | null;
+  janela_fim?: string | null;
+  /** Atribuição da parada (migration 0307) — mesma para os pedidos do destino. */
+  veiculo_id?: string | null;
+  motorista_id?: string | null;
+  sequencia_veiculo?: number | null;
 }
 
 /**
@@ -96,6 +118,12 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
         pedidos: [],
         itens: [],
         total_cents: 0,
+        janela_inicio: null,
+        janela_fim: null,
+        janela_conflito: false,
+        veiculo_id: null,
+        motorista_id: null,
+        sequencia_veiculo: null,
         menorSeq: i.sequencia,
       };
       mapa.set(chave, p);
@@ -115,6 +143,34 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
       status: i.status,
     });
     p.total_cents += i.total_cents;
+    // Janela: interseção. Pedido sem janela não restringe o destino.
+    if (i.janela_inicio && i.janela_fim) {
+      const inicio = minutosDoDia(i.janela_inicio);
+      const fim = minutosDoDia(i.janela_fim);
+      if (inicio != null && fim != null && fim > inicio) {
+        const inicioAtual = minutosDoDia(p.janela_inicio);
+        const fimAtual = minutosDoDia(p.janela_fim);
+        const novoInicio = inicioAtual == null ? i.janela_inicio : p.janela_inicio;
+        const novoFim = fimAtual == null ? i.janela_fim : p.janela_fim;
+        const inicioMin = Math.max(inicioAtual ?? inicio, inicio);
+        const fimMin = Math.min(fimAtual ?? fim, fim);
+        if (fimMin <= inicioMin) {
+          p.janela_conflito = true;
+          p.janela_inicio = null;
+          p.janela_fim = null;
+        } else {
+          // Guarda a string original do lado que venceu (já é HH:MM:SS).
+          p.janela_inicio = inicioMin === inicio ? i.janela_inicio : novoInicio;
+          p.janela_fim = fimMin === fim ? i.janela_fim : novoFim;
+        }
+      }
+    }
+    // Atribuição: os pedidos de um mesmo destino saem no mesmo veículo.
+    if (p.veiculo_id == null && i.veiculo_id) p.veiculo_id = i.veiculo_id;
+    if (p.motorista_id == null && i.motorista_id) p.motorista_id = i.motorista_id;
+    if (p.sequencia_veiculo == null && i.sequencia_veiculo != null) {
+      p.sequencia_veiculo = i.sequencia_veiculo;
+    }
     // Itens da parada: o cliente recebe tudo de uma vez, então o mesmo produto
     // em dois pedidos vira UMA linha com a soma — igual ao romaneio.
     for (const item of i.itens ?? []) {

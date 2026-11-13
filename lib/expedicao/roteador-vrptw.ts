@@ -41,6 +41,12 @@ export const rotaDeVeiculoSchema = z.object({
   veiculo_id: z.string().min(1).max(64),
   motorista_id: z.string().max(64).nullable().optional(),
   paradas: z.array(z.string()).default([]),
+  /**
+   * Chegada em cada parada, em segundos desde a saída da base — 1:1 com
+   * `paradas`. Vem do solver: recalcular no cliente divergiria do relógio que
+   * as janelas respeitaram.
+   */
+  chegadas_s: z.array(z.number().int()).default([]),
   distancia_m: z.number().default(0),
   duracao_s: z.number().default(0),
   duracao_com_paradas_s: z.number().default(0),

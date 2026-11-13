@@ -6325,6 +6325,7 @@ export type Database = {
       };
       fleet_drivers: {
         Row: {
+          ativo: boolean;
           atualizados_em: string;
           capacidade_jornada_min: number;
           criados_em: string;
@@ -6337,6 +6338,7 @@ export type Database = {
           user_id: string | null;
         };
         Insert: {
+          ativo?: boolean;
           atualizados_em?: string;
           capacidade_jornada_min?: number;
           criados_em?: string;
@@ -6349,6 +6351,7 @@ export type Database = {
           user_id?: string | null;
         };
         Update: {
+          ativo?: boolean;
           atualizados_em?: string;
           capacidade_jornada_min?: number;
           criados_em?: string;
@@ -6372,6 +6375,7 @@ export type Database = {
       };
       fleet_vehicles: {
         Row: {
+          ativo: boolean;
           atualizados_em: string;
           capacidade_kg: number;
           capacidade_m3: number;
@@ -6382,6 +6386,7 @@ export type Database = {
           veiculo_tipo: string | null;
         };
         Insert: {
+          ativo?: boolean;
           atualizados_em?: string;
           capacidade_kg?: number;
           capacidade_m3?: number;
@@ -6392,6 +6397,7 @@ export type Database = {
           veiculo_tipo?: string | null;
         };
         Update: {
+          ativo?: boolean;
           atualizados_em?: string;
           capacidade_kg?: number;
           capacidade_m3?: number;
@@ -9948,7 +9954,10 @@ export type Database = {
           entregue_lat: number | null;
           entregue_lng: number | null;
           id: string;
+          janela_fim: string | null;
+          janela_inicio: string | null;
           motivo: string | null;
+          motorista_id: string | null;
           order_id: string;
           organization_id: string;
           reconferir_em: string | null;
@@ -9956,9 +9965,11 @@ export type Database = {
           separado_em: string | null;
           separado_por: string | null;
           sequencia: number;
+          sequencia_veiculo: number | null;
           shipment_id: string;
           status: string;
           updated_at: string;
+          veiculo_id: string | null;
         };
         Insert: {
           conferido?: boolean;
@@ -9967,7 +9978,10 @@ export type Database = {
           entregue_lat?: number | null;
           entregue_lng?: number | null;
           id?: string;
+          janela_fim?: string | null;
+          janela_inicio?: string | null;
           motivo?: string | null;
+          motorista_id?: string | null;
           order_id: string;
           organization_id: string;
           reconferir_em?: string | null;
@@ -9975,9 +9989,11 @@ export type Database = {
           separado_em?: string | null;
           separado_por?: string | null;
           sequencia?: number;
+          sequencia_veiculo?: number | null;
           shipment_id: string;
           status?: string;
           updated_at?: string;
+          veiculo_id?: string | null;
         };
         Update: {
           conferido?: boolean;
@@ -9986,7 +10002,10 @@ export type Database = {
           entregue_lat?: number | null;
           entregue_lng?: number | null;
           id?: string;
+          janela_fim?: string | null;
+          janela_inicio?: string | null;
           motivo?: string | null;
+          motorista_id?: string | null;
           order_id?: string;
           organization_id?: string;
           reconferir_em?: string | null;
@@ -9994,9 +10013,11 @@ export type Database = {
           separado_em?: string | null;
           separado_por?: string | null;
           sequencia?: number;
+          sequencia_veiculo?: number | null;
           shipment_id?: string;
           status?: string;
           updated_at?: string;
+          veiculo_id?: string | null;
         };
         Relationships: [
           {
@@ -10015,6 +10036,80 @@ export type Database = {
           },
           {
             foreignKeyName: "shipment_orders_shipment_id_fkey";
+            columns: ["shipment_id"];
+            isOneToOne: false;
+            referencedRelation: "shipments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_orders_veiculo_id_fkey";
+            columns: ["veiculo_id"];
+            isOneToOne: false;
+            referencedRelation: "fleet_vehicles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_orders_motorista_id_fkey";
+            columns: ["motorista_id"];
+            isOneToOne: false;
+            referencedRelation: "fleet_drivers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      shipment_route_versions: {
+        Row: {
+          algoritmo: string;
+          ativa: boolean;
+          criado_em: string;
+          criado_por: string | null;
+          distancia_m: number | null;
+          duracao_s: number | null;
+          id: string;
+          organization_id: string;
+          shipment_id: string;
+          tempo_execucao_ms: number | null;
+          veiculos: Json;
+          versao: number;
+        };
+        Insert: {
+          algoritmo: string;
+          ativa?: boolean;
+          criado_em?: string;
+          criado_por?: string | null;
+          distancia_m?: number | null;
+          duracao_s?: number | null;
+          id?: string;
+          organization_id: string;
+          shipment_id: string;
+          tempo_execucao_ms?: number | null;
+          veiculos?: Json;
+          versao: number;
+        };
+        Update: {
+          algoritmo?: string;
+          ativa?: boolean;
+          criado_em?: string;
+          criado_por?: string | null;
+          distancia_m?: number | null;
+          duracao_s?: number | null;
+          id?: string;
+          organization_id?: string;
+          shipment_id?: string;
+          tempo_execucao_ms?: number | null;
+          veiculos?: Json;
+          versao?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipment_route_versions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_route_versions_shipment_id_fkey";
             columns: ["shipment_id"];
             isOneToOne: false;
             referencedRelation: "shipments";
@@ -10127,6 +10222,7 @@ export type Database = {
       };
       shipments: {
         Row: {
+          saida_prevista: string | null;
           created_at: string;
           created_by: string | null;
           distancia_m: number | null;
@@ -10152,6 +10248,7 @@ export type Database = {
           veiculo_tipo: string | null;
         };
         Insert: {
+          saida_prevista?: string | null;
           created_at?: string;
           created_by?: string | null;
           distancia_m?: number | null;
@@ -10177,6 +10274,7 @@ export type Database = {
           veiculo_tipo?: string | null;
         };
         Update: {
+          saida_prevista?: string | null;
           created_at?: string;
           created_by?: string | null;
           distancia_m?: number | null;

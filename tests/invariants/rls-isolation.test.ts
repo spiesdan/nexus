@@ -531,6 +531,15 @@ beforeAll(() => {
           insert into public.fleet_drivers (organization_id, nome, capacidade_jornada_min)
             values (v_org, 'Motorista RLS Invariant', 480);
         end if;
+
+        -- migration 0307 — versões da rota (histórico da distribuição). O seed
+        -- aproveita a carga já criada acima: o snapshot referencia shipment_id
+        -- e é lido só pela organização dona.
+        if not exists (select 1 from public.shipment_route_versions where organization_id = v_org) then
+          insert into public.shipment_route_versions
+            (organization_id, shipment_id, versao, algoritmo, veiculos)
+            values (v_org, v_shi, 1, 'ortools-vrptw-1', '[]'::jsonb);
+        end if;
       end loop;
     end
     $seed$;
@@ -683,6 +692,10 @@ export const TABLES = [
   // API/worker de frota (service role).
   "fleet_vehicles",
   "fleet_drivers",
+  // migration 0307 — histórico de rotas por veículo. Leitura org-scoped; a
+  // escrita é agent+ (confirmar distribuição) e não há delete por papel:
+  // histórico de rota é snapshot, não rascunho.
+  "shipment_route_versions",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {
