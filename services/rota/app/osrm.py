@@ -42,8 +42,14 @@ async def matrizes_rota(
             # Matriz incompleta nao vira distancia 0 (0 m = "na mesma porta").
             raise RuntimeError("osrm_matrix_incompleta")
 
-        distancias = [[float(v if v is not None else 0) for v in linha] for linha in dist]
-        duracoes = [[float(v if v is not None else 0) for v in linha] for linha in dur]
+        # `null` = par sem rota entre as ruas. Virar 0 seria dizer "mesma
+        # porta" e esconder exatamente o trecho que a rota não consegue fazer.
+        if any(v is None for linha in dist for v in linha) or any(
+            v is None for linha in dur for v in linha
+        ):
+            raise RuntimeError("osrm_matrix_sem_rota")
+        distancias = [[float(v) for v in linha] for linha in dist]
+        duracoes = [[float(v) for v in linha] for linha in dur]
         return {"distancias": distancias, "duracoes": duracoes}
 
 
