@@ -4,7 +4,21 @@
  * Usa o client user-scoped (cookie session) → toda contagem HERDA a RLS de
  * SELECT de `conversations` (fn_can_view_conversation, migration 0035). Um agent
  * em modo own* recebe a contagem do SEU escopo, NUNCA o total da org — a mesma
- * garantia do listing. Head count (count:'exact', head:true) não devolve linhas.
+ * garantia do listing.
+ *
+ * ═══ POR QUE UMA VARREDURA, E NÃO QUATRO CONSULTAS ═══════════════════════════
+ *
+ * Até a 1.52.2 esta rota disparava quatro `count: "exact", head: true` em
+ * paralelo. Cada um varria `conversations` inteira, e a RLS desta tabela chama
+ * `fn_can_view_conversation()` e `fn_can_view_channel()` POR LINHA — cada uma
+ * com três subconsultas de papel. Medido na VPS em 2026-11-13: ~1,2 s de média,
+ * pico de 7991 ms contra o `statement_timeout` de 8 s do role `authenticated`,
+ * e a Inbox recebia 500 (`57014 statement timeout`).
+ *
+ * Agora é UM RPC (`fn_conversas_contagens`, migration 0310): a mesma varredura
+ * responde as quatro perguntas com `count(*) filter`, em 799 ms. O RPC é
+ * `security invoker`, então a RLS continua valendo — o ganho é não repetir a
+ * varredura, não desligar a proteção.
  */
 import { randomUUID } from "node:crypto";
 
@@ -16,6 +30,13 @@ import { comandosDaFila } from "@/lib/inbox/comando-da-conversa";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+interface ContagensDoInbox {
+  fila: number;
+  automatico: number;
+  mine: number;
+  all: number;
+}
 
 export async function GET(): Promise<Response> {
   const requestId = randomUUID();
@@ -35,59 +56,39 @@ export async function GET(): Promise<Response> {
     return fail("no_active_org", "No active organization.", 403, { requestId });
   }
 
-  const org = activeOrg.orgId;
-  const countExact = () =>
-    supabase
-      .from("conversations")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", org);
-
-  // Espelha tabToFilter (InboxLayout): unassigned = fila aberta sem dono;
-  // mine = atribuídas a mim e ainda ABERTAS; all = tudo que o usuário VÊ.
-  //
-  // O `not in (terminais)` do `mine` espelha o `exclude_finished` da aba, e o
-  // espelhamento é o ponto: um badge que conta o que a aba não mostra é pior
-  // que badge nenhum — manda o atendente procurar um trabalho que não existe.
-  // O fato ORG-WIDE resolvido ANTES das contagens, porque ele escolhe QUAL
+  // O fato ORG-WIDE resolvido ANTES da contagem, porque ele escolhe QUAL
   // conjunto de comandos a Fila pede. `undefined` (não deu para saber) segue a
   // convenção da regra: assume que há automático.
-  const automaticoDaOrg = await orgTemAutomatico(supabase, org);
+  const automaticoDaOrg = await orgTemAutomatico(supabase, activeOrg.orgId);
 
-  const [fila, automatico, mine, all] = await Promise.all([
-    // A FILA DEIXOU DE SER "sem dono + status de espera".
-    //
-    // Aquele par contava como trabalho humano pendente tudo que o robô estava
-    // atendendo: medido na VPS em 2026-08-30, o badge dizia 83 enquanto 47
-    // daquelas conversas tinham o automático no comando. Agora ele conta o mesmo
+  const { data, error } = await supabase.rpc("fn_conversas_contagens", {
+    p_org: activeOrg.orgId,
+    p_me: user.id,
+    // A FILA DEIXOU DE SER "sem dono + status de espera": ela conta o mesmo
     // predicado que a aba pede — e o espelhamento entre badge e aba é vigiado
-    // por `tests/unit/badge-espelha-a-aba.test.ts`, porque um badge que conta o
-    // que a aba não mostra manda o atendente procurar trabalho que não existe.
-    countExact().in("comando_da_conversa", comandosDaFila(automaticoDaOrg)),
-    // A aba "Automático". Antes ela pedia `status='ai_handling'`, escrito por UM
-    // caminho só em produção — por isso vivia quase vazia.
-    countExact().eq("comando_da_conversa", "automatico"),
-    countExact()
-      .eq("assigned_to_user_id", user.id)
-      .not("status", "in", `(${CONVERSATION_TERMINAL_STATUSES.join(",")})`),
-    countExact(),
-  ]);
+    // por `tests/unit/badge-espelha-a-aba.test.ts`.
+    p_comandos: comandosDaFila(automaticoDaOrg),
+    // `exclude_finished` da aba "Minhas": fechar não solta o dono (histórico que
+    // vale), então o badge sem os terminais precisa do mesmo conjunto da aba.
+    p_terminais: [...CONVERSATION_TERMINAL_STATUSES],
+  });
 
-  const firstErr = fila.error ?? automatico.error ?? mine.error ?? all.error;
-  if (firstErr) {
-    return fail("internal_error", firstErr.message, 500, { requestId });
+  if (error) {
+    return fail("internal_error", error.message, 500, { requestId });
   }
 
+  const contagens = data as unknown as ContagensDoInbox;
   return ok(
     {
-      fila: fila.count ?? 0,
-      automatico: automatico.count ?? 0,
+      fila: contagens.fila ?? 0,
+      automatico: contagens.automatico ?? 0,
       // `unassigned` continua respondendo, com o MESMO valor de `fila`. É rota
       // `/api/v1/` versionada: campo não some de uma versão para outra, e um
       // cliente com a página aberta desde antes do deploy segue lendo o nome
       // velho até recarregar.
-      unassigned: fila.count ?? 0,
-      mine: mine.count ?? 0,
-      all: all.count ?? 0,
+      unassigned: contagens.fila ?? 0,
+      mine: contagens.mine ?? 0,
+      all: contagens.all ?? 0,
     },
     { requestId },
   );

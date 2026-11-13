@@ -176,11 +176,18 @@ describe("contador de Minhas", () => {
     // Lê a fonte da rota de counts em vez de repetir a string: o que quebra
     // aqui é o badge e a aba discordarem, e um literal duplicado no teste
     // esconderia exatamente isso.
+    //
+    // Desde a migration 0310 o predicado de `mine` mora no RPC
+    // `fn_conversas_contagens` (uma varredura para as quatro contagens). O que
+    // esta prova continua vigiando é o ENCONTRO das duas pontas: a rota envia o
+    // mesmo `CONVERSATION_TERMINAL_STATUSES` que a aba usa, e o RPC o recebe
+    // como filtro de `status`.
     const { readFileSync } = await import("node:fs");
     const fonte = readFileSync("app/api/v1/conversations/counts/route.ts", "utf8");
 
     expect(fonte).toContain("CONVERSATION_TERMINAL_STATUSES");
-    expect(fonte).toMatch(/assigned_to_user_id[\s\S]{0,200}not\(\s*"status"\s*,\s*"in"/);
+    expect(fonte).toMatch(/p_terminais:\s*\[\.\.\.CONVERSATION_TERMINAL_STATUSES\]/);
+    expect(fonte).toContain('rpc("fn_conversas_contagens"');
   });
 });
 
