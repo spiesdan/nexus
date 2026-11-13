@@ -1,6 +1,9 @@
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
+# Motor fixo: o OR-Tools é upstream e o contrato de resposta é nosso; uma
+# versão diferente entre dois builds da MESMA tag muda o resultado do solver.
 ortools==9.15.6755
-pydantic>=2.9.0
-httpx>=0.27.0
-python-multipart>=0.0.9
+
+# Camada HTTP: contrato nosso, sem dependência de versão do motor.
+fastapi>=0.115.0,<0.121
+uvicorn[standard]>=0.30.0,<0.39
+pydantic>=2.9.0,<3
+httpx>=0.27.0,<0.29

@@ -1,10 +1,20 @@
 """FastAPI do servico de roteirizacao (F5) — VRPTW via Google OR-Tools."""
 
+import os
+
 from fastapi import FastAPI
 
 from app.contract import SolverRequest, SolverResponse
 
-app = FastAPI(title="Nexus Rota — VRPTW Solver", version="0.1.0")
+VERSAO = os.environ.get("ROTA_VERSAO", "local")
+
+app = FastAPI(title="Nexus Rota — VRPTW Solver", version=VERSAO)
+
+
+@app.get("/healthz")
+async def saude() -> dict:
+    """Liveness com versao — e' o que o healthcheck do compose e o deploy leem."""
+    return {"status": "ok", "versao": VERSAO}
 
 
 @app.post("/rota/otimizar", response_model=SolverResponse)
