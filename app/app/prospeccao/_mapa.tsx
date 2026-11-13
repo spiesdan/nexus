@@ -484,7 +484,7 @@ export function MapaProspects({
             isolate    → CABEÇALHO por cima            ✅
             z-0        → CABEÇALHO por cima            ✅
 
-          O teste `leaflet-isolado-em-contexto-de-stack.test.ts` exige que
+          O teste `mapas-em-contexto-de-stack.test.ts` exige que
           todo mapa do repo tenha pelo menos uma das duas. */}
 
       <div

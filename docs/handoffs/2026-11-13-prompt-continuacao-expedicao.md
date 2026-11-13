@@ -548,3 +548,68 @@ Correção de verdade, para um PR próprio: trocar as 11 famílias por `next/fon
 arquivos `.woff2` versionados (some a dependência de rede no build; custo: ~15 binários e
 prova visual da tipografia). Não foi feito aqui porque exige prova visual que este ambiente
 não tem.
+
+---
+
+## 13. Migração MapLibre + prova visual (2026-11-13)
+
+### O que foi entregue
+
+- **Mapa da expedição migrado de Leaflet para MapLibre GL JS 6.18.0** —
+  `app/app/expedicao/[id]/_mapa-rota.tsx` reescrito (10 casos do gate do mapa +
+  7 do gate de stacking, verdes).
+  Cartografia inalterada: tiles raster do OpenStreetMap, sem chave, sem custo de
+  licença. A prospecção (`app/app/prospeccao/_mapa.tsx`) segue em Leaflet.
+- **Helpers puros** em `lib/mapas/estilo.ts` e `lib/mapas/geometria.ts`
+  (estilo raster, linha de rota, polígono de precisão do GPS em metros, limites),
+  com 14 testes sem browser (`estilo.test.ts` 4, `geometria.test.ts` 10, verdes).
+- **Gates atualizados:**
+  - `tests/unit/mapas-em-contexto-de-stack.test.ts` (renomeado de
+    `leaflet-isolado-em-contexto-de-stack.test.ts`): varre quem instancia mapa
+    (`L.map(` / `new maplibregl.Map(`) e exige `isolate` ou `z-0`.
+  - `tests/unit/mapa-da-expedicao-e-maplibre.test.ts` (10 casos): importação
+    MapLibre (não Leaflet), estilo de `lib/mapas/estilo`, geometria de
+    `lib/mapas/geometria`, enquadramento que respeita o dedo, popup com ações,
+    pino arrastável, `ResizeObserver` + `remove()`, stacking context.
+- **Prova visual** em `evidence/2026-11-13-expedicao/`:
+  - `evidence/2026-11-13-expedicao/mapa-rotas-veiculo.png` — mapa MapLibre com
+    tiles OSM, 9 pinos, 3 rotas coloridas por veículo, ponto azul do motorista,
+    distribuição "Confirmada", painel de recuperação expandido (2 pendentes).
+  - `evidence/2026-11-13-expedicao/recuperacao-colapsado.png` — mesmo layout,
+    painel de recuperação colapsado.
+  - `evidence/2026-11-13-expedicao/README.md` — fixtures, viewport 1680×1600,
+    como rebuildar com `node tests/visual/expedicao/build.mjs <dir>`.
+- **Bancada visual** em `tests/visual/expedicao/` (`bancada.tsx`, `fixtures.ts`,
+  `fetch-falso.ts`, `link-stub.tsx`, `build.mjs`) — componentes de produção com
+  `fetch` falso; build com esbuild + Tailwind; worker do MapLibre copiado para o
+  output e `setWorkerUrl` forçado (corrige o worker que falhava em servidores de
+  arquivo estático).
+
+### ADR e documentação
+
+- `docs/adr/0003-maplibre-no-mapa-da-expedicao.md` — novo, supersede o ADR-0002.
+- `docs/adr/0002-stack-geografica-osm.md` — marcado `superseded by ADR-0003`.
+- `docs/runbooks/geodados.md` — linha 3 agora cita ADR-0003.
+- `docs/architecture/expedicao-vrptw.architecture.json` — mapa = MapLibre, com
+  `mapas-helpers` (lib/mapas) e a dependência de tiles do OSM como nodes.
+- `tests/visual/expedicao/` — bancada da prova visual (componentes de produção).
+- `.changes/mapa-expedicao-maplibre.md` — fragmento de release.
+
+### Gates medidos nesta máquina
+
+| Gate | Resultado |
+|---|---|
+| `pnpm typecheck` | zerado |
+| `pnpm lint` | 0 erros |
+| `pnpm test:unit` (mapas) | 31 verdes (10 gate do mapa + 7 stacking + 14 helpers) |
+| `pnpm test:unit` (completo) | pendente — rodar antes do commit |
+| `pnpm build` | pendente — rodar antes do commit |
+
+### O que continua aberto
+
+- `pnpm test:unit` completo e `pnpm build` ainda não rodaram nesta máquina após a
+  migração (fazer antes de commitar).
+- A suíte `e2e` do PR #422 está `in_progress` — acompanhar até verde e mergear.
+- Prova visual em app rodando com banco real (o CI smoke não cobre esta tela) —
+  fora do escopo deste ambiente (não há Supabase nem banco semeados aqui).
+

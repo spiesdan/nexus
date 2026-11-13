@@ -1,5 +1,6 @@
 /**
- * O PROVEDOR DE ROTEAMENTO — Leaflet desenha, o provedor calcula.
+ * O PROVEDOR DE ROTEAMENTO — o mapa desenha (MapLibre na expedição), o
+ * provedor calcula.
  *
  * A interface existe para o cálculo não ficar acoplado a um serviço: hoje
  * OSRM (ruas de verdade, sem chave), amanhã GraphHopper/ORS/Google sem tocar
