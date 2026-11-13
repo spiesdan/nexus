@@ -23,6 +23,7 @@ import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 
+import { ApiErrorCodes } from "@/lib/api/errors";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import {
@@ -248,7 +249,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (resultado.status === "sem_solucao") {
     return fail(
-      "unprocessable_entity",
+      ApiErrorCodes.unprocessable_entity,
       "Não foi possível distribuir as entregas com as restrições informadas.",
       422,
       {
