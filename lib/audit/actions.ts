@@ -481,6 +481,27 @@ export const AUDIT_ACTIONS = [
   "shipment.rota.ordenada",
   "shipment.rota.iniciada",
   "shipment.rota.finalizada",
+  // Distribuição por veículo (migration 0307). Confirmar QUEM leva O QUE é o
+  // fato que o histórico de versões registra; separado de `rota.ordenada`
+  // porque a ordem sozinha não diz o veículo — e é essa pergunta que o
+  // operador faz quando a entrega dá errado.
+  "shipment.rota.distribuida",
+  // Address Recovery Engine (migration 0309). Recuperação de endereços com
+  // histórico: confirma, rejeita e reverte são rastreáveis para não haver
+  // correção silenciosa do endereço do cliente.
+  "shipment.rota.recuperada",
+  "shipment.rota.recuperacao_confirmada",
+  "shipment.rota.recuperacao_rejeitada",
+  "shipment.rota.recuperacao_revertida",
+  // Frota (migration 0306/0307). Capacidade e jornada decidem o que o
+  // otimizador pode alocar; mudar isso sem rastro deixa a distribuição
+  // inexplicável depois.
+  "fleet.vehicle.created",
+  "fleet.vehicle.updated",
+  "fleet.vehicle.deleted",
+  "fleet.driver.created",
+  "fleet.driver.updated",
+  "fleet.driver.deleted",
   // Compras e estoque (migrations 0242/0243, NEXUS §46–§47). Mercadoria e
   // dinheiro de compra com rastro de quem, quando e por quê.
   "supplier.created",

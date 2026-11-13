@@ -246,6 +246,43 @@ const schema = z.object({
   /** Teto de uma leitura de OCR. CPU em 2 vCPUs leva segundos; 60 s é folga. */
   OCR_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(60_000).catch(60_000),
   /**
+   * Solver de rotas (serviço Python/OR-Tools). Opcional de propósito: sem ele
+   * no ar a rota de otimização responde 503, mas o resto da expedição continua
+   * funcionando — derrubar o boot por um serviço de uma tela seria trocar um
+   * recurso por todos.
+   */
+  ROTA_SOLVER_URL: z.string().optional().default(""),
+  ROTA_SOLVER_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(120_000).default(30_000).catch(30_000),
+  /**
+   * Geocodificação (Nominatim): endereço → coordenada.
+   *
+   * O default é a instância pública, suficiente para avaliação e para quem
+   * ainda não subiu a sua. Em produção COM volume, aponte para instância
+   * própria (docs/runbooks/geodados.md): a política do Nominatim público não
+   * permite consulta em massa e não existe SLA. Trocar é só esta variável —
+   * o resto do módulo não conhece o provedor.
+   */
+  GEOCODER_URL: z
+    .string()
+    .optional()
+    .default("https://nominatim.openstreetmap.org/search"),
+  /**
+   * Intervalo mínimo entre chamadas ao geocodificador, por processo.
+   *
+   * 1100 ms é o ritmo que respeita a instância pública (serializa o processo).
+   * Instância própria não tem esse limite: `0` desliga a espera artificial e
+   * uma carga de 20 paradas deixa de gastar 22 s só na fila.
+   */
+  GEOCODER_MIN_INTERVALO_MS: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(60_000)
+    .default(1_100)
+    .catch(1_100),
+  /** User-Agent identificável — exigência da política de uso do Nominatim. */
+  GEOCODER_UA: z.string().optional().default("Nexus-Rotas/1.0"),
+  /**
    * Teto de NEGÓCIOS decididos por passada do cron de risco (15 min).
    *
    * O custo é medido, não estimado: 64 estados com uma pergunta custam ~12,5 s

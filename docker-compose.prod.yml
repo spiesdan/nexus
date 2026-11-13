@@ -39,6 +39,11 @@ services:
     pull_policy: ${APP_PULL_POLICY:-always}
     restart: unless-stopped
     env_file: .env
+    environment:
+      # O solver roda no compose, na rede interna. O default do código
+      # (`127.0.0.1:8000`) serve para rodar o serviço à mão no dev; dentro do
+      # contêiner o endereço é o nome do serviço.
+      ROTA_SOLVER_URL: ${ROTA_SOLVER_URL:-http://rota:8791}
     depends_on:
       srh:
         condition: service_started
@@ -330,6 +335,40 @@ services:
       timeout: 5s
       retries: 3
       start_period: 120s
+    logging: *default-logging
+    networks: [internal]
+
+  # Solver VRPTW (F5) — FastAPI + Google OR-Tools. Python não cabe na imagem
+  # Node do app, então é serviço próprio, como o OCR e o sidecar fiscal.
+  #
+  # Sem `ports`: só a rede interna, como o fiscal. O app fala por
+  # `ROTA_SOLVER_URL` (default `http://rota:8791` no compose). Sem o serviço no
+  # ar, a rota de otimização responde 503 `upstream_unavailable` — falha
+  # fechada, nunca uma heurística se passando por OR-Tools.
+  rota:
+    image: ${ROTA_IMAGE:-ghcr.io/spiesdan/nexus-rota:stable}
+    pull_policy: ${ROTA_PULL_POLICY:-always}
+    # O `build:` fica ao lado como escape de quem instala sem registry; quem
+    # manda é a `image:` — é ela que o `pull` do update.sh traz.
+    build:
+      context: services/rota
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # Teto MEDIDO? Não: o solver atual resolve cargas de dezenas de paradas em
+    # poucos MB. 512m cobre o pico do OR-Tools com folga e impede que uma carga
+    # patológica leve a VPS inteira junto. Revisar com medição antes de subir.
+    mem_limit: 512m
+    environment:
+      # Instância própria do OSRM é o recomendado em produção (dados e perfil
+      # de veículo sob nosso controle). O default é o demo público, que não
+      # tem SLA — e está declarado no README do serviço.
+      OSRM_URL: ${OSRM_URL:-https://router.project-osrm.org}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8791/healthz', timeout=3)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     logging: *default-logging
     networks: [internal]
 

@@ -28580,3 +28580,606 @@ grant execute on function public.fn_decrypt_oauth(bytea) to service_role;
 grant execute on function public.fn_encrypt_oauth(text) to service_role;
 grant execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) to service_role;
 grant execute on function public.fn_update_budget_consumption() to service_role;
+
+-- ─── F5 — FROTA / VEÍCULOS / MOTORISTAS (VRPTW multi-veículo) ────────────────
+-- Apêndice idempotente do migration 20261114120000_0306_frota_veiculos_motoristas.
+-- Idempotente (create ... if not exists / drop policy if exists + create), portável
+-- em psql puro. Não altera nenhuma tabela anterior — apenas adiciona a frota.
+
+create table if not exists public.fleet_vehicles (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  placa text not null,
+  veiculo_tipo text,
+  capacidade_kg numeric(12,3) not null default 0,
+  capacidade_m3 numeric(12,3) not null default 0,
+  criados_em timestamptz not null default now(),
+  atualizados_em timestamptz not null default now()
+);
+
+create table if not exists public.fleet_drivers (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  user_id uuid references auth.users (id) on delete set null,
+  nome text not null,
+  telefone text,
+  capacidade_jornada_min int not null default 480,
+  disponibilidade jsonb not null default '{}'::jsonb,
+  restricoes jsonb not null default '{}'::jsonb,
+  criados_em timestamptz not null default now(),
+  atualizados_em timestamptz not null default now()
+);
+
+create index if not exists idx_fleet_vehicles_organization_id
+  on public.fleet_vehicles (organization_id);
+create index if not exists idx_fleet_drivers_organization_id
+  on public.fleet_drivers (organization_id);
+
+alter table public.fleet_vehicles enable row level security;
+alter table public.fleet_drivers enable row level security;
+
+drop policy if exists "fleet_vehicles_select" on public.fleet_vehicles;
+create policy "fleet_vehicles_select" on public.fleet_vehicles
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_insert" on public.fleet_vehicles;
+create policy "fleet_vehicles_insert" on public.fleet_vehicles
+  for insert with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_update" on public.fleet_vehicles;
+create policy "fleet_vehicles_update" on public.fleet_vehicles
+  for update using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_delete" on public.fleet_vehicles;
+create policy "fleet_vehicles_delete" on public.fleet_vehicles
+  for delete using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_select" on public.fleet_drivers;
+create policy "fleet_drivers_select" on public.fleet_drivers
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_insert" on public.fleet_drivers;
+create policy "fleet_drivers_insert" on public.fleet_drivers
+  for insert with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_update" on public.fleet_drivers;
+create policy "fleet_drivers_update" on public.fleet_drivers
+  for update using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_delete" on public.fleet_drivers;
+create policy "fleet_drivers_delete" on public.fleet_drivers
+  for delete using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+comment on table public.fleet_vehicles is
+  'Frota (F5/VRPTW): veiculo com placa, tipo e capacidades proprias (kg/volume). Frota e legado em shipments.placa — esta tabela e a entidade usada pelo otimizador multi-veiculo.';
+
+comment on table public.fleet_drivers is
+  'Motoristas (F5/VRPTW): motorista com capacidade de jornada (min) e disponibilidade/restricoes (jsonb operacional). user_id liga ao login quando houver; sem login, motorista continua nome-only (logica TS no servico).';
+
+-- ─── 0307 — DISTRIBUIÇÃO POR VEÍCULO / JANELAS / VERSÕES DE ROTA ──────────────
+-- Apêndice idempotente do migration 20261115120000_0307_distribuicao_por_veiculo.
+-- Idempotente (add column if not exists / create ... if not exists / drop policy
+-- if exists + create), portável em psql puro. Não altera dado existente: as
+-- colunas novas nascem NULL/true e o caminho single-vehicle continua válido.
+
+alter table public.fleet_vehicles
+  add column if not exists ativo boolean not null default true;
+
+alter table public.fleet_drivers
+  add column if not exists ativo boolean not null default true;
+
+create unique index if not exists fleet_vehicles_org_placa_key
+  on public.fleet_vehicles (
+    organization_id,
+    upper(regexp_replace(placa, '\s', '', 'g'))
+  );
+
+alter table public.shipment_orders
+  add column if not exists veiculo_id uuid references public.fleet_vehicles (id) on delete set null;
+
+alter table public.shipment_orders
+  add column if not exists motorista_id uuid references public.fleet_drivers (id) on delete set null;
+
+alter table public.shipment_orders
+  add column if not exists sequencia_veiculo integer;
+
+alter table public.shipment_orders
+  add column if not exists janela_inicio time;
+
+alter table public.shipment_orders
+  add column if not exists janela_fim time;
+
+alter table public.shipments
+  add column if not exists saida_prevista time;
+
+comment on column public.shipments.saida_prevista is
+  'Hora do dia em que a carga sai da base. Converte a janela de entrega (hora do dia) para o solver e o ETA (segundos desde a saida) para horario. NULL = janela nao aplicavel; o solver declara.';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_orders_sequencia_veiculo_positiva'
+  ) then
+    alter table public.shipment_orders
+      add constraint shipment_orders_sequencia_veiculo_positiva
+      check (sequencia_veiculo is null or sequencia_veiculo > 0);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_orders_janela_completa'
+  ) then
+    alter table public.shipment_orders
+      add constraint shipment_orders_janela_completa
+      check (
+        (janela_inicio is null and janela_fim is null)
+        or (janela_inicio is not null and janela_fim is not null and janela_fim > janela_inicio)
+      );
+  end if;
+end
+$$;
+
+create index if not exists shipment_orders_veiculo_idx
+  on public.shipment_orders (shipment_id, veiculo_id, sequencia_veiculo);
+
+create table if not exists public.shipment_route_versions (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  shipment_id uuid not null references public.shipments (id) on delete cascade,
+  versao integer not null,
+  algoritmo text not null,
+  veiculos jsonb not null default '[]'::jsonb,
+  distancia_m integer,
+  duracao_s integer,
+  tempo_execucao_ms integer,
+  criado_por uuid references auth.users (id) on delete set null,
+  criado_em timestamptz not null default now(),
+  ativa boolean not null default false,
+  constraint shipment_route_versions_versao_positiva check (versao > 0)
+);
+
+create unique index if not exists shipment_route_versions_shipment_versao_key
+  on public.shipment_route_versions (shipment_id, versao);
+
+create index if not exists shipment_route_versions_org_idx
+  on public.shipment_route_versions (organization_id, shipment_id, versao desc);
+
+alter table public.shipment_route_versions enable row level security;
+
+drop policy if exists shipment_route_versions_select on public.shipment_route_versions;
+create policy shipment_route_versions_select on public.shipment_route_versions
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists shipment_route_versions_insert on public.shipment_route_versions;
+create policy shipment_route_versions_insert on public.shipment_route_versions
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+drop policy if exists shipment_route_versions_update on public.shipment_route_versions;
+create policy shipment_route_versions_update on public.shipment_route_versions
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+revoke all on public.shipment_route_versions from anon;
+grant select, insert, update on public.shipment_route_versions to authenticated;
+grant all on public.shipment_route_versions to service_role;
+
+comment on table public.shipment_route_versions is
+  'Histórico de rotas (F5): snapshot imutável de cada distribuição confirmada por veículo. `ativa` marca a versão que o app do motorista aplica; versão antiga nunca sobrescreve a nova.';
+
+comment on column public.shipment_orders.veiculo_id is
+  'Veículo da frota responsável por esta parada na distribuição confirmada. NULL = caminho single-vehicle legado (shipments.placa).';
+
+comment on column public.shipment_orders.janela_inicio is
+  'Janela de entrega combinada com o cliente (hora do dia). Sem janela, o solver declara a restrição como não aplicada.';
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 0308 — Destino de entrega com snapshot (aditivo, idempotente)
+-- Aplicado pelo install.sh/update.sh; espelha
+-- supabase/migrations/20261116120000_0308_destino_da_entrega.sql.
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0308 — O DESTINO DA ENTREGA (prompt §2)
+--
+-- Até aqui, endereço e coordenada de uma entrega vinham do CADASTRO DO
+-- CONTATO. A consequência medida: dois pedidos do mesmo cliente para endereços
+-- diferentes (o caso "Mercado Central: Rua A, 100 e Rua B, 500") viravam duas
+-- paradas na lista, mas compartilhavam o mesmo pino no mapa — corrigir um
+-- movia o outro. E mexer no cadastro do cliente movia, em silêncio, o destino
+-- de uma carga já planejada.
+--
+-- Esta migration cria a identidade do DESTINO, com snapshot:
+--
+--   * `shipment_destinations` é por (organização, chave). A chave é o endereço
+--     efetivo do pedido no instante em que ele entra na carga — mudou o
+--     endereço, muda a chave, nasce outro destino, e a entrega antiga continua
+--     apontando para o destino antigo.
+--   * `shipment_orders.destination_id` liga cada pedido da carga ao seu
+--     destino. `shipment_orders` continua sendo a parada (não há entidade
+--     paralela); o destino é quem carrega o endereço e a coordenada.
+--   * A geocodificação e o pino manual passam a gravar AQUI, não em `contacts`.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.shipment_destinations (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+
+  -- O cliente do destino. NULL = entrega avulsa (pedido sem contato): a chave
+  -- cai no nome normalizado, como `agruparParadas` já fazia.
+  contact_id uuid references public.contacts (id) on delete set null,
+
+  -- Identidade estável: `<contact_id|avulso:nome>::<endereço>`. É o que
+  -- impede dois endereços do mesmo cliente de colapsarem num pino só.
+  chave text not null,
+
+  -- ── Snapshot do endereço no momento da inclusão na carga ──────────────────
+  endereco text,
+  numero text,
+  complemento text,
+  bairro text,
+  cidade text,
+  uf text,
+  cep text,
+
+  -- ── Resultado da geocodificação (muda com o tempo; o endereço não) ───────
+  latitude double precision,
+  longitude double precision,
+  geo_status text not null default 'pendente',
+  geo_fonte text,
+  geo_precisao_m double precision,
+  geo_em timestamptz,
+
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+
+-- Estados do prompt §3. `ok` cobre confirmado e aproximado (a precisão está em
+-- `geo_fonte`/`geo_precisao_m`); os demais são falha declarada, nunca chute.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_destinations_geo_status_valido'
+  ) then
+    alter table public.shipment_destinations
+      add constraint shipment_destinations_geo_status_valido
+      check (geo_status in ('pendente', 'ok', 'nao_encontrado', 'ambiguo', 'erro'));
+  end if;
+end $$;
+
+create unique index if not exists shipment_destinations_chave_key
+  on public.shipment_destinations (organization_id, chave);
+
+create index if not exists shipment_destinations_org_geo_idx
+  on public.shipment_destinations (organization_id, geo_status);
+
+alter table public.shipment_orders
+  add column if not exists destination_id uuid
+  references public.shipment_destinations (id) on delete set null;
+
+create index if not exists shipment_orders_destination_idx
+  on public.shipment_orders (destination_id);
+
+alter table public.shipment_destinations enable row level security;
+
+drop policy if exists shipment_destinations_select on public.shipment_destinations;
+create policy shipment_destinations_select on public.shipment_destinations
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists shipment_destinations_insert on public.shipment_destinations;
+create policy shipment_destinations_insert on public.shipment_destinations
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+-- O endereço é snapshot e não se reescreve; o update existe para a
+-- geocodificação e o pino manual gravarem coordenada, fonte e estado.
+drop policy if exists shipment_destinations_update on public.shipment_destinations;
+create policy shipment_destinations_update on public.shipment_destinations
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+-- Sem delete por papel: destino de carga é histórico. A remoção da carga não
+-- apaga o destino (ele pode servir a outra carga); a organização, sim, leva
+-- tudo junto por cascade.
+revoke all on public.shipment_destinations from anon;
+grant select, insert, update on public.shipment_destinations to authenticated;
+grant all on public.shipment_destinations to service_role;
+
+comment on table public.shipment_destinations is
+  'Destino de entrega com snapshot (prompt §2): endereço efetivo do pedido no momento em que entrou na carga. Mudança posterior no cadastro do cliente NÃO altera esta linha — cria outro destino. Coordenada e estado da geocodificação moram aqui, não em contacts.';
+
+comment on column public.shipment_destinations.chave is
+  'Identidade estável do destino: <contact_id|avulso:nome>::<endereço>. Mesma regra de agrupamento de paradas (lib/rotas/paradas.ts).';
+
+comment on column public.shipment_destinations.geo_fonte is
+  'nominatim:numero|nominatim:rua|nominatim:bairro|nominatim:cidade|manual. A tela usa para dizer quando o ponto é aproximado.';
+
+comment on column public.shipment_orders.destination_id is
+  'Destino (endereço + coordenada) deste pedido na carga. NULL em carga anterior à migration 0308; nesse caso a leitura cai no cadastro do contato, como antes.';
+
+-- ─── Backfill das cargas abertas ────────────────────────────────────────────
+--
+-- Reproduz em SQL a prioridade de `_carga.ts`: endereço do pedido com rua,
+-- senão o do cadastro. Carga já encerrada não é tocada: o histórico não se
+-- reescreve. Nome de avulso normalizado igual a `nomeAvulsoNormalizado`
+-- (sem acento, minúsculo, espaço simples) — a chave tem de bater com a que o
+-- aplicativo calcula, senão a próxima leitura criaria um destino paralelo.
+do $$
+declare
+  r record;
+  v_endereco text;
+  v_chave text;
+  v_destino uuid;
+  v_geo_status text;
+begin
+  for r in
+    select so.id as shipment_order_id,
+           so.organization_id,
+           co.id as order_id,
+           co.contact_id,
+           co.cliente_nome,
+           co.endereco_entrega,
+           c.logradouro, c.numero_end, c.complemento, c.bairro, c.cidade, c.uf, c.cep,
+           c.latitude, c.longitude, c.geo_status as contato_geo_status, c.geo_fonte
+      from public.shipment_orders so
+      join public.commercial_orders co
+        on co.id = so.order_id and co.organization_id = so.organization_id
+      left join public.contacts c
+        on c.id = co.contact_id and c.organization_id = so.organization_id
+      join public.shipments s
+        on s.id = so.shipment_id and s.organization_id = so.organization_id
+     where so.destination_id is null
+       and s.finished_at is null
+  loop
+    -- Endereço efetivo: o do pedido vence; senão, a linha do cadastro. A
+    -- checagem de "tem rua" (`linhaComRua`) continua na leitura do aplicativo;
+    -- repeti-la aqui só faria o backfill escolher outro endereço — que é pior,
+    -- porque o snapshot congelaria o endereço errado.
+    v_endereco := nullif(btrim(coalesce(r.endereco_entrega, '')), '');
+    if v_endereco is null then
+      v_endereco := nullif(
+        btrim(concat_ws(', ',
+          nullif(btrim(coalesce(r.logradouro, '')), ''),
+          nullif(btrim(coalesce(r.numero_end, '')), ''),
+          nullif(btrim(coalesce(r.complemento, '')), ''),
+          nullif(btrim(coalesce(r.bairro, '')), ''),
+          nullif(btrim(concat_ws('/', nullif(btrim(coalesce(r.cidade, '')), ''), nullif(btrim(coalesce(r.uf, '')), ''))), '')
+        )),
+        ''
+      );
+    end if;
+
+    v_chave := coalesce(
+      r.contact_id::text,
+      'avulso:' || btrim(regexp_replace(
+        lower(translate(coalesce(r.cliente_nome, '?'), 'áàâãäéèêëíìîïóòôõöúùûüçÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ', 'aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC')),
+        '\s+', ' ', 'g'
+      ))
+    );
+    if v_endereco is not null then
+      v_chave := v_chave || '::' || v_endereco;
+      v_geo_status := case when r.latitude is not null then 'ok' else 'pendente' end;
+    else
+      v_geo_status := 'nao_encontrado';
+    end if;
+
+    insert into public.shipment_destinations (
+      organization_id, contact_id, chave, endereco, numero, complemento, bairro,
+      cidade, uf, cep, latitude, longitude, geo_status, geo_fonte, geo_em
+    ) values (
+      r.organization_id, r.contact_id, v_chave, v_endereco, r.numero_end, r.complemento,
+      r.bairro, r.cidade, r.uf, r.cep, r.latitude, r.longitude, v_geo_status, r.geo_fonte,
+      case when r.latitude is not null then now() else null end
+    )
+    on conflict (organization_id, chave) do nothing;
+
+    select id into v_destino
+      from public.shipment_destinations
+     where organization_id = r.organization_id and chave = v_chave
+     limit 1;
+
+    if v_destino is not null then
+      update public.shipment_orders
+         set destination_id = v_destino
+       where id = r.shipment_order_id;
+    end if;
+  end loop;
+end $$;
+
+-- ─── 0309 — ADDRESS RECOVERY ENGINE ─────────────────────────────────────────
+--
+-- Apêndice idempotente do migration
+-- supabase/migrations/20261116130000_0309_address_recovery_engine.sql.
+--
+-- Recuperação de endereços com histórico auditável. Nada aqui reescreve o
+-- endereço que o vendedor digitou: `endereco_original` é imutável e cada
+-- tentativa do motor vira linha append-only em `shipment_destination_recoveries`.
+
+alter table public.shipment_destinations
+  add column if not exists endereco_original text;
+alter table public.shipment_destinations
+  add column if not exists endereco_normalizado text;
+alter table public.shipment_destinations
+  add column if not exists endereco_recuperado text;
+alter table public.shipment_destinations
+  add column if not exists recuperacao_status text not null default 'nao_tentada';
+alter table public.shipment_destinations
+  add column if not exists confianca numeric(4,3);
+alter table public.shipment_destinations
+  add column if not exists metodo text;
+alter table public.shipment_destinations
+  add column if not exists provedor text;
+alter table public.shipment_destinations
+  add column if not exists recuperado_em timestamptz;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'shipment_destinations_recuperacao_status_valido'
+  ) then
+    alter table public.shipment_destinations
+      add constraint shipment_destinations_recuperacao_status_valido
+      check (recuperacao_status in (
+        'nao_tentada', 'encontrado', 'recuperado', 'ambiguo', 'nao_encontrado', 'erro'
+      ));
+  end if;
+end $$;
+
+create index if not exists shipment_destinations_recuperacao_idx
+  on public.shipment_destinations (organization_id, recuperacao_status);
+
+create table if not exists public.shipment_destination_recoveries (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  destination_id uuid not null references public.shipment_destinations (id) on delete cascade,
+  tentativa integer not null,
+  provedor text not null,
+  consulta text,
+  candidato jsonb,
+  confianca numeric(4,3),
+  motivo text,
+  criado_em timestamptz not null default now(),
+  criado_por uuid references auth.users (id) on delete set null
+);
+
+create index if not exists shipment_destination_recoveries_dest_idx
+  on public.shipment_destination_recoveries (destination_id, tentativa);
+
+alter table public.shipment_destination_recoveries enable row level security;
+
+drop policy if exists shipment_destination_recoveries_select on public.shipment_destination_recoveries;
+create policy shipment_destination_recoveries_select on public.shipment_destination_recoveries
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists shipment_destination_recoveries_insert on public.shipment_destination_recoveries;
+create policy shipment_destination_recoveries_insert on public.shipment_destination_recoveries
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+revoke all on public.shipment_destination_recoveries from anon;
+grant select, insert on public.shipment_destination_recoveries to authenticated;
+grant all on public.shipment_destination_recoveries to service_role;
+
+drop policy if exists shipment_destinations_update_0309 on public.shipment_destinations;
+create policy shipment_destinations_update_0309 on public.shipment_destinations
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+grant select, insert, update on public.shipment_destinations to authenticated;
+grant all on public.shipment_destinations to service_role;
+
+comment on column public.shipment_destinations.endereco_original is
+  'Endereço informado pelo vendedor no pedido. Imutável: o motor grava o resultado em endereco_recuperado.';
+
+comment on column public.shipment_destinations.recuperacao_status is
+  'nao_tentada|encontrado|recuperado|ambiguo|nao_encontrado|erro. Só o motor de recuperação e o operador mudam este estado.';
+
+comment on column public.shipment_destinations.confianca is
+  'Pontuação 0–1 da última recuperação. Vetos duros (UF/CEP/município divergente) vencem qualquer pontuação.';
+
+comment on table public.shipment_destination_recoveries is
+  'Histórico append-only do Address Recovery Engine. Uma linha por tentativa; nunca se apaga. Base da auditoria e da reversão.';
+
+-- Backfill: original preenchido uma vez; quem já tem pino não passa a travar a
+-- rota por causa da coluna nova.
+update public.shipment_destinations
+   set endereco_original = coalesce(endereco_original, endereco)
+ where endereco_original is null;
+
+update public.shipment_destinations
+   set recuperacao_status = 'encontrado'
+ where recuperacao_status = 'nao_tentada'
+   and latitude is not null
+   and longitude is not null
+   and geo_status = 'ok';

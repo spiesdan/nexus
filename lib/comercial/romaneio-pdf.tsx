@@ -21,6 +21,17 @@
  *
  * Os pesos só aparecem quando existem: no Odvix a carga saía com "0,000 Kg" em
  * toda linha, e coluna inteira de zero é ruído, não informação.
+ *
+ * ─── ESTA FOLHA NÃO MUDA COM A DISTRIBUIÇÃO POR VEÍCULO ─────────────────────
+ *
+ * A roteirização multi-veículo (F5) tem tela, versão e mapa próprios. O papel
+ * que o motorista leva continua sendo ESTE, com o veículo legado da carga
+ * (`shipments.placa`/`motorista_nome`) — foi pedido explícito: manter o mesmo
+ * romaneio que a operação já usa. Não acrescente aqui a atribuição por parada,
+ * ETA ou versão da rota sem que isso seja pedido: quem confere a distribuição
+ * olha a tela, e o motorista confere o que carregar e entregar. O gate em
+ * `tests/unit/romaneio-nao-muda-com-distribuicao.test.ts` existe para essa
+ * mudança não acontecer por acidente.
  */
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import React from "react";

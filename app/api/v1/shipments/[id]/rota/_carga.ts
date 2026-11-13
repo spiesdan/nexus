@@ -29,6 +29,8 @@ export interface CargaRota {
   rota_geojson: { geometria?: number[][]; provedor?: string; ruas?: boolean; modo?: string } | null;
   rota_em: string | null;
   rota_versao: number;
+  /** Hora do dia da saída da base (migration 0307). NULL = janela não aplicável. */
+  saida_prevista: string | null;
   started_at: string | null;
   finished_at: string | null;
 }
@@ -41,7 +43,8 @@ export interface CargaComParadas {
 
 const COLUNAS_CARGA_ROTA =
   "id, numero, status, placa, veiculo_tipo, motorista_nome, origem_endereco, origem_lat, origem_lng, " +
-  "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, started_at, finished_at";
+  "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, " +
+  "saida_prevista, started_at, finished_at";
 
 export async function carregarCargaComParadas(
   supabase: Supabase,
@@ -58,11 +61,25 @@ export async function carregarCargaComParadas(
 
   const { data: itens } = await supabase
     .from("shipment_orders")
-    .select("id, order_id, sequencia, status, separado_em")
+    .select(
+      "id, order_id, sequencia, status, separado_em, veiculo_id, motorista_id, sequencia_veiculo, janela_inicio, janela_fim, destination_id",
+    )
     .eq("shipment_id", shipmentId)
     .eq("organization_id", orgId)
     .order("sequencia");
-  const lista = ((itens ?? []) as unknown as { id: string; order_id: string; sequencia: number; status: string; separado_em: string | null }[]);
+  const lista = ((itens ?? []) as unknown as {
+    id: string;
+    order_id: string;
+    sequencia: number;
+    status: string;
+    separado_em: string | null;
+    veiculo_id: string | null;
+    motorista_id: string | null;
+    sequencia_veiculo: number | null;
+    janela_inicio: string | null;
+    janela_fim: string | null;
+    destination_id: string | null;
+  }[]);
   if (lista.length === 0) {
     return { carga: carga as unknown as CargaRota, itens: [], paradas: [] };
   }
@@ -81,18 +98,59 @@ export async function carregarCargaComParadas(
     .eq("organization_id", orgId)
     .in("order_id", idsPedidos)
     .order("posicao");
-  const porPedidoItens = new Map<string, { codigo: string; nome: string; quantidade: number }[]>();
-  for (const it of (itensProdutos ?? []) as unknown as {
+  const listaItensProdutos = (itensProdutos ?? []) as unknown as {
     order_id: string;
     produto_codigo: string;
     produto_nome: string;
     quantidade: number;
-  }[]) {
+  }[];
+
+  // PESO E VOLUME DO QUE VAI NA CARGA — sem inventar número.
+  //
+  // O solver usa a matriz rodoviária e a capacidade dos veículos; para a
+  // capacidade significar algo, a demanda de cada parada precisa vir do
+  // cadastro do produto (`catalog_products`), não de um zero fixo. Produto
+  // sem `peso_bruto_kg` fica SEM peso (a resposta dirá que a restrição não
+  // foi aplicada) — ausência não vira zero silencioso.
+  //
+  // Volume só é derivado quando as três dimensões existem: cm³ → m³.
+  const codigosProdutos = [...new Set(listaItensProdutos.map((i) => (i.produto_codigo ?? "").trim()).filter(Boolean))];
+  const fisicoPorCodigo = new Map<string, { pesoKg: number | null; volumeM3: number | null }>();
+  if (codigosProdutos.length > 0) {
+    const { data: produtos } = await supabase
+      .from("catalog_products")
+      .select("codigo, peso_bruto_kg, altura_cm, largura_cm, comprimento_cm")
+      .eq("organization_id", orgId)
+      .in("codigo", codigosProdutos);
+    for (const p of (produtos ?? []) as unknown as {
+      codigo: string;
+      peso_bruto_kg: number | null;
+      altura_cm: number | null;
+      largura_cm: number | null;
+      comprimento_cm: number | null;
+    }[]) {
+      const dimensoes = [p.altura_cm, p.largura_cm, p.comprimento_cm];
+      const volumeM3 =
+        dimensoes.every((d) => d != null && d > 0)
+          ? (Number(p.altura_cm) * Number(p.largura_cm) * Number(p.comprimento_cm)) / 1_000_000
+          : null;
+      fisicoPorCodigo.set(p.codigo.trim(), { pesoKg: p.peso_bruto_kg ?? null, volumeM3 });
+    }
+  }
+
+  const porPedidoItens = new Map<
+    string,
+    { codigo: string; nome: string; quantidade: number; peso_unit_kg: number | null; volume_unit_m3: number | null }[]
+  >();
+  for (const it of listaItensProdutos) {
     const listaItens = porPedidoItens.get(it.order_id) ?? [];
+    const fisico = fisicoPorCodigo.get((it.produto_codigo ?? "").trim());
     listaItens.push({
       codigo: it.produto_codigo ?? "",
       nome: it.produto_nome ?? "",
       quantidade: Number(it.quantidade ?? 0),
+      peso_unit_kg: fisico?.pesoKg ?? null,
+      volume_unit_m3: fisico?.volumeM3 ?? null,
     });
     porPedidoItens.set(it.order_id, listaItens);
   }
@@ -108,6 +166,48 @@ export async function carregarCargaComParadas(
       status: string;
     }[]).map((p) => [p.id, p]),
   );
+
+  // O DESTINO PERSISTIDO (migration 0308) — endereço e coordenada do ENDEREÇO,
+  // não do cliente. É a fonte primária; o cadastro só entra quando a carga é
+  // anterior a esta migration (`destination_id` nulo).
+  const idsDestinos = [...new Set(lista.map((i) => i.destination_id).filter(Boolean))] as string[];
+  const porDestino = new Map<string, {
+    id: string;
+    endereco: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    geo_status: string | null;
+    geo_fonte: string | null;
+    recuperacao_status: string | null;
+    endereco_original: string | null;
+    endereco_recuperado: string | null;
+    confianca: number | null;
+    metodo: string | null;
+  }>();
+  if (idsDestinos.length > 0) {
+    const { data: destinos } = await supabase
+      .from("shipment_destinations")
+      .select(
+        "id, endereco, latitude, longitude, geo_status, geo_fonte, recuperacao_status, endereco_original, endereco_recuperado, confianca, metodo",
+      )
+      .eq("organization_id", orgId)
+      .in("id", idsDestinos);
+    for (const d of (destinos ?? []) as unknown as {
+      id: string;
+      endereco: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      geo_status: string | null;
+      geo_fonte: string | null;
+      recuperacao_status: string | null;
+      endereco_original: string | null;
+      endereco_recuperado: string | null;
+      confianca: number | null;
+      metodo: string | null;
+    }[]) {
+      porDestino.set(d.id, d);
+    }
+  }
 
   const idsContatos = [...new Set([...porPedido.values()].map((p) => p.contact_id).filter(Boolean))] as string[];
   let porContato = new Map<string, {
@@ -159,6 +259,7 @@ export async function carregarCargaComParadas(
   const paraParada: ItemDaCargaParaParada[] = lista.map((i) => {
     const p = porPedido.get(i.order_id);
     const c = p?.contact_id ? porContato.get(p.contact_id) : undefined;
+    const destino = i.destination_id ? porDestino.get(i.destination_id) : undefined;
     return {
       shipment_order_id: i.id,
       order_id: i.order_id,
@@ -168,6 +269,7 @@ export async function carregarCargaComParadas(
       numero: p?.numero ?? 0,
       cliente_nome: p?.cliente_nome ?? "?",
       contact_id: p?.contact_id ?? null,
+      destination_id: i.destination_id,
       contato_nome: c ? (c.display_name ?? c.name) : null,
       fone: c?.phone_number ?? null,
       // O ENDEREÇO DA PARADA — o do PEDIDO quando o operador escolheu outro
@@ -185,13 +287,30 @@ export async function carregarCargaComParadas(
       // EXISTE mas nasceu sem a rua (o cadastro estava incompleto na hora do
       // faturamento) e vencia o cadastro já completo. Endereço sem rua não é
       // ponto de entrega escolhido — é dado velho.
-      endereco_entrega: linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
-      latitude: c?.latitude ?? null,
-      longitude: c?.longitude ?? null,
-      geo_status: c?.geo_status ?? "pendente",
-      geo_fonte: c?.geo_fonte ?? null,
+      //
+      // Com destino persistido, o snapshot VENCE: é o endereço que o pedido
+      // tinha quando entrou na carga, e mexer no cadastro do cliente depois
+      // disso não move a entrega planejada (prompt §2).
+      endereco_entrega:
+        destino?.endereco ?? linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
+      latitude: destino ? destino.latitude : (c?.latitude ?? null),
+      longitude: destino ? destino.longitude : (c?.longitude ?? null),
+      geo_status: destino ? (destino.geo_status ?? "pendente") : (c?.geo_status ?? "pendente"),
+      geo_fonte: destino ? destino.geo_fonte : (c?.geo_fonte ?? null),
       total_cents: p?.total_cents ?? 0,
       itens: porPedidoItens.get(i.order_id) ?? [],
+      veiculo_id: i.veiculo_id,
+      motorista_id: i.motorista_id,
+      sequencia_veiculo: i.sequencia_veiculo,
+      janela_inicio: i.janela_inicio,
+      janela_fim: i.janela_fim,
+      // Estado da recuperação do DESTINO (0309) — a tela mostra o original e
+      // o sugerido lado a lado. Em carga legada (sem destino) fica null.
+      recuperacao_status: destino?.recuperacao_status ?? null,
+      endereco_original: destino?.endereco_original ?? null,
+      endereco_recuperado: destino?.endereco_recuperado ?? null,
+      recuperacao_confianca: destino?.confianca ?? null,
+      recuperacao_metodo: destino?.metodo ?? null,
     };
   });
 

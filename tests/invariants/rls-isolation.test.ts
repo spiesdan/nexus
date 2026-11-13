@@ -111,6 +111,7 @@ beforeAll(() => {
       v_camp uuid;
       v_compra uuid;
       v_va uuid;
+      v_dest uuid;
       v_tag text;
       v_chave text;
     begin
@@ -519,6 +520,48 @@ beforeAll(() => {
           insert into public.automatic_sales_events (organization_id, campaign_id, event_type)
             values (v_org, v_va, 'descoberta');
         end if;
+
+        -- migration 0306 (F5: VRPTW) — frota e motoristas. As linhas são a
+        -- prova comportamental da RLS (o gate de completude exige seed positivo):
+        -- a org lê a própria frota/motorista (≥1) e 0 da vizinha.
+        if not exists (select 1 from public.fleet_vehicles where organization_id = v_org) then
+          insert into public.fleet_vehicles (organization_id, placa, veiculo_tipo, capacidade_kg, capacidade_m3)
+            values (v_org, 'FRT-' || v_tag, 'truck', 1000, 10);
+        end if;
+        if not exists (select 1 from public.fleet_drivers where organization_id = v_org) then
+          insert into public.fleet_drivers (organization_id, nome, capacidade_jornada_min)
+            values (v_org, 'Motorista RLS Invariant', 480);
+        end if;
+
+        -- migration 0307 — versões da rota (histórico da distribuição). O seed
+        -- aproveita a carga já criada acima: o snapshot referencia shipment_id
+        -- e é lido só pela organização dona.
+        if not exists (select 1 from public.shipment_route_versions where organization_id = v_org) then
+          insert into public.shipment_route_versions
+            (organization_id, shipment_id, versao, algoritmo, veiculos)
+            values (v_org, v_shi, 1, 'ortools-vrptw-1', '[]'::jsonb);
+        end if;
+
+        -- migration 0308 — destino da entrega com snapshot (prompt §2). O seed
+        -- usa a carga já criada: a chave é única por organização, então o
+        -- sufixo da tag evita colisão entre as duas orgs do teste.
+        if not exists (select 1 from public.shipment_destinations where organization_id = v_org) then
+          insert into public.shipment_destinations
+            (organization_id, chave, endereco, geo_status)
+            values (v_org, 'rls-' || v_tag || '::Rua da Prova, 100', 'Rua da Prova, 100', 'pendente');
+        end if;
+        select id into v_dest from public.shipment_destinations where organization_id = v_org limit 1;
+
+        -- migration 0309 — histórico append-only do Address Recovery Engine.
+        -- O seed é a prova comportamental: a org lê a própria tentativa (≥1) e
+        -- 0 da vizinha. Insert-only por RLS; não há delete por papel.
+        if v_dest is not null and not exists (
+          select 1 from public.shipment_destination_recoveries where organization_id = v_org
+        ) then
+          insert into public.shipment_destination_recoveries
+            (organization_id, destination_id, tentativa, provedor, consulta, motivo)
+            values (v_org, v_dest, 1, 'nominatim', 'Rua da Prova, 100', 'seed de invariante RLS');
+        end if;
       end loop;
     end
     $seed$;
@@ -665,6 +708,24 @@ export const TABLES = [
   // at-risk); a ESCRITA é do worker com service role no cron risk-watcher.
   // Seed em `beforeAll`, logo após o lead da própria org (FK).
   "crm_lead_risk_decisions",
+  // migration 0306 (F5: VRPTW) — frota e motoristas. Mesmo molde da onda acima:
+  // leitura org-scoped sem gate de papel (o agente que opera a rota lê a frota
+  // da própria org — positivo semeado em `beforeAll`); a escrita é manager+ via
+  // API/worker de frota (service role).
+  "fleet_vehicles",
+  "fleet_drivers",
+  // migration 0307 — histórico de rotas por veículo. Leitura org-scoped; a
+  // escrita é agent+ (confirmar distribuição) e não há delete por papel:
+  // histórico de rota é snapshot, não rascunho.
+  "shipment_route_versions",
+  // migration 0308 — destino da entrega (endereço + coordenada). Leitura
+  // org-scoped; a escrita é agent+ (inclusão na carga, geocodificação e pino
+  // manual) e não há delete por papel: destino é snapshot, não rascunho.
+  "shipment_destinations",
+  // migration 0309 — histórico append-only da recuperação de endereços.
+  // Leitura org-scoped; escrita agent+ e sem delete por papel: histórico de
+  // correção de endereço é auditoria, não rascunho.
+  "shipment_destination_recoveries",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

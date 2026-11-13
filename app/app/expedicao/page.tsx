@@ -68,7 +68,7 @@ export default async function ExpedicaoPage() {
   const { data: itensDasCargas } = idsDasCargas.length
     ? await supabase
         .from("shipment_orders")
-        .select("shipment_id, order_id, status, sequencia")
+        .select("shipment_id, order_id, status, sequencia, veiculo_id, motorista_id")
         .eq("organization_id", activeOrg.orgId)
         .in("shipment_id", idsDasCargas)
         .order("sequencia")
@@ -78,6 +78,8 @@ export default async function ExpedicaoPage() {
     order_id: string;
     status: string;
     sequencia: number;
+    veiculo_id: string | null;
+    motorista_id: string | null;
   }[];
 
   /**
@@ -112,6 +114,39 @@ export default async function ExpedicaoPage() {
     }[]).map((p) => [p.id, p]),
   );
 
+  /**
+   * QUEM LEVA CADA CARGA — veículo e motorista DA DISTRIBUIÇÃO (migration 0307).
+   *
+   * `shipments.placa`/`motorista_nome` são o veículo legado da carga: depois da
+   * distribuição por veículo, a pergunta "quais cargas saem com o ABC1D23?" não
+   * se responde mais por eles. A atribuição mora nos pedidos, então a lista de
+   * filtros sai daí — e continua funcionando para a carga antiga, sem ids.
+   */
+  const idsDeVeiculo = [...new Set(itens.map((i) => i.veiculo_id).filter((v): v is string => v != null))];
+  const idsDeMotorista = [...new Set(itens.map((i) => i.motorista_id).filter((v): v is string => v != null))];
+  const [{ data: veiculosDaFrota }, { data: motoristasDaFrota }] = await Promise.all([
+    idsDeVeiculo.length
+      ? supabase
+          .from("fleet_vehicles")
+          .select("id, placa")
+          .eq("organization_id", activeOrg.orgId)
+          .in("id", idsDeVeiculo)
+      : Promise.resolve({ data: [] as { id: string; placa: string }[] }),
+    idsDeMotorista.length
+      ? supabase
+          .from("fleet_drivers")
+          .select("id, nome")
+          .eq("organization_id", activeOrg.orgId)
+          .in("id", idsDeMotorista)
+      : Promise.resolve({ data: [] as { id: string; nome: string }[] }),
+  ]);
+  const placaPorId = new Map(
+    ((veiculosDaFrota ?? []) as unknown as { id: string; placa: string }[]).map((v) => [v.id, v.placa]),
+  );
+  const nomePorId = new Map(
+    ((motoristasDaFrota ?? []) as unknown as { id: string; nome: string }[]).map((m) => [m.id, m.nome]),
+  );
+
   const progresso: Record<string, ProgressoDaCarga> = {};
   for (const item of itens) {
     const p = (progresso[item.shipment_id] ??= {
@@ -120,10 +155,16 @@ export default async function ExpedicaoPage() {
       devolvidos: 0,
       cidades: [],
       semCidade: 0,
+      veiculos: [],
+      motoristas: [],
     });
     p.total += 1;
     if (item.status === "entregue") p.entregues += 1;
     else if (item.status === "devolvido") p.devolvidos += 1;
+    const placa = item.veiculo_id ? placaPorId.get(item.veiculo_id) : undefined;
+    if (placa && !p.veiculos.includes(placa)) p.veiculos.push(placa);
+    const nome = item.motorista_id ? nomePorId.get(item.motorista_id) : undefined;
+    if (nome && !p.motoristas.includes(nome)) p.motoristas.push(nome);
   }
   for (const [shipmentId, p] of Object.entries(progresso)) {
     const daCarga = cidadesDaCarga(
@@ -164,6 +205,7 @@ export default async function ExpedicaoPage() {
         vazias: t("Nenhuma carga ainda"),
         embarcaveis: t("Aguardando embarque"),
         verRomaneio: t("Romaneio (PDF)"),
+        frota: t("Frota"),
       }}
     />
   );

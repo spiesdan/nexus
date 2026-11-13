@@ -1510,6 +1510,10 @@ esac
   # contrato é HTTP nosso, mas o app espera o formato que a imagem dele devolve.
   envq OCR_IMAGE "${IMG_OCR}:${TAG_ALVO}"
   envq OCR_PULL_POLICY "$PULL_POLICY_ALVO"
+  # O solver de rotas na MESMA versão: o contrato HTTP (campos e status) é
+  # nosso, e um lado velho com o outro novo é resposta que a tela não entende.
+  envq ROTA_IMAGE "${IMG_ROTA}:${TAG_ALVO}"
+  envq ROTA_PULL_POLICY "$PULL_POLICY_ALVO"
   envq DOMAIN "$DOMAIN"
   envq ACME_EMAIL "$ACME_EMAIL"
   printf '# Proxy reverso: "caddy" (o kit sobe o dele nas portas 80/443) ou "traefik"\n'
@@ -1629,6 +1633,19 @@ esac
   # Vazio desliga (a foto volta a usar só a IA) e é o desligamento de emergência.
   envq OCR_SERVICE_URL "http://ocr:8790"
   envq OCR_TIMEOUT_MS "60000"
+  # Solver de rotas (OR-Tools): endereço do contêiner `rota` na rede interna,
+  # sem porta publicada. Sem ele o app responde 503 na otimização multi-veículo
+  # — não existe heurística local se passando por OR-Tools. A chave tem de ser
+  # gravada aqui: `.env` é reescrito a partir desta lista FECHADA, e uma chave
+  # posta à mão some no próximo install (gate em hostgator-setup-kit/test-validators.sh).
+  envq ROTA_SOLVER_URL "http://rota:8791"
+  # Geocodificação e ruas. O default é a instância PÚBLICA: funciona sem
+  # infraestrutura extra, mas não tem SLA e a política do Nominatim limita uso
+  # em massa. Quem sobe a instância própria (docs/runbooks/geodados.md) edita
+  # estas três linhas no .env e roda o update — o install as preserva.
+  envq GEOCODER_URL "${GEOCODER_URL:-https://nominatim.openstreetmap.org/search}"
+  envq GEOCODER_MIN_INTERVALO_MS "${GEOCODER_MIN_INTERVALO_MS:-1100}"
+  envq OSRM_URL "${OSRM_URL:-https://router.project-osrm.org}"
   envq WAHA_API_KEY "$WAHA_API_KEY"
   envq WAHA_API_KEY_SHA512 "$WAHA_API_KEY_SHA512"
   envq WAHA_HMAC_SECRET "$WAHA_HMAC_SECRET"

@@ -58,6 +58,83 @@ describe("agruparParadas", () => {
     expect(paradas).toHaveLength(1);
   });
 
+  it("janela do destino é a INTERSEÇÃO das janelas dos pedidos", () => {
+    const paradas = agruparParadas([
+      item({
+        order_id: "a",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        janela_inicio: "08:00:00",
+        janela_fim: "12:00:00",
+      }),
+      item({
+        order_id: "b",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        janela_inicio: "10:00:00",
+        janela_fim: "18:00:00",
+      }),
+    ]);
+    expect(paradas).toHaveLength(1);
+    expect(paradas[0]?.janela_inicio).toBe("10:00:00");
+    expect(paradas[0]?.janela_fim).toBe("12:00:00");
+    expect(paradas[0]?.janela_conflito).toBe(false);
+  });
+
+  it("janelas que não se cruzam viram conflito declarado e nenhuma janela aplicada", () => {
+    const paradas = agruparParadas([
+      item({
+        order_id: "a",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        janela_inicio: "08:00:00",
+        janela_fim: "09:00:00",
+      }),
+      item({
+        order_id: "b",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        janela_inicio: "15:00:00",
+        janela_fim: "16:00:00",
+      }),
+    ]);
+    expect(paradas[0]?.janela_conflito).toBe(true);
+    expect(paradas[0]?.janela_inicio).toBeNull();
+    expect(paradas[0]?.janela_fim).toBeNull();
+  });
+
+  it("pedido sem janela não restringe a janela do destino", () => {
+    const paradas = agruparParadas([
+      item({
+        order_id: "a",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        janela_inicio: "08:00:00",
+        janela_fim: "12:00:00",
+      }),
+      item({ order_id: "b", contact_id: "c1", endereco_entrega: "Rua X, 10" }),
+    ]);
+    expect(paradas[0]?.janela_inicio).toBe("08:00:00");
+    expect(paradas[0]?.janela_fim).toBe("12:00:00");
+  });
+
+  it("a atribuição da distribuição chega à parada (mesmo destino, mesmo veículo)", () => {
+    const paradas = agruparParadas([
+      item({
+        order_id: "a",
+        contact_id: "c1",
+        endereco_entrega: "Rua X, 10",
+        veiculo_id: "v1",
+        motorista_id: "m1",
+        sequencia_veiculo: 3,
+      }),
+      item({ order_id: "b", contact_id: "c1", endereco_entrega: "Rua X, 10" }),
+    ]);
+    expect(paradas[0]?.veiculo_id).toBe("v1");
+    expect(paradas[0]?.motorista_id).toBe("m1");
+    expect(paradas[0]?.sequencia_veiculo).toBe(3);
+  });
+
   it("endereço não informado não colapsa com endereço conhecido de destino diferente", () => {
     const paradas = agruparParadas([
       item({ order_id: "a", contact_id: "c1", endereco_entrega: null }),

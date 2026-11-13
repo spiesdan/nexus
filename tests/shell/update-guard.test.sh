@@ -392,48 +392,53 @@ pin_caso() {  # pin_caso <descrição> <conteúdo do .env> <esperado>
   r="$(cd "$PROJ" && pin_incompleto .env.pin || true)"
   check "$d" test "$r" = "$esperado"
 }
-# `fiscal` (o sidecar da SEFAZ), `mercos` (o importador de pedidos) e `ocr`
-# (o PaddleOCR do pedido) entram na
+# `fiscal` (o sidecar da SEFAZ), `mercos` (o importador de pedidos), `ocr`
+# (o PaddleOCR do pedido) e `rota` (o solver VRPTW) entram na
 # lista porque `pin_incompleto` passou a vigiar a chave deles — e o teste que não
 # acompanha reprova, que é o que aconteceu. Do lado bom, é a prova de que a
 # guarda é real: uma função que ninguém exercita não protege nada.
-pin_caso "app pinado + worker/scheduler/fiscal/mercos/ocr AUSENTES → acusa os cinco" \
-  "APP_IMAGE=${NS}/nexus:1.3.0" "worker scheduler fiscal mercos ocr"
+pin_caso "app pinado + worker/scheduler/fiscal/mercos/ocr/rota AUSENTES → acusa os seis" \
+  "APP_IMAGE=${NS}/nexus:1.3.0" "worker scheduler fiscal mercos ocr rota"
 pin_caso "app pinado + worker em canal móvel → acusa" \
   "APP_IMAGE=${NS}/nexus:1.3.0
 WORKER_IMAGE=${NS}/nexus-worker:stable
 SCHEDULER_IMAGE=${NS}/nexus-scheduler:1.3.0
 FISCAL_IMAGE=${NS}/nexus-fiscal-sidecar:1.3.0
 MERCOS_IMAGE=${NS}/nexus-mercos:1.3.0
-OCR_IMAGE=${NS}/nexus-ocr:1.3.0" "worker"
+OCR_IMAGE=${NS}/nexus-ocr:1.3.0
+ROTA_IMAGE=${NS}/nexus-rota:1.3.0" "worker"
 pin_caso "sidecar em canal móvel → acusa (o app monta o payload, o sidecar monta o XML)" \
   "APP_IMAGE=${NS}/nexus:1.3.0
 WORKER_IMAGE=${NS}/nexus-worker:1.3.0
 SCHEDULER_IMAGE=${NS}/nexus-scheduler:1.3.0
 FISCAL_IMAGE=${NS}/nexus-fiscal-sidecar:stable
 MERCOS_IMAGE=${NS}/nexus-mercos:1.3.0
-OCR_IMAGE=${NS}/nexus-ocr:1.3.0" "fiscal"
+OCR_IMAGE=${NS}/nexus-ocr:1.3.0
+ROTA_IMAGE=${NS}/nexus-rota:1.3.0" "fiscal"
 pin_caso "OCR em canal móvel → acusa (o app espera o contrato da mesma versão)" \
   "APP_IMAGE=${NS}/nexus:1.3.0
 WORKER_IMAGE=${NS}/nexus-worker:1.3.0
 SCHEDULER_IMAGE=${NS}/nexus-scheduler:1.3.0
 FISCAL_IMAGE=${NS}/nexus-fiscal-sidecar:1.3.0
 MERCOS_IMAGE=${NS}/nexus-mercos:1.3.0
-OCR_IMAGE=${NS}/nexus-ocr:stable" "ocr"
-pin_caso "as seis na mesma versão → silêncio" \
+OCR_IMAGE=${NS}/nexus-ocr:stable
+ROTA_IMAGE=${NS}/nexus-rota:1.3.0" "ocr"
+pin_caso "as sete na mesma versão → silêncio" \
   "APP_IMAGE=${NS}/nexus:1.3.0
 WORKER_IMAGE=${NS}/nexus-worker:1.3.0
 SCHEDULER_IMAGE=${NS}/nexus-scheduler:1.3.0
 FISCAL_IMAGE=${NS}/nexus-fiscal-sidecar:1.3.0
 MERCOS_IMAGE=${NS}/nexus-mercos:1.3.0
-OCR_IMAGE=${NS}/nexus-ocr:1.3.0" ""
+OCR_IMAGE=${NS}/nexus-ocr:1.3.0
+ROTA_IMAGE=${NS}/nexus-rota:1.3.0" ""
 pin_caso "app num canal deliberado (:latest) → não é 'metade', silêncio" \
   "APP_IMAGE=${NS}/nexus:latest
 WORKER_IMAGE=${NS}/nexus-worker:latest
 SCHEDULER_IMAGE=${NS}/nexus-scheduler:latest
 FISCAL_IMAGE=${NS}/nexus-fiscal-sidecar:latest
 MERCOS_IMAGE=${NS}/nexus-mercos:latest
-OCR_IMAGE=${NS}/nexus-ocr:latest" ""
+OCR_IMAGE=${NS}/nexus-ocr:latest
+ROTA_IMAGE=${NS}/nexus-rota:latest" ""
 # As aspas SIMPLES são o objeto deste caso — o `install.sh` grava assim. Elas
 # ficam literais porque estão DENTRO da string de aspas duplas; trocá-las por
 # duplas FECHA a string, e o conteúdo sai sem aspa nenhuma. Medido: nessa forma
@@ -445,7 +450,8 @@ WORKER_IMAGE='${NS}/nexus-worker:1.3.0'
 SCHEDULER_IMAGE='${NS}/nexus-scheduler:1.3.0'
 FISCAL_IMAGE='${NS}/nexus-fiscal-sidecar:1.3.0'
 MERCOS_IMAGE='${NS}/nexus-mercos:1.3.0'
-OCR_IMAGE='${NS}/nexus-ocr:1.3.0'" ""
+OCR_IMAGE='${NS}/nexus-ocr:1.3.0'
+ROTA_IMAGE='${NS}/nexus-rota:1.3.0'" ""
 rm -f "$PROJ/.env.pin"
 
 

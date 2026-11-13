@@ -91,6 +91,24 @@ function banco(linhas: Record<string, Record<string, unknown>[]>): Gravado[] {
       gravados.push({ tabela: this.__tabela as string, operacao: "update", carga });
       return this;
     },
+    /**
+     * `shipment_destinations` (0308): a rota grava o destino do pedido antes de
+     * responder. O dublê devolve as linhas gravadas na releitura por `chave`,
+     * como o PostgREST faz — sem isto o teste passaria por acidente, com
+     * `destination_id` sempre nulo.
+     */
+    upsert(this: Record<string, unknown>, carga: Record<string, unknown>[]) {
+      const tabela = this.__tabela as string;
+      gravados.push({ tabela, operacao: "upsert", carga });
+      const atual = linhas[tabela] ?? [];
+      const inseridas = carga.map((linha, i) => {
+        const existente = atual.find((l) => l.chave === linha.chave);
+        return existente ?? { id: `destino-${tabela}-${i}`, ...linha };
+      });
+      linhas[tabela] = inseridas;
+      this.__inserido = inseridas;
+      return this;
+    },
   };
   const cliente = {
     from: (tabela: string) => {
@@ -194,6 +212,20 @@ describe("POST /api/v1/shipments/[id]/orders", () => {
     expect(insercao?.carga).toEqual([
       { organization_id: ORG, shipment_id: CARGA, order_id: PEDIDO, sequencia: 3, status: "na_carga" },
     ]);
+
+    // O destino com snapshot nasce junto (0308): sem ele a parada não tem
+    // endereço/coordenada próprios e cairia no pino do cliente.
+    const destino = gravados.find((g) => g.tabela === "shipment_destinations" && g.operacao === "upsert");
+    expect(destino?.carga).toEqual([
+      expect.objectContaining({
+        organization_id: ORG,
+        chave: "avulso:wanderlei machado",
+        latitude: null,
+        geo_status: "nao_encontrado",
+      }),
+    ]);
+    const ligacao = gravados.find((g) => g.tabela === "shipment_orders" && g.operacao === "update");
+    expect(ligacao?.carga).toEqual({ destination_id: "destino-shipment_destinations-0" });
 
     const avanco = gravados.find((g) => g.tabela === "commercial_orders" && g.operacao === "update");
     expect(avanco?.carga).toEqual({ status: "expedido" });

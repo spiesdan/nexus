@@ -313,3 +313,214 @@ encontrada, gates re-executados e preparação do corte de release.
   sessão. `curl` não prova UX (doctrine de QA Visual).
 - **Release**: fragments prontos; corte a executar no fluxo padrão (dispatch → release PR →
   merge → tag → publish → deploy → health). Nenhuma mudança de schema nesta entrega.
+
+---
+
+## 9. CONTINUAÇÃO — DESFECHO DO FLUXO DE RELEASE (2026-11-13, fim de sessão)
+
+### 9.1 Release v1.51.1 — cadeia completa (fragment → dispatch → release PR → merge → tag → publish → deploy → health)
+
+| Etapa | Resultado |
+|---|---|
+| Fragmentos (`.changes/`) | 4 novos desta sessão: agrupamento por destino; sequência manual invalida geometria; geocodificação fora de faixa; endereço novo não reusa coordenada. |
+| Dispatch `release` | Run `43329009641` → PR **#418** ("Release 1.51.1") criado. |
+| Merge do PR #418 | **23:29:50Z — MERGED**. |
+| Tag `v1.51.1` | Criada pelo workflow (commit do App) a partir do merge; publicada via `publish-image` (run da tag, `43329450066`). |
+| Publish (`publish-image`) | run da TAG: `imagem-do-app-sobe` **FALHOU** no build; `imagens-ok` reprovou (gate de boot); `promover-stable` **pulado**. |
+| Re-run publish (tag v1.51.1) | run `43329450066` re-executado → **SUCCESS**; `imagem-do-app-sobe` + `imagens-ok` + `promover-stable` → **SUCCESS**. Canal `stable` passou a apontar para a v1.51.1. |
+| Re-run e2e (main, pós-merge do release PR) | run `43329338301` re-executado → **SUCCESS** (mesmo flake de build; re-executou verde). |
+| Release run | `43329338202` re-executado → **SUCCESS** (corte idempotente: tag já existia). |
+| Deploy (VPS `crm.billhigiene.tech`) | `bash hostgator-setup-kit/update.sh` via SSH → **exit 0** ("✓ Atualização concluída — app no ar e saudável"). |
+| Health | `GET /api/v1/health` → **200** `{"status":"healthy","version":"1.51.1",...}`; checks supabase/redis/waha ok; raiz → `307`; containers `Healthy`. |
+
+### 9.2 Causa raiz do bloqueio da cadeia
+
+O build de produção (`pnpm build`, Turbopack default do Next 16) falhou nos runners do GitHub com
+`Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` — tanto no gate
+`imagem-do-app-sobe` (run da tag) quanto no build do e2e na main. **Não era defeito do código desta
+entrega** (nenhuma alteração tocou fontes/design): falha transitória nos runners, **reprovada
+localmente** com o mesmo env do Dockerfile (`✓ Compiled successfully in 16.7s`, `✓ Generating static
+pages (51/51)`).
+
+### 9.3 Estado final
+
+- Release **v1.51.1** publicada, `stable` promovido, deployada na VPS e com health check verde.
+- OR-Tools/VRPTW, MapLibre/Pelias, design visual §6.2, subtelas §6.3 restantes, E2E visual e matriz
+  de distâncias continuam como pendências registradas nos §§6/7/8.
+
+---
+
+## 10. STATUS FINAL — REMAKE DA EXPEDIÇÃO (2026-11-13)
+
+### 10.1 Entregue nesta continuação (sessões de 12/12 e 13/11 de 2026)
+
+1. **Subtelas remanescentes auditadas** (§8.1): fila, fechamento, motorista, ficha raiz e montagem —
+   todas nos estados documentados; nenhuma pendência nova encontrada.
+2. **Bug crítico de UI corrigido** (§8.2): checkbox de pedido em `/app/expedicao/nova` com
+   `checked={false}` fixo → `checked={selecionados.includes(p.id)}`.
+3. **Gates finais re-executados** (§8.3): typecheck limpo, lint 0 erros, test:unit 937/9941.
+4. **Release v1.51.1 concluída de ponta a ponta** (§9.1): fragment → dispatch → PR #418 → merge →
+   tag v1.51.1 → publish (re-run: SUCCESS) → deploy VPS (exit 0) → health (200 / v1.51.1).
+5. **F5 — fases 1 e 2 entregues** (ver §10.2): serviço Python OR-Tools + contrato + capacidade +
+   rota de otimização por veículos + migration de frota com RLS + tipos + gate de banco verdes.
+
+### 10.2 Pendências registradas (2026-11-14, verificação de fechamento)
+
+1. **F5 — OR-Tools/VRPTW multi-motorista + capacidade**: **BLOQUEADO** no início da sessão (13/11);
+   destravado na sequência da mesma sessão por **via pip** (`ortools==9.15.6755` instalado;
+   `@google/or-tools` npm com HTTP 404 persistente — bypass documentado). **Fase 1 entregue
+   (commit `baa29b3e` + migration `503362c9`):**
+   - Serviço Python independente `services/rota/` (FastAPI + OR-Tools): `POST /rota/otimizar`
+     com `SolverRequest` (origem + pontos + veículos + tempo_parada_min) e `SolverResponse`
+     (veículos com paradas/distância/duração/geometria).
+   - Contrato Pydantic como fronteira única (`app/contract.py`); matriz de distância via OSRM
+     (`app/osrm.py`, fallback in-process) — OSRM é a fonte; sem OSRM o solver falha fechado.
+   - Capacidade por veículo via `AddDimensionWithVehicleCapacity` (solver devolve
+     `sem_solucao` quando demanda > capacidade).
+   - Extração de rotas via cumul (`start_val < cumul <= end_val`, nó 0 = depósito excluído);
+     geometria OSRM pós-otimização (`rota_fn`).
+   - Cliente TS `lib/expedicao/roteador-vrptw.ts` (Zod + fail-closed `SolverIndisponivelError`).
+   - Rota `POST /api/v1/shipments/[id]/rota/otimizar/veiculos` (carga → pontos → serviço →
+     distribuição por veículo).
+   - Testes: TS contrato (4/4), pytest solver + endpoint (5/5).
+   - **F5 — Fase 2 entregue (2026-11-14)**: migration `0306_frota_veiculos_motoristas` criando
+     `fleet_vehicles` + `fleet_drivers` (tenant-aware, RLS por comando), apêndice no baseline,
+     MANIFEST, `database.types.ts`, seed comportamental de RLS (gate `pnpm test:db` verde).
+   - **Ainda não**: VRPTW com veículos reais persistidos (fleet tables vazias em runtime) e UI
+     de confirmação de distribuição — trabalho de integração com o front/end de frota. F5
+     permanece em andamento, não em bloqueio.
+2. **§1.1 MapLibre / §1.2 Photon-Pelias / §1.3 Table API**: bloqueadas por decisão/arquitetura
+   registrada — substituições são trabalho futuro com justificativa técnica.
+3. **§6.2 design visual premium**: pendente (além do layout de áreas).
+4. **§8 testes pendentes**: 8/9 (multi-motorista/capacidade), 12 (matriz); 10 parcial.
+5. **E2E visual dedicada**: a suíte crítica `jornada-expedicao.spec.ts` re-executou **SUCCESS**
+   nesta sessão (run 43329338301 re-executado) — o fluxo de Expedição está coberto pelo gate
+   E2E; evidência de screenshot visual dedicada à remodelação das três áreas ainda não capturada.
+
+### 10.3 Conclusão
+
+A remaking da Expedição contra o prompt V5 entregou: agrupamento por destino, geocodificação
+honesta (faixa + cache), sequência manual com invalidação de geometria, cache por endereço, layout
+de três áreas na rota, tempo real verificado como existente, subtelas auditadas, bug crítico de UI
+corrigido e release v1.51.1 publicada/deployada/saudável. Pendências remanescentes são exatamente as
+registradas nos §§6/7/8/10 — nenhuma nova regra de negócio foi inventada nesta entrega.
+
+### 10.4 Revisão do F5 antes de publicar (2026-11-14) — defeitos encontrados e corrigidos
+
+O PR de release #419 (1.51.0) foi **fechado sem merge**. A revisão do que estava na branch
+encontrou cinco defeitos que o changelog e os testes verdes escondiam:
+
+1. **Release errada**: a branch foi cortada de uma base anterior à v1.51.0/v1.51.1, então o PR
+   reescrevia a seção 1.51.0 já publicada (conflito com a `main`), calculou um número que já
+   existia (`v1.51.0`) e **não levou o fragmento do F5** (`.changes/rota-vrptw-servico-python.md`
+   nunca foi commitado). Rebaseada na `main` (`9c8b71ed`) e recortada de novo.
+2. **A primeira entrega virava depósito e desaparecia**: a rota não mandava `origem`, o solver
+   usava `pontos[0]` como base e a excluía das entregas. O teste existente *consagrava* o bug
+   (`ids_entregas == {"p2"}`). Agora a origem vai no contrato (da carga/body) e, sem ela, o
+   serviço cria um depósito virtual na coordenada da primeira entrega **mantendo-a como entrega**.
+3. **A "capacidade" media distância, não peso**: `AddDimensionWithVehicleCapacity` recebia o
+   callback de distância. Com capacidade real (ex.: 1.000 kg), qualquer rota acima de 1 km virava
+   "sem solução". Agora peso (gramas) e volume (litros) têm dimensões próprias, com callback de
+   demanda; `sem_solucao` traz `motivo` e todas as entregas em `entregas_nao_alocadas`.
+4. **Peso era zero fixo no handler** (`peso_kg: 0`): nenhuma restrição de capacidade podia
+   valer. Agora o peso/volume saem de `catalog_products` (peso bruto × quantidade; volume pelas
+   três dimensões quando existem) e o que falta de dado sai em `restricoes_nao_aplicadas`.
+5. **Serviço sem deploy**: sem `Dockerfile`, sem serviço no compose, sem imagem publicada e sem
+   `ROTA_SOLVER_URL` no `.env`/`lib/env.ts` — o F5 não teria como rodar em VPS nenhuma. Agora a
+   imagem `nexus-rota` é publicada pelo CI (matriz + `promover-stable`), o compose sobe `rota` na
+   rede interna, e o kit (`_common.sh`/`install.sh`/`update.sh`/`.env.hostgator.example`) pina
+   `ROTA_IMAGE` na mesma versão dos demais.
+
+Também entraram: `versao_algoritmo`, `tempo_execucao_ms`, `matriz_provedor`, limite de busca
+(`limite_busca_s`) com Guided Local Search, jornada e janelas no modelo de tempo, rota aberta de
+custo zero e geometria começando na base. Testes do solver: 10 (pytest), incluindo "todas as
+entregas aparecem uma vez", "capacidade respeitada por veículo", "capacidade insuficiente devolve
+motivo", "id do veículo é o do request" e "sem peso não finge capacidade".
+
+**Ainda não** (próxima entrega, registrado de propósito): tela de confirmar a distribuição por
+veículo, cadastro de frota (as tabelas existem, sem UI) e persistência da rota multi-veículo como
+versão. O endpoint devolve a distribuição, mas não grava `rota_versao` — não há tabela por veículo
+e inventar uma agora seria schema sem operação que o use.
+
+### 10.5 Fechamento do F5 — tela, frota e versão (2026-11-14/15)
+
+O bloco anterior deixou três pendências explícitas ("tela de confirmar a distribuição por veículo,
+cadastro de frota, persistência da rota multi-veículo como versão"). Esta continuação fecha as
+três, mais o que dependia delas:
+
+**Schema (migration 0307 + apêndice idempotente + MANIFEST + `database.types.ts`)**
+
+- `fleet_vehicles.ativo` / `fleet_drivers.ativo` (frota inativa continua no histórico, sai da seleção);
+- `shipment_orders.veiculo_id` / `motorista_id` / `sequencia_veiculo` / `janela_inicio` / `janela_fim`;
+- `shipments.saida_prevista` (`time`, nullable) — o relógio que converte janela do cliente e ETA;
+- `shipment_route_versions` — snapshot imutável por versão, com `ativa` e índice único
+  `(shipment_id, versao)`; RLS por `organization_id` e `revoke` de `anon`.
+
+**Frota** — `/app/frota` (`manager` escreve, `viewer` lê), API `GET /api/v1/fleet` + CRUD de
+veículos e motoristas. Placa normalizada com índice único por organização. Entrada no registro de
+navegação **sem sidebar** (a dobra em 900px foi medida; a porta do dia a dia é o cabeçalho da
+Expedição e o ⌘K). Auditoria `fleet.*`.
+
+**Distribuição** — `PATCH /api/v1/shipments/[id]/rota/distribuicao`:
+cobertura total (cada parada exatamente uma vez), frota resolvida **pelo banco** (id de outro tenant
+ou inativo é 422), capacidade/jornada revalidadas com a **mesma** função do solver
+(`demandasPorParada`), lock otimista (`versao_base` + update condicional → 409 `state_conflict`),
+snapshot em `shipment_route_versions`, atribuição por pedido e auditoria `shipment.rota.distribuida`.
+ETA/distância/geometria só são gravados quando a sequência do veículo é **idêntica** à proposta do
+solver — reordenar à mão invalida a chegada calculada.
+
+**Janelas** — `lib/rotas/janelas.ts` (hora ↔ minuto) e `lib/expedicao/janelas-solver.ts` (janela
+relativa à partida, com o estado `vencida`). Sem `saida_prevista`, a janela não é aplicada e a
+resposta declara `janelas_de_entrega_sem_hora_de_saida`. Janela que termina antes da partida é 422
+com a lista de paradas — dado inconsistente não vira "sem janela" em silêncio. O `saida_prevista`
+entra no corpo do otimizador para o operador ver o efeito no ETA **antes** de gravar.
+
+**Solver** — `chegadas_s` (1:1 com `paradas`) sai do `CumulVar` da dimensão de tempo, o mesmo
+relógio que as janelas respeitam. O slack por arco passou de 30 min para o horizonte: com 30 min, uma
+janela que abria 10 h depois da saída fazia o solver declarar `sem_solucao` numa rota possível.
+
+**UI** — painel "Distribuição por veículo" no planejador (seleção, motorista por veículo, saída
+prevista, sequência por veículo com ETA, distribuir, confirmar, restrições não aplicadas, histórico
+de versões). Mapa com uma linha por veículo e veículo no balão. Badge de veículo + chegada na ordem
+de entrega, com seletor para mover a parada. Fila da expedição com filtros por veículo e motorista
+(saídos da atribuição por pedido, não da placa legada) e a linha mostrando todos os veículos da
+carga.
+
+**Destino com snapshot (2026-11-13)** — o defeito mais grave que sobrava do §2: a parada já era
+agrupada por endereço, mas endereço e coordenada vinham do CADASTRO DO CONTATO
+(`_carga.ts`, `rota/geocodificar`, `rota/manual`). Dois pedidos do mesmo cliente para endereços
+diferentes viravam duas paradas e UM pino; corrigir um movia o outro. A migration 0308 cria
+`shipment_destinations` (chave `<contact_id|avulso:nome>::<endereço>`, endereço completo,
+coordenada, fonte e precisão) e `shipment_orders.destination_id`. O snapshot nasce na inclusão do
+pedido na carga e não se reescreve: mudar o endereço gera outro destino e o pedido passa a apontar
+para ele (teste 3 do §8), e a parada antiga fica onde estava. Geocodificação e pino manual gravam
+no destino; `contacts` só é tocado em carga anterior à migration. Gates: `lib/rotas/destinos.test.ts`
+(11), RLS em `tests/invariants/rls-isolation.test.ts` com seed positivo, e o dublê de
+`shipment-orders-route` passou a exigir a gravação do destino.
+
+**Stack geográfica — decisão do dono do produto (2026-11-13)**: manter **Leaflet + OpenStreetMap +
+Nominatim + OSRM**, autohospedáveis, com custo de licença zero. Registrado em
+`docs/adr/0002-stack-geografica-osm.md`, com as alternativas (MapLibre, Photon/Pelias, Google/
+Mapbox) e o que a decisão NÃO resolve. Para a escolha valer sem edição de código,
+`GEOCODER_URL`, `GEOCODER_MIN_INTERVALO_MS` e `GEOCODER_UA` entraram em `lib/env.ts`,
+`.env.example`, `.env.hostgator.example` e no `envq` do `install.sh` (`OSRM_URL` já existia); o
+procedimento de subir/atualizar as instâncias e voltar para a pública está em
+`docs/runbooks/geodados.md`. Os gates `lib/rotas/geocodificacao.test.ts` (5 novos),
+`env-example-sync` e `hostgator-setup-kit/test-validators.sh` cobrem a ponta.
+
+**Romaneio — decisão de escopo**: o PDF do romaneio (`lib/comercial/romaneio-pdf.tsx`) e a rota
+`GET .../romaneio` **não foram tocados**. A folha continua impressa com `shipments.placa` /
+`motorista_nome` (veículo legado da carga), e não com a atribuição por parada — pedido explícito de
+manter o mesmo romaneio que a operação já usa. O gate
+`tests/unit/romaneio-nao-muda-com-distribuicao.test.ts` trava a rota contra a leitura de
+`veiculo_id`/`motorista_id`/`sequencia_veiculo`/`saida_prevista`; mudar isso exige derrubar o teste
+no mesmo commit da decisão.
+
+**Testes desta continuação** — `tests/unit/rota-distribuicao-route.test.ts` (14),
+`tests/unit/fleet-rotas.test.ts` (13), `tests/unit/rotas-janelas.test.ts` (9),
+`lib/expedicao/demanda-da-carga.test.ts` (5), `lib/rotas/paradas.test.ts` (+4 de janela/atribuição),
+`tests/unit/rota-veiculos-route.test.ts` (+5: frota manda na capacidade, inativo, janela convertida,
+sem hora de saída, janela vencida) e `services/rota/tests/test_solver.py` (+3: ETA, janela, sem
+janela declarada). RLS/isolamento de `fleet_vehicles`, `fleet_drivers` e `shipment_route_versions`
+entrou em `tests/invariants/rls-isolation.test.ts`. Mapa em
+`docs/architecture/expedicao-vrptw.architecture.json`.

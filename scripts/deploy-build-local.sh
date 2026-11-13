@@ -118,6 +118,7 @@ say "2. tags de imagem no .env"
 sed -i \
   -e "s|^APP_IMAGE=.*|APP_IMAGE=nexus:${TAG}|" \
   -e "s|^OCR_IMAGE=.*|OCR_IMAGE=nexus-ocr:${TAG}|" \
+  -e "s|^ROTA_IMAGE=.*|ROTA_IMAGE=nexus-rota:${TAG}|" \
   -e "s|^WORKER_IMAGE=.*|WORKER_IMAGE=nexus-worker:${TAG}|" \
   -e "s|^SCHEDULER_IMAGE=.*|SCHEDULER_IMAGE=nexus-scheduler:${TAG}|" \
   -e "s|^MERCOS_IMAGE=.*|MERCOS_IMAGE=nexus-mercos:${TAG}|" \

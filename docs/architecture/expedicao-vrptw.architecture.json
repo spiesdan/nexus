@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "lanes": [
+    {
+      "id": "tela",
+      "label": "Tela"
+    },
+    {
+      "id": "api",
+      "label": "API"
+    },
+    {
+      "id": "dominio",
+      "label": "Domínio"
+    },
+    {
+      "id": "solver",
+      "label": "Serviço de rota"
+    },
+    {
+      "id": "dados",
+      "label": "Dados"
+    },
+    {
+      "id": "ops",
+      "label": "Operação"
+    },
+    {
+      "id": "geo",
+      "label": "Serviços geográficos"
+    }
+  ],
+  "mainPath": [
+    "pagina-expedicao",
+    "roteirizador",
+    "api-otimizar-veiculos",
+    "roteador-vrptw",
+    "solver-python",
+    "api-distribuicao",
+    "route-versions"
+  ],
+  "nodes": [
+    {
+      "id": "pagina-expedicao",
+      "lane": "tela",
+      "label": "Fila da expedição — filtros por situação, veículo e motorista"
+    },
+    {
+      "id": "roteirizador",
+      "lane": "tela",
+      "label": "Planejador — mapa, ordem e painel de distribuição por veículo"
+    },
+    {
+      "id": "mapa-rota",
+      "lane": "tela",
+      "label": "Mapa — uma linha por veículo, ETA no balão"
+    },
+    {
+      "id": "pagina-frota",
+      "lane": "tela",
+      "label": "Frota — veículos e motoristas (capacidade e jornada)"
+    },
+    {
+      "id": "api-fleet",
+      "lane": "api",
+      "label": "GET/POST /api/v1/fleet e CRUD de veículos/motoristas"
+    },
+    {
+      "id": "api-otimizar-veiculos",
+      "lane": "api",
+      "label": "POST .../rota/otimizar/veiculos — VRPTW (frota autoritativa)"
+    },
+    {
+      "id": "api-distribuicao",
+      "lane": "api",
+      "label": "PATCH .../rota/distribuicao — confirma versão, atribuição e ETA"
+    },
+    {
+      "id": "api-rota-get",
+      "lane": "api",
+      "label": "GET .../rota — carga, distribuição ativa e histórico"
+    },
+    {
+      "id": "carga",
+      "lane": "dominio",
+      "label": "carregarCargaComParadas — fonte única de paradas, itens e janelas"
+    },
+    {
+      "id": "paradas",
+      "lane": "dominio",
+      "label": "agruparParadas — destino, interseção de janelas e atribuição"
+    },
+    {
+      "id": "demanda",
+      "lane": "dominio",
+      "label": "demandasPorParada — peso/volume únicos do solver e da confirmação"
+    },
+    {
+      "id": "janelas",
+      "lane": "dominio",
+      "label": "Janela do dia → minutos desde a saída (sem saída, não aplica)"
+    },
+    {
+      "id": "roteador-vrptw",
+      "lane": "dominio",
+      "label": "Contrato Zod + cliente do serviço (falha fechado)"
+    },
+    {
+      "id": "solver-python",
+      "lane": "solver",
+      "label": "FastAPI + OR-Tools — distribuição, sequência e chegadas_s"
+    },
+    {
+      "id": "osrm",
+      "lane": "geo",
+      "label": "OSRM — matriz por ruas e geometria (instância própria ou demo)"
+    },
+    {
+      "id": "fleet-vehicles",
+      "lane": "dados",
+      "label": "fleet_vehicles — placa única por org, capacidade, ativo"
+    },
+    {
+      "id": "fleet-drivers",
+      "lane": "dados",
+      "label": "fleet_drivers — jornada, ativo"
+    },
+    {
+      "id": "shipment-orders",
+      "lane": "dados",
+      "label": "shipment_orders — veículo, motorista, sequência e janela por pedido"
+    },
+    {
+      "id": "route-versions",
+      "lane": "dados",
+      "label": "shipment_route_versions — snapshot imutável por versão (ativa)"
+    },
+    {
+      "id": "audit",
+      "lane": "ops",
+      "label": "audit — fleet.* e shipment.rota.distribuida"
+    },
+    {
+      "id": "deploy",
+      "lane": "ops",
+      "label": "Compose + imagem nexus-rota publicada pelo CI"
+    },
+    {
+      "id": "api-geocodificar",
+      "lane": "api",
+      "label": "POST .../rota/geocodificar e .../rota/manual — endereço → coordenada"
+    },
+    {
+      "id": "nominatim",
+      "lane": "geo",
+      "label": "Nominatim — geocodificação (instância própria ou pública)"
+    },
+    {
+      "id": "destino",
+      "lane": "dados",
+      "label": "shipment_destinations — destino com snapshot (endereço + coordenada, 0308)"
+    }
+  ],
+  "edges": [
+    {
+      "id": "fila-abre-planejador",
+      "from": "pagina-expedicao",
+      "to": "roteirizador",
+      "label": "abre a carga"
+    },
+    {
+      "id": "fila-filtra-atribuicao",
+      "from": "pagina-expedicao",
+      "to": "shipment-orders",
+      "label": "lê veículo/motorista da distribuição"
+    },
+    {
+      "id": "planejador-desenha",
+      "from": "roteirizador",
+      "to": "mapa-rota",
+      "label": "rotas por veículo"
+    },
+    {
+      "id": "planejador-le-rota",
+      "from": "roteirizador",
+      "to": "api-rota-get",
+      "label": "GET carga + distribuição"
+    },
+    {
+      "id": "planejador-otimiza",
+      "from": "roteirizador",
+      "to": "api-otimizar-veiculos",
+      "label": "distribuir"
+    },
+    {
+      "id": "planejador-confirma",
+      "from": "roteirizador",
+      "to": "api-distribuicao",
+      "label": "confirmar"
+    },
+    {
+      "id": "planejador-carrega-frota",
+      "from": "roteirizador",
+      "to": "api-fleet",
+      "label": "veículos e motoristas"
+    },
+    {
+      "id": "planejador-link-frota",
+      "from": "roteirizador",
+      "to": "pagina-frota",
+      "label": "cadastrar frota"
+    },
+    {
+      "id": "frota-crud",
+      "from": "pagina-frota",
+      "to": "api-fleet",
+      "label": "CRUD"
+    },
+    {
+      "id": "fleet-veiculos",
+      "from": "api-fleet",
+      "to": "fleet-vehicles",
+      "label": "capacidade"
+    },
+    {
+      "id": "fleet-motoristas",
+      "from": "api-fleet",
+      "to": "fleet-drivers",
+      "label": "jornada"
+    },
+    {
+      "id": "get-carrega",
+      "from": "api-rota-get",
+      "to": "carga",
+      "label": "paradas e itens"
+    },
+    {
+      "id": "get-versoes",
+      "from": "api-rota-get",
+      "to": "route-versions",
+      "label": "ativa + últimas 20"
+    },
+    {
+      "id": "otimiza-carrega",
+      "from": "api-otimizar-veiculos",
+      "to": "carga",
+      "label": "fonte única"
+    },
+    {
+      "id": "otimiza-paradas",
+      "from": "api-otimizar-veiculos",
+      "to": "paradas",
+      "label": "agrupa e aplica janela"
+    },
+    {
+      "id": "otimiza-demanda",
+      "from": "api-otimizar-veiculos",
+      "to": "demanda",
+      "label": "peso e volume"
+    },
+    {
+      "id": "otimiza-janelas",
+      "from": "api-otimizar-veiculos",
+      "to": "janelas",
+      "label": "hora do dia → relógio"
+    },
+    {
+      "id": "otimiza-frota",
+      "from": "api-otimizar-veiculos",
+      "to": "fleet-vehicles",
+      "label": "capacidade autoritativa"
+    },
+    {
+      "id": "otimiza-jornada",
+      "from": "api-otimizar-veiculos",
+      "to": "fleet-drivers",
+      "label": "jornada autoritativa"
+    },
+    {
+      "id": "otimiza-contrato",
+      "from": "api-otimizar-veiculos",
+      "to": "roteador-vrptw",
+      "label": "contrato tipado"
+    },
+    {
+      "id": "contrato-solver",
+      "from": "roteador-vrptw",
+      "to": "solver-python",
+      "label": "POST /rota/otimizar"
+    },
+    {
+      "id": "solver-osrm-matriz",
+      "from": "solver-python",
+      "to": "osrm",
+      "label": "matriz"
+    },
+    {
+      "id": "contrato-osrm-rota",
+      "from": "roteador-vrptw",
+      "to": "osrm",
+      "label": "geometria"
+    },
+    {
+      "id": "distribuicao-demanda",
+      "from": "api-distribuicao",
+      "to": "demanda",
+      "label": "revalida capacidade"
+    },
+    {
+      "id": "distribuicao-carrega",
+      "from": "api-distribuicao",
+      "to": "carga",
+      "label": "cobertura total"
+    },
+    {
+      "id": "distribuicao-frota",
+      "from": "api-distribuicao",
+      "to": "fleet-vehicles",
+      "label": "resolve pelo id"
+    },
+    {
+      "id": "distribuicao-motoristas",
+      "from": "api-distribuicao",
+      "to": "fleet-drivers",
+      "label": "resolve pelo id"
+    },
+    {
+      "id": "distribuicao-versoes",
+      "from": "api-distribuicao",
+      "to": "route-versions",
+      "label": "grava versão + ativa"
+    },
+    {
+      "id": "distribuicao-pedidos",
+      "from": "api-distribuicao",
+      "to": "shipment-orders",
+      "label": "atribuição + sequência"
+    },
+    {
+      "id": "distribuicao-audit",
+      "from": "api-distribuicao",
+      "to": "audit",
+      "label": "quem confirmou"
+    },
+    {
+      "id": "fleet-audit",
+      "from": "api-fleet",
+      "to": "audit",
+      "label": "cadastro da frota"
+    },
+    {
+      "id": "solver-deploy",
+      "from": "deploy",
+      "to": "solver-python",
+      "label": "imagem nexus-rota"
+    },
+    {
+      "id": "planejador-localiza",
+      "from": "roteirizador",
+      "to": "api-geocodificar",
+      "label": "localizar endereços"
+    },
+    {
+      "id": "geocodifica-carrega",
+      "from": "api-geocodificar",
+      "to": "carga",
+      "label": "paradas e endereços"
+    },
+    {
+      "id": "geocodifica-nominatim",
+      "from": "api-geocodificar",
+      "to": "nominatim",
+      "label": "consulta /search"
+    },
+    {
+      "id": "carga-snapshot-destino",
+      "from": "carga",
+      "to": "destino",
+      "label": "inclusão do pedido grava o snapshot"
+    },
+    {
+      "id": "destino-geocodifica",
+      "from": "destino",
+      "to": "api-geocodificar",
+      "label": "endereço e coordenada do destino"
+    }
+  ]
+}

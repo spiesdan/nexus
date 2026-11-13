@@ -168,6 +168,15 @@ jobs:
             context: ocr
             grupo: ocr
             title: Nexus OCR
+          # O solver de rotas (F5) — FastAPI + OR-Tools, Python. Entra na
+          # matriz pelo mesmo motivo do OCR: serviço só com `build:` na VPS
+          # nunca é atualizado. Contexto próprio (`services/rota`), sem
+          # package.json.
+          - name: nexus-rota
+            dockerfile: Dockerfile
+            context: services/rota
+            grupo: rota
+            title: Nexus Rota (VRPTW)
 
     steps:
       - uses: actions/checkout@v7
@@ -348,6 +357,22 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
+      # O solver de rotas: também Python, contexto próprio. A versão entra como
+      # `ROTA_VERSAO` — o nome que o Dockerfile declara e o `/healthz` devolve.
+      - name: Build e push (Rota — Python, contexto próprio)
+        if: matrix.grupo == 'rota'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ROTA_VERSAO=${{ steps.ver.outputs.value }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
   # aconteceu: `next@16.3.1` passou a resolver `@swc/helpers` por ESM, o file
   # tracing do `output: standalone` levou 2 dos 108 arquivos do pacote, e o
@@ -486,7 +511,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PUSH_TOKEN }}
 
-      - name: Apontar `stable` para esta versão, nas seis imagens
+      - name: Apontar `stable` para esta versão, nas sete imagens
         env:
           VERSAO: ${{ github.ref_name }}
         run: |
@@ -497,14 +522,14 @@ jobs:
           # canal deixaria de ser o mesmo manifesto que a versão.
           dono=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           numero="${VERSAO#v}"
-          for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr; do
+          for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr nexus-rota; do
             echo "::group::${img}"
             docker buildx imagetools create \
               --tag "${REGISTRY}/${dono}/${img}:stable" \
               "${REGISTRY}/${dono}/${img}:${numero}"
             echo "::endgroup::"
           done
-          echo "stable agora aponta para ${numero} nas seis imagens"
+          echo "stable agora aponta para ${numero} nas sete imagens"
 
   # Job de fachada: dá UM nome estável para a branch protection exigir. Sem ele,
   # o required check teria que listar as três instâncias da matriz pelo nome

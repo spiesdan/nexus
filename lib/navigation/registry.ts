@@ -459,6 +459,18 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     sidebar: true,
   },
   {
+    // Frota (F5/VRPTW): a entidade que dá contra o que comparar peso e volume.
+    // SEM sidebar — a dobra em 900px é medida e Operação já tem três portas no
+    // sidebar (§19). A porta principal é o cabeçalho da Expedição (é de lá que
+    // se sente falta de veículo cadastrado) e o ⌘K; o registro garante que a
+    // rota não nasça órfã.
+    href: "/app/frota",
+    label: "Frota",
+    description: "Veículos e motoristas, com capacidade de carga e jornada.",
+    icon: Signpost,
+    group: "operacao",
+  },
+  {
     // Campanha: o trabalho de falar com a base. Duas subtelas — a campanha por
     // região (cliente que já comprou nas cidades escolhidas, por número não
     // oficial) e a prospecção B2B (empresa nova por região/categoria). Uma

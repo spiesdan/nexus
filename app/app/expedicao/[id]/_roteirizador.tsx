@@ -6,6 +6,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,16 +14,21 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/types";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { horaDoMinuto, minutosDoDia } from "@/lib/rotas/janelas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/browser";
 import { CaretDown, CaretUp, MapPin } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
+import { PainelRecuperacao } from "./_recuperacao";
 
 export interface ParadaRotaApi {
   chave: string;
+  /** Identidade do ENDEREÇO (migration 0308) — o que autoriza geocodificar e fixar pino. */
+  destination_id: string | null;
   contact_id: string | null;
   cliente: string;
   fone: string | null;
@@ -36,6 +42,113 @@ export interface ParadaRotaApi {
   itens?: { codigo: string; nome: string; quantidade: number }[];
   total_cents: number;
 }
+
+/** Veículo da frota, como sai de GET /api/v1/fleet. */
+interface VeiculoDaFrotaApi {
+  id: string;
+  placa: string;
+  veiculo_tipo: string | null;
+  capacidade_kg: number;
+  capacidade_m3: number;
+  ativo: boolean;
+}
+
+interface MotoristaDaFrotaApi {
+  id: string;
+  nome: string;
+  capacidade_jornada_min: number;
+  ativo: boolean;
+}
+
+/** Uma rota por veículo — mesma forma no solver, no histórico e na confirmação. */
+export interface RotaDeVeiculoApi {
+  veiculo_id: string | null;
+  motorista_id: string | null;
+  placa?: string | null;
+  motorista_nome?: string | null;
+  paradas: string[];
+  /** Chegada em cada parada, segundos desde a saída (1:1 com `paradas`). */
+  chegadas_s?: number[];
+  distancia_m: number | null;
+  duracao_s: number | null;
+  carga_kg: number;
+  carga_m3: number;
+  geometria?: number[][];
+}
+
+export interface DistribuicaoApi {
+  id: string;
+  versao: number;
+  algoritmo: string;
+  veiculos: RotaDeVeiculoApi[];
+  distancia_m: number | null;
+  duracao_s: number | null;
+  tempo_execucao_ms: number | null;
+  criado_em: string;
+}
+
+interface HistoricoRotaApi {
+  id: string;
+  versao: number;
+  algoritmo: string;
+  distancia_m: number | null;
+  duracao_s: number | null;
+  criado_em: string;
+  ativa: boolean;
+}
+
+interface PropostaMulti {
+  veiculos: RotaDeVeiculoApi[];
+  total_paradas: number;
+  status: string;
+  origem: { node_id: string; latitude: number; longitude: number };
+  retornar_origem: boolean;
+  tempo_parada_min: number;
+  saida_prevista: string | null;
+  nao_roteirizaveis: { chave: string; cliente: string; endereco: string | null }[];
+  entregas_nao_alocadas: string[];
+  restricoes_nao_aplicadas: string[];
+  total_kg: number;
+  total_m3: number;
+  tempo_execucao_ms: number;
+  versao_algoritmo: string;
+  matriz_provedor: string;
+}
+
+/** Cores por veículo — a linha do mapa e a legenda usam a MESMA paleta. */
+const CORES_DOS_VEICULOS = [
+  "#7c3aed",
+  "#0891b2",
+  "#d97706",
+  "#db2777",
+  "#16a34a",
+  "#4f46e5",
+  "#0f766e",
+  "#b45309",
+];
+
+/**
+ * Restrições que o solver declara NÃO ter aplicado.
+ *
+ * Elas não são erro: são a diferença entre "respeitei a capacidade" e "não havia
+ * capacidade cadastrada". Mostrar o código cru na tela esconderia justamente o
+ * que o operador precisa corrigir (produto sem peso, veículo sem capacidade,
+ * janela sem hora de saída).
+ */
+const ROTULO_RESTRICAO: Record<string, string> = {
+  frota_nao_informada: "Nenhum veículo informado — a distribuição usou um só.",
+  capacidade_peso_sem_dados: "Nenhum produto com peso no cadastro: a capacidade em kg não foi verificada.",
+  capacidade_peso_sem_dado_do_veiculo: "Veículo sem capacidade em kg: o peso não foi limitado.",
+  capacidade_volume_sem_dados: "Nenhum produto com dimensões: a capacidade em m³ não foi verificada.",
+  capacidade_volume_sem_dado_do_veiculo: "Veículo sem capacidade em m³: o volume não foi limitado.",
+  jornada_sem_dados: "Motorista sem jornada cadastrada: o tempo de trabalho não foi limitado.",
+  janelas_de_entrega_sem_dados: "Nenhum pedido com janela de entrega: o horário não foi restringido.",
+  janelas_de_entrega_sem_hora_de_saida: "Há janela de entrega, mas falta a hora de saída: o horário não foi restringido.",
+  janelas_conflitantes_na_parada: "Dois pedidos do mesmo destino têm janelas que não se cruzam.",
+  peso_de_produto_incompleto: "Algum produto da carga não tem peso no cadastro.",
+  volume_de_produto_incompleto: "Algum produto da carga não tem dimensões no cadastro.",
+  capacidade_sem_dado_do_veiculo: "O veículo da carga não tem capacidade cadastrada.",
+};
 
 export interface RotaCarregada {
   carga: {
@@ -55,11 +168,14 @@ export interface RotaCarregada {
     rota_geojson: { geometria?: number[][]; provedor?: string; ruas?: boolean; modo?: string } | null;
     rota_em: string | null;
     rota_versao: number;
+    saida_prevista: string | null;
     started_at: string | null;
     finished_at: string | null;
   };
   paradas: ParadaRotaApi[];
   ultima_posicao: { latitude: number; longitude: number; em: string } | null;
+  distribuicao?: DistribuicaoApi | null;
+  historico_rotas?: HistoricoRotaApi[];
 }
 
 export interface PropostaRota {
@@ -118,6 +234,9 @@ export function Roteirizador({
   aoMudar: () => void;
 }) {
   const t = useT();
+  // O histórico de rotas mostra data e hora: o formato tem de seguir o idioma
+  // de quem lê, não um "pt-BR" fixo no código (gate i18n).
+  const tagDeIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const [rota, setRota] = React.useState<RotaCarregada | null>(null);
   const [ordem, setOrdem] = React.useState<string[]>([]);
@@ -131,6 +250,17 @@ export function Roteirizador({
   const [pinoPendente, setPinoPendente] = React.useState<{ lat: number; lng: number } | null>(null);
   const [rastro, setRastro] = React.useState<[number, number][]>([]);
   const [motorista, setMotorista] = React.useState<{ lat: number; lng: number } | null>(null);
+  // ── Distribuição por veículo (F5/VRPTW) ──────────────────────────────────
+  const [frota, setFrota] = React.useState<{
+    veiculos: VeiculoDaFrotaApi[];
+    motoristas: MotoristaDaFrotaApi[];
+  } | null>(null);
+  const [selecionados, setSelecionados] = React.useState<string[]>([]);
+  const [motoristaPorVeiculo, setMotoristaPorVeiculo] = React.useState<Record<string, string>>({});
+  /** chave da parada → veiculo_id. A ordem dentro do veículo vem de `ordem`. */
+  const [atribuicao, setAtribuicao] = React.useState<Record<string, string>>({});
+  const [propostaMulti, setPropostaMulti] = React.useState<PropostaMulti | null>(null);
+  const [saida, setSaida] = React.useState("");
 
   // Devolve a rota lida para quem precisa do estado NOVO no mesmo clique
   // (o cálculo da ordem geocodifica antes e não pode decidir pelo render
@@ -144,8 +274,30 @@ export function Roteirizador({
         const chaves = d.paradas.map((p) => p.chave);
         // Preserva reordenação manual quando as paradas são as mesmas.
         if (atual.length === chaves.length && atual.every((c) => chaves.includes(c))) return atual;
-        return chaves;
+        // Com distribuição confirmada, a ordem lida é a do romaneio (veículo a
+        // veículo) — o mesmo que o motorista vê.
+        const confirmada = d.distribuicao?.veiculos.flatMap((v) => v.paradas) ?? [];
+        return confirmada.length === chaves.length ? confirmada : chaves;
       });
+      setSaida((atual) => {
+        const salva = d.carga.saida_prevista?.slice(0, 5) ?? "";
+        return salva || atual;
+      });
+      if (d.distribuicao) {
+        const mapa: Record<string, string> = {};
+        const ids: string[] = [];
+        const motores: Record<string, string> = {};
+        for (const v of d.distribuicao.veiculos) {
+          if (!v.veiculo_id) continue;
+          ids.push(v.veiculo_id);
+          if (v.motorista_id) motores[v.veiculo_id] = v.motorista_id;
+          for (const chave of v.paradas) mapa[chave] = v.veiculo_id;
+        }
+        setSelecionados(ids);
+        setMotoristaPorVeiculo(motores);
+        setAtribuicao(mapa);
+        setPropostaMulti(null);
+      }
       setOrigemTexto((atual) => (atual === "" && d.carga.origem_endereco ? d.carga.origem_endereco : atual));
       setRetornar(d.carga.retornar_origem);
       setTempoParada(d.carga.tempo_parada_min);
@@ -161,6 +313,28 @@ export function Roteirizador({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar();
   }, [recarregar]);
+
+  // Frota: uma vez, para o painel de distribuição saber o que pode alocar.
+  React.useEffect(() => {
+    let vivo = true;
+    apiClient
+      .get<{ data: { veiculos: VeiculoDaFrotaApi[]; motoristas: MotoristaDaFrotaApi[] } }>(
+        "/api/v1/fleet",
+      )
+      .then((r) => {
+        if (!vivo) return;
+        setFrota(r.data);
+        // Seleção inicial: frota ativa inteira. Quem não tem frota continua no
+        // fluxo single-vehicle (`Salvar ordem`) — o painel diz isso.
+        setSelecionados((atual) =>
+          atual.length > 0 ? atual : r.data.veiculos.filter((v) => v.ativo).map((v) => v.id),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const statusCarga = rota?.carga.status;
 
@@ -229,6 +403,78 @@ export function Roteirizador({
   const ordemMudou = ordem.join("|") !== ordemSalva.join("|") && ordem.length === ordemSalva.length;
   const configMudou = retornar !== rota.carga.retornar_origem || tempoParada !== rota.carga.tempo_parada_min;
 
+  // ── Distribuição por veículo: derivados ──────────────────────────────────
+  const veiculosAtivos = (frota?.veiculos ?? []).filter((v) => v.ativo);
+  const motoristasAtivos = (frota?.motoristas ?? []).filter((m) => m.ativo);
+  const distribuicaoExibida = propostaMulti ?? rota.distribuicao ?? null;
+  const idsDaDistribuicao = (distribuicaoExibida?.veiculos ?? [])
+    .map((v) => v.veiculo_id)
+    .filter((v): v is string => v != null);
+  const corDoVeiculo = (id: string | null) => {
+    if (!id) return "#6b7280";
+    const i = idsDaDistribuicao.indexOf(id);
+    return CORES_DOS_VEICULOS[(i < 0 ? idsDaDistribuicao.length : i) % CORES_DOS_VEICULOS.length]!;
+  };
+  const frotaPorId = new Map(veiculosAtivos.map((v) => [v.id, v]));
+  const rotuloDoVeiculo = (id: string | null | undefined): string | null => {
+    if (!id) return null;
+    const daFrota = frotaPorId.get(id);
+    if (daFrota) return daFrota.placa;
+    const noSnapshot = distribuicaoExibida?.veiculos.find((v) => v.veiculo_id === id);
+    return noSnapshot?.placa ?? null;
+  };
+  const chegadaPorChave = new Map<string, number>();
+  for (const v of distribuicaoExibida?.veiculos ?? []) {
+    v.paradas.forEach((chave, i) => {
+      const chegada = v.chegadas_s?.[i];
+      if (chegada != null) chegadaPorChave.set(chave, chegada);
+    });
+  }
+  const partidaMin = minutosDoDia(saida);
+  const horaDeChegada = (chave: string): string | null => {
+    const chegada = chegadaPorChave.get(chave);
+    if (chegada == null || partidaMin == null) return null;
+    return horaDoMinuto(partidaMin + chegada / 60);
+  };
+  const atribuicoesValidas = ordem.filter((c) => {
+    const veiculo = atribuicao[c];
+    return veiculo != null && selecionados.includes(veiculo);
+  });
+  const coberturaCompleta = atribuicoesValidas.length === rota.paradas.length;
+  // A distribuição mudou? Compara a assinatura (veículo → motorista → paradas,
+  // na ordem da lista) com a versão ativa. Só assim o botão de confirmar diz a
+  // verdade: salvar de novo a mesma coisa criaria uma versão vazia no histórico.
+  const assinaturaDe = (veiculos: { veiculo_id: string | null; motorista_id?: string | null; paradas: string[] }[]) =>
+    [...veiculos]
+      .sort((a, b) => (a.veiculo_id ?? "").localeCompare(b.veiculo_id ?? ""))
+      .map(
+        (v) =>
+          `${v.veiculo_id ?? ""}:${v.motorista_id ?? ""}:${v.paradas.join(",")}`,
+      )
+      .join("|");
+  const assinaturaAtual = assinaturaDe(
+    selecionados.map((id) => ({
+      veiculo_id: id,
+      motorista_id: motoristaPorVeiculo[id] ?? null,
+      paradas: ordem.filter((c) => atribuicao[c] === id),
+    })),
+  );
+  const assinaturaSalva = assinaturaDe(rota.distribuicao?.veiculos ?? []);
+  const saidaSalva = rota.carga.saida_prevista?.slice(0, 5) ?? "";
+  const distribuicaoMudou = assinaturaAtual !== assinaturaSalva || saida !== saidaSalva;
+  // Linha por veículo: só da distribuição CONFIRMADA/proposta e só enquanto a
+  // ordem não foi mexida à mão — geometria antiga com sequência nova é mentira.
+  const rotasMapa =
+    !ordemMudou && proposta === null
+      ? (distribuicaoExibida?.veiculos ?? [])
+          .filter((v) => v.veiculo_id && (v.geometria?.length ?? 0) > 1)
+          .map((v) => ({
+            veiculo_id: v.veiculo_id as string,
+            cor: corDoVeiculo(v.veiculo_id),
+            geometria: v.geometria as number[][],
+          }))
+      : [];
+
   const primeiraPendente = (() => {
     for (const p of paradasOrdenadas) {
       if (p.pedidos.some((x) => ["na_carga", "em_rota", "em_atendimento"].includes(x.status))) return p.chave;
@@ -258,6 +504,7 @@ export function Roteirizador({
       ordem: i + 1,
       estado,
       pedidos: p.pedidos,
+      veiculoRotulo: rotuloDoVeiculo(atribuicao[p.chave]),
     };
   });
 
@@ -293,7 +540,7 @@ export function Roteirizador({
    * dentro do cálculo da ordem ele é `"otimizar"`, para os botões não voltarem
    * a ficar clicáveis no meio da operação.
    */
-  async function geocodificarTudo(rotulo = "geo", contactIds?: string[]): Promise<number> {
+  async function geocodificarTudo(rotulo = "geo", destinationIds?: string[]): Promise<number> {
     setTrabalhando(rotulo);
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
@@ -303,10 +550,10 @@ export function Roteirizador({
       for (;;) {
         const corpo = await apiClient.post<{ data: { estados: { estado: string }[]; restantes: number } }>(
           `/api/v1/shipments/${cargaId}/rota/geocodificar`,
-          // `contact_ids` só vai quando é uma parada específica ("Tentar de
-          // novo" num pino aproximado): é o que autoriza regeocodificar quem
-          // já tem coordenada, sem varrer a carga inteira a cada clique.
-          contactIds ? { contact_ids: contactIds } : {},
+          // `destination_ids` só vai quando é um DESTINO específico ("Tentar
+          // de novo" num pino aproximado): é o que autoriza regeocodificar
+          // quem já tem coordenada, sem varrer a carga inteira a cada clique.
+          destinationIds ? { destination_ids: destinationIds } : {},
           // Até 8 consultas por contato (rua → CEP → município) × 1,1s de
           // ritmo justo, em lote de 10: a chamada passa fácil dos 60s. O
           // timeout padrão de 10s abortava justamente as paradas difíceis —
@@ -413,12 +660,47 @@ export function Roteirizador({
       } else if (txt) {
         origem = { endereco: txt };
       }
-      const corpo = await apiClient.post<{ data: PropostaRota }>(`/api/v1/shipments/${cargaId}/rota/otimizar`, {
-        origem,
-        retornar_origem: retornar,
-        tempo_parada_min: tempoParada,
-        modo: modoEscolhido,
-      });
+      // Gate do Address Recovery Engine (§3): com endereço não resolvido o
+      // servidor recusa com 422 e a lista dos pendentes. Aqui o operador vê
+      // QUAIS são e decide — seguir mesmo assim é ato explícito, não um
+      // caminho que ele descobre clicando de novo.
+      let corpo: { data: PropostaRota };
+      try {
+        corpo = await apiClient.post<{ data: PropostaRota }>(
+          `/api/v1/shipments/${cargaId}/rota/otimizar`,
+          {
+            origem,
+            retornar_origem: retornar,
+            tempo_parada_min: tempoParada,
+            modo: modoEscolhido,
+          },
+        );
+      } catch (e) {
+        const pendentes =
+          e instanceof ApiError && e.status === 422 && Array.isArray(e.details?.pendentes)
+            ? (e.details.pendentes as { enderecoOriginal?: string | null }[])
+            : null;
+        if (!pendentes || pendentes.length === 0) throw e;
+        const seguir = await confirmar({
+          title: `${pendentes.length} ${
+            pendentes.length === 1
+              ? t("endereço ainda não foi confirmado. A rota pode sair com um ponto errado.")
+              : t("endereços ainda não foram confirmados. A rota pode sair com pontos errados.")
+          } ${t("Otimizar mesmo assim?")}`,
+          confirmLabel: t("Otimizar mesmo assim"),
+        });
+        if (!seguir) return;
+        corpo = await apiClient.post<{ data: PropostaRota }>(
+          `/api/v1/shipments/${cargaId}/rota/otimizar`,
+          {
+            origem,
+            retornar_origem: retornar,
+            tempo_parada_min: tempoParada,
+            modo: modoEscolhido,
+            ignorar_pendentes: true,
+          },
+        );
+      }
       const p = corpo.data;
       setProposta(p);
       // A proposta só traz as paradas COM coordenada. Jogar fora as demais
@@ -471,6 +753,208 @@ export function Roteirizador({
     }
   }
 
+  /**
+   * OTIMIZAÇÃO MULTI-VEÍCULO — OR-Tools de verdade no serviço Python.
+   *
+   * Diferente de `otimizar()`, que resolve a ordem de UM caminhão, esta rota
+   * distribui as paradas entre os veículos escolhidos respeitando capacidade e
+   * jornada. O resultado NÃO é salvo automaticamente: vira proposta para o
+   * operador revisar e confirmar (`confirmarDistribuicao`).
+   */
+  async function otimizarMulti() {
+    if (selecionados.length === 0) {
+      toast.error(t("Escolha ao menos um veículo da frota."));
+      return;
+    }
+    if (ordemMudou && !(await confirmar({ title: t("A ordem manual será substituída pela distribuição. Continuar?"), confirmLabel: t("Distribuir") }))) return;
+    if (rota?.carga.status === "em_rota" && !(await confirmar({ title: t("A rota está em andamento — o motorista verá a nova sequência. Reotimizar mesmo assim?"), confirmLabel: t("Reotimizar") }))) return;
+    setTrabalhando("multi");
+    try {
+      if (comCoord.length === 0) {
+        const noMapa = await geocodificarTudo("multi");
+        if (noMapa === 0) {
+          toast.error(t("Nenhuma parada localizada — sem endereço não há distribuição."));
+          return;
+        }
+        setTrabalhando("multi");
+      }
+      let origem: { endereco: string } | { latitude: number; longitude: number } | null = null;
+      const txt = origemTexto.trim();
+      if (txt === "@gps") {
+        try {
+          const pos = await new Promise<GeolocationPosition>((ok, falha) =>
+            navigator.geolocation.getCurrentPosition(ok, falha, { timeout: 10000 }),
+          );
+          origem = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        } catch {
+          toast.error(t("Não consegui pegar sua posição. Digite o endereço da origem."));
+          return;
+        }
+      } else if (txt) {
+        origem = { endereco: txt };
+      }
+
+      const corpo = await apiClient.post<{ data: PropostaMulti }>(
+        `/api/v1/shipments/${cargaId}/rota/otimizar/veiculos`,
+        {
+          origem,
+          retornar_origem: retornar,
+          tempo_parada_min: tempoParada,
+          // Sem a hora de saída a janela do cliente não vira restrição. Vai no
+          // corpo e não espera a confirmação para valer: o operador escolhe a
+          // hora e vê o efeito no ETA ANTES de gravar.
+          ...(saida ? { saida_prevista: saida } : {}),
+          max_veiculos: selecionados.length,
+          veiculos: selecionados.map((id) => ({
+            veiculo_id: id,
+            ...(motoristaPorVeiculo[id] ? { motorista_id: motoristaPorVeiculo[id] } : {}),
+          })),
+        },
+        // O solver tem limite de busca próprio; o timeout de 10s do cliente
+        // abortaria a chamada no meio e o retry rodaria dois solvers.
+        { timeoutMs: 90_000 },
+      );
+      const p = corpo.data;
+      setPropostaMulti(p);
+      setSaida(p.saida_prevista?.slice(0, 5) ?? "");
+
+      const mapa: Record<string, string> = {};
+      const sequencia: string[] = [];
+      for (const v of p.veiculos) {
+        if (!v.veiculo_id) continue;
+        for (const chave of v.paradas) {
+          mapa[chave] = v.veiculo_id;
+          sequencia.push(chave);
+        }
+      }
+      // Parada sem coordenada não fica órfã: entra no fim, no primeiro veículo.
+      for (const parada of p.nao_roteirizaveis) {
+        if (!mapa[parada.chave]) {
+          mapa[parada.chave] = selecionados[0] as string;
+          sequencia.push(parada.chave);
+        }
+      }
+      for (const parada of rota?.paradas ?? []) {
+        if (!sequencia.includes(parada.chave)) {
+          mapa[parada.chave] = selecionados[0] as string;
+          sequencia.push(parada.chave);
+        }
+      }
+      setAtribuicao(mapa);
+      setOrdem(sequencia);
+      setProposta(null);
+      if (p.restricoes_nao_aplicadas.length > 0) {
+        toast.warning(t("Distribuição pronta, com restrições não aplicadas: veja o painel."));
+      } else {
+        toast.success(t("Distribuição pronta. Revise e confirme."));
+      }
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setTrabalhando(null);
+    }
+  }
+
+  /**
+   * CONFIRMA a distribuição — grava a versão, a atribuição e o ETA.
+   *
+   * Revalida no servidor (capacidade, cobertura, versão). Aqui só montamos o
+   * que a tela mostra; o servidor é quem decide o que cabe e quem vence a
+   * corrida entre duas telas.
+   */
+  async function confirmarDistribuicao() {
+    if (!rota) return;
+    const veiculos = selecionados
+      .map((id) => {
+        const paradasDoVeiculo = ordem.filter((c) => atribuicao[c] === id);
+        const propostaDoVeiculo = propostaMulti?.veiculos.find((v) => v.veiculo_id === id);
+        const salvaDoVeiculo = rota.distribuicao?.veiculos.find((v) => v.veiculo_id === id);
+        const base = propostaDoVeiculo ?? salvaDoVeiculo;
+        // ETA só vale para a sequência que o solver calculou. Reordenar à mão
+        // invalidaria chegada/distância — melhor não gravar do que gravar errado.
+        const sequenciaIntacta =
+          !!base &&
+          base.paradas.length === paradasDoVeiculo.length &&
+          base.paradas.every((c, i) => c === paradasDoVeiculo[i]);
+        return {
+          veiculo_id: id,
+          motorista_id: motoristaPorVeiculo[id] ?? null,
+          paradas: paradasDoVeiculo,
+          ...(sequenciaIntacta && base?.chegadas_s
+            ? { chegadas_s: base.chegadas_s }
+            : {}),
+          distancia_m: sequenciaIntacta ? (base?.distancia_m ?? null) : null,
+          duracao_s: sequenciaIntacta ? (base?.duracao_s ?? null) : null,
+          ...(sequenciaIntacta && base?.geometria ? { geometria: base.geometria } : {}),
+        };
+      })
+      .filter((v) => v.paradas.length > 0);
+
+    if (veiculos.length === 0) {
+      toast.error(t("Nenhuma parada atribuída a um veículo."));
+      return;
+    }
+    if (!coberturaCompleta) {
+      toast.error(t("Toda parada precisa estar atribuída a um veículo selecionado."));
+      return;
+    }
+
+    const metricasCompletas = veiculos.every((v) => v.duracao_s != null && v.distancia_m != null);
+    const distanciaTotal = metricasCompletas
+      ? veiculos.reduce((soma, v) => soma + (v.distancia_m ?? 0), 0)
+      : null;
+    const duracaoTotal = metricasCompletas
+      ? veiculos.reduce((soma, v) => soma + (v.duracao_s ?? 0), 0)
+      : null;
+
+    setTrabalhando("distribuir");
+    try {
+      await apiClient.patch(`/api/v1/shipments/${cargaId}/rota/distribuicao`, {
+        versao_base: rota.carga.rota_versao,
+        veiculos,
+        algoritmo: propostaMulti?.versao_algoritmo ?? "confirmacao-manual",
+        ...(propostaMulti ? { tempo_execucao_ms: propostaMulti.tempo_execucao_ms } : {}),
+        distancia_m: distanciaTotal,
+        duracao_s: duracaoTotal,
+        saida_prevista: saida || null,
+        restricoes_nao_aplicadas: propostaMulti?.restricoes_nao_aplicadas ?? [],
+      });
+      toast.success(t("Distribuição confirmada e gravada."));
+      setPropostaMulti(null);
+      await recarregar();
+      aoMudar();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setTrabalhando(null);
+    }
+  }
+
+  function alternarVeiculo(id: string) {
+    setSelecionados((atual) => {
+      if (atual.includes(id)) {
+        const restantes = atual.filter((x) => x !== id);
+        // Parada de veículo retirado não fica sem dono calado: vai para o
+        // primeiro que permaneceu, e o operador vê a mudança na lista.
+        if (restantes.length > 0) {
+          setAtribuicao((mapa) => {
+            const novo = { ...mapa };
+            for (const [chave, veiculo] of Object.entries(novo)) {
+              if (veiculo === id) novo[chave] = restantes[0] as string;
+            }
+            return novo;
+          });
+        }
+        return restantes;
+      }
+      return [...atual, id];
+    });
+  }
+
+  function moverParadaPara(chave: string, veiculoId: string) {
+    setAtribuicao((mapa) => ({ ...mapa, [chave]: veiculoId }));
+  }
+
   function mover(chave: string, dir: -1 | 1) {
     setOrdem((atual) => {
       const i = atual.indexOf(chave);
@@ -483,8 +967,9 @@ export function Roteirizador({
     setProposta(null);
   }
 
-  function alternarMarcar(contactId: string) {
-    setMarcarPara((atual) => (atual === contactId ? null : contactId));
+  /** `destino` é o id do DESTINO (0308) — ou o contato, em carga legada. */
+  function alternarMarcar(destino: string) {
+    setMarcarPara((atual) => (atual === destino ? null : destino));
     setPinoPendente(null);
   }
 
@@ -502,7 +987,7 @@ export function Roteirizador({
     setTrabalhando("pino");
     try {
       await apiClient.post(`/api/v1/shipments/${cargaId}/rota/manual`, {
-        contact_id: marcarPara,
+        destination_id: marcarPara,
         latitude: Number(pinoPendente.lat.toFixed(6)),
         longitude: Number(pinoPendente.lng.toFixed(6)),
       });
@@ -589,6 +1074,7 @@ export function Roteirizador({
           altura="min(46vh, 430px)"
           paradas={pontosMapa}
           geometria={geometria}
+          rotas={rotasMapa}
           origem={origemMapa}
           motorista={motorista}
           rastro={rastro}
@@ -847,6 +1333,243 @@ export function Roteirizador({
           </Card>
         )}
 
+        {/* ── Distribuição por veículo (F5 / VRPTW) ────────────────────────
+            O passo que faltava: sem esta tela, a distribuição do OR-Tools
+            morria na resposta HTTP. Aqui o operador escolhe QUEM participa,
+            define a hora de saída, vê a sequência de cada veículo com ETA e
+            confirma — e a confirmação grava uma versão imutável da rota. */}
+        {editavel && frota !== null && (
+          <Card className="min-w-0 overflow-hidden p-0 xl:order-3">
+            <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  {t("Frota")}
+                </p>
+                <p className="text-sm font-medium text-text">{t("Distribuição por veículo")}</p>
+              </div>
+              <Badge
+                variant={
+                  propostaMulti ? "info" : rota.distribuicao ? "success" : "neutral"
+                }
+              >
+                {propostaMulti
+                  ? t("Proposta")
+                  : rota.distribuicao
+                    ? t("Confirmada")
+                    : t("Não distribuída")}
+              </Badge>
+            </header>
+
+            <div className="space-y-3 p-3.5">
+              {veiculosAtivos.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "Nenhum veículo na frota. Sem placa e capacidade cadastradas, a carga continua saindo num veículo só.",
+                  )}{" "}
+                  <Link href="/app/frota" className="text-accent underline underline-offset-2">
+                    {t("Cadastrar frota")}
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  <ul className="space-y-1.5">
+                    {veiculosAtivos.map((v) => {
+                      const marcado = selecionados.includes(v.id);
+                      const paradasDoVeiculo = ordem.filter((c) => atribuicao[c] === v.id);
+                      return (
+                        <li
+                          key={v.id}
+                          className={cn(
+                            "rounded-lg border p-2",
+                            marcado ? "border-accent/40 bg-accent/5" : "border-border",
+                          )}
+                        >
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-accent"
+                              checked={marcado}
+                              onChange={() => alternarVeiculo(v.id)}
+                            />
+                            <span
+                              aria-hidden
+                              className="h-2 w-2 shrink-0 rounded-full"
+                              style={{ backgroundColor: corDoVeiculo(v.id) }}
+                            />
+                            <span className="min-w-0 flex-1 truncate font-medium text-text">
+                              {v.placa}
+                            </span>
+                            <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                              {paradasDoVeiculo.length}{" "}
+                              {paradasDoVeiculo.length === 1 ? t("parada") : t("paradas")}
+                            </span>
+                          </label>
+
+                          {marcado && (
+                            <div className="mt-1.5 flex items-center gap-2 pl-6">
+                              <select
+                                aria-label={t("Motorista do veículo")}
+                                className="h-7 min-w-0 flex-1 rounded-md border border-border bg-surface px-1.5 text-[11px] text-text"
+                                value={motoristaPorVeiculo[v.id] ?? ""}
+                                onChange={(e) =>
+                                  setMotoristaPorVeiculo((atual) => ({
+                                    ...atual,
+                                    [v.id]: e.target.value,
+                                  }))
+                                }
+                              >
+                                <option value="">{t("Sem motorista definido")}</option>
+                                {motoristasAtivos.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.nome}
+                                  </option>
+                                ))}
+                              </select>
+                              <span className="shrink-0 text-[10px] text-text-subtle tabular-nums">
+                                {v.capacidade_kg > 0 ? `${v.capacidade_kg} kg` : t("peso ?")}
+                                {" · "}
+                                {v.capacidade_m3 > 0 ? `${v.capacidade_m3} m³` : t("volume ?")}
+                              </span>
+                            </div>
+                          )}
+
+                          {marcado && paradasDoVeiculo.length > 0 && (
+                            <ol className="mt-1.5 space-y-0.5 border-t border-border/60 pt-1.5 pl-6 text-[11px]">
+                              {paradasDoVeiculo.map((chave, i) => {
+                                const parada = rota.paradas.find((x) => x.chave === chave);
+                                const chegada = horaDeChegada(chave);
+                                return (
+                                  <li key={chave} className="flex items-baseline gap-1.5">
+                                    <span className="shrink-0 text-muted-foreground tabular-nums">
+                                      {i + 1}.
+                                    </span>
+                                    <span className="min-w-0 flex-1 truncate text-text">
+                                      {parada?.cliente ?? chave}
+                                    </span>
+                                    {chegada && (
+                                      <span className="shrink-0 text-text-subtle tabular-nums">
+                                        {chegada}
+                                      </span>
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ol>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <label className="flex items-center gap-2 text-xs text-text">
+                    <span className="shrink-0">{t("Saída prevista")}</span>
+                    <input
+                      type="time"
+                      value={saida}
+                      onChange={(e) => setSaida(e.target.value)}
+                      className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-text tabular-nums"
+                    />
+                  </label>
+                  <p className="text-[11px] text-text-subtle">
+                    {saida
+                      ? t("É a hora que transforma a janela do cliente e o ETA em horário.")
+                      : t("Sem hora de saída a janela de entrega não é aplicada — o solver declara.")}
+                  </p>
+
+                  <div className="grid gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => void otimizarMulti()}
+                      disabled={
+                        trabalhando !== null ||
+                        selecionados.length === 0 ||
+                        paradasOrdenadas.length === 0
+                      }
+                    >
+                      {trabalhando === "multi" ? t("Distribuindo…") : t("Distribuir com OR-Tools")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void confirmarDistribuicao()}
+                      disabled={
+                        trabalhando !== null || !coberturaCompleta || !distribuicaoMudou
+                      }
+                    >
+                      {trabalhando === "distribuir"
+                        ? t("Gravando…")
+                        : t("Confirmar distribuição")}
+                    </Button>
+                  </div>
+
+                  {!coberturaCompleta && (
+                    <p className="text-[11px] text-warning-fg">
+                      {`${rota.paradas.length - atribuicoesValidas.length} ${t(
+                        "parada(s) sem veículo — toda parada precisa de um veículo selecionado.",
+                      )}`}
+                    </p>
+                  )}
+
+                  {propostaMulti && propostaMulti.restricoes_nao_aplicadas.length > 0 && (
+                    <div className="rounded-lg border border-warning/40 bg-warning-bg p-2">
+                      <p className="text-[11px] font-medium text-warning-fg">
+                        {t("Restrições que não foram aplicadas")}
+                      </p>
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-warning-fg">
+                        {propostaMulti.restricoes_nao_aplicadas.map((codigo) => (
+                          <li key={codigo}>{t(ROTULO_RESTRICAO[codigo] ?? codigo)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {propostaMulti && propostaMulti.entregas_nao_alocadas.length > 0 && (
+                    <p className="text-[11px] text-warning-fg">
+                      {`${propostaMulti.entregas_nao_alocadas.length} ${t(
+                        "entrega(s) não couberam na frota escolhida.",
+                      )}`}
+                    </p>
+                  )}
+
+                  {(rota.historico_rotas?.length ?? 0) > 0 && (
+                    <details className="text-[11px] text-muted-foreground">
+                      <summary className="cursor-pointer select-none">
+                        {t("Histórico de rotas")} ({rota.historico_rotas?.length})
+                      </summary>
+                      <ul className="mt-1.5 space-y-0.5">
+                        {(rota.historico_rotas ?? []).map((h) => (
+                          <li key={h.id} className="flex items-baseline gap-1.5">
+                            <span className="tabular-nums">{`v${h.versao}`}</span>
+                            {h.ativa && <Badge variant="success">{t("Ativa")}</Badge>}
+                            <span className="min-w-0 flex-1 truncate">
+                              {new Date(h.criado_em).toLocaleString(tagDeIdioma, {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            <span className="shrink-0 tabular-nums">
+                              {h.distancia_m != null ? formatarDistancia(h.distancia_m) : "—"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </>
+              )}
+            </div>
+          </Card>
+        )}
+
+        {/* ── Recuperação de endereços (Address Recovery Engine, 0309) ──────
+            Fica ao lado do planejamento porque é pré-requisito dele: com
+            endereço sem confirmação o servidor recusa otimizar. */}
+        {editavel && (
+          <PainelRecuperacao cargaId={cargaId} podeOperar={podeOperar} aoAtualizar={recarregar} />
+        )}
+
         {/* ── A ordem de entrega ────────────────────────────────────────── */}
         <Card className="min-w-0 overflow-hidden p-0 xl:order-1">
           <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-border px-3.5 py-2.5">
@@ -903,6 +1626,36 @@ export function Roteirizador({
                   </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                    {rotuloDoVeiculo(atribuicao[p.chave]) && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-medium text-text">
+                        <span
+                          aria-hidden
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{ backgroundColor: corDoVeiculo(atribuicao[p.chave] ?? null) }}
+                        />
+                        {rotuloDoVeiculo(atribuicao[p.chave])}
+                      </span>
+                    )}
+                    {horaDeChegada(p.chave) && (
+                      <span className="inline-flex items-center gap-1 text-text-subtle tabular-nums">
+                        {t("chegada")} {horaDeChegada(p.chave)}
+                      </span>
+                    )}
+                    {editavel && selecionados.length > 0 && (
+                      <select
+                        aria-label={t("Veículo da parada")}
+                        className="h-6 max-w-[9rem] rounded-md border border-border bg-surface px-1 text-[11px] text-text"
+                        value={atribuicao[p.chave] ?? ""}
+                        onChange={(e) => moverParadaPara(p.chave, e.target.value)}
+                      >
+                        <option value="">{t("Sem veículo")}</option>
+                        {selecionados.map((id) => (
+                          <option key={id} value={id}>
+                            {rotuloDoVeiculo(id) ?? id}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     <span
                       className={cn(
                         "inline-flex items-center gap-1",
@@ -919,7 +1672,7 @@ export function Roteirizador({
                         ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
                         : ""}
                     </span>
-                    {podeOperar && p.contact_id && (
+                    {podeOperar && (p.destination_id ?? p.contact_id) && (
                       <>
                         {(p.geo_status !== "ok" ||
                           p.geo_fonte === "nominatim:bairro" ||
@@ -927,7 +1680,9 @@ export function Roteirizador({
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() => void geocodificarTudo("geo", [p.contact_id as string])}
+                            onClick={() =>
+                              void geocodificarTudo("geo", [(p.destination_id ?? p.contact_id) as string])
+                            }
                           >
                             {t("Tentar de novo")}
                           </button>
@@ -940,12 +1695,14 @@ export function Roteirizador({
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() => alternarMarcar(p.contact_id as string)}
+                            onClick={() => alternarMarcar((p.destination_id ?? p.contact_id) as string)}
                           >
-                            {marcarPara === p.contact_id ? t("Cancelar marcação") : t("Marcar no mapa")}
+                            {marcarPara === (p.destination_id ?? p.contact_id)
+                              ? t("Cancelar marcação")
+                              : t("Marcar no mapa")}
                           </button>
                         )}
-                        {(p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
+                        {p.contact_id && (p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
                           <Link
                             href={`/app/contacts/${p.contact_id}`}
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"

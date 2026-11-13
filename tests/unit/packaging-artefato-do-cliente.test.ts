@@ -77,7 +77,7 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos", "ocr"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos", "ocr", "rota"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
   it("o parser enxerga os 10 serviços de produção", () => {
@@ -97,6 +97,10 @@ describe("packaging — o artefato que o cliente instala", () => {
     // `ocr` entrou como o décimo: o PaddleOCR que lê a foto do pedido antes de
     // gastar IA. Mesmo contrato (`image:` + `build:` ao lado), e é justamente o
     // `pull_policy` que faz uma correção do motor chegar na VPS.
+    //
+    // `rota` entrou como o décimo primeiro: o solver VRPTW (F5). Python não cabe
+    // na imagem Node; sem serviço publicado, o app fica sem otimização em toda
+    // instalação nova — e um `build:`-only nunca receberia correção do solver.
     expect([...servicos.keys()].sort()).toEqual(
       [
         "app",
@@ -105,6 +109,7 @@ describe("packaging — o artefato que o cliente instala", () => {
         "mercos",
         "ocr",
         "redis",
+        "rota",
         "scheduler",
         "srh",
         "waha",
@@ -250,6 +255,7 @@ describe("packaging — o artefato que o cliente instala", () => {
       ["Dockerfile.scheduler", "APP_VERSION"],
       ["Dockerfile.mercos", "APP_VERSION"],
       ["ocr/Dockerfile", "OCR_VERSAO"],
+      ["services/rota/Dockerfile", "ROTA_VERSAO"],
     ] as const) {
       const conteudo = fs.readFileSync(path.join(RAIZ, arquivo), "utf8");
       expect(conteudo, `${arquivo} sem org.opencontainers.image.source`).toContain(
@@ -259,7 +265,7 @@ describe("packaging — o artefato que o cliente instala", () => {
     }
   });
 
-  it("o workflow publica as seis imagens e injeta a versão", () => {
+  it("o workflow publica as sete imagens e injeta a versão", () => {
     const wf = fs.readFileSync(path.join(RAIZ, ".github/workflows/publish-image.yml"), "utf8");
     for (const imagem of [
       "nexus",
@@ -268,6 +274,7 @@ describe("packaging — o artefato que o cliente instala", () => {
       "nexus-fiscal-sidecar",
       "nexus-mercos",
       "nexus-ocr",
+      "nexus-rota",
     ]) {
       expect(wf, `publish-image.yml não publica '${imagem}'`).toContain(`name: ${imagem}`);
     }
@@ -275,6 +282,7 @@ describe("packaging — o artefato que o cliente instala", () => {
     // O OCR não é Node: a versão dele entra como OCR_VERSAO, que é o nome que o
     // Dockerfile declara e o `/healthz` devolve.
     expect(wf, "publish-image.yml não passa OCR_VERSAO como build-arg").toContain("OCR_VERSAO=");
+    expect(wf, "publish-image.yml não passa ROTA_VERSAO como build-arg").toContain("ROTA_VERSAO=");
     // A sonda prende o EFEITO (o canal `stable` passa a existir), não a forma.
     // Ela já mudou uma vez: `stable` saiu da lista de tags da matriz — onde cada
     // imagem o movia sozinha — para o job `promover-stable`, que só roda com as
