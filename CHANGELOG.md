@@ -8,6 +8,78 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.51.0] — 2026-11-13
+
+### Adicionado
+
+- **O pedido ganha o campo de Informações Fiscais** A tela de detalhes do pedido ganhou o campo dedicado "Informações Fiscais", e a emissão de nota passa a ler esse campo como a fonte do texto complementar da NF-e (infCpl / dados da DANFE).
+
+  Antes o texto que virava o infCpl era apenas o campo livre do pedido — a fonte mais frágil do fluxo. Com a coluna `informacoes_fiscais` o operador tem um campo próprio para colocar a ordem de compra ou qualquer dado complementar que a nota deve levar, e a emissão grava nesse campo no infCpl da nota. O texto legado (`observacoes`) continua como fallback para os pedidos antigos, sem re-escrita em massa.
+
+  Na venda avulsa (NF-e sem pedido) o destinatário que vem do cadastro do cliente já nasce preenchido pela tela de emissão — nome, documento e entrega vêm do próprio contato, sem digitação manual no formulário.
+
+### Corrigido
+
+- **O aviso "Mudou no Mercos" para de disparar em pedido que não mudou** A revisão do Mercos compara o que o ERP manda com o que está no CRM e avisa a expedição quando algo mudou depois do embarque. Em 12/11/2026 o aviso aparecia em 17 das 19 paradas da carga 40 — e nenhuma delas tinha item, quantidade ou preço alterado.
+
+  O que todas registravam era a mesma mudança falsa: a cidade de "GENERAL CARNEIRO, Paraná/PR" para "GENERAL CARNEIRO, Paraná". A cidade é idêntica dos dois lados. O que "mudava" era a UF: o cadastro tem `PR` e o Mercos nunca manda `uf` — o coletor extrai a linha "<cidade>, <estado>" da tela e manda tudo dentro de `cidade`, com o estado por extenso.
+
+  Agora uma régua só separa cidade e UF, usada pela importação e pela revisão, aceitando sigla ou nome do estado ("Bituruna, Paraná", "Canoinhas, SC", "Canoinhas/SC"). O aviso só olha UF quando o ERP realmente mandou UF. De quebra, a revisão limpa o cadastro que a importação antiga sujou com o nome do estado colado — "Bituruna, Paraná" vira "Bituruna" com `uf = PR`, sem marcar a carga.
+
+  A regra do aviso continua a mesma: mudou cliente, endereço ou itens/totais depois de entrar na carga, a parada avisa e quem opera decide se remaneja.
+
+- **Geocodificação com número no cadastro não devolve mais a avenida como se fosse o imóvel** A cadeia de fallback da geocodificação fechava a fase de rua com precisão de avenida (`rua`) mesmo quando o cadastro trazia número de porta — e devolvia esse ponto como se fosse a parada. Na carga 40 (12/11/2026), as paradas 19506 (EDGAR ORLAMUNDER, Avenida Presidente Getúlio Vargas, 689) e 19542 (GALMAQ/CHG, mesma avenida, 230) colapsaram no mesmo pino (-26.4154231, -51.3182519) e a rota saiu com trecho de 0 km entre clientes diferentes.
+
+  Agora, com número no cadastro, a fase de rua só fecha com precisão de imóvel (`numero`); sem número, o trecho de rua continua aceito como aproximado (diretriz medida no OSM do interior). O ponto aproximado só volta pela cadeia de emergência (bairro/CEP/município), depois de esgotada a fase de rua.
+
+- **Geocodificação rejeita coordenadas fora da faixa válida** O resolvedor de coordenadas aceitava qualquer número finito como latitude ou
+  longitude — um valor com centésimos fora do planeta entrava na rota e o mapa
+  desenhamia linha para lugar nenhum.
+
+  Agora a faixa é validada (latitude entre -90 e 90, longitude entre -180 e
+  180) antes de virar parada; resultado fora de faixa é rejeitado como erro e a
+  cadeia de fallback segue para o próximo candidato.
+
+- **Ordenar por distância para de mandar o motorista para o outro lado da cidade** O botão "Ordenar por distância" ordenava as paradas pela distância até a base — do mais perto ao mais longe. Parece razoável no papel e é errado na rua: duas paradas a 2 km da base em direções opostas ficam vizinhas na lista e a 3 km uma da outra no mapa.
+
+  Medido na carga 039 (12/11/2026), com as coordenadas já corrigidas: a parada 4 (PRIME AUTOMOTIVE, Centro) mandava para a 5 (BRTECH, Industrial 1) — 3,0 km atravessando a cidade no meio do trajeto. O radial somava 11,65 km entre paradas.
+
+  Agora a ordem é o caminho curto de verdade: base primeiro, depois sempre a parada mais próxima da anterior, com uma passada de 2-opt desfazendo os cruzamentos. Nessa mesma carga: BRTECH → LANCHONETE → VITINS → CAMILA → PRIME → SCHIESSL → PAPE, nenhum trecho acima de 1,6 km e 7,25 km no total — o ótimo exato entre as 5.040 ordens possíveis dos 7 pontos. A base continua fixa na primeira posição.
+
+  A conta é feita em linha reta e sem depender de serviço externo; a rua continua sendo desenhada pelo OSRM depois, na ordem nova. "Otimizar por ruas" segue existindo para quem quer o caixeiro-viajante pelas ruas de verdade.
+
+- **Endereço alterado na revisão não reusa a coordenada anterior** Ao trocar o endereço de entrega de um pedido embarcado (ou criar a carga a
+  partir dele), o cache de geocodificação do contato mantinha a latitude,
+  longitude e status da coordenada antiga.
+
+  Com isso, a rota podia nascer com o destino errado sem nenhuma nova
+  consulta — o cache precisava ser limpo quando o corpo da alteração trouxa
+  `endereco_entrega`.
+
+- **Agrupamento de paradas considera o destino, não só o cliente** Um cliente com dois pedidos para endereços diferentes gerava uma única parada
+  na rota — as duas entregas eram jogadas no mesmo pino, e o mapa achava a
+  segunda entrega no lugar da primeira.
+
+  O agrupamento passa a usar o destino efetivo do pedido (`${base}::${destino}`)
+  quando o pedido traz endereço de entrega, e só recorre ao contato quando não
+  tém. Cliente com mesmo endereço continua podendo virar parada única.
+
+  A tela de montagem da nova carga também mantém os pedidos escolhidos fora da
+  lista de busca — antes um pedido marcado podia "sumir" da lista quando casava
+  com o termo pesquisado.
+
+- **Sequência manual na rota invalida a geometria que estava desenhada** Ao alterar a ordem de entrega manualmente na tela de rota, a linha que o
+  mapa desenhava pertencia à sequência anterior e podia continuar no caminho
+  errado.
+
+  Com a sequência gravada, o backend invalida a geometria (`rota_geojson`),
+  a distância e a duração — e incrementa a versão da rota. Sem isso, a tela
+  mostrava a linha da ordem antiga enquanto a lista de paradas já estava na
+  ordem nova, e o motorista ia de fato para o trajeto errado.
+
+  Quando a alteração vem de uma proposta salva (otimizar e salvar), a
+  geometria passa a vir do próprio payload, então a invalidação não se aplica.
+
 ## [1.50.1] — 2026-11-12
 
 ### Corrigido
@@ -6941,7 +7013,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.50.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.51.0...HEAD
+[1.51.0]: https://github.com/spiesdan/nexus/compare/v1.50.1...v1.51.0
 [1.50.1]: https://github.com/spiesdan/nexus/compare/v1.50.0...v1.50.1
 [1.50.0]: https://github.com/spiesdan/nexus/compare/v1.49.1...v1.50.0
 [1.49.1]: https://github.com/spiesdan/nexus/compare/v1.49.0...v1.49.1
