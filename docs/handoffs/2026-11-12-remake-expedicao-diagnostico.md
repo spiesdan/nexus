@@ -441,3 +441,74 @@ motivo", "id do veículo é o do request" e "sem peso não finge capacidade".
 veículo, cadastro de frota (as tabelas existem, sem UI) e persistência da rota multi-veículo como
 versão. O endpoint devolve a distribuição, mas não grava `rota_versao` — não há tabela por veículo
 e inventar uma agora seria schema sem operação que o use.
+
+### 10.5 Fechamento do F5 — tela, frota e versão (2026-11-14/15)
+
+O bloco anterior deixou três pendências explícitas ("tela de confirmar a distribuição por veículo,
+cadastro de frota, persistência da rota multi-veículo como versão"). Esta continuação fecha as
+três, mais o que dependia delas:
+
+**Schema (migration 0307 + apêndice idempotente + MANIFEST + `database.types.ts`)**
+
+- `fleet_vehicles.ativo` / `fleet_drivers.ativo` (frota inativa continua no histórico, sai da seleção);
+- `shipment_orders.veiculo_id` / `motorista_id` / `sequencia_veiculo` / `janela_inicio` / `janela_fim`;
+- `shipments.saida_prevista` (`time`, nullable) — o relógio que converte janela do cliente e ETA;
+- `shipment_route_versions` — snapshot imutável por versão, com `ativa` e índice único
+  `(shipment_id, versao)`; RLS por `organization_id` e `revoke` de `anon`.
+
+**Frota** — `/app/frota` (`manager` escreve, `viewer` lê), API `GET /api/v1/fleet` + CRUD de
+veículos e motoristas. Placa normalizada com índice único por organização. Entrada no registro de
+navegação **sem sidebar** (a dobra em 900px foi medida; a porta do dia a dia é o cabeçalho da
+Expedição e o ⌘K). Auditoria `fleet.*`.
+
+**Distribuição** — `PATCH /api/v1/shipments/[id]/rota/distribuicao`:
+cobertura total (cada parada exatamente uma vez), frota resolvida **pelo banco** (id de outro tenant
+ou inativo é 422), capacidade/jornada revalidadas com a **mesma** função do solver
+(`demandasPorParada`), lock otimista (`versao_base` + update condicional → 409 `state_conflict`),
+snapshot em `shipment_route_versions`, atribuição por pedido e auditoria `shipment.rota.distribuida`.
+ETA/distância/geometria só são gravados quando a sequência do veículo é **idêntica** à proposta do
+solver — reordenar à mão invalida a chegada calculada.
+
+**Janelas** — `lib/rotas/janelas.ts` (hora ↔ minuto) e `lib/expedicao/janelas-solver.ts` (janela
+relativa à partida, com o estado `vencida`). Sem `saida_prevista`, a janela não é aplicada e a
+resposta declara `janelas_de_entrega_sem_hora_de_saida`. Janela que termina antes da partida é 422
+com a lista de paradas — dado inconsistente não vira "sem janela" em silêncio. O `saida_prevista`
+entra no corpo do otimizador para o operador ver o efeito no ETA **antes** de gravar.
+
+**Solver** — `chegadas_s` (1:1 com `paradas`) sai do `CumulVar` da dimensão de tempo, o mesmo
+relógio que as janelas respeitam. O slack por arco passou de 30 min para o horizonte: com 30 min, uma
+janela que abria 10 h depois da saída fazia o solver declarar `sem_solucao` numa rota possível.
+
+**UI** — painel "Distribuição por veículo" no planejador (seleção, motorista por veículo, saída
+prevista, sequência por veículo com ETA, distribuir, confirmar, restrições não aplicadas, histórico
+de versões). Mapa com uma linha por veículo e veículo no balão. Badge de veículo + chegada na ordem
+de entrega, com seletor para mover a parada. Fila da expedição com filtros por veículo e motorista
+(saídos da atribuição por pedido, não da placa legada) e a linha mostrando todos os veículos da
+carga.
+
+**Stack geográfica — decisão do dono do produto (2026-11-13)**: manter **Leaflet + OpenStreetMap +
+Nominatim + OSRM**, autohospedáveis, com custo de licença zero. Registrado em
+`docs/adr/0002-stack-geografica-osm.md`, com as alternativas (MapLibre, Photon/Pelias, Google/
+Mapbox) e o que a decisão NÃO resolve. Para a escolha valer sem edição de código,
+`GEOCODER_URL`, `GEOCODER_MIN_INTERVALO_MS` e `GEOCODER_UA` entraram em `lib/env.ts`,
+`.env.example`, `.env.hostgator.example` e no `envq` do `install.sh` (`OSRM_URL` já existia); o
+procedimento de subir/atualizar as instâncias e voltar para a pública está em
+`docs/runbooks/geodados.md`. Os gates `lib/rotas/geocodificacao.test.ts` (5 novos),
+`env-example-sync` e `hostgator-setup-kit/test-validators.sh` cobrem a ponta.
+
+**Romaneio — decisão de escopo**: o PDF do romaneio (`lib/comercial/romaneio-pdf.tsx`) e a rota
+`GET .../romaneio` **não foram tocados**. A folha continua impressa com `shipments.placa` /
+`motorista_nome` (veículo legado da carga), e não com a atribuição por parada — pedido explícito de
+manter o mesmo romaneio que a operação já usa. O gate
+`tests/unit/romaneio-nao-muda-com-distribuicao.test.ts` trava a rota contra a leitura de
+`veiculo_id`/`motorista_id`/`sequencia_veiculo`/`saida_prevista`; mudar isso exige derrubar o teste
+no mesmo commit da decisão.
+
+**Testes desta continuação** — `tests/unit/rota-distribuicao-route.test.ts` (14),
+`tests/unit/fleet-rotas.test.ts` (13), `tests/unit/rotas-janelas.test.ts` (9),
+`lib/expedicao/demanda-da-carga.test.ts` (5), `lib/rotas/paradas.test.ts` (+4 de janela/atribuição),
+`tests/unit/rota-veiculos-route.test.ts` (+5: frota manda na capacidade, inativo, janela convertida,
+sem hora de saída, janela vencida) e `services/rota/tests/test_solver.py` (+3: ETA, janela, sem
+janela declarada). RLS/isolamento de `fleet_vehicles`, `fleet_drivers` e `shipment_route_versions`
+entrou em `tests/invariants/rls-isolation.test.ts`. Mapa em
+`docs/architecture/expedicao-vrptw.architecture.json`.
