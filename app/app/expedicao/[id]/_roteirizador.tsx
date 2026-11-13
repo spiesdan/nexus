@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/types";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { horaDoMinuto, minutosDoDia } from "@/lib/rotas/janelas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
@@ -22,6 +23,7 @@ import { CaretDown, CaretUp, MapPin } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
+import { PainelRecuperacao } from "./_recuperacao";
 
 export interface ParadaRotaApi {
   chave: string;
@@ -658,12 +660,47 @@ export function Roteirizador({
       } else if (txt) {
         origem = { endereco: txt };
       }
-      const corpo = await apiClient.post<{ data: PropostaRota }>(`/api/v1/shipments/${cargaId}/rota/otimizar`, {
-        origem,
-        retornar_origem: retornar,
-        tempo_parada_min: tempoParada,
-        modo: modoEscolhido,
-      });
+      // Gate do Address Recovery Engine (§3): com endereço não resolvido o
+      // servidor recusa com 422 e a lista dos pendentes. Aqui o operador vê
+      // QUAIS são e decide — seguir mesmo assim é ato explícito, não um
+      // caminho que ele descobre clicando de novo.
+      let corpo: { data: PropostaRota };
+      try {
+        corpo = await apiClient.post<{ data: PropostaRota }>(
+          `/api/v1/shipments/${cargaId}/rota/otimizar`,
+          {
+            origem,
+            retornar_origem: retornar,
+            tempo_parada_min: tempoParada,
+            modo: modoEscolhido,
+          },
+        );
+      } catch (e) {
+        const pendentes =
+          e instanceof ApiError && e.status === 422 && Array.isArray(e.details?.pendentes)
+            ? (e.details.pendentes as { enderecoOriginal?: string | null }[])
+            : null;
+        if (!pendentes || pendentes.length === 0) throw e;
+        const seguir = await confirmar({
+          title: `${pendentes.length} ${
+            pendentes.length === 1
+              ? t("endereço ainda não foi confirmado. A rota pode sair com um ponto errado.")
+              : t("endereços ainda não foram confirmados. A rota pode sair com pontos errados.")
+          } ${t("Otimizar mesmo assim?")}`,
+          confirmLabel: t("Otimizar mesmo assim"),
+        });
+        if (!seguir) return;
+        corpo = await apiClient.post<{ data: PropostaRota }>(
+          `/api/v1/shipments/${cargaId}/rota/otimizar`,
+          {
+            origem,
+            retornar_origem: retornar,
+            tempo_parada_min: tempoParada,
+            modo: modoEscolhido,
+            ignorar_pendentes: true,
+          },
+        );
+      }
       const p = corpo.data;
       setProposta(p);
       // A proposta só traz as paradas COM coordenada. Jogar fora as demais
@@ -1524,6 +1561,13 @@ export function Roteirizador({
               )}
             </div>
           </Card>
+        )}
+
+        {/* ── Recuperação de endereços (Address Recovery Engine, 0309) ──────
+            Fica ao lado do planejamento porque é pré-requisito dele: com
+            endereço sem confirmação o servidor recusa otimizar. */}
+        {editavel && (
+          <PainelRecuperacao cargaId={cargaId} podeOperar={podeOperar} aoAtualizar={recarregar} />
         )}
 
         {/* ── A ordem de entrega ────────────────────────────────────────── */}
