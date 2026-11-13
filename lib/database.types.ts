@@ -6323,6 +6323,94 @@ export type Database = {
           },
         ];
       };
+      fleet_drivers: {
+        Row: {
+          atualizados_em: string;
+          capacidade_jornada_min: number;
+          criados_em: string;
+          disponibilidade: Json;
+          id: string;
+          nome: string;
+          organization_id: string;
+          restricoes: Json;
+          telefone: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          atualizados_em?: string;
+          capacidade_jornada_min?: number;
+          criados_em?: string;
+          disponibilidade?: Json;
+          id?: string;
+          nome: string;
+          organization_id: string;
+          restricoes?: Json;
+          telefone?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          atualizados_em?: string;
+          capacidade_jornada_min?: number;
+          criados_em?: string;
+          disponibilidade?: Json;
+          id?: string;
+          nome?: string;
+          organization_id?: string;
+          restricoes?: Json;
+          telefone?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fleet_drivers_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fleet_vehicles: {
+        Row: {
+          atualizados_em: string;
+          capacidade_kg: number;
+          capacidade_m3: number;
+          criados_em: string;
+          id: string;
+          organization_id: string;
+          placa: string;
+          veiculo_tipo: string | null;
+        };
+        Insert: {
+          atualizados_em?: string;
+          capacidade_kg?: number;
+          capacidade_m3?: number;
+          criados_em?: string;
+          id?: string;
+          organization_id: string;
+          placa: string;
+          veiculo_tipo?: string | null;
+        };
+        Update: {
+          atualizados_em?: string;
+          capacidade_kg?: number;
+          capacidade_m3?: number;
+          criados_em?: string;
+          id?: string;
+          organization_id?: string;
+          placa?: string;
+          veiculo_tipo?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fleet_vehicles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       flywheel_distiller_proposals: {
         Row: {
           applied_at: string | null;

@@ -28580,3 +28580,110 @@ grant execute on function public.fn_decrypt_oauth(bytea) to service_role;
 grant execute on function public.fn_encrypt_oauth(text) to service_role;
 grant execute on function public.fn_lgpd_cascade_redact_contact(uuid, uuid, uuid) to service_role;
 grant execute on function public.fn_update_budget_consumption() to service_role;
+
+-- ─── F5 — FROTA / VEÍCULOS / MOTORISTAS (VRPTW multi-veículo) ────────────────
+-- Apêndice idempotente do migration 20261114120000_0306_frota_veiculos_motoristas.
+-- Idempotente (create ... if not exists / drop policy if exists + create), portável
+-- em psql puro. Não altera nenhuma tabela anterior — apenas adiciona a frota.
+
+create table if not exists public.fleet_vehicles (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  placa text not null,
+  veiculo_tipo text,
+  capacidade_kg numeric(12,3) not null default 0,
+  capacidade_m3 numeric(12,3) not null default 0,
+  criados_em timestamptz not null default now(),
+  atualizados_em timestamptz not null default now()
+);
+
+create table if not exists public.fleet_drivers (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  user_id uuid references auth.users (id) on delete set null,
+  nome text not null,
+  telefone text,
+  capacidade_jornada_min int not null default 480,
+  disponibilidade jsonb not null default '{}'::jsonb,
+  restricoes jsonb not null default '{}'::jsonb,
+  criados_em timestamptz not null default now(),
+  atualizados_em timestamptz not null default now()
+);
+
+create index if not exists idx_fleet_vehicles_organization_id
+  on public.fleet_vehicles (organization_id);
+create index if not exists idx_fleet_drivers_organization_id
+  on public.fleet_drivers (organization_id);
+
+alter table public.fleet_vehicles enable row level security;
+alter table public.fleet_drivers enable row level security;
+
+drop policy if exists "fleet_vehicles_select" on public.fleet_vehicles;
+create policy "fleet_vehicles_select" on public.fleet_vehicles
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_insert" on public.fleet_vehicles;
+create policy "fleet_vehicles_insert" on public.fleet_vehicles
+  for insert with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_update" on public.fleet_vehicles;
+create policy "fleet_vehicles_update" on public.fleet_vehicles
+  for update using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_vehicles_delete" on public.fleet_vehicles;
+create policy "fleet_vehicles_delete" on public.fleet_vehicles
+  for delete using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_select" on public.fleet_drivers;
+create policy "fleet_drivers_select" on public.fleet_drivers
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_insert" on public.fleet_drivers;
+create policy "fleet_drivers_insert" on public.fleet_drivers
+  for insert with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_update" on public.fleet_drivers;
+create policy "fleet_drivers_update" on public.fleet_drivers
+  for update using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists "fleet_drivers_delete" on public.fleet_drivers;
+create policy "fleet_drivers_delete" on public.fleet_drivers
+  for delete using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+comment on table public.fleet_vehicles is
+  'Frota (F5/VRPTW): veiculo com placa, tipo e capacidades proprias (kg/volume). Frota e legado em shipments.placa — esta tabela e a entidade usada pelo otimizador multi-veiculo.';
+
+comment on table public.fleet_drivers is
+  'Motoristas (F5/VRPTW): motorista com capacidade de jornada (min) e disponibilidade/restricoes (jsonb operacional). user_id liga ao login quando houver; sem login, motorista continua nome-only (logica TS no servico).';
