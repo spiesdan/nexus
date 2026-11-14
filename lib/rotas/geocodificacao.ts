@@ -96,7 +96,12 @@ export function expandirAbreviacoes(rua: string): string {
 // Complemento colado onde era para ser bairro/número ("LOJA", "FUNDOS",
 // "SALA 3", "CASA") envenena a consulta: o Nominatim procura literalmente.
 const COMPLEMENTOS =
-  /\b(LOJAS?|SALAS?|SOBRELOJA|CASAS?|FUNDOS|FRENTE|PREDIOS?|PRÉDIOS?|GALP(O|AO|ÕES)|BOX|QUIOSQUE|PISO|SUPERIOR|TERREO|TÉRREO|ALTOS|BAIXOS|SOBRADO|BARRACA?O|BARRACÕES|CXPST|CAIXA POSTAL|CX POSTAL|SN|S\/N)\s*\d*\b\.?/gi;
+  // O separador entre o complemento e o número varia no cadastro do Mercos:
+  // "SALA 03", "SALA: 03", "SALA-03". Sem aceitar os três, o `:` sobrava na
+  // consulta ("SALA: 03;") e o Nominatim devolvia vazio — medido na parada
+  // PED-19566 (Rodovia BR 476): das 5 consultas da cadeia, 3 morriam por causa
+  // do resíduo, e a que sobrava era a de emergência.
+  /\b(LOJAS?|SALAS?|SOBRELOJA|CASAS?|FUNDOS|FRENTE|PREDIOS?|PRÉDIOS?|GALP(O|AO|ÕES)|BOX|QUIOSQUE|PISO|SUPERIOR|TERREO|TÉRREO|ALTOS|BAIXOS|SOBRADO|BARRACA?O|BARRACÕES|CXPST|CAIXA POSTAL|CX POSTAL|SN|S\/N)\s*[:.\-]?\s*\d*\b\.?/gi;
 
 // Faixa de numeração do cadastro ("... , ATÉ 599/600", "DE 500/501 AO FIM",
 // "... DE 1400 A 2298 LADO PAR") e referência antiga ("antiga panif arco
@@ -133,7 +138,7 @@ export function limparComplemento(trecho: string): string {
     // propósito: o \b não enxerga o Ã como letra (medido no Node 24) e
     // comia o O de BARÃO/SÃO.
     .replace(/(?<![\p{L}\d])[A-Z]\.?(?![\p{L}\d])(?=\s+\S)/gu, "");
-  return semFaixa.replace(COMPLEMENTOS, " ").replace(/\s+/g, " ").replace(/^[,\-–\s]+|[,\-–\s]+$/g, "").trim();
+  return semFaixa.replace(COMPLEMENTOS, " ").replace(/\s+/g, " ").replace(/^[,\-–;\s]+|[,\-–;\s]+$/g, "").trim();
 }
 
 /**
@@ -450,6 +455,78 @@ export function aceitaResultado(r: ResultadoGeo, temNumero: boolean): boolean {
   return !temNumero && r.precisao === "rua";
 }
 
+/**
+ * ─── O PINO TEM QUE ESTAR NO MUNICÍPIO QUE O CADASTRO PEDIU ─────────────────
+ *
+ * O Nominatim casa texto livre e **não respeita** a cidade da consulta. O caso
+ * medido na produção (PED-19566, 2026-11-13) é o retrato do defeito: o endereço
+ * era "Rodovia BR 476 Km 344 — centro, Paula Freitas/PR", a consulta de
+ * emergência do bairro foi `"centro, Paula Freitas, PR, Brasil"` e o provedor
+ * respondeu **Avenida Brasil, Carapicuíba/SP** — 600 km fora. A cadeia aceitava
+ * qualquer `estado: "ok"` da emergência, então o pino da entrega foi para São
+ * Paulo, marcado como "rua aproximada", e o mapa mostrava a parada no lugar
+ * errado com cara de acerto.
+ *
+ * A regra abaixo é a mesma dos vetos duros de `recuperacao/confianca.ts`, e é
+ * conservadora de propósito: só recusa quando há PROVA de divergência.
+ *   - UF divergente ⇒ recusa (não existe entrega em outro estado);
+ *   - município divergente sem CEP que confirme ⇒ recusa (distrito do interior
+ *     continua aceito: o CEP do distrito é o do município, e aí o CEP manda);
+ *   - provedor sem componentes ⇒ aceita (não há como contradizer).
+ */
+function soDigitos(valor: string | null | undefined): string {
+  return (valor ?? "").replace(/\D/g, "");
+}
+
+/** "Paraná" e "PR" são a mesma UF; o resto da comparação é textual. */
+const UF_POR_NOME: Record<string, string> = {
+  acre: "AC", alagoas: "AL", amapa: "AP", amazonas: "AM", bahia: "BA", ceara: "CE",
+  "distrito federal": "DF", "espirito santo": "ES", goias: "GO", maranhao: "MA",
+  "mato grosso": "MT", "mato grosso do sul": "MS", "minas gerais": "MG", para: "PA",
+  paraiba: "PB", parana: "PR", pernambuco: "PE", piaui: "PI", "rio de janeiro": "RJ",
+  "rio grande do norte": "RN", "rio grande do sul": "RS", rondonia: "RO", roraima: "RR",
+  "santa catarina": "SC", "sao paulo": "SP", sergipe: "SE", tocantins: "TO",
+};
+
+function siglaUf(valor: string | null | undefined): string | null {
+  const texto = (valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+  if (/^[A-Z]{2}$/.test(texto)) return texto;
+  return UF_POR_NOME[texto.toLowerCase()] ?? null;
+}
+
+function normalizarNome(valor: string | null | undefined): string {
+  return (valor ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function pertenceAoMunicipio(r: ResultadoGeo, p: PartesEndereco): boolean {
+  const c = r.componentes;
+  if (!c) return true;
+
+  const ufPedida = siglaUf(p.uf);
+  const ufCandidata = siglaUf(c.uf);
+  if (ufPedida && ufCandidata && ufPedida !== ufCandidata) return false;
+
+  const municipioPedido = normalizarNome(p.cidade);
+  const municipioCandidato = normalizarNome(c.municipio);
+  if (!municipioPedido || !municipioCandidato) return true;
+  if (municipioPedido === municipioCandidato) return true;
+
+  // Nome do município diverge, mas o CEP é o mesmo: é distrito (o Nominatim
+  // devolve o distrito em `village`/`town`). O CEP confirma a região; aceitar.
+  const cepPedido = soDigitos(p.cep);
+  const cepCandidato = soDigitos(c.cep);
+  return Boolean(cepPedido && cepCandidato && cepPedido === cepCandidato);
+}
+
 export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: string | null): Promise<ResultadoGeo> {
   let cadeia = montarConsultas(p);
   let temNumero = Boolean(numeroDa(p));
@@ -466,13 +543,15 @@ export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: s
   let viuErro = false;
   for (const consulta of [...cadeia, ...crua]) {
     const r = await buscar(consulta);
-    if (aceitaResultado(r, temNumero)) return r;
+    // Candidato de outro município/UF não é a parada: segue a cadeia em vez
+    // de gravar um pino a centenas de km (ver `pertenceAoMunicipio`).
+    if (aceitaResultado(r, temNumero) && pertenceAoMunicipio(r, p)) return r;
     if (r.estado === "erro") viuErro = true;
     // nao_encontrado/ambiguo/bairro/cidade: próxima fase (mais solta) pode resolver.
   }
   for (const consulta of emergencia) {
     const r = await buscar(consulta);
-    if (r.estado === "ok") return r;
+    if (r.estado === "ok" && pertenceAoMunicipio(r, p)) return r;
     if (r.estado === "erro") viuErro = true;
   }
   if (cadeia.length + crua.length + emergencia.length === 0) {
@@ -511,7 +590,13 @@ function componentesDoCandidato(c: CandidatoNominatim): NonNullable<ResultadoGeo
     numero: a?.house_number ?? null,
     bairro: a?.suburb ?? null,
     municipio: a?.city ?? a?.town ?? a?.village ?? a?.municipality ?? null,
-    uf: a?.state ?? a?.["ISO3166-2-lvl4"]?.replace(/^BR-/, "") ?? null,
+    // A SIGLA ANTES DO NOME. O Nominatim devolve `state: "Paraná"` e
+    // `ISO3166-2-lvl4: "BR-PR"`; preferir o nome fazia toda comparação com a
+    // UF do cadastro ("PR") divergir e disparava o veto `uf_divergente` em
+    // `avaliarConfianca` — ou seja, o motor de recuperação NUNCA corrigia
+    // endereço automaticamente, sem que nada falhasse. O ISO é o mesmo dado
+    // em sigla; é ele que conversa com o cadastro.
+    uf: a?.["ISO3166-2-lvl4"]?.replace(/^BR-/, "") ?? a?.state ?? null,
     cep: a?.postcode ?? null,
   };
 }
