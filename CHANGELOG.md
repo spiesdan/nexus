@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.4] — 2026-11-14
+
+### Corrigido
+
+- **Parada não cai mais no estado errado quando o mapa não conhece a rua** Quando a rua do endereço não existe no mapa, o sistema cai numa consulta de emergência pelo bairro — e o provedor de mapas não respeita a cidade da consulta. Um bairro chamado "centro" em Paula Freitas/PR foi respondido como **Avenida Brasil, Carapicuíba/SP**, e o pino da entrega foi para o outro estado, exibido como "rua aproximada". O mapa mostrava a parada a 600 km do cliente com cara de acerto.
+
+  Agora todo resultado passa por uma conferência de lugar: UF diferente é descartado, e município diferente só é aceito quando o CEP confirma (distrito do interior continua funcionando, porque o CEP do distrito é o do município). A busca segue para a próxima tentativa e, quando nada bate, a parada fica marcada como aproximada no município certo — nunca num ponto inventado em outro estado.
+
+  De quebra, o complemento do cadastro com dois-pontos ("SALA: 03") deixou de envenenar a consulta, e a UF passou a ser comparada pela sigla: o mapa devolve o nome do estado ("Paraná") e o cadastro guarda "PR", o que fazia a conferência de UF divergir sempre.
+
 ## [1.52.3] — 2026-11-13
 
 ### Corrigido
@@ -7084,7 +7094,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.4...HEAD
+[1.52.4]: https://github.com/spiesdan/nexus/compare/v1.52.3...v1.52.4
 [1.52.3]: https://github.com/spiesdan/nexus/compare/v1.52.2...v1.52.3
 [1.52.2]: https://github.com/spiesdan/nexus/compare/v1.52.1...v1.52.2
 [1.52.1]: https://github.com/spiesdan/nexus/compare/v1.52.0...v1.52.1
