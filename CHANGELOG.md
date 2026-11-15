@@ -8,6 +8,23 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.52.6] — 2026-11-15
+
+### Corrigido
+
+- **Cargas de teste do QA só usam endereço com um único nó no mapa** As três cargas de teste da Expedição usavam endereços que existem no
+  OpenStreetMap como nó de casa — mas alguns deles existem **duas vezes**: Mafra
+  tem dois nós nº 484 na Rua Marechal Deodoro (700 m entre eles), Paula Freitas
+  dois nós nº 80 na Rua Gustavo Schuartz e União da Vitória dois nós nº 490 na
+  Avenida Interventor Manoel Ribas. O geocodificador acerta um dos dois, e o pino
+  aparece a 79 m, 290 m e 1.043 m do outro. Não é defeito de código: o dado do
+  mapa é que é ambíguo.
+
+  Agora as cargas usam só ruas com **um** nó por número — todas as nove paradas
+  saem com o pino a 0,0 m do nó do mapa, o que torna a comparação com o Google
+  Maps uma medida de verdade. As três paradas ambíguas saíram (e um teste impede
+  que voltem).
+
 ## [1.52.5] — 2026-11-15
 
 ### Corrigido
@@ -7119,7 +7136,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.52.6...HEAD
+[1.52.6]: https://github.com/spiesdan/nexus/compare/v1.52.5...v1.52.6
 [1.52.5]: https://github.com/spiesdan/nexus/compare/v1.52.4...v1.52.5
 [1.52.4]: https://github.com/spiesdan/nexus/compare/v1.52.3...v1.52.4
 [1.52.3]: https://github.com/spiesdan/nexus/compare/v1.52.2...v1.52.3
