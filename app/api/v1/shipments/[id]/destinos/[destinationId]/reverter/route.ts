@@ -17,6 +17,8 @@ import { requireRole } from "@/lib/auth/require-role";
 import { audit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 
+import { destinoPertenceACarga } from "../../_pertence";
+
 export const dynamic = "force-dynamic";
 
 const corpoSchema = z.object({
@@ -52,14 +54,15 @@ export async function POST(
     return fail("not_found", "Destino não encontrado.", 404, { requestId });
   }
 
-  const { data: naCarga } = await supabase
-    .from("shipment_orders")
-    .select("id")
-    .eq("destination_id", destinationId)
-    .eq("shipment_id", id)
-    .eq("organization_id", authz.org.orgId)
-    .maybeSingle();
-  if (!naCarga) {
+  // Pertencimento por existência, não por cardinalidade: dois pedidos ao mesmo
+  // endereço são uma parada só (0308) e duas linhas em `shipment_orders` —
+  // `maybeSingle()` transformava isso em "não pertence" e travava o reverter.
+  const pertence = await destinoPertenceACarga(supabase, {
+    orgId: authz.org.orgId,
+    shipmentId: id,
+    destinationId,
+  });
+  if (!pertence) {
     return fail("validation_failed", "Destino não pertence a esta carga.", 422, { requestId });
   }
 

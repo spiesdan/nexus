@@ -57,6 +57,12 @@ test("endereço sem número — aviso, entrada marcada, memória e confirmação
   expect(patch.status(), "não deu para gravar o endereço sem número").toBe(200);
 
   const pedido = await semearPedido(page, cliente, { produtoId, contactId });
+  // SEGUNDO pedido no MESMO endereço. Em 0308 o destino é um por ENDEREÇO, então
+  // esta carga tem UMA parada e DUAS linhas em `shipment_orders`. É o caso comum
+  // da operação (o cliente compra duas vezes e o caminhão leva tudo junto) e o
+  // que expunha o `maybeSingle()` do pertencimento: o motorista tocava "é aqui"
+  // e recebia "Destino não pertence a esta carga" — estando parado na porta.
+  const pedidoIrmao = await semearPedido(page, cliente, { produtoId, contactId });
 
   // Carga pela tela — o caminho real, sem atalho de API.
   await page.goto("/app/expedicao");
@@ -71,6 +77,14 @@ test("endereço sem número — aviso, entrada marcada, memória e confirmação
   await page
     .locator("label")
     .filter({ hasText: rotuloDoPedido(pedido.numero) })
+    .getByRole("checkbox")
+    .check();
+  await expect(page.getByTestId(`carga-pedido-${pedidoIrmao.numero}`)).toBeVisible({
+    timeout: 20_000,
+  });
+  await page
+    .locator("label")
+    .filter({ hasText: rotuloDoPedido(pedidoIrmao.numero) })
     .getByRole("checkbox")
     .check();
   await page.getByRole("button", { name: /^Criar carga/ }).click();
@@ -103,8 +117,20 @@ test("endereço sem número — aviso, entrada marcada, memória e confirmação
   const respostaRota = await page.request.get(`/api/v1/shipments/${cargaId}/rota`);
   expect(respostaRota.status()).toBe(200);
   const paradas = (await respostaRota.json()) as {
-    data: { paradas: { destination_id: string | null; numero?: string | null }[] };
+    data: {
+      paradas: {
+        destination_id: string | null;
+        numero?: string | null;
+        pedidos: { order_id: string }[];
+      }[];
+    };
   };
+  // UMA parada, DOIS pedidos: é o agrupamento por endereço (0308) e a razão de o
+  // pertencimento ser pergunta de existência.
+  expect(paradas.data.paradas).toHaveLength(1);
+  expect(paradas.data.paradas[0]?.pedidos.map((p) => p.order_id).sort()).toEqual(
+    [pedido.id, pedidoIrmao.id].sort(),
+  );
   const destino = paradas.data.paradas[0]?.destination_id;
   expect(destino, "a parada precisa ter destino persistido (0308)").toBeTruthy();
   expect(paradas.data.paradas[0]?.numero).toBe("S/N");
