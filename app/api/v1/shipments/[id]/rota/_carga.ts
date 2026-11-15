@@ -46,6 +46,53 @@ const COLUNAS_CARGA_ROTA =
   "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, " +
   "saida_prevista, started_at, finished_at";
 
+interface DestinoDaCarga {
+  id: string;
+  endereco: string | null;
+  numero: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  geo_status: string | null;
+  geo_fonte: string | null;
+  recuperacao_status: string | null;
+  endereco_original: string | null;
+  endereco_recuperado: string | null;
+  confianca: number | null;
+  metodo: string | null;
+  entrada_id: string | null;
+  entrada_confirmada_em: string | null;
+}
+
+interface EntradaDaMemoria {
+  id: string;
+  referencia: string | null;
+  marcado_em: string;
+  confirmacoes: number;
+  confirmado_em: string | null;
+}
+
+/**
+ * A entrada que a parada mostra.
+ *
+ * A entrada da MEMÓRIA (referência, quantas entregas já confirmaram) mais a
+ * confirmação desta PARADA. São coisas diferentes: o endereço pode ter dez
+ * confirmações de cargas antigas e esta entrega ainda não ter sido conferida —
+ * e é essa pergunta que o motorista precisa responder.
+ *
+ * Se o `entrada_id` aponta para uma linha que não veio (apagada, ou fora do
+ * escopo de leitura), a parada sai SEM entrada em vez de com uma inventada: a
+ * tela volta a dizer que falta marcar, que é a verdade operacional.
+ */
+function entradaDaParada(
+  destino: DestinoDaCarga | undefined,
+  porEntrada: Map<string, EntradaDaMemoria>,
+): ({ referencia: string | null; marcado_em: string; confirmacoes: number; confirmado_em: string | null; confirmada_em: string | null } & { id: string }) | null {
+  if (!destino?.entrada_id) return null;
+  const memoria = porEntrada.get(destino.entrada_id);
+  if (!memoria) return null;
+  return { ...memoria, confirmada_em: destino.entrada_confirmada_em ?? null };
+}
+
 export async function carregarCargaComParadas(
   supabase: Supabase,
   orgId: string,
@@ -171,41 +218,37 @@ export async function carregarCargaComParadas(
   // não do cliente. É a fonte primária; o cadastro só entra quando a carga é
   // anterior a esta migration (`destination_id` nulo).
   const idsDestinos = [...new Set(lista.map((i) => i.destination_id).filter(Boolean))] as string[];
-  const porDestino = new Map<string, {
-    id: string;
-    endereco: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    geo_status: string | null;
-    geo_fonte: string | null;
-    recuperacao_status: string | null;
-    endereco_original: string | null;
-    endereco_recuperado: string | null;
-    confianca: number | null;
-    metodo: string | null;
-  }>();
+  const porDestino = new Map<string, DestinoDaCarga>();
   if (idsDestinos.length > 0) {
     const { data: destinos } = await supabase
       .from("shipment_destinations")
       .select(
-        "id, endereco, latitude, longitude, geo_status, geo_fonte, recuperacao_status, endereco_original, endereco_recuperado, confianca, metodo",
+        "id, endereco, numero, latitude, longitude, geo_status, geo_fonte, recuperacao_status, endereco_original, endereco_recuperado, confianca, metodo, entrada_id, entrada_confirmada_em",
       )
       .eq("organization_id", orgId)
       .in("id", idsDestinos);
-    for (const d of (destinos ?? []) as unknown as {
-      id: string;
-      endereco: string | null;
-      latitude: number | null;
-      longitude: number | null;
-      geo_status: string | null;
-      geo_fonte: string | null;
-      recuperacao_status: string | null;
-      endereco_original: string | null;
-      endereco_recuperado: string | null;
-      confianca: number | null;
-      metodo: string | null;
-    }[]) {
+    for (const d of (destinos ?? []) as unknown as DestinoDaCarga[]) {
       porDestino.set(d.id, d);
+    }
+  }
+
+  // A ENTRADA MARCADA (0311) — uma consulta para todas as paradas da carga.
+  //
+  // O pino de endereço sem número só é a porta se alguém marcou. A entrada é
+  // mostrada ao motorista (referência incluída) e é o que `precisaDeEntrada`
+  // usa para não pedir de novo o que já foi resolvido.
+  const idsEntradas = [
+    ...new Set([...porDestino.values()].map((d) => d.entrada_id).filter(Boolean)),
+  ] as string[];
+  const porEntrada = new Map<string, EntradaDaMemoria>();
+  if (idsEntradas.length > 0) {
+    const { data: entradas } = await supabase
+      .from("endereco_entradas")
+      .select("id, referencia, marcado_em, confirmacoes, confirmado_em")
+      .eq("organization_id", orgId)
+      .in("id", idsEntradas);
+    for (const e of (entradas ?? []) as unknown as EntradaDaMemoria[]) {
+      porEntrada.set(e.id, e);
     }
   }
 
@@ -297,6 +340,8 @@ export async function carregarCargaComParadas(
       longitude: destino ? destino.longitude : (c?.longitude ?? null),
       geo_status: destino ? (destino.geo_status ?? "pendente") : (c?.geo_status ?? "pendente"),
       geo_fonte: destino ? destino.geo_fonte : (c?.geo_fonte ?? null),
+      numero_endereco: destino?.numero ?? c?.numero_end ?? null,
+      entrada: entradaDaParada(destino, porEntrada),
       total_cents: p?.total_cents ?? 0,
       itens: porPedidoItens.get(i.order_id) ?? [],
       veiculo_id: i.veiculo_id,

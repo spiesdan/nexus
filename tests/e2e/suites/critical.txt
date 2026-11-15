@@ -6,6 +6,7 @@ contato-salva-email.spec.ts
 conversa-vira-lead.spec.ts
 credenciais-de-ia.spec.ts
 distribuicao-atendimento.spec.ts
+entrada-do-endereco.spec.ts
 error-pages.spec.ts
 estoque-entrada-saida-e-saldo.spec.ts
 inbox-quem-manda.spec.ts

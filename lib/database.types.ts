@@ -5065,6 +5065,65 @@ export type Database = {
           },
         ];
       };
+      endereco_entradas: {
+        Row: {
+          atualizado_em: string;
+          confirmacoes: number;
+          confirmado_em: string | null;
+          confirmado_por: string | null;
+          criado_em: string;
+          endereco: string | null;
+          endereco_normalizado: string;
+          id: string;
+          latitude: number;
+          longitude: number;
+          marcado_em: string;
+          marcado_por: string | null;
+          organization_id: string;
+          referencia: string | null;
+        };
+        Insert: {
+          atualizado_em?: string;
+          confirmacoes?: number;
+          confirmado_em?: string | null;
+          confirmado_por?: string | null;
+          criado_em?: string;
+          endereco?: string | null;
+          endereco_normalizado: string;
+          id?: string;
+          latitude: number;
+          longitude: number;
+          marcado_em?: string;
+          marcado_por?: string | null;
+          organization_id: string;
+          referencia?: string | null;
+        };
+        Update: {
+          atualizado_em?: string;
+          confirmacoes?: number;
+          confirmado_em?: string | null;
+          confirmado_por?: string | null;
+          criado_em?: string;
+          endereco?: string | null;
+          endereco_normalizado?: string;
+          id?: string;
+          latitude?: number;
+          longitude?: number;
+          marcado_em?: string;
+          marcado_por?: string | null;
+          organization_id?: string;
+          referencia?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "endereco_entradas_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       disclosure_template_pointers: {
         Row: {
           organization_id: string;
@@ -10139,6 +10198,9 @@ export type Database = {
           endereco_normalizado: string | null;
           endereco_original: string | null;
           endereco_recuperado: string | null;
+          entrada_confirmada_em: string | null;
+          entrada_confirmada_por: string | null;
+          entrada_id: string | null;
           geo_em: string | null;
           geo_fonte: string | null;
           geo_precisao_m: number | null;
@@ -10168,6 +10230,9 @@ export type Database = {
           endereco_normalizado?: string | null;
           endereco_original?: string | null;
           endereco_recuperado?: string | null;
+          entrada_confirmada_em?: string | null;
+          entrada_confirmada_por?: string | null;
+          entrada_id?: string | null;
           geo_em?: string | null;
           geo_fonte?: string | null;
           geo_precisao_m?: number | null;
@@ -10197,6 +10262,9 @@ export type Database = {
           endereco_normalizado?: string | null;
           endereco_original?: string | null;
           endereco_recuperado?: string | null;
+          entrada_confirmada_em?: string | null;
+          entrada_confirmada_por?: string | null;
+          entrada_id?: string | null;
           geo_em?: string | null;
           geo_fonte?: string | null;
           geo_precisao_m?: number | null;
@@ -10218,6 +10286,13 @@ export type Database = {
             columns: ["contact_id"];
             isOneToOne: false;
             referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipment_destinations_entrada_id_fkey";
+            columns: ["entrada_id"];
+            isOneToOne: false;
+            referencedRelation: "endereco_entradas";
             referencedColumns: ["id"];
           },
           {

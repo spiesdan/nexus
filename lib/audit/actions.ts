@@ -493,6 +493,11 @@ export const AUDIT_ACTIONS = [
   "shipment.rota.recuperacao_confirmada",
   "shipment.rota.recuperacao_rejeitada",
   "shipment.rota.recuperacao_revertida",
+  // Entrada do endereço (migration 0311). 37% dos destinos não têm número e a
+  // porta só vem de quem conhece o local: quem marcou e quem confirmou na
+  // entrega precisam de rastro — é o que separa estimativa de prova.
+  "shipment.rota.entrada_marcada",
+  "shipment.rota.entrada_confirmada",
   // Frota (migration 0306/0307). Capacidade e jornada decidem o que o
   // otimizador pode alocar; mudar isso sem rastro deixa a distribuição
   // inexplicável depois.

@@ -62,7 +62,13 @@ type Gravado = { tabela: string; operacao: string; carga: Record<string, unknown
 
 /**
  * Dublê de Supabase: implementa só as cadeias usadas pelas rotas
- * (`select().eq().eq().maybeSingle()`, `select().eq().in()` e `update/insert`).
+ * (`select().eq().eq().maybeSingle()`, `select().eq().eq().limit(1)`,
+ * `select().eq().in()` e `update/insert`).
+ *
+ * `limit()` existe porque o pertencimento do destino virou pergunta de
+ * EXISTÊNCIA: dois pedidos no mesmo endereço são uma parada só (0308) e duas
+ * linhas em `shipment_orders`; `maybeSingle()` transformava isso em erro de
+ * cardinalidade e a rota respondia 422.
  */
 function banco(linhas: Record<string, Record<string, unknown>[]>) {
   const gravados: Gravado[] = [];
@@ -80,6 +86,9 @@ function banco(linhas: Record<string, Record<string, unknown>[]>) {
       return this;
     },
     order(this: Record<string, unknown>) {
+      return this;
+    },
+    limit(this: Record<string, unknown>) {
       return this;
     },
     maybeSingle(this: Record<string, unknown>) {
@@ -426,6 +435,39 @@ describe("POST /destinos/[destinationId]/confirmar", () => {
     expect(historico).toBeDefined();
     expect(historico?.carga.destination_id).toBe(DESTINO);
     expect(historico?.carga.organization_id).toBe(ORG);
+  });
+
+  it("aceita destino com DOIS pedidos na mesma carga — uma parada, duas linhas", async () => {
+    // O caso medido na jornada da entrada do endereço (15/11/2026): em 0308 o
+    // destino é um por ENDEREÇO, então dois pedidos ao mesmo prédio são uma
+    // parada e duas linhas em `shipment_orders`. Com `maybeSingle()` a rota
+    // respondia 422 "Destino não pertence a esta carga" para o próprio destino
+    // que estava na tela do motorista. Pertencimento é pergunta de existência.
+    const { cliente } = banco({
+      shipment_destinations: [
+        { id: DESTINO, organization_id: ORG, recuperacao_status: "ambiguo", endereco_original: "Rua A" },
+      ],
+      shipment_orders: [
+        { id: "ped-1", destination_id: DESTINO, shipment_id: CARGA, organization_id: ORG },
+        { id: "ped-2", destination_id: DESTINO, shipment_id: CARGA, organization_id: ORG },
+      ],
+    });
+    vi.mocked(createClient).mockReturnValue(cliente as never);
+
+    const { POST } = await import(
+      "@/app/api/v1/shipments/[id]/destinos/[destinationId]/confirmar/route"
+    );
+    const res = await POST(
+      post(url, {
+        endereco: "Rua A, 100, Centro, Canoinhas, SC",
+        latitude: -26.1748,
+        longitude: -50.3933,
+        metodo: "normalizado",
+        provedor: "nominatim",
+      }),
+      { params: Promise.resolve({ id: CARGA, destinationId: DESTINO }) }
+    );
+    expect(res.status).toBe(200);
   });
 });
 

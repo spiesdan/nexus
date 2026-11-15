@@ -27,6 +27,7 @@ import {
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { situacaoDoNumero } from "@/lib/rotas/entradas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
 import {
   MOTIVOS_DEVOLUCAO,
@@ -420,6 +421,36 @@ export function ModoMotorista({
     }
   }
 
+  /**
+   * "É aqui" — o motorista confirma, na porta, que o pino é a entrada (0311).
+   *
+   * É o único momento em que a marcação do escritório deixa de ser palpite: o
+   * ponto passa a ter procedência de quem esteve lá, e a entrada vale para as
+   * próximas cargas do mesmo endereço. Manda a posição do aparelho porque, se
+   * ainda não havia entrada, é ela que vira a primeira marcação.
+   */
+  async function confirmarEntrada(parada: ParadaRotaApi) {
+    if (!parada.destination_id) return;
+    let geo: { latitude?: number; longitude?: number } = {};
+    try {
+      const pos = await posicaoAtual(8000);
+      geo = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+    } catch {
+      // Sem GPS a confirmação vale igual: o ponto marcado continua o mesmo.
+    }
+    try {
+      await apiClient.post(
+        `/api/v1/shipments/${cargaId}/destinos/${parada.destination_id}/entrada/confirmar`,
+        geo,
+      );
+      toast.success(t("Entrada confirmada."));
+      await recarregar();
+      aoMudar();
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function transicao(acao: "iniciar" | "finalizar") {
     try {
       await apiClient.post(`/api/v1/shipments/${cargaId}/rota/${acao}`, {});
@@ -523,6 +554,8 @@ export function ModoMotorista({
       lng: p.longitude,
       ordem: i + 1,
       estado,
+      entrada: p.entrada ? { referencia: p.entrada.referencia, confirmacoes: p.entrada.confirmacoes } : null,
+      semNumero: situacaoDoNumero(p.numero) === "sem_numero",
       pedidos: p.pedidos.map((x) => ({
         order_id: x.order_id,
         numero: x.numero,
@@ -602,6 +635,56 @@ export function ModoMotorista({
                     >
                       {parada.fone}
                     </a>
+                  )}
+
+                  {/* A ENTRADA (0311). No endereço sem número o pino NÃO é a
+                      porta, e é o motorista que descobre isso — na rua. Aqui
+                      ele vê o que a expedição marcou ("portão azul"), confirma
+                      que é o lugar e, com isso, ensina o sistema para a próxima
+                      entrega no mesmo endereço. */}
+                  {parada.entrada ? (
+                    <div className="rounded-xl border border-border bg-stage-2/50 px-3 py-2 text-xs">
+                      <p className="flex items-center gap-1.5 font-medium text-text">
+                        <MapPin size={13} aria-hidden className="shrink-0 text-success-fg" />
+                        {t("Entrada marcada pela expedição")}
+                      </p>
+                      {parada.entrada.referencia && (
+                        <p className="mt-0.5 text-muted-foreground">{parada.entrada.referencia}</p>
+                      )}
+                      <p className="mt-0.5 text-text-subtle">
+                        {parada.entrada.confirmada_em
+                          ? t("Confirmada nesta entrega.")
+                          : parada.entrada.confirmacoes > 0
+                            ? `${parada.entrada.confirmacoes} ${
+                                parada.entrada.confirmacoes === 1
+                                  ? t("entrega já confirmou este ponto.")
+                                  : t("entregas já confirmaram este ponto.")
+                              }`
+                            : t("Ainda não confirmada por quem entregou.")}
+                      </p>
+                    </div>
+                  ) : (
+                    situacaoDoNumero(parada.numero) === "sem_numero" && (
+                      <p className="rounded-xl bg-warning-bg px-3 py-2 text-xs text-warning-fg">
+                        {t("Endereço sem número — o pino pode não ser a porta.")}
+                      </p>
+                    )
+                  )}
+
+                  {/* A confirmação vale para a ENTRADA QUE EXISTE e para o
+                      endereço que ainda não tem nenhuma: no primeiro caso o
+                      motorista valida a marcação do escritório, no segundo ele
+                      cria a primeira. Depois de confirmada nesta entrega, o
+                      botão some — insistir seria pedir a mesma informação. */}
+                  {podeOperar && parada.destination_id && !parada.entrada?.confirmada_em && (
+                    <Button
+                      variant="outline"
+                      className="h-10 w-full rounded-2xl"
+                      onClick={() => void confirmarEntrada(parada)}
+                    >
+                      <MapPin size={15} aria-hidden />
+                      {t("É aqui — estamos na entrada")}
+                    </Button>
                   )}
 
                   {(parada.itens?.length ?? 0) > 0 && (
@@ -848,6 +931,19 @@ export function ModoMotorista({
                 </p>
               ) : (
                 <p className="mt-1 text-sm text-warning-fg">{t("Sem endereço cadastrado.")}</p>
+              )}
+              {/* A referência da entrada chega antes da esquina: é aqui que o
+                  motorista precisa saber que o portão é o azul (0311). */}
+              {proxima.entrada?.referencia && (
+                <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-success-fg">
+                  <MapPin size={14} aria-hidden className="mt-0.5 shrink-0" />
+                  <span>{proxima.entrada.referencia}</span>
+                </p>
+              )}
+              {!proxima.entrada && situacaoDoNumero(proxima.numero) === "sem_numero" && (
+                <p className="mt-1 text-xs text-warning-fg">
+                  {t("Endereço sem número — o pino pode não ser a porta.")}
+                </p>
               )}
               {proxima.fone && (
                 <a

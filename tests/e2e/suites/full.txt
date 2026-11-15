@@ -30,6 +30,7 @@ conversa-vira-lead.spec.ts
 credenciais-de-ia.spec.ts
 degradacao-silenciosa.spec.ts
 distribuicao-atendimento.spec.ts
+entrada-do-endereco.spec.ts
 error-pages.spec.ts
 escalacao-ciclo.spec.ts
 escopo-de-funil-do-agente.spec.ts
