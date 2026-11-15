@@ -143,7 +143,7 @@
     {
       "id": "audit",
       "lane": "ops",
-      "label": "audit — fleet.* e shipment.rota.distribuida"
+      "label": "audit — fleet.*, shipment.rota.distribuida e shipment.rota.entrada_*"
     },
     {
       "id": "deploy",
@@ -169,6 +169,21 @@
       "id": "destino",
       "lane": "dados",
       "label": "shipment_destinations — destino com snapshot (endereço + coordenada, 0308)"
+    },
+    {
+      "id": "entradas",
+      "lane": "dominio",
+      "label": "lib/rotas/entradas.ts — sem número no cadastro, chave do endereço e precisaDeEntrada (0311)"
+    },
+    {
+      "id": "entrada-do-endereco",
+      "lane": "dados",
+      "label": "endereco_entradas — entrada do endereço com referência e confirmações; memória por endereço normalizado (0311)"
+    },
+    {
+      "id": "api-entrada",
+      "lane": "api",
+      "label": "POST .../rota/manual e .../destinos/[id]/entrada/confirmar — marcar e confirmar a entrada"
     }
   ],
   "edges": [
@@ -405,6 +420,42 @@
       "from": "destino",
       "to": "api-geocodificar",
       "label": "endereço e coordenada do destino"
+    },
+    {
+      "id": "planejador-le-entradas",
+      "from": "roteirizador",
+      "to": "entradas",
+      "label": "aviso sem número e resumo de despacho"
+    },
+    {
+      "id": "rota-le-entradas",
+      "from": "api-rota-get",
+      "to": "entradas",
+      "label": "entrada da parada e confirmação"
+    },
+    {
+      "id": "manual-grava-memoria",
+      "from": "api-entrada",
+      "to": "entrada-do-endereco",
+      "label": "upsert por endereço normalizado"
+    },
+    {
+      "id": "manual-normaliza",
+      "from": "api-entrada",
+      "to": "entradas",
+      "label": "chave e fonte 'entrada'"
+    },
+    {
+      "id": "memoria-preenche-destino",
+      "from": "entrada-do-endereco",
+      "to": "destino",
+      "label": "entrada conhecida aplica o pino na criação"
+    },
+    {
+      "id": "entrada-audit",
+      "from": "api-entrada",
+      "to": "audit",
+      "label": "quem marcou e quem confirmou"
     }
   ]
 }

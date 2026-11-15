@@ -82,12 +82,32 @@ update public.shipment_destinations
    set latitude = null, longitude = null,
        geo_status = 'pendente', geo_fonte = null, geo_em = now()
  where organization_id = '<org-id>'
-   and geo_fonte like 'nominatim%';   -- pino manual (geo_fonte='manual') NÃO se desfaz
+   and geo_fonte like 'nominatim%';   -- entrada marcada (geo_fonte='entrada') e pino manual NÃO se desfazem
 ```
 
-Pino marcado à mão (`geo_fonte = 'manual'`) é decisão do operador: geocodificação nunca o
-sobrescreve. Carga anterior à 0308 (sem destino) ainda usa o cache de `contacts` — para essas,
-o `update` equivalente é em `public.contacts`.
+Pino marcado à mão (`geo_fonte = 'manual'`, cargas anteriores à 0311) e **entrada marcada**
+(`geo_fonte = 'entrada'`, migration 0311) são decisão do operador: a geocodificação nunca os
+sobrescreve — nem no botão "Tentar de novo", nem no "geocodificar" em lote. A entrada também
+mora em `public.endereco_entradas`, chaveada pelo endereço normalizado, então zerar o pino do
+destino não apaga a memória do endereço: a próxima carga do mesmo endereço volta com o ponto
+certo. Carga anterior à 0308 (sem destino) ainda usa o cache de `contacts` — para essas, o
+`update` equivalente é em `public.contacts`.
+
+**Endereço sem número.** 37% dos destinos de produção não têm número de casa (medido em
+15/11/2026: 12 `S/N` + 6 vazio de 49). Para esses, nenhum geocodificador devolve a porta: o
+Nominatim para na rua, no bairro ou no centro da cidade. Não é falha do extrato nem do app — é
+o dado que não existe. A saída é marcar a entrada (roteirizador → "Marcar no mapa", com
+referência textual) e confirmar no app do motorista ("é aqui"). A memória é chaveada pelo
+endereço normalizado (sem acento, pontuação ou CEP); **cadastro sem rua não gera chave** — duas
+entregas sem `logradouro` no mesmo bairro não podem dividir a entrada uma da outra. Conferir a
+memória:
+
+```sql
+select endereco_normalizado, referencia, confirmacoes, marcado_em
+  from public.endereco_entradas
+ where organization_id = '<org-id>'
+ order by confirmacoes asc, marcado_em desc;
+```
 
 ## 4. Subir o OSRM próprio
 

@@ -29223,3 +29223,103 @@ update public.shipment_destinations
    and longitude is not null
    and geo_status = 'ok';
 
+-- ─── 0311 — A ENTRADA DO ENDEREÇO ───────────────────────────────────────────
+--
+-- Apêndice idempotente do migration
+-- supabase/migrations/20261118120000_0311_entrada_do_destino.sql.
+--
+-- 37% dos destinos não têm número de casa (medido: 12 `S/N` + 6 vazio de 49).
+-- Sem número, nenhum geocodificador devolve a porta — e "Tentar de novo" não
+-- pode funcionar. A entrada passa a ser um dado de primeira classe, com autor,
+-- referência e confirmação de quem entregou, e a memória é por endereço
+-- normalizado: marcar uma vez resolve para as cargas seguintes.
+
+create table if not exists public.endereco_entradas (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations (id) on delete cascade,
+  endereco_normalizado text not null,
+  endereco text,
+  latitude double precision not null,
+  longitude double precision not null,
+  referencia text,
+  marcado_por uuid references auth.users (id) on delete set null,
+  marcado_em timestamptz not null default now(),
+  confirmacoes integer not null default 0,
+  confirmado_em timestamptz,
+  confirmado_por uuid references auth.users (id) on delete set null,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now(),
+  constraint endereco_entradas_org_chave_unica unique (organization_id, endereco_normalizado),
+  constraint endereco_entradas_latitude_valida check (latitude between -90 and 90),
+  constraint endereco_entradas_longitude_valida check (longitude between -180 and 180),
+  constraint endereco_entradas_confirmacoes_nao_negativas check (confirmacoes >= 0)
+);
+
+alter table public.endereco_entradas enable row level security;
+
+drop policy if exists endereco_entradas_select on public.endereco_entradas;
+create policy endereco_entradas_select on public.endereco_entradas
+  for select using (
+    public.fn_is_platform_admin()
+    or organization_id in (select public.fn_user_org_ids())
+  );
+
+drop policy if exists endereco_entradas_insert on public.endereco_entradas;
+create policy endereco_entradas_insert on public.endereco_entradas
+  for insert with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+drop policy if exists endereco_entradas_update on public.endereco_entradas;
+create policy endereco_entradas_update on public.endereco_entradas
+  for update using (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or (
+      organization_id in (select public.fn_user_org_ids())
+      and public.fn_role_at_least(organization_id, 'agent')
+    )
+  );
+
+revoke all on public.endereco_entradas from anon;
+grant select, insert, update on public.endereco_entradas to authenticated;
+grant all on public.endereco_entradas to service_role;
+
+comment on table public.endereco_entradas is
+  'Entrada do endereço marcada por quem conhece o local (0311). Chave = endereço normalizado, para reaproveitar entre cargas. Existe porque 37% dos destinos não têm número e nenhum geocodificador devolve a porta.';
+
+comment on column public.endereco_entradas.referencia is
+  'O que o mapa não conta: "portão azul", "entrada pelos fundos". Lida pelo motorista antes de chegar.';
+
+comment on column public.endereco_entradas.confirmacoes is
+  'Quantas entregas confirmaram "é aqui". Marcação do escritório é estimativa; confirmação do motorista é prova.';
+
+alter table public.shipment_destinations
+  add column if not exists entrada_id uuid references public.endereco_entradas (id) on delete set null;
+
+alter table public.shipment_destinations
+  add column if not exists entrada_confirmada_em timestamptz;
+
+alter table public.shipment_destinations
+  add column if not exists entrada_confirmada_por uuid references auth.users (id) on delete set null;
+
+create index if not exists shipment_destinations_entrada_idx
+  on public.shipment_destinations (entrada_id)
+  where entrada_id is not null;
+
+comment on column public.shipment_destinations.entrada_id is
+  'Entrada marcada de onde este pino veio (0311). NULL = pino geocodificado ou nunca marcado.';
+
+comment on column public.shipment_destinations.entrada_confirmada_em is
+  'Quando o motorista confirmou na porta que o ponto é a entrada. NULL = ainda não confirmado.';
+

@@ -21,6 +21,16 @@ export interface PontoParadaMapa {
   /** Posição 1-based na ordem atual. */
   ordem: number;
   estado: "pendente" | "proxima" | "atendimento" | "entregue" | "problema";
+  /**
+   * A entrada marcada (0311). Presente = o pino é a porta, e a `referencia`
+   * ("portão azul") é o que leva até ela depois da esquina.
+   */
+  entrada?: { referencia: string | null; confirmacoes: number } | null;
+  /**
+   * Endereço sem número no cadastro. O balão diz isso para ninguém procurar
+   * uma porta que o mapa não tem como achar.
+   */
+  semNumero?: boolean;
   /** Veículo responsável (distribuição por veículo) — aparece no balão. */
   veiculoRotulo?: string | null;
   pedidos: { order_id: string; numero: number; total_cents: number; status: string }[];
@@ -435,6 +445,13 @@ export function MapaRota({
       const popup = novoBaliao(
         `<b>#${p.ordem} ${esc(p.cliente)}</b>` +
           (p.endereco ? `<br>${esc(p.endereco)}` : "") +
+          (p.entrada
+            ? `<br><span style="color:#15803d">${esc(t("Entrada marcada"))}${
+                p.entrada.referencia ? ` · ${esc(p.entrada.referencia)}` : ""
+              }</span>`
+            : p.semNumero
+              ? `<br><span style="color:#b45309">${esc(t("Sem número no cadastro"))}</span>`
+              : "") +
           (p.veiculoRotulo ? `<br><b>${esc(p.veiculoRotulo)}</b>` : "") +
           (p.fone ? `<br>${esc(p.fone)}` : "") +
           `<br>${pedidosHtml}` +

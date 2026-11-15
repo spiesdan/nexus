@@ -18,6 +18,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { bloqueiaOtimizacao } from "@/lib/rotas/recuperacao/pendencia";
 import { createClient } from "@/lib/supabase/server";
 import { carregarCargaComParadas } from "../_carga";
 
@@ -158,7 +159,8 @@ export async function GET(
   });
 
   const resumo = resumoVazio();
-  for (const dest of destinosSaida) {
+  for (let i = 0; i < destinosSaida.length; i++) {
+    const dest = destinosSaida[i]!;
     resumo.analisados++;
     switch (dest.status) {
       case "encontrado":
@@ -179,7 +181,13 @@ export async function GET(
       default:
         resumo.naoTentados++;
     }
-    if (dest.status !== "encontrado" && dest.status !== "recuperado") resumo.pendentes++;
+    // `pendentes` é o que BLOQUEIA a otimização, não "o que o motor de
+    // recuperação ainda não resolveu". A diferença é real desde 0311: um
+    // destino que nasceu com a entrada memorizada tem pino `ok` e continua
+    // `nao_tentada` — contá-lo aqui fazia o painel dizer "a otimização fica
+    // bloqueada" enquanto o servidor otimizava. A régua é a mesma função que o
+    // servidor usa.
+    if (bloqueiaOtimizacao(destinos[i]!)) resumo.pendentes++;
   }
 
   return ok({ destinos: destinosSaida, resumo }, { requestId });

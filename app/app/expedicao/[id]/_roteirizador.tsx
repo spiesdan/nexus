@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { FONTE_ENTRADA, FONTE_MANUAL, precisaDeEntrada, situacaoDoNumero } from "@/lib/rotas/entradas";
 import { horaDoMinuto, minutosDoDia } from "@/lib/rotas/janelas";
 import {
   formatarDistancia,
@@ -38,10 +39,22 @@ export interface ParadaRotaApi {
   cliente: string;
   fone: string | null;
   endereco: string | null;
+  /** Número do endereço como está no destino (0311) — `S/N`, vazio ou `KM 12`. */
+  numero?: string | null;
   latitude: number | null;
   longitude: number | null;
   geo_status: string;
   geo_fonte: string | null;
+  /** Entrada marcada (0311) — presente = o pino é a porta. */
+  entrada?: {
+    id: string;
+    referencia: string | null;
+    marcado_em: string;
+    confirmacoes: number;
+    confirmado_em: string | null;
+    /** Quando ESTA parada foi confirmada na porta (não a memória do endereço). */
+    confirmada_em?: string | null;
+  } | null;
   pedidos: {
     shipment_order_id: string;
     order_id: string;
@@ -246,6 +259,19 @@ function pinoAproximado(fonte: string | null | undefined): boolean {
 }
 
 /**
+ * O pino desta parada veio de alguém que marcou a ENTRADA — com memória (0311)
+ * ou do tempo do `manual`, quando ainda não havia onde guardar a marcação.
+ *
+ * A distinção importa na tela: sem a memória o chip diz "Entrada marcada" do
+ * mesmo jeito (o pino É a porta), mas sem a referência; o que ele não pode é
+ * continuar dizendo "sem número no cadastro" e oferecendo "Marcar no mapa" como
+ * se ninguém tivesse respondido.
+ */
+function entradaMarcada(p: Pick<ParadaRotaApi, "entrada" | "geo_fonte">): boolean {
+  return Boolean(p.entrada) || p.geo_fonte === FONTE_ENTRADA || p.geo_fonte === FONTE_MANUAL;
+}
+
+/**
  * ROTEIRIZADOR — a central de planejamento da carga.
  *
  * Paradas vêm da carga (agrupadas por cliente no backend), geocodificação no
@@ -278,6 +304,12 @@ export function Roteirizador({
   const [progressoGeo, setProgressoGeo] = React.useState<string | null>(null);
   const [marcarPara, setMarcarPara] = React.useState<string | null>(null);
   const [pinoPendente, setPinoPendente] = React.useState<{ lat: number; lng: number } | null>(null);
+  /**
+   * "portão azul", "entrada pelos fundos". Vai junto com o alfinete: o ponto
+   * sozinho para na esquina, e a última centena de metros é onde a entrega
+   * atrasa. Some ao cancelar — referência sem ponto não é entrada.
+   */
+  const [referenciaEntrada, setReferenciaEntrada] = React.useState("");
   const [rastro, setRastro] = React.useState<[number, number][]>([]);
   const [motorista, setMotorista] = React.useState<{ lat: number; lng: number } | null>(null);
   // ── Distribuição por veículo (F5/VRPTW) ──────────────────────────────────
@@ -434,6 +466,15 @@ export function Roteirizador({
     .filter((p): p is ParadaRotaApi => !!p);
   const comCoord = paradasOrdenadas.filter((p) => p.latitude != null && p.longitude != null);
   const semCoord = paradasOrdenadas.filter((p) => p.latitude == null || p.longitude == null);
+  /**
+   * Quantas paradas vão sair sem ninguém ter dito onde é a porta (0311).
+   *
+   * É gate, não enfeite: 37% dos destinos não têm número de casa, e para eles
+   * o pino de rua/bairro/cidade fica a centenas de metros da entrada. O número
+   * aparece antes de despachar, junto da ordem, porque é aí que ainda dá para
+   * resolver — depois do caminhão na rua, só o telefone resolve.
+   */
+  const semEntrada = paradasOrdenadas.filter((p) => precisaDeEntrada(p));
   const totalClientes = new Set(rota.paradas.map((p) => p.contact_id ?? p.chave)).size;
   // Planejador vale montando E em rota (reotimizar no meio do caminho é
   // operação normal — o motorista confirma a nova sequência no app).
@@ -547,6 +588,10 @@ export function Roteirizador({
       estado,
       pedidos: p.pedidos,
       veiculoRotulo: rotuloDoVeiculo(atribuicao[p.chave]),
+      entrada: entradaMarcada(p)
+        ? { referencia: p.entrada?.referencia ?? null, confirmacoes: p.entrada?.confirmacoes ?? 0 }
+        : null,
+      semNumero: situacaoDoNumero(p.numero) === "sem_numero",
     };
   });
 
@@ -1053,8 +1098,14 @@ export function Roteirizador({
 
   /** `destino` é o id do DESTINO (0308) — ou o contato, em carga legada. */
   function alternarMarcar(destino: string) {
-    setMarcarPara((atual) => (atual === destino ? null : destino));
+    const proximo = marcarPara === destino ? null : destino;
+    setMarcarPara(proximo);
     setPinoPendente(null);
+    // Reabrir a marcação de quem já tem entrada mostra a referência que existe:
+    // apagar o "portão azul" ao corrigir o ponto seria perder o que o motorista
+    // já sabe.
+    const parada = rota?.paradas.find((p) => (p.destination_id ?? p.contact_id) === proximo);
+    setReferenciaEntrada(proximo ? (parada?.entrada?.referencia ?? "") : "");
   }
 
   function usarMinhaPosicao() {
@@ -1074,10 +1125,12 @@ export function Roteirizador({
         destination_id: marcarPara,
         latitude: Number(pinoPendente.lat.toFixed(6)),
         longitude: Number(pinoPendente.lng.toFixed(6)),
+        ...(referenciaEntrada.trim() ? { referencia: referenciaEntrada.trim() } : {}),
       });
-      toast.success(t("Posição fixada."));
+      toast.success(t("Entrada marcada."));
       setMarcarPara(null);
       setPinoPendente(null);
+      setReferenciaEntrada("");
       await recarregar();
     } catch (e) {
       showApiError(e);
@@ -1089,6 +1142,7 @@ export function Roteirizador({
   function cancelarPino() {
     setMarcarPara(null);
     setPinoPendente(null);
+    setReferenciaEntrada("");
   }
 
   async function acaoParada(chave: string, acao: "cheguei" | "entregue") {
@@ -1259,25 +1313,38 @@ export function Roteirizador({
         />
 
         {marcarPara && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-warning/40 bg-warning-bg p-2.5 text-sm text-warning-fg">
-            <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-            <span>
-              {pinoPendente
-                ? t("Alfinete no lugar? Confirme para valer.")
-                : t("Clique no mapa para soltar o alfinete.")}
-            </span>
-            <span className="ml-auto flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => void confirmarPino()}
-                disabled={!pinoPendente || trabalhando !== null}
-              >
-                {t("Confirmar posição")}
-              </Button>
-              <Button size="sm" variant="outline" onClick={cancelarPino}>
-                {t("Cancelar")}
-              </Button>
-            </span>
+          <div className="mt-2 space-y-2 rounded-xl border border-warning/40 bg-warning-bg p-2.5 text-sm text-warning-fg">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+              <span>
+                {pinoPendente
+                  ? t("Alfinete no lugar? Confirme para valer.")
+                  : t("Clique no mapa onde fica a entrada.")}
+              </span>
+              <span className="ml-auto flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => void confirmarPino()}
+                  disabled={!pinoPendente || trabalhando !== null}
+                >
+                  {t("Confirmar entrada")}
+                </Button>
+                <Button size="sm" variant="outline" onClick={cancelarPino}>
+                  {t("Cancelar")}
+                </Button>
+              </span>
+            </div>
+            {/* O ponto sozinho para na esquina. A referência é o que atravessa
+                a última centena de metros — e é texto de quem conhece o lugar,
+                não campo do cadastro do cliente. */}
+            <Input
+              value={referenciaEntrada}
+              onChange={(e) => setReferenciaEntrada(e.target.value)}
+              maxLength={160}
+              placeholder={t("Referência para o motorista: “portão azul”, “entrada pelos fundos”")}
+              aria-label={t("Referência da entrada")}
+              className="h-9 bg-surface text-text"
+            />
           </div>
         )}
 
@@ -1808,42 +1875,75 @@ export function Roteirizador({
                         ))}
                       </select>
                     )}
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1",
-                        p.geo_status === "ok"
-                          ? "text-success-fg"
-                          : p.geo_status === "pendente"
-                            ? "text-text-subtle"
-                            : "text-warning-fg",
-                      )}
-                    >
-                      <MapPin className="h-3 w-3 shrink-0" aria-hidden />
-                      {ROTULO_GEO[p.geo_status] ?? p.geo_status}
-                      {p.geo_status === "ok" && APROXIMADO_POR_FONTE[p.geo_fonte ?? ""]
-                        ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
-                        : ""}
-                    </span>
+                    {/* DE ONDE VEM O PINO (0311). Três estados diferentes que
+                        antes saíam iguais:
+                        · entrada marcada — o pino é a porta, e a referência vai
+                          junto porque o ponto sozinho para na esquina;
+                        · geocode — o que o mapa conseguiu (rua/bairro/cidade);
+                        · sem número — o cadastro não tem número, e é por isso
+                          que o pino não pode ser a porta. */}
+                    {entradaMarcada(p) ? (
+                      <span
+                        className="inline-flex min-w-0 items-center gap-1 text-success-fg"
+                        title={p.entrada?.referencia ?? undefined}
+                      >
+                        <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                        <span className="font-medium">{t("Entrada marcada")}</span>
+                        {p.entrada?.referencia && (
+                          <span className="truncate text-text-subtle">
+                            · {p.entrada.referencia}
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1",
+                          p.geo_status === "ok"
+                            ? "text-success-fg"
+                            : p.geo_status === "pendente"
+                              ? "text-text-subtle"
+                              : "text-warning-fg",
+                        )}
+                      >
+                        <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                        {ROTULO_GEO[p.geo_status] ?? p.geo_status}
+                        {p.geo_status === "ok" && APROXIMADO_POR_FONTE[p.geo_fonte ?? ""]
+                          ? ` ${t(APROXIMADO_POR_FONTE[p.geo_fonte ?? ""] as string)}`
+                          : ""}
+                      </span>
+                    )}
+                    {!entradaMarcada(p) && situacaoDoNumero(p.numero) === "sem_numero" && (
+                      <span className="inline-flex items-center rounded-md bg-warning-bg px-1.5 py-0.5 font-medium text-warning-fg">
+                        {t("sem número no cadastro")}
+                      </span>
+                    )}
                     {podeOperar && (p.destination_id ?? p.contact_id) && (
                       <>
-                        {(p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
-                          <button
-                            type="button"
-                            className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            onClick={() =>
-                              void geocodificarTudo("geo", [
-                                (p.destination_id ?? p.contact_id) as string,
-                              ])
-                            }
-                          >
-                            {t("Tentar de novo")}
-                          </button>
-                        )}
+                        {/* "Tentar de novo" só existe quando há número. Sem
+                            número, o Nominatim não tem o que achar — o botão
+                            era uma promessa que o código não podia cumprir, e
+                            o operador lia a falha dele como falha do mapa. */}
+                        {p.geo_status !== "ok" || pinoAproximado(p.geo_fonte) ? (
+                          situacaoDoNumero(p.numero) !== "sem_numero" ? (
+                            <button
+                              type="button"
+                              className="text-muted-foreground underline underline-offset-2 hover:text-text"
+                              onClick={() =>
+                                void geocodificarTudo("geo", [
+                                  (p.destination_id ?? p.contact_id) as string,
+                                ])
+                              }
+                            >
+                              {t("Tentar de novo")}
+                            </button>
+                          ) : null
+                        ) : null}
                         {/* Ponto aproximado também se corrige à mão: no endereço
                             rural o pino de cidade é só o começo, e o motorista
                             marca a porteira. Antes o "Marcar no mapa" sumia
                             justamente quando o pino estava no lugar errado. */}
-                        {(p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
+                        {precisaDeEntrada(p) || entradaMarcada(p) ? (
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
@@ -1853,9 +1953,11 @@ export function Roteirizador({
                           >
                             {marcarPara === (p.destination_id ?? p.contact_id)
                               ? t("Cancelar marcação")
-                              : t("Marcar no mapa")}
+                              : entradaMarcada(p)
+                                ? t("Corrigir entrada")
+                                : t("Marcar no mapa")}
                           </button>
-                        )}
+                        ) : null}
                         {p.contact_id &&
                           (p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
                             <Link
@@ -1904,6 +2006,17 @@ export function Roteirizador({
               {semCoord.length === 1
                 ? t("parada fora do cálculo — sem localização.")
                 : t("paradas fora do cálculo — sem localização.")}
+            </p>
+          )}
+
+          {/* O resumo antes de despachar. Fica junto da ordem, não num canto:
+              é a última chance de marcar a entrada com o caminhão ainda na
+              base. */}
+          {semEntrada.length > 0 && (
+            <p className="border-t border-border px-3.5 py-2 text-xs text-text-subtle">
+              {semEntrada.length === 1
+                ? t("1 parada sem entrada marcada — o pino é aproximado.")
+                : `${semEntrada.length} ${t("paradas sem entrada marcada — o pino é aproximado.")}`}
             </p>
           )}
         </Card>

@@ -14,6 +14,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { geocodificarComFallback } from "@/lib/rotas/geocodificacao";
+import { FONTE_ENTRADA } from "@/lib/rotas/entradas";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "../_carga";
@@ -67,7 +68,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (pedidosDestino && (!p.destination_id || !pedidosDestino.includes(p.destination_id))) return false;
     if (pedidosContato && (!p.contact_id || !pedidosContato.includes(p.contact_id))) return false;
     // Pino marcado à mão é decisão do humano — geocodificação nunca o desfaz.
-    if (p.geo_fonte === "manual") return false;
+    //
+    // `entrada` entrou aqui na 0311 junto com `manual` (0311 substituiu
+    // `manual` por `entrada` para o pino marcado). Sem esta linha, rodar a
+    // geocodificação de novo apagaria a porta que alguém marcou e devolveria o
+    // pino de rua — o trabalho de campo sumiria em silêncio, que é exatamente
+    // o defeito que a entrada veio consertar.
+    if (p.geo_fonte === "manual" || p.geo_fonte === FONTE_ENTRADA || p.entrada) return false;
     const semCoord = p.latitude == null || p.longitude == null;
     const aproximado =
       p.geo_status === "ok" &&

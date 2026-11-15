@@ -202,6 +202,13 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "cross-org (B lê 0 da org A) e `writeCountAs` do agent recusado: o log " +
       "é escrito pelo serviço, não pelo navegador.",
   },
+  {
+    tabela: "endereco_entradas",
+    razao:
+      "tests/invariants/entrada-do-endereco.test.ts — `countAs` do agent B " +
+      "vê 0 linhas da org A, `writeCountAs` recusa escrita cross-org e " +
+      "viewer não escreve nem na própria org (migration 0311).",
+  },
 ];
 
 /**

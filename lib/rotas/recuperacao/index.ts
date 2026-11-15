@@ -48,3 +48,5 @@ export {
   type ResultadoRecuperacao,
   type TentativaRegistrada,
 } from "./motor";
+
+export { bloqueiaOtimizacao, type DestinoParaPendencia } from "./pendencia";

@@ -25,6 +25,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { geocodificarEndereco } from "@/lib/rotas/geocodificacao";
 import { otimizarComFallback, OsmrmProvider, type Coordenada } from "@/lib/rotas/osrm";
+import { bloqueiaOtimizacao } from "@/lib/rotas/recuperacao/pendencia";
 import { haversineM, ordenarPorMenorTrajeto } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/server";
 
@@ -84,11 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .select("id, chave, recuperacao_status, endereco_original, endereco_recuperado, latitude, longitude, geo_status")
         .eq("organization_id", authz.org.orgId)
         .in("id", idsDestinos);
-      const pendentes = (todosDestinos ?? []).filter(
-        (p) =>
-          (p.recuperacao_status === "nao_tentada" || p.recuperacao_status === "ambiguo") &&
-          (p.latitude == null || p.longitude == null || p.geo_status !== "ok")
-      );
+      const pendentes = (todosDestinos ?? []).filter((p) => bloqueiaOtimizacao(p));
       if (pendentes.length > 0) {
         return fail(
           "validation_failed",

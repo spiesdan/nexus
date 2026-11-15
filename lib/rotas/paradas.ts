@@ -10,6 +10,7 @@
  */
 
 import { minutosDoDia } from "./janelas";
+import type { EntradaDoEndereco } from "./entradas";
 
 export interface ItemDaParada {
   codigo: string;
@@ -34,11 +35,25 @@ export interface ParadaDaRota {
   cliente: string;
   fone: string | null;
   endereco: string | null;
+  /**
+   * O número do endereço, como está no destino (0311). `S/N`, vazio e `KM 12`
+   * são respostas diferentes — quem lê usa `situacaoDoNumero`
+   * (`lib/rotas/entradas.ts`) em vez de testar string vazia.
+   */
+  numero?: string | null;
   latitude: number | null;
   longitude: number | null;
   geo_status: string;
-  /** nominatim:numero|nominatim:rua|nominatim:cidade|manual — a tela diz quando é aproximado. */
+  /**
+   * `entrada` = pino marcado por quem conhece o local (0311);
+   * `nominatim:numero|rua|bairro|cidade` = o que o geocoder conseguiu.
+   */
   geo_fonte: string | null;
+  /**
+   * A entrada marcada de onde este pino veio. Presente = alguém já disse onde
+   * é a porta, e a tela mostra a referência ("portão azul") ao motorista.
+   */
+  entrada?: EntradaDoEndereco | null;
   pedidos: { shipment_order_id: string; order_id: string; numero: number; total_cents: number; status: string }[];
   /** O que entregar nesta parada — itens dos pedidos do cliente, somados. */
   itens: ItemDaParada[];
@@ -81,6 +96,13 @@ export interface ItemDaCargaParaParada {
   contato_nome: string | null;
   fone: string | null;
   endereco_entrega: string | null;
+  /**
+   * O número do ENDEREÇO (0311) — não confundir com `numero`, que é o número
+   * do PEDIDO. `S/N` e vazio são "sem número"; `KM 12` é marco de rodovia.
+   */
+  numero_endereco?: string | null;
+  /** A entrada marcada deste endereço (0311), quando já existe. */
+  entrada?: EntradaDoEndereco | null;
   destination_id?: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -135,10 +157,12 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
         cliente: i.contato_nome?.trim() || i.cliente_nome,
         fone: i.fone,
         endereco: destino || null,
+        numero: i.numero_endereco ?? null,
         latitude: i.latitude,
         longitude: i.longitude,
         geo_status: i.geo_status ?? "pendente",
         geo_fonte: i.geo_fonte ?? null,
+        entrada: i.entrada ?? null,
         pedidos: [],
         itens: [],
         total_cents: 0,
@@ -164,6 +188,10 @@ export function agruparParadas(itens: ItemDaCargaParaParada[]): ParadaDaRota[] {
       p.latitude = i.latitude;
       p.longitude = i.longitude;
     }
+    // A entrada vale para o destino inteiro: se qualquer pedido da parada já
+    // trouxe a entrada marcada, a parada tem entrada (0311).
+    if (!p.entrada && i.entrada) p.entrada = i.entrada;
+    if (!p.numero && (i.numero_endereco ?? "").trim()) p.numero = i.numero_endereco!.trim();
     p.pedidos.push({
       shipment_order_id: i.shipment_order_id,
       order_id: i.order_id,
