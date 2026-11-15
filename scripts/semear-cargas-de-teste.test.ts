@@ -25,12 +25,25 @@ describe("semear-cargas-de-teste — guarda-corpo de ambiente", () => {
     expect(CARGAS).toHaveLength(3);
     // Cada carga tem pelo menos 3 paradas — uma rota de 2 não testa ordem.
     for (const carga of CARGAS) expect(carga.paradas.length).toBeGreaterThanOrEqual(3);
-    // A armadilha do PED-19566 continua no fixture: rodovia sem número no OSM
-    // e bairro genérico "centro" é o que fazia o pino ir para outro estado.
-    const armadilha = CARGAS.flatMap((c) => c.paradas).find((p) => p.rua.includes("BR 476"));
-    expect(armadilha?.cidade).toBe("Paula Freitas");
-    expect(armadilha?.uf).toBe("PR");
-    expect(armadilha?.bairro.toLowerCase()).toBe("centro");
+    // Pelo menos uma carga atravessa estado: o veto geográfico e a rota entre
+    // UFs é justamente o que o PED-19566 quebrou.
+    expect(CARGAS.some((c) => new Set(c.paradas.map((p) => p.uf)).size > 1)).toBe(true);
+  });
+
+  it("toda parada tem endereço completo — a carga exige pino de NÚMERO", () => {
+    // O script aborta se alguma parada não sair com precisão de casa. Isso só
+    // é possível porque todos estes endereços existem no OSM com número; o
+    // teste trava o contrato das fixtures para ninguém trocar por "Rua X, 500".
+    for (const p of CARGAS.flatMap((c) => c.paradas)) {
+      expect(p.numero).toMatch(/^\d+$/);
+      expect(p.rua.length).toBeGreaterThan(5);
+      expect(p.cep).toMatch(/^\d{8}$/);
+      expect(p.cidade.length).toBeGreaterThan(2);
+      expect(["PR", "SC"]).toContain(p.uf);
+    }
+    // O endereço plausível-inventado de 2026-11-14 (rodovia sem nó no OSM) não
+    // volta: ele caía no centro do bairro e foi o que motivou esta revisão.
+    expect(CARGAS.flatMap((c) => c.paradas).some((p) => /BR[-\s]?476/i.test(p.rua))).toBe(false);
   });
 
   it("todo cliente e motorista nasce marcado como teste", () => {

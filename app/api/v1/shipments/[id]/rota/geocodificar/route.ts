@@ -71,7 +71,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const semCoord = p.latitude == null || p.longitude == null;
     const aproximado =
       p.geo_status === "ok" &&
-      (p.geo_fonte === "nominatim:bairro" || p.geo_fonte === "nominatim:cidade");
+      (p.geo_fonte === "nominatim:rua" ||
+        p.geo_fonte === "nominatim:bairro" ||
+        p.geo_fonte === "nominatim:cidade");
     return semCoord || (pedidos != null && aproximado);
   });
 

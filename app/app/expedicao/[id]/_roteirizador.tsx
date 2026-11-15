@@ -236,6 +236,16 @@ const APROXIMADO_POR_FONTE: Record<string, string> = {
 };
 
 /**
+ * Pino que NÃO é a porta: rua, bairro ou cidade. Todos os três merecem "Tentar
+ * de novo" e correção à mão — antes o "Marcar no mapa" só aparecia para
+ * `nominatim:cidade`, então o pino de bairro (o mais comum no interior, e o que
+ * fica a quilômetros da rua) não tinha como ser corrigido pelo operador.
+ */
+function pinoAproximado(fonte: string | null | undefined): boolean {
+  return fonte === "nominatim:rua" || fonte === "nominatim:bairro" || fonte === "nominatim:cidade";
+}
+
+/**
  * ROTEIRIZADOR — a central de planejamento da carga.
  *
  * Paradas vêm da carga (agrupadas por cliente no backend), geocodificação no
@@ -1816,9 +1826,7 @@ export function Roteirizador({
                     </span>
                     {podeOperar && (p.destination_id ?? p.contact_id) && (
                       <>
-                        {(p.geo_status !== "ok" ||
-                          p.geo_fonte === "nominatim:bairro" ||
-                          p.geo_fonte === "nominatim:cidade") && (
+                        {(p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
@@ -1835,7 +1843,7 @@ export function Roteirizador({
                             rural o pino de cidade é só o começo, e o motorista
                             marca a porteira. Antes o "Marcar no mapa" sumia
                             justamente quando o pino estava no lugar errado. */}
-                        {(p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
+                        {(p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
                           <button
                             type="button"
                             className="text-muted-foreground underline underline-offset-2 hover:text-text"
@@ -1849,7 +1857,7 @@ export function Roteirizador({
                           </button>
                         )}
                         {p.contact_id &&
-                          (p.geo_status !== "ok" || p.geo_fonte === "nominatim:cidade") && (
+                          (p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
                             <Link
                               href={`/app/contacts/${p.contact_id}`}
                               className="text-muted-foreground underline underline-offset-2 hover:text-text"
