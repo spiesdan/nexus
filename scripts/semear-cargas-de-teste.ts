@@ -71,13 +71,21 @@ interface CargaFake {
  * diz o que a geocodificação DEVE devolver — é o que este script confere e
  * imprime no fim.
  *
- * TODOS os endereços abaixo existem no OpenStreetMap COMO NÓ DE CASA
+ * TODOS os endereços abaixo existem no OpenStreetMap COMO NÓ DE CASA ÚNICO
  * (`addr:housenumber` confirmado pela API do OSM em 2026-11-15, e o pino
  * conferido com o próprio produto: precisão "numero"). Não é preciosismo: o
  * teste de 2026-11-14 usava endereço plausível-inventado, a consulta caía no
  * centro do bairro e o mapa mostrava o pino a 1,87 km da rua. Carga de QA que
  * não cai na casa não serve para comparar com o Google Maps nem para provar
  * rota.
+ *
+ * "ÚNICO" é a segunda lição, medida no mesmo dia: Mafra tem DOIS nós 484 na
+ * Rua Marechal Deodoro (700 m entre eles), Paula Freitas tem dois nós 80 na
+ * Rua Gustavo Schuartz e União da Vitória tem dois nós 490 na Avenida
+ * Interventor Manoel Ribas. O geocodificador acerta um deles e o pino fica a
+ * 79 m, 290 m e 1.043 m do outro — sem que nada esteja errado no código: o
+ * dado é ambíguo. Endereço duplicado não serve para dizer "o pino está na
+ * porta"; por isso as cargas usam só ruas com um nó por número.
  *
  * A armadilha do PED-19566 (rodovia sem número no OSM + "centro" genérico)
  * continua coberta — em `lib/rotas/geocodificacao.test.ts`, que é onde ela
@@ -92,34 +100,35 @@ export const CARGAS: CargaFake[] = [
     paradas: [
       {
         cliente: "Mercado Planalto",
-        // Nó de casa 484 da Rua Marechal Deodoro (OSM).
-        rua: "Rua Marechal Deodoro",
-        numero: "484",
-        bairro: "Centro",
-        cidade: "Mafra",
-        uf: "SC",
-        cep: "89300000",
-        itens: [
-          { codigo: "QA-A1", nome: "Caixa de papel 30x30 (fardo)", quantidade: 4, precoCents: 12500 },
-          { codigo: "QA-A2", nome: "Saco de lixo 100L (pacote)", quantidade: 10, precoCents: 8990 },
-        ],
-      },
-      {
-        cliente: "Casa de Materiais Leoberto",
-        // Nó de casa 711 da Rua Leoberto Leal (OSM).
+        // Nó de casa 711 da Rua Leoberto Leal (OSM) — único da rua.
         rua: "Rua Leoberto Leal",
         numero: "711",
         bairro: "Centro",
         cidade: "Papanduva",
         uf: "SC",
         cep: "89370000",
-        itens: [{ codigo: "QA-A3", nome: "Fita adesiva transparente 45mm", quantidade: 24, precoCents: 1290 }],
+        itens: [
+          { codigo: "QA-A1", nome: "Caixa de papel 30x30 (fardo)", quantidade: 4, precoCents: 12500 },
+          { codigo: "QA-A2", nome: "Saco de lixo 100L (pacote)", quantidade: 10, precoCents: 8990 },
+        ],
       },
       {
         cliente: "Comercial Rio Branco",
-        // Nó de casa 232 da Avenida Barão do Rio Branco (OSM).
+        // Nó de casa 232 da Avenida Barão do Rio Branco (OSM) — único.
         rua: "Avenida Barão do Rio Branco",
         numero: "232",
+        bairro: "Centro",
+        cidade: "Caçador",
+        uf: "SC",
+        cep: "89500000",
+        itens: [{ codigo: "QA-A3", nome: "Fita adesiva transparente 45mm", quantidade: 24, precoCents: 1290 }],
+      },
+      {
+        cliente: "Depósito Barão",
+        // Nó de casa 198 da Avenida Barão do Rio Branco (OSM), 200 m do 232:
+        // duas paradas na MESMA avenida, que é o que testa a ordem de rota.
+        rua: "Avenida Barão do Rio Branco",
+        numero: "198",
         bairro: "Centro",
         cidade: "Caçador",
         uf: "SC",
@@ -134,31 +143,15 @@ export const CARGAS: CargaFake[] = [
     motorista: MOTORISTAS[1]!,
     paradas: [
       {
-        cliente: "Distribuidora Iguaçu",
-        // Nó de casa 490 da Avenida Interventor Manoel Ribas (OSM).
-        rua: "Avenida Interventor Manoel Ribas",
-        numero: "490",
+        cliente: "Agro Dom Pedro",
+        // Nó de casa 832 da Rua Dom Pedro II (OSM) — parada do PR.
+        rua: "Rua Dom Pedro II",
+        numero: "832",
         bairro: "Centro",
         cidade: "União da Vitória",
         uf: "PR",
         cep: "84600000",
         itens: [{ codigo: "QA-B1", nome: "Bobina de papel toalha", quantidade: 12, precoCents: 4590 }],
-      },
-      {
-        cliente: "Serralheria Schuartz",
-        // Nó de casa 80 da Rua Gustavo Schuartz (OSM) — o endereço que a
-        // consulta de texto livre mandava para o centro da CIDADE e só a
-        // consulta estruturada achou.
-        rua: "Rua Gustavo Schuartz",
-        numero: "80",
-        bairro: "Centro",
-        cidade: "Paula Freitas",
-        uf: "PR",
-        cep: "84630000",
-        itens: [
-          { codigo: "QA-B2", nome: "Detergente neutro 5L", quantidade: 8, precoCents: 3290 },
-          { codigo: "QA-B3", nome: "Álcool 70% 1L", quantidade: 20, precoCents: 1490 },
-        ],
       },
       {
         cliente: "Madeireira Sperança",
@@ -169,12 +162,26 @@ export const CARGAS: CargaFake[] = [
         cidade: "Caçador",
         uf: "SC",
         cep: "89500000",
+        itens: [
+          { codigo: "QA-B2", nome: "Detergente neutro 5L", quantidade: 8, precoCents: 3290 },
+          { codigo: "QA-B3", nome: "Álcool 70% 1L", quantidade: 20, precoCents: 1490 },
+        ],
+      },
+      {
+        cliente: "Serralheria Sperança",
+        // Nó de casa 444 da mesma rua (OSM) — 180 m do 267.
+        rua: "Rua Carlos Sperança",
+        numero: "444",
+        bairro: "Centro",
+        cidade: "Caçador",
+        uf: "SC",
+        cep: "89500000",
         itens: [{ codigo: "QA-B4", nome: "Papel higiênico folha dupla (fardo)", quantidade: 5, precoCents: 5690 }],
       },
     ],
   },
   {
-    rotulo: "C · centro de Caçador e União da Vitória",
+    rotulo: "C · centro de Caçador",
     veiculo: "saveiro",
     motorista: MOTORISTAS[2]!,
     paradas: [
@@ -190,6 +197,17 @@ export const CARGAS: CargaFake[] = [
         itens: [{ codigo: "QA-C1", nome: "Resma A4 75g (caixa)", quantidade: 6, precoCents: 18900 }],
       },
       {
+        cliente: "Comercial Aristiliano",
+        // Nó de casa 1011 da mesma avenida (OSM) — 43 m do 957.
+        rua: "Avenida Coronel Aristiliano Ramos",
+        numero: "1011",
+        bairro: "Centro",
+        cidade: "Caçador",
+        uf: "SC",
+        cep: "89500000",
+        itens: [{ codigo: "QA-C2", nome: "Eletrodo de solda 2,5mm (caixa)", quantidade: 3, precoCents: 7190 }],
+      },
+      {
         cliente: "Mercearia dos Moraes",
         // Nó de casa 45 da Rua Prudente de Moraes (OSM).
         rua: "Rua Prudente de Moraes",
@@ -198,17 +216,6 @@ export const CARGAS: CargaFake[] = [
         cidade: "Caçador",
         uf: "SC",
         cep: "89500000",
-        itens: [{ codigo: "QA-C2", nome: "Eletrodo de solda 2,5mm (caixa)", quantidade: 3, precoCents: 7190 }],
-      },
-      {
-        cliente: "Agro Dom Pedro",
-        // Nó de casa 832 da Rua Dom Pedro II (OSM).
-        rua: "Rua Dom Pedro II",
-        numero: "832",
-        bairro: "Centro",
-        cidade: "União da Vitória",
-        uf: "PR",
-        cep: "84600000",
         itens: [{ codigo: "QA-C3", nome: "Corda de sisal 10mm (rolo)", quantidade: 4, precoCents: 4290 }],
       },
     ],

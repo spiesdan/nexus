@@ -46,6 +46,29 @@ describe("semear-cargas-de-teste — guarda-corpo de ambiente", () => {
     expect(CARGAS.flatMap((c) => c.paradas).some((p) => /BR[-\s]?476/i.test(p.rua))).toBe(false);
   });
 
+  it("nenhuma parada usa endereço com nó DUPLICADO no OSM", () => {
+    // Medido em 2026-11-15: Mafra tem dois nós 484 na Rua Marechal Deodoro,
+    // Paula Freitas dois nós 80 na Rua Gustavo Schuartz e União da Vitória dois
+    // nós 490 na Avenida Interventor Manoel Ribas. O geocodificador acerta um
+    // deles e o pino fica a 79 m / 290 m / 1.043 m do outro — dado ambíguo, não
+    // defeito de código. Carga de QA não pode depender de sorte de desempate.
+    const ambiguos = [
+      /^Rua Marechal Deodoro\|484$/, // Mafra
+      /^Rua Gustavo Schuartz\|80$/, // Paula Freitas
+      /^Avenida Interventor Manoel Ribas\|490$/, // União da Vitória
+    ];
+    const assinatura = (p: { rua: string; numero: string | null }) =>
+      `${p.rua}|${p.numero ?? ""}`;
+    for (const carga of CARGAS) {
+      for (const p of carga.paradas) {
+        expect(ambiguos.some((re) => re.test(assinatura(p))), `${assinatura(p)} tem nó duplicado no OSM`).toBe(false);
+      }
+      // Duas paradas na mesma rua e no mesmo número colapsariam no mesmo pino.
+      const chaves = carga.paradas.map(assinatura);
+      expect(new Set(chaves).size).toBe(chaves.length);
+    }
+  });
+
   it("todo cliente e motorista nasce marcado como teste", () => {
     // O prefixo é o que permite ao próprio script apagar as fixtures anteriores
     // sem tocar em dado de verdade.
