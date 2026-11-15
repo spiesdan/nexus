@@ -6,18 +6,20 @@
  * Testar a Expedição com dados reais é caro (mexe em pedido de cliente) e testar
  * com dado inventado não prova nada: o que quebra a rota é o endereço que o OSM
  * não conhece, o bairro genérico ("centro"), a rodovia sem número. Estas três
- * cargas reproduzem os três regimes de geocodificação que a produção entrega,
- * com o resultado MEDIDO de cada parada:
+ * cargas usam endereços que existem no OpenStreetMap COMO NÓ DE CASA — o pino
+ * cai na porta, não no centro do bairro — e cobrem os três regimes que a
+ * produção entrega:
  *
- *   A — planalto norte de SC: municípios próximos, uma parada com pino exato
- *       (o OSM tem o número da casa em Papanduva) e duas aproximadas de bairro.
- *   B — PR e SC na mesma rota: travessia de estado, outra parada exata
- *       (Caçador) e uma aproximada.
- *   C — a armadilha do PED-19566: "Rodovia BR 476 Km 344 — centro, Paula
- *       Freitas/PR". Antes da correção de 2026-11-13 esta parada ia parar em
- *       Carapicuíba/SP (600 km fora); hoje ela cai no município certo, marcada
- *       como aproximada. Se algum dia voltar a cair em outro estado, é aqui que
- *       aparece primeiro.
+ *   A — planalto norte de SC: Mafra → Papanduva → Caçador, três casas mapeadas.
+ *   B — PR e SC na mesma rota: União da Vitória/PR → Paula Freitas/PR →
+ *       Caçador/SC, com a parada que só a consulta ESTRUTURADA acha (nº 80 da
+ *       Rua Gustavo Schuartz: o texto livre devolvia o centro da cidade).
+ *   C — centro de Caçador e União da Vitória: três casas em ruas movimentadas,
+ *       onde errar o pino em 300 m muda a ordem da rota.
+ *
+ * A armadilha do PED-19566 (rodovia sem número no OSM, pino aproximado) vive em
+ * `lib/rotas/geocodificacao.test.ts` — aqui ela não cabe: estas cargas abortam
+ * se alguma parada não sair com precisão de NÚMERO.
  *
  * ## Regras
  *
@@ -68,6 +70,19 @@ interface CargaFake {
  * Os três regimes, com o endereço que os produz. O comentário de cada parada
  * diz o que a geocodificação DEVE devolver — é o que este script confere e
  * imprime no fim.
+ *
+ * TODOS os endereços abaixo existem no OpenStreetMap COMO NÓ DE CASA
+ * (`addr:housenumber` confirmado pela API do OSM em 2026-11-15, e o pino
+ * conferido com o próprio produto: precisão "numero"). Não é preciosismo: o
+ * teste de 2026-11-14 usava endereço plausível-inventado, a consulta caía no
+ * centro do bairro e o mapa mostrava o pino a 1,87 km da rua. Carga de QA que
+ * não cai na casa não serve para comparar com o Google Maps nem para provar
+ * rota.
+ *
+ * A armadilha do PED-19566 (rodovia sem número no OSM + "centro" genérico)
+ * continua coberta — em `lib/rotas/geocodificacao.test.ts`, que é onde ela
+ * precisa estar: por definição ela termina em pino APROXIMADO, e estas cargas
+ * exigem pino exato (o script aborta se alguma parada não for "numero").
  */
 export const CARGAS: CargaFake[] = [
   {
@@ -76,9 +91,10 @@ export const CARGAS: CargaFake[] = [
     motorista: MOTORISTAS[0]!,
     paradas: [
       {
-        cliente: "Mercado Nereu Ramos",
-        rua: "Rua Presidente Nereu Ramos",
-        numero: "500",
+        cliente: "Mercado Planalto",
+        // Nó de casa 484 da Rua Marechal Deodoro (OSM).
+        rua: "Rua Marechal Deodoro",
+        numero: "484",
         bairro: "Centro",
         cidade: "Mafra",
         uf: "SC",
@@ -89,24 +105,25 @@ export const CARGAS: CargaFake[] = [
         ],
       },
       {
-        cliente: "Casa de Materiais Canoinhas",
-        rua: "Rua Marechal Deodoro",
-        numero: "120",
-        bairro: "Centro",
-        cidade: "Canoinhas",
-        uf: "SC",
-        cep: "89460000",
-        itens: [{ codigo: "QA-A3", nome: "Fita adesiva transparente 45mm", quantidade: 24, precoCents: 1290 }],
-      },
-      {
-        // Pino EXATO: o OSM tem o número da casa nesta rua.
-        cliente: "Supermercado Papanduva",
-        rua: "Rua Duque de Caxias",
-        numero: "200",
+        cliente: "Casa de Materiais Leoberto",
+        // Nó de casa 711 da Rua Leoberto Leal (OSM).
+        rua: "Rua Leoberto Leal",
+        numero: "711",
         bairro: "Centro",
         cidade: "Papanduva",
         uf: "SC",
         cep: "89370000",
+        itens: [{ codigo: "QA-A3", nome: "Fita adesiva transparente 45mm", quantidade: 24, precoCents: 1290 }],
+      },
+      {
+        cliente: "Comercial Rio Branco",
+        // Nó de casa 232 da Avenida Barão do Rio Branco (OSM).
+        rua: "Avenida Barão do Rio Branco",
+        numero: "232",
+        bairro: "Centro",
+        cidade: "Caçador",
+        uf: "SC",
+        cep: "89500000",
         itens: [{ codigo: "QA-A4", nome: "Luva de latex (caixa 100)", quantidade: 6, precoCents: 3490 }],
       },
     ],
@@ -117,9 +134,10 @@ export const CARGAS: CargaFake[] = [
     motorista: MOTORISTAS[1]!,
     paradas: [
       {
-        cliente: "Distribuidora do Iguaçu",
-        rua: "Rua Coronel Amazonas",
-        numero: "300",
+        cliente: "Distribuidora Iguaçu",
+        // Nó de casa 490 da Avenida Interventor Manoel Ribas (OSM).
+        rua: "Avenida Interventor Manoel Ribas",
+        numero: "490",
         bairro: "Centro",
         cidade: "União da Vitória",
         uf: "PR",
@@ -127,66 +145,70 @@ export const CARGAS: CargaFake[] = [
         itens: [{ codigo: "QA-B1", nome: "Bobina de papel toalha", quantidade: 12, precoCents: 4590 }],
       },
       {
-        // Pino EXATO: também tem número no OSM.
-        cliente: "Comercial Caçador",
-        rua: "Rua Barão do Rio Branco",
-        numero: "300",
+        cliente: "Serralheria Schuartz",
+        // Nó de casa 80 da Rua Gustavo Schuartz (OSM) — o endereço que a
+        // consulta de texto livre mandava para o centro da CIDADE e só a
+        // consulta estruturada achou.
+        rua: "Rua Gustavo Schuartz",
+        numero: "80",
         bairro: "Centro",
-        cidade: "Caçador",
-        uf: "SC",
-        cep: "89500000",
+        cidade: "Paula Freitas",
+        uf: "PR",
+        cep: "84630000",
         itens: [
           { codigo: "QA-B2", nome: "Detergente neutro 5L", quantidade: 8, precoCents: 3290 },
           { codigo: "QA-B3", nome: "Álcool 70% 1L", quantidade: 20, precoCents: 1490 },
         ],
       },
       {
-        cliente: "Mercado Santa Catarina",
-        rua: "Rua Santa Catarina",
-        numero: "1190",
+        cliente: "Madeireira Sperança",
+        // Nó de casa 267 da Rua Carlos Sperança (OSM) — travessia PR → SC.
+        rua: "Rua Carlos Sperança",
+        numero: "267",
         bairro: "Centro",
-        cidade: "Irineópolis",
+        cidade: "Caçador",
         uf: "SC",
-        cep: "89440000",
+        cep: "89500000",
         itens: [{ codigo: "QA-B4", nome: "Papel higiênico folha dupla (fardo)", quantidade: 5, precoCents: 5690 }],
       },
     ],
   },
   {
-    rotulo: "C · a armadilha do PED-19566",
+    rotulo: "C · centro de Caçador e União da Vitória",
     veiculo: "saveiro",
     motorista: MOTORISTAS[2]!,
     paradas: [
       {
-        // O CASO REAL: rodovia sem número no OSM + bairro genérico "centro".
-        // Antes de 2026-11-13 esta parada caía em Carapicuíba/SP.
-        cliente: "SV Implementos (rodovia)",
-        rua: "Rodovia BR 476 Km 344, 344, SALA: 03;",
-        numero: "344",
-        bairro: "centro",
-        cidade: "Paula Freitas",
-        uf: "PR",
-        cep: "84630000",
-        itens: [{ codigo: "QA-C1", nome: "Peça de implemento rodoviário", quantidade: 2, precoCents: 89000 }],
+        cliente: "Papelaria Central",
+        // Nó de casa 957 da Avenida Coronel Aristiliano Ramos (OSM).
+        rua: "Avenida Coronel Aristiliano Ramos",
+        numero: "957",
+        bairro: "Centro",
+        cidade: "Caçador",
+        uf: "SC",
+        cep: "89500000",
+        itens: [{ codigo: "QA-C1", nome: "Resma A4 75g (caixa)", quantidade: 6, precoCents: 18900 }],
       },
       {
-        cliente: "Serralheria Bela Vista",
-        rua: "Rua Professora Alfredo Ludka",
-        numero: "140",
+        cliente: "Mercearia dos Moraes",
+        // Nó de casa 45 da Rua Prudente de Moraes (OSM).
+        rua: "Rua Prudente de Moraes",
+        numero: "45",
         bairro: "Centro",
-        cidade: "Bela Vista do Toldo",
+        cidade: "Caçador",
         uf: "SC",
-        cep: "89478000",
+        cep: "89500000",
         itens: [{ codigo: "QA-C2", nome: "Eletrodo de solda 2,5mm (caixa)", quantidade: 3, precoCents: 7190 }],
       },
       {
-        cliente: "Agropecuária Major Vieira",
-        rua: "Rua Duque de Caxias",
-        numero: "80",
+        cliente: "Agro Dom Pedro",
+        // Nó de casa 832 da Rua Dom Pedro II (OSM).
+        rua: "Rua Dom Pedro II",
+        numero: "832",
         bairro: "Centro",
-        cidade: "Major Vieira",
-        uf: "SC",
-        cep: "89480000",
+        cidade: "União da Vitória",
+        uf: "PR",
+        cep: "84600000",
         itens: [{ codigo: "QA-C3", nome: "Corda de sisal 10mm (rolo)", quantidade: 4, precoCents: 4290 }],
       },
     ],
@@ -433,6 +455,16 @@ async function main() {
       // A parada NUNCA pode cair fora do estado que o cadastro pediu.
       if (r.componentes?.uf && r.componentes.uf !== p.uf) {
         throw new Error(`parada ${i + 1} da carga ${numeroCarga} caiu em ${onde}: esperado ${p.cidade}/${p.uf}`);
+      }
+      // E o pino desta carga TEM de ser a casa: estes nove endereços foram
+      // escolhidos por existirem no OSM com número. Se algum dia um deles cair
+      // para rua/bairro, é sinal de que a geocodificação regrediu — e a carga
+      // de QA deixaria de provar o que promete.
+      if (r.estado !== "ok" || r.precisao !== "numero") {
+        throw new Error(
+          `parada ${i + 1} da carga ${numeroCarga} ficou ${r.estado}/${r.precisao ?? "—"} — esta carga exige pino de número (casa). ` +
+            `Veja se o endereço ainda existe no OSM ou se a consulta estruturada regrediu.`,
+        );
       }
     }
   }

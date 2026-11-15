@@ -288,6 +288,78 @@ export function variantesDoNome(rua: string): string[] {
 }
 
 /**
+ * A CONSULTA ESTRUTURADA — o número da casa que a consulta livre não acha.
+ *
+ * Medido em 2026-11-15 contra o Nominatim público, em endereços que EXISTEM no
+ * OSM (nó com `addr:housenumber` confirmado pela API do OSM):
+ *
+ *   "Rua Gustavo Schuartz, 80, Centro, Paula Freitas, PR" → cidade (rua ignorada)
+ *   street=80 Rua Gustavo Schuartz & city=Paula Freitas & state=PR → nº 80 ✓
+ *   "Avenida Coronel Aristiliano Ramos, 957, Caçador, SC" → bairro
+ *   street=957 Avenida Coronel Aristiliano Ramos & city=Caçador → nº 957 ✓
+ *
+ * Texto livre faz o Nominatim procurar o número dentro do nome da rua e
+ * desistir; na consulta estruturada o número é um campo próprio. É a diferença
+ * entre o pino cair na casa e cair no centro do bairro — 1,87 km em Canoinhas.
+ *
+ * Vale como PRIMEIRA consulta quando há número e cidade, e nunca substitui a
+ * cadeia: se a instância não suportar os parâmetros, a resposta é vazia e a
+ * cadeia de texto livre segue como sempre.
+ */
+export interface ConsultaEstruturada {
+  street: string;
+  city: string;
+  state?: string;
+  country: string;
+}
+
+export function consultaEstruturada(p: PartesEndereco): ConsultaEstruturada | null {
+  const ruaLimpa = limparComplemento(p.logradouro ?? "");
+  const numero = numeroDa(p);
+  const rua = ruaSemNumeroColado(ruaLimpa, numero);
+  const cidade = (p.cidade ?? "").trim().replace(/\s+/g, " ");
+  if (!numero || !rua || !cidade) return null;
+  const uf = (p.uf ?? "").trim().toUpperCase();
+  return { street: `${numero} ${rua}`, city: cidade, ...(uf ? { state: uf } : {}), country: "Brasil" };
+}
+
+/**
+ * "Rua Marechal Deodoro" × "Rua Mal. Deodoro" — a mesma rua escrita diferente.
+ *
+ * Usado para não aceitar como "a rua pedida" um resultado que o provedor achou
+ * por aproximação em OUTRA via: sem esta guarda, o pino de rua da BR-476
+ * voltava a cair na "Rodovia do Xisto", 12,7 km fora (medido), desfazendo a
+ * correção do PED-19566.
+ */
+export function mesmoLogradouro(pedido: string | null | undefined, candidato: string | null | undefined): boolean {
+  const a = chaveDeLogradouro(pedido);
+  const b = chaveDeLogradouro(candidato);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const ta = a.split(" ");
+  const tb = b.split(" ");
+  const [menor, maior] = ta.length <= tb.length ? [ta, tb] : [tb, ta];
+  const conjunto = new Set(maior);
+  if (menor.every((t) => conjunto.has(t))) return true;
+  // Sufixo/preposição do cadastro no fim do nome ("... DE CIMA"): só por
+  // substring, e só com nome suficiente para não casar "Rua A" com "Rua AB".
+  return a.length >= 6 && b.length >= 6 && (a.includes(b) || b.includes(a));
+}
+
+function chaveDeLogradouro(nome: string | null | undefined): string {
+  const base = (nome ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!base) return "";
+  const semTipo = semTipoVial(base) || base;
+  const semTitulo = semHonorifico(semTipo) || semTipo;
+  return semConectores(semTitulo).toLowerCase().trim();
+}
+
+/**
  * O geocodificador é o Nominatim (OpenStreetMap) — público por padrão, próprio
  * quando `GEOCODER_URL` aponta para a instância da casa.
  *
@@ -448,6 +520,11 @@ export function consultasDeEmergencia(p: PartesEndereco): string[] {
  * e a rota saiu com trecho de 0 km entre clientes diferentes. Sem número no
  * cadastro, o trecho de rua continua aceito como aproximado (diretriz medida no
  * OSM do interior).
+ *
+ * Com número, a rua ainda pode ser o pino FINAL, mas só depois de esgotada a
+ * cadeia exata e antes do bairro: `geocodificarComFallback` guarda o melhor
+ * resultado de rua e o devolve se nenhum imóvel aparecer — é a diferença entre
+ * o pino na rua certa e o pino no centro do bairro (1,87 km, medido).
  */
 export function aceitaResultado(r: ResultadoGeo, temNumero: boolean): boolean {
   if (r.estado !== "ok") return false;
@@ -528,33 +605,58 @@ export function pertenceAoMunicipio(r: ResultadoGeo, p: PartesEndereco): boolean
 }
 
 export async function geocodificarComFallback(p: PartesEndereco, linhaPedido?: string | null): Promise<ResultadoGeo> {
-  let cadeia = montarConsultas(p);
-  let temNumero = Boolean(numeroDa(p));
+  let alvo = p;
+  let cadeia = montarConsultas(alvo);
+  let temNumero = Boolean(numeroDa(alvo));
   // Sem rua no cadastro, destrincha a linha do pedido e tenta a cadeia nela.
   if (cadeia.length === 0 && linhaPedido?.trim()) {
     const partes = parseLinhaEndereco(linhaPedido);
-    cadeia = montarConsultas(partes);
-    temNumero = Boolean(numeroDa(partes));
+    alvo = { ...partes, bairro: partes.bairro ?? p.bairro, cep: p.cep ?? partes.cep, cidade: partes.cidade ?? p.cidade, uf: partes.uf ?? p.uf };
+    cadeia = montarConsultas(alvo);
+    temNumero = Boolean(numeroDa(alvo));
   }
+  // Primeiro a consulta ESTRUTURADA: é a única que acha o número da casa no
+  // Nominatim (ver `consultaEstruturada`). Sem número/cidade ela não existe.
+  const estruturada = consultaEstruturada(alvo);
   // Último suspiro: a linha crua (o Nominatim às vezes entende o que a
   // normalização desmontou).
   const crua = linhaPedido?.trim() ? [`${linhaPedido.trim()}, Brasil`] : [];
-  const emergencia = consultasDeEmergencia(p);
+  const emergencia = consultasDeEmergencia(alvo);
   let viuErro = false;
-  for (const consulta of [...cadeia, ...crua]) {
+  /**
+   * O melhor pino de RUA visto na cadeia — devolvido se nenhum imóvel exato
+   * aparecer. Antes ele era descartado e a parada caía no centro do BAIRRO:
+   * medido em 2026-11-15, 1,87 km de erro em Canoinhas, 694 m em Major Vieira,
+   * 384 m em Irineópolis — o pino parecia errado porque era o centro do bairro,
+   * não a rua. Com número no cadastro, a rua só fecha a parada depois da cadeia
+   * exata (imóvel > rua); a marcação continua honesta ("rua aproximada").
+   */
+  let ruaAproximada: ResultadoGeo | null = null;
+  const consultas: (string | ConsultaEstruturada)[] = [...(estruturada ? [estruturada] : []), ...cadeia, ...crua];
+  for (const consulta of consultas) {
     const r = await buscar(consulta);
+    if (r.estado === "erro") viuErro = true;
     // Candidato de outro município/UF não é a parada: segue a cadeia em vez
     // de gravar um pino a centenas de km (ver `pertenceAoMunicipio`).
-    if (aceitaResultado(r, temNumero) && pertenceAoMunicipio(r, p)) return r;
-    if (r.estado === "erro") viuErro = true;
+    if (!pertenceAoMunicipio(r, alvo)) continue;
+    // Imóvel exato só vale se for a rua pedida: um "house" de outra via é
+    // falso exato (medido: "Rua Leoberto Leal, 711" devolvia uma casa na Rua
+    // Nereu Ramos com precisão de número).
+    if (aceitaResultado(r, temNumero) && (r.precisao !== "numero" || mesmoLogradouro(alvo.logradouro, r.componentes?.rua))) {
+      return r;
+    }
+    if (r.estado === "ok" && r.precisao === "rua" && !ruaAproximada && mesmoLogradouro(alvo.logradouro, r.componentes?.rua)) {
+      ruaAproximada = r;
+    }
     // nao_encontrado/ambiguo/bairro/cidade: próxima fase (mais solta) pode resolver.
   }
+  if (ruaAproximada) return ruaAproximada;
   for (const consulta of emergencia) {
     const r = await buscar(consulta);
-    if (r.estado === "ok" && pertenceAoMunicipio(r, p)) return r;
     if (r.estado === "erro") viuErro = true;
+    if (r.estado === "ok" && pertenceAoMunicipio(r, alvo)) return r;
   }
-  if (cadeia.length + crua.length + emergencia.length === 0) {
+  if (cadeia.length + crua.length + emergencia.length + (estruturada ? 1 : 0) === 0) {
     return { estado: "erro", latitude: null, longitude: null, precisao: null };
   }
   return { estado: viuErro ? "erro" : "nao_encontrado", latitude: null, longitude: null, precisao: null };
@@ -646,15 +748,24 @@ export function classificarResultado(j: CandidatoNominatim[] | null | undefined)
   return { estado: "ambiguo", latitude: null, longitude: null, precisao: null };
 }
 
-async function buscar(consulta: string): Promise<ResultadoGeo> {
+async function buscar(consulta: string | ConsultaEstruturada): Promise<ResultadoGeo> {
   await reservarVez();
   const controle = new AbortController();
   const limite = setTimeout(() => controle.abort(), 15000);
+  const params = new URLSearchParams({ format: "json", limit: "5", countrycodes: "br", addressdetails: "1" });
+  if (typeof consulta === "string") {
+    params.set("q", consulta);
+  } else {
+    params.set("street", consulta.street);
+    params.set("city", consulta.city);
+    if (consulta.state) params.set("state", consulta.state);
+    params.set("country", consulta.country);
+  }
   try {
-    const res = await fetch(
-      `${urlDoGeocoder()}?q=${encodeURIComponent(consulta)}&format=json&limit=5&countrycodes=br&addressdetails=1`,
-      { headers: { "User-Agent": ua(), Accept: "application/json" }, signal: controle.signal },
-    );
+    const res = await fetch(`${urlDoGeocoder()}?${params}`, {
+      headers: { "User-Agent": ua(), Accept: "application/json" },
+      signal: controle.signal,
+    });
     if (!res.ok) return { estado: "erro", latitude: null, longitude: null, precisao: null };
     return classificarResultado((await res.json()) as CandidatoNominatim[]);
   } catch {

@@ -3,8 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   aceitaResultado,
   classificarResultado,
+  consultaEstruturada,
   consultasDeEmergencia,
   geocodificarComFallback,
+  mesmoLogradouro,
   pertenceAoMunicipio,
   type ResultadoGeo,
   expandirAbreviacoes,
@@ -498,6 +500,205 @@ describe("geocodificarComFallback — o pino do PED-19566 não vai para São Pau
     );
     expect(consultouCarapicuiba).toBe(true);
     expect(r.latitude).not.toBe(-23.531725);
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// o pino tem que cair na CASA, não no centro do bairro
+// ---------------------------------------------------------------------------
+
+/**
+ * MEDIDO EM 2026-11-15 (Nominatim público + API do OSM).
+ *
+ * Em endereços cujo nó `addr:housenumber` EXISTE no OSM, a consulta de texto
+ * livre devolvia a rua (sem número) ou o bairro; a consulta estruturada
+ * (`street=<n> <rua>&city=…`) devolvia a casa:
+ *
+ *   Rua Gustavo Schuartz, 80 — Paula Freitas/PR .... texto livre: cidade · estruturada: nº 80
+ *   Av. Coronel Aristiliano Ramos, 957 — Caçador/SC . texto livre: bairro · estruturada: nº 957
+ *
+ * E quando só a rua existe, o pino de rua vale mais que o centro do bairro:
+ * 1,87 km de erro em Canoinhas, 694 m em Major Vieira, 384 m em Irineópolis.
+ */
+describe("consulta estruturada — o número que o texto livre não acha", () => {
+  it("monta street/city/state a partir das partes", () => {
+    expect(
+      consultaEstruturada({
+        logradouro: "Rua Gustavo Schuartz",
+        numero_end: "80",
+        bairro: "Centro",
+        cidade: "Paula Freitas",
+        uf: "pr",
+      }),
+    ).toEqual({ street: "80 Rua Gustavo Schuartz", city: "Paula Freitas", state: "PR", country: "Brasil" });
+  });
+
+  it("sem número ou sem cidade não há consulta estruturada", () => {
+    expect(consultaEstruturada({ logradouro: "Rua X", cidade: "Mafra", uf: "SC" })).toBeNull();
+    expect(consultaEstruturada({ logradouro: "Rua X", numero_end: "10", cidade: null })).toBeNull();
+    // "KM 258" não é número de porta (ver normalizarNumero).
+    expect(consultaEstruturada({ logradouro: "BR 476", numero_end: "KM 258", cidade: "Mafra" })).toBeNull();
+  });
+});
+
+describe("mesmoLogradouro — a rua devolvida é a rua pedida?", () => {
+  it("aceita a mesma rua escrita diferente", () => {
+    expect(mesmoLogradouro("Rua Marechal Deodoro", "Rua Marechal Deodoro")).toBe(true);
+    expect(mesmoLogradouro("RUA VEREADOR JOAO ALEXANDRINA", "Rua João Alexandrina")).toBe(true);
+    expect(mesmoLogradouro("Rua Prudente de Moraes", "Rua Prudente Moraes")).toBe(true);
+    expect(mesmoLogradouro("Avenida Getúlio Vargas", "Rua Getúlio Vargas")).toBe(true);
+  });
+
+  it("recusa rua diferente — a BR-476 não é a Rodovia do Xisto", () => {
+    // Sem esta guarda, o pino de rua da parada do PED-19566 voltava para a
+    // geometria da rodovia, 12,7 km fora do ponto certo.
+    expect(mesmoLogradouro("Rodovia BR 476 Km 344", "Rodovia do Xisto")).toBe(false);
+    expect(mesmoLogradouro("Rua Marechal Deodoro", "Rua Nereu Ramos")).toBe(false);
+    expect(mesmoLogradouro(null, "Rua X")).toBe(false);
+    expect(mesmoLogradouro("Rua X", null)).toBe(false);
+  });
+});
+
+describe("geocodificarComFallback — ordem: imóvel, rua, bairro", () => {
+  it("a consulta estruturada vem primeiro e o imóvel vence", async () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "0");
+    const urls: string[] = [];
+    const fetchFalso = vi.fn(async (url: string) => {
+      urls.push(url);
+      const p = new URL(url).searchParams;
+      const estruturada = p.get("street") === "80 Rua Gustavo Schuartz";
+      return {
+        ok: true,
+        json: async () =>
+          estruturada
+            ? [
+                {
+                  lat: "-26.2099330",
+                  lon: "-50.9321470",
+                  addresstype: "shop",
+                  address: {
+                    house_number: "80",
+                    road: "Rua Gustavo Schuartz",
+                    city: "Paula Freitas",
+                    state: "Paraná",
+                    "ISO3166-2-lvl4": "BR-PR",
+                  },
+                },
+              ]
+            : [],
+      } as unknown as Response;
+    });
+    vi.stubGlobal("fetch", fetchFalso);
+
+    const r = await geocodificarComFallback({
+      logradouro: "Rua Gustavo Schuartz",
+      numero_end: "80",
+      bairro: "Centro",
+      cidade: "Paula Freitas",
+      uf: "PR",
+      cep: "84630000",
+    });
+
+    expect(urls[0]).toContain("street=80+Rua+Gustavo+Schuartz");
+    expect(urls[0]).toContain("city=Paula+Freitas");
+    expect(urls[0]).toContain("state=PR");
+    expect(r).toMatchObject({ estado: "ok", precisao: "numero", latitude: -26.209933, longitude: -50.932147 });
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("sem imóvel, o pino é a RUA — não o centro do bairro", async () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "0");
+    const consultas: string[] = [];
+    const fetchFalso = vi.fn(async (url: string) => {
+      const p = new URL(url).searchParams;
+      consultas.push(p.get("q") ?? `street:${p.get("street")}`);
+      const q = p.get("q");
+      const rua =
+        q === "Rua Marechal Deodoro, 999, Centro, Canoinhas, SC, Brasil"
+          ? [
+              {
+                lat: "-26.1867565",
+                lon: "-50.3838562",
+                addresstype: "residential",
+                address: {
+                  road: "Rua Marechal Deodoro",
+                  city: "Canoinhas",
+                  state: "Santa Catarina",
+                  "ISO3166-2-lvl4": "BR-SC",
+                },
+              },
+            ]
+          : [];
+      return { ok: true, json: async () => rua } as unknown as Response;
+    });
+    vi.stubGlobal("fetch", fetchFalso);
+
+    const r = await geocodificarComFallback({
+      logradouro: "Rua Marechal Deodoro",
+      numero_end: "999",
+      bairro: "Centro",
+      cidade: "Canoinhas",
+      uf: "SC",
+      cep: "89460000",
+    });
+
+    expect(r).toMatchObject({ estado: "ok", precisao: "rua", latitude: -26.1867565, longitude: -50.3838562 });
+    // O centro do bairro (emergência) não foi consultado: a rua já respondeu.
+    expect(consultas.some((c) => c.startsWith("Centro, Canoinhas"))).toBe(false);
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("casa de OUTRA rua não é 'número certo' — segue a cadeia", async () => {
+    vi.stubEnv("GEOCODER_MIN_INTERVALO_MS", "0");
+    const fetchFalso = vi.fn(async (url: string) => {
+      const p = new URL(url).searchParams;
+      // A consulta estruturada acha um imóvel, mas na Rua Nereu Ramos — o
+      // falso exato medido com "Rua Leoberto Leal, 711, Papanduva".
+      if (p.get("street")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              lat: "-26.4072018",
+              lon: "-50.1435943",
+              addresstype: "house",
+              address: { house_number: "711", road: "Rua Nereu Ramos", city: "Papanduva", "ISO3166-2-lvl4": "BR-SC" },
+            },
+          ],
+        } as unknown as Response;
+      }
+      const q = p.get("q") ?? "";
+      if (q === "Papanduva, SC, Brasil") {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              lat: "-26.4100000",
+              lon: "-50.1440000",
+              addresstype: "town",
+              address: { city: "Papanduva", state: "Santa Catarina", "ISO3166-2-lvl4": "BR-SC" },
+            },
+          ],
+        } as unknown as Response;
+      }
+      return { ok: true, json: async () => [] } as unknown as Response;
+    });
+    vi.stubGlobal("fetch", fetchFalso);
+
+    const r = await geocodificarComFallback({
+      logradouro: "Rua Leoberto Leal",
+      numero_end: "711",
+      bairro: "Centro",
+      cidade: "Papanduva",
+      uf: "SC",
+    });
+
+    expect(r.precisao).not.toBe("numero");
+    expect(r.precisao).toBe("cidade");
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
   });
