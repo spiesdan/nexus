@@ -940,6 +940,7 @@ não é reconstruído de memória — seria inventar):
 |---|---|---|---|
 | 16/11/2026 | Banco provado por execução: migrations, schema e RLS | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | Fase 2 medida em produção: 258 medições, 15 achados, 6 gates | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | As 16 jornadas medidas: 254 testes verdes e 7 falhas abertas uma a uma | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
