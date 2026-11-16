@@ -954,6 +954,7 @@ não é reconstruído de memória — seria inventar):
 | 16/11/2026 | Mais três vezes em que a régua culpou o produto                            | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | As mesmas subtelas em 390 px: 42 abas, zero overflow                       | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | Dois formulários recusavam em silêncio (só o balão do navegador)           | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | 11 datas seguiam o idioma do navegador, não o de quem lê | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
