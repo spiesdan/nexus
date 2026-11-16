@@ -8,7 +8,12 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { createClient } from "@/lib/supabase/server";
-import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO, type ItemDoPedido, type PedidoComercial } from "@/lib/schemas/pedidos";
+import {
+  COLUNAS_DO_ITEM,
+  COLUNAS_DO_PEDIDO,
+  type ItemDoPedido,
+  type PedidoComercial,
+} from "@/lib/schemas/pedidos";
 
 import { ImprimirLoteClient, type ClienteImpresso, type ItemImpresso } from "./_imprimir";
 
@@ -63,14 +68,15 @@ export default async function ImprimirLotePage({
    */
   const cargaId = idsDoLote(params.carga)[0];
   const idsDaCarga = cargaId
-    ? ((
-        await supabase
-          .from("shipment_orders")
-          .select("order_id, sequencia")
-          .eq("organization_id", activeOrg.orgId)
-          .eq("shipment_id", cargaId)
-          .order("sequencia")
-      ).data ?? []
+    ? (
+        (
+          await supabase
+            .from("shipment_orders")
+            .select("order_id, sequencia")
+            .eq("organization_id", activeOrg.orgId)
+            .eq("shipment_id", cargaId)
+            .order("sequencia")
+        ).data ?? []
       ).map((linha) => (linha as { order_id: string }).order_id)
     : [];
 
@@ -89,7 +95,15 @@ export default async function ImprimirLotePage({
     const lotes = emLotes(idsDaCarga);
     return (
       <div className="mx-auto max-w-xl space-y-4 p-6">
-        <h1 className="text-lg font-semibold">{t("Imprimir pedidos da carga")}</h1>
+        {/* `text-2xl`, o tamanho canônico do `NexusPageHeader` — e não
+            `text-lg`. Este é o MESMO defeito que a V-08 introduziu no
+            componente ao lado (`_imprimir.tsx`): consertar estado vazio com um
+            `<h1>` de tamanho inventado cria uma família nova de tipografia e
+            reprova a varredura §100, que mede o `font-size` do primeiro
+            `<h1>` de cada rota. */}
+        <h1 className="text-2xl font-medium tracking-tight text-text">
+          {t("Imprimir pedidos da carga")}
+        </h1>
         <p className="text-sm text-muted-foreground">
           {t("Esta carga tem")} {idsDaCarga.length} {t("pedidos, e cada arquivo imprime até")}{" "}
           {MAXIMO_PEDIDOS_NO_LOTE}. {t("Abra um lote por vez, na ordem das paradas:")}
@@ -110,7 +124,11 @@ export default async function ImprimirLotePage({
   const [{ data: org }, { data: pedidosRaw }, { data: itensRaw }] = await Promise.all([
     supabase.from("organizations").select("display_name").eq("id", activeOrg.orgId).maybeSingle(),
     ids.length > 0
-      ? supabase.from("commercial_orders").select(COLUNAS_DO_PEDIDO).eq("organization_id", activeOrg.orgId).in("id", ids)
+      ? supabase
+          .from("commercial_orders")
+          .select(COLUNAS_DO_PEDIDO)
+          .eq("organization_id", activeOrg.orgId)
+          .in("id", ids)
       : Promise.resolve({ data: [] }),
     ids.length > 0
       ? supabase
@@ -123,7 +141,7 @@ export default async function ImprimirLotePage({
   ]);
 
   const porPedido = new Map<string, ItemDoPedido[]>();
-  for (const it of ((itensRaw ?? []) as unknown as (ItemDoPedido & { order_id: string })[])) {
+  for (const it of (itensRaw ?? []) as unknown as (ItemDoPedido & { order_id: string })[]) {
     const lista = porPedido.get(it.order_id) ?? [];
     lista.push(it);
     porPedido.set(it.order_id, lista);
@@ -131,17 +149,24 @@ export default async function ImprimirLotePage({
   const listaPedidos = (pedidosRaw ?? []) as unknown as PedidoComercial[];
 
   // Bloco do cliente (um select para o lote) + unidade dos itens (idem).
-  const idsContatos = [...new Set(listaPedidos.map((p) => p.contact_id).filter(Boolean))] as string[];
+  const idsContatos = [
+    ...new Set(listaPedidos.map((p) => p.contact_id).filter(Boolean)),
+  ] as string[];
   const idsProdutos = [
     ...new Set(
-      [...porPedido.values()].flat().map((i) => i.product_id).filter(Boolean),
+      [...porPedido.values()]
+        .flat()
+        .map((i) => i.product_id)
+        .filter(Boolean),
     ),
   ] as string[];
   const [{ data: contatosRaw }, { data: prodsRaw }] = await Promise.all([
     idsContatos.length > 0
       ? supabase
           .from("contacts")
-          .select("id, display_name, name, tipo_pessoa, fantasia, ie, cnpj, phone_number, email, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
+          .select(
+            "id, display_name, name, tipo_pessoa, fantasia, ie, cnpj, phone_number, email, logradouro, numero_end, complemento, bairro, cidade, uf, cep",
+          )
           .eq("organization_id", activeOrg.orgId)
           .in("id", idsContatos)
       : Promise.resolve({ data: [] }),
@@ -154,10 +179,16 @@ export default async function ImprimirLotePage({
       : Promise.resolve({ data: [] }),
   ]);
   const porContato = new Map(
-    ((contatosRaw ?? []) as unknown as Record<string, string | null>[]).map((c) => [c.id as string, c]),
+    ((contatosRaw ?? []) as unknown as Record<string, string | null>[]).map((c) => [
+      c.id as string,
+      c,
+    ]),
   );
   const unidadePorProduto = new Map(
-    ((prodsRaw ?? []) as { id: string; unidade: string | null }[]).map((pr) => [pr.id, pr.unidade ?? "UN"]),
+    ((prodsRaw ?? []) as { id: string; unidade: string | null }[]).map((pr) => [
+      pr.id,
+      pr.unidade ?? "UN",
+    ]),
   );
 
   function clienteDe(p: PedidoComercial): ClienteImpresso {
@@ -208,9 +239,10 @@ export default async function ImprimirLotePage({
   const pedidos = listaPedidos.map((p) => ({
     pedido: p,
     cliente: clienteDe(p),
-    itens: (porPedido.get(p.id) ?? []).map(
-      (it): ItemImpresso => ({ ...it, unidade: (it.product_id && unidadePorProduto.get(it.product_id)) || "UN" }),
-    ),
+    itens: (porPedido.get(p.id) ?? []).map((it): ItemImpresso => ({
+      ...it,
+      unidade: (it.product_id && unidadePorProduto.get(it.product_id)) || "UN",
+    })),
   }));
   // Mesma ordem da seleção.
   pedidos.sort((a, b) => ids.indexOf(a.pedido.id) - ids.indexOf(b.pedido.id));

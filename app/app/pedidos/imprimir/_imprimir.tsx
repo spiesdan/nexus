@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import {
   ROTULO_DO_STATUS,
@@ -74,12 +75,22 @@ export function ImprimirLoteClient({
   // uma linha de texto no meio do vazio e `h1 = []`.
   if (pedidos.length === 0) {
     return (
-      <div className="mx-auto max-w-xl space-y-3 p-6">
-        <h1 className="text-lg font-semibold">{t("Imprimir pedidos")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Nenhum pedido selecionado.")}</p>
-        <Button variant="outline" asChild>
-          <Link href="/app/pedidos">{t("Voltar para Pedidos")}</Link>
-        </Button>
+      <div className="mx-auto max-w-xl p-6">
+        {/* `NexusPageHeader`, não um `<h1>` próprio: a varredura §100 mede o
+            tamanho do primeiro `<h1>` de cada rota e exige tipografia única
+            (`text-2xl`). A primeira versão desta correção usou
+            `text-lg font-semibold` e virou a QUARTA família de título do
+            produto — a spec `auditoria-aceite-11-itens` reprovou, e estava
+            certa: corrigir a ausência de título não autoriza inventar um. */}
+        <NexusPageHeader
+          title={t("Imprimir pedidos")}
+          subtitle={t("Nenhum pedido selecionado.")}
+          actions={
+            <Button variant="outline" asChild>
+              <Link href="/app/pedidos">{t("Voltar para Pedidos")}</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }

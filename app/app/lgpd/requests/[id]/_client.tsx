@@ -91,21 +91,17 @@ export function LgpdRequestDetail({ id }: Props) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-xl font-semibold tracking-tight font-mono">
-            #{shortId}
-          </h1>
-          <Badge variant={STATUS_VARIANT[request.status] ?? "secondary"}>
-            {statusLabel}
-          </Badge>
+          <h1 className="font-mono text-2xl font-semibold tracking-tight">#{shortId}</h1>
+          <Badge variant={STATUS_VARIANT[request.status] ?? "secondary"}>{statusLabel}</Badge>
           <Badge variant="outline">{typeLabel}</Badge>
-          {request.emergency && (
-            <Badge variant="destructive">{t("Urgente")}</Badge>
-          )}
+          {request.emergency && <Badge variant="destructive">{t("Urgente")}</Badge>}
         </div>
 
         <p className="text-sm text-muted-foreground">
           {t("Recebido em")}{" "}
-          {format(new Date(request.received_at), `dd/MM/yyyy '${t("às")}' HH:mm`, { locale: localeDaData })}
+          {format(new Date(request.received_at), `dd/MM/yyyy '${t("às")}' HH:mm`, {
+            locale: localeDaData,
+          })}
           {request.due_at && (
             <>
               {" · "}
@@ -118,7 +114,7 @@ export function LgpdRequestDetail({ id }: Props) {
 
       {/* PDF download if completed */}
       {signed_pdf_url && (
-        <div className="rounded-2xl border bg-muted/30 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-muted/30 px-4 py-3 text-sm">
           <span>{t("Relatório de exportação disponível (expira em 72h).")}</span>
           <Button size="sm" variant="outline" asChild className="shrink-0">
             <a href={signed_pdf_url} download>
@@ -170,22 +166,22 @@ export function LgpdRequestDetail({ id }: Props) {
             <Row label={t("Origem")} value={request.source ?? "—"} />
             <Row label={t("Escopo")} value={request.scope} />
             <Row label={t("Tentativas")} value={String(request.attempts)} />
-            {request.contact_id && (
-              <Row label="Contact ID" value={request.contact_id} mono />
-            )}
+            {request.contact_id && <Row label="Contact ID" value={request.contact_id} mono />}
             {request.external_customer_id && (
               <Row label="External customer ID" value={request.external_customer_id} />
             )}
             {request.completed_at && (
               <Row
                 label={t("Concluído em")}
-                value={format(new Date(request.completed_at), "dd/MM/yyyy HH:mm", { locale: localeDaData })}
+                value={format(new Date(request.completed_at), "dd/MM/yyyy HH:mm", {
+                  locale: localeDaData,
+                })}
               />
             )}
             {request.error_message && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-2 py-1">
                 <p className="text-xs text-muted-foreground">{t("Erro")}</p>
-                <p className="text-destructive text-xs">{request.error_message}</p>
+                <p className="text-xs text-destructive">{request.error_message}</p>
               </div>
             )}
           </CardContent>
@@ -207,25 +203,14 @@ export function LgpdRequestDetail({ id }: Props) {
   );
 }
 
-function Row({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
+function Row({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className="text-muted-foreground shrink-0">{label}</span>
+      <span className="shrink-0 text-muted-foreground">{label}</span>
       {/* `title` dá o valor completo em hover — sem isso um uuid truncado
           (id do contato, id externo) virava informação irrecuperável na
           tela, justo num relatório que existe pra ser conferido. */}
-      <span
-        className={`text-right truncate ${mono ? "font-mono text-xs" : ""}`}
-        title={value}
-      >
+      <span className={`truncate text-right ${mono ? "font-mono text-xs" : ""}`} title={value}>
         {value}
       </span>
     </div>

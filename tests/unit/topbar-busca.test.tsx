@@ -37,10 +37,26 @@ afterEach(() => {
 describe("busca da TopBar", () => {
   it("tem UM botão, com nome acessível mesmo quando o texto some no mobile", () => {
     render(<SearchTrigger />);
-    const botoes = screen.getAllByRole("button", { name: /^Buscar$/i });
+    // O nome diz O QUE se busca. Já foi só "Buscar", e numa tela com filtro
+    // local isso criava dois controles com o mesmo nome acessível — medido em
+    // 16/11/2026 por `filterbar-unica-nas-listas` (strict mode violation).
+    const botoes = screen.getAllByRole("button", { name: /^Buscar em todo o sistema$/i });
     expect(botoes).toHaveLength(1);
     expect(botoes[0]).toHaveAttribute("aria-keyshortcuts", "Meta+K Control+K");
+    // `title` continua "Buscar": é dica visual (tooltip), não nome acessível.
     expect(botoes[0]).toHaveAttribute("title", "Buscar");
+  });
+
+  it("o nome acessível não colide com o filtro local de uma tela", () => {
+    // A régua: "Buscar" sozinho é o nome do CAMPO de filtro das listas
+    // (compras, estoque, carteira, prospecção). O botão do shell não pode
+    // responder pelo mesmo nome, senão dois controles disputam "Buscar" na
+    // mesma árvore de acessibilidade.
+    render(<SearchTrigger />);
+    expect(
+      screen.queryByRole("button", { name: /^Buscar$/i }),
+      "o botão do shell voltou a se chamar só 'Buscar'",
+    ).toBeNull();
   });
 
   it("mostra o atalho da plataforma no <kbd>", () => {
@@ -50,7 +66,7 @@ describe("busca da TopBar", () => {
 
   it("o clique abre a paleta", () => {
     render(<SearchTrigger />);
-    fireEvent.click(screen.getByRole("button", { name: /^Buscar$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Buscar em todo o sistema$/i }));
     expect(paleta.abrir).toBe(1);
   });
 });
