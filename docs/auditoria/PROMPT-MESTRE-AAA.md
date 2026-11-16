@@ -947,6 +947,7 @@ não é reconstruído de memória — seria inventar):
 | 16/11/2026 | As 16 jornadas medidas: 254 testes verdes e 7 falhas abertas uma a uma | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | Subtela aberta, não só enumerada: 55 campos ganharam nome              | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | 14 telas dinâmicas medidas com dado real — e o editor de agente sem título | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | Três erros do instrumento faziam o produto parecer pior | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
