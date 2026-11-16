@@ -71,20 +71,28 @@ done
 psql_stop() { docker exec -i "$CONTAINER" psql -U postgres -d postgres -q -v ON_ERROR_STOP=1 -f -; }
 
 echo "==> prelude (os stubs que um Postgres cru não tem)"
-# Extraído do scripts/test-db.sh em vez de duplicado: prelude que diverge do
-# harness mediria um mundo que o gate obrigatório não conhece.
-prelude=$(sed -n "/^psql_install <<'SQL'$/,/^SQL$/p" "$ROOT/scripts/test-db.sh" | sed '1d;$d')
-# Guarda de instrumento: se a extração falhar (o test-db.sh muda de forma), o
-# prelude sai VAZIO e o install falha longe daqui, com um erro que não menciona
-# prelude nenhum. Aconteceu ao escrever este script: o regex sem o apóstrofo
-# final extraiu zero linhas e o sintoma foi `type public.vector does not exist`.
+# Lido do MESMO arquivo que o gate `test:db` e o replay da auditoria usam.
+#
+# Até 2026-11-15 este script recortava o heredoc de dentro do scripts/test-db.sh
+# com `sed`. Funcionava enquanto o prelude morava lá — e quebrava em silêncio
+# quando o formato mudava (já quebrou uma vez: o recorte saiu vazio e o sintoma
+# foi `type public.vector does not exist`, longe da causa). Hoje o prelude é um
+# arquivo; extrair é abrir, não recortar.
+PREAMBULO="$ROOT/scripts/sql/preambulo-supabase-descartavel.sql"
+if [ ! -s "$PREAMBULO" ]; then
+  echo "FATAL: preâmbulo ausente ou vazio: $PREAMBULO" >&2
+  exit 1
+fi
+prelude=$(cat "$PREAMBULO")
+# Guarda de instrumento: prelude sem as extensões que o baseline não cria faz o
+# install falhar longe daqui, com erro que não menciona prelude nenhum.
 if [ "$(grep -c 'create extension' <<<"$prelude")" -lt 3 ]; then
-  echo "FATAL: a extração do prelude de scripts/test-db.sh falhou (sem 'create extension')." >&2
-  echo "       O formato daquele arquivo mudou — conserte o recorte aqui, e não duplique o prelude." >&2
+  echo "FATAL: o preâmbulo perdeu as extensões (sem 3+ 'create extension')." >&2
+  echo "       Conserte $PREAMBULO — não duplique o prelude neste script." >&2
   exit 1
 fi
 psql_stop <<<"$prelude"
-echo "    ✓ prelude ok ($(wc -l <<<"$prelude" | tr -d ' ') linhas, extraídas do harness)"
+echo "    ✓ prelude ok ($(wc -l <<<"$prelude" | tr -d ' ') linhas, de $PREAMBULO)"
 
 echo "==> INSTALL: baseline.sql com ON_ERROR_STOP=1"
 psql_stop < "$BASELINE" >/dev/null

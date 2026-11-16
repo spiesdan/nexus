@@ -39,9 +39,24 @@ dc --env-file .env pull app worker scheduler
 echo "[nexus] 4/7 validando configuração..."
 dc --env-file .env config >/dev/null
 
-echo "[nexus] 5/7 executando migrations seguras..."
-# Migrations são aditivas primeiro (§81); o provisionamento aplica baseline idempotente.
-dc --env-file .env run --rm app pnpm db:migrate || true
+echo "[nexus] 5/7 schema: provisionado pelo kit (baseline idempotente) — deploy não muta schema"
+# Este passo NÃO roda `pnpm db:migrate`, e a razão é medida, não estética:
+#
+#   1. o placeholder que existia (`echo TODO … && exit 0`) saía com SUCESSO sem
+#      aplicar nada — e o `|| true` aqui engolia até o erro de verdade;
+#   2. a imagem de runtime não tem `pnpm` (`Cannot find module '/app/pnpm'`,
+#      docs/infrastructure/deploy-performance.md): o comando falhava SEMPRE;
+#   3. a cadeia de 292 migrations não reproduz o schema (10 stubs `SELECT 1;`;
+#      docs/auditoria/12-migrations-e-rls.md), então `supabase db push` seria
+#      pior: marcaria migrations como aplicadas sobre um schema parcial.
+#
+# O schema entra pelo `supabase/baseline.sql` (install.sh/update.sh do kit), que
+# é idempotente e re-aplicável sobre banco com dados. Para conferir o schema de
+# uma instalação, rode de uma máquina com acesso ao banco:
+#
+#   SUPABASE_DB_URL=postgres://… pnpm db:verificar
+#
+# Um passo que não faz nada é honesto quando DIZ que não faz nada e por quê.
 
 echo "[nexus] 6/7 subindo containers..."
 dc --env-file .env up -d app worker scheduler
