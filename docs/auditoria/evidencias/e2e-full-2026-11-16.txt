@@ -1,0 +1,823 @@
+
+> nexus@0.1.0 test:e2e:full /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes
+> tsx scripts/test-e2e-suite.ts full
+
+suíte full: 96 specs (tests/e2e/suites/full.txt)
+[seed-e2e-agenda] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed-e2e-agenda] {"tipo_id":"0299db39-b4e0-4544-ad50-a50c8b6b647c","tipo_slug":"consulta-e2e","tipo_nome":"Consulta E2E","dono_user_id":"06ab0cb8-2b5b-419c-92ce-37e03434e538","contato_id":"d549f41b-315a-4350-8923-5b39992db12b","contato_nome":"Paciente Agenda E2E","fuso":"America/Sao_Paulo"}
+[seed-e2e-numero-conectado] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] número conectado (WORKING): 0c901725-6dab-45b6-a224-10732ae877db
+[seed] janela de envio fixada em 0h-24h (domingo liberado) em 5 canal(is)
+[seed-e2e-followup-agent] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+
+✅ Followup agent fixtures seed completo. credential=01dd9027-59ef-4318-83fc-6d92c966e609 channel_session=b7d06963-ad61-41d1-86fa-f8555290c783
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=6
+[seed-e2e-nascimento-do-lead] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-nascimento-do-lead: ok (funil de entrada 714dbeb6-8873-4771-9b72-6c5240109f34)
+[seed-e2e-invite] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed-invite] org do seed base: 68fe016a-7312-4ee0-8417-2dd07a0ad659
+[seed-invite] convidado criado: f264910a-9b46-477a-b498-0b12c93a7b02
+[seed-invite] convidado sem membership (estado inicial correto)
+[seed-invite] escrito /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/.e2e-invite.json: {"org_id":"68fe016a-7312-4ee0-8417-2dd07a0ad659","invitee_email":"convidado.invite@nexus.test","invitee_id":"f264910a-9b46-477a-b498-0b12c93a7b02"}
+[seed-e2e-kanban] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] lead created "Pedido E2E com responsavel": 37102b08-d4d4-45db-b816-69cd58d8ef8e
+[seed] lead created "Pedido E2E sem responsavel": aa82137f-7bd6-4393-a1c7-3a654955bb37
+
+✅ Kanban seed completo. pipeline=714dbeb6-8873-4771-9b72-6c5240109f34 stage=46a387d5-9390-42fd-b230-25a30decd371
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+[seed-e2e-funis] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+✅ segunda org 987b3c76-437b-4645-852a-713f9aeeed24 com 1 funil(is); manager vinculado.
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+[audit] insert error insert or update on table "api_audit_log" violates foreign key constraint "api_audit_log_actor_api_token_id_fkey" { action: 'followup.scheduled' }
+[seed-e2e-radar] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] radar lead existing: 3e86b649-957a-467f-ba8d-3ab92f95a943
+
+✅ Radar seed completo. lead=3e86b649-957a-467f-ba8d-3ab92f95a943 conv=0b3b3600-d59c-4ffc-b931-2c5aec63d83c (frio desde 2026-11-11T04:29:21.800Z)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+
+Running 268 tests using 1 worker
+
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=6
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓    1 [chromium] › tests/e2e/abas-canonicas-nas-telas.spec.ts:36:5 › abas canônicas: 6 telas em ui/tabs + sub-nav do tenant com href (12.7s)
+  ✓    2 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:163:7 › acervo de conhecimento › sem chave de embedding, a tela DIZ — e oferece o conserto ali mesmo (1.1s)
+  ✓    3 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:179:7 › acervo de conhecimento › cadastrar material sem chave: ele fica ESPERANDO, e a tela não mente (5.3s)
+  -    4 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:227:7 › acervo de conhecimento › com a chave cadastrada pela tela, perguntas e respostas viram trecho buscável
+  -    5 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:259:7 › acervo de conhecimento › documento enviado como arquivo também vira trecho — não só pergunta e resposta
+  -    6 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:286:7 › acervo de conhecimento › o assistente ESCOLHE o que lê, e a escolha é dele — não do primeiro da organização
+  -    7 [chromium] › tests/e2e/acervo-de-conhecimento.spec.ts:314:7 › acervo de conhecimento › acervo que nenhum assistente lê é DITO — dinheiro gasto sem efeito era invisível
+  ✓    8 [chromium] › tests/e2e/agenda-caminho-ate-os-horarios.spec.ts:62:5 › o endereço da aba de Atendimento abre nela, e ela se anuncia como o lugar dos horários (2.9s)
+  ✓    9 [chromium] › tests/e2e/agenda-caminho-ate-os-horarios.spec.ts:92:5 › um endereço de aba desconhecido cai na aba padrão, não numa tela vazia (1.4s)
+  ✓   10 [chromium] › tests/e2e/agenda-conectar-google.spec.ts:91:7 › conectar a agenda do Google › sem chave do Google, a Agenda abre e explica o que falta (938ms)
+  -   11 [chromium] › tests/e2e/agenda-conectar-google.spec.ts:126:8 › conectar a agenda do Google › conectar a agenda do Google pela tela e ver a faixa mudar
+[seed-e2e-duas-organizacoes] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed-e2e-duas-organizacoes] {"org_a_id":"68fe016a-7312-4ee0-8417-2dd07a0ad659","org_b_id":"e7136c97-f6a6-466d-9a44-fef35d18dc3e","org_b_nome":"E2E Segunda Organização","usuario_email":"e2e-manager@nexus.test","tipo_a":{"slug":"so-da-org-a","nome":"Atendimento Só Da Org A","id":"008c1d9f-4ed7-4ba7-88d8-76b860af2f18"},"tipo_b":{"slug":"so-da-org-b","nome":"Atendimento Só Da Org B","id":"d63edbaf-aa54-4ee0-b5c9-f5e603ddfd2f"}}
+  ✓   12 [chromium] › tests/e2e/agenda-escopo-da-organizacao.spec.ts:116:5 › membro de duas organizações vê na Agenda só os tipos da organização ativa (4.1s)
+  ✓   13 [chromium] › tests/e2e/agenda-google-volta-do-consentimento.spec.ts:75:7 › a volta do consentimento do Google chega ao sistema › o callback não é mais barrado pelo proxy antes de existir (43ms)
+  -   14 [chromium] › tests/e2e/agenda-google-volta-do-consentimento.spec.ts:98:7 › a volta do consentimento do Google chega ao sistema › a ida emite o vínculo, e a volta com ele é reconhecida
+  ✓   15 [chromium] › tests/e2e/agenda-google-volta-do-consentimento.spec.ts:155:7 › a volta do consentimento do Google chega ao sistema › volta SEM o vínculo é recusada — a proteção não sumiu junto com o 401 (17ms)
+  ✓   16 [chromium] › tests/e2e/agenda-google-volta-nao-desloga.spec.ts:97:5 › voltar do consentimento não manda a pessoa para o /login (3.0s)
+  ✓   17 [chromium] › tests/e2e/agenda-grade-interativa.spec.ts:145:5 › clicar num bloco livre abre a marcação NAQUELE horário (3.3s)
+  ✓   18 [chromium] › tests/e2e/agenda-grade-interativa.spec.ts:177:5 › bloco fora da disponibilidade não marca — e diz por quê (2.5s)
+  ✓   19 [chromium] › tests/e2e/agenda-grade-interativa.spec.ts:206:5 › arrastar um card remarca — e o horário novo sobrevive ao reload (7.5s)
+  ✓   20 [chromium] › tests/e2e/agenda-grade-interativa.spec.ts:369:5 › arrastar para fora da disponibilidade é RECUSADO e o card volta (4.3s)
+  ✓   21 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:174:7 › kit visual da Agenda › a grade troca de visão pelo clique, e cada visão desenha o que promete (1.8s)
+  ✓   22 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:195:7 › kit visual da Agenda › a régua do agora cai no minuto certo, medida em pixels (521ms)
+[coluna de horários] fechada=0px  aberta=267px  painel 702px -> 960px
+  ✓   23 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:205:7 › kit visual da Agenda › a coluna de horários NÃO está lá, e entra quando o dia é escolhido (926ms)
+  ✓   24 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:257:7 › kit visual da Agenda › quem pediu para não receber mensagem: marca igual, mas a tela avisa ANTES (726ms)
+  ✓   25 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:287:7 › kit visual da Agenda › e quem aceita mensagem NÃO vê o aviso (641ms)
+  ✓   26 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:298:7 › kit visual da Agenda › dia sem horário nasce apagado e não aceita clique (349ms)
+  ✓   27 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:307:7 › kit visual da Agenda › filtrar por pessoa isola a agenda dela — e só a dela (423ms)
+[16h da quarta] dois agendamentos, larguras 71px e 71px, sem cruzar
+  ✓   28 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:331:7 › kit visual da Agenda › dois agendamentos no mesmo horário dividem a largura — nenhum some atrás do outro (387ms)
+  ✓   29 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:367:7 › kit visual da Agenda › ocupação vinda do Google é ocupação, não agendamento: não abre (360ms)
+
+[medidas das trilhas]
+tema=light fundo=rgb(255, 255, 255)
+  trilha 1: rgb(172, 77, 64)  contraste 5.40:1
+  trilha 2: rgb(189, 124, 32)  contraste 3.46:1
+  trilha 3: rgb(126, 111, 1)  contraste 5.05:1
+  trilha 4: rgb(17, 161, 155)  contraste 3.18:1
+  trilha 5: rgb(11, 122, 154)  contraste 4.92:1
+  trilha 6: rgb(96, 139, 218)  contraste 3.39:1
+  trilha 7: rgb(123, 91, 173)  contraste 5.33:1
+  trilha 8: rgb(204, 119, 177)  contraste 3.07:1
+  par mais próximo: 2 vs 3 — distância OKLab 0.119
+
+  ✓   30 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:395:7 › kit visual da Agenda › as oito trilhas passam em contraste e são distinguíveis — no tema claro (341ms)
+  ✓   31 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:425:7 › kit visual da Agenda › controle que promete ação ou FAZ, ou está desabilitado com o motivo (936ms)
+  ✓   32 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:457:7 › kit visual da Agenda › o NÚMERO que a tela afirma é o número que a tela mede (892ms)
+  ✓   33 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:487:7 › kit visual da Agenda › a data em pt-br não maiúscula a preposição (1.0s)
+  ✓   34 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:502:7 › kit visual da Agenda › o histórico separa as quatro abas, e cancelado NÃO aparece em próximos (976ms)
+  ✓   35 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:530:7 › kit visual da Agenda › o histórico não oferece ação que não pode cumprir (672ms)
+  ✓   36 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:546:7 › kit visual da Agenda › o passado registra o desfecho — senão `realizado` e `faltou` ficam sem escritor (458ms)
+  ✓   37 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:570:7 › kit visual da Agenda › a tela distingue “não publiquei horário” de “não tenho vaga” (418ms)
+  ✓   38 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:598:7 › kit visual da Agenda › o dia apagado diz POR QUÊ, e não só que está apagado (410ms)
+  ✓   39 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:633:7 › kit visual da Agenda › o que a API conta além dos slots chega à tela (473ms)
+  ✓   40 [chromium] › tests/e2e/agenda-kit-visual.spec.ts:648:7 › kit visual da Agenda › evidência visual: claro e celular (1.5s)
+  ✓   41 [chromium] › tests/e2e/agenda-marcar-pela-tela.spec.ts:103:5 › marcar um horário pela tela e vê-lo aparecer na grade — sem recarregar (4.6s)
+  ✓   42 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:154:7 › a coluna de horários cabe DENTRO do painel — 900×800 (empilhado) (3.9s)
+  ✓   43 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:154:7 › a coluna de horários cabe DENTRO do painel — 1024×800 (limiar das 3 colunas) (3.0s)
+  ✓   44 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:154:7 › a coluna de horários cabe DENTRO do painel — 1280×800 (notebook comum) (3.4s)
+  ✓   45 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:154:7 › a coluna de horários cabe DENTRO do painel — 1440×900 (3.4s)
+  ✓   46 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:154:7 › a coluna de horários cabe DENTRO do painel — 1920×1080 (3.7s)
+  ✓   47 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:203:5 › a lista de horários ROLA, e o último horário é alcançável — 1280×700 (3.1s)
+  ✓   48 [chromium] › tests/e2e/agenda-painel-cabe-na-tela.spec.ts:315:5 › dá para CLICAR num horário — o teste final é a ação, não a medida (3.1s)
+  ✓   49 [chromium] › tests/e2e/agenda-remarcar-e-cancelar.spec.ts:121:5 › cancelar pela tela: o motivo é exigido, e o compromisso sai dos próximos (4.5s)
+  ✓   50 [chromium] › tests/e2e/agenda-remarcar-e-cancelar.spec.ts:171:5 › remarcar pela tela: o painel abre em modo remarcar e o horário muda (5.3s)
+[seed-e2e-agenda] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed-e2e-agenda] {"tipo_id":"0299db39-b4e0-4544-ad50-a50c8b6b647c","tipo_slug":"consulta-e2e","tipo_nome":"Consulta E2E","dono_user_id":"06ab0cb8-2b5b-419c-92ce-37e03434e538","contato_id":"d549f41b-315a-4350-8923-5b39992db12b","contato_nome":"Paciente Agenda E2E","fuso":"America/Sao_Paulo"}
+  ✓   51 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:128:7 › a Agenda como o dono do produto a usa › chego na Agenda CLICANDO no menu, não digitando a URL (1.6s)
+  ✓   52 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:147:7 › a Agenda como o dono do produto a usa › as pessoas da equipe são REAIS — o filtro deixou de ser invisível (987ms)
+  ✓   53 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:210:7 › a Agenda como o dono do produto a usa › o histórico está NA TELA DO PRODUTO, com as quatro abas (950ms)
+  ✓   54 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:233:7 › a Agenda como o dono do produto a usa › a tela declara de onde veio o que ela mostra — e nunca de mentira (13ms)
+  ✓   55 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:260:7 › a Agenda como o dono do produto a usa › as três visões desenham, e a régua do agora existe — NO PRODUTO (244ms)
+  ✓   56 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:299:7 › a Agenda como o dono do produto a usa › o filtro por pessoa ISOLA de verdade — clicando, no produto (480ms)
+  ✓   57 [chromium] › tests/e2e/agenda-tela-do-produto.spec.ts:326:7 › a Agenda como o dono do produto a usa › evidência visual da tela do produto (784ms)
+  ✓   58 [chromium] › tests/e2e/agenda-tipos-de-agendamento.spec.ts:76:5 › chego nos tipos CLICANDO no menu, e a lista mostra o que existe (2.7s)
+  ✓   59 [chromium] › tests/e2e/agenda-tipos-de-agendamento.spec.ts:101:5 › crio um tipo COM responsável, e ele passa a ser marcável na Agenda (2.9s)
+  ✓   60 [chromium] › tests/e2e/agenda-tipos-de-agendamento.spec.ts:146:5 › o tipo NASCE com responsável — e quem escolhe 'Definir depois' recebe a saída (5.1s)
+  ✓   61 [chromium] › tests/e2e/agenda-tipos-de-agendamento.spec.ts:241:5 › desativar tira o tipo da tela de marcar, sem apagar a história (4.1s)
+  ✓   62 [chromium] › tests/e2e/agenda-ver-na-agenda.spec.ts:64:5 › marcar, clicar em 'Ver na agenda', e ENCONTRAR o compromisso na grade (3.2s)
+[seed-e2e-agente-mcp] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+token MCP de agente emitido para a org 68fe016a-7312-4ee0-8417-2dd07a0ad659 (.e2e-agente-mcp.json)
+  ✓   63 [chromium] › tests/e2e/agente-marca-consulta.spec.ts:150:7 › o agente marca consulta › METADE 1: o agente consulta, marca, e a linha nasce (4.1s)
+  ✓   64 [chromium] › tests/e2e/agente-marca-consulta.spec.ts:189:7 › o agente marca consulta › METADE 1b: o agente NÃO marca em horário ocupado — pelo caminho real (621ms)
+  ✓   65 [chromium] › tests/e2e/agente-marca-consulta.spec.ts:222:7 › o agente marca consulta › METADE 2: o compromisso aparece na Agenda, na tela (16.1s)
+  ✓   66 [chromium] › tests/e2e/agente-novo-e-uso.spec.ts:44:7 › Criar um agente pela tela › o formulário abre e diz o que falta antes de deixar criar (3.2s)
+  ✓   67 [chromium] › tests/e2e/agente-novo-e-uso.spec.ts:69:7 › Criar um agente pela tela › preencho como uma pessoa faria e o agente nasce, com as capacidades que liguei (19.5s)
+  ✓   68 [chromium] › tests/e2e/agente-novo-e-uso.spec.ts:132:7 › Criar um agente pela tela › a tela oferece caminho para o que ela exige, sem exigir que o usuário adivinhe (28.5s)
+  ✓   69 [chromium] › tests/e2e/agente-novo-e-uso.spec.ts:164:7 › Olhar o consumo de IA › a tela mostra os números do período e nomeia o que eles são (30.5s)
+  ✓   70 [chromium] › tests/e2e/agente-novo-e-uso.spec.ts:189:7 › Olhar o consumo de IA › um período sem nenhum dado é explicado, não fica em branco (31.3s)
+[seed-e2e-agente-mcp] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+token MCP de agente emitido para a org 68fe016a-7312-4ee0-8417-2dd07a0ad659 (.e2e-agente-mcp.json)
+  ✓   71 [chromium] › tests/e2e/agente-organiza-operacao.spec.ts:174:7 › o agente organiza a operação e a tela conta quem foi › cria etapa, liga automação, e o egress externo continua barrado (25.4s)
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=23
+  ✓   72 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:102:7 › A aba do papel que organiza o sistema › os TRÊS papéis aparecem, e os nomes dizem o que cada um faz (1.1s)
+  ✓   73 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:115:7 › A aba do papel que organiza o sistema › o papel que confere mostra a lista inteira, aberta, e sem interruptor decorativo (1.2s)
+  ✓   74 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:155:7 › A aba do papel que organiza o sistema › desligado, a tela diz o que CONTINUA acontecendo — não só o que para (1.0s)
+  ✓   75 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:168:7 › A aba do papel que organiza o sistema › desligado, não oferece configuração que não vai valer (1.1s)
+  ✓   76 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:175:7 › A aba do papel que organiza o sistema › ligar revela as escolhas do papel, e elas são SÓ dele (801ms)
+  ✓   77 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:188:7 › A aba do papel que organiza o sistema › a escolha SOBREVIVE ao recarregar — o caso que pega o campo perdido no meio do caminho (2.9s)
+  ✓   78 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:216:7 › A aba do papel que organiza o sistema › o modelo do papel volta a herdar, e isso também sobrevive ao refresh (2.6s)
+  ✓   79 [chromium] › tests/e2e/agente-papeis-operador.spec.ts:235:7 › A aba do papel que organiza o sistema › a tela do papel não fala a NOSSA língua (697ms)
+  ✘   80 [chromium] › tests/e2e/auditoria-aceite-11-itens.spec.ts:182:5 › fase 6b — auditoria §100: varredura de todas as rotas estáticas em 1280 (1.3m)
+  -   81 [chromium] › tests/e2e/auditoria-aceite-11-itens.spec.ts:235:5 › fase 6b — evidência visual dos itens do checklist
+  ✓   82 [chromium] › tests/e2e/auth.spec.ts:5:7 › auth flow › anon GET /app/inbox redirects to /login (379ms)
+  ✓   83 [chromium] › tests/e2e/auth.spec.ts:12:7 › auth flow › invalid login shows error (1.9s)
+  ✓   84 [chromium] › tests/e2e/auth.spec.ts:22:7 › auth flow › login form is keyboard navigable in tab order (294ms)
+  ✓   85 [chromium] › tests/e2e/auth.spec.ts:34:7 › auth flow › login page has no serious or critical a11y violations (501ms)
+[seed-e2e-numero-conectado] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] número conectado (WORKING): 0c901725-6dab-45b6-a224-10732ae877db
+[seed] janela de envio fixada em 0h-24h (domingo liberado) em 6 canal(is)
+[seed-e2e-numero-conectado] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] número conectado (WORKING): 0c901725-6dab-45b6-a224-10732ae877db
+[seed] janela de envio fixada em 0h-24h (domingo liberado) em 6 canal(is)
+  ✓   86 [chromium] › tests/e2e/automacao-diz-a-verdade.spec.ts:114:7 › a automação conta o que aconteceu de verdade › envio que morre aparece como FALHOU, com a razão — nunca como sucesso (14.0s)
+  ✓   87 [chromium] › tests/e2e/automacao-diz-a-verdade.spec.ts:314:7 › a automação conta o que aconteceu de verdade › a ação 'Mensagem escrita pela IA' aparece no ENTÃO e pede agente, número e contexto (6.2s)
+[seed-e2e-campanha-entrega] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-campanha-entrega OK — campanha cbf5c604-dcc6-4149-a13c-e03151e506bf
+  ✓   88 [chromium] › tests/e2e/campanha-controle-entrega.spec.ts:52:5 › o controle separa enviada, entregue, lida e falha na entrega (2.6s)
+  ✓   89 [chromium] › tests/e2e/capacidades-do-agente.spec.ts:165:7 › Configurar o que o agente pode fazer › as jornadas aparecem em português, com explicação e contagem (2.7s)
+  ✓   90 [chromium] › tests/e2e/capacidades-do-agente.spec.ts:207:7 › Configurar o que o agente pode fazer › ligar uma jornada NÃO dá ao agente o direito de mandar WhatsApp (27.9s)
+  ✓   91 [chromium] › tests/e2e/capacidades-do-agente.spec.ts:292:7 › Configurar o que o agente pode fazer › o modo avançado revela a ficha e o nome técnico (30.1s)
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=23
+  ✓   92 [chromium] › tests/e2e/capacidades-do-agente.spec.ts:311:7 › Configurar o que o agente pode fazer › a escolha sobrevive ao salvar e recarregar (32.3s)
+  ✓   93 [chromium] › tests/e2e/capacidades-do-agente.spec.ts:354:7 › Olhar o agente funcionando › o painel mostra o uso real, e o que fazer com cada número (3.1s)
+  ✓   94 [chromium] › tests/e2e/central-de-avisos-capacidades.spec.ts:57:7 › Central de avisos — o atendimento que saiu sem as ferramentas › o aviso aparece, em português de gente, com o motivo técnico junto (1.8s)
+  ✓   95 [chromium] › tests/e2e/central-de-avisos-capacidades.spec.ts:100:7 › Central de avisos — o atendimento que saiu sem as ferramentas › o aviso é acionável: dá para resolver e ele sai da lista de abertos (2.5s)
+  ✓   96 [chromium] › tests/e2e/compras-do-rascunho-ao-estoque.spec.ts:24:5 › compras — do pedido em rascunho ao recebimento no estoque (23.1s)
+  ✓   97 [chromium] › tests/e2e/confirmar-dado-do-contato.spec.ts:92:7 › o dado que o cliente disse espera confirmação › aparece na ficha com o trecho, e CONFIRMAR grava (5.5s)
+  ✓   98 [chromium] › tests/e2e/confirmar-dado-do-contato.spec.ts:147:7 › o dado que o cliente disse espera confirmação › DESCARTAR tira da tela sem gravar (3.5s)
+  ✓   99 [chromium] › tests/e2e/contato-salva-email.spec.ts:59:5 › o e-mail digitado na tela do contato fica salvo (3.9s)
+  ✓  100 [chromium] › tests/e2e/conversa-vira-lead.spec.ts:93:7 › a conversa vira lead › mensagem de quem nunca escreveu vira card no funil de entrada (2.6s)
+  ✓  101 [chromium] › tests/e2e/conversa-vira-lead.spec.ts:114:7 › a conversa vira lead › a timeline explica de onde o card veio (2.3s)
+  ✓  102 [chromium] › tests/e2e/conversa-vira-lead.spec.ts:126:7 › a conversa vira lead › a segunda mensagem do mesmo contato NÃO abre um segundo card (2.3s)
+  ✓  103 [chromium] › tests/e2e/credenciais-de-ia.spec.ts:12:7 › Chaves de acesso à IA › [P0] chave inválida vira frase legível, e a tela diz onde pegar outra (7.8s)
+  ✘  104 [chromium] › tests/e2e/degradacao-silenciosa.spec.ts:117:7 › degradação silenciosa do tempo real › com a entrega morta, a tela avisa que pode estar desatualizada (17.5s)
+  ✓  105 [chromium] › tests/e2e/distribuicao-atendimento.spec.ts:73:7 › distribuição de atendimento — a tela que liga o rodízio e a visibilidade › manager liga o rodízio e a restrição pela tela, e o estado sobrevive ao reload (2.5s)
+  ✓  106 [chromium] › tests/e2e/distribuicao-atendimento.spec.ts:124:7 › distribuição de atendimento — a tela que liga o rodízio e a visibilidade › a combinação que mata a operação é avisada antes de salvar (1.8s)
+  ✓  107 [chromium] › tests/e2e/distribuicao-atendimento.spec.ts:139:7 › distribuição de atendimento — a tela que liga o rodízio e a visibilidade › atendente não abre a tela nem consegue gravar pela API (1.6s)
+  ✓  108 [chromium] › tests/e2e/entrada-do-endereco.spec.ts:27:5 › endereço sem número — aviso, entrada marcada, memória e confirmação (15.0s)
+  ✓  109 [chromium] › tests/e2e/error-pages.spec.ts:4:7 › error pages › /404 renders PT-BR copy (229ms)
+  ✓  110 [chromium] › tests/e2e/error-pages.spec.ts:11:7 › error pages › /403 renders sem permissão (200ms)
+  ✓  111 [chromium] › tests/e2e/error-pages.spec.ts:16:7 › error pages › /500 renders erro interno (186ms)
+  ✓  112 [chromium] › tests/e2e/error-pages.spec.ts:21:7 › error pages › /503 renders manutenção (196ms)
+  ✓  113 [chromium] › tests/e2e/error-pages.spec.ts:38:7 › documentos legais › /legal/terms abre SEM sessão — é o que o aceite do onboarding linka (209ms)
+  ✓  114 [chromium] › tests/e2e/error-pages.spec.ts:46:7 › documentos legais › /legal/privacy abre SEM sessão e nomeia o responsável (218ms)
+  ✓  115 [chromium] › tests/e2e/error-pages.spec.ts:56:7 › documentos legais › o vizinho de /legal continua fechado — a liberação é dos dois, não do prefixo (217ms)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+  ✓  116 [chromium] › tests/e2e/escalacao-ciclo.spec.ts:173:7 › IA 360 W3 — o agente para, a pessoa continua, o agente retoma sabendo › ciclo completo: chamado → decisão da pessoa → devolução → o agente volta citando (7.9s)
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=23
+  ✓  117 [chromium] › tests/e2e/escopo-de-funil-do-agente.spec.ts:100:7 › a marcação de funis do assistente › nasce FECHADA e a tela explica o que isso significa (827ms)
+  ✓  118 [chromium] › tests/e2e/escopo-de-funil-do-agente.spec.ts:120:7 › a marcação de funis do assistente › marcar um funil SOBREVIVE ao salvar e recarregar (2.4s)
+  ✓  119 [chromium] › tests/e2e/estoque-entrada-saida-e-saldo.spec.ts:21:5 › estoque — entrada e saída registradas no razão mudam o saldo (32.6s)
+  ✘  120 [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:29:5 › fase 5b — compras, estoque e carteira usam a FilterBar canônica (desktop) (26.1s)
+  ✘  121 [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:75:5 › fase 5b — FilterBar canônica empilha no mobile 390 (2.3s)
+  ✓  122 [chromium] › tests/e2e/followup-builder.spec.ts:101:7 › followup flows — lista + criação (Task 6.1) › manager cria um fluxo e ele aparece na lista com badge Rascunho (2.4s)
+  ✓  123 [chromium] › tests/e2e/followup-builder.spec.ts:129:7 › followup flows — lista + criação (Task 6.1) › viewer não vê o botão de criar fluxo (RBAC) (1.6s)
+  ✓  124 [chromium] › tests/e2e/followup-builder.spec.ts:192:7 › followup flow builder — canvas visual (Task 6.2) › manager cria um fluxo, clica na linha e o canvas React Flow abre (3.2s)
+  ✓  125 [chromium] › tests/e2e/followup-builder.spec.ts:216:7 › followup flow builder — canvas visual (Task 6.2) › adiciona os 4 nós via paleta e conecta trigger→wait→action→end (5.1s)
+  ✓  126 [chromium] › tests/e2e/followup-builder.spec.ts:263:7 › followup flow builder — canvas visual (Task 6.2) › clica no nó Aguardar e configura 10min; clica no nó Ação e configura o prompt_hint (3.4s)
+  ✓  127 [chromium] › tests/e2e/followup-builder.spec.ts:307:7 › followup flow builder — canvas visual (Task 6.2) › fluxo completo: montar, publicar incompleto (422 ancorado), corrigir, publicar, recarregar, rollback desabilitado (12.2s)
+  ✓  128 [chromium] › tests/e2e/followup-builder.spec.ts:492:7 › followup flow builder — editor de condição de aresta / ai_classify (Task 6.3) › ai_classify só publica depois de configurar class_match/no_reply/always nas arestas de saída (13.4s)
+[seed-e2e-followup-agent] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+
+✅ Followup agent fixtures seed completo. credential=01dd9027-59ef-4318-83fc-6d92c966e609 channel_session=b7d06963-ad61-41d1-86fa-f8555290c783
+  ✓  129 [chromium] › tests/e2e/followup-builder.spec.ts:650:7 › followup flow selector no editor do agente (Task 7.2) › admin vincula um fluxo publicado ao agente, salva, e a persistência é provada via API (5.3s)
+  ✓  130 [chromium] › tests/e2e/followup-builder.spec.ts:754:7 › followup flow builder — controle de gatilho na PublishBar (Task 8.5) › operador arma o gatilho de Silêncio (threshold) pela UI; oferece só os kinds com motor; PATCH round-trips (3.8s)
+  ✓  131 [chromium] › tests/e2e/followup-dossie.spec.ts:191:7 › dossiê do follow-up — ler a história e intervir › manager abre o dossiê pela fila, lê a história traduzida e intervém (8.5s)
+  ✓  132 [chromium] › tests/e2e/followup-dossie.spec.ts:289:7 › dossiê do follow-up — ler a história e intervir › viewer lê o dossiê inteiro e não tem botão de intervir — nem no servidor (6.6s)
+  ✓  133 [chromium] › tests/e2e/followup-dossie.spec.ts:319:7 › dossiê do follow-up — ler a história e intervir › o dossiê mostra o tempo que a IA escolheu — e quanto ela pediu antes do corte (5.0s)
+[seed-e2e-followup-agent] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+
+✅ Followup agent fixtures seed completo. credential=01dd9027-59ef-4318-83fc-6d92c966e609 channel_session=b7d06963-ad61-41d1-86fa-f8555290c783
+  ✓  134 [chromium] › tests/e2e/followup-journey.spec.ts:224:7 › followup — jornada completa (Task 8.3) › silêncio → enroll → trigger→wait→action→classify → resposta → outcome → fila (27.9s)
+  ✓  135 [chromium] › tests/e2e/followup-linguagem.spec.ts:84:7 › construtor de follow-up — a tela não fala em código (W2-LINGUAGEM) › nenhum valor de wire e nenhum UUID aparecem no painel de nenhum tipo de nó (4.2s)
+[seed-e2e-followup-promise] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+
+✅ Follow-up promise seed completo. cron_job=e23b31d1-3256-44fd-a0e7-8cd3b39bb041 contact=cb91e1bd-4e8a-478e-ae38-616495f3c820
+  ✓  136 [chromium] › tests/e2e/followup-queue.spec.ts:154:7 › followup queue — fila unificada (Task 7.1) › manager vê enrollment na fila, filtra por status/fluxo, cancela, e a promessa seedada aparece (6.0s)
+  ✓  137 [chromium] › tests/e2e/followup-queue.spec.ts:258:7 › followup queue — fila unificada (Task 7.1) › viewer vê a fila (leitura) mas não consegue cancelar — 403 client E server-side (5.2s)
+[medida] card: 1 saída = 43.40275573730469px · 2 regras = 101.27316284179688px · 5 regras = 159.14352416992188px (3.67x)
+  ✓  138 [chromium] › tests/e2e/followup-ramos.spec.ts:120:7 › condição com várias regras — uma bolinha por regra › duas regras dão duas saídas separadas, e dois leads seguem caminhos diferentes (12.5s)
+  ✓  139 [chromium] › tests/e2e/followup-tempo-adaptativo.spec.ts:142:7 › nó de espera — o modo Adaptativo tem de decidir de verdade › a espera configurada como Adaptativa não pode agendar o máximo (9.8s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  140 [chromium] › tests/e2e/form-field-canonico.spec.ts:36:5 › FormField canônico nos 6 forms (4.9s)
+{"ok":true}
+  ✓  141 [chromium] › tests/e2e/gatilho-de-caso.spec.ts:154:7 › gatilho de caso aberto › o caso aberto pelo agente arma o follow-up, e resolvê-lo o cancela (9.0s)
+{"ok":true}
+  ✓  142 [chromium] › tests/e2e/gatilho-de-etapa.spec.ts:140:7 › gatilho de etapa do funil › o negócio movido no quadro para a etapa escolhida arma o follow-up sozinho (11.1s)
+  ✓  143 [chromium] › tests/e2e/historico-de-captacao.spec.ts:68:7 › histórico de leads captados › captação entra, aparece na tela com dados/hora/origem/IP, e a recusada também (11.5s)
+  ✓  144 [chromium] › tests/e2e/historico-de-captacao.spec.ts:183:7 › histórico de leads captados › o VIEWER não alcança o histórico — o formulário tem PII (6.5s)
+  ✓  145 [chromium] › tests/e2e/icone-da-marca.spec.ts:20:7 › o ícone e o título carregam a marca da instalação › GET /icon responde imagem para quem não entrou (642ms)
+  ✓  146 [chromium] › tests/e2e/icone-da-marca.spec.ts:38:7 › o ícone e o título carregam a marca da instalação › o <head> do login declara o ícone — é o que mata o pedido a /favicon.ico (368ms)
+  ✓  147 [chromium] › tests/e2e/icone-da-marca.spec.ts:51:7 › o ícone e o título carregam a marca da instalação › o título da aba herda a marca resolvida, e é a MESMA que a tela mostra (256ms)
+[seed-e2e-recompra] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-recompra OK
+  ✓  148 [chromium] › tests/e2e/imprimir-pedidos-mesma-aba.spec.ts:40:5 › Imprimir pedidos entrega o PDF na MESMA aba, sem página intermediária (5.1s)
+  ✓  149 [chromium] › tests/e2e/inbox-abas-espelham-o-comando.spec.ts:140:7 › Inbox: as abas perguntam quem manda › Fila mostra só quem espera uma PESSOA; Automático mostra o que o robô conduz (15.9s)
+  ✓  150 [chromium] › tests/e2e/inbox-quem-manda.spec.ts:165:7 › Inbox — quem manda nesta conversa › o automático atende, a pessoa assume, o automático PARA, e a volta existe (5.0s)
+  ✓  151 [chromium] › tests/e2e/inbox-quem-manda.spec.ts:248:7 › Inbox — quem manda nesta conversa › a conversa que o automático escalou APARECE na Fila (2.4s)
+  ✘  152 [chromium] › tests/e2e/inbox-responder-citando.spec.ts:101:7 › responder citando › o botão de responder revela a faixa, e o × a desfaz (30.6s)
+  ✘  153 [chromium] › tests/e2e/inbox-responder-citando.spec.ts:127:7 › responder citando › trocar de conversa LIMPA a citação (30.5s)
+  ✓  154 [chromium] › tests/e2e/inbox-scope.spec.ts:32:7 › G4-02 — inbox com escopo › agent em modo own*: vê Minhas e Fila, NÃO vê Todas (1.6s)
+  ✓  155 [chromium] › tests/e2e/inbox-scope.spec.ts:41:7 › G4-02 — inbox com escopo › manager: vê a visão Todas (1.5s)
+  ✓  156 [chromium] › tests/e2e/inbox-scope.spec.ts:48:7 › G4-02 — inbox com escopo › deep-link para conversa fora do escopo → estado vazio claro (sem stack trace) (3.2s)
+  ✓  157 [chromium] › tests/e2e/inteligencia-carrega.spec.ts:21:5 › inteligência carrega sem derrubar o SegmentError (3.3s)
+  ✓  158 [chromium] › tests/e2e/invite-lifecycle.spec.ts:177:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 1. ciclo feliz: convidar → aceitar → vira agent → cai no inbox (4.9s)
+  ✓  159 [chromium] › tests/e2e/invite-lifecycle.spec.ts:216:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 2. escopo pós-aceite: agent vê inbox/kanban, bloqueado em billing/api-tokens (2.7s)
+  ✓  160 [chromium] › tests/e2e/invite-lifecycle.spec.ts:233:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 3. permissão pós-aceite: agent NÃO consegue convidar (403) (1.0s)
+  ✓  161 [chromium] › tests/e2e/invite-lifecycle.spec.ts:241:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 4. reuso do token: aceitar 2x é idempotente (sem membership duplicada) (2.3s)
+  ✓  162 [chromium] › tests/e2e/invite-lifecycle.spec.ts:268:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 5. already_member: reconvidar quem já é membro → failed already_member (2.3s)
+  ✓  163 [chromium] › tests/e2e/invite-lifecycle.spec.ts:277:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 6. token expirado → convite inválido ou expirado (309ms)
+  ✓  164 [chromium] › tests/e2e/invite-lifecycle.spec.ts:289:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 7. token adulterado (HMAC quebrado) → inválido (228ms)
+  ✓  165 [chromium] › tests/e2e/invite-lifecycle.spec.ts:303:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 8. email não corresponde: logado com outra conta → mismatch (1.4s)
+  ✓  166 [chromium] › tests/e2e/invite-lifecycle.spec.ts:317:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 9. não autenticado → CTA de login, não o formulário de aceite (207ms)
+  ✓  167 [chromium] › tests/e2e/invite-lifecycle.spec.ts:343:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 10. sem conta → o caminho existe e leva o convite junto (307ms)
+  ✓  168 [chromium] › tests/e2e/invite-lifecycle.spec.ts:360:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 11. o signup com convite não pede empresa, e trava o e-mail (208ms)
+  ✓  169 [chromium] › tests/e2e/invite-lifecycle.spec.ts:379:7 › ciclo de vida do convite (ponta a ponta + adversarial) › 12. convite expirado no signup avisa, em vez de abrir empresa nova (219ms)
+  ✓  170 [chromium] › tests/e2e/jornada-expedicao.spec.ts:32:5 › jornada 4 (expedição) — pedido vira carga, sai para rota e é concluído (7.3s)
+  ✓  171 [chromium] › tests/e2e/jornada-financeiro.spec.ts:25:5 › jornada 5 (financeiro) — faturar gera título, receber baixa e conciliar acusa a NF (18.1s)
+  ✓  172 [chromium] › tests/e2e/jornada-fiscal.spec.ts:47:5 › jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado honesto sem emissor (37.3s)
+  ✓  173 [chromium] › tests/e2e/jornada-ia.spec.ts:32:5 › jornada 3 (ia) — proposta do Brain vira aprovação e a ação é honesta no Decision Log (17.2s)
+  ✓  174 [chromium] › tests/e2e/jornada-venda.spec.ts:39:5 › jornada 1 (venda) — do login ao pedido criado, aprovado e faturável (31.4s)
+  ✓  175 [chromium] › tests/e2e/kanban-owner-filter.spec.ts:51:5 › filtro por responsável reflete na URL e esconde leads com dono (2.3s)
+[seed-e2e-capacidades] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+✅ Seed de capacidades completo. agent=6ee88aac-07fe-455a-b572-c5c91fdeb9d8 version=c6ce49fa-e56f-4430-a150-1a4934e14311 chamadas auditadas na org=23
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  176 [chromium] › tests/e2e/kpi-e-charts-canonicos.spec.ts:37:5 › NexusKpi e NexusChart nas 7 telas (9.4s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  177 [chromium] › tests/e2e/marca-logo.spec.ts:478:7 › o logo subido pela tela chega à tela › (1) o dono do servidor sobe o logo e ele aparece na barra lateral (4.5s)
+  ✓  178 [chromium] › tests/e2e/marca-logo.spec.ts:536:7 › o logo subido pela tela chega à tela › (2) quem NÃO entrou vê o logo do dono na tela de acesso — a P0 (612ms)
+  ✓  179 [chromium] › tests/e2e/marca-logo.spec.ts:551:7 › o logo subido pela tela chega à tela › (3) o logo da EMPRESA troca a barra dela e NÃO vaza para a tela de acesso (4.0s)
+  ✓  180 [chromium] › tests/e2e/marca-logo.spec.ts:584:7 › o logo subido pela tela chega à tela › (4) SVG renomeado para .png é recusado pelos BYTES, com a razão dita (5.5s)
+  ✓  181 [chromium] › tests/e2e/marca-logo.spec.ts:647:7 › o logo subido pela tela chega à tela › (5) remover devolve o logo da camada de baixo (3.3s)
+  ✓  182 [chromium] › tests/e2e/marca-logo.spec.ts:669:7 › o logo subido pela tela chega à tela › (6) o dono remove o logo da instalação e a fachada volta ao que era (8.1s)
+evidência: evidence/meu-dia-alertas.png
+  ✓  183 [chromium] › tests/e2e/meu-dia-alertas.spec.ts:37:5 › alertas: a rotina cria, o Meu Dia mostra, e resolver tira da tela (5.9s)
+  ✓  184 [chromium] › tests/e2e/meu-dia.spec.ts:74:5 › meu dia: linha do tempo monta, Concluir some a tarefa e a tela não quebra (12.0s)
+  ✓  185 [chromium] › tests/e2e/mfa-opcional.spec.ts:88:7 › a verificação em duas etapas é escolha, não imposição › admin entra no sistema sem ser parado (764ms)
+  ✓  186 [chromium] › tests/e2e/mfa-opcional.spec.ts:94:7 › a verificação em duas etapas é escolha, não imposição › e a tela de Segurança oferece LIGAR — antes isso era inalcançável (1.4s)
+  ✓  187 [chromium] › tests/e2e/mfa-opcional.spec.ts:115:7 › a verificação em duas etapas é escolha, não imposição › o admin pode EXIGIR da equipe — e a exigência pega de verdade (2.5s)
+  ✓  188 [chromium] › tests/e2e/mfa-opcional.spec.ts:140:7 › a verificação em duas etapas é escolha, não imposição › desligar a exigência devolve o acesso (764ms)
+  ✓  189 [chromium] › tests/e2e/navegacao.spec.ts:85:7 › navegação agrupada › o sidebar tem hierarquia: grupos na ordem de uso (1.4s)
+  ✓  190 [chromium] › tests/e2e/navegacao.spec.ts:110:7 › navegação agrupada › chega nas Etapas do funil pelo hub de Configurações (19.9s)
+  ✓  191 [chromium] › tests/e2e/navegacao.spec.ts:125:7 › navegação agrupada › a lista de funis é item de sidebar, com nome próprio (29.2s)
+  ✓  192 [chromium] › tests/e2e/navegacao.spec.ts:134:7 › navegação agrupada › chega em Conhecimento, que só existia atrás das abas de IA (30.1s)
+  ✓  193 [chromium] › tests/e2e/navegacao.spec.ts:157:7 › navegação agrupada › chega ao canal oficial pelo hub de Configurações (31.2s)
+  ✓  194 [chromium] › tests/e2e/navegacao.spec.ts:167:7 › navegação agrupada › o ⌘K acha o canal oficial por nome, mesmo sem tela própria (27.9s)
+  ✓  195 [chromium] › tests/e2e/navegacao.spec.ts:177:7 › navegação agrupada › ⌘K abre, filtra e navega (31.3s)
+  ✓  196 [chromium] › tests/e2e/navegacao.spec.ts:199:7 › navegação agrupada › a busca global tem página própria e a ponte da paleta leva para lá (30.3s)
+  ✓  197 [chromium] › tests/e2e/navegacao.spec.ts:228:7 › navegação agrupada › nenhum grupo fica fora da dobra, e em 900px o menu não rola (28.2s)
+  ✓  198 [chromium] › tests/e2e/navegacao.spec.ts:250:9 › navegação agrupada › mobile › em 390px, o sidebar vira gaveta e não cria overflow horizontal (30.8s)
+  ✓  199 [chromium] › tests/e2e/navegacao.spec.ts:276:7 › navegação agrupada › Configurações fica fixo no rodapé, fora da área que rola (29.2s)
+  ✓  200 [chromium] › tests/e2e/navegacao.spec.ts:293:7 › navegação agrupada › um agent vê um grupo só-hub com a porta dele, e não o grupo que a §19 dissolveu (973ms)
+  ✓  201 [chromium] › tests/e2e/navegacao.spec.ts:305:7 › navegação agrupada › o sino da central abre o painel (§17) e o painel tem porta para a central inteira (29.7s)
+  ✓  202 [chromium] › tests/e2e/notas-fiscais-modulo.spec.ts:59:5 › as 12 subtelas do módulo fiscal abrem com sessão real (35.6s)
+  ✘  203 [chromium] › tests/e2e/notas-fiscais-modulo.spec.ts:75:5 › a porta do sidebar é /app/fiscal e a navegação lista as subtelas (29.2s)
+  ✓  204 [chromium] › tests/e2e/notas-fiscais-modulo.spec.ts:104:5 › nota inexistente cai na tela de 404, não em erro de servidor (2.7s)
+  ✓  205 [chromium] › tests/e2e/notificacoes-diz-o-que-falta.spec.ts:103:7 › Notificações — a tela conta a verdade sobre esta instalação › sem o par VAPID, a tela diz o que falta e o que fazer — e não fica muda (1.7s)
+  ✓  206 [chromium] › tests/e2e/notificacoes-diz-o-que-falta.spec.ts:144:7 › Notificações — a tela conta a verdade sobre esta instalação › sem VAPID a tela mantém o controle de Push e explica por que ele está travado (1.3s)
+  ✓  207 [chromium] › tests/e2e/olhar-telas-do-epico.spec.ts:65:7 › as telas do épico abrem para uma pessoa › cada tela abre, tem conteúdo e não cospe erro no console (32.0s)
+  ✓  208 [chromium] › tests/e2e/password-recovery.spec.ts:65:5 › recuperar senha: forgot → e-mail → nova senha → login com a nova (3.2s)
+  ✓  209 [chromium] › tests/e2e/pedido-idempotencia.spec.ts:23:5 › idempotência ao vivo: retry com a mesma chave não duplica (2.3s)
+  ✓  210 [chromium] › tests/e2e/pipelines-gestao.spec.ts:89:7 › gestão de funis › a lista mostra só a organização ativa, mesmo com funil homônimo em outra (1.3s)
+  ✓  211 [chromium] › tests/e2e/pipelines-gestao.spec.ts:103:7 › gestão de funis › cria funil com colunas, edita, e as recusas aparecem explicadas (5.7s)
+  ✓  212 [chromium] › tests/e2e/pipelines-gestao.spec.ts:172:5 › quem não pode gerenciar vê a lista sem os controles de escrita (1.5s)
+[seed-e2e-prospeccao-mapa] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-prospeccao-mapa OK
+  ✘  213 [chromium] › tests/e2e/prospeccao-mapa.spec.ts:40:5 › mapa mostra marcadores, clique sincroniza lista e detalhe abre (30.3s)
+[seed-e2e-radar-prospects] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-radar-prospects OK
+  ✓  214 [chromium] › tests/e2e/prospeccao-radar.spec.ts:40:5 › radar: novos prospects com as 3 ações — fila, abrir e conversa (6.2s)
+  ✓  215 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:60:5 › F0/F1 — o painel abre agrupado, explica os pontos e diz a origem (2.9s)
+  ✓  216 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:92:5 › F1 — ponto fixo mostra a RAZÃO, não um cadeado mudo (21.1s)
+  ✓  217 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:104:5 › F3 — a OpenRouter é oferecida e seus modelos estão no seletor (30.3s)
+  ✓  218 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:122:5 › F1 — trocar o modelo GRAVA, e a tela passa a mostrar o novo (31.1s)
+  ✓  219 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:153:5 › F1/F3 — a catraca RECUSA modelo sem ferramentas no ponto que cria o lead (28.5s)
+  ✓  220 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:166:5 › F2 — a tela de execuções abre e responde 'está tudo bem?' (30.1s)
+  ✓  221 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:176:5 › as duas telas têm porta na navegação — pelo hub de IA (29.1s)
+  ✓  222 [chromium] › tests/e2e/prova-painel-provedores.spec.ts:188:5 › instalação sem agente publicado: os dois pontos principais são EDITÁVEIS (31.1s)
+[QA] versão de teste f4654915-d3af-43a1-af7a-5552e7d51c16 com 14 capacidades
+[QA] cenários nesta corrida: 1-ler-o-funil, 2-marcador-existente, 3-diagnostico-de-entrada, 4-capacidade-apenas-humana, 5-barreira-de-verdade, 6-respostas-prontas, 7-automacoes-e-falhas, 8-desligar-automacao, 9-quem-pode-mexer, 10-mandar-resposta-pronta
+[QA] --- 1-ler-o-funil ---
+[QA] esperado: crm_list_pipelines e/ou crm_list_stages
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 123ms
+[QA] resposta: (vazia)
+[QA] --- 2-marcador-existente ---
+[QA] esperado: crm_list_tags antes de qualquer crm_manage_tags
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 41ms
+[QA] resposta: (vazia)
+[QA] --- 3-diagnostico-de-entrada ---
+[QA] esperado: crm_list_webhook_sources + crm_list_webhook_source_events
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 49ms
+[QA] resposta: (vazia)
+[QA] --- 4-capacidade-apenas-humana ---
+[QA] esperado: crm_create_stage — que é apenasHumano e deve ser RECUSADA pelo papel
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 32ms
+[QA] resposta: (vazia)
+[QA] --- 5-barreira-de-verdade ---
+[QA] esperado: crm_create_stage tentado e RECUSADO (apenasHumano + requiresRole manager)
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 37ms
+[QA] resposta: (vazia)
+[QA] --- 6-respostas-prontas ---
+[QA] esperado: crm_list_message_templates
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 23ms
+[QA] resposta: (vazia)
+[QA] --- 7-automacoes-e-falhas ---
+[QA] esperado: crm_list_automation_rules + crm_list_automation_runs
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 27ms
+[QA] resposta: (vazia)
+[QA] --- 8-desligar-automacao ---
+[QA] esperado: crm_set_automation_rule_active (pode bater em papel/apenasHumano)
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 26ms
+[QA] resposta: (vazia)
+[QA] --- 9-quem-pode-mexer ---
+[QA] esperado: crm_list_team_members — território de papel de acesso
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 23ms
+[QA] resposta: (vazia)
+[QA] --- 10-mandar-resposta-pronta ---
+[QA] esperado: crm_render_message_template
+[QA] chamou:   (NENHUMA ferramenta)
+[QA] status:   failed · 24ms
+[QA] resposta: (vazia)
+[QA] relatório salvo em evidence/ia-360-w4/qa-turnos-do-agente.md
+  ✓  223 [chromium] › tests/e2e/qa-agente-usa-as-maos.spec.ts:414:7 › QA — o agente usa as mãos que a W4 entregou? › um modelo de verdade escolhendo as capacidades novas (21.6s)
+[QA] selos na tela → assistente: 1 · você/time: 0
+[QA] proporção do sinal que importa: 1/1 = 100%
+[QA] altura ocupada por selo: 16px de 936px da lista (2%)
+[QA] captura salva: qa-selo-no-funil-usado.png
+  ✓  224 [chromium] › tests/e2e/qa-selo-no-funil-usado.spec.ts:52:7 › QA — o selo de autoria com o funil já vivido › quantos selos o dono vê depois de algumas semanas de uso (9.4s)
+[QA] /app/templates · h1="Respostas rápidas"
+[QA] /app/templates · botões: Recolher | EE2E Test Org | Buscar...⌘K | 3 | EM |  Novo template
+[QA] /app/templates · primeiros 220 chars: Pular para o conteúdo NEXUS VISÃO GERAL Dashboard Meu Dia VENDAS Pedidos Clientes Produtos Funis Prospecção ATENDIMENTO Inbox Radar Follow-ups Agenda INTELIGÊNCIA Ver tudo em IA OPERAÇÃO Estoque Compras Expedição FINANCE
+[QA] /app/templates · dá para criar pela tela? SIM
+[QA] /app/templates · resposta criada pela interface e visível na lista
+  ✓  225 [chromium] › tests/e2e/qa-telas-descobertas-w4.spec.ts:61:7 › QA — as telas da W4 que ninguém abria › respostas prontas: o usuário cria uma PELA TELA (6.4s)
+[QA] /app/settings/templates · URL final: http://localhost:3001/403
+[QA] /app/settings/templates · h1="403 — Sem permissão"
+[QA] /app/settings/templates · botões: (nenhum)
+[QA] /app/settings/templates · primeiros 220 chars: 403 — Sem permissão Você não tem acesso a essa área. Voltar Voltar pra Inbox
+  ✓  226 [chromium] › tests/e2e/qa-telas-descobertas-w4.spec.ts:98:7 › QA — as telas da W4 que ninguém abria › settings/templates: o que é essa segunda porta (6.9s)
+[QA] funil alvo: 714dbeb6-8873-4771-9b72-6c5240109f34
+[QA] assistente criou etapa → HTTP 200
+[QA] corpo da resposta MCP: event: message data: {"result":{"content":[{"type":"text","text":"{\"stage_id\":\"d75a41df-7399-4448-9611-10c26c5036ca\",\"etapas\":[{\"id\":\"46a387d5-9390-42fd-b230-25a30decd371\",\"name\":\"Carrinho abandonado\",\"slug\":\"carrinho_abandonado\",\"position\":1000,\"is_won\":false,\"is_lost\":false,\"last_change_actor_kind\":\"user\",\"last_change_at\":\"2026-10-18T02:47:06.197999+00:00\"},{\"id\":\"93afa7c7-feab-45b8-822f-111c1825de3f\",\"name\":\"Aguardando pagamento\",\"slug\":\"aguardando_p
+[QA] /app/audit · h1="Audit Log"
+[QA] /app/audit · botões: Recolher | EE2E Test Org | Buscar...⌘K | 3 | EM | Exportar CSV
+[QA] /app/audit · primeiros 220 chars: Pular para o conteúdo NEXUS VISÃO GERAL Dashboard Meu Dia VENDAS Pedidos Clientes Produtos Funis Prospecção ATENDIMENTO Inbox Radar Follow-ups Agenda INTELIGÊNCIA Ver tudo em IA OPERAÇÃO Estoque Compras Expedição FINANCE
+[QA] /app/audit · encontra a AÇÃO (pipeline.stage_created)? NÃO
+[QA] /app/audit · encontra O QUE MUDOU (nome da etapa)? NÃO
+[QA] /app/audit · a linha diz que foi o ASSISTENTE? NÃO
+  ✓  227 [chromium] › tests/e2e/qa-telas-descobertas-w4.spec.ts:111:7 › QA — as telas da W4 que ninguém abria › histórico: o dono consegue achar o que o assistente mudou? (6.6s)
+[seed-e2e-queue] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] conversation created in queue: 869a56cd-2e95-401c-a601-34a4b9d73846
+
+✅ Queue seed completo. conversation=869a56cd-2e95-401c-a601-34a4b9d73846
+  ✓  228 [chromium] › tests/e2e/queue-assign.spec.ts:84:7 › G5-03 — fila com posição + atribuição › conversa aparece na Fila com o tempo de espera → worker atribui → move para Minhas (4.5s)
+  ✓  229 [chromium] › tests/e2e/rbac-roles.spec.ts:104:7 › rbac role matrix (spec 13 §4) › agent é bloqueado em api-tokens e billing (403) (2.5s)
+  ✓  230 [chromium] › tests/e2e/rbac-roles.spec.ts:118:7 › rbac role matrix (spec 13 §4) › admin acessa api-tokens e billing (login com MFA TOTP) (3.5s)
+  ✓  231 [chromium] › tests/e2e/rbac-roles.spec.ts:131:7 › rbac role matrix (spec 13 §4) › agent vê inbox e kanban (2.6s)
+  ✓  232 [chromium] › tests/e2e/rbac-roles.spec.ts:147:7 › rbac role matrix (spec 13 §4) › viewer não consegue enviar mensagem (403 no POST /api/v1/messages) (920ms)
+[seed-e2e-recompra] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+seed-e2e-recompra OK
+  ✓  233 [chromium] › tests/e2e/recompra-radar.spec.ts:40:5 › recompra atrasada aparece com atraso e link para os pedidos (3.5s)
+  ✓  234 [chromium] › tests/e2e/relogio-http-cron-externo.spec.ts:208:7 › Relógio HTTP — a batida de um cron externo faz o follow-up andar › segredo errado é recusado — e o relógio NÃO anda (356ms)
+  ✓  235 [chromium] › tests/e2e/relogio-http-cron-externo.spec.ts:227:7 › Relógio HTTP — a batida de um cron externo faz o follow-up andar › ⭐ com o segredo certo, as batidas movem o enrollment até o fim (737ms)
+  ✓  236 [chromium] › tests/e2e/reset-password-mfa.spec.ts:50:5 › reset de senha com MFA pede o código TOTP e conclui (1.4s)
+  ✓  237 [chromium] › tests/e2e/responsividade-nas-rotas.spec.ts:22:5 › fase 6 — telas mobile-priority em 390 (7.0s)
+  ✓  238 [chromium] › tests/e2e/responsividade-nas-rotas.spec.ts:71:5 › fase 6 — nenhuma rota do app vaza em 390, 430 e 768 (2.2m)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+[audit] insert error insert or update on table "api_audit_log" violates foreign key constraint "api_audit_log_actor_api_token_id_fkey" { action: 'followup.scheduled' }
+  ✓  239 [chromium] › tests/e2e/retorno-anti-morte.spec.ts:76:5 › o retorno marcado pelo agente aparece no Radar e na linha do tempo (2.3s)
+  ✓  240 [chromium] › tests/e2e/retorno-anti-morte.spec.ts:108:5 › a linha do tempo do negócio mostra o retorno em português de gente (2.4s)
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+  ✓  241 [chromium] › tests/e2e/retorno-anti-morte.spec.ts:124:5 › uma pessoa desmarca o retorno pela fila, e o agente descobre (3.6s)
+[seed-e2e-radar] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] radar lead existing: 3e86b649-957a-467f-ba8d-3ab92f95a943
+
+✅ Radar seed completo. lead=3e86b649-957a-467f-ba8d-3ab92f95a943 conv=0b3b3600-d59c-4ffc-b931-2c5aec63d83c (frio desde 2026-11-11T05:04:17.019Z)
+  ✓  242 [chromium] › tests/e2e/risk-radar.spec.ts:64:5 › o atendente vê no Radar a demanda aberta que esfriou sem próximo passo (2.1s)
+  ✓  243 [chromium] › tests/e2e/risk-radar.spec.ts:75:5 › o atendente assume a demanda direto do Radar e vira o responsável (3.0s)
+  ✓  244 [chromium] › tests/e2e/signup-journey.spec.ts:17:5 › criar conta: signup → e-mail de confirmação → onboarding → re-login (1.5s)
+  ✓  245 [chromium] › tests/e2e/smoke.spec.ts:3:5 › home returns 200 and no console errors (244ms)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  246 [chromium] › tests/e2e/system-update.spec.ts:181:5 › quem pula versões vê os avisos de TODAS elas, não só o da mais nova (2.2s)
+  ✓  247 [chromium] › tests/e2e/system-update.spec.ts:246:5 › o dono vê a versão nova na sidebar e atualiza pela tela (4.0s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  248 [chromium] › tests/e2e/system-update.spec.ts:300:5 › quando a atualização falha, a tela nomeia a versão certa, mostra o log e dá saída (6.2s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  249 [chromium] › tests/e2e/system-update.spec.ts:415:5 › quando o host não conseguiu comparar, a tela não diz que está em dia (2.2s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  250 [chromium] › tests/e2e/system-update.spec.ts:440:5 › instalação à frente da versão publicada não vira tela quebrada nem alarme (3.4s)
+[seed-e2e-system-update] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] platform_admin já ativo: 8db56fe1-162c-4202-a7eb-a274fef200a1
+[seed] system_version/system_update_runs resetados
+
+✅ Seed da atualização self-service completo.
+  ✓  251 [chromium] › tests/e2e/system-update.spec.ts:465:5 › fork sem nenhuma release publicada não afirma 'à frente' sem base (2.4s)
+  ✓  252 [chromium] › tests/e2e/system-update.spec.ts:491:5 › quem não é dono do servidor não vê o botão (1.9s)
+  ✓  253 [chromium] › tests/e2e/troca-de-organizacao-tem-volta.spec.ts:74:5 › trocar para uma organização não configurada leva ao wizard — e dá para voltar (2.9s)
+  ✓  254 [chromium] › tests/e2e/vps-webhook-outbound-ssrf.spec.ts:96:7 › J6.8 — anti-SSRF do outbound call_webhook (real, ponta a ponta) › regra call_webhook para host interno → run falha e receiver recebe ZERO hits (11.8s)
+[seed-e2e-numero-conectado] escrevendo em LOCAL: http://127.0.0.1:54321 (origem: ambiente)
+[seed] número conectado (WORKING): 0c901725-6dab-45b6-a224-10732ae877db
+[seed] janela de envio fixada em 0h-24h (domingo liberado) em 8 canal(is)
+[QA] fila do event_log drenou em 1 tick(s) de 40 (último: scanned=0, retried=0, failed=0)
+  ✓  255 [chromium] › tests/e2e/webhooks.spec.ts:118:7 › webhooks & automações — fluxo completo › cria fonte, cria automação, dispara lead real, confere atividade e kanban; agent sem acesso (1.0m)
+  ✓  256 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:94:7 › o wizard monta um funcionário › abre mostrando o que a instalação já trouxe, e não pede o nome de novo (2.9s)
+  ✓  257 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:109:7 › o wizard monta um funcionário › o aceite de termos leva a documentos que EXISTEM (139ms)
+  ✓  258 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:117:7 › o wizard monta um funcionário › o nome do negócio chega ao cabeçalho do passo seguinte (1.6s)
+  ✓  259 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:136:7 › o wizard monta um funcionário › o passo do telefone pergunta COMO se conecta antes de assumir o código (1.2s)
+  ✓  260 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:169:7 › o wizard monta um funcionário › o passo do telefone não expõe identificador interno nem enum (1.5s)
+  ✓  261 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:185:7 › o wizard monta um funcionário › treinar mostra o cérebro dele — e sem chave não é um beco (944ms)
+  ✓  262 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:216:7 › o wizard monta um funcionário › treinar: pede as regras da casa e mostra o que ele já sabe fazer (1.4s)
+  ✓  263 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:260:7 › o wizard monta um funcionário › o quadro chega montado, venha da IA ou de um modelo pronto (1.3s)
+  ✓  264 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:295:7 › o wizard monta um funcionário › dá para trocar por um modelo pronto sem depender de IA nenhuma (1.1s)
+  ✓  265 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:309:7 › o wizard monta um funcionário › coluna sem nome barra o salvar, em vez de sumir calada (1.0s)
+  ✓  266 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:330:7 › o wizard monta um funcionário › salvar troca o funil de e-commerce e ENSINA o destino de cada coluna (1.4s)
+  ✓  267 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:370:7 › o wizard monta um funcionário › as regras da casa viraram memória da organização, não prompt do agente (26ms)
+  ✓  268 [chromium] › tests/e2e/wizard-do-funcionario.spec.ts:415:7 › o wizard monta um funcionário › o wizard termina apresentando o sistema, e o resumo não acusa passo inexistente (2.4s)
+
+
+  1) [chromium] › tests/e2e/auditoria-aceite-11-itens.spec.ts:182:5 › fase 6b — auditoria §100: varredura de todas as rotas estáticas em 1280 
+
+    Error: tamanhos de título espalhados:
+    VIOLACOES(0) de 112 rotas:
+    FAMILIAS(1): Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+    H1 24px (97): /app /app/agenda /app/ai /app/ai/agents /app/ai/cases /app/ai/controle /app/ai/credentials /app/ai/decisoes /app/ai/evolution /app/ai/followups /app/ai/inbox /app/ai/knowledge/sources /app/ai/memory /app/ai/proposals /app/ai/providers /app/ai/routers /app/ai/runs /app/ai/skills /app/ai/usage /app/audit /app/busca /app/carteira /app/comissoes /app/compras /app/connections /app/contacts /app/estoque /app/expedicao /app/expedicao/nova /app/faturamento /app/financeiro /app/indicadores /app/integrations/nuvemshop /app/inteligencia /app/kanban /app/lgpd/requests /app/metrics /app/meu-dia /app/notas /app/pedidos /app/pedidos/novo /app/products /app/radar /app/radar/categorias /app/radar/oportunidades /app/radar/prospeccao /app/radar/recuperacao /app/radar/risco /app/recuperacao /app/relatorios /app/settings /app/settings/api-tokens /app/settings/atendimento /app/settings/atualizacao /app/settings/billing /app/settings/canal-oficial /app/settings/marca /app/settings/notifications /app/settings/profile /app/settings/security /app/settings/templates /app/settings/tenant /app/settings/tenant/agenda /app/settings/tenant/pipelines /app/settings/tenant/whatsapp /app/tarefas /app/team /app/team/invite /app/templates /app/titulos /app/webhooks /admin /admin/audit /admin/dashboard /admin/google /admin/incidents /admin/lgpd /admin/marca /admin/platform-admins /admin/tenants /admin/tenants/new /admin/usage /admin/users /admin/forbidden /login /login/forgot /login/mfa /login/recovery /login/reset /signup /403 /500 /503 /account-suspended /legal/privacy /legal/terms /vitrine-agenda
+    H1 sem-h1 (1): /app/ai/agents/new
+    H1 16px (11): /app/inbox /admin/inbox /onboarding /onboarding/welcome /onboarding/funil /onboarding/invite-team /onboarding/connect-whatsapp /onboarding/connect-nuvemshop /onboarding/setup-ai /onboarding/testar /onboarding/done
+    H1 18px (1): /app/pedidos/imprimir
+    H1 20px (1): /app/prospeccao
+    H1 22px (1): /design
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 3
+    Received:    6
+
+      224 |   // por `headingLevel`, rota sem título) — se o conjunto estourar, tem tela
+      225 |   // com tipografia de título fora do padrão
+    > 226 |   expect(porTamanho.size, `tamanhos de título espalhados:\n${relatorio}`).toBeLessThanOrEqual(3);
+          |                                                                           ^
+      227 | });
+      228 |
+      229 | /**
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/auditoria-aceite-11-itens.spec.ts:226:75
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auditoria-aceite-11-itens--f6d7f--as-rotas-estáticas-em-1280-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/auditoria-aceite-11-itens--f6d7f--as-rotas-estáticas-em-1280-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/auditoria-aceite-11-itens--f6d7f--as-rotas-estáticas-em-1280-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/auditoria-aceite-11-itens--f6d7f--as-rotas-estáticas-em-1280-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:29:5 › fase 5b — compras, estoque e carteira usam a FilterBar canônica (desktop) 
+
+    Error: locator.fill: Error: strict mode violation: getByLabel('Buscar') resolved to 2 elements:
+        1) <button title="Buscar" aria-label="Buscar" aria-keyshortcuts="Meta+K Control+K" class="inline-flex items-center whitespace-nowrap rounded-full font-medium tracking-[-0.02em] transition-[background-color,border-color,color,box-shadow,transform] duration-fast ease-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:sh…>…</button> aka getByRole('button', { name: 'Buscar' })
+        2) <input value="" type="search" id="fornecedores-busca" placeholder="Buscar fornecedor pelo nome" class="flex h-10 w-full rounded-lg border border-border bg-bg px-4 py-2 text-sm text-text placeholder:text-text-muted transition-[border-color,box-shadow] duration-fast ease-out hover:border-border-strong focus-visible:outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-text disabled:cur…/> aka getByRole('searchbox', { name: 'Buscar' })
+
+    Call log:
+      - waiting for getByLabel('Buscar')
+
+
+      43 |   const barraFornecedores = await barraDe(page, "Buscar");
+      44 |   await expect(barraFornecedores.getByRole("button", { name: /novo fornecedor/i })).toBeVisible();
+    > 45 |   await page.getByLabel("Buscar").fill("acme");
+         |                                   ^
+      46 |   await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 20_000 });
+      47 |   await saudavel(page);
+      48 |   await page.screenshot({ path: "evidence/fase5-filterbar-unico/2-compras-fornecedores-desktop.png" });
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/filterbar-unica-nas-listas.spec.ts:45:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/filterbar-unica-nas-listas-0e782-FilterBar-canônica-desktop--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/filterbar-unica-nas-listas-0e782-FilterBar-canônica-desktop--chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/filterbar-unica-nas-listas-0e782-FilterBar-canônica-desktop--chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/filterbar-unica-nas-listas-0e782-FilterBar-canônica-desktop--chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:75:5 › fase 5b — FilterBar canônica empilha no mobile 390 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByLabel('Buscar')
+    Expected: visible
+    Error: strict mode violation: getByLabel('Buscar') resolved to 2 elements:
+        1) <button title="Buscar" aria-label="Buscar" aria-keyshortcuts="Meta+K Control+K" class="inline-flex items-center whitespace-nowrap rounded-full font-medium tracking-[-0.02em] transition-[background-color,border-color,color,box-shadow,transform] duration-fast ease-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:sh…>…</button> aka getByRole('button', { name: 'Buscar' })
+        2) <input value="" type="search" id="estoque-busca" placeholder="Buscar produto pelo nome ou código" class="flex h-10 w-full rounded-lg border border-border bg-bg px-4 py-2 text-sm text-text placeholder:text-text-muted transition-[border-color,box-shadow] duration-fast ease-out hover:border-border-strong focus-visible:outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-text disabled:c…/> aka getByRole('searchbox', { name: 'Buscar' })
+
+    Call log:
+      - Expect "toBeVisible" getByLabel('Buscar') with timeout 5000ms
+      - waiting for getByLabel('Buscar')
+
+
+      80 |   await expect(page.getByRole("heading", { level: 1, name: /^estoque$/i })).toBeVisible({ timeout: 15_000 });
+      81 |   await barraDe(page, "Buscar");
+    > 82 |   await expect(page.getByLabel("Buscar")).toBeVisible();
+         |                                           ^
+      83 |   await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 20_000 });
+      84 |   await expect(page.getByText("Algo deu errado")).toHaveCount(0);
+      85 |   await expect(page.getByText(/Erro ao (carregar|listar)/)).toHaveCount(0);
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/filterbar-unica-nas-listas.spec.ts:82:43
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/filterbar-unica-nas-listas-882f9-ônica-empilha-no-mobile-390-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/filterbar-unica-nas-listas-882f9-ônica-empilha-no-mobile-390-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/filterbar-unica-nas-listas-882f9-ônica-empilha-no-mobile-390-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/filterbar-unica-nas-listas-882f9-ônica-empilha-no-mobile-390-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests/e2e/inbox-responder-citando.spec.ts:101:7 › responder citando › o botão de responder revela a faixa, e o × a desfaz 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Target page, context or browser has been closed
+
+      72 |   const total = Math.min(await linhas.count(), 8);
+      73 |   for (let i = 0; i < total; i++) {
+    > 74 |     await linhas.nth(i).click();
+         |                         ^
+      75 |     const temBolha = await bolhas(page)
+      76 |       .first()
+      77 |       .waitFor({ state: "visible", timeout: 4_000 })
+        at abrirConversaComMensagens (/Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/inbox-responder-citando.spec.ts:74:25)
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/inbox-responder-citando.spec.ts:103:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/inbox-responder-citando-re-e8ce4-vela-a-faixa-e-o-×-a-desfaz-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/inbox-responder-citando-re-e8ce4-vela-a-faixa-e-o-×-a-desfaz-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/inbox-responder-citando-re-e8ce4-vela-a-faixa-e-o-×-a-desfaz-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/inbox-responder-citando-re-e8ce4-vela-a-faixa-e-o-×-a-desfaz-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › tests/e2e/inbox-responder-citando.spec.ts:127:7 › responder citando › trocar de conversa LIMPA a citação 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Target page, context or browser has been closed
+
+      72 |   const total = Math.min(await linhas.count(), 8);
+      73 |   for (let i = 0; i < total; i++) {
+    > 74 |     await linhas.nth(i).click();
+         |                         ^
+      75 |     const temBolha = await bolhas(page)
+      76 |       .first()
+      77 |       .waitFor({ state: "visible", timeout: 4_000 })
+        at abrirConversaComMensagens (/Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/inbox-responder-citando.spec.ts:74:25)
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/inbox-responder-citando.spec.ts:131:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/inbox-responder-citando-re-628a4-de-conversa-LIMPA-a-citação-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/inbox-responder-citando-re-628a4-de-conversa-LIMPA-a-citação-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/inbox-responder-citando-re-628a4-de-conversa-LIMPA-a-citação-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/inbox-responder-citando-re-628a4-de-conversa-LIMPA-a-citação-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium] › tests/e2e/notas-fiscais-modulo.spec.ts:75:5 › a porta do sidebar é /app/fiscal e a navegação lista as subtelas 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  getByRole('link', { name: /notas fiscais/i }).first()
+    Expected: "/app/fiscal"
+    Received: "/app/notas"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('link', { name: /notas fiscais/i }).first() with timeout 5000ms
+      - waiting for getByRole('link', { name: /notas fiscais/i }).first()
+        14 × locator resolved to <a href="/app/notas" class="row-hover interactive relative flex items-center gap-3 rounded-lg px-3 py-1 text-sm font-medium text-muted-foreground hover:bg-surface-elevated/60 hover:text-foreground">…</a>
+           - unexpected value "/app/notas"
+
+
+      79 |   const porta = page.getByRole("link", { name: /notas fiscais/i }).first();
+      80 |   await expect(porta).toBeVisible({ timeout: 20_000 });
+    > 81 |   await expect(porta).toHaveAttribute("href", "/app/fiscal");
+         |                       ^
+      82 |
+      83 |   await page.goto("/app/fiscal");
+      84 |   const nav = page.getByRole("navigation", { name: /notas fiscais|fiscal/i }).first();
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/notas-fiscais-modulo.spec.ts:81:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/notas-fiscais-modulo-a-por-908e0-navegação-lista-as-subtelas-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/notas-fiscais-modulo-a-por-908e0-navegação-lista-as-subtelas-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/notas-fiscais-modulo-a-por-908e0-navegação-lista-as-subtelas-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/notas-fiscais-modulo-a-por-908e0-navegação-lista-as-subtelas-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium] › tests/e2e/prospeccao-mapa.spec.ts:40:5 › mapa mostra marcadores, clique sincroniza lista e detalhe abre 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: visão Mapa sem contêiner Leaflet
+
+    expect(locator).toBeVisible() failed
+
+    Locator: locator('.leaflet-container').first()
+    Expected: visible
+    Error: element(s) not found
+
+    Call log:
+      - visão Mapa sem contêiner Leaflet locator('.leaflet-container').first() with timeout 30000ms
+      - waiting for locator('.leaflet-container').first()
+      - Test timeout of 30000ms exceeded.
+
+
+      48 |   await page.getByRole("button", { name: /^mapa$/i }).click();
+      49 |   const mapa = page.locator(".leaflet-container").first();
+    > 50 |   await expect(mapa, "visão Mapa sem contêiner Leaflet").toBeVisible({ timeout: 30_000 });
+         |                                                          ^
+      51 |
+      52 |   const marcadores = page.locator(".leaflet-marker-icon");
+      53 |   await expect
+        at /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/tests/e2e/prospeccao-mapa.spec.ts:50:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/prospeccao-mapa-mapa-mostr-e86f8-roniza-lista-e-detalhe-abre-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/prospeccao-mapa-mapa-mostr-e86f8-roniza-lista-e-detalhe-abre-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/prospeccao-mapa-mapa-mostr-e86f8-roniza-lista-e-detalhe-abre-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/prospeccao-mapa-mapa-mostr-e86f8-roniza-lista-e-detalhe-abre-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Slow test file: [chromium] › tests/e2e/navegacao.spec.ts (5.3m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  7 failed
+    [chromium] › tests/e2e/auditoria-aceite-11-itens.spec.ts:182:5 › fase 6b — auditoria §100: varredura de todas as rotas estáticas em 1280 
+    [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:29:5 › fase 5b — compras, estoque e carteira usam a FilterBar canônica (desktop) 
+    [chromium] › tests/e2e/filterbar-unica-nas-listas.spec.ts:75:5 › fase 5b — FilterBar canônica empilha no mobile 390 
+    [chromium] › tests/e2e/inbox-responder-citando.spec.ts:101:7 › responder citando › o botão de responder revela a faixa, e o × a desfaz 
+    [chromium] › tests/e2e/inbox-responder-citando.spec.ts:127:7 › responder citando › trocar de conversa LIMPA a citação 
+    [chromium] › tests/e2e/notas-fiscais-modulo.spec.ts:75:5 › a porta do sidebar é /app/fiscal e a navegação lista as subtelas 
+    [chromium] › tests/e2e/prospeccao-mapa.spec.ts:40:5 › mapa mostra marcadores, clique sincroniza lista e detalhe abre 
+  6 skipped
+  1 did not run
+  254 passed (37.1m)
+ ELIFECYCLE  Command failed with exit code 1.

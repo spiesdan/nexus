@@ -207,6 +207,21 @@ Prova: `docs/auditoria/capturas/desktop_app_pedidos_imprimir.png` recapturada co
 produção**, JSON `docs/auditoria/capturas/medicoes-v08-imprimir-depois.json` com
 `h1: ["Imprimir pedidos"]`, `overflow: 0`, `console: 0`.
 
+**A primeira correção desta tinha um defeito próprio, e um gate antigo a pegou.** O `<h1>` do
+estado vazio nasceu com `text-lg font-semibold` — 18 px. A varredura de aceite
+(`tests/e2e/auditoria-aceite-11-itens.spec.ts`, §100) mede o `font-size` do primeiro `<h1>` de
+cada rota e exige no máximo **3** famílias de tipografia de título; o cabeçalho canônico
+(`NexusPageHeader`) usa `text-2xl` (24 px). O `<h1>` novo virou a **quarta** família e a spec
+reprovou: corrigir a ausência de título não autoriza inventar um tamanho.
+
+Conserto: o estado vazio passou a montar o **`NexusPageHeader`** canônico — título, subtítulo
+("Nenhum pedido selecionado.") e o botão de volta como `actions`. É o mesmo cabeçalho das
+outras 155 telas, então a família de título não muda.
+
+O caso fica registrado porque é a classe de erro que este relatório inteiro tenta evitar: a
+correção de um achado criou outro, e quem achou foi uma **régua que já existia** — não a minha
+inspeção. Sem esse gate, 18 px numa tela de impressão passaria como "está bonito".
+
 > Por que os dois estavam no mesmo arquivo e ninguém viu: `_imprimir.tsx` é client component e a
 > única forma de vê-lo era abrir a rota **sem** `?carga=`. As capturas anteriores passaram por 37
 > telas e esta entrou só na varredura de 58 rotas de 16/11 — a primeira que varreu `/app/**`
@@ -347,6 +362,67 @@ nos filtros "Fonte" e "Resultado". Ali o rótulo visível dizia uma coisa e o no
 outra ("Filtrar por fonte"). Trocado por `aria-labelledby` apontando para o `<label>`, para o
 nome acessível ser exatamente o texto que a pessoa lê.
 
+### V-16 · Alta · O editor de agente era a única tela do produto sem `<h1>` — **CORRIGIDO**
+
+Encontrado pela varredura de aceite (112 rotas em 1280 px), não pela minha captura de 258
+medições — e o motivo é instrutivo: na minha varredura, `/app/ai/agents/new` era visitada com o
+perfil `manager` e cai em `/403` (a rota exige `admin`+). Medida com o `dono`, a tela abre e o
+relatório acusa:
+
+```
+H1 sem-h1 (1): /app/ai/agents/new
+```
+
+A tela é o **editor de agente** — criar e editar —, o coração de um produto que se vende como
+"agentes de IA nativos". O cabeçalho era `<h2 className="text-xl">` e a página não tinha título
+de nível 1: nem `NexusPageHeader`, nem `sr-only`. Corrigido para `<h1>` no tamanho canônico
+(`text-2xl`), herdado por `/app/ai/agents/[id]` porque as duas rotas montam o mesmo `AgentForm`.
+
+### V-17 · Média · Três telas com título fora da tipografia canônica — **CORRIGIDO**
+
+A mesma varredura mediu o `font-size` do primeiro `<h1>` de cada rota. O canônico é 24 px
+(`NexusPageHeader`). Fora dele:
+
+| Tela | Antes | Depois |
+|---|---|---|
+| `/app/pedidos/imprimir?carga=` (estado "muitos pedidos") | 18 px | 24 px |
+| `/app/campanhas` (medida via alias `/app/prospeccao`) | 20 px | 24 px |
+| `/app/lgpd/requests/[id]` (título é o `#id`, em mono) | 20 px | 24 px |
+
+Os dois primeiros passaram a montar o cabeçalho canônico; o terceiro manteve o `font-mono` e
+subiu para `text-2xl` — o identificador continua mono, o tamanho é o da casa.
+
+Ficam como estão, com motivo: `/design` (22 px — o showcase existe para mostrar a escala) e os
+`<h1 className="sr-only">` (16 px herdados — um título recortado não tem tipografia visível).
+
+Gate novo: `tests/unit/titulo-de-tela-tem-um-tamanho.test.ts` lê todo `<h1>` de `app/app/**` e
+`app/admin/**` em segundos e reprova tamanho fora do canônico, antes de a varredura de 1,3 min
+descobrir.
+
+### V-18 · Média · Dois controles com o mesmo nome acessível: "Buscar" — **CORRIGIDO**
+
+`filterbar-unica-nas-listas` reprovou com:
+
+```
+strict mode violation: getByLabel('Buscar') resolved to 2 elements
+  1) <button aria-label="Buscar" aria-keyshortcuts="Meta+K Control+K">
+  2) <input type="search" id="fornecedores-busca">
+```
+
+O botão da busca global do shell e o campo de filtro da página tinham o **mesmo nome
+acessível**. O efeito não é só de teste: quem usa leitor de tela ouve "Buscar" duas vezes e não
+sabe qual é o global. O botão passou a se chamar **"Buscar em todo o sistema"** (`title`
+continua "Buscar" — dica visual, não nome acessível), e o locator do teste passou a ser
+`getByRole("searchbox", { name: "Buscar" })`, que diz o que mede.
+
+### V-19 · Média · Uma spec reprovava o produto por uma decisão que o produto tomou — **CORRIGIDO**
+
+`notas-fiscais-modulo:75` exigia que o item de sidebar "Notas fiscais" apontasse para
+`/app/fiscal`. O commit `5eee8923` (04/11) mudou o item para `/app/notas` — emissão, que é o uso
+diário — e renomeou o recebimento para "NF-e recebidas", explicando a decisão no registro. O
+commit atualizou o título de `TELAS` e esqueceu esta asserção. A spec é que estava velha; agora
+afirma `/app/notas` e diz por quê.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -436,7 +512,12 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos | `[~]` | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional | `[x]` | O título vem de UMA fonte e cada tela mantém sua composição |
 
-**Fase 2: em andamento.** V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13 e V-15 corrigidos com
-medida antes/depois; V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é
-sinal a confirmar por clique; V-14 é observação. V-04 aguarda **decisão de produto**. As jornadas
-J1–J16 ainda não começaram.
+**Fase 2: em andamento.** **15 achados corrigidos** com medida antes/depois (V-01, V-02, V-07,
+V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18, V-19, mais V-17 agrupando três telas);
+V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
+por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
+
+As **16 jornadas** (J1–J16) foram mapeadas, medidas e executadas: **254 testes E2E verdes** em
+37,1 min, com 7 falhas abertas uma a uma — 5 consertadas (4 do produto, 1 spec obsoleta, 1 de
+orçamento de teste) e 1 achado novo em aberto (F-27, o mapa de empresas, vermelho há duas noites
+no CI da main). Relatório: [`13-jornadas.md`](13-jornadas.md).

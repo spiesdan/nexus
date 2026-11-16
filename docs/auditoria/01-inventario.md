@@ -15,6 +15,7 @@
 | [`06-apis.md`](06-apis.md) · `06-apis.json` | 418 handlers: métodos, guarda, validação, efeitos | idem |
 | [`07-integracoes.md`](07-integracoes.md) | integrações, 16 workers, 30 crons, serviços, env | idem |
 | [`08-mobile-offline.md`](08-mobile-offline.md) | Capacitor, service worker, fila offline, SQLite | idem |
+| [`09b-subtelas.md`](09b-subtelas.md) | Abas, modais e gavetas por tela — o que a matriz de rotas não vê (F-22) | `pnpm exec tsx scripts/auditoria/subtelas.ts` |
 | [`09-telas-estados.md`](09-telas-estados.md) | 156 telas × 12 estados (sinal no código) | idem |
 | [`10-cobertura-testes.md`](10-cobertura-testes.md) | teste por rota | idem |
 
@@ -274,12 +275,72 @@ tem a propriedade" de "o instrumento não olhou". Três correções em
 
 O JSON antigo fica no repositório com o defeito visível, e esta nota é a chave de leitura.
 
+### F-22 · Corrigido · A matriz dizia "esta tela tem abas" e não sabia o nome de nenhuma
+
+`09-telas-estados.md` marca a coluna `abas` quando encontra `<Tabs|TabsList|TabsTrigger` no
+segmento da rota, e `modal/drawer` quando encontra `<Dialog|Sheet|Drawer|Modal`. Isso responde
+**se** a tela tem subtela, e não **qual**. Consequência medida: a matriz podia marcar ✓ em 26
+arquivos com `Tabs` e **nenhuma** aba tinha nome — e auditoria que não sabe o nome da aba não
+consegue abri-la. Na prática, "tem aba" virava "não olhei a aba".
+
+Medido no repositório em 16/11/2026: `Dialog` em 53 arquivos, `Sheet` em 13, `Tabs` em 26 (17
+telas distintas), `Drawer` em 0.
+
+`scripts/auditoria/subtelas.ts` passou a enumerar, por tela, **aba**, **modal** e **gaveta** com
+rótulo, arquivo e linha, a partir do mesmo segmento de rota (page + arquivos locais + imports
+relativos). Resultado: **82 abas, 68 modais, 12 gavetas** em 156 telas, **74** delas com ao menos
+uma subtela. Artefato: [`09b-subtelas.md`](09b-subtelas.md).
+
+O extrator errou duas vezes antes de servir, e as duas viram caso de teste em
+`tests/unit/subtela-tem-nome.test.ts` (8 casos):
+
+1. **caminho absoluto devolvia zero arquivo.** `arquivosDaTela(raiz, pasta)` faz `join(raiz,
+   pasta)`; passar a pasta absoluta devolveu **0 abas em 156 telas** — e o artefato saiu vazio
+   sem erro nenhum. Zero silencioso é o jeito mais fácil de um inventário mentir.
+2. **`className` virou rótulo.** A primeira execução listou como aba o texto
+   `# / ml-1.5 text-[10px]`. O rótulo passou a vir de `t("…")` / texto do JSX, com `className`
+   removida antes; rótulo montado em laço é dito `(rótulo dinâmico)` em vez de inventado.
+
+O mesmo extrator conta `<Dialog>`/`<Sheet>`/`<Drawer>`/`<AlertDialog>` **sem o `Title`
+correspondente**: o Radix anuncia "diálogo" sem nome e o leitor de tela não diz o que abriu. É a
+mesma classe da V-15. Medido: **0** sem título — e confirmado por fora, com `grep`
+(`<Dialog>`=61 / `<DialogTitle>`=63, `<Sheet>`=15/15, `<AlertDialog>`=7/7), para o gate não
+depender só do próprio extrator.
+
+### F-23 · Contido (correção estrutural pendente) · A suíte E2E sobrescreve fixture de teste unitário
+
+Medido em 16/11/2026, ao rodar `pnpm test:e2e:full`: **149 arquivos versionados** sob `evidence/`
+foram reescritos por specs (capturas de tela e JSONs de turno). Três testes de
+`tests/unit/projecao-conversador.test.ts` reprovaram em seguida — e o motivo não é o produto:
+
+```
+controle: o payload real deve conter o erro cru:
+expected '[]' to contain 'unsafe_url:https_required'
+```
+
+`projecao-conversador` lê `evidence/ia-360-w4/medicao-vazamento/turnos/*.json` como **fixture
+real** — e o `git diff` do turno que ele usa mostra `444 → 8 linhas`: a suíte E2E o substituiu
+por um turno vazio. Uma rodada de E2E corrompe a fixture de um teste unitário, e o vermelho
+aparece no lugar errado ("a projeção do Conversador quebrou").
+
+É o mesmo defeito de método das F-20/F-21 um nível acima: **o artefato de evidência e a fonte de
+verdade do teste moram no mesmo caminho**. Enquanto forem o mesmo diretório, "rodar a suíte" muda
+o que os testes leem — e quem commitar o resultado do E2E commita a corrupção.
+
+Nesta rodada os 149 arquivos foram **revertidos** (`git checkout -- evidence` + `loop/checkpoints/evidence`)
+e o teste voltou a **20/20 verde**. A correção estrutural — gravar em `evidence/<rodada>/` ou em
+`test-results/`, deixando `evidence/` imutável — fica como recomendação com dono: mexer no caminho
+de gravação de dezenas de specs exige passar por cada uma.
+
+Regra para quem repetir esta auditoria: **antes de commitar, `git status evidence/` tem de estar
+vazio.** Se não estiver, o que está lá não é melhoria de evidência — é estado de execução.
+
 ## 4. Cobertura do checklist
 
 | # | Tarefa | Estado | Evidência |
 |---|---|---|---|
 | 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis) | `[x]` | `inventario-rotas.md` — 156 telas, 13 resolvers, 13 layouts, **6** fronteiras de erro (5 `error.tsx` + `global-error.tsx`), **8** `loading` + `not-found`, 2 especiais (`icon.tsx`, `manifest.ts`). Sem `template.tsx` e sem `default.tsx` (não há rotas paralelas) |
-| 1.2 | Subtelas e estados | `[~]` | `09-telas-estados.md` — 12 estados × 156 telas, medidos no **segmento de rota** (page + `_client` + `_components` + imports locais): 143/143 telas com JSX têm ao menos um sinal. Em execução: **129 das 155 rotas estáticas** abertas em build de produção, em desktop e celular (258 medições, `11-auditoria-visual.md` §3); as **26 dinâmicas** ficam de fora com motivo escrito (precisam de id real). **Continua sinal no código, não comportamento**: subtelas (abas/drawers/modais) não são enumeradas nem abertas — é o que falta para `[x]` (F-20/F-21) |
+| 1.2 | Subtelas e estados | `[~]` | `09-telas-estados.md` — 12 estados × 156 telas no **segmento de rota** (page + `_client` + `_components` + imports locais): 143/143 telas com JSX têm ao menos um sinal. **Subtela agora tem nome** (F-22): `09b-subtelas.md` enumera 82 abas, 68 modais e 12 gavetas com arquivo e linha. Em execução: **129 das 155 rotas estáticas** abertas em build de produção, em desktop e celular (258 medições, `11-auditoria-visual.md` §3); as **26 dinâmicas** ficam fora com motivo escrito. **Continua `[~]`**: enumerar subtela não é abri-la, e nenhuma das 82 abas foi clicada — é o que falta para `[x]` |
 | 1.3 | Componentes | `[x]` | `05-componentes.md` — 242 arquivos, 19 primitivas `ui/`, tipo por área |
 | 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas) | `[x]` | `06-apis.md`/`.json` — 418 handlers com métodos, guarda, schema Zod, efeitos, idempotência, rate limit. **Erros**: código por `fail()` lido de `lib/api/errors.ts` (`inventario.ts`) |
 | 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, update) | `[x]` | `04-inventario-dados.md` (texto) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em banco): 180 tabelas, 179/179 com RLS, 305 políticas, 104 triggers, 92 funções, 2 views, 185 tipos; instalação **e** update sobre dados verdes; Storage: **7 buckets** (`ai-policy`, `lgpd-exports`, `skill-assets`, `whatsapp-media`, `brand-logos`, `delivery-proofs`, `product-images`). Índices não foram enumerados um a um — F-09 domina a frente |
@@ -288,7 +349,7 @@ O JSON antigo fica no repositório com o defeito visível, e esta nota é a chav
 | 1.8 | Cobertura de testes | `[x]` | `10-cobertura-testes.md` — 1.121 arquivos; 58 telas com sinal de teste, 98 sem |
 | 1.9 | Documentação: obsoleto × código | `[x]` | F-01 (licença), F-04 (Sage × índigo), F-11 (rotas), D-1/D-3 (Discord), e o próprio F-15 |
 | 1.10 | Registro por rota (objetivo, perfil, entrada, ações, saída, dependências, permissões, dados, estados, links, API/tabelas, relações, problemas, decisão, teste) | `[~]` | Estrutura gerada (tela, guarda, estados, teste). Os 15 campos narrativos por rota são preenchidos na Fase 2, tela a tela — preenchê-los agora seria inventar auditoria |
-| 1.11 | Matriz rota × subtela × estado | `[~]` | `09-telas-estados.md` tem rota × 12 sinais; **faltam** a coluna de subtela (componente, não rota) e o status/evidência por célula |
+| 1.11 | Matriz rota × subtela × estado | `[~]` | `09-telas-estados.md` tem rota × 12 sinais; `09b-subtelas.md` passa a enumerar **aba, modal e gaveta com nome, arquivo e linha** (82 abas, 68 modais, 12 gavetas em 156 telas, extraídos do segmento). **Falta** o status/evidência por célula: enumerar não é abrir — a Fase 2 abre |
 | 1.12 | Reconciliação das rotas do prompt | `[x]` | `02-reconciliacao-rotas.md` — **cobertura de rotas**: 156 = 143 páginas com JSX + 13 resolvers; 0 ausentes; 0 acréscimos. Não é cobertura de subtelas/estados/jornadas |
 
 ### Definition of Done da Fase 1

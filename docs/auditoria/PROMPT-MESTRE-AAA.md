@@ -614,21 +614,21 @@ Correção de método registrada: a primeira rodada capturou um checkout **208 c
 
 | # | Item | Estado |
 |---|---|---|
-| 2.1 | Avaliar produto em execução e no código; desktop/tablet/celular | `[~]` |
+| 2.1 | Avaliar produto em execução e no código; desktop/tablet/celular | `[~]` | **Em execução**: 129 rotas estáticas × desktop 1440 e celular 390 (258 medições) + **96 specs E2E** (254 testes verdes) contra build de produção. **Falta tablet**: só 834 px em 5 telas, medido em dev (`11-auditoria-visual.md` §5) |
 | 2.2 | Se impedido, registrar bloqueio e usar análise estática sem alegar inspeção visual | `[x]` |
-| 2.3 | Propósito e próximo passo evidentes | `[~]` |
+| 2.3 | Propósito e próximo passo evidentes | `[~]` | Toda tela com `<h1>` (0 sem título após V-02/V-08/V-12/V-16) e 6 estados vazios corrigidos com caminho de volta (V-09). **Falta** julgar propósito tela a tela: 129 abertas, nenhuma com critério escrito |
 | 2.4 | Hierarquia e densidade | `[~]` |
 | 2.5 | Consistência de headers, breadcrumb, ações, filtros, navegação | `[~]` |
-| 2.6 | Cliques/digitação em tarefas frequentes | `[ ]` |
+| 2.6 | Cliques/digitação em tarefas frequentes | `[~]` | Contado no que existe: `jornada-venda` executa **5 cliques e 5 digitações** do login ao pedido criado — o número mede a jornada do teste, não o caminho do usuário real, e por isso não vira nota. Nenhuma outra jornada foi contada. **Falta** um instrumento de contagem por tarefa |
 | 2.7 | Busca, ordenação, filtros, paginação, seleção em massa, preferências | `[~]` |
-| 2.8 | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[ ]` |
+| 2.8 | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[~]` | **Rótulos**: 101 `<label>` analisados, **0 sem vínculo** (gate `rotulo-de-campo-aponta-para-controle`), 0 campo visível sem nome acessível em 258 medições. **Validação**: 44 `FormField`, 8 com `erro=` no campo; `form-field-canonico` cobre 7 forms de configuração. **Confirmação**: 148 pontos de confirmação (AlertDialog/`confirmar`) em `app/`+`components/`. **Prevenção de duplicidade**: 244 botões desabilitados enquanto salvam. **Falta**: preservação de dados e cancelamento não são exercitados por spec |
 | 2.9 | Estados (loading, skeleton, vazio, erro recuperável, sucesso, offline, permissão negada) | `[~]` — onde cada estado **existe** está medido (143/143 com ≥1 sinal, V-07); vazio e permissão negada observados em execução, o resto não |
-| 2.10 | Feedback imediato e prevenção de duplicidade | `[ ]` |
+| 2.10 | Feedback imediato e prevenção de duplicidade | `[~]` | Feedback: **125 arquivos** usam `toast` (Sonner montado no layout raiz) e 26 `aria-live`. Duplicidade: 244 botões com guarda de pendência; `pedido-idempotencia` prova **ao vivo** dois POSTs → um pedido. **Falta**: `Idempotency-Key` só existe em 1 rota (limitação L4), e nenhum teste tenta a duplicata com clique duplo |
 | 2.11 | A11y: contraste, foco, teclado, leitor de tela, toque, zoom, reduced motion | `[~]` |
-| 2.12 | Casos extremos: nomes longos, valores extremos, tabelas grandes, ausência, latência, falha de rede | `[ ]` |
+| 2.12 | Casos extremos: nomes longos, valores extremos, tabelas grandes, ausência, latência, falha de rede | `[~]` | **Ausência**: 6 estados vazios corrigidos (V-09). **Falha de rede**: `degradacao-silenciosa` (catraca: a tela NÃO avisa — defeito conhecido) e `mobile-offline` (backend morto). **Largura**: overflow 0 em 258 medições. **Nome longo**: `truncate`/`line-clamp` em 131 arquivos é sinal, **não prova** — nenhum teste cria nome de 80 caracteres e confere a tabela. **Tabela grande / latência**: não medidos |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas | `[~]` |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR | `[~]` |
-| 2.15 | Desempenho percebido e gráficos | `[ ]` |
+| 2.15 | Desempenho percebido e gráficos | `[~]` | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Gráficos**: `kpi-e-charts-canonicos` (J12) e `inteligencia-carrega` verdes. **Falta** trace de navegador (LCP/CLS/TBT) |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional | `[~]` |
 
 Jornadas críticas (16)
@@ -903,6 +903,12 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | `tests/unit/link-para-arquivo-estatico-existe.test.ts` | Gate: todo `href`/`src` com extensão existe em `public/` (o runbook que dava 404 — V-13). |
 | `tests/unit/rotulo-de-campo-aponta-para-controle.test.ts` | Gate: todo `<label>` do produto se liga ao campo por `htmlFor`, embrulhamento ou `aria-labelledby` (V-15). |
 | `public/runbook/platform-admin-management.md` | Runbook do "somente DBA", escrito do schema real; era o destino do link que respondia 404. |
+| `scripts/auditoria/subtelas.ts` | Enumerador de **aba, modal e gaveta** por tela (rótulo, arquivo, linha) + modais sem `Title`. |
+| `docs/auditoria/09b-subtelas.md` | O inventário: 82 abas, 68 modais, 12 gavetas em 156 telas (F-22). |
+| `tests/unit/subtela-tem-nome.test.ts` | Gate de 8 casos: o extrator lê, o rótulo não é `className`, laço é dito dinâmico, modal sem `Title` é contado. |
+| `scripts/auditoria/jornadas.ts` | Mapa **J1–J16 → specs** + contagem do disco + resultado lido do log do Playwright. |
+| `docs/auditoria/13-jornadas.md` | As 16 jornadas do prompt: superfície, spec, resultado medido e o que fica descoberto. |
+| `tests/unit/jornadas-fecham.test.ts` | Gate: 99 specs do disco, 0 sem jornada e 0 sem motivo; a tabela do doc é a do gerador. |
 
 ## 3.7 Canal de atualizações (Discord)
 
