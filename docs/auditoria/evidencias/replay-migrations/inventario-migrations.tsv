@@ -1,0 +1,37 @@
+extensao	citext
+extensao	pg_trgm
+extensao	pgcrypto
+extensao	plpgsql
+extensao	uuid-ossp
+extensao	vector
+funcao	auth.uid()
+funcao	public.decrypt_cpf(p_contact_id uuid, p_organization_id uuid)
+funcao	public.emit_event(p_event_type text, p_entity_kind text, p_entity_id uuid, p_payload jsonb, p_metadata jsonb, p_organization_id uuid)
+funcao	public.encrypt_cpf(p_plaintext text)
+funcao	public.fn_aplicar_quadro_do_onboarding(p_organization_id uuid, p_pipeline_id uuid, p_nome text, p_slug text, p_etapas jsonb)
+funcao	public.fn_definir_marca_da_organizacao(p_org uuid, p_actor uuid, p_marca jsonb)
+funcao	public.fn_devolver_numero_nfe(p_organization_id uuid, p_numero integer)
+funcao	public.fn_emit_message_event()
+funcao	public.fn_estampar_atribuicao_de_anuncio(p_contact uuid, p_platform text, p_metadata jsonb)
+funcao	public.fn_expurgar_nonces_de_oauth(p_retencao_dias integer, p_limite integer)
+funcao	public.fn_importar_pedido_mercos(p_org uuid, p_pedido jsonb)
+funcao	public.fn_lgpd_cascade_redact_contact(p_organization_id uuid, p_contact_id uuid, p_request_id uuid)
+funcao	public.fn_mark_conversation_message(p_conv uuid, p_direction text, p_preview text, p_at timestamp with time zone)
+funcao	public.fn_proximo_numero_carga(p_org uuid)
+funcao	public.fn_proximo_numero_pedido(p_org uuid)
+funcao	public.fn_publish_ai_agent_version(p_org_id uuid, p_agent_id uuid, p_version_id uuid)
+funcao	public.fn_reservar_numero_nfe(p_organization_id uuid)
+funcao	public.fn_update_last_activity_at()
+funcao	public.retrieve_top_k_chunks(p_organization_id uuid, p_kb_version_id uuid, p_embedding vector, p_k integer, p_threshold real)
+rls_ligado	public.system_update_runs
+rls_ligado	public.system_version
+tabela	auth.users
+tabela	public.system_update_runs
+tabela	public.system_version
+tabela	storage.buckets
+tabela	storage.objects
+tipo	auth.users
+tipo	public.system_update_runs
+tipo	public.system_version
+tipo	storage.buckets
+tipo	storage.objects

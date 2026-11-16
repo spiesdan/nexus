@@ -1,0 +1,201 @@
+{
+  "base": "http://localhost:3001",
+  "grupo": "admin",
+  "url_depois_do_login": "http://localhost:3001/app/inbox",
+  "resultados": [
+    {
+      "rota": "/app/settings",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2955,
+      "erro": null,
+      "arquivo": "desktop_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 954,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3757,
+      "erro": null,
+      "arquivo": "desktop_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 858,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/lgpd",
+      "largura": "desktop",
+      "status": 404,
+      "ms": 951,
+      "erro": null,
+      "arquivo": "desktop_app_lgpd.png",
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "textoVisivel": 88,
+      "url": "/app/lgpd"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4497,
+      "erro": null,
+      "arquivo": "desktop_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1664,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/admin",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2051,
+      "erro": null,
+      "arquivo": "desktop_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1654,
+      "erro": null,
+      "arquivo": "celular_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 684,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1869,
+      "erro": null,
+      "arquivo": "celular_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 424,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/lgpd",
+      "largura": "celular",
+      "status": 404,
+      "ms": 935,
+      "erro": null,
+      "arquivo": "celular_app_lgpd.png",
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "textoVisivel": 88,
+      "url": "/app/lgpd"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1634,
+      "erro": null,
+      "arquivo": "celular_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1394,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/admin",
+      "largura": "celular",
+      "status": 200,
+      "ms": 964,
+      "erro": null,
+      "arquivo": "celular_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    }
+  ]
+}

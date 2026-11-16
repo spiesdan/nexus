@@ -1,0 +1,33 @@
+# Ambiente medido em 2026-11-16T02:19:29Z
+
+## Repositório
+worktree:        /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes
+branch:          docs/auditoria-aaa
+commit:          9f8e6faa9fa58ab29a0a39b478ab1f3a39d58aff
+arquivos sujos:  31
+
+## Docker e imagem
+docker:          Docker version 29.8.2, build 7fc2dff
+imagem pedida:   pgvector/pgvector:pg15
+imagem id:       sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+imagem digests:  pgvector/pgvector@sha256:47af0b65960b14f1c6945aa4ccae37836c632e9a6fe0eea9160936e616e5b2e9
+plataforma:      linux/arm64
+
+## Cliente e servidor Postgres
+psql (cliente no container): psql (PostgreSQL) 15.19 (Debian 15.19-1.pgdg12+2)
+servidor:        PostgreSQL 15.19 (Debian 15.19-1.pgdg12+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+server_version_num: 150019
+
+## Insumos
+baseline:        /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/supabase/baseline.sql
+baseline sha256: 9a0afaec56ffef8f69a9ee110bc8d2ca186cb729e9800c1b48c6bdd2e5a3ca11
+baseline linhas: 29325
+migrations:      292 arquivos
+preâmbulo:       /Users/bill/.local/share/opencode/worktree/d08597/fix/campanha-clientes/scripts/sql/preambulo-supabase-descartavel.sql
+preâmbulo sha256: 0cc7ce48a6aa5899ee7c56d5d1b5fcad5027c855ecb0892aa298e8bd74c9a435
+
+## Comandos exatos
+preâmbulo:  docker exec -i $C psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < scripts/sql/preambulo-supabase-descartavel.sql
+migration:  docker exec -i $C psql -U postgres -d postgres -v ON_ERROR_STOP=1 --single-transaction -q -f - < <arquivo>
+baseline:   docker exec -i $C psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < supabase/baseline.sql
+inventário: docker exec -i $C psql -U postgres -d postgres -t -A -F $'\t' -f - < scripts/auditoria/inventario-schema.sql

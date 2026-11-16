@@ -1,0 +1,292 @@
+001	00001_initial_schema	ok	122	sql	-	-	-	-
+002	20260428195354_0001_platform_base	ok	112	stub	-	-	-	-
+003	20260428195513_0002_event_log_and_compat	ok	104	stub	-	-	-	-
+004	20260428195708_0003_customer_360	ok	101	stub	-	-	-	-
+005	20260428200016_0004_whatsapp_waha	ok	100	stub	-	-	-	-
+006	20260428200128_0005_ai_rag	ok	99	stub	-	-	-	-
+007	20260428200211_0006_nuvemshop_lgpd	ok	104	stub	-	-	-	-
+008	20260428200331_0007_security_hardening	ok	101	stub	-	-	-	-
+009	20260429013958_0008_tenant_onboarding_state	ok	108	stub	-	-	-	-
+010	20260429021857_0009_expand_messaging_constraints	ok	100	stub	-	-	-	-
+011	20260429032132_0010_ai_rag_handoff_columns_and_rpcs	falhou	falhou	102	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+012	20260429040000_0011_handoff_reason_column	falhou	falhou	101	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+013	20260429060000_0012_kb_version_lifecycle_columns	falhou	falhou	102	prerequisito:tabela	public.ai_knowledge_versions	sim	relation "public.ai_knowledge_versions" does not exist
+014	20260429070000_0013_ai_faq_items	ok	106	stub	-	-	-	-
+015	20260429080000_0014_storage_policies_ai_policy	falhou	falhou	107	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+016	20260429090000_0015_conversations_rag_optin	falhou	falhou	103	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+017	20260429100000_0017_storage_policies_lgpd_exports	falhou	falhou	130	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+018	20260429110000_0018_lgpd_redaction_queue	falhou	falhou	109	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+019	20260429110001_0019_lgpd_cascade_redact_rpc	ok	106	sql	-	-	-	-
+020	20260429120000_0020_organization_suspend_reason	falhou	falhou	101	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+021	20260429130000_0021_incidents	falhou	falhou	119	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+022	20260429140000_0022_ai_budget_trigger	falhou	falhou	104	prerequisito:tabela	public.ai_budgets	sim	relation "public.ai_budgets" does not exist
+023	20260505140000_0023_ai_agents_module	falhou	falhou	107	prerequisito:tabela	public.ai_agents	sim	relation "public.ai_agents" does not exist
+024	20260506000000_0024_ai_agent_publish_fn	ok	106	sql	-	-	-	-
+025	20260506100000_0025_fix_publish_fn_and_realtime_publication	falhou	falhou	108	prerequisito:tabela	public.ai_agent_runs	sim	relation "public.ai_agent_runs" does not exist
+026	20260706200000_0026_fix_publish_fn_status_case	ok	117	sql	-	-	-	-
+027	20260706210000_0027_whatsapp_conversation_unification	falhou	falhou	98	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+028	20260716120000_0030_config_rls_role_policies	falhou	falhou	100	prerequisito:tabela	public.crm_pipelines	sim	relation "public.crm_pipelines" does not exist
+029	20260717120000_0031_conversation_assignment_events	falhou	falhou	108	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+030	20260717150000_0032_conversation_assignee_kind	falhou	falhou	102	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+031	20260717180000_0033_conversation_tags	falhou	falhou	101	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+032	20260717190000_0034_hardening_revoke_anon_definer	falhou	falhou	103	prerequisito:funcao	public.fn_upsert_wa_contact	sim	function public.fn_upsert_wa_contact(uuid, text, text, text, text, text) does not exist
+033	20260717190001_0038_webhooks_automation	falhou	falhou	116	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+034	20260717200000_0035_visibility_mode_conversation_rls	falhou	falhou	108	prerequisito:funcao	public.fn_is_platform_admin	sim	function public.fn_is_platform_admin() does not exist
+035	20260717210000_0036_visibility_mode_lead_rls	falhou	falhou	100	prerequisito:funcao	public.fn_is_platform_admin	sim	function public.fn_is_platform_admin() does not exist
+036	20260718120000_0037_attendant_metrics	falhou	falhou	111	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+037	20260718130000_0039_attendant_availability	falhou	falhou	116	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+038	20260718140000_0040_conversation_routing_emit	falhou	falhou	143	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+039	20260718150000_0041_webhook_secret_encryption	falhou	falhou	127	prerequisito:tabela	public.webhook_sources	sim	relation "public.webhook_sources" does not exist
+040	20260718160000_0042_lead_children_visibility_rls	falhou	falhou	117	prerequisito:tabela	public.crm_lead_activities	sim	relation "public.crm_lead_activities" does not exist
+041	20260718160001_0043_retire_duplicate_lead_trigger_events	falhou	falhou	106	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+042	20260718170000_0044_user_orgs_select_manager	falhou	falhou	102	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+043	20260719000000_0050_agent_harness	falhou	falhou	109	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+044	20260719100000_0051_agent_version_immutability	falhou	falhou	104	prerequisito:tabela	public.ai_agent_versions	sim	relation "public.ai_agent_versions" does not exist
+045	20260719110000_0052_republish_fn_uppercase_fix	ok	111	sql	-	-	-	-
+046	20260720100000_0053_flywheel_proposal_applied	falhou	falhou	102	prerequisito:tabela	flywheel_distiller_proposals	sim	relation "flywheel_distiller_proposals" does not exist
+047	20260721120000_0054_followup_flows	falhou	falhou	105	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+048	20260721120001_0055_whatsapp_media_bucket	ok	103	sql	-	-	-	-
+049	20260721130000_0056_followup_version_lineage	falhou	falhou	104	prerequisito:tabela	followup_flow_versions	sim	relation "followup_flow_versions" does not exist
+050	20260721140000_0057_followup_dead_inbox_kind	falhou	falhou	103	prerequisito:tabela	agent_inbox_items	sim	relation "agent_inbox_items" does not exist
+051	20260722120000_0058_media_multimodal	falhou	falhou	108	prerequisito:tabela	messages	sim	relation "messages" does not exist
+052	20260722130000_0059_agent_split_messages	falhou	falhou	101	prerequisito:tabela	ai_agent_versions	sim	relation "ai_agent_versions" does not exist
+053	20260722140000_0060_message_templates	falhou	falhou	104	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+054	20260722150000_0061_agent_followup_selector	falhou	falhou	111	prerequisito:tabela	ai_agent_versions	sim	relation "ai_agent_versions" does not exist
+055	20260722160000_0062_conversation_snooze	falhou	falhou	102	prerequisito:tabela	conversations	sim	relation "conversations" does not exist
+056	20260722160001_0064_followup_enrollment_exclusivity	falhou	falhou	105	prerequisito:tabela	followup_enrollments	sim	relation "followup_enrollments" does not exist
+057	20260723120000_0063_conversation_notes	falhou	falhou	104	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+058	20260723130000_0065_reconcile_inbox_kind_check	falhou	falhou	99	prerequisito:tabela	agent_inbox_items	sim	relation "agent_inbox_items" does not exist
+059	20260724000000_0066_human_cases	falhou	falhou	105	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+060	20260724010000_0067_org_memory	falhou	falhou	106	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+061	20260724120000_0068_skills_marketplace	falhou	falhou	101	prerequisito:tabela	skill_versions	sim	relation "skill_versions" does not exist
+062	20260724130000_0069_seed_platform_skills	falhou	falhou	112	prerequisito:tabela	skill_pointers	sim	relation "skill_pointers" does not exist
+063	20260725000000_0070_crm_lead_owner_kind	falhou	falhou	113	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+064	20260725010000_0071_crm_lead_activities_barramento	falhou	falhou	123	prerequisito:tabela	public.crm_lead_activities	sim	relation "public.crm_lead_activities" does not exist
+065	20260725020000_0072_activity_evidence_llm_call_ids	falhou	falhou	108	prerequisito:tabela	public.crm_lead_activities	sim	relation "public.crm_lead_activities" does not exist
+066	20260725030000_0073_next_action_identity_and_ambiguous_inbox	falhou	falhou	106	prerequisito:tabela	public.lead_state	sim	relation "public.lead_state" does not exist
+067	20260725040000_0074_lead_score_com_evidencia	falhou	falhou	106	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+068	20260725050000_0075_score_sai_do_lead_para_tabela_propria	falhou	falhou	107	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+069	20260725060000_0076_evidencia_do_score_exige_ancora_e_fatores	falhou	falhou	99	prerequisito:tabela	public.crm_lead_scores	sim	relation "public.crm_lead_scores" does not exist
+070	20260725070000_0077_evidencia_do_score_uma_fonte_so	falhou	falhou	105	prerequisito:tabela	public.crm_lead_scores	sim	relation "public.crm_lead_scores" does not exist
+071	20260725080000_0078_estado_de_risco_do_negocio	falhou	falhou	108	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+072	20260725090000_0079_relogio_do_silencio_so_conta_interacao	ok	106	sql	-	-	-	-
+073	20260725100000_0080_kind_de_caixa_para_o_acervo_de_risco	falhou	falhou	101	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+074	20260725110000_0081_detected_at_e_carimbo_do_banco	falhou	falhou	104	prerequisito:tabela	public.crm_lead_risk_states	sim	relation "public.crm_lead_risk_states" does not exist
+075	20260725120000_0082_proposta_de_reativacao_com_prazo	falhou	falhou	108	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+076	20260725130000_0083_kind_de_caixa_para_reativacao_vencida	falhou	falhou	98	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+077	20260725140000_0084_agent_stage_hint	falhou	falhou	98	prerequisito:tabela	public.crm_stages	sim	relation "public.crm_stages" does not exist
+078	20260725150000_0113_ai_pricing_backfill	falhou	falhou	99	prerequisito:tabela	public.ai_pricing	sim	relation "public.ai_pricing" does not exist
+079	20260726000000_0085_intent_router	falhou	falhou	103	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+080	20260727000000_0086_knowledge_searches	falhou	falhou	105	prerequisito:tabela	organizations	sim	relation "organizations" does not exist
+081	20260727120000_0087_channel_provider	falhou	falhou	101	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+082	20260728120000_0088_meta_templates	falhou	falhou	104	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+083	20260728130000_0089_system_self_update	ok	121	sql	-	-	-	-
+084	20260728140000_0090_system_update_dispatched_unique	ok	136	sql	-	-	-	-
+085	20260729000000_0092_stage_names_acentos	falhou	falhou	103	prerequisito:tabela	public.crm_stages	sim	relation "public.crm_stages" does not exist
+086	20260729120000_0091_message_type_template	falhou	falhou	106	prerequisito:tabela	public.messages	sim	relation "public.messages" does not exist
+087	20260729130000_0093_system_version_compare_failed	ok	108	sql	-	-	-	-
+088	20260730000000_0094_system_version_has_known_release	ok	103	sql	-	-	-	-
+089	20260730180000_0095_budget_conta_llm_calls	falhou	falhou	101	prerequisito:tabela	public.llm_calls	sim	relation "public.llm_calls" does not exist
+090	20260730200000_0096_llm_default_model_da_org	falhou	falhou	98	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+091	20260730220000_0097_rag_threshold_calibrado	falhou	falhou	104	prerequisito:tabela	public.ai_agents	sim	relation "public.ai_agents" does not exist
+092	20260801200000_0098_contacts_locale	falhou	falhou	111	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+093	20260801220000_0099_contacts_avatar	falhou	falhou	110	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+094	20260804180000_0102_cron_jobs_retorno_cancelado	falhou	falhou	102	prerequisito:tabela	public.cron_jobs	sim	relation "public.cron_jobs" does not exist
+095	20260804200000_0100_agent_case_events_agent_noted	falhou	falhou	102	prerequisito:tabela	public.agent_case_events	sim	relation "public.agent_case_events" does not exist
+096	20260804210000_0101_autoria_da_configuracao	falhou	falhou	114	prerequisito:tabela	public.crm_stages	sim	relation "public.crm_stages" does not exist
+097	20260804220000_0103_uso_de_capacidades_do_agente	falhou	falhou	109	prerequisito:tabela	public.ai_agent_runs	sim	relation "public.ai_agent_runs" does not exist
+098	20260805120000_0104_catalogo_de_modelos_atualizado	falhou	falhou	106	prerequisito:tabela	public.ai_models	sim	relation "public.ai_models" does not exist
+099	20260805140000_0105_inbox_capabilities_missing	falhou	falhou	103	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+100	20260805150000_0106_channel_sessions_archived_at	falhou	falhou	103	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+101	20260805160000_0107_channel_sessions_phone_unique_ativos	falhou	falhou	105	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+102	20260805180000_0108_revoke_definer_exposto	falhou	falhou	102	prerequisito:funcao	public.fn_is_platform_admin	sim	function public.fn_is_platform_admin() does not exist
+103	20260805190000_0109_inbox_kind_message_send_stuck	falhou	falhou	104	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+104	20260805200000_0110_lead_checkpoints_declaracao	falhou	falhou	112	prerequisito:tabela	lead_checkpoints	sim	relation "lead_checkpoints" does not exist
+105	20260806100000_0111_operator_turn	falhou	falhou	104	prerequisito:tabela	job_queue	sim	relation "job_queue" does not exist
+106	20260806120000_0114_ai_invocations_agent_id_nullable	falhou	falhou	102	prerequisito:tabela	public.ai_invocations	sim	relation "public.ai_invocations" does not exist
+107	20260806140000_0112_operator_tool_ids	falhou	falhou	100	prerequisito:tabela	ai_agent_versions	sim	relation "ai_agent_versions" does not exist
+108	20260806180000_0115_deletar_org_e_agente	falhou	falhou	105	prerequisito:tabela	public.ai_agents	sim	relation "public.ai_agents" does not exist
+109	20260806190000_0133_fn_atrito_metrics	falhou	falhou	196	prerequisito:tabela	public.agent_cases	sim	relation "public.agent_cases" does not exist
+110	20260806210000_0134_atrito_abandono	falhou	falhou	110	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+111	20260806230000_0135_atrito_repeticao_espera	falhou	falhou	123	prerequisito:tabela	public.agent_cases	sim	relation "public.agent_cases" does not exist
+112	20260807010000_0136_demandas	falhou	falhou	116	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+113	20260807030000_0137_atrito_denominador_demanda	falhou	falhou	111	prerequisito:tabela	public.demandas	sim	relation "public.demandas" does not exist
+114	20260807050000_0138_demanda_no_ponto_de_entrada	falhou	falhou	104	prerequisito:tabela	public.messages	sim	relation "public.messages" does not exist
+115	20260807060000_0122_telefone_do_lid	falhou	falhou	105	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+116	20260807070000_0123_fila_de_confirmacao_de_dado	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+117	20260807080000_0124_kind_proposta_vencida	falhou	falhou	102	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+118	20260807090000_0125_escopo_de_funil_do_agente	falhou	falhou	106	prerequisito:tabela	public.ai_agent_versions	sim	relation "public.ai_agent_versions" does not exist
+119	20260807120000_0126_ai_purpose_bindings	falhou	falhou	131	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+120	20260807140000_0127_provider_vocabulario_aberto	falhou	falhou	102	prerequisito:tabela	public.ai_agent_versions	sim	relation "public.ai_agent_versions" does not exist
+121	20260807160000_0116_definer_nova_nasce_exposta	falhou	falhou	109	prerequisito:funcao	public.fn_audit_log_row	sim	function public.fn_audit_log_row() does not exist
+122	20260807160500_0128_llm_calls_registra_falha	falhou	falhou	101	prerequisito:tabela	public.llm_calls	sim	relation "public.llm_calls" does not exist
+123	20260807180000_0129_midia_nao_lida	falhou	falhou	103	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+124	20260807200000_0130_unifica_ai_invocations	falhou	falhou	112	prerequisito:tabela	public.llm_calls	sim	relation "public.llm_calls" does not exist
+125	20260808020000_0131_canal_zernio_vocabulario	falhou	falhou	109	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+126	20260808030000_0132_zernio_envio	falhou	falhou	103	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+127	20260808040000_0139_kind_check_completo	falhou	falhou	103	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+128	20260808050000_0140_orcamento_nao_conta_backfill	falhou	falhou	101	prerequisito:tabela	public.ai_budgets	sim	relation "public.ai_budgets" does not exist
+129	20260808060000_0141_binding_sobrevive_a_rotacao	falhou	falhou	103	prerequisito:tabela	public.ai_purpose_bindings	sim	relation "public.ai_purpose_bindings" does not exist
+130	20260808180000_0119_contato_lookup_telefone	falhou	falhou	115	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+131	20260808200000_0120_avisos_de_canal	falhou	falhou	119	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+132	20260809100000_0142_camadas_de_seguranca_por_org	falhou	falhou	108	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+133	20260810120000_0145_dossie_do_followup	falhou	falhou	104	prerequisito:tabela	public.followup_enrollments	sim	relation "public.followup_enrollments" does not exist
+134	20260810121000_0144_followup_timing_plan	falhou	falhou	108	prerequisito:tabela	followup_enrollments	sim	relation "followup_enrollments" does not exist
+135	20260810122000_0146_claim_justo_entre_organizacoes	falhou	falhou	103	prerequisito:tabela	followup_enrollments	sim	relation "followup_enrollments" does not exist
+136	20260810150000_0143_guardrail_layers_escrita_de_admin	falhou	falhou	100	prerequisito:tabela	public.org_guardrail_layers	sim	relation "public.org_guardrail_layers" does not exist
+137	20260810160000_0147_relogio_do_banco	falhou	falhou	103	prerequisito:tabela	public.followup_enrollments	sim	relation "public.followup_enrollments" does not exist
+138	20260810180000_0153_mensagem_editada_e_apagada	falhou	falhou	103	prerequisito:tabela	public.messages	sim	relation "public.messages" does not exist
+139	20260810210000_0154_template_sabe_de_qual_conexao	falhou	falhou	102	prerequisito:tabela	public.meta_templates	sim	relation "public.meta_templates" does not exist
+140	20260811090000_0148_caso_anuncia_no_barramento	falhou	falhou	110	prerequisito:tabela	public.agent_cases	sim	relation "public.agent_cases" does not exist
+141	20260811100000_0149_definer_valida_membership	ok	109	sql	-	-	-	-
+142	20260811110000_0150_rbac_na_config_de_ia_e_canais	falhou	falhou	104	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+143	20260811200000_0151_arquivo_do_webhook_por_canal	falhou	falhou	102	prerequisito:tabela	public.webhook_events_log	sim	relation "public.webhook_events_log" does not exist
+144	20260811210000_0152_o_gatilho_manda_o_texto	ok	116	sql	-	-	-	-
+145	20260813090000_0155_marca_da_instalacao_no_banco	falhou	falhou	143	prerequisito:funcao	public.fn_touch_updated_at	sim	function public.fn_touch_updated_at() does not exist
+146	20260813120000_0156_quadro_do_onboarding	ok	117	sql	-	-	-	-
+147	20260814090000_0157_marca_por_organizacao	ok	106	sql	-	-	-	-
+148	20260814140000_0158_logo_no_storage	falhou	falhou	103	prerequisito:tabela	public.platform_branding	sim	relation "public.platform_branding" does not exist
+149	20260814210000_0159_o_teto_que_vincula	falhou	falhou	101	prerequisito:tabela	public.llm_calls	sim	relation "public.llm_calls" does not exist
+150	20260815120000_0160_ai_budgets_so_escreve_pela_rota	falhou	falhou	101	prerequisito:tabela	public.ai_budgets	sim	relation "public.ai_budgets" does not exist
+151	20260819140000_0161_outbound_zera_unread	falhou	falhou	105	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+152	20260819150000_0162_contato_ultima_atividade_mensagem	falhou	falhou	115	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+153	20260820010000_0163_o_arquivo_do_webhook_pode_perder_o_corpo	falhou	falhou	103	prerequisito:tabela	public.webhook_events_log	sim	relation "public.webhook_events_log" does not exist
+154	20260820030000_0164_atribuicao_de_anuncio	ok	125	sql	-	-	-	-
+155	20260820120000_0166_indice_do_claim_da_fila	falhou	falhou	109	prerequisito:tabela	job_queue	sim	relation "job_queue" does not exist
+156	20260820160000_0165_identificador_de_canal_unico_entre_ativos	falhou	falhou	101	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+157	20260820170000_0167_poda_da_fila_e_expurgo_do_audit	falhou	falhou	104	prerequisito:tabela	public.job_queue	sim	relation "public.job_queue" does not exist
+158	20260821090000_0168_a_mensagem_que_responde_outra	falhou	falhou	112	prerequisito:tabela	public.messages	sim	relation "public.messages" does not exist
+159	20260824120000_0173_quem_manda_na_conversa	falhou	falhou	114	prerequisito:tipo	public.conversations	sim	type "public.conversations" does not exist
+160	20260825120000_0174_historico_de_leads_captados	falhou	falhou	111	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+161	20260825130000_0175_a_automacao_diz_a_verdade	falhou	falhou	112	prerequisito:tabela	public.automation_rule_runs	sim	relation "public.automation_rule_runs" does not exist
+162	20260826140000_0181_o_acervo_e_da_organizacao	falhou	falhou	103	prerequisito:tabela	public.ai_knowledge_sources	sim	relation "public.ai_knowledge_sources" does not exist
+163	20260826190000_0177_agenda_o_compromisso_marcado	falhou	falhou	116	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+164	20260826200000_0182_dois_cliques_nao_marcam_duas_vezes	falhou	falhou	102	prerequisito:tabela	public.calendar_appointments	sim	relation "public.calendar_appointments" does not exist
+165	20260826210000_0183_a_grade_da_agenda_nao_se_move_sozinha	falhou	falhou	156	prerequisito:tabela	public.calendar_appointments	sim	relation "public.calendar_appointments" does not exist
+166	20260826220000_0184_anonimizar_um_contato_deixava_a_agenda_legivel	falhou	falhou	147	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+167	20260826230000_0185_instalacao_fresca_nao_dava_para_marcar_nada	falhou	falhou	122	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+168	20260827000000_0186_a_cor_da_pessoa_e_uma_trilha_nao_um_hex	falhou	falhou	104	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+169	20260827010000_0187_o_espelho_do_google_e_cache_com_prazo	falhou	falhou	106	prerequisito:tabela	public.calendar_external_events	sim	relation "public.calendar_external_events" does not exist
+170	20260827020000_0188_a_volta_do_google_sem_identidade_cria_fantasma	falhou	falhou	105	prerequisito:tabela	public.calendar_external_events	sim	relation "public.calendar_external_events" does not exist
+171	20260827030000_0189_o_espelho_nao_se_limpa_sozinho	falhou	falhou	124	prerequisito:tabela	public.calendar_external_events	sim	relation "public.calendar_external_events" does not exist
+172	20260827040000_0190_o_mesmo_state_do_google_valia_duas_vezes	falhou	falhou	131	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+173	20260827050000_0191_o_playbook_de_agendamento_nao_conhecia_as_ferramentas	falhou	falhou	103	prerequisito:tabela	skill_versions	sim	relation "skill_versions" does not exist
+174	20260827060000_0192_a_poda_de_nonces_esqueceu_authenticated	falhou	falhou	110	prerequisito:funcao	public.fn_expurgar_nonces_de_oauth	sim	function public.fn_expurgar_nonces_de_oauth(integer, integer) does not exist
+175	20260827080000_0193_a_conexao_do_google_sem_fk_e_sem_fuso	falhou	falhou	103	prerequisito:tabela	public.calendar_appointments	sim	relation "public.calendar_appointments" does not exist
+176	20260827090000_0194_lembrete_nasce_desligado	falhou	falhou	108	prerequisito:tabela	public.calendar_event_types	sim	relation "public.calendar_event_types" does not exist
+177	20260827100000_0195_tipo_semeado_nascia_sem_dono	falhou	falhou	108	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+178	20260827180000_0196_followup_pointer_surface	falhou	falhou	101	prerequisito:tabela	public.followup_flow_pointers	sim	relation "public.followup_flow_pointers" does not exist
+179	20260827181000_0197_push_subscriptions	falhou	falhou	115	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+180	20260827182000_0198_nono_digito_canonico	falhou	falhou	99	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+181	20260827183000_0199_push_subscriptions_rbac	falhou	falhou	100	prerequisito:tabela	public.push_subscriptions	sim	relation "public.push_subscriptions" does not exist
+182	20260827190000_0200_o_que_ainda_nao_foi_ao_google	falhou	falhou	106	prerequisito:tabela	public.calendar_appointments	sim	relation "public.calendar_appointments" does not exist
+183	20260827200000_0201_credencial_do_google_pela_tela	falhou	falhou	104	prerequisito:funcao	public.fn_set_updated_at	sim	function public.fn_set_updated_at() does not exist
+184	20260828000000_0202_o_nome_do_atendente_custava_uma_chamada_http	falhou	falhou	107	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+185	20260831000000_0203_comando_da_conversa	falhou	falhou	105	prerequisito:tipo	public.conversations	sim	type public.conversations does not exist
+186	20260901120000_0204_catalogo_de_produtos_da_loja	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+187	20260902020000_0205_um_agente_indexa_mais_de_um_material	falhou	falhou	101	prerequisito:tabela	public.ai_knowledge_versions	sim	relation "public.ai_knowledge_versions" does not exist
+188	20260903210000_0207_credenciais_de_ia_voltam_a_ser_lidas_por_manager	falhou	falhou	104	prerequisito:tabela	public.ai_provider_credentials	sim	relation "public.ai_provider_credentials" does not exist
+189	20260904120000_0208_pedidos_comerciais	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+190	20260904130000_0209_proximo_numero_do_pedido	ok	123	sql	-	-	-	-
+191	20260904140000_0210_categorias_e_tabelas_de_preco	falhou	falhou	114	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+192	20260904150000_0211_credito_do_cliente	falhou	falhou	108	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+193	20260904160000_0212_expedicao_e_romaneio	falhou	falhou	108	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+194	20260904170000_0213_fiscal_notas	falhou	falhou	108	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+195	20260904180000_0214_embarque_certo	falhou	falhou	103	prerequisito:tabela	public.shipment_orders	sim	relation "public.shipment_orders" does not exist
+196	20260904190000_0215_fiscal_emitente_completo	falhou	falhou	106	prerequisito:tabela	public.fiscal_settings	sim	relation "public.fiscal_settings" does not exist
+197	20260904200000_0216_ncm_no_produto	falhou	falhou	102	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+198	20260904210000_0217_contador_para_service_role	ok	103	sql	-	-	-	-
+199	20260904220000_0218_comprovante_de_entrega	falhou	falhou	104	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+200	20260904230000_0219_fotos_do_produto	falhou	falhou	107	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+201	20260905120000_0220_prospeccao	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+202	20260905220000_0221_politicas_comerciais	falhou	falhou	104	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+203	20260905230000_0222_pedido_completo	falhou	falhou	97	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+204	20260905230001_0223_tabela_no_pedido	falhou	falhou	100	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+205	20260905230002_0224_cnpj_no_contato	falhou	falhou	99	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+206	20260906080000_0225_metas_comerciais	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+207	20260906140000_0226_comissoes	falhou	falhou	102	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+208	20260906150000_0227_baixa_de_titulos	falhou	falhou	103	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+209	20260906160000_0228_vitrine	falhou	falhou	105	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+210	20260906170000_0229_tarefas_e_atividades	falhou	falhou	113	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+211	20260906180000_0230_endereco_no_contato	falhou	falhou	99	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+212	20260906210000_0231_roteirizador_de_entregas	falhou	falhou	102	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+213	20260907010000_0232_indice_pedidos_cronologico	falhou	falhou	101	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+214	20260908010000_0233_recebiveis_financeiros	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+215	20260908020000_0234_fila_fiscal_e_eventos	falhou	falhou	104	prerequisito:tabela	public.invoices	sim	relation "public.invoices" does not exist
+216	20260908030000_0235_fiscal_cce_inutilizacao_cfop	falhou	falhou	116	prerequisito:tabela	public.fiscal_events	sim	relation "public.fiscal_events" does not exist
+217	20260909010000_0236_notas_de_entrada_e_contas_a_pagar	falhou	falhou	107	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+218	20260922080000_0237_radar_digest_kind	falhou	falhou	101	prerequisito:tabela	agent_inbox_items	sim	relation "agent_inbox_items" does not exist
+219	20260923120000_0238_lgpd_prospeccao_e_fiscal_na_cascata	falhou	falhou	103	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+220	20260923130000_0239_radar_digest_restaura_o_vocabulario	falhou	falhou	103	prerequisito:tabela	public.agent_inbox_items	sim	relation "public.agent_inbox_items" does not exist
+221	20260925010000_0240_separacao_da_carga	falhou	falhou	104	prerequisito:tabela	public.shipment_orders	sim	relation "public.shipment_orders" does not exist
+222	20260925020000_0241_politica_execucao_autonoma	falhou	falhou	102	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+223	20260925030000_0242_movimentos_de_estoque	falhou	falhou	99	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+224	20260925040000_0243_compras_fornecedores_e_pedidos	falhou	falhou	107	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+225	20260928190000_0244_a_poda_de_nonces_aceita_os_nomes_das_irmas	ok	105	sql	-	-	-	-
+226	20260929090000_0245_indice_fila_inbox_last_inbound	falhou	falhou	100	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+227	20260930120000_0246_venda_automatica	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+228	20261001120000_0247_prospeccao_fila	falhou	falhou	100	prerequisito:tabela	public.business_prospects	sim	relation "public.business_prospects" does not exist
+229	20261001130000_0248_campanhas_objetivo	falhou	falhou	98	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+230	20261001150000_0249_commercial_tasks_prospect	falhou	falhou	98	prerequisito:tabela	public.commercial_tasks	sim	relation "public.commercial_tasks" does not exist
+231	20261001160000_0250_prospecting_orcamento	falhou	falhou	98	prerequisito:tabela	public.prospecting_settings	sim	relation "public.prospecting_settings" does not exist
+232	20261004030000_0251_proposta_documento_fiscal	falhou	falhou	102	prerequisito:tabela	public.contact_field_proposals	sim	relation "public.contact_field_proposals" does not exist
+233	20261004060000_0252_encrypt_decrypt_cpf	ok	97	sql	-	-	-	-
+234	20261004080000_0253_historico_emitidas_cursor	falhou	falhou	100	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+235	20261004090000_0254_fiscal_ibpt	falhou	falhou	103	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+236	20261004100000_0255_dados_da_empresa	falhou	falhou	114	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+237	20261004110000_0256_ncm_origem	falhou	falhou	98	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+238	20261004120000_0257_nota_extras_fiscais	falhou	falhou	101	prerequisito:tabela	public.invoices	sim	relation "public.invoices" does not exist
+239	20261004180000_0258_decisao_ia_do_radar	falhou	falhou	101	prerequisito:tabela	public.crm_leads	sim	relation "public.crm_leads" does not exist
+240	20261004200000_0259_rbac_crm_lead_risk_decisions	falhou	falhou	101	prerequisito:tabela	public.crm_lead_risk_decisions	sim	relation "public.crm_lead_risk_decisions" does not exist
+241	20261005120000_0260_prospeccao_laya_fit	falhou	falhou	101	prerequisito:tabela	public.business_prospects	sim	relation "public.business_prospects" does not exist
+242	20261009140000_0261_fiscal_agendado_e_alertas	falhou	falhou	101	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+243	20261010120000_0262_alerta_reabertura	falhou	falhou	105	prerequisito:tabela	operational_alerts	sim	relation "operational_alerts" does not exist
+244	20261010150000_0263_pedido_chave_sincronizacao	falhou	falhou	98	prerequisito:tabela	commercial_orders	sim	relation "commercial_orders" does not exist
+245	20261011120000_0264_prospect_site_situacao	falhou	falhou	102	prerequisito:tabela	business_prospects	sim	relation "business_prospects" does not exist
+246	20261011140000_0265_lab_avaliacoes	falhou	falhou	109	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+247	20261011150000_0266_membro_setor	falhou	falhou	102	prerequisito:tabela	user_organizations	sim	relation "user_organizations" does not exist
+248	20261013120000_0267_cargo_vendedor	falhou	falhou	109	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+249	20261014120000_0268_fechamento_carga	falhou	falhou	133	prerequisito:tabela	public.shipment_orders	sim	relation "public.shipment_orders" does not exist
+250	20261014200000_0269_venda_automatica_msg_cooldown	falhou	falhou	106	prerequisito:tabela	public.automatic_sales_campaigns	sim	relation "public.automatic_sales_campaigns" does not exist
+251	20261016000000_0270_foco_produto_checkpoint	falhou	falhou	97	prerequisito:tabela	lead_checkpoints	sim	relation "lead_checkpoints" does not exist
+252	20261017000000_0271_publico_da_base_na_campanha	falhou	falhou	101	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+253	20261018120000_0272_emit_event_guarda_organizacao_inexistente	ok	102	sql	-	-	-	-
+254	20261019120000_0273_prospeccao_agendada	falhou	falhou	103	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+255	20261019130000_0274_campanha_de_recuperacao	falhou	falhou	101	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+256	20261019140000_0275_ficha_do_produto	falhou	falhou	107	prerequisito:tabela	public.catalog_products	sim	relation "public.catalog_products" does not exist
+257	20261019160000_0276_rastreio_e_contato_no_cliente	falhou	falhou	101	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+258	20261020120000_0277_prospeccao_exclusiva_e_categoria	falhou	falhou	100	prerequisito:tabela	public.business_prospects	sim	relation "public.business_prospects" does not exist
+259	20261021130000_0278_mercos_import_runs	falhou	falhou	104	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+260	20261021133000_0279_mercos_telefone_e164	ok	106	sql	-	-	-	-
+261	20261021135000_0280_mercos_telefone_lookup	ok	104	sql	-	-	-	-
+262	20261021160000_0281_mercos_vendedor_e_vinculo_cliente	falhou	falhou	105	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+263	20261021170000_0282_pedidos_leitura_sem_pedagio_de_escrita	falhou	falhou	99	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+264	20261022190000_0283_mensagens_por_categoria	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+265	20261023120000_0284_campanha_por_template	falhou	falhou	101	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+266	20261025120000_0285_template_por_categoria	falhou	falhou	105	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+267	20261025200000_0286_qualidade_do_numero	falhou	falhou	101	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+268	20261026120000_0287_ritmo_longo_da_campanha	falhou	falhou	107	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+269	20261026130000_0288_trava_de_disparo	falhou	falhou	105	prerequisito:tabela	public.channel_sessions	sim	relation "public.channel_sessions" does not exist
+270	20261028120000_0289_carimbo_da_conversa_nao_anda_para_tras	ok	104	sql	-	-	-	-
+271	20261102120000_0290_fiscal_entrada_modulo	falhou	falhou	102	prerequisito:tabela	public.fiscal_settings	sim	relation "public.fiscal_settings" does not exist
+272	20261103120000_0291_numeracao_da_nfe	falhou	falhou	104	prerequisito:tabela	public.fiscal_settings	sim	relation "public.fiscal_settings" does not exist
+273	20261104120000_0292_motorista	falhou	falhou	101	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+274	20261104190000_0293_numeracao_sem_repeticao	ok	108	sql	-	-	-	-
+275	20261104200000_0294_invoice_orders	falhou	falhou	108	prerequisito:tabela	public.invoices	sim	relation "public.invoices" does not exist
+276	20261105140000_0295_fiscal_events_ajuste	falhou	falhou	106	prerequisito:tabela	public.fiscal_events	sim	relation "public.fiscal_events" does not exist
+277	20261106120000_0296_canais_por_membro	falhou	falhou	98	prerequisito:tabela	public.user_organizations	sim	relation "public.user_organizations" does not exist
+278	20261106130000_0297_revisao_mercos	falhou	falhou	99	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+279	20261106180000_0298_mercos_pago_e_entregue	falhou	falhou	102	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+280	20261109120000_0299_aviso_de_expedicao_nao_cai_no_comercial	falhou	falhou	105	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+281	20261109130000_0300_notas_na_publicacao_realtime	falhou	falhou	100	prerequisito:tabela	public.conversation_notes	sim	relation "public.conversation_notes" does not exist
+282	20261110120000_0301_mercos_cadastro_1_para_1	falhou	falhou	106	prerequisito:tabela	public.contacts	sim	relation "public.contacts" does not exist
+283	20261111120000_0302_pedido_concluido	falhou	falhou	107	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+284	20261112120000_0303_campanha_por_regiao	falhou	falhou	99	prerequisito:tabela	public.prospecting_campaigns	sim	relation "public.prospecting_campaigns" does not exist
+285	20261112180000_0304_revisao_cidade_uf	falhou	falhou	113	prerequisito:tipo	public.commercial_orders	sim	type "public.commercial_orders" does not exist
+286	20261113090000_0305_pedido_informacoes_fiscais	falhou	falhou	100	prerequisito:tabela	public.commercial_orders	sim	relation "public.commercial_orders" does not exist
+287	20261114120000_0306_frota_veiculos_motoristas	falhou	falhou	112	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+288	20261115120000_0307_distribuicao_por_veiculo	falhou	falhou	113	prerequisito:tabela	public.fleet_vehicles	sim	relation "public.fleet_vehicles" does not exist
+289	20261116120000_0308_destino_da_entrega	falhou	falhou	107	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist
+290	20261116130000_0309_address_recovery_engine	falhou	falhou	101	prerequisito:tabela	public.shipment_destinations	sim	relation "public.shipment_destinations" does not exist
+291	20261117120000_0310_contagens_do_inbox_em_uma_consulta	falhou	falhou	105	prerequisito:tabela	public.conversations	sim	relation "public.conversations" does not exist
+292	20261118120000_0311_entrada_do_destino	falhou	falhou	108	prerequisito:tabela	public.organizations	sim	relation "public.organizations" does not exist

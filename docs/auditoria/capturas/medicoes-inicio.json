@@ -1,0 +1,102 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "inicio",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "resultados": [
+    {
+      "rota": "/app",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 8635,
+      "erro": null,
+      "arquivo": "desktop_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 62,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3449,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2906,
+      "erro": null,
+      "arquivo": "desktop_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 96,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 2799,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2325,
+      "erro": null,
+      "arquivo": "desktop_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 36,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 404,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3365,
+      "erro": null,
+      "arquivo": "desktop_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 123,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 2031,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2245,
+      "erro": null,
+      "arquivo": "desktop_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agente de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1662,
+      "url": "/app/ai"
+    }
+  ]
+}

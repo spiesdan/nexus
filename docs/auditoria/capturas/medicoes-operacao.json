@@ -1,0 +1,197 @@
+{
+  "base": "http://localhost:3001",
+  "grupo": "operacao",
+  "url_depois_do_login": "http://localhost:3001/app/inbox",
+  "resultados": [
+    {
+      "rota": "/app/estoque",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5780,
+      "erro": null,
+      "arquivo": "desktop_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 585,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4984,
+      "erro": null,
+      "arquivo": "desktop_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 600,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3575,
+      "erro": null,
+      "arquivo": "desktop_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 37,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 1083,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5064,
+      "erro": null,
+      "arquivo": "desktop_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 41,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 788,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 6037,
+      "erro": null,
+      "arquivo": "desktop_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 83,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 2978,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2115,
+      "erro": null,
+      "arquivo": "celular_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 315,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1954,
+      "erro": null,
+      "arquivo": "celular_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 330,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1732,
+      "erro": null,
+      "arquivo": "celular_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 748,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1840,
+      "erro": null,
+      "arquivo": "celular_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 518,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2621,
+      "erro": null,
+      "arquivo": "celular_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 2493,
+      "url": "/app/financeiro"
+    }
+  ]
+}
