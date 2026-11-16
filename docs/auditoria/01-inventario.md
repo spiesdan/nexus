@@ -40,8 +40,10 @@ ausentes, 0 acréscimos**.
 
 > **Isto prova cobertura de ROTAS, não auditoria de telas.** Que toda rota do prompt tenha
 > arquivo não diz que cada subtela (aba, drawer, modal), cada estado (vazio, erro, permissão
-> negada, salvando) e cada jornada foi vista funcionando. Em 2026-11-16, **42 de 156 telas** tinham
-> captura em navegador (57 capturas: 37 desktop + 20 celular). A correção da alegação está em
+> negada, salvando) e cada jornada foi vista funcionando. Em 2026-11-16, **37 de 156 telas** tinham
+> captura em navegador (**57 arquivos**: 37 rotas em desktop + as mesmas 20 rotas em celular — 57 =
+> 37 + 20, e as 20 são subconjunto das 37). A versão anterior dizia "42 telas", soma que não fecha
+> com arquivo nenhum. A correção da alegação está em
 > [`PROMPT-MESTRE-AAA.md`](PROMPT-MESTRE-AAA.md) § Fase 1.
 
 ## 3. Achados da Fase 1
@@ -209,12 +211,75 @@ Por que importa: é o **único gate** do kit de instalação (`AGENTS.md` § Pac
 que ele vigia — apóstrofo no nome da loja quebrando todo comando `docker compose` — é real
 (`install.sh:510-516`). Aqui o gate estava **certo**; a leitura do defeito é que estava errada.
 
+### F-20 · Corrigido · A matriz de telas × estados media o `page.tsx`, não a tela
+
+`09-telas-estados.md` saiu com **156 linhas e as 12 colunas de estado em `—`** em quase todas —
+e `error.tsx = ✓` em **156 de 156**. Lido como produto, dizia "nenhuma tela trata carregamento,
+vazio, erro, permissão, formulário, filtro ou tabela". Eram três defeitos do instrumento, todos
+mecânicos:
+
+| Defeito | Medida | Efeito |
+|---|---|---|
+| O texto vinha só do `page.tsx` | **89 das 156** telas delegam a UI a `_client.tsx`/`_components/` na mesma pasta | `/app/pedidos` tem filtro, tabela e confirmação no `_client.tsx` e saía `—` nas três |
+| `loading.tsx`/`error.tsx` eram procurados no segmento **ou em `app/`** | existe **um** `app/error.tsx` global | as 156 linhas ganhavam ✓ pelo mesmo arquivo; a coluna dizia "o app tem fallback", não "esta tela trata erro" |
+| O regex rodava **dentro dos comentários** | este repo escreve parágrafos citando "erro", "vazio", "nenhum" | `vazio` 137/156, `gráfico` 67/156, `filtros` 118/156 — inflados por prosa, não por código |
+
+**Correção** (`scripts/auditoria/segmento-de-rota.ts` + `inventario-completo.ts`):
+
+1. o texto vem do **segmento de rota** — `page.tsx` + irmãos + subpastas **sem** `page.tsx` próprio
+   (`pedidos/[id]`, `novo` e `imprimir` são outras telas e ficam de fora);
+2. segue **imports relativos** até 5 níveis: `/app/radar/risco` é `return <RiscoDoRadar/>`, e o
+   componente mora em `../_components/secoes/Risco` — sem seguir, a tela não tinha estado nenhum;
+3. imports `@/…` entram **um salto, sem recursão**: o formulário compartilhado aparece, o botão
+   base que ele usa não contamina as outras telas;
+4. comentários são removidos antes da busca — **string e JSX ficam**, porque "Nenhum pedido
+   encontrado" é sinal real;
+5. `loading`/`error` distinguem **`próprio`** de **`herdado`** de **`—`**.
+
+Medido depois, mesmo commit:
+
+| Coluna | Antes | Depois |
+|---|---|---|
+| telas com ≥1 sinal | 0 de 143 (todas em `—`) | **143 de 143** |
+| `filtros` | 118/156 (inflado por comentário) | **69/156** |
+| `gráfico` | 67/156 | **7/156** |
+| `vazio` | 137/156 | **95/156** |
+| `error` | ✓ em 156 (arquivo global) | `herdado` em 156 — o dado correto: existe fallback global, nenhuma rota fica sem |
+
+Gate: `tests/unit/matriz-telas-le-segmento.test.ts` (11 casos) usa fatos reais do repo — que
+`/app/pedidos` inclui `_client.tsx` e exclui `[id]`/`novo`/`imprimir`, que `/app/radar/risco`
+alcança o componente de `_components`, que `app/error.tsx` é `herdado` e não `próprio`, e que
+`//` dentro de uma URL não é comentário. Um inventário que erra para "vazio" autoriza a conclusão
+de que não há nada a corrigir — por isso a regra fica vigiada.
+
+### F-21 · Corrigido · O lote de captura registrou "149 telas não abrem" quando quem caiu foi o servidor
+
+`docs/auditoria/capturas/medicoes-completo-tenant.json` guarda **168 medições** (84 rotas × 2
+larguras): **19 com PNG e 149 com `erro`**. A leitura ingênua é "149 telas quebradas". Medido,
+eram 149 `ERR_CONNECTION_REFUSED` / `ERR_EMPTY_RESPONSE` no mesmo `http://localhost:3011` — o
+processo do Next morreu no meio do lote, e o instrumento continuou tentando rota após rota,
+gravando a queda como se fosse defeito de cada tela. As primeiras 19 (medidas antes da queda)
+estão boas; as 149 seguintes nunca chegaram a ser vistas.
+
+É o **mesmo defeito de método** do F-20 e do F-09a: o instrumento não distingue "o objeto não
+tem a propriedade" de "o instrumento não olhou". Três correções em
+`scripts/auditoria/captura-visual.mjs`:
+
+1. **espera o servidor antes de começar** (poll em `/login` por até 120 s, sai 1 se não subir);
+2. **reconhece queda e repete uma vez**, registrando `reconexoes` por rota — se o servidor voltou,
+   a rota é medida de verdade; se não voltou, o erro fica com o motivo certo;
+3. `--faltantes`, que lê a matriz, remove o que já tem PNG e **pula rota dinâmica com motivo
+   escrito** (`rota dinâmica sem fixture (id/token real)`) — capturar `/app/pedidos/[id]` sem id
+   mede a tela de não-encontrado e vira "tela vazia" no relatório.
+
+O JSON antigo fica no repositório com o defeito visível, e esta nota é a chave de leitura.
+
 ## 4. Cobertura do checklist
 
 | # | Tarefa | Estado | Evidência |
 |---|---|---|---|
 | 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis) | `[x]` | `inventario-rotas.md` — 156 telas, 13 resolvers, 13 layouts, **6** fronteiras de erro (5 `error.tsx` + `global-error.tsx`), **8** `loading` + `not-found`, 2 especiais (`icon.tsx`, `manifest.ts`). Sem `template.tsx` e sem `default.tsx` (não há rotas paralelas) |
-| 1.2 | Subtelas e estados | `[~]` | `09-telas-estados.md` — 12 estados × 156 telas com **sinal no código**: onde o estado existe, não se funciona. Subtelas (abas/drawers/modais) não são enumeradas e a execução está em 42 de 156 telas |
+| 1.2 | Subtelas e estados | `[~]` | `09-telas-estados.md` — 12 estados × 156 telas, medidos no **segmento de rota** (page + `_client` + `_components` + imports locais): 143/143 telas com JSX têm ao menos um sinal. Em execução: **129 das 155 rotas estáticas** abertas em build de produção, em desktop e celular (258 medições, `11-auditoria-visual.md` §3); as **26 dinâmicas** ficam de fora com motivo escrito (precisam de id real). **Continua sinal no código, não comportamento**: subtelas (abas/drawers/modais) não são enumeradas nem abertas — é o que falta para `[x]` (F-20/F-21) |
 | 1.3 | Componentes | `[x]` | `05-componentes.md` — 242 arquivos, 19 primitivas `ui/`, tipo por área |
 | 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas) | `[x]` | `06-apis.md`/`.json` — 418 handlers com métodos, guarda, schema Zod, efeitos, idempotência, rate limit. **Erros**: código por `fail()` lido de `lib/api/errors.ts` (`inventario.ts`) |
 | 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, update) | `[x]` | `04-inventario-dados.md` (texto) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em banco): 180 tabelas, 179/179 com RLS, 305 políticas, 104 triggers, 92 funções, 2 views, 185 tipos; instalação **e** update sobre dados verdes; Storage: **7 buckets** (`ai-policy`, `lgpd-exports`, `skill-assets`, `whatsapp-media`, `brand-logos`, `delivery-proofs`, `product-images`). Índices não foram enumerados um a um — F-09 domina a frente |

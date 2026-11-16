@@ -1,7 +1,7 @@
 # Inventário de APIs
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `app/**/route.ts`. Gerado em 2026-11-16T02:08:42.673Z. Não editar à mão.
+> Fonte: `app/**/route.ts`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
 
 **418 handlers**. Medido no arquivo: métodos exportados, guarda, validação, efeitos declarados.
 

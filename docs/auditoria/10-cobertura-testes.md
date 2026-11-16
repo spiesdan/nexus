@@ -1,11 +1,11 @@
 # Cobertura de testes por rota
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `tests/, app/, lib/, components/, hooks/, workers/`. Gerado em 2026-11-16T02:08:42.673Z. Não editar à mão.
+> Fonte: `tests/, app/, lib/, components/, hooks/, workers/`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
 
 | Medida | Valor |
 |---|---|
-| Arquivos de teste encontrados | 1122 |
+| Arquivos de teste encontrados | 1124 |
 | Telas | 156 |
 | Telas com teste próprio na pasta | 15 |
 | Telas citadas em algum teste | 56 |

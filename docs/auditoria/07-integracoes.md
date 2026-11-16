@@ -1,7 +1,7 @@
 # Integrações e infraestrutura
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `lib/, app/, workers/, .env.example, docker-compose.prod.yml`. Gerado em 2026-11-16T02:08:42.673Z. Não editar à mão.
+> Fonte: `lib/, app/, workers/, .env.example, docker-compose.prod.yml`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
 
 ## Integrações — quem é chamado de fora
 

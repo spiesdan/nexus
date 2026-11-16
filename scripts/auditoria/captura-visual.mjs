@@ -19,9 +19,15 @@
  * Uso:
  *   node scripts/auditoria/captura-visual.mjs --rotas /app,/app/inbox
  *   node scripts/auditoria/captura-visual.mjs --grupo inicio
+ *   node scripts/auditoria/captura-visual.mjs --faltantes --area admin --perfil dono
+ *
+ * `--area` restringe `--faltantes` a admin | tenant | publica. Precisa combinar
+ * com `--perfil`: `/admin/**` é superfície do `dono`; medir com `manager`
+ * devolve `/403` e o número vira "tela quebrada" em vez de "guarda funcionando".
+ * `--larguras` aceita `desktop,tablet,celular` (padrão: desktop,celular).
  */
 import { chromium } from "@playwright/test";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createHmac } from "node:crypto";
 import { join } from "node:path";
 
@@ -67,8 +73,54 @@ const argumentos = process.argv.slice(2);
 const args = new Map();
 for (let i = 0; i < argumentos.length; i += 2) args.set(argumentos[i], argumentos[i + 1]);
 const grupo = args.get("--grupo") ?? "inicio";
-const rotas = (args.get("--rotas") ?? GRUPOS[grupo]?.join(",") ?? "/app").split(",");
 const largurasPedidas = (args.get("--larguras") ?? "desktop,celular").split(",");
+// Área do inventário. `/admin/**` só existe para o `dono`; medir com `manager`
+// devolve `/403` e alguém lê "a tela de admin está quebrada".
+const AREA = args.get("--area");
+const daArea = (tela) => {
+  if (!AREA) return true;
+  if (AREA === "admin") return tela.startsWith("/admin");
+  if (AREA === "tenant") return tela.startsWith("/app");
+  if (AREA === "publica") return !tela.startsWith("/admin") && !tela.startsWith("/app");
+  throw new Error(`--area desconhecida: ${AREA} (use admin|tenant|publica)`);
+};
+
+/**
+ * `--faltantes`: lê o inventário e captura só o que ainda não tem PNG.
+ *
+ * Rota com `[id]`/`[token]` fica de fora e é REGISTRADA como pulada: capturar
+ * `/app/pedidos/[id]` sem um id real mede a tela de não-encontrado e alguém
+ * depois lê isso como "a tela está vazia".
+ */
+function rotasFaltantes() {
+  const doc = readFileSync(join(RAIZ, "docs", "auditoria", "09-telas-estados.md"), "utf8");
+  const telas = [...doc.matchAll(/^\| `([^`]+)`/gm)]
+    .map((m) => m[1])
+    .map((t) => t.replace(/\/\([^)]*\)/g, ""))
+    .filter((t) => t.startsWith("/"));
+  const existentes = new Set(readdirSync(SAIDA));
+  const puladas = [];
+  const restantes = [];
+  for (const tela of telas) {
+    if (!daArea(tela)) continue;
+    if (tela.includes("[")) {
+      puladas.push({ rota: tela, motivo: "rota dinâmica sem fixture (id/token real)" });
+      continue;
+    }
+    const falta = largurasPedidas.some(
+      (l) => !existentes.has(`${l}${tela.replace(/[^a-z0-9]+/gi, "_")}.png`),
+    );
+    if (falta) restantes.push(tela);
+  }
+  return { restantes, puladas };
+}
+
+const selecao = args.get("--rotas")
+  ? { restantes: args.get("--rotas").split(","), puladas: [] }
+  : args.get("--faltantes")
+    ? rotasFaltantes()
+    : { restantes: GRUPOS[grupo]?.join(",").split(",") ?? ["/app"], puladas: [] };
+const rotas = selecao.restantes;
 // Qual perfil do seed E2E entra. `manager` vê o produto; `dono` é admin de
 // plataforma e é o único que alcança `/admin/*` sem cair no forbidden. Medir
 // `/admin` com `manager` e chamar o resultado de "acesso negado" seria medir o
@@ -128,13 +180,59 @@ async function entrar() {
     .catch(() => undefined);
 
   // MFA, quando o perfil exige.
+  //
+  // O `dono` (superfície `/admin/**`) tem fator TOTP; o `manager` desta instalação
+  // não. E o campo NÃO é um input único: `components/auth/TOTPInput.tsx` desenha
+  // **6 caixas de 1 dígito** com auto-avanço, e o 6º dígito dispara `onComplete`,
+  // que já envia o formulário. Preencher a primeira caixa com "123456" não
+  // funciona — o `maxLength=1` guarda um caractere só, o botão "Verificar" fica
+  // `disabled` e o script esperava 30 s por um clique que nunca acontece. Foi
+  // exatamente o que travou o lote de `/admin/**` em 16/11.
   if (pagina.url().includes("/mfa") || (await pagina.locator("input[autocomplete=one-time-code]").count()) > 0) {
-    const campo = pagina.locator("input[autocomplete=one-time-code]").first();
-    await campo.fill(totp(segredo));
-    await pagina.locator("button[type=submit]").first().click();
-    await pagina.waitForURL((u) => !u.pathname.includes("/mfa"), { timeout: 30000 }).catch(() => undefined);
+    const codigo = totp(segredo);
+    const caixas = pagina.locator('[role="group"] input[maxlength="1"]');
+    if ((await caixas.count()) >= 6) {
+      await caixas.first().click();
+      // Digitar (não preencher): cada dígito move o foco para a caixa seguinte.
+      await pagina.keyboard.type(codigo, { delay: 60 });
+    } else {
+      const campo = pagina.locator("input[autocomplete=one-time-code]").first();
+      await campo.fill(codigo);
+      const botao = pagina.locator("button[type=submit]").first();
+      if (await botao.isEnabled().catch(() => false)) await botao.click();
+    }
+    await pagina
+      .waitForURL((u) => !u.pathname.includes("/mfa"), { timeout: 30000 })
+      .catch(() => undefined);
+    if (pagina.url().includes("/mfa")) {
+      throw new Error("MFA do perfil não passou — as rotas abaixo seriam medidas deslogadas");
+    }
   }
   return pagina.url();
+}
+
+/**
+ * O servidor já morreu NO MEIO de um lote (149 de 168 rotas `ERR_CONNECTION_REFUSED`),
+ * e o resultado ficou no JSON com cara de "estas telas não abrem". Esperar e
+ * repetir uma vez separa "a tela está quebrada" de "o processo caiu".
+ */
+async function esperarServidor(limiteMs = 120000) {
+  const inicio = Date.now();
+  while (Date.now() - inicio < limiteMs) {
+    try {
+      const r = await fetch(`${BASE}/login`, { signal: AbortSignal.timeout(4000) });
+      if (r.status < 500) return true;
+    } catch {
+      /* ainda não subiu */
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return false;
+}
+
+if (!(await esperarServidor())) {
+  console.error(`ERRO: ${BASE} não respondeu em 120s. Nenhuma captura foi feita.`);
+  process.exit(1);
 }
 
 const urlDepoisDoLogin = await entrar();
@@ -151,10 +249,26 @@ async function medir() {
         return r.width < 40 || r.height < 40;
       })
       .length;
+    // "Campo sem rótulo" só conta campo que a pessoa vê e preenche. `type=hidden`
+    // não tem rótulo por definição, e campo DENTRO de um `<label>` já é rotulado
+    // pelo texto ao redor — contar os dois inflava o número e transformava
+    // "o app usa input oculto" em "o app é inacessível".
     const semRotulo = [...document.querySelectorAll("input,select,textarea")].filter((el) => {
+      if ((el.getAttribute("type") || "").toLowerCase() === "hidden") return false;
+      // Elemento fora da árvore de acessibilidade não "precisa de rótulo": ele
+      // quase sempre é o `BubbleSelect` do Radix — um `<select>` nativo 1×1 px,
+      // `aria-hidden`, `tabindex="-1"`, que o Radix injeta dentro do <form> só
+      // para autofill. O controle que a pessoa usa é o `button[role=combobox]`,
+      // e esse TEM label. Contar o invisível reprovava `/app/settings/profile` e
+      // `/admin/tenants/new`, medidos em 16/11, sem nenhum defeito real.
+      if (el.getAttribute("aria-hidden") === "true") return false;
+      if (el.getAttribute("tabindex") === "-1") return false;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return false;
+      if (el.closest("label")) return false;
       const id = el.getAttribute("id");
       const rotulo = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
-      return !rotulo && !el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby") && !el.getAttribute("placeholder");
+      return !rotulo && !el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby") && !el.getAttribute("placeholder") && !el.getAttribute("title");
     }).length;
     const h1 = [...document.querySelectorAll("h1")].map((h) => h.textContent.trim()).filter(Boolean);
     return {
@@ -178,11 +292,42 @@ for (const largura of larguras) {
     const inicio = Date.now();
     let status = 0;
     let erro = null;
-    try {
-      const resposta = await pagina.goto(`${BASE}${rota}`, { waitUntil: "networkidle", timeout: 45000 });
-      status = resposta?.status() ?? 0;
-    } catch (e) {
-      erro = e instanceof Error ? e.message.slice(0, 120) : String(e);
+    let reconexoes = 0;
+    // `ms` é até o HTML + 4 s de assentamento. `assentou` diz se a rede chegou a
+    // ficar quieta antes do teto — sem isso, "1.500 ms" poderia ser "250 ms de
+    // tela + 1.250 ms de prefetch", e o número enganaria quem lê desempenho.
+    let assentou = false;
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      try {
+        // `networkidle` como CONDIÇÃO DE SUCESSO era uma armadilha: o Next
+        // prefetcha os `<Link>` do menu assim que a tela monta, e há tela que
+        // nunca fica 500 ms sem requisição. Medido em 16/11: `/admin/platform-admins`
+        // renderizava em 191 ms (h1 e API 200) e ainda assim estourava 45 s,
+        // porque depois de `/admin/marca` o router começou a prefetchar
+        // `/admin/usage`, `/admin/users`, `/admin/marca`, `/admin/google`…
+        // Agora: espera o HTML, deixa a rede assentar ATÉ 4 s (sem falhar se não
+        // assentar) e mede. Quem não assenta tem a medida registrada, não um erro.
+        const resposta = await pagina.goto(`${BASE}${rota}`, {
+          waitUntil: "domcontentloaded",
+          timeout: 30000,
+        });
+        status = resposta?.status() ?? 0;
+        assentou = await pagina
+          .waitForLoadState("networkidle", { timeout: 4000 })
+          .then(() => true)
+          .catch(() => false);
+        await pagina.waitForTimeout(250);
+        erro = null;
+        break;
+      } catch (e) {
+        erro = e instanceof Error ? e.message.slice(0, 120) : String(e);
+        const caiu = /ERR_CONNECTION_REFUSED|ERR_EMPTY_RESPONSE|ECONNRESET/.test(erro);
+        // Uma vez só: se o servidor voltou, a rota é medida de verdade. Se não
+        // voltou, o erro fica com o motivo certo em vez de virar "tela vazia".
+        if (!caiu || tentativa === 1 || !(await esperarServidor())) break;
+        reconexoes++;
+        await entrar().catch(() => undefined);
+      }
     }
     const ms = Date.now() - inicio;
     const medida = erro ? null : await medir().catch(() => null);
@@ -194,6 +339,8 @@ for (const largura of larguras) {
       status,
       ms,
       erro,
+      reconexoes,
+      assentou,
       arquivo: erro ? null : nomeArquivo,
       errosDeConsole: [...new Set(errosDeConsole)].slice(0, 5),
       falhasDeRede: [...new Set(falhasDeRede)].slice(0, 5),
@@ -208,7 +355,18 @@ for (const largura of larguras) {
 
 writeFileSync(
   join(SAIDA, `medicoes-${grupo}.json`),
-  JSON.stringify({ base: BASE, grupo, perfil, url_depois_do_login: urlDepoisDoLogin.replace(/\?.*/, "?…"), resultados }, null, 2) + "\n",
+  JSON.stringify(
+    {
+      base: BASE,
+      grupo,
+      perfil,
+      url_depois_do_login: urlDepoisDoLogin.replace(/\?.*/, "?…"),
+      puladas: selecao.puladas,
+      resultados,
+    },
+    null,
+    2,
+  ) + "\n",
 );
 
 await navegador.close();
