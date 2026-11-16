@@ -1,0 +1,896 @@
+{
+  "geradoEm": "2026-11-16T09:53:10.290Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 14,
+  "resultados": [
+    {
+      "rota": "/admin/tenants/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "E2E Segunda Org"
+      ],
+      "textoVisivel": 716,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/admin/tenants/[id]",
+      "tipo": "aba",
+      "subtela": "em breve",
+      "familia": "aba",
+      "naoMedida": "TimeoutError: locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('tab', { name: /em breve/i }).first()\u001b[22m\n\u001b[2m    - locator resol"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 552,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Configuração",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Teste",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Capacidades",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Execuções",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Histórico",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Propostas",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Geral",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 552,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Modelo",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 1232,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "RAG",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 689,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Guardrails",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 606,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "modal",
+      "subtela": "Diff",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 780,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "E2E Follow-up 1794804070365"
+      ],
+      "textoVisivel": 299,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups/enrollments/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "textoVisivel": 1010,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups/enrollments/[id]",
+      "tipo": "modal",
+      "subtela": "Adiar o próximo passo",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "textoVisivel": 1784,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups/enrollments/[id]",
+      "tipo": "modal",
+      "subtela": "Por onde seguir?",
+      "gatilho": "Abrir assistente",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "textoVisivel": 1601,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compra #1"
+      ],
+      "textoVisivel": 612,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras/[id]",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 780,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Visão geral",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 780,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Pedidos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 653,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Produtos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 711,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Financeiro",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 739,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "WhatsApp",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 663,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Histórico",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 830,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Oportunidades",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 679,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Inteligência",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 712,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "LGPD",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 765,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Pessoa jurídica",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "aba",
+      "subtela": "Pessoa física",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "modal",
+      "subtela": "Editar cliente",
+      "gatilho": "Anonimizar cliente",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 1028,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "tipo": "modal",
+      "subtela": "Anonimizar cliente (LGPD)",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Escalação E2E"
+      ],
+      "textoVisivel": 939,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 922,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "tipo": "modal",
+      "subtela": "Adicionar pedido à carga",
+      "gatilho": "Adicionar pedido",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 2442,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "tipo": "modal",
+      "subtela": "Veículo e motorista",
+      "gatilho": "Veículo",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1042,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "tipo": "modal",
+      "subtela": "Trocar carga",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1467,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1417,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "tipo": "modal",
+      "subtela": "Adicionar pedido à carga",
+      "gatilho": "Adicionar pedido",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 2994,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "tipo": "modal",
+      "subtela": "Veículo e motorista",
+      "gatilho": "Veículo",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1537,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "tipo": "modal",
+      "subtela": "Trocar carga",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1591,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 460,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "tipo": "modal",
+      "subtela": "Adicionar pedido à carga",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 1234,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "tipo": "modal",
+      "subtela": "Veículo e motorista",
+      "gatilho": "Abrir assistente",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 1051,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "tipo": "modal",
+      "subtela": "Trocar carga",
+      "gatilho": "Central de avisos — 3 em aberto",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 1207,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1597,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "tipo": "modal",
+      "subtela": "Adicionar pedido à carga",
+      "gatilho": "Adicionar pedido",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 3174,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "tipo": "modal",
+      "subtela": "Veículo e motorista",
+      "gatilho": "Veículo",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1717,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "tipo": "modal",
+      "subtela": "Trocar carga",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1771,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/fiscal/notas/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "textoVisivel": 88,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/fiscal/notas/[id]",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Associar item ao catálogo",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/pedidos/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "PED-0001"
+      ],
+      "textoVisivel": 983,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/pedidos/[id]",
+      "tipo": "modal",
+      "subtela": "Foto do produto",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "PED-0001"
+      ],
+      "textoVisivel": 1972,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/pipelines/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "textoVisivel": 88,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/pipelines/[id]",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Excluir",
+          "motivo": "título destrutivo — não abro por heurística"
+        },
+        {
+          "titulo": "Novo Lead",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/prospeccao/campanhas/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha E2E Entrega"
+      ],
+      "textoVisivel": 1604,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/prospeccao/campanhas/[id]",
+      "tipo": "modal",
+      "subtela": "Enviar mensagem para   empresas",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha E2E Entrega"
+      ],
+      "textoVisivel": 1778,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}

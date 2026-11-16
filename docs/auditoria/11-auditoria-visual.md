@@ -499,14 +499,14 @@ Resultado medido (39 telas, sessão real de `manager`, `dono` e admin, build de 
 
 | Medida                                              | Resultado                                                            |
 | --------------------------------------------------- | -------------------------------------------------------------------- |
-| telas abertas                                       | **51** (32 tenant + 5 do `dono` + 14 dinâmicas com id real do banco) |
-| abas clicadas e medidas                             | **72**                                                               |
+| telas abertas                                       | **53** (33 tenant + 6 do `dono` + 14 dinâmicas com id real do banco) |
+| abas clicadas e medidas                             | **82** + **4 dentro de modal**                                       |
 | aba clicada que **não** ficou selecionada           | **0**                                                                |
 | aba que selecionou e **não mudou** o conteúdo       | **0**                                                                |
 | overflow horizontal em aba aberta                   | **0**                                                                |
 | aba sem `<h1>`                                      | **4 → 0** (as 4 eram a V-23: a tela de edição do agente)             |
 | campo visível sem nome acessível em aba aberta      | **0** (era 2 em `/app/frota`, V-20)                                  |
-| modais abertos e medidos                            | **31**                                                               |
+| modais abertos e medidos                            | **32**                                                               |
 | modal sem nome acessível (`role=dialog` sem título) | **0**                                                                |
 | erro de console                                     | **1**, e virou a V-22                                                |
 
@@ -521,12 +521,33 @@ vazia" — o mesmo erro do F-21. Duas rotas ficaram sem dado nesta instalação 
 e clicar em botão por semelhança de nome é como se apaga dado de cliente — "Excluir" e "Excluir
 filtro" começam igual. O instrumento tem lista de verbos destrutivos e **não clica** neles;
 registra cada um como `não aberto` com o motivo ("nenhum botão visível com nome relacionado",
-"gatilho casou mas não abriu"). **24** abas também não foram encontradas no DOM, e os motivos são
-estruturais, medidos: (a) vivem dentro de gaveta — as abas da ficha de produto só existem depois
-de escolher um produto; (b) o extrator lista as abas de **todos** os arquivos do segmento, e
-quando dois componentes definem barra de aba e só um é montado (o detalhe do agente tem
-`AgentTabs` e `AgentEditor`), o outro conjunto nunca aparece; (c) o texto vem de um objeto
-(`{textos.abaBuscar}`), e o inventário diz `(rótulo dinâmico)` em vez de inventar.
+"gatilho casou mas não abriu"). **15 abas seguem não abertas**, e cada uma tem um motivo medido — nenhuma é "esqueci":
+
+| Quantas | Onde                                                                                                  | Por quê                                                                                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6       | `/app/ai/agents/[id]` — "Configuração", "Teste", "Capacidades", "Execuções", "Histórico", "Propostas" | a tela monta `AgentEditor`, **não** `AgentTabs`; essas seis abas não existem no DOM. O extrator lista as abas de todos os arquivos do segmento, e é isso que aparece |
+| 5       | `/app/products` — as abas da ficha                                                                    | vivem dentro da **gaveta**, que abre por clique na **linha** da tabela, não em botão. O instrumento não clica em linha: é o gesto que também seleciona e navega      |
+| 2       | `/app/connections` "Templates da Meta" e `/admin/tenants/[id]` "em breve"                             | a primeira pertence a uma barra que só monta no canal oficial; a segunda é a aba declarada como "em breve" — existe no rótulo, não no produto                        |
+| 2       | `/app/contacts/[id]` "Pessoa jurídica/física"                                                         | iguais às de `/app/contacts`, mas o diálogo de **edição** não abriu naquela tela                                                                                     |
+
+As quatro de "Pessoa jurídica/física" de `/app/contacts` e `/app/pedidos/novo` **foram medidas**:
+o instrumento passou a abrir as abas de dentro do modal (`Novo cliente › Pessoa jurídica`), e
+essa linha da tabela existe por causa delas.
+
+**Dois falsos positivos do próprio instrumento, corrigidos nesta rodada** — e os dois eram o
+produto estando certo:
+
+1. **`aria-current="true"`.** `/app/ai/cases` aparecia com "aba clicada que não ficou
+   selecionada": a `CaseList` marca a aba com `aria-current="true"` e o instrumento só aceitava
+   `"page"`. Remedido: 0.
+2. **Rótulo com contador.** `{t("Abertos")}{data ? ` (${data.open_count})` : ""}` produz o nome
+   acessível "Abertos (3)"; `exact: true` com "Abertos" não casava, e 10 abas apareciam como "não
+   encontradas" estando na tela. O localizador passou a cair para busca por trecho.
+
+O terceiro erro foi meu, no instrumento, e está documentado no código: o padrão `/app/ai/agents/[id]`
+reivindicava `/app/ai/agents/new` (`[^/]+` casa "new"), e a passada do `dono` mediu a tela de
+**criação** gravando como se fosse a de edição — 10 "abas não encontradas" que não existiam. A
+precedência passou a ser rota exata primeiro, e cada URL só pode ser consumida uma vez.
 
 **O único erro de console que sobra** é o 404 de `/api/v1/channels/partner/templates` — e ele é
 a **resposta certa** da API (`not_found: nenhuma conexão de parceiro ativa`). A V-22 corrigiu o

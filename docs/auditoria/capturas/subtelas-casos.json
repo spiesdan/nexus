@@ -1,0 +1,79 @@
+{
+  "geradoEm": "2026-11-16T09:58:08.734Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 1,
+  "resultados": [
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 678,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Abertos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 678,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Concluídos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 754,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Contato sem nome",
+      "familia": "aba-caseira",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 1179,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}

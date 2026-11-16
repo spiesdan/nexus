@@ -127,6 +127,26 @@ export function gatilhoProvavel(titulo, botoes) {
   );
 }
 
+const escapeRe = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Localiza a aba pelo nome, tolerando o que a tela acrescenta.
+ *
+ * `TabsTrigger` do produto costuma concatenar contador:
+ * `{t("Abertos")}{data ? ` (${data.open_count})` : ""}`. O nome acessível vira
+ * "Abertos (3)" e um `exact: true` com "Abertos" não casa — foi o que fez 24
+ * abas aparecerem como "não encontradas no DOM" em 16/11/2026, quando elas
+ * estavam lá, com o número do lado.
+ */
+function localizarAba(pagina, rotulo, familia) {
+  const papel = familia === "aba-caseira" ? "button" : "tab";
+  const exato = pagina.getByRole(papel, { name: rotulo, exact: true }).first();
+  return {
+    exato,
+    porTrecho: pagina.getByRole(papel, { name: new RegExp(escapeRe(rotulo), "i") }).first(),
+  };
+}
+
 async function medir(pagina) {
   return pagina.evaluate(() => {
     const doc = document.documentElement;
@@ -193,13 +213,39 @@ function casa(pedida, rotaInventario) {
   return padrao.test(pedida);
 }
 
-const alvo = inventario.telas
-  .filter((t) => t.abas.length + t.modais.length + t.gavetas.length > 0)
-  .filter((t) => !pedidas || pedidas.some((p) => casa(p.trim(), t.rota)))
-  .map((t) => {
-    const concreta = pedidas?.find((p) => casa(p.trim(), t.rota));
-    return { ...t, url: concreta ? concreta.trim() : t.rota };
-  });
+/**
+ * Uma URL pedida pertence a UMA tela do inventário — a mais específica.
+ *
+ * O primeiro `casa()` deixou `/app/ai/agents/[id]` reivindicar
+ * `/app/ai/agents/new` (o padrão `[^/]+` casa "new"): a passada do `dono` mediu
+ * a tela de CRIAÇÃO e gravou como se fosse a de edição, produzindo 10 "abas não
+ * encontradas" que não existiam. Ordem de precedência: rota exata primeiro,
+ * padrão depois — e cada URL só pode ser consumida uma vez.
+ */
+const alvo = (() => {
+  const telas = inventario.telas.filter(
+    (t) => t.abas.length + t.modais.length + t.gavetas.length > 0,
+  );
+  if (!pedidas) return telas.map((t) => ({ ...t, url: t.rota }));
+  const usadas = new Set();
+  const saida = [];
+  for (const t of telas) {
+    const exata = pedidas.find((p) => p.trim() === t.rota);
+    if (exata && !usadas.has(exata.trim())) {
+      usadas.add(exata.trim());
+      saida.push({ ...t, url: exata.trim() });
+    }
+  }
+  for (const t of telas) {
+    if (saida.some((s) => s.rota === t.rota)) continue;
+    const casada = pedidas.find((p) => !usadas.has(p.trim()) && casa(p.trim(), t.rota));
+    if (casada) {
+      usadas.add(casada.trim());
+      saida.push({ ...t, url: casada.trim() });
+    }
+  }
+  return saida;
+})();
 
 if (!estado) {
   console.error(
@@ -252,10 +298,8 @@ for (const tela of alvo) {
     const rotulo = item.rotulo;
     if (!rotulo || rotulo.startsWith("(") || vistas.has(rotulo)) continue;
     vistas.add(rotulo);
-    const tab =
-      item.tipo === "aba-caseira"
-        ? pagina.getByRole("button", { name: rotulo, exact: true }).first()
-        : pagina.getByRole("tab", { name: rotulo, exact: true }).first();
+    const { exato, porTrecho } = localizarAba(pagina, rotulo, item.tipo);
+    const tab = (await exato.count()) > 0 ? exato : porTrecho;
     if ((await tab.count()) === 0) {
       resultados.push({
         rota: tela.rota,
@@ -268,9 +312,11 @@ for (const tela of alvo) {
     }
     // Aba que já está aberta não "muda o conteúdo" — ela já é o conteúdo.
     // Contar isso como "clicou e nada aconteceu" dava 6 falsos achados.
-    const jaAtiva =
-      (await tab.getAttribute("aria-selected")) === "true" ||
-      (await tab.getAttribute("aria-current")) === "page";
+    // `aria-current` vale "page" nas barras do produto e "true" nas listas
+    // filtradas (`CaseList`). Exigir só "page" marcava como "clicou e não
+    // selecionou" uma aba que estava selecionada — medido em 16/11/2026.
+    const corrente = await tab.getAttribute("aria-current");
+    const jaAtiva = (await tab.getAttribute("aria-selected")) === "true" || Boolean(corrente);
     try {
       await tab.click({ timeout: 8_000 });
       await pagina.waitForTimeout(900);
@@ -285,9 +331,9 @@ for (const tela of alvo) {
       continue;
     }
     const med = await medir(pagina);
+    const correnteDepois = await tab.getAttribute("aria-current");
     const ativaDepois =
-      (await tab.getAttribute("aria-selected")) === "true" ||
-      (await tab.getAttribute("aria-current")) === "page";
+      (await tab.getAttribute("aria-selected")) === "true" || Boolean(correnteDepois);
     resultados.push({
       rota: tela.rota,
       tipo: "aba",
@@ -317,6 +363,43 @@ for (const tela of alvo) {
   const naoAbertos = [];
   const abertos = new Set();
 
+  /**
+   * Abas DENTRO do modal — subtela aninhada.
+   *
+   * Medido em 16/11/2026: "Pessoa jurídica" e "Pessoa física" são
+   * `<TabsTrigger>` de `NewContactDialog`. Elas não existem na página; existem
+   * depois de abrir o diálogo. A varredura contava 2 abas "não encontradas" e o
+   * produto estava certo — faltava abrir a caixa.
+   */
+  async function abasDoModal(tituloModal) {
+    const dentro = pagina.locator('[role="dialog"]:not([aria-hidden="true"])');
+    const nomes = await dentro
+      .getByRole("tab")
+      .evaluateAll((els) =>
+        els.map((el) => (el.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean),
+      );
+    for (const nome of [...new Set(nomes)].slice(0, 8)) {
+      const tab = dentro.getByRole("tab", { name: new RegExp(escapeRe(nome), "i") }).first();
+      if ((await tab.count()) === 0) continue;
+      try {
+        await tab.click({ timeout: 5_000 });
+        await pagina.waitForTimeout(500);
+      } catch {
+        continue;
+      }
+      const med = await medir(pagina);
+      resultados.push({
+        rota: tela.rota,
+        tipo: "aba-modal",
+        subtela: `${tituloModal} › ${nome}`,
+        status,
+        ...med,
+        console: [...consoleErros],
+      });
+      consoleErros.length = 0;
+    }
+  }
+
   async function medirModal(titulo, gatilho) {
     const med = await medir(pagina);
     if (med.dialogos === 0) return false;
@@ -331,6 +414,7 @@ for (const tela of alvo) {
     });
     consoleErros.length = 0;
     abertos.add(titulo);
+    await abasDoModal(titulo);
     await pagina.keyboard.press("Escape").catch(() => undefined);
     await pagina.waitForTimeout(400);
     return true;
@@ -423,6 +507,7 @@ for (const tela of alvo) {
       });
       consoleErros.length = 0;
       abertos.add(alvo);
+      await abasDoModal(alvo);
       await pagina.keyboard.press("Escape").catch(() => undefined);
       await pagina.waitForTimeout(400);
     }

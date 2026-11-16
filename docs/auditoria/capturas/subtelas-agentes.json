@@ -1,0 +1,171 @@
+{
+  "geradoEm": "2026-11-16T09:58:45.809Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 2,
+  "resultados": [
+    {
+      "rota": "/app/ai/agents/new",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Novo agente"
+      ],
+      "textoVisivel": 7461,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 552,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Configuração",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Teste",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Capacidades",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Execuções",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Histórico",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Propostas",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Geral",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 552,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Modelo",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 1232,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "RAG",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 689,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "aba",
+      "subtela": "Guardrails",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 606,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "tipo": "modal",
+      "subtela": "Diff",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bot Padrão E2E"
+      ],
+      "textoVisivel": 780,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}
