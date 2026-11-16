@@ -367,7 +367,28 @@ load_env() {
         # quatro caracteres a mais, e o erro só aparece longe daqui (o psql
         # recusa a conexão, o login não bate) sem nada apontando para o .env.
         # Achado pelo teste de round-trip.
-        val="${val//"'\\''"/"'"}"
+        #
+        # AS DUAS VARIÁVEIS NÃO SÃO ESTILO — são o que faz isto funcionar nos
+        # dois bash. Medido em 2026-11-16, mesma entrada, mesmo script:
+        #
+        #     bash 3.2 (o /bin/bash do macOS, que roda `pnpm test:shell` aqui):
+        #         val="${val//"'\\''"/"'"}"      -> Sant"'"Ana Odontologia  (ERRADO)
+        #     bash 5 (Linux, a VPS do cliente):
+        #         val="${val//"'\\''"/"'"}"      -> Sant'Ana Odontologia
+        #
+        # A causa é o bash 3.2 não remover as aspas do REPLACEMENT em
+        # `${var//padrão/replacement}`: ele insere os três caracteres `"'"` em vez
+        # de uma aspa. Com o replacement vindo de variável e SEM aspas
+        # (`$aspa_nova`), os dois concordam. O padrão pode continuar entre aspas.
+        #
+        # Impacto real: no macOS o gate do kit reprovava uma asserção de
+        # retrocompatibilidade; na VPS (bash 5) o cliente não via o defeito. Ou
+        # seja, o gate estava certo e a leitura do defeito é que estava errada —
+        # antes de corrigir, foi descartada a hipótese de "contaminação de estado
+        # entre seções" (a mesma asserção, isolada, também falhava).
+        local aspa_legada="'\\''"
+        local aspa_nova="'"
+        val="${val//"$aspa_legada"/$aspa_nova}"
         ;;
     esac
     printf -v "$key" '%s' "$val"
