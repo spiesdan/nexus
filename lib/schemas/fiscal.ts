@@ -363,6 +363,20 @@ export const extrasFiscaisSchema = z.object({
    * pedido — a venda avulsa/balcão.
    */
   avulsa: avulsaSchema.optional(),
+  /**
+   * FINALIDADE DA NF-e (`finNFe`): ausente = 1 (venda normal); **4 =
+   * devolução**. Devolução é entrada (`tpNF=0`), referencia a venda original
+   * em `<NFref><refNFe>` e não tem pagamento (`tPag=90`).
+   *
+   * É campo de NOTA, não de pedido: a devolução nasce contra uma chave
+   * autorizada, e a chave não muda quando o pedido muda.
+   */
+  finalidade: z.union([z.literal(1), z.literal(4)]).optional(),
+  /** Chave (44 dígitos) da NF-e devolvida — obrigatória quando `finalidade = 4`. */
+  ref_nfe: z.string().regex(/^\d{44}$/).optional(),
+}).refine((v) => v.finalidade !== 4 || (v.ref_nfe ?? "").length === 44, {
+  message: "ref_nfe (chave de 44 dígitos) é obrigatória na devolução.",
+  path: ["ref_nfe"],
 });
 
 /**
