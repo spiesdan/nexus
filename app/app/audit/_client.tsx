@@ -68,29 +68,54 @@ export function AuditClient() {
     <div className="flex flex-col gap-4">
       <Card className="hover-raise p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+          {/* `id` + `htmlFor` não são decoração: sem eles o `<label>` é só texto
+              ao lado e o leitor de tela anuncia "campo de data" sem dizer que é
+              "De" ou "Até". Medido em 16/11 no build de produção: os dois
+              `input[type=datetime-local]` desta tela eram os ÚNICOS campos
+              visíveis do produto sem rótulo associado (V-15). */}
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Ação contém")}</label>
+            <label htmlFor="audit-acao" className="block text-xs text-muted-foreground">
+              {t("Ação contém")}
+            </label>
             <Input
+              id="audit-acao"
               value={actionInput}
               onChange={(e) => setActionInput(e.target.value)}
               placeholder="ex: lead.created"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Tipo de recurso")}</label>
+            <label htmlFor="audit-recurso" className="block text-xs text-muted-foreground">
+              {t("Tipo de recurso")}
+            </label>
             <Input
+              id="audit-recurso"
               value={resourceType}
               onChange={(e) => setResourceType(e.target.value)}
               placeholder="ex: contact"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("De")}</label>
-            <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <label htmlFor="audit-de" className="block text-xs text-muted-foreground">
+              {t("De")}
+            </label>
+            <Input
+              id="audit-de"
+              type="datetime-local"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Até")}</label>
-            <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} />
+            <label htmlFor="audit-ate" className="block text-xs text-muted-foreground">
+              {t("Até")}
+            </label>
+            <Input
+              id="audit-ate"
+              type="datetime-local"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
           </div>
           <div className="flex items-end">
             <Button variant="outline" className="w-full" onClick={handleExport}>

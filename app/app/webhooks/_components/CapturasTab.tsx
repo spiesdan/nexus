@@ -135,9 +135,16 @@ export function CapturasTab() {
             </div>
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Fonte")}</label>
+            {/* `Select` do Radix não é `<select>`: o controle é um `<button
+                role="combobox">`, e `htmlFor` nele não é confiável entre leitores
+                de tela. Por isso o rótulo ganha `id` e o botão aponta para ele
+                com `aria-labelledby` — assim o nome acessível é EXATAMENTE o
+                texto que a pessoa lê ("Fonte", não "Filtrar por fonte"). */}
+            <label id="capturas-fonte" className="block text-xs text-muted-foreground">
+              {t("Fonte")}
+            </label>
             <Select value={fonte} onValueChange={setFonte}>
-              <SelectTrigger aria-label={t("Filtrar por fonte")}>
+              <SelectTrigger aria-labelledby="capturas-fonte">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -151,9 +158,11 @@ export function CapturasTab() {
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Resultado")}</label>
+            <label id="capturas-resultado" className="block text-xs text-muted-foreground">
+              {t("Resultado")}
+            </label>
             <Select value={desfecho} onValueChange={setDesfecho}>
-              <SelectTrigger aria-label={t("Filtrar por resultado")}>
+              <SelectTrigger aria-labelledby="capturas-resultado">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -255,7 +264,11 @@ export function CapturasTab() {
                     // célula — que é justamente o que torna uma tabela legível
                     // sem enxergar. Quem carrega o papel de botão é a primeira
                     // célula, que também é o alvo de teclado.
-                    <TableRow key={row.id} className="cursor-pointer" onClick={() => setAberta(row)}>
+                    <TableRow
+                      key={row.id}
+                      className="cursor-pointer"
+                      onClick={() => setAberta(row)}
+                    >
                       <TableCell className="max-w-[220px] truncate font-medium">
                         <button
                           type="button"
@@ -274,7 +287,7 @@ export function CapturasTab() {
                       <TableCell className="max-w-[160px] truncate text-sm text-muted-foreground">
                         {row.source_name}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                         {w.data} <span className="tabular-nums">{w.hora}</span>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
