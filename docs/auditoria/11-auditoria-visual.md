@@ -642,6 +642,26 @@ de teste em tela de produção é sujar o banco de quem instalou; para isso exis
 roda contra banco semeado e limpa o que cria. Aqui só se exercita o caminho de **recusa** — e
 recusa, por definição, não grava. Se gravar, o registro diz `gravouApesarDeInvalido`.
 
+### Tablet 834 px — o buraco que este relatório vinha declarando
+
+Desde a primeira varredura o item 2.1 dizia "falta tablet: só 5 telas, medidas em dev". As 32
+telas de tenant do instrumento de subtelas foram medidas em **834 × 1112**, no build de produção:
+
+| Medida (834 px)                  | Resultado                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| medições                         | **32**                                                                                                 |
+| status                           | **32 × 200**, 0 erro de captura                                                                        |
+| overflow horizontal              | **0**                                                                                                  |
+| `<h1>` ausente                   | **0**                                                                                                  |
+| campo visível sem nome acessível | **0**                                                                                                  |
+| erro de console                  | **1** — o 422 de disponibilidade em `/app/agenda` (V-14, estado de instalação fresca que a tela trata) |
+| tempo até o HTML + assentamento  | p50 **1.334 ms** · p90 1.521 ms · máx 1.932 ms                                                         |
+
+E os alvos de toque, que é onde tablet diverge dos dois extremos: p50 de 3 por tela, com a mesma
+cauda do celular — `/app/agenda` 261, `/app/prospeccao/nova` 109, `/app/contacts` 99. Continua
+**sinal**, não defeito: a maioria é checkbox de linha de tabela densa, e o alvo clicável real pode
+ser a célula.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
