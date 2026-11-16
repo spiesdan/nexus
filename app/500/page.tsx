@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { StatusPage } from "@/components/nexus-ui/feedback/StatusPage";
 import { idiomaDaPagina } from "@/lib/i18n/idioma-da-pagina";
+
+export const metadata: Metadata = { title: "Erro interno" };
 
 /**
  * `/500` — irmã de `/403` e `/503`, e faltava.

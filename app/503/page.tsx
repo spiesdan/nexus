@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { StatusPage } from "@/components/nexus-ui/feedback/StatusPage";
 import { IDIOMA_PADRAO } from "@/lib/i18n/idiomas";
+
+export const metadata: Metadata = { title: "Em manutenção" };
 
 // Manutenção é justamente o cenário em que o Supabase pode estar fora do ar —
 // esta página não pode depender dele para saber em que idioma falar. Sem

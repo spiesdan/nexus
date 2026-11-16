@@ -358,6 +358,21 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
         data-refetch-divergencias={listQ.seguranca?.divergencias ?? 0}
       >
         {/*
+        O TÍTULO NÍVEL 1 QUE FALTAVA — visível só para quem navega por cabeçalhos.
+
+        Medido em 15/11/2026: o Inbox era a ÚNICA tela do produto sem `<h1>` (38
+        das 40 capturadas tinham um). É a tela de trabalho mais usada, e sem nível
+        1 a navegação por cabeçalho do leitor de tela não tem onde pousar: quem
+        usa NVDA/VoiceOver pula direto para o conteúdo, sem saber onde está.
+
+        `sr-only` e não um título visível de propósito: a tela é uma barra de
+        filtros + duas colunas, e um "Inbox" em 24 px no topo roubaria altura de
+        conversa no celular — que é justamente o espaço que a lista e o composer
+        disputam. O `<h1>` existe para a árvore de acessibilidade, não para o
+        layout: `sr-only` o mantém no fluxo sem ocupar pixel.
+      */}
+        <h1 className="sr-only">{t("Inbox")}</h1>
+        {/*
         NO CELULAR, UMA COISA POR VEZ.
 
         Antes as duas colunas caíam empilhadas em `grid-cols-1`: a lista inteira
