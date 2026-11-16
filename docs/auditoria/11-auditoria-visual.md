@@ -523,6 +523,31 @@ filtro" começam igual. O instrumento tem lista de verbos destrutivos e **não c
 registra cada um como `não aberto` com o motivo ("nenhum botão visível com nome relacionado",
 gatilho casou mas não abriu").
 
+### As mesmas subtelas em 390 px
+
+As 42 abas e os 24 modais das telas de tenant foram medidos de novo em **390 px**, com a mesma
+sessão e o mesmo build:
+
+| Medida (390 px)                  | Resultado                             |
+| -------------------------------- | ------------------------------------- |
+| telas                            | **32**                                |
+| abas clicadas e medidas          | **42**                                |
+| modais abertos                   | **24**                                |
+| overflow horizontal              | **0**                                 |
+| aba sem `<h1>`                   | **0**                                 |
+| erro de console                  | **0**                                 |
+| campo visível sem nome acessível | **0**                                 |
+| abas não encontradas             | **7** (as mesmas estruturais de 1440) |
+
+Nenhuma aba vaza na largura de celular — que era a hipótese a testar: barra de abas é o
+componente que mais estoura em tela estreita, e aqui as 42 rolam ou empilham dentro da largura.
+
+**Um resultado "não determinado", e é de propósito.** Em "Importar fotos" o rótulo ganha
+contador ao ativar ("Importar fotos" → "Importar fotos (12)"), o elemento é recriado, e a leitura
+de `aria-current` estoura no nó que saiu do DOM. Antes o instrumento gravava `false` e inventava
+"clicou e não selecionou"; agora grava `null` e o relatório diz **não determinado**. Quem não
+conseguiu ler não acusa.
+
 **O que segue não aberto, com motivo medido** — e a lista encurtou porque três causas eram minhas:
 
 | Quantas | Onde                                                                     | Por quê                                                                                                                                                                                                        |

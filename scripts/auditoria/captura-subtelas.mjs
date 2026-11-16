@@ -368,14 +368,21 @@ for (const tela of alvo) {
     }
     const med = await medir(pagina);
     medidos.add(`${tela.rota}|${rotulo}`);
-    let ativaDepois = false;
+    // `null` = NÃO DETERMINADO, e isso é diferente de `false`.
+    //
+    // Aba cujo rótulo ganha contador ao ativar ("Importar fotos" → "Importar
+    // fotos (12)") recria o elemento: o locator resolvido antes do clique
+    // aponta para o nó que saiu do DOM, a leitura estoura, e registrar `false`
+    // inventava "clicou e não selecionou". Medido em 16/11/2026 em 390 px.
+    // Quem não conseguiu ler diz que não conseguiu — não acusa.
+    let ativaDepois = null;
     try {
       const correnteDepois = await tab.getAttribute("aria-current", { timeout: 3_000 });
       ativaDepois =
         (await tab.getAttribute("aria-selected", { timeout: 3_000 })) === "true" ||
         Boolean(correnteDepois);
     } catch {
-      ativaDepois = false;
+      ativaDepois = null;
     }
     resultados.push({
       rota: tela.rota,

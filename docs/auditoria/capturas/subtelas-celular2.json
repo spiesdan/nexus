@@ -1,0 +1,212 @@
+{
+  "geradoEm": "2026-11-16T11:05:53.773Z",
+  "base": "http://localhost:3011",
+  "largura": 390,
+  "telas": 1,
+  "resultados": [
+    {
+      "rota": "/app/products",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 2314,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 2314,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Promoções",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 481,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Destaques",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 481,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Configurações",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 296,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Categorias",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 296,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Tabelas de preço",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 272,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos e tabelas",
+      "familia": "aba-caseira",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 2314,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Importar fotos",
+      "familia": "aba-caseira",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": null,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 2319,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Informações gerais / há um NCM sugerido",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Variações",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Peso e dimensões",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "modal",
+      "subtela": "Foto do produto",
+      "gatilho": "Abrir navegação",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 3279,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}
