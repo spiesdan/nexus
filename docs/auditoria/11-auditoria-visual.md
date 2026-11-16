@@ -609,6 +609,39 @@ O título era `<h2 className="text-xl">`. Agora é `<h1>` em `text-2xl`, o canô
 `[id]` **parecem** a mesma tela e são componentes diferentes (`AgentForm` e `AgentEditor`) — só
 abrir as duas provou.
 
+### V-24 · Média · Dois formulários recusavam em silêncio (só o balão do navegador) — **CORRIGIDO**
+
+Primeira medição da Fase 2 que **submete** em vez de olhar. Instrumento novo,
+`scripts/auditoria/escrita-e-validacao.mjs`, com três formulários que podem recusar sem efeito
+colateral — e a regra do experimento é uma só: _submeti inválido; o produto disse o que estava
+errado, onde, e sem gravar nada?_
+
+| Caso                 | Antes                                           | Depois                                                                               |
+| -------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
+| token com nome vazio | recusou · `mensagens: []` · `ariaInvalid: 0`    | **"Dê um nome ao token — pelo menos 2 letras."** · `ariaInvalid: 1`                  |
+| fonte sem nome       | recusou · `mensagens: []` · `ariaInvalid: 0`    | **"Dê um nome à fonte — é por ele que você a reconhece depois."** · `ariaInvalid: 1` |
+| convite sem e-mail   | recusou · mensagem na página · `ariaInvalid: 1` | igual (já estava certo)                                                              |
+
+Os dois primeiros recusavam pelo `required` do HTML: o navegador mostra o balão nativo, que
+**some ao sair do campo**, não usa a tipografia de erro do produto e **não marca `aria-invalid`**.
+Quem usa leitor de tela ouve "entrada inválida" sem saber o motivo. E a inconsistência era dentro
+do **mesmo** diálogo: o de token já validava escopos em JS (`erroEscopos`) e deixava o nome na
+mão do navegador.
+
+Conserto: `noValidate` no `<form>` + validação do nome no handler, com a mensagem no `FormField`
+(`erro=`) no token e em `<p role="alert">` ligado por `aria-describedby` na fonte. Nos três casos
+o instrumento agora registra `recusou: true`, `explicou: true`, `citaOCampo: true`,
+`gravouApesarDeInvalido: false`.
+
+Gate novo: `tests/unit/formulario-que-recusa-explica.test.ts` lê os **20 `<form>`** do produto e
+reprova formulário que desliga a validação nativa (`noValidate`) sem ter onde escrever a recusa —
+isto é, o clique em Enviar virando um no-op silencioso.
+
+**O que este instrumento NÃO faz, de propósito:** submeter formulário **válido**. Criar registro
+de teste em tela de produção é sujar o banco de quem instalou; para isso existe a suíte E2E, que
+roda contra banco semeado e limpa o que cria. Aqui só se exercita o caminho de **recusa** — e
+recusa, por definição, não grava. Se gravar, o registro diz `gravouApesarDeInvalido`.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

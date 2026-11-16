@@ -1,0 +1,66 @@
+{
+  "geradoEm": "2026-11-16T11:23:51.482Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "resultados": [
+    {
+      "id": "token-sem-nome",
+      "rota": "/app/settings/api-tokens",
+      "porque": "token com nome vazio",
+      "status": 200,
+      "camposObrigatorios": 1,
+      "formularioAberto": true,
+      "html5Invalido": 1,
+      "ariaInvalid": 1,
+      "mensagens": [
+        "Dê um nome ao token — pelo menos 2 letras."
+      ],
+      "urlMudou": false,
+      "recusou": true,
+      "explicou": true,
+      "gravouApesarDeInvalido": false,
+      "citaOCampo": true,
+      "console": [],
+      "cancelarFecha": true
+    },
+    {
+      "id": "fonte-sem-nome",
+      "rota": "/app/webhooks",
+      "porque": "fonte de captação com nome vazio",
+      "status": 200,
+      "camposObrigatorios": 1,
+      "formularioAberto": true,
+      "html5Invalido": 1,
+      "ariaInvalid": 1,
+      "mensagens": [
+        "Dê um nome à fonte — é por ele que você a reconhece depois."
+      ],
+      "urlMudou": false,
+      "recusou": true,
+      "explicou": true,
+      "gravouApesarDeInvalido": false,
+      "citaOCampo": true,
+      "console": [],
+      "cancelarFecha": true
+    },
+    {
+      "id": "convite-sem-email",
+      "rota": "/app/team/invite",
+      "porque": "convite sem nenhum e-mail",
+      "status": 200,
+      "camposObrigatorios": 0,
+      "formularioAberto": true,
+      "html5Invalido": 0,
+      "ariaInvalid": 1,
+      "mensagens": [
+        "Adicione ao menos um email."
+      ],
+      "urlMudou": false,
+      "recusou": true,
+      "explicou": true,
+      "gravouApesarDeInvalido": false,
+      "citaOCampo": true,
+      "console": []
+    }
+  ]
+}
