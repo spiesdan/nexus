@@ -423,6 +423,101 @@ diário — e renomeou o recebimento para "NF-e recebidas", explicando a decisã
 commit atualizou o título de `TELAS` e esqueceu esta asserção. A spec é que estava velha; agora
 afirma `/app/notas` e diz por quê.
 
+### V-20 · Alta · O rótulo visível não dava nome a nenhum campo — **CORRIGIDO (55 campos)**
+
+Este é o maior achado da Fase 2 e o mais invisível até aqui: meu gate de rótulos
+(`rotulo-de-campo-aponta-para-controle`) lia `<label>` literal, e o produto usa **`<Label>`** —
+o primitivo de `components/ui/label`, que renderiza `<label>` em runtime. Toda a classe escapou.
+
+Apareceu ao abrir a aba **Motoristas** de `/app/frota` com o instrumento de subtelas:
+`camposSemRotulo = 2`. A causa estava no helper local:
+
+```tsx
+<Label className="text-xs text-muted-foreground">{rotulo}</Label>   {/* sem htmlFor */}
+{children}                                                          {/* irmão, não filho */}
+```
+
+Medido com o mesmo critério em todo `app/` e `components/`: **90 `<Label>` sem `htmlFor` e sem
+controle dentro**; em **55** deles o campo ficava **sem nome nenhum** — leitor de tela
+anunciando "campo de texto" sem dizer o que preencher. Em 35 o campo já tinha `aria-label`/`id`,
+e o defeito ali é outro (texto visível ≠ nome), registrado e não silenciado.
+
+Conserto em duas frentes, e a segunda é a que importa:
+
+1. **`scripts/auditoria/cod-rotulo-acessivel.mjs`** injeta `aria-label` com o **texto do rótulo**
+   no controle irmão — preservando a expressão (`aria-label={t("Qtd.")}`). Rodou em **35
+   rótulos** nesta rodada (25 + 10), e é idempotente.
+2. **O gate e o conserto são o mesmo código**: `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts`
+   importa `planejar()` do script e exige lista vazia. Não existe o caso "o teste mede uma coisa
+   e o conserto faz outra" — é a mesma régua.
+
+O que o codemod **não** toca, de propósito, porque adivinhar seria pior que deixar sem nome:
+
+| Caso | Por que não mexer |
+|---|---|
+| rótulo de **grupo** sobre uma lista (`Janelas de envio`, `Mensagens`, `Itens`) | carimbar o rótulo do grupo no primeiro item faria o leitor de tela **mentir** |
+| controle com `placeholder` que descreve outra coisa (`Cidades com clientes` / "Buscar cidade") | os dois textos disputam o nome; corrigido à mão com o texto da busca |
+| rótulo + bloco com 2+ controles | não há como saber qual é "o" campo |
+
+Os casos de grupo receberam nome específico à mão: os quatro horários de "Janelas de envio" em
+`/app/campanhas` e `/app/radar/recuperacao` agora são "Início da janela 1", "Fim da janela 1", …
+
+### V-21 · Média · Aba de `/app/compras` sem estado anunciado — **CORRIGIDO**
+
+`/app/compras` navega entre "Pedidos" e "Fornecedores" com dois `<button>` marcados **só por
+`className`**. Nem `role=tab`, nem `aria-selected`, nem `aria-current` — as outras barras do
+produto (`/app/products`, `/app/prospeccao`, `/app/expedicao/[id]`) usam `aria-current`. Quem usa
+leitor de tela ouvia dois botões sem saber qual estava aberto; o inventário de subtelas também
+não conseguia enumerá-los. Corrigido com `aria-current="page"` na aba ativa, como o resto do
+produto.
+
+### V-22 · Média · Erro de API renderizado como "estado vazio" — **CORRIGIDO**
+
+Abrindo a aba **Modelos do parceiro** de `/app/connections` numa instalação **sem** conexão de
+parceiro, o console registrava `404 /api/v1/channels/partner/templates` e a tela mostrava:
+
+> "Nenhum modelo espelhado ainda. Clique em **Sincronizar** para trazer os que já existem na
+> plataforma."
+
+Duas coisas erradas de uma vez: a instrução **não tem como funcionar** (não há conexão para
+sincronizar) e o 404 nunca chegava a quem estava na tela. A API estava certa — `not_found:
+"Nenhuma conexão de parceiro ativa."` (medido em `route.ts`, `contexto()`). Erro tratado como
+vazio é o padrão que a doutrina do produto chama de "degradação silenciosa": o operador insiste
+num caminho que não existe.
+
+Agora `lista.isError` vem antes do vazio: 404 vira "Este número ainda não tem conexão com o
+provedor parceiro — conecte na aba Provedor parceiro", e qualquer outro erro vira mensagem com
+**"Tentar de novo"**.
+
+### Instrumento: as subtelas passaram a ser ABERTAS, não só enumeradas
+
+`docs/auditoria/09b-subtelas.md` enumerou 99 abas, 68 modais e 12 gavetas. Enumerar não é abrir.
+`scripts/auditoria/captura-subtelas.mjs` abre cada uma e mede o mesmo conjunto da varredura de
+rotas, mais duas coisas próprias: se a aba **ficou selecionada** e se o **conteúdo mudou**.
+
+Resultado medido (39 telas, sessão real de `manager`, `dono` e admin, build de produção):
+
+| Medida | Resultado |
+|---|---|
+| telas abertas | **39** (32 tenant + 5 do `dono` + 2 admin) |
+| abas clicadas e medidas | **50** |
+| aba clicada que **não** ficou selecionada | **0** |
+| aba que selecionou e **não mudou** o conteúdo | **0** |
+| overflow horizontal em aba aberta | **0** |
+| aba sem `<h1>` | **0** |
+| campo visível sem nome acessível em aba aberta | **0** (era 2 em `/app/frota`) |
+| modais abertos e medidos | **11** |
+| modal sem nome acessível (`role=dialog` sem título) | **0** |
+| erro de console | **1**, e virou a V-22 |
+
+**O que ele não abre, com número:** **29** modais. O extrator dá o `<DialogTitle>`, não o gatilho,
+e clicar em botão por semelhança de nome é como se apaga dado de cliente — "Excluir" e "Excluir
+filtro" começam igual. O instrumento tem lista de verbos destrutivos e **não clica** neles;
+registra cada um como `não aberto` com o motivo ("nenhum botão visível com nome relacionado",
+"gatilho casou mas não abriu"). **15** abas também não foram encontradas no DOM, e o motivo é
+estrutural: elas vivem dentro de gaveta (as abas da ficha de produto abrem depois de escolher um
+produto) ou são `<TabsTrigger>` cujo texto vem de um objeto (`{textos.abaBuscar}`).
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

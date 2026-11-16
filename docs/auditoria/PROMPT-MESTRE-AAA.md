@@ -909,6 +909,10 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | `scripts/auditoria/jornadas.ts` | Mapa **J1–J16 → specs** + contagem do disco + resultado lido do log do Playwright. |
 | `docs/auditoria/13-jornadas.md` | As 16 jornadas do prompt: superfície, spec, resultado medido e o que fica descoberto. |
 | `tests/unit/jornadas-fecham.test.ts` | Gate: 99 specs do disco, 0 sem jornada e 0 sem motivo; a tabela do doc é a do gerador. |
+| `scripts/auditoria/captura-subtelas.mjs` | **Abre** aba e modal e mede (h1, overflow, console, campo sem nome, aba que não seleciona). Não clica em verbo destrutivo. |
+| `docs/auditoria/capturas/subtelas-{tenant,dono,admin}.json` | As 50 abas e 11 modais medidos em 39 telas. |
+| `scripts/auditoria/cod-rotulo-acessivel.mjs` | `aria-label` a partir do rótulo visível; `planejar()` é a régua do gate. Idempotente. |
+| `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts` | Gate da V-20: exige `planejar()` vazia e prova que 93 `<Label>` foram lidos. |
 
 ## 3.7 Canal de atualizações (Discord)
 

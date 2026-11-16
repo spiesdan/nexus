@@ -1,0 +1,30 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "sessao5",
+  "perfil": "dono",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1940,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 63,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bom dia, E2E."
+      ],
+      "textoVisivel": 3392,
+      "url": "/app"
+    }
+  ]
+}
