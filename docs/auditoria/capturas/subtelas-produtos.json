@@ -1,0 +1,181 @@
+{
+  "geradoEm": "2026-11-16T10:31:57.694Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 1,
+  "resultados": [
+    {
+      "rota": "/app/products",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 3034,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 3034,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Promoções",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 775,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Destaques",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 775,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Configurações",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 590,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Categorias",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 590,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Tabelas de preço",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 566,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos e tabelas",
+      "familia": "aba-caseira",
+      "naoMedida": "elemento não encontrado no DOM (aba-caseira)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Importar fotos",
+      "familia": "aba-caseira",
+      "naoMedida": "elemento não encontrado no DOM (aba-caseira)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Informações gerais / há um NCM sugerido",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Variações",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Peso e dimensões",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Foto do produto",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    }
+  ]
+}

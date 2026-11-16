@@ -521,18 +521,29 @@ vazia" — o mesmo erro do F-21. Duas rotas ficaram sem dado nesta instalação 
 e clicar em botão por semelhança de nome é como se apaga dado de cliente — "Excluir" e "Excluir
 filtro" começam igual. O instrumento tem lista de verbos destrutivos e **não clica** neles;
 registra cada um como `não aberto` com o motivo ("nenhum botão visível com nome relacionado",
-"gatilho casou mas não abriu"). **15 abas seguem não abertas**, e cada uma tem um motivo medido — nenhuma é "esqueci":
+gatilho casou mas não abriu").
 
-| Quantas | Onde                                                                                                  | Por quê                                                                                                                                                              |
-| ------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6       | `/app/ai/agents/[id]` — "Configuração", "Teste", "Capacidades", "Execuções", "Histórico", "Propostas" | a tela monta `AgentEditor`, **não** `AgentTabs`; essas seis abas não existem no DOM. O extrator lista as abas de todos os arquivos do segmento, e é isso que aparece |
-| 5       | `/app/products` — as abas da ficha                                                                    | vivem dentro da **gaveta**, que abre por clique na **linha** da tabela, não em botão. O instrumento não clica em linha: é o gesto que também seleciona e navega      |
-| 2       | `/app/connections` "Templates da Meta" e `/admin/tenants/[id]` "em breve"                             | a primeira pertence a uma barra que só monta no canal oficial; a segunda é a aba declarada como "em breve" — existe no rótulo, não no produto                        |
-| 2       | `/app/contacts/[id]` "Pessoa jurídica/física"                                                         | iguais às de `/app/contacts`, mas o diálogo de **edição** não abriu naquela tela                                                                                     |
+**O que segue não aberto, com motivo medido** — e a lista encurtou porque três causas eram minhas:
 
-As quatro de "Pessoa jurídica/física" de `/app/contacts` e `/app/pedidos/novo` **foram medidas**:
-o instrumento passou a abrir as abas de dentro do modal (`Novo cliente › Pessoa jurídica`), e
-essa linha da tabela existe por causa delas.
+| Quantas | Onde                                                                     | Por quê                                                                                                                                                                                                        |
+| ------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6       | `/app/ai/agents/[id]` — "Configuração"…"Propostas"                       | a tela monta `AgentEditor`, **não** `AgentTabs`. Essas seis abas não existem no DOM                                                                                                                            |
+| 2       | `/app/products` — "Variações", "Peso e dimensões"                        | a ficha entra **inline** ao clicar "Cadastrar produto"; a primeira aba ("Informações gerais") foi medida, as outras duas exigem a ficha aberta **no momento** da medição — clicar em outro botão antes a fecha |
+| 2       | `/app/contacts/[id]` — "Pessoa jurídica/física"                          | o diálogo de **edição** não abriu naquela tela                                                                                                                                                                 |
+| 2       | `/app/connections` "Templates da Meta", `/admin/tenants/[id]` "em breve" | a primeira pertence a uma barra que só monta no canal oficial; a segunda é a aba declarada como "em breve"                                                                                                     |
+
+Duas que estavam nesta lista **saíram nesta rodada**, e as duas eram o instrumento culpando o
+produto:
+
+- **"Produtos e tabelas" e "Importar fotos"** (as duas abas caseiras de `/app/products`) não eram
+  encontradas porque o laço anterior já tinha trocado de painel e as escondido. O instrumento
+  passou a **recarregar a página e tentar de novo** antes de declarar ausência.
+- **"Pessoa jurídica/física"** de `/app/contacts` e `/app/pedidos/novo` foram medidas: o
+  instrumento passou a abrir as abas **de dentro do modal** (`Novo cliente › Pessoa jurídica`).
+
+Também aprendi a não morrer: ler `aria-current` de um locator que acabou de sumir estourava com
+"Timeout 30000ms exceeded" e derrubava o lote inteiro. Instrumento de auditoria **registra e
+segue** — uma aba nunca justifica perder 50 medições.
 
 **Dois falsos positivos do próprio instrumento, corrigidos nesta rodada** — e os dois eram o
 produto estando certo:

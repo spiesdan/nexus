@@ -281,7 +281,22 @@ for (const tela of alvo) {
     await pagina.close();
     continue;
   }
-  await pagina.waitForTimeout(1200);
+  /**
+   * Espera a tela TERMINAR de montar as abas.
+   *
+   * Medido em 16/11/2026 em `/app/products`: a lista de produtos chega depois do
+   * primeiro paint, e as abas "Produtos e tabelas"/"Importar fotos" existem só
+   * depois disso. Com 1.200 ms fixos o instrumento dizia "não encontrada" para
+   * abas que apareciam em 2,5 s — de novo o instrumento acusando o produto.
+   */
+  for (let i = 0; i < 8; i++) {
+    const temAba = await pagina
+      .evaluate(() => document.querySelectorAll('[role="tab"], [aria-current]').length > 0)
+      .catch(() => false);
+    if (temAba) break;
+    await pagina.waitForTimeout(500);
+  }
+  await pagina.waitForTimeout(600);
   const base = await medir(pagina);
   resultados.push({ rota: tela.rota, tipo: "base", status, ...base, console: [...consoleErros] });
   consoleErros.length = 0;
@@ -294,12 +309,24 @@ for (const tela of alvo) {
   // que ESTAVAM no DOM — medido em 16/11/2026, o instrumento dizia "aba não
   // encontrada" para os dois botões de `/app/compras`.
   const vistas = new Set();
+  const medidos = new Set();
   for (const item of tela.abas) {
     const rotulo = item.rotulo;
     if (!rotulo || rotulo.startsWith("(") || vistas.has(rotulo)) continue;
     vistas.add(rotulo);
-    const { exato, porTrecho } = localizarAba(pagina, rotulo, item.tipo);
-    const tab = (await exato.count()) > 0 ? exato : porTrecho;
+    let { exato, porTrecho } = localizarAba(pagina, rotulo, item.tipo);
+    let tab = (await exato.count()) > 0 ? exato : porTrecho;
+    if ((await tab.count()) === 0) {
+      // A aba pode ter DESAPARECIDO porque o laço anterior trocou de painel:
+      // em `/app/products`, clicar em "Tabelas de preço" esconde os botões
+      // "Produtos e tabelas"/"Importar fotos", que vivem no painel de trás.
+      // Recarregar devolve o estado inicial e a aba aparece — medido em
+      // 16/11/2026, era isso e não ausência de produto.
+      await pagina.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 }).catch(() => undefined);
+      await pagina.waitForTimeout(1_500);
+      ({ exato, porTrecho } = localizarAba(pagina, rotulo, item.tipo));
+      tab = (await exato.count()) > 0 ? exato : porTrecho;
+    }
     if ((await tab.count()) === 0) {
       resultados.push({
         rota: tela.rota,
@@ -312,11 +339,20 @@ for (const tela of alvo) {
     }
     // Aba que já está aberta não "muda o conteúdo" — ela já é o conteúdo.
     // Contar isso como "clicou e nada aconteceu" dava 6 falsos achados.
-    // `aria-current` vale "page" nas barras do produto e "true" nas listas
-    // filtradas (`CaseList`). Exigir só "page" marcava como "clicou e não
-    // selecionou" uma aba que estava selecionada — medido em 16/11/2026.
-    const corrente = await tab.getAttribute("aria-current");
-    const jaAtiva = (await tab.getAttribute("aria-selected")) === "true" || Boolean(corrente);
+    // Ler atributo de um locator que acabou de sumir (o reload pode não ter
+    // devolvido a aba) estourava com "Timeout 30000ms exceeded" e derrubava o
+    // lote inteiro. Instrumento de auditoria não pode morrer por causa de uma
+    // aba: registra e segue.
+    let jaAtiva = false;
+    try {
+      // `aria-current` vale "page" nas barras do produto e "true" nas listas
+      // filtradas (`CaseList`). Exigir só "page" marcava como "clicou e não
+      // selecionou" uma aba que estava selecionada — medido em 16/11/2026.
+      const corrente = await tab.getAttribute("aria-current", { timeout: 3_000 });
+      jaAtiva = (await tab.getAttribute("aria-selected", { timeout: 3_000 })) === "true" || Boolean(corrente);
+    } catch {
+      jaAtiva = false;
+    }
     try {
       await tab.click({ timeout: 8_000 });
       await pagina.waitForTimeout(900);
@@ -331,9 +367,16 @@ for (const tela of alvo) {
       continue;
     }
     const med = await medir(pagina);
-    const correnteDepois = await tab.getAttribute("aria-current");
-    const ativaDepois =
-      (await tab.getAttribute("aria-selected")) === "true" || Boolean(correnteDepois);
+    medidos.add(`${tela.rota}|${rotulo}`);
+    let ativaDepois = false;
+    try {
+      const correnteDepois = await tab.getAttribute("aria-current", { timeout: 3_000 });
+      ativaDepois =
+        (await tab.getAttribute("aria-selected", { timeout: 3_000 })) === "true" ||
+        Boolean(correnteDepois);
+    } catch {
+      ativaDepois = false;
+    }
     resultados.push({
       rota: tela.rota,
       tipo: "aba",
@@ -371,6 +414,54 @@ for (const tela of alvo) {
    * depois de abrir o diálogo. A varredura contava 2 abas "não encontradas" e o
    * produto estava certo — faltava abrir a caixa.
    */
+  /**
+   * Abas que APARECERAM depois de um clique, dentro de um painel.
+   *
+   * A ficha do produto não é diálogo: ela entra inline quando a pessoa clica em
+   * "Novo produto", e só então as cinco abas existem. A exploração antiga só
+   * olhava `[role=dialog]`, então nunca as via — e o relatório dizia "não
+   * encontradas" para abas que estavam a um clique de distância.
+   *
+   * Aqui o critério é o que se pode MEDIR: quantas abas visíveis existem agora,
+   * e quais ainda não foram medidas nesta tela.
+   */
+  async function abasQueApareceram(contexto, prefixo) {
+    const escopo = contexto ?? pagina;
+    const nomes = await escopo
+      .getByRole("tab")
+      .evaluateAll((els) =>
+        els.map((el) => (el.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean),
+      );
+    for (const nome of [...new Set(nomes)].slice(0, 10)) {
+      if (vistas.has(nome) || medidos.has(`${tela.rota}|${nome}`)) continue;
+      const tab = escopo.getByRole("tab", { name: new RegExp(escapeRe(nome), "i") }).first();
+      if ((await tab.count()) === 0) continue;
+      try {
+        await tab.click({ timeout: 4_000 });
+        await pagina.waitForTimeout(450);
+      } catch {
+        continue;
+      }
+      const med = await medir(pagina);
+      resultados.push({
+        rota: tela.rota,
+        tipo: "aba-painel",
+        // O nome da aba vem primeiro; o clique que a revelou é dado separado.
+        // Juntar os dois em `subtela` produzia rótulo errado: a aba aparecia
+        // porque "Cadastrar produto" foi clicado antes, e o registro dizia
+        // "Dispensar aviso › Informações gerais".
+        subtela: nome,
+        depoisDe: prefixo || null,
+        status,
+        ...med,
+        console: [...consoleErros],
+      });
+      consoleErros.length = 0;
+      vistas.add(nome);
+      medidos.add(`${tela.rota}|${nome}`);
+    }
+  }
+
   async function abasDoModal(tituloModal) {
     const dentro = pagina.locator('[role="dialog"]:not([aria-hidden="true"])');
     const nomes = await dentro
@@ -485,7 +576,13 @@ for (const tela of alvo) {
         continue;
       }
       const med = await medir(pagina);
-      if (med.dialogos === 0) continue;
+      if (med.dialogos === 0) {
+        // Não abriu diálogo — mas pode ter aberto um PAINEL com abas próprias
+        // (a ficha de produto entra inline). Medir é barato; ignorar é o que
+        // deixou 5 abas fora do relatório.
+        await abasQueApareceram(null, clicavel);
+        continue;
+      }
       // Qual título entre os pendentes está no DOM? `[role=dialog]` sem aria-hidden.
       const texto = (
         await pagina
