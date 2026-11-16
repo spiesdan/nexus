@@ -1,0 +1,93 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "correcoes-v12-v13",
+  "perfil": "dono",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/admin/inbox",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1721,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_admin_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conversa (suporte) · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 18,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox da plataforma"
+      ],
+      "textoVisivel": 782,
+      "url": "/admin/inbox"
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1348,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_admin_platform_admins.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Platform Admins — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 17,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Platform Admins"
+      ],
+      "textoVisivel": 818,
+      "url": "/admin/platform-admins"
+    },
+    {
+      "rota": "/admin/inbox",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1058,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_admin_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conversa (suporte) · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox da plataforma"
+      ],
+      "textoVisivel": 594,
+      "url": "/admin/inbox"
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1050,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_admin_platform_admins.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Platform Admins — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Platform Admins"
+      ],
+      "textoVisivel": 630,
+      "url": "/admin/platform-admins"
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "faltantes-admin",
+  "perfil": "dono",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [
+    {
+      "rota": "/admin/audit/[entryId]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/inbox/[conversationId]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/incidents/[id]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/lgpd/requests/[id]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/tenants/[id]/health",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/tenants/[id]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    },
+    {
+      "rota": "/admin/users/[id]",
+      "motivo": "rota dinâmica sem fixture (id/token real)"
+    }
+  ],
+  "resultados": [
+    {
+      "rota": "/admin/audit",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1721,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_audit.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Audit Log — Admin",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 72,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Audit Log"
+      ],
+      "textoVisivel": 4584,
+      "url": "/admin/audit"
+    },
+    {
+      "rota": "/admin/dashboard",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1239,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_dashboard.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 16,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Dashboard"
+      ],
+      "textoVisivel": 567,
+      "url": "/admin/dashboard"
+    },
+    {
+      "rota": "/admin/google",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1083,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_google.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Google Agenda da instalação",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 17,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Google Agenda desta instalação"
+      ],
+      "textoVisivel": 962,
+      "url": "/admin/google"
+    },
+    {
+      "rota": "/admin/inbox",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1135,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conversa (suporte) · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 18,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 762,
+      "url": "/admin/inbox"
+    },
+    {
+      "rota": "/admin/incidents",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1160,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_incidents.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Incidentes — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 18,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Incidentes"
+      ],
+      "textoVisivel": 370,
+      "url": "/admin/incidents"
+    },
+    {
+      "rota": "/admin/lgpd",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1109,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_lgpd.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "LGPD — Admin",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 19,
+      "camposSemRotulo": 0,
+      "h1": [
+        "LGPD — Cross-tenant"
+      ],
+      "textoVisivel": 400,
+      "url": "/admin/lgpd"
+    },
+    {
+      "rota": "/admin/marca",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1074,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_marca.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Marca da instalação",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 19,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Marca"
+      ],
+      "textoVisivel": 1605,
+      "url": "/admin/marca"
+    },
+    {
+      "rota": "/admin",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1236,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 16,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Dashboard"
+      ],
+      "textoVisivel": 567,
+      "url": "/admin/dashboard"
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 45006,
+      "erro": "page.goto: Timeout 45000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3011/admin/platform-admins\", wait",
+      "reconexoes": 0,
+      "arquivo": null,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1332,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_tenants_new.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Novo Tenant — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 20,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Novo Tenant"
+      ],
+      "textoVisivel": 514,
+      "url": "/admin/tenants/new"
+    },
+    {
+      "rota": "/admin/tenants",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1204,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_tenants.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Tenants — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 19,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Tenants"
+      ],
+      "textoVisivel": 390,
+      "url": "/admin/tenants"
+    },
+    {
+      "rota": "/admin/usage",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1144,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_usage.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Uso & Custo — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 18,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Uso & Custo"
+      ],
+      "textoVisivel": 650,
+      "url": "/admin/usage"
+    },
+    {
+      "rota": "/admin/users",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1285,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_users.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Usuários — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 23,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Usuários"
+      ],
+      "textoVisivel": 795,
+      "url": "/admin/users"
+    },
+    {
+      "rota": "/admin/forbidden",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 726,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_admin_forbidden.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    },
+    {
+      "rota": "/admin/audit",
+      "largura": "celular",
+      "status": 200,
+      "ms": 838,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_audit.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Audit Log — Admin",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 56,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Audit Log"
+      ],
+      "textoVisivel": 4470,
+      "url": "/admin/audit"
+    },
+    {
+      "rota": "/admin/dashboard",
+      "largura": "celular",
+      "status": 200,
+      "ms": 915,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_dashboard.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Dashboard"
+      ],
+      "textoVisivel": 379,
+      "url": "/admin/dashboard"
+    },
+    {
+      "rota": "/admin/google",
+      "largura": "celular",
+      "status": 200,
+      "ms": 896,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_google.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Google Agenda da instalação",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Google Agenda desta instalação"
+      ],
+      "textoVisivel": 774,
+      "url": "/admin/google"
+    },
+    {
+      "rota": "/admin/inbox",
+      "largura": "celular",
+      "status": 200,
+      "ms": 962,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conversa (suporte) · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [],
+      "textoVisivel": 574,
+      "url": "/admin/inbox"
+    },
+    {
+      "rota": "/admin/incidents",
+      "largura": "celular",
+      "status": 200,
+      "ms": 836,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_incidents.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Incidentes — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Incidentes"
+      ],
+      "textoVisivel": 182,
+      "url": "/admin/incidents"
+    },
+    {
+      "rota": "/admin/lgpd",
+      "largura": "celular",
+      "status": 200,
+      "ms": 852,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_lgpd.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "LGPD — Admin",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "LGPD — Cross-tenant"
+      ],
+      "textoVisivel": 212,
+      "url": "/admin/lgpd"
+    },
+    {
+      "rota": "/admin/marca",
+      "largura": "celular",
+      "status": 200,
+      "ms": 821,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_marca.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Marca da instalação",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Marca"
+      ],
+      "textoVisivel": 1417,
+      "url": "/admin/marca"
+    },
+    {
+      "rota": "/admin",
+      "largura": "celular",
+      "status": 200,
+      "ms": 946,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Dashboard"
+      ],
+      "textoVisivel": 379,
+      "url": "/admin/dashboard"
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "largura": "celular",
+      "status": 0,
+      "ms": 45005,
+      "erro": "page.goto: Timeout 45000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3011/admin/platform-admins\", wait",
+      "reconexoes": 0,
+      "arquivo": null,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "largura": "celular",
+      "status": 200,
+      "ms": 948,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_tenants_new.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Novo Tenant — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Novo Tenant"
+      ],
+      "textoVisivel": 326,
+      "url": "/admin/tenants/new"
+    },
+    {
+      "rota": "/admin/tenants",
+      "largura": "celular",
+      "status": 200,
+      "ms": 890,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_tenants.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Tenants — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Tenants"
+      ],
+      "textoVisivel": 202,
+      "url": "/admin/tenants"
+    },
+    {
+      "rota": "/admin/usage",
+      "largura": "celular",
+      "status": 200,
+      "ms": 874,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_usage.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Uso & Custo — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Uso & Custo"
+      ],
+      "textoVisivel": 420,
+      "url": "/admin/usage"
+    },
+    {
+      "rota": "/admin/users",
+      "largura": "celular",
+      "status": 200,
+      "ms": 853,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_users.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Usuários — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 8,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Usuários"
+      ],
+      "textoVisivel": 607,
+      "url": "/admin/users"
+    },
+    {
+      "rota": "/admin/forbidden",
+      "largura": "celular",
+      "status": 200,
+      "ms": 702,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_admin_forbidden.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    }
+  ]
+}

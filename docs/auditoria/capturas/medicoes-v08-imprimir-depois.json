@@ -1,0 +1,49 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "v08-imprimir-depois",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app/pedidos/imprimir",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1617,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "desktop_app_pedidos_imprimir.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Imprimir pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "textoVisivel": 408,
+      "url": "/app/pedidos/imprimir"
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "largura": "celular",
+      "status": 200,
+      "ms": 862,
+      "erro": null,
+      "reconexoes": 0,
+      "arquivo": "celular_app_pedidos_imprimir.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Imprimir pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "textoVisivel": 123,
+      "url": "/app/pedidos/imprimir"
+    }
+  ]
+}

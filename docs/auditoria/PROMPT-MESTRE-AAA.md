@@ -562,7 +562,7 @@ F-09 (P0) aberto para a Fase 10. Registro: [`01-inventario.md`](01-inventario.md
 | # | Tarefa | Estado | Evidência |
 |---|---|---|---|
 | 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis) | `[x]` | 156 telas · 13 resolvers · 13 layouts · 6 fronteiras de erro · 8 `loading` + `not-found` · 2 especiais. `inventario-rotas.md` |
-| 1.2 | Subtelas e estados (abas, filtros, drawers, modais, menus, forms, painéis, vazio, loading, erro, sucesso, permissão negada, ausência de dados, confirmação, em andamento) | `[~]` | Matriz **156 × 12 de SINAL no código** em `09-telas-estados.md` — diz onde o estado existe, não que ele funciona. Subtelas (abas, drawers, modais), estados de escrita (salvar, confirmar, duplicidade) e as jornadas continuam sem execução. Medido em 2026-11-16: **42 telas distintas** abertas em navegador (57 capturas — 37 desktop 1440 + 20 celular 390), de 156. |
+| 1.2 | Subtelas e estados (abas, filtros, drawers, modais, menus, forms, painéis, vazio, loading, erro, sucesso, permissão negada, ausência de dados, confirmação, em andamento) | `[~]` | Matriz **156 × 12 de SINAL no código** em `09-telas-estados.md`, medida no **segmento de rota** (page + `_client` + `_components` + imports locais; 143/143 com ≥1 sinal — F-20/V-07). Diz onde o estado existe, não que ele funciona. Subtelas (abas, drawers, modais), estados de escrita (salvar, confirmar, duplicidade) e as jornadas continuam sem execução. Medido em 2026-11-16: **37 telas distintas** abertas em navegador (57 arquivos — 37 rotas em desktop 1440 + as mesmas 20 em celular 390; 20 ⊂ 37), de 156. |
 | 1.3 | Componentes (shell, design system, compartilhados, de módulo, tabelas, gráficos, forms, mobile) | `[x]` | `05-componentes.md`: 242 arquivos, 19 primitivas `ui/`, tipo por diretório |
 | 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas) | `[x]` | `06-apis.md`/`.json`: 418 handlers com métodos, guarda, schema, efeitos, idempotência (2), rate limit (F-12, F-13) |
 | 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, estratégia de update) | `[~]` | `04-inventario-dados.md` (contagem de TEXTO) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em Postgres descartável): 180 tabelas criadas pelo baseline, **RLS ligado em 179 de 179 de `public`**, **305 políticas** (300 em `public`), 104 triggers, 92 funções em `public`; instalação e **update sobre dados** verdes; **F-09: a cadeia de migrations NÃO reproduz o schema** (35 de 292 aplicam; 257 falham por pré-requisito). |
@@ -585,15 +585,17 @@ Definition of Done da Fase 1
 |---|---|---|
 | 1.D1 | Catálogo de rotas/módulos gerado do checkout | `[x]` |
 | 1.D2 | Todas as rotas classificadas; resolver ≠ tela | `[x]` | 143 telas com JSX · 13 resolvers sem JSX |
-| 1.D3 | Toda subtela/estado com cobertura planejada | `[~]` | Matriz de sinais pronta; **o plano de cobertura por subtela/estado/jornada não existe** — a Fase 2 cobre tela a tela e está em 42 de 156 |
+| 1.D3 | Toda subtela/estado com cobertura planejada | `[~]` | Matriz de sinais pronta; **o plano de cobertura por subtela/estado/jornada não existe** — a Fase 2 cobre tela a tela e está em 37 de 156 |
 | 1.D4 | Cada capacidade com estado + evidência | `[x]` | |
 | 1.D5 | Contradições doc × implementação registradas | `[x]` | F-01, F-04, F-11, F-15 |
 
 ## Fase 2 — Auditoria funcional, visual e de experiência
 
-**Status: em andamento.** Medido pelo conteúdo de `docs/auditoria/capturas/`: **57 capturas**
-(37 desktop 1440 + 20 celular 390) que cobrem **42 telas distintas** de 156 — nenhuma tela foi
-declarada vista sem captura correspondente. Registro: [`11-auditoria-visual.md`](11-auditoria-visual.md) · instrumento:
+**Status: em andamento.** Medido pelo conteúdo de `docs/auditoria/capturas/`: **57 arquivos**
+— 37 rotas em desktop 1440 e **as mesmas** 20 em celular 390 —, ou seja, **37 telas distintas**
+de 156. A contagem anterior ("42 telas") não fechava com arquivo nenhum: 37 + 20 = 57, e as 20 do
+celular são subconjunto das 37 do desktop. Nenhuma tela foi declarada vista sem captura
+correspondente. Registro: [`11-auditoria-visual.md`](11-auditoria-visual.md) · instrumento:
 `node scripts/auditoria/captura-visual.mjs --grupo <inicio|vendas|operacao|admin>`.
 
 Achados: **V-01 corrigido** — 36 de 40 páginas tinham o mesmo `<title>`; título agora vem de
@@ -602,7 +604,9 @@ disco. **V-02 corrigido** — `#/app/inbox` era a única tela sem `<h1>`; agora 
 medido 1×1 px sem overflow. **V-03 descartado** — o "botão que cobria a barra inferior" era o
 TanStack Query Devtools, só em `NODE_ENV=development`; com ele removido, 0 colisões em 6 telas.
 **V-04 pendente de decisão** — formato de data vem do navegador. **V-05 aberto** — desempenho só
-medido em dev.
+medido em dev. **V-07 corrigido** — a matriz de estados media o `page.tsx` e não a tela: 156 linhas
+com tudo em `—` e `error.tsx` ✓ em 156 (arquivo global). Agora lê o segmento + imports locais,
+remove comentários e separa `próprio`/`herdado`: **143 de 143** telas com ≥1 sinal. Gate de 11 casos.
 
 Correção de método registrada: a primeira rodada capturou um checkout **208 commits divergente**
 (`/Users/bill/Downloads/nexus`); todas as medidas foram refeitas em servidor do próprio worktree
@@ -618,7 +622,7 @@ Correção de método registrada: a primeira rodada capturou um checkout **208 c
 | 2.6 | Cliques/digitação em tarefas frequentes | `[ ]` |
 | 2.7 | Busca, ordenação, filtros, paginação, seleção em massa, preferências | `[~]` |
 | 2.8 | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[ ]` |
-| 2.9 | Estados (loading, skeleton, vazio, erro recuperável, sucesso, offline, permissão negada) | `[~]` |
+| 2.9 | Estados (loading, skeleton, vazio, erro recuperável, sucesso, offline, permissão negada) | `[~]` — onde cada estado **existe** está medido (143/143 com ≥1 sinal, V-07); vazio e permissão negada observados em execução, o resto não |
 | 2.10 | Feedback imediato e prevenção de duplicidade | `[ ]` |
 | 2.11 | A11y: contraste, foco, teclado, leitor de tela, toque, zoom, reduced motion | `[~]` |
 | 2.12 | Casos extremos: nomes longos, valores extremos, tabelas grandes, ausência, latência, falha de rede | `[ ]` |
@@ -862,6 +866,12 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | L3 | Duas specs E2E fora do CI (`vps-fresh-onboarding`, `inbox-tempo-real`) | Jornada de instalação fresca sem gate; Fase 9. |
 | L4 | Crons e MCP sem rate limit | Abuso/DoS; Fase 8. |
 | L5 | `git ls-files 'app/**/page.tsx'` devolve 155, mas o checkout tem **156** | **Resolvido**: o glob `**/` não casa diretório zero, então `app/page.tsx` ficava de fora. `git ls-files 'app/**/page.tsx' app/page.tsx` = 156, igual a `find`. Não é divergência de código. |
+| L9 | A matriz de telas × estados media só o `page.tsx`: **12 colunas em `—`** nas 156 linhas e `error.tsx` ✓ em todas | **Corrigido**. 89/156 telas delegam a UI a `_client`/`_components`; o `app/error.tsx` global marcava todas; o regex lia comentário. Agora mede o segmento + imports locais, sem comentário, com `próprio`/`herdado`: **143 de 143** com ≥1 sinal. F-20/V-07, gate de 11 casos |
+| L10 | O lote de captura gravou **149 de 168** rotas como `ERR_CONNECTION_REFUSED` — o servidor caiu, não as telas | **Corrigido**: o instrumento espera o servidor, reconhece queda, repete uma vez e registra `reconexoes`; `--faltantes` pula rota dinâmica **com motivo escrito**. F-21 |
+| L11 | "42 telas capturadas" não fechava com arquivo nenhum | **Corrigido para 37**: 57 arquivos = 37 rotas em desktop + as mesmas 20 em celular (20 ⊂ 37). Contado por `ls docs/auditoria/capturas/*.png`, não por memória |
+| L12 | `networkidle` como condição de sucesso reprovava tela que **renderiza**: `/admin/platform-admins` estourava 45 s com `h1` correto e API 200 em 191 ms | **Corrigido**: o Next prefetcha os `<Link>` do menu (67 requisições em 8 s, 25 `fetch`) e a rede nunca fica 500 ms quieta. Agora é `domcontentloaded` + 4 s de assentamento opcional, e cada medição grava `assentou`. V-10 |
+| L13 | `/admin/**` respondia "Acesso negado" — `e2e-dono` não estava em `platform_admins` | **Corrigido pelo caminho documentado** (`scripts/seed-e2e-system-update.ts`, o mesmo do job `e2e`). A área de admin só é auditável com o dono promovido; instalação fresca sem ninguém promovido tem a área inalcançável **por desenho**. V-11 |
+| L14 | **3 rotas** com campo visível sem nome acessível na varredura de 258 medições; o detector também acusava o `BubbleSelect` do Radix (1×1 px, `aria-hidden`) | **Corrigido e classificado**: das 3, **2 eram falso positivo** (o `<select>` nativo oculto que o Radix injeta no `<form>`; o controle real é `button[role=combobox]` com `<label for>`) e **1 era real** — `/app/audit` tinha 4 `<label>` sem `htmlFor` e campos sem `id`. Corrigidos os 4 + 2 que só o gate estático via (`CapturasTab`, rótulo visível ≠ nome acessível). Gate novo analisa os **101** `<label>` de `app/`+`components/`: 0 soltos. V-15 |
 
 ## 3.5 Artefatos produzidos
 
@@ -886,6 +896,13 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | `scripts/db/aplicar-schema.sh` | `db:migrate`/`db:verificar` real: aplica baseline, verifica, falha em conexão. |
 | `scripts/test-update-com-dados.sh` | Prova que o update re-aplica o baseline **sobre dados** sem perder linha. |
 | `docs/auditoria/evidencias/replay-migrations/` | Evidência bruta: ambiente, console, 257 logs de falha, inventários, diff, RLS. |
+| `scripts/auditoria/captura-visual.mjs` | Instrumento da Fase 2: abre a rota em navegador real, mede `<h1>`, overflow, alvos de toque, campos sem rótulo, título, erros de console/5xx e tempo. `--area`, `--perfil`, `--larguras`, `--faltantes`. |
+| `docs/auditoria/capturas/medicoes-producao-{tenant,admin,publica}.json` | As **258** medições (129 rotas × 2 larguras) em build de produção. |
+| `scripts/auditoria/segmento-de-rota.ts` | Regra testável de "a tela" (page + `_client` + `_components` + imports locais), usada pela matriz de estados. |
+| `tests/unit/matriz-telas-le-segmento.test.ts` | Gate de 11 casos: a matriz de estados lê a tela, não só o `page.tsx` (F-20). |
+| `tests/unit/link-para-arquivo-estatico-existe.test.ts` | Gate: todo `href`/`src` com extensão existe em `public/` (o runbook que dava 404 — V-13). |
+| `tests/unit/rotulo-de-campo-aponta-para-controle.test.ts` | Gate: todo `<label>` do produto se liga ao campo por `htmlFor`, embrulhamento ou `aria-labelledby` (V-15). |
+| `public/runbook/platform-admin-management.md` | Runbook do "somente DBA", escrito do schema real; era o destino do link que respondia 404. |
 
 ## 3.7 Canal de atualizações (Discord)
 
