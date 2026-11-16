@@ -662,6 +662,38 @@ cauda do celular — `/app/agenda` 261, `/app/prospeccao/nova` 109, `/app/contac
 **sinal**, não defeito: a maioria é checkbox de linha de tabela densa, e o alvo clicável real pode
 ser a célula.
 
+### Tabelas, densidade e paginação — medido no DOM, não na captura
+
+Uma lista com 8 linhas e uma com 800 têm o mesmo PNG quando o servidor devolve as 800. O
+instrumento `scripts/auditoria/tabelas.mjs` lê as linhas **renderizadas** de cada lista:
+
+| Rota                                                                                | linhas | colunas | paginação | declara total |
+| ----------------------------------------------------------------------------------- | ------ | ------- | --------- | ------------- |
+| `/app/audit`                                                                        | **50** | 6       | sim       | —             |
+| `/admin/audit`                                                                      | **50** | 6       | sim       | sim           |
+| `/app/comissoes`                                                                    | **35** | 8       | —         | sim           |
+| `/app/contacts`                                                                     | **25** | 9       | sim       | sim           |
+| `/app/products`                                                                     | **21** | 10      | sim       | sim           |
+| `/admin/users`                                                                      | 10     | 7       | —         | sim           |
+| `/app/team`                                                                         | 6      | 8       | —         | —             |
+| `/admin/tenants`                                                                    | 6      | 8       | —         | —             |
+| `/app/estoque` · `/app/financeiro` · `/app/notas`                                   | 2      | 4–10    | —         | sim           |
+| `/app/compras`                                                                      | 1      | 5       | —         | —             |
+| `/app/pedidos` · `/app/expedicao` · `/app/frota` · `/app/fiscal/*` · `/app/ai/runs` | **0**  | —       | —         | —             |
+
+**Nenhuma tabela acima de 100 linhas sem paginação — 0.** O maior volume desta instalação é o
+audit log, 50 linhas, e ele **tem** paginação. As duas listas de maior densidade (contatos e
+produtos) também têm.
+
+**O que este número NÃO prova, e é o ponto:** a instalação auditada tem no máximo 50 linhas por
+lista. O caso extremo que o prompt pede — "tabela grande" — **não foi reproduzido aqui**, e
+declarar "o produto aguenta 10 mil linhas" a partir disso seria inventar. O que se pode afirmar:
+o mecanismo de paginação existe e está ligado nas duas listas que mais crescem. O teste de carga
+de lista continua dívida, com nome: `tabelas.mjs --linhas 5000` contra um banco semeado.
+
+`/app/team` é a única com **5 células truncadas** — e truncar ali é o comportamento certo: é a
+lista de pessoas, com nomes de tamanho livre.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
