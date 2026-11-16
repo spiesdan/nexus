@@ -14,14 +14,15 @@
 Cada jornada abaixo tem três colunas de evidência, e cada uma responde a uma pergunta
 diferente:
 
-| Prova | Pergunta que responde | Como foi medida |
-|---|---|---|
-| **Superfície** | o produto **tem** essa jornada? | `find`/`grep` no código, com o comando citado. Tela que não existe não pode ser auditada — e tela que existe sem rota de API é meia jornada. |
-| **Spec E2E** | alguém **exercita** essa jornada? | lista de `tests/e2e/suites/full.txt` (96 specs, **264** `test()` declarados) e `playwright.mobile.config.ts`. Contagem por spec medida com regex sobre o arquivo, não estimada. |
-| **Execução** | a jornada **passa** hoje? | `pnpm test:e2e:full` contra o build do worktree. Log bruto e recorte por spec em `evidencias/e2e-full-2026-11-16.txt`. |
+| Prova          | Pergunta que responde             | Como foi medida                                                                                                                                                                 |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Superfície** | o produto **tem** essa jornada?   | `find`/`grep` no código, com o comando citado. Tela que não existe não pode ser auditada — e tela que existe sem rota de API é meia jornada.                                    |
+| **Spec E2E**   | alguém **exercita** essa jornada? | lista de `tests/e2e/suites/full.txt` (96 specs, **264** `test()` declarados) e `playwright.mobile.config.ts`. Contagem por spec medida com regex sobre o arquivo, não estimada. |
+| **Execução**   | a jornada **passa** hoje?         | `pnpm test:e2e:full` contra o build do worktree. Log bruto e recorte por spec em `evidencias/e2e-full-2026-11-16.txt`.                                                          |
 
 **Regra de leitura, e é o ponto principal deste documento.** "Existe spec" não é "está
 coberto":
+
 - spec que **não roda em nenhuma suíte** é cobertura declarada e não executada;
 - spec com `test.skip`/`test.fixme` é **cobertura parcial** — o número de pulados entra na
   conta e o motivo é o motivo do código, não uma suposição;
@@ -35,24 +36,26 @@ o que o spec realmente abre.
 ## 1. Mapa J1–J16
 
 <!-- TABELA:INICIO -->
-| # | Jornada (texto do prompt) | Specs | `test()` no arquivo | ✓ | ✘ | esperado | pulado |
-|---|---|---|---|---|---|---|---|
-| J1 | login, recuperação de acesso, MFA e convite de usuário | 6 | 23 | 23 | 0 | 0 | 0 |
-| J2 | onboarding do tenant, configuração de funil, equipe, WhatsApp, Nuvemshop e IA | 2 | 14 | 14 | 0 | 0 | 0 |
-| J3 | captura, qualificação e atribuição de lead | 9 | 15 | 14 | 1 | 0 | 0 |
-| J4 | mover lead entre etapas, agendar próximo passo e registrar resultado | 17 | 57 | 59 | 0 | 0 | 2 |
-| J5 | buscar ou criar contato, revisar Customer 360 e histórico | 2 | 3 | 3 | 0 | 0 | 0 |
-| J6 | receber, atribuir, responder, encaminhar e encerrar conversa no inbox | 5 | 9 | 7 | 2 | 0 | 0 |
-| J7 | transferir conversa entre IA e pessoa, com contexto, controle e auditoria | 2 | 3 | 3 | 0 | 0 | 0 |
-| J8 | criar/publicar/pausar/rollback de agente, editar conhecimento, testar e avaliar resposta | 12 | 43 | 39 | 0 | 0 | 4 |
-| J9 | configurar follow-up e controlar enrollment, pausa, retomada, cancelamento, snooze e falha | 9 | 20 | 20 | 0 | 0 | 0 |
-| J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão | 4 | 4 | 4 | 0 | 0 | 0 |
-| J11 | compras, entrada de estoque, expedição, rota, motorista e fechamento | 4 | 4 | 4 | 0 | 0 | 0 |
-| J12 | financeiro, títulos, recebimentos e indicadores | 3 | 3 | 3 | 0 | 0 | 0 |
-| J13 | operações fiscais e tratamento de falhas de sincronização | 2 | 4 | 3 | 1 | 0 | 0 |
-| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria | 2 | 4 | 2 | 1 | 0 | 1 |
-| J15 | atualizar, configurar integração, revisar erro e recuperar o serviço | 8 | 19 | 18 | 0 | 1 | 0 |
-| J16 | captura de pedido offline, fila, sincronização, conflito e rejeição | 0 | 0 | 0 | 0 | 0 | 0 |
+
+| #   | Jornada (texto do prompt)                                                                  | Specs | `test()` no arquivo | ✓   | ✘   | esperado | pulado |
+| --- | ------------------------------------------------------------------------------------------ | ----- | ------------------- | --- | --- | -------- | ------ |
+| J1  | login, recuperação de acesso, MFA e convite de usuário                                     | 6     | 23                  | 23  | 0   | 0        | 0      |
+| J2  | onboarding do tenant, configuração de funil, equipe, WhatsApp, Nuvemshop e IA              | 2     | 14                  | 14  | 0   | 0        | 0      |
+| J3  | captura, qualificação e atribuição de lead                                                 | 9     | 15                  | 14  | 1   | 0        | 0      |
+| J4  | mover lead entre etapas, agendar próximo passo e registrar resultado                       | 17    | 57                  | 59  | 0   | 0        | 2      |
+| J5  | buscar ou criar contato, revisar Customer 360 e histórico                                  | 2     | 3                   | 3   | 0   | 0        | 0      |
+| J6  | receber, atribuir, responder, encaminhar e encerrar conversa no inbox                      | 5     | 9                   | 7   | 2   | 0        | 0      |
+| J7  | transferir conversa entre IA e pessoa, com contexto, controle e auditoria                  | 2     | 3                   | 3   | 0   | 0        | 0      |
+| J8  | criar/publicar/pausar/rollback de agente, editar conhecimento, testar e avaliar resposta   | 12    | 43                  | 39  | 0   | 0        | 4      |
+| J9  | configurar follow-up e controlar enrollment, pausa, retomada, cancelamento, snooze e falha | 9     | 20                  | 20  | 0   | 0        | 0      |
+| J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão        | 4     | 4                   | 4   | 0   | 0        | 0      |
+| J11 | compras, entrada de estoque, expedição, rota, motorista e fechamento                       | 4     | 4                   | 4   | 0   | 0        | 0      |
+| J12 | financeiro, títulos, recebimentos e indicadores                                            | 3     | 3                   | 3   | 0   | 0        | 0      |
+| J13 | operações fiscais e tratamento de falhas de sincronização                                  | 2     | 4                   | 3   | 1   | 0        | 0      |
+| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria                          | 2     | 4                   | 2   | 1   | 0        | 1      |
+| J15 | atualizar, configurar integração, revisar erro e recuperar o serviço                       | 8     | 19                  | 18  | 0   | 1        | 0      |
+| J16 | captura de pedido offline, fila, sincronização, conflito e rejeição                        | 0     | 0                   | 0   | 0   | 0        | 0      |
+
 <!-- TABELA:FIM -->
 
 As 99 specs do disco fecham: **68** estão em jornadas (algumas em duas, de propósito — o mesmo
@@ -112,7 +115,7 @@ por dependência de WAHA, Redis, Resend e Nuvemshop.
 
 **O que é provado.** O wizard inteiro, pela tela, **dentro do CI**: abre mostrando o que a
 instalação já trouxe, o aceite de termos leva a documentos que existem, o nome do negócio
-chega ao passo seguinte, o passo do telefone pergunta *como* se conecta antes de assumir o
+chega ao passo seguinte, o passo do telefone pergunta _como_ se conecta antes de assumir o
 código (e não vaza identificador interno), treinar mostra o cérebro do agente e sem chave não
 vira beco, o quadro chega montado, trocar por modelo pronto funciona sem IA, coluna sem nome
 barra o salvamento em vez de sumir calada, e as regras da casa viram memória da organização —
@@ -225,7 +228,7 @@ mensagem. As abas espelham o comando do automático.
 **O que fica descoberto.** **Encerrar** ("Fechar esta conversa?", com confirmação) e
 **arquivar** têm botão em `components/inbox/ConversationHeader.tsx` e nenhum spec que clique
 neles; nenhum dos 99 specs procura por `encerrar`/`arquivar` no inbox. "Encaminhar" é exercitado
-como *transferir* (`[id]/transfer`), que é a mesma rota. Os dois testes de resposta citando
+como _transferir_ (`[id]/transfer`), que é a mesma rota. Os dois testes de resposta citando
 estão `skip` — o motivo está escrito no arquivo e precisa ser lido antes de tratar como
 cobertura.
 
@@ -344,8 +347,7 @@ conjunto.
 **Superfície (medida).** `financeiro`, `titulos` (alias que redireciona), `faturamento`,
 `comissoes`, `indicadores`.
 
-**Specs.** `jornada-financeiro` (1), `kpi-e-charts-canonicos` (1), `inteligencia-carrega` (1) —
-3.
+**Specs.** `jornada-financeiro` (1), `kpi-e-charts-canonicos` (1), `inteligencia-carrega` (1) — 3.
 
 **O que é provado.** A jornada 5: faturar gera título, receber baixa, e conciliar **acusa a NF**
 — o laço fecha entre pedido, título e nota. Os KPIs e gráficos canônicos desenham com os
@@ -397,6 +399,7 @@ citam `/app/lgpd/requests` **como rota a visitar** numa varredura de 1280/390, o
 tela abre — não que a solicitação nasce, é aprovada, pré-visualizada e anonimizada.
 
 **O que fica descoberto.** Esta é a **maior lacuna** da Fase 2, e é medida, não suposta:
+
 - **import/export**: 14 rotas e 6 telas com botão (`products`, `kanban`, `notas`, `pedidos`,
   `expedicao/nova`, `audit`) e **zero** teste de ponta a ponta. O caminho de arquivo inválido,
   de cabeçalho errado e de importação parcial não é exercitado em lugar nenhum;
@@ -470,13 +473,13 @@ Cada falha abaixo foi aberta, lida e classificada — nenhuma foi tratada como "
 
 ### 3.1 As 7 falhas da execução
 
-| Spec:linha | O que ela mede | O que aconteceu, medido | Veredito |
-|---|---|---|---|
-| `auditoria-aceite-11-itens:182` | tipografia de `<h1>` nas 112 rotas | **6 famílias** de tamanho em vez de 3. Detalhe abaixo. | **defeito meu + 4 do produto — corrigidos** |
-| `filterbar-unica-nas-listas:29` e `:75` | barra de filtros de compras/estoque/carteira | `strict mode violation: getByLabel('Buscar') resolved to 2 elements` — o botão de busca do **shell** e o campo de filtro da página tinham o **mesmo nome acessível** | **produto — corrigido** |
-| `notas-fiscais-modulo:75` | a porta do sidebar de Notas Fiscais | esperava `/app/fiscal`; o registro aponta `/app/notas` desde `5eee8923` | **spec obsoleta — corrigida** |
-| `inbox-responder-citando:101` e `:127` | responder citando mensagem | `Test timeout of 30000ms exceeded` no laço de 8 conversas × 4 s = **32 s**, que não cabe no prazo de 30 s | **teste — corrigido** |
-| `prospeccao-mapa:40` | mapa de empresas com marcadores | `.leaflet-container` não existe. **Aberto (F-27).** | **não corrigido — vermelho há 2 noites no CI** |
+| Spec:linha                              | O que ela mede                               | O que aconteceu, medido                                                                                                                                              | Veredito                                       |
+| --------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `auditoria-aceite-11-itens:182`         | tipografia de `<h1>` nas 112 rotas           | **6 famílias** de tamanho em vez de 3. Detalhe abaixo.                                                                                                               | **defeito meu + 4 do produto — corrigidos**    |
+| `filterbar-unica-nas-listas:29` e `:75` | barra de filtros de compras/estoque/carteira | `strict mode violation: getByLabel('Buscar') resolved to 2 elements` — o botão de busca do **shell** e o campo de filtro da página tinham o **mesmo nome acessível** | **produto — corrigido**                        |
+| `notas-fiscais-modulo:75`               | a porta do sidebar de Notas Fiscais          | esperava `/app/fiscal`; o registro aponta `/app/notas` desde `5eee8923`                                                                                              | **spec obsoleta — corrigida**                  |
+| `inbox-responder-citando:101` e `:127`  | responder citando mensagem                   | `Test timeout of 30000ms exceeded` no laço de 8 conversas × 4 s = **32 s**, que não cabe no prazo de 30 s                                                            | **teste — corrigido**                          |
+| `prospeccao-mapa:40`                    | mapa de empresas com marcadores              | `.leaflet-container` não existe. **Aberto (F-27).**                                                                                                                  | **não corrigido — vermelho há 2 noites no CI** |
 
 `degradacao-silenciosa:117` aparece como ✘ no log e **não** é falha: o spec declara
 `test.fail(...)`, a catraca que exige que a tela avise quando a entrega do tempo real morre. A
@@ -499,12 +502,12 @@ H1 22px  (1):  /design               ← showcase do DS, escala própria
 
 Cinco consertos, cada um com o motivo escrito no código:
 
-| Tela | Antes | Depois | O que era |
-|---|---|---|---|
-| `/app/pedidos/imprimir` | 18 px | **24 px** | meu `text-lg` na V-08 → virou `NexusPageHeader` |
-| `/app/pedidos/imprimir?carga=` | 18 px | **24 px** | mesmo defeito no `page.tsx` (estado "muitos pedidos") |
-| `/app/campanhas` (via `/app/prospeccao`) | 20 px | **24 px** | `<h1 className="text-xl">` → `NexusPageHeader` |
-| `/app/lgpd/requests/[id]` | 20 px | **24 px** | `#id` em `text-xl font-mono` → `text-2xl`, mono preservado |
+| Tela                                         | Antes          | Depois    | O que era                                                             |
+| -------------------------------------------- | -------------- | --------- | --------------------------------------------------------------------- |
+| `/app/pedidos/imprimir`                      | 18 px          | **24 px** | meu `text-lg` na V-08 → virou `NexusPageHeader`                       |
+| `/app/pedidos/imprimir?carga=`               | 18 px          | **24 px** | mesmo defeito no `page.tsx` (estado "muitos pedidos")                 |
+| `/app/campanhas` (via `/app/prospeccao`)     | 20 px          | **24 px** | `<h1 className="text-xl">` → `NexusPageHeader`                        |
+| `/app/lgpd/requests/[id]`                    | 20 px          | **24 px** | `#id` em `text-xl font-mono` → `text-2xl`, mono preservado            |
 | `/app/ai/agents/new` e `/app/ai/agents/[id]` | **sem `<h1>`** | **24 px** | o editor usava `<h2 className="text-xl">` como título da tela inteira |
 
 O `sr-only` (16 px) e o `/design` (22 px) ficam como estão: um título recortado não tem

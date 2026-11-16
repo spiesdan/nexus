@@ -19,13 +19,13 @@ O instrumento passou a subir o servidor **do próprio worktree** e a receber
 **build de produção** (`pnpm build` + `pnpm exec next start -p 3011`), não em dev: em dev o
 `networkidle` mede compilação por rota, e o número não descreve o produto que o cliente instala.
 
-| O que estava errado | Como foi descoberto |
-|---|---|
-| capturas de um checkout 208 commits atrás | `lsof -p <pid>` mostrou `cwd = /Users/bill/Downloads/nexus` |
-| `node <script>.mjs` fora do repo não achava `playwright` | o script precisa rodar na raiz do projeto (resolve `@playwright/test`) |
-| login "não passava" | era o script navegando antes do Server Action concluir; e preencher antes da hidratação envia o form vazio |
-| 149 de 168 rotas "quebradas" | o servidor morreu **no meio** do lote e o instrumento gravou `ERR_CONNECTION_REFUSED` como defeito de cada tela (F-21) |
-| capturas em dev mediam compilação | `networkidle` em dev inclui o build da rota; trocado para `next start` sobre `pnpm build` |
+| O que estava errado                                      | Como foi descoberto                                                                                                    |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| capturas de um checkout 208 commits atrás                | `lsof -p <pid>` mostrou `cwd = /Users/bill/Downloads/nexus`                                                            |
+| `node <script>.mjs` fora do repo não achava `playwright` | o script precisa rodar na raiz do projeto (resolve `@playwright/test`)                                                 |
+| login "não passava"                                      | era o script navegando antes do Server Action concluir; e preencher antes da hidratação envia o form vazio             |
+| 149 de 168 rotas "quebradas"                             | o servidor morreu **no meio** do lote e o instrumento gravou `ERR_CONNECTION_REFUSED` como defeito de cada tela (F-21) |
+| capturas em dev mediam compilação                        | `networkidle` em dev inclui o build da rota; trocado para `next start` sobre `pnpm build`                              |
 
 ## 2. Achados
 
@@ -46,12 +46,12 @@ em `lib/navigation/registry.ts`, com gate de completude no CI
 criaria uma **segunda cópia sem gate**, que envelhece calada — o defeito que este
 repo combate. Em vez disso:
 
-| Peça | O que faz |
-|---|---|
-| `lib/navigation/titulos.ts` | resolve rota → título a partir do registro, com fallbacks declarados (sub-fluxo → destino exato → prefixo mais longo) |
-| `generateMetadata` em `app/app/layout.tsx`, `app/admin/(protected)/layout.tsx`, `app/onboarding/layout.tsx` | lê `x-pathname` (publicado pelo `proxy.ts`) e devolve o título; a página que já declara `metadata` **continua vencendo** |
-| `metadata` próprio em `/403`, `/500`, `/503` | não ficam mais no título genérico |
-| `tests/unit/titulos-de-rota.test.ts` | **lê o disco**: toda `page.tsx` com JSX precisa resolver título, e o título não pode repetir entre telas distintas do tenant |
+| Peça                                                                                                        | O que faz                                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `lib/navigation/titulos.ts`                                                                                 | resolve rota → título a partir do registro, com fallbacks declarados (sub-fluxo → destino exato → prefixo mais longo)        |
+| `generateMetadata` em `app/app/layout.tsx`, `app/admin/(protected)/layout.tsx`, `app/onboarding/layout.tsx` | lê `x-pathname` (publicado pelo `proxy.ts`) e devolve o título; a página que já declara `metadata` **continua vencendo**     |
+| `metadata` próprio em `/403`, `/500`, `/503`                                                                | não ficam mais no título genérico                                                                                            |
+| `tests/unit/titulos-de-rota.test.ts`                                                                        | **lê o disco**: toda `page.tsx` com JSX precisa resolver título, e o título não pode repetir entre telas distintas do tenant |
 
 O onboarding usa `PASSOS` de `lib/onboarding/passos.ts` — a mesma definição que
 alimenta o indicador de progresso. Três listas de passos já divergiram neste repo;
@@ -90,10 +90,10 @@ comportamento nativo do `input[type=date]`. Consequência real: **a mesma tela m
 formato diferente para cada pessoa**, e num produto brasileiro "03/04" é ambíguo num
 filtro de período.
 
-| Opção | Custo | Efeito |
-|---|---|---|
-| A. manter nativo | zero | acessibilidade e teclado numérico do celular de graça; formato varia por navegador |
-| B. campo próprio `dd/mm/aaaa` | componente + validação + teclado numérico manual | formato único; perde o seletor nativo e o preenchimento automático |
+| Opção                         | Custo                                            | Efeito                                                                             |
+| ----------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| A. manter nativo              | zero                                             | acessibilidade e teclado numérico do celular de graça; formato varia por navegador |
+| B. campo próprio `dd/mm/aaaa` | componente + validação + teclado numérico manual | formato único; perde o seletor nativo e o preenchimento automático                 |
 
 Não implementei nenhuma: mudar isso altera o comportamento de filtro em todas as
 telas de período, e a doutrina deste repo proíbe inventar regra de produto. A decisão
@@ -104,10 +104,10 @@ telas de período, e a doutrina deste repo proíbe inventar regra de produto. A 
 Os tempos anteriores (2,2 s a 9,3 s) vinham de `next dev` e mediam compilação por rota. Medido
 agora contra `pnpm build` + `pnpm exec next start -p 3011`, em 129 rotas × 2 larguras:
 
-| Largura | n | p50 | p90 | máx |
-|---|---|---|---|---|
+| Largura      | n   | p50          | p90      | máx      |
+| ------------ | --- | ------------ | -------- | -------- |
 | desktop 1440 | 129 | **1.495 ms** | 1.990 ms | 2.838 ms |
-| celular 390 | 129 | **1.172 ms** | 1.536 ms | 1.920 ms |
+| celular 390  | 129 | **1.172 ms** | 1.536 ms | 1.920 ms |
 
 O que cada número é: `domcontentloaded` **mais** até 4 s de assentamento (prefetch de `<Link>`
 incluso) e 250 ms de espera. **Nas 258 medições a rede assentou** — o caso de 4,4 s que a primeira
@@ -122,13 +122,13 @@ fica `[~]`, não `[x]`, por isso.
 Medido no **celular 390** em 129 rotas: p50 de **3** alvos por tela, 17 rotas com zero, máximo
 **223** em `/app/agenda`.
 
-| Tela (celular 390) | Elementos < 40 px |
-|---|---|
-| `/app/agenda` | 223 |
-| `/vitrine-agenda` | 151 |
-| `/app/prospeccao/nova` | 85 |
-| `/app/contacts` | 75 |
-| `/admin/audit` | 56 |
+| Tela (celular 390)     | Elementos < 40 px |
+| ---------------------- | ----------------- |
+| `/app/agenda`          | 223               |
+| `/vitrine-agenda`      | 151               |
+| `/app/prospeccao/nova` | 85                |
+| `/app/contacts`        | 75                |
+| `/admin/audit`         | 56                |
 
 A maioria é checkbox de seleção de linha (16 px), padrão de tabela densa — o alvo clicável real
 pode ser a célula. `/app/agenda` e `/vitrine-agenda` merecem olhar: são as duas telas de toque
@@ -142,11 +142,11 @@ Antes de auditar tela a tela, o artefato que devia dizer **onde procurar** estav
 todas as 156. Lido como produto, dizia que nenhuma tela trata carregamento, vazio, erro,
 permissão, formulário, filtro ou tabela. As três causas eram do instrumento:
 
-| Causa | Medida | Efeito na matriz |
-|---|---|---|
-| texto vinha só do `page.tsx` | **89 das 156** telas delegam a UI a `_client.tsx`/`_components/` na mesma pasta | `/app/pedidos` tem filtro, tabela e confirmação no `_client.tsx` e saía `—` nas três |
-| `loading`/`error` buscados no segmento **ou em `app/`** | existe **um** `app/error.tsx` global | ✓ em 156 linhas pelo mesmo arquivo: a coluna dizia "o app tem fallback", não "esta tela trata erro" |
-| regex rodando dentro de **comentário** | este repo justifica cada decisão em parágrafo | `vazio` 137/156, `filtros` 118/156, `gráfico` 67/156 — inflados por prosa |
+| Causa                                                   | Medida                                                                          | Efeito na matriz                                                                                    |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| texto vinha só do `page.tsx`                            | **89 das 156** telas delegam a UI a `_client.tsx`/`_components/` na mesma pasta | `/app/pedidos` tem filtro, tabela e confirmação no `_client.tsx` e saía `—` nas três                |
+| `loading`/`error` buscados no segmento **ou em `app/`** | existe **um** `app/error.tsx` global                                            | ✓ em 156 linhas pelo mesmo arquivo: a coluna dizia "o app tem fallback", não "esta tela trata erro" |
+| regex rodando dentro de **comentário**                  | este repo justifica cada decisão em parágrafo                                   | `vazio` 137/156, `filtros` 118/156, `gráfico` 67/156 — inflados por prosa                           |
 
 Corrigido em `scripts/auditoria/segmento-de-rota.ts`: o texto é o **segmento de rota** (page +
 irmãos + subpastas sem `page.tsx` próprio), com **imports relativos seguidos até 5 níveis** (a
@@ -154,13 +154,13 @@ tela `/app/radar/risco` é `return <RiscoDoRadar/>`, e o componente mora em `../
 imports `@/…` **um salto sem recursão**, comentários removidos e `loading`/`error` separados em
 `próprio` / `herdado` / `—`.
 
-| Depois da correção | Valor |
-|---|---|
-| telas com JSX e ≥1 sinal | **143 de 143** (antes: 0) |
-| `filtros` | 69/156 (antes 118 — inflado) |
-| `gráfico` | 7/156 (antes 67) |
-| `vazio` | 95/156 (antes 137) |
-| `error` | `herdado` em 156 — verdade: há fallback global, nenhuma rota fica sem |
+| Depois da correção       | Valor                                                                 |
+| ------------------------ | --------------------------------------------------------------------- |
+| telas com JSX e ≥1 sinal | **143 de 143** (antes: 0)                                             |
+| `filtros`                | 69/156 (antes 118 — inflado)                                          |
+| `gráfico`                | 7/156 (antes 67)                                                      |
+| `vazio`                  | 95/156 (antes 137)                                                    |
+| `error`                  | `herdado` em 156 — verdade: há fallback global, nenhuma rota fica sem |
 
 Gate: `tests/unit/matriz-telas-le-segmento.test.ts`, 11 casos com fatos do repo. Um inventário
 que erra para "vazio" autoriza a conclusão de que não há o que corrigir — é o pior tipo de
@@ -177,11 +177,11 @@ duas larguras.
 lugar nenhum; aqui existia **num ramo inalcançável pela navegação comum**, o que é pior de achar —
 quem lê o código vê o `<h1>` e conclui que está resolvido.
 
-| Antes | Depois |
-|---|---|
-| `h1: []` (desktop **e** celular) | `h1: ["Imprimir pedidos"]` (desktop e celular) |
-| — | `<h1 className="sr-only">` no estado normal, para não mexer na composição do impresso |
-| — | `<h1>` visível no estado vazio |
+| Antes                            | Depois                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| `h1: []` (desktop **e** celular) | `h1: ["Imprimir pedidos"]` (desktop e celular)                                        |
+| —                                | `<h1 className="sr-only">` no estado normal, para não mexer na composição do impresso |
+| —                                | `<h1>` visível no estado vazio                                                        |
 
 ### V-09 · Média · O vazio de `/app/pedidos/imprimir` não tinha próximo passo — **CORRIGIDO**
 
@@ -189,11 +189,11 @@ O estado vazio era uma linha de texto centralizada: `"Nenhum pedido selecionado.
 sem botão, sem link. Medido nos dois lotes (o "antes" em `docs/auditoria/capturas/medicoes-tenant-faltantes.json`, o
 "depois" em `docs/auditoria/capturas/medicoes-v08-imprimir-depois.json`):
 
-| | antes | depois |
-|---|---|---|
-| texto visível (desktop 1440) | 371 caracteres | **408** |
-| texto visível (celular 390) | 86 caracteres | **123** |
-| `<h1>` | `[]` | `["Imprimir pedidos"]` |
+|                              | antes          | depois                 |
+| ---------------------------- | -------------- | ---------------------- |
+| texto visível (desktop 1440) | 371 caracteres | **408**                |
+| texto visível (celular 390)  | 86 caracteres  | **123**                |
+| `<h1>`                       | `[]`           | `["Imprimir pedidos"]` |
 
 Quem abria a tela por engano ficava numa página que só diz "nada aqui" — sem caminho de volta a
 não ser o menu lateral. É o invariante "nenhuma demanda sem próximo passo" olhado do lado do
@@ -233,11 +233,11 @@ inspeção. Sem esse gate, 18 px numa tela de impressão passaria como "está bo
 produto, era "a tela do dono não abre". Medido com a ordem do lote reproduzida
 (`/admin/marca` → `/admin/platform-admins`, registrando toda requisição):
 
-| Fato medido | Valor |
-|---|---|
-| `h1` renderizado | `["Platform Admins"]` |
-| `GET /api/v1/admin/platform-admins` | **200 em 191 ms** |
-| requisições pendentes ao estourar o tempo | **nenhuma** |
+| Fato medido                                  | Valor                                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `h1` renderizado                             | `["Platform Admins"]`                                                                                    |
+| `GET /api/v1/admin/platform-admins`          | **200 em 191 ms**                                                                                        |
+| requisições pendentes ao estourar o tempo    | **nenhuma**                                                                                              |
 | requisições em 8 s após o `domcontentloaded` | 67 — 25 `fetch` e 33 `script`, incluindo `/admin/usage`, `/admin/users`, `/admin/marca`, `/admin/google` |
 
 Não era a tela: era o **prefetch dos `<Link>` do menu**. O Next busca as rotas vizinhas assim que
@@ -325,11 +325,11 @@ registrado porque, sem esta nota, o próximo leitor do JSON leria "422 na Agenda
 A varredura de 258 medições deixou **3 rotas** com campo visível sem nome acessível. Duas eram
 falso positivo do detector; uma era real.
 
-| Rota | Acusado | Veredito |
-|---|---|---|
-| `/app/audit` | 2 × `input[type=datetime-local]`, 204×40 px | **defeito real** |
-| `/app/settings/profile` | 2 × `select` | falso positivo |
-| `/admin/tenants/new` | 1 × `select` | falso positivo |
+| Rota                    | Acusado                                     | Veredito         |
+| ----------------------- | ------------------------------------------- | ---------------- |
+| `/app/audit`            | 2 × `input[type=datetime-local]`, 204×40 px | **defeito real** |
+| `/app/settings/profile` | 2 × `select`                                | falso positivo   |
+| `/admin/tenants/new`    | 1 × `select`                                | falso positivo   |
 
 **Por que os dois `select` eram falso positivo.** Medido no DOM: `aria-hidden="true"`,
 `tabindex="-1"`, `position: absolute`, **1×1 px**, dentro do `<form>`. É o `BubbleSelect` do
@@ -383,11 +383,11 @@ de nível 1: nem `NexusPageHeader`, nem `sr-only`. Corrigido para `<h1>` no tama
 A mesma varredura mediu o `font-size` do primeiro `<h1>` de cada rota. O canônico é 24 px
 (`NexusPageHeader`). Fora dele:
 
-| Tela | Antes | Depois |
-|---|---|---|
-| `/app/pedidos/imprimir?carga=` (estado "muitos pedidos") | 18 px | 24 px |
-| `/app/campanhas` (medida via alias `/app/prospeccao`) | 20 px | 24 px |
-| `/app/lgpd/requests/[id]` (título é o `#id`, em mono) | 20 px | 24 px |
+| Tela                                                     | Antes | Depois |
+| -------------------------------------------------------- | ----- | ------ |
+| `/app/pedidos/imprimir?carga=` (estado "muitos pedidos") | 18 px | 24 px  |
+| `/app/campanhas` (medida via alias `/app/prospeccao`)    | 20 px | 24 px  |
+| `/app/lgpd/requests/[id]` (título é o `#id`, em mono)    | 20 px | 24 px  |
 
 Os dois primeiros passaram a montar o cabeçalho canônico; o terceiro manteve o `font-mono` e
 subiu para `text-2xl` — o identificador continua mono, o tamanho é o da casa.
@@ -453,11 +453,11 @@ Conserto em duas frentes, e a segunda é a que importa:
 
 O que o codemod **não** toca, de propósito, porque adivinhar seria pior que deixar sem nome:
 
-| Caso | Por que não mexer |
-|---|---|
-| rótulo de **grupo** sobre uma lista (`Janelas de envio`, `Mensagens`, `Itens`) | carimbar o rótulo do grupo no primeiro item faria o leitor de tela **mentir** |
-| controle com `placeholder` que descreve outra coisa (`Cidades com clientes` / "Buscar cidade") | os dois textos disputam o nome; corrigido à mão com o texto da busca |
-| rótulo + bloco com 2+ controles | não há como saber qual é "o" campo |
+| Caso                                                                                           | Por que não mexer                                                             |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| rótulo de **grupo** sobre uma lista (`Janelas de envio`, `Mensagens`, `Itens`)                 | carimbar o rótulo do grupo no primeiro item faria o leitor de tela **mentir** |
+| controle com `placeholder` que descreve outra coisa (`Cidades com clientes` / "Buscar cidade") | os dois textos disputam o nome; corrigido à mão com o texto da busca          |
+| rótulo + bloco com 2+ controles                                                                | não há como saber qual é "o" campo                                            |
 
 Os casos de grupo receberam nome específico à mão: os quatro horários de "Janelas de envio" em
 `/app/campanhas` e `/app/radar/recuperacao` agora são "Início da janela 1", "Fim da janela 1", …
@@ -497,26 +497,60 @@ rotas, mais duas coisas próprias: se a aba **ficou selecionada** e se o **conte
 
 Resultado medido (39 telas, sessão real de `manager`, `dono` e admin, build de produção):
 
-| Medida | Resultado |
-|---|---|
-| telas abertas | **39** (32 tenant + 5 do `dono` + 2 admin) |
-| abas clicadas e medidas | **50** |
-| aba clicada que **não** ficou selecionada | **0** |
-| aba que selecionou e **não mudou** o conteúdo | **0** |
-| overflow horizontal em aba aberta | **0** |
-| aba sem `<h1>` | **0** |
-| campo visível sem nome acessível em aba aberta | **0** (era 2 em `/app/frota`) |
-| modais abertos e medidos | **11** |
-| modal sem nome acessível (`role=dialog` sem título) | **0** |
-| erro de console | **1**, e virou a V-22 |
+| Medida                                              | Resultado                                                            |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| telas abertas                                       | **51** (32 tenant + 5 do `dono` + 14 dinâmicas com id real do banco) |
+| abas clicadas e medidas                             | **72**                                                               |
+| aba clicada que **não** ficou selecionada           | **0**                                                                |
+| aba que selecionou e **não mudou** o conteúdo       | **0**                                                                |
+| overflow horizontal em aba aberta                   | **0**                                                                |
+| aba sem `<h1>`                                      | **4 → 0** (as 4 eram a V-23: a tela de edição do agente)             |
+| campo visível sem nome acessível em aba aberta      | **0** (era 2 em `/app/frota`, V-20)                                  |
+| modais abertos e medidos                            | **31**                                                               |
+| modal sem nome acessível (`role=dialog` sem título) | **0**                                                                |
+| erro de console                                     | **1**, e virou a V-22                                                |
+
+**Como as 14 rotas dinâmicas entraram.** `scripts/auditoria/ids-para-rotas-dinamicas.mjs` pede um
+id real ao PostgREST para cada tabela (`commercial_orders`, `shipments`, `crm_pipelines`,
+`followup_flow_pointers`…), monta a URL e devolve o que não tem dado com o motivo. Sem isso,
+abrir `/app/pedidos/[id]` mediria a tela de "não encontrado" e o relatório chamaria isso de "tela
+vazia" — o mesmo erro do F-21. Duas rotas ficaram sem dado nesta instalação (`ai_routers` e
+`lgpd_requests` estão vazias), e é isso que o artefato publica.
 
 **O que ele não abre, com número:** **29** modais. O extrator dá o `<DialogTitle>`, não o gatilho,
 e clicar em botão por semelhança de nome é como se apaga dado de cliente — "Excluir" e "Excluir
 filtro" começam igual. O instrumento tem lista de verbos destrutivos e **não clica** neles;
 registra cada um como `não aberto` com o motivo ("nenhum botão visível com nome relacionado",
-"gatilho casou mas não abriu"). **15** abas também não foram encontradas no DOM, e o motivo é
-estrutural: elas vivem dentro de gaveta (as abas da ficha de produto abrem depois de escolher um
-produto) ou são `<TabsTrigger>` cujo texto vem de um objeto (`{textos.abaBuscar}`).
+"gatilho casou mas não abriu"). **24** abas também não foram encontradas no DOM, e os motivos são
+estruturais, medidos: (a) vivem dentro de gaveta — as abas da ficha de produto só existem depois
+de escolher um produto; (b) o extrator lista as abas de **todos** os arquivos do segmento, e
+quando dois componentes definem barra de aba e só um é montado (o detalhe do agente tem
+`AgentTabs` e `AgentEditor`), o outro conjunto nunca aparece; (c) o texto vem de um objeto
+(`{textos.abaBuscar}`), e o inventário diz `(rótulo dinâmico)` em vez de inventar.
+
+**O único erro de console que sobra** é o 404 de `/api/v1/channels/partner/templates` — e ele é
+a **resposta certa** da API (`not_found: nenhuma conexão de parceiro ativa`). A V-22 corrigiu o
+que importava: a tela deixou de chamar isso de "estado vazio". Silenciar o 404 exigiria a página
+saber que não há conexão antes de perguntar — decisão de produto, não de instrumento.
+
+### V-23 · Alta · A tela de edição do agente também não tinha `<h1>` — **CORRIGIDO**
+
+A V-16 corrigiu o `<h1>` em `AgentForm`, que é a tela de **criação**
+(`/app/ai/agents/new`). A tela de **edição** usa outro componente, `AgentEditor`, e continuou sem
+título de nível 1 — descoberto só quando as rotas dinâmicas entraram na varredura:
+
+```
+/app/ai/agents/<id>  base  h1: []
+/app/ai/agents/<id>  aba "Geral"  h1: []
+```
+
+`auditoria-aceite` não podia achar: `/app/ai/agents/[id]` é rota dinâmica e a spec mede as
+estáticas. Aqui o id veio do banco (`ids-para-rotas-dinamicas.mjs`), e a tela abriu de verdade.
+O título era `<h2 className="text-xl">`. Agora é `<h1>` em `text-2xl`, o canônico.
+
+**A lição de método:** "corrigi a tela do agente" era verdade para uma das duas telas. `new` e
+`[id]` **parecem** a mesma tela e são componentes diferentes (`AgentForm` e `AgentEditor`) — só
+abrir as duas provou.
 
 ## 3. O que está bom — e foi medido, não elogiado
 
@@ -524,16 +558,16 @@ Números da varredura de **16/11 contra build de produção** (`pnpm build` + `p
 **129 rotas estáticas × 2 larguras = 258 medições**, em três lotes (`producao-tenant`,
 `producao-admin`, `producao-publica`).
 
-| Medida | Resultado |
-|---|---|
-| status HTTP | **256 × 200** e **2 × 500** — os dois do `/500`, que é a página de erro (esperado) |
-| erro de captura | **0** (nenhum `ERR_CONNECTION_REFUSED`, nenhum timeout) |
-| rede assentou | **258 de 258** medições |
-| overflow horizontal > 0 | **0 de 258** |
-| erro de console | **4 medições** em 2 rotas: `/app/agenda` (422 de disponibilidade, V-14) e `/500` (a própria página de erro) |
-| `<h1>` ausente | **0** |
-| campo visível sem nome acessível | **0** |
-| tempo até o HTML + assentamento | desktop **p50 1.495 ms** · p90 1.990 ms · máx 2.838 ms; celular **p50 1.172 ms** · p90 1.536 ms · máx 1.920 ms |
+| Medida                           | Resultado                                                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| status HTTP                      | **256 × 200** e **2 × 500** — os dois do `/500`, que é a página de erro (esperado)                             |
+| erro de captura                  | **0** (nenhum `ERR_CONNECTION_REFUSED`, nenhum timeout)                                                        |
+| rede assentou                    | **258 de 258** medições                                                                                        |
+| overflow horizontal > 0          | **0 de 258**                                                                                                   |
+| erro de console                  | **4 medições** em 2 rotas: `/app/agenda` (422 de disponibilidade, V-14) e `/500` (a própria página de erro)    |
+| `<h1>` ausente                   | **0**                                                                                                          |
+| campo visível sem nome acessível | **0**                                                                                                          |
+| tempo até o HTML + assentamento  | desktop **p50 1.495 ms** · p90 1.990 ms · máx 2.838 ms; celular **p50 1.172 ms** · p90 1.536 ms · máx 1.920 ms |
 
 > Esta é a **segunda** varredura completa do dia, e as diferenças entre as duas são as correções
 > da própria auditoria — não ruído. Na primeira, `/admin/inbox` aparecia sem `<h1>` (V-12),
@@ -549,23 +583,23 @@ Números da varredura de **16/11 contra build de produção** (`pnpm build` + `p
 
 ### O que a varredura NÃO cobriu — e por quê
 
-| Não coberto | Motivo medido |
-|---|---|
+| Não coberto                                                                 | Motivo medido                                                                                                                                                                       |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **26 rotas dinâmicas** (`[id]`, `[token]`, `[conversationId]`, `[entryId]`) | precisam de um id real no banco; abrir sem id mede a tela de "não encontrado" e viraria "tela vazia" no relatório. O instrumento as **pula com motivo escrito** no JSON (`puladas`) |
-| `/onboarding/*` (9 rotas) | a conta do seed já completou o onboarding: todas redirecionam para `/app/inbox`. Auditar onboarding exige uma conta recém-criada, que a suíte E2E não mantém |
-| `/login/mfa` | a sessão do seed já está autenticada: redireciona para `/app/inbox` |
-| **tablet 834 px** | medido em 5 telas numa rodada anterior; a varredura completa rodou em 1440 e 390 |
+| `/onboarding/*` (9 rotas)                                                   | a conta do seed já completou o onboarding: todas redirecionam para `/app/inbox`. Auditar onboarding exige uma conta recém-criada, que a suíte E2E não mantém                        |
+| `/login/mfa`                                                                | a sessão do seed já está autenticada: redireciona para `/app/inbox`                                                                                                                 |
+| **tablet 834 px**                                                           | medido em 5 telas numa rodada anterior; a varredura completa rodou em 1440 e 390                                                                                                    |
 
 ### Redirecionamentos medidos — 26 de 129 (e nenhum é link quebrado)
 
 A varredura segue o redirect e mede a tela de destino. Os 26 se dividem em três grupos, e o
 número de cada grupo fecha com `medicoes-producao-*.json`:
 
-| Destino | Rotas | O que é |
-|---|---|---|
-| `/403` | 10 | guarda de papel: `manager` pedindo tela de `admin` |
-| `/app/inbox` | 10 | sessão já autenticada: 9 de `/onboarding/**` + `/login/mfa` |
-| outra tela | 6 | **alias antigo** que continua funcionando: `/app/lgpd/requests`→`/app`, `/app/metrics`→`/app/indicadores`, `/app/prospeccao`→`/app/campanhas`, `/app/recuperacao`→`/app/radar/recuperacao`, `/app/titulos`→`/app/financeiro`, `/admin`→`/admin/dashboard` |
+| Destino      | Rotas | O que é                                                                                                                                                                                                                                                   |
+| ------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/403`       | 10    | guarda de papel: `manager` pedindo tela de `admin`                                                                                                                                                                                                        |
+| `/app/inbox` | 10    | sessão já autenticada: 9 de `/onboarding/**` + `/login/mfa`                                                                                                                                                                                               |
+| outra tela   | 6     | **alias antigo** que continua funcionando: `/app/lgpd/requests`→`/app`, `/app/metrics`→`/app/indicadores`, `/app/prospeccao`→`/app/campanhas`, `/app/recuperacao`→`/app/radar/recuperacao`, `/app/titulos`→`/app/financeiro`, `/admin`→`/admin/dashboard` |
 
 Os 6 aliases são um acerto que a auditoria não esperava encontrar: link antigo no menu do
 navegador de um cliente não vira 404. Os 10 de `/403` e os 10 de `/app/inbox` são o motivo pelo
@@ -575,37 +609,37 @@ cobriu").
 
 ### Falsos positivos descartados antes de virarem achado
 
-| Parecia | Era |
-|---|---|
-| `/app/lgpd` responde 404 | a rota real é `/app/lgpd/requests` (`lib/navigation/registry.ts`); erro meu de rota |
-| `/admin` cai em "Acesso negado" | `manager` não é admin de plataforma — comportamento correto, com estado próprio |
-| `/admin/platform-admins` "não abre" (45 s) | `networkidle` nunca assentava por causa do prefetch do menu (V-10) |
-| `/admin/platform-admins` responde 404 | o link do runbook no aviso "somente DBA" (V-13) — o 404 era real, mas de um `<a>`, não da tela |
-| `/app/agenda` com erro de console 422 | instalação sem `attendant_availability`; a tela trata (V-14) |
-| 11 campos sem rótulo em `/app/products` | o detector contava `type=hidden` e campo dentro de `<label>`; corrigido, restaram **3 rotas** com 1–2 campos |
-| círculo "N" cobrindo "Recolher" no rodapé | indicador de dev do Next, não elemento do produto |
-| botão flutuante cobre a barra inferior | TanStack Query Devtools, só em `NODE_ENV=development` (V-03) |
+| Parecia                                    | Era                                                                                                          |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `/app/lgpd` responde 404                   | a rota real é `/app/lgpd/requests` (`lib/navigation/registry.ts`); erro meu de rota                          |
+| `/admin` cai em "Acesso negado"            | `manager` não é admin de plataforma — comportamento correto, com estado próprio                              |
+| `/admin/platform-admins` "não abre" (45 s) | `networkidle` nunca assentava por causa do prefetch do menu (V-10)                                           |
+| `/admin/platform-admins` responde 404      | o link do runbook no aviso "somente DBA" (V-13) — o 404 era real, mas de um `<a>`, não da tela               |
+| `/app/agenda` com erro de console 422      | instalação sem `attendant_availability`; a tela trata (V-14)                                                 |
+| 11 campos sem rótulo em `/app/products`    | o detector contava `type=hidden` e campo dentro de `<label>`; corrigido, restaram **3 rotas** com 1–2 campos |
+| círculo "N" cobrindo "Recolher" no rodapé  | indicador de dev do Next, não elemento do produto                                                            |
+| botão flutuante cobre a barra inferior     | TanStack Query Devtools, só em `NODE_ENV=development` (V-03)                                                 |
 
 ## 4. Cobertura do checklist
 
-| # | Item | Estado | Medido |
-|---|---|---|---|
-| 2.1 | Avaliar em execução e no código; desktop/tablet/celular | `[~]` | **129 rotas estáticas** abertas em navegador contra build de produção, em 1440 e 390 (= 258 medições), de 155 telas distintas. 26 dinâmicas puladas com motivo; tablet 834 em 5 telas |
-| 2.2 | Se impedido, registrar bloqueio sem alegar inspeção visual | `[x]` | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3) |
-| 2.3 | Propósito e próximo passo evidentes | `[x]` | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo |
-| 2.4 | Hierarquia e densidade | `[~]` | Lida nas 258 capturas; sem medição de densidade |
-| 2.5 | Consistência de headers, breadcrumb, ações, filtros, navegação | `[~]` | Shell e barra de filtros consistentes; títulos por rota |
-| 2.6 | Cliques/digitação em tarefas frequentes | `[ ]` | Depende das jornadas J1–J16 |
-| 2.7 | Busca, ordenação, filtros, paginação, seleção em massa | `[~]` | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado |
-| 2.8 | Formulários | `[ ]` | Não executado |
-| 2.9 | Estados (loading, vazio, erro, sucesso, offline, permissão negada) | `[~]` | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
-| 2.10 | Feedback imediato e prevenção de duplicidade | `[ ]` | — |
-| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]` | `<h1>` em 100% após V-02/V-08/V-12; alvos < 40 px medidos em 258 medições (p50 = 3 por tela no celular, máx 223 em `/app/agenda` — V-06 segue sinal); **101 `<label>`** analisados, **0 sem vínculo** com o campo após a V-15 (gate novo); contraste, foco e teclado não medidos |
-| 2.12 | Casos extremos | `[ ]` | — |
-| 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas | `[~]` | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos |
-| 2.14 | Idioma, moeda, datas, timezone, convenções BR | `[~]` | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir) |
-| 2.15 | Desempenho percebido e gráficos | `[~]` | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados |
-| 2.16 | Não padronizar mecanicamente onde a composição é intencional | `[x]` | O título vem de UMA fonte e cada tela mantém sua composição |
+| #    | Item                                                                | Estado | Medido                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---- | ------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[~]`  | **129 rotas estáticas** abertas em navegador contra build de produção, em 1440 e 390 (= 258 medições), de 155 telas distintas. 26 dinâmicas puladas com motivo; tablet 834 em 5 telas                                                                                                                                                                                                                                                          |
+| 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
+| 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
+| 2.4  | Hierarquia e densidade                                              | `[~]`  | Lida nas 258 capturas; sem medição de densidade                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | Shell e barra de filtros consistentes; títulos por rota                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.6  | Cliques/digitação em tarefas frequentes                             | `[ ]`  | Depende das jornadas J1–J16                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado                                                                                                                                                                                                                                                                                                                                               |
+| 2.8  | Formulários                                                         | `[ ]`  | Não executado                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
+| 2.10 | Feedback imediato e prevenção de duplicidade                        | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | `<h1>` em 100% após V-02/V-08/V-12; alvos < 40 px medidos em 258 medições (p50 = 3 por tela no celular, máx 223 em `/app/agenda` — V-06 segue sinal); **101 `<label>`** analisados, **0 sem vínculo** com o campo após a V-15 (gate novo); contraste, foco e teclado não medidos                                                                                                                                                               |
+| 2.12 | Casos extremos                                                      | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos                                                                                                                                                                                                                                                          |
+| 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
+| 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados                                                                                                                                                                                                                                    |
+| 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
 **Fase 2: em andamento.** **15 achados corrigidos** com medida antes/depois (V-01, V-02, V-07,
 V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18, V-19, mais V-17 agrupando três telas);

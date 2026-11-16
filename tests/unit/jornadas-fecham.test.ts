@@ -114,7 +114,15 @@ describe("as 16 jornadas do prompt fecham com as specs do disco", () => {
     // Sem `--log` o gerador imprime "—" nas colunas de resultado; o documento
     // tem os números da execução. Compara-se o que é estável: id, título,
     // nº de specs e nº de declarados.
-    const chave = (l: string) => l.split("|").slice(1, 5).join("|");
+    // Comparação por CÉLULA, sem espaço: o Prettier alinha as colunas do
+    // markdown com padding, e `" # "` ≠ `"#"` reprovava por formatação — não
+    // por conteúdo. O que o gate vigia é o conteúdo da tabela.
+    const chave = (l: string) =>
+      l
+        .split("|")
+        .slice(1, 5)
+        .map((c) => c.trim())
+        .join("|");
     expect(noDoc.map(chave)).toEqual(semResultado.map(chave));
   });
 });

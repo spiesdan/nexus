@@ -6,33 +6,33 @@
 
 ## 1. Os artefatos desta fase — todos gerados
 
-| Arquivo | O que mede | Comando |
-|---|---|---|
-| [`inventario-rotas.md`](inventario-rotas.md) | telas, resolvers, APIs, layouts, estados, especiais | `pnpm exec tsx scripts/auditoria/inventario.ts` |
-| [`02-reconciliacao-rotas.md`](02-reconciliacao-rotas.md) | 156 rotas do prompt × código | `pnpm exec tsx scripts/auditoria/reconciliar-rotas.ts` |
-| [`04-inventario-dados.md`](04-inventario-dados.md) | tabelas, views, funções, RLS, políticas — em 3 fontes | `pnpm exec tsx scripts/auditoria/inventario-dados.ts` |
-| [`05-componentes.md`](05-componentes.md) | 242 componentes por diretório e tipo | `pnpm exec tsx scripts/auditoria/inventario-completo.ts` |
-| [`06-apis.md`](06-apis.md) · `06-apis.json` | 418 handlers: métodos, guarda, validação, efeitos | idem |
-| [`07-integracoes.md`](07-integracoes.md) | integrações, 16 workers, 30 crons, serviços, env | idem |
-| [`08-mobile-offline.md`](08-mobile-offline.md) | Capacitor, service worker, fila offline, SQLite | idem |
-| [`09b-subtelas.md`](09b-subtelas.md) | Abas, modais e gavetas por tela — o que a matriz de rotas não vê (F-22) | `pnpm exec tsx scripts/auditoria/subtelas.ts` |
-| [`09-telas-estados.md`](09-telas-estados.md) | 156 telas × 12 estados (sinal no código) | idem |
-| [`10-cobertura-testes.md`](10-cobertura-testes.md) | teste por rota | idem |
+| Arquivo                                                  | O que mede                                                              | Comando                                                  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
+| [`inventario-rotas.md`](inventario-rotas.md)             | telas, resolvers, APIs, layouts, estados, especiais                     | `pnpm exec tsx scripts/auditoria/inventario.ts`          |
+| [`02-reconciliacao-rotas.md`](02-reconciliacao-rotas.md) | 156 rotas do prompt × código                                            | `pnpm exec tsx scripts/auditoria/reconciliar-rotas.ts`   |
+| [`04-inventario-dados.md`](04-inventario-dados.md)       | tabelas, views, funções, RLS, políticas — em 3 fontes                   | `pnpm exec tsx scripts/auditoria/inventario-dados.ts`    |
+| [`05-componentes.md`](05-componentes.md)                 | 242 componentes por diretório e tipo                                    | `pnpm exec tsx scripts/auditoria/inventario-completo.ts` |
+| [`06-apis.md`](06-apis.md) · `06-apis.json`              | 418 handlers: métodos, guarda, validação, efeitos                       | idem                                                     |
+| [`07-integracoes.md`](07-integracoes.md)                 | integrações, 16 workers, 30 crons, serviços, env                        | idem                                                     |
+| [`08-mobile-offline.md`](08-mobile-offline.md)           | Capacitor, service worker, fila offline, SQLite                         | idem                                                     |
+| [`09b-subtelas.md`](09b-subtelas.md)                     | Abas, modais e gavetas por tela — o que a matriz de rotas não vê (F-22) | `pnpm exec tsx scripts/auditoria/subtelas.ts`            |
+| [`09-telas-estados.md`](09-telas-estados.md)             | 156 telas × 12 estados (sinal no código)                                | idem                                                     |
+| [`10-cobertura-testes.md`](10-cobertura-testes.md)       | teste por rota                                                          | idem                                                     |
 
 ## 2. Medidas de cabeçalho
 
-| Medida | Valor | Fonte |
-|---|---|---|
-| Telas (`page.tsx`) | **156** | `find app -name page.tsx` |
-| Resolvers (redirecionam sem JSX) | 13 | `inventario.ts` |
-| Handlers de API | **418** = 416 em `app/api` + 2 fora (`/auth/confirm`, `/icone-512`) | `find app -name route.ts` |
-| Layouts | 13 | `inventario.ts` |
-| Componentes | **242** (19 em `components/ui`) | `inventario-completo.ts` |
-| Workers | 16 | `workers/*.ts` |
-| Rotas de cron | 30 | `app/api/**/cron/**` |
-| Migrations | 292 (10 são stub) | `supabase/migrations` |
+| Medida                              | Valor                                                                                                                                  | Fonte                                                                                                                                                                                 |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Telas (`page.tsx`)                  | **156**                                                                                                                                | `find app -name page.tsx`                                                                                                                                                             |
+| Resolvers (redirecionam sem JSX)    | 13                                                                                                                                     | `inventario.ts`                                                                                                                                                                       |
+| Handlers de API                     | **418** = 416 em `app/api` + 2 fora (`/auth/confirm`, `/icone-512`)                                                                    | `find app -name route.ts`                                                                                                                                                             |
+| Layouts                             | 13                                                                                                                                     | `inventario.ts`                                                                                                                                                                       |
+| Componentes                         | **242** (19 em `components/ui`)                                                                                                        | `inventario-completo.ts`                                                                                                                                                              |
+| Workers                             | 16                                                                                                                                     | `workers/*.ts`                                                                                                                                                                        |
+| Rotas de cron                       | 30                                                                                                                                     | `app/api/**/cron/**`                                                                                                                                                                  |
+| Migrations                          | 292 (10 são stub)                                                                                                                      | `supabase/migrations`                                                                                                                                                                 |
 | Tabelas criadas pelo `baseline.sql` | **180** (179 em `public` + `private.app_secrets`) · **RLS em 179 de 179** de `public` · **305 políticas** (300 `public` + 5 `storage`) | medido em Postgres descartável — [`12-migrations-e-rls.md`](12-migrations-e-rls.md). A linha antiga (`142 com RLS`) era contagem de TEXTO e subestimava: o baseline liga RLS por laço |
-| Arquivos de teste | 1.121 | `git ls-files` |
+| Arquivos de teste                   | 1.121                                                                                                                                  | `git ls-files`                                                                                                                                                                        |
 
 **156 `page.tsx` = 143 telas com JSX + 13 resolvers**, e o prompt lista **156 rotas**. Os 13
 resolvers são caminhos que existem e redirecionam (`page.tsx` sem JSX) — a reconciliação os
@@ -51,14 +51,14 @@ ausentes, 0 acréscimos**.
 
 ### F-09 · P0 · A cadeia de migrations **não é reaplicável**
 
-| Evidência | Valor |
-|---|---|
-| Migrations aplicadas em ordem num Postgres limpo | **35 de 292** — schema parcial: **2 tabelas** em `public`, 0 políticas |
-| Migrations que falham | **257 de 292** — **todas** por pré-requisito ausente; **0** por SQL inválido |
-| Falhas que citam um objeto que **existe** no `baseline.sql` | **257 de 257** (prova cruzada objeto a objeto) |
-| Objetos distintos ausentes | **71** (os mesmos 71 derrubam 257 migrations em cadeia; o texto cru do erro dava 81 porque 10 nomes vinham sem schema e repetiam um objeto já citado qualificado) |
-| Objetos que só o `baseline.sql` cria | **1.023** (177 tabelas de `public` + `private.app_secrets`, 104 triggers, 74 funções de `public` + `private.fn_oauth_key()`, 305 políticas, 180 tipos, 2 views, 2 sequências) |
-| Migrations que são stub (`SELECT 1;`, "applied via Supabase MCP") | **10** — `0001`–`0009` e `0013` |
+| Evidência                                                         | Valor                                                                                                                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migrations aplicadas em ordem num Postgres limpo                  | **35 de 292** — schema parcial: **2 tabelas** em `public`, 0 políticas                                                                                                        |
+| Migrations que falham                                             | **257 de 292** — **todas** por pré-requisito ausente; **0** por SQL inválido                                                                                                  |
+| Falhas que citam um objeto que **existe** no `baseline.sql`       | **257 de 257** (prova cruzada objeto a objeto)                                                                                                                                |
+| Objetos distintos ausentes                                        | **71** (os mesmos 71 derrubam 257 migrations em cadeia; o texto cru do erro dava 81 porque 10 nomes vinham sem schema e repetiam um objeto já citado qualificado)             |
+| Objetos que só o `baseline.sql` cria                              | **1.023** (177 tabelas de `public` + `private.app_secrets`, 104 triggers, 74 funções de `public` + `private.fn_oauth_key()`, 305 políticas, 180 tipos, 2 views, 2 sequências) |
+| Migrations que são stub (`SELECT 1;`, "applied via Supabase MCP") | **10** — `0001`–`0009` e `0013`                                                                                                                                               |
 
 > O número já esteve **258** e acusava as migrations 0014/0017/0025 de quebradas. Não estavam:
 > eram lacunas do preâmbulo do instrumento, e o relatório detalhado delas (com a correção) está
@@ -74,7 +74,7 @@ tabela que a migration anterior não cria.
 
 **Consequência medida, no estado em que o achado foi aberto:** `package.json` declarava
 `db:reset` = `supabase db reset`, e o `db:migrate` era um placeholder cujo próprio TODO dizia
-*"wire supabase db push"*. Quem seguisse qualquer um dos dois recebia um banco que **parece**
+_"wire supabase db push"_. Quem seguisse qualquer um dos dois recebia um banco que **parece**
 migrado (as migrations existem, rodam, e a maioria falha em silêncio com `ON_ERROR_STOP=0`) e
 não é. O caminho do self-host (`baseline.sql` via `install.sh`/`update.sh`) está correto — é o
 único que está.
@@ -134,7 +134,7 @@ Duplicar pedido por retry de rede é o defeito que isso previne.
 **0** handlers ficaram sem marcador de autenticação — mas isso não é elogio, é medida
 fraca: o detector conta a **menção** a um mecanismo (`requireRole`, `loadAuthUser`,
 `Bearer`, HMAC), não a correção dele. Rotas públicas de borda (`/api/v1/health`,
-`/cron/*`, `/webhooks/*`, callbacks OAuth) aparecem como *"pública (auth na rota)"*
+`/cron/*`, `/webhooks/*`, callbacks OAuth) aparecem como _"pública (auth na rota)"_
 porque estão em `lib/auth/public-paths.ts` — três delas foram conferidas à mão
 (Bearer + `timingSafeEqual`). A verificação de authz por rota é Fase 2.
 
@@ -169,10 +169,10 @@ contaminação de estado entre seções da suíte. Não era — e a reprodução
 motivo medido depois: ela rodava no **zsh** (o shell desta ferramenta), não no bash. Mesmo
 `_common.sh` **antigo**, mesmo fixture, trocando só o interpretador:
 
-| Interpretador | `load_env` devolve |
-|---|---|
-| `zsh` | `Sant'Ana Odontologia` — certo, por acidente do zsh |
-| `bash 3.2.57` (é o que o `pnpm test:shell` usa) | `Sant"'"Ana Odontologia` — **errado** |
+| Interpretador                                   | `load_env` devolve                                  |
+| ----------------------------------------------- | --------------------------------------------------- |
+| `zsh`                                           | `Sant'Ana Odontologia` — certo, por acidente do zsh |
+| `bash 3.2.57` (é o que o `pnpm test:shell` usa) | `Sant"'"Ana Odontologia` — **errado**               |
 
 Um instrumento que roda em outro interpretador mede outro universo — o mesmo defeito de método que
 produziu o falso achado das migrations 0014/0017 (F-09a). Rodando a suíte de verdade, com `bash -x`,
@@ -184,10 +184,10 @@ aspas** (`${val//"'\\''"/"'"}`). O **bash 3.2 — o `/bin/bash` do macOS — nã
 replacement** em `${var//padrão/replacement}` e insere os três caracteres `"'"`; o bash 5 (Linux,
 a VPS do cliente) remove e faz o certo. Medido lado a lado, mesma entrada, mesmo script:
 
-| Bash | `load_env` **antigo** | `load_env` **corrigido** |
-|---|---|---|
+| Bash                                            | `load_env` **antigo**                             | `load_env` **corrigido**         |
+| ----------------------------------------------- | ------------------------------------------------- | -------------------------------- |
 | 3.2.57 (macOS — é este gate rodando localmente) | `Sant"'"Ana` / `se"'"nha com espaço` — **errado** | `Sant'Ana` / `se'nha com espaço` |
-| 5.x (`docker run bash:5` — a VPS do cliente) | `Sant'Ana` / `se'nha com espaço` | `Sant'Ana` / `se'nha com espaço` |
+| 5.x (`docker run bash:5` — a VPS do cliente)    | `Sant'Ana` / `se'nha com espaço`                  | `Sant'Ana` / `se'nha com espaço` |
 
 As quatro células foram executadas com o `load_env` **real** (`. ./_common.sh` + `load_env`
 apontando para o fixture do teste), não com uma reescrita do trecho: `bash -c` para o 3.2 e
@@ -219,11 +219,11 @@ e `error.tsx = ✓` em **156 de 156**. Lido como produto, dizia "nenhuma tela tr
 vazio, erro, permissão, formulário, filtro ou tabela". Eram três defeitos do instrumento, todos
 mecânicos:
 
-| Defeito | Medida | Efeito |
-|---|---|---|
-| O texto vinha só do `page.tsx` | **89 das 156** telas delegam a UI a `_client.tsx`/`_components/` na mesma pasta | `/app/pedidos` tem filtro, tabela e confirmação no `_client.tsx` e saía `—` nas três |
-| `loading.tsx`/`error.tsx` eram procurados no segmento **ou em `app/`** | existe **um** `app/error.tsx` global | as 156 linhas ganhavam ✓ pelo mesmo arquivo; a coluna dizia "o app tem fallback", não "esta tela trata erro" |
-| O regex rodava **dentro dos comentários** | este repo escreve parágrafos citando "erro", "vazio", "nenhum" | `vazio` 137/156, `gráfico` 67/156, `filtros` 118/156 — inflados por prosa, não por código |
+| Defeito                                                                | Medida                                                                          | Efeito                                                                                                       |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| O texto vinha só do `page.tsx`                                         | **89 das 156** telas delegam a UI a `_client.tsx`/`_components/` na mesma pasta | `/app/pedidos` tem filtro, tabela e confirmação no `_client.tsx` e saía `—` nas três                         |
+| `loading.tsx`/`error.tsx` eram procurados no segmento **ou em `app/`** | existe **um** `app/error.tsx` global                                            | as 156 linhas ganhavam ✓ pelo mesmo arquivo; a coluna dizia "o app tem fallback", não "esta tela trata erro" |
+| O regex rodava **dentro dos comentários**                              | este repo escreve parágrafos citando "erro", "vazio", "nenhum"                  | `vazio` 137/156, `gráfico` 67/156, `filtros` 118/156 — inflados por prosa, não por código                    |
 
 **Correção** (`scripts/auditoria/segmento-de-rota.ts` + `inventario-completo.ts`):
 
@@ -239,13 +239,13 @@ mecânicos:
 
 Medido depois, mesmo commit:
 
-| Coluna | Antes | Depois |
-|---|---|---|
-| telas com ≥1 sinal | 0 de 143 (todas em `—`) | **143 de 143** |
-| `filtros` | 118/156 (inflado por comentário) | **69/156** |
-| `gráfico` | 67/156 | **7/156** |
-| `vazio` | 137/156 | **95/156** |
-| `error` | ✓ em 156 (arquivo global) | `herdado` em 156 — o dado correto: existe fallback global, nenhuma rota fica sem |
+| Coluna             | Antes                            | Depois                                                                           |
+| ------------------ | -------------------------------- | -------------------------------------------------------------------------------- |
+| telas com ≥1 sinal | 0 de 143 (todas em `—`)          | **143 de 143**                                                                   |
+| `filtros`          | 118/156 (inflado por comentário) | **69/156**                                                                       |
+| `gráfico`          | 67/156                           | **7/156**                                                                        |
+| `vazio`            | 137/156                          | **95/156**                                                                       |
+| `error`            | ✓ em 156 (arquivo global)        | `herdado` em 156 — o dado correto: existe fallback global, nenhuma rota fica sem |
 
 Gate: `tests/unit/matriz-telas-le-segmento.test.ts` (11 casos) usa fatos reais do repo — que
 `/app/pedidos` inclui `_client.tsx` e exclui `[id]`/`novo`/`imprimir`, que `/app/radar/risco`
@@ -295,7 +295,7 @@ O extrator errou duas vezes antes de servir, e as duas viram caso de teste em
 `tests/unit/subtela-tem-nome.test.ts` (8 casos):
 
 1. **caminho absoluto devolvia zero arquivo.** `arquivosDaTela(raiz, pasta)` faz `join(raiz,
-   pasta)`; passar a pasta absoluta devolveu **0 abas em 156 telas** — e o artefato saiu vazio
+pasta)`; passar a pasta absoluta devolveu **0 abas em 156 telas** — e o artefato saiu vazio
    sem erro nenhum. Zero silencioso é o jeito mais fácil de um inventário mentir.
 2. **`className` virou rótulo.** A primeira execução listou como aba o texto
    `# / ml-1.5 text-[10px]`. O rótulo passou a vir de `t("…")` / texto do JSX, com `className`
@@ -337,29 +337,29 @@ vazio.** Se não estiver, o que está lá não é melhoria de evidência — é 
 
 ## 4. Cobertura do checklist
 
-| # | Tarefa | Estado | Evidência |
-|---|---|---|---|
-| 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis) | `[x]` | `inventario-rotas.md` — 156 telas, 13 resolvers, 13 layouts, **6** fronteiras de erro (5 `error.tsx` + `global-error.tsx`), **8** `loading` + `not-found`, 2 especiais (`icon.tsx`, `manifest.ts`). Sem `template.tsx` e sem `default.tsx` (não há rotas paralelas) |
-| 1.2 | Subtelas e estados | `[~]` | `09-telas-estados.md` — 12 estados × 156 telas no **segmento de rota** (page + `_client` + `_components` + imports locais): 143/143 telas com JSX têm ao menos um sinal. **Subtela agora tem nome** (F-22): `09b-subtelas.md` enumera 82 abas, 68 modais e 12 gavetas com arquivo e linha. Em execução: **129 das 155 rotas estáticas** abertas em build de produção, em desktop e celular (258 medições, `11-auditoria-visual.md` §3); as **26 dinâmicas** ficam fora com motivo escrito. **Continua `[~]`**: enumerar subtela não é abri-la, e nenhuma das 82 abas foi clicada — é o que falta para `[x]` |
-| 1.3 | Componentes | `[x]` | `05-componentes.md` — 242 arquivos, 19 primitivas `ui/`, tipo por área |
-| 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas) | `[x]` | `06-apis.md`/`.json` — 418 handlers com métodos, guarda, schema Zod, efeitos, idempotência, rate limit. **Erros**: código por `fail()` lido de `lib/api/errors.ts` (`inventario.ts`) |
-| 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, update) | `[x]` | `04-inventario-dados.md` (texto) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em banco): 180 tabelas, 179/179 com RLS, 305 políticas, 104 triggers, 92 funções, 2 views, 185 tipos; instalação **e** update sobre dados verdes; Storage: **7 buckets** (`ai-policy`, `lgpd-exports`, `skill-assets`, `whatsapp-media`, `brand-logos`, `delivery-proofs`, `product-images`). Índices não foram enumerados um a um — F-09 domina a frente |
-| 1.6 | Integrações e infra | `[x]` | `07-integracoes.md` — 10 integrações, 16 workers, 30 crons, serviços do compose, 45+ env |
-| 1.7 | Mobile e offline | `[x]` | `08-mobile-offline.md` — Capacitor, `mobile/www`, `sw.js`, `notify-sw.js`, outbox, SQLite |
-| 1.8 | Cobertura de testes | `[x]` | `10-cobertura-testes.md` — 1.121 arquivos; 58 telas com sinal de teste, 98 sem |
-| 1.9 | Documentação: obsoleto × código | `[x]` | F-01 (licença), F-04 (Sage × índigo), F-11 (rotas), D-1/D-3 (Discord), e o próprio F-15 |
-| 1.10 | Registro por rota (objetivo, perfil, entrada, ações, saída, dependências, permissões, dados, estados, links, API/tabelas, relações, problemas, decisão, teste) | `[~]` | Estrutura gerada (tela, guarda, estados, teste). Os 15 campos narrativos por rota são preenchidos na Fase 2, tela a tela — preenchê-los agora seria inventar auditoria |
-| 1.11 | Matriz rota × subtela × estado | `[~]` | `09-telas-estados.md` (rota × 12 sinais) + `09b-subtelas.md` (**99 abas, 68 modais, 12 gavetas** com nome, arquivo e linha, das duas famílias de aba: Radix e barra caseira `aria-current`). **Em execução**: 39 telas abertas, **50 abas clicadas** (0 sem selecionar, 0 sem mudar conteúdo, 0 overflow, 0 sem `<h1>`, 0 campo sem nome) e **11 modais** (0 sem nome). **Falta**: 29 modais e 15 abas não abertos com motivo escrito (gatilho não derivável / vivem em gaveta), e nenhuma aba foi aberta no celular |
-| 1.12 | Reconciliação das rotas do prompt | `[x]` | `02-reconciliacao-rotas.md` — **cobertura de rotas**: 156 = 143 páginas com JSX + 13 resolvers; 0 ausentes; 0 acréscimos. Não é cobertura de subtelas/estados/jornadas |
+| #    | Tarefa                                                                                                                                                         | Estado | Evidência                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1  | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis)                                            | `[x]`  | `inventario-rotas.md` — 156 telas, 13 resolvers, 13 layouts, **6** fronteiras de erro (5 `error.tsx` + `global-error.tsx`), **8** `loading` + `not-found`, 2 especiais (`icon.tsx`, `manifest.ts`). Sem `template.tsx` e sem `default.tsx` (não há rotas paralelas)                                                                                                                                                                                                                                                                                                                                         |
+| 1.2  | Subtelas e estados                                                                                                                                             | `[~]`  | `09-telas-estados.md` — 12 estados × 156 telas no **segmento de rota** (page + `_client` + `_components` + imports locais): 143/143 telas com JSX têm ao menos um sinal. **Subtela agora tem nome** (F-22): `09b-subtelas.md` enumera 82 abas, 68 modais e 12 gavetas com arquivo e linha. Em execução: **129 das 155 rotas estáticas** abertas em build de produção, em desktop e celular (258 medições, `11-auditoria-visual.md` §3); as **26 dinâmicas** ficam fora com motivo escrito. **Continua `[~]`**: enumerar subtela não é abri-la, e nenhuma das 82 abas foi clicada — é o que falta para `[x]` |
+| 1.3  | Componentes                                                                                                                                                    | `[x]`  | `05-componentes.md` — 242 arquivos, 19 primitivas `ui/`, tipo por área                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 1.4  | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas)                                          | `[x]`  | `06-apis.md`/`.json` — 418 handlers com métodos, guarda, schema Zod, efeitos, idempotência, rate limit. **Erros**: código por `fail()` lido de `lib/api/errors.ts` (`inventario.ts`)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 1.5  | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, update)                                                      | `[x]`  | `04-inventario-dados.md` (texto) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em banco): 180 tabelas, 179/179 com RLS, 305 políticas, 104 triggers, 92 funções, 2 views, 185 tipos; instalação **e** update sobre dados verdes; Storage: **7 buckets** (`ai-policy`, `lgpd-exports`, `skill-assets`, `whatsapp-media`, `brand-logos`, `delivery-proofs`, `product-images`). Índices não foram enumerados um a um — F-09 domina a frente                                                                                                                                                 |
+| 1.6  | Integrações e infra                                                                                                                                            | `[x]`  | `07-integracoes.md` — 10 integrações, 16 workers, 30 crons, serviços do compose, 45+ env                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 1.7  | Mobile e offline                                                                                                                                               | `[x]`  | `08-mobile-offline.md` — Capacitor, `mobile/www`, `sw.js`, `notify-sw.js`, outbox, SQLite                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 1.8  | Cobertura de testes                                                                                                                                            | `[x]`  | `10-cobertura-testes.md` — 1.121 arquivos; 58 telas com sinal de teste, 98 sem                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 1.9  | Documentação: obsoleto × código                                                                                                                                | `[x]`  | F-01 (licença), F-04 (Sage × índigo), F-11 (rotas), D-1/D-3 (Discord), e o próprio F-15                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 1.10 | Registro por rota (objetivo, perfil, entrada, ações, saída, dependências, permissões, dados, estados, links, API/tabelas, relações, problemas, decisão, teste) | `[~]`  | Estrutura gerada (tela, guarda, estados, teste). Os 15 campos narrativos por rota são preenchidos na Fase 2, tela a tela — preenchê-los agora seria inventar auditoria                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 1.11 | Matriz rota × subtela × estado                                                                                                                                 | `[~]`  | `09-telas-estados.md` (rota × 12 sinais) + `09b-subtelas.md` (**99 abas, 68 modais, 12 gavetas** com nome, arquivo e linha, das duas famílias de aba: Radix e barra caseira `aria-current`). **Em execução**: **51 telas** abertas (37 estáticas + 14 dinâmicas com id real do banco), **72 abas clicadas** (0 sem selecionar, 0 sem mudar conteúdo, 0 overflow, 0 sem `<h1>`, 0 campo sem nome) e **31 modais** (0 sem nome). **Falta**: 29 modais e 15 abas não abertos com motivo escrito (gatilho não derivável / vivem em gaveta), e nenhuma aba foi aberta no celular                                 |
+| 1.12 | Reconciliação das rotas do prompt                                                                                                                              | `[x]`  | `02-reconciliacao-rotas.md` — **cobertura de rotas**: 156 = 143 páginas com JSX + 13 resolvers; 0 ausentes; 0 acréscimos. Não é cobertura de subtelas/estados/jornadas                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ### Definition of Done da Fase 1
 
-| # | Item | Estado | Evidência |
-|---|---|---|---|
-| 1.D1 | Catálogo gerado do checkout | `[x]` | 9 arquivos, todos por comando |
-| 1.D2 | Todas as rotas classificadas; resolver ≠ tela | `[x]` | 143 telas com JSX · 13 resolvers sem JSX · 156 `page.tsx` no total |
-| 1.D3 | Toda subtela/estado com cobertura planejada | `[~]` | Matriz pronta; o *plano* de cobertura por estado é da Fase 2 (§4 do prompt) |
-| 1.D4 | Cada capacidade com estado + evidência | `[x]` | Tabela do §4 acima |
-| 1.D5 | Contradições doc × implementação registradas | `[x]` | F-01, F-04, F-11, F-15 |
+| #    | Item                                          | Estado | Evidência                                                                   |
+| ---- | --------------------------------------------- | ------ | --------------------------------------------------------------------------- |
+| 1.D1 | Catálogo gerado do checkout                   | `[x]`  | 9 arquivos, todos por comando                                               |
+| 1.D2 | Todas as rotas classificadas; resolver ≠ tela | `[x]`  | 143 telas com JSX · 13 resolvers sem JSX · 156 `page.tsx` no total          |
+| 1.D3 | Toda subtela/estado com cobertura planejada   | `[~]`  | Matriz pronta; o _plano_ de cobertura por estado é da Fase 2 (§4 do prompt) |
+| 1.D4 | Cada capacidade com estado + evidência        | `[x]`  | Tabela do §4 acima                                                          |
+| 1.D5 | Contradições doc × implementação registradas  | `[x]`  | F-01, F-04, F-11, F-15                                                      |
 
 **Fase 1: concluída** — com F-09 (P0) aberto e proposto para a Fase 10.

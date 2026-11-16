@@ -174,7 +174,13 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">{agent.name}</h2>
+          {/* `<h1>` e `text-2xl`: é o título da TELA de edição do agente — e ela
+              não tinha nenhum. Medido em 16/11/2026, abrindo
+              `/app/ai/agents/<id>` real: `h1: []`, e a aba "Geral" idem. A V-16
+              corrigiu o mesmo defeito em `AgentForm` (a tela de criação) e não
+              alcançou esta, porque o detalhe usa `AgentEditor`. A varredura de
+              aceite não pegou: `/app/ai/agents/[id]` é rota dinâmica. */}
+          <h1 className="text-2xl font-medium tracking-tight text-text">{agent.name}</h1>
           <p className="text-xs text-muted-foreground">
             {agent.is_default ? `${t("Agent default")} · ` : ""}
             {t("Criado em")} {new Date(agent.created_at).toLocaleDateString(tagDoIdioma)}

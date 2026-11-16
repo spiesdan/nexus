@@ -173,12 +173,33 @@ async function medir(pagina) {
 const inventario = JSON.parse(
   readFileSync(join(RAIZ, "docs", "auditoria", "09b-subtelas.json"), "utf8"),
 );
-const alvo = inventario.telas.filter((t) => {
-  const tem = t.abas.length + t.modais.length + t.gavetas.length > 0;
-  if (!tem) return false;
-  if (!pedidas) return true;
-  return pedidas.some((p) => p.trim() === t.rota);
-});
+/**
+ * Casa a rota PEDIDA com a do INVENTÁRIO.
+ *
+ * O inventário tem `/app/pedidos/[id]`; quem pede passa
+ * `/app/pedidos/303befd2-…` (id real, de `ids-para-rotas-dinamicas.mjs`).
+ * Igualdade seca não casaria e a varredura das telas dinâmicas sairia "0 telas".
+ */
+function casa(pedida, rotaInventario) {
+  if (pedida === rotaInventario) return true;
+  const padrao = new RegExp(
+    "^" +
+      rotaInventario
+        .split("/")
+        .map((p) => (/^\[.*\]$/.test(p) ? "[^/]+" : p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+        .join("/") +
+      "$",
+  );
+  return padrao.test(pedida);
+}
+
+const alvo = inventario.telas
+  .filter((t) => t.abas.length + t.modais.length + t.gavetas.length > 0)
+  .filter((t) => !pedidas || pedidas.some((p) => casa(p.trim(), t.rota)))
+  .map((t) => {
+    const concreta = pedidas?.find((p) => casa(p.trim(), t.rota));
+    return { ...t, url: concreta ? concreta.trim() : t.rota };
+  });
 
 if (!estado) {
   console.error(
@@ -204,7 +225,7 @@ for (const tela of alvo) {
   });
   pagina.on("pageerror", (e) => consoleErros.push(`pageerror: ${e.message}`.slice(0, 200)));
 
-  const url = `${BASE}${tela.rota}`;
+  const url = `${BASE}${tela.url ?? tela.rota}`;
   let status = 0;
   try {
     const resp = await pagina.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 });
@@ -284,7 +305,37 @@ for (const tela of alvo) {
   }
 
   // ── MODAIS ──────────────────────────────────────────────────────────────
+  //
+  // Duas passadas. A primeira tenta o gatilho por NOME (o botão que compartilha
+  // palavra com o `<DialogTitle>`). A segunda EXPLORA os botões da tela: clica,
+  // vê se abriu diálogo, mede e fecha. Só a segunda alcança o caso comum — o
+  // botão "Novo" que abre o diálogo "Cadastrar fornecedor" não compartilha
+  // palavra nenhuma com o título.
+  //
+  // A guarda é a mesma nas duas: `PERIGO` (verbo destrutivo) nunca é clicado.
+  // Explorar uma tela clicando em tudo é como se apaga dado de cliente.
   const naoAbertos = [];
+  const abertos = new Set();
+
+  async function medirModal(titulo, gatilho) {
+    const med = await medir(pagina);
+    if (med.dialogos === 0) return false;
+    resultados.push({
+      rota: tela.rota,
+      tipo: "modal",
+      subtela: titulo,
+      gatilho,
+      status,
+      ...med,
+      console: [...consoleErros],
+    });
+    consoleErros.length = 0;
+    abertos.add(titulo);
+    await pagina.keyboard.press("Escape").catch(() => undefined);
+    await pagina.waitForTimeout(400);
+    return true;
+  }
+
   for (const modal of tela.modais) {
     const titulo = modal.rotulo;
     if (!titulo || titulo.startsWith("(")) {
@@ -303,44 +354,88 @@ for (const tela of alvo) {
             nome: (el.getAttribute("aria-label") || el.textContent || "")
               .replace(/\s+/g, " ")
               .trim(),
-            texto: (el.textContent || "").replace(/\s+/g, " ").trim(),
           }))
           .filter((b) => b.nome !== ""),
       );
     const gatilho = gatilhoProvavel(titulo, botoes);
-    if (!gatilho) {
-      naoAbertos.push({ titulo, motivo: "nenhum botão visível com nome relacionado" });
-      continue;
-    }
+    if (!gatilho) continue; // a exploração abaixo cobre
     try {
       await pagina
         .getByRole("button", { name: gatilho.nome, exact: true })
         .first()
-        .click({ timeout: 8_000 });
+        .click({ timeout: 6_000 });
       await pagina.waitForTimeout(700);
     } catch {
-      naoAbertos.push({ titulo, motivo: `gatilho "${gatilho.nome}" casou mas não abriu` });
       continue;
     }
-    const med = await medir(pagina);
-    if (med.dialogos === 0) {
-      naoAbertos.push({ titulo, motivo: `cliquei "${gatilho.nome}" e nenhum diálogo abriu` });
+    await medirModal(titulo, gatilho.nome);
+  }
+
+  // Exploração: para cada modal ainda não aberto, tenta os botões da tela.
+  const pendentes = tela.modais
+    .map((m) => m.rotulo)
+    .filter((r) => r && !r.startsWith("(") && !PERIGO.test(r) && !abertos.has(r));
+  if (pendentes.length > 0) {
+    // O `evaluateAll` roda no NAVEGADOR: `PERIGO` é regex de Node e não existe
+    // lá. O bloqueio de verbo destrutivo é aplicado aqui, depois de voltar.
+    const nomes = (
+      await pagina
+        .locator('button:visible, [role="button"]:visible')
+        .evaluateAll((els) =>
+          els
+            .map((el) =>
+              (el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim(),
+            )
+            .filter((n) => n !== ""),
+        )
+    ).filter((n) => !PERIGO.test(n));
+    for (const clicavel of [...new Set(nomes)].slice(0, 40)) {
+      const restantes = pendentes.filter((t) => !abertos.has(t));
+      if (restantes.length === 0) break;
+      const botao = pagina.getByRole("button", { name: clicavel, exact: true }).first();
+      if ((await botao.count()) === 0) continue;
+      try {
+        await botao.click({ timeout: 4_000 });
+        await pagina.waitForTimeout(600);
+      } catch {
+        continue;
+      }
+      const med = await medir(pagina);
+      if (med.dialogos === 0) continue;
+      // Qual título entre os pendentes está no DOM? `[role=dialog]` sem aria-hidden.
+      const texto = (
+        await pagina
+          .locator('[role="dialog"]:not([aria-hidden="true"])')
+          .first()
+          .innerText()
+          .catch(() => "")
+      ).replace(/\s+/g, " ");
+      const alvo = restantes.find((t) => texto.includes(t)) ?? restantes[0];
+      resultados.push({
+        rota: tela.rota,
+        tipo: "modal",
+        subtela: alvo,
+        gatilho: clicavel,
+        porExploracao: true,
+        status,
+        ...med,
+        console: [...consoleErros],
+      });
+      consoleErros.length = 0;
+      abertos.add(alvo);
       await pagina.keyboard.press("Escape").catch(() => undefined);
-      await pagina.waitForTimeout(300);
-      continue;
+      await pagina.waitForTimeout(400);
     }
-    resultados.push({
-      rota: tela.rota,
-      tipo: "modal",
-      subtela: titulo,
-      gatilho: gatilho.nome,
-      status,
-      ...med,
-      console: [...consoleErros],
-    });
-    consoleErros.length = 0;
-    await pagina.keyboard.press("Escape").catch(() => undefined);
-    await pagina.waitForTimeout(400);
+  }
+
+  for (const titulo of pendentes) {
+    if (!abertos.has(titulo)) {
+      naoAbertos.push({
+        titulo,
+        motivo:
+          "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)",
+      });
+    }
   }
 
   if (naoAbertos.length > 0) {

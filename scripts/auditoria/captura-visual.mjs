@@ -43,7 +43,13 @@ const LARGURAS = [
 
 const GRUPOS = {
   inicio: ["/login", "/app", "/app/inbox", "/app/kanban", "/app/contacts"],
-  vendas: ["/app/pedidos", "/app/prospeccao", "/app/relatorios", "/app/comissoes", "/app/indicadores"],
+  vendas: [
+    "/app/pedidos",
+    "/app/prospeccao",
+    "/app/relatorios",
+    "/app/comissoes",
+    "/app/indicadores",
+  ],
   operacao: ["/app/estoque", "/app/compras", "/app/expedicao", "/app/financeiro", "/app/titulos"],
   admin: ["/app/settings", "/app/team", "/app/lgpd", "/app/ai", "/admin"],
 };
@@ -158,7 +164,8 @@ async function entrar() {
   // Preencher antes da hidratação "cola" no DOM mas não no estado do React: ao
   // enviar, o formulário vai vazio e a tela responde "Email inválido". Já
   // aconteceu aqui. Então: espera a rede assentar, preenche e CONFIRMA o valor.
-  const campoSenha = (await pagina.locator("#password").count()) > 0 ? "#password" : "input[type=password]";
+  const campoSenha =
+    (await pagina.locator("#password").count()) > 0 ? "#password" : "input[type=password]";
   async function preencher(seletor, valor) {
     for (let tentativa = 0; tentativa < 5; tentativa++) {
       await pagina.fill(seletor, valor);
@@ -188,7 +195,10 @@ async function entrar() {
   // funciona — o `maxLength=1` guarda um caractere só, o botão "Verificar" fica
   // `disabled` e o script esperava 30 s por um clique que nunca acontece. Foi
   // exatamente o que travou o lote de `/admin/**` em 16/11.
-  if (pagina.url().includes("/mfa") || (await pagina.locator("input[autocomplete=one-time-code]").count()) > 0) {
+  if (
+    pagina.url().includes("/mfa") ||
+    (await pagina.locator("input[autocomplete=one-time-code]").count()) > 0
+  ) {
     const codigo = totp(segredo);
     const caixas = pagina.locator('[role="group"] input[maxlength="1"]');
     if ((await caixas.count()) >= 6) {
@@ -256,13 +266,13 @@ async function medir() {
   return pagina.evaluate(() => {
     const doc = document.documentElement;
     const overflow = doc.scrollWidth - doc.clientWidth;
-    const alvosPequenos = [...document.querySelectorAll("a,button,[role=button],input,select,textarea")]
-      .filter((el) => {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 || r.height === 0) return false;
-        return r.width < 40 || r.height < 40;
-      })
-      .length;
+    const alvosPequenos = [
+      ...document.querySelectorAll("a,button,[role=button],input,select,textarea"),
+    ].filter((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      return r.width < 40 || r.height < 40;
+    }).length;
     // "Campo sem rótulo" só conta campo que a pessoa vê e preenche. `type=hidden`
     // não tem rótulo por definição, e campo DENTRO de um `<label>` já é rotulado
     // pelo texto ao redor — contar os dois inflava o número e transformava
@@ -282,9 +292,17 @@ async function medir() {
       if (el.closest("label")) return false;
       const id = el.getAttribute("id");
       const rotulo = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
-      return !rotulo && !el.getAttribute("aria-label") && !el.getAttribute("aria-labelledby") && !el.getAttribute("placeholder") && !el.getAttribute("title");
+      return (
+        !rotulo &&
+        !el.getAttribute("aria-label") &&
+        !el.getAttribute("aria-labelledby") &&
+        !el.getAttribute("placeholder") &&
+        !el.getAttribute("title")
+      );
     }).length;
-    const h1 = [...document.querySelectorAll("h1")].map((h) => h.textContent.trim()).filter(Boolean);
+    const h1 = [...document.querySelectorAll("h1")]
+      .map((h) => h.textContent.trim())
+      .filter(Boolean);
     return {
       titulo: document.title,
       overflowHorizontal: overflow,
@@ -346,7 +364,10 @@ for (const largura of larguras) {
     const ms = Date.now() - inicio;
     const medida = erro ? null : await medir().catch(() => null);
     const nomeArquivo = `${largura.nome}${rota.replace(/[^a-z0-9]+/gi, "_")}.png`;
-    if (!erro) await pagina.screenshot({ path: join(SAIDA, nomeArquivo), fullPage: false }).catch(() => undefined);
+    if (!erro)
+      await pagina
+        .screenshot({ path: join(SAIDA, nomeArquivo), fullPage: false })
+        .catch(() => undefined);
     resultados.push({
       rota,
       largura: largura.nome,
@@ -362,7 +383,9 @@ for (const largura of larguras) {
     });
     console.log(
       `${largura.nome.padEnd(8)} ${rota.padEnd(34)} ${String(status).padEnd(4)} ${String(ms).padStart(5)}ms` +
-        (medida ? ` overflow=${medida.overflowHorizontal} alvos<40=${medida.alvosMenoresQue40} console=${resultados.at(-1).errosDeConsole.length}` : ` ERRO ${erro}`),
+        (medida
+          ? ` overflow=${medida.overflowHorizontal} alvos<40=${medida.alvosMenoresQue40} console=${resultados.at(-1).errosDeConsole.length}`
+          : ` ERRO ${erro}`),
     );
   }
 }

@@ -23,21 +23,21 @@
 
 **Como este arquivo está organizado**
 
-| Parte | Conteúdo |
-|---|---|
+| Parte       | Conteúdo                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
 | **Parte 1** | O prompt mestre, íntegro e verbatim (Fases 0–10, DoD global, regras, contexto, referências, inventário inicial). |
-| **Parte 2** | Checklist de execução: cada tarefa/critério do prompt com marcação e evidência medida. |
-| **Parte 3** | Registro de execução: decisões, achados, riscos e artefatos produzidos (documento vivo). |
+| **Parte 2** | Checklist de execução: cada tarefa/critério do prompt com marcação e evidência medida.                           |
+| **Parte 3** | Registro de execução: decisões, achados, riscos e artefatos produzidos (documento vivo).                         |
 
 **Legenda de marcação**
 
-| Marca | Significado |
-|---|---|
-| `[x]` | Concluído, com evidência registrada (comando, arquivo ou captura). |
+| Marca | Significado                                                                      |
+| ----- | -------------------------------------------------------------------------------- |
+| `[x]` | Concluído, com evidência registrada (comando, arquivo ou captura).               |
 | `[~]` | Em andamento / parcial: parte medida, parte pendente — o que falta está escrito. |
-| `[ ]` | Pendente. |
-| `[!]` | Bloqueado: causa e impacto registrados. |
-| `[-]` | Não aplicável: justificativa registrada (nunca usado para "pular" tarefa). |
+| `[ ]` | Pendente.                                                                        |
+| `[!]` | Bloqueado: causa e impacto registrados.                                          |
+| `[-]` | Não aplicável: justificativa registrada (nunca usado para "pular" tarefa).       |
 
 **Fonte de verdade do inventário:** `scripts/auditoria/inventario.ts` (gera
 `docs/auditoria/inventario.json` e `docs/auditoria/inventario-rotas.md`). Números escritos à
@@ -486,67 +486,67 @@ Ao final, entregue um relatório conciso com: escopo realizado, mudanças por m�
 
 ## Regras de execução (R1–R8)
 
-| # | Regra | Estado | Evidência / observação |
-|---|---|---|---|
-| R1 | Auditar o checkout; refazer contagens | `[~]` | Branch `docs/auditoria-aaa` (base `9f8e6faa`). Inventário gerado por script: 143 telas, 13 resolvers, 418 APIs, 13 layouts, 292 migrations. Falta varrer tabelas/RLS/workers/integrações. |
-| R2 | Classificar cada capacidade com 7 estados | `[~]` | Escala adotada na Parte 3. Classificação iniciada em rotas (tela/resolver); APIs e capacidades ainda sem estado. |
-| R3 | Ler módulo antes de alterar | `[x]` | Nenhuma alteração funcional feita até aqui; só `scripts/auditoria/` e `docs/auditoria/`. |
-| R4 | Fases pequenas; não remover sem impacto/compat/rollback | `[x]` | Nada removido. Toda remoção futura exige bloco "impacto/compatibilidade/rollback". |
-| R5 | Não inventar dado/regra; registrar lacuna | `[x]` | Inventário é gerado; números à mão foram substituídos por comando. Lacunas listadas na Parte 3. |
-| R6 | Não copiar UI de Linear/Attio/HubSpot/Salesforce/Intercom | `[x]` | Nenhum ativo externo usado; identidade a definir na Fase 3. |
-| R7 | Registro vivo de achados/decisões/riscos | `[~]` | Parte 3 deste arquivo + `inventario.json`. |
-| R8 | Só concluir fase com critério + DoD; registrar falhas | `[x]` | Este checklist marca fase a fase; nenhuma fase declarada concluída ainda. |
+| #   | Regra                                                     | Estado | Evidência / observação                                                                                                                                                                    |
+| --- | --------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Auditar o checkout; refazer contagens                     | `[~]`  | Branch `docs/auditoria-aaa` (base `9f8e6faa`). Inventário gerado por script: 143 telas, 13 resolvers, 418 APIs, 13 layouts, 292 migrations. Falta varrer tabelas/RLS/workers/integrações. |
+| R2  | Classificar cada capacidade com 7 estados                 | `[~]`  | Escala adotada na Parte 3. Classificação iniciada em rotas (tela/resolver); APIs e capacidades ainda sem estado.                                                                          |
+| R3  | Ler módulo antes de alterar                               | `[x]`  | Nenhuma alteração funcional feita até aqui; só `scripts/auditoria/` e `docs/auditoria/`.                                                                                                  |
+| R4  | Fases pequenas; não remover sem impacto/compat/rollback   | `[x]`  | Nada removido. Toda remoção futura exige bloco "impacto/compatibilidade/rollback".                                                                                                        |
+| R5  | Não inventar dado/regra; registrar lacuna                 | `[x]`  | Inventário é gerado; números à mão foram substituídos por comando. Lacunas listadas na Parte 3.                                                                                           |
+| R6  | Não copiar UI de Linear/Attio/HubSpot/Salesforce/Intercom | `[x]`  | Nenhum ativo externo usado; identidade a definir na Fase 3.                                                                                                                               |
+| R7  | Registro vivo de achados/decisões/riscos                  | `[~]`  | Parte 3 deste arquivo + `inventario.json`.                                                                                                                                                |
+| R8  | Só concluir fase com critério + DoD; registrar falhas     | `[x]`  | Este checklist marca fase a fase; nenhuma fase declarada concluída ainda.                                                                                                                 |
 
 ## Contexto inicial — 13 pistas a confirmar
 
-| # | Pista | Estado | Evidência medida |
-|---|---|---|---|
-| C1 | Next.js/React/TS + Supabase/Postgres multi-tenant | `[x]` | `package.json` (next 16, react 19, ts 6), `supabase/`, RLS em migrations. |
-| C2 | ~156 páginas, 416 handlers, 293 migrations | `[x]` | Medido: **156 `page.tsx`** (143 telas + 13 resolvers), **418 `route.ts`**, **292 migrations**. Os números do prompt estavam levemente defasados — confirmado. |
-| C3 | Superfícies amplas (CRM, inbox, IA, vendas, pedidos, estoque, compras, logística, financeiro, fiscal, admin, config) | `[x]` | `inventario.json` → `telas_por_grupo`. |
-| C4 | App Android/Capacitor separado, offline com SQLite | `[ ]` | `capacitor.config.ts` e `mobile/` existem; conteúdo não auditado. |
-| C5 | PWA/offline de logística; mapear o que funciona offline | `[ ]` | Pendente (Fase 7). |
-| C6 | Já existe Customer 360/timeline, Google Agenda, Radar, score de lead, automações, IA | `[ ]` | Rotas existem; estado real não auditado. |
-| C7 | `docs/design-overhaul`, `docs/design-system`, `docs/architecture` com contagens antigas | `[ ]` | Pendente (Fase 1.9). |
-| C8 | `capacitor.config.ts` com identidade/domínio da Bill Higiene | `[ ]` | Pendente (Fase 7). |
-| C9 | `app/manifest.ts` documenta limitação de boot offline | `[ ]` | Pendente (Fase 7). |
-| C10 | `app/layout.tsx` usa `next/font/google`; risco de build sem rede | `[ ]` | Pendente (Fase 3/8). |
-| C11 | `db:migrate` pode ser placeholder | `[x]` | **CONFIRMADO e CORRIGIDO**: era `echo 'TODO: wire supabase db push or pg-migrate' && exit 0` — sucesso sem aplicar nada. Agora `bash scripts/db/aplicar-schema.sh` aplica o `baseline.sql` com `ON_ERROR_STOP=1`, **verifica** o schema e sai 1 quando falta objeto ou quando o psql não conecta. Gate: `tests/unit/db-migrate-nao-e-placeholder.test.ts`. Evidência: [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §6 |
-| C12 | Licença do `LICENSE` vs. declarações do README | `[ ]` | Pendente (Fase 0/6). |
-| C13 | Guardrail contra banco remoto em testes | `[ ]` | Existe; preservado até aqui. Auditoria e reforço pendentes (Fase 9). |
+| #   | Pista                                                                                                                | Estado | Evidência medida                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | Next.js/React/TS + Supabase/Postgres multi-tenant                                                                    | `[x]`  | `package.json` (next 16, react 19, ts 6), `supabase/`, RLS em migrations.                                                                                                                                                                                                                                                                                                                                                   |
+| C2  | ~156 páginas, 416 handlers, 293 migrations                                                                           | `[x]`  | Medido: **156 `page.tsx`** (143 telas + 13 resolvers), **418 `route.ts`**, **292 migrations**. Os números do prompt estavam levemente defasados — confirmado.                                                                                                                                                                                                                                                               |
+| C3  | Superfícies amplas (CRM, inbox, IA, vendas, pedidos, estoque, compras, logística, financeiro, fiscal, admin, config) | `[x]`  | `inventario.json` → `telas_por_grupo`.                                                                                                                                                                                                                                                                                                                                                                                      |
+| C4  | App Android/Capacitor separado, offline com SQLite                                                                   | `[ ]`  | `capacitor.config.ts` e `mobile/` existem; conteúdo não auditado.                                                                                                                                                                                                                                                                                                                                                           |
+| C5  | PWA/offline de logística; mapear o que funciona offline                                                              | `[ ]`  | Pendente (Fase 7).                                                                                                                                                                                                                                                                                                                                                                                                          |
+| C6  | Já existe Customer 360/timeline, Google Agenda, Radar, score de lead, automações, IA                                 | `[ ]`  | Rotas existem; estado real não auditado.                                                                                                                                                                                                                                                                                                                                                                                    |
+| C7  | `docs/design-overhaul`, `docs/design-system`, `docs/architecture` com contagens antigas                              | `[ ]`  | Pendente (Fase 1.9).                                                                                                                                                                                                                                                                                                                                                                                                        |
+| C8  | `capacitor.config.ts` com identidade/domínio da Bill Higiene                                                         | `[ ]`  | Pendente (Fase 7).                                                                                                                                                                                                                                                                                                                                                                                                          |
+| C9  | `app/manifest.ts` documenta limitação de boot offline                                                                | `[ ]`  | Pendente (Fase 7).                                                                                                                                                                                                                                                                                                                                                                                                          |
+| C10 | `app/layout.tsx` usa `next/font/google`; risco de build sem rede                                                     | `[ ]`  | Pendente (Fase 3/8).                                                                                                                                                                                                                                                                                                                                                                                                        |
+| C11 | `db:migrate` pode ser placeholder                                                                                    | `[x]`  | **CONFIRMADO e CORRIGIDO**: era `echo 'TODO: wire supabase db push or pg-migrate' && exit 0` — sucesso sem aplicar nada. Agora `bash scripts/db/aplicar-schema.sh` aplica o `baseline.sql` com `ON_ERROR_STOP=1`, **verifica** o schema e sai 1 quando falta objeto ou quando o psql não conecta. Gate: `tests/unit/db-migrate-nao-e-placeholder.test.ts`. Evidência: [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §6 |
+| C12 | Licença do `LICENSE` vs. declarações do README                                                                       | `[ ]`  | Pendente (Fase 0/6).                                                                                                                                                                                                                                                                                                                                                                                                        |
+| C13 | Guardrail contra banco remoto em testes                                                                              | `[ ]`  | Existe; preservado até aqui. Auditoria e reforço pendentes (Fase 9).                                                                                                                                                                                                                                                                                                                                                        |
 
 ## Referências de produto — princípios a registrar
 
-| # | Referência | Estado | Observação |
-|---|---|---|---|
-| P1 | Linear | `[ ]` | Estudar e registrar princípios aplicáveis. |
-| P2 | Attio | `[ ]` | idem. |
-| P3 | HubSpot | `[ ]` | idem. |
-| P4 | Salesforce Sales Cloud | `[ ]` | idem. |
-| P5 | Intercom — Inbox | `[ ]` | idem. |
-| P6 | Intercom — IA | `[ ]` | idem. |
-| P7 | Registrar princípios relevantes (contexto do cliente, navegação previsível, ações rápidas, flexibilidade de dados, automações observáveis, relatórios, colaboração humano+IA, controles, performance em volume) | `[ ]` | Saída em `docs/auditoria/03-principios-de-produto.md`. |
+| #   | Referência                                                                                                                                                                                                      | Estado | Observação                                             |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------ |
+| P1  | Linear                                                                                                                                                                                                          | `[ ]`  | Estudar e registrar princípios aplicáveis.             |
+| P2  | Attio                                                                                                                                                                                                           | `[ ]`  | idem.                                                  |
+| P3  | HubSpot                                                                                                                                                                                                         | `[ ]`  | idem.                                                  |
+| P4  | Salesforce Sales Cloud                                                                                                                                                                                          | `[ ]`  | idem.                                                  |
+| P5  | Intercom — Inbox                                                                                                                                                                                                | `[ ]`  | idem.                                                  |
+| P6  | Intercom — IA                                                                                                                                                                                                   | `[ ]`  | idem.                                                  |
+| P7  | Registrar princípios relevantes (contexto do cliente, navegação previsível, ações rápidas, flexibilidade de dados, automações observáveis, relatórios, colaboração humano+IA, controles, performance em volume) | `[ ]`  | Saída em `docs/auditoria/03-principios-de-produto.md`. |
 
 ## Fase 0 — Segurança do trabalho e linha de base
 
 **Status: concluída.** Registro completo em [`00-linha-de-base.md`](00-linha-de-base.md).
 
-| # | Tarefa | Estado | Evidência |
-|---|---|---|---|
-| 0.1 | Verificar estado do repo e arquivos do usuário; não sobrescrever | `[x]` | Untracked preservados: `.debug-detalhe.mjs`, `.probe-cliente{,2,3}.mjs`, `.repara-mercos{,2,4}.mjs`, `docs/PROMPT-V5-EXPEDICAO-ROTEIZACAO.md` (este último **não** é commitado). |
-| 0.2 | Ler AGENTS.md e docs de arquitetura/design/deploy/segurança/banco/mobile/CI | `[x]` | Lidos: `AGENTS.md`, `CLAUDE.md`, `docs/current-state.md`, `docs/harness-audit.md`, `docs/threat-model.md`, `docs/design-system/*`, `docs/deploy-selfhost/README.md`, os 8 workflows. |
-| 0.3 | Identificar comandos reais (lint, typecheck, build, unit, API, integração, E2E, jornadas, a11y, mobile, release) | `[x]` | `package.json` medido — ver `00-linha-de-base.md` §2. |
-| 0.4 | Não rodar destrutivo; não testar contra banco/serviço remoto; confirmar guardrails | `[x]` | Guardrail lido: `scripts/lib/env-de-teste.ts` → `recusarSeRemotoVindoDoArquivo()`. Nenhum teste tocou banco, VPS ou serviço externo. |
-| 0.5 | Registrar linha de base com erros existentes | `[x]` | `00-linha-de-base.md` §3: typecheck exit 0 · lint exit 0 (505 avisos) · unit 1 falha por timeout sob carga, isolada passa 22/22. |
+| #   | Tarefa                                                                                                           | Estado | Evidência                                                                                                                                                                            |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0.1 | Verificar estado do repo e arquivos do usuário; não sobrescrever                                                 | `[x]`  | Untracked preservados: `.debug-detalhe.mjs`, `.probe-cliente{,2,3}.mjs`, `.repara-mercos{,2,4}.mjs`, `docs/PROMPT-V5-EXPEDICAO-ROTEIZACAO.md` (este último **não** é commitado).     |
+| 0.2 | Ler AGENTS.md e docs de arquitetura/design/deploy/segurança/banco/mobile/CI                                      | `[x]`  | Lidos: `AGENTS.md`, `CLAUDE.md`, `docs/current-state.md`, `docs/harness-audit.md`, `docs/threat-model.md`, `docs/design-system/*`, `docs/deploy-selfhost/README.md`, os 8 workflows. |
+| 0.3 | Identificar comandos reais (lint, typecheck, build, unit, API, integração, E2E, jornadas, a11y, mobile, release) | `[x]`  | `package.json` medido — ver `00-linha-de-base.md` §2.                                                                                                                                |
+| 0.4 | Não rodar destrutivo; não testar contra banco/serviço remoto; confirmar guardrails                               | `[x]`  | Guardrail lido: `scripts/lib/env-de-teste.ts` → `recusarSeRemotoVindoDoArquivo()`. Nenhum teste tocou banco, VPS ou serviço externo.                                                 |
+| 0.5 | Registrar linha de base com erros existentes                                                                     | `[x]`  | `00-linha-de-base.md` §3: typecheck exit 0 · lint exit 0 (505 avisos) · unit 1 falha por timeout sob carga, isolada passa 22/22.                                                     |
 
 Critérios de aceitação
 
-| # | Critério | Estado |
-|---|---|---|
-| 0.A1 | Mudanças locais identificadas e preservadas | `[x]` | `00-linha-de-base.md` §1 |
-| 0.A2 | Comandos de validação e efeitos documentados | `[x]` | `00-linha-de-base.md` §2 |
-| 0.A3 | Ambiente de teste e destino do banco claros e protegidos | `[x]` | `00-linha-de-base.md` §4 |
-| 0.A4 | Nenhuma alteração funcional nesta fase | `[x]` | só `docs/`, `scripts/auditoria/`, `scripts/discord/`, `.env.example` |
+| #    | Critério                                                 | Estado |
+| ---- | -------------------------------------------------------- | ------ |
+| 0.A1 | Mudanças locais identificadas e preservadas              | `[x]`  | `00-linha-de-base.md` §1                                             |
+| 0.A2 | Comandos de validação e efeitos documentados             | `[x]`  | `00-linha-de-base.md` §2                                             |
+| 0.A3 | Ambiente de teste e destino do banco claros e protegidos | `[x]`  | `00-linha-de-base.md` §4                                             |
+| 0.A4 | Nenhuma alteração funcional nesta fase                   | `[x]`  | só `docs/`, `scripts/auditoria/`, `scripts/discord/`, `.env.example` |
 
 ## Fase 1 — Inventário rastreável
 
@@ -556,38 +556,38 @@ F-09 (P0) aberto para a Fase 10. Registro: [`01-inventario.md`](01-inventario.md
 > Correção de alegação (2026-11-16): **156 = 143 páginas + 13 resolvers é cobertura de ROTAS, não
 > auditoria de subtelas, estados e jornadas.** Contar `page.tsx` prova que nenhuma rota do prompt
 > ficou sem arquivo; não prova que cada aba, drawer, estado vazio/erro/permissão e jornada J1–J16
-> foi vista funcionando. A matriz da 1.2 lista onde cada estado *aparece no código* — sinal, não
+> foi vista funcionando. A matriz da 1.2 lista onde cada estado _aparece no código_ — sinal, não
 > execução. Quem lê `[x]` ali está lendo uma prova que o artefato não dá.
 
-| # | Tarefa | Estado | Evidência |
-|---|---|---|---|
-| 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis) | `[x]` | 156 telas · 13 resolvers · 13 layouts · 6 fronteiras de erro · 8 `loading` + `not-found` · 2 especiais. `inventario-rotas.md` |
-| 1.2 | Subtelas e estados (abas, filtros, drawers, modais, menus, forms, painéis, vazio, loading, erro, sucesso, permissão negada, ausência de dados, confirmação, em andamento) | `[~]` | Matriz **156 × 12 de SINAL no código** em `09-telas-estados.md`, medida no **segmento de rota** (page + `_client` + `_components` + imports locais; 143/143 com ≥1 sinal — F-20/V-07). Diz onde o estado existe, não que ele funciona. Subtelas (abas, drawers, modais), estados de escrita (salvar, confirmar, duplicidade) e as jornadas continuam sem execução. Medido em 2026-11-16: **37 telas distintas** abertas em navegador (57 arquivos — 37 rotas em desktop 1440 + as mesmas 20 em celular 390; 20 ⊂ 37), de 156. |
-| 1.3 | Componentes (shell, design system, compartilhados, de módulo, tabelas, gráficos, forms, mobile) | `[x]` | `05-componentes.md`: 242 arquivos, 19 primitivas `ui/`, tipo por diretório |
-| 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas) | `[x]` | `06-apis.md`/`.json`: 418 handlers com métodos, guarda, schema, efeitos, idempotência (2), rate limit (F-12, F-13) |
-| 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, estratégia de update) | `[~]` | `04-inventario-dados.md` (contagem de TEXTO) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em Postgres descartável): 180 tabelas criadas pelo baseline, **RLS ligado em 179 de 179 de `public`**, **305 políticas** (300 em `public`), 104 triggers, 92 funções em `public`; instalação e **update sobre dados** verdes; **F-09: a cadeia de migrations NÃO reproduz o schema** (35 de 292 aplicam; 257 falham por pré-requisito). |
-| 1.6 | Integrações e infra (WAHA, Meta, Nuvemshop, Google Agenda, IA, webhooks, worker, cron, notificações, self-host, updater, backup) | `[x]` | `07-integracoes.md`: 10 integrações, 16 workers, 30 crons, serviços do compose, env |
-| 1.7 | Mobile e offline (Capacitor, SQLite, fila, sync, conflitos, dados locais, PWA, toque) | `[x]` | `08-mobile-offline.md` + F-10 (marca no shell) + F-15 (correção do F-08) |
-| 1.8 | Cobertura de testes (unit, API, banco, invariantes, jornadas, E2E, visuais, mobile, shell, CI) | `[x]` | `10-cobertura-testes.md`: 1.121 arquivos; 58 telas com sinal, 98 sem (F-14) |
-| 1.9 | Documentação: obsoleto vs. código; regras operacionais não cobertas | `[x]` | F-01 (licença), F-04 (Sage × índigo), **F-11 (rotas 166/169 × 418)**, F-15 |
+| #   | Tarefa                                                                                                                                                                    | Estado | Evidência                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 | Rotas e telas (páginas, layouts, públicas, autenticadas, admin, dinâmicas, redirects, resolvers, erro, instaláveis)                                                       | `[x]`  | 156 telas · 13 resolvers · 13 layouts · 6 fronteiras de erro · 8 `loading` + `not-found` · 2 especiais. `inventario-rotas.md`                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 1.2 | Subtelas e estados (abas, filtros, drawers, modais, menus, forms, painéis, vazio, loading, erro, sucesso, permissão negada, ausência de dados, confirmação, em andamento) | `[~]`  | Matriz **156 × 12 de SINAL no código** em `09-telas-estados.md`, medida no **segmento de rota** (page + `_client` + `_components` + imports locais; 143/143 com ≥1 sinal — F-20/V-07). Diz onde o estado existe, não que ele funciona. Subtelas (abas, drawers, modais), estados de escrita (salvar, confirmar, duplicidade) e as jornadas continuam sem execução. Medido em 2026-11-16: **37 telas distintas** abertas em navegador (57 arquivos — 37 rotas em desktop 1440 + as mesmas 20 em celular 390; 20 ⊂ 37), de 156. |
+| 1.3 | Componentes (shell, design system, compartilhados, de módulo, tabelas, gráficos, forms, mobile)                                                                           | `[x]`  | `05-componentes.md`: 242 arquivos, 19 primitivas `ui/`, tipo por diretório                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 1.4 | APIs (handlers, métodos, authn, authz, validação, limites, payloads, efeitos, erros, idempotência, chamadas externas)                                                     | `[x]`  | `06-apis.md`/`.json`: 418 handlers com métodos, guarda, schema, efeitos, idempotência (2), rate limit (F-12, F-13)                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 1.5 | Dados (migrations, tabelas, views, RPCs, triggers, filas, índices, RLS, Storage, tipos, baseline, estratégia de update)                                                   | `[~]`  | `04-inventario-dados.md` (contagem de TEXTO) + **[`12-migrations-e-rls.md`](12-migrations-e-rls.md)** (medido em Postgres descartável): 180 tabelas criadas pelo baseline, **RLS ligado em 179 de 179 de `public`**, **305 políticas** (300 em `public`), 104 triggers, 92 funções em `public`; instalação e **update sobre dados** verdes; **F-09: a cadeia de migrations NÃO reproduz o schema** (35 de 292 aplicam; 257 falham por pré-requisito).                                                                         |
+| 1.6 | Integrações e infra (WAHA, Meta, Nuvemshop, Google Agenda, IA, webhooks, worker, cron, notificações, self-host, updater, backup)                                          | `[x]`  | `07-integracoes.md`: 10 integrações, 16 workers, 30 crons, serviços do compose, env                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 1.7 | Mobile e offline (Capacitor, SQLite, fila, sync, conflitos, dados locais, PWA, toque)                                                                                     | `[x]`  | `08-mobile-offline.md` + F-10 (marca no shell) + F-15 (correção do F-08)                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 1.8 | Cobertura de testes (unit, API, banco, invariantes, jornadas, E2E, visuais, mobile, shell, CI)                                                                            | `[x]`  | `10-cobertura-testes.md`: 1.121 arquivos; 58 telas com sinal, 98 sem (F-14)                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 1.9 | Documentação: obsoleto vs. código; regras operacionais não cobertas                                                                                                       | `[x]`  | F-01 (licença), F-04 (Sage × índigo), **F-11 (rotas 166/169 × 418)**, F-15                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Itens estruturais da Fase 1
 
-| # | Item | Estado |
-|---|---|---|
-| 1.10 | Para cada rota registrar: objetivo, usuário/perfil, entrada, ações, saída, dependências, permissões, dados exibidos, estados, links, API/tabelas, telas relacionadas, problemas, decisão, cobertura de teste | `[~]` | Estrutura gerada (tela, guarda, estados, teste). Os campos narrativos são preenchidos tela a tela na Fase 2 — preencher antes seria inventar auditoria |
-| 1.11 | Matriz rota × subtela × estado com status e evidência | `[~]` | `09-telas-estados.md` entrega rota × 12 sinais de estado. **Faltam duas colunas do que o item pede**: "subtela" (abas/drawers/modais são componentes, não rotas — a matriz não os enumera) e "status + evidência" por célula, que é o que a Fase 2 preenche. |
-| 1.12 | Reconciliação das rotas listadas no prompt (acrescentar as que faltam; não remover sem prova) | `[x]` | **Cobertura de ROTAS**: 156 rotas do prompt = 143 páginas com JSX + 13 resolvers; 0 ausentes; 0 fora da lista. `docs/auditoria/02-reconciliacao-rotas.md`, gerado por `scripts/auditoria/reconciliar-rotas.ts`. Não é cobertura de subtelas/estados/jornadas — ver a correção de alegação no topo da Fase 1. |
+| #    | Item                                                                                                                                                                                                         | Estado |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 1.10 | Para cada rota registrar: objetivo, usuário/perfil, entrada, ações, saída, dependências, permissões, dados exibidos, estados, links, API/tabelas, telas relacionadas, problemas, decisão, cobertura de teste | `[~]`  | Estrutura gerada (tela, guarda, estados, teste). Os campos narrativos são preenchidos tela a tela na Fase 2 — preencher antes seria inventar auditoria                                                                                                                                                       |
+| 1.11 | Matriz rota × subtela × estado com status e evidência                                                                                                                                                        | `[~]`  | `09-telas-estados.md` entrega rota × 12 sinais de estado. **Faltam duas colunas do que o item pede**: "subtela" (abas/drawers/modais são componentes, não rotas — a matriz não os enumera) e "status + evidência" por célula, que é o que a Fase 2 preenche.                                                 |
+| 1.12 | Reconciliação das rotas listadas no prompt (acrescentar as que faltam; não remover sem prova)                                                                                                                | `[x]`  | **Cobertura de ROTAS**: 156 rotas do prompt = 143 páginas com JSX + 13 resolvers; 0 ausentes; 0 fora da lista. `docs/auditoria/02-reconciliacao-rotas.md`, gerado por `scripts/auditoria/reconciliar-rotas.ts`. Não é cobertura de subtelas/estados/jornadas — ver a correção de alegação no topo da Fase 1. |
 
 Definition of Done da Fase 1
 
-| # | Item | Estado |
-|---|---|---|
-| 1.D1 | Catálogo de rotas/módulos gerado do checkout | `[x]` |
-| 1.D2 | Todas as rotas classificadas; resolver ≠ tela | `[x]` | 143 telas com JSX · 13 resolvers sem JSX |
-| 1.D3 | Toda subtela/estado com cobertura planejada | `[~]` | Matriz de sinais pronta; **o plano de cobertura por subtela/estado/jornada não existe** — a Fase 2 cobre tela a tela e está em 37 de 156 |
-| 1.D4 | Cada capacidade com estado + evidência | `[x]` | |
-| 1.D5 | Contradições doc × implementação registradas | `[x]` | F-01, F-04, F-11, F-15 |
+| #    | Item                                          | Estado |
+| ---- | --------------------------------------------- | ------ |
+| 1.D1 | Catálogo de rotas/módulos gerado do checkout  | `[x]`  |
+| 1.D2 | Todas as rotas classificadas; resolver ≠ tela | `[x]`  | 143 telas com JSX · 13 resolvers sem JSX                                                                                                 |
+| 1.D3 | Toda subtela/estado com cobertura planejada   | `[~]`  | Matriz de sinais pronta; **o plano de cobertura por subtela/estado/jornada não existe** — a Fase 2 cobre tela a tela e está em 37 de 156 |
+| 1.D4 | Cada capacidade com estado + evidência        | `[x]`  |                                                                                                                                          |
+| 1.D5 | Contradições doc × implementação registradas  | `[x]`  | F-01, F-04, F-11, F-15                                                                                                                   |
 
 ## Fase 2 — Auditoria funcional, visual e de experiência
 
@@ -612,193 +612,193 @@ Correção de método registrada: a primeira rodada capturou um checkout **208 c
 (`/Users/bill/Downloads/nexus`); todas as medidas foram refeitas em servidor do próprio worktree
 (`localhost:3011`).
 
-| # | Item | Estado |
-|---|---|---|
-| 2.1 | Avaliar produto em execução e no código; desktop/tablet/celular | `[~]` | **Em execução**: 129 rotas estáticas × desktop 1440 e celular 390 (258 medições) + **96 specs E2E** (254 testes verdes) contra build de produção. **Falta tablet**: só 834 px em 5 telas, medido em dev (`11-auditoria-visual.md` §5) |
-| 2.2 | Se impedido, registrar bloqueio e usar análise estática sem alegar inspeção visual | `[x]` |
-| 2.3 | Propósito e próximo passo evidentes | `[~]` | Toda tela com `<h1>` (0 sem título após V-02/V-08/V-12/V-16) e 6 estados vazios corrigidos com caminho de volta (V-09). **Falta** julgar propósito tela a tela: 129 abertas, nenhuma com critério escrito |
-| 2.4 | Hierarquia e densidade | `[~]` |
-| 2.5 | Consistência de headers, breadcrumb, ações, filtros, navegação | `[~]` |
-| 2.6 | Cliques/digitação em tarefas frequentes | `[~]` | Contado no que existe: `jornada-venda` executa **5 cliques e 5 digitações** do login ao pedido criado — o número mede a jornada do teste, não o caminho do usuário real, e por isso não vira nota. Nenhuma outra jornada foi contada. **Falta** um instrumento de contagem por tarefa |
-| 2.7 | Busca, ordenação, filtros, paginação, seleção em massa, preferências | `[~]` |
-| 2.8 | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[~]` | **Rótulos**: 101 `<label>` analisados, **0 sem vínculo** (gate `rotulo-de-campo-aponta-para-controle`), 0 campo visível sem nome acessível em 258 medições. **Validação**: 44 `FormField`, 8 com `erro=` no campo; `form-field-canonico` cobre 7 forms de configuração. **Confirmação**: 148 pontos de confirmação (AlertDialog/`confirmar`) em `app/`+`components/`. **Prevenção de duplicidade**: 244 botões desabilitados enquanto salvam. **Falta**: preservação de dados e cancelamento não são exercitados por spec |
-| 2.9 | Estados (loading, skeleton, vazio, erro recuperável, sucesso, offline, permissão negada) | `[~]` — onde cada estado **existe** está medido (143/143 com ≥1 sinal, V-07); vazio e permissão negada observados em execução, o resto não |
-| 2.10 | Feedback imediato e prevenção de duplicidade | `[~]` | Feedback: **125 arquivos** usam `toast` (Sonner montado no layout raiz) e 26 `aria-live`. Duplicidade: 244 botões com guarda de pendência; `pedido-idempotencia` prova **ao vivo** dois POSTs → um pedido. **Falta**: `Idempotency-Key` só existe em 1 rota (limitação L4), e nenhum teste tenta a duplicata com clique duplo |
-| 2.11 | A11y: contraste, foco, teclado, leitor de tela, toque, zoom, reduced motion | `[~]` |
-| 2.12 | Casos extremos: nomes longos, valores extremos, tabelas grandes, ausência, latência, falha de rede | `[~]` | **Ausência**: 6 estados vazios corrigidos (V-09). **Falha de rede**: `degradacao-silenciosa` (catraca: a tela NÃO avisa — defeito conhecido) e `mobile-offline` (backend morto). **Largura**: overflow 0 em 258 medições. **Nome longo**: `truncate`/`line-clamp` em 131 arquivos é sinal, **não prova** — nenhum teste cria nome de 80 caracteres e confere a tabela. **Tabela grande / latência**: não medidos |
-| 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas | `[~]` |
-| 2.14 | Idioma, moeda, datas, timezone, convenções BR | `[~]` |
-| 2.15 | Desempenho percebido e gráficos | `[~]` | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Gráficos**: `kpi-e-charts-canonicos` (J12) e `inteligencia-carrega` verdes. **Falta** trace de navegador (LCP/CLS/TBT) |
-| 2.16 | Não padronizar mecanicamente onde a composição é intencional | `[~]` |
+| #    | Item                                                                                               | Estado                                                                                                                                     |
+| ---- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2.1  | Avaliar produto em execução e no código; desktop/tablet/celular                                    | `[~]`                                                                                                                                      | **Em execução**: 129 rotas estáticas × desktop 1440 e celular 390 (258 medições) + **96 specs E2E** (254 testes verdes) contra build de produção. **Falta tablet**: só 834 px em 5 telas, medido em dev (`11-auditoria-visual.md` §5)                                                                                                                                                                                                                                                                                     |
+| 2.2  | Se impedido, registrar bloqueio e usar análise estática sem alegar inspeção visual                 | `[x]`                                                                                                                                      |
+| 2.3  | Propósito e próximo passo evidentes                                                                | `[~]`                                                                                                                                      | Toda tela com `<h1>` (0 sem título após V-02/V-08/V-12/V-16) e 6 estados vazios corrigidos com caminho de volta (V-09). **Falta** julgar propósito tela a tela: 129 abertas, nenhuma com critério escrito                                                                                                                                                                                                                                                                                                                 |
+| 2.4  | Hierarquia e densidade                                                                             | `[~]`                                                                                                                                      |
+| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação                                     | `[~]`                                                                                                                                      |
+| 2.6  | Cliques/digitação em tarefas frequentes                                                            | `[~]`                                                                                                                                      | Contado no que existe: `jornada-venda` executa **5 cliques e 5 digitações** do login ao pedido criado — o número mede a jornada do teste, não o caminho do usuário real, e por isso não vira nota. Nenhuma outra jornada foi contada. **Falta** um instrumento de contagem por tarefa                                                                                                                                                                                                                                     |
+| 2.7  | Busca, ordenação, filtros, paginação, seleção em massa, preferências                               | `[~]`                                                                                                                                      |
+| 2.8  | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar)                  | `[~]`                                                                                                                                      | **Rótulos**: 101 `<label>` analisados, **0 sem vínculo** (gate `rotulo-de-campo-aponta-para-controle`), 0 campo visível sem nome acessível em 258 medições. **Validação**: 44 `FormField`, 8 com `erro=` no campo; `form-field-canonico` cobre 7 forms de configuração. **Confirmação**: 148 pontos de confirmação (AlertDialog/`confirmar`) em `app/`+`components/`. **Prevenção de duplicidade**: 244 botões desabilitados enquanto salvam. **Falta**: preservação de dados e cancelamento não são exercitados por spec |
+| 2.9  | Estados (loading, skeleton, vazio, erro recuperável, sucesso, offline, permissão negada)           | `[~]` — onde cada estado **existe** está medido (143/143 com ≥1 sinal, V-07); vazio e permissão negada observados em execução, o resto não |
+| 2.10 | Feedback imediato e prevenção de duplicidade                                                       | `[~]`                                                                                                                                      | Feedback: **125 arquivos** usam `toast` (Sonner montado no layout raiz) e 26 `aria-live`. Duplicidade: 244 botões com guarda de pendência; `pedido-idempotencia` prova **ao vivo** dois POSTs → um pedido. **Falta**: `Idempotency-Key` só existe em 1 rota (limitação L4), e nenhum teste tenta a duplicata com clique duplo                                                                                                                                                                                             |
+| 2.11 | A11y: contraste, foco, teclado, leitor de tela, toque, zoom, reduced motion                        | `[~]`                                                                                                                                      |
+| 2.12 | Casos extremos: nomes longos, valores extremos, tabelas grandes, ausência, latência, falha de rede | `[~]`                                                                                                                                      | **Ausência**: 6 estados vazios corrigidos (V-09). **Falha de rede**: `degradacao-silenciosa` (catraca: a tela NÃO avisa — defeito conhecido) e `mobile-offline` (backend morto). **Largura**: overflow 0 em 258 medições. **Nome longo**: `truncate`/`line-clamp` em 131 arquivos é sinal, **não prova** — nenhum teste cria nome de 80 caracteres e confere a tabela. **Tabela grande / latência**: não medidos                                                                                                          |
+| 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas                                       | `[~]`                                                                                                                                      |
+| 2.14 | Idioma, moeda, datas, timezone, convenções BR                                                      | `[~]`                                                                                                                                      |
+| 2.15 | Desempenho percebido e gráficos                                                                    | `[~]`                                                                                                                                      | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Gráficos**: `kpi-e-charts-canonicos` (J12) e `inteligencia-carrega` verdes. **Falta** trace de navegador (LCP/CLS/TBT)                                                                                                                                                                                                                                                   |
+| 2.16 | Não padronizar mecanicamente onde a composição é intencional                                       | `[~]`                                                                                                                                      |
 
 Jornadas críticas (16)
 
-| # | Jornada | Estado |
-|---|---|---|
-| J1 | Login, recuperação, MFA, convite | `[ ]` |
-| J2 | Onboarding do tenant (funil, equipe, WhatsApp, Nuvemshop, IA) | `[ ]` |
-| J3 | Captura, qualificação e atribuição de lead | `[ ]` |
-| J4 | Mover lead, agendar próximo passo, registrar resultado | `[ ]` |
-| J5 | Buscar/criar contato, Customer 360, histórico | `[ ]` |
-| J6 | Inbox: receber, atribuir, responder, encaminhar, encerrar | `[ ]` |
-| J7 | Handoff IA↔humano com contexto, controle e auditoria | `[ ]` |
-| J8 | Agente: criar, publicar, pausar, rollback, conhecimento, testar, avaliar | `[ ]` |
-| J9 | Follow-up: configurar, enrollment, pausa, retomada, cancelamento, snooze, falha | `[ ]` |
-| J10 | Pedido: criar, políticas, estoque, cobrança, comissão | `[ ]` |
-| J11 | Compras, entrada de estoque, expedição, rota, motorista, fechamento | `[ ]` |
-| J12 | Financeiro, títulos, recebimentos, indicadores | `[ ]` |
-| J13 | Fiscal e falhas de sincronização | `[ ]` |
-| J14 | Import/export, LGPD, solicitações, auditoria | `[ ]` |
-| J15 | Atualizar, configurar integração, revisar erro, recuperar serviço | `[ ]` |
-| J16 | Pedido offline: fila, sync, conflito, rejeição | `[ ]` |
+| #   | Jornada                                                                         | Estado |
+| --- | ------------------------------------------------------------------------------- | ------ |
+| J1  | Login, recuperação, MFA, convite                                                | `[ ]`  |
+| J2  | Onboarding do tenant (funil, equipe, WhatsApp, Nuvemshop, IA)                   | `[ ]`  |
+| J3  | Captura, qualificação e atribuição de lead                                      | `[ ]`  |
+| J4  | Mover lead, agendar próximo passo, registrar resultado                          | `[ ]`  |
+| J5  | Buscar/criar contato, Customer 360, histórico                                   | `[ ]`  |
+| J6  | Inbox: receber, atribuir, responder, encaminhar, encerrar                       | `[ ]`  |
+| J7  | Handoff IA↔humano com contexto, controle e auditoria                            | `[ ]`  |
+| J8  | Agente: criar, publicar, pausar, rollback, conhecimento, testar, avaliar        | `[ ]`  |
+| J9  | Follow-up: configurar, enrollment, pausa, retomada, cancelamento, snooze, falha | `[ ]`  |
+| J10 | Pedido: criar, políticas, estoque, cobrança, comissão                           | `[ ]`  |
+| J11 | Compras, entrada de estoque, expedição, rota, motorista, fechamento             | `[ ]`  |
+| J12 | Financeiro, títulos, recebimentos, indicadores                                  | `[ ]`  |
+| J13 | Fiscal e falhas de sincronização                                                | `[ ]`  |
+| J14 | Import/export, LGPD, solicitações, auditoria                                    | `[ ]`  |
+| J15 | Atualizar, configurar integração, revisar erro, recuperar serviço               | `[ ]`  |
+| J16 | Pedido offline: fila, sync, conflito, rejeição                                  | `[ ]`  |
 
 ## Fase 3 — Identidade visual e design system
 
-| # | Item | Estado |
-|---|---|---|
-| 3.1 | Identidade própria, consistente, revista contra produto e marca real | `[ ]` |
-| 3.2 | Tokens claros aplicados (canvas, surface, subtle, text, border, primary, hover, accent, success, warning, danger, info) | `[ ]` |
-| 3.3 | Tokens escuros aplicados (idem + surface-raised) | `[ ]` |
-| 3.4 | Aliases semânticos (estado, interação, foco, seleção, disabled, overlay, gráficos) | `[ ]` |
-| 3.5 | Status nunca só por cor | `[ ]` |
-| 3.6 | Contraste WCAG 2.2 AA (texto, ícones, bordas de controle, foco) | `[ ]` |
-| 3.7 | Tipografia Inter + IBM Plex Mono (licença/pipeline), sem dependência de rede no build | `[ ]` |
-| 3.8 | Escala tipográfica 13–16 / 20–28 / 24–32 | `[ ]` |
-| 3.9 | Espaçamento base 4 (4,8,12,16,20,24,32,40,48,64) | `[ ]` |
-| 3.10 | Raios 6/10/14 | `[ ]` |
-| 3.11 | Sombras sutis | `[ ]` |
-| 3.12 | Movimento 120–220 ms + reduced motion | `[ ]` |
-| 3.13 | Ícones consistentes | `[ ]` |
-| 3.14 | Densidade controlada | `[ ]` |
-| 3.15 | Componentes globais padronizados (lista completa do prompt) | `[ ]` |
-| 3.16 | Para cada componente: variantes, estados, tokens, teclado, a11y, responsividade, exemplos | `[ ]` |
+| #    | Item                                                                                                                    | Estado |
+| ---- | ----------------------------------------------------------------------------------------------------------------------- | ------ |
+| 3.1  | Identidade própria, consistente, revista contra produto e marca real                                                    | `[ ]`  |
+| 3.2  | Tokens claros aplicados (canvas, surface, subtle, text, border, primary, hover, accent, success, warning, danger, info) | `[ ]`  |
+| 3.3  | Tokens escuros aplicados (idem + surface-raised)                                                                        | `[ ]`  |
+| 3.4  | Aliases semânticos (estado, interação, foco, seleção, disabled, overlay, gráficos)                                      | `[ ]`  |
+| 3.5  | Status nunca só por cor                                                                                                 | `[ ]`  |
+| 3.6  | Contraste WCAG 2.2 AA (texto, ícones, bordas de controle, foco)                                                         | `[ ]`  |
+| 3.7  | Tipografia Inter + IBM Plex Mono (licença/pipeline), sem dependência de rede no build                                   | `[ ]`  |
+| 3.8  | Escala tipográfica 13–16 / 20–28 / 24–32                                                                                | `[ ]`  |
+| 3.9  | Espaçamento base 4 (4,8,12,16,20,24,32,40,48,64)                                                                        | `[ ]`  |
+| 3.10 | Raios 6/10/14                                                                                                           | `[ ]`  |
+| 3.11 | Sombras sutis                                                                                                           | `[ ]`  |
+| 3.12 | Movimento 120–220 ms + reduced motion                                                                                   | `[ ]`  |
+| 3.13 | Ícones consistentes                                                                                                     | `[ ]`  |
+| 3.14 | Densidade controlada                                                                                                    | `[ ]`  |
+| 3.15 | Componentes globais padronizados (lista completa do prompt)                                                             | `[ ]`  |
+| 3.16 | Para cada componente: variantes, estados, tokens, teclado, a11y, responsividade, exemplos                               | `[ ]`  |
 
 ## Fase 4 — Shell e navegação
 
-| # | Item | Estado |
-|---|---|---|
-| 4.1 | Navegação por tarefas e papéis, com descoberta de áreas avançadas | `[ ]` |
-| 4.2 | Agrupamento CRM/vendas/atendimento/operação/financeiro/insights/IA/equipe/config | `[ ]` |
-| 4.3 | Sidebar, Topbar, busca, breadcrumb, tenant, notificações, atalhos padronizados | `[ ]` |
-| 4.4 | Comportamento expandido/recolhido, tablet, celular, modais, retorno | `[ ]` |
-| 4.5 | Deep links, redirects, hashes, filtros sem quebrar URLs | `[ ]` |
-| 4.6 | Busca global distingue entidades e respeita acesso | `[ ]` |
-| 4.7 | Command palette/atalhos só se descobríveis e acessíveis | `[ ]` |
-| 4.A1 | Toda página com entrada e retorno | `[ ]` |
-| 4.A2 | Teclado e leitor de tela funcionam | `[ ]` |
-| 4.A3 | Nenhuma rota órfã / deep link perdido | `[ ]` |
-| 4.A4 | Mobile não encobre conteúdo | `[ ]` |
+| #    | Item                                                                             | Estado |
+| ---- | -------------------------------------------------------------------------------- | ------ |
+| 4.1  | Navegação por tarefas e papéis, com descoberta de áreas avançadas                | `[ ]`  |
+| 4.2  | Agrupamento CRM/vendas/atendimento/operação/financeiro/insights/IA/equipe/config | `[ ]`  |
+| 4.3  | Sidebar, Topbar, busca, breadcrumb, tenant, notificações, atalhos padronizados   | `[ ]`  |
+| 4.4  | Comportamento expandido/recolhido, tablet, celular, modais, retorno              | `[ ]`  |
+| 4.5  | Deep links, redirects, hashes, filtros sem quebrar URLs                          | `[ ]`  |
+| 4.6  | Busca global distingue entidades e respeita acesso                               | `[ ]`  |
+| 4.7  | Command palette/atalhos só se descobríveis e acessíveis                          | `[ ]`  |
+| 4.A1 | Toda página com entrada e retorno                                                | `[ ]`  |
+| 4.A2 | Teclado e leitor de tela funcionam                                               | `[ ]`  |
+| 4.A3 | Nenhuma rota órfã / deep link perdido                                            | `[ ]`  |
+| 4.A4 | Mobile não encobre conteúdo                                                      | `[ ]`  |
 
 ## Fase 5 — Redesign por módulo
 
-| # | Módulo | Estado |
-|---|---|---|
-| 5.1 | Público, login, onboarding, legal | `[ ]` |
-| 5.2 | Dashboard, Meu Dia, busca, tarefas, agenda | `[ ]` |
-| 5.3 | Contatos, leads, carteira, funis, Customer 360 | `[ ]` |
-| 5.4 | Inbox, atendimento, campanhas | `[ ]` |
-| 5.5 | Radar, prospecção, recuperação, inteligência | `[ ]` |
-| 5.6 | Pedidos, catálogo, estoque, compras, expedição | `[ ]` |
-| 5.7 | Financeiro, títulos, comissões | `[ ]` |
-| 5.8 | Fiscal | `[ ]` |
-| 5.9 | IA, agentes, conhecimento, follow-ups, automações | `[ ]` |
-| 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[ ]` |
-| 5.11 | Administração global | `[ ]` |
+| #    | Módulo                                             | Estado |
+| ---- | -------------------------------------------------- | ------ |
+| 5.1  | Público, login, onboarding, legal                  | `[ ]`  |
+| 5.2  | Dashboard, Meu Dia, busca, tarefas, agenda         | `[ ]`  |
+| 5.3  | Contatos, leads, carteira, funis, Customer 360     | `[ ]`  |
+| 5.4  | Inbox, atendimento, campanhas                      | `[ ]`  |
+| 5.5  | Radar, prospecção, recuperação, inteligência       | `[ ]`  |
+| 5.6  | Pedidos, catálogo, estoque, compras, expedição     | `[ ]`  |
+| 5.7  | Financeiro, títulos, comissões                     | `[ ]`  |
+| 5.8  | Fiscal                                             | `[ ]`  |
+| 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[ ]`  |
+| 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[ ]`  |
+| 5.11 | Administração global                               | `[ ]`  |
 
 ## Fase 6 — Backend, APIs, banco, regras comerciais
 
-| # | Item | Estado |
-|---|---|---|
-| 6.1 | Catálogo completo de APIs (métodos, payloads, authn, authz, validação, efeitos) | `[~]` | Métodos e flags por handler prontos; payloads/efeitos pendentes. |
-| 6.2 | Consistência de contratos UI ↔ handlers ↔ serviços ↔ workers ↔ webhooks ↔ banco | `[ ]` |
-| 6.3 | RLS em tabelas sensíveis, isolamento, service-role, credenciais, upload, logs, erros | `[~]` | **RLS medido**: 179 de 179 tabelas de `public` com RLS ligada, 0 sem; 300 políticas em `public` (305 com `storage`); 5 tabelas sem política são de plataforma (deny-all intencional, nomeadas); 96 tabelas com prova comportamental de isolamento cross-tenant, 73 em dívida conhecida (F-17). **Pendentes**: service-role por handler (209 dos 416 citam `createAdminClient` sem gate de `organization_id`), upload, logs, erros. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §5 |
-| 6.4 | Endpoints duplicados/sem uso/legados — sem remover sem consumidores/telemetria | `[ ]` |
-| 6.5 | Paginação, busca, filtros, ordenação, limites, rate limit, idempotência, retries, concorrência, timeout, cache, filas, observabilidade | `[ ]` |
-| 6.6 | Migrations/baseline como histórico; aditivas, reversíveis, com rollback; não reescrever histórico | `[~]` | A cadeia **é** histórico, e está provado que não reproduz o schema (F-09: 35 de 292 aplicam; 257 falham por pré-requisito; 10 stubs `SELECT 1;`). O caminho de instalação/atualização é o `baseline.sql`, idempotente e re-aplicável sobre dados. **Reversibilidade e rollback não foram auditados** — aberto para a Fase 10 |
-| 6.7 | Estratégia de migração local/CI/self-host; corrigir placeholder após descobrir fluxo | `[~]` | **Placeholder corrigido** e estratégia declarada: schema entra pelo `baseline.sql` (`install.sh`/`update.sh`), `db:migrate` aplica + verifica, `deploy.sh` não muta schema. **`db:reset` corrigido** em 16/11: recria `public`/`private`, restabelece o DEFAULT ACL do Supabase antes do baseline e aplica + verifica (`scripts/db/resetar-schema.sh`, gate `tests/unit/db-reset-aplica-baseline.test.ts`). A cadeia em si continua sem reproduzir o schema (Fase 10) |
-| 6.8 | Documentar tabelas, entidades, relações, exclusão, retenção, soft delete, constraints, índices, triggers, jobs | `[ ]` |
-| 6.9 | Backups, atualização, restauração, health checks, instalação em VPS | `[ ]` |
-| 6.10 | SLIs e logs úteis sem segredo/dado pessoal | `[ ]` |
-| 6.A1 | Nenhum endpoint perde comportamento sem decisão e compatibilidade | `[ ]` |
-| 6.A2 | RLS testada em ≥2 tenants | `[x]` | `tests/invariants/rls-isolation.test.ts` semeia 2 organizações com 1 usuário cada, simula JWT com `set_config('request.jwt.claims')`, faz `set role authenticated` e conta linhas cross-tenant **com controle positivo** — 73 tabelas; mais 23 em `PROVA_PROPRIA` com teste próprio. Total **96 tabelas** com prova comportamental. `pnpm test:db`: 159 arquivos, 1492 testes passando. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §5.2 |
-| 6.A3 | Operações externas/financeiras com idempotência, auditoria, repetição tratada | `[ ]` |
-| 6.A4 | Migrações testadas desde o baseline e em atualização | `[x]` | **Testadas, com resultado negativo registrado**: instalação em Postgres 15.19 limpo (exit 0), update sobre 10 linhas semeadas (dados iguais antes e depois), e replay das 292 migrations contra o baseline. O replay reprovou a cadeia (F-09) — o teste existe e o veredito é o achado, não a ausência de teste. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §2 e §4 |
-| 6.A5 | Runbook: deploy, migração, health, backup, recuperação, atualização | `[ ]` |
+| #    | Item                                                                                                                                   | Estado |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 6.1  | Catálogo completo de APIs (métodos, payloads, authn, authz, validação, efeitos)                                                        | `[~]`  | Métodos e flags por handler prontos; payloads/efeitos pendentes.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 6.2  | Consistência de contratos UI ↔ handlers ↔ serviços ↔ workers ↔ webhooks ↔ banco                                                        | `[ ]`  |
+| 6.3  | RLS em tabelas sensíveis, isolamento, service-role, credenciais, upload, logs, erros                                                   | `[~]`  | **RLS medido**: 179 de 179 tabelas de `public` com RLS ligada, 0 sem; 300 políticas em `public` (305 com `storage`); 5 tabelas sem política são de plataforma (deny-all intencional, nomeadas); 96 tabelas com prova comportamental de isolamento cross-tenant, 73 em dívida conhecida (F-17). **Pendentes**: service-role por handler (209 dos 416 citam `createAdminClient` sem gate de `organization_id`), upload, logs, erros. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §5 |
+| 6.4  | Endpoints duplicados/sem uso/legados — sem remover sem consumidores/telemetria                                                         | `[ ]`  |
+| 6.5  | Paginação, busca, filtros, ordenação, limites, rate limit, idempotência, retries, concorrência, timeout, cache, filas, observabilidade | `[ ]`  |
+| 6.6  | Migrations/baseline como histórico; aditivas, reversíveis, com rollback; não reescrever histórico                                      | `[~]`  | A cadeia **é** histórico, e está provado que não reproduz o schema (F-09: 35 de 292 aplicam; 257 falham por pré-requisito; 10 stubs `SELECT 1;`). O caminho de instalação/atualização é o `baseline.sql`, idempotente e re-aplicável sobre dados. **Reversibilidade e rollback não foram auditados** — aberto para a Fase 10                                                                                                                                                             |
+| 6.7  | Estratégia de migração local/CI/self-host; corrigir placeholder após descobrir fluxo                                                   | `[~]`  | **Placeholder corrigido** e estratégia declarada: schema entra pelo `baseline.sql` (`install.sh`/`update.sh`), `db:migrate` aplica + verifica, `deploy.sh` não muta schema. **`db:reset` corrigido** em 16/11: recria `public`/`private`, restabelece o DEFAULT ACL do Supabase antes do baseline e aplica + verifica (`scripts/db/resetar-schema.sh`, gate `tests/unit/db-reset-aplica-baseline.test.ts`). A cadeia em si continua sem reproduzir o schema (Fase 10)                    |
+| 6.8  | Documentar tabelas, entidades, relações, exclusão, retenção, soft delete, constraints, índices, triggers, jobs                         | `[ ]`  |
+| 6.9  | Backups, atualização, restauração, health checks, instalação em VPS                                                                    | `[ ]`  |
+| 6.10 | SLIs e logs úteis sem segredo/dado pessoal                                                                                             | `[ ]`  |
+| 6.A1 | Nenhum endpoint perde comportamento sem decisão e compatibilidade                                                                      | `[ ]`  |
+| 6.A2 | RLS testada em ≥2 tenants                                                                                                              | `[x]`  | `tests/invariants/rls-isolation.test.ts` semeia 2 organizações com 1 usuário cada, simula JWT com `set_config('request.jwt.claims')`, faz `set role authenticated` e conta linhas cross-tenant **com controle positivo** — 73 tabelas; mais 23 em `PROVA_PROPRIA` com teste próprio. Total **96 tabelas** com prova comportamental. `pnpm test:db`: 159 arquivos, 1492 testes passando. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §5.2                                          |
+| 6.A3 | Operações externas/financeiras com idempotência, auditoria, repetição tratada                                                          | `[ ]`  |
+| 6.A4 | Migrações testadas desde o baseline e em atualização                                                                                   | `[x]`  | **Testadas, com resultado negativo registrado**: instalação em Postgres 15.19 limpo (exit 0), update sobre 10 linhas semeadas (dados iguais antes e depois), e replay das 292 migrations contra o baseline. O replay reprovou a cadeia (F-09) — o teste existe e o veredito é o achado, não a ausência de teste. [`12-migrations-e-rls.md`](12-migrations-e-rls.md) §2 e §4                                                                                                              |
+| 6.A5 | Runbook: deploy, migração, health, backup, recuperação, atualização                                                                    | `[ ]`  |
 
 ## Fase 7 — Web responsiva, PWA, Capacitor, offline
 
-| # | Item | Estado |
-|---|---|---|
-| 7.1 | Larguras 320, 360, 390, 430, 768, 1024, 1280, 1440 | `[ ]` |
-| 7.2 | Zoom, orientação, teclado virtual, safe areas | `[ ]` |
-| 7.3 | Distinguir offline pós-sessão de boot offline do zero | `[ ]` |
-| 7.4 | Documentar páginas/operações offline | `[ ]` |
-| 7.5 | Cache, validade, update, mensagens, integridade, dados privados, logout, limpeza | `[ ]` |
-| 7.6 | Perda/retorno de rede, fila, retry, conflitos, duplicidade, rejeição | `[ ]` |
-| 7.7 | Não exibir como sincronizado o que é local | `[ ]` |
-| 7.8 | Inspecionar `mobile/`, Capacitor, Android, SQLite, fila, sync, identidade, links, endpoint | `[ ]` |
-| 7.9 | Preservar captura offline e integridade da fila | `[ ]` |
-| 7.10 | Parametrização segura de domínio/marca | `[ ]` |
-| 7.11 | Instalação, ciclo de vida, rede, storage, update, permissões, teclado, leitor, notificações, APK | `[ ]` |
-| 7.12 | Determinar suporte a iOS antes de incluir | `[ ]` |
-| 7.A1 | Matriz offline publicada e fiel | `[ ]` |
-| 7.A2 | Nenhum pedido desaparece em falha/rejeição | `[ ]` |
-| 7.A3 | Estados pendente/enviando/sincronizado/rejeitado distinguíveis e recuperáveis | `[ ]` |
-| 7.A4 | APK mantém funções; branding/servidor configuráveis e testados | `[ ]` |
+| #    | Item                                                                                             | Estado |
+| ---- | ------------------------------------------------------------------------------------------------ | ------ |
+| 7.1  | Larguras 320, 360, 390, 430, 768, 1024, 1280, 1440                                               | `[ ]`  |
+| 7.2  | Zoom, orientação, teclado virtual, safe areas                                                    | `[ ]`  |
+| 7.3  | Distinguir offline pós-sessão de boot offline do zero                                            | `[ ]`  |
+| 7.4  | Documentar páginas/operações offline                                                             | `[ ]`  |
+| 7.5  | Cache, validade, update, mensagens, integridade, dados privados, logout, limpeza                 | `[ ]`  |
+| 7.6  | Perda/retorno de rede, fila, retry, conflitos, duplicidade, rejeição                             | `[ ]`  |
+| 7.7  | Não exibir como sincronizado o que é local                                                       | `[ ]`  |
+| 7.8  | Inspecionar `mobile/`, Capacitor, Android, SQLite, fila, sync, identidade, links, endpoint       | `[ ]`  |
+| 7.9  | Preservar captura offline e integridade da fila                                                  | `[ ]`  |
+| 7.10 | Parametrização segura de domínio/marca                                                           | `[ ]`  |
+| 7.11 | Instalação, ciclo de vida, rede, storage, update, permissões, teclado, leitor, notificações, APK | `[ ]`  |
+| 7.12 | Determinar suporte a iOS antes de incluir                                                        | `[ ]`  |
+| 7.A1 | Matriz offline publicada e fiel                                                                  | `[ ]`  |
+| 7.A2 | Nenhum pedido desaparece em falha/rejeição                                                       | `[ ]`  |
+| 7.A3 | Estados pendente/enviando/sincronizado/rejeitado distinguíveis e recuperáveis                    | `[ ]`  |
+| 7.A4 | APK mantém funções; branding/servidor configuráveis e testados                                   | `[ ]`  |
 
 ## Fase 8 — Segurança, privacidade, desempenho, acessibilidade
 
-| # | Item | Estado |
-|---|---|---|
-| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[ ]` |
-| 8.2 | Limites de exposição de dados e segurança administrativa | `[ ]` |
-| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers | `[ ]` |
-| 8.4 | Otimizar só com baseline → gargalo → resultado | `[ ]` |
-| 8.5 | WCAG 2.2 AA, teclado, foco, semântica, contraste, leitores, erros, toque, reduced motion | `[ ]` |
+| #   | Item                                                                                                                                         | Estado |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[ ]`  |
+| 8.2 | Limites de exposição de dados e segurança administrativa                                                                                     | `[ ]`  |
+| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[ ]`  |
+| 8.4 | Otimizar só com baseline → gargalo → resultado                                                                                               | `[ ]`  |
+| 8.5 | WCAG 2.2 AA, teclado, foco, semântica, contraste, leitores, erros, toque, reduced motion                                                     | `[ ]`  |
 
 ## Fase 9 — Testes e qualidade
 
-| # | Item | Estado |
-|---|---|---|
-| 9.1 | Unitários (domínio, cálculos, validação, formatação, máquina de estados, sync) | `[ ]` |
-| 9.2 | API (authn, authz, validação, tenant, idempotência, erros, paginação, limites) | `[ ]` |
-| 9.3 | Banco/invariantes (constraints, RLS, migrations, baseline, jobs, isolamento) | `[ ]` |
-| 9.4 | Jornadas E2E (caminhos críticos, permissões, falhas, recuperação) | `[ ]` |
-| 9.5 | Visual (snapshots por tema/breakpoint, revisão sem aprovação cega) | `[ ]` |
-| 9.6 | Acessibilidade (axe + teclado/foco + semântica) | `[ ]` |
-| 9.7 | Mobile/offline (banco local, fila, conflitos, rede, retry, rejeição, persistência) | `[ ]` |
-| 9.8 | Operação (instalação, atualização, health, backup, restauração) | `[ ]` |
-| 9.9 | Dados sintéticos, ambientes isolados, guardrail de banco remoto intacto | `[ ]` |
+| #   | Item                                                                               | Estado |
+| --- | ---------------------------------------------------------------------------------- | ------ |
+| 9.1 | Unitários (domínio, cálculos, validação, formatação, máquina de estados, sync)     | `[ ]`  |
+| 9.2 | API (authn, authz, validação, tenant, idempotência, erros, paginação, limites)     | `[ ]`  |
+| 9.3 | Banco/invariantes (constraints, RLS, migrations, baseline, jobs, isolamento)       | `[ ]`  |
+| 9.4 | Jornadas E2E (caminhos críticos, permissões, falhas, recuperação)                  | `[ ]`  |
+| 9.5 | Visual (snapshots por tema/breakpoint, revisão sem aprovação cega)                 | `[ ]`  |
+| 9.6 | Acessibilidade (axe + teclado/foco + semântica)                                    | `[ ]`  |
+| 9.7 | Mobile/offline (banco local, fila, conflitos, rede, retry, rejeição, persistência) | `[ ]`  |
+| 9.8 | Operação (instalação, atualização, health, backup, restauração)                    | `[ ]`  |
+| 9.9 | Dados sintéticos, ambientes isolados, guardrail de banco remoto intacto            | `[ ]`  |
 
 ## Fase 10 — Execução progressiva
 
-| # | Item | Estado |
-|---|---|---|
-| 10.1 | Plano priorizado após inventário/auditoria | `[ ]` |
-| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy | `[ ]` |
-| 10.3 | P1 — CRM, vendas, inbox, pedidos, mobile; erros sem recuperação; a11y grave | `[ ]` |
-| 10.4 | P2 — consistência visual, densidade, tabelas, navegação, relatórios, automações | `[ ]` |
-| 10.5 | P3 — capacidades ausentes confirmadas e conveniência | `[ ]` |
-| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[ ]` |
-| 10.7 | Commits lógicos só quando o fluxo pedir; preservar mudanças preexistentes | `[x]` | Nada commitado ainda; arquivos do usuário preservados. |
+| #    | Item                                                                                          | Estado |
+| ---- | --------------------------------------------------------------------------------------------- | ------ |
+| 10.1 | Plano priorizado após inventário/auditoria                                                    | `[ ]`  |
+| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy           | `[ ]`  |
+| 10.3 | P1 — CRM, vendas, inbox, pedidos, mobile; erros sem recuperação; a11y grave                   | `[ ]`  |
+| 10.4 | P2 — consistência visual, densidade, tabelas, navegação, relatórios, automações               | `[ ]`  |
+| 10.5 | P3 — capacidades ausentes confirmadas e conveniência                                          | `[ ]`  |
+| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[ ]`  |
+| 10.7 | Commits lógicos só quando o fluxo pedir; preservar mudanças preexistentes                     | `[x]`  | Nada commitado ainda; arquivos do usuário preservados. |
 
 ## Definition of Done global (12)
 
-| # | Critério | Estado |
-|---|---|---|
-| D1 | 100% das rotas no inventário e auditadas | `[~]` | Inventário gerado; auditoria não iniciada. |
-| D2 | Subtelas/modais/abas/fluxos/estados com evidência ou bloqueio | `[ ]` |
-| D3 | Toda capacidade classificada, sem duplicar | `[ ]` |
-| D4 | Jornadas críticas com critério de sucesso e validação | `[ ]` |
-| D5 | Design system, tokens, temas, navegação, componentes consistentes | `[ ]` |
-| D6 | Desktop, tablet, mobile, PWA, Capacitor, offline testados conforme suporte real | `[ ]` |
-| D7 | Segurança, isolamento, regras, privacidade, integridade preservados | `[ ]` |
-| D8 | Lint/typecheck/build/testes passam ou falha documentada e atribuível | `[ ]` |
-| D9 | Migrações, instalação, atualização, recuperação documentadas e validadas | `[~]` | Migrações, instalação e atualização **documentadas e validadas** com evidência de execução ([`12-migrations-e-rls.md`](12-migrations-e-rls.md)). **Recuperação (restore/rollback) não auditada** |
-| D10 | Sem erro crítico de a11y, overflow, perda de dados, ação sem feedback, tela sem erro recuperável | `[ ]` |
-| D11 | Documentação, inventário, capturas e decisões fiéis ao código | `[~]` | Inventário fiel por construção (gerado); restante pendente. |
-| D12 | Nenhuma funcionalidade removida sem justificativa/compat/migração | `[x]` | Nada removido. |
-| D-Final | Relatório final (escopo, mudanças, cobertura, testes, pendências, riscos, links) — parágrafo após os 12 itens | `[ ]` |
+| #       | Critério                                                                                                      | Estado |
+| ------- | ------------------------------------------------------------------------------------------------------------- | ------ |
+| D1      | 100% das rotas no inventário e auditadas                                                                      | `[~]`  | Inventário gerado; auditoria não iniciada.                                                                                                                                                       |
+| D2      | Subtelas/modais/abas/fluxos/estados com evidência ou bloqueio                                                 | `[ ]`  |
+| D3      | Toda capacidade classificada, sem duplicar                                                                    | `[ ]`  |
+| D4      | Jornadas críticas com critério de sucesso e validação                                                         | `[ ]`  |
+| D5      | Design system, tokens, temas, navegação, componentes consistentes                                             | `[ ]`  |
+| D6      | Desktop, tablet, mobile, PWA, Capacitor, offline testados conforme suporte real                               | `[ ]`  |
+| D7      | Segurança, isolamento, regras, privacidade, integridade preservados                                           | `[ ]`  |
+| D8      | Lint/typecheck/build/testes passam ou falha documentada e atribuível                                          | `[ ]`  |
+| D9      | Migrações, instalação, atualização, recuperação documentadas e validadas                                      | `[~]`  | Migrações, instalação e atualização **documentadas e validadas** com evidência de execução ([`12-migrations-e-rls.md`](12-migrations-e-rls.md)). **Recuperação (restore/rollback) não auditada** |
+| D10     | Sem erro crítico de a11y, overflow, perda de dados, ação sem feedback, tela sem erro recuperável              | `[ ]`  |
+| D11     | Documentação, inventário, capturas e decisões fiéis ao código                                                 | `[~]`  | Inventário fiel por construção (gerado); restante pendente.                                                                                                                                      |
+| D12     | Nenhuma funcionalidade removida sem justificativa/compat/migração                                             | `[x]`  | Nada removido.                                                                                                                                                                                   |
+| D-Final | Relatório final (escopo, mudanças, cobertura, testes, pendências, riscos, links) — parágrafo após os 12 itens | `[ ]`  |
 
 ---
 
@@ -827,15 +827,15 @@ pnpm db:reset       # recria o schema pelo baseline (NÃO usa a cadeia) — exig
 
 ## 3.2 Inventário medido (15/11/2026, base `9f8e6faa`)
 
-| Medida | Valor | Como |
-|---|---|---|
-| `page.tsx` | **156** | `find app -name page.tsx \| wc -l` |
-| Telas (com JSX) | **143** | script |
-| Resolvers/redirects (sem JSX) | **13** | script |
-| `route.ts` | **418** | `find app -name route.ts` (416 em `app/api`, + `app/auth/confirm`, + `app/icone-512`) |
-| Layouts | **13** | script |
-| Migrations | **292** | `ls supabase/migrations/*.sql` |
-| Arquivos de teste | **1.121** | script (por diretório na Parte 2, item 1.8) |
+| Medida                        | Valor     | Como                                                                                  |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------- |
+| `page.tsx`                    | **156**   | `find app -name page.tsx \| wc -l`                                                    |
+| Telas (com JSX)               | **143**   | script                                                                                |
+| Resolvers/redirects (sem JSX) | **13**    | script                                                                                |
+| `route.ts`                    | **418**   | `find app -name route.ts` (416 em `app/api`, + `app/auth/confirm`, + `app/icone-512`) |
+| Layouts                       | **13**    | script                                                                                |
+| Migrations                    | **292**   | `ls supabase/migrations/*.sql`                                                        |
+| Arquivos de teste             | **1.121** | script (por diretório na Parte 2, item 1.8)                                           |
 
 Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/app/leads/:id`,
 `/app/metrics`, `/app/prospeccao`, `/app/recuperacao`, `/app/settings/canal-oficial`,
@@ -843,87 +843,87 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 
 ## 3.3 Decisões
 
-| Data | Decisão | Razão |
-|---|---|---|
-| 15/11 | Inventário é **gerado por script**, nunca escrito à mão | Prosa envelhece; o prompt exige refazer contagens. |
-| 15/11 | Página com JSX é **tela** mesmo com `redirect()` condicional | Guard de permissão não transforma tela em resolver; só quem redireciona sem JSX é resolver. |
-| 15/11 | Este arquivo tem **autoridade sobre qualquer `.md`** | Ordem do usuário (15/11/2026). |
+| Data  | Decisão                                                                                                                                                   | Razão                                                                                                                                                                                           |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 15/11 | Inventário é **gerado por script**, nunca escrito à mão                                                                                                   | Prosa envelhece; o prompt exige refazer contagens.                                                                                                                                              |
+| 15/11 | Página com JSX é **tela** mesmo com `redirect()` condicional                                                                                              | Guard de permissão não transforma tela em resolver; só quem redireciona sem JSX é resolver.                                                                                                     |
+| 15/11 | Este arquivo tem **autoridade sobre qualquer `.md`**                                                                                                      | Ordem do usuário (15/11/2026).                                                                                                                                                                  |
 | 16/11 | O **preâmbulo** do Postgres descartável vive em **um arquivo** (`scripts/sql/preambulo-supabase-descartavel.sql`), consumido pelo gate e pelo instrumento | Dois textos divergiram e o instrumento inventou 2 migrations "quebradas" (0014/0017) + 1 publicação ausente (0025). Instrumento que mede outro universo produz achado falso com cara de achado. |
-| 16/11 | `db:migrate` aplica o **`baseline.sql`**, não `supabase db push` | A cadeia de 292 migrations não reproduz o schema (10 stubs `SELECT 1;`), e `db push` marcaria migrations como aplicadas sobre schema parcial. |
-| 16/11 | `deploy.sh` **não** roda `pnpm db:migrate` | A imagem de runtime não tem `pnpm`; o passo falhava sempre e o `\|\| true` escondia. O schema é do kit. |
-| 16/11 | Contagem de RLS por **texto** é rotulada como texto | O baseline liga RLS por laço (`execute format(...)`); a contagem textual dizia 142/38 quando o banco diz 179/0. |
-| 16/11 | **156 telas = cobertura de ROTAS**, não auditoria de telas | Ver a correção de alegação no topo da Fase 1: subtelas, estados e jornadas seguem sem execução. |
+| 16/11 | `db:migrate` aplica o **`baseline.sql`**, não `supabase db push`                                                                                          | A cadeia de 292 migrations não reproduz o schema (10 stubs `SELECT 1;`), e `db push` marcaria migrations como aplicadas sobre schema parcial.                                                   |
+| 16/11 | `deploy.sh` **não** roda `pnpm db:migrate`                                                                                                                | A imagem de runtime não tem `pnpm`; o passo falhava sempre e o `\|\| true` escondia. O schema é do kit.                                                                                         |
+| 16/11 | Contagem de RLS por **texto** é rotulada como texto                                                                                                       | O baseline liga RLS por laço (`execute format(...)`); a contagem textual dizia 142/38 quando o banco diz 179/0.                                                                                 |
+| 16/11 | **156 telas = cobertura de ROTAS**, não auditoria de telas                                                                                                | Ver a correção de alegação no topo da Fase 1: subtelas, estados e jornadas seguem sem execução.                                                                                                 |
 
 ## 3.4 Riscos e lacunas abertos
 
-| # | Risco/lacuna | Impacto |
-|---|---|---|
-| L1 | `db:migrate` **corrigido** e `db:reset` **corrigido** (não passa mais pela cadeia) | Resta a cadeia em si (F-09): `supabase db push` ainda a aplicaria. Fase 10. |
-| L2 | **209 de 416** handlers de `app/api/**` citam `createAdminClient`/`SUPABASE_SERVICE_ROLE` no próprio arquivo, sem gate automático de `organization_id` | Risco de vazamento cross-tenant; Fase 6/8. (A linha dizia "89 de 169" — número de um repo menor.) |
-| L6 | Cadeia de 292 migrations não reproduz o schema: 35 aplicam, 257 falham, **71** objetos distintos ausentes (81 nomes crus — 10 sem schema repetiam objeto já contado), 10 stubs | F-09 (P0). Instalação/atualização pelo `baseline.sql` funcionam — o caminho de migrations, não. |
-| L7 | 73 tabelas tenant-aware **sem prova comportamental** de isolamento (`DEBITO_CONHECIDO`) | RLS ligado e política presente, mas nenhum teste cross-tenant. Gate impede crescimento; não resolve. F-17. |
-| L8 | `pnpm test:shell` **verde** (395 ✓, 0 ✗) | Era 1 falha no macOS: o `load_env` do kit usava um replacement entre aspas que o bash 3.2 não desescapa. Corrigido em `_common.sh`, provado nos dois bash. F-19. |
-| L3 | Duas specs E2E fora do CI (`vps-fresh-onboarding`, `inbox-tempo-real`) | Jornada de instalação fresca sem gate; Fase 9. |
-| L4 | Crons e MCP sem rate limit | Abuso/DoS; Fase 8. |
-| L5 | `git ls-files 'app/**/page.tsx'` devolve 155, mas o checkout tem **156** | **Resolvido**: o glob `**/` não casa diretório zero, então `app/page.tsx` ficava de fora. `git ls-files 'app/**/page.tsx' app/page.tsx` = 156, igual a `find`. Não é divergência de código. |
-| L9 | A matriz de telas × estados media só o `page.tsx`: **12 colunas em `—`** nas 156 linhas e `error.tsx` ✓ em todas | **Corrigido**. 89/156 telas delegam a UI a `_client`/`_components`; o `app/error.tsx` global marcava todas; o regex lia comentário. Agora mede o segmento + imports locais, sem comentário, com `próprio`/`herdado`: **143 de 143** com ≥1 sinal. F-20/V-07, gate de 11 casos |
-| L10 | O lote de captura gravou **149 de 168** rotas como `ERR_CONNECTION_REFUSED` — o servidor caiu, não as telas | **Corrigido**: o instrumento espera o servidor, reconhece queda, repete uma vez e registra `reconexoes`; `--faltantes` pula rota dinâmica **com motivo escrito**. F-21 |
-| L11 | "42 telas capturadas" não fechava com arquivo nenhum | **Corrigido para 37**: 57 arquivos = 37 rotas em desktop + as mesmas 20 em celular (20 ⊂ 37). Contado por `ls docs/auditoria/capturas/*.png`, não por memória |
-| L12 | `networkidle` como condição de sucesso reprovava tela que **renderiza**: `/admin/platform-admins` estourava 45 s com `h1` correto e API 200 em 191 ms | **Corrigido**: o Next prefetcha os `<Link>` do menu (67 requisições em 8 s, 25 `fetch`) e a rede nunca fica 500 ms quieta. Agora é `domcontentloaded` + 4 s de assentamento opcional, e cada medição grava `assentou`. V-10 |
-| L13 | `/admin/**` respondia "Acesso negado" — `e2e-dono` não estava em `platform_admins` | **Corrigido pelo caminho documentado** (`scripts/seed-e2e-system-update.ts`, o mesmo do job `e2e`). A área de admin só é auditável com o dono promovido; instalação fresca sem ninguém promovido tem a área inalcançável **por desenho**. V-11 |
-| L14 | **3 rotas** com campo visível sem nome acessível na varredura de 258 medições; o detector também acusava o `BubbleSelect` do Radix (1×1 px, `aria-hidden`) | **Corrigido e classificado**: das 3, **2 eram falso positivo** (o `<select>` nativo oculto que o Radix injeta no `<form>`; o controle real é `button[role=combobox]` com `<label for>`) e **1 era real** — `/app/audit` tinha 4 `<label>` sem `htmlFor` e campos sem `id`. Corrigidos os 4 + 2 que só o gate estático via (`CapturasTab`, rótulo visível ≠ nome acessível). Gate novo analisa os **101** `<label>` de `app/`+`components/`: 0 soltos. V-15 |
+| #   | Risco/lacuna                                                                                                                                                                   | Impacto                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1  | `db:migrate` **corrigido** e `db:reset` **corrigido** (não passa mais pela cadeia)                                                                                             | Resta a cadeia em si (F-09): `supabase db push` ainda a aplicaria. Fase 10.                                                                                                                                                                                                                                                                                                                                                                                |
+| L2  | **209 de 416** handlers de `app/api/**` citam `createAdminClient`/`SUPABASE_SERVICE_ROLE` no próprio arquivo, sem gate automático de `organization_id`                         | Risco de vazamento cross-tenant; Fase 6/8. (A linha dizia "89 de 169" — número de um repo menor.)                                                                                                                                                                                                                                                                                                                                                          |
+| L6  | Cadeia de 292 migrations não reproduz o schema: 35 aplicam, 257 falham, **71** objetos distintos ausentes (81 nomes crus — 10 sem schema repetiam objeto já contado), 10 stubs | F-09 (P0). Instalação/atualização pelo `baseline.sql` funcionam — o caminho de migrations, não.                                                                                                                                                                                                                                                                                                                                                            |
+| L7  | 73 tabelas tenant-aware **sem prova comportamental** de isolamento (`DEBITO_CONHECIDO`)                                                                                        | RLS ligado e política presente, mas nenhum teste cross-tenant. Gate impede crescimento; não resolve. F-17.                                                                                                                                                                                                                                                                                                                                                 |
+| L8  | `pnpm test:shell` **verde** (395 ✓, 0 ✗)                                                                                                                                       | Era 1 falha no macOS: o `load_env` do kit usava um replacement entre aspas que o bash 3.2 não desescapa. Corrigido em `_common.sh`, provado nos dois bash. F-19.                                                                                                                                                                                                                                                                                           |
+| L3  | Duas specs E2E fora do CI (`vps-fresh-onboarding`, `inbox-tempo-real`)                                                                                                         | Jornada de instalação fresca sem gate; Fase 9.                                                                                                                                                                                                                                                                                                                                                                                                             |
+| L4  | Crons e MCP sem rate limit                                                                                                                                                     | Abuso/DoS; Fase 8.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| L5  | `git ls-files 'app/**/page.tsx'` devolve 155, mas o checkout tem **156**                                                                                                       | **Resolvido**: o glob `**/` não casa diretório zero, então `app/page.tsx` ficava de fora. `git ls-files 'app/**/page.tsx' app/page.tsx` = 156, igual a `find`. Não é divergência de código.                                                                                                                                                                                                                                                                |
+| L9  | A matriz de telas × estados media só o `page.tsx`: **12 colunas em `—`** nas 156 linhas e `error.tsx` ✓ em todas                                                               | **Corrigido**. 89/156 telas delegam a UI a `_client`/`_components`; o `app/error.tsx` global marcava todas; o regex lia comentário. Agora mede o segmento + imports locais, sem comentário, com `próprio`/`herdado`: **143 de 143** com ≥1 sinal. F-20/V-07, gate de 11 casos                                                                                                                                                                              |
+| L10 | O lote de captura gravou **149 de 168** rotas como `ERR_CONNECTION_REFUSED` — o servidor caiu, não as telas                                                                    | **Corrigido**: o instrumento espera o servidor, reconhece queda, repete uma vez e registra `reconexoes`; `--faltantes` pula rota dinâmica **com motivo escrito**. F-21                                                                                                                                                                                                                                                                                     |
+| L11 | "42 telas capturadas" não fechava com arquivo nenhum                                                                                                                           | **Corrigido para 37**: 57 arquivos = 37 rotas em desktop + as mesmas 20 em celular (20 ⊂ 37). Contado por `ls docs/auditoria/capturas/*.png`, não por memória                                                                                                                                                                                                                                                                                              |
+| L12 | `networkidle` como condição de sucesso reprovava tela que **renderiza**: `/admin/platform-admins` estourava 45 s com `h1` correto e API 200 em 191 ms                          | **Corrigido**: o Next prefetcha os `<Link>` do menu (67 requisições em 8 s, 25 `fetch`) e a rede nunca fica 500 ms quieta. Agora é `domcontentloaded` + 4 s de assentamento opcional, e cada medição grava `assentou`. V-10                                                                                                                                                                                                                                |
+| L13 | `/admin/**` respondia "Acesso negado" — `e2e-dono` não estava em `platform_admins`                                                                                             | **Corrigido pelo caminho documentado** (`scripts/seed-e2e-system-update.ts`, o mesmo do job `e2e`). A área de admin só é auditável com o dono promovido; instalação fresca sem ninguém promovido tem a área inalcançável **por desenho**. V-11                                                                                                                                                                                                             |
+| L14 | **3 rotas** com campo visível sem nome acessível na varredura de 258 medições; o detector também acusava o `BubbleSelect` do Radix (1×1 px, `aria-hidden`)                     | **Corrigido e classificado**: das 3, **2 eram falso positivo** (o `<select>` nativo oculto que o Radix injeta no `<form>`; o controle real é `button[role=combobox]` com `<label for>`) e **1 era real** — `/app/audit` tinha 4 `<label>` sem `htmlFor` e campos sem `id`. Corrigidos os 4 + 2 que só o gate estático via (`CapturasTab`, rótulo visível ≠ nome acessível). Gate novo analisa os **101** `<label>` de `app/`+`components/`: 0 soltos. V-15 |
 
 ## 3.5 Artefatos produzidos
 
-| Arquivo | O quê |
-|---|---|
-| `docs/auditoria/PROMPT-MESTRE-AAA.md` | Este arquivo: prompt íntegro + checklist + registro. |
-| `scripts/auditoria/inventario.ts` | Gerador do inventário (rotas, APIs, layouts, migrations, testes). |
-| `docs/auditoria/inventario.json` | Inventário estruturado (fonte para consultas). |
-| `docs/auditoria/inventario-rotas.md` | Inventário legível (tabelas por tipo). |
-| `docs/auditoria/00-linha-de-base.md` | Fase 0: estado do repo, comandos, baseline medido, guardrails e 8 achados. |
-| `scripts/auditoria/reconciliar-rotas.ts` | Cruza a lista de rotas do prompt com o checkout. |
-| `docs/auditoria/02-reconciliacao-rotas.md` | Resultado: 156 rotas do prompt, 0 ausentes, 0 acréscimos. |
-| `scripts/auditoria/verificar-prompt.ts` | Gate de integridade do texto da Parte 1. |
-| `docs/auditoria/prompt-mestre.sha256` | Hash do prompt (301 linhas). |
-| `scripts/discord/notificar.ts` | Posta no canal de atualizações (embed, cor por nível, URL nunca impressa). |
-| `scripts/discord/configurar-servidor.ts` | Blueprint idempotente do servidor Discord (canais, cargos, permissões). |
-| `docs/auditoria/12-migrations-e-rls.md` | As 6 perguntas de banco: reprodução com versões, causa de cada falha, diff dos dois caminhos, instalação **e** update, RLS + isolamento, `db:migrate`. |
-| `scripts/auditoria/replay-migrations.sh` | Os dois caminhos de schema medidos lado a lado, com classificação de cada falha. |
-| `scripts/auditoria/inventario-schema.sql` | Uma linha por objeto (`tipo<TAB>objeto`) — o mesmo SELECT nos dois bancos, `diff`. |
-| `scripts/auditoria/diagnostico-rls.sql` | RLS desligado, política `using (true)`, predicado sem org, comando sem política. |
-| `scripts/sql/preambulo-supabase-descartavel.sql` | Fonte única do banco descartável (gate + instrumento). |
-| `scripts/db/aplicar-schema.sh` | `db:migrate`/`db:verificar` real: aplica baseline, verifica, falha em conexão. |
-| `scripts/test-update-com-dados.sh` | Prova que o update re-aplica o baseline **sobre dados** sem perder linha. |
-| `docs/auditoria/evidencias/replay-migrations/` | Evidência bruta: ambiente, console, 257 logs de falha, inventários, diff, RLS. |
-| `scripts/auditoria/captura-visual.mjs` | Instrumento da Fase 2: abre a rota em navegador real, mede `<h1>`, overflow, alvos de toque, campos sem rótulo, título, erros de console/5xx e tempo. `--area`, `--perfil`, `--larguras`, `--faltantes`. |
-| `docs/auditoria/capturas/medicoes-producao-{tenant,admin,publica}.json` | As **258** medições (129 rotas × 2 larguras) em build de produção. |
-| `scripts/auditoria/segmento-de-rota.ts` | Regra testável de "a tela" (page + `_client` + `_components` + imports locais), usada pela matriz de estados. |
-| `tests/unit/matriz-telas-le-segmento.test.ts` | Gate de 11 casos: a matriz de estados lê a tela, não só o `page.tsx` (F-20). |
-| `tests/unit/link-para-arquivo-estatico-existe.test.ts` | Gate: todo `href`/`src` com extensão existe em `public/` (o runbook que dava 404 — V-13). |
-| `tests/unit/rotulo-de-campo-aponta-para-controle.test.ts` | Gate: todo `<label>` do produto se liga ao campo por `htmlFor`, embrulhamento ou `aria-labelledby` (V-15). |
-| `public/runbook/platform-admin-management.md` | Runbook do "somente DBA", escrito do schema real; era o destino do link que respondia 404. |
-| `scripts/auditoria/subtelas.ts` | Enumerador de **aba, modal e gaveta** por tela (rótulo, arquivo, linha) + modais sem `Title`. |
-| `docs/auditoria/09b-subtelas.md` | O inventário: 82 abas, 68 modais, 12 gavetas em 156 telas (F-22). |
-| `tests/unit/subtela-tem-nome.test.ts` | Gate de 8 casos: o extrator lê, o rótulo não é `className`, laço é dito dinâmico, modal sem `Title` é contado. |
-| `scripts/auditoria/jornadas.ts` | Mapa **J1–J16 → specs** + contagem do disco + resultado lido do log do Playwright. |
-| `docs/auditoria/13-jornadas.md` | As 16 jornadas do prompt: superfície, spec, resultado medido e o que fica descoberto. |
-| `tests/unit/jornadas-fecham.test.ts` | Gate: 99 specs do disco, 0 sem jornada e 0 sem motivo; a tabela do doc é a do gerador. |
-| `scripts/auditoria/captura-subtelas.mjs` | **Abre** aba e modal e mede (h1, overflow, console, campo sem nome, aba que não seleciona). Não clica em verbo destrutivo. |
-| `docs/auditoria/capturas/subtelas-{tenant,dono,admin}.json` | As 50 abas e 11 modais medidos em 39 telas. |
-| `scripts/auditoria/cod-rotulo-acessivel.mjs` | `aria-label` a partir do rótulo visível; `planejar()` é a régua do gate. Idempotente. |
-| `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts` | Gate da V-20: exige `planejar()` vazia e prova que 93 `<Label>` foram lidos. |
+| Arquivo                                                                 | O quê                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/auditoria/PROMPT-MESTRE-AAA.md`                                   | Este arquivo: prompt íntegro + checklist + registro.                                                                                                                                                     |
+| `scripts/auditoria/inventario.ts`                                       | Gerador do inventário (rotas, APIs, layouts, migrations, testes).                                                                                                                                        |
+| `docs/auditoria/inventario.json`                                        | Inventário estruturado (fonte para consultas).                                                                                                                                                           |
+| `docs/auditoria/inventario-rotas.md`                                    | Inventário legível (tabelas por tipo).                                                                                                                                                                   |
+| `docs/auditoria/00-linha-de-base.md`                                    | Fase 0: estado do repo, comandos, baseline medido, guardrails e 8 achados.                                                                                                                               |
+| `scripts/auditoria/reconciliar-rotas.ts`                                | Cruza a lista de rotas do prompt com o checkout.                                                                                                                                                         |
+| `docs/auditoria/02-reconciliacao-rotas.md`                              | Resultado: 156 rotas do prompt, 0 ausentes, 0 acréscimos.                                                                                                                                                |
+| `scripts/auditoria/verificar-prompt.ts`                                 | Gate de integridade do texto da Parte 1.                                                                                                                                                                 |
+| `docs/auditoria/prompt-mestre.sha256`                                   | Hash do prompt (301 linhas).                                                                                                                                                                             |
+| `scripts/discord/notificar.ts`                                          | Posta no canal de atualizações (embed, cor por nível, URL nunca impressa).                                                                                                                               |
+| `scripts/discord/configurar-servidor.ts`                                | Blueprint idempotente do servidor Discord (canais, cargos, permissões).                                                                                                                                  |
+| `docs/auditoria/12-migrations-e-rls.md`                                 | As 6 perguntas de banco: reprodução com versões, causa de cada falha, diff dos dois caminhos, instalação **e** update, RLS + isolamento, `db:migrate`.                                                   |
+| `scripts/auditoria/replay-migrations.sh`                                | Os dois caminhos de schema medidos lado a lado, com classificação de cada falha.                                                                                                                         |
+| `scripts/auditoria/inventario-schema.sql`                               | Uma linha por objeto (`tipo<TAB>objeto`) — o mesmo SELECT nos dois bancos, `diff`.                                                                                                                       |
+| `scripts/auditoria/diagnostico-rls.sql`                                 | RLS desligado, política `using (true)`, predicado sem org, comando sem política.                                                                                                                         |
+| `scripts/sql/preambulo-supabase-descartavel.sql`                        | Fonte única do banco descartável (gate + instrumento).                                                                                                                                                   |
+| `scripts/db/aplicar-schema.sh`                                          | `db:migrate`/`db:verificar` real: aplica baseline, verifica, falha em conexão.                                                                                                                           |
+| `scripts/test-update-com-dados.sh`                                      | Prova que o update re-aplica o baseline **sobre dados** sem perder linha.                                                                                                                                |
+| `docs/auditoria/evidencias/replay-migrations/`                          | Evidência bruta: ambiente, console, 257 logs de falha, inventários, diff, RLS.                                                                                                                           |
+| `scripts/auditoria/captura-visual.mjs`                                  | Instrumento da Fase 2: abre a rota em navegador real, mede `<h1>`, overflow, alvos de toque, campos sem rótulo, título, erros de console/5xx e tempo. `--area`, `--perfil`, `--larguras`, `--faltantes`. |
+| `docs/auditoria/capturas/medicoes-producao-{tenant,admin,publica}.json` | As **258** medições (129 rotas × 2 larguras) em build de produção.                                                                                                                                       |
+| `scripts/auditoria/segmento-de-rota.ts`                                 | Regra testável de "a tela" (page + `_client` + `_components` + imports locais), usada pela matriz de estados.                                                                                            |
+| `tests/unit/matriz-telas-le-segmento.test.ts`                           | Gate de 11 casos: a matriz de estados lê a tela, não só o `page.tsx` (F-20).                                                                                                                             |
+| `tests/unit/link-para-arquivo-estatico-existe.test.ts`                  | Gate: todo `href`/`src` com extensão existe em `public/` (o runbook que dava 404 — V-13).                                                                                                                |
+| `tests/unit/rotulo-de-campo-aponta-para-controle.test.ts`               | Gate: todo `<label>` do produto se liga ao campo por `htmlFor`, embrulhamento ou `aria-labelledby` (V-15).                                                                                               |
+| `public/runbook/platform-admin-management.md`                           | Runbook do "somente DBA", escrito do schema real; era o destino do link que respondia 404.                                                                                                               |
+| `scripts/auditoria/subtelas.ts`                                         | Enumerador de **aba, modal e gaveta** por tela (rótulo, arquivo, linha) + modais sem `Title`.                                                                                                            |
+| `docs/auditoria/09b-subtelas.md`                                        | O inventário: 82 abas, 68 modais, 12 gavetas em 156 telas (F-22).                                                                                                                                        |
+| `tests/unit/subtela-tem-nome.test.ts`                                   | Gate de 8 casos: o extrator lê, o rótulo não é `className`, laço é dito dinâmico, modal sem `Title` é contado.                                                                                           |
+| `scripts/auditoria/jornadas.ts`                                         | Mapa **J1–J16 → specs** + contagem do disco + resultado lido do log do Playwright.                                                                                                                       |
+| `docs/auditoria/13-jornadas.md`                                         | As 16 jornadas do prompt: superfície, spec, resultado medido e o que fica descoberto.                                                                                                                    |
+| `tests/unit/jornadas-fecham.test.ts`                                    | Gate: 99 specs do disco, 0 sem jornada e 0 sem motivo; a tabela do doc é a do gerador.                                                                                                                   |
+| `scripts/auditoria/captura-subtelas.mjs`                                | **Abre** aba e modal e mede (h1, overflow, console, campo sem nome, aba que não seleciona). Não clica em verbo destrutivo.                                                                               |
+| `docs/auditoria/capturas/subtelas-{tenant,dono,admin}.json`             | As 50 abas e 11 modais medidos em 39 telas.                                                                                                                                                              |
+| `scripts/auditoria/cod-rotulo-acessivel.mjs`                            | `aria-label` a partir do rótulo visível; `planejar()` é a régua do gate. Idempotente.                                                                                                                    |
+| `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts`                 | Gate da V-20: exige `planejar()` vazia e prova que 93 `<Label>` foram lidos.                                                                                                                             |
 
 ## 3.7 Canal de atualizações (Discord)
 
 Ordem do usuário (15/11/2026): **toda mudança desta frente é anunciada no canal de
 atualizações** — é o registro que se lê sem abrir o repositório.
 
-| Peça | Valor |
-|---|---|
-| Servidor (guild) | `1571693710016643193` |
-| Canal do feed | `1571693710486409381` |
-| Credencial | `DISCORD_WEBHOOK_URL` em `.env.local` (gitignored) |
+| Peça             | Valor                                              |
+| ---------------- | -------------------------------------------------- |
+| Servidor (guild) | `1571693710016643193`                              |
+| Canal do feed    | `1571693710486409381`                              |
+| Credencial       | `DISCORD_WEBHOOK_URL` em `.env.local` (gitignored) |
 
 O webhook é **mão única**: escreve no canal, não lê nem edita o servidor. Estrutura
 (categorias, canais, cargos, permissões) exige **bot**; o blueprint está escrito em
@@ -940,12 +940,12 @@ Regra: a URL nunca entra em documento, commit, log ou mensagem. Erro do script p
 **Postagens desta frente** (o registro começa aqui; o que foi enviado antes não foi anotado e
 não é reconstruído de memória — seria inventar):
 
-| Data | Título | Nível | Saída do script |
-|---|---|---|---|
-| 16/11/2026 | Banco provado por execução: migrations, schema e RLS | `auditoria` | `enviado (arquivo, auditoria)` |
-| 16/11/2026 | Fase 2 medida em produção: 258 medições, 15 achados, 6 gates | `auditoria` | `enviado (arquivo, auditoria)` |
+| Data       | Título                                                                 | Nível       | Saída do script                |
+| ---------- | ---------------------------------------------------------------------- | ----------- | ------------------------------ |
+| 16/11/2026 | Banco provado por execução: migrations, schema e RLS                   | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | Fase 2 medida em produção: 258 medições, 15 achados, 6 gates           | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | As 16 jornadas medidas: 254 testes verdes e 7 falhas abertas uma a uma | `auditoria` | `enviado (arquivo, auditoria)` |
-| 16/11/2026 | Subtela aberta, não só enumerada: 55 campos ganharam nome | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | Subtela aberta, não só enumerada: 55 campos ganharam nome              | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
@@ -970,14 +970,14 @@ quando **o usuário** muda o prompt; regravar para "consertar" divergência é f
 
 Pedido do usuário que abriu esta frente: provar as seis coisas, não afirmá-las.
 
-| # | Pergunta | Resultado medido | Onde |
-|---|---|---|---|
-| 1 | Reprodução em Postgres descartável, com versões, comando e saída | PostgreSQL **15.19**, `pgvector/pgvector:pg15` `sha256:47af0b65960b…`, `linux/arm64`; docker `29.8.2`; baseline `sha256:9a0afaec…` | §1 |
-| 2 | Cada migration que falha: causa, e se é quebrada ou pré-requisito ausente | **35 ok / 257 falham**; 246 tabela, 8 função, 3 tipo, **0 SQL inválido**; **257 de 257** citam objeto que existe no baseline; **71 objetos distintos** (81 nomes crus, 10 sem schema); causa raiz: 10 stubs `SELECT 1;` | §2 |
-| 3 | Schema de migrations × `baseline.sql` (tabelas, funções, triggers, extensões, políticas) | A: 2 tabelas `public`, 18 funções, 0 trigger, 0 política. B: **179** tabelas, **92** funções, **104** triggers, **305** políticas. Só em A: **0**; só em B: **1.023** | §3 |
-| 4 | Instalação **e** atualização de base existente | instalação: exit 0 com `ON_ERROR_STOP=1`; update sobre 10 linhas semeadas: exit 0 e dados idênticos antes/depois | §4 |
-| 5 | As políticas **junto** do RLS + isolamento entre tenants | **179 de 179** tabelas de `public` com RLS; 300 políticas em `public`; 5 tabelas de plataforma deny-all (nomeadas); **96 tabelas com prova comportamental**, 73 em dívida conhecida | §5 |
-| 6 | `db:migrate` não pode retornar sucesso sendo placeholder | corrigido: aplica o baseline **e verifica**; sai 1 sem objeto ou sem conexão; gate `tests/unit/db-migrate-nao-e-placeholder.test.ts`. **`db:reset` também**: recria pelo baseline, com DEFAULT ACL antes e paridade de ACL medida; gate `tests/unit/db-reset-aplica-baseline.test.ts` | §6 e §6.1 |
+| #   | Pergunta                                                                                 | Resultado medido                                                                                                                                                                                                                                                                      | Onde      |
+| --- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| 1   | Reprodução em Postgres descartável, com versões, comando e saída                         | PostgreSQL **15.19**, `pgvector/pgvector:pg15` `sha256:47af0b65960b…`, `linux/arm64`; docker `29.8.2`; baseline `sha256:9a0afaec…`                                                                                                                                                    | §1        |
+| 2   | Cada migration que falha: causa, e se é quebrada ou pré-requisito ausente                | **35 ok / 257 falham**; 246 tabela, 8 função, 3 tipo, **0 SQL inválido**; **257 de 257** citam objeto que existe no baseline; **71 objetos distintos** (81 nomes crus, 10 sem schema); causa raiz: 10 stubs `SELECT 1;`                                                               | §2        |
+| 3   | Schema de migrations × `baseline.sql` (tabelas, funções, triggers, extensões, políticas) | A: 2 tabelas `public`, 18 funções, 0 trigger, 0 política. B: **179** tabelas, **92** funções, **104** triggers, **305** políticas. Só em A: **0**; só em B: **1.023**                                                                                                                 | §3        |
+| 4   | Instalação **e** atualização de base existente                                           | instalação: exit 0 com `ON_ERROR_STOP=1`; update sobre 10 linhas semeadas: exit 0 e dados idênticos antes/depois                                                                                                                                                                      | §4        |
+| 5   | As políticas **junto** do RLS + isolamento entre tenants                                 | **179 de 179** tabelas de `public` com RLS; 300 políticas em `public`; 5 tabelas de plataforma deny-all (nomeadas); **96 tabelas com prova comportamental**, 73 em dívida conhecida                                                                                                   | §5        |
+| 6   | `db:migrate` não pode retornar sucesso sendo placeholder                                 | corrigido: aplica o baseline **e verifica**; sai 1 sem objeto ou sem conexão; gate `tests/unit/db-migrate-nao-e-placeholder.test.ts`. **`db:reset` também**: recria pelo baseline, com DEFAULT ACL antes e paridade de ACL medida; gate `tests/unit/db-reset-aplica-baseline.test.ts` | §6 e §6.1 |
 
 Comandos, todos executados nesta árvore:
 
