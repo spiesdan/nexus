@@ -210,7 +210,7 @@ function PerguntarIA({ mes }: { mes: string }) {
                     ))}
                   </Pie>
                   <Tooltip formatter={(v) => brl(Math.round(Number(v ?? 0)))} />
-                  <Legend />
+                  <Legend formatter={(valor) => <span className="text-text-muted">{valor}</span>} />
                 </PieChart>
               ) : grafico.tipo === "linha" ? (
                 <LineChart data={grafico.dados} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -632,7 +632,9 @@ export function IndicadoresClient({
               <TableRow>
                 <TableHead>{t("Vendedor")}</TableHead>
                 <TableHead className="hidden text-right lg:table-cell">{t("Pedidos")}</TableHead>
-                <TableHead className="hidden text-right lg:table-cell">{t("Ticket médio")}</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">
+                  {t("Ticket médio")}
+                </TableHead>
                 <TableHead className="text-right">{t("Total")}</TableHead>
                 <TableHead className="text-right">{t("Meta")}</TableHead>
               </TableRow>
@@ -641,8 +643,12 @@ export function IndicadoresClient({
               {dados.ranking.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium">{r.nome}</TableCell>
-                  <TableCell className="hidden text-right tabular-nums lg:table-cell">{r.qtd}</TableCell>
-                  <TableCell className="hidden text-right tabular-nums lg:table-cell">{brl(r.ticket)}</TableCell>
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
+                    {r.qtd}
+                  </TableCell>
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
+                    {brl(r.ticket)}
+                  </TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">
                     {brl(r.total)}
                   </TableCell>

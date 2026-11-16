@@ -60,10 +60,7 @@ export function UsageChart({ payload }: Props) {
           <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={series.cost_cents}
-              margin={margemDoChart}
-            >
+            <LineChart data={series.cost_cents} margin={margemDoChart}>
               <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="day"
@@ -71,11 +68,7 @@ export function UsageChart({ payload }: Props) {
                 {...eixoComum}
                 interval="preserveStartEnd"
               />
-              <YAxis
-                {...eixoComum}
-                tickFormatter={(v: number) => formatCentsUSD(v)}
-                width={70}
-              />
+              <YAxis {...eixoComum} tickFormatter={(v: number) => formatCentsUSD(v)} width={70} />
               <Tooltip
                 formatter={(value) => [formatCentsUSD(Number(value)), t("Custo")]}
                 labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
@@ -98,10 +91,7 @@ export function UsageChart({ payload }: Props) {
           <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={series.total_tokens}
-              margin={margemDoChart}
-            >
+            <LineChart data={series.total_tokens} margin={margemDoChart}>
               <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="day"
@@ -109,11 +99,7 @@ export function UsageChart({ payload }: Props) {
                 {...eixoComum}
                 interval="preserveStartEnd"
               />
-              <YAxis
-                {...eixoComum}
-                tickFormatter={formatTokens}
-                width={50}
-              />
+              <YAxis {...eixoComum} tickFormatter={formatTokens} width={50} />
               <Tooltip
                 formatter={(value) => [formatNumero(Number(value)), t("Tokens")]}
                 labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
@@ -136,10 +122,7 @@ export function UsageChart({ payload }: Props) {
           <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={latencyData}
-              margin={margemDoChart}
-            >
+            <LineChart data={latencyData} margin={margemDoChart}>
               <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="day"
@@ -167,7 +150,10 @@ export function UsageChart({ payload }: Props) {
                 labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}
                 contentStyle={chartTooltipStyle}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 11 }}
+                formatter={(valor) => <span className="text-text-muted">{valor}</span>}
+              />
               <Line
                 type="monotone"
                 dataKey="p50"
@@ -194,10 +180,7 @@ export function UsageChart({ payload }: Props) {
           <ChartEmpty />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={handoffData}
-              margin={margemDoChart}
-            >
+            <LineChart data={handoffData} margin={margemDoChart}>
               <CartesianGrid {...gridComum} />
               <XAxis
                 dataKey="day"
@@ -205,11 +188,7 @@ export function UsageChart({ payload }: Props) {
                 {...eixoComum}
                 interval="preserveStartEnd"
               />
-              <YAxis
-                {...eixoComum}
-                tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-                width={45}
-              />
+              <YAxis {...eixoComum} tickFormatter={(v: number) => `${v.toFixed(0)}%`} width={45} />
               <Tooltip
                 formatter={(value) => [`${Number(value).toFixed(2)}%`, t("Handoff")]}
                 labelFormatter={(label) => formatTickDia(String(label), tagDoIdioma)}

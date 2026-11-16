@@ -1,0 +1,179 @@
+{
+  "geradoEm": "2026-11-16T12:19:42.400Z",
+  "base": "http://localhost:3011",
+  "resultados": [
+    {
+      "rota": "/app",
+      "medida": {
+        "medidos": 150,
+        "naoMedidosPorImagem": 27,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/pedidos",
+      "medida": {
+        "medidos": 94,
+        "naoMedidosPorImagem": 262,
+        "reprovados": 21,
+        "piores": [
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          },
+          {
+            "amostra": "Faturado",
+            "tag": "div",
+            "tamanho": 12,
+            "razao": 4.13,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(214,64,159,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
+          }
+        ]
+      }
+    },
+    {
+      "rota": "/app/contacts",
+      "medida": {
+        "medidos": 122,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/kanban",
+      "medida": {
+        "medidos": 42,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/audit",
+      "medida": {
+        "medidos": 334,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "medida": {
+        "medidos": 61,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/indicadores",
+      "medida": {
+        "medidos": 219,
+        "naoMedidosPorImagem": 27,
+        "reprovados": 1,
+        "piores": [
+          {
+            "amostra": "Inativos antigos",
+            "tag": "span",
+            "tamanho": 16,
+            "razao": 3.53,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(220,38,38,1)",
+            "corFundo": "rgb(28,28,28)",
+            "classe": "recharts-legend-item-text"
+          }
+        ]
+      }
+    },
+    {
+      "rota": "/login",
+      "medida": {
+        "medidos": 8,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    }
+  ]
+}

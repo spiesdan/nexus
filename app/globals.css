@@ -402,7 +402,19 @@
      token semântico de texto secundário. O par está travado em
      `tests/unit/tailwind-tokens.test.ts`. */
   --color-text-muted: #909090;
-  --color-text-subtle: #5e5e5e;
+  /* #5e5e5e era o valor do tema CLARO repetido aqui: sobre `--color-bg`
+     (#151515) dava **2,82:1** — medido em 16/11/2026 pelo instrumento de
+     contraste, no texto de 11 px da lista de pedidos ("Hoje", "13 pedidos ·
+     R$ 605,80") e em todo meta de linha. O irmão `--color-text-muted` já tinha
+     sido corrigido para #909090 pelo mesmo motivo (ver comentário acima); o
+     `subtle` ficou para trás porque o gate o excluía como "decoração" — e ele
+     não é: são 73 usos, muitos deles texto que se lê.
+     #8d8d8d é o menor degrau que passa AA nos dois fundos onde ele aparece
+     (4,9:1 sobre `bg`, 4,5:1 sobre `surface-elevated`). O preço é a rampa
+     comprimir: `subtle` fica a 3 unidades de `muted`. A alternativa — deixar
+     abaixo de AA — não é opção para texto. Se o desenho quiser mais separação,
+     o caminho é subir o `muted`, não descer este. */
+  --color-text-subtle: #8d8d8d;
 
   /* Borders (dark) */
   --color-border: #313131;
@@ -430,7 +442,11 @@
   --color-lavender: #918df6;
   --color-iris: #9580ff;
   --color-mint: #33c758;
-  --color-mint-wash: #def6e4;
+  /* O wash NÃO acompanhava o tema: seguia o pálido do claro (#def6e4) sobre
+     uma página #151515, e o selo `mint` ficava ilegível nos dois temas
+     (1,95:1, medido em 16/11/2026). No escuro o wash é o mesmo verde com
+     alfa sobre o fundo — lavagem sobre escuro, não sobre branco. */
+  --color-mint-wash: rgba(51, 199, 88, 0.16);
   --color-amber: #ffa600;
   --color-sky: #2c78fc;
   --color-magenta: #d6409f;

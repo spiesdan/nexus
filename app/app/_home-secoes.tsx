@@ -325,7 +325,7 @@ export function SalesRoadmap() {
                 width={44}
               />
               <Tooltip formatter={(v) => brl(Math.round(Number(v ?? 0)))} />
-              <Legend />
+              <Legend formatter={(valor) => <span className="text-text-muted">{valor}</span>} />
               <Bar dataKey="realizado" name={t("Realizado")} fill="#2563eb" radius={[4, 4, 0, 0]} />
               <Bar dataKey="projecao" name={t("Projeção")} fill="#93c5fd" radius={[4, 4, 0, 0]} />
               <Line

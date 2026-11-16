@@ -133,15 +133,21 @@ function rotuloDoMes(mes: string, tag: string): string {
 
 function letraDoDia(mes: string, dia: number): string {
   const [ano = "", mm = ""] = mes.split("-");
-  return DIAS_SEMANA[new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).getUTCDay()] ?? "";
+  return (
+    DIAS_SEMANA[new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).getUTCDay()] ??
+    ""
+  );
 }
 
 function diaExtenso(mes: string, dia: number, tag: string): string {
   const [ano = "", mm = ""] = mes.split("-");
-  return new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).toLocaleDateString(tag, {
-    weekday: "long",
-    timeZone: "UTC",
-  });
+  return new Date(Date.UTC(Number(ano) || 2026, (Number(mm) || 1) - 1, dia)).toLocaleDateString(
+    tag,
+    {
+      weekday: "long",
+      timeZone: "UTC",
+    },
+  );
 }
 
 interface PropsKpi {
@@ -158,14 +164,20 @@ function CartaoKpi({ label, valor, pct, cor, bgCor, Icone, info }: PropsKpi) {
   const largura = pct == null ? 0 : Math.min(100, Math.max(0, pct));
   const sobe = (pct ?? 0) >= 100;
   return (
-    <div className="rounded-xl border border-border fill-panel p-4">
+    <div className="fill-panel rounded-xl border border-border p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-md", bgCor, cor)}>
+          <span
+            className={cn(
+              "flex size-6 shrink-0 items-center justify-center rounded-md",
+              bgCor,
+              cor,
+            )}
+          >
             <Icone size={13} />
           </span>
-          <span className="truncate text-xs text-fg-muted">{label}</span>
-          {info ? <Info size={11} className="shrink-0 text-fg-muted" weight="bold" /> : null}
+          <span className="truncate text-xs text-text-muted">{label}</span>
+          {info ? <Info size={11} className="shrink-0 text-text-muted" weight="bold" /> : null}
         </div>
         {pct != null ? (
           <span
@@ -180,15 +192,18 @@ function CartaoKpi({ label, valor, pct, cor, bgCor, Icone, info }: PropsKpi) {
       </div>
       <div
         title={fmtBRL.format(valor / 100)}
-        className="mt-2.5 truncate text-xl font-semibold leading-none tabular-nums text-fg sm:text-2xl xl:text-3xl"
+        className="mt-2.5 truncate text-xl leading-none font-semibold text-fg tabular-nums sm:text-2xl xl:text-3xl"
       >
         {fmtBRL.format(valor / 100)}
       </div>
       <div className="mt-3 flex items-center gap-2">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-          <div className={cn("h-full rounded-full", cor.replace("text-", "bg-"))} style={{ width: `${largura}%` }} />
+          <div
+            className={cn("h-full rounded-full", cor.replace("text-", "bg-"))}
+            style={{ width: `${largura}%` }}
+          />
         </div>
-        <span className="shrink-0 text-[10px] tabular-nums text-fg-muted">
+        <span className="shrink-0 text-[10px] text-text-muted tabular-nums">
           {pct == null ? "—" : `${Math.round(pct)}%`}
         </span>
       </div>
@@ -228,7 +243,9 @@ function Legenda({
   );
 
   if (!aoClicar) {
-    return <div className={cn("flex items-center gap-1.5", ausente && "opacity-40")}>{apagado}</div>;
+    return (
+      <div className={cn("flex items-center gap-1.5", ausente && "opacity-40")}>{apagado}</div>
+    );
   }
 
   return (
@@ -382,7 +399,8 @@ export function CrmSalesChart({
   }, [visiveis, tetoCents]);
 
   const serieMeta = useMemo(
-    () => (visiveis.some((v) => v.metaAc != null) ? visiveis.map((v) => norm(v.metaAc ?? 0)) : null),
+    () =>
+      visiveis.some((v) => v.metaAc != null) ? visiveis.map((v) => norm(v.metaAc ?? 0)) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visiveis, tetoCents],
   );
@@ -445,10 +463,10 @@ export function CrmSalesChart({
   // As portas da legenda cortam aqui, junto do resto: o pico do eixo Y fica
   // como está (mesma regra do COMPARAR desligado) — a tela não pisca.
   const linhasVendido = ocultas.vendido ? [] : polylinesDe(serieVendido);
-  const linhaMeta = !ocultas.meta && serieMeta ? polylinesDe(serieMeta)[0] ?? null : null;
+  const linhaMeta = !ocultas.meta && serieMeta ? (polylinesDe(serieMeta)[0] ?? null) : null;
   const linhasProjecao = !ocultas.projecao && serieProjecao ? polylinesDe(serieProjecao) : [];
-  const linhaMesAnt = !ocultas.mesAnt && serieMesAnt ? polylinesDe(serieMesAnt)[0] ?? null : null;
-  const linhaMesAno = !ocultas.mesAno && serieMesAno ? polylinesDe(serieMesAno)[0] ?? null : null;
+  const linhaMesAnt = !ocultas.mesAnt && serieMesAnt ? (polylinesDe(serieMesAnt)[0] ?? null) : null;
+  const linhaMesAno = !ocultas.mesAno && serieMesAno ? (polylinesDe(serieMesAno)[0] ?? null) : null;
 
   const passoX = IW / Math.max(1, visiveis.length - 1);
   const xDoIdx = (i: number): number => i * passoX;
@@ -470,8 +488,10 @@ export function CrmSalesChart({
   const xHoje = idxHoje >= 0 ? M.left + xDoIdx(idxHoje) : null;
 
   const pontoHover = hover != null ? visiveis[hover] : null;
-  const deltaDe = (valor: number | null | undefined, anterior: number | null | undefined): number | null =>
-    valor == null ? null : valor - (anterior ?? 0);
+  const deltaDe = (
+    valor: number | null | undefined,
+    anterior: number | null | undefined,
+  ): number | null => (valor == null ? null : valor - (anterior ?? 0));
 
   // A árvore do dia sob o cursor: o que ELE vendeu (delta do acumulado), o que
   // já acumulou, e o que a linha contínua não conta — a meta daquele dia, o
@@ -481,13 +501,19 @@ export function CrmSalesChart({
   if (pontoHover && hover != null) {
     const anterior = hover > 0 ? visiveis[hover - 1] : null;
     if (!futuro && !ocultas.vendido) {
-      linhasTooltip.push({ rotulo: t("No dia"), valor: deltaDe(pontoHover.vendidoAc, anterior?.vendidoAc) });
+      linhasTooltip.push({
+        rotulo: t("No dia"),
+        valor: deltaDe(pontoHover.vendidoAc, anterior?.vendidoAc),
+      });
     }
     if (!ocultas.vendido) {
       linhasTooltip.push({ rotulo: t("Acumulado"), valor: pontoHover.vendidoAc });
     }
     if (!ocultas.meta && pontoHover.metaAc != null) {
-      linhasTooltip.push({ rotulo: t("Meta do dia"), valor: deltaDe(pontoHover.metaAc, anterior?.metaAc) });
+      linhasTooltip.push({
+        rotulo: t("Meta do dia"),
+        valor: deltaDe(pontoHover.metaAc, anterior?.metaAc),
+      });
     }
     if (!ocultas.projecao && pontoHover.projecao != null) {
       linhasTooltip.push({
@@ -496,10 +522,16 @@ export function CrmSalesChart({
       });
     }
     if (comparar?.ativo && !ocultas.mesAnt && pontoHover.mesAnt != null) {
-      linhasTooltip.push({ rotulo: t("Mês passado"), valor: deltaDe(pontoHover.mesAnt, anterior?.mesAnt) });
+      linhasTooltip.push({
+        rotulo: t("Mês passado"),
+        valor: deltaDe(pontoHover.mesAnt, anterior?.mesAnt),
+      });
     }
     if (comparar?.ativo && !ocultas.mesAno && pontoHover.mesAno != null) {
-      linhasTooltip.push({ rotulo: t("Ano passado"), valor: deltaDe(pontoHover.mesAno, anterior?.mesAno) });
+      linhasTooltip.push({
+        rotulo: t("Ano passado"),
+        valor: deltaDe(pontoHover.mesAno, anterior?.mesAno),
+      });
     }
   }
 
@@ -520,8 +552,10 @@ export function CrmSalesChart({
           <ChartLineUp size={18} />
         </span>
         <div className="min-w-0">
-          <h3 className="text-base font-semibold leading-none text-fg">{t("Evolução de Vendas")}</h3>
-          <p className="mt-1.5 truncate text-xs text-fg-muted">
+          <h3 className="text-base leading-none font-semibold text-fg">
+            {t("Evolução de Vendas")}
+          </h3>
+          <p className="mt-1.5 truncate text-xs text-text-muted">
             {t("Acompanhe o desempenho das suas vendas, com gráficos e métricas em tempo real.")}
           </p>
         </div>
@@ -570,7 +604,7 @@ export function CrmSalesChart({
                   title={t("Mês anterior")}
                   onClick={() => navegarMes(-1)}
                   disabled={carregando}
-                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
+                  className="interactive rounded-sm p-1 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <CaretLeft size={12} weight="bold" />
                 </button>
@@ -586,7 +620,7 @@ export function CrmSalesChart({
                   title={t("Próximo mês")}
                   disabled={proximoBloqueado || carregando}
                   onClick={() => navegarMes(1)}
-                  className="interactive rounded-sm p-1 text-fg-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
+                  className="interactive rounded-sm p-1 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <CaretRight size={12} weight="bold" />
                 </button>
@@ -603,7 +637,7 @@ export function CrmSalesChart({
                   onClick={() => setRange(r)}
                   className={cn(
                     "interactive rounded-sm px-1.5 py-0.5 text-[11px] leading-none hover:bg-white/[0.06]",
-                    r === range ? "font-medium text-fg" : "text-fg-muted",
+                    r === range ? "font-medium text-fg" : "text-text-muted",
                   )}
                 >
                   {r}
@@ -613,235 +647,241 @@ export function CrmSalesChart({
           </div>
 
           <div className="relative">
-          <svg
-            data-testid="svg-vendas"
-            viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-            className="mt-4 h-auto w-full"
-            aria-hidden="true"
-            onMouseLeave={() => setHover(null)}
-          >
-            <defs>
-              <linearGradient id="crm-sales-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#34d399" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-              </linearGradient>
-              <clipPath id="crm-sales-plot">
-                <rect x={M.left} y={M.top} width={IW} height={IH} />
-              </clipPath>
-            </defs>
+            <svg
+              data-testid="svg-vendas"
+              viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
+              className="mt-4 h-auto w-full"
+              aria-hidden="true"
+              onMouseLeave={() => setHover(null)}
+            >
+              <defs>
+                <linearGradient id="crm-sales-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#34d399" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+                </linearGradient>
+                <clipPath id="crm-sales-plot">
+                  <rect x={M.left} y={M.top} width={IW} height={IH} />
+                </clipPath>
+              </defs>
 
-            {/* grade + eixo Y */}
-            {passos.map((v) => {
-              const y = M.top + IH * (1 - norm(v * 100));
-              return (
-                <g key={v}>
-                  <line
-                    x1={M.left}
-                    x2={M.left + IW}
-                    y1={y}
-                    y2={y}
-                    stroke="#94a3b8"
-                    strokeOpacity={0.15}
-                  />
-                  <text x={M.left - 6} y={y + 3} textAnchor="end" fontSize={9} fill="#94a3b8">
-                    {fmtNum.format(v)}
-                  </text>
-                </g>
-              );
-            })}
+              {/* grade + eixo Y */}
+              {passos.map((v) => {
+                const y = M.top + IH * (1 - norm(v * 100));
+                return (
+                  <g key={v}>
+                    <line
+                      x1={M.left}
+                      x2={M.left + IW}
+                      y1={y}
+                      y2={y}
+                      stroke="#94a3b8"
+                      strokeOpacity={0.15}
+                    />
+                    <text x={M.left - 6} y={y + 3} textAnchor="end" fontSize={9} fill="#94a3b8">
+                      {fmtNum.format(v)}
+                    </text>
+                  </g>
+                );
+              })}
 
-            <g clipPath="url(#crm-sales-plot)">
-              {areaVendido ? (
-                <g transform={`translate(${M.left},${M.top})`}>
-                  <polygon points={areaVendido} fill="url(#crm-sales-fill)" />
-                </g>
-              ) : null}
+              <g clipPath="url(#crm-sales-plot)">
+                {areaVendido ? (
+                  <g transform={`translate(${M.left},${M.top})`}>
+                    <polygon points={areaVendido} fill="url(#crm-sales-fill)" />
+                  </g>
+                ) : null}
 
-              {linhasVendido.length > 0 ? (
-                <g
-                  data-serie="vendido"
-                  transform={`translate(${M.left},${M.top})`}
-                  fill="none"
-                  stroke="#34d399"
-                  strokeWidth={1.6}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                >
-                  {linhasVendido.map((pts, i) => (
-                    <polyline key={i} points={pts} />
-                  ))}
-                </g>
-              ) : null}
-
-              {/* pontos da realizada (como na referência) */}
-              {!ocultas.vendido ? (
-                <g data-serie="vendido-pontos" transform={`translate(${M.left},${M.top})`} fill="#34d399">
-                  {serieVendido.map((v, i) =>
-                    v == null ? null : <circle key={i} cx={xDoIdx(i)} cy={IH * (1 - v)} r={1.8} />,
-                  )}
-                </g>
-              ) : null}
-
-              {linhaMesAno ? (
-                <g data-serie="mesAno" transform={`translate(${M.left},${M.top})`}>
-                  <polyline
-                    points={linhaMesAno}
+                {linhasVendido.length > 0 ? (
+                  <g
+                    data-serie="vendido"
+                    transform={`translate(${M.left},${M.top})`}
                     fill="none"
-                    stroke="#cbd5e1"
-                    strokeWidth={1.2}
-                    strokeDasharray="2 3"
-                  />
-                </g>
-              ) : null}
-              {linhaMesAnt ? (
-                <g data-serie="mesAnt" transform={`translate(${M.left},${M.top})`}>
-                  <polyline
-                    points={linhaMesAnt}
+                    stroke="#34d399"
+                    strokeWidth={1.6}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  >
+                    {linhasVendido.map((pts, i) => (
+                      <polyline key={i} points={pts} />
+                    ))}
+                  </g>
+                ) : null}
+
+                {/* pontos da realizada (como na referência) */}
+                {!ocultas.vendido ? (
+                  <g
+                    data-serie="vendido-pontos"
+                    transform={`translate(${M.left},${M.top})`}
+                    fill="#34d399"
+                  >
+                    {serieVendido.map((v, i) =>
+                      v == null ? null : (
+                        <circle key={i} cx={xDoIdx(i)} cy={IH * (1 - v)} r={1.8} />
+                      ),
+                    )}
+                  </g>
+                ) : null}
+
+                {linhaMesAno ? (
+                  <g data-serie="mesAno" transform={`translate(${M.left},${M.top})`}>
+                    <polyline
+                      points={linhaMesAno}
+                      fill="none"
+                      stroke="#cbd5e1"
+                      strokeWidth={1.2}
+                      strokeDasharray="2 3"
+                    />
+                  </g>
+                ) : null}
+                {linhaMesAnt ? (
+                  <g data-serie="mesAnt" transform={`translate(${M.left},${M.top})`}>
+                    <polyline
+                      points={linhaMesAnt}
+                      fill="none"
+                      stroke="#94a3b8"
+                      strokeWidth={1.2}
+                      strokeDasharray="6 3"
+                    />
+                  </g>
+                ) : null}
+                {linhaMeta ? (
+                  <g data-serie="meta" transform={`translate(${M.left},${M.top})`}>
+                    <polyline
+                      points={linhaMeta}
+                      fill="none"
+                      stroke="#9a7bff"
+                      strokeWidth={1.4}
+                      strokeDasharray="6 3"
+                    />
+                  </g>
+                ) : null}
+                {linhasProjecao.length > 0 ? (
+                  <g
+                    data-serie="projecao"
+                    transform={`translate(${M.left},${M.top})`}
                     fill="none"
-                    stroke="#94a3b8"
-                    strokeWidth={1.2}
-                    strokeDasharray="6 3"
-                  />
-                </g>
-              ) : null}
-              {linhaMeta ? (
-                <g data-serie="meta" transform={`translate(${M.left},${M.top})`}>
-                  <polyline
-                    points={linhaMeta}
-                    fill="none"
-                    stroke="#9a7bff"
+                    stroke="#eab308"
                     strokeWidth={1.4}
                     strokeDasharray="6 3"
-                  />
-                </g>
-              ) : null}
-              {linhasProjecao.length > 0 ? (
-                <g
-                  data-serie="projecao"
-                  transform={`translate(${M.left},${M.top})`}
-                  fill="none"
-                  stroke="#eab308"
-                  strokeWidth={1.4}
-                  strokeDasharray="6 3"
-                  strokeLinejoin="round"
-                >
-                  {linhasProjecao.map((pts, i) => (
-                    <polyline key={i} points={pts} />
-                  ))}
-                </g>
-              ) : null}
+                    strokeLinejoin="round"
+                  >
+                    {linhasProjecao.map((pts, i) => (
+                      <polyline key={i} points={pts} />
+                    ))}
+                  </g>
+                ) : null}
 
-              {/* marcador de HOJE — só quando o mês é o corrente; a grade
+                {/* marcador de HOJE — só quando o mês é o corrente; a grade
                   passada chega inteira e o "hoje" dela seria o último dia. */}
-              {atual && xHoje != null ? (
-                <line
-                  x1={xHoje}
-                  x2={xHoje}
-                  y1={M.top}
-                  y2={M.top + IH}
-                  stroke="#94a3b8"
-                  strokeOpacity={0.5}
-                  strokeDasharray="3 3"
-                />
-              ) : null}
-
-              {/* alvos de hover: um retângulo por coluna do dia */}
-              {visiveis.map((p, i) => (
-                <rect
-                  key={`alvo-${p.dia}`}
-                  data-dia={p.dia}
-                  x={M.left + xDoIdx(i) - passoX / 2}
-                  y={M.top}
-                  width={passoX}
-                  height={IH}
-                  fill="transparent"
-                  onMouseEnter={() => setHover(i)}
-                />
-              ))}
-
-              {/* crosshair + ponto do dia sob o cursor */}
-              {hover != null && visiveis[hover] ? (
-                <g>
+                {atual && xHoje != null ? (
                   <line
-                    x1={M.left + xDoIdx(hover)}
-                    x2={M.left + xDoIdx(hover)}
+                    x1={xHoje}
+                    x2={xHoje}
                     y1={M.top}
                     y2={M.top + IH}
                     stroke="#94a3b8"
-                    strokeOpacity={0.7}
+                    strokeOpacity={0.5}
+                    strokeDasharray="3 3"
                   />
-                  {!ocultas.vendido && serieVendido[hover] != null ? (
-                    <circle
-                      cx={M.left + xDoIdx(hover)}
-                      cy={M.top + IH * (1 - serieVendido[hover])}
-                      r={3.4}
-                      fill="#34d399"
-                      stroke="var(--color-surface)"
-                      strokeWidth={1.5}
-                    />
-                  ) : null}
-                </g>
-              ) : null}
-            </g>
+                ) : null}
 
-            {/* eixo X: dia + letra do dia da semana, com desbaste — 31 rótulos
+                {/* alvos de hover: um retângulo por coluna do dia */}
+                {visiveis.map((p, i) => (
+                  <rect
+                    key={`alvo-${p.dia}`}
+                    data-dia={p.dia}
+                    x={M.left + xDoIdx(i) - passoX / 2}
+                    y={M.top}
+                    width={passoX}
+                    height={IH}
+                    fill="transparent"
+                    onMouseEnter={() => setHover(i)}
+                  />
+                ))}
+
+                {/* crosshair + ponto do dia sob o cursor */}
+                {hover != null && visiveis[hover] ? (
+                  <g>
+                    <line
+                      x1={M.left + xDoIdx(hover)}
+                      x2={M.left + xDoIdx(hover)}
+                      y1={M.top}
+                      y2={M.top + IH}
+                      stroke="#94a3b8"
+                      strokeOpacity={0.7}
+                    />
+                    {!ocultas.vendido && serieVendido[hover] != null ? (
+                      <circle
+                        cx={M.left + xDoIdx(hover)}
+                        cy={M.top + IH * (1 - serieVendido[hover])}
+                        r={3.4}
+                        fill="#34d399"
+                        stroke="var(--color-surface)"
+                        strokeWidth={1.5}
+                      />
+                    ) : null}
+                  </g>
+                ) : null}
+              </g>
+
+              {/* eixo X: dia + letra do dia da semana, com desbaste — 31 rótulos
                 lado a lado colidem abaixo de ~1400px (medido em screenshot
                 1280). Mostra ~8 marcos + o último dia + o hoje; o hover por
                 coluna continua dia a dia (os `rect[data-dia]` não mudam). */}
-            {(() => {
-              const passo = Math.max(1, Math.ceil(visiveis.length / 8));
-              return visiveis.map((p, i) =>
-                i % passo === 0 || i === visiveis.length - 1 || (p.dia === diaHoje && atual) ? (
-                  <g key={p.dia}>
-                    <text
-                      x={M.left + xDoIdx(i)}
-                      y={M.top + IH + 14}
-                      textAnchor="middle"
-                      fontSize={8.5}
-                      fill={p.dia === diaHoje && atual ? "#e4e4e7" : "#94a3b8"}
-                    >
-                      {p.dia}
-                    </text>
-                    <text
-                      x={M.left + xDoIdx(i)}
-                      y={M.top + IH + 26}
-                      textAnchor="middle"
-                      fontSize={8}
-                      fill="#94a3b8"
-                      fillOpacity={0.7}
-                    >
-                      {letraDoDia(mes, p.dia)}
-                    </text>
-                  </g>
-                ) : null,
-              );
-            })()}
-          </svg>
+              {(() => {
+                const passo = Math.max(1, Math.ceil(visiveis.length / 8));
+                return visiveis.map((p, i) =>
+                  i % passo === 0 || i === visiveis.length - 1 || (p.dia === diaHoje && atual) ? (
+                    <g key={p.dia}>
+                      <text
+                        x={M.left + xDoIdx(i)}
+                        y={M.top + IH + 14}
+                        textAnchor="middle"
+                        fontSize={8.5}
+                        fill={p.dia === diaHoje && atual ? "#e4e4e7" : "#94a3b8"}
+                      >
+                        {p.dia}
+                      </text>
+                      <text
+                        x={M.left + xDoIdx(i)}
+                        y={M.top + IH + 26}
+                        textAnchor="middle"
+                        fontSize={8}
+                        fill="#94a3b8"
+                        fillOpacity={0.7}
+                      >
+                        {letraDoDia(mes, p.dia)}
+                      </text>
+                    </g>
+                  ) : null,
+                );
+              })()}
+            </svg>
 
-          {pontoHover && hover != null ? (
-            <div
-              data-testid="tooltip-dia"
-              className="pointer-events-none absolute z-10 min-w-[10.5rem] -translate-x-1/2 -translate-y-full rounded-lg border border-border fill-panel px-2.5 py-2 shadow-lg"
-              style={{
-                left: `${Math.min(86, Math.max(14, ((M.left + xDoIdx(hover)) / PLOT_W) * 100))}%`,
-                top: `${Math.min(84, Math.max(20, ((M.top + IH * (1 - norm(pontoHover.vendidoAc))) / PLOT_H) * 100))}%`,
-              }}
-            >
-              <p className="mb-1.5 border-b border-border pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-fg-muted">
-                {pontoHover.dia} · {diaExtenso(mes, pontoHover.dia, tag)}
-              </p>
-              <div className="space-y-1">
-                {linhasTooltip.map((linha) => (
-                  <div key={linha.rotulo} className="flex items-center justify-between gap-4">
-                    <span className="text-[10px] text-fg-muted">{linha.rotulo}</span>
-                    <span className="text-[10px] font-medium tabular-nums text-fg">
-                      {linha.valor == null ? "—" : fmtBRL.format(linha.valor / 100)}
-                    </span>
-                  </div>
-                ))}
+            {pontoHover && hover != null ? (
+              <div
+                data-testid="tooltip-dia"
+                className="fill-panel pointer-events-none absolute z-10 min-w-[10.5rem] -translate-x-1/2 -translate-y-full rounded-lg border border-border px-2.5 py-2 shadow-lg"
+                style={{
+                  left: `${Math.min(86, Math.max(14, ((M.left + xDoIdx(hover)) / PLOT_W) * 100))}%`,
+                  top: `${Math.min(84, Math.max(20, ((M.top + IH * (1 - norm(pontoHover.vendidoAc))) / PLOT_H) * 100))}%`,
+                }}
+              >
+                <p className="mb-1.5 border-b border-border pb-1.5 text-[10px] font-semibold tracking-wide text-text-muted uppercase">
+                  {pontoHover.dia} · {diaExtenso(mes, pontoHover.dia, tag)}
+                </p>
+                <div className="space-y-1">
+                  {linhasTooltip.map((linha) => (
+                    <div key={linha.rotulo} className="flex items-center justify-between gap-4">
+                      <span className="text-[10px] text-text-muted">{linha.rotulo}</span>
+                      <span className="text-[10px] font-medium text-fg tabular-nums">
+                        {linha.valor == null ? "—" : fmtBRL.format(linha.valor / 100)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -893,8 +933,8 @@ export function CrmSalesChart({
         </div>
 
         {/* Resumo do mês (painel direito da referência) */}
-        <div className="rounded-xl border border-border fill-panel p-4">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-fg-muted">
+        <div className="fill-panel rounded-xl border border-border p-4">
+          <p className="text-[11px] font-medium tracking-wide text-text-muted uppercase">
             {rotuloDoMes(mes, tag)}
           </p>
 
@@ -904,7 +944,7 @@ export function CrmSalesChart({
                 <span className="flex size-5 items-center justify-center rounded-md bg-emerald-400/15 text-emerald-400">
                   <Wallet size={12} />
                 </span>
-                <span className="text-[11px] uppercase text-fg-muted">{t("Vendido no mês")}</span>
+                <span className="text-[11px] text-text-muted uppercase">{t("Vendido no mês")}</span>
               </div>
               {comparar ? (
                 <button
@@ -912,7 +952,7 @@ export function CrmSalesChart({
                   onClick={comparar.onToggle}
                   className={cn(
                     "interactive flex items-center gap-1 rounded-md border border-accent-violet/60 px-2 py-0.5 text-[11px] leading-none",
-                    comparar.ativo ? "bg-accent-violet/20 text-fg" : "text-fg-muted",
+                    comparar.ativo ? "bg-accent-violet/20 text-fg" : "text-text-muted",
                   )}
                 >
                   <ChartLineUp size={11} />
@@ -920,11 +960,11 @@ export function CrmSalesChart({
                 </button>
               ) : null}
             </div>
-            <p className="mt-1.5 text-xl font-semibold tabular-nums text-fg">
+            <p className="mt-1.5 text-xl font-semibold text-fg tabular-nums">
               {fmtBRL.format(vendidoMes / 100)}
             </p>
             {atual ? (
-              <p className="mt-0.5 text-[11px] text-fg-muted">
+              <p className="mt-0.5 text-[11px] text-text-muted">
                 {t("Hoje")} {fmtBRL.format(vendidoHoje / 100)}
               </p>
             ) : null}
@@ -938,18 +978,20 @@ export function CrmSalesChart({
                 <span className="flex size-5 items-center justify-center rounded-md bg-violet-400/15 text-violet-400">
                   <Flag size={12} />
                 </span>
-                <span className="text-[11px] uppercase text-fg-muted">{t("Objetivo do mês")}</span>
+                <span className="text-[11px] text-text-muted uppercase">
+                  {t("Objetivo do mês")}
+                </span>
               </div>
               {objetivo == null ? (
                 <a
                   href="/app/relatorios"
-                  className="text-[11px] text-fg-muted underline underline-offset-2 hover:text-fg"
+                  className="text-[11px] text-text-muted underline underline-offset-2 hover:text-fg"
                 >
                   {t("Definir metas")}
                 </a>
               ) : null}
             </div>
-            <p className="mt-1.5 text-xl font-semibold tabular-nums text-fg">
+            <p className="mt-1.5 text-xl font-semibold text-fg tabular-nums">
               {objetivo != null ? fmtBRL.format(objetivo / 100) : "—"}
             </p>
             <div className="mt-2 flex items-center gap-2">
@@ -961,11 +1003,11 @@ export function CrmSalesChart({
                   }}
                 />
               </div>
-              <span className="shrink-0 text-[10px] tabular-nums text-fg-muted">
+              <span className="shrink-0 text-[10px] text-text-muted tabular-nums">
                 {pctVendido == null ? "—" : `${pctVendido.toFixed(1)}%`}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-fg-muted">
+            <p className="mt-1 text-[11px] text-text-muted">
               {pctVendido != null
                 ? `${pctVendido.toFixed(1)}% ${t("da meta")}`
                 : t("Nenhuma meta definida")}
@@ -979,14 +1021,16 @@ export function CrmSalesChart({
               <span className="flex size-5 items-center justify-center rounded-md bg-indigo-400/15 text-indigo-400">
                 <Clock size={12} />
               </span>
-              <span className="text-[11px] uppercase text-fg-muted">{t("Necessário vender")}</span>
+              <span className="text-[11px] text-text-muted uppercase">
+                {t("Necessário vender")}
+              </span>
             </div>
-            <p className="mt-1.5 text-lg font-semibold tabular-nums text-fg">
+            <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
               {necessarioDia != null
                 ? `${fmtBRL.format(Math.round(necessarioDia) / 100)} ${t("por dia útil")}`
                 : "—"}
             </p>
-            <p className="mt-0.5 text-[11px] text-fg-muted">
+            <p className="mt-0.5 text-[11px] text-text-muted">
               {necessarioDia != null
                 ? `${diasUteisRestantes} ${t("dias úteis restantes")}`
                 : t("Nenhuma meta definida")}

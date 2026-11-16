@@ -758,6 +758,46 @@ passou a ser **≥ 20 ms de duração percebível**. É a quinta vez nesta audit
 estava na medição — e a regra segue a mesma: **antes de acusar o produto, provar que a régua
 olhou**.
 
+### Contraste — medido no navegador, com a cor final de cada texto
+
+Instrumento novo, `scripts/auditoria/contraste.mjs`: para cada elemento com texto próprio, lê a
+`color` computada, sobe a árvore compondo o fundo real (alfa sobre alfa é conta, não média) e
+calcula a razão do WCAG — **4,5:1** para texto normal, **3:1** para texto grande. Limiar por
+tamanho, como a norma manda.
+
+**1.030 textos medidos em 8 telas. 48 abaixo do mínimo. Depois das correções: 22.**
+
+| #    | O que era                                                                                | Números                                                           | Desfecho                                                                                |
+| ---- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| V-27 | `--color-text-subtle` no tema escuro tinha o valor do **claro** (`#5e5e5e`)              | **2,82:1** sobre `#151515`, em texto de 11 px da lista de pedidos | **corrigido** → `#8d8d8d` (4,9:1 / 4,5:1 no elevado)                                    |
+| V-28 | `Badge variant="mint"` = `text-mint` sobre `bg-mint-wash`, e o wash **não era temado**   | **1,95:1** nos dois temas (selo "Entregue")                       | **corrigido** → wash com alfa no escuro + `text-success-fg` (5,6:1 claro, 7,4:1 escuro) |
+| V-29 | `text-fg-muted` do **uimaxxing** vazando para o produto (`#737373`)                      | **3,85:1** sobre `#151515`, 12 px                                 | **corrigido** → 19 usos passaram a `text-text-muted`                                    |
+| V-29 | Legenda de gráfico pintava o **texto** com a cor da série (Recharts)                     | **3,3:1** (azul) e **3,53:1** (vermelho) sobre `#1c1c1c`          | **corrigido** → `formatter` com `text-text-muted`; o swatch continua colorido           |
+| V-30 | **Paleta de categoria** usada como texto (`magenta`, `amber`, `sky`, `lavender`, `iris`) | `magenta` **4,13:1**; `amber` **1,9:1** sobre branco              | **declarado, não corrigido** — ver abaixo                                               |
+
+### V-30 · A paleta de categoria não passa AA, e isso é decisão declarada
+
+O próprio `globals.css` diz, no bloco dos tons de categoria: _"abaixo de 4,5 — tags curtas e
+pontuação funcional, como a referência manda"_. Ou seja: não é descuido, é escolha de design
+ancorada numa referência externa.
+
+O que a medição acrescenta é o **preço exato** dessa escolha:
+
+| Tom                 | Sobre `#1c1c1c` (escuro) | Sobre branco (claro) | AA (4,5)         |
+| ------------------- | ------------------------ | -------------------- | ---------------- |
+| `magenta` `#d6409f` | **4,13:1**               | **4,12:1**           | reprova nos dois |
+| `amber` `#ffa600`   | 8,6:1                    | **1,9:1**            | reprova no claro |
+| `sky` `#2c78fc`     | 4,7:1                    | 3,4:1                | reprova no claro |
+| `mint` `#33c758`    | 7,1:1                    | **2,1:1**            | reprova no claro |
+
+Não existe **um** hex que sirva aos dois temas: escurecer conserta o claro e quebra o escuro, e
+vice-versa. Consertar de verdade exige **dois valores por tom** (um por tema) e a decisão de qual
+referência vence — o que é escolha de design, não de auditoria.
+
+O que fiz: **declarei com número** em vez de corrigir por conta própria, e apontei o caminho
+(par por tema). O `mint` já foi corrigido porque o defeito ali não era a paleta: era o **wash**
+não acompanhar o tema, e isso é bug, não gosto.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

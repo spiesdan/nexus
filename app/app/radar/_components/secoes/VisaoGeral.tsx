@@ -22,11 +22,22 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
 import { linkWhatsAppRecuperacao } from "@/lib/comercial/inatividade";
-import { filtrarLinhas, ROTULO_NIVEL, agregarRadar, type NivelRadar, type ResumoRadar } from "@/lib/comercial/radar-score";
+import {
+  filtrarLinhas,
+  ROTULO_NIVEL,
+  agregarRadar,
+  type NivelRadar,
+  type ResumoRadar,
+} from "@/lib/comercial/radar-score";
 import { comRecorte } from "@/lib/comercial/radar-filtros-url";
 import { comoMoeda } from "@/lib/format/moeda";
 
-import { useInativosDoRadar, useLinhasDoRadar, useRadarDados, useVendedoresDoRadar } from "../../_dados";
+import {
+  useInativosDoRadar,
+  useLinhasDoRadar,
+  useRadarDados,
+  useVendedoresDoRadar,
+} from "../../_dados";
 import { FiltrosDoRadar } from "../FiltrosDoRadar";
 import { paraLinha } from "../comum";
 
@@ -343,7 +354,10 @@ export function VisaoGeralDoRadar() {
                       nome,
                     ]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12 }}
+                    formatter={(valor) => <span className="text-text-muted">{valor}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
