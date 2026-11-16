@@ -1133,3 +1133,33 @@
 body {
   cursor: default;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   MOVIMENTO REDUZIDO, GLOBAL.
+
+   O `uimaxxing.css` já respeita `prefers-reduced-motion` — mas em TRÊS
+   componentes nomeados (`.pointer-cursor`, `.roll-in`, `.caret-smooth`). O resto
+   do produto anima igual com a preferência ligada: medido em 16/11/2026 pelo
+   instrumento `teclado-e-foco.mjs`, **18 de 20** elementos amostrados mantinham
+   `transition-duration` > 0 com `reducedMotion: reduce` emulado.
+
+   Para quem tem sensibilidade vestibular, transição de 150 ms não é enfeite: é
+   desconforto. A regra abaixo é a universal — reduz a duração a quase zero em
+   vez de remover a propriedade, porque `transitionend`/`animationend` ainda
+   precisa disparar (há componente que fecha por evento, e `transition: none`
+   deixaria a promessa pendurada).
+
+   `!important` aqui é intencional e é o único jeito: as classes utilitárias do
+   Tailwind (`transition`, `animate-*`) vêm com especificidade própria, e sem
+   `!important` elas venceriam por ordem.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

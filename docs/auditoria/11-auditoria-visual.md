@@ -720,6 +720,44 @@ exceções **com o motivo do autor, não com o meu**: o comentário do arquivo d
 registrado como **pendente de decisão**: o certo é o idioma da organização, e isso muda a
 assinatura de `renderPuladasPdf`.
 
+### Teclado, foco e movimento reduzido — o bloco do 2.11 que não tem PNG
+
+Foco e teclado não aparecem em captura de tela: um botão com `outline: none` é idêntico a um com
+foco visível **até alguém apertar Tab**. Instrumento novo, `scripts/auditoria/teclado-e-foco.mjs`,
+percorre até 40 paradas de Tab por tela nas 9 telas onde o teclado é caminho principal.
+
+| Medida                                 | Resultado                         |
+| -------------------------------------- | --------------------------------- |
+| telas                                  | **9** (8 autenticadas + login)    |
+| paradas de foco                        | **301**                           |
+| elemento focado **sem** foco visível   | **0**                             |
+| primeiro Tab é "Pular para o conteúdo" | **sim, nas 8 telas autenticadas** |
+| foco dentro de `aria-hidden`           | **0**                             |
+
+O critério é o do WCAG 2.4.7: `outline` com largura > 0, ou `box-shadow` — os dois caminhos que o
+tema usa. Nenhum elemento ficou sem. E o "pular para o conteúdo" ser o **primeiro** Tab é o que
+salva quem navega por teclado de atravessar 18 portas de menu antes de chegar ao conteúdo.
+
+### V-26 · Média · O produto ignorava `prefers-reduced-motion` — **CORRIGIDO**
+
+Com a preferência emulada, **18 de 20** elementos amostrados continuavam animando
+(`transition-duration` > 0). O `uimaxxing.css` já respeitava a preferência — mas em **três
+componentes nomeados** (`.pointer-cursor`, `.roll-in`, `.caret-smooth`). Todo o resto, que é onde
+o produto passa o dia (botões, cards, `transition` do Tailwind), ignorava.
+
+Para quem tem sensibilidade vestibular, transição de 150 ms não é enfeite: é desconforto. A regra
+global entrou em `app/globals.css` reduzindo a duração a ~zero em vez de remover a propriedade —
+`transitionend`/`animationend` continua disparando, e há componente que fecha por evento.
+
+Depois: **0 de 20**. Medido, não presumido.
+
+**E o instrumento errou primeiro.** A primeira rodada pós-conserto deu `movimento=20` — **pior**
+que antes. A causa era a régua: ela comparava com `"0s"` e a regra global escreve `0.01ms`, que
+não é `"0s"`. Ou seja, o instrumento lia "o produto respeita" como "o produto ignora". O limiar
+passou a ser **≥ 20 ms de duração percebível**. É a quinta vez nesta auditoria que o defeito
+estava na medição — e a regra segue a mesma: **antes de acusar o produto, provar que a régua
+olhou**.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

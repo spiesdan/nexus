@@ -1,0 +1,3142 @@
+{
+  "geradoEm": "2026-11-16T12:06:33.575Z",
+  "base": "http://localhost:3011",
+  "resultados": [
+    {
+      "rota": "/app",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Mês anterior",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "1D",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "1W",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "1M",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Tudo",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Vendas no mês",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Previsão de vendas",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Mês passado",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Ano passado",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Comparar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/pedidos",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Importar pedidos Mercos",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Imprimir",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Criar pedido",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "Buscar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "Status",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "Vendedor",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "Origem",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "De",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Gerar pedido",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Visualizar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Enviar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Mais opções",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "Buscar cliente por nome, telefone ou e-mail…",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Cadastrar novo cliente",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Listar todos os clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "combobox",
+          "nome": "Preço base",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Adicionar com IA",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/inbox",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "Buscar conversas",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "tab",
+          "nome": "Fila2",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "combobox",
+          "nome": "Filtrar por número de WhatsApp",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "combobox",
+          "nome": "Filtrar por assunto",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "switch",
+          "nome": "",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Q1Aguardando há 7 horasQuem Manda 179480427406",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Q1Aguardando há 17 diasQuem Manda 179338598749",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/kanban",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Importar planilha",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Novo funil",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "PedidosPadrão",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Renomear",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Arquivar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/contacts",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Importar CSV",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Novo cliente",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "Buscar por nome, email ou telefone…",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "Todas",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "Todas as origensManualWhatsAppNuvemshopImporta",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "select",
+          "papel": null,
+          "nome": "2550100",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "Selecionar todos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Nome",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Email",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Telefone",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/audit",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "ex: lead.created",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "ex: contact",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/app/settings/profile",
+      "focos": [
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pular para o conteúdo",
+          "temOutline": true,
+          "temSombra": true,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "NEXUS",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Dashboard",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Meu Dia",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Pedidos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Clientes",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Produtos",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Funis",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Campanha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Inbox",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Radar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Follow-ups",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Agenda",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Ver tudo em IA",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Estoque",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Compras",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Expedição",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Contas a Receber",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Notas fiscais",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Comissões",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Configurações",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "2 na fila",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Dispensar aviso",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Nova versão · 1.1.0",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Recolher sidebar",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Buscar em todo o sistema",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Alternar para o tema claro",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Abrir assistente",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Central de avisos — 3 em aberto",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Menu do usuário",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "combobox",
+          "nome": "Seguir o idioma da empresa",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": "combobox",
+          "nome": "America/Sao_Paulo",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "https://…",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Salvar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": false,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "Pular para o conteúdo",
+        "ehPularParaConteudo": true
+      }
+    },
+    {
+      "rota": "/login",
+      "focos": [
+        {
+          "tag": "input",
+          "papel": null,
+          "nome": "",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "button",
+          "papel": null,
+          "nome": "Entrar",
+          "temOutline": false,
+          "temSombra": true,
+          "outline": "none 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Esqueci minha senha",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        },
+        {
+          "tag": "a",
+          "papel": null,
+          "nome": "Criar conta",
+          "temOutline": true,
+          "temSombra": false,
+          "outline": "solid 2px",
+          "foraDoMain": true,
+          "dentroDeAriaHidden": false
+        }
+      ],
+      "semFocoVisivel": [],
+      "movimentoReduzido": {
+        "comMovimento": 0,
+        "amostra": []
+      },
+      "primeiroTab": {
+        "texto": "",
+        "ehPularParaConteudo": false
+      }
+    }
+  ]
+}
