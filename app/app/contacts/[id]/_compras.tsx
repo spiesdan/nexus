@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Card } from "@/components/ui/card";
 import { apiClient } from "@/lib/api/client";
 import {
@@ -23,6 +24,7 @@ import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
  */
 export function ComprasDoContato({ contactId }: { contactId: string }) {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const [pedidos, setPedidos] = React.useState<PedidoComercial[] | null>(null);
 
   React.useEffect(() => {
@@ -63,16 +65,17 @@ export function ComprasDoContato({ contactId }: { contactId: string }) {
   return (
     <div className="space-y-3">
       <Card className="hover-raise p-4">
-        <p className="text-sm text-muted-foreground">
-          {t("Total comprado (sem cancelados)")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t("Total comprado (sem cancelados)")}</p>
         <p className="text-2xl font-semibold">{comoMoeda(total, "BRL")}</p>
       </Card>
       <ul className="divide-y rounded-lg border">
         {pedidos.map((p) => {
           const badge = badgeDaOrigem(p.origem);
           return (
-            <li key={p.id} className="flex items-center gap-4 p-3 text-sm transition-colors hover:bg-muted/50">
+            <li
+              key={p.id}
+              className="flex items-center gap-4 p-3 text-sm transition-colors hover:bg-muted/50"
+            >
               <Link
                 href={`/app/pedidos/${p.id}`}
                 className="font-medium text-primary underline-offset-4 hover:underline"
@@ -81,7 +84,7 @@ export function ComprasDoContato({ contactId }: { contactId: string }) {
                 {numeroDoPedido(p.numero)}
               </Link>
               <span className="text-muted-foreground">
-                {new Date(p.created_at).toLocaleDateString()}
+                {new Date(p.created_at).toLocaleDateString(tagDoIdioma)}
               </span>
               <span>{ROTULO_DO_STATUS[p.status as StatusDoPedido] ?? p.status}</span>
               <span

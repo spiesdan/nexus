@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { Button } from "@/components/ui/button";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
@@ -41,6 +42,7 @@ function precoLiquido(it: ItemImpresso): number {
 /** Botão de impressão (só na tela — some no papel). */
 function BotaoImprimir() {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   return (
     <div className="mb-4 flex gap-2 print:hidden">
       <Button onClick={() => window.print()}>{t("Imprimir")}</Button>
@@ -69,6 +71,7 @@ export function ImprimirLoteClient({
   pedidos: { pedido: PedidoComercial; cliente: ClienteImpresso; itens: ItemImpresso[] }[];
 }) {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   // Estado vazio: sem `h1` e sem saída, o leitor de tela não tinha onde pousar
   // e a pessoa ficava numa tela que só diz "nada aqui" — sem caminho de volta.
   // Medido na captura de 16/11 (`desktop_app_pedidos_imprimir.png`): página com
@@ -119,7 +122,8 @@ export function ImprimirLoteClient({
                   {t("Pedido")} Nº {p.numero}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(p.created_at).toLocaleDateString()} · {numeroDoPedido(p.numero)}
+                  {new Date(p.created_at).toLocaleDateString(tagDoIdioma)} ·{" "}
+                  {numeroDoPedido(p.numero)}
                 </p>
               </div>
               <p className="shrink-0 rounded-full border border-border-strong px-3 py-1 text-xs font-medium tracking-wide uppercase">
@@ -226,7 +230,7 @@ export function ImprimirLoteClient({
               {p.previsao_entrega && (
                 <p>
                   <span className="text-muted-foreground">{t("Previsão de entrega")}: </span>
-                  {new Date(p.previsao_entrega).toLocaleDateString()}
+                  {new Date(p.previsao_entrega).toLocaleDateString(tagDoIdioma)}
                 </p>
               )}
               {p.endereco_entrega?.trim() && (
@@ -237,7 +241,7 @@ export function ImprimirLoteClient({
               )}
               <p>
                 <span className="text-muted-foreground">{t("Data de emissão")}: </span>
-                {new Date(p.created_at).toLocaleDateString()}
+                {new Date(p.created_at).toLocaleDateString(tagDoIdioma)}
               </p>
             </div>
             {p.observacoes?.trim() && (

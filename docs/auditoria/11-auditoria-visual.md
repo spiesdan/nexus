@@ -694,6 +694,32 @@ de lista continua dívida, com nome: `tabelas.mjs --linhas 5000` contra um banco
 `/app/team` é a única com **5 células truncadas** — e truncar ali é o comportamento certo: é a
 lista de pessoas, com nomes de tamanho livre.
 
+### V-25 · Média · Dez datas seguiam o idioma do **navegador**, não o de quem lê — **CORRIGIDO**
+
+O produto já tem uma camada de data (`useTagDeIdioma`) e um guarda que reprova `locale: ptBR`
+importado à mão. O guarda cobria **idioma fixo**; não cobria **idioma ausente**. Medido:
+
+```
+toLocaleDateString()  sem argumento  em  7 arquivos
+```
+
+Sem argumento, quem decide é o navegador. Quem escolheu espanhol na interface via
+`12/25/2026` — a mesma classe de defeito de antes, por outro caminho: antes o idioma era fixo em
+português; agora era o do sistema, e em nenhum dos dois era o de quem lê.
+
+Onde: `imprimir` (3 datas do documento), `RunsTable`, `VersionHistory` (2), `RunDetailDrawer` (2),
+`_home-secoes` (fila de follow-ups), `contacts/[id]/_compras`, `pedidos/[id]/_detalhe`.
+
+**E o guarda passou a cobrar a ausência.** Ao estendê-lo, ele achou **mais três** que um `grep`
+por `toLocaleDateString()` não pegava — porque o receptor era expressão (`new Date(\`${l.vencimento}T12:00:00Z\`)`).
+Ficaram **12** no total, e 11 foram corrigidas.
+
+A décima segunda é o PDF de "puladas" (`lib/fiscal/puladas-pdf.tsx`), e vai para a lista de
+exceções **com o motivo do autor, não com o meu**: o comentário do arquivo diz que o rodapé segue
+"o locale da máquina de quem emite". Isso não é seguir quem **lê** — o PDF vai para alguém. Está
+registrado como **pendente de decisão**: o certo é o idioma da organização, e isso muda a
+assinatura de `renderPuladasPdf`.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
