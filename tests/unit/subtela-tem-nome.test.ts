@@ -69,6 +69,34 @@ describe("subtela tem nome", () => {
     );
   });
 
+  it("lê a barra de abas CASEIRA (aria-current) e não se perde no `=>`", () => {
+    // Regressão medida em 16/11/2026: `/app/prospeccao` saiu com quatro abas
+    // chamadas `setAba(buscar)} >`. A causa é o `>` de `onClick={() => ...}` —
+    // um `[^>]*` no atributo para ali e o "rótulo" vira código. O fim da tag
+    // passou a respeitar `{}` e strings.
+    const jsx = `
+      <Button
+        type="button"
+        aria-current={aba === "buscar" ? "page" : undefined}
+        onClick={() => setAba("buscar")}
+      >
+        {t("Buscar")}
+      </Button>
+      <button aria-current={aba === "x" ? "page" : undefined}>Fornecedores</button>`;
+    const r = extrairDoTexto(jsx, "exemplo.tsx");
+    expect(r.abas.map((a) => a.rotulo)).toEqual(["Buscar", "Fornecedores"]);
+    expect(r.abas.every((a) => a.tipo === "aba-caseira")).toBe(true);
+  });
+
+  it("Link com aria-current é ROTA IRMÃ, não aba de estado", () => {
+    // `/app/fiscal`: o NavFiscal navega entre rotas. Tratar como subtela de
+    // estado contaria duas vezes o que a varredura de rotas já mede.
+    const jsx = `<Link href="/app/fiscal/notas" aria-current={ativa ? "page" : undefined}>{t("Todas as notas")}</Link>`;
+    const r = extrairDoTexto(jsx, "NavFiscal.tsx");
+    expect(r.abas).toEqual([]);
+    expect(r.rotasIrmaes.map((a) => [a.tipo, a.rotulo])).toEqual([["nav-rota", "Todas as notas"]]);
+  });
+
   it("conta modal sem Title — o defeito de acessibilidade, não só o inventário", () => {
     const comTitulo = extrairDoTexto(
       '<Dialog><DialogContent><DialogTitle>{t("Criar")}</DialogTitle></DialogContent></Dialog>',
@@ -106,8 +134,9 @@ describe("subtela tem nome", () => {
     const abas = entradas.reduce((a, e) => a + e.abas.length, 0);
     const modais = entradas.reduce((a, e) => a + e.modais.length, 0);
     const gavetas = entradas.reduce((a, e) => a + e.gavetas.length, 0);
-    // Medido em 16/11/2026: 82 abas, 68 modais, 12 gavetas.
-    expect(abas).toBeGreaterThan(50);
+    // Medido em 16/11/2026, com as duas famílias de aba: 99 abas
+    // (Radix + barra caseira), 68 modais, 12 gavetas.
+    expect(abas).toBeGreaterThan(80);
     expect(modais).toBeGreaterThan(40);
     expect(gavetas).toBeGreaterThan(5);
   });

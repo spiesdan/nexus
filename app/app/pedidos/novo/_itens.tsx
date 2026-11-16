@@ -75,6 +75,7 @@ export function OrderItems({
             <div>
               <Label>{t("Preço")}</Label>
               <Input
+                aria-label={t("Preço")}
                 className="h-9"
                 value={l.precoTexto}
                 onChange={(e) => aoMudar(l.key, { precoTexto: e.target.value })}
@@ -83,6 +84,7 @@ export function OrderItems({
             <div>
               <Label>{t("Desc. %")}</Label>
               <Input
+                aria-label={t("Desc. %")}
                 type="number"
                 min={0}
                 max={100}

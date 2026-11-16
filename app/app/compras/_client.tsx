@@ -102,10 +102,18 @@ export function ComprasClient({ podeEscrever }: { podeEscrever: boolean }) {
         title="Compras"
         subtitle="Pedidos de compra aos fornecedores e quem os fornece."
         navigation={
+          // `aria-current`, não só classe. As outras barras de aba do produto
+          // (`/app/products`, `/app/prospeccao`, `/app/expedicao/[id]`) marcam a
+          // aba ativa com `aria-current="page"`; esta marcava **só** por
+          // `className`. Medido em 16/11/2026: um leitor de tela anunciava dois
+          // botões "Pedidos" e "Fornecedores" sem dizer qual está aberto — e o
+          // inventário de subtelas não conseguia nem enumerá-las, porque não há
+          // `role=tab` nem `aria-current` para ler.
           <nav className="flex gap-4">
             <button
               type="button"
               onClick={() => trocarAba("pedidos")}
+              aria-current={aba === "pedidos" ? "page" : undefined}
               className={aba === "pedidos" ? "font-medium text-text" : "hover:text-text"}
             >
               Pedidos
@@ -113,6 +121,7 @@ export function ComprasClient({ podeEscrever }: { podeEscrever: boolean }) {
             <button
               type="button"
               onClick={() => trocarAba("fornecedores")}
+              aria-current={aba === "fornecedores" ? "page" : undefined}
               className={aba === "fornecedores" ? "font-medium text-text" : "hover:text-text"}
             >
               Fornecedores
@@ -498,7 +507,7 @@ function DialogNovaCompra({
           <div className="space-y-2">
             <Label>Fornecedor (opcional)</Label>
             <Select value={supplierId || "sem"} onValueChange={(v) => setSupplierId(v === "sem" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Fornecedor (opcional)">
                 <SelectValue placeholder="Sem fornecedor" />
               </SelectTrigger>
               <SelectContent>

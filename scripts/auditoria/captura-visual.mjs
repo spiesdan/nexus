@@ -237,6 +237,20 @@ if (!(await esperarServidor())) {
 
 const urlDepoisDoLogin = await entrar();
 
+/**
+ * `--guardar-estado <arquivo>` grava a sessão (cookies/localStorage) para outro
+ * instrumento reusar sem repetir login.
+ *
+ * Por que existe: `captura-subtelas.mjs` abre ~150 telas e cada aba nelas; logar
+ * por aba dobraria o custo e bateria no rate limit por IP sem medir nada novo.
+ * O arquivo NUNCA vai para o git (é credencial de sessão) — grave em /tmp.
+ */
+const guardarEstado = args.get("--guardar-estado");
+if (guardarEstado) {
+  await contexto.storageState({ path: String(guardarEstado) });
+  process.stdout.write(`sessão gravada em ${guardarEstado}\n`);
+}
+
 /** Mede o que dá para medir sem olho humano: overflow, alvos de toque, título, vazio. */
 async function medir() {
   return pagina.evaluate(() => {

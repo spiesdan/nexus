@@ -182,7 +182,9 @@ export function PainelDeProvedores() {
         subtitle={
           <>
             {t("Seu sistema usa inteligência artificial em")} {dados.pontos.length}{" "}
-            {t("lugares diferentes. Aqui você vê qual está atendendo cada um — e troca, se quiser.")}
+            {t(
+              "lugares diferentes. Aqui você vê qual está atendendo cada um — e troca, se quiser.",
+            )}
           </>
         }
       />
@@ -225,12 +227,7 @@ export function PainelDeProvedores() {
             {avancado[papel] && (
               <div className="mt-3 space-y-3">
                 {pontos.map((ponto) => (
-                  <CartaoDoPonto
-                    key={ponto.id}
-                    ponto={ponto}
-                    dados={dados}
-                    aoSalvar={carregar}
-                  />
+                  <CartaoDoPonto key={ponto.id} ponto={ponto} dados={dados} aoSalvar={carregar} />
                 ))}
               </div>
             )}
@@ -397,7 +394,7 @@ function CartaoDoPonto({
                 setCredentialId("");
               }}
             >
-              <SelectTrigger data-testid={`provider-${ponto.id}`}>
+              <SelectTrigger aria-label={t("Provedor")} data-testid={`provider-${ponto.id}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -425,6 +422,7 @@ function CartaoDoPonto({
             {modelosDoProvider.length === 0 ? (
               <>
                 <Input
+                  aria-label={t("Modelo")}
                   value={modelId}
                   onChange={(e) => setModelId(e.target.value)}
                   placeholder="ex.: meta-llama/llama-3.3-70b-instruct"
@@ -456,7 +454,7 @@ function CartaoDoPonto({
           <div>
             <Label className="text-xs">{t("Chave")}</Label>
             <Select value={credentialId} onValueChange={setCredentialId}>
-              <SelectTrigger data-testid={`chave-${ponto.id}`}>
+              <SelectTrigger aria-label={t("Chave")} data-testid={`chave-${ponto.id}`}>
                 <SelectValue placeholder={t("da instalação")} />
               </SelectTrigger>
               <SelectContent>
@@ -473,6 +471,7 @@ function CartaoDoPonto({
             <div className="sm:col-span-3">
               <Label className="text-xs">{t("Endereço próprio (opcional)")}</Label>
               <Input
+                aria-label={t("Endereço próprio (opcional)")}
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 placeholder="https://mi-gateway.ejemplo.com/v1"

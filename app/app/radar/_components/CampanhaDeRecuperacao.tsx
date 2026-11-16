@@ -148,17 +148,17 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               {t("Vai falar com")} <strong>{comFone.length}</strong>{" "}
-              {t("clientes que pararam de comprar, uma mensagem por minuto, dentro das janelas abaixo.")}
-              {semFone > 0 ? ` ${semFone} ${t("ficaram de fora por não ter telefone no cadastro.")}` : ""}
+              {t(
+                "clientes que pararam de comprar, uma mensagem por minuto, dentro das janelas abaixo.",
+              )}
+              {semFone > 0
+                ? ` ${semFone} ${t("ficaram de fora por não ter telefone no cadastro.")}`
+                : ""}
             </p>
 
             <div className="space-y-1.5">
               <Label htmlFor="rec-nome">{t("Nome da campanha")}</Label>
-              <Input
-                id="rec-nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
+              <Input id="rec-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
             </div>
 
             <div className="space-y-2">
@@ -166,14 +166,13 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
               {mensagens.map((m, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <Textarea
+                    aria-label={t("Mensagens (giram nesta ordem, uma por minuto)")}
                     value={m}
                     rows={2}
                     maxLength={4000}
                     placeholder={t("Escreva a mensagem")}
                     onChange={(e) =>
-                      setMensagens((atual) =>
-                        atual.map((v, j) => (j === i ? e.target.value : v)),
-                      )
+                      setMensagens((atual) => atual.map((v, j) => (j === i ? e.target.value : v)))
                     }
                   />
                   {mensagens.length > 1 && (
@@ -207,6 +206,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
                   <Input
                     type="time"
                     className="w-32"
+                    aria-label={`${t("Início da janela")} ${i + 1}`}
                     value={j.inicio}
                     onChange={(e) =>
                       setJanelas((atual) =>
@@ -218,6 +218,7 @@ export function CampanhaDeRecuperacao({ contatos }: { contatos: ClienteInativo[]
                   <Input
                     type="time"
                     className="w-32"
+                    aria-label={`${t("Fim da janela")} ${i + 1}`}
                     value={j.fim}
                     onChange={(e) =>
                       setJanelas((atual) =>

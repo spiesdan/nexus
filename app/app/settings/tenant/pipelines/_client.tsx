@@ -145,34 +145,43 @@ function PipelineEditor({ pipeline }: { pipeline: PipelineRow }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="space-y-1">
           <Label className="text-xs">Lead</Label>
-          <Input value={lead} onChange={(e) => setLead(e.target.value)} />
+          <Input aria-label="Lead" value={lead} onChange={(e) => setLead(e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Deal</Label>
-          <Input value={deal} onChange={(e) => setDeal(e.target.value)} />
+          <Input aria-label="Deal" value={deal} onChange={(e) => setDeal(e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Won</Label>
-          <Input value={won} onChange={(e) => setWon(e.target.value)} />
+          <Input aria-label="Won" value={won} onChange={(e) => setWon(e.target.value)} />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Lost</Label>
-          <Input value={lost} onChange={(e) => setLost(e.target.value)} />
+          <Input aria-label="Lost" value={lost} onChange={(e) => setLost(e.target.value)} />
         </div>
       </div>
 
       <div className="space-y-1">
         <Label className="text-xs">{t("Motivos de perda (separados por vírgula)")}</Label>
-        <Input value={reasonsText} onChange={(e) => setReasonsText(e.target.value)} />
+        <Input
+          aria-label={t("Motivos de perda (separados por vírgula)")}
+          value={reasonsText}
+          onChange={(e) => setReasonsText(e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">
         <Label className="text-xs">{t("Campos do lead neste funil")}</Label>
         <p className="text-xs text-muted-foreground">
-          {t("Aparecem no dossiê do negócio. No follow-up, você escolhe em qual campo gravar a resposta.")}
+          {t(
+            "Aparecem no dossiê do negócio. No follow-up, você escolhe em qual campo gravar a resposta.",
+          )}
         </p>
         {fields.map((f, i) => (
-          <div key={`${f.key}-${i}`} className="grid gap-2 rounded-2xl border border-border p-2 md:grid-cols-[1fr_1fr_8rem_auto]">
+          <div
+            key={`${f.key}-${i}`}
+            className="grid gap-2 rounded-2xl border border-border p-2 md:grid-cols-[1fr_1fr_8rem_auto]"
+          >
             <Input
               aria-label={`${t("Chave do campo")} ${i + 1}`}
               placeholder={t("chave (endereco)")}

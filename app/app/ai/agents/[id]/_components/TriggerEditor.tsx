@@ -21,7 +21,7 @@ export interface BusinessHoursValue {
 }
 
 export interface TriggerValue {
-  events: ("message")[];
+  events: "message"[];
   filters: {
     ignore_groups: boolean;
     ignore_self: boolean;
@@ -58,12 +58,12 @@ export function TriggerEditor({ value, onChange, disabled }: Props) {
   function setBhEnabled(enabled: boolean) {
     patchFilters({
       business_hours: enabled
-        ? bh ?? {
+        ? (bh ?? {
             timezone: "America/Sao_Paulo",
             start: "08:00",
             end: "20:00",
             weekdays: [1, 2, 3, 4, 5],
-          }
+          })
         : null,
     });
   }
@@ -93,6 +93,7 @@ export function TriggerEditor({ value, onChange, disabled }: Props) {
                 className="flex cursor-pointer items-center gap-2 rounded-full border border-border/60 px-2 py-1 text-xs"
               >
                 <input
+                  aria-label={t("O que faz ele responder")}
                   type="checkbox"
                   className="h-3.5 w-3.5 accent-primary"
                   checked={checked}
@@ -132,12 +133,16 @@ export function TriggerEditor({ value, onChange, disabled }: Props) {
             disabled={disabled}
             id="ignore_self"
           />
-          <Label htmlFor="ignore_self">{t("Não responder às mensagens que saem do seu próprio número")}</Label>
+          <Label htmlFor="ignore_self">
+            {t("Não responder às mensagens que saem do seu próprio número")}
+          </Label>
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="keyword_regex">{t("Só responder quando a mensagem falar de algo específico (opcional)")}</Label>
+        <Label htmlFor="keyword_regex">
+          {t("Só responder quando a mensagem falar de algo específico (opcional)")}
+        </Label>
         <Input
           id="keyword_regex"
           value={value.filters.keyword_regex ?? ""}
@@ -159,10 +164,12 @@ export function TriggerEditor({ value, onChange, disabled }: Props) {
         <Label>{t("Quantos atendimentos ao mesmo tempo")}</Label>
         <Select
           value={value.concurrency}
-          onValueChange={(v) => onChange({ ...value, concurrency: v as TriggerValue["concurrency"] })}
+          onValueChange={(v) =>
+            onChange({ ...value, concurrency: v as TriggerValue["concurrency"] })
+          }
           disabled={disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Quantos atendimentos ao mesmo tempo")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

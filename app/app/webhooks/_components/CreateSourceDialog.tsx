@@ -109,7 +109,7 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
           <div className="space-y-2">
             <Label>{t("Funil de entrada")}</Label>
             <Select value={pipelineId} onValueChange={setPipelineId} disabled={pipelinesLoading}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("Funil de entrada")}>
                 <SelectValue placeholder={t("Escolha o funil")} />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +128,7 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
               onValueChange={setStageId}
               disabled={!pipelineId || stagesLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("Estágio de entrada")}>
                 <SelectValue
                   placeholder={pipelineId ? t("Escolha o estágio") : t("Escolha o funil primeiro")}
                 />

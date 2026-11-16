@@ -32,7 +32,13 @@ import { join, relative, sep } from "node:path";
 import { arquivosDaTela, semComentarios } from "./segmento-de-rota";
 
 export interface Subtela {
-  tipo: "aba" | "modal" | "gaveta";
+  /**
+   * `aba`          — `<TabsTrigger>` do Radix: troca de estado na mesma rota.
+   * `aba-caseira`  — `<button aria-current>`: troca de estado, barra feita à mão.
+   * `nav-rota`     — `<Link/a aria-current>`: **outra rota**, não um estado.
+   * `modal`, `gaveta` — sobreposição.
+   */
+  tipo: "aba" | "aba-caseira" | "nav-rota" | "modal" | "gaveta";
   rotulo: string;
   arquivo: string;
   linha: number;
@@ -41,11 +47,49 @@ export interface Subtela {
 export interface SubtelasDaTela {
   /** Rota, como `app/app/pedidos` → `/app/pedidos`. */
   rota: string;
+  /** Abas de ESTADO: Radix + barras caseiras com `aria-current` em `<button>`. */
   abas: Subtela[];
   modais: Subtela[];
   gavetas: Subtela[];
+  /** `aria-current` em `<Link>`: são rotas irmãs, já cobertas pela varredura de rotas. */
+  rotasIrmaes: Subtela[];
   /** `<Dialog>`/`<Sheet>` sem `<DialogTitle>`/`<SheetTitle>` no mesmo arquivo. */
   semTitulo: number;
+}
+
+/** Remove `{...}` respeitando chaves aninhadas e strings dentro delas. */
+export function semExpressoes(texto: string): string {
+  let saida = "";
+  let i = 0;
+  while (i < texto.length) {
+    if (texto[i] !== "{") {
+      saida += texto[i];
+      i++;
+      continue;
+    }
+    let profundidade = 0;
+    while (i < texto.length) {
+      const c = texto[i]!;
+      if (c === '"' || c === "'" || c === "`") {
+        const aspa = c;
+        i++;
+        while (i < texto.length && texto[i] !== aspa) i += texto[i] === "\\" ? 2 : 1;
+        i++;
+        continue;
+      }
+      if (c === "{") profundidade++;
+      else if (c === "}") {
+        profundidade--;
+        if (profundidade === 0) {
+          i++;
+          break;
+        }
+      }
+      i++;
+    }
+    saida += " ";
+  }
+  return saida;
 }
 
 /** Linha (1-based) de um índice de caractere. */
@@ -78,26 +122,69 @@ export function rotuloDeJsx(trecho: string): string {
   if (uteis.length > 0) return [...new Set(uteis)].slice(0, 2).join(" / ");
 
   // 2) texto solto no JSX: `<DialogTitle>Nova compra</DialogTitle>`.
-  const texto = limpo
+  //    Braces são removidos com PROFUNDIDADE: `{a === "x" && <span>{rotulo}</span>}`
+  //    tem chaves aninhadas, e um `\{[^}]*\}` para na primeira e deixa `)} )}`
+  //    como "rótulo" — foi o que saiu em `/app/notas` em 16/11/2026.
+  const texto = semExpressoes(limpo)
     .replace(/<[^>]+>/g, " ")
-    .replace(/\{[^}]*\}/g, " ")
     .replace(/["'`]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  if (texto) return texto.slice(0, 48);
+  // Sobrou só pontuação? Então o rótulo é expressão pura — dizer "dinâmico" é
+  // honesto; devolver `)} )}` parece inventário e não é.
+  if (/[A-Za-zÀ-ÿ]{2,}/.test(texto)) return texto.slice(0, 48);
 
   // 3) literal cru (sem `t()`) e, por último, o rótulo é dinâmico — dizer isso
   // é melhor que devolver o nome de uma classe CSS.
-  const crus = [...limpo.matchAll(/["'`]([^"'`]{1,48})["'`]/g)]
+  // Literal cru só vale FORA de expressão: `{a === "notas"}` não é rótulo, é
+  // comparação — e virava "notas" como nome de aba.
+  const crus = [...semExpressoes(limpo).matchAll(/["'`]([^"'`]{1,48})["'`]/g)]
     .map((m) => m[1]!.trim())
     .filter((l) => l !== "" && !l.startsWith("/") && !/\s-\s|^[a-z-]+:/.test(l));
   if (crus.length > 0) return [...new Set(crus)].slice(0, 2).join(" / ");
   return "(rótulo dinâmico)";
 }
 
+/**
+ * Fim da tag de abertura, respeitando `{}` e strings.
+ *
+ * `onClick={() => setAba("buscar")}` tem um `>` DENTRO do atributo — o `=>`. Um
+ * `[^>]*` para no meio e o "rótulo" sai `setAba(buscar)} >`, como saiu na
+ * primeira versão. Medido em 16/11/2026 em `/app/prospeccao`: quatro abas com
+ * nome de código em vez de nome de tela.
+ */
+function fimDaTagAbertura(fonte: string, inicio: number): number {
+  let i = inicio;
+  let chaves = 0;
+  while (i < fonte.length) {
+    const c = fonte[i]!;
+    if (c === '"' || c === "'" || c === "`") {
+      const aspa = c;
+      i++;
+      while (i < fonte.length) {
+        if (fonte[i] === "\\") {
+          i += 2;
+          continue;
+        }
+        if (fonte[i] === aspa) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (c === "{") chaves++;
+    else if (c === "}") chaves--;
+    else if (c === ">" && chaves === 0) return i;
+    i++;
+  }
+  return -1;
+}
+
 /** Extrai o conteúdo entre `<Tag ...>` e `</Tag>` a partir de `inicio`. */
 function conteudoDaTag(fonte: string, inicio: number, tag: string): string | null {
-  const fechaAbertura = fonte.indexOf(">", inicio);
+  const fechaAbertura = fimDaTagAbertura(fonte, inicio);
   if (fechaAbertura < 0) return null;
   if (fonte[fechaAbertura - 1] === "/") return null; // auto-fechado
   const fim = fonte.indexOf(`</${tag}>`, fechaAbertura);
@@ -117,6 +204,50 @@ function coletar(fonte: string, arquivo: string, tag: string, tipo: Subtela["tip
     achados.push({ tipo, rotulo, arquivo, linha: linhaDe(fonte, m.index) });
   }
   return achados;
+}
+
+/**
+ * Barra de abas CASEIRA — `<button aria-current="page">` / `<Link aria-current>`.
+ *
+ * O extractor só achava `<TabsTrigger>` do Radix, e por isso `/app/compras`
+ * aparecia com **zero** abas quando tem duas ("Pedidos" e "Fornecedores"), e
+ * `/app/products`, `/app/prospeccao`, `/app/fiscal` (NavFiscal) e
+ * `/app/expedicao/[id]` também. Medido em 16/11/2026: 6 telas com barra
+ * caseira, nenhuma enumerada.
+ *
+ * A distinção que importa está no ELEMENTO, não no nome: `aria-current` num
+ * `<button>` troca estado na mesma rota (subtela de verdade); num `<a>`/`Link`
+ * navega para outra rota (já medida pela varredura de rotas — abrir de novo
+ * seria contar duas vezes).
+ */
+function coletarAriaCurrent(
+  fonte: string,
+  arquivo: string,
+): { estado: Subtela[]; rota: Subtela[] } {
+  const estado: Subtela[] = [];
+  const rota: Subtela[] = [];
+  for (const m of fonte.matchAll(/<(button|Link|a|Button)\b/g)) {
+    const tag = m[1]!;
+    // Não confundir `<a>` com `<abbr>`/`<aside>`: exige fronteira.
+    if (!/[\s/>]/.test(fonte[m.index! + tag.length + 1] ?? " ")) continue;
+    const fim = fimDaTagAbertura(fonte, m.index!);
+    if (fim < 0) continue;
+    const attrs = fonte.slice(m.index! + tag.length + 1, fim);
+    if (!/\baria-current\b/.test(attrs)) continue;
+    const interno = conteudoDaTag(fonte, m.index!, tag);
+    const rotulo = interno === null ? "" : rotuloDeJsx(interno);
+    if (!rotulo) continue;
+    const item: Subtela = {
+      tipo: tag === "button" || tag === "Button" ? "aba-caseira" : "nav-rota",
+      rotulo,
+      arquivo,
+      linha: linhaDe(fonte, m.index!),
+    };
+    // `href` decide, mesmo em `<Button asChild>`: se navega, é rota.
+    if (/\bhref\b/.test(attrs) || item.tipo === "nav-rota") rota.push(item);
+    else estado.push(item);
+  }
+  return { estado, rota };
 }
 
 /** Conta `<Dialog`/`<Sheet` sem o Title correspondente no MESMO arquivo. */
@@ -145,10 +276,17 @@ export function extrairDoTexto(
   arquivo = "(memória)",
 ): Omit<SubtelasDaTela, "rota"> {
   const fonte = semComentarios(textoBruto);
-  const abas = coletar(fonte, arquivo, "TabsTrigger", "aba");
+  const radix = coletar(fonte, arquivo, "TabsTrigger", "aba");
+  const caseiras = coletarAriaCurrent(fonte, arquivo);
   const modais = coletar(fonte, arquivo, "DialogTitle", "modal");
   const gavetas = coletar(fonte, arquivo, "SheetTitle", "gaveta");
-  return { abas, modais, gavetas, semTitulo: modaisSemTitulo(fonte) };
+  return {
+    abas: [...radix, ...caseiras.estado],
+    modais,
+    gavetas,
+    rotasIrmaes: caseiras.rota,
+    semTitulo: modaisSemTitulo(fonte),
+  };
 }
 
 /** Rota legível a partir da pasta da página, relativa a `app/`. */
@@ -187,6 +325,7 @@ export function inventariarSubtelas(raiz: string): SubtelasDaTela[] {
       abas: [],
       modais: [],
       gavetas: [],
+      rotasIrmaes: [],
       semTitulo: 0,
     };
     for (const arquivo of arquivos) {
@@ -195,6 +334,7 @@ export function inventariarSubtelas(raiz: string): SubtelasDaTela[] {
       entrada.abas.push(...parcial.abas);
       entrada.modais.push(...parcial.modais);
       entrada.gavetas.push(...parcial.gavetas);
+      entrada.rotasIrmaes.push(...parcial.rotasIrmaes);
       entrada.semTitulo += parcial.semTitulo;
     }
     porPasta.set(pasta, entrada);
@@ -251,6 +391,12 @@ if (process.argv[1]?.endsWith("subtelas.ts")) {
   const entradas = inventariarSubtelas(raiz);
   const md = renderizar(entradas);
   writeFileSync(join(raiz, "docs", "auditoria", "09b-subtelas.md"), md);
+  // JSON ao lado do markdown: o instrumento de captura precisa da lista para
+  // ABRIR cada aba, e parsear tabela markdown seria frágil de propósito errado.
+  writeFileSync(
+    join(raiz, "docs", "auditoria", "09b-subtelas.json"),
+    JSON.stringify({ geradoEm: new Date().toISOString(), telas: entradas }, null, 2) + "\n",
+  );
   const abas = entradas.reduce((a, e) => a + e.abas.length, 0);
   const modais = entradas.reduce((a, e) => a + e.modais.length, 0);
   const gavetas = entradas.reduce((a, e) => a + e.gavetas.length, 0);

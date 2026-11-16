@@ -399,7 +399,7 @@ export function VendaAutomaticaClient({
                     void carregar(selecionada, v);
                   }}
                 >
-                  <SelectTrigger className="h-8 w-52 text-xs">
+                  <SelectTrigger aria-label={t("Filtro da fila")} className="h-8 w-52 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
