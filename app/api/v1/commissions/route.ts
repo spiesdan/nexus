@@ -11,6 +11,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { comissaoDoPedido } from "@/lib/comercial/comissao";
+import { fusoValido, intervaloDoMesNoFuso } from "@/lib/comercial/visao-do-mes";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,8 @@ export interface LinhaComissao {
   comissao_cents: number;
   base_cents: number;
   baixado_em: string | null;
+  /** Quanto JÁ foi baixado. Pode ser menor que `comissao_cents` (baixa parcial). */
+  baixado_cents: number;
 }
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -41,9 +44,15 @@ export async function GET(req: NextRequest): Promise<Response> {
   const vendedor = req.nextUrl.searchParams.get("vendedor")?.trim() || null;
 
   const supabase = await createClient();
-  const [ano = 0, mes = 1] = anoMes.split("-").map(Number);
-  const inicio = `${anoMes}-01T00:00:00Z`;
-  const fim = new Date(Date.UTC(ano, mes, 1)).toISOString();
+  // O mês é o do FUSO DA ORGANIZAÇÃO. Em UTC, o pedido das 22h do último dia
+  // (Brasília) caía no mês seguinte e o fechamento do vendedor saía errado.
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("timezone")
+    .eq("id", authz.org.orgId)
+    .maybeSingle();
+  const fuso = fusoValido((org as { timezone?: string | null } | null)?.timezone ?? null);
+  const { inicio, fim } = intervaloDoMesNoFuso(anoMes, fuso);
 
   let q = supabase
     .from("commercial_orders")
@@ -61,7 +70,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   const ids = ((pedidos ?? []) as { id: string }[]).map((p) => p.id);
   let itens: { order_id: string; subtotal_cents: number; product_id: string | null }[] = [];
   let regras = new Map<string, number | null>();
-  let baixas = new Map<string, string>();
+  // Valor E data: guardar só a data fazia uma baixa PARCIAL aparecer como
+  // comissão 100% paga no total da tela.
+  let baixas = new Map<string, { baixado_em: string; valor_cents: number }>();
   if (ids.length > 0) {
     const [{ data: itensDb, error: erroItens }, { data: baixasDb }] = await Promise.all([
       supabase
@@ -71,13 +82,17 @@ export async function GET(req: NextRequest): Promise<Response> {
         .in("order_id", ids),
       supabase
         .from("commercial_commission_baixas")
-        .select("order_id, baixado_em")
+        .select("order_id, baixado_em, valor_cents")
         .eq("organization_id", authz.org.orgId)
         .in("order_id", ids),
     ]);
     if (erroItens) return fail("internal_error", "Erro ao ler os itens.", 500, { requestId });
     itens = (itensDb ?? []) as typeof itens;
-    baixas = new Map(((baixasDb ?? []) as { order_id: string; baixado_em: string }[]).map((b) => [b.order_id, b.baixado_em]));
+    baixas = new Map(
+      ((baixasDb ?? []) as { order_id: string; baixado_em: string; valor_cents: number }[]).map(
+        (b) => [b.order_id, { baixado_em: b.baixado_em, valor_cents: b.valor_cents }],
+      ),
+    );
     const prodIds = [...new Set(itens.map((i) => i.product_id).filter(Boolean))] as string[];
     if (prodIds.length > 0) {
       const { data: prods } = await supabase
@@ -115,7 +130,8 @@ export async function GET(req: NextRequest): Promise<Response> {
       total_cents: p.total_cents,
       comissao_cents: calc.cents,
       base_cents: calc.base_cents,
-      baixado_em: baixas.get(p.id) ?? null,
+      baixado_em: baixas.get(p.id)?.baixado_em ?? null,
+      baixado_cents: baixas.get(p.id)?.valor_cents ?? 0,
     };
   });
 

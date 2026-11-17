@@ -36,6 +36,50 @@ export function mesAtualNoFuso(fuso: string, agoraMs: number): string {
   return /^\d{4}-\d{2}$/.test(partes) ? partes : new Date(agoraMs).toISOString().slice(0, 7);
 }
 
+/**
+ * O INTERVALO UTC de um mês no fuso da organização.
+ *
+ * `?ano_mes=2026-11` é uma pergunta sobre NOVEMBRO NAQUELE LUGAR, e a rota
+ * respondia com `2026-11-01T00:00:00Z`–`2026-12-01T00:00:00Z`: em Brasília
+ * (UTC−3) isso é 31/10 21h a 30/11 21h. Todo pedido feito entre 21h e 23h59 do
+ * último dia do mês caía no mês seguinte, e todo pedido da véspera entrava no
+ * mês anterior — a comissão do vendedor fechava no mês errado.
+ *
+ * O deslocamento é perguntado ao `Intl` (duas passadas, porque a virada de mês
+ * pode cair do outro lado de uma mudança de horário de verão).
+ */
+function deslocamentoEm(fuso: string, ms: number): number {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: fuso,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(ms));
+  const v = (tipo: Intl.DateTimeFormatPartTypes): number =>
+    Number(partes.find((p) => p.type === tipo)?.value ?? 0);
+  const comoUtc = Date.UTC(v("year"), v("month") - 1, v("day"), v("hour"), v("minute"), v("second"));
+  return comoUtc - ms;
+}
+
+export function intervaloDoMesNoFuso(
+  anoMes: string,
+  fuso: string,
+): { inicio: string; fim: string } {
+  const [ano = 0, mes = 1] = anoMes.split("-").map(Number);
+  const paredeInicio = Date.UTC(ano, mes - 1, 1);
+  const paredeFim = Date.UTC(ano, mes, 1);
+  const paraUtc = (parede: number): string => {
+    let t = parede - deslocamentoEm(fuso, parede);
+    t = parede - deslocamentoEm(fuso, t);
+    return new Date(t).toISOString();
+  };
+  return { inicio: paraUtc(paredeInicio), fim: paraUtc(paredeFim) };
+}
+
 /** "2026-09" + delta meses, preserva o formato AAAA-MM. */
 export function deslocarMes(anoMes: string, delta: number): string {
   const [ano = 0, mes = 1] = anoMes.split("-").map(Number);

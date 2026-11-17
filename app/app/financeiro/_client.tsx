@@ -114,6 +114,7 @@ export function FinanceiroClient({
   const [de, setDe] = React.useState("");
   const [ate, setAte] = React.useState("");
   const [kpis, setKpis] = React.useState<Record<string, number> | null>(null);
+  const [amostraKpis, setAmostraKpis] = React.useState(false);
   const [erroRecebiveis, setErroRecebiveis] = React.useState(false);
   const [erroConciliacao, setErroConciliacao] = React.useState(false);
   const [divergencias, setDivergencias] = React.useState<
@@ -145,12 +146,20 @@ export function FinanceiroClient({
     [],
   );
 
-  const carregarKpis = React.useCallback(async () => {
+  // Os KPIs têm de seguir o MESMO filtro de data da lista. O cartão diz
+  // "Recebido (período)" e a rota era chamada sem `de`/`ate`: o número exibido
+  // ao lado de um filtro visível era o total histórico.
+  const carregarKpis = React.useCallback(async (de: string, ate: string) => {
     try {
-      const corpo = await apiClient.get<{ data: Record<string, number> }>(
-        "/api/v1/financeiro/dashboard",
-      );
+      const qs = new URLSearchParams();
+      if (de) qs.set("de", de);
+      if (ate) qs.set("ate", ate);
+      const corpo = await apiClient.get<{
+        data: Record<string, number>;
+        meta?: { amostra_parcial?: boolean };
+      }>(`/api/v1/financeiro/dashboard${qs.size > 0 ? `?${qs}` : ""}`);
       setKpis(corpo.data ?? null);
+      setAmostraKpis(corpo.meta?.amostra_parcial === true);
     } catch {
       setKpis(null);
     }
@@ -173,7 +182,7 @@ export function FinanceiroClient({
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void carregar(1, { busca: "", status: "", de: "", ate: "" });
-    void carregarKpis();
+    void carregarKpis("", "");
   }, [carregar, carregarKpis]);
 
   React.useEffect(() => {
@@ -184,6 +193,7 @@ export function FinanceiroClient({
   function aplicarFiltros() {
     setPagina(1);
     void carregar(1, { busca, status, de, ate });
+    void carregarKpis(de, ate);
   }
 
   function filtroRapido(qual: "hoje" | "vencidos" | "7d" | "30d") {
@@ -209,6 +219,7 @@ export function FinanceiroClient({
       ate: qual === "vencidos" ? "" : qual === "hoje" ? h : maisDias(qual === "7d" ? 7 : 30),
     };
     void carregar(1, f);
+    void carregarKpis(f.de, f.ate);
   }
 
   const totalPaginas = Math.max(1, Math.ceil(total / 50));
@@ -255,6 +266,14 @@ export function FinanceiroClient({
             comparison={`${t("Vendas")}: ${comoMoeda(kpis.vendas_periodo_cents ?? 0, "BRL")}`}
           />
         </NexusKpiGrid>
+      )}
+
+      {amostraKpis && (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t(
+            "A base passou do teto de leitura: os números deste painel são da amostra carregada, não da carteira inteira.",
+          )}
+        </p>
       )}
 
       <Tabs value={aba} onValueChange={setAba}>
@@ -464,7 +483,7 @@ export function FinanceiroClient({
                                 podeRegistrar={podeRegistrar}
                                 aoMudar={() => {
                                   void carregar(pagina, { busca: buscaAplicada, status, de, ate });
-                                  void carregarKpis();
+                                  void carregarKpis(de, ate);
                                 }}
                               />
                             </TableCell>
