@@ -804,13 +804,19 @@ Jornadas críticas (16)
 
 | #    | Item                                                                                          | Estado |
 | ---- | --------------------------------------------------------------------------------------------- | ------ |
-| 10.1 | Plano priorizado após inventário/auditoria                                                    | `[ ]`  |
-| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy           | `[ ]`  |
+| 10.1 | Plano priorizado após inventário/auditoria                                                    | `[x]`  |
+| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy           | `[~]`  |
 | 10.3 | P1 — CRM, vendas, inbox, pedidos, mobile; erros sem recuperação; a11y grave                   | `[ ]`  |
 | 10.4 | P2 — consistência visual, densidade, tabelas, navegação, relatórios, automações               | `[ ]`  |
 | 10.5 | P3 — capacidades ausentes confirmadas e conveniência                                          | `[ ]`  |
-| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[ ]`  |
+| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[x]`  |
 | 10.7 | Commits lógicos só quando o fluxo pedir; preservar mudanças preexistentes                     | `[x]`  | ≈50 commits na branch `docs/auditoria-aaa`, todos pushados; arquivos do usuário preservados. |
+
+> **Evidência (17/11/2026):** [`19-plano-priorizado.md`](19-plano-priorizado.md) classifica as
+> **115 pendências** da Parte 2 em **P0 7 · P1 53 · P2 15 · P3 40**, com os oito campos que o
+> 10.6 exige por item. O 10.2 fica `[~]` de propósito: o plano P0 está fechado, a **execução** é
+> fatiada e o estado de cada um vive na linha própria (F-09, F-17, 6.3, 8.1, 8.2, 6.A3).
+
 
 ## Definition of Done global (12)
 
@@ -968,6 +974,7 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | `docs/auditoria/capturas/subtelas-{tenant,dono,admin}.json`             | As 50 abas e 11 modais medidos em 39 telas.                                                                                                                                                              |
 | `scripts/auditoria/cod-rotulo-acessivel.mjs`                            | `aria-label` a partir do rótulo visível; `planejar()` é a régua do gate. Idempotente.                                                                                                                    |
 | `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts`                 | Gate da V-20: exige `planejar()` vazia e prova que 93 `<Label>` foram lidos.                                                                                                                             |
+| `docs/auditoria/19-plano-priorizado.md`                                  | Fase 10 (10.1/10.6): as 115 pendências da Parte 2 em P0/P1/P2/P3, com impacto, evidência, dependência, risco, arquivos, estratégia, validação e critério de conclusão — a fila executável.                                               |
 
 ## 3.7 Canal de atualizações (Discord)
 
