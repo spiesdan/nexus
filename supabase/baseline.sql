@@ -29357,3 +29357,18 @@ comment on column public.llm_calls.tool_calls is
 
 comment on column public.llm_calls.sources_meta is
   'Citações do provedor em forma agregada: {total, hosts:[...]} (0312). Sem título nem URL completa.';
+
+-- ============================================================================
+-- 0313 — índice da JANELA de mensagens por organização.
+-- Ver supabase/migrations/20261120120000_0313_indice_janela_de_mensagens.sql.
+--
+-- A janela (`organization_id` + `created_at`) não tinha índice que a cobrisse:
+-- o único por org em `messages` é PARCIAL por status. Medido com 200.000 linhas:
+-- 25–54 ms → 5,7–19 ms. `create index` sem `concurrently` porque o baseline é
+-- aplicado por `psql` e a cadeia é replayada dentro de transação.
+-- ============================================================================
+create index if not exists messages_org_created_idx
+  on public.messages (organization_id, created_at desc);
+
+comment on index public.messages_org_created_idx is
+  'Janela de mensagens por organização (0313). Cobre count/list por org + período — usado por /admin/usage e pelas contagens do inbox. Sem ele: 25–54 ms em 200k linhas; com: 5,7–19 ms (medido em 17/11/2026).';
