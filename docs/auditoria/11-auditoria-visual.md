@@ -1244,6 +1244,47 @@ passa a significar só o que diz.
 aparecer quando a busca terminou com sucesso. Busca pausada (offline) e busca com erro têm os seus
 próprios ramos.
 
+### Hierarquia e densidade — 12 telas medidas na primeira dobra (2.4)
+
+Instrumento novo, `scripts/auditoria/hierarquia-e-densidade.mjs`: em 1440 × 900, conta por tela a
+**ação primária** (botão/link com fundo opaco que se destaca do fundo da página), as secundárias, os
+alvos na dobra e os **caracteres por linha** de cada parágrafo com mais de uma linha.
+
+| Tela | Primárias | Secundárias | Alvos na dobra | títulos | linha |
+| --- | --- | --- | --- | --- | --- |
+| `/app/pedidos` | **1** (Criar pedido) | 17 | 32 | 1 | — |
+| `/app/contacts` | **1** (Novo cliente) | 33 | **50** | 1 | — |
+| `/app/kanban` | **1** (Novo funil) | 6 | **7** | 1 | — |
+| `/app/financeiro` | **1** (Filtrar) | 13 | 17 | 1 | — |
+| `/app/notas` | **1** (Emitir nota) | 15 | 19 | 1 | — |
+| `/app/expedicao` | **1** (Nova carga) | 16 | 18 | 2 | — |
+| `/app/prospeccao` | **1** (Criar campanha) | 13 | 16 | 2 | — |
+| `/app` | 0 | 13 | 13 | 2 | 45 ch |
+| `/app/inbox` | 0 | 10 | 11 | 1 | — |
+| `/app/ai` | 0 | 16 | 16 | 4 | 40 ch |
+| `/app/settings` | 0 | 14 | 14 | 5 | 37 ch |
+| `/admin` | — | — | — | 1 | — |
+
+**Hierarquia: disciplinada.** As sete telas de operação têm **exatamente uma** ação primária — não
+há duas portas de mesmo peso competindo. Onde não há primária (`/app`, `/app/ai`, `/app/settings`,
+`/app/inbox`) são telas de leitura/hub: o certo é não haver mesmo um botão cheio pedindo clique.
+
+**Densidade: varia 7×.** Kanban tem **7** alvos na dobra; Contatos tem **50** — 25 linhas × duas
+ações por linha. Não é defeito por si (lista densa é o trabalho), mas é onde o próximo ajuste de
+densidade deve olhar.
+
+**Leitura: só 3 telas têm parágrafo de mais de uma linha**, e a maior média é **45 caracteres por
+linha** — dentro do confortável, longe dos 95 que cansam.
+
+`/admin` aparece sem números porque a sessão medida é de organização e a rota **redireciona** para
+`/admin/dashboard`; medir uma tela de plataforma com sessão de tenant seria publicar outro produto.
+
+**A régua errou duas vezes, e as duas ficaram no registro:** (1) "primária" por nome de classe dava
+**0 em toda tela** — o `Button` compõe as classes em build e o `<Button asChild>` vira `<a>`; a
+detecção passou a ser por **cor computada** (fundo opaco que se destaca do fundo da página); (2)
+"linha longa" medida pela **largura da caixa** dava 138 caracteres numa frase de 40 — caixa larga não
+é linha longa; agora um `Range` conta as linhas renderizadas e divide o texto por elas.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1319,11 +1360,11 @@ cobriu").
 | 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[~]`  | **129 rotas estáticas** contra build de produção em 1440 e 390 (258 medições), **32 telas em tablet 834** e **20 rotas dinâmicas com id real** em desktop e celular (40 medições, todas 200, 0 overflow, 0 erro de console). **4 dinâmicas sem dado** com motivo (`ai_routers`, `lgpd_requests` ×2, `incidents`); **2 de token** exigem criar o token. **Falta**: as 2 rotas de token |
 | 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
-| 2.4  | Hierarquia e densidade                                              | `[~]`  | Lida nas 258 capturas; sem medição de densidade                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2.4  | Hierarquia e densidade                                                | `[~]`  | **12 telas medidas na dobra** (1440×900): **1 ação primária** em cada uma das 7 telas de operação (pedidos, contatos, kanban, financeiro, notas, expedição, prospecção) — nenhuma com duas competindo; 0 nos hubs de leitura. **Densidade**: 7 alvos (kanban) a **50** (contatos). **Leitura**: máxima de **45 caracteres por linha** nos 3 parágrafos longos. `/admin` redireciona com sessão de organização — fora da medida. **Falta**: densidade em 320 e no tablet |
 | 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | **Título medido no DOM das 129 rotas estáticas**: 117 de 119 `h1` visíveis a 24 px / 500, **um `h1` por tela** (V-35 e V-36 corrigidos; 2 exceções declaradas: `/design` e os títulos que são identificador). `sr-only` separado de visível no instrumento. **Breadcrumb**: 52 de 129 rotas têm; shell e barra de filtros consistentes nos 258 screenshots. **Falta**: decidir se breadcrumb é padrão de todas as telas internas ou só das profundas |
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Cliques reais exercitados pela suíte E2E** (16 jornadas, 254 testes verdes): a contagem por tarefa só existe para `jornada-venda` (**5 cliques + 5 digitações** do login ao pedido criado); nas demais o teste mede o resultado, não o esforço. **F-27 fechado**: o mapa de empresas não abria porque um efeito de URL escrevia no alias `/app/prospeccao` e remontava a tela — a aba Empresas voltava para Campanhas. **Falta**: instrumento de contagem por tarefa (quantos cliques/digitações cada jornada custa) |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | **Medido no dedo** (`lista-busca-e-paginacao.mjs`): contatos 25 → 19 linhas com "E2E" e 25 → 50 com "Carregar mais"; pedidos 49 → 11 com o termo, 47 linhas na visão Tabela e **"47 selecionados"** após selecionar todos. **Não vai para a URL**: filtro em `/app/contacts` e `/app/pedidos` não sobrevive a reload (decisão de produto, 4.5). **Falta**: ordenação por coluna e seleção em massa fora de Pedidos |
-| 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
+| 2.8  | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[~]`  | **Recusa**: 3 formulários submetidos vazios em produção — os 3 recusam, explicam na página e não gravam (`escrita-e-validacao.mjs`). **Caminho válido**: 2 specs E2E executadas hoje contra o build de produção, verdes em 12,2 s — `contato-salva-email` (e-mail digitado fica salvo) e `jornada-venda` (login → pedido criado). **Inventário**: 34 arquivos com botão de envio, 32 com menção em alguma spec; **2 sem cobertura de caminho válido**: renomear agente e criar token de API |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | **Offline medido em 5 telas** (`offline-e-erro.mjs`): com SW ativo o app abre; contatos/inbox/financeiro mostram "Algo deu errado … Tentar novamente"; ação pausada avisa "Sem conexão" (V-42) e o Audit Log deixou de dizer "Nenhum log" quando a busca só estava pausada (V-43). **Pedidos offline segue mudo** — F-28. Loading/vazio/erro/sucesso por V-07/V-09/V-12/V-25; permissão negada em 10 rotas. **Falta**: offline de escrita (fila/outbox) — frente 7 |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[~]`  | **Medido no clique** (`scripts/auditoria/feedback-e-duplicidade.mjs`, POST abortado após 2,5 s — nada grava): cliente novo e template novo mostram botão desabilitado, rótulo de progresso, **1 requisição por envio** e erro visível quando a resposta falha. Antes: **3 POSTs por clique** (V-39 — o cliente repetia erro de rede em método que grava) e 4 de 35 botões de envio mudos (V-40). **Falta**: dedupe server-side da `Idempotency-Key`, hoje lida por **2** rotas |
 | 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | **Contraste medido no navegador** (8 telas, cor final de cada texto sobre o fundo real): de **22 abaixo do mínimo** para **0 de 1.030** depois de V-37/V-38 (V-27 a V-30 na rodada anterior). 27 elementos por tela ficam fora por terem `background-image` — contados, não aprovados. **Foco/teclado**: 301 paradas em 9 telas, 0 sem foco visível, "Pular para o conteúdo" é o primeiro Tab. **Movimento**: 0 de 20 animando com `prefers-reduced-motion`. **Alvos de toque**: p50 de 3 por tela abaixo de 40 px (V-06, sinal). **Falta**: leitor de tela real (NVDA/VoiceOver) e zoom 200% |
