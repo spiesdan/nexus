@@ -869,6 +869,28 @@ conferência justamente porque `curl` manda UA próprio.
 Medido depois: `buscarCnpj("33000167000101")` → `ok: true` com razão social, endereço e as
 quatro IEs publicadas (DF/MS/RJ/RS, só a do RJ ativa).
 
+### V-33 · Média · O instrumento de medição apagava evidência: uma rodada avulsa reduziu o artefato de 5 rotas para 1
+
+Encontrado ao provar a V-31: para capturar a tela de notas, o instrumento foi rodado com
+`--rotas /app/notas`. Como `--grupo` cai em `inicio` por padrão, ele gravou
+`capturas/medicoes-inicio.json` com `writeFileSync` — e o artefato que tinha **5 rotas** ficou
+com **1**. Nenhum aviso: o script terminou com `ok: 1 medições`.
+
+| Antes da rodada avulsa | Depois |
+| --- | --- |
+| 5 medições (`/app`, `/app/pedidos`, `/app/kanban`, `/app/contacts`, `/app/ai`) | **1** (`/app/notas`) |
+
+Um instrumento de auditoria que apaga evidência é o mesmo defeito que ele deveria detectar: o
+relatório publica um número que o artefato não sustenta mais. Foi restaurado do git e a regra
+mudou.
+
+**Corrigido em `scripts/auditoria/medicoes.mjs`**: o arquivo passa a ser o **último resultado por
+rota × largura** — o que foi remedido é atualizado, o que não foi permanece, e a mesma rota em
+outra largura entra como outra chave. Leitura de arquivo ausente, vazio ou corrompido não lança.
+`scripts/auditoria/captura-visual.mjs` passou a usar o mesclador e imprime o total do artefato ao
+final. Gate em `tests/unit/medicoes-do-instrumento.test.ts` (**6 testes**): o primeiro caso é
+exatamente o defeito medido — 5 rotas + 1 avulsa tem de resultar em 6, nunca em 1.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -958,10 +980,11 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **25 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **26 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
-V-31 (correção automática da nota) e V-32 (403 do cliente HTTP na BrasilAPI);
+V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
+(o instrumento que apagava o próprio artefato);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 

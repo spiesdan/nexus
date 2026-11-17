@@ -27,9 +27,11 @@
  * `--larguras` aceita `desktop,tablet,celular` (padrão: desktop,celular).
  */
 import { chromium } from "@playwright/test";
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createHmac } from "node:crypto";
 import { join } from "node:path";
+
+import { montarArtefato } from "./medicoes.mjs";
 
 const RAIZ = process.cwd();
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3001";
@@ -390,21 +392,28 @@ for (const largura of larguras) {
   }
 }
 
-writeFileSync(
-  join(SAIDA, `medicoes-${grupo}.json`),
-  JSON.stringify(
-    {
-      base: BASE,
-      grupo,
-      perfil,
-      url_depois_do_login: urlDepoisDoLogin.replace(/\?.*/, "?…"),
-      puladas: selecao.puladas,
-      resultados,
-    },
-    null,
-    2,
-  ) + "\n",
-);
+// O artefato é mesclado, não substituído: medir uma rota avulsa não pode
+// apagar as medições anteriores do grupo (ver `scripts/auditoria/medicoes.mjs`).
+const arquivoMedicoes = join(SAIDA, `medicoes-${grupo}.json`);
+let anterior = null;
+if (existsSync(arquivoMedicoes)) {
+  try {
+    anterior = JSON.parse(readFileSync(arquivoMedicoes, "utf8"));
+  } catch {
+    anterior = null;
+  }
+}
+const artefato = montarArtefato({
+  base: BASE,
+  grupo,
+  perfil,
+  urlDepoisDoLogin: urlDepoisDoLogin.replace(/\?.*/, "?…"),
+  puladas: selecao.puladas,
+  novas: resultados,
+  anterior,
+});
+writeFileSync(arquivoMedicoes, JSON.stringify(artefato, null, 2) + "\n");
+console.log(`\nartefato: ${arquivoMedicoes} (${artefato.resultados.length} medições no total)`);
 
 await navegador.close();
 console.log(`\nok: ${resultados.length} medições · capturas em docs/auditoria/capturas/`);
