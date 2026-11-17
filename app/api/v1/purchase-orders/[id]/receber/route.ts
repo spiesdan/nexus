@@ -17,6 +17,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { validateRequest } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { ajustarEstoque } from "@/lib/estoque/ajustar";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ type ItemLinha = {
   produto_nome: string;
   quantidade: number;
   recebido_qtd: number;
+  custo_unit_cents: number;
 };
 
 export async function POST(req: NextRequest, { params }: Params): Promise<Response> {
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
 
   const { data: itensDb, error: erroItens } = await supabase
     .from("purchase_order_items")
-    .select("id, product_id, produto_codigo, produto_nome, quantidade, recebido_qtd")
+    .select("id, product_id, produto_codigo, produto_nome, quantidade, recebido_qtd, custo_unit_cents")
     .eq("organization_id", orgId)
     .eq("purchase_order_id", id);
   if (erroItens) return fail("internal_error", "Erro ao ler os itens.", 500, { requestId });
@@ -109,31 +111,48 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     if (a.receber <= 0 || !a.product_id) continue;
     const saldo = saldos.get(a.product_id);
     if (!saldo || !saldo.controla_estoque) continue;
-    const novoSaldo = saldo.quantidade + a.receber;
-    const [{ error: erroMov }, { error: erroSaldo }, { error: erroItem }] = await Promise.all([
-      supabase.from("inventory_movements").insert({
-        organization_id: orgId,
-        product_id: a.product_id,
-        tipo: "entrada",
-        quantidade: a.receber,
-        origem: "compra",
-        purchase_order_id: id,
-        observacao: `Recebimento compra ${(pedido as unknown as { numero: number }).numero}`,
-        created_by: authz.user.id,
-      }),
-      supabase.from("catalog_products").update({ quantidade: novoSaldo }).eq("organization_id", orgId).eq("id", a.product_id),
-      supabase
-        .from("purchase_order_items")
-        .update({ recebido_qtd: a.recebido_qtd + a.receber })
-        .eq("organization_id", orgId)
-        .eq("id", a.id),
-    ]);
-    if (erroMov || erroSaldo || erroItem) {
+    // O saldo entra pelo CAS (`ajustarEstoque`): o `select + update` anterior
+    // perdia uma entrada quando dois recebimentos corriam juntos.
+    const ajuste = await ajustarEstoque(supabase, {
+      organizationId: orgId,
+      productId: a.product_id,
+      delta: a.receber,
+    });
+    if (!ajuste.ok) {
+      return fail("validation_failed", `Estoque de ${a.produto_codigo} recusou a entrada (${ajuste.motivo}).`, 422, {
+        requestId,
+      });
+    }
+    const { error: erroMov } = await supabase.from("inventory_movements").insert({
+      organization_id: orgId,
+      product_id: a.product_id,
+      tipo: "entrada",
+      quantidade: a.receber,
+      origem: "compra",
+      purchase_order_id: id,
+      observacao: `Recebimento compra ${(pedido as unknown as { numero: number }).numero}`,
+      created_by: authz.user.id,
+    });
+    const { error: erroItem } = await supabase
+      .from("purchase_order_items")
+      .update({ recebido_qtd: a.recebido_qtd + a.receber })
+      .eq("organization_id", orgId)
+      .eq("id", a.id);
+    if (erroMov || erroItem) {
       return fail("internal_error", `Falha ao receber ${a.produto_codigo} — confira o pedido antes de repetir.`, 500, {
         requestId,
       });
     }
-    saldos.set(a.product_id, { ...saldo, quantidade: novoSaldo });
+    // O recebimento é a hora em que o custo real chega. Sem isto, a sugestão
+    // de reposição usava o custo do cadastro para sempre.
+    if (a.custo_unit_cents > 0) {
+      await supabase
+        .from("catalog_products")
+        .update({ custo_cents: a.custo_unit_cents })
+        .eq("organization_id", orgId)
+        .eq("id", a.product_id);
+    }
+    saldos.set(a.product_id, { ...saldo, quantidade: ajuste.saldo });
     recebidos += 1;
   }
   if (recebidos === 0) {
