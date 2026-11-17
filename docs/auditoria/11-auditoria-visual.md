@@ -1497,6 +1497,30 @@ Ressalvas registradas: a tarefa de montagem **não** escala com o número de gr�
 desalinhado (81 % idle), então **não** foi usado para atribuir função — a atribuição a parse/avaliação
 é inferida do payload e do commit, não provada por amostragem.
 
+## 8. Exposição sem rate limit — medida, e não há superfície aberta (8.x / 6.5)
+
+O número "3 de 417 rotas com rate limit" assusta sozinho. O que importa é **quem** chega até essas
+rotas. Medido nas 49 rotas mutantes que não têm RBAC no próprio `route.ts`:
+
+| Classe | Rotas | Proteção real |
+| --- | --- | --- |
+| aceitável por desenho — **cron** | 25 | `Bearer` com `INTERNAL_CRON_SECRET`/`INTERNAL_SECRET`, fail-closed |
+| aceitável — **webhook** | 8 | HMAC com `timingSafeEqual` (Nuvemshop, WAHA, Meta, canal) |
+| aceitável — **RBAC no helper** | 8 | `team/*` → `requireRole("admin")` em `_shared.ts`; `shipments/*/rota/*` → `requireRole("agent")` em `_transicao.ts` |
+| **risco real** (público, sem assinatura, escreve e é caro) | **0** | — |
+| **indeterminado** | 2 | abaixo |
+
+**Os dois indeterminados:**
+
+1. `/api/internal/agents/run` — roda agente de IA (**LLM pago**) atrás de segredo estático
+   (`INTERNAL_SECRET`, comparação em tempo constante, fail-closed). Não é público: sem header, 401.
+   Mas **não há teto por chamada** — segredo vazado = custo ilimitado;
+2. `/api/v1/onboarding/whatsapp/session` — só `loadAuthUser()` (cookie), sem `requireRole`: qualquer
+   membro cria sessão/QR no WAHA. Abuso exige conta válida; o custo é recurso externo.
+
+O link público do orçamento, que é o caso mais sensível, é **assinado** (`verificarOrcamento` com HMAC
+e expiração). A conclusão medida: não existe rota "pública + sem assinatura + escrita no banco + cara".
+
 ## 6. APIs — superfície medida (6.2 e 6.5)
 
 ### Contrato de resposta (6.2)
