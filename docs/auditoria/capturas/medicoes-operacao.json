@@ -3,7 +3,7 @@
   "grupo": "operacao",
   "perfil": "manager",
   "url_depois_do_login": "http://localhost:3011/app/inbox",
-  "atualizado_em": "2026-11-17T04:33:43.876Z",
+  "atualizado_em": "2026-11-17T11:02:06.048Z",
   "puladas": [],
   "resultados": [
     {
@@ -299,6 +299,111 @@
         "Financeiro"
       ],
       "textoVisivel": 3393,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1343,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Estoque · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 300,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1168,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Compras · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 255,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1380,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 947,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1227,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 717,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1441,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 42,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 3406,
       "url": "/app/financeiro"
     }
   ]

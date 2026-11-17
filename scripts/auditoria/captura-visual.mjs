@@ -48,6 +48,10 @@ const LARGURAS = [
   { nome: "estreito", width: 320, height: 720 },
   { nome: "compacto", width: 360, height: 780 },
   { nome: "grande", width: 430, height: 932 },
+  // Zoom 200% em tela de 1440: o navegador vê 720 × 450 px de CSS. É o cenário
+  // de quem aumenta a letra para ler — e o que revela layout que só funciona
+  // porque a fonte coube.
+  { nome: "zoom200", width: 720, height: 450 },
 ];
 
 const GRUPOS = {

@@ -3,7 +3,7 @@
   "grupo": "inicio",
   "perfil": "manager",
   "url_depois_do_login": "http://localhost:3011/app/inbox",
-  "atualizado_em": "2026-11-17T04:33:21.304Z",
+  "atualizado_em": "2026-11-17T11:01:48.049Z",
   "puladas": [],
   "resultados": [
     {
@@ -414,6 +414,111 @@
         "Clientes"
       ],
       "textoVisivel": 1323,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/login",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1128,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/app",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1546,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 26,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bom dia, E2E."
+      ],
+      "textoVisivel": 3112,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1333,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 377,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1092,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 151,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1102,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 88,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1336,
       "url": "/app/contacts"
     }
   ]
