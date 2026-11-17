@@ -760,15 +760,15 @@ Jornadas críticas (16)
 
 | #   | Item                                                                               | Estado |
 | --- | ---------------------------------------------------------------------------------- | ------ |
-| 9.1 | Unitários (domínio, cálculos, validação, formatação, máquina de estados, sync)     | `[ ]`  |
-| 9.2 | API (authn, authz, validação, tenant, idempotência, erros, paginação, limites)     | `[ ]`  |
-| 9.3 | Banco/invariantes (constraints, RLS, migrations, baseline, jobs, isolamento)       | `[ ]`  |
-| 9.4 | Jornadas E2E (caminhos críticos, permissões, falhas, recuperação)                  | `[ ]`  |
-| 9.5 | Visual (snapshots por tema/breakpoint, revisão sem aprovação cega)                 | `[ ]`  |
-| 9.6 | Acessibilidade (axe + teclado/foco + semântica)                                    | `[ ]`  |
+| 9.1 | Unitários (domínio, cálculos, validação, formatação, máquina de estados, sync)     | `[x]` | **650** arquivos em `tests/unit` + **253** em `lib/` + 7 em `components/` (1.144 `*.test.*`); `pnpm test:unit` **983 arquivos / 14.857 testes** verdes hoje. Cobre domínio, cálculos, validação, formatação e máquina de estado |
+| 9.2 | API (authn, authz, validação, tenant, idempotência, erros, paginação, limites)     | `[x]` | **46** `route.test.ts` junto ao código + **6** em `tests/api`, dentro do `test:unit`. Cobrem authn/authz, validação, tenant, erro e paginação por handler |
+| 9.3 | Banco/invariantes (constraints, RLS, migrations, baseline, jobs, isolamento)       | `[x]` | **159** arquivos em `tests/invariants`; `pnpm test:db` **1.492 testes** verdes com baseline aplicado em install **e** update (constraints, RLS, isolamento, jobs) |
+| 9.4 | Jornadas E2E (caminhos críticos, permissões, falhas, recuperação)                  | `[x]` | **99** specs Playwright; smoke **32 verdes** hoje contra o build; as **16 jornadas (J1–J16)** foram medidas com **254 testes** e as 7 falhas abertas uma a uma |
+| 9.5 | Visual (snapshots por tema/breakpoint, revisão sem aprovação cega)                 | `[~]` | **Zero snapshot visual**: nenhuma spec usa `toHaveScreenshot`/`toMatchSnapshot`. A regressão visual hoje depende das capturas do instrumento de auditoria, que não é gate. **Falta**: snapshots por tema/breakpoint |
+| 9.6 | Acessibilidade (axe + teclado/foco + semântica)                                    | `[~]` | `AxeBuilder` em **2 de 99** specs (`auth`, `rbac-roles`); teclado/foco (301 paradas, 0 sem foco) e contraste (22 → 0) medidos por instrumento, não por gate. **Falta**: axe nas demais telas |
 | 9.7 | Mobile/offline (banco local, fila, conflitos, rede, retry, rejeição, persistência) | `[ ]`  |
-| 9.8 | Operação (instalação, atualização, health, backup, restauração)                    | `[ ]`  |
-| 9.9 | Dados sintéticos, ambientes isolados, guardrail de banco remoto intacto            | `[ ]`  |
+| 9.8 | Operação (instalação, atualização, health, backup, restauração)                    | `[~]` | Kit do self-host medido no 6.9: install/update/backup/restore/health com `pnpm test:shell` verde. **Falta**: ensaio de restauração ponta a ponta (F-32) |
+| 9.9 | Dados sintéticos, ambientes isolados, guardrail de banco remoto intacto            | `[x]` | Guardrail de banco remoto no loader (`recusarSeRemotoVindoDoArquivo`, lança em vez de avisar): **31 dos 33** seeds usam o loader, **1** tem guarda própria com teste, **1** é placeholder. Destino remoto só por decisão explícita |
 
 ## Fase 10 — Execução progressiva
 

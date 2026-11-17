@@ -1527,6 +1527,32 @@ payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolver
 tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
 frente, não um patch.
 
+## 9. Testes — o que existe, medido por tipo (9.1 a 9.9)
+
+| Tipo | Arquivos | Evidência de execução |
+| --- | --- | --- |
+| Unitário | **650** em `tests/unit` + **253** em `lib/` + 7 em `components/` (1.144 `*.test.*` no total) | `pnpm test:unit`: **983 arquivos / 14.857 testes** verdes hoje |
+| API (handler) | **46** `route.test.ts` junto ao código + **6** em `tests/api` | dentro do `test:unit` |
+| Banco/invariantes | **159** em `tests/invariants` | `pnpm test:db`: **1.492 testes** verdes, install+update do baseline |
+| E2E | **99** specs | smoke: **32 verdes** hoje; 16 jornadas (J1–J16) já medidas com **254 testes** |
+| Shell/kit | **5** | `pnpm test:shell` verde hoje |
+
+**Dados sintéticos e guardrail de banco remoto (9.9):** o loader central
+(`scripts/lib/env-de-teste.ts`) **recusa** cair em arquivo que aponte para destino remoto — e lança,
+não avisa (foi assim que 1.483 linhas de teste foram parar na produção em 07/10). Medido: **31 dos
+33** scripts de seed usam o loader; **1** (`semear-cargas-de-teste`) tem guarda própria
+(`ehAmbienteLocal`, com teste); **1** é placeholder sem código. Destino remoto, hoje, só por decisão
+explícita de ambiente.
+
+**O que falta, com nome:**
+- **9.5 — zero snapshot visual.** Nenhuma spec usa `toHaveScreenshot`/`toMatchSnapshot`; a regressão
+  visual depende das 60+ capturas do instrumento de auditoria, que não é gate. É a lacuna maior desta
+  frente;
+- **9.6 — acessibilidade automatizada em 2 specs** (`auth`, `rbac-roles` usam `AxeBuilder`); as outras
+  97 não passam axe. Teclado/foco e contraste foram medidos por instrumento, não por gate;
+- **9.7 — mobile/offline** depende da frente 7 (fila local, conflitos): hoje há service worker e
+  sincronizador, sem teste de conflito.
+
 ## 6. Operação do self-host — instalar, atualizar, salvar, restaurar (6.9)
 
 O produto é vendido como código instalado na VPS do cliente, então a operação é parte da entrega.
