@@ -127,11 +127,12 @@ export async function cascadeRedactContact(args: CascadeArgs): Promise<CascadeRe
   const { error: trilhaErro } = await admin
     .from("llm_calls")
     .update({
-      prompt_system: null,
-      prompt_messages: null,
-      output_text: null,
+      prompt_system_hash: null,
+      prompt_messages_meta: null,
+      output_text_hash: null,
+      output_chars: null,
       tool_calls: null,
-      sources: null,
+      sources_meta: null,
     })
     .eq("organization_id", args.organizationId)
     .eq("contact_id", args.contactId);

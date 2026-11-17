@@ -57,11 +57,12 @@ describe("GET /api/v1/ai/runs/:id", () => {
         cost_cents: 2,
         latency_ms: 900,
         created_at: "2026-11-17T10:00:00Z",
-        prompt_system: "Você é o atendente.",
-        prompt_messages: [{ role: "user", content: "oi" }],
-        output_text: "Olá!",
-        tool_calls: [{ tool: "buscar_conhecimento", input: "{}" }],
-        sources: null,
+        prompt_system_hash: "a".repeat(64),
+        prompt_messages_meta: { total: 1, papeis: [{ role: "user", chars: 2 }], sha256: "b".repeat(64) },
+        output_text_hash: "c".repeat(64),
+        output_chars: 4,
+        tool_calls: [{ tool: "buscar_conhecimento", input_hash: "d".repeat(64) }],
+        sources_meta: null,
       }) as never,
     );
 
@@ -69,11 +70,17 @@ describe("GET /api/v1/ai/runs/:id", () => {
     const res = await GET(pedido(), { params: Promise.resolve({ id: ID }) });
     expect(res.status).toBe(200);
     const corpo = (await res.json()) as {
-      data: { output_text: string; prompt_messages: unknown; tem_trilha: boolean };
+      data: {
+        output_text_hash: string;
+        prompt_messages_meta: { total: number };
+        tem_trilha: boolean;
+      };
     };
-    expect(corpo.data.output_text).toBe("Olá!");
-    expect(corpo.data.prompt_messages).toEqual([{ role: "user", content: "oi" }]);
+    expect(corpo.data.output_text_hash).toBe("c".repeat(64));
+    expect(corpo.data.prompt_messages_meta.total).toBe(1);
     expect(corpo.data.tem_trilha).toBe(true);
+    // A resposta não pode carregar texto de conversa.
+    expect(JSON.stringify(corpo)).not.toContain("Olá");
   });
 
   it("linha anterior à 0312: 200 com tem_trilha=false (não inventa vazio)", async () => {
@@ -94,20 +101,23 @@ describe("GET /api/v1/ai/runs/:id", () => {
         cost_cents: 0,
         latency_ms: 100,
         created_at: "2026-01-01T00:00:00Z",
-        prompt_system: null,
-        prompt_messages: null,
-        output_text: null,
+        prompt_system_hash: null,
+        prompt_messages_meta: null,
+        output_text_hash: null,
+        output_chars: null,
         tool_calls: null,
-        sources: null,
+        sources_meta: null,
       }) as never,
     );
 
     const { GET } = await import("./route");
     const res = await GET(pedido(), { params: Promise.resolve({ id: ID }) });
-    const corpo = (await res.json()) as { data: { tem_trilha: boolean; output_text: null } };
+    const corpo = (await res.json()) as {
+      data: { tem_trilha: boolean; output_text_hash: null };
+    };
     expect(res.status).toBe(200);
     expect(corpo.data.tem_trilha).toBe(false);
-    expect(corpo.data.output_text).toBeNull();
+    expect(corpo.data.output_text_hash).toBeNull();
   });
 
   it("execução inexistente (ou de outra org) é 404", async () => {

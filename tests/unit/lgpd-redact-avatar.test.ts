@@ -242,11 +242,12 @@ describe("cascadeRedactContact — trilha de IA (0312)", () => {
     const trilha = updates.find((u) => u.tabela === "llm_calls");
     expect(trilha, "a cascata precisa zerar a trilha de llm_calls").toBeDefined();
     expect(trilha?.patch).toEqual({
-      prompt_system: null,
-      prompt_messages: null,
-      output_text: null,
+      prompt_system_hash: null,
+      prompt_messages_meta: null,
+      output_text_hash: null,
+      output_chars: null,
       tool_calls: null,
-      sources: null,
+      sources_meta: null,
     });
   });
 

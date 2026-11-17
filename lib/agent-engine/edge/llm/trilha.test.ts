@@ -3,107 +3,117 @@ import { describe, expect, it } from "vitest";
 import {
   ferramentasDoTurno,
   fontesDoTurno,
-  mensagensDoTurno,
-  recortar,
-  systemDoTurno,
+  metaDasMensagens,
+  metaDasMensagensJson,
   trilhaDoTurno,
 } from "./trilha";
 
 /**
- * A trilha do turno (P0, 0312). Antes dela, `llm_calls` guardava custo e erro
- * e nada do conteúdo — "por que o agente respondeu isso?" não tinha resposta.
+ * A trilha do turno (0312) — estrutura e hash, NUNCA conteúdo.
  *
- * O que se mede aqui é o contrato do registro: contexto que o modelo VIU (não
- * só a entrada), saída, ferramentas e fontes — com recorte VISÍVEL e sem
- * inventar vazio onde não houve resposta.
+ * O invariante do repo é explícito: conteúdo de mensagem é PII e não entra em
+ * `llm_calls` (`tests/unit/llm-calls-registra-falha.test.ts`). A trilha existe
+ * para responder "por que o agente respondeu isso?" sem copiar a conversa — o
+ * texto segue em `messages`, e o hash é o que correlaciona.
  */
 describe("trilha do turno", () => {
-  it("recorta com marca visível em vez de cortar em silêncio", () => {
-    const curto = recortar("abc", 10);
-    expect(curto).toBe("abc");
-
-    const longo = recortar("x".repeat(50), 10);
-    expect(longo).toBe(`${"x".repeat(10)}…`);
-  });
-
-  it("serializa objeto e não lança com ciclo", () => {
-    expect(recortar({ a: 1 })).toBe('{"a":1}');
-
-    const ciclo: Record<string, unknown> = {};
-    ciclo.self = ciclo;
-    expect(() => recortar(ciclo)).not.toThrow();
-    expect(recortar(ciclo).length).toBeGreaterThan(0);
-  });
-
-  it("system: null quando ausente; string preservada", () => {
-    expect(systemDoTurno(undefined)).toBeNull();
-    expect(systemDoTurno("Você é o atendente.")).toBe("Você é o atendente.");
-  });
-
-  it("mensagens: é o CONTEXTO (histórico + entrada), não só a entrada", () => {
-    const json = mensagensDoTurno([
+  it("meta das mensagens NÃO carrega conteúdo — só total, papéis e tamanho", () => {
+    const meta = metaDasMensagens([
       { role: "assistant", content: "Olá!" },
-      { role: "user", content: "Quero 2 caixas" },
+      { role: "user", content: "meu CPF é 123.456.789-00" },
     ]);
-    expect(json).not.toBeNull();
-    const lido = JSON.parse(json!) as Array<{ role: string; content: string }>;
-    expect(lido).toHaveLength(2);
-    expect(lido[0]).toEqual({ role: "assistant", content: "Olá!" });
-    expect(lido[1]).toEqual({ role: "user", content: "Quero 2 caixas" });
+    expect(meta).not.toBeNull();
+    const json = JSON.stringify(meta);
+    expect(json).not.toContain("123.456.789-00");
+    expect(json).not.toContain("CPF");
+    expect(json).not.toContain("Olá");
+    expect(meta).toMatchObject({
+      total: 2,
+      papeis: [
+        { role: "assistant", chars: 4 },
+        { role: "user", chars: "meu CPF é 123.456.789-00".length },
+      ],
+    });
+    expect(meta!.sha256).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it("mensagens: vazio vira null (não afirma contexto que não houve)", () => {
-    expect(mensagensDoTurno([])).toBeNull();
-    expect(mensagensDoTurno(undefined)).toBeNull();
+  it("o hash do contexto muda quando o conteúdo muda (é verificável)", () => {
+    const a = metaDasMensagens([{ role: "user", content: "oi" }])!;
+    const b = metaDasMensagens([{ role: "user", content: "oi " }])!;
+    expect(a.sha256).not.toBe(b.sha256);
   });
 
-  it("ferramentas: nome, entrada e resultado — a trilha da fonte consultada", () => {
-    const json = ferramentasDoTurno([
+  it("mensagens vazias viram null (não afirma contexto que não houve)", () => {
+    expect(metaDasMensagens([])).toBeNull();
+    expect(metaDasMensagens(undefined)).toBeNull();
+    expect(metaDasMensagensJson([])).toBeNull();
+  });
+
+  it("ferramentas: nome + hash do input/output + tamanho, sem o trecho", () => {
+    const ferramentas = ferramentasDoTurno([
       {
         toolCalls: [{ toolName: "buscar_conhecimento", input: { q: "prazo de entrega" } }],
         toolResults: [{ toolName: "buscar_conhecimento", output: { trechos: ["3 dias úteis"] } }],
       },
     ]);
-    const lido = JSON.parse(json!) as Array<{ tool: string; input: string; output?: string }>;
-    expect(lido).toHaveLength(1);
-    expect(lido[0]!.tool).toBe("buscar_conhecimento");
-    expect(lido[0]!.input).toContain("prazo de entrega");
-    expect(lido[0]!.output).toContain("3 dias úteis");
+    expect(ferramentas).toHaveLength(1);
+    expect(ferramentas[0]!.tool).toBe("buscar_conhecimento");
+    expect(ferramentas[0]!.input_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(ferramentas[0]!.output_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(ferramentas[0]!.output_chars).toBeGreaterThan(0);
+    const json = JSON.stringify(ferramentas);
+    expect(json).not.toContain("prazo de entrega");
+    expect(json).not.toContain("3 dias úteis");
   });
 
-  it("ferramentas: resultado sem chamada correspondente não some", () => {
-    const lido = JSON.parse(
-      ferramentasDoTurno([{ toolResults: [{ toolName: "crm", output: "lead 42" }] }])!,
-    ) as Array<{ tool: string; output?: string }>;
-    expect(lido).toHaveLength(1);
-    expect(lido[0]!.tool).toBe("crm");
-    expect(lido[0]!.output).toContain("lead 42");
+  it("resultado sem chamada correspondente não some", () => {
+    const ferramentas = ferramentasDoTurno([{ toolResults: [{ toolName: "crm", output: "lead 42" }] }]);
+    expect(ferramentas).toHaveLength(1);
+    expect(ferramentas[0]!.tool).toBe("crm");
+    expect(ferramentas[0]!.output_chars).toBe(7);
   });
 
-  it("ferramentas e fontes: ausência vira null", () => {
-    expect(ferramentasDoTurno([])).toBeNull();
-    expect(ferramentasDoTurno([{}])).toBeNull();
+  it("fontes: só total e host, sem título nem caminho", () => {
+    const fontes = fontesDoTurno([
+      { sources: [{ title: "Manual", url: "https://exemplo.test/segredo/123" }] },
+      { sources: [{ title: "Outro", url: "https://exemplo.test/x" }] },
+    ]);
+    expect(fontes).toEqual({ total: 2, hosts: ["exemplo.test"] });
+    const json = JSON.stringify(fontes);
+    expect(json).not.toContain("segredo");
+    expect(json).not.toContain("Manual");
+  });
+
+  it("ausência de ferramenta/fonte vira null", () => {
+    expect(ferramentasDoTurno([])).toEqual([]);
     expect(fontesDoTurno([])).toBeNull();
   });
 
-  it("fontes citadas pelo provedor entram", () => {
-    const lido = JSON.parse(
-      fontesDoTurno([{ sources: [{ title: "Manual", url: "https://exemplo.test" }] }])!,
-    ) as Array<{ title: string }>;
-    expect(lido[0]!.title).toBe("Manual");
-  });
-
-  it("trilha completa: saída vazia vira null, não string vazia", () => {
+  it("trilha completa: saída vazia vira null, e nada de texto na saída", () => {
     const t = trilhaDoTurno({
-      system: "sistema",
-      messages: [{ role: "user", content: "oi" }],
+      system: "Você é o atendente.",
+      messages: [{ role: "user", content: "meu CPF é 123.456.789-00" }],
       saida: "   ",
       steps: [],
     });
-    expect(t.output_text).toBeNull();
-    expect(t.prompt_system).toBe("sistema");
-    expect(t.prompt_messages).toContain("oi");
-    expect(t.tool_calls).toBeNull();
-    expect(t.sources).toBeNull();
+    expect(t.output_text_hash).toBeNull();
+    expect(t.output_chars).toBeNull();
+    expect(t.prompt_system_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(t.prompt_messages_meta).not.toBeNull();
+    const json = JSON.stringify(t);
+    expect(json).not.toContain("123.456.789-00");
+    expect(json).not.toContain("atendente");
+  });
+
+  it("saída com texto vira hash + tamanho, nunca o texto", () => {
+    const t = trilhaDoTurno({
+      system: "s",
+      messages: [{ role: "user", content: "oi" }],
+      saida: "  Olá, tudo bem?  ",
+      steps: [],
+    });
+    expect(t.output_text_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(t.output_chars).toBe("Olá, tudo bem?".length);
+    expect(JSON.stringify(t)).not.toContain("Olá");
   });
 });

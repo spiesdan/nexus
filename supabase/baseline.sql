@@ -29325,30 +29325,35 @@ comment on column public.shipment_destinations.entrada_confirmada_em is
 
 
 -- ============================================================================
--- 0312 — trilha do run de IA: entrada, contexto, saída e ferramentas.
+-- ============================================================================
+-- 0312 — trilha do run de IA: ESTRUTURA e HASH, nunca o conteúdo da conversa.
 -- Ver supabase/migrations/20261119120000_0312_trilha_do_run_de_ia.sql.
 --
--- `llm_calls` guardava custo e erro, nunca o conteúdo. Sem isto, "por que o
--- agente respondeu isso?" não tinha resposta em lugar nenhum. As colunas são
--- nullable: linha anterior à 0312 não tem trilha, e não se inventa uma.
+-- Conteúdo de mensagem é PII e não entra em telemetria (invariante
+-- `llm-calls-registra-falha.test.ts`). O que entra é o que permite auditar:
+-- hashes, papéis, tamanhos e nomes de ferramenta.
 -- ============================================================================
-alter table public.llm_calls add column if not exists prompt_system text;
-alter table public.llm_calls add column if not exists prompt_messages jsonb;
-alter table public.llm_calls add column if not exists output_text text;
+alter table public.llm_calls add column if not exists prompt_system_hash text;
+alter table public.llm_calls add column if not exists prompt_messages_meta jsonb;
+alter table public.llm_calls add column if not exists output_text_hash text;
+alter table public.llm_calls add column if not exists output_chars int;
 alter table public.llm_calls add column if not exists tool_calls jsonb;
-alter table public.llm_calls add column if not exists sources jsonb;
+alter table public.llm_calls add column if not exists sources_meta jsonb;
 
-comment on column public.llm_calls.prompt_system is
-  'System prompt EFETIVO do turno, com o prefixo estável da org (playbook + tools) já aplicado. NULL = linha anterior à 0312 ou chamada sem system.';
+comment on column public.llm_calls.prompt_system_hash is
+  'sha256 do system prompt efetivo do turno (0312). Prova de QUAL política foi usada sem copiar o texto — o playbook é versionado.';
 
-comment on column public.llm_calls.prompt_messages is
-  'Mensagens enviadas ao modelo no turno (histórico + entrada do cliente), como array JSON. É o CONTEXTO que o modelo viu, não só o que o usuário digitou. NULL = linha anterior à 0312.';
+comment on column public.llm_calls.prompt_messages_meta is
+  'Contexto do turno SEM conteúdo: {total, papeis:[{role,chars}], sha256} (0312). O texto fica em `messages`, sob retenção e anonimização daquela tabela.';
 
-comment on column public.llm_calls.output_text is
-  'Texto final que o modelo produziu no turno. NULL em erro/abort: nesse caso o registro é error_code/error_message.';
+comment on column public.llm_calls.output_text_hash is
+  'sha256 da saída final do modelo (0312). NULL em erro/abort — não houve resposta. O texto enviado está em `messages`.';
 
-comment on column public.llm_calls.sources is
-  'Fontes citadas pelo provedor no turno (result.sources), quando ele devolve citações. Complementa tool_calls: a busca de conhecimento aparece lá, com o trecho que voltou.';
+comment on column public.llm_calls.output_chars is
+  'Tamanho da saída em caracteres (0312), para distinguir resposta vazia de resposta truncada sem guardar o texto.';
 
 comment on column public.llm_calls.tool_calls is
-  'Ferramentas chamadas no turno: [{tool, input, output}] com output recortado. É a trilha das FONTES consultadas. NULL = turno sem ferramenta ou linha anterior à 0312.';
+  'Ferramentas do turno: [{tool, input_hash, output_hash, output_chars}] (0312). A fonte consultada é auditável por hash; o trecho não é duplicado.';
+
+comment on column public.llm_calls.sources_meta is
+  'Citações do provedor em forma agregada: {total, hosts:[...]} (0312). Sem título nem URL completa.';

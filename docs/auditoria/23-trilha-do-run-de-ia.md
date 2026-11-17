@@ -1,93 +1,85 @@
-# P0-4 — a trilha do run de IA: entrada, contexto, fontes e saída
+# P0-4 — a trilha do run de IA: auditar sem copiar a conversa
 
 > Medido em 17/11/2026 no checkout `nexus/main`. Fecha a lacuna que a Fase 5.9
-> registrava como "run trace" e que a Fase 8 apontava como ausência de inspeção:
-> "por que o agente respondeu isso?" não tinha resposta em lugar nenhum.
+> registrava como "run trace" — **sem** violar o invariante de PII: conteúdo de
+> mensagem não entra em tabela de telemetria.
 
 ## 1. O que estava faltando, medido
 
 | Peça | Antes | Consequência |
 |---|---|---|
 | `llm_calls` | tokens, custo, modelo, latência, erro | explicava **quanto**, não **o quê** |
-| prompt enviado (system + histórico + entrada) | descartado depois da chamada | impossível reconstruir o contexto que o modelo viu |
-| saída do modelo | usada para enviar e descartada | a resposta que o cliente recebeu não podia ser auditada |
+| contexto enviado (system + histórico + entrada) | descartado depois da chamada | impossível correlacionar o turno com a conversa |
+| saída do modelo | usada para enviar e descartada | a resposta que o cliente recebeu não era auditável |
 | ferramentas/fontes | só o custo | "de onde ele tirou isso?" sem resposta |
-| `ai_agent_runs` | **0 linhas em produção** | o motor de produção (`lib/agent-engine`) não escreve nela; a própria rota de execuções lê `llm_calls` no lugar |
+| `ai_agent_runs` | **0 linhas em produção** | o motor (`lib/agent-engine`) não escreve nela; a rota de execuções lê `llm_calls` |
 
-O último ponto é o que impedia o conserto óbvio: guardar a trilha em
-`ai_agent_runs` seria construir a tela sobre uma tabela que o motor não usa —
-uma tela que promete registro e responde "nada aconteceu" a quem investiga.
+## 2. A restrição que decidiu o desenho
 
-## 2. O que foi feito
+O repo tem um invariante explícito — `tests/unit/llm-calls-registra-falha.test.ts`,
+"o conteúdo da conversa não vai junto": **conteúdo de mensagem é PII e não entra
+em log/telemetria**. A primeira versão desta trilha gravava prompt e saída crus
+e foi **reprovada pelo gate** — com razão: log é o lugar de onde PII vaza em
+auditoria de acesso e sobrevive à anonimização.
 
-### 2.1 Schema (migration 0312 + baseline + MANIFEST)
+A trilha final mantém o que permite **auditar** sem copiar o dado.
 
-`llm_calls` ganhou cinco colunas **nullable**:
+## 3. O que é gravado (0312, nullable)
 
-| Coluna | O que é |
-|---|---|
-| `prompt_system` | o system **efetivo** do turno, com o prefixo estável da org (playbook + tools) já aplicado |
-| `prompt_messages` | as mensagens enviadas ao modelo — **o contexto que ele viu**, não só a entrada do cliente |
-| `output_text` | o texto final; `NULL` em erro/abort (a resposta não existiu) |
-| `tool_calls` | `[{tool, input, output}]` com o retorno de cada ferramenta — a trilha das **fontes consultadas** |
-| `sources` | citações que o provedor devolveu (`result.sources`), quando devolve |
+| Coluna | Conteúdo | Por que serve |
+|---|---|---|
+| `prompt_system_hash` | sha256 do system efetivo | prova **qual política** foi usada (o playbook é versionado) sem copiá-la |
+| `prompt_messages_meta` | `{total, papeis:[{role,chars}], sha256}` | o **contexto em forma verificável**: quantas mensagens, de que papéis, com que tamanho |
+| `output_text_hash` | sha256 da saída | correlaciona a resposta sem guardá-la |
+| `output_chars` | tamanho da saída | distingue resposta vazia de truncada |
+| `tool_calls` | `[{tool, input_hash, output_hash, output_chars}]` | **quais fontes** foram consultadas e o tamanho do retorno |
+| `sources_meta` | `{total, hosts:[…]}` | citações do provedor sem título nem URL completa |
 
-Nullable de propósito: linha anterior à 0312 não tem trilha, e inventar `''`
-seria afirmar que o modelo respondeu nada.
+**Correlação sem cópia:** o hash do contexto casa com a linha de `messages` do
+mesmo turno; quem tem direito de ler a conversa confere ali, sob a retenção e a
+cascata de anonimização daquela tabela. A telemetria sozinha não devolve PII.
 
-### 2.2 Escrita (o seam único)
+## 4. Escrita (o seam único)
 
-Toda chamada de LLM passa por `lib/agent-engine/edge/llm/run-model-call.ts`.
-A montagem da trilha vive em `trilha.ts` (funções puras, testadas) e é gravada
-no **mesmo INSERT** que já registrava tokens/custo — sem transação nova, sem
-caminho paralelo.
+Toda chamada de LLM passa por `lib/agent-engine/edge/llm/run-model-call.ts`. A
+montagem vive em `trilha.ts` (funções puras, testadas) e é gravada no **mesmo
+INSERT** que já registrava tokens/custo.
 
-Recorte **visível**: ferramenta/fonte a 2 000 caracteres, cada mensagem a
-20 000, system a 100 000, com sufixo `…`. Telemetria não derruba turno
-(`recortar` nunca lança) e o corte não é silencioso.
+No **erro**, grava os hashes do system e do contexto (é o que se precisa
+inspecionar: prompt grande demais, histórico corrompido) e deixa
+`output_text_hash` nulo — a resposta não existiu.
 
-No **erro**, a entrada é justamente o que se precisa inspecionar (prompt grande
-demais, histórico corrompido, payload inválido): `registrarFalha` grava
-`prompt_system`/`prompt_messages` e deixa `output_text` nulo.
+## 5. Leitura
 
-### 2.3 Leitura
+`GET /api/v1/ai/runs/:id` (manager+) devolve a trilha e `tem_trilha` (`false`
+para linha anterior à 0312). Rota separada da lista: a lista de 100 execuções
+não precisa baixar a trilha de cada uma.
 
-`GET /api/v1/ai/runs/:id` (manager+, mesma guarda da lista) devolve a trilha e
-`tem_trilha` — `false` para linha anterior à 0312, para a tela explicar a
-ausência em vez de desenhar painel vazio. Rota separada: prompt + mensagens
-somam dezenas de KB por turno, e a lista de 100 execuções não pode baixar
-megabytes para mostrar latência.
+## 6. LGPD
 
-### 2.4 LGPD — a trilha é uma CÓPIA da conversa
+A trilha não copia texto, mas os hashes ainda correlacionam. A cascata de
+anonimização zera as seis colunas das chamadas do contato — o hash sozinho não é
+dado pessoal, mas o vínculo com a conversa é, e some junto.
 
-A cascata de anonimização (`fn_lgpd_cascade_redact_contact`) anonimiza
-`contacts`/`messages`, mas não conhece `llm_calls`: sem um passo novo, a pessoa
-"anonimizada" continuaria no prompt e na saída, palavra por palavra. A cascata
-agora zera as cinco colunas das chamadas do contato — o mesmo raciocínio do
-avatar órfão, em outra forma. Falha nesse passo **não** é engolida: o texto
-original não pode sobreviver à anonimização.
-
-## 3. O que foi medido
+## 7. O que foi medido
 
 | Medida | Resultado |
 |---|---|
-| Migration 0312 aplica em banco com o baseline | exit 0; 5 colunas criadas |
-| Re-aplicar 0312 | idempotente (5 `already exists, skipping`) |
-| `lib/agent-engine/edge/llm/trilha.test.ts` | **10 casos** verdes (recorte visível, contexto ≠ entrada, ferramenta+resultado, fonte sem chamada, vazio → null) |
-| `app/api/v1/ai/runs/[id]/route.test.ts` | **5 casos** verdes (trilha completa, linha antiga `tem_trilha:false`, 404 cross-org/inexistente, 400 id, 403 viewer) |
-| `tests/unit/lgpd-redact-avatar.test.ts` | **9 casos** verdes (2 novos: zera as 5 colunas; passo **depois** da RPC) |
+| Migration 0312 aplica em banco com o baseline | exit 0; 6 colunas; re-aplicar idempotente |
+| `llm-calls-registra-falha.test.ts` (invariante de PII) | **15/15 verde** (o caso do CPF passa a valer também para a trilha) |
+| `trilha.test.ts` | 9 casos: meta sem conteúdo, hash muda com o conteúdo, ferramentas/fontes sem trecho, saída vazia → null |
+| `app/api/v1/ai/runs/[id]/route.test.ts` | 5 casos; 200/404/400/403 e resposta sem texto de conversa |
+| `lgpd-redact-avatar.test.ts` | 9 casos; zera as 6 colunas depois da RPC |
 | `pnpm typecheck` | limpo |
 
-## 4. O que NÃO foi feito (declarado)
+## 8. O que NÃO foi feito (declarado)
 
-- **UI**: a trilha está legível por API, não há drawer na tela de execuções.
-  É a próxima fatia de 5.9, com prova visual;
-- **`ai_agent_runs` continua sem escritor de produção**. Não foi "consertada"
-  para não duplicar a fonte: `llm_calls` é onde o motor grava, e a rota já lê de
-  lá. Unificar as duas tabelas é decisão de arquitetura, não conserto de P0;
-- **retenção própria da trilha**: as colunas herdam a retenção de `llm_calls`.
-  Se a política mudar para texto de conversa, é decisão de produto (a janela de
-  retenção atual está em `lib/retencao/politica.ts`);
-- **recorte de ferramenta é por peça**, não por turno: um turno com 20
-  ferramentas pode chegar a ~40 KB em `tool_calls`. Cabe na linha; não cabe
-  numa resposta de lista — por isso a trilha é rota separada.
+- **UI**: a trilha está legível por API, não há drawer na tela de execuções —
+  próxima fatia de 5.9, com prova visual;
+- **leitura do texto a partir do id**: a correlação é por hash; a rota que junta
+  `llm_calls` + `messages` para exibir a conversa é decisão de produto (e de
+  permissão) e não foi feita;
+- **`ai_agent_runs` continua sem escritor de produção** — não foi "consertada"
+  para não duplicar a fonte; unificar as duas tabelas é decisão de arquitetura;
+- **retenção própria**: as colunas herdam a de `llm_calls`; texto de conversa
+  não é duplicado, então a política de `messages` continua sendo a única.

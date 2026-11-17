@@ -1,37 +1,35 @@
 /**
- * A trilha do turno de IA — o que o modelo VIU e o que ele DEVOLVEU.
+ * A trilha do turno de IA — ESTRUTURA e HASH, nunca o conteúdo da conversa.
  *
- * ## Por que existe (P0, medido em 17/11/2026)
+ * ## Por que assim (P0-4, e a correção que o gate cobrou)
  *
- * `llm_calls` guardava tokens, custo, modelo e erro — e **nada do conteúdo**.
- * Quando o agente respondia errado, ou quando o operador perguntava "por que
- * ele disse isso?", a resposta não existia em lugar nenhum: a entrada já tinha
- * sido lida, o contexto montado (histórico + playbook + resultados de
- * ferramenta) era descartado, e a saída do modelo não era persistida.
+ * `llm_calls` guardava tokens, custo, modelo e erro — e nada que explicasse a
+ * resposta. A primeira versão desta trilha gravou prompt e saída **crus** e foi
+ * reprovada pelo invariante do repo (`tests/unit/llm-calls-registra-falha.test.ts`,
+ * "o conteúdo da conversa não vai junto"): conteúdo de mensagem é PII e não entra
+ * em telemetria. O invariante está certo — log é o lugar de onde dado pessoal
+ * vaza em auditoria de acesso e sobrevive à anonimização.
  *
- * `ai_agent_runs` não resolvia: o motor de produção (`lib/agent-engine`) não
- * escreve nela — a própria rota de execuções lê `llm_calls` no lugar.
+ * A trilha mantém o que permite AUDITAR sem copiar o dado:
  *
- * ## Recorte, e por que ele é explícito
+ *   · hash do system efetivo → prova de qual política foi usada (o playbook é
+ *     versionado, então o hash correlaciona);
+ *   · meta das mensagens → quantas, de que papéis, com que tamanho, e o hash do
+ *     conjunto. É o CONTEXTO em forma verificável;
+ *   · hash/tamanho da saída → distingue resposta vazia de truncada;
+ *   · ferramentas por hash → quais fontes foram consultadas e o tamanho do que
+ *     voltou, sem duplicar o trecho;
+ *   · fontes agregadas → total e hosts, sem título nem URL completa.
  *
- * Uma ferramenta pode devolver JSON enorme (busca de catálogo, histórico), e
- * uma linha de telemetria com megabytes estoura o INSERT e não cabe na tela.
- * Cada peça é cortada com o sufixo `…` — o corte é VISÍVEL, não silencioso, e
- * os limites estão nomeados abaixo.
+ * Correlação sem cópia: o hash da mensagem de entrada casa com a linha em
+ * `messages` do mesmo turno; quem pode ler a conversa confere ali. A telemetria
+ * sozinha não devolve PII nem sob ordem de acesso a log.
  */
+import { createHash } from "node:crypto";
+
 import type { ModelMessage } from "ai";
 
-/** Uma peça de ferramenta/fonte. O texto do prompt tem limite próprio. */
-export const LIMITE_DA_PECA = 2_000;
-/** Cada mensagem do histórico, individualmente. */
-export const LIMITE_DA_MENSAGEM = 20_000;
-/** O system prompt inteiro (playbook + tools) — é grande por natureza. */
-export const LIMITE_DO_SYSTEM = 100_000;
-/** O conjunto de fontes citadas. */
-export const LIMITE_DAS_FONTES = 20_000;
-
-/** Serializa e corta, marcando o corte. Nunca lança: telemetria não derruba turno. */
-export function recortar(valor: unknown, limite: number = LIMITE_DA_PECA): string {
+function hash(valor: unknown): string {
   let texto: string;
   if (typeof valor === "string") {
     texto = valor;
@@ -42,29 +40,46 @@ export function recortar(valor: unknown, limite: number = LIMITE_DA_PECA): strin
       texto = String(valor);
     }
   }
-  return texto.length > limite ? `${texto.slice(0, limite)}…` : texto;
+  return createHash("sha256").update(texto, "utf8").digest("hex");
 }
 
-export function systemDoTurno(system: unknown): string | null {
+export function hashDoSystem(system: unknown): string | null {
   if (system === undefined || system === null) return null;
-  if (typeof system === "string") {
-    return system.length > LIMITE_DO_SYSTEM ? `${system.slice(0, LIMITE_DO_SYSTEM)}…` : system;
-  }
-  return recortar(system, LIMITE_DO_SYSTEM);
+  if (typeof system === "string" && system.trim() === "") return null;
+  return hash(system);
+}
+
+export interface MetaDasMensagens {
+  total: number;
+  papeis: Array<{ role: string; chars: number }>;
+  sha256: string;
 }
 
 /**
- * O contexto que o modelo viu — histórico + mensagem de entrada —, não só o
- * que o cliente digitou. É a diferença entre "o cliente escreveu X" e "o
- * modelo respondeu Y TENDO VISTO X, Z e o resumo W".
+ * O contexto em forma verificável: quantas mensagens, de que papéis, com que
+ * tamanho, e o hash do conjunto. **Nenhum caractere de conteúdo sai daqui.**
  */
-export function mensagensDoTurno(messages: readonly ModelMessage[] | undefined): string | null {
+export function metaDasMensagens(
+  messages: readonly ModelMessage[] | undefined,
+): MetaDasMensagens | null {
   if (!messages || messages.length === 0) return null;
-  const enxutas = messages.map((m) => {
-    const msg = m as unknown as { role?: unknown; content?: unknown };
-    return { role: msg.role ?? null, content: recortar(msg.content, LIMITE_DA_MENSAGEM) };
-  });
-  return JSON.stringify(enxutas);
+  return {
+    total: messages.length,
+    papeis: messages.map((m) => {
+      const msg = m as unknown as { role?: unknown; content?: unknown };
+      const conteudo =
+        typeof msg.content === "string" ? msg.content : (JSON.stringify(msg.content) ?? "");
+      return { role: String(msg.role ?? "desconhecido"), chars: conteudo.length };
+    }),
+    sha256: hash(messages),
+  };
+}
+
+export function metaDasMensagensJson(
+  messages: readonly ModelMessage[] | undefined,
+): string | null {
+  const meta = metaDasMensagens(messages);
+  return meta === null ? null : JSON.stringify(meta);
 }
 
 interface PassoComFerramentas {
@@ -73,48 +88,88 @@ interface PassoComFerramentas {
   sources?: ReadonlyArray<unknown>;
 }
 
+export interface FerramentaDaTrilha {
+  tool: string;
+  input_hash: string;
+  output_hash: string | null;
+  output_chars: number | null;
+}
+
 /**
- * As FONTES consultadas: ferramenta, argumento de entrada e o que ela devolveu.
- * A busca de conhecimento do agente aparece aqui, com o trecho que voltou — é o
- * que responde "de onde ele tirou isso?".
+ * As fontes consultadas em forma de hash: qual ferramenta, hash do argumento e
+ * do retorno, e o tamanho do retorno. O trecho em si não é duplicado.
  */
-export function ferramentasDoTurno(steps: readonly PassoComFerramentas[]): string | null {
-  const chamadas: Array<{ tool: string; input: string; output?: string }> = [];
+export function ferramentasDoTurno(steps: readonly PassoComFerramentas[]): FerramentaDaTrilha[] {
+  const chamadas: FerramentaDaTrilha[] = [];
   for (const step of steps) {
     for (const chamada of step.toolCalls ?? []) {
-      chamadas.push({ tool: chamada.toolName ?? "?", input: recortar(chamada.input) });
+      chamadas.push({
+        tool: chamada.toolName ?? "?",
+        input_hash: hash(chamada.input ?? null),
+        output_hash: null,
+        output_chars: null,
+      });
     }
   }
   const resultados = steps.flatMap((s) => s.toolResults ?? []);
   resultados.forEach((resultado, i) => {
+    const serializado = (() => {
+      try {
+        return typeof resultado.output === "string"
+          ? resultado.output
+          : (JSON.stringify(resultado.output) ?? "");
+      } catch {
+        return "";
+      }
+    })();
     const alvo = chamadas[i];
     if (alvo) {
-      alvo.output = recortar(resultado.output);
+      alvo.output_hash = hash(resultado.output ?? null);
+      alvo.output_chars = serializado.length;
     } else {
-      // Resultado sem chamada correspondente (passo retomado de estado): não se
-      // inventa input, mas o resultado é fonte e não pode sumir.
       chamadas.push({
         tool: resultado.toolName ?? "?",
-        input: "",
-        output: recortar(resultado.output),
+        input_hash: hash(null),
+        output_hash: hash(resultado.output ?? null),
+        output_chars: serializado.length,
       });
     }
   });
-  return chamadas.length > 0 ? JSON.stringify(chamadas) : null;
+  return chamadas;
 }
 
-/** Citações que o provedor devolveu (`result.sources`), quando ele as devolve. */
-export function fontesDoTurno(steps: readonly PassoComFerramentas[]): string | null {
+export interface FontesDaTrilha {
+  total: number;
+  hosts: string[];
+}
+
+/**
+ * Citações do provedor sem título nem URL completa: só o host. É o suficiente
+ * para "de onde veio" sem transformar a telemetria em cópia da web.
+ */
+export function fontesDoTurno(steps: readonly PassoComFerramentas[]): FontesDaTrilha | null {
   const fontes = steps.flatMap((s) => s.sources ?? []);
-  return fontes.length > 0 ? recortar(fontes, LIMITE_DAS_FONTES) : null;
+  if (fontes.length === 0) return null;
+  const hosts = new Set<string>();
+  for (const fonte of fontes) {
+    const url = (fonte as { url?: unknown }).url;
+    if (typeof url !== "string") continue;
+    try {
+      hosts.add(new URL(url).host);
+    } catch {
+      // URL inválida não vira host inventado.
+    }
+  }
+  return { total: fontes.length, hosts: [...hosts].sort() };
 }
 
 export interface TrilhaDoTurno {
-  prompt_system: string | null;
-  prompt_messages: string | null;
-  output_text: string | null;
+  prompt_system_hash: string | null;
+  prompt_messages_meta: string | null;
+  output_text_hash: string | null;
+  output_chars: number | null;
   tool_calls: string | null;
-  sources: string | null;
+  sources_meta: string | null;
 }
 
 export function trilhaDoTurno(args: {
@@ -124,12 +179,15 @@ export function trilhaDoTurno(args: {
   steps: readonly PassoComFerramentas[];
 }): TrilhaDoTurno {
   const saida = (args.saida ?? "").trim();
+  const ferramentas = ferramentasDoTurno(args.steps);
+  const fontes = fontesDoTurno(args.steps);
   return {
-    prompt_system: systemDoTurno(args.system),
-    prompt_messages: mensagensDoTurno(args.messages),
-    // Saída vazia NÃO vira "": seria afirmar que o modelo respondeu nada.
-    output_text: saida === "" ? null : saida,
-    tool_calls: ferramentasDoTurno(args.steps),
-    sources: fontesDoTurno(args.steps),
+    prompt_system_hash: hashDoSystem(args.system),
+    prompt_messages_meta: metaDasMensagensJson(args.messages),
+    // Saída vazia NÃO vira hash de "": seria afirmar que o modelo respondeu nada.
+    output_text_hash: saida === "" ? null : hash(saida),
+    output_chars: saida === "" ? null : saida.length,
+    tool_calls: ferramentas.length > 0 ? JSON.stringify(ferramentas) : null,
+    sources_meta: fontes === null ? null : JSON.stringify(fontes),
   };
 }

@@ -10,9 +10,13 @@
  * endpoint lê exatamente as colunas que a 0312 passou a gravar — e devolve
  * `null` onde a linha é anterior à trilha, em vez de inventar string vazia.
  *
- * Rota separada, e não um campo da lista: prompt e mensagens somam dezenas de
- * KB por turno, e a lista de 100 execuções passaria a baixar megabytes para
- * mostrar latência.
+ * Rota separada, e não um campo da lista: mesmo em metadados, a trilha é bem
+ * maior que a linha de custo, e a lista de 100 execuções não precisa dela.
+ *
+ * ⚠️ **Sem PII**: a 0312 grava hashes, papéis e tamanhos — nunca o texto da
+ * conversa (o invariante `llm-calls-registra-falha.test.ts` proíbe). Quem
+ * precisa do conteúdo lê `messages`, sob retenção e anonimização daquela
+ * tabela; o hash é o que correlaciona.
  *
  * Guarda: `manager`, a mesma da lista (`ai_runs`). A trilha contém conversa de
  * cliente — não é leitura de viewer.
@@ -32,7 +36,7 @@ const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const COLUNAS =
   "id, contact_id, purpose, provider, model, status, error_code, error_message, http_status, " +
   "origem_da_escolha, input_tokens, output_tokens, cost_cents, latency_ms, created_at, " +
-  "prompt_system, prompt_messages, output_text, tool_calls, sources";
+  "prompt_system_hash, prompt_messages_meta, output_text_hash, output_chars, tool_calls, sources_meta";
 
 interface LinhaDaTrilha {
   id: string;
@@ -50,11 +54,12 @@ interface LinhaDaTrilha {
   cost_cents: number | null;
   latency_ms: number | null;
   created_at: string;
-  prompt_system: string | null;
-  prompt_messages: unknown;
-  output_text: string | null;
+  prompt_system_hash: string | null;
+  prompt_messages_meta: unknown;
+  output_text_hash: string | null;
+  output_chars: number | null;
   tool_calls: unknown;
-  sources: unknown;
+  sources_meta: unknown;
 }
 
 export async function GET(
@@ -90,11 +95,11 @@ export async function GET(
       // A trilha só existe a partir da 0312. `tem_trilha` é o que a tela usa
       // para explicar a linha antiga em vez de desenhar um painel vazio.
       tem_trilha:
-        linha.prompt_system !== null ||
-        linha.prompt_messages !== null ||
-        linha.output_text !== null ||
+        linha.prompt_system_hash !== null ||
+        linha.prompt_messages_meta !== null ||
+        linha.output_text_hash !== null ||
         linha.tool_calls !== null ||
-        linha.sources !== null,
+        linha.sources_meta !== null,
     },
     { requestId },
   );
